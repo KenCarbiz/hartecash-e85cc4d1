@@ -1,14 +1,46 @@
 import { useState } from "react";
-import { Shield } from "lucide-react";
+import { Shield, Loader2, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const STEPS = ["Vehicle Info", "Your Details", "Get Offer"];
 
+interface VehicleInfo {
+  year: string;
+  make: string;
+  model: string;
+}
+
+const decodeVin = async (vin: string): Promise<VehicleInfo | null> => {
+  try {
+    const res = await fetch(
+      `https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${encodeURIComponent(vin)}?format=json`
+    );
+    const data = await res.json();
+    const results = data.Results as { Variable: string; Value: string | null }[];
+    const get = (name: string) =>
+      results.find((r) => r.Variable === name)?.Value || "";
+
+    const year = get("Model Year");
+    const make = get("Make");
+    const model = get("Model");
+
+    if (year && make && model) {
+      return { year, make, model };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
 const SellCarForm = () => {
   const [activeTab, setActiveTab] = useState<"vin" | "plate">("plate");
   const [step, setStep] = useState(0);
+  const [vinLoading, setVinLoading] = useState(false);
+  const [vehicleInfo, setVehicleInfo] = useState<VehicleInfo | null>(null);
+  const [vinError, setVinError] = useState("");
   const [formData, setFormData] = useState({
     plate: "",
     state: "",
@@ -23,6 +55,24 @@ const SellCarForm = () => {
   const update = (field: string, value: string) =>
     setFormData((prev) => ({ ...prev, [field]: value }));
 
+  const handleVinLookup = async () => {
+    const vin = formData.vin.trim();
+    if (vin.length !== 17) {
+      setVinError("VIN must be exactly 17 characters.");
+      return;
+    }
+    setVinError("");
+    setVinLoading(true);
+    setVehicleInfo(null);
+    const info = await decodeVin(vin);
+    setVinLoading(false);
+    if (info) {
+      setVehicleInfo(info);
+    } else {
+      setVinError("Could not decode this VIN. Please check and try again.");
+    }
+  };
+
   const handleNext = () => {
     if (step < 2) setStep(step + 1);
   };
@@ -33,7 +83,6 @@ const SellCarForm = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Submit logic
     alert("Thank you! We'll reach out with your cash offer shortly.");
   };
 
@@ -67,7 +116,7 @@ const SellCarForm = () => {
             <div className="flex gap-2 mb-6 border-b-2 border-muted">
               <button
                 type="button"
-                onClick={() => setActiveTab("plate")}
+                onClick={() => { setActiveTab("plate"); setVehicleInfo(null); setVinError(""); }}
                 className={`flex-1 py-3 text-[15px] font-semibold border-b-[3px] -mb-[2px] transition-all ${
                   activeTab === "plate"
                     ? "text-accent border-accent"
@@ -115,17 +164,49 @@ const SellCarForm = () => {
                 </div>
               </>
             ) : (
-              <div className="mb-5">
-                <Label className="text-sm font-semibold text-card-foreground mb-2 block">
-                  VIN Number
-                </Label>
-                <Input
-                  placeholder="Enter 17-character VIN"
-                  value={formData.vin}
-                  onChange={(e) => update("vin", e.target.value)}
-                  className="py-3.5 px-4 text-base border-2 border-input focus:border-accent focus:ring-accent/10"
-                />
-              </div>
+              <>
+                <div className="mb-5">
+                  <Label className="text-sm font-semibold text-card-foreground mb-2 block">
+                    VIN Number
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Enter 17-character VIN"
+                      value={formData.vin}
+                      onChange={(e) => {
+                        update("vin", e.target.value.toUpperCase());
+                        setVehicleInfo(null);
+                        setVinError("");
+                      }}
+                      maxLength={17}
+                      className="py-3.5 px-4 text-base border-2 border-input focus:border-accent focus:ring-accent/10 flex-1"
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleVinLookup}
+                      disabled={vinLoading || formData.vin.trim().length === 0}
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 shrink-0"
+                    >
+                      {vinLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Lookup"}
+                    </Button>
+                  </div>
+                  {vinError && (
+                    <p className="text-destructive text-sm mt-2">{vinError}</p>
+                  )}
+                </div>
+
+                {vehicleInfo && (
+                  <div className="mb-5 p-4 bg-success/10 border border-success/30 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <CheckCircle className="w-5 h-5 text-success" />
+                      <span className="text-sm font-bold text-card-foreground">Vehicle Found</span>
+                    </div>
+                    <p className="text-base font-semibold text-card-foreground">
+                      {vehicleInfo.year} {vehicleInfo.make} {vehicleInfo.model}
+                    </p>
+                  </div>
+                )}
+              </>
             )}
 
             <div className="mb-5">
@@ -204,6 +285,11 @@ const SellCarForm = () => {
             <p className="text-muted-foreground text-sm mb-6">
               Click below and we'll have your personalized cash offer ready in minutes.
             </p>
+            {vehicleInfo && (
+              <p className="text-base font-semibold text-card-foreground mb-4">
+                {vehicleInfo.year} {vehicleInfo.make} {vehicleInfo.model}
+              </p>
+            )}
           </div>
         )}
 
