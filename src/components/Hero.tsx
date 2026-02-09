@@ -2,10 +2,10 @@ import { Check, Star } from "lucide-react";
 
 const Hero = () => {
   const benefits = [
-    "No obligation — get a real offer in minutes",
-    "We come to you — free pickup at your door",
-    "Beat most online offers, guaranteed",
-    "Safe, secure & hassle-free process",
+    { label: "Faster", desc: "Get cash in 24 hours, not weeks of meetups" },
+    { label: "Safer", desc: "No strangers at your home or getting your personal info" },
+    { label: "More Convenient", desc: "One visit, we handle all paperwork" },
+    { label: "Privacy Protected", desc: "We never share your address, name, or phone number" },
   ];
 
   return (
@@ -20,11 +20,11 @@ const Hero = () => {
       </p>
 
       <div className="max-w-[500px] mx-auto mb-8 text-left px-5 md:px-0">
-        {benefits.map((benefit, i) => (
-          <div key={i} className="flex items-center gap-3 mb-3">
-            <Check className="w-6 h-6 text-success flex-shrink-0 stroke-[3]" />
+        {benefits.map((b, i) => (
+          <div key={i} className="flex items-start gap-3 mb-3">
+            <Check className="w-6 h-6 text-success flex-shrink-0 stroke-[3] mt-0.5" />
             <span className="text-[15px] md:text-base font-medium leading-snug">
-              {benefit}
+              <strong>{b.label}:</strong> {b.desc}
             </span>
           </div>
         ))}
