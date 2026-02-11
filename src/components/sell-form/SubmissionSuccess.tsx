@@ -45,15 +45,15 @@ const SubmissionSuccess = ({ uploadUrl, vehicleInfo, nextStep }: Props) => {
         <QRCodeSVG value={uploadUrl} size={200} level="H" />
       </div>
 
-      <div className="flex items-center gap-3 bg-muted/50 rounded-xl p-4 text-left">
-        <Smartphone className="w-8 h-8 text-accent shrink-0" />
+      <div className="flex items-center gap-4 bg-muted/50 rounded-xl p-6 text-left">
+        <Smartphone className="w-12 h-12 text-accent shrink-0" />
         <div>
-          <p className="text-sm font-semibold text-card-foreground">Using your phone?</p>
+          <p className="text-base font-semibold text-card-foreground">Using your phone?</p>
           <a
             href={uploadUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-accent underline font-medium"
+            className="text-base text-accent underline font-medium"
           >
             Tap here to upload photos directly →
           </a>
