@@ -235,7 +235,7 @@ export type Database = {
       mark_photos_uploaded: { Args: { _token: string }; Returns: undefined }
     }
     Enums: {
-      app_role: "admin" | "user"
+      app_role: "admin" | "user" | "sales_bdc" | "used_car_manager" | "gsm_gm"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -363,7 +363,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
+      app_role: ["admin", "user", "sales_bdc", "used_car_manager", "gsm_gm"],
     },
   },
 } as const
