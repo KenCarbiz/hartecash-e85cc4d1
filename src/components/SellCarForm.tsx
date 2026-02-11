@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 import { STEPS, initialFormData } from "./sell-form/types";
 import type { FormData, VehicleInfo } from "./sell-form/types";
 import StepVehicleInfo from "./sell-form/StepVehicleInfo";
@@ -8,11 +9,15 @@ import StepVehicleBuild from "./sell-form/StepVehicleBuild";
 import StepConditionHistory from "./sell-form/StepConditionHistory";
 import StepYourDetails from "./sell-form/StepYourDetails";
 import StepGetOffer from "./sell-form/StepGetOffer";
+import SubmissionSuccess from "./sell-form/SubmissionSuccess";
 
 const SellCarForm = () => {
   const [step, setStep] = useState(0);
   const [vehicleInfo, setVehicleInfo] = useState<VehicleInfo | null>(null);
   const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [submitted, setSubmitted] = useState(false);
+  const [uploadUrl, setUploadUrl] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const update = (field: string, value: string) =>
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -33,16 +38,69 @@ const SellCarForm = () => {
   const handleNext = () => { if (step < STEPS.length - 1) setStep(step + 1); };
   const handleBack = () => { if (step > 0) setStep(step - 1); };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.nextStep === "photos") {
-      alert("Thank you! We'll send you a link to upload your vehicle photos shortly.");
-    } else if (formData.nextStep === "visit") {
-      alert("Thank you! We'll contact you to schedule your in-person visit.");
-    } else {
-      alert("Thank you! We'll reach out with your cash offer shortly.");
+    setSubmitting(true);
+    try {
+      const { data, error } = await supabase
+        .from("submissions")
+        .insert({
+          plate: formData.plate || null,
+          state: formData.state || null,
+          vin: formData.vin || null,
+          mileage: formData.mileage || null,
+          vehicle_year: vehicleInfo?.year || null,
+          vehicle_make: vehicleInfo?.make || null,
+          vehicle_model: vehicleInfo?.model || null,
+          exterior_color: formData.exteriorColor || null,
+          drivetrain: formData.drivetrain || null,
+          modifications: formData.modifications || null,
+          overall_condition: formData.overallCondition || null,
+          exterior_damage: formData.exteriorDamage,
+          windshield_damage: formData.windshieldDamage || null,
+          moonroof: formData.moonroof || null,
+          interior_damage: formData.interiorDamage,
+          tech_issues: formData.techIssues,
+          engine_issues: formData.engineIssues,
+          mechanical_issues: formData.mechanicalIssues,
+          drivable: formData.drivable || null,
+          accidents: formData.accidents || null,
+          smoked_in: formData.smokedIn || null,
+          tires_replaced: formData.tiresReplaced || null,
+          num_keys: formData.numKeys || null,
+          name: formData.name || null,
+          phone: formData.phone || null,
+          email: formData.email || null,
+          zip: formData.zip || null,
+          loan_status: formData.loanStatus || null,
+          next_step: formData.nextStep || null,
+        })
+        .select("token")
+        .single();
+
+      if (error) throw error;
+
+      const baseUrl = window.location.origin;
+      setUploadUrl(`${baseUrl}/upload/${data.token}`);
+      setSubmitted(true);
+    } catch (err) {
+      console.error("Submission error:", err);
+      alert("Something went wrong. Please try again.");
     }
+    setSubmitting(false);
   };
+
+  if (submitted) {
+    return (
+      <div className="bg-card rounded-2xl shadow-xl mx-auto -mt-10 mb-10 p-6 md:p-8 relative z-10 max-w-lg w-[calc(100%-40px)]">
+        <SubmissionSuccess
+          uploadUrl={uploadUrl}
+          vehicleInfo={vehicleInfo}
+          nextStep={formData.nextStep}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="bg-card rounded-2xl shadow-xl mx-auto -mt-10 mb-10 p-6 md:p-8 relative z-10 max-w-lg w-[calc(100%-40px)]">
@@ -87,9 +145,10 @@ const SellCarForm = () => {
           ) : (
             <Button
               type="submit"
+              disabled={submitting}
               className="flex-1 py-4 bg-accent hover:bg-accent/90 text-accent-foreground text-[17px] font-bold shadow-lg shadow-accent/30 hover:-translate-y-0.5 transition-all"
             >
-              Get My Cash Offer →
+              {submitting ? "Submitting..." : "Get My Cash Offer →"}
             </Button>
           )}
         </div>

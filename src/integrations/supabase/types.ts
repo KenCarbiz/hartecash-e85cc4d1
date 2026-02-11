@@ -14,7 +14,114 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      submissions: {
+        Row: {
+          accidents: string | null
+          created_at: string
+          drivable: string | null
+          drivetrain: string | null
+          email: string | null
+          engine_issues: string[] | null
+          exterior_color: string | null
+          exterior_damage: string[] | null
+          id: string
+          interior_damage: string[] | null
+          loan_status: string | null
+          mechanical_issues: string[] | null
+          mileage: string | null
+          modifications: string | null
+          moonroof: string | null
+          name: string | null
+          next_step: string | null
+          num_keys: string | null
+          overall_condition: string | null
+          phone: string | null
+          photos_uploaded: boolean
+          plate: string | null
+          smoked_in: string | null
+          state: string | null
+          tech_issues: string[] | null
+          tires_replaced: string | null
+          token: string
+          vehicle_make: string | null
+          vehicle_model: string | null
+          vehicle_year: string | null
+          vin: string | null
+          windshield_damage: string | null
+          zip: string | null
+        }
+        Insert: {
+          accidents?: string | null
+          created_at?: string
+          drivable?: string | null
+          drivetrain?: string | null
+          email?: string | null
+          engine_issues?: string[] | null
+          exterior_color?: string | null
+          exterior_damage?: string[] | null
+          id?: string
+          interior_damage?: string[] | null
+          loan_status?: string | null
+          mechanical_issues?: string[] | null
+          mileage?: string | null
+          modifications?: string | null
+          moonroof?: string | null
+          name?: string | null
+          next_step?: string | null
+          num_keys?: string | null
+          overall_condition?: string | null
+          phone?: string | null
+          photos_uploaded?: boolean
+          plate?: string | null
+          smoked_in?: string | null
+          state?: string | null
+          tech_issues?: string[] | null
+          tires_replaced?: string | null
+          token?: string
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_year?: string | null
+          vin?: string | null
+          windshield_damage?: string | null
+          zip?: string | null
+        }
+        Update: {
+          accidents?: string | null
+          created_at?: string
+          drivable?: string | null
+          drivetrain?: string | null
+          email?: string | null
+          engine_issues?: string[] | null
+          exterior_color?: string | null
+          exterior_damage?: string[] | null
+          id?: string
+          interior_damage?: string[] | null
+          loan_status?: string | null
+          mechanical_issues?: string[] | null
+          mileage?: string | null
+          modifications?: string | null
+          moonroof?: string | null
+          name?: string | null
+          next_step?: string | null
+          num_keys?: string | null
+          overall_condition?: string | null
+          phone?: string | null
+          photos_uploaded?: boolean
+          plate?: string | null
+          smoked_in?: string | null
+          state?: string | null
+          tech_issues?: string[] | null
+          tires_replaced?: string | null
+          token?: string
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_year?: string | null
+          vin?: string | null
+          windshield_damage?: string | null
+          zip?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
