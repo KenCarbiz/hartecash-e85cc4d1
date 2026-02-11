@@ -15,7 +15,7 @@ const ValueProps = () => {
     {
       icon: <Truck className="w-8 h-8 text-accent" />,
       title: "Free Pickup",
-      desc: "We come to your home or office. Zero hassle on your end.",
+      desc: "We come to your home or office. Zero hassle on your end. Available on select transactions.",
     },
     {
       icon: <ShieldCheck className="w-8 h-8 text-accent" />,
