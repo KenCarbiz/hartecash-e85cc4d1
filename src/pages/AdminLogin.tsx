@@ -36,19 +36,24 @@ const AdminLogin = () => {
         return;
       }
 
-      // Grant admin role
+      // Create pending admin request
       if (data.user) {
-        await supabase.from("user_roles").insert({
+        const { error: reqError } = await supabase.from("pending_admin_requests").insert({
           user_id: data.user.id,
-          role: "admin",
+          email,
         });
+        if (reqError) {
+          setError("Failed to submit access request.");
+          setLoading(false);
+          return;
+        }
       }
 
       setError("");
       setEmail("");
       setPassword("");
       setIsSignup(false);
-      alert("Account created! You can now log in.");
+      alert("Account created! Your request has been sent to the admin for approval.");
     } else {
       // Log in
       const { data, error: authError } = await supabase.auth.signInWithPassword({

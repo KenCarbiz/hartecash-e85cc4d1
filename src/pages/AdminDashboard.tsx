@@ -3,10 +3,19 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LogOut, Search, Trash2, Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import { LogOut, Search, Trash2, Eye, ChevronLeft, ChevronRight, UserCheck, UserX, Users } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import harteLogo from "@/assets/harte-logo.png";
+
+interface PendingRequest {
+  id: string;
+  user_id: string;
+  email: string;
+  status: string;
+  created_at: string;
+}
 
 interface Submission {
   id: string;
@@ -53,6 +62,7 @@ const AdminDashboard = () => {
   const [photos, setPhotos] = useState<string[]>([]);
   const [page, setPage] = useState(0);
   const [total, setTotal] = useState(0);
+  const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -62,6 +72,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     fetchSubmissions();
+    fetchPendingRequests();
   }, [page]);
 
   const checkAuth = async () => {
@@ -99,6 +110,43 @@ const AdminDashboard = () => {
       setTotal(count || 0);
     }
     setLoading(false);
+  };
+
+  const fetchPendingRequests = async () => {
+    const { data } = await supabase
+      .from("pending_admin_requests")
+      .select("*")
+      .eq("status", "pending")
+      .order("created_at", { ascending: false });
+    if (data) setPendingRequests(data);
+  };
+
+  const handleApprove = async (request: PendingRequest) => {
+    // Grant admin role
+    const { error: roleError } = await supabase.from("user_roles").insert({
+      user_id: request.user_id,
+      role: "admin",
+    });
+    if (roleError) {
+      toast({ title: "Error", description: "Failed to grant admin role.", variant: "destructive" });
+      return;
+    }
+    // Update request status
+    await supabase
+      .from("pending_admin_requests")
+      .update({ status: "approved", reviewed_at: new Date().toISOString() })
+      .eq("id", request.id);
+    toast({ title: "Approved", description: `${request.email} now has admin access.` });
+    fetchPendingRequests();
+  };
+
+  const handleReject = async (request: PendingRequest) => {
+    await supabase
+      .from("pending_admin_requests")
+      .update({ status: "rejected", reviewed_at: new Date().toISOString() })
+      .eq("id", request.id);
+    toast({ title: "Rejected", description: `${request.email} was denied access.` });
+    fetchPendingRequests();
   };
 
   const handleDelete = async (id: string) => {
