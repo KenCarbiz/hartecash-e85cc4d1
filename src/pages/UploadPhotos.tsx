@@ -28,9 +28,7 @@ const UploadPhotos = () => {
     const fetchSubmission = async () => {
       if (!token) { setError("Invalid link."); setLoading(false); return; }
       const { data, error: err } = await supabase
-        .from("submissions")
-        .select("id, vehicle_year, vehicle_make, vehicle_model, name, photos_uploaded")
-        .eq("token", token)
+        .rpc("get_submission_by_token", { _token: token })
         .maybeSingle();
       if (err || !data) { setError("Submission not found. Please check your link."); }
       else if (data.photos_uploaded) { setDone(true); setSubmission(data); }
@@ -68,10 +66,7 @@ const UploadPhotos = () => {
           .upload(path, file, { contentType: file.type });
         if (uploadErr) throw uploadErr;
       }
-      await supabase
-        .from("submissions")
-        .update({ photos_uploaded: true })
-        .eq("token", token);
+      await supabase.rpc("mark_photos_uploaded", { _token: token });
       setDone(true);
     } catch {
       setError("Upload failed. Please try again.");
