@@ -73,6 +73,13 @@ const PROGRESS_STAGES = [
   { key: "purchase_complete", label: "Purchase Complete" },
 ];
 
+const ROLE_LABELS: Record<string, string> = {
+  admin: "Admin",
+  sales_bdc: "Sales / BDC",
+  used_car_manager: "Used Car Manager",
+  gsm_gm: "GSM / GM",
+};
+
 const AdminDashboard = () => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
@@ -82,17 +89,26 @@ const AdminDashboard = () => {
   const [page, setPage] = useState(0);
   const [total, setTotal] = useState(0);
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
+  const [userRole, setUserRole] = useState<string>("");
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const canSetPrice = ["admin", "used_car_manager", "gsm_gm"].includes(userRole);
+  const canApprove = ["admin", "gsm_gm"].includes(userRole);
+  const canDelete = userRole === "admin";
+  const canManageAccess = userRole === "admin";
+  const canUpdateStatus = true; // all staff
 
   useEffect(() => {
     checkAuth();
   }, []);
 
   useEffect(() => {
-    fetchSubmissions();
-    fetchPendingRequests();
-  }, [page]);
+    if (userRole) {
+      fetchSubmissions();
+      if (canManageAccess) fetchPendingRequests();
+    }
+  }, [page, userRole]);
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -104,12 +120,14 @@ const AdminDashboard = () => {
       .from("user_roles")
       .select("role")
       .eq("user_id", session.user.id)
-      .eq("role", "admin")
+      .limit(1)
       .maybeSingle();
 
     if (!roleData) {
       await supabase.auth.signOut();
       navigate("/admin/login");
+    } else {
+      setUserRole(roleData.role);
     }
   };
 
@@ -140,22 +158,22 @@ const AdminDashboard = () => {
     if (data) setPendingRequests(data);
   };
 
+  const [approveRole, setApproveRole] = useState<string>("sales_bdc");
+
   const handleApprove = async (request: PendingRequest) => {
-    // Grant admin role
     const { error: roleError } = await supabase.from("user_roles").insert({
       user_id: request.user_id,
-      role: "admin",
+      role: approveRole as any,
     });
     if (roleError) {
-      toast({ title: "Error", description: "Failed to grant admin role.", variant: "destructive" });
+      toast({ title: "Error", description: "Failed to grant role.", variant: "destructive" });
       return;
     }
-    // Update request status
     await supabase
       .from("pending_admin_requests")
       .update({ status: "approved", reviewed_at: new Date().toISOString() })
       .eq("id", request.id);
-    toast({ title: "Approved", description: `${request.email} now has admin access.` });
+    toast({ title: "Approved", description: `${request.email} granted ${ROLE_LABELS[approveRole] || approveRole} access.` });
     fetchPendingRequests();
   };
 
@@ -245,7 +263,12 @@ const AdminDashboard = () => {
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src={harteLogo} alt="Harte Auto Group" className="h-10 w-auto" />
-            <span className="text-lg font-bold text-card-foreground">Admin Dashboard</span>
+            <div>
+              <span className="text-lg font-bold text-card-foreground">Dashboard</span>
+              <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-accent/20 text-accent font-medium">
+                {ROLE_LABELS[userRole] || userRole}
+              </span>
+            </div>
           </div>
           <Button variant="outline" size="sm" onClick={handleLogout}>
             <LogOut className="w-4 h-4 mr-1" /> Logout
@@ -258,15 +281,17 @@ const AdminDashboard = () => {
         <Tabs defaultValue="submissions">
           <TabsList className="mb-4">
             <TabsTrigger value="submissions">Submissions ({total})</TabsTrigger>
-            <TabsTrigger value="requests" className="relative">
-              <Users className="w-4 h-4 mr-1" />
-              Access Requests
-              {pendingRequests.length > 0 && (
-                <span className="ml-1.5 inline-flex items-center justify-center w-5 h-5 rounded-full bg-destructive text-destructive-foreground text-xs font-bold">
-                  {pendingRequests.length}
-                </span>
-              )}
-            </TabsTrigger>
+            {canManageAccess && (
+              <TabsTrigger value="requests" className="relative">
+                <Users className="w-4 h-4 mr-1" />
+                Access Requests
+                {pendingRequests.length > 0 && (
+                  <span className="ml-1.5 inline-flex items-center justify-center w-5 h-5 rounded-full bg-destructive text-destructive-foreground text-xs font-bold">
+                    {pendingRequests.length}
+                  </span>
+                )}
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="submissions">
@@ -339,9 +364,11 @@ const AdminDashboard = () => {
                                 <Button variant="ghost" size="sm" onClick={() => handleView(sub)}>
                                   <Eye className="w-4 h-4" />
                                 </Button>
-                                <Button variant="ghost" size="sm" onClick={() => handleDelete(sub.id)} className="text-destructive hover:text-destructive">
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
+                                {canDelete && (
+                                  <Button variant="ghost" size="sm" onClick={() => handleDelete(sub.id)} className="text-destructive hover:text-destructive">
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                )}
                               </div>
                             </td>
                           </tr>
@@ -379,6 +406,7 @@ const AdminDashboard = () => {
                     <tr className="border-b border-border bg-muted/50">
                       <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Email</th>
                       <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Requested</th>
+                      <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Role</th>
                       <th className="text-right px-4 py-3 font-semibold text-muted-foreground">Actions</th>
                     </tr>
                   </thead>
@@ -387,9 +415,22 @@ const AdminDashboard = () => {
                       <tr key={req.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
                         <td className="px-4 py-3 font-medium text-card-foreground">{req.email}</td>
                         <td className="px-4 py-3 text-muted-foreground">{new Date(req.created_at).toLocaleDateString()}</td>
+                        <td className="px-4 py-3">
+                          <Select value={approveRole} onValueChange={setApproveRole}>
+                            <SelectTrigger className="w-44">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="sales_bdc">Sales / BDC</SelectItem>
+                              <SelectItem value="used_car_manager">Used Car Manager</SelectItem>
+                              <SelectItem value="gsm_gm">GSM / GM</SelectItem>
+                              <SelectItem value="admin">Admin</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </td>
                         <td className="px-4 py-3 text-right">
                           <div className="flex justify-end gap-2">
-                            <Button size="sm" onClick={() => handleApprove(req)} className="bg-green-600 hover:bg-green-700 text-white">
+                            <Button size="sm" onClick={() => handleApprove(req)} className="bg-success hover:bg-success/90 text-success-foreground">
                               <UserCheck className="w-4 h-4 mr-1" /> Approve
                             </Button>
                             <Button size="sm" variant="destructive" onClick={() => handleReject(req)}>
@@ -485,7 +526,13 @@ const AdminDashboard = () => {
                   <label className="text-xs font-medium text-muted-foreground mb-1 block">Update Status</label>
                   <Select
                     value={selected.progress_status}
+                    disabled={!canUpdateStatus || (["manager_approval", "price_agreed", "purchase_complete"].includes(selected.progress_status) && !canApprove)}
                     onValueChange={async (val) => {
+                      // Only GSM/GM or admin can set manager_approval, price_agreed, purchase_complete
+                      if (["manager_approval", "price_agreed", "purchase_complete"].includes(val) && !canApprove) {
+                        toast({ title: "Not authorized", description: "Only GSM/GM can approve purchases.", variant: "destructive" });
+                        return;
+                      }
                       const { error } = await supabase
                         .from("submissions")
                         .update({ progress_status: val, status_updated_at: new Date().toISOString() })
@@ -499,36 +546,50 @@ const AdminDashboard = () => {
                   >
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {PROGRESS_STAGES.map(s => (
-                        <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>
-                      ))}
+                      {PROGRESS_STAGES.map(s => {
+                        const isApprovalStage = ["manager_approval", "price_agreed", "purchase_complete"].includes(s.key);
+                        return (
+                          <SelectItem key={s.key} value={s.key} disabled={isApprovalStage && !canApprove}>
+                            {s.label}{isApprovalStage && !canApprove ? " (GSM/GM only)" : ""}
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
               {/* Offered Price */}
-              <div>
-                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                  <DollarSign className="w-4 h-4 inline mr-1" />Offered Price
-                </h3>
-                <Input
-                  type="number"
-                  placeholder="Enter offer amount"
-                  defaultValue={selected.offered_price?.toString() || ""}
-                  onBlur={async (e) => {
-                    const price = e.target.value ? Number(e.target.value) : null;
-                    const { error } = await supabase
-                      .from("submissions")
-                      .update({ offered_price: price })
-                      .eq("id", selected.id);
-                    if (!error) {
-                      setSelected({ ...selected, offered_price: price });
-                      toast({ title: "Price updated" });
-                    }
-                  }}
-                />
-              </div>
+              {canSetPrice ? (
+                <div>
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                    <DollarSign className="w-4 h-4 inline mr-1" />Offered Price
+                  </h3>
+                  <Input
+                    type="number"
+                    placeholder="Enter offer amount"
+                    defaultValue={selected.offered_price?.toString() || ""}
+                    onBlur={async (e) => {
+                      const price = e.target.value ? Number(e.target.value) : null;
+                      const { error } = await supabase
+                        .from("submissions")
+                        .update({ offered_price: price })
+                        .eq("id", selected.id);
+                      if (!error) {
+                        setSelected({ ...selected, offered_price: price });
+                        toast({ title: "Price updated" });
+                      }
+                    }}
+                  />
+                </div>
+              ) : selected.offered_price ? (
+                <div>
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                    <DollarSign className="w-4 h-4 inline mr-1" />Offered Price
+                  </h3>
+                  <p className="text-card-foreground font-medium">${selected.offered_price.toLocaleString()}</p>
+                </div>
+              ) : null}
 
               {/* Internal Notes */}
               <div>
@@ -578,13 +639,15 @@ const AdminDashboard = () => {
                 )}
               </div>
 
-              <Button
-                variant="destructive"
-                className="w-full"
-                onClick={() => handleDelete(selected.id)}
-              >
-                <Trash2 className="w-4 h-4 mr-2" /> Delete Submission
-              </Button>
+              {canDelete && (
+                <Button
+                  variant="destructive"
+                  className="w-full"
+                  onClick={() => handleDelete(selected.id)}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" /> Delete Submission
+                </Button>
+              )}
             </div>
           )}
         </DialogContent>
