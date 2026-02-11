@@ -14,7 +14,8 @@ export interface FormData {
   exteriorColor: string;
   drivetrain: string;
   modifications: string;
-  // Vehicle Condition
+  // Condition & History (all on one page)
+  overallCondition: string;
   exteriorDamage: string[];
   windshieldDamage: string;
   moonroof: string;
@@ -23,8 +24,6 @@ export interface FormData {
   engineIssues: string[];
   mechanicalIssues: string[];
   drivable: string;
-  overallCondition: string;
-  // Vehicle History
   accidents: string;
   smokedIn: string;
   tiresReplaced: string;
@@ -35,6 +34,8 @@ export interface FormData {
   email: string;
   zip: string;
   loanStatus: string;
+  // Next Steps
+  nextStep: string;
 }
 
 export const initialFormData: FormData = {
@@ -45,6 +46,7 @@ export const initialFormData: FormData = {
   exteriorColor: "",
   drivetrain: "",
   modifications: "",
+  overallCondition: "",
   exteriorDamage: [],
   windshieldDamage: "",
   moonroof: "",
@@ -53,7 +55,6 @@ export const initialFormData: FormData = {
   engineIssues: [],
   mechanicalIssues: [],
   drivable: "",
-  overallCondition: "",
   accidents: "",
   smokedIn: "",
   tiresReplaced: "",
@@ -63,13 +64,13 @@ export const initialFormData: FormData = {
   email: "",
   zip: "",
   loanStatus: "",
+  nextStep: "",
 };
 
 export const STEPS = [
   "Vehicle Info",
   "Vehicle Build",
-  "Condition",
-  "History",
+  "Condition & History",
   "Your Details",
-  "Get Offer",
+  "Get Your Offer",
 ];

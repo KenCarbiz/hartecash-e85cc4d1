@@ -5,8 +5,7 @@ import { STEPS, initialFormData } from "./sell-form/types";
 import type { FormData, VehicleInfo } from "./sell-form/types";
 import StepVehicleInfo from "./sell-form/StepVehicleInfo";
 import StepVehicleBuild from "./sell-form/StepVehicleBuild";
-import StepVehicleCondition from "./sell-form/StepVehicleCondition";
-import StepVehicleHistory from "./sell-form/StepVehicleHistory";
+import StepConditionHistory from "./sell-form/StepConditionHistory";
 import StepYourDetails from "./sell-form/StepYourDetails";
 import StepGetOffer from "./sell-form/StepGetOffer";
 
@@ -21,7 +20,6 @@ const SellCarForm = () => {
   const updateArray = (field: string, value: string) =>
     setFormData((prev) => {
       const arr = (prev as any)[field] as string[];
-      // If selecting "none", clear others. If selecting something else, remove "none".
       if (value === "none") return { ...prev, [field]: ["none"] };
       const without = arr.filter((v) => v !== "none");
       return {
@@ -37,7 +35,13 @@ const SellCarForm = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    alert("Thank you! We'll reach out with your cash offer shortly.");
+    if (formData.nextStep === "photos") {
+      alert("Thank you! We'll send you a link to upload your vehicle photos shortly.");
+    } else if (formData.nextStep === "visit") {
+      alert("Thank you! We'll contact you to schedule your in-person visit.");
+    } else {
+      alert("Thank you! We'll reach out with your cash offer shortly.");
+    }
   };
 
   return (
@@ -49,11 +53,7 @@ const SellCarForm = () => {
             <div
               key={i}
               className={`w-3 h-3 rounded-full transition-all ${
-                i < step
-                  ? "bg-success"
-                  : i === step
-                  ? "bg-accent scale-125"
-                  : "bg-border"
+                i < step ? "bg-success" : i === step ? "bg-accent scale-125" : "bg-border"
               }`}
             />
           ))}
@@ -64,14 +64,11 @@ const SellCarForm = () => {
       </div>
 
       <form onSubmit={handleSubmit}>
-        {step === 0 && (
-          <StepVehicleInfo formData={formData} update={update} vehicleInfo={vehicleInfo} setVehicleInfo={setVehicleInfo} />
-        )}
+        {step === 0 && <StepVehicleInfo formData={formData} update={update} vehicleInfo={vehicleInfo} setVehicleInfo={setVehicleInfo} />}
         {step === 1 && <StepVehicleBuild formData={formData} update={update} />}
-        {step === 2 && <StepVehicleCondition formData={formData} updateArray={updateArray} update={update} />}
-        {step === 3 && <StepVehicleHistory formData={formData} update={update} />}
-        {step === 4 && <StepYourDetails formData={formData} update={update} />}
-        {step === 5 && <StepGetOffer vehicleInfo={vehicleInfo} />}
+        {step === 2 && <StepConditionHistory formData={formData} updateArray={updateArray} update={update} />}
+        {step === 3 && <StepYourDetails formData={formData} update={update} />}
+        {step === 4 && <StepGetOffer formData={formData} update={update} vehicleInfo={vehicleInfo} />}
 
         <div className="flex gap-3">
           {step > 0 && (
