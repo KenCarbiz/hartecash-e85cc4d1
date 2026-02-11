@@ -214,6 +214,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_submission_by_token: {
+        Args: { _token: string }
+        Returns: {
+          id: string
+          name: string
+          photos_uploaded: boolean
+          vehicle_make: string
+          vehicle_model: string
+          vehicle_year: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -221,6 +232,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      mark_photos_uploaded: { Args: { _token: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "user"
