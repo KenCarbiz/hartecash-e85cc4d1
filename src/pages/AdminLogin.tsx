@@ -76,7 +76,22 @@ const AdminLogin = () => {
         .maybeSingle();
 
       if (!roleData) {
-        setError("You do not have admin access.");
+        // Check if they have a pending request
+        const { data: pendingData } = await supabase
+          .from("pending_admin_requests")
+          .select("status")
+          .eq("user_id", data.user.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (pendingData?.status === "pending") {
+          setError("Your access request is pending admin approval.");
+        } else if (pendingData?.status === "rejected") {
+          setError("Your access request was denied.");
+        } else {
+          setError("You do not have admin access.");
+        }
         await supabase.auth.signOut();
         setLoading(false);
         return;

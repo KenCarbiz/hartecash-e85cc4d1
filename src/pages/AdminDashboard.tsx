@@ -236,72 +236,137 @@ const AdminDashboard = () => {
 
       {/* Content */}
       <div className="max-w-6xl mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-foreground">
-            Submissions <span className="text-muted-foreground font-normal text-base">({total})</span>
-          </h2>
-          <div className="relative w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search leads..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-        </div>
+        <Tabs defaultValue="submissions">
+          <TabsList className="mb-4">
+            <TabsTrigger value="submissions">Submissions ({total})</TabsTrigger>
+            <TabsTrigger value="requests" className="relative">
+              <Users className="w-4 h-4 mr-1" />
+              Access Requests
+              {pendingRequests.length > 0 && (
+                <span className="ml-1.5 inline-flex items-center justify-center w-5 h-5 rounded-full bg-destructive text-destructive-foreground text-xs font-bold">
+                  {pendingRequests.length}
+                </span>
+              )}
+            </TabsTrigger>
+          </TabsList>
 
-        {loading ? (
-          <div className="text-center py-12 text-muted-foreground">Loading submissions...</div>
-        ) : filtered.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">No submissions found.</div>
-        ) : (
-          <>
-            <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
-              <div className="overflow-x-auto">
+          <TabsContent value="submissions">
+            <div className="flex items-center justify-end mb-4">
+              <div className="relative w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search leads..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="text-center py-12 text-muted-foreground">Loading submissions...</div>
+            ) : filtered.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">No submissions found.</div>
+            ) : (
+              <>
+                <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-border bg-muted/50">
+                          <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Date</th>
+                          <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Name</th>
+                          <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Vehicle</th>
+                          <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Contact</th>
+                          <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Photos</th>
+                          <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Next Step</th>
+                          <th className="text-right px-4 py-3 font-semibold text-muted-foreground">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filtered.map((sub) => (
+                          <tr key={sub.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              {new Date(sub.created_at).toLocaleDateString()}
+                            </td>
+                            <td className="px-4 py-3 font-medium text-card-foreground">
+                              {sub.name || "—"}
+                            </td>
+                            <td className="px-4 py-3">
+                              {sub.vehicle_year && sub.vehicle_make
+                                ? `${sub.vehicle_year} ${sub.vehicle_make} ${sub.vehicle_model || ""}`
+                                : sub.vin || sub.plate || "—"}
+                            </td>
+                            <td className="px-4 py-3">
+                              <div>{sub.email || "—"}</div>
+                              <div className="text-muted-foreground text-xs">{sub.phone || ""}</div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${sub.photos_uploaded ? "bg-success/20 text-success" : "bg-muted text-muted-foreground"}`}>
+                                {sub.photos_uploaded ? "Yes" : "No"}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 capitalize">{sub.next_step || "—"}</td>
+                            <td className="px-4 py-3 text-right">
+                              <div className="flex justify-end gap-1">
+                                <Button variant="ghost" size="sm" onClick={() => handleView(sub)}>
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                                <Button variant="ghost" size="sm" onClick={() => handleDelete(sub.id)} className="text-destructive hover:text-destructive">
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 mt-4">
+                    <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage(page - 1)}>
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                    <span className="text-sm text-muted-foreground">
+                      Page {page + 1} of {totalPages}
+                    </span>
+                    <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+          </TabsContent>
+
+          <TabsContent value="requests">
+            {pendingRequests.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">No pending access requests.</div>
+            ) : (
+              <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border bg-muted/50">
-                      <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Date</th>
-                      <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Name</th>
-                      <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Vehicle</th>
-                      <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Contact</th>
-                      <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Photos</th>
-                      <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Next Step</th>
+                      <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Email</th>
+                      <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Requested</th>
                       <th className="text-right px-4 py-3 font-semibold text-muted-foreground">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filtered.map((sub) => (
-                      <tr key={sub.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          {new Date(sub.created_at).toLocaleDateString()}
-                        </td>
-                        <td className="px-4 py-3 font-medium text-card-foreground">
-                          {sub.name || "—"}
-                        </td>
-                        <td className="px-4 py-3">
-                          {sub.vehicle_year && sub.vehicle_make
-                            ? `${sub.vehicle_year} ${sub.vehicle_make} ${sub.vehicle_model || ""}`
-                            : sub.vin || sub.plate || "—"}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div>{sub.email || "—"}</div>
-                          <div className="text-muted-foreground text-xs">{sub.phone || ""}</div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${sub.photos_uploaded ? "bg-success/20 text-success" : "bg-muted text-muted-foreground"}`}>
-                            {sub.photos_uploaded ? "Yes" : "No"}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 capitalize">{sub.next_step || "—"}</td>
+                    {pendingRequests.map((req) => (
+                      <tr key={req.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+                        <td className="px-4 py-3 font-medium text-card-foreground">{req.email}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{new Date(req.created_at).toLocaleDateString()}</td>
                         <td className="px-4 py-3 text-right">
-                          <div className="flex justify-end gap-1">
-                            <Button variant="ghost" size="sm" onClick={() => handleView(sub)}>
-                              <Eye className="w-4 h-4" />
+                          <div className="flex justify-end gap-2">
+                            <Button size="sm" onClick={() => handleApprove(req)} className="bg-green-600 hover:bg-green-700 text-white">
+                              <UserCheck className="w-4 h-4 mr-1" /> Approve
                             </Button>
-                            <Button variant="ghost" size="sm" onClick={() => handleDelete(sub.id)} className="text-destructive hover:text-destructive">
-                              <Trash2 className="w-4 h-4" />
+                            <Button size="sm" variant="destructive" onClick={() => handleReject(req)}>
+                              <UserX className="w-4 h-4 mr-1" /> Reject
                             </Button>
                           </div>
                         </td>
@@ -310,24 +375,9 @@ const AdminDashboard = () => {
                   </tbody>
                 </table>
               </div>
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-4">
-                <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage(page - 1)}>
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <span className="text-sm text-muted-foreground">
-                  Page {page + 1} of {totalPages}
-                </span>
-                <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
             )}
-          </>
-        )}
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Detail Modal */}
