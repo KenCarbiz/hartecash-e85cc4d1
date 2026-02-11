@@ -67,12 +67,12 @@ const AdminLogin = () => {
         return;
       }
 
-      // Check if user has admin role
+      // Check if user has any staff role
       const { data: roleData } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", data.user.id)
-        .eq("role", "admin")
+        .limit(1)
         .maybeSingle();
 
       if (!roleData) {
@@ -86,11 +86,11 @@ const AdminLogin = () => {
           .maybeSingle();
 
         if (pendingData?.status === "pending") {
-          setError("Your access request is pending admin approval.");
+          setError("Your access request is pending approval.");
         } else if (pendingData?.status === "rejected") {
           setError("Your access request was denied.");
         } else {
-          setError("You do not have admin access.");
+          setError("You do not have access.");
         }
         await supabase.auth.signOut();
         setLoading(false);

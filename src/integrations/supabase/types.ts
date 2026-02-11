@@ -232,6 +232,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_staff: { Args: { _user_id: string }; Returns: boolean }
       mark_photos_uploaded: { Args: { _token: string }; Returns: undefined }
     }
     Enums: {
