@@ -334,7 +334,7 @@ const SellCarForm = () => {
           8-DAY PRICE GUARANTEE
         </h4>
         <p className="text-sm leading-relaxed opacity-95">
-          Your offer is good for 7 days. No games. No surprises.
+          Your offer is good for 8 days. No games. No surprises.
         </p>
       </div>
     </div>
