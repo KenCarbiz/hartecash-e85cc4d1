@@ -88,6 +88,7 @@ const AdminDashboard = () => {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Submission | null>(null);
   const [photos, setPhotos] = useState<string[]>([]);
+  const [docs, setDocs] = useState<{ name: string; url: string; type: string }[]>([]);
   const [page, setPage] = useState(0);
   const [total, setTotal] = useState(0);
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
@@ -201,8 +202,17 @@ const AdminDashboard = () => {
     }
   };
 
+  const DOC_TYPE_LABELS: Record<string, string> = {
+    drivers_license: "Driver's License",
+    registration: "Registration",
+    title_inquiry: "Title Inquiry",
+    title: "Title",
+    payoff_verification: "Payoff Verification",
+  };
+
   const handleView = async (sub: Submission) => {
     setSelected(sub);
+    setDocs([]);
     // Fetch photos
     const { data } = await supabase.storage
       .from("submission-photos")
@@ -219,6 +229,24 @@ const AdminDashboard = () => {
     } else {
       setPhotos([]);
     }
+
+    // Fetch documents from customer-documents bucket
+    const docTypes = ["drivers_license", "registration", "title_inquiry", "title", "payoff_verification"];
+    const allDocs: { name: string; url: string; type: string }[] = [];
+    for (const docType of docTypes) {
+      const { data: docFiles } = await supabase.storage
+        .from("customer-documents")
+        .list(sub.token + "/" + docType);
+      if (docFiles && docFiles.length > 0) {
+        docFiles.forEach(file => {
+          const { data: urlData } = supabase.storage
+            .from("customer-documents")
+            .getPublicUrl(sub.token + "/" + docType + "/" + file.name);
+          allDocs.push({ name: file.name, url: urlData.publicUrl, type: docType });
+        });
+      }
+    }
+    setDocs(allDocs);
   };
 
   const handleLogout = async () => {
@@ -581,7 +609,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Detail Modal */}
-      <Dialog open={!!selected} onOpenChange={() => { setSelected(null); setPhotos([]); }}>
+      <Dialog open={!!selected} onOpenChange={() => { setSelected(null); setPhotos([]); setDocs([]); }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 print:max-h-none print:overflow-visible">
           <div className="sticky top-0 z-10 bg-primary text-primary-foreground px-6 py-4 rounded-t-lg print:static">
             <DialogHeader>
@@ -782,6 +810,49 @@ const AdminDashboard = () => {
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground">No photos uploaded.</p>
+                )}
+              </div>
+
+              {/* Uploaded Documents */}
+              <div data-print-section className="bg-muted/40 rounded-lg p-4">
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">
+                  <FileText className="w-4 h-4 inline mr-1" />Documents {docs.length > 0 && `(${docs.length})`}
+                </h3>
+                {docs.length > 0 ? (
+                  <div className="space-y-3">
+                    {Object.entries(
+                      docs.reduce<Record<string, typeof docs>>((acc, doc) => {
+                        if (!acc[doc.type]) acc[doc.type] = [];
+                        acc[doc.type].push(doc);
+                        return acc;
+                      }, {})
+                    ).map(([type, typeDocs]) => (
+                      <div key={type}>
+                        <p className="text-xs font-semibold text-muted-foreground uppercase mb-1.5">
+                          {DOC_TYPE_LABELS[type] || type}
+                        </p>
+                        <div className="grid grid-cols-3 gap-2">
+                          {typeDocs.map((doc, i) => {
+                            const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(doc.name);
+                            return (
+                              <a key={i} href={doc.url} target="_blank" rel="noopener noreferrer" className="block">
+                                {isImage ? (
+                                  <img src={doc.url} alt={doc.name} className="rounded-lg w-full h-28 object-cover hover:opacity-80 transition-opacity" />
+                                ) : (
+                                  <div className="rounded-lg w-full h-28 bg-muted flex flex-col items-center justify-center hover:bg-muted/80 transition-colors border border-border">
+                                    <FileText className="w-8 h-8 text-muted-foreground mb-1" />
+                                    <span className="text-[10px] text-muted-foreground text-center px-1 truncate w-full">{doc.name}</span>
+                                  </div>
+                                )}
+                              </a>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No documents uploaded.</p>
                 )}
               </div>
 
