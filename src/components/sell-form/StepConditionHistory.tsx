@@ -95,7 +95,7 @@ const StepConditionHistory = ({ formData, updateArray, update }: Props) => {
         <div className="space-y-5 mt-2">
           {kbbDefinitions.map((d) => (
             <div key={d.title}>
-              <h4 className="font-bold text-card-foreground mb-1">{d.title}</h4>
+              <h4 className="font-bold text-card-foreground mb-1 text-center">{d.title}</h4>
               <p className="text-sm text-muted-foreground leading-relaxed">{d.text}</p>
             </div>
           ))}
