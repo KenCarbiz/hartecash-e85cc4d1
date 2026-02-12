@@ -278,7 +278,7 @@ const AdminDashboard = () => {
             body: { appointment },
           });
         } catch (e) {
-          console.error("Failed to send confirmation email:", e);
+          // Error logged server-side via edge function
           toast({ title: "Warning", description: "Status updated but confirmation email failed.", variant: "destructive" });
         }
       }

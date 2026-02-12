@@ -156,8 +156,7 @@ const SellCarForm = () => {
       localStorage.setItem("lastSubmissionTime", Date.now().toString());
       setSubmitted(true);
     } catch (err) {
-      console.error("Submission error:", err);
-      alert("Something went wrong. Please try again.");
+      toast({ title: "Submission failed", description: "Something went wrong. Please try again.", variant: "destructive" });
     }
     setSubmitting(false);
   };
