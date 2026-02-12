@@ -202,6 +202,7 @@ const SellCarForm = () => {
           style={{ position: "absolute", left: "-9999px", opacity: 0, height: 0, width: 0 }}
           tabIndex={-1}
           autoComplete="off"
+          aria-label="Website"
         />
         {step === 0 && <StepVehicleInfo formData={formData} update={update} vehicleInfo={vehicleInfo} setVehicleInfo={setVehicleInfo} />}
         {step === 1 && <StepVehicleBuild formData={formData} update={update} />}
