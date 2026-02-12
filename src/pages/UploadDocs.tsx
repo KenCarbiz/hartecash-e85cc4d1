@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { FileText, CheckCircle, Upload, X, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import harteLogo from "@/assets/harte-logo.png";
 
 const DOC_TYPES = [
   { key: "drivers_license", label: "Driver's License", emoji: "🪪" },
@@ -138,10 +139,15 @@ const UploadDocs = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <div className="bg-primary text-primary-foreground px-6 py-4 mb-0">
+        <div className="max-w-lg mx-auto flex items-center gap-3">
+          <img src={harteLogo} alt="Harte" className="h-12 w-auto" />
+          <h1 className="font-bold text-lg">Upload Documents</h1>
+        </div>
+      </div>
       <div className="max-w-lg mx-auto p-6">
         <div className="text-center mb-6">
           <FileText className="w-12 h-12 text-accent mx-auto mb-3" />
-          <h1 className="text-2xl font-bold text-foreground mb-1">Upload Documents</h1>
           {submission && (
             <p className="text-muted-foreground text-sm">
               {submission.vehicle_year} {submission.vehicle_make} {submission.vehicle_model}
