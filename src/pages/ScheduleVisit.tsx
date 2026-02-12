@@ -12,13 +12,37 @@ import { useToast } from "@/hooks/use-toast";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 
-const TIME_SLOTS = [
+// Store hours: Mon-Thu 9AM-7PM, Fri-Sat 9AM-6PM, Sun Closed
+const WEEKDAY_SLOTS = [
   "9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM",
   "11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM",
   "1:00 PM", "1:30 PM", "2:00 PM", "2:30 PM",
   "3:00 PM", "3:30 PM", "4:00 PM", "4:30 PM",
-  "5:00 PM",
+  "5:00 PM", "5:30 PM", "6:00 PM", "6:30 PM",
 ];
+
+const FRIDAY_SAT_SLOTS = [
+  "9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM",
+  "11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM",
+  "1:00 PM", "1:30 PM", "2:00 PM", "2:30 PM",
+  "3:00 PM", "3:30 PM", "4:00 PM", "4:30 PM",
+  "5:00 PM", "5:30 PM",
+];
+
+const getTimeSlotsForDate = (dateStr: string): string[] => {
+  if (!dateStr) return WEEKDAY_SLOTS;
+  const date = new Date(dateStr + "T12:00:00");
+  const day = date.getDay(); // 0=Sun, 1=Mon, ..., 5=Fri, 6=Sat
+  if (day === 0) return []; // Sunday closed
+  if (day === 5 || day === 6) return FRIDAY_SAT_SLOTS; // Fri-Sat 9-6
+  return WEEKDAY_SLOTS; // Mon-Thu 9-7
+};
+
+const isSunday = (dateStr: string): boolean => {
+  if (!dateStr) return false;
+  const date = new Date(dateStr + "T12:00:00");
+  return date.getDay() === 0;
+};
 
 const ScheduleVisit = () => {
   const [searchParams] = useSearchParams();
@@ -38,8 +62,21 @@ const ScheduleVisit = () => {
   const [submitted, setSubmitted] = useState(false);
 
   const handleChange = (field: string, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [field]: value };
+      // Reset time if date changes and current time is no longer valid
+      if (field === "preferred_date") {
+        const slots = getTimeSlotsForDate(value);
+        if (!slots.includes(prev.preferred_time)) {
+          next.preferred_time = "";
+        }
+      }
+      return next;
+    });
   };
+
+  const availableSlots = getTimeSlotsForDate(form.preferred_date);
+  const selectedDateIsSunday = isSunday(form.preferred_date);
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -168,22 +205,36 @@ const ScheduleVisit = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="preferred_time">Preferred Time *</Label>
-                  <Select
-                    value={form.preferred_time}
-                    onValueChange={(v) => handleChange("preferred_time", v)}
-                    required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a time" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TIME_SLOTS.map((t) => (
-                        <SelectItem key={t} value={t}>
-                          {t}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {selectedDateIsSunday ? (
+                    <p className="text-sm text-destructive font-medium py-2">
+                      We are closed on Sundays. Please select another date.
+                    </p>
+                  ) : (
+                    <Select
+                      value={form.preferred_time}
+                      onValueChange={(v) => handleChange("preferred_time", v)}
+                      required
+                      disabled={!form.preferred_date}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={form.preferred_date ? "Select a time" : "Pick a date first"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableSlots.map((t) => (
+                          <SelectItem key={t} value={t}>
+                            {t}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  {form.preferred_date && !selectedDateIsSunday && (
+                    <p className="text-xs text-muted-foreground">
+                      {[5, 6].includes(new Date(form.preferred_date + "T12:00:00").getDay())
+                        ? "Fri–Sat: 9:00 AM – 6:00 PM"
+                        : "Mon–Thu: 9:00 AM – 7:00 PM"}
+                    </p>
+                  )}
                 </div>
               </div>
 
