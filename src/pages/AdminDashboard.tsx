@@ -389,11 +389,23 @@ const AdminDashboard = () => {
     return `${window.location.origin}/docs/${token}`;
   };
 
-  const handleGenerateCheckRequest = () => {
+  const handleGenerateCheckRequest = async () => {
     if (!selected || !selected.offered_price) return;
     const s = selected;
     const vehicleStr = [s.vehicle_year, s.vehicle_make, s.vehicle_model].filter(Boolean).join(" ") || "N/A";
     const today = new Date().toLocaleDateString();
+
+    // Fetch appraisal documents
+    let appraisalImages: string[] = [];
+    const { data: appraisalFiles } = await supabase.storage
+      .from("customer-documents")
+      .list(`${s.id}/appraisal`);
+    if (appraisalFiles && appraisalFiles.length > 0) {
+      appraisalImages = appraisalFiles.map(f => {
+        const { data } = supabase.storage.from("customer-documents").getPublicUrl(`${s.id}/appraisal/${f.name}`);
+        return data.publicUrl;
+      });
+    }
 
     const printWindow = window.open("", "_blank", "width=800,height=600");
     if (!printWindow) return;
@@ -411,10 +423,21 @@ const AdminDashboard = () => {
       "th { background: #f3f5f7; font-weight: 600; color: #4a5568; width: 40%; }",
       "td { font-weight: 500; }",
       ".amount { font-size: 22px; font-weight: 700; color: #2a4365; }",
+      ".acv { font-size: 18px; font-weight: 600; color: #4a5568; }",
       ".sig-section { margin-top: 40px; display: flex; justify-content: space-between; }",
       ".sig-line { width: 45%; border-top: 1px solid #1a2a3a; padding-top: 6px; font-size: 12px; color: #6b7b8d; }",
+      ".appraisal-section { page-break-before: always; padding: 24px 32px; }",
+      ".appraisal-section h2 { font-size: 16px; font-weight: 700; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; color: #2a4365; }",
+      ".appraisal-img { max-width: 100%; margin-bottom: 16px; border: 1px solid #d1d5db; }",
       "@page { margin: 0.75in; size: letter; }",
     ].join("\n");
+
+    const appraisalHtml = appraisalImages.length > 0 ? `
+      <div class="appraisal-section">
+        <h2>Appraisal Document</h2>
+        ${appraisalImages.map(url => `<img class="appraisal-img" src="${url}" />`).join("")}
+      </div>
+    ` : "";
 
     const html = `<!DOCTYPE html><html><head><title>Check Request</title><style>${css}</style></head><body>
       <div class="header"><h1>Harte Auto Group</h1><p>Check Request Form</p></div>
@@ -428,7 +451,7 @@ const AdminDashboard = () => {
           <tr><th>Contact Phone</th><td>${s.phone || ""}</td></tr>
           <tr><th>Contact Email</th><td>${s.email || ""}</td></tr>
           <tr><th>Agreed Upon Value (Check Amount)</th><td class="amount">$${s.offered_price!.toLocaleString()}</td></tr>
-          <tr><th>In-House ACV Value</th><td style="border-bottom:1px solid #ccc;">&nbsp;</td></tr>
+          <tr><th>In-House ACV (Actual Cash Value)</th><td class="acv">${s.acv_value ? "$" + s.acv_value.toLocaleString() : "N/A"}</td></tr>
           <tr><th>Description</th><td style="font-weight:600;">Customer Direct Inventory Purchase</td></tr>
           <tr><th>Vehicle</th><td>${vehicleStr}</td></tr>
           <tr><th>VIN</th><td>${s.vin || "N/A"}</td></tr>
@@ -443,6 +466,7 @@ const AdminDashboard = () => {
           <div class="sig-line">Date Issued</div>
         </div>
       </div>
+      ${appraisalHtml}
     </body></html>`;
 
     printWindow.document.write(html);
