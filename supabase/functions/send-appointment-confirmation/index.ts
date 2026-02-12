@@ -1,5 +1,3 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -12,7 +10,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { appointment, confirmationUrl } = await req.json();
+    const { appointment } = await req.json();
 
     if (!appointment) {
       return new Response(JSON.stringify({ error: "Missing appointment data" }), {
@@ -33,16 +31,18 @@ Deno.serve(async (req) => {
 
     const resendKey = Deno.env.get("RESEND_API_KEY");
 
-    if (!resendKey || !customer_email) {
-      return new Response(
-        JSON.stringify({
-          error: "Missing RESEND_API_KEY or customer_email",
-        }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+    if (!resendKey) {
+      return new Response(JSON.stringify({ error: "Missing RESEND_API_KEY" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (!customer_email) {
+      return new Response(JSON.stringify({ error: "Missing customer_email" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Format date for display
@@ -54,6 +54,8 @@ Deno.serve(async (req) => {
       year: "numeric",
     });
 
+    const firstName = customer_name?.split(" ")[0] || "friend";
+
     const emailRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -63,37 +65,40 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         from: "Harte Auto <onboarding@resend.dev>",
         to: [customer_email],
-        subject: `Appointment Confirmed — ${formattedDate} at ${preferred_time}`,
+        subject: `🚗 You've Got a Date With Us — ${formattedDate} at ${preferred_time}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: linear-gradient(135deg, #003366 0%, #004488 100%); padding: 20px; border-radius: 8px 8px 0 0;">
-              <h1 style="color: white; margin: 0; font-size: 24px;">Appointment Confirmed!</h1>
+            <div style="background: linear-gradient(135deg, #003366 0%, #004488 100%); padding: 24px; border-radius: 8px 8px 0 0; text-align: center;">
+              <h1 style="color: white; margin: 0; font-size: 26px;">It's a Date! 🎉</h1>
+              <p style="color: #b0c4de; margin: 8px 0 0; font-size: 14px;">Your appointment at Harte Auto is locked in</p>
             </div>
             
             <div style="padding: 30px; background: #f9f9f9; border-radius: 0 0 8px 8px;">
-              <p>Hi ${customer_name},</p>
+              <p style="font-size: 16px;">Hey ${firstName}! 👋</p>
               
-              <p>Your appointment at Harte Auto has been confirmed. Here are the details:</p>
+              <p>Great news — we've penciled you in (well, digitally inked you in, because it's ${new Date().getFullYear()} and pencils are so last century). Here's the lowdown:</p>
               
-              <div style="background: white; padding: 20px; border-left: 4px solid #003366; margin: 20px 0;">
-                <p style="margin: 10px 0;"><strong>📅 Date:</strong> ${formattedDate}</p>
-                <p style="margin: 10px 0;"><strong>⏰ Time:</strong> ${preferred_time}</p>
-                ${vehicle_info ? `<p style="margin: 10px 0;"><strong>🚗 Vehicle:</strong> ${vehicle_info}</p>` : ""}
-                <p style="margin: 10px 0;"><strong>📞 Phone:</strong> ${customer_phone}</p>
+              <div style="background: white; padding: 20px; border-left: 4px solid #003366; margin: 20px 0; border-radius: 0 4px 4px 0;">
+                <p style="margin: 10px 0;"><strong>📅 When:</strong> ${formattedDate}</p>
+                <p style="margin: 10px 0;"><strong>⏰ Time:</strong> ${preferred_time} (yes, we'll actually be ready for you)</p>
+                ${vehicle_info ? `<p style="margin: 10px 0;"><strong>🚗 Your Ride:</strong> ${vehicle_info}</p>` : ""}
+                <p style="margin: 10px 0;"><strong>📞 Your Phone:</strong> ${customer_phone}</p>
+              </div>
+
+              ${notes ? `<p style="margin: 15px 0;"><strong>📝 Notes:</strong></p><p style="background: #f0f0f0; padding: 12px; border-radius: 6px; font-style: italic;">${notes}</p>` : ""}
+              
+              <div style="margin: 20px 0; padding: 16px; background: #fff3cd; border-radius: 6px; color: #856404;">
+                <strong>⏰ Pro tip:</strong> Show up about 10 minutes early. It gives you time to grab a coffee from our lobby, take a deep breath, and mentally prepare to say goodbye to your car (or hello to a great offer 💰).
               </div>
               
-              ${notes ? `<p style="margin: 20px 0;"><strong>Notes:</strong></p><p style="background: #f0f0f0; padding: 10px; border-radius: 4px;">${notes}</p>` : ""}
+              <p>If something comes up and you need to reschedule, no worries — just give us a shout. We don't hold grudges. Probably.</p>
               
-              <p style="margin: 20px 0; padding: 15px; background: #fff3cd; border-radius: 4px; color: #856404;">
-                ⚠️ <strong>Please arrive 10 minutes early</strong> to allow time for check-in.
-              </p>
+              <p style="margin-top: 25px;">See you soon! 🙌</p>
               
-              <p>If you need to reschedule or have any questions, please don't hesitate to contact us at your earliest convenience.</p>
-              
-              <p style="margin-top: 30px; color: #666; font-size: 12px;">
-                Thank you for choosing Harte Auto!<br/>
-                <strong>Harte Auto</strong>
-              </p>
+              <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #888; font-size: 12px;">
+                <strong>Harte Auto Group</strong><br/>
+                Where selling your car is almost as fun as buying one. <em>Almost.</em>
+              </div>
             </div>
           </div>
         `,

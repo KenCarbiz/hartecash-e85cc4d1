@@ -242,8 +242,13 @@ const AdminDashboard = () => {
         }
       }
 
-      // Send notification
+      // Send staff notification
       supabase.functions.invoke("notify-appointment", {
+        body: { appointment: apptForm },
+      });
+
+      // Send customer confirmation email
+      supabase.functions.invoke("send-appointment-confirmation", {
         body: { appointment: apptForm },
       });
 
