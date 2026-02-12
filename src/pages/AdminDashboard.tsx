@@ -57,6 +57,7 @@ interface Submission {
   num_keys: string | null;
   progress_status: string;
   offered_price: number | null;
+  acv_value: number | null;
   check_request_done: boolean;
   internal_notes: string | null;
   status_updated_by: string | null;
@@ -832,6 +833,29 @@ const AdminDashboard = () => {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* ACV Value - required when appraisal_completed */}
+                {selected.progress_status === "appraisal_completed" && (
+                  <div className="mt-3">
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">In-House ACV (Actual Cash Value) <span className="text-destructive">*</span></label>
+                    <div className="relative">
+                      <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        type="number"
+                        placeholder="Enter ACV amount"
+                        className="pl-7"
+                        value={selected.acv_value?.toString() || ""}
+                        onChange={(e) => {
+                          const val = e.target.value ? Number(e.target.value) : null;
+                          setSelected({ ...selected, acv_value: val });
+                        }}
+                      />
+                    </div>
+                    {!selected.acv_value && (
+                      <p className="text-xs text-destructive mt-1">ACV value is required before updating.</p>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Offered Price */}
@@ -1013,19 +1037,21 @@ const AdminDashboard = () => {
               <div className="sticky bottom-0 bg-background pt-3 pb-1 border-t border-border flex gap-2">
                 <Button
                   className="flex-1"
+                  disabled={selected.progress_status === "appraisal_completed" && !selected.acv_value}
                   onClick={async () => {
                     const { error } = await supabase
                       .from("submissions")
                       .update({
                         progress_status: selected.progress_status,
                         offered_price: selected.offered_price,
+                        acv_value: selected.acv_value,
                         check_request_done: selected.check_request_done,
                         internal_notes: selected.internal_notes,
                         status_updated_at: new Date().toISOString(),
                       })
                       .eq("id", selected.id);
                     if (!error) {
-                      setSubmissions(prev => prev.map(s => s.id === selected.id ? { ...s, progress_status: selected.progress_status, offered_price: selected.offered_price, internal_notes: selected.internal_notes } : s));
+                      setSubmissions(prev => prev.map(s => s.id === selected.id ? { ...s, progress_status: selected.progress_status, offered_price: selected.offered_price, acv_value: selected.acv_value, internal_notes: selected.internal_notes } : s));
                       toast({ title: "Record updated", description: "All changes have been saved." });
                     } else {
                       toast({ title: "Error", description: "Failed to save changes.", variant: "destructive" });

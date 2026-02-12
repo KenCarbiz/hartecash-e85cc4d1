@@ -71,6 +71,7 @@ export type Database = {
       submissions: {
         Row: {
           accidents: string | null
+          acv_value: number | null
           check_request_done: boolean
           created_at: string
           docs_uploaded: boolean
@@ -116,6 +117,7 @@ export type Database = {
         }
         Insert: {
           accidents?: string | null
+          acv_value?: number | null
           check_request_done?: boolean
           created_at?: string
           docs_uploaded?: boolean
@@ -161,6 +163,7 @@ export type Database = {
         }
         Update: {
           accidents?: string | null
+          acv_value?: number | null
           check_request_done?: boolean
           created_at?: string
           docs_uploaded?: boolean
