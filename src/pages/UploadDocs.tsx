@@ -10,6 +10,7 @@ const DOC_TYPES = [
   { key: "title_inquiry", label: "Title Inquiry", emoji: "🔍" },
   { key: "title", label: "Title", emoji: "📄" },
   { key: "payoff_verification", label: "Payoff Verification", emoji: "💰" },
+  { key: "appraisal", label: "Appraisal", emoji: "📊" },
 ];
 
 interface SubmissionInfo {

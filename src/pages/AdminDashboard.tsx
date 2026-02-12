@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LogOut, Search, Trash2, Eye, ChevronLeft, ChevronRight, UserCheck, UserX, Users, Check, Circle, DollarSign, StickyNote, XCircle, Save, Printer, FileText, QrCode, ExternalLink, ClipboardCheck } from "lucide-react";
+import { LogOut, Search, Trash2, Eye, ChevronLeft, ChevronRight, UserCheck, UserX, Users, Check, Circle, DollarSign, StickyNote, XCircle, Save, Printer, FileText, QrCode, ExternalLink, ClipboardCheck, Upload } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { QRCodeSVG } from "qrcode.react";
 import { Textarea } from "@/components/ui/textarea";
@@ -72,6 +72,7 @@ const PROGRESS_STAGES = [
   { key: "inspection_completed", label: "In-Person Inspection Completed" },
   { key: "title_verified", label: "Title Verified" },
   { key: "ownership_verified", label: "Ownership Verified" },
+  { key: "appraisal_completed", label: "Final Appraisal Completed" },
   { key: "manager_approval", label: "Manager / Appraiser Approval" },
   { key: "price_agreed", label: "Price Agreed" },
   { key: "purchase_complete", label: "Purchase Complete" },
@@ -211,6 +212,7 @@ const AdminDashboard = () => {
     title_inquiry: "Title Inquiry",
     title: "Title",
     payoff_verification: "Payoff Verification",
+    appraisal: "Appraisal",
   };
 
   const handleView = async (sub: Submission) => {
@@ -234,7 +236,7 @@ const AdminDashboard = () => {
     }
 
     // Fetch documents from customer-documents bucket
-    const docTypes = ["drivers_license", "registration", "title_inquiry", "title", "payoff_verification"];
+    const docTypes = ["drivers_license", "registration", "title_inquiry", "title", "payoff_verification", "appraisal"];
     const allDocs: { name: string; url: string; type: string }[] = [];
     for (const docType of docTypes) {
       const { data: docFiles } = await supabase.storage
@@ -787,6 +789,19 @@ const AdminDashboard = () => {
                         }`}>
                           {stage.label}
                         </span>
+                        {stage.key === "appraisal_completed" && (isComplete || isCurrent) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="ml-auto h-6 text-xs"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(getDocsUrl(selected.token), "_blank");
+                            }}
+                          >
+                            <Upload className="w-3 h-3 mr-1" /> Upload Appraisal
+                          </Button>
+                        )}
                       </div>
                     );
                   })}
