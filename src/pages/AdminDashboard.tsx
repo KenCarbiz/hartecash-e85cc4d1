@@ -424,7 +424,7 @@ const AdminDashboard = () => {
           <tr><th>City, State, Zip</th><td>${[s.state, s.zip].filter(Boolean).join(" ") || ""}</td></tr>
           <tr><th>Contact Phone</th><td>${s.phone || ""}</td></tr>
           <tr><th>Contact Email</th><td>${s.email || ""}</td></tr>
-          <tr><th>Agreed Upon Amount</th><td class="amount">$${s.offered_price!.toLocaleString()}</td></tr>
+          <tr><th>Agreed Upon Value (Check Amount)</th><td class="amount">$${s.offered_price!.toLocaleString()}</td></tr>
           <tr><th>In-House ACV Value</th><td style="border-bottom:1px solid #ccc;">&nbsp;</td></tr>
           <tr><th>Description</th><td style="font-weight:600;">Customer Direct Inventory Purchase</td></tr>
           <tr><th>Vehicle</th><td>${vehicleStr}</td></tr>
