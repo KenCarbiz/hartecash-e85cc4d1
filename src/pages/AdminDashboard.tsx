@@ -227,7 +227,128 @@ const AdminDashboard = () => {
   };
 
   const handlePrint = () => {
-    window.print();
+    if (!selected) return;
+    const s = selected;
+
+    const printWindow = window.open("", "_blank", "width=800,height=600");
+    if (!printWindow) return;
+
+    const css = [
+      "* { margin: 0; padding: 0; box-sizing: border-box; }",
+      "body { font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif; color: #1a2a3a; background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }",
+      ".header { background: #2a4365; color: white; padding: 20px 24px; }",
+      ".header h1 { font-size: 20px; font-weight: 700; }",
+      ".header p { font-size: 13px; opacity: 0.8; margin-top: 4px; }",
+      ".content { padding: 16px 24px; }",
+      ".section { background: #f3f5f7; border: 1px solid #e2e6ea; border-radius: 8px; padding: 16px; margin-bottom: 14px; page-break-inside: avoid; }",
+      ".section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #6b7b8d; margin-bottom: 10px; }",
+      ".grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 24px; }",
+      ".row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #e8ecef; }",
+      ".row:last-child { border-bottom: none; }",
+      ".label { font-size: 13px; color: #6b7b8d; }",
+      ".value { font-size: 13px; font-weight: 500; text-align: right; max-width: 60%; }",
+      ".stage { display: flex; align-items: center; gap: 10px; padding: 6px 12px; border-radius: 6px; margin-bottom: 4px; }",
+      ".stage-dot { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; color: white; flex-shrink: 0; }",
+      ".stage-complete { background: rgba(56,161,105,0.15); }",
+      ".stage-complete .stage-dot { background: #38a169; }",
+      ".stage-current { background: rgba(229,62,62,0.2); }",
+      ".stage-current .stage-dot { background: #e53e3e; }",
+      ".stage-current .stage-label { font-weight: 700; }",
+      ".stage-dead { background: rgba(229,62,62,0.15); }",
+      ".stage-dead .stage-dot { background: #e53e3e; }",
+      ".stage-dead .stage-label { font-weight: 700; color: #e53e3e; }",
+      ".stage-label { font-size: 13px; }",
+      ".stage-inactive .stage-label { color: #9aa5b4; }",
+      ".stage-inactive .stage-dot { background: #d1d5db; }",
+      ".photos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }",
+      ".photos-grid img { width: 100%; height: 100px; object-fit: cover; border-radius: 6px; }",
+      ".notes { white-space: pre-wrap; font-size: 13px; color: #4a5568; background: white; padding: 8px; border-radius: 4px; border: 1px solid #e2e6ea; }",
+      "@page { margin: 0.5in; size: letter; }",
+    ].join("\n");
+
+    const makeRow = (label: string, value: string) =>
+      '<div class="row"><span class="label">' + label + '</span><span class="value">' + value + "</span></div>";
+
+    const makeSection = (title: string, rows: [string, string | null | undefined][]) => {
+      const valid = rows.filter(([, v]) => v != null && v !== "" && v !== "none");
+      if (valid.length === 0) return "";
+      return '<div class="section"><div class="section-title">' + title + '</div><div class="grid">' +
+        valid.map(([l, v]) => makeRow(l, v!)).join("") + "</div></div>";
+    };
+
+    const arrVal = (a: string[] | null) =>
+      a && a.length > 0 && !(a.length === 1 && a[0] === "none") ? a.join(", ") : null;
+
+    const vehicleStr = [s.vehicle_year, s.vehicle_make, s.vehicle_model].filter(Boolean).join(" ") || null;
+
+    // Build deal progress HTML
+    const isDeadLead = s.progress_status === "dead_lead";
+    const currentIdx = PROGRESS_STAGES.findIndex(st => st.key === s.progress_status);
+    const progressHtml = PROGRESS_STAGES.map((st, i) => {
+      const isComplete = !isDeadLead && i < currentIdx;
+      const isCurrent = i === currentIdx;
+      const isDead = st.key === "dead_lead" && isDeadLead;
+      const cls = isDead ? "stage stage-dead" : isComplete ? "stage stage-complete" : isCurrent ? "stage stage-current" : "stage stage-inactive";
+      const dot = isDead ? "✕" : isComplete ? "✓" : "○";
+      return '<div class="' + cls + '"><div class="stage-dot">' + dot + '</div><span class="stage-label">' + st.label + "</span></div>";
+    }).join("");
+
+    const photosHtml = photos.length > 0
+      ? '<div class="section"><div class="section-title">Photos (' + photos.length + ')</div><div class="photos-grid">' +
+        photos.map(u => '<img src="' + u + '" />').join("") + "</div></div>"
+      : "";
+
+    const notesHtml = s.internal_notes
+      ? '<div class="section"><div class="section-title">Internal Notes</div><div class="notes">' + s.internal_notes + "</div></div>"
+      : "";
+
+    const priceSection = s.offered_price
+      ? makeSection("Offered Price", [["Amount", "$" + s.offered_price.toLocaleString()]])
+      : "";
+
+    const docsUrl = getDocsUrl(s.token);
+
+    const html = "<!DOCTYPE html><html><head><title>Submission Details</title><style>" + css + "</style></head><body>" +
+      '<div class="header"><h1>' + (vehicleStr || "Submission Details") + "</h1>" +
+      "<p>Submitted " + new Date(s.created_at).toLocaleDateString() + " &bull; " + (s.name || "Unknown") + "</p></div>" +
+      '<div class="content">' +
+      makeSection("Contact Information", [["Name", s.name], ["Phone", s.phone], ["Email", s.email], ["ZIP", s.zip]]) +
+      makeSection("Vehicle Details", [
+        ["Year/Make/Model", vehicleStr], ["VIN", s.vin], ["Plate", s.plate], ["Mileage", s.mileage],
+        ["Exterior Color", s.exterior_color], ["Drivetrain", s.drivetrain], ["Modifications", s.modifications],
+      ]) +
+      makeSection("Condition & History", [
+        ["Overall", s.overall_condition], ["Drivable", s.drivable],
+        ["Exterior Damage", arrVal(s.exterior_damage)], ["Windshield", s.windshield_damage],
+        ["Moonroof", s.moonroof], ["Interior Damage", arrVal(s.interior_damage)],
+        ["Tech Issues", arrVal(s.tech_issues)], ["Engine Issues", arrVal(s.engine_issues)],
+        ["Mechanical Issues", arrVal(s.mechanical_issues)], ["Accidents", s.accidents],
+        ["Smoked In", s.smoked_in], ["Tires Replaced", s.tires_replaced], ["Keys", s.num_keys],
+      ]) +
+      makeSection("Loan & Info", [["Loan Status", s.loan_status], ["Next Step", s.next_step]]) +
+      '<div class="section"><div class="section-title">Deal Progress</div>' + progressHtml + "</div>" +
+      priceSection +
+      notesHtml +
+      photosHtml +
+      '<div class="section"><div class="section-title">Customer Documents Upload Link</div>' +
+      '<p style="font-size:13px;color:#4a5568;word-break:break-all;">' + docsUrl + "</p></div>" +
+      "</div></body></html>";
+
+    printWindow.document.write(html);
+    printWindow.document.close();
+
+    // Wait for images to load then print
+    const images = printWindow.document.querySelectorAll("img");
+    let loaded = 0;
+    const totalImages = images.length;
+    const triggerPrint = () => { printWindow.focus(); printWindow.print(); };
+    if (totalImages === 0) {
+      setTimeout(triggerPrint, 200);
+    } else {
+      images.forEach(img => {
+        img.onload = img.onerror = () => { loaded++; if (loaded >= totalImages) setTimeout(triggerPrint, 200); };
+      });
+    }
   };
 
   const getDocsUrl = (token: string) => {
