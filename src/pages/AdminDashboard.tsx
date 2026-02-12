@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LogOut, Search, Trash2, Eye, ChevronLeft, ChevronRight, UserCheck, UserX, Users, Check, Circle, DollarSign, StickyNote, XCircle, Save, Printer, FileText, QrCode, ExternalLink, ClipboardCheck, Upload } from "lucide-react";
+import { LogOut, Search, Trash2, Eye, ChevronLeft, ChevronRight, UserCheck, UserX, Users, Check, Circle, DollarSign, StickyNote, XCircle, Save, Printer, FileText, QrCode, ExternalLink, ClipboardCheck, Upload, CalendarDays, Plus, Phone, Mail } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { QRCodeSVG } from "qrcode.react";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,12 +11,27 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { Label } from "@/components/ui/label";
 import harteLogo from "@/assets/harte-logo.png";
 
 interface PendingRequest {
   id: string;
   user_id: string;
   email: string;
+  status: string;
+  created_at: string;
+}
+
+interface Appointment {
+  id: string;
+  submission_token: string | null;
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string;
+  preferred_date: string;
+  preferred_time: string;
+  vehicle_info: string | null;
+  notes: string | null;
   status: string;
   created_at: string;
 }
@@ -97,6 +112,19 @@ const AdminDashboard = () => {
   const [page, setPage] = useState(0);
   const [total, setTotal] = useState(0);
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [showCreateAppt, setShowCreateAppt] = useState(false);
+  const [apptForm, setApptForm] = useState({
+    customer_name: "",
+    customer_email: "",
+    customer_phone: "",
+    preferred_date: "",
+    preferred_time: "",
+    vehicle_info: "",
+    notes: "",
+    submission_token: "",
+  });
+  const [creatingAppt, setCreatingAppt] = useState(false);
   const [userRole, setUserRole] = useState<string>("");
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -114,6 +142,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (userRole) {
       fetchSubmissions();
+      fetchAppointments();
       if (canManageAccess) fetchPendingRequests();
     }
   }, [page, userRole]);
@@ -164,6 +193,88 @@ const AdminDashboard = () => {
       .eq("status", "pending")
       .order("created_at", { ascending: false });
     if (data) setPendingRequests(data);
+  };
+
+  const fetchAppointments = async () => {
+    const { data } = await supabase
+      .from("appointments")
+      .select("*")
+      .order("preferred_date", { ascending: true });
+    if (data) setAppointments(data);
+  };
+
+  const handleCreateAppointment = async () => {
+    if (!apptForm.customer_name || !apptForm.customer_email || !apptForm.customer_phone || !apptForm.preferred_date || !apptForm.preferred_time) {
+      toast({ title: "Missing fields", description: "Please fill in all required fields.", variant: "destructive" });
+      return;
+    }
+    setCreatingAppt(true);
+    try {
+      const { error } = await supabase.from("appointments").insert({
+        customer_name: apptForm.customer_name,
+        customer_email: apptForm.customer_email,
+        customer_phone: apptForm.customer_phone,
+        preferred_date: apptForm.preferred_date,
+        preferred_time: apptForm.preferred_time,
+        vehicle_info: apptForm.vehicle_info || null,
+        notes: apptForm.notes || null,
+        submission_token: apptForm.submission_token || null,
+      });
+      if (error) throw error;
+
+      // If linked to a submission, update its status to inspection_scheduled
+      if (apptForm.submission_token) {
+        await supabase
+          .from("submissions")
+          .update({ progress_status: "inspection_scheduled", status_updated_at: new Date().toISOString() })
+          .eq("token", apptForm.submission_token);
+        fetchSubmissions();
+      }
+
+      // Send notification
+      supabase.functions.invoke("notify-appointment", {
+        body: { appointment: apptForm },
+      });
+
+      toast({ title: "Appointment created", description: `Scheduled for ${apptForm.preferred_date} at ${apptForm.preferred_time}.` });
+      setShowCreateAppt(false);
+      setApptForm({ customer_name: "", customer_email: "", customer_phone: "", preferred_date: "", preferred_time: "", vehicle_info: "", notes: "", submission_token: "" });
+      fetchAppointments();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setCreatingAppt(false);
+    }
+  };
+
+  const handleUpdateApptStatus = async (id: string, status: string) => {
+    const { error } = await supabase.from("appointments").update({ status }).eq("id", id);
+    if (!error) {
+      setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a));
+      toast({ title: "Updated", description: `Appointment marked as ${status}.` });
+    }
+  };
+
+  const APPT_TIME_SLOTS_WEEKDAY = [
+    "9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM",
+    "11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM",
+    "1:00 PM", "1:30 PM", "2:00 PM", "2:30 PM",
+    "3:00 PM", "3:30 PM", "4:00 PM", "4:30 PM",
+    "5:00 PM", "5:30 PM", "6:00 PM", "6:30 PM",
+  ];
+  const APPT_TIME_SLOTS_FRISSAT = [
+    "9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM",
+    "11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM",
+    "1:00 PM", "1:30 PM", "2:00 PM", "2:30 PM",
+    "3:00 PM", "3:30 PM", "4:00 PM", "4:30 PM",
+    "5:00 PM", "5:30 PM",
+  ];
+  const getApptTimeSlots = () => {
+    if (!apptForm.preferred_date) return APPT_TIME_SLOTS_WEEKDAY;
+    const day = new Date(apptForm.preferred_date + "T12:00:00").getDay();
+    if (day === 0) return [];
+    if (day === 5 || day === 6) return APPT_TIME_SLOTS_FRISSAT;
+    return APPT_TIME_SLOTS_WEEKDAY;
   };
 
   const [approveRole, setApproveRole] = useState<string>("sales_bdc");
@@ -531,6 +642,10 @@ const AdminDashboard = () => {
         <Tabs defaultValue="submissions">
           <TabsList className="mb-4">
             <TabsTrigger value="submissions">Submissions ({total})</TabsTrigger>
+            <TabsTrigger value="appointments">
+              <CalendarDays className="w-4 h-4 mr-1" />
+              Appointments ({appointments.length})
+            </TabsTrigger>
             {canManageAccess && (
               <TabsTrigger value="requests" className="relative">
                 <Users className="w-4 h-4 mr-1" />
@@ -644,6 +759,75 @@ const AdminDashboard = () => {
                   </div>
                 )}
               </>
+            )}
+          </TabsContent>
+
+          <TabsContent value="appointments">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-card-foreground">Scheduled Appointments</h2>
+              <Button size="sm" onClick={() => setShowCreateAppt(true)}>
+                <Plus className="w-4 h-4 mr-1" /> New Appointment
+              </Button>
+            </div>
+            {appointments.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">No appointments scheduled yet.</div>
+            ) : (
+              <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border bg-muted/50">
+                        <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Date & Time</th>
+                        <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Customer</th>
+                        <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Contact</th>
+                        <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Vehicle</th>
+                        <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Status</th>
+                        <th className="text-right px-4 py-3 font-semibold text-muted-foreground">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {appointments.map((appt) => (
+                        <tr key={appt.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <div className="font-medium text-card-foreground">{new Date(appt.preferred_date + "T12:00:00").toLocaleDateString()}</div>
+                            <div className="text-xs text-muted-foreground">{appt.preferred_time}</div>
+                          </td>
+                          <td className="px-4 py-3 font-medium text-card-foreground">{appt.customer_name}</td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-1 text-muted-foreground text-xs"><Mail className="w-3 h-3" />{appt.customer_email}</div>
+                            <div className="flex items-center gap-1 text-muted-foreground text-xs"><Phone className="w-3 h-3" />{appt.customer_phone}</div>
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground">{appt.vehicle_info || "—"}</td>
+                          <td className="px-4 py-3">
+                            <Select value={appt.status} onValueChange={(v) => handleUpdateApptStatus(appt.id, v)}>
+                              <SelectTrigger className="w-32 h-7 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="pending">Pending</SelectItem>
+                                <SelectItem value="confirmed">Confirmed</SelectItem>
+                                <SelectItem value="completed">Completed</SelectItem>
+                                <SelectItem value="cancelled">Cancelled</SelectItem>
+                                <SelectItem value="no_show">No Show</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            {appt.submission_token && (
+                              <Button variant="ghost" size="sm" onClick={() => {
+                                const sub = submissions.find(s => s.token === appt.submission_token);
+                                if (sub) handleView(sub);
+                              }}>
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             )}
           </TabsContent>
 
@@ -1095,6 +1279,75 @@ const AdminDashboard = () => {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Appointment Dialog */}
+      <Dialog open={showCreateAppt} onOpenChange={setShowCreateAppt}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Schedule an Appointment</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Name *</Label>
+                <Input value={apptForm.customer_name} onChange={(e) => setApptForm(p => ({ ...p, customer_name: e.target.value }))} placeholder="Customer name" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Phone *</Label>
+                <Input value={apptForm.customer_phone} onChange={(e) => setApptForm(p => ({ ...p, customer_phone: e.target.value }))} placeholder="(555) 123-4567" />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Email *</Label>
+              <Input type="email" value={apptForm.customer_email} onChange={(e) => setApptForm(p => ({ ...p, customer_email: e.target.value }))} placeholder="email@example.com" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Date *</Label>
+                <Input type="date" min={new Date().toISOString().split("T")[0]} value={apptForm.preferred_date} onChange={(e) => setApptForm(p => ({ ...p, preferred_date: e.target.value, preferred_time: "" }))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Time *</Label>
+                {apptForm.preferred_date && new Date(apptForm.preferred_date + "T12:00:00").getDay() === 0 ? (
+                  <p className="text-sm text-destructive font-medium py-2">Closed Sundays</p>
+                ) : (
+                  <Select value={apptForm.preferred_time} onValueChange={(v) => setApptForm(p => ({ ...p, preferred_time: v }))} disabled={!apptForm.preferred_date}>
+                    <SelectTrigger><SelectValue placeholder="Select time" /></SelectTrigger>
+                    <SelectContent>
+                      {getApptTimeSlots().map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Link to Submission (optional)</Label>
+              <Select value={apptForm.submission_token} onValueChange={(v) => setApptForm(p => ({ ...p, submission_token: v }))}>
+                <SelectTrigger><SelectValue placeholder="Select a submission" /></SelectTrigger>
+                <SelectContent>
+                  {submissions.map(s => (
+                    <SelectItem key={s.token} value={s.token}>
+                      {s.name || "Unknown"} — {[s.vehicle_year, s.vehicle_make, s.vehicle_model].filter(Boolean).join(" ") || "No vehicle"}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Linking will update the customer's status to "Inspection Scheduled".</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Vehicle Info</Label>
+              <Input value={apptForm.vehicle_info} onChange={(e) => setApptForm(p => ({ ...p, vehicle_info: e.target.value }))} placeholder="e.g. 2020 Toyota Camry" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Notes</Label>
+              <Textarea value={apptForm.notes} onChange={(e) => setApptForm(p => ({ ...p, notes: e.target.value }))} placeholder="Internal notes..." rows={2} />
+            </div>
+            <Button className="w-full" onClick={handleCreateAppointment} disabled={creatingAppt}>
+              {creatingAppt ? "Creating..." : "Create Appointment"}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
