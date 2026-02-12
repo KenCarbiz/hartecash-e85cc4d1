@@ -1,4 +1,7 @@
-import { Check } from "lucide-react";
+import { useState } from "react";
+import { Check, Info } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import FormField from "./FormField";
 import RadioOption from "./RadioOption";
 import CheckboxOption from "./CheckboxOption";
@@ -59,10 +62,60 @@ const mechanicalOptions = [
   { value: "none", label: "No mechanical or electrical issues" },
 ];
 
-const StepConditionHistory = ({ formData, updateArray, update }: Props) => (
+const kbbDefinitions = [
+  {
+    title: "Excellent",
+    text: `"Excellent" condition means that the vehicle looks new and is in excellent mechanical condition. This vehicle has never had any paint or bodywork and does not need reconditioning. The engine compartment is clean and free of fluid leaks. This vehicle is free of rust. The body and interior are free of wear or visible defects. The tires all match and are like new. This vehicle has a clean title history and will pass a safety and smog inspection. This vehicle has complete and verifiable service records.`,
+  },
+  {
+    title: "Very Good",
+    text: `"Very Good" condition means that the vehicle has minor cosmetic defects and is in excellent mechanical condition. This vehicle has had minor or no paint or bodywork, and requires minimal reconditioning. The engine compartment is clean and free of fluid leaks. This vehicle is free of rust. The body and interior have minimal signs of wear or visible defects. The tires all match and have 75% or more of tread remaining. This vehicle has a clean title history and will pass a safety and smog inspection. Most service records are available.`,
+  },
+  {
+    title: "Good",
+    text: `"Good" condition means that the vehicle has some cosmetic repairable defects and is free of major mechanical problems. The paint and bodywork may require minor touch-ups. The engine compartment may have minor leaks. This vehicle has only minor cosmetic or no rust. The body may have minor scratches or dings and the interior has minor blemishes characteristic of normal wear. The tires match and have at least 50% of tread remaining. Though it may need some reconditioning, it has a clean title history and will pass safety and smog inspection. Some service records are available.`,
+  },
+  {
+    title: "Fair",
+    text: `"Fair" condition means that the vehicle has some cosmetic defects that require repairing and/or replacing and requires some mechanical repairs. The paint and bodywork may require refinishing and body repair. The engine compartment has leaks and may require a tune up. This vehicle may have some repairable rust damage. The body has dings, chips, or scratches and the interior has substantial wear, and may have small tears. The tires may need replacing. This vehicle needs servicing, but is still in reasonable running condition. Has a clean title history. A few service records are available.`,
+  },
+];
+
+const StepConditionHistory = ({ formData, updateArray, update }: Props) => {
+  const [showKbb, setShowKbb] = useState(false);
+
+  return (
   <>
-    {/* Overall Condition - CarMax style */}
+    <Dialog open={showKbb} onOpenChange={setShowKbb}>
+      <DialogContent className="max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-lg font-bold">Kelley Blue Book® Condition Definitions</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-5 mt-2">
+          {kbbDefinitions.map((d) => (
+            <div key={d.title}>
+              <h4 className="font-bold text-card-foreground mb-1">{d.title}</h4>
+              <p className="text-sm text-muted-foreground leading-relaxed">{d.text}</p>
+            </div>
+          ))}
+        </div>
+        <DialogFooter>
+          <Button onClick={() => setShowKbb(false)} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-bold">
+            GOT IT!
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
     <FormField label="What is the overall condition of your vehicle?">
+      <button
+        type="button"
+        onClick={() => setShowKbb(true)}
+        className="flex items-center gap-1.5 text-xs text-accent hover:underline mb-3 font-medium"
+      >
+        <Info className="w-3.5 h-3.5" />
+        View full Kelley Blue Book® condition definitions
+      </button>
       <div className="grid gap-2">
         {conditionRatings.map((r) => {
           const selected = formData.overallCondition === r.value;
@@ -191,6 +244,7 @@ const StepConditionHistory = ({ formData, updateArray, update }: Props) => (
       </div>
     </FormField>
   </>
-);
+  );
+};
 
 export default StepConditionHistory;
