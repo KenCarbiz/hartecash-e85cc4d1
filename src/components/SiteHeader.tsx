@@ -14,7 +14,7 @@ const SiteHeader = () => {
     <header className="bg-card sticky top-0 z-50 shadow-md">
       <div className="max-w-[500px] mx-auto px-5 py-3">
         <div className="flex items-center justify-between">
-          <img src={harteLogo} alt="Harte Auto Group" className="h-24 md:h-28 w-auto" />
+          <img src={harteLogo} alt="Harte Auto Group" className="h-24 md:h-28 w-auto" width={317} height={112} fetchPriority="high" />
 
           <div className="relative" onMouseEnter={show} onMouseLeave={hide}>
             <button
