@@ -447,7 +447,7 @@ const AdminDashboard = () => {
           <tr><th>Date</th><td>${today}</td></tr>
           <tr><th>Customer Name (As It Appears on Title)</th><td>${s.name || ""}</td></tr>
           <tr><th>Address</th><td style="border-bottom:1px solid #ccc;min-width:200px;">&nbsp;</td></tr>
-          <tr><th>City, State, Zip</th><td>${[s.state, s.zip].filter(Boolean).join(" ") || ""}</td></tr>
+          <tr><th>City, State, Zip</th><td style="text-align:right;">${[s.state, s.zip].filter(Boolean).join(" ") || ""}</td></tr>
           <tr><th>Contact Phone</th><td>${s.phone || ""}</td></tr>
           <tr><th>Contact Email</th><td>${s.email || ""}</td></tr>
           <tr><th>Agreed Upon Value (Check Amount)</th><td class="amount">$${s.offered_price!.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td></tr>
