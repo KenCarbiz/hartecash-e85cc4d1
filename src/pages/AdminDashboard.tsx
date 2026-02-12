@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LogOut, Search, Trash2, Eye, ChevronLeft, ChevronRight, UserCheck, UserX, Users, Check, Circle, DollarSign, StickyNote, XCircle, Save, Printer, FileText, QrCode, ExternalLink } from "lucide-react";
+import { LogOut, Search, Trash2, Eye, ChevronLeft, ChevronRight, UserCheck, UserX, Users, Check, Circle, DollarSign, StickyNote, XCircle, Save, Printer, FileText, QrCode, ExternalLink, ClipboardCheck } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { QRCodeSVG } from "qrcode.react";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -55,6 +56,7 @@ interface Submission {
   num_keys: string | null;
   progress_status: string;
   offered_price: number | null;
+  check_request_done: boolean;
   internal_notes: string | null;
   status_updated_by: string | null;
   status_updated_at: string | null;
@@ -381,6 +383,64 @@ const AdminDashboard = () => {
 
   const getDocsUrl = (token: string) => {
     return `${window.location.origin}/docs/${token}`;
+  };
+
+  const handleGenerateCheckRequest = () => {
+    if (!selected || !selected.offered_price) return;
+    const s = selected;
+    const vehicleStr = [s.vehicle_year, s.vehicle_make, s.vehicle_model].filter(Boolean).join(" ") || "N/A";
+    const today = new Date().toLocaleDateString();
+
+    const printWindow = window.open("", "_blank", "width=800,height=600");
+    if (!printWindow) return;
+
+    const css = [
+      "* { margin: 0; padding: 0; box-sizing: border-box; }",
+      "body { font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif; color: #1a2a3a; background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }",
+      ".header { background: #2a4365; color: white; padding: 24px 32px; text-align: center; }",
+      ".header h1 { font-size: 22px; font-weight: 700; }",
+      ".header p { font-size: 13px; opacity: 0.8; margin-top: 4px; }",
+      ".content { padding: 24px 32px; }",
+      ".title { font-size: 18px; font-weight: 700; text-align: center; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 2px; }",
+      "table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }",
+      "th, td { padding: 10px 14px; text-align: left; border: 1px solid #d1d5db; font-size: 14px; }",
+      "th { background: #f3f5f7; font-weight: 600; color: #4a5568; width: 40%; }",
+      "td { font-weight: 500; }",
+      ".amount { font-size: 22px; font-weight: 700; color: #2a4365; }",
+      ".sig-section { margin-top: 40px; display: flex; justify-content: space-between; }",
+      ".sig-line { width: 45%; border-top: 1px solid #1a2a3a; padding-top: 6px; font-size: 12px; color: #6b7b8d; }",
+      "@page { margin: 0.75in; size: letter; }",
+    ].join("\n");
+
+    const html = `<!DOCTYPE html><html><head><title>Check Request</title><style>${css}</style></head><body>
+      <div class="header"><h1>Harte Auto Group</h1><p>Check Request Form</p></div>
+      <div class="content">
+        <p class="title">Check Request</p>
+        <table>
+          <tr><th>Date</th><td>${today}</td></tr>
+          <tr><th>Customer Name</th><td>${s.name || "N/A"}</td></tr>
+          <tr><th>Phone</th><td>${s.phone || "N/A"}</td></tr>
+          <tr><th>Email</th><td>${s.email || "N/A"}</td></tr>
+          <tr><th>Vehicle</th><td>${vehicleStr}</td></tr>
+          <tr><th>VIN</th><td>${s.vin || "N/A"}</td></tr>
+          <tr><th>Mileage</th><td>${s.mileage || "N/A"}</td></tr>
+          <tr><th>Loan Status</th><td>${s.loan_status || "N/A"}</td></tr>
+          <tr><th>Check Amount</th><td class="amount">$${s.offered_price!.toLocaleString()}</td></tr>
+        </table>
+        <div class="sig-section">
+          <div class="sig-line">Authorized By (Print &amp; Sign)</div>
+          <div class="sig-line">Date</div>
+        </div>
+        <div class="sig-section" style="margin-top:30px;">
+          <div class="sig-line">Accounting Use – Check #</div>
+          <div class="sig-line">Date Issued</div>
+        </div>
+      </div>
+    </body></html>`;
+
+    printWindow.document.write(html);
+    printWindow.document.close();
+    setTimeout(() => { printWindow.focus(); printWindow.print(); }, 300);
   };
 
   const filtered = submissions.filter((s) => {
@@ -780,6 +840,41 @@ const AdminDashboard = () => {
                 </div>
               ) : null}
 
+              {/* Check Request */}
+              {(() => {
+                const priceAgreedIdx = PROGRESS_STAGES.findIndex(s => s.key === "price_agreed");
+                const currentIdx = PROGRESS_STAGES.findIndex(s => s.key === selected.progress_status);
+                const isPriceAgreedOrBeyond = selected.progress_status !== "dead_lead" && currentIdx >= priceAgreedIdx && selected.offered_price;
+                return (
+                  <div data-print-section className="bg-muted/40 rounded-lg p-4">
+                    <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">
+                      <ClipboardCheck className="w-4 h-4 inline mr-1" />Check Request
+                    </h3>
+                    <div className="flex items-center gap-3 mb-3">
+                      <Checkbox
+                        id="check-request-done"
+                        checked={selected.check_request_done}
+                        disabled={!isPriceAgreedOrBeyond}
+                        onCheckedChange={(checked) => {
+                          setSelected({ ...selected, check_request_done: !!checked });
+                        }}
+                      />
+                      <label htmlFor="check-request-done" className={`text-sm font-medium ${isPriceAgreedOrBeyond ? "text-card-foreground" : "text-muted-foreground"}`}>
+                        Check Request Done
+                      </label>
+                    </div>
+                    {isPriceAgreedOrBeyond && (
+                      <Button variant="outline" size="sm" onClick={handleGenerateCheckRequest}>
+                        <Printer className="w-4 h-4 mr-1" /> Generate Check Request
+                      </Button>
+                    )}
+                    {!isPriceAgreedOrBeyond && (
+                      <p className="text-xs text-muted-foreground">Available once price is agreed and entered.</p>
+                    )}
+                  </div>
+                );
+              })()}
+
               {/* Internal Notes */}
               <div data-print-section className="bg-muted/40 rounded-lg p-4">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">
@@ -905,6 +1000,7 @@ const AdminDashboard = () => {
                       .update({
                         progress_status: selected.progress_status,
                         offered_price: selected.offered_price,
+                        check_request_done: selected.check_request_done,
                         internal_notes: selected.internal_notes,
                         status_updated_at: new Date().toISOString(),
                       })

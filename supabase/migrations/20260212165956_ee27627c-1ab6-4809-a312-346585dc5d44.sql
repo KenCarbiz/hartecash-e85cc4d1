@@ -1,0 +1,1 @@
+ALTER TABLE public.submissions ADD COLUMN check_request_done boolean NOT NULL DEFAULT false;
