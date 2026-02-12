@@ -10,10 +10,10 @@ interface Props {
 }
 
 const conditionRatings = [
-  { value: "excellent", label: "Excellent", desc: "Looks new and is in excellent mechanical condition.", pct: "3%" },
-  { value: "very_good", label: "Very Good", desc: "Minor cosmetic defects, good mechanical condition.", pct: "28%" },
-  { value: "good", label: "Good", desc: "Has repairable cosmetic defects and mechanical problems.", pct: "50%" },
-  { value: "fair", label: "Fair", desc: "Requires some mechanical repairs.", pct: "20%" },
+  { value: "excellent", label: "Excellent", desc: "(2% of cars KBB values) - Looks new and is in excellent mechanical condition.", pct: "3%" },
+  { value: "very_good", label: "Very Good", desc: "(28% of cars KBB values) - Has minor cosmetic defects and is in good mechanical condition.", pct: "28%" },
+  { value: "good", label: "Good", desc: "(50% of cars KBB values) - Has repairable cosmetic defects and mechanical problems.", pct: "50%" },
+  { value: "fair", label: "Fair", desc: "(20% of cars KBB values) - Requires some mechanical repairs.", pct: "20%" },
 ];
 
 const exteriorOptions = [
