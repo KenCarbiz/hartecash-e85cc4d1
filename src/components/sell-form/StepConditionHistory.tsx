@@ -87,10 +87,11 @@ const StepConditionHistory = ({ formData, updateArray, update }: Props) => {
   return (
   <>
     <Dialog open={showKbb} onOpenChange={setShowKbb}>
-      <DialogContent className="max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-h-[80vh] overflow-y-auto p-0">
+        <div className="sticky top-0 z-10 bg-primary text-primary-foreground px-6 py-4 rounded-t-lg">
           <DialogTitle className="text-lg font-bold">Kelley Blue Book® Condition Definitions</DialogTitle>
-        </DialogHeader>
+        </div>
+        <div className="px-6 pt-2">
         <div className="space-y-5 mt-2">
           {kbbDefinitions.map((d) => (
             <div key={d.title}>
@@ -99,11 +100,14 @@ const StepConditionHistory = ({ formData, updateArray, update }: Props) => {
             </div>
           ))}
         </div>
+        </div>
+        <div className="px-6 pb-4">
         <DialogFooter>
           <Button onClick={() => setShowKbb(false)} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-bold">
             GOT IT!
           </Button>
         </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
 
