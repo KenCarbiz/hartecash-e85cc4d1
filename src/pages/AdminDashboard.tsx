@@ -248,9 +248,32 @@ const AdminDashboard = () => {
   };
 
   const handleUpdateApptStatus = async (id: string, status: string) => {
+    const appointment = appointments.find(a => a.id === id);
+    if (!appointment) return;
+
     const { error } = await supabase.from("appointments").update({ status }).eq("id", id);
     if (!error) {
       setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a));
+      
+      // Send confirmation email if status is "Confirmed"
+      if (status === "Confirmed") {
+        try {
+          const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+          const functionUrl = `https://${projectId}.functions.supabase.co/send-appointment-confirmation`;
+          
+          await fetch(functionUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            },
+            body: JSON.stringify({ appointment }),
+          });
+        } catch (e) {
+          console.error("Failed to send confirmation email:", e);
+        }
+      }
+      
       toast({ title: "Updated", description: `Appointment marked as ${status}.` });
     }
   };
