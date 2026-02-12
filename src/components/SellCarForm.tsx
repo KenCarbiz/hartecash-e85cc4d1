@@ -110,9 +110,15 @@ const SellCarForm = () => {
     }
     setSubmitting(true);
     try {
-      const { data, error } = await supabase
+      // Generate token client-side to avoid needing SELECT permission
+      const tokenBytes = new Uint8Array(16);
+      crypto.getRandomValues(tokenBytes);
+      const generatedToken = Array.from(tokenBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+
+      const { error } = await supabase
         .from("submissions")
         .insert({
+          token: generatedToken,
           plate: formData.plate || null,
           state: formData.state || null,
           vin: formData.vin || null,
@@ -145,14 +151,12 @@ const SellCarForm = () => {
           loan_balance: formData.loanBalance || null,
           loan_payment: formData.loanPayment || null,
           next_step: formData.nextStep || null,
-        })
-        .select("token")
-        .single();
+        });
 
       if (error) throw error;
 
       const baseUrl = window.location.origin;
-      setUploadUrl(`${baseUrl}/upload/${data.token}`);
+      setUploadUrl(`${baseUrl}/upload/${generatedToken}`);
       localStorage.setItem("lastSubmissionTime", Date.now().toString());
       setSubmitted(true);
     } catch (err) {
