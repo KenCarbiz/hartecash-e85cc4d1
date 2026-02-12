@@ -52,24 +52,30 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { appointment } = await req.json();
+    const body = await req.json();
+    const appointment = body?.appointment;
 
-    if (!appointment) {
+    if (!appointment || typeof appointment !== "object") {
       return new Response(JSON.stringify({ error: "Missing appointment data" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const {
-      customer_name,
-      customer_email,
-      customer_phone,
-      preferred_date,
-      preferred_time,
-      vehicle_info,
-      notes,
-    } = appointment;
+    const customer_name = typeof appointment.customer_name === "string" ? appointment.customer_name.trim().slice(0, 200) : "";
+    const customer_email = typeof appointment.customer_email === "string" ? appointment.customer_email.trim().slice(0, 255) : "";
+    const customer_phone = typeof appointment.customer_phone === "string" ? appointment.customer_phone.trim().slice(0, 30) : "";
+    const preferred_date = typeof appointment.preferred_date === "string" ? appointment.preferred_date.trim().slice(0, 20) : "";
+    const preferred_time = typeof appointment.preferred_time === "string" ? appointment.preferred_time.trim().slice(0, 50) : "";
+    const vehicle_info = typeof appointment.vehicle_info === "string" ? appointment.vehicle_info.trim().slice(0, 500) : "";
+    const notes = typeof appointment.notes === "string" ? appointment.notes.trim().slice(0, 1000) : "";
+
+    if (!customer_name || !customer_phone || !preferred_date || !preferred_time) {
+      return new Response(JSON.stringify({ error: "Missing required appointment fields" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const staffEmail = Deno.env.get("STAFF_NOTIFICATION_EMAIL");
     const staffPhone = Deno.env.get("STAFF_NOTIFICATION_PHONE");
