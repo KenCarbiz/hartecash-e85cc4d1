@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { STEPS, initialFormData } from "./sell-form/types";
 import type { FormData, VehicleInfo } from "./sell-form/types";
 import StepVehicleInfo from "./sell-form/StepVehicleInfo";
@@ -19,6 +20,7 @@ const SellCarForm = () => {
   const [uploadUrl, setUploadUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (step > 0) {
@@ -42,11 +44,61 @@ const SellCarForm = () => {
       };
     });
 
-  const handleNext = () => { if (step < STEPS.length - 1) setStep(step + 1); };
+  const validateStep = (): boolean => {
+    const missing: string[] = [];
+
+    if (step === 0) {
+      if (!formData.vin.trim() && !formData.plate.trim()) missing.push("VIN or License Plate");
+      if (formData.plate.trim() && !formData.state.trim()) missing.push("State");
+      if (!formData.mileage.trim()) missing.push("Mileage");
+    } else if (step === 1) {
+      if (!formData.exteriorColor.trim()) missing.push("Exterior Color");
+      if (!formData.drivetrain) missing.push("Drivetrain");
+      if (!formData.modifications) missing.push("Modifications");
+    } else if (step === 2) {
+      if (!formData.overallCondition) missing.push("Overall Condition");
+      if (formData.exteriorDamage.length === 0) missing.push("Exterior Damage");
+      if (!formData.windshieldDamage) missing.push("Windshield Damage");
+      if (!formData.moonroof) missing.push("Moonroof");
+      if (formData.interiorDamage.length === 0) missing.push("Interior Damage");
+      if (formData.techIssues.length === 0) missing.push("Technology Issues");
+      if (formData.engineIssues.length === 0) missing.push("Engine Issues");
+      if (formData.mechanicalIssues.length === 0) missing.push("Mechanical Issues");
+      if (!formData.drivable) missing.push("Drivable");
+      if (!formData.accidents) missing.push("Accidents");
+      if (!formData.smokedIn) missing.push("Smoked In");
+      if (!formData.tiresReplaced) missing.push("Tires Replaced");
+      if (!formData.numKeys) missing.push("Number of Keys");
+    } else if (step === 3) {
+      if (!formData.name.trim()) missing.push("Full Name");
+      if (!formData.phone.trim()) missing.push("Phone Number");
+      if (!formData.email.trim()) missing.push("Email Address");
+      if (!formData.zip.trim()) missing.push("ZIP Code");
+      if (!formData.loanStatus) missing.push("Sell or Trade-In");
+    } else if (step === 4) {
+      if (!formData.nextStep) missing.push("Next Step");
+    }
+
+    if (missing.length > 0) {
+      toast({
+        title: "Please complete all fields",
+        description: `Missing: ${missing.join(", ")}`,
+        variant: "destructive",
+      });
+      return false;
+    }
+    return true;
+  };
+
+  const handleNext = () => {
+    if (!validateStep()) return;
+    if (step < STEPS.length - 1) setStep(step + 1);
+  };
   const handleBack = () => { if (step > 0) setStep(step - 1); };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateStep()) return;
     setSubmitting(true);
     try {
       const { data, error } = await supabase
