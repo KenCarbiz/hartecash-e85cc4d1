@@ -14,6 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointments: {
+        Row: {
+          created_at: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string
+          id: string
+          notes: string | null
+          preferred_date: string
+          preferred_time: string
+          status: string
+          submission_token: string | null
+          vehicle_info: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string
+          id?: string
+          notes?: string | null
+          preferred_date: string
+          preferred_time: string
+          status?: string
+          submission_token?: string | null
+          vehicle_info?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string
+          id?: string
+          notes?: string | null
+          preferred_date?: string
+          preferred_time?: string
+          status?: string
+          submission_token?: string | null
+          vehicle_info?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_submission_token_fkey"
+            columns: ["submission_token"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["token"]
+          },
+        ]
+      }
       pending_admin_requests: {
         Row: {
           created_at: string
