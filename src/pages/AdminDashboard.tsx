@@ -483,7 +483,7 @@ const AdminDashboard = () => {
           {selected && (
             <div className="px-6 pb-6 space-y-5 pt-4">
               {/* Contact Card */}
-              <div className="bg-muted/40 rounded-lg p-4">
+              <div data-print-section className="bg-muted/40 rounded-lg p-4">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Contact Information</h3>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-2">
                   <DetailRow label="Name" value={selected.name} />
@@ -494,7 +494,7 @@ const AdminDashboard = () => {
               </div>
 
               {/* Vehicle Card */}
-              <div className="bg-muted/40 rounded-lg p-4">
+              <div data-print-section className="bg-muted/40 rounded-lg p-4">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Vehicle Details</h3>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-2">
                   <DetailRow label="Year/Make/Model" value={`${selected.vehicle_year || ""} ${selected.vehicle_make || ""} ${selected.vehicle_model || ""}`.trim() || null} />
@@ -508,7 +508,7 @@ const AdminDashboard = () => {
               </div>
 
               {/* Condition Card */}
-              <div className="bg-muted/40 rounded-lg p-4">
+              <div data-print-section className="bg-muted/40 rounded-lg p-4">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Condition & History</h3>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-2">
                   <DetailRow label="Overall" value={selected.overall_condition} />
@@ -528,7 +528,7 @@ const AdminDashboard = () => {
               </div>
 
               {/* Loan Info */}
-              <div className="bg-muted/40 rounded-lg p-4">
+              <div data-print-section className="bg-muted/40 rounded-lg p-4">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Loan & Info</h3>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-2">
                   <DetailRow label="Loan Status" value={selected.loan_status} />
@@ -540,7 +540,7 @@ const AdminDashboard = () => {
               </div>
 
               {/* Deal Progress with cumulative highlighting */}
-              <div className="bg-muted/40 rounded-lg p-4">
+              <div data-print-section className="bg-muted/40 rounded-lg p-4">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Deal Progress</h3>
                 <div className="space-y-1.5">
                   {PROGRESS_STAGES.map((stage, i) => {
@@ -550,7 +550,7 @@ const AdminDashboard = () => {
                     const isCurrent = i === currentIdx;
                     const isDead = stage.key === "dead_lead" && isDeadLead;
                     return (
-                      <div key={stage.key} className={`flex items-center gap-2.5 px-3 py-1.5 rounded-md transition-colors ${
+                      <div key={stage.key} data-print-stage={isDead ? "dead" : isComplete ? "complete" : isCurrent ? "current" : undefined} className={`flex items-center gap-2.5 px-3 py-1.5 rounded-md transition-colors ${
                         isDead ? "bg-destructive/15" :
                         isComplete ? "bg-success/15" :
                         isCurrent ? "bg-accent/20" :
@@ -608,7 +608,7 @@ const AdminDashboard = () => {
 
               {/* Offered Price */}
               {canSetPrice ? (
-                <div className="bg-muted/40 rounded-lg p-4">
+                <div data-print-section className="bg-muted/40 rounded-lg p-4">
                   <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">
                     <DollarSign className="w-4 h-4 inline mr-1" />Offered Price
                   </h3>
@@ -623,7 +623,7 @@ const AdminDashboard = () => {
                   />
                 </div>
               ) : selected.offered_price ? (
-                <div className="bg-muted/40 rounded-lg p-4">
+                <div data-print-section className="bg-muted/40 rounded-lg p-4">
                   <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">
                     <DollarSign className="w-4 h-4 inline mr-1" />Offered Price
                   </h3>
@@ -632,7 +632,7 @@ const AdminDashboard = () => {
               ) : null}
 
               {/* Internal Notes */}
-              <div className="bg-muted/40 rounded-lg p-4">
+              <div data-print-section className="bg-muted/40 rounded-lg p-4">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">
                   <StickyNote className="w-4 h-4 inline mr-1" />Internal Notes
                 </h3>
@@ -647,7 +647,7 @@ const AdminDashboard = () => {
               </div>
 
               {/* Photos */}
-              <div className="bg-muted/40 rounded-lg p-4">
+              <div data-print-section className="bg-muted/40 rounded-lg p-4">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">
                   Photos {photos.length > 0 && `(${photos.length})`}
                 </h3>
@@ -665,7 +665,7 @@ const AdminDashboard = () => {
               </div>
 
               {/* Document Upload Link & QR */}
-              <div className="bg-muted/40 rounded-lg p-4 print:break-before-page">
+              <div data-print-section className="bg-muted/40 rounded-lg p-4 print:break-before-page">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">
                   <FileText className="w-4 h-4 inline mr-1" />Customer Documents
                 </h3>

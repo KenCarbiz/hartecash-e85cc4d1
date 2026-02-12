@@ -103,22 +103,108 @@
 }
 
 @media print {
-  body > * {
-    visibility: hidden;
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
+
+  body {
+    background: white !important;
+  }
+
+  body > *:not([data-radix-portal]) {
+    display: none !important;
+  }
+
+  [data-radix-portal] {
+    position: static !important;
+  }
+
   [role="dialog"] {
-    visibility: visible;
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
+    position: static !important;
+    transform: none !important;
     max-height: none !important;
     overflow: visible !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
-  [role="dialog"] * {
-    visibility: visible;
-  }
-  .print\\:hidden {
+
+  /* Hide overlay */
+  [data-radix-portal] > [data-state] {
     display: none !important;
+  }
+  [data-radix-portal] > [role="dialog"] {
+    display: block !important;
+  }
+
+  /* Hide close button, print button */
+  .print\\:hidden,
+  [role="dialog"] button[class*="absolute"] {
+    display: none !important;
+  }
+
+  /* Force background colors to print */
+  [class*="bg-primary"] {
+    background-color: hsl(216 50% 30%) !important;
+    color: white !important;
+  }
+
+  [class*="bg-success"][class*="text-success-foreground"] {
+    background-color: hsl(142 71% 40%) !important;
+  }
+
+  [class*="bg-accent"][class*="text-accent-foreground"] {
+    background-color: hsl(0 72% 51%) !important;
+  }
+
+  [class*="bg-destructive"][class*="text-destructive-foreground"] {
+    background-color: hsl(0 84% 60%) !important;
+  }
+
+  /* Deal progress row highlights */
+  [data-print-stage="complete"] {
+    background-color: hsl(142 71% 40% / 0.15) !important;
+  }
+
+  [data-print-stage="current"] {
+    background-color: hsl(0 72% 51% / 0.2) !important;
+  }
+
+  [data-print-stage="dead"] {
+    background-color: hsl(0 84% 60% / 0.15) !important;
+  }
+
+  /* Section cards */
+  [data-print-section] {
+    background-color: hsl(210 20% 96%) !important;
+    border: 1px solid hsl(210 20% 90%) !important;
+  }
+
+  /* Sticky footer should not be sticky when printing */
+  .sticky.bottom-0 {
+    position: static !important;
+    display: none !important;
+  }
+
+  /* Better page breaks */
+  [data-print-section] {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 12px !important;
+  }
+
+  /* Print header */
+  .print\\:static {
+    position: static !important;
+  }
+
+  @page {
+    margin: 0.5in;
+    size: letter;
   }
 }
