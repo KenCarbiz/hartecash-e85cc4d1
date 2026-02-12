@@ -1,3 +1,4 @@
+import { Check } from "lucide-react";
 import FormField from "./FormField";
 import RadioOption from "./RadioOption";
 import CheckboxOption from "./CheckboxOption";
@@ -63,26 +64,32 @@ const StepConditionHistory = ({ formData, updateArray, update }: Props) => (
     {/* Overall Condition - CarMax style */}
     <FormField label="What is the overall condition of your vehicle?">
       <div className="grid gap-2">
-        {conditionRatings.map((r) => (
-          <button
-            key={r.value}
-            type="button"
-            onClick={() => update("overallCondition", r.value)}
-            className={`w-full text-left px-4 py-3 rounded-lg border-2 transition-all ${
-              formData.overallCondition === r.value
-                ? "border-accent bg-accent/10"
-                : "border-input bg-background hover:border-muted-foreground/30"
-            }`}
-          >
-            <div className="flex justify-between items-center">
-              <span className={`text-sm font-bold ${formData.overallCondition === r.value ? "text-accent" : "text-card-foreground"}`}>
+        {conditionRatings.map((r) => {
+          const selected = formData.overallCondition === r.value;
+          return (
+            <button
+              key={r.value}
+              type="button"
+              onClick={() => update("overallCondition", r.value)}
+              className={`relative w-full text-left px-4 py-3 rounded-lg border-2 transition-all overflow-hidden ${
+                selected
+                  ? "border-accent bg-accent/10"
+                  : "border-input bg-background hover:border-muted-foreground/30"
+              }`}
+            >
+              {selected && (
+                <div className="absolute top-0 right-0 w-8 h-8">
+                  <div className="absolute top-0 right-0 w-0 h-0 border-t-[32px] border-t-accent border-l-[32px] border-l-transparent" />
+                  <Check className="absolute top-0.5 right-0.5 w-3.5 h-3.5 text-accent-foreground" strokeWidth={3} />
+                </div>
+              )}
+              <span className={`text-sm font-bold ${selected ? "text-accent" : "text-card-foreground"}`}>
                 {r.label}
               </span>
-              <span className="text-xs text-muted-foreground">{r.pct} of cars</span>
-            </div>
-            <span className="text-xs text-muted-foreground mt-0.5 block">{r.desc}</span>
-          </button>
-        ))}
+              <span className="text-xs text-muted-foreground mt-0.5 block">{r.desc}</span>
+            </button>
+          );
+        })}
       </div>
     </FormField>
 

@@ -49,7 +49,7 @@ export const initialFormData: FormData = {
   exteriorColor: "",
   drivetrain: "",
   modifications: "",
-  overallCondition: "",
+  overallCondition: "good",
   exteriorDamage: [],
   windshieldDamage: "",
   moonroof: "",
