@@ -77,6 +77,8 @@ interface Submission {
   internal_notes: string | null;
   status_updated_by: string | null;
   status_updated_at: string | null;
+  appointment_date: string | null;
+  appointment_set: boolean;
 }
 
 const PAGE_SIZE = 20;
@@ -234,6 +236,10 @@ const AdminDashboard = () => {
           })
           .eq("token", apptForm.submission_token);
         fetchSubmissions();
+        // Update selected submission if viewing it
+        if (selected && selected.token === apptForm.submission_token) {
+          setSelected({ ...selected, appointment_set: true, appointment_date: apptForm.preferred_date, progress_status: "inspection_scheduled" });
+        }
       }
 
       // Send notification
@@ -1227,6 +1233,45 @@ const AdminDashboard = () => {
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground">No documents uploaded.</p>
+                )}
+              </div>
+
+              {/* Schedule Appointment from Submission */}
+              <div data-print-section className="bg-muted/40 rounded-lg p-4">
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">
+                  <CalendarDays className="w-4 h-4 inline mr-1" />Appointment
+                </h3>
+                {selected.appointment_set ? (
+                  <div className="space-y-1">
+                    <p className="text-sm text-card-foreground font-medium flex items-center gap-1.5">
+                      <Check className="w-4 h-4 text-success" /> Appointment Set
+                    </p>
+                    {(selected as any).appointment_date && (
+                      <p className="text-sm text-muted-foreground">
+                        Date: {new Date((selected as any).appointment_date + "T12:00:00").toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setApptForm({
+                        customer_name: selected.name || "",
+                        customer_email: selected.email || "",
+                        customer_phone: selected.phone || "",
+                        preferred_date: "",
+                        preferred_time: "",
+                        vehicle_info: [selected.vehicle_year, selected.vehicle_make, selected.vehicle_model].filter(Boolean).join(" "),
+                        notes: "",
+                        submission_token: selected.token,
+                      });
+                      setShowCreateAppt(true);
+                    }}
+                  >
+                    <CalendarDays className="w-4 h-4 mr-1" /> Schedule Appointment
+                  </Button>
                 )}
               </div>
 
