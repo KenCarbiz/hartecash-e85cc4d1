@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Upload, X, FileText, Plus } from "lucide-react";
@@ -24,6 +24,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 const StaffFileUpload = ({ token, bucket, onUploadComplete }: StaffFileUploadProps) => {
   const [files, setFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<{ [key: number]: string }>({});
   const [docType, setDocType] = useState("drivers_license");
   const [uploading, setUploading] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
@@ -49,10 +50,27 @@ const StaffFileUpload = ({ token, bucket, onUploadComplete }: StaffFileUploadPro
       return true;
     });
     setFiles(prev => [...prev, ...added]);
+    
+    // Generate previews for images
+    added.forEach((file, index) => {
+      if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const currentIndex = files.length + index;
+          setPreviews(prev => ({ ...prev, [currentIndex]: e.target?.result as string }));
+        };
+        reader.readAsDataURL(file);
+      }
+    });
   };
 
   const removeFile = (index: number) => {
     setFiles(prev => prev.filter((_, i) => i !== index));
+    setPreviews(prev => {
+      const updated = { ...prev };
+      delete updated[index];
+      return updated;
+    });
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -178,16 +196,38 @@ const StaffFileUpload = ({ token, bucket, onUploadComplete }: StaffFileUploadPro
       </div>
 
       {files.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {files.map((f, i) => (
-            <div key={i} className="flex items-center gap-1 bg-muted rounded-md px-2 py-1 text-xs">
-              <FileText className="w-3 h-3 text-muted-foreground" />
-              <span className="max-w-[120px] truncate">{f.name}</span>
-              <button onClick={() => removeFile(i)} className="text-destructive hover:text-destructive/80">
-                <X className="w-3 h-3" />
-              </button>
+        <div className="space-y-2">
+          <div className="text-xs font-semibold text-muted-foreground uppercase">Files</div>
+          {previews && Object.keys(previews).length > 0 && (
+            <div className="grid grid-cols-4 gap-2">
+              {files.map((f, i) => (
+                previews[i] ? (
+                  <div key={i} className="relative">
+                    <img 
+                      src={previews[i]} 
+                      alt={f.name}
+                      className="w-full h-20 object-cover rounded-md border border-border"
+                    />
+                    <button 
+                      onClick={() => removeFile(i)} 
+                      className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-0.5 hover:bg-destructive/90"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                    <p className="text-xs mt-1 truncate text-muted-foreground">{f.name}</p>
+                  </div>
+                ) : (
+                  <div key={i} className="flex items-center gap-1 bg-muted rounded-md px-2 py-1 text-xs h-20 relative group">
+                    <FileText className="w-3 h-3 text-muted-foreground" />
+                    <span className="max-w-[80px] truncate">{f.name}</span>
+                    <button onClick={() => removeFile(i)} className="text-destructive hover:text-destructive/80 ml-auto">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                )
+              ))}
             </div>
-          ))}
+          )}
         </div>
       )}
 
