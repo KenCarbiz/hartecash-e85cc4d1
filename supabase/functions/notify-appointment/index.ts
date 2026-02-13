@@ -12,46 +12,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Authenticate the request
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const userId = claimsData.claims.sub;
-
-    // Check if user is staff
-    const { data: roleData } = await supabaseClient
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (!roleData) {
-      return new Response(JSON.stringify({ error: "Forbidden" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const body = await req.json();
     const appointment = body?.appointment;
 
@@ -72,6 +32,14 @@ Deno.serve(async (req) => {
 
     if (!customer_name || !customer_phone || !preferred_date || !preferred_time) {
       return new Response(JSON.stringify({ error: "Missing required appointment fields" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Validate email format if provided
+    if (customer_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer_email)) {
+      return new Response(JSON.stringify({ error: "Invalid email format" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -118,8 +86,10 @@ Deno.serve(async (req) => {
           }),
         });
         const emailData = await emailRes.json();
-        results.email = emailRes.ok ? "sent" : "failed";
+        console.log("Resend response:", JSON.stringify(emailData));
+        results.email = emailRes.ok ? "sent" : `failed: ${JSON.stringify(emailData)}`;
       } catch (e) {
+        console.error("Email error:", e);
         results.email = "error";
       }
     } else {
@@ -144,8 +114,10 @@ Deno.serve(async (req) => {
           }),
         });
         const smsData = await smsRes.json();
-        results.sms = smsRes.ok ? "sent" : "failed";
+        console.log("Twilio response:", JSON.stringify(smsData));
+        results.sms = smsRes.ok ? "sent" : `failed: ${JSON.stringify(smsData)}`;
       } catch (e) {
+        console.error("SMS error:", e);
         results.sms = "error";
       }
     } else {
@@ -156,6 +128,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
+    console.error("notify-appointment error:", e);
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
