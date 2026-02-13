@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
 import harteLogo from "@/assets/harte-logo.png";
 import StaffManagement from "@/components/admin/StaffManagement";
+import StaffFileUpload from "@/components/admin/StaffFileUpload";
 
 interface PendingRequest {
   id: string;
@@ -1204,6 +1205,7 @@ const AdminDashboard = () => {
                 ) : (
                   <p className="text-sm text-muted-foreground">No photos uploaded.</p>
                 )}
+                <StaffFileUpload token={selected.token} bucket="submission-photos" onUploadComplete={() => handleView(selected)} />
               </div>
 
               {/* Uploaded Documents */}
@@ -1247,6 +1249,7 @@ const AdminDashboard = () => {
                 ) : (
                   <p className="text-sm text-muted-foreground">No documents uploaded.</p>
                 )}
+                <StaffFileUpload token={selected.token} bucket="customer-documents" onUploadComplete={() => handleView(selected)} />
               </div>
 
               {/* Schedule Appointment from Submission */}
