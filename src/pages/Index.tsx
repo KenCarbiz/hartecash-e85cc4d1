@@ -3,6 +3,7 @@ import Hero from "@/components/Hero";
 import SellCarForm from "@/components/SellCarForm";
 import HowItWorks from "@/components/HowItWorks";
 import ValueProps from "@/components/ValueProps";
+import TrustBadges from "@/components/TrustBadges";
 import Testimonials from "@/components/Testimonials";
 import FAQ from "@/components/FAQ";
 import CTABanner from "@/components/CTABanner";
@@ -16,6 +17,7 @@ const Index = () => {
         <Hero />
         <SellCarForm />
         <HowItWorks />
+        <TrustBadges />
         <ValueProps />
         <Testimonials />
         <FAQ />

@@ -11,9 +11,17 @@ import StepConditionHistory from "./sell-form/StepConditionHistory";
 import StepYourDetails from "./sell-form/StepYourDetails";
 import StepGetOffer from "./sell-form/StepGetOffer";
 import SubmissionSuccess from "./sell-form/SubmissionSuccess";
+import { motion, AnimatePresence } from "framer-motion";
+
+const stepVariants = {
+  enter: (dir: number) => ({ x: dir > 0 ? 80 : -80, opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit: (dir: number) => ({ x: dir > 0 ? -80 : 80, opacity: 0 }),
+};
 
 const SellCarForm = () => {
   const [step, setStep] = useState(0);
+  const [direction, setDirection] = useState(1);
   const [vehicleInfo, setVehicleInfo] = useState<VehicleInfo | null>(null);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [submitted, setSubmitted] = useState(false);
@@ -93,9 +101,9 @@ const SellCarForm = () => {
 
   const handleNext = () => {
     if (!validateStep()) return;
-    if (step < STEPS.length - 1) setStep(step + 1);
+    if (step < STEPS.length - 1) { setDirection(1); setStep(step + 1); }
   };
-  const handleBack = () => { if (step > 0) setStep(step - 1); };
+  const handleBack = () => { if (step > 0) { setDirection(-1); setStep(step - 1); } };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -208,11 +216,23 @@ const SellCarForm = () => {
           autoComplete="off"
           aria-label="Website"
         />
-        {step === 0 && <StepVehicleInfo formData={formData} update={update} vehicleInfo={vehicleInfo} setVehicleInfo={setVehicleInfo} />}
-        {step === 1 && <StepVehicleBuild formData={formData} update={update} />}
-        {step === 2 && <StepConditionHistory formData={formData} updateArray={updateArray} update={update} />}
-        {step === 3 && <StepYourDetails formData={formData} update={update} />}
-        {step === 4 && <StepGetOffer formData={formData} update={update} vehicleInfo={vehicleInfo} />}
+        <AnimatePresence mode="wait" custom={direction}>
+          <motion.div
+            key={step}
+            custom={direction}
+            variants={stepVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.25, ease: "easeInOut" }}
+          >
+            {step === 0 && <StepVehicleInfo formData={formData} update={update} vehicleInfo={vehicleInfo} setVehicleInfo={setVehicleInfo} />}
+            {step === 1 && <StepVehicleBuild formData={formData} update={update} />}
+            {step === 2 && <StepConditionHistory formData={formData} updateArray={updateArray} update={update} />}
+            {step === 3 && <StepYourDetails formData={formData} update={update} />}
+            {step === 4 && <StepGetOffer formData={formData} update={update} vehicleInfo={vehicleInfo} />}
+          </motion.div>
+        </AnimatePresence>
 
         <div className="flex gap-3">
           {step > 0 && (

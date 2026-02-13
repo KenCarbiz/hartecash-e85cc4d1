@@ -7,6 +7,7 @@ import {
   DollarSign, Upload, ExternalLink
 } from "lucide-react";
 import harteLogo from "@/assets/harte-logo.png";
+import { motion } from "framer-motion";
 
 interface PortalSubmission {
   id: string;
@@ -186,32 +187,49 @@ const CustomerPortal = () => {
 
         {/* Progress */}
         <div className="bg-card rounded-xl p-5 shadow-lg">
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-2 mb-4">
             <Clock className="w-5 h-5 text-primary" />
-            <h3 className="font-bold text-card-foreground">Status</h3>
+            <h3 className="font-bold text-card-foreground">Your Progress</h3>
           </div>
-          <div className="space-y-2">
+          <div className="relative pl-6">
+            {/* Vertical line */}
+            <div className="absolute left-[11px] top-2 bottom-2 w-0.5 bg-border" />
+            {/* Filled progress line */}
+            <motion.div
+              className="absolute left-[11px] top-2 w-0.5 bg-success"
+              initial={{ height: 0 }}
+              animate={{ height: currentStageIdx >= 0 ? `${Math.min((currentStageIdx / (CUSTOMER_VISIBLE_STAGES.length - 1)) * 100, 100)}%` : "0%" }}
+              transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
+            />
             {CUSTOMER_VISIBLE_STAGES.map((stage, i) => {
               const isStageComplete = currentStageIdx > i || isComplete;
               const isCurrent = currentStageIdx === i && !isComplete;
               return (
-                <div
+                <motion.div
                   key={stage}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm ${
-                    isStageComplete ? "bg-success/10" : isCurrent ? "bg-accent/10" : "bg-muted/50"
-                  }`}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.08, duration: 0.3 }}
+                  className="relative flex items-center gap-3 py-2.5"
                 >
-                  {isStageComplete ? (
-                    <CheckCircle className="w-5 h-5 text-success flex-shrink-0" />
-                  ) : isCurrent ? (
-                    <Circle className="w-5 h-5 text-accent flex-shrink-0 fill-accent" />
-                  ) : (
-                    <Circle className="w-5 h-5 text-muted-foreground/40 flex-shrink-0" />
-                  )}
-                  <span className={`${isCurrent ? "font-bold text-card-foreground" : isStageComplete ? "text-card-foreground" : "text-muted-foreground"}`}>
+                  <div className="absolute -left-6 flex items-center justify-center">
+                    {isStageComplete ? (
+                      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: i * 0.08 + 0.2, type: "spring" }}>
+                        <CheckCircle className="w-6 h-6 text-success" />
+                      </motion.div>
+                    ) : isCurrent ? (
+                      <div className="relative">
+                        <Circle className="w-6 h-6 text-accent fill-accent" />
+                        <span className="absolute inset-0 rounded-full animate-ping bg-accent/30" />
+                      </div>
+                    ) : (
+                      <Circle className="w-6 h-6 text-muted-foreground/30" />
+                    )}
+                  </div>
+                  <span className={`text-sm ${isCurrent ? "font-bold text-card-foreground" : isStageComplete ? "text-card-foreground" : "text-muted-foreground/60"}`}>
                     {PROGRESS_LABELS[stage] || stage}
                   </span>
-                </div>
+                </motion.div>
               );
             })}
           </div>
