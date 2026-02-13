@@ -1,22 +1,22 @@
-import { Skeleton } from "@/components/ui/skeleton";
+import { motion } from "framer-motion";
+import loadingCar from "@/assets/loading-car.svg";
 
 const UploadSkeleton = () => (
-  <div className="min-h-screen bg-background">
-    <div className="max-w-lg mx-auto p-6">
-      <div className="text-center mb-6">
-        <Skeleton className="w-12 h-12 rounded-full mx-auto mb-3" />
-        <Skeleton className="h-7 w-56 mx-auto mb-2" />
-        <Skeleton className="h-4 w-40 mx-auto" />
-      </div>
-      <div className="bg-card rounded-xl p-5 shadow-lg mb-6 space-y-3">
-        <Skeleton className="h-5 w-36" />
-        {Array.from({ length: 7 }).map((_, i) => (
-          <Skeleton key={i} className="h-4 w-48" />
-        ))}
-      </div>
-      <Skeleton className="h-32 w-full rounded-xl mb-4" />
-      <Skeleton className="h-12 w-full rounded-lg" />
-    </div>
+  <div className="min-h-screen bg-background flex items-center justify-center">
+    <motion.div
+      animate={{ y: [0, -10, 0] }}
+      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+      className="text-center"
+    >
+      <img src={loadingCar} alt="Loading" className="w-24 h-24 mx-auto mb-4 opacity-80" />
+      <motion.div
+        animate={{ opacity: [0.5, 1, 0.5] }}
+        transition={{ duration: 1.5, repeat: Infinity }}
+        className="text-sm font-medium text-muted-foreground"
+      >
+        Loading photos...
+      </motion.div>
+    </motion.div>
   </div>
 );
 
