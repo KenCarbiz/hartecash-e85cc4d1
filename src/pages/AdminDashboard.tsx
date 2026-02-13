@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import harteLogo from "@/assets/harte-logo.png";
 import StaffManagement from "@/components/admin/StaffManagement";
 import StaffFileUpload from "@/components/admin/StaffFileUpload";
+import DashboardAnalytics from "@/components/admin/DashboardAnalytics";
 
 interface PendingRequest {
   id: string;
@@ -110,6 +111,8 @@ const AdminDashboard = () => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>(""); 
+  const [dateRangeFilter, setDateRangeFilter] = useState<{ from: string; to: string }>({ from: "", to: "" });
   const [selected, setSelected] = useState<Submission | null>(null);
   const [photos, setPhotos] = useState<string[]>([]);
   const [docs, setDocs] = useState<{ name: string; url: string; type: string }[]>([]);
@@ -130,6 +133,7 @@ const AdminDashboard = () => {
   });
   const [creatingAppt, setCreatingAppt] = useState(false);
   const [userRole, setUserRole] = useState<string>("");
+  const [showFilterPanel, setShowFilterPanel] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -623,16 +627,30 @@ const AdminDashboard = () => {
   };
 
   const filtered = submissions.filter((s) => {
-    if (!search) return true;
-    const q = search.toLowerCase();
-    return (
-      s.name?.toLowerCase().includes(q) ||
-      s.email?.toLowerCase().includes(q) ||
-      s.phone?.includes(q) ||
-      s.vin?.toLowerCase().includes(q) ||
-      s.plate?.toLowerCase().includes(q) ||
-      `${s.vehicle_year} ${s.vehicle_make} ${s.vehicle_model}`.toLowerCase().includes(q)
-    );
+    // Text search
+    if (search) {
+      const q = search.toLowerCase();
+      const matchesSearch =
+        s.name?.toLowerCase().includes(q) ||
+        s.email?.toLowerCase().includes(q) ||
+        s.phone?.includes(q) ||
+        s.vin?.toLowerCase().includes(q) ||
+        s.plate?.toLowerCase().includes(q) ||
+        `${s.vehicle_year} ${s.vehicle_make} ${s.vehicle_model}`.toLowerCase().includes(q);
+      if (!matchesSearch) return false;
+    }
+
+    // Status filter
+    if (statusFilter && statusFilter !== "__all__" && s.progress_status !== statusFilter) return false;
+
+    // Date range filter
+    if (dateRangeFilter.from || dateRangeFilter.to) {
+      const submissionDate = new Date(s.created_at).toISOString().split('T')[0];
+      if (dateRangeFilter.from && submissionDate < dateRangeFilter.from) return false;
+      if (dateRangeFilter.to && submissionDate > dateRangeFilter.to) return false;
+    }
+
+    return true;
   });
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
@@ -702,9 +720,14 @@ const AdminDashboard = () => {
             )}
           </TabsList>
 
+          {/* Analytics Dashboard */}
+          <div className="mb-6">
+            <DashboardAnalytics />
+          </div>
+
           <TabsContent value="submissions">
-            <div className="flex items-center justify-end mb-4">
-              <div className="relative w-64">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div className="relative flex-1 max-w-xs">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   placeholder="Search leads..."
@@ -713,7 +736,68 @@ const AdminDashboard = () => {
                   className="pl-9"
                 />
               </div>
+              <Button
+                variant={showFilterPanel ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowFilterPanel(!showFilterPanel)}
+              >
+                Filter {(statusFilter || dateRangeFilter.from || dateRangeFilter.to) && "*"}
+              </Button>
             </div>
+
+            {showFilterPanel && (
+              <div className="mb-4 bg-muted/40 rounded-lg border border-border p-4 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label className="text-xs font-semibold mb-2 block">Status</Label>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="All statuses" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__all__">All statuses</SelectItem>
+                        {PROGRESS_STAGES.map(stage => (
+                          <SelectItem key={stage.key} value={stage.key}>
+                            {stage.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold mb-2 block">From Date</Label>
+                    <Input
+                      type="date"
+                      value={dateRangeFilter.from}
+                      onChange={(e) => setDateRangeFilter(prev => ({ ...prev, from: e.target.value }))}
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold mb-2 block">To Date</Label>
+                    <Input
+                      type="date"
+                      value={dateRangeFilter.to}
+                      onChange={(e) => setDateRangeFilter(prev => ({ ...prev, to: e.target.value }))}
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setStatusFilter("__all__");
+                      setDateRangeFilter({ from: "", to: "" });
+                    }}
+                    className="text-xs"
+                  >
+                    Clear Filters
+                  </Button>
+                </div>
+              </div>
+            )}
 
             {loading ? (
               <div className="text-center py-12 text-muted-foreground">Loading submissions...</div>
