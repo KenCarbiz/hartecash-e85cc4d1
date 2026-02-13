@@ -353,6 +353,13 @@ export type Database = {
       mark_docs_uploaded: { Args: { _token: string }; Returns: undefined }
       mark_photos_uploaded: { Args: { _token: string }; Returns: undefined }
       remove_staff_role: { Args: { _role_id: string }; Returns: undefined }
+      update_staff_role: {
+        Args: {
+          _new_role: Database["public"]["Enums"]["app_role"]
+          _role_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "user" | "sales_bdc" | "used_car_manager" | "gsm_gm"
