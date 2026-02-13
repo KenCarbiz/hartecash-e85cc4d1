@@ -27,7 +27,9 @@ const StaffFileUpload = ({ token, bucket, onUploadComplete }: StaffFileUploadPro
   const [docType, setDocType] = useState("drivers_license");
   const [uploading, setUploading] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   const isPhotos = bucket === "submission-photos";
@@ -51,6 +53,25 @@ const StaffFileUpload = ({ token, bucket, onUploadComplete }: StaffFileUploadPro
 
   const removeFile = (index: number) => {
     setFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    addFiles(e.dataTransfer.files);
   };
 
   const handleUpload = async () => {
@@ -130,6 +151,31 @@ const StaffFileUpload = ({ token, bucket, onUploadComplete }: StaffFileUploadPro
         className="hidden"
         onChange={(e) => { addFiles(e.target.files); e.target.value = ""; }}
       />
+
+      <div
+        ref={dropZoneRef}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors cursor-pointer ${
+          isDragging 
+            ? "border-primary bg-primary/5" 
+            : "border-muted-foreground/20 hover:border-muted-foreground/40"
+        }`}
+      >
+        <div className="flex flex-col items-center gap-2">
+          <Upload className="w-5 h-5 text-muted-foreground" />
+          <p className="text-xs text-muted-foreground">
+            Drag and drop files here or{" "}
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="text-primary hover:underline"
+            >
+              click to browse
+            </button>
+          </p>
+        </div>
+      </div>
 
       {files.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
