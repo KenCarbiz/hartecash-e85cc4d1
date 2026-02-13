@@ -144,7 +144,7 @@ const CustomerPortal = () => {
       {/* Header */}
       <div className="bg-primary text-primary-foreground px-6 py-4">
         <div className="max-w-lg mx-auto flex items-center gap-3">
-          <img src={harteLogo} alt="Harte" className="h-8 w-auto brightness-0 invert" />
+          <img src={harteLogo} alt="Harte" className="h-12 w-auto" />
           <div>
             <h1 className="font-bold text-lg">My Submission</h1>
             <p className="text-sm opacity-80">{vehicleStr}</p>
