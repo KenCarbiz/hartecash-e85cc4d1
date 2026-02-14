@@ -9,7 +9,8 @@ const DOC_TYPES = [
   { key: "drivers_license", label: "Driver's License", emoji: "🪪" },
   { key: "registration", label: "Registration", emoji: "📋" },
   { key: "title_inquiry", label: "Title Inquiry by Dealer", emoji: "🔍" },
-  { key: "title", label: "Title", emoji: "📄" },
+  { key: "title_front", label: "Title (Front)", emoji: "📄" },
+  { key: "title_back", label: "Title (Back)", emoji: "📄" },
   { key: "payoff_verification", label: "Payoff Verification (if necessary)", emoji: "💰" },
 ];
 
