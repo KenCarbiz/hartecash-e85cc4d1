@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { FileText, CheckCircle, Upload, X, Plus, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import MobileQRBanner from "@/components/upload/MobileQRBanner";
 import harteLogo from "@/assets/harte-logo.png";
 
 const DOC_TYPES = [
@@ -162,6 +163,8 @@ const UploadDocs = () => {
             </p>
           )}
         </div>
+
+        <MobileQRBanner url={`${window.location.origin}/docs/${token}`} />
 
         <div className="bg-card rounded-xl p-5 shadow-lg mb-6">
           <h3 className="font-bold text-card-foreground mb-3">Documents needed:</h3>

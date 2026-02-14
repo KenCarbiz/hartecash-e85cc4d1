@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Camera, CheckCircle, Upload, X, Plus, ImageIcon, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import UploadSkeleton from "@/components/UploadSkeleton";
+import MobileQRBanner from "@/components/upload/MobileQRBanner";
 import harteLogo from "@/assets/harte-logo.png";
 
 interface SubmissionInfo {
@@ -235,6 +236,8 @@ const UploadPhotos = () => {
             {submission.vehicle_year} {submission.vehicle_make} {submission.vehicle_model}
           </p>
         )}
+
+        <MobileQRBanner url={`${window.location.origin}/upload/${token}`} />
 
         {/* Progress indicator */}
         <div className="mb-5">
