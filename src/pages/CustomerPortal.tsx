@@ -34,6 +34,7 @@ interface PortalSubmission {
 const PROGRESS_LABELS: Record<string, string> = {
   new: "Submission Received",
   contacted: "Under Review",
+  offer_made: "Initial Offer",
   inspection_scheduled: "Inspection Scheduled",
   inspection_completed: "Inspection Complete",
   price_agreed: "Final Offer",
@@ -50,7 +51,7 @@ const STAGE_MAPPING: Record<string, string> = {
 };
 
 const CUSTOMER_VISIBLE_STAGES = [
-  "new", "contacted", "inspection_scheduled", "inspection_completed",
+  "new", "contacted", "offer_made", "inspection_scheduled", "inspection_completed",
   "price_agreed", "purchase_complete",
 ];
 
@@ -140,7 +141,11 @@ const CustomerPortal = () => {
 
   const s = submission;
   const vehicleStr = [s.vehicle_year, s.vehicle_make, s.vehicle_model].filter(Boolean).join(" ");
-  const mappedStatus = STAGE_MAPPING[s.progress_status] || s.progress_status;
+  // If an offer has been made but internal status hasn't advanced past contacted, show offer_made
+  let mappedStatus = STAGE_MAPPING[s.progress_status] || s.progress_status;
+  if (mappedStatus === "contacted" && s.offered_price) {
+    mappedStatus = "offer_made";
+  }
   const currentStageIdx = CUSTOMER_VISIBLE_STAGES.indexOf(mappedStatus);
   const isComplete = mappedStatus === "purchase_complete";
 
