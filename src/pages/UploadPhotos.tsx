@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Camera, CheckCircle, Upload, X, Plus, ImageIcon, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import UploadSkeleton from "@/components/UploadSkeleton";
+import harteLogo from "@/assets/harte-logo.png";
 
 interface SubmissionInfo {
   id: string;
@@ -219,19 +220,21 @@ const UploadPhotos = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-lg mx-auto p-6">
-        <Link to={`/my-submission/${token}`} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4">
-          <ArrowLeft className="w-4 h-4" /> Back to My Submission
-        </Link>
-        <div className="text-center mb-6">
-          <Camera className="w-12 h-12 text-accent mx-auto mb-3" />
-          <h1 className="text-2xl font-bold text-foreground mb-1">Upload Vehicle Photos</h1>
-          {submission && (
-            <p className="text-muted-foreground text-sm">
-              {submission.vehicle_year} {submission.vehicle_make} {submission.vehicle_model}
-            </p>
-          )}
+      <div className="bg-primary text-primary-foreground px-6 py-4 mb-0">
+        <div className="max-w-lg mx-auto flex items-center gap-3">
+          <Link to={`/my-submission/${token}`} className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <img src={harteLogo} alt="Harte" className="h-12 w-auto" />
+          <h1 className="font-bold text-lg">Upload Vehicle Photos</h1>
         </div>
+      </div>
+      <div className="max-w-lg mx-auto p-6">
+        {submission && (
+          <p className="text-muted-foreground text-sm text-center mb-4">
+            {submission.vehicle_year} {submission.vehicle_make} {submission.vehicle_model}
+          </p>
+        )}
 
         {/* Progress indicator */}
         <div className="mb-5">
