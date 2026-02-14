@@ -65,7 +65,7 @@ const STAGE_CONFIG: Record<string, StageInfo> = {
     helperText: "We've inspected your vehicle and are finalizing the details.",
   },
   price_agreed: {
-    label: "Final Offer",
+    label: "Final Offer Accepted",
     icon: Handshake,
     helperText: "We've agreed on a price! We're preparing everything for the purchase.",
   },
