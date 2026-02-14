@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
   Car, CheckCircle, Circle, Camera, FileText, Printer, Clock,
-  DollarSign, Upload, ExternalLink
+  DollarSign, Inbox, Search, BadgeDollarSign, CalendarCheck,
+  ClipboardCheck, Handshake, PartyPopper, type LucideIcon
 } from "lucide-react";
 import harteLogo from "@/assets/harte-logo.png";
 import { motion } from "framer-motion";
@@ -31,14 +32,48 @@ interface PortalSubmission {
   token: string;
 }
 
-const PROGRESS_LABELS: Record<string, string> = {
-  new: "Submission Received",
-  contacted: "Under Review",
-  offer_made: "Initial Offer",
-  inspection_scheduled: "Inspection Scheduled",
-  inspection_completed: "Inspection Complete",
-  price_agreed: "Final Offer",
-  purchase_complete: "Purchase Complete 🎉",
+interface StageInfo {
+  label: string;
+  icon: LucideIcon;
+  helperText: string;
+}
+
+const STAGE_CONFIG: Record<string, StageInfo> = {
+  new: {
+    label: "Submission Received",
+    icon: Inbox,
+    helperText: "We've received your vehicle info and our team will begin reviewing it shortly.",
+  },
+  contacted: {
+    label: "Under Review",
+    icon: Search,
+    helperText: "Our team is evaluating your vehicle details. We'll be in touch soon!",
+  },
+  offer_made: {
+    label: "Initial Offer",
+    icon: BadgeDollarSign,
+    helperText: "We've prepared a cash offer for your vehicle. Check it out above!",
+  },
+  inspection_scheduled: {
+    label: "Inspection Scheduled",
+    icon: CalendarCheck,
+    helperText: "Your in-person inspection is booked. Bring your vehicle and we'll take a look!",
+  },
+  inspection_completed: {
+    label: "Inspection Complete",
+    icon: ClipboardCheck,
+    helperText: "We've inspected your vehicle and are finalizing the details.",
+  },
+  price_agreed: {
+    label: "Final Offer",
+    icon: Handshake,
+    helperText: "We've agreed on a price! We're preparing everything for the purchase.",
+  },
+  purchase_complete: {
+    label: "Purchase Complete 🎉",
+    icon: PartyPopper,
+    helperText: "Congratulations! The deal is done. Thank you for choosing Harte Auto Group!",
+  },
 };
 
 // Map internal-only stages to the nearest customer-visible stage
@@ -211,31 +246,49 @@ const CustomerPortal = () => {
             {CUSTOMER_VISIBLE_STAGES.map((stage, i) => {
               const isStageComplete = currentStageIdx > i || isComplete;
               const isCurrent = currentStageIdx === i && !isComplete;
+              const config = STAGE_CONFIG[stage];
+              const StageIcon = config?.icon || Circle;
               return (
                 <motion.div
                   key={stage}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.08, duration: 0.3 }}
-                  className="relative flex items-center gap-3 py-2.5"
+                  className="relative flex items-start gap-3 py-2.5"
                 >
-                  <div className="absolute -left-6 flex items-center justify-center">
+                  <div className="absolute -left-6 flex items-center justify-center mt-0.5">
                     {isStageComplete ? (
                       <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: i * 0.08 + 0.2, type: "spring" }}>
                         <CheckCircle className="w-6 h-6 text-success" />
                       </motion.div>
                     ) : isCurrent ? (
                       <div className="relative">
-                        <Circle className="w-6 h-6 text-accent fill-accent" />
+                        <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center">
+                          <StageIcon className="w-3.5 h-3.5 text-white" />
+                        </div>
                         <span className="absolute inset-0 rounded-full animate-ping bg-accent/30" />
                       </div>
                     ) : (
-                      <Circle className="w-6 h-6 text-muted-foreground/30" />
+                      <div className="w-6 h-6 rounded-full border-2 border-muted-foreground/20 flex items-center justify-center">
+                        <StageIcon className="w-3.5 h-3.5 text-muted-foreground/30" />
+                      </div>
                     )}
                   </div>
-                  <span className={`text-sm ${isCurrent ? "font-bold text-card-foreground" : isStageComplete ? "text-card-foreground" : "text-muted-foreground/60"}`}>
-                    {PROGRESS_LABELS[stage] || stage}
-                  </span>
+                  <div>
+                    <span className={`text-sm ${isCurrent ? "font-bold text-card-foreground" : isStageComplete ? "text-card-foreground" : "text-muted-foreground/60"}`}>
+                      {config?.label || stage}
+                    </span>
+                    {isCurrent && config?.helperText && (
+                      <motion.p
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4, duration: 0.3 }}
+                        className="text-xs text-muted-foreground mt-0.5 leading-relaxed"
+                      >
+                        {config.helperText}
+                      </motion.p>
+                    )}
+                  </div>
                 </motion.div>
               );
             })}
