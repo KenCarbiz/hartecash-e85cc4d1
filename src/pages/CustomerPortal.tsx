@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -173,13 +174,19 @@ const CustomerPortal = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-gradient-to-r from-primary via-[hsl(210,100%,30%)] to-primary text-primary-foreground px-6 py-5">
-        <div className="max-w-lg mx-auto flex items-center gap-3">
-          <img src={harteLogo} alt="Harte" className="h-12 w-auto" />
-          <div className="flex-1">
-            <h1 className="font-bold text-lg">{vehicleStr || "My Submission"}</h1>
-            {firstName && (
-              <p className="text-sm opacity-80">Welcome back, {firstName}!</p>
-            )}
+        <div className="max-w-lg mx-auto">
+          <Link to="/my-submission" className="inline-flex items-center gap-1 text-xs text-primary-foreground/70 hover:text-primary-foreground transition-colors mb-1.5">
+            <ArrowLeft className="w-3.5 h-3.5" />
+            Back to my submissions
+          </Link>
+          <div className="flex items-center gap-3">
+            <img src={harteLogo} alt="Harte" className="h-12 w-auto" />
+            <div className="flex-1">
+              <h1 className="font-bold text-lg">{vehicleStr || "My Submission"}</h1>
+              {firstName && (
+                <p className="text-sm opacity-80">Welcome back, {firstName}!</p>
+              )}
+            </div>
           </div>
         </div>
       </div>
