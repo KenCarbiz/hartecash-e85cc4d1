@@ -50,8 +50,9 @@ const UploadPhotos = () => {
   useEffect(() => {
     const fetchSubmission = async () => {
       if (!token) { setError("Invalid link."); setLoading(false); return; }
-      const { data, error: err } = await supabase
-        .rpc("get_submission_by_token", { _token: token });
+      const minDelay = new Promise(r => setTimeout(r, 1200));
+      const fetchData = supabase.rpc("get_submission_by_token", { _token: token });
+      const [, { data, error: err }] = await Promise.all([minDelay, fetchData]);
       if (err || !data || data.length === 0) { setError("Submission not found."); }
       else { setSubmission(data[0]); }
       setLoading(false);

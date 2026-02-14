@@ -87,11 +87,11 @@ const CustomerPortal = () => {
   useEffect(() => {
     const fetch = async () => {
       if (!token) { setError("Invalid link."); setLoading(false); return; }
-      const { data, error: err } = await supabase
-        .rpc("get_submission_portal", { _token: token })
-        .maybeSingle();
-      if (err || !data) setError("Submission not found. Please check your link.");
-      else setSubmission(data as PortalSubmission);
+      const minDelay = new Promise(r => setTimeout(r, 1200));
+      const fetchData = supabase.rpc("get_submission_portal", { _token: token });
+      const [, { data, error: err }] = await Promise.all([minDelay, fetchData]);
+      if (err || !data || data.length === 0) setError("Submission not found. Please check your link.");
+      else setSubmission(data[0] as PortalSubmission);
       setLoading(false);
     };
     fetch();
