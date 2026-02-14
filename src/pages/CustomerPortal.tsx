@@ -32,22 +32,26 @@ interface PortalSubmission {
 }
 
 const PROGRESS_LABELS: Record<string, string> = {
-  new: "New Lead",
-  contacted: "Customer Contacted",
+  new: "Submission Received",
+  contacted: "Under Review",
   inspection_scheduled: "Inspection Scheduled",
-  inspection_completed: "Inspection Completed",
-  title_verified: "Title Verified",
-  ownership_verified: "Ownership Verified",
-  appraisal_completed: "Appraisal Completed",
-  manager_approval: "Manager Approval",
-  price_agreed: "Price Agreed",
-  purchase_complete: "Purchase Complete",
-  dead_lead: "Closed",
+  inspection_completed: "Inspection Complete",
+  price_agreed: "Final Offer",
+  purchase_complete: "Purchase Complete 🎉",
+};
+
+// Map internal-only stages to the nearest customer-visible stage
+const STAGE_MAPPING: Record<string, string> = {
+  title_verified: "inspection_completed",
+  ownership_verified: "inspection_completed",
+  appraisal_completed: "inspection_completed",
+  manager_approval: "inspection_completed",
+  dead_lead: "new",
 };
 
 const CUSTOMER_VISIBLE_STAGES = [
   "new", "contacted", "inspection_scheduled", "inspection_completed",
-  "title_verified", "appraisal_completed", "price_agreed", "purchase_complete",
+  "price_agreed", "purchase_complete",
 ];
 
 const CustomerPortal = () => {
@@ -136,8 +140,9 @@ const CustomerPortal = () => {
 
   const s = submission;
   const vehicleStr = [s.vehicle_year, s.vehicle_make, s.vehicle_model].filter(Boolean).join(" ");
-  const currentStageIdx = CUSTOMER_VISIBLE_STAGES.indexOf(s.progress_status);
-  const isComplete = s.progress_status === "purchase_complete";
+  const mappedStatus = STAGE_MAPPING[s.progress_status] || s.progress_status;
+  const currentStageIdx = CUSTOMER_VISIBLE_STAGES.indexOf(mappedStatus);
+  const isComplete = mappedStatus === "purchase_complete";
 
   return (
     <div className="min-h-screen bg-background">
