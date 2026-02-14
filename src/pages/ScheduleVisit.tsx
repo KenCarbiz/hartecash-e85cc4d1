@@ -50,12 +50,12 @@ const ScheduleVisit = () => {
   const { toast } = useToast();
 
   const [form, setForm] = useState({
-    customer_name: "",
-    customer_email: "",
-    customer_phone: "",
+    customer_name: searchParams.get("name") || "",
+    customer_email: searchParams.get("email") || "",
+    customer_phone: searchParams.get("phone") || "",
     preferred_date: "",
     preferred_time: "",
-    vehicle_info: "",
+    vehicle_info: searchParams.get("vehicle") || "",
     notes: "",
   });
   const [submitting, setSubmitting] = useState(false);

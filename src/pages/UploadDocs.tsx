@@ -131,6 +131,11 @@ const UploadDocs = () => {
           {submission?.vehicle_year && ` for your ${submission.vehicle_year} ${submission.vehicle_make} ${submission.vehicle_model}`}.
           Our team will review them shortly.
         </p>
+        <Link to={`/my-submission/${token}`}>
+          <Button variant="outline" className="mt-4 gap-2">
+            <ArrowLeft className="w-4 h-4" /> Back to My Submission
+          </Button>
+        </Link>
       </div>
     </div>
   );

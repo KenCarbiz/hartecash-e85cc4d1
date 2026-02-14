@@ -204,6 +204,11 @@ const UploadPhotos = () => {
             ? " All required photos are in — we'll be in touch with your cash offer shortly."
             : " Upload the remaining required photos when you're ready."}
         </p>
+        <Link to={`/my-submission/${token}`}>
+          <Button variant="outline" className="mt-4 gap-2">
+            <ArrowLeft className="w-4 h-4" /> Back to My Submission
+          </Button>
+        </Link>
       </div>
     </div>
   );
