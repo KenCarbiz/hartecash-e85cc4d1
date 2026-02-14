@@ -14,6 +14,10 @@ import WhatsNextCard from "@/components/portal/WhatsNextCard";
 import VehiclePhotos from "@/components/portal/VehiclePhotos";
 import CompletionChecklist from "@/components/portal/CompletionChecklist";
 import DealerContactCard from "@/components/portal/DealerContactCard";
+import WhatToBringCard from "@/components/portal/WhatToBringCard";
+import PortalFAQ from "@/components/portal/PortalFAQ";
+import PaymentInfoCard from "@/components/portal/PaymentInfoCard";
+import LoanPayoffCard from "@/components/portal/LoanPayoffCard";
 
 interface PortalSubmission {
   id: string;
@@ -306,6 +310,19 @@ const CustomerPortal = () => {
           </div>
         </div>
 
+        {/* Payment Info */}
+        <PaymentInfoCard />
+
+        {/* Loan Payoff Guidance - only show if user has a loan */}
+        {s.loan_status && ["has_loan", "lease"].includes(s.loan_status) && (
+          <LoanPayoffCard />
+        )}
+
+        {/* What to Bring */}
+        {currentStageIdx >= CUSTOMER_VISIBLE_STAGES.indexOf("offer_made") && !isComplete && (
+          <WhatToBringCard />
+        )}
+
         {/* Schedule Visit CTA */}
         {currentStageIdx >= CUSTOMER_VISIBLE_STAGES.indexOf("offer_made") && !isComplete && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
@@ -316,10 +333,13 @@ const CustomerPortal = () => {
               </Button>
             </Link>
             <p className="text-xs text-muted-foreground text-center mt-1.5">
-              Book an in-person appointment to finalize your deal
+              Estimated visit: 15–25 minutes • Book your appointment now
             </p>
           </motion.div>
         )}
+
+        {/* Portal FAQ */}
+        <PortalFAQ />
 
         {/* Dealer Contact */}
         <DealerContactCard />
