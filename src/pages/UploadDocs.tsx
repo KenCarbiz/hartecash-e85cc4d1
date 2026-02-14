@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { FileText, CheckCircle, Upload, X, Plus } from "lucide-react";
+import { FileText, CheckCircle, Upload, X, Plus, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import harteLogo from "@/assets/harte-logo.png";
 
@@ -141,6 +141,9 @@ const UploadDocs = () => {
     <div className="min-h-screen bg-background">
       <div className="bg-primary text-primary-foreground px-6 py-4 mb-0">
         <div className="max-w-lg mx-auto flex items-center gap-3">
+          <Link to={`/my-submission/${token}`} className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
           <img src={harteLogo} alt="Harte" className="h-12 w-auto" />
           <h1 className="font-bold text-lg">Upload Documents</h1>
         </div>

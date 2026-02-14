@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Camera, CheckCircle, Upload, X, Plus, ImageIcon } from "lucide-react";
+import { Camera, CheckCircle, Upload, X, Plus, ImageIcon, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import UploadSkeleton from "@/components/UploadSkeleton";
 
@@ -215,6 +215,9 @@ const UploadPhotos = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-lg mx-auto p-6">
+        <Link to={`/my-submission/${token}`} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4">
+          <ArrowLeft className="w-4 h-4" /> Back to My Submission
+        </Link>
         <div className="text-center mb-6">
           <Camera className="w-12 h-12 text-accent mx-auto mb-3" />
           <h1 className="text-2xl font-bold text-foreground mb-1">Upload Vehicle Photos</h1>
