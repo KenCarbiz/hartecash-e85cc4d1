@@ -330,7 +330,6 @@ export type Database = {
           vehicle_make: string
           vehicle_model: string
           vehicle_year: string
-          vin: string
         }[]
       }
       has_role: {

@@ -30,7 +30,6 @@ interface PortalSubmission {
   created_at: string;
   loan_status: string | null;
   token: string;
-  vin: string | null;
 }
 
 interface StageInfo {
@@ -304,7 +303,6 @@ const CustomerPortal = () => {
           </div>
           <div className="space-y-1 text-sm">
             {vehicleStr && <div className="flex justify-between"><span className="text-muted-foreground">Vehicle</span><span className="font-medium">{vehicleStr}</span></div>}
-            {s.vin && <div className="flex justify-between"><span className="text-muted-foreground">VIN</span><span className="font-medium font-mono text-xs">{s.vin}</span></div>}
             {s.mileage && <div className="flex justify-between"><span className="text-muted-foreground">Mileage</span><span className="font-medium">{s.mileage}</span></div>}
             {s.exterior_color && <div className="flex justify-between"><span className="text-muted-foreground">Color</span><span className="font-medium">{s.exterior_color}</span></div>}
             {s.overall_condition && <div className="flex justify-between"><span className="text-muted-foreground">Condition</span><span className="font-medium">{s.overall_condition}</span></div>}
