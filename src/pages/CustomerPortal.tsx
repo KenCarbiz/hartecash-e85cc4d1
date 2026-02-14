@@ -310,6 +310,25 @@ const CustomerPortal = () => {
           </div>
         </div>
 
+        {/* Schedule Visit CTA */}
+        {currentStageIdx >= CUSTOMER_VISIBLE_STAGES.indexOf("offer_made") && !isComplete && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <Link to={`/schedule?token=${s.token}&vehicle=${encodeURIComponent(vehicleStr)}&name=${encodeURIComponent(s.name || "")}&email=${encodeURIComponent(s.email || "")}&phone=${encodeURIComponent(s.phone || "")}`}>
+              <Button className="w-full gap-2 text-base py-6 bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg">
+                <CalendarCheck className="w-5 h-5" />
+                Schedule Your Visit
+              </Button>
+            </Link>
+            <p className="text-xs text-muted-foreground text-center mt-1.5">
+              Book an in-person appointment to finalize your deal
+            </p>
+          </motion.div>
+        )}
+
         {/* Actions */}
         <div className="bg-card rounded-xl p-5 shadow-lg">
           <h3 className="font-bold text-card-foreground mb-3">Actions</h3>
