@@ -10,6 +10,8 @@ import {
 import harteLogo from "@/assets/harte-logo.png";
 import { motion } from "framer-motion";
 import PortalSkeleton from "@/components/PortalSkeleton";
+import WhatsNextCard from "@/components/portal/WhatsNextCard";
+import VehiclePhotos from "@/components/portal/VehiclePhotos";
 
 interface PortalSubmission {
   id: string;
@@ -187,7 +189,7 @@ const CustomerPortal = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-primary text-primary-foreground px-6 py-4">
+      <div className="bg-gradient-to-r from-primary via-[hsl(210,100%,30%)] to-primary text-primary-foreground px-6 py-5">
         <div className="max-w-lg mx-auto flex items-center gap-3">
           <img src={harteLogo} alt="Harte" className="h-12 w-auto" />
           <div>
@@ -198,12 +200,17 @@ const CustomerPortal = () => {
       </div>
 
       <div className="max-w-lg mx-auto p-6 space-y-5">
-        {/* Greeting */}
-        <div className="text-center">
-          <p className="text-muted-foreground text-sm">
-            Welcome back{s.name ? `, ${s.name}` : ""}! Here's the status of your submission.
-          </p>
-        </div>
+        {/* What's Next */}
+        <WhatsNextCard
+          mappedStatus={mappedStatus}
+          photosUploaded={s.photos_uploaded}
+          docsUploaded={s.docs_uploaded}
+          token={s.token}
+          vehicleStr={vehicleStr}
+          name={s.name || ""}
+          email={s.email || ""}
+          phone={s.phone || ""}
+        />
 
         {/* Offer Card */}
         {s.offered_price && (
@@ -294,6 +301,9 @@ const CustomerPortal = () => {
             })}
           </div>
         </div>
+
+        {/* Vehicle Photos */}
+        <VehiclePhotos token={s.token} photosUploaded={s.photos_uploaded} />
 
         {/* Vehicle Info */}
         <div className="bg-card rounded-xl p-5 shadow-lg">
