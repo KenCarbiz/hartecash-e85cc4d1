@@ -120,7 +120,7 @@ const AdminDashboard = () => {
   const [statusFilter, setStatusFilter] = useState<string>(""); 
   const [dateRangeFilter, setDateRangeFilter] = useState<{ from: string; to: string }>({ from: "", to: "" });
   const [selected, setSelected] = useState<Submission | null>(null);
-  const [photos, setPhotos] = useState<string[]>([]);
+  const [photos, setPhotos] = useState<{ url: string; name: string }[]>([]);
   const [docs, setDocs] = useState<{ name: string; url: string; type: string }[]>([]);
   const [page, setPage] = useState(0);
   const [total, setTotal] = useState(0);
@@ -365,6 +365,30 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleDeletePhoto = async (fileName: string) => {
+    if (!selected || !canDelete) return;
+    if (!confirm(`Delete photo "${fileName}"? This cannot be undone.`)) return;
+    const { error } = await supabase.storage.from("submission-photos").remove([`${selected.token}/${fileName}`]);
+    if (error) {
+      toast({ title: "Error", description: "Failed to delete photo.", variant: "destructive" });
+    } else {
+      toast({ title: "Deleted", description: "Photo removed." });
+      setPhotos((prev) => prev.filter((p) => p.name !== fileName));
+    }
+  };
+
+  const handleDeleteDoc = async (docType: string, fileName: string) => {
+    if (!selected || !canDelete) return;
+    if (!confirm(`Delete document "${fileName}"? This cannot be undone.`)) return;
+    const { error } = await supabase.storage.from("customer-documents").remove([`${selected.token}/${docType}/${fileName}`]);
+    if (error) {
+      toast({ title: "Error", description: "Failed to delete document.", variant: "destructive" });
+    } else {
+      toast({ title: "Deleted", description: "Document removed." });
+      setDocs((prev) => prev.filter((d) => !(d.type === docType && d.name === fileName)));
+    }
+  };
+
   const DOC_TYPE_LABELS: Record<string, string> = {
     drivers_license: "Driver's License",
     registration: "Registration",
@@ -401,14 +425,14 @@ const AdminDashboard = () => {
       .list(sub.token);
 
     if (data && data.length > 0) {
-      const urls: string[] = [];
+      const photoItems: { url: string; name: string }[] = [];
       for (const file of data) {
         const { data: urlData } = await supabase.storage
           .from("submission-photos")
           .createSignedUrl(`${sub.token}/${file.name}`, 3600);
-        if (urlData?.signedUrl) urls.push(urlData.signedUrl);
+        if (urlData?.signedUrl) photoItems.push({ url: urlData.signedUrl, name: file.name });
       }
-      setPhotos(urls);
+      setPhotos(photoItems);
     } else {
       setPhotos([]);
     }
@@ -587,7 +611,7 @@ const AdminDashboard = () => {
 
     const photosHtml = photos.length > 0
       ? '<div class="section"><div class="section-title">Photos (' + photos.length + ')</div><div class="photos-grid">' +
-        photos.map(u => '<img src="' + u + '" />').join("") + "</div></div>"
+        photos.map(p => '<img src="' + p.url + '" />').join("") + "</div></div>"
       : "";
 
     const notesHtml = s.internal_notes
@@ -1529,10 +1553,21 @@ const AdminDashboard = () => {
                 </h3>
                 {photos.length > 0 ? (
                   <div className="grid grid-cols-3 gap-2">
-                    {photos.map((url, i) => (
-                      <a key={i} href={url} target="_blank" rel="noopener noreferrer">
-                        <img src={url} alt={`Photo ${i + 1}`} className="rounded-lg w-full h-28 object-cover hover:opacity-80 transition-opacity" />
-                      </a>
+                    {photos.map((photo, i) => (
+                      <div key={i} className="relative group">
+                        <a href={photo.url} target="_blank" rel="noopener noreferrer">
+                          <img src={photo.url} alt={`Photo ${i + 1}`} className="rounded-lg w-full h-28 object-cover hover:opacity-80 transition-opacity" />
+                        </a>
+                        {canDelete && (
+                          <button
+                            onClick={() => handleDeletePhoto(photo.name)}
+                            className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Delete photo"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
                     ))}
                   </div>
                 ) : (
@@ -1563,16 +1598,27 @@ const AdminDashboard = () => {
                           {typeDocs.map((doc, i) => {
                             const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(doc.name);
                             return (
-                              <a key={i} href={doc.url} target="_blank" rel="noopener noreferrer" className="block">
-                                {isImage ? (
-                                  <img src={doc.url} alt={doc.name} className="rounded-lg w-full h-28 object-cover hover:opacity-80 transition-opacity" />
-                                ) : (
-                                  <div className="rounded-lg w-full h-28 bg-muted flex flex-col items-center justify-center hover:bg-muted/80 transition-colors border border-border">
-                                    <FileText className="w-8 h-8 text-muted-foreground mb-1" />
-                                    <span className="text-[10px] text-muted-foreground text-center px-1 truncate w-full">{doc.name}</span>
-                                  </div>
+                              <div key={i} className="relative group">
+                                <a href={doc.url} target="_blank" rel="noopener noreferrer" className="block">
+                                  {isImage ? (
+                                    <img src={doc.url} alt={doc.name} className="rounded-lg w-full h-28 object-cover hover:opacity-80 transition-opacity" />
+                                  ) : (
+                                    <div className="rounded-lg w-full h-28 bg-muted flex flex-col items-center justify-center hover:bg-muted/80 transition-colors border border-border">
+                                      <FileText className="w-8 h-8 text-muted-foreground mb-1" />
+                                      <span className="text-[10px] text-muted-foreground text-center px-1 truncate w-full">{doc.name}</span>
+                                    </div>
+                                  )}
+                                </a>
+                                {canDelete && (
+                                  <button
+                                    onClick={() => handleDeleteDoc(doc.type, doc.name)}
+                                    className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    title="Delete document"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </button>
                                 )}
-                              </a>
+                              </div>
                             );
                           })}
                         </div>
