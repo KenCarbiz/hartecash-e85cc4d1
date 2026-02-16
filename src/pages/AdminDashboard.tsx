@@ -77,6 +77,7 @@ interface Submission {
   progress_status: string;
   offered_price: number | null;
   acv_value: number | null;
+  appraised_by: string | null;
   check_request_done: boolean;
   internal_notes: string | null;
   status_updated_by: string | null;
@@ -1427,6 +1428,9 @@ const AdminDashboard = () => {
                     </div>
                     {!selected.acv_value && (
                       <p className="text-xs text-destructive mt-1">ACV value is required before updating.</p>
+                    )}
+                    {selected.appraised_by && selected.acv_value && (
+                      <p className="text-xs text-muted-foreground mt-1">Appraised by: {selected.appraised_by}</p>
                     )}
                   </div>
                 )}

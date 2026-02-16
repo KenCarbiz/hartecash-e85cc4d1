@@ -165,6 +165,7 @@ export type Database = {
           address_street: string | null
           appointment_date: string | null
           appointment_set: boolean
+          appraised_by: string | null
           check_request_done: boolean
           created_at: string
           docs_uploaded: boolean
@@ -216,6 +217,7 @@ export type Database = {
           address_street?: string | null
           appointment_date?: string | null
           appointment_set?: boolean
+          appraised_by?: string | null
           check_request_done?: boolean
           created_at?: string
           docs_uploaded?: boolean
@@ -267,6 +269,7 @@ export type Database = {
           address_street?: string | null
           appointment_date?: string | null
           appointment_set?: boolean
+          appraised_by?: string | null
           check_request_done?: boolean
           created_at?: string
           docs_uploaded?: boolean
