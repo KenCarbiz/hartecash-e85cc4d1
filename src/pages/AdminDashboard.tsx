@@ -140,6 +140,7 @@ const AdminDashboard = () => {
   const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [activityLog, setActivityLog] = useState<{ id: string; action: string; old_value: string | null; new_value: string | null; performed_by: string | null; created_at: string }[]>([]);
   const [duplicateWarnings, setDuplicateWarnings] = useState<Record<string, string[]>>({});
+  const [selectedApptTime, setSelectedApptTime] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -377,8 +378,21 @@ const AdminDashboard = () => {
     setSelected(sub);
     setDocs([]);
     setActivityLog([]);
+    setSelectedApptTime(null);
     fetchActivityLog(sub.id);
     checkDuplicates(sub);
+
+    // Fetch linked appointment time
+    if (sub.appointment_set) {
+      const { data: apptData } = await supabase
+        .from("appointments")
+        .select("preferred_time")
+        .eq("submission_token", sub.token)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (apptData?.preferred_time) setSelectedApptTime(apptData.preferred_time);
+    }
     // Fetch photos
     const { data } = await supabase.storage
       .from("submission-photos")
@@ -1565,6 +1579,7 @@ const AdminDashboard = () => {
                   <div className="space-y-2">
                     <p className="text-sm text-card-foreground font-medium">
                       {new Date(selected.appointment_date + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+                      {selectedApptTime && <span className="ml-1">at {selectedApptTime}</span>}
                     </p>
                     <Button
                       variant="outline"
