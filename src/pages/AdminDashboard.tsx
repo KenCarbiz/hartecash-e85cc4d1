@@ -87,6 +87,7 @@ interface Submission {
   address_street: string | null;
   address_city: string | null;
   address_state: string | null;
+  lead_source: string;
 }
 
 const PAGE_SIZE = 20;
@@ -945,6 +946,7 @@ const AdminDashboard = () => {
                           <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Vehicle</th>
                           <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Contact</th>
                           <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Photos</th>
+                          <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Source</th>
                           <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Status</th>
                           <th className="text-center px-3 py-3 font-semibold text-muted-foreground">Age</th>
                           <th className="text-right px-4 py-3 font-semibold text-muted-foreground">Actions</th>
@@ -972,6 +974,11 @@ const AdminDashboard = () => {
                               <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${sub.photos_uploaded ? "bg-success/20 text-success" : "bg-muted text-muted-foreground"}`}>
                                 {sub.photos_uploaded ? "Yes" : "No"}
                               </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <Badge variant={sub.lead_source === "service" ? "secondary" : "outline"} className="text-xs">
+                                {sub.lead_source === "service" ? "Service" : "Inventory"}
+                              </Badge>
                             </td>
                           <td className="px-4 py-3">
                               <Select
