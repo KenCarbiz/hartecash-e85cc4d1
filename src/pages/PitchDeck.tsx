@@ -259,7 +259,7 @@ export default function PitchDeck() {
           <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-indigo-600/10 blur-[120px] pointer-events-none" />
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center relative">
             <motion.div variants={fadeUp} custom={0} className="mb-8">
-              <img src={presenterLogo} alt="Presenter" className="h-60 mx-auto opacity-90" />
+              <img src={presenterLogo} alt="Presenter" className="h-60 mx-auto rounded-2xl" />
             </motion.div>
             <motion.div variants={fadeUp} custom={0.5}>
               <GlowBadge label="Introducing" />
