@@ -180,6 +180,10 @@ const ServiceLanding = () => {
         email: email || null,
         next_step: "service_trade",
         loan_status: "sell",
+        appointment_date: appointmentDate || null,
+        internal_notes: appointmentDate
+          ? `Service appointment: ${formattedAppointment}. Submitted via service trade landing page.`
+          : "Submitted via service trade landing page.",
       });
 
       if (error) throw error;
