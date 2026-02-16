@@ -6,7 +6,11 @@ import {
   Maximize2, Minimize2, CheckCircle2, XCircle, Clock, DollarSign,
   Smartphone, FileText, Camera, CalendarDays, UserCheck, Lock,
   TrendingUp, Award, ArrowRight, Globe, Layers, Eye, Star,
-  Target, Cpu, Database, ArrowUpRight, ChevronDown
+  Target, Cpu, Database, ArrowUpRight, ChevronDown, Upload,
+  ClipboardCheck, Printer, MessageSquare, Search, Inbox,
+  BadgeDollarSign, Handshake, PartyPopper, CircleDot,
+  ShieldCheck, MousePointerClick, Send, Phone, Mail,
+  CreditCard, KeyRound, MapPin, AlertCircle, LayoutDashboard
 } from "lucide-react";
 
 /* ─── Animated Counter ─── */
@@ -35,7 +39,9 @@ function AnimatedNumber({ value, prefix = "", suffix = "", className = "" }: { v
 /* ─── Slide IDs ─── */
 const SLIDES = [
   "hero", "market", "problem", "competition", "cookie-cutter", "solution-intro",
-  "customer-exp", "employee-exp", "workflow", "mobile", "security",
+  "cust-walk-1", "cust-walk-2", "cust-walk-3",
+  "emp-walk-1", "emp-walk-2", "emp-walk-3",
+  "workflow", "mobile", "security",
   "comparison", "traction", "why-us", "cta",
 ] as const;
 type SlideId = typeof SLIDES[number];
@@ -61,7 +67,6 @@ function Section({ id, dark, children, isPresenting, currentSlide, className = "
       id={id}
       className={`${isPresenting ? "w-full h-full flex items-center justify-center" : "min-h-screen flex items-center justify-center"} ${bg} ${className} relative overflow-hidden`}
     >
-      {/* Subtle grid pattern for dark sections */}
       {dark && (
         <div className="absolute inset-0 opacity-[0.03]" style={{
           backgroundImage: "linear-gradient(hsl(210 100% 60%) 1px, transparent 1px), linear-gradient(90deg, hsl(210 100% 60%) 1px, transparent 1px)",
@@ -128,6 +133,51 @@ function CompRow({ feature, us, them }: { feature: string; us: boolean; them: bo
   );
 }
 
+/* ─── Walkthrough Step ─── */
+function WalkStep({ number, icon: Icon, title, desc, detail, dark }: {
+  number: number; icon: any; title: string; desc: string; detail?: string; dark?: boolean;
+}) {
+  return (
+    <div className={`flex gap-5 ${dark ? "" : ""}`}>
+      <div className="flex flex-col items-center shrink-0">
+        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg ${dark ? "bg-blue-500/20 text-blue-400" : "bg-primary/10 text-primary"}`}>
+          {number}
+        </div>
+        <div className={`w-0.5 flex-1 mt-2 ${dark ? "bg-white/10" : "bg-border"}`} />
+      </div>
+      <div className="pb-8">
+        <div className="flex items-center gap-2 mb-1.5">
+          <Icon className={`w-4 h-4 ${dark ? "text-blue-400" : "text-primary"}`} />
+          <h3 className={`font-bold text-lg ${dark ? "text-white" : "text-foreground"}`}>{title}</h3>
+        </div>
+        <p className={`text-sm leading-relaxed mb-2 ${dark ? "text-white/60" : "text-muted-foreground"}`}>{desc}</p>
+        {detail && (
+          <div className={`text-xs px-3 py-2 rounded-lg inline-block ${dark ? "bg-white/5 text-white/40 border border-white/10" : "bg-muted text-muted-foreground border border-border"}`}>
+            {detail}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Mockup Frame ─── */
+function MockupFrame({ title, dark, children }: { title: string; dark?: boolean; children: React.ReactNode }) {
+  return (
+    <div className={`rounded-2xl overflow-hidden border ${dark ? "border-white/10 bg-white/5" : "border-border bg-card shadow-lg"}`}>
+      <div className={`flex items-center gap-2 px-4 py-2.5 border-b ${dark ? "border-white/10 bg-white/5" : "border-border bg-muted/50"}`}>
+        <div className="flex gap-1.5">
+          <span className="w-3 h-3 rounded-full bg-red-400/60" />
+          <span className="w-3 h-3 rounded-full bg-yellow-400/60" />
+          <span className="w-3 h-3 rounded-full bg-emerald-400/60" />
+        </div>
+        <span className={`text-xs font-mono ml-2 ${dark ? "text-white/30" : "text-muted-foreground"}`}>{title}</span>
+      </div>
+      <div className="p-5">{children}</div>
+    </div>
+  );
+}
+
 /* ═══════════════════════════ MAIN ═══════════════════════════ */
 export default function PitchDeck() {
   const [isPresenting, setIsPresenting] = useState(false);
@@ -183,7 +233,7 @@ export default function PitchDeck() {
         </button>
       </div>
 
-      {/* ── Scroll indicator (page mode only) ── */}
+      {/* ── Scroll indicator ── */}
       {!isPresenting && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -200,10 +250,8 @@ export default function PitchDeck() {
 
         {/* ═══ 1 — HERO ═══ */}
         <Section id="hero" dark isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "hero"}>
-          {/* Gradient orbs */}
           <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full bg-blue-600/10 blur-[150px] pointer-events-none" />
           <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-indigo-600/10 blur-[120px] pointer-events-none" />
-
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center relative">
             <motion.div variants={fadeUp} custom={0} className="mb-8">
               <img src={harteLogo} alt="Harte Auto Group" className="h-16 mx-auto brightness-0 invert opacity-90" />
@@ -235,7 +283,7 @@ export default function PitchDeck() {
           </motion.div>
         </Section>
 
-        {/* ═══ 2 — MARKET OPPORTUNITY ═══ */}
+        {/* ═══ 2 — MARKET ═══ */}
         <Section id="market" dark isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "market"}>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
             <GlowBadge label="Market Opportunity" />
@@ -254,7 +302,7 @@ export default function PitchDeck() {
           </motion.div>
         </Section>
 
-        {/* ═══ 3 — THE PROBLEM ═══ */}
+        {/* ═══ 3 — PROBLEM ═══ */}
         <Section id="problem" isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "problem"}>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
             <LightBadge label="The Problem" />
@@ -383,82 +431,593 @@ export default function PitchDeck() {
               <FeaturePill dark icon={Cpu} title="Staff Command Center" desc="Role-based dashboard with full deal pipeline, appraisal workflows, document management, and one-click check requests." />
               <FeaturePill dark icon={Database} title="Enterprise Backend" desc="Encrypted storage, server-side RBAC, rate limiting, audit trails, and automated notifications via SMS and email." />
             </motion.div>
+            <motion.div variants={fadeUp} custom={3} className="mt-14 flex items-center justify-center gap-3 text-white/30 text-sm">
+              <ArrowRight className="w-4 h-4" />
+              <span>Let's walk through exactly what your <strong className="text-white/60">customers</strong> and <strong className="text-white/60">employees</strong> will see</span>
+              <ArrowRight className="w-4 h-4" />
+            </motion.div>
           </motion.div>
         </Section>
 
-        {/* ═══ 7 — CUSTOMER EXPERIENCE ═══ */}
-        <Section id="customer-exp" isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "customer-exp"}>
+        {/* ═══════════════════════════════════════════════════════════════
+            CUSTOMER WALKTHROUGH — 3 SLIDES
+        ═══════════════════════════════════════════════════════════════ */}
+
+        {/* ═══ 7 — CUSTOMER WALK 1: Landing & Form ═══ */}
+        <Section id="cust-walk-1" isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "cust-walk-1"}>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
-            <LightBadge label="Consumer Experience" />
-            <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-6xl font-black mb-6 leading-tight">
-              Selling a Car<br />Should Feel <span className="text-primary">This Easy</span>
+            <div className="flex items-center gap-3 mb-3">
+              <LightBadge label="Customer Walkthrough" />
+              <span className="text-xs font-mono text-muted-foreground mb-8 inline-block">1 of 3</span>
+            </div>
+            <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-5xl font-black mb-4 leading-tight">
+              Step 1: <span className="text-primary">Discover & Submit</span>
             </motion.h2>
-            <motion.div variants={fadeUp} custom={1} className="grid md:grid-cols-2 gap-12 mt-14">
-              <div className="space-y-8">
-                {[
-                  { icon: FileText, title: "Guided Multi-Step Intake", desc: "5-step intelligent form captures vehicle info, build details, condition & history, loan status, and contact — with real-time validation at every step." },
-                  { icon: Eye, title: "Personal Customer Portal", desc: "Every customer gets a branded dashboard with a 7-stage progress tracker, completion checklist, next-step guidance, and direct dealer contact." },
-                  { icon: Camera, title: "Mobile Photo Grid", desc: "6 mandatory photo categories (front, rear, both sides, dash, interior) with guided labels. Auto-marks complete when all photos are uploaded." },
-                  { icon: CalendarDays, title: "Integrated Scheduling", desc: "One-click appointment booking pre-filled with their vehicle and contact info. Automated email & SMS confirmations to both customer and staff." },
-                ].map((item, i) => (
-                  <motion.div key={i} variants={fadeUp} custom={i + 2} className="flex gap-5">
-                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                      <item.icon className="w-6 h-6 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-lg text-foreground mb-1">{item.title}</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
-                    </div>
-                  </motion.div>
-                ))}
+            <motion.p variants={fadeUp} custom={0.5} className="text-lg text-muted-foreground max-w-3xl mb-12">
+              A customer lands on your dealer-branded page. No third-party logos. No CarMax. Just YOUR dealership offering to buy their car — with a professional, guided experience.
+            </motion.p>
+
+            <motion.div variants={fadeUp} custom={1} className="grid lg:grid-cols-2 gap-10">
+              {/* Left: Step-by-step walkthrough */}
+              <div>
+                <WalkStep number={1} icon={Globe} title="Branded Landing Page"
+                  desc="Customer sees a hero section with your dealership logo, trust badges (BBB, Google Reviews), and a clear 'Get Your Cash Offer' call-to-action."
+                  detail="🎯 100% your brand — no competing logos, no third-party affiliations"
+                />
+                <WalkStep number={2} icon={Car} title="Step 1: Vehicle Info"
+                  desc="They enter Year, Make, Model — or paste a VIN for instant auto-decode. The form validates every field in real time."
+                  detail="🔎 VIN decoder auto-fills Year, Make, Model instantly"
+                />
+                <WalkStep number={3} icon={Layers} title="Steps 2–3: Build & Condition"
+                  desc="Drivetrain, color, moonroof, keys, tire condition, accident history, mechanical/cosmetic issues — all guided checkboxes. No free-text guessing."
+                  detail="✅ Every question is mandatory — no half-complete submissions"
+                />
+                <WalkStep number={4} icon={Send} title="Steps 4–5: Details & Submit"
+                  desc="Contact info, loan status (Paid Off / Has Loan / Lease), and a final review. One tap to submit. They immediately receive a confirmation with a link to their personal portal."
+                  detail="📧 Instant email confirmation with unique portal link"
+                />
               </div>
-              <motion.div variants={scaleIn} custom={3} className="bg-gradient-to-br from-primary/5 via-primary/10 to-blue-500/5 border border-primary/15 rounded-3xl p-8 flex flex-col justify-center">
-                <h3 className="text-xl font-bold mb-8">Customer Progress Tracker</h3>
-                {[
-                  { label: "Submission Received", done: true },
-                  { label: "Under Review", done: true },
-                  { label: "Initial Offer", done: true },
-                  { label: "Inspection Scheduled", active: true },
-                  { label: "Inspection Complete" },
-                  { label: "Final Offer Accepted" },
-                  { label: "Purchase Complete" },
-                ].map((stage, i) => (
-                  <div key={i} className="flex items-center gap-4 py-2.5">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                      stage.done ? "bg-emerald-500 text-white" : stage.active ? "bg-primary text-primary-foreground ring-4 ring-primary/20" : "bg-muted text-muted-foreground"
-                    }`}>
-                      {stage.done ? "✓" : i + 1}
+
+              {/* Right: Mockup of the form */}
+              <motion.div variants={scaleIn} custom={2}>
+                <MockupFrame title="hartecash.com/sell-my-car">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3 mb-6">
+                      <img src={harteLogo} alt="" className="h-8" />
+                      <span className="font-bold text-foreground">Get Your Cash Offer</span>
                     </div>
-                    <span className={`text-sm ${stage.done ? "text-foreground font-medium" : stage.active ? "text-primary font-bold" : "text-muted-foreground"}`}>{stage.label}</span>
+                    {/* Progress bar mockup */}
+                    <div className="flex gap-1 mb-6">
+                      {["Vehicle Info", "Build", "Condition", "Details", "Submit"].map((s, i) => (
+                        <div key={s} className="flex-1 text-center">
+                          <div className={`h-1.5 rounded-full mb-1.5 ${i <= 1 ? "bg-primary" : "bg-muted"}`} />
+                          <span className={`text-[10px] ${i <= 1 ? "text-primary font-bold" : "text-muted-foreground"}`}>{s}</span>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Form fields */}
+                    <div className="space-y-3">
+                      <div className="bg-muted/50 rounded-lg p-3 border border-border">
+                        <span className="text-[10px] text-muted-foreground block mb-1">VIN (Optional)</span>
+                        <span className="text-sm font-mono text-foreground">1HGBH41JXMN109186</span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[["Year", "2021"], ["Make", "Honda"], ["Model", "Accord"]].map(([l, v]) => (
+                          <div key={l} className="bg-muted/50 rounded-lg p-3 border border-border">
+                            <span className="text-[10px] text-muted-foreground block mb-1">{l}</span>
+                            <span className="text-sm text-foreground font-medium">{v}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="bg-muted/50 rounded-lg p-3 border border-border">
+                        <span className="text-[10px] text-muted-foreground block mb-1">Mileage</span>
+                        <span className="text-sm text-foreground">34,200 miles</span>
+                      </div>
+                    </div>
+                    <div className="bg-primary text-primary-foreground rounded-lg py-3 text-center font-bold text-sm mt-4">
+                      Continue →
+                    </div>
                   </div>
-                ))}
+                </MockupFrame>
               </motion.div>
             </motion.div>
           </motion.div>
         </Section>
 
-        {/* ═══ 8 — EMPLOYEE EXPERIENCE ═══ */}
-        <Section id="employee-exp" dark isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "employee-exp"}>
+        {/* ═══ 8 — CUSTOMER WALK 2: Portal & Tracking ═══ */}
+        <Section id="cust-walk-2" dark isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "cust-walk-2"}>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
-            <GlowBadge label="Staff Experience" />
-            <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-6xl font-black mb-6 leading-tight">
-              Your Team Gets a<br /><span className="text-blue-400">Mission Control</span>
+            <div className="flex items-center gap-3 mb-3">
+              <GlowBadge label="Customer Walkthrough" />
+              <span className="text-xs font-mono text-white/30 mb-8 inline-block">2 of 3</span>
+            </div>
+            <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-5xl font-black mb-4 leading-tight">
+              Step 2: <span className="text-blue-400">Their Personal Portal</span>
             </motion.h2>
-            <motion.p variants={fadeUp} custom={1} className="text-lg text-white/50 max-w-2xl mb-14">
-              Not a CRM add-on. A purpose-built command center designed for the direct-buy workflow from day one.
+            <motion.p variants={fadeUp} custom={0.5} className="text-lg text-white/50 max-w-3xl mb-12">
+              After submitting, every customer gets a dedicated portal — a branded dashboard they can return to anytime. No login required. Just their unique link.
             </motion.p>
-            <motion.div variants={fadeUp} custom={2} className="grid md:grid-cols-3 gap-6">
-              <FeaturePill dark icon={BarChart3} title="Live Analytics" desc="Total leads, conversion rates, avg. pipeline days, active deals — real-time metrics that drive better decisions." />
-              <FeaturePill dark icon={UserCheck} title="4-Tier RBAC" desc="Sales/BDC → Used Car Manager → GSM/GM → Admin. Server-enforced. No loopholes. No unauthorized actions." />
-              <FeaturePill dark icon={DollarSign} title="Appraisal Attribution" desc="ACV entry restricted to managers. Auto-records appraiser name, initial, and title for full accountability." />
-              <FeaturePill dark icon={FileText} title="Check Requests" desc="One-click formatted documents with customer details, agreed price, ACV, signature lines, and appended appraisals." />
-              <FeaturePill dark icon={TrendingUp} title="10-Stage Pipeline" desc="New Lead → Customer Contacted → Inspection → Title → Ownership → Appraisal → Approval → Price Agreed → Purchase Complete." />
-              <FeaturePill dark icon={Clock} title="Full Audit Trail" desc="Every status change, price update, and action logged with timestamp and attribution. Complete accountability." />
+
+            <motion.div variants={fadeUp} custom={1} className="grid lg:grid-cols-2 gap-10">
+              {/* Left: Mockup of portal */}
+              <motion.div variants={scaleIn} custom={1.5}>
+                <MockupFrame title="hartecash.com/portal/abc123" dark>
+                  <div className="space-y-4">
+                    {/* Header */}
+                    <div className="bg-blue-600 rounded-xl p-4 text-white">
+                      <div className="flex items-center gap-3">
+                        <img src={harteLogo} alt="" className="h-8 brightness-0 invert" />
+                        <div>
+                          <div className="font-bold">2021 Honda Accord</div>
+                          <div className="text-xs text-white/70">Welcome back, Sarah!</div>
+                        </div>
+                      </div>
+                    </div>
+                    {/* What's Next */}
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                      <div className="text-xs font-bold text-blue-400 mb-1">📋 What's Next</div>
+                      <div className="text-xs text-white/60">Upload 6 photos of your vehicle so we can prepare your offer.</div>
+                    </div>
+                    {/* Offer */}
+                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3 text-center">
+                      <div className="text-xs text-white/50 mb-1">Your Cash Offer</div>
+                      <div className="text-2xl font-black text-emerald-400">$24,500.00</div>
+                      <div className="text-[10px] text-white/30 mt-1">Subject to in-person inspection</div>
+                    </div>
+                    {/* Progress tracker mini */}
+                    <div className="space-y-2">
+                      {[
+                        { label: "Submitted", done: true },
+                        { label: "Under Review", done: true },
+                        { label: "Initial Offer", done: true },
+                        { label: "Inspection", active: true },
+                        { label: "Purchase Complete", done: false },
+                      ].map((s, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold ${
+                            s.done ? "bg-emerald-500 text-white" : s.active ? "bg-blue-500 text-white ring-2 ring-blue-500/30" : "bg-white/10 text-white/30"
+                          }`}>
+                            {s.done ? "✓" : i + 1}
+                          </div>
+                          <span className={`text-xs ${s.done ? "text-white/70" : s.active ? "text-blue-400 font-bold" : "text-white/30"}`}>{s.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </MockupFrame>
+              </motion.div>
+
+              {/* Right: Step breakdown */}
+              <div>
+                <WalkStep number={1} icon={Eye} title="Personalized Dashboard" dark
+                  desc="The customer is greeted by name — 'Welcome back, Sarah!' — with their vehicle prominently displayed. It feels personal, not transactional."
+                  detail="👤 Name, vehicle, and progress all personalized"
+                />
+                <WalkStep number={2} icon={BadgeDollarSign} title="Cash Offer Front & Center" dark
+                  desc="Once your team enters an offer, it appears as a bold card: '$24,500.00'. The customer can print it. It updates in real-time as negotiations progress."
+                  detail="🖨️ One-click print of the offer for their records"
+                />
+                <WalkStep number={3} icon={CircleDot} title="7-Stage Progress Tracker" dark
+                  desc="Animated progress bar shows exactly where they stand: Received → Review → Offer → Inspection → Verified → Agreed → Complete. No guessing, no phone calls asking 'what's the status?'"
+                  detail="📊 Each stage has custom icons, animations, and helper text"
+                />
+                <WalkStep number={4} icon={ClipboardCheck} title="Smart 'What's Next' Card" dark
+                  desc="Dynamically guides the customer: 'Upload photos' → 'Upload documents' → 'Schedule your visit'. Priorities shift automatically as they complete each step."
+                  detail="🧠 Intelligent — always shows the most important next action"
+                />
+              </div>
             </motion.div>
           </motion.div>
         </Section>
 
-        {/* ═══ 9 — WORKFLOW ═══ */}
+        {/* ═══ 9 — CUSTOMER WALK 3: Photos, Docs, Schedule ═══ */}
+        <Section id="cust-walk-3" isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "cust-walk-3"}>
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
+            <div className="flex items-center gap-3 mb-3">
+              <LightBadge label="Customer Walkthrough" />
+              <span className="text-xs font-mono text-muted-foreground mb-8 inline-block">3 of 3</span>
+            </div>
+            <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-5xl font-black mb-4 leading-tight">
+              Step 3: <span className="text-primary">Upload, Schedule & Close</span>
+            </motion.h2>
+            <motion.p variants={fadeUp} custom={0.5} className="text-lg text-muted-foreground max-w-3xl mb-12">
+              The customer completes everything from their phone — photos, documents, and scheduling — without ever calling the dealership.
+            </motion.p>
+
+            <motion.div variants={fadeUp} custom={1} className="grid lg:grid-cols-3 gap-8">
+              {/* Photo Upload */}
+              <motion.div variants={scaleIn} custom={1}>
+                <MockupFrame title="📸 Vehicle Photos">
+                  <div className="space-y-3">
+                    <p className="text-xs text-muted-foreground">6 required categories — guided with labels:</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {["Front", "Rear", "Driver Side", "Passenger", "Dashboard", "Interior"].map((cat, i) => (
+                        <div key={cat} className={`aspect-square rounded-lg flex flex-col items-center justify-center text-[10px] font-medium border-2 border-dashed ${
+                          i < 3 ? "border-emerald-400/40 bg-emerald-500/5 text-emerald-600" : "border-muted-foreground/20 bg-muted/30 text-muted-foreground"
+                        }`}>
+                          {i < 3 ? <CheckCircle2 className="w-4 h-4 text-emerald-500 mb-1" /> : <Camera className="w-4 h-4 mb-1 opacity-40" />}
+                          {cat}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground bg-muted/50 rounded-lg p-2 text-center">
+                      Auto-marks complete when all 6 uploaded ✓
+                    </div>
+                  </div>
+                </MockupFrame>
+              </motion.div>
+
+              {/* Document Upload */}
+              <motion.div variants={scaleIn} custom={2}>
+                <MockupFrame title="📄 Documents">
+                  <div className="space-y-3">
+                    <p className="text-xs text-muted-foreground">Required documents with guided slots:</p>
+                    <div className="space-y-2">
+                      {[
+                        { name: "Driver's License", done: true },
+                        { name: "Registration", done: true },
+                        { name: "Title (Front)", done: false },
+                        { name: "Title (Back)", done: false },
+                      ].map((doc) => (
+                        <div key={doc.name} className={`flex items-center gap-3 p-2.5 rounded-lg border ${doc.done ? "border-emerald-400/30 bg-emerald-500/5" : "border-border bg-muted/30"}`}>
+                          {doc.done ? <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" /> : <Upload className="w-4 h-4 text-muted-foreground/40 shrink-0" />}
+                          <span className={`text-xs ${doc.done ? "text-foreground font-medium" : "text-muted-foreground"}`}>{doc.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground bg-muted/50 rounded-lg p-2 text-center">
+                      📱 QR code on desktop → opens phone camera instantly
+                    </div>
+                  </div>
+                </MockupFrame>
+              </motion.div>
+
+              {/* Schedule Visit */}
+              <motion.div variants={scaleIn} custom={3}>
+                <MockupFrame title="📅 Schedule Visit">
+                  <div className="space-y-3">
+                    <p className="text-xs text-muted-foreground">Pre-filled appointment booking:</p>
+                    <div className="space-y-2">
+                      {[
+                        { label: "Vehicle", value: "2021 Honda Accord" },
+                        { label: "Name", value: "Sarah Johnson" },
+                        { label: "Email", value: "sarah@email.com" },
+                        { label: "Phone", value: "(860) 555-1234" },
+                      ].map((field) => (
+                        <div key={field.label} className="bg-muted/50 rounded-lg p-2.5 border border-border">
+                          <span className="text-[10px] text-muted-foreground block">{field.label}</span>
+                          <span className="text-xs text-foreground font-medium">{field.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="bg-primary text-primary-foreground rounded-lg py-2.5 text-center font-bold text-xs">
+                      Confirm Appointment →
+                    </div>
+                    <div className="text-[10px] text-muted-foreground text-center">
+                      📧 + 📱 Auto-sends email & SMS confirmation
+                    </div>
+                  </div>
+                </MockupFrame>
+              </motion.div>
+            </motion.div>
+
+            {/* Additional context */}
+            <motion.div variants={fadeUp} custom={4} className="mt-12 grid md:grid-cols-3 gap-6">
+              {[
+                { icon: Phone, title: "Zero Phone Calls", desc: "Everything the customer needs is in the portal. No 'call us for status.' No phone tag." },
+                { icon: KeyRound, title: "No Login Required", desc: "Customers access their portal via unique token link. No password, no account, no friction." },
+                { icon: MapPin, title: "What to Bring Card", desc: "Portal shows exactly what to bring: ID, registration, title, all keys. No surprises at the dealership." },
+              ].map((item, i) => (
+                <motion.div key={i} variants={scaleIn} custom={i + 5} className="flex gap-4 bg-card border border-border rounded-xl p-5">
+                  <item.icon className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-bold text-sm text-foreground mb-1">{item.title}</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          </motion.div>
+        </Section>
+
+        {/* ═══════════════════════════════════════════════════════════════
+            EMPLOYEE WALKTHROUGH — 3 SLIDES
+        ═══════════════════════════════════════════════════════════════ */}
+
+        {/* ═══ 10 — EMPLOYEE WALK 1: Dashboard & Pipeline ═══ */}
+        <Section id="emp-walk-1" dark isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "emp-walk-1"}>
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
+            <div className="flex items-center gap-3 mb-3">
+              <GlowBadge label="Employee Walkthrough" />
+              <span className="text-xs font-mono text-white/30 mb-8 inline-block">1 of 3</span>
+            </div>
+            <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-5xl font-black mb-4 leading-tight">
+              What Your <span className="text-blue-400">Team Sees</span>: Command Center
+            </motion.h2>
+            <motion.p variants={fadeUp} custom={0.5} className="text-lg text-white/50 max-w-3xl mb-12">
+              Your employees log in and see a purpose-built dashboard — not a repurposed CRM. Every lead, every stage, every action in one view.
+            </motion.p>
+
+            <motion.div variants={fadeUp} custom={1} className="grid lg:grid-cols-2 gap-10">
+              {/* Left: Dashboard mockup */}
+              <motion.div variants={scaleIn} custom={1.5}>
+                <MockupFrame title="Admin Dashboard — Leads" dark>
+                  <div className="space-y-4">
+                    {/* Analytics bar */}
+                    <div className="grid grid-cols-4 gap-2">
+                      {[
+                        { label: "Total Leads", value: "147" },
+                        { label: "This Week", value: "12" },
+                        { label: "Offers Made", value: "38" },
+                        { label: "Purchased", value: "23" },
+                      ].map((stat) => (
+                        <div key={stat.label} className="bg-white/5 rounded-lg p-2 text-center border border-white/10">
+                          <div className="text-lg font-black text-blue-400">{stat.value}</div>
+                          <div className="text-[9px] text-white/40">{stat.label}</div>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Leads table */}
+                    <div className="border border-white/10 rounded-lg overflow-hidden">
+                      <div className="grid grid-cols-4 gap-2 p-2 bg-white/5 text-[9px] text-white/40 font-bold uppercase">
+                        <span>Customer</span><span>Vehicle</span><span>Status</span><span>Offer</span>
+                      </div>
+                      {[
+                        { name: "Sarah J.", car: "21 Accord", status: "Offer Made", offer: "$24,500", color: "text-emerald-400" },
+                        { name: "Mike R.", car: "22 RAV4", status: "Inspection", offer: "$28,100", color: "text-blue-400" },
+                        { name: "Lisa K.", car: "20 Civic", status: "New Lead", offer: "—", color: "text-yellow-400" },
+                        { name: "Tom H.", car: "23 CRV", status: "Contacted", offer: "—", color: "text-orange-400" },
+                      ].map((lead, i) => (
+                        <div key={i} className="grid grid-cols-4 gap-2 p-2 border-t border-white/5 text-[10px]">
+                          <span className="text-white/70 font-medium">{lead.name}</span>
+                          <span className="text-white/50">{lead.car}</span>
+                          <span className={`${lead.color} font-medium`}>{lead.status}</span>
+                          <span className="text-white/70">{lead.offer}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </MockupFrame>
+              </motion.div>
+
+              {/* Right: Steps */}
+              <div>
+                <WalkStep number={1} icon={LayoutDashboard} title="Real-Time Analytics Bar" dark
+                  desc="Total leads, weekly intake, offers made, deals closed — live numbers updated with every status change. Your team knows the pulse of the operation instantly."
+                  detail="📊 Sortable, filterable, and searchable by any field"
+                />
+                <WalkStep number={2} icon={Search} title="Lead Table with Smart Filters" dark
+                  desc="Every submission in a sortable table. Filter by status, search by name/phone/vehicle, and click any row to open the full detail modal."
+                  detail="🔍 Instant search across name, email, phone, vehicle, and VIN"
+                />
+                <WalkStep number={3} icon={TrendingUp} title="10-Stage Deal Pipeline" dark
+                  desc="New Lead → Contacted → Offer Made → Inspection Scheduled → Inspection Complete → Title Verified → Ownership Verified → Appraisal → Approval → Purchase Complete. Each stage enforced server-side."
+                  detail="🔒 Pipeline gates prevent unauthorized status transitions"
+                />
+                <WalkStep number={4} icon={AlertCircle} title="Dead Lead Tracking" dark
+                  desc="Leads that go cold are marked 'Dead Lead' with red visual styling — keeping your pipeline clean while preserving the data for future re-engagement."
+                  detail="💀 Red-flagged with distinct styling so they don't clutter active deals"
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        </Section>
+
+        {/* ═══ 11 — EMPLOYEE WALK 2: Appraisal & Check Request ═══ */}
+        <Section id="emp-walk-2" isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "emp-walk-2"}>
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
+            <div className="flex items-center gap-3 mb-3">
+              <LightBadge label="Employee Walkthrough" />
+              <span className="text-xs font-mono text-muted-foreground mb-8 inline-block">2 of 3</span>
+            </div>
+            <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-5xl font-black mb-4 leading-tight">
+              The Money Moves: <span className="text-primary">Appraisal & Checkout</span>
+            </motion.h2>
+            <motion.p variants={fadeUp} custom={0.5} className="text-lg text-muted-foreground max-w-3xl mb-12">
+              This is where deals get done. Your managers appraise, approve, and generate check requests — all within the same interface.
+            </motion.p>
+
+            <motion.div variants={fadeUp} custom={1} className="grid lg:grid-cols-2 gap-10">
+              {/* Left: Steps */}
+              <div>
+                <WalkStep number={1} icon={DollarSign} title="Cash Offer Entry"
+                  desc="Sales or Used Car Manager enters the initial cash offer. It instantly appears on the customer's portal. The customer gets notified and can view/print it immediately."
+                  detail="💰 Offer visible to customer in real-time, no phone call needed"
+                />
+                <WalkStep number={2} icon={ClipboardCheck} title="In-House ACV (Actual Cash Value)"
+                  desc="Only managers (Used Car Manager, GSM/GM, Admin) can enter the ACV. The system auto-records WHO appraised it: 'John S. — Used Car Manager'. Full accountability."
+                  detail="🔐 Restricted to management roles only — enforced at database level"
+                />
+                <WalkStep number={3} icon={ShieldCheck} title="Manager Approval Gate"
+                  desc="The pipeline can't advance to 'Manager Approval' or 'Purchase Complete' without a GSM/GM or Admin signing off. Server-side triggers enforce this — no workarounds."
+                  detail="⛔ Server-side trigger rejects unauthorized transitions"
+                />
+                <WalkStep number={4} icon={Printer} title="One-Click Check Request"
+                  desc="Generates a professional printout: customer name, address, agreed price, ACV, description ('Customer Direct Inventory Purchase'), GSM and Accounting signature lines, and appended appraisal documents."
+                  detail="🖨️ Formatted for immediate accounting processing"
+                />
+              </div>
+
+              {/* Right: Check request mockup */}
+              <motion.div variants={scaleIn} custom={2} className="space-y-6">
+                <MockupFrame title="Check Request — Print Preview">
+                  <div className="space-y-4 text-foreground">
+                    <div className="text-center border-b border-border pb-3">
+                      <div className="font-black text-lg">CHECK REQUEST</div>
+                      <div className="text-xs text-muted-foreground">Harte Auto Group</div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div>
+                        <span className="text-muted-foreground">Customer:</span>
+                        <div className="font-bold">Sarah Johnson</div>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-muted-foreground">Date:</span>
+                        <div className="font-bold">02/16/2026</div>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Vehicle:</span>
+                        <div className="font-bold">2021 Honda Accord</div>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-muted-foreground">Hartford, CT 06120</span>
+                      </div>
+                    </div>
+                    <div className="border border-border rounded-lg p-3 text-xs">
+                      <span className="text-muted-foreground">Description:</span>
+                      <div className="font-medium mt-1">Customer Direct Inventory Purchase</div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-emerald-500/10 border border-emerald-400/20 rounded-lg p-3 text-center">
+                        <span className="text-[10px] text-muted-foreground block">Check Amount</span>
+                        <span className="text-xl font-black text-emerald-600">$24,500.00</span>
+                      </div>
+                      <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 text-center">
+                        <span className="text-[10px] text-muted-foreground block">In-House ACV</span>
+                        <span className="text-xl font-black text-primary">$26,200.00</span>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 pt-3 border-t border-border">
+                      <div className="text-center">
+                        <div className="border-b border-foreground/30 w-full mb-1 h-6" />
+                        <span className="text-[10px] text-muted-foreground">GSM / GM Signature</span>
+                      </div>
+                      <div className="text-center">
+                        <div className="border-b border-foreground/30 w-full mb-1 h-6" />
+                        <span className="text-[10px] text-muted-foreground">Accounting Signature</span>
+                      </div>
+                    </div>
+                    <div className="text-[9px] text-muted-foreground text-center">
+                      Appraised by: John S. — Used Car Manager
+                    </div>
+                  </div>
+                </MockupFrame>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        </Section>
+
+        {/* ═══ 12 — EMPLOYEE WALK 3: Docs, Staff, Roles ═══ */}
+        <Section id="emp-walk-3" dark isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "emp-walk-3"}>
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
+            <div className="flex items-center gap-3 mb-3">
+              <GlowBadge label="Employee Walkthrough" />
+              <span className="text-xs font-mono text-white/30 mb-8 inline-block">3 of 3</span>
+            </div>
+            <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-5xl font-black mb-4 leading-tight">
+              Full Control: <span className="text-blue-400">Docs, Roles & Oversight</span>
+            </motion.h2>
+            <motion.p variants={fadeUp} custom={0.5} className="text-lg text-white/50 max-w-3xl mb-12">
+              Internal document management, staff permissions, and complete audit trails — everything a GM needs to run the operation with confidence.
+            </motion.p>
+
+            <motion.div variants={fadeUp} custom={1} className="grid lg:grid-cols-3 gap-8">
+              {/* Document Management */}
+              <motion.div variants={scaleIn} custom={1}>
+                <MockupFrame title="📁 Internal Documents" dark>
+                  <div className="space-y-3">
+                    <p className="text-[10px] text-white/40 mb-2">Staff-only document types:</p>
+                    <div className="space-y-2">
+                      {[
+                        { name: "Appraisal Report", tag: "Staff Only", color: "text-purple-400 bg-purple-500/10 border-purple-500/20" },
+                        { name: "Carfax Report", tag: "Staff Only", color: "text-purple-400 bg-purple-500/10 border-purple-500/20" },
+                        { name: "Window Sticker", tag: "If Available", color: "text-orange-400 bg-orange-500/10 border-orange-500/20" },
+                        { name: "Customer Title", tag: "Customer", color: "text-blue-400 bg-blue-500/10 border-blue-500/20" },
+                        { name: "Registration", tag: "Customer", color: "text-blue-400 bg-blue-500/10 border-blue-500/20" },
+                      ].map((doc) => (
+                        <div key={doc.name} className="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/10">
+                          <span className="text-xs text-white/70">{doc.name}</span>
+                          <span className={`text-[9px] px-2 py-0.5 rounded-full border ${doc.color}`}>{doc.tag}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="text-[10px] text-white/30 text-center mt-2">
+                      Appraisal auto-appends to Check Request printout
+                    </div>
+                  </div>
+                </MockupFrame>
+              </motion.div>
+
+              {/* Role Management */}
+              <motion.div variants={scaleIn} custom={2}>
+                <MockupFrame title="👥 Staff Management" dark>
+                  <div className="space-y-3">
+                    <p className="text-[10px] text-white/40 mb-2">4-tier role hierarchy:</p>
+                    <div className="space-y-2">
+                      {[
+                        { role: "Admin", desc: "Full access, staff management", icon: "🔑" },
+                        { role: "GSM / GM", desc: "Approve deals, set prices", icon: "👔" },
+                        { role: "Used Car Manager", desc: "Appraisals, ACV entry", icon: "🚗" },
+                        { role: "Sales / BDC", desc: "Contact leads, update status", icon: "📞" },
+                      ].map((r) => (
+                        <div key={r.role} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-white/5 border border-white/10">
+                          <span className="text-sm">{r.icon}</span>
+                          <div>
+                            <div className="text-xs font-bold text-white/80">{r.role}</div>
+                            <div className="text-[10px] text-white/40">{r.desc}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="text-[10px] text-white/30 text-center">
+                      🔒 All enforced at the database level
+                    </div>
+                  </div>
+                </MockupFrame>
+              </motion.div>
+
+              {/* Audit Trail */}
+              <motion.div variants={scaleIn} custom={3}>
+                <MockupFrame title="📋 Activity Log" dark>
+                  <div className="space-y-3">
+                    <p className="text-[10px] text-white/40 mb-2">Every action, logged:</p>
+                    <div className="space-y-2">
+                      {[
+                        { time: "2:34 PM", action: "Status → Offer Made", by: "Mike R.", byRole: "Sales" },
+                        { time: "2:35 PM", action: "Offer: $24,500", by: "Mike R.", byRole: "Sales" },
+                        { time: "3:12 PM", action: "ACV: $26,200", by: "John S.", byRole: "UCM" },
+                        { time: "3:15 PM", action: "Status → Approved", by: "Karen T.", byRole: "GSM" },
+                        { time: "3:18 PM", action: "Check Request Done", by: "Karen T.", byRole: "GSM" },
+                      ].map((log, i) => (
+                        <div key={i} className="flex gap-2 text-[10px] p-2 rounded bg-white/5 border border-white/5">
+                          <span className="text-white/30 font-mono shrink-0">{log.time}</span>
+                          <span className="text-white/60 flex-1">{log.action}</span>
+                          <span className="text-blue-400 shrink-0">{log.by}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="text-[10px] text-white/30 text-center">
+                      Full timestamp, user, and before/after values
+                    </div>
+                  </div>
+                </MockupFrame>
+              </motion.div>
+            </motion.div>
+
+            {/* Bottom callouts */}
+            <motion.div variants={fadeUp} custom={4} className="mt-12 grid md:grid-cols-3 gap-6">
+              {[
+                { icon: MessageSquare, title: "Appointment Management", desc: "View scheduled dates, reschedule, and see appointment status — all within the lead detail modal." },
+                { icon: Users, title: "Staff Onboarding", desc: "Add new team members, assign roles, and remove access. The admin sees everyone, controls everything." },
+                { icon: Mail, title: "Auto-Notifications", desc: "SMS and email confirmations fire automatically for appointments. Staff gets notified. Customer gets notified. No manual follow-up." },
+              ].map((item, i) => (
+                <motion.div key={i} variants={scaleIn} custom={i + 5} className="flex gap-4 bg-white/5 border border-white/10 rounded-xl p-5">
+                  <item.icon className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-bold text-sm text-white mb-1">{item.title}</h4>
+                    <p className="text-xs text-white/50 leading-relaxed">{item.desc}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          </motion.div>
+        </Section>
+
+        {/* ═══════════════════════════════════════════════════════════════
+            REMAINING SLIDES (unchanged content)
+        ═══════════════════════════════════════════════════════════════ */}
+
+        {/* ═══ 13 — WORKFLOW ═══ */}
         <Section id="workflow" isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "workflow"}>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
             <LightBadge label="Automation" />
@@ -486,7 +1045,7 @@ export default function PitchDeck() {
           </motion.div>
         </Section>
 
-        {/* ═══ 10 — MOBILE ═══ */}
+        {/* ═══ 14 — MOBILE ═══ */}
         <Section id="mobile" dark isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "mobile"}>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center">
             <GlowBadge label="Mobile-First" />
@@ -504,7 +1063,7 @@ export default function PitchDeck() {
           </motion.div>
         </Section>
 
-        {/* ═══ 11 — SECURITY ═══ */}
+        {/* ═══ 15 — SECURITY ═══ */}
         <Section id="security" isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "security"}>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
             <LightBadge label="Enterprise Security" />
@@ -532,7 +1091,7 @@ export default function PitchDeck() {
           </motion.div>
         </Section>
 
-        {/* ═══ 12 — COMPARISON ═══ */}
+        {/* ═══ 16 — COMPARISON ═══ */}
         <Section id="comparison" dark isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "comparison"}>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
             <GlowBadge label="Feature Comparison" />
@@ -566,7 +1125,7 @@ export default function PitchDeck() {
           </motion.div>
         </Section>
 
-        {/* ═══ 13 — TRACTION ═══ */}
+        {/* ═══ 17 — TRACTION ═══ */}
         <Section id="traction" isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "traction"}>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center">
             <LightBadge label="Built & Proven" />
@@ -585,7 +1144,7 @@ export default function PitchDeck() {
           </motion.div>
         </Section>
 
-        {/* ═══ 14 — WHY US ═══ */}
+        {/* ═══ 18 — WHY US ═══ */}
         <Section id="why-us" dark isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "why-us"}>
           <div className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full bg-blue-600/8 blur-[140px] pointer-events-none" />
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center relative">
@@ -612,7 +1171,7 @@ export default function PitchDeck() {
           </motion.div>
         </Section>
 
-        {/* ═══ 15 — CTA ═══ */}
+        {/* ═══ 19 — CTA ═══ */}
         <Section id="cta" dark isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "cta"}>
           <div className="absolute inset-0 bg-gradient-to-b from-blue-600/5 via-transparent to-transparent pointer-events-none" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-blue-600/5 blur-[200px] pointer-events-none" />
