@@ -170,6 +170,8 @@ const ServiceLanding = () => {
       crypto.getRandomValues(tokenBytes);
       const generatedToken = Array.from(tokenBytes).map(b => b.toString(16).padStart(2, '0')).join('');
 
+      const hasScheduledAppointment = !!(appointmentDate && appointmentTime);
+
       const { error } = await supabase.from("submissions").insert({
         token: generatedToken,
         vin: vin || null,
@@ -184,12 +186,34 @@ const ServiceLanding = () => {
         loan_status: "sell",
         lead_source: "service",
         appointment_date: appointmentDate || null,
+        appointment_set: hasScheduledAppointment,
+        progress_status: hasScheduledAppointment ? "inspection_scheduled" : "new",
         internal_notes: appointmentDate
           ? `Service appointment: ${formattedAppointment}. Submitted via service trade landing page.`
           : "Submitted via service trade landing page.",
       });
 
       if (error) throw error;
+
+      // If the customer has a pre-populated service appointment, create an appointment record
+      if (hasScheduledAppointment) {
+        const vehicleDesc = vehicleInfo
+          ? `${vehicleInfo.year} ${vehicleInfo.make} ${vehicleInfo.model}`
+          : vin || "Unknown vehicle";
+
+        await supabase.from("appointments").insert({
+          customer_name: name,
+          customer_email: email,
+          customer_phone: phone,
+          preferred_date: appointmentDate,
+          preferred_time: decodeURIComponent(appointmentTime),
+          vehicle_info: vehicleDesc,
+          submission_token: generatedToken,
+          status: "confirmed",
+          notes: `Auto-created from service appointment. Appraisal scheduled during service visit on ${formattedAppointment}.`,
+        });
+      }
+
       setUploadUrl(`${window.location.origin}/upload/${generatedToken}`);
       localStorage.setItem("lastSubmissionTime", Date.now().toString());
       setStep(2);
