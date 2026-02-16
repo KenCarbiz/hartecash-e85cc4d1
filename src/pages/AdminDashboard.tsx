@@ -1561,16 +1561,30 @@ const AdminDashboard = () => {
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">
                   <CalendarDays className="w-4 h-4 inline mr-1" />Appointment
                 </h3>
-                {selected.appointment_set ? (
-                  <div className="space-y-1">
-                    <p className="text-sm text-card-foreground font-medium flex items-center gap-1.5">
-                      <Check className="w-4 h-4 text-success" /> Appointment Set
+                {selected.appointment_set && selected.appointment_date ? (
+                  <div className="space-y-2">
+                    <p className="text-sm text-card-foreground font-medium">
+                      {new Date(selected.appointment_date + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
                     </p>
-                    {(selected as any).appointment_date && (
-                      <p className="text-sm text-muted-foreground">
-                        Date: {new Date((selected as any).appointment_date + "T12:00:00").toLocaleDateString()}
-                      </p>
-                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setApptForm({
+                          customer_name: selected.name || "",
+                          customer_email: selected.email || "",
+                          customer_phone: selected.phone || "",
+                          preferred_date: "",
+                          preferred_time: "",
+                          vehicle_info: [selected.vehicle_year, selected.vehicle_make, selected.vehicle_model].filter(Boolean).join(" "),
+                          notes: "",
+                          submission_token: selected.token,
+                        });
+                        setShowCreateAppt(true);
+                      }}
+                    >
+                      <CalendarDays className="w-4 h-4 mr-1" /> Reschedule Appointment
+                    </Button>
                   </div>
                 ) : (
                   <Button
