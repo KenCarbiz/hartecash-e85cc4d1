@@ -19,7 +19,7 @@ const DOC_TYPES = [
   { key: "payoff_verification", label: "Payoff Verification" },
   { key: "appraisal", label: "Appraisal" },
   { key: "carfax", label: "Carfax" },
-  { key: "window_sticker", label: "Window Sticker" },
+  { key: "window_sticker", label: "Window Sticker (if available)" },
 ];
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
