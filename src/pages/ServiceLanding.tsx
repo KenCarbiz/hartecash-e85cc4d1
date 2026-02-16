@@ -109,6 +109,8 @@ const ServiceLanding = () => {
   const formRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
+  const vehicleLabel = vehicleInfo ? `${vehicleInfo.year} ${vehicleInfo.make} ${vehicleInfo.model}` : null;
+
   // Auto-decode VIN from URL param on mount
   useEffect(() => {
     const trimmedVin = vinParam.trim();
@@ -220,15 +222,29 @@ const ServiceLanding = () => {
 
 
           <motion.h1 variants={fadeUp} custom={1} className="text-3xl md:text-5xl lg:text-6xl font-black leading-tight mb-6 tracking-tight">
-            There's Never Been a{" "}
-            <span className="bg-gradient-to-r from-[hsl(210,80%,60%)] to-[hsl(250,80%,70%)] bg-clip-text text-transparent">
-              Better Time
-            </span>{" "}
-            to Upgrade
+            {vehicleLabel ? (
+              <>
+                Your{" "}
+                <span className="bg-gradient-to-r from-[hsl(210,80%,60%)] to-[hsl(250,80%,70%)] bg-clip-text text-transparent">
+                  {vehicleLabel}
+                </span>{" "}
+                Could Be Worth More Than You Think
+              </>
+            ) : (
+              <>
+                There's Never Been a{" "}
+                <span className="bg-gradient-to-r from-[hsl(210,80%,60%)] to-[hsl(250,80%,70%)] bg-clip-text text-transparent">
+                  Better Time
+                </span>{" "}
+                to Upgrade
+              </>
+            )}
           </motion.h1>
 
           <motion.p variants={fadeUp} custom={2} className="text-lg md:text-xl text-[hsl(215,20%,65%)] mb-10 leading-relaxed max-w-xl mx-auto">
-            You're already trusting us with your vehicle's care. Let us show you what it's worth — and how easy upgrading can be.
+            {formattedAppointment
+              ? `While you're here on ${formattedAppointment.split(" at")[0]} for service, let us show you what your ${vehicleLabel || "vehicle"} is worth — it only takes 2 minutes.`
+              : `You're already trusting us with your vehicle's care. Let us show you what it's worth — and how easy upgrading can be.`}
           </motion.p>
 
           <motion.div variants={fadeUp} custom={3} className="flex items-center justify-center gap-1 mb-2">
@@ -252,11 +268,21 @@ const ServiceLanding = () => {
                 className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-2xl p-6 md:p-8 shadow-2xl"
               >
                 <h2 className="text-xl font-bold mb-1">Your Vehicle</h2>
-                <p className="text-sm text-[hsl(215,20%,65%)] mb-6">
+                <p className="text-sm text-[hsl(215,20%,65%)] mb-4">
                   {vehicleInfo
                     ? "We found your vehicle. Just confirm the mileage below."
                     : "Your VIN is pre-filled. Hit Lookup to confirm your vehicle."}
                 </p>
+
+                {formattedAppointment && (
+                  <div className="flex items-center gap-3 p-3 bg-[hsl(160,84%,39%)]/10 border border-[hsl(160,84%,39%)]/30 rounded-lg mb-5 text-sm">
+                    <CalendarDays className="w-5 h-5 text-[hsl(160,60%,60%)] flex-shrink-0" />
+                    <div>
+                      <span className="text-[hsl(160,60%,60%)]">Your Service Appointment</span>
+                      <p className="font-semibold text-[hsl(160,60%,75%)]">{formattedAppointment}</p>
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-4">
                   <div>
@@ -310,6 +336,9 @@ const ServiceLanding = () => {
                   >
                     See What It's Worth <ArrowRight className="w-5 h-5 ml-1" />
                   </Button>
+                  <p className="text-center text-xs text-[hsl(215,20%,50%)] mt-3 flex items-center justify-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5" /> Takes about 2 minutes • No obligation
+                  </p>
                 </div>
               </motion.div>
             )}
@@ -447,6 +476,32 @@ const ServiceLanding = () => {
                 </motion.div>
               ))}
             </div>
+
+            {/* Testimonial */}
+            <motion.div variants={fadeUp} custom={9} className="mt-10 max-w-lg mx-auto text-center">
+              <div className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-2xl p-6">
+                <div className="flex justify-center gap-0.5 mb-3">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                  ))}
+                </div>
+                <p className="text-sm text-[hsl(215,20%,75%)] italic leading-relaxed mb-4">
+                  "I came in for an oil change and left with a brand-new car and a lower payment. They showed me the numbers and it just made sense. Easiest car deal I've ever done."
+                </p>
+                <p className="text-xs font-semibold text-[hsl(215,20%,55%)]">— Sarah M., Hartford CT</p>
+              </div>
+            </motion.div>
+
+            {/* Urgency Banner */}
+            <motion.div variants={fadeUp} custom={10} className="mt-8 max-w-lg mx-auto">
+              <div className="bg-gradient-to-r from-[hsl(210,100%,25%)]/20 to-[hsl(250,80%,40%)]/20 border border-[hsl(210,100%,25%)]/30 rounded-xl p-5 text-center">
+                <TrendingUp className="w-6 h-6 mx-auto mb-2 text-[hsl(210,80%,60%)]" />
+                <h3 className="text-sm font-bold mb-1">Market Alert: Used Car Values Are Shifting</h3>
+                <p className="text-xs text-[hsl(215,20%,60%)] leading-relaxed">
+                  Pre-owned vehicle values are adjusting as new inventory increases. Today's offer could be higher than next month's. Lock in your price now.
+                </p>
+              </div>
+            </motion.div>
           </motion.div>
         </section>
       )}
