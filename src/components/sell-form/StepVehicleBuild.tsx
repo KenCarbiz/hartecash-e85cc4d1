@@ -1,15 +1,23 @@
 import { Input } from "@/components/ui/input";
 import FormField from "./FormField";
 import RadioOption from "./RadioOption";
-import type { FormData } from "./types";
+import type { FormData, VehicleInfo } from "./types";
 
 interface Props {
   formData: FormData;
   update: (field: string, value: string) => void;
+  vehicleInfo?: VehicleInfo | null;
 }
 
-const StepVehicleBuild = ({ formData, update }: Props) => (
+const StepVehicleBuild = ({ formData, update, vehicleInfo }: Props) => (
   <>
+    {vehicleInfo && (
+      <div className="mb-5 p-4 bg-primary/10 border border-primary/30 rounded-lg text-center">
+        <p className="text-lg font-bold text-card-foreground">
+          {vehicleInfo.year} {vehicleInfo.make} {vehicleInfo.model}
+        </p>
+      </div>
+    )}
     <FormField label="What color is your vehicle?">
       <Input
         placeholder="e.g. Black, White, Silver"

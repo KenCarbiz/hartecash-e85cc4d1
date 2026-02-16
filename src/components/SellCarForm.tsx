@@ -101,8 +101,23 @@ const SellCarForm = () => {
     return true;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!validateStep()) return;
+    // Auto-decode VIN if on step 0, VIN is entered but not yet looked up
+    if (step === 0 && !vehicleInfo && formData.vin.trim().length === 17) {
+      try {
+        const res = await fetch(
+          `https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${encodeURIComponent(formData.vin.trim())}?format=json`
+        );
+        const data = await res.json();
+        const results = data.Results as { Variable: string; Value: string | null }[];
+        const get = (name: string) => results.find((r) => r.Variable === name)?.Value || "";
+        const year = get("Model Year");
+        const make = get("Make");
+        const model = get("Model");
+        if (year && make && model) setVehicleInfo({ year, make, model });
+      } catch { /* silently continue */ }
+    }
     if (step < STEPS.length - 1) { setDirection(1); setStep(step + 1); }
   };
   const handleBack = () => { if (step > 0) { setDirection(-1); setStep(step - 1); } };
@@ -230,7 +245,7 @@ const SellCarForm = () => {
             transition={{ duration: 0.25, ease: "easeInOut" }}
           >
             {step === 0 && <StepVehicleInfo formData={formData} update={update} vehicleInfo={vehicleInfo} setVehicleInfo={setVehicleInfo} />}
-            {step === 1 && <StepVehicleBuild formData={formData} update={update} />}
+            {step === 1 && <StepVehicleBuild formData={formData} update={update} vehicleInfo={vehicleInfo} />}
             {step === 2 && <StepConditionHistory formData={formData} updateArray={updateArray} update={update} />}
             {step === 3 && <StepYourDetails formData={formData} update={update} />}
             {step === 4 && <StepGetOffer formData={formData} update={update} vehicleInfo={vehicleInfo} />}
