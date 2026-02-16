@@ -182,6 +182,7 @@ const ServiceLanding = () => {
         email: email || null,
         next_step: "service_trade",
         loan_status: "sell",
+        lead_source: "service",
         appointment_date: appointmentDate || null,
         internal_notes: appointmentDate
           ? `Service appointment: ${formattedAppointment}. Submitted via service trade landing page.`

@@ -178,6 +178,7 @@ export type Database = {
           id: string
           interior_damage: string[] | null
           internal_notes: string | null
+          lead_source: string
           loan_balance: string | null
           loan_company: string | null
           loan_payment: string | null
@@ -230,6 +231,7 @@ export type Database = {
           id?: string
           interior_damage?: string[] | null
           internal_notes?: string | null
+          lead_source?: string
           loan_balance?: string | null
           loan_company?: string | null
           loan_payment?: string | null
@@ -282,6 +284,7 @@ export type Database = {
           id?: string
           interior_damage?: string[] | null
           internal_notes?: string | null
+          lead_source?: string
           loan_balance?: string | null
           loan_company?: string | null
           loan_payment?: string | null
