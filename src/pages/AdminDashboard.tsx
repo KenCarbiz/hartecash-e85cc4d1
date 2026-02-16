@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LogOut, Search, Trash2, Eye, ChevronLeft, ChevronRight, UserCheck, UserX, Users, Check, Circle, DollarSign, StickyNote, XCircle, Save, Printer, FileText, QrCode, ExternalLink, ClipboardCheck, Upload, CalendarDays, Plus, Phone, Mail } from "lucide-react";
+import { LogOut, Search, Trash2, Eye, ChevronLeft, ChevronRight, UserCheck, UserX, Users, Check, Circle, DollarSign, StickyNote, XCircle, Save, Printer, FileText, QrCode, ExternalLink, ClipboardCheck, Upload, CalendarDays, Plus, Phone, Mail, AlertTriangle, Clock, History } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { QRCodeSVG } from "qrcode.react";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,6 +16,7 @@ import harteLogo from "@/assets/harte-logo.png";
 import StaffManagement from "@/components/admin/StaffManagement";
 import StaffFileUpload from "@/components/admin/StaffFileUpload";
 import DashboardAnalytics from "@/components/admin/DashboardAnalytics";
+import { Badge } from "@/components/ui/badge";
 
 interface PendingRequest {
   id: string;
@@ -134,6 +135,8 @@ const AdminDashboard = () => {
   const [creatingAppt, setCreatingAppt] = useState(false);
   const [userRole, setUserRole] = useState<string>("");
   const [showFilterPanel, setShowFilterPanel] = useState(false);
+  const [activityLog, setActivityLog] = useState<{ id: string; action: string; old_value: string | null; new_value: string | null; performed_by: string | null; created_at: string }[]>([]);
+  const [duplicateWarnings, setDuplicateWarnings] = useState<Record<string, string[]>>({});
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -368,6 +371,9 @@ const AdminDashboard = () => {
   const handleView = async (sub: Submission) => {
     setSelected(sub);
     setDocs([]);
+    setActivityLog([]);
+    fetchActivityLog(sub.id);
+    checkDuplicates(sub);
     // Fetch photos
     const { data } = await supabase.storage
       .from("submission-photos")
@@ -410,6 +416,82 @@ const AdminDashboard = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/admin/login");
+  };
+
+  const handleInlineStatusChange = async (sub: Submission, newStatus: string) => {
+    if (["manager_approval", "price_agreed", "purchase_complete"].includes(newStatus) && !canApprove) {
+      toast({ title: "Not authorized", description: "Only GSM/GM can set this status.", variant: "destructive" });
+      return;
+    }
+    const oldStatus = sub.progress_status;
+    const { error } = await supabase
+      .from("submissions")
+      .update({ progress_status: newStatus, status_updated_at: new Date().toISOString() })
+      .eq("id", sub.id);
+    if (!error) {
+      setSubmissions(prev => prev.map(s => s.id === sub.id ? { ...s, progress_status: newStatus, status_updated_at: new Date().toISOString() } : s));
+      // Log activity
+      await supabase.from("activity_log").insert({
+        submission_id: sub.id,
+        action: "Status Changed",
+        old_value: PROGRESS_STAGES.find(s => s.key === oldStatus)?.label || oldStatus,
+        new_value: PROGRESS_STAGES.find(s => s.key === newStatus)?.label || newStatus,
+        performed_by: userRole,
+      });
+      toast({ title: "Status updated" });
+    } else {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const getDaysSinceUpdate = (sub: Submission) => {
+    const refDate = sub.status_updated_at || sub.created_at;
+    const days = Math.floor((Date.now() - new Date(refDate).getTime()) / (1000 * 60 * 60 * 24));
+    return days;
+  };
+
+  const getAgingColor = (days: number, status: string) => {
+    if (["purchase_complete", "dead_lead"].includes(status)) return "text-muted-foreground";
+    if (days <= 2) return "text-success";
+    if (days <= 5) return "text-yellow-600";
+    return "text-destructive";
+  };
+
+  const fetchActivityLog = async (submissionId: string) => {
+    const { data } = await supabase
+      .from("activity_log")
+      .select("*")
+      .eq("submission_id", submissionId)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    setActivityLog(data || []);
+  };
+
+  const checkDuplicates = async (sub: Submission) => {
+    const warnings: string[] = [];
+    if (sub.vin) {
+      const { data } = await supabase
+        .from("submissions")
+        .select("id, name, created_at")
+        .eq("vin", sub.vin)
+        .neq("id", sub.id)
+        .limit(3);
+      if (data && data.length > 0) {
+        warnings.push(`VIN match: ${data.length} other submission(s) with same VIN`);
+      }
+    }
+    if (sub.phone) {
+      const { data } = await supabase
+        .from("submissions")
+        .select("id, name, created_at")
+        .eq("phone", sub.phone)
+        .neq("id", sub.id)
+        .limit(3);
+      if (data && data.length > 0) {
+        warnings.push(`Phone match: ${data.length} other submission(s) with same phone`);
+      }
+    }
+    setDuplicateWarnings(prev => ({ ...prev, [sub.id]: warnings }));
   };
 
   const handlePrint = () => {
@@ -809,13 +891,14 @@ const AdminDashboard = () => {
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-b border-border bg-muted/50">
+                         <tr className="border-b border-border bg-muted/50">
                           <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Date</th>
                           <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Name</th>
                           <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Vehicle</th>
                           <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Contact</th>
                           <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Photos</th>
                           <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Status</th>
+                          <th className="text-center px-3 py-3 font-semibold text-muted-foreground">Age</th>
                           <th className="text-right px-4 py-3 font-semibold text-muted-foreground">Actions</th>
                         </tr>
                       </thead>
@@ -843,14 +926,40 @@ const AdminDashboard = () => {
                               </span>
                             </td>
                           <td className="px-4 py-3">
-                              <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
-                                sub.progress_status === "purchase_complete" ? "bg-success/20 text-success" :
-                                sub.progress_status === "dead_lead" ? "bg-destructive/20 text-destructive" :
-                                sub.progress_status === "new" ? "bg-muted text-muted-foreground" :
-                                "bg-accent/20 text-accent"
-                              }`}>
-                                {PROGRESS_STAGES.find(s => s.key === sub.progress_status)?.label || sub.progress_status}
-                              </span>
+                              <Select
+                                value={sub.progress_status}
+                                onValueChange={(val) => handleInlineStatusChange(sub, val)}
+                              >
+                                <SelectTrigger className={`w-44 h-7 text-xs font-medium ${
+                                  sub.progress_status === "purchase_complete" ? "border-success/50 text-success" :
+                                  sub.progress_status === "dead_lead" ? "border-destructive/50 text-destructive" :
+                                  sub.progress_status === "new" ? "border-muted text-muted-foreground" :
+                                  "border-accent/50 text-accent"
+                                }`}>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {PROGRESS_STAGES.map(s => {
+                                    const isApprovalStage = ["manager_approval", "price_agreed", "purchase_complete"].includes(s.key);
+                                    return (
+                                      <SelectItem key={s.key} value={s.key} disabled={isApprovalStage && !canApprove}>
+                                        {s.label}{isApprovalStage && !canApprove ? " 🔒" : ""}
+                                      </SelectItem>
+                                    );
+                                  })}
+                                </SelectContent>
+                              </Select>
+                            </td>
+                            <td className="px-3 py-3 text-center">
+                              {(() => {
+                                const days = getDaysSinceUpdate(sub);
+                                const color = getAgingColor(days, sub.progress_status);
+                                return (
+                                  <span className={`text-xs font-bold ${color}`} title={`${days}d since last update`}>
+                                    {days}d
+                                  </span>
+                                );
+                              })()}
                             </td>
                             <td className="px-4 py-3 text-right">
                               <div className="flex justify-end gap-1">
@@ -1038,6 +1147,19 @@ const AdminDashboard = () => {
 
           {selected && (
             <div className="px-6 pb-6 space-y-5 pt-4">
+              {/* Duplicate Warning */}
+              {duplicateWarnings[selected.id] && duplicateWarnings[selected.id].length > 0 && (
+                <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 flex items-start gap-2">
+                  <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-bold text-destructive">Possible Duplicate</p>
+                    {duplicateWarnings[selected.id].map((w, i) => (
+                      <p key={i} className="text-xs text-destructive/80">{w}</p>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Contact Card */}
               <div data-print-section className="bg-muted/40 rounded-lg p-4">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Contact Information</h3>
@@ -1414,6 +1536,35 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
+              {/* Activity Log */}
+              <div data-print-section className="bg-muted/40 rounded-lg p-4">
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">
+                  <History className="w-4 h-4 inline mr-1" />Activity Log
+                </h3>
+                {activityLog.length > 0 ? (
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {activityLog.map((log) => (
+                      <div key={log.id} className="flex items-start gap-2 text-xs border-b border-border pb-2 last:border-0">
+                        <Clock className="w-3 h-3 text-muted-foreground mt-0.5 flex-shrink-0" />
+                        <div className="flex-1">
+                          <span className="font-medium text-card-foreground">{log.action}</span>
+                          {log.old_value && log.new_value && (
+                            <span className="text-muted-foreground"> — {log.old_value} → {log.new_value}</span>
+                          )}
+                          <div className="text-muted-foreground mt-0.5">
+                            {log.performed_by && <span className="capitalize">{log.performed_by.replace(/_/g, " ")}</span>}
+                            {" · "}
+                            {new Date(log.created_at).toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No activity recorded yet.</p>
+                )}
+              </div>
+
               {/* Update Record Button */}
               <div className="sticky bottom-0 bg-background pt-3 pb-1 border-t border-border flex gap-2">
                 <Button
@@ -1432,7 +1583,28 @@ const AdminDashboard = () => {
                       })
                       .eq("id", selected.id);
                     if (!error) {
+                      // Log changes
+                      const oldSub = submissions.find(s => s.id === selected.id);
+                      if (oldSub && oldSub.progress_status !== selected.progress_status) {
+                        await supabase.from("activity_log").insert({
+                          submission_id: selected.id,
+                          action: "Status Changed",
+                          old_value: PROGRESS_STAGES.find(s => s.key === oldSub.progress_status)?.label || oldSub.progress_status,
+                          new_value: PROGRESS_STAGES.find(s => s.key === selected.progress_status)?.label || selected.progress_status,
+                          performed_by: userRole,
+                        });
+                      }
+                      if (oldSub && oldSub.offered_price !== selected.offered_price) {
+                        await supabase.from("activity_log").insert({
+                          submission_id: selected.id,
+                          action: "Price Updated",
+                          old_value: oldSub.offered_price ? `$${oldSub.offered_price.toLocaleString()}` : "None",
+                          new_value: selected.offered_price ? `$${selected.offered_price.toLocaleString()}` : "None",
+                          performed_by: userRole,
+                        });
+                      }
                       setSubmissions(prev => prev.map(s => s.id === selected.id ? { ...s, progress_status: selected.progress_status, offered_price: selected.offered_price, acv_value: selected.acv_value, internal_notes: selected.internal_notes } : s));
+                      fetchActivityLog(selected.id);
                       toast({ title: "Record updated", description: "All changes have been saved." });
                     } else {
                       toast({ title: "Error", description: "Failed to save changes.", variant: "destructive" });
