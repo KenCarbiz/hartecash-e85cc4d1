@@ -161,6 +161,7 @@ const SellCarForm = () => {
           loan_balance: formData.loanBalance || null,
           loan_payment: formData.loanPayment || null,
           next_step: formData.nextStep || null,
+          lead_source: "inventory",
         });
 
       if (error) throw error;
