@@ -117,7 +117,8 @@ const AdminDashboard = () => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>(""); 
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [sourceFilter, setSourceFilter] = useState<string>("");
   const [dateRangeFilter, setDateRangeFilter] = useState<{ from: string; to: string }>({ from: "", to: "" });
   const [selected, setSelected] = useState<Submission | null>(null);
   const [photos, setPhotos] = useState<{ url: string; name: string }[]>([]);
@@ -798,6 +799,9 @@ const AdminDashboard = () => {
     // Status filter
     if (statusFilter && statusFilter !== "__all__" && s.progress_status !== statusFilter) return false;
 
+    // Source filter
+    if (sourceFilter && sourceFilter !== "__all__" && s.lead_source !== sourceFilter) return false;
+
     // Date range filter
     if (dateRangeFilter.from || dateRangeFilter.to) {
       const submissionDate = new Date(s.created_at).toISOString().split('T')[0];
@@ -896,13 +900,13 @@ const AdminDashboard = () => {
                 size="sm"
                 onClick={() => setShowFilterPanel(!showFilterPanel)}
               >
-                Filter {(statusFilter || dateRangeFilter.from || dateRangeFilter.to) && "*"}
+                Filter {(statusFilter || sourceFilter || dateRangeFilter.from || dateRangeFilter.to) && "*"}
               </Button>
             </div>
 
             {showFilterPanel && (
               <div className="mb-4 bg-muted/40 rounded-lg border border-border p-4 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div>
                     <Label className="text-xs font-semibold mb-2 block">Status</Label>
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -916,6 +920,19 @@ const AdminDashboard = () => {
                             {stage.label}
                           </SelectItem>
                         ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold mb-2 block">Lead Source</Label>
+                    <Select value={sourceFilter} onValueChange={setSourceFilter}>
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="All sources" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__all__">All sources</SelectItem>
+                        <SelectItem value="inventory">Inventory</SelectItem>
+                        <SelectItem value="service">Service</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -944,6 +961,7 @@ const AdminDashboard = () => {
                     size="sm"
                     onClick={() => {
                       setStatusFilter("__all__");
+                      setSourceFilter("__all__");
                       setDateRangeFilter({ from: "", to: "" });
                     }}
                     className="text-xs"
