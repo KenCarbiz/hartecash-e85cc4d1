@@ -217,14 +217,7 @@ const ServiceLanding = () => {
             Exclusively for Our Service Customers
            </motion.div>
 
-          {formattedAppointment && (
-            <motion.div variants={fadeUp} custom={0.5}
-              className="inline-flex items-center gap-2 px-5 py-2.5 mb-6 rounded-xl bg-[hsl(160,84%,39%)]/10 border border-[hsl(160,84%,39%)]/30 text-sm font-medium text-[hsl(160,60%,60%)]"
-            >
-              <CalendarDays className="w-4 h-4 flex-shrink-0" />
-              <span>Your service appointment: <strong className="text-[hsl(160,60%,75%)]">{formattedAppointment}</strong></span>
-            </motion.div>
-          )}
+
 
           <motion.h1 variants={fadeUp} custom={1} className="text-3xl md:text-5xl lg:text-6xl font-black leading-tight mb-6 tracking-tight">
             There's Never Been a{" "}
@@ -336,6 +329,16 @@ const ServiceLanding = () => {
                   <div className="p-3 bg-[hsl(210,100%,25%)]/10 border border-[hsl(210,100%,25%)]/20 rounded-lg mb-5 text-sm">
                     <span className="font-semibold">{vehicleInfo.year} {vehicleInfo.make} {vehicleInfo.model}</span>
                     <span className="text-[hsl(215,20%,65%)] ml-2">• {mileage} mi</span>
+                  </div>
+                )}
+
+                {formattedAppointment && (
+                  <div className="flex items-center gap-3 p-3 bg-[hsl(160,84%,39%)]/10 border border-[hsl(160,84%,39%)]/30 rounded-lg mb-5 text-sm">
+                    <CalendarDays className="w-5 h-5 text-[hsl(160,60%,60%)] flex-shrink-0" />
+                    <div>
+                      <span className="text-[hsl(160,60%,60%)]">Service Appointment</span>
+                      <p className="font-semibold text-[hsl(160,60%,75%)]">{formattedAppointment}</p>
+                    </div>
                   </div>
                 )}
 
