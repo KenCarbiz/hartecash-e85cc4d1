@@ -81,7 +81,7 @@ const ServiceLanding = () => {
   const vinParam = searchParams.get("vin") || "";
 
   const [step, setStep] = useState(0); // 0 = vehicle, 1 = contact, 2 = done
-  const [vin, setVin] = useState(vinParam.toUpperCase());
+  const [vin, setVin] = useState(vinParam.trim().toUpperCase());
   const [mileage, setMileage] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -97,9 +97,10 @@ const ServiceLanding = () => {
 
   // Auto-decode VIN from URL param on mount
   useEffect(() => {
-    if (vinParam && vinParam.length === 17) {
+    const trimmedVin = vinParam.trim();
+    if (trimmedVin && trimmedVin.length === 17) {
       setVinLoading(true);
-      decodeVin(vinParam).then((info) => {
+      decodeVin(trimmedVin).then((info) => {
         setVinLoading(false);
         if (info) setVehicleInfo(info);
       });
@@ -107,14 +108,16 @@ const ServiceLanding = () => {
   }, [vinParam]);
 
   const handleVinLookup = async () => {
-    if (vin.length !== 17) {
+    const trimmedVin = vin.trim();
+    if (trimmedVin.length !== 17) {
       setVinError("VIN must be exactly 17 characters.");
       return;
     }
+    setVin(trimmedVin);
     setVinError("");
     setVinLoading(true);
     setVehicleInfo(null);
-    const info = await decodeVin(vin);
+    const info = await decodeVin(trimmedVin);
     setVinLoading(false);
     if (info) setVehicleInfo(info);
     else setVinError("Could not decode this VIN. Please check and try again.");
