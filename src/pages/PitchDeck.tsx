@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import harteLogo from "@/assets/harte-logo.png";
+import presenterLogo from "@/assets/pitch/presenter-logo.png";
 import screenshotLanding from "@/assets/pitch/screenshot-landing.jpg";
 import screenshotPortal from "@/assets/pitch/screenshot-portal.jpg";
 import screenshotUploadMobile from "@/assets/pitch/screenshot-upload-mobile.jpg";
@@ -258,7 +259,7 @@ export default function PitchDeck() {
           <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-indigo-600/10 blur-[120px] pointer-events-none" />
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center relative">
             <motion.div variants={fadeUp} custom={0} className="mb-8">
-              <img src={harteLogo} alt="Harte Auto Group" className="h-16 mx-auto brightness-0 invert opacity-90" />
+              <img src={presenterLogo} alt="Presenter" className="h-20 mx-auto opacity-90" />
             </motion.div>
             <motion.div variants={fadeUp} custom={0.5}>
               <GlowBadge label="Introducing" />
