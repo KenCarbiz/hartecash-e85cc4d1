@@ -938,53 +938,53 @@ const AdminDashboard = () => {
               <>
                 <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
                   <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
+                    <table className="min-w-[1100px] text-sm">
                       <thead>
                          <tr className="border-b border-border bg-muted/50">
-                          <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Date</th>
-                          <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Name</th>
-                          <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Vehicle</th>
-                          <th className="text-left px-4 py-3 font-semibold text-muted-foreground">VIN</th>
-                          <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Contact</th>
-                          <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Photos</th>
-                          <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Source</th>
-                          <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Status</th>
-                          <th className="text-center px-3 py-3 font-semibold text-muted-foreground">Age</th>
-                          <th className="text-right px-4 py-3 font-semibold text-muted-foreground">Actions</th>
+                          <th className="text-left px-3 py-3 font-semibold text-muted-foreground whitespace-nowrap">Date</th>
+                          <th className="text-left px-3 py-3 font-semibold text-muted-foreground whitespace-nowrap">Name</th>
+                          <th className="text-left px-3 py-3 font-semibold text-muted-foreground whitespace-nowrap">Vehicle</th>
+                          <th className="text-left px-3 py-3 font-semibold text-muted-foreground whitespace-nowrap">VIN</th>
+                          <th className="text-left px-3 py-3 font-semibold text-muted-foreground whitespace-nowrap">Contact</th>
+                          <th className="text-left px-3 py-3 font-semibold text-muted-foreground whitespace-nowrap">Photos</th>
+                          <th className="text-left px-3 py-3 font-semibold text-muted-foreground whitespace-nowrap">Source</th>
+                          <th className="text-left px-3 py-3 font-semibold text-muted-foreground whitespace-nowrap min-w-[160px]">Status</th>
+                          <th className="text-center px-2 py-3 font-semibold text-muted-foreground whitespace-nowrap">Age</th>
+                          <th className="text-right px-3 py-3 font-semibold text-muted-foreground whitespace-nowrap">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         {filtered.map((sub) => (
                           <tr key={sub.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
-                            <td className="px-4 py-3 whitespace-nowrap">
+                            <td className="px-3 py-3 whitespace-nowrap">
                               {new Date(sub.created_at).toLocaleDateString()}
                             </td>
-                            <td className="px-4 py-3 font-medium text-card-foreground">
+                            <td className="px-3 py-3 font-medium text-card-foreground whitespace-nowrap">
                               {sub.name || "—"}
                             </td>
-                            <td className="px-4 py-3">
+                            <td className="px-3 py-3 whitespace-nowrap">
                               {sub.vehicle_year && sub.vehicle_make
                                 ? `${sub.vehicle_year} ${sub.vehicle_make} ${sub.vehicle_model || ""}`
                                 : sub.plate || "—"}
                             </td>
-                            <td className="px-4 py-3 text-xs font-mono text-muted-foreground">
+                            <td className="px-3 py-3 text-xs font-mono text-muted-foreground whitespace-nowrap">
                               {sub.vin || "—"}
                             </td>
-                            <td className="px-4 py-3">
+                            <td className="px-3 py-3 whitespace-nowrap">
                               <div>{sub.email || "—"}</div>
                               <div className="text-muted-foreground text-xs">{sub.phone || ""}</div>
                             </td>
-                            <td className="px-4 py-3">
+                            <td className="px-3 py-3">
                               <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${sub.photos_uploaded ? "bg-success/20 text-success" : "bg-muted text-muted-foreground"}`}>
                                 {sub.photos_uploaded ? "Yes" : "No"}
                               </span>
                             </td>
-                            <td className="px-4 py-3">
+                            <td className="px-3 py-3">
                               <Badge variant={sub.lead_source === "service" ? "secondary" : "outline"} className="text-xs">
                                 {sub.lead_source === "service" ? "Service" : "Inventory"}
                               </Badge>
                             </td>
-                          <td className="px-4 py-3">
+                            <td className="px-3 py-3">
                               <Select
                                 value={sub.progress_status}
                                 onValueChange={(val) => handleInlineStatusChange(sub, val)}
@@ -1009,7 +1009,7 @@ const AdminDashboard = () => {
                                 </SelectContent>
                               </Select>
                             </td>
-                            <td className="px-3 py-3 text-center">
+                            <td className="px-2 py-3 text-center">
                               {(() => {
                                 const days = getDaysSinceUpdate(sub);
                                 const color = getAgingColor(days, sub.progress_status);
@@ -1020,7 +1020,7 @@ const AdminDashboard = () => {
                                 );
                               })()}
                             </td>
-                            <td className="px-4 py-3 text-right">
+                            <td className="px-3 py-3 text-right">
                               <div className="flex justify-end gap-1">
                                 <Button variant="ghost" size="sm" onClick={() => handleView(sub)}>
                                   <Eye className="w-4 h-4" />
