@@ -621,6 +621,11 @@ const AdminDashboard = () => {
         ["Smoked In", s.smoked_in], ["Tires Replaced", s.tires_replaced], ["Keys", s.num_keys],
       ]) +
       makeSection("Loan & Info", [["Loan Status", s.loan_status], ["Next Step", s.next_step]]) +
+      '<div class="section"><div class="section-title">Appointment</div><p style="font-size:13px;color:#4a5568;">' +
+        (s.appointment_set && s.appointment_date
+          ? new Date(s.appointment_date + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })
+          : "No appointment yet") +
+      '</p></div>' +
       '<div class="section"><div class="section-title">Deal Progress</div>' + progressHtml + "</div>" +
       priceSection +
       notesHtml +
