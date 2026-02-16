@@ -4,6 +4,7 @@ import SellCarForm from "@/components/SellCarForm";
 import HowItWorks from "@/components/HowItWorks";
 import ValueProps from "@/components/ValueProps";
 import TrustBadges from "@/components/TrustBadges";
+import CompetitorComparison from "@/components/CompetitorComparison";
 import Testimonials from "@/components/Testimonials";
 import FAQ from "@/components/FAQ";
 import CTABanner from "@/components/CTABanner";
@@ -18,6 +19,7 @@ const Index = () => {
         <SellCarForm />
         <HowItWorks />
         <TrustBadges />
+        <CompetitorComparison />
         <ValueProps />
         <Testimonials />
         <FAQ />
