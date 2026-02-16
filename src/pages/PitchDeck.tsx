@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import harteLogo from "@/assets/harte-logo.png";
-import presenterLogo from "@/assets/pitch/presenter-logo.png";
+import presenterLogo from "@/assets/pitch/pitch-top-logo.png";
 import screenshotLanding from "@/assets/pitch/screenshot-landing.jpg";
 import screenshotPortal from "@/assets/pitch/screenshot-portal.jpg";
 import screenshotUploadMobile from "@/assets/pitch/screenshot-upload-mobile.jpg";
