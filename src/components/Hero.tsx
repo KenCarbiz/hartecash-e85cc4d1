@@ -1,4 +1,4 @@
-import { Check, Star } from "lucide-react";
+import { Check, Star, Shield } from "lucide-react";
 
 const Hero = () => {
   const benefits = [
@@ -10,6 +10,12 @@ const Hero = () => {
 
   return (
     <section className="bg-gradient-to-b from-primary to-[hsl(210,100%,36%)] text-primary-foreground px-5 py-12 pb-16 text-center relative">
+      {/* 8-Day Price Guarantee Badge */}
+      <div className="inline-flex items-center gap-2 bg-success/20 border border-success/40 rounded-full px-4 py-1.5 mb-5">
+        <Shield className="w-4 h-4 text-success fill-success/30" />
+        <span className="text-sm font-bold tracking-wide text-success-foreground">8-DAY PRICE GUARANTEE</span>
+      </div>
+
       <h1 className="text-[26px] md:text-[32px] font-extrabold tracking-wide leading-tight mb-4 uppercase">
         Sell Your Car
         <br />

@@ -1,7 +1,13 @@
-import { DollarSign, Clock, Truck, ShieldCheck } from "lucide-react";
+import { DollarSign, Clock, Truck, ShieldCheck, Shield } from "lucide-react";
 
 const ValueProps = () => {
   const items = [
+    {
+      icon: <Shield className="w-8 h-8 text-success" />,
+      title: "8-Day Price Guarantee",
+      desc: "Your offer is locked in for 8 full days. No pressure, no surprises — sell on your schedule.",
+      highlight: true,
+    },
     {
       icon: <DollarSign className="w-8 h-8 text-accent" />,
       title: "Top Dollar Guaranteed",
@@ -33,7 +39,11 @@ const ValueProps = () => {
         {items.map((item, i) => (
           <div
             key={i}
-            className="flex items-start gap-4 p-5 bg-card rounded-xl shadow-sm"
+            className={`flex items-start gap-4 p-5 rounded-xl shadow-sm ${
+              item.highlight
+                ? "bg-success/10 border-2 border-success/30"
+                : "bg-card"
+            }`}
           >
             <div className="flex-shrink-0 mt-1">{item.icon}</div>
             <div>
