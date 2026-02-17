@@ -177,7 +177,7 @@ export default function KenPage() {
                   <GlowBadge label="Meet the Leader" />
                 </motion.div>
                 <motion.h1 variants={fadeUp} custom={1.5} className="text-5xl md:text-7xl font-black leading-[0.95] tracking-tight mb-4">
-                  Kenneth S.<br />
+                  Kenneth<br />
                   <span className="bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-500 bg-clip-text text-transparent">
                     Criscione
                   </span>
