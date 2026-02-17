@@ -856,7 +856,7 @@ const AdminDashboard = () => {
     <div className="min-h-screen bg-background transition-colors duration-300">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-gradient-to-r from-[hsl(210,100%,15%)] via-[hsl(210,100%,20%)] to-[hsl(220,80%,18%)] text-white shadow-lg">
-        <div className="max-w-[1400px] mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="max-w-[1400px] mx-auto px-4 py-1 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src={harteLogoWhite} alt="Harte Auto Group" className="h-28 w-auto" />
             <div>
