@@ -224,7 +224,7 @@ export default function KenPage() {
             </motion.div>
             <motion.div variants={fadeUp} custom={3} className="grid md:grid-cols-3 gap-6">
               <div className="rounded-2xl p-6 bg-white/5 border border-white/10 text-center">
-                <p className="text-3xl font-black text-emerald-400">$3,240</p>
+                <p className="text-3xl font-black text-emerald-400">$4,000+</p>
                 <p className="text-xs text-white/50 mt-2">Current PVR (Per Vehicle Retailed)</p>
               </div>
               <div className="rounded-2xl p-6 bg-white/5 border border-white/10 text-center">
