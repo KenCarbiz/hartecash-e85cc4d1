@@ -5,12 +5,14 @@ import {
   Maximize2, Minimize2, Users, DollarSign,
   Award, TrendingUp, Briefcase, Target,
   Star, Shield, Handshake, Car, Zap,
+  ListOrdered, ArrowUpRight, CheckCircle2,
+  GraduationCap, BarChart3, Repeat,
 } from "lucide-react";
 import kenPortrait from "@/assets/ken-portrait.png";
 import presenterLogo from "@/assets/pitch/pitch-top-logo.png";
 
 /* ─── Slide IDs ─── */
-const SLIDES = ["hero", "stats", "journey", "leadership", "philosophy", "cta"] as const;
+const SLIDES = ["hero", "stats", "process", "turnarounds", "journey", "leadership", "philosophy", "cta"] as const;
 type SlideId = typeof SLIDES[number];
 
 /* ─── Variants ─── */
@@ -103,7 +105,7 @@ export default function KenPage() {
   }, [isPresenting]);
 
   useEffect(() => {
-    document.title = "Ken Cieplinski | 20 Years of Automotive Excellence";
+    document.title = "Ken Criscione | 20+ Years of Automotive Excellence";
     return () => { document.title = "Sell Your Car - Get Cash Offer in 2 Minutes | Harte Auto Group"; };
   }, []);
 
@@ -164,18 +166,12 @@ export default function KenPage() {
           <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-indigo-600/10 blur-[120px] pointer-events-none" />
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} className="relative">
             <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
-              {/* Photo */}
               <motion.div variants={fadeUp} custom={0} className="shrink-0">
                 <div className="relative">
                   <div className="absolute -inset-3 rounded-3xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 blur-xl" />
-                  <img
-                    src={kenPortrait}
-                    alt="Ken Cieplinski"
-                    className="relative w-72 md:w-80 lg:w-96 rounded-2xl object-cover shadow-2xl shadow-blue-900/30 border border-white/10"
-                  />
+                  <img src={kenPortrait} alt="Ken Criscione" className="relative w-72 md:w-80 lg:w-96 rounded-2xl object-cover shadow-2xl shadow-blue-900/30 border border-white/10" />
                 </div>
               </motion.div>
-              {/* Text */}
               <div className="text-center lg:text-left">
                 <motion.div variants={fadeUp} custom={0.5}>
                   <img src={presenterLogo} alt="Harte Auto Group" className="h-16 mb-6 mx-auto lg:mx-0 opacity-60" />
@@ -184,19 +180,23 @@ export default function KenPage() {
                   <GlowBadge label="Meet the Leader" />
                 </motion.div>
                 <motion.h1 variants={fadeUp} custom={1.5} className="text-5xl md:text-7xl font-black leading-[0.95] tracking-tight mb-4">
-                  Ken<br />
+                  Kenneth S.<br />
                   <span className="bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-500 bg-clip-text text-transparent">
-                    Cieplinski
+                    Criscione
                   </span>
                 </motion.h1>
-                <motion.p variants={fadeUp} custom={2} className="text-xl md:text-2xl text-white/50 mb-6 font-medium">
-                  General Sales Manager · Harte Auto Group
+                <motion.p variants={fadeUp} custom={2} className="text-xl md:text-2xl text-white/50 mb-3 font-medium">
+                  Finance Director · Harte Auto Group
+                </motion.p>
+                <motion.p variants={fadeUp} custom={2.2} className="text-sm text-white/30 mb-6 max-w-lg">
+                  Visionary, process-driven leader with 20+ years turning around underperforming dealerships, building elite teams, and shattering F&I records across Connecticut.
                 </motion.p>
                 <motion.div variants={fadeUp} custom={2.5} className="flex flex-wrap items-center justify-center lg:justify-start gap-6 text-sm text-white/40">
                   {[
-                    { icon: Briefcase, label: "20 Years in Auto" },
+                    { icon: Briefcase, label: "20+ Years" },
                     { icon: Users, label: "200+ Mentored" },
-                    { icon: Car, label: "35,000 Vehicles Sold" },
+                    { icon: Car, label: "35,000+ Sold" },
+                    { icon: DollarSign, label: "$45M+ F&I Revenue" },
                   ].map(({ icon: I, label }) => (
                     <span key={label} className="flex items-center gap-2">
                       <I className="w-4 h-4 text-blue-400" />{label}
@@ -217,18 +217,108 @@ export default function KenPage() {
               <span className="text-blue-400">Proven Results</span>
             </motion.h2>
             <motion.p variants={fadeUp} custom={1} className="text-lg text-white/50 max-w-2xl mb-16">
-              Numbers don't lie — Ken's career speaks for itself through consistent, measurable impact across every dealership he's touched.
+              From turning $400 PVR departments into $3,000+ powerhouses — every number backed by real dealership records.
             </motion.p>
-            <motion.div variants={fadeUp} custom={2} className="grid md:grid-cols-4 gap-6">
+            <motion.div variants={fadeUp} custom={2} className="grid md:grid-cols-4 gap-6 mb-10">
               <MetricCard value={20} suffix="+" label="Years in the Automotive Industry" />
               <MetricCard value={35000} suffix="+" label="Vehicles Sold Career-Wide" />
               <MetricCard value={200} suffix="+" label="Employees Mentored & Trained" />
               <MetricCard value={45} prefix="$" suffix="M+" label="Generated in F&I Revenue" />
             </motion.div>
+            <motion.div variants={fadeUp} custom={3} className="grid md:grid-cols-3 gap-6">
+              <div className="rounded-2xl p-6 bg-white/5 border border-white/10 text-center">
+                <p className="text-3xl font-black text-emerald-400">$3,240</p>
+                <p className="text-xs text-white/50 mt-2">Current PVR (Per Vehicle Retailed)</p>
+              </div>
+              <div className="rounded-2xl p-6 bg-white/5 border border-white/10 text-center">
+                <p className="text-3xl font-black text-emerald-400">70%</p>
+                <p className="text-xs text-white/50 mt-2">VSC Penetration Rate</p>
+              </div>
+              <div className="rounded-2xl p-6 bg-white/5 border border-white/10 text-center">
+                <p className="text-3xl font-black text-emerald-400">#1</p>
+                <p className="text-xs text-white/50 mt-2">Nissan Dealer in CT (1999)</p>
+              </div>
+            </motion.div>
           </motion.div>
         </Section>
 
-        {/* ═══ 3 — CAREER JOURNEY ═══ */}
+        {/* ═══ 3 — THE 6-STEP PROCESS ═══ */}
+        <Section id="process" isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "process"}>
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
+            <GlowBadge label="The Process" />
+            <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-6xl font-black mb-6 leading-tight">
+              The 6-Step<br />
+              <span className="text-blue-400">Selling Process</span>
+            </motion.h2>
+            <motion.p variants={fadeUp} custom={1} className="text-lg text-white/50 max-w-2xl mb-16">
+              Process-driven. Operationally disciplined. Every deal follows a proven framework that maximizes profit while delivering an exceptional customer experience.
+            </motion.p>
+            <motion.div variants={fadeUp} custom={2} className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                { num: "01", title: "Meet & Greet", desc: "Build instant rapport. Set the tone for a transparent, pressure-free experience from the very first handshake." },
+                { num: "02", title: "Qualify & Discover", desc: "Understand the customer's needs, wants, and budget. Ask the right questions to match them with the right vehicle." },
+                { num: "03", title: "Present & Demonstrate", desc: "Showcase the vehicle's value with a structured walkaround and test drive that builds emotional connection." },
+                { num: "04", title: "Negotiate & Close", desc: "Present numbers with confidence using a proven menu system. Fair, transparent, and designed to maximize PVR." },
+                { num: "05", title: "F&I Delivery", desc: "The profit engine. Structured product presentation with 70% VSC penetration — every product earns its place." },
+                { num: "06", title: "Follow-Up & Retain", desc: "The deal doesn't end at delivery. CSI follow-up, loyalty programs, and referral systems drive repeat business." },
+              ].map(({ num, title, desc }) => (
+                <div key={num} className="rounded-2xl p-6 bg-white/5 border border-white/10 hover:scale-[1.02] transition-transform duration-300 group">
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-2xl font-black text-blue-400/60">{num}</span>
+                    <h3 className="font-bold text-lg text-white">{title}</h3>
+                  </div>
+                  <p className="text-sm leading-relaxed text-white/60">{desc}</p>
+                </div>
+              ))}
+            </motion.div>
+            <motion.div variants={fadeUp} custom={3} className="mt-10 p-6 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-center">
+              <p className="text-sm text-blue-300 font-semibold">
+                <ListOrdered className="w-4 h-4 inline mr-2" />
+                "Process isn't a restriction — it's a multiplier. Every step compounds into bigger profits, happier customers, and a team that knows exactly what to do."
+              </p>
+            </motion.div>
+          </motion.div>
+        </Section>
+
+        {/* ═══ 4 — TURNAROUND TRACK RECORD ═══ */}
+        <Section id="turnarounds" isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "turnarounds"}>
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
+            <GlowBadge label="Track Record" />
+            <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-6xl font-black mb-6 leading-tight">
+              Turnaround<br />
+              <span className="text-blue-400">Specialist</span>
+            </motion.h2>
+            <motion.p variants={fadeUp} custom={1} className="text-lg text-white/50 max-w-2xl mb-16">
+              Recruited again and again to fix broken F&I departments. The results speak louder than any resume.
+            </motion.p>
+            <motion.div variants={fadeUp} custom={2} className="space-y-5">
+              {[
+                { dealer: "Key Hyundai of Milford", period: "2025", before: "$1,100–$1,300 PVR", after: "$3,240 PVR · 70% VSC", detail: "474 units delivered for $1.54M in F&I revenue. Trained junior finance manager to $2,870 PVR within months." },
+                { dealer: "George Harte Nissan", period: "2018–2025", before: "$1,106 PVR", after: "$3,850 PVR · 65% VSC", detail: "+$200K/month finance profit immediately. Grew used car volume by 254 units in one year." },
+                { dealer: "Napoli Nissan", period: "2014–2017", before: "$900 F&I per car", after: "$1.4M → $3M annual profit", detail: "Hit $3M for two consecutive years. Tripled product penetration. Launched Kia franchise generating $2,100+ PVR." },
+                { dealer: "Alfano Nissan & Hyundai", period: "2012–2014", before: "$400–$775 PVR", after: "$1,981 PVR", detail: "Tripled penetration at both stores. Grew Nissan volume from 80 to 135 units/month. CSI up 30%." },
+                { dealer: "Danbury Volkswagen", period: "2004–2007", before: "$25K/month F&I", after: "$97.5K/month F&I", detail: "Ranked 'Top Finance Manager in the Northeast' by VW. #3 in nation for VW Credit Card Activations." },
+              ].map(({ dealer, period, before, after, detail }) => (
+                <div key={dealer} className="rounded-2xl p-6 bg-white/5 border border-white/10 hover:bg-white/[0.07] transition-colors">
+                  <div className="flex flex-col md:flex-row md:items-center gap-4 mb-3">
+                    <div className="flex-1">
+                      <h3 className="font-bold text-lg text-white">{dealer}</h3>
+                      <p className="text-xs text-white/40">{period}</p>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm">
+                      <span className="px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 font-semibold">{before}</span>
+                      <ArrowUpRight className="w-4 h-4 text-emerald-400" />
+                      <span className="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">{after}</span>
+                    </div>
+                  </div>
+                  <p className="text-sm text-white/50">{detail}</p>
+                </div>
+              ))}
+            </motion.div>
+          </motion.div>
+        </Section>
+
+        {/* ═══ 5 — CAREER JOURNEY ═══ */}
         <Section id="journey" isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "journey"}>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
             <GlowBadge label="The Journey" />
@@ -237,27 +327,27 @@ export default function KenPage() {
               <span className="text-blue-400">Ground Up</span>
             </motion.h2>
             <motion.p variants={fadeUp} custom={1} className="text-lg text-white/50 max-w-2xl mb-16">
-              From the showroom floor to the GM's office — a career forged by hustle, knowledge, and an obsession with getting the customer the best deal.
+              From selling Nissans in Shelton in 1994 to running multi-store F&I operations — every role earned, never given.
             </motion.p>
             <motion.div variants={fadeUp} custom={2} className="grid md:grid-cols-3 gap-8">
               {[
                 {
                   icon: Star,
-                  period: "The Foundation",
-                  title: "Started on the Floor",
-                  desc: "Began as a sales consultant, learning every angle of the deal — from first handshake to final signature. Mastered the art of earning trust quickly.",
+                  period: "1994–2000",
+                  title: "Sales Floor to Sales Manager",
+                  desc: "Started at Mario D'Addario Auto Group. Rose to GSM, grew the dealership to #1 Nissan Dealer in Connecticut. Created their first internet department from scratch — 250 leads/month, 28 units sold online.",
                 },
                 {
                   icon: TrendingUp,
-                  period: "The Rise",
-                  title: "Finance & Leadership",
-                  desc: "Moved into F&I, unlocking $45M+ in revenue. Trained teams, built processes, and turned finance departments into profit engines.",
+                  period: "2000–2017",
+                  title: "Finance Director Era",
+                  desc: "Paul Miller, Danbury VW, Napoli Motors, Alfano Auto — every stop a turnaround story. Grew F&I from $25K to $97.5K/month at VW. Ranked Top Finance Manager in the Northeast. Built and launched a Kia franchise.",
                 },
                 {
                   icon: Target,
-                  period: "The Present",
-                  title: "General Sales Manager",
-                  desc: "Now leading the entire sales operation at Harte Auto Group — setting strategy, mentoring the next generation, and driving record-breaking numbers.",
+                  period: "2018–Present",
+                  title: "The Harte Chapter & Beyond",
+                  desc: "Recruited to George Harte Nissan to fix a declining store. Added $200K/month in F&I profit immediately. Now building the next evolution of dealer-direct vehicle acquisition at Harte Auto Group.",
                 },
               ].map(({ icon: Icon, period, title, desc }) => (
                 <div key={title} className="rounded-2xl p-8 bg-white/5 border border-white/10 backdrop-blur-sm hover:scale-[1.02] transition-transform duration-300">
@@ -270,26 +360,37 @@ export default function KenPage() {
                 </div>
               ))}
             </motion.div>
+            <motion.div variants={fadeUp} custom={3} className="mt-10 flex flex-wrap gap-3 justify-center">
+              {[
+                "Nissan Certified", "Ford Credit F&I Certified", "VW Credit Certified",
+                "JM&A F&I Certified", "Universal (Zurich) #1 in Class", "Joe Verde Trained",
+              ].map(cert => (
+                <span key={cert} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold border border-white/10 text-white/50 bg-white/5">
+                  <GraduationCap className="w-3 h-3 text-blue-400" />
+                  {cert}
+                </span>
+              ))}
+            </motion.div>
           </motion.div>
         </Section>
 
-        {/* ═══ 4 — LEADERSHIP STYLE ═══ */}
+        {/* ═══ 6 — LEADERSHIP STYLE ═══ */}
         <Section id="leadership" isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "leadership"}>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
             <GlowBadge label="Leadership" />
             <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-6xl font-black mb-6 leading-tight">
-              More Than a Manager —<br />
-              <span className="text-blue-400">A Mentor</span>
+              Operationally<br />
+              <span className="text-blue-400">Disciplined</span>
             </motion.h2>
             <motion.p variants={fadeUp} custom={1} className="text-lg text-white/50 max-w-2xl mb-16">
-              200+ employees have been coached, developed, and elevated under Ken's guidance. His approach blends old-school grit with modern strategy.
+              200+ employees trained, mentored, and elevated. Ken doesn't just manage — he builds systems that turn average performers into top producers.
             </motion.p>
             <motion.div variants={fadeUp} custom={2} className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
-                { icon: Handshake, title: "Relationship First", desc: "Every deal starts with trust. Ken builds relationships that last beyond the transaction." },
-                { icon: Shield, title: "Integrity Always", desc: "Transparent pricing, honest assessments, no gimmicks — the Harte standard." },
-                { icon: Zap, title: "Speed & Precision", desc: "Fast offers, streamlined processes, and a team that moves with purpose." },
-                { icon: Award, title: "Culture of Winning", desc: "Setting goals, celebrating wins, and pushing every team member to their best." },
+                { icon: ListOrdered, title: "Process-Driven", desc: "Every department runs on a proven, repeatable process. No guessing, no shortcuts — just discipline that compounds into profits." },
+                { icon: Handshake, title: "Relationship Builder", desc: "Productive relationships with customers, vendors, lenders, and teams. Communication at every level drives results." },
+                { icon: BarChart3, title: "P&L Accountable", desc: "Full ownership of the bottom line. From overhead control to revenue generation — every dollar tracked, every decision justified." },
+                { icon: Repeat, title: "Turnaround Expert", desc: "Recruited repeatedly to fix underperforming stores. Track record of tripling F&I profits within the first year." },
               ].map(({ icon: Icon, title, desc }) => (
                 <div key={title} className="rounded-2xl p-6 bg-white/5 border border-white/10 hover:scale-[1.02] transition-transform duration-300">
                   <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 bg-blue-500/20">
@@ -303,21 +404,21 @@ export default function KenPage() {
           </motion.div>
         </Section>
 
-        {/* ═══ 5 — PHILOSOPHY ═══ */}
+        {/* ═══ 7 — PHILOSOPHY ═══ */}
         <Section id="philosophy" isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "philosophy"}>
-          <div className="absolute top-1/3 right-1/4 w-[500px] h-[500px] rounded-full bg-blue-600/8 blur-[150px] pointer-events-none" />
+          <div className="absolute top-1/3 right-1/4 w-[500px] h-[500px] rounded-full bg-blue-600/[0.08] blur-[150px] pointer-events-none" />
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center max-w-4xl mx-auto">
             <motion.div variants={fadeUp} custom={0}>
               <GlowBadge label="Philosophy" />
             </motion.div>
             <motion.h2 variants={fadeUp} custom={1} className="text-4xl md:text-6xl font-black mb-10 leading-tight">
-              <span className="text-blue-400">"</span>Every customer deserves<br />the best deal — <span className="text-blue-400">period.</span><span className="text-blue-400">"</span>
+              <span className="text-blue-400">"</span>Process is the<br />multiplier — discipline<br />is the <span className="text-blue-400">edge.</span><span className="text-blue-400">"</span>
             </motion.h2>
             <motion.p variants={fadeUp} custom={2} className="text-lg md:text-xl text-white/50 leading-relaxed mb-12">
-              In an industry full of noise, Ken keeps it simple: treat every person like family, give them a fair price, and make the process effortless. That philosophy has driven 35,000 sales and counting.
+              In an industry where most wing it, Ken builds systems. A customer-first approach backed by operational discipline — that's how you turn a $400 PVR department into a $3,200+ machine and keep it there.
             </motion.p>
             <motion.div variants={fadeUp} custom={3} className="flex flex-wrap justify-center gap-4">
-              {["Customer-First", "Data-Driven", "Team Builder", "Process Innovator", "Results-Oriented"].map(tag => (
+              {["Customer-First", "Process-Driven", "Operationally Disciplined", "Data-Backed", "Team Builder", "Turnaround Specialist"].map(tag => (
                 <span key={tag} className="px-5 py-2.5 rounded-full text-sm font-semibold border border-blue-500/30 text-blue-400 bg-blue-500/10">
                   {tag}
                 </span>
@@ -326,7 +427,7 @@ export default function KenPage() {
           </motion.div>
         </Section>
 
-        {/* ═══ 6 — CTA ═══ */}
+        {/* ═══ 8 — CTA ═══ */}
         <Section id="cta" isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "cta"}>
           <div className="absolute top-1/4 left-1/3 w-[600px] h-[600px] rounded-full bg-blue-600/10 blur-[150px] pointer-events-none" />
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center relative">
@@ -340,7 +441,7 @@ export default function KenPage() {
               </span>
             </motion.h2>
             <motion.p variants={fadeUp} custom={2} className="text-lg text-white/50 max-w-xl mx-auto mb-12">
-              Whether you're selling your car, joining the team, or looking for a leader who delivers — Ken is ready.
+              Whether you're selling your car, looking to hire a proven leader, or want someone who turns departments around — Ken delivers.
             </motion.p>
             <motion.div variants={fadeUp} custom={3} className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
@@ -350,10 +451,10 @@ export default function KenPage() {
                 Get In Touch
               </a>
               <a
-                href="tel:+18668517390"
+                href="tel:+12035095054"
                 className="inline-flex items-center justify-center gap-2 px-10 py-4 rounded-full bg-white/5 border border-white/10 text-white font-bold text-lg hover:bg-white/10 transition"
               >
-                Call (866) 851-7390
+                Call (203) 509-5054
               </a>
             </motion.div>
             <motion.div variants={fadeUp} custom={4} className="mt-16">
