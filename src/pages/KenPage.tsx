@@ -173,9 +173,6 @@ export default function KenPage() {
                 </div>
               </motion.div>
               <div className="text-center lg:text-left">
-                <motion.div variants={fadeUp} custom={0.5}>
-                  <img src={presenterLogo} alt="Harte Auto Group" className="h-16 mb-6 mx-auto lg:mx-0 opacity-60" />
-                </motion.div>
                 <motion.div variants={fadeUp} custom={1}>
                   <GlowBadge label="Meet the Leader" />
                 </motion.div>
