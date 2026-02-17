@@ -193,7 +193,7 @@ export default function KenPage() {
                     { icon: Briefcase, label: "20+ Years" },
                     { icon: Users, label: "200+ Mentored" },
                     { icon: Car, label: "35,000+ Sold" },
-                    { icon: DollarSign, label: "$45M+ F&I Revenue" },
+                    { icon: DollarSign, label: "$45K+ F&I Profit" },
                   ].map(({ icon: I, label }) => (
                     <span key={label} className="flex items-center gap-2">
                       <I className="w-4 h-4 text-blue-400" />{label}
@@ -220,7 +220,7 @@ export default function KenPage() {
               <MetricCard value={20} suffix="+" label="Years in the Automotive Industry" />
               <MetricCard value={35000} suffix="+" label="Vehicles Sold Career-Wide" />
               <MetricCard value={200} suffix="+" label="Employees Mentored & Trained" />
-              <MetricCard value={45} prefix="$" suffix="M+" label="Generated in F&I Revenue" />
+              <MetricCard value={45} prefix="$" suffix="K+" label="Generated in F&I Profit" />
             </motion.div>
             <motion.div variants={fadeUp} custom={3} className="grid md:grid-cols-3 gap-6">
               <div className="rounded-2xl p-6 bg-white/5 border border-white/10 text-center">
