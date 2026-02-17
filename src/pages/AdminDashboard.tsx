@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
 import harteLogo from "@/assets/harte-logo.png";
+import harteLogoWhite from "@/assets/harte-logo-white.png";
 import StaffManagement from "@/components/admin/StaffManagement";
 import StaffFileUpload from "@/components/admin/StaffFileUpload";
 import DashboardAnalytics from "@/components/admin/DashboardAnalytics";
@@ -857,7 +858,7 @@ const AdminDashboard = () => {
       <header className="sticky top-0 z-50 bg-gradient-to-r from-[hsl(210,100%,15%)] via-[hsl(210,100%,20%)] to-[hsl(220,80%,18%)] text-white shadow-lg">
         <div className="max-w-[1400px] mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={harteLogo} alt="Harte Auto Group" className="h-10 w-auto brightness-0 invert" />
+            <img src={harteLogoWhite} alt="Harte Auto Group" className="h-10 w-auto" />
             <div>
               <span className="text-lg font-bold">Dashboard</span>
               <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-white/20 text-white/90 font-medium">
