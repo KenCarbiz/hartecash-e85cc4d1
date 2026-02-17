@@ -193,7 +193,7 @@ export default function KenPage() {
                     { icon: Briefcase, label: "20+ Years" },
                     { icon: Users, label: "200+ Mentored" },
                     { icon: Car, label: "35,000+ Sold" },
-                    { icon: DollarSign, label: "$45K+ F&I Profit" },
+                    { icon: DollarSign, label: "$45M+ F&I Profit" },
                   ].map(({ icon: I, label }) => (
                     <span key={label} className="flex items-center gap-2">
                       <I className="w-4 h-4 text-blue-400" />{label}
@@ -220,7 +220,7 @@ export default function KenPage() {
               <MetricCard value={20} suffix="+" label="Years in the Automotive Industry" />
               <MetricCard value={35000} suffix="+" label="Vehicles Sold Career-Wide" />
               <MetricCard value={200} suffix="+" label="Employees Mentored & Trained" />
-              <MetricCard value={45} prefix="$" suffix="K+" label="Generated in F&I Profit" />
+              <MetricCard value={45} prefix="$" suffix="M+" label="Generated in F&I Profit" />
             </motion.div>
             <motion.div variants={fadeUp} custom={3} className="grid md:grid-cols-3 gap-6">
               <div className="rounded-2xl p-6 bg-white/5 border border-white/10 text-center">
@@ -244,7 +244,7 @@ export default function KenPage() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
             <GlowBadge label="The Process" />
             <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-6xl font-black mb-6 leading-tight">
-              The 6-Step<br />
+              The 6½-Step<br />
               <span className="text-blue-400">Selling Process</span>
             </motion.h2>
             <motion.p variants={fadeUp} custom={1} className="text-lg text-white/50 max-w-2xl mb-16">
@@ -255,6 +255,7 @@ export default function KenPage() {
                 { num: "01", title: "Meet & Greet", desc: "Build instant rapport. Set the tone for a transparent, pressure-free experience from the very first handshake." },
                 { num: "02", title: "Qualify & Discover", desc: "Understand the customer's needs, wants, and budget. Ask the right questions to match them with the right vehicle." },
                 { num: "03", title: "Present & Demonstrate", desc: "Showcase the vehicle's value with a structured walkaround and test drive that builds emotional connection." },
+                { num: "03½", title: "Service Walk", desc: "Introduce the customer to the service department. Build trust, establish the relationship early, and set the stage for long-term retention." },
                 { num: "04", title: "Negotiate & Close", desc: "Present numbers with confidence using a proven menu system. Fair, transparent, and designed to maximize PVR." },
                 { num: "05", title: "F&I Delivery", desc: "The profit engine. Structured product presentation with 70% VSC penetration — every product earns its place." },
                 { num: "06", title: "Follow-Up & Retain", desc: "The deal doesn't end at delivery. CSI follow-up, loyalty programs, and referral systems drive repeat business." },
