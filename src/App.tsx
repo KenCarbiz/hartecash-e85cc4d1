@@ -16,6 +16,7 @@ const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const PitchDeck = lazy(() => import("./pages/PitchDeck"));
 const ServiceLanding = lazy(() => import("./pages/ServiceLanding"));
+const KenPage = lazy(() => import("./pages/KenPage"));
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/service" element={<ServiceLanding />} />
             <Route path="/pitch" element={<PitchDeck />} />
+            <Route path="/ken" element={<KenPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
