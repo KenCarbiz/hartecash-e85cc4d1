@@ -17,8 +17,9 @@ const SiteFooter = () => {
           <h4 className="text-sm font-bold uppercase tracking-wider opacity-70 mb-3">Locations</h4>
           <p className="text-sm opacity-60 leading-relaxed">
             Hartford, CT<br />
-            West Hartford, CT<br />
-            Manchester, CT
+            Wallingford, CT<br />
+            Meriden, CT<br />
+            West Haven, CT
           </p>
         </div>
         <div className="mt-6 lg:mt-0">
