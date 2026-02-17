@@ -247,22 +247,25 @@ export default function KenPage() {
               The 6½-Step<br />
               <span className="text-blue-400">Selling Process</span>
             </motion.h2>
-            <motion.p variants={fadeUp} custom={1} className="text-lg text-white/50 max-w-2xl mb-16">
-              Process-driven. Operationally disciplined. Every deal follows a proven framework that maximizes profit while delivering an exceptional customer experience.
+            <motion.p variants={fadeUp} custom={1} className="text-lg text-white/50 max-w-2xl mb-6">
+              "Connect before you collect." Every deal follows a proven framework — operationally disciplined, process-driven, and designed to maximize profit while building real customer trust.
             </motion.p>
+            <motion.div variants={fadeUp} custom={1.5} className="mb-16">
+              <span className="text-xs text-white/30 font-semibold tracking-widest uppercase">The Dealership 2.ai Trusted Sales Process</span>
+            </motion.div>
             <motion.div variants={fadeUp} custom={2} className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
-                { num: "01", title: "Meet & Greet", desc: "Build instant rapport. Set the tone for a transparent, pressure-free experience from the very first handshake." },
-                { num: "02", title: "Qualify & Discover", desc: "Understand the customer's needs, wants, and budget. Ask the right questions to match them with the right vehicle." },
-                { num: "03", title: "Present & Demonstrate", desc: "Showcase the vehicle's value with a structured walkaround and test drive that builds emotional connection." },
-                { num: "03½", title: "Service Walk", desc: "Introduce the customer to the service department. Build trust, establish the relationship early, and set the stage for long-term retention." },
-                { num: "04", title: "Negotiate & Close", desc: "Present numbers with confidence using a proven menu system. Fair, transparent, and designed to maximize PVR." },
-                { num: "05", title: "F&I Delivery", desc: "The profit engine. Structured product presentation with 70% VSC penetration — every product earns its place." },
-                { num: "06", title: "Follow-Up & Retain", desc: "The deal doesn't end at delivery. CSI follow-up, loyalty programs, and referral systems drive repeat business." },
+                { num: "1", title: "Meet & Greet", desc: "The first 30 seconds set the entire deal. Immediate approach, firm handshake, use their name — make them feel welcomed, not hunted. Lose this step and every step after becomes harder." },
+                { num: "2", title: "Counseling", desc: "Discovery & relationship building. Uncover lifestyle, pain points, financial picture, and credit situation. Slow down, listen more than you talk. Connect before you collect." },
+                { num: "2½", title: "Touch Desk", desc: "Manager strategy alignment. The half-step that separates average from professional. Share customer intel, get direction, and align the deal strategy before showing a single vehicle." },
+                { num: "3", title: "Select a Vehicle", desc: "Present the right vehicle, not every vehicle. One primary pick based on counseling insights. Fewer choices = higher close rate. You don't ask which — you tell them which fits best." },
+                { num: "4", title: "Feature & Benefit", desc: "The walkaround — where gross is made or lost. 10–15 minute structured presentation connecting every feature to the customer's specific needs. Build value before you talk numbers." },
+                { num: "5", title: "Demo Drive", desc: "Create emotional ownership. Let them feel the vehicle in their life — their commute, their family, their roads. The test drive sells the car, you sell the experience." },
+                { num: "6", title: "The Close", desc: "Secure commitment and finalize the deal. Everything before this was building to this moment. Confident numbers, proven menu system, and a process that drives $3,200+ PVR." },
               ].map(({ num, title, desc }) => (
-                <div key={num} className="rounded-2xl p-6 bg-white/5 border border-white/10 hover:scale-[1.02] transition-transform duration-300 group">
+                <div key={num} className={`rounded-2xl p-6 border hover:scale-[1.02] transition-transform duration-300 ${num === "2½" ? "bg-blue-500/10 border-blue-500/20" : "bg-white/5 border-white/10"}`}>
                   <div className="flex items-center gap-3 mb-3">
-                    <span className="text-2xl font-black text-blue-400/60">{num}</span>
+                    <span className={`text-2xl font-black ${num === "2½" ? "text-blue-400" : "text-blue-400/60"}`}>{num}</span>
                     <h3 className="font-bold text-lg text-white">{title}</h3>
                   </div>
                   <p className="text-sm leading-relaxed text-white/60">{desc}</p>
@@ -272,7 +275,7 @@ export default function KenPage() {
             <motion.div variants={fadeUp} custom={3} className="mt-10 p-6 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-center">
               <p className="text-sm text-blue-300 font-semibold">
                 <ListOrdered className="w-4 h-4 inline mr-2" />
-                "Process isn't a restriction — it's a multiplier. Every step compounds into bigger profits, happier customers, and a team that knows exactly what to do."
+                "If you don't have the information from counseling, you're not ready for the Touch Desk. If you skip the Touch Desk, you lose control of the deal."
               </p>
             </motion.div>
           </motion.div>
