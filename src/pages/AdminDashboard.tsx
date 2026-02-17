@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { formatPhone } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LogOut, Search, Trash2, Eye, ChevronLeft, ChevronRight, UserCheck, UserX, Users, Check, Circle, DollarSign, StickyNote, XCircle, Save, Printer, FileText, QrCode, ExternalLink, ClipboardCheck, Upload, CalendarDays, Plus, Phone, Mail, AlertTriangle, Clock, History, Moon, Sun } from "lucide-react";
@@ -669,7 +670,7 @@ const AdminDashboard = () => {
       '<div class="header"><h1>' + (vehicleStr || "Submission Details") + "</h1>" +
       "<p>Submitted " + new Date(s.created_at).toLocaleDateString() + " &bull; " + (s.name || "Unknown") + "</p></div>" +
       '<div class="content">' +
-      makeSection("Contact Information", [["Name", s.name], ["Phone", s.phone], ["Email", s.email], ["ZIP", s.zip], ["Address", [(s as any).address_street, (s as any).address_city, (s as any).address_state, s.zip].filter(Boolean).join(", ") || null]]) +
+      makeSection("Contact Information", [["Name", s.name], ["Phone", formatPhone(s.phone)], ["Email", s.email], ["ZIP", s.zip], ["Address", [(s as any).address_street, (s as any).address_city, (s as any).address_state, s.zip].filter(Boolean).join(", ") || null]]) +
       makeSection("Vehicle Details", [
         ["Year/Make/Model", vehicleStr], ["VIN", s.vin], ["Plate", s.plate], ["Mileage", s.mileage],
         ["Exterior Color", s.exterior_color], ["Drivetrain", s.drivetrain], ["Modifications", s.modifications],
@@ -777,7 +778,7 @@ const AdminDashboard = () => {
           <tr><th>Customer Name (As It Appears on Title)</th><td>${s.name || ""}</td></tr>
           <tr><th>Address</th><td style="border-bottom:1px solid #ccc;min-width:200px;">&nbsp;</td></tr>
           <tr><th>City, State, Zip</th><td style="text-align:right;">${[s.state, s.zip].filter(Boolean).join(" ") || ""}</td></tr>
-          <tr><th>Contact Phone</th><td>${s.phone || ""}</td></tr>
+          <tr><th>Contact Phone</th><td>${formatPhone(s.phone)}</td></tr>
           <tr><th>Contact Email</th><td>${s.email || ""}</td></tr>
           <tr><th>Agreed Upon Value (Check Amount)</th><td class="amount">$${s.offered_price!.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td></tr>
           <tr><th>In-House ACV (Actual Cash Value)</th><td class="acv">${s.acv_value ? "$" + s.acv_value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "N/A"}</td></tr>
@@ -1046,7 +1047,7 @@ const AdminDashboard = () => {
                             </td>
                             <td className="px-3 py-3 whitespace-nowrap">
                               <div>{sub.email || "—"}</div>
-                              <div className="text-muted-foreground text-xs">{sub.phone || ""}</div>
+                              <div className="text-muted-foreground text-xs">{formatPhone(sub.phone) || ""}</div>
                             </td>
                             <td className="px-3 py-3">
                               <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${sub.photos_uploaded ? "bg-success/20 text-success" : "bg-muted text-muted-foreground"}`}>
@@ -1164,7 +1165,7 @@ const AdminDashboard = () => {
                           <td className="px-4 py-3 font-medium text-card-foreground">{appt.customer_name}</td>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-1 text-muted-foreground text-xs"><Mail className="w-3 h-3" />{appt.customer_email}</div>
-                            <div className="flex items-center gap-1 text-muted-foreground text-xs"><Phone className="w-3 h-3" />{appt.customer_phone}</div>
+                            <div className="flex items-center gap-1 text-muted-foreground text-xs"><Phone className="w-3 h-3" />{formatPhone(appt.customer_phone)}</div>
                           </td>
                           <td className="px-4 py-3 text-muted-foreground">{appt.vehicle_info || "—"}</td>
                           <td className="px-4 py-3">

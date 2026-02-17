@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { formatPhone } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -197,7 +198,7 @@ const StaffManagement = () => {
                       className="flex items-center gap-1 text-xs text-muted-foreground hover:text-card-foreground transition-colors"
                     >
                       <Phone className="w-3 h-3" />
-                      {member.phone_number || "Add phone"}
+                      {formatPhone(member.phone_number) || "Add phone"}
                     </button>
                   )}
                 </td>
