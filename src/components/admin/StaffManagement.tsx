@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Shield, Info } from "lucide-react";
+import { Trash2, Shield, Info, Phone, Save } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface StaffMember {
@@ -12,6 +13,7 @@ interface StaffMember {
   display_name: string | null;
   role: string;
   role_id: string;
+  phone_number?: string | null;
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -23,10 +25,10 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 const ROLE_COLORS: Record<string, string> = {
-  admin: "bg-destructive/15 text-destructive",
-  gsm_gm: "bg-accent/20 text-accent",
-  used_car_manager: "bg-primary/15 text-primary",
-  sales_bdc: "bg-success/20 text-success",
+  admin: "bg-red-500/15 text-red-600 dark:text-red-400",
+  gsm_gm: "bg-violet-500/15 text-violet-600 dark:text-violet-400",
+  used_car_manager: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
+  sales_bdc: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
   user: "bg-muted text-muted-foreground",
 };
 
@@ -59,6 +61,8 @@ const StaffManagement = () => {
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [changingRole, setChangingRole] = useState<string | null>(null);
+  const [editingPhone, setEditingPhone] = useState<string | null>(null);
+  const [phoneValue, setPhoneValue] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -71,7 +75,23 @@ const StaffManagement = () => {
     if (error) {
       toast({ title: "Error", description: "Failed to load staff.", variant: "destructive" });
     } else {
-      setStaff(data || []);
+      // Fetch phone numbers for all staff
+      const staffData = data || [];
+      const userIds = staffData.map((s: any) => s.user_id);
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, phone_number")
+        .in("user_id", userIds);
+      
+      const phoneMap: Record<string, string | null> = {};
+      profiles?.forEach((p: any) => {
+        phoneMap[p.user_id] = p.phone_number;
+      });
+
+      setStaff(staffData.map((s: any) => ({
+        ...s,
+        phone_number: phoneMap[s.user_id] || null,
+      })));
     }
     setLoading(false);
   };
@@ -104,6 +124,21 @@ const StaffManagement = () => {
     }
   };
 
+  const handleSavePhone = async (member: StaffMember) => {
+    const { error } = await supabase
+      .from("profiles")
+      .update({ phone_number: phoneValue || null })
+      .eq("user_id", member.user_id);
+
+    if (error) {
+      toast({ title: "Error", description: "Failed to save phone number.", variant: "destructive" });
+    } else {
+      toast({ title: "Saved", description: "Phone number updated." });
+      setStaff(prev => prev.map(s => s.user_id === member.user_id ? { ...s, phone_number: phoneValue || null } : s));
+      setEditingPhone(null);
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-12 text-muted-foreground">Loading staff...</div>;
   }
@@ -126,7 +161,7 @@ const StaffManagement = () => {
               <ul className="text-xs text-muted-foreground space-y-0.5">
                 {perms.map((p, i) => (
                   <li key={i} className="flex items-start gap-1">
-                    <span className="text-success mt-0.5">•</span> {p}
+                    <span className="text-emerald-500 mt-0.5">•</span> {p}
                   </li>
                 ))}
               </ul>
@@ -141,18 +176,45 @@ const StaffManagement = () => {
           <thead>
             <tr className="border-b border-border bg-muted/50">
               <th className="text-left px-4 py-3 font-semibold text-muted-foreground">User</th>
+              <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Phone</th>
               <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Current Role</th>
               <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Change Role</th>
               <th className="text-right px-4 py-3 font-semibold text-muted-foreground">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {staff.map((member) => (
-              <tr key={member.role_id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+            {staff.map((member, idx) => (
+              <tr key={member.role_id} className={`border-b border-border last:border-0 hover:bg-muted/30 transition-colors ${idx % 2 === 1 ? "bg-muted/10" : ""}`}>
                 <td className="px-4 py-3">
                   <div className="font-medium text-card-foreground">{member.display_name || member.email || "Unknown"}</div>
                   {member.display_name && member.email && (
                     <div className="text-xs text-muted-foreground">{member.email}</div>
+                  )}
+                </td>
+                <td className="px-4 py-3">
+                  {editingPhone === member.user_id ? (
+                    <div className="flex items-center gap-1">
+                      <Input
+                        value={phoneValue}
+                        onChange={(e) => setPhoneValue(e.target.value)}
+                        placeholder="(555) 123-4567"
+                        className="h-7 text-xs w-36"
+                      />
+                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleSavePhone(member)}>
+                        <Save className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setEditingPhone(member.user_id);
+                        setPhoneValue(member.phone_number || "");
+                      }}
+                      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-card-foreground transition-colors"
+                    >
+                      <Phone className="w-3 h-3" />
+                      {member.phone_number || "Add phone"}
+                    </button>
                   )}
                 </td>
                 <td className="px-4 py-3">

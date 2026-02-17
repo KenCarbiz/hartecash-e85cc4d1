@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LogOut, Search, Trash2, Eye, ChevronLeft, ChevronRight, UserCheck, UserX, Users, Check, Circle, DollarSign, StickyNote, XCircle, Save, Printer, FileText, QrCode, ExternalLink, ClipboardCheck, Upload, CalendarDays, Plus, Phone, Mail, AlertTriangle, Clock, History } from "lucide-react";
+import { LogOut, Search, Trash2, Eye, ChevronLeft, ChevronRight, UserCheck, UserX, Users, Check, Circle, DollarSign, StickyNote, XCircle, Save, Printer, FileText, QrCode, ExternalLink, ClipboardCheck, Upload, CalendarDays, Plus, Phone, Mail, AlertTriangle, Clock, History, Moon, Sun } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { QRCodeSVG } from "qrcode.react";
 import { Textarea } from "@/components/ui/textarea";
@@ -114,6 +114,12 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 const AdminDashboard = () => {
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("admin-dark-mode") === "true";
+    }
+    return false;
+  });
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -156,6 +162,20 @@ const AdminDashboard = () => {
   useEffect(() => {
     checkAuth();
   }, []);
+
+  // Dark mode toggle effect
+  useEffect(() => {
+    const root = document.documentElement;
+    if (darkMode) {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+    localStorage.setItem("admin-dark-mode", darkMode.toString());
+    return () => {
+      root.classList.remove("dark");
+    };
+  }, [darkMode]);
 
   useEffect(() => {
     if (userRole) {
@@ -832,22 +852,33 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background transition-colors duration-300">
       {/* Header */}
-      <header className="bg-card border-b border-border sticky top-0 z-50">
+      <header className="sticky top-0 z-50 bg-gradient-to-r from-[hsl(210,100%,15%)] via-[hsl(210,100%,20%)] to-[hsl(220,80%,18%)] text-white shadow-lg">
         <div className="max-w-[1400px] mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={harteLogo} alt="Harte Auto Group" className="h-10 w-auto" />
+            <img src={harteLogo} alt="Harte Auto Group" className="h-10 w-auto brightness-0 invert" />
             <div>
-              <span className="text-lg font-bold text-card-foreground">Dashboard</span>
-              <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-accent/20 text-accent font-medium">
+              <span className="text-lg font-bold">Dashboard</span>
+              <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-white/20 text-white/90 font-medium">
                 {ROLE_LABELS[userRole] || userRole}
               </span>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={handleLogout}>
-            <LogOut className="w-4 h-4 mr-1" /> Logout
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setDarkMode(!darkMode)}
+              className="text-white/80 hover:text-white hover:bg-white/10"
+              title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="text-white/80 hover:text-white hover:bg-white/10">
+              <LogOut className="w-4 h-4 mr-1" /> Logout
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -996,8 +1027,8 @@ const AdminDashboard = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {filtered.map((sub) => (
-                          <tr key={sub.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+                        {filtered.map((sub, idx) => (
+                          <tr key={sub.id} className={`border-b border-border last:border-0 hover:bg-primary/5 transition-colors ${idx % 2 === 1 ? "bg-muted/20" : ""}`}>
                             <td className="px-3 py-3 whitespace-nowrap">
                               {new Date(sub.created_at).toLocaleDateString()}
                             </td>
