@@ -19,7 +19,8 @@ const SiteFooter = () => {
             Hartford, CT<br />
             Wallingford, CT<br />
             Meriden, CT<br />
-            West Haven, CT
+            West Haven, CT<br />
+            Old Saybrook, CT
           </p>
         </div>
         <div className="mt-6 lg:mt-0">
