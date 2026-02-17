@@ -497,9 +497,6 @@ export default function KenPage() {
                 Call (203) 509-5054
               </a>
             </motion.div>
-            <motion.div variants={fadeUp} custom={4} className="mt-16">
-              <img src={presenterLogo} alt="Harte Auto Group" className="h-12 mx-auto opacity-30" />
-            </motion.div>
           </motion.div>
         </Section>
 
