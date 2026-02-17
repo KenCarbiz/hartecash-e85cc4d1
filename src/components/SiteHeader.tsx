@@ -12,11 +12,17 @@ const SiteHeader = () => {
 
   return (
     <header className="bg-card sticky top-0 z-50 shadow-md">
-      <div className="max-w-[500px] mx-auto px-5 py-3">
+      <div className="max-w-6xl mx-auto px-5 py-3">
         <div className="flex items-center justify-between">
           <img src={harteLogo} alt="Harte Auto Group" className="h-24 md:h-28 w-auto" width={317} height={112} fetchPriority="high" />
 
-          <div className="relative" onMouseEnter={show} onMouseLeave={hide}>
+          <nav className="hidden lg:flex items-center gap-8 text-sm font-semibold text-card-foreground">
+            <a href="#compare" className="hover:text-accent transition-colors">Why Harte</a>
+            <Link to="/schedule" className="hover:text-accent transition-colors">Schedule a Visit</Link>
+            <Link to="/my-submission" className="hover:text-accent transition-colors">View My Offer</Link>
+          </nav>
+
+          <div className="relative lg:hidden" onMouseEnter={show} onMouseLeave={hide}>
             <button
               aria-label="Customer menu"
               className="p-2 rounded-full hover:bg-muted transition-colors"

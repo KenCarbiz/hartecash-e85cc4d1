@@ -19,17 +19,17 @@ const HowItWorks = () => {
 
   return (
     <section className="py-16 px-5 bg-card">
-      <h2 className="text-2xl md:text-[28px] font-extrabold text-center mb-12 text-card-foreground">
+      <h2 className="text-2xl md:text-[28px] lg:text-[34px] font-extrabold text-center mb-12 text-card-foreground">
         How It Works
       </h2>
-      <div className="max-w-[400px] mx-auto">
+      <div className="max-w-[400px] lg:max-w-4xl mx-auto lg:grid lg:grid-cols-3 lg:gap-10">
         {steps.map((step, i) => (
-          <div key={i} className="flex gap-5 mb-10 last:mb-0">
-            <div className="w-16 h-16 bg-gradient-to-br from-primary to-[hsl(210,100%,36%)] text-primary-foreground rounded-full flex items-center justify-center text-[28px] font-extrabold flex-shrink-0 shadow-lg shadow-primary/30">
+          <div key={i} className="flex lg:flex-col lg:items-center lg:text-center gap-5 mb-10 last:mb-0 lg:mb-0">
+            <div className="w-16 h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-primary to-[hsl(210,100%,36%)] text-primary-foreground rounded-full flex items-center justify-center text-[28px] lg:text-[34px] font-extrabold flex-shrink-0 shadow-lg shadow-primary/30">
               {step.num}
             </div>
             <div>
-              <h3 className="text-lg font-bold mb-2 text-card-foreground">
+              <h3 className="text-lg lg:text-xl font-bold mb-2 text-card-foreground">
                 {step.title}
               </h3>
               <p className="text-[15px] text-muted-foreground leading-relaxed">
