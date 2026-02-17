@@ -244,7 +244,7 @@ export default function KenPage() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
             <GlowBadge label="The Process" />
             <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-6xl font-black mb-6 leading-tight">
-              The 6½-Step<br />
+              The 6⅕-Step<br />
               <span className="text-blue-400">Selling Process</span>
             </motion.h2>
             <motion.p variants={fadeUp} custom={1} className="text-lg text-white/50 max-w-2xl mb-6">
