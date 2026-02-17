@@ -75,23 +75,7 @@ const StaffManagement = () => {
     if (error) {
       toast({ title: "Error", description: "Failed to load staff.", variant: "destructive" });
     } else {
-      // Fetch phone numbers for all staff
-      const staffData = data || [];
-      const userIds = staffData.map((s: any) => s.user_id);
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, phone_number")
-        .in("user_id", userIds);
-      
-      const phoneMap: Record<string, string | null> = {};
-      profiles?.forEach((p: any) => {
-        phoneMap[p.user_id] = p.phone_number;
-      });
-
-      setStaff(staffData.map((s: any) => ({
-        ...s,
-        phone_number: phoneMap[s.user_id] || null,
-      })));
+      setStaff((data || []) as unknown as StaffMember[]);
     }
     setLoading(false);
   };

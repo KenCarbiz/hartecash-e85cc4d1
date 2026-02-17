@@ -349,6 +349,7 @@ export type Database = {
         Returns: {
           display_name: string
           email: string
+          phone_number: string
           role: string
           role_id: string
           user_id: string
