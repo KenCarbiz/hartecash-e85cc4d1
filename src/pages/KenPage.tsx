@@ -12,7 +12,7 @@ import kenPortrait from "@/assets/ken-portrait.png";
 import presenterLogo from "@/assets/pitch/pitch-top-logo.png";
 
 /* ─── Slide IDs ─── */
-const SLIDES = ["hero", "stats", "process", "turnarounds", "journey", "leadership", "philosophy", "cta"] as const;
+const SLIDES = ["hero", "stats", "process", "turnarounds", "journey", "leadership", "philosophy", "platform", "cta"] as const;
 type SlideId = typeof SLIDES[number];
 
 /* ─── Variants ─── */
@@ -428,7 +428,46 @@ export default function KenPage() {
           </motion.div>
         </Section>
 
-        {/* ═══ 8 — CTA ═══ */}
+        {/* ═══ 8 — PLATFORM ═══ */}
+        <Section id="platform" isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "platform"}>
+          <div className="absolute top-1/4 right-1/3 w-[500px] h-[500px] rounded-full bg-blue-600/10 blur-[150px] pointer-events-none" />
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center relative">
+            <motion.div variants={fadeUp} custom={0}>
+              <GlowBadge label="Now Launching" />
+            </motion.div>
+            <motion.h2 variants={fadeUp} custom={1} className="text-4xl md:text-6xl font-black mb-6 leading-tight">
+              Introducing<br />
+              <span className="bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-500 bg-clip-text text-transparent">
+                HarteCash.com
+              </span>
+            </motion.h2>
+            <motion.p variants={fadeUp} custom={2} className="text-lg md:text-xl text-white/50 max-w-2xl mx-auto mb-10 leading-relaxed">
+              A full-stack, dealer-branded platform that captures, manages, and converts direct consumer vehicle purchases — end to end. Built by Ken, powered by 20+ years of process expertise.
+            </motion.p>
+            <motion.div variants={fadeUp} custom={3} className="grid md:grid-cols-3 gap-6 mb-12 max-w-3xl mx-auto">
+              {[
+                { title: "2-Minute Offers", desc: "Customers get an instant cash offer from their phone — no dealership visit required." },
+                { title: "Full Deal Pipeline", desc: "Every lead tracked from submission to check-in-hand with a complete admin dashboard." },
+                { title: "Customer Portal", desc: "Branded portal for photo uploads, document submission, and appointment scheduling." },
+              ].map(({ title, desc }) => (
+                <div key={title} className="rounded-2xl p-6 bg-white/5 border border-white/10 text-left">
+                  <h3 className="font-bold text-white mb-2">{title}</h3>
+                  <p className="text-sm text-white/50">{desc}</p>
+                </div>
+              ))}
+            </motion.div>
+            <motion.div variants={fadeUp} custom={4}>
+              <a
+                href="/pitch"
+                className="inline-flex items-center justify-center gap-2 px-10 py-4 rounded-full bg-blue-600 text-white font-bold text-lg hover:bg-blue-500 transition shadow-lg shadow-blue-600/25"
+              >
+                See the Full Platform Pitch →
+              </a>
+            </motion.div>
+          </motion.div>
+        </Section>
+
+        {/* ═══ 9 — CTA ═══ */}
         <Section id="cta" isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "cta"}>
           <div className="absolute top-1/4 left-1/3 w-[600px] h-[600px] rounded-full bg-blue-600/10 blur-[150px] pointer-events-none" />
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center relative">
