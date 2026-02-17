@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Shield, Info, Phone, Save } from "lucide-react";
+import { Trash2, Shield, Info, Phone, Save, UserPlus } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 interface StaffMember {
   user_id: string;
@@ -64,6 +66,11 @@ const StaffManagement = () => {
   const [changingRole, setChangingRole] = useState<string | null>(null);
   const [editingPhone, setEditingPhone] = useState<string | null>(null);
   const [phoneValue, setPhoneValue] = useState("");
+  const [addOpen, setAddOpen] = useState(false);
+  const [addEmail, setAddEmail] = useState("");
+  const [addRole, setAddRole] = useState("sales_bdc");
+  const [addDisplayName, setAddDisplayName] = useState("");
+  const [adding, setAdding] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -124,17 +131,144 @@ const StaffManagement = () => {
     }
   };
 
+  const handleAddEmployee = async () => {
+    if (!addEmail.trim()) {
+      toast({ title: "Email required", description: "Enter the employee's email address.", variant: "destructive" });
+      return;
+    }
+    setAdding(true);
+
+    // Find user by email in profiles
+    const { data: profiles, error: profileErr } = await supabase
+      .from("profiles")
+      .select("user_id, email, display_name")
+      .eq("email", addEmail.trim().toLowerCase());
+
+    if (profileErr || !profiles || profiles.length === 0) {
+      toast({ title: "User not found", description: "No account found with that email. They must sign up first.", variant: "destructive" });
+      setAdding(false);
+      return;
+    }
+
+    const profile = profiles[0];
+
+    // Check if already has a role
+    const existing = staff.find(s => s.user_id === profile.user_id);
+    if (existing) {
+      toast({ title: "Already a staff member", description: `${profile.email} already has the ${ROLE_LABELS[existing.role]} role.`, variant: "destructive" });
+      setAdding(false);
+      return;
+    }
+
+    // Insert role via user_roles table (RLS requires admin)
+    const { data: inserted, error: insertErr } = await supabase
+      .from("user_roles")
+      .insert({ user_id: profile.user_id, role: addRole as any })
+      .select("id")
+      .single();
+
+    if (insertErr) {
+      toast({ title: "Error", description: insertErr.message, variant: "destructive" });
+      setAdding(false);
+      return;
+    }
+
+    // Optionally update display name if provided
+    if (addDisplayName.trim() && addDisplayName.trim() !== (profile.display_name || "")) {
+      await supabase.from("profiles").update({ display_name: addDisplayName.trim() }).eq("user_id", profile.user_id);
+    }
+
+    toast({ title: "Employee added", description: `${profile.email} has been added as ${ROLE_LABELS[addRole]}.` });
+    setAddOpen(false);
+    setAddEmail("");
+    setAddRole("sales_bdc");
+    setAddDisplayName("");
+    setAdding(false);
+    fetchStaff();
+  };
+
   if (loading) {
     return <div className="text-center py-12 text-muted-foreground">Loading staff...</div>;
   }
 
-  if (staff.length === 0) {
-    return <div className="text-center py-12 text-muted-foreground">No staff members found.</div>;
+  if (staff.length === 0 && !addOpen) {
+    return (
+      <div className="space-y-4">
+        <div className="flex justify-end">
+          <Button onClick={() => setAddOpen(true)} size="sm">
+            <UserPlus className="w-4 h-4 mr-1" /> Add Employee
+          </Button>
+        </div>
+        <div className="text-center py-12 text-muted-foreground">No staff members found.</div>
+        {renderAddDialog()}
+      </div>
+    );
+  }
+
+  function renderAddDialog() {
+    return (
+      <Dialog open={addOpen} onOpenChange={setAddOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Employee</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Email Address</Label>
+              <Input
+                value={addEmail}
+                onChange={(e) => setAddEmail(e.target.value)}
+                placeholder="employee@example.com"
+                type="email"
+              />
+              <p className="text-xs text-muted-foreground">Employee must have an existing account.</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Display Name (optional)</Label>
+              <Input
+                value={addDisplayName}
+                onChange={(e) => setAddDisplayName(e.target.value)}
+                placeholder="John Smith"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Role</Label>
+              <Select value={addRole} onValueChange={setAddRole}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sales_bdc">Sales / BDC</SelectItem>
+                  <SelectItem value="used_car_manager">Used Car Manager</SelectItem>
+                  <SelectItem value="gsm_gm">GSM / GM</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddOpen(false)}>Cancel</Button>
+            <Button onClick={handleAddEmployee} disabled={adding}>
+              {adding ? "Adding..." : "Add Employee"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
   }
 
   return (
     <div className="space-y-4">
-      {/* Permissions legend */}
+      {/* Add Employee button + Permissions legend */}
+      <div className="flex items-center justify-between mb-2">
+        <div />
+        <Button onClick={() => setAddOpen(true)} size="sm">
+          <UserPlus className="w-4 h-4 mr-1" /> Add Employee
+        </Button>
+      </div>
+
+      {renderAddDialog()}
+
       <div className="bg-muted/40 rounded-xl p-4 border border-border">
         <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Role Permissions</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
