@@ -750,17 +750,26 @@ const AdminDashboard = () => {
     const vehicleStr = [s.vehicle_year, s.vehicle_make, s.vehicle_model].filter(Boolean).join(" ") || "N/A";
     const today = new Date().toLocaleDateString();
 
-    // Fetch appraisal documents
-    let appraisalImages: string[] = [];
-    const { data: appraisalFiles } = await supabase.storage
-      .from("customer-documents")
-      .list(`${s.id}/appraisal`);
-    if (appraisalFiles && appraisalFiles.length > 0) {
-      for (const f of appraisalFiles) {
-        const { data } = await supabase.storage.from("customer-documents").createSignedUrl(`${s.id}/appraisal/${f.name}`, 3600);
-        if (data?.signedUrl) appraisalImages.push(data.signedUrl);
+    // Helper to fetch signed URLs from a doc folder
+    const fetchDocImages = async (folder: string): Promise<string[]> => {
+      const urls: string[] = [];
+      const { data: files } = await supabase.storage.from("customer-documents").list(`${s.id}/${folder}`);
+      if (files && files.length > 0) {
+        for (const f of files) {
+          const { data } = await supabase.storage.from("customer-documents").createSignedUrl(`${s.id}/${folder}/${f.name}`, 3600);
+          if (data?.signedUrl) urls.push(data.signedUrl);
+        }
       }
-    }
+      return urls;
+    };
+
+    // Fetch all supporting documents in parallel
+    const [appraisalImages, dlImages, titleImages, payoffImages] = await Promise.all([
+      fetchDocImages("appraisal"),
+      fetchDocImages("drivers-license"),
+      fetchDocImages("title"),
+      fetchDocImages("payoff"),
+    ]);
 
     const printWindow = window.open("", "_blank", "width=800,height=600");
     if (!printWindow) return;
@@ -781,18 +790,14 @@ const AdminDashboard = () => {
       ".acv { font-size: 18px; font-weight: 600; color: #4a5568; }",
       ".sig-section { margin-top: 40px; display: flex; justify-content: space-between; }",
       ".sig-line { width: 45%; border-top: 1px solid #1a2a3a; padding-top: 6px; font-size: 12px; color: #6b7b8d; }",
-      ".appraisal-section { page-break-before: always; padding: 24px 32px; }",
-      ".appraisal-section h2 { font-size: 16px; font-weight: 700; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; color: #2a4365; }",
-      ".appraisal-img { max-width: 100%; margin-bottom: 16px; border: 1px solid #d1d5db; }",
+      ".doc-section { page-break-before: always; padding: 24px 32px; }",
+      ".doc-section h2 { font-size: 16px; font-weight: 700; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; color: #2a4365; }",
+      ".doc-img { max-width: 100%; margin-bottom: 16px; border: 1px solid #d1d5db; }",
       "@page { margin: 0.75in; size: letter; }",
     ].join("\n");
 
-    const appraisalHtml = appraisalImages.length > 0 ? `
-      <div class="appraisal-section">
-        <h2>Appraisal Document</h2>
-        ${appraisalImages.map(url => `<img class="appraisal-img" src="${url}" />`).join("")}
-      </div>
-    ` : "";
+    const makeDocSection = (title: string, images: string[]) =>
+      images.length > 0 ? `<div class="doc-section"><h2>${title}</h2>${images.map(url => `<img class="doc-img" src="${url}" />`).join("")}</div>` : "";
 
     const html = `<!DOCTYPE html><html><head><title>Check Request</title><style>${css}</style></head><body>
       <div class="header"><h1>Harte Auto Group</h1><p>Check Request Form</p></div>
@@ -821,7 +826,10 @@ const AdminDashboard = () => {
           <div class="sig-line">Date Issued</div>
         </div>
       </div>
-      ${appraisalHtml}
+      ${makeDocSection("Appraisal Document", appraisalImages)}
+      ${makeDocSection("Driver's License", dlImages)}
+      ${makeDocSection("Title", titleImages)}
+      ${makeDocSection("Payoff Documentation", payoffImages)}
     </body></html>`;
 
     printWindow.document.write(html);
@@ -846,6 +854,85 @@ const AdminDashboard = () => {
       }
     } catch (e) {
       console.error("Error saving check request:", e);
+    }
+  };
+
+  const handlePrintAllDocs = async () => {
+    if (!selected) return;
+    const s = selected;
+    const vehicleStr = [s.vehicle_year, s.vehicle_make, s.vehicle_model].filter(Boolean).join(" ") || "N/A";
+
+    const fetchDocImages = async (folder: string): Promise<string[]> => {
+      const urls: string[] = [];
+      const { data: files } = await supabase.storage.from("customer-documents").list(`${s.id}/${folder}`);
+      if (files && files.length > 0) {
+        for (const f of files) {
+          const { data } = await supabase.storage.from("customer-documents").createSignedUrl(`${s.id}/${folder}/${f.name}`, 3600);
+          if (data?.signedUrl) urls.push(data.signedUrl);
+        }
+      }
+      return urls;
+    };
+
+    const [dlImages, regImages, titleImages, appraisalImages, carfaxImages, payoffImages, windowStickerImages] = await Promise.all([
+      fetchDocImages("drivers-license"),
+      fetchDocImages("registration"),
+      fetchDocImages("title"),
+      fetchDocImages("appraisal"),
+      fetchDocImages("carfax"),
+      fetchDocImages("payoff"),
+      fetchDocImages("window-sticker"),
+    ]);
+
+    const allEmpty = [dlImages, regImages, titleImages, appraisalImages, carfaxImages, payoffImages, windowStickerImages].every(a => a.length === 0);
+    if (allEmpty) {
+      toast({ title: "No Documents", description: "No documents have been uploaded for this customer yet.", variant: "destructive" });
+      return;
+    }
+
+    const printWindow = window.open("", "_blank", "width=800,height=600");
+    if (!printWindow) return;
+
+    const css = [
+      "* { margin: 0; padding: 0; box-sizing: border-box; }",
+      "body { font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif; color: #1a2a3a; background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }",
+      ".header { background: #2a4365; color: white; padding: 24px 32px; text-align: center; }",
+      ".header h1 { font-size: 22px; font-weight: 700; }",
+      ".header p { font-size: 13px; opacity: 0.8; margin-top: 4px; }",
+      ".doc-section { page-break-before: always; padding: 24px 32px; }",
+      ".doc-section:first-of-type { page-break-before: auto; }",
+      ".doc-section h2 { font-size: 16px; font-weight: 700; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; color: #2a4365; }",
+      ".doc-img { max-width: 100%; margin-bottom: 16px; border: 1px solid #d1d5db; }",
+      "@page { margin: 0.75in; size: letter; }",
+    ].join("\n");
+
+    const makeDocSection = (title: string, images: string[]) =>
+      images.length > 0 ? `<div class="doc-section"><h2>${title}</h2>${images.map(url => `<img class="doc-img" src="${url}" />`).join("")}</div>` : "";
+
+    const html = `<!DOCTYPE html><html><head><title>Customer Documents – ${s.name || vehicleStr}</title><style>${css}</style></head><body>
+      <div class="header"><h1>Harte Auto Group</h1><p>Customer Documents — ${s.name || ""} — ${vehicleStr}</p></div>
+      ${makeDocSection("Driver's License", dlImages)}
+      ${makeDocSection("Registration", regImages)}
+      ${makeDocSection("Title", titleImages)}
+      ${makeDocSection("Appraisal", appraisalImages)}
+      ${makeDocSection("Carfax", carfaxImages)}
+      ${makeDocSection("Payoff Documentation", payoffImages)}
+      ${makeDocSection("Window Sticker", windowStickerImages)}
+    </body></html>`;
+
+    printWindow.document.write(html);
+    printWindow.document.close();
+
+    const images = printWindow.document.querySelectorAll("img");
+    let loaded = 0;
+    const totalImages = images.length;
+    const triggerPrint = () => { printWindow.focus(); printWindow.print(); };
+    if (totalImages === 0) {
+      setTimeout(triggerPrint, 200);
+    } else {
+      images.forEach(img => {
+        img.onload = img.onerror = () => { loaded++; if (loaded >= totalImages) setTimeout(triggerPrint, 200); };
+      });
     }
   };
 
@@ -1617,10 +1704,15 @@ const AdminDashboard = () => {
                     </div>
                     {isPriceAgreedOrBeyond && (
                       <div className="space-y-2">
-                        <Button variant="outline" size="sm" onClick={handleGenerateCheckRequest}>
-                          <Printer className="w-4 h-4 mr-1" /> Generate Check Request
-                        </Button>
-                        <p className="text-xs text-muted-foreground">Requires: address, appraisal doc, and driver's license.</p>
+                        <div className="flex flex-wrap gap-2">
+                          <Button variant="outline" size="sm" onClick={handleGenerateCheckRequest}>
+                            <Printer className="w-4 h-4 mr-1" /> Generate Check Request
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={handlePrintAllDocs}>
+                            <FileText className="w-4 h-4 mr-1" /> Print All Docs
+                          </Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Check request includes all docs. "Print All Docs" reprints supporting documents only.</p>
                       </div>
                     )}
                     {!isPriceAgreedOrBeyond && (
