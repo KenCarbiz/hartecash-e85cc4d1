@@ -283,15 +283,15 @@ export default function KenPage() {
                     </span>
                   ))}
                 </motion.div>
-                <motion.div variants={fadeUp} custom={3} className="mt-7 md:mt-10 flex flex-col sm:flex-row flex-wrap gap-3 md:gap-4 justify-center lg:justify-start">
-                  <a href="mailto:kenc@hartecars.com" className="inline-flex items-center justify-center gap-2 px-8 sm:px-12 py-4 sm:py-5 rounded-full bg-blue-600 text-white font-bold text-base sm:text-xl hover:bg-blue-500 transition shadow-lg shadow-blue-600/25">
+                <motion.div variants={fadeUp} custom={3} className="mt-7 md:mt-10 flex flex-col sm:flex-row lg:flex-nowrap gap-3 justify-center lg:justify-start">
+                  <a href="mailto:kenc@hartecars.com" className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-blue-600 text-white font-bold text-sm sm:text-base hover:bg-blue-500 transition shadow-lg shadow-blue-600/25 whitespace-nowrap">
                     Get In Touch
                   </a>
-                  <a href="tel:+12035095054" className="inline-flex items-center justify-center gap-2 px-8 sm:px-12 py-4 sm:py-5 rounded-full bg-white/5 border border-white/15 text-white font-bold text-base sm:text-xl hover:bg-white/10 transition">
+                  <a href="tel:+12035095054" className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-white/5 border border-white/15 text-white font-bold text-sm sm:text-base hover:bg-white/10 transition whitespace-nowrap">
                     Call (203) 509-5054
                   </a>
-                  <a href="https://www.linkedin.com/in/kencriscione" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 px-8 sm:px-12 py-4 sm:py-5 rounded-full bg-[#0A66C2]/20 border border-[#0A66C2]/40 text-[#74b3f8] font-bold text-base sm:text-xl hover:bg-[#0A66C2]/30 transition">
-                    <Linkedin className="w-5 h-5" /> Connect on LinkedIn
+                  <a href="https://www.linkedin.com/in/kencriscione" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-[#0A66C2]/20 border border-[#0A66C2]/40 text-[#74b3f8] font-bold text-sm sm:text-base hover:bg-[#0A66C2]/30 transition whitespace-nowrap">
+                    <Linkedin className="w-4 h-4" /> Connect on LinkedIn
                   </a>
                 </motion.div>
               </div>
