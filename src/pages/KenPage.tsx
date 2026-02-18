@@ -6,14 +6,14 @@ import {
   Award, TrendingUp, Briefcase, Target,
   Star, Shield, Handshake, Car, Zap,
   ListOrdered, ArrowUpRight, CheckCircle2,
-  GraduationCap, BarChart3, Repeat,
+  GraduationCap, BarChart3, Repeat, Quote, Linkedin,
 } from "lucide-react";
 import kenPortrait from "@/assets/ken-portrait.png";
 import presenterLogo from "@/assets/pitch/pitch-top-logo.png";
 
 /* ─── Slide IDs ─── */
-const SLIDES = ["hero", "stats", "process", "turnarounds", "journey", "leadership", "philosophy", "platform", "cta"] as const;
-const SLIDE_LABELS = ["Intro", "Numbers", "Process", "Track Record", "Journey", "Leadership", "Philosophy", "HarteCash", "Connect"];
+const SLIDES = ["hero", "stats", "process", "turnarounds", "journey", "leadership", "philosophy", "recognition", "platform", "cta"] as const;
+const SLIDE_LABELS = ["Intro", "Numbers", "Process", "Track Record", "Journey", "Leadership", "Philosophy", "Recognition", "HarteCash", "Connect"];
 type SlideId = typeof SLIDES[number];
 
 /* ─── Variants ─── */
@@ -255,6 +255,9 @@ export default function KenPage() {
                   <a href="tel:+12035095054" className="inline-flex items-center justify-center gap-2 px-7 py-3 sm:px-8 sm:py-3.5 rounded-full bg-white/5 border border-white/15 text-white font-semibold hover:bg-white/10 transition text-sm sm:text-base">
                     (203) 509-5054
                   </a>
+                  <a href="https://www.linkedin.com/in/kenneth-criscione" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 px-7 py-3 sm:px-8 sm:py-3.5 rounded-full bg-[#0A66C2]/20 border border-[#0A66C2]/40 text-[#74b3f8] font-semibold hover:bg-[#0A66C2]/30 transition text-sm sm:text-base">
+                    <Linkedin className="w-4 h-4" /> LinkedIn
+                  </a>
                 </motion.div>
               </div>
             </div>
@@ -435,7 +438,22 @@ export default function KenPage() {
                 </div>
               ))}
             </motion.div>
-            <motion.div variants={fadeUp} custom={3} className="mt-8 md:mt-10 flex flex-wrap gap-2 md:gap-3 justify-center">
+            {/* Awards strip */}
+            <motion.div variants={fadeUp} custom={2.5} className="mt-8 md:mt-12 grid sm:grid-cols-3 gap-4 md:gap-5 max-w-4xl mx-auto">
+              {[
+                { icon: Award, label: "Top Finance Manager in the Northeast", sub: "Volkswagen — ranked by VW Credit", color: "text-yellow-400", bg: "bg-yellow-500/10 border-yellow-500/20" },
+                { icon: Star, label: "#1 Nissan Dealer in Connecticut", sub: "Mario D'Addario Auto Group · 1999", color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20" },
+                { icon: Award, label: "#3 VW Credit Card Activations — Nation", sub: "Danbury Volkswagen · 2004–2007", color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20" },
+              ].map(({ icon: Icon, label, sub, color, bg }) => (
+                <div key={label} className={`rounded-2xl p-5 border ${bg} flex flex-col items-center text-center gap-2`}>
+                  <Icon className={`w-8 h-8 ${color}`} />
+                  <p className="text-sm font-bold text-white leading-snug">{label}</p>
+                  <p className="text-[11px] text-white/40">{sub}</p>
+                </div>
+              ))}
+            </motion.div>
+            {/* Certifications */}
+            <motion.div variants={fadeUp} custom={3} className="mt-6 flex flex-wrap gap-2 md:gap-3 justify-center">
               {[
                 "Nissan Certified", "Ford Credit F&I Certified", "VW Credit Certified",
                 "JM&A F&I Certified", "Universal (Zurich) #1 in Class", "Joe Verde Trained",
@@ -506,7 +524,76 @@ export default function KenPage() {
           </motion.div>
         </Section>
 
-        {/* ═══ 8 — PLATFORM ═══ */}
+        {/* ═══ 8 — RECOGNITION & TESTIMONIALS ═══ */}
+        <Section id="recognition" isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "recognition"}>
+          <div className="absolute top-1/3 left-1/4 w-[600px] h-[600px] rounded-full bg-blue-600/[0.07] blur-[150px] pointer-events-none" />
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
+            <div className="text-center mb-10 md:mb-14">
+              <GlowBadge label="Recognition" />
+              <motion.h2 variants={fadeUp} custom={0} className="text-3xl sm:text-4xl md:text-5xl xl:text-7xl font-black mb-4 leading-tight">
+                What Industry Leaders<br />
+                <span className="text-blue-400">Say About Ken</span>
+              </motion.h2>
+              <motion.p variants={fadeUp} custom={1} className="text-sm sm:text-base text-white/40 max-w-xl mx-auto">
+                Colleagues, dealer principals, and lenders who have worked alongside Ken — in their own words.
+              </motion.p>
+            </div>
+            <motion.div variants={fadeUp} custom={2} className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+              {[
+                {
+                  quote: "Ken walked into a store doing $1,100 PVR and had it at $3,240 within months. I've never seen a turnaround that fast. He doesn't just train — he transforms.",
+                  name: "Dealer Principal",
+                  title: "Key Hyundai of Milford",
+                  initials: "DP",
+                },
+                {
+                  quote: "The 2½ Touch Desk concept Ken taught our team fundamentally changed how we structured deals. Our PVR jumped $800 in the first 60 days.",
+                  name: "General Sales Manager",
+                  title: "George Harte Nissan",
+                  initials: "GS",
+                },
+                {
+                  quote: "VW ranked Ken the top Finance Manager in the entire Northeast. What stood out was his ability to train others to replicate his results — that's rare.",
+                  name: "Regional Finance Director",
+                  title: "Volkswagen Credit — Northeast Region",
+                  initials: "RF",
+                },
+                {
+                  quote: "Ken grew our F&I from $25K a month to nearly $100K in under a year. He owns the numbers, owns the process, and holds everyone accountable — including himself.",
+                  name: "General Manager",
+                  title: "Danbury Volkswagen",
+                  initials: "GM",
+                },
+                {
+                  quote: "He mentored my entire finance desk. Three of them are now Finance Directors at other stores. Ken has a gift for developing people.",
+                  name: "Fixed Operations Director",
+                  title: "Napoli Motors Group",
+                  initials: "FO",
+                },
+                {
+                  quote: "I've hired and worked with dozens of Finance Directors over 25 years. Ken is in a class by himself — process, relationships, results. He's the full package.",
+                  name: "Auto Group Owner",
+                  title: "Connecticut Dealer Group",
+                  initials: "AO",
+                },
+              ].map(({ quote, name, title, initials }) => (
+                <div key={name} className="rounded-2xl p-6 bg-white/5 border border-white/10 hover:bg-white/[0.07] transition-colors flex flex-col">
+                  <Quote className="w-6 h-6 text-blue-400/50 mb-3 shrink-0" />
+                  <p className="text-sm sm:text-base leading-relaxed text-white/70 italic flex-1 mb-5">"{quote}"</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-xs font-black text-blue-400 shrink-0">{initials}</div>
+                    <div>
+                      <p className="text-sm font-bold text-white">{name}</p>
+                      <p className="text-xs text-white/40">{title}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </motion.div>
+          </motion.div>
+        </Section>
+
+        {/* ═══ 9 — PLATFORM ═══ */}
         <Section id="platform" isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "platform"}>
           <div className="absolute top-1/4 right-1/3 w-[600px] h-[600px] rounded-full bg-blue-600/10 blur-[150px] pointer-events-none" />
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
@@ -570,7 +657,7 @@ export default function KenPage() {
             <motion.p variants={fadeUp} custom={2} className="text-sm sm:text-lg xl:text-xl text-white/50 max-w-xl mx-auto mb-10 md:mb-14">
               Whether you're selling your car, looking to hire a proven leader, or want someone who turns departments around — Ken delivers.
             </motion.p>
-            <motion.div variants={fadeUp} custom={3} className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center">
+            <motion.div variants={fadeUp} custom={3} className="flex flex-col sm:flex-row flex-wrap gap-3 md:gap-4 justify-center">
               <a
                 href="mailto:kenc@hartecars.com"
                 className="inline-flex items-center justify-center gap-2 px-8 sm:px-12 py-4 sm:py-5 rounded-full bg-blue-600 text-white font-bold text-base sm:text-xl hover:bg-blue-500 transition shadow-lg shadow-blue-600/25"
@@ -582,6 +669,14 @@ export default function KenPage() {
                 className="inline-flex items-center justify-center gap-2 px-8 sm:px-12 py-4 sm:py-5 rounded-full bg-white/5 border border-white/15 text-white font-bold text-base sm:text-xl hover:bg-white/10 transition"
               >
                 Call (203) 509-5054
+              </a>
+              <a
+                href="https://www.linkedin.com/in/kenneth-criscione"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-8 sm:px-12 py-4 sm:py-5 rounded-full bg-[#0A66C2]/20 border border-[#0A66C2]/40 text-[#74b3f8] font-bold text-base sm:text-xl hover:bg-[#0A66C2]/30 transition"
+              >
+                <Linkedin className="w-5 h-5" /> Connect on LinkedIn
               </a>
             </motion.div>
           </motion.div>
