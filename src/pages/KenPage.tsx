@@ -82,9 +82,9 @@ function GlowBadge({ label }: { label: string }) {
 
 /* ─── Rotating CTA Headline ─── */
 const CTA_HEADLINES = [
-  { line1: "Your Next Chapter", line2: "Starts Here." },
+  { line1: "Your Dealership's Next Chapter", line2: "Starts Here." },
   { line1: "Stop Settling for", line2: "Average." },
-  { line1: "The Dealership You Want", line2: "Needs This." },
+  { line1: "The Dealership You Want.", line2: "The Talent You Need." },
   { line1: "Results Don't Lie.", line2: "Let's Talk." },
   { line1: "Built to Win.", line2: "Ready to Prove It." },
 ];
