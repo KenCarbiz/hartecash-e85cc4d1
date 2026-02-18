@@ -291,7 +291,7 @@ export default function KenPage() {
                     Call (203) 509-5054
                   </a>
                   <a href="https://www.linkedin.com/in/kencriscione" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-[#0A66C2]/20 border border-[#0A66C2]/40 text-[#74b3f8] font-bold text-sm sm:text-base hover:bg-[#0A66C2]/30 transition whitespace-nowrap">
-                    <Linkedin className="w-4 h-4" /> Connect on LinkedIn
+                    Connect on LinkedIn
                   </a>
                 </motion.div>
               </div>
