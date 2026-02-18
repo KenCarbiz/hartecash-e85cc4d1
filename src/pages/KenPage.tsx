@@ -649,9 +649,9 @@ export default function KenPage() {
               <GlowBadge label="Let's Connect" />
             </motion.div>
             <motion.h2 variants={fadeUp} custom={1} className="text-4xl sm:text-5xl md:text-7xl xl:text-9xl font-black mb-5 md:mb-6 leading-tight">
-              Ready to Work With<br />
+              Your Next Chapter<br />
               <span className="bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-500 bg-clip-text text-transparent">
-                the Best?
+                Starts Here.
               </span>
             </motion.h2>
             <motion.p variants={fadeUp} custom={2} className="text-sm sm:text-lg xl:text-xl text-white/50 max-w-xl mx-auto mb-10 md:mb-14">
