@@ -97,8 +97,8 @@ function RotatingCTAHeadline() {
       setTimeout(() => {
         setIdx(i => (i + 1) % CTA_HEADLINES.length);
         setVisible(true);
-      }, 400);
-    }, 3500);
+      }, 600);
+    }, 7000);
     return () => clearInterval(interval);
   }, []);
   const { line1, line2 } = CTA_HEADLINES[idx];
