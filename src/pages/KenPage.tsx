@@ -255,7 +255,7 @@ export default function KenPage() {
                   <a href="tel:+12035095054" className="inline-flex items-center justify-center gap-2 px-7 py-3 sm:px-8 sm:py-3.5 rounded-full bg-white/5 border border-white/15 text-white font-semibold hover:bg-white/10 transition text-sm sm:text-base">
                     (203) 509-5054
                   </a>
-                  <a href="https://www.linkedin.com/in/kennethcriscione" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 px-7 py-3 sm:px-8 sm:py-3.5 rounded-full bg-[#0A66C2]/20 border border-[#0A66C2]/40 text-[#74b3f8] font-semibold hover:bg-[#0A66C2]/30 transition text-sm sm:text-base">
+                  <a href="https://www.linkedin.com/in/kencriscione" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 px-7 py-3 sm:px-8 sm:py-3.5 rounded-full bg-[#0A66C2]/20 border border-[#0A66C2]/40 text-[#74b3f8] font-semibold hover:bg-[#0A66C2]/30 transition text-sm sm:text-base">
                     <Linkedin className="w-4 h-4" /> LinkedIn
                   </a>
                 </motion.div>
@@ -671,7 +671,7 @@ export default function KenPage() {
                 Call (203) 509-5054
               </a>
               <a
-                href="https://www.linkedin.com/in/kennethcriscione"
+                href="https://www.linkedin.com/in/kencriscione"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 px-8 sm:px-12 py-4 sm:py-5 rounded-full bg-[#0A66C2]/20 border border-[#0A66C2]/40 text-[#74b3f8] font-bold text-base sm:text-xl hover:bg-[#0A66C2]/30 transition"
