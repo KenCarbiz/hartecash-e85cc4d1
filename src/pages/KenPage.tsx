@@ -311,7 +311,7 @@ export default function KenPage() {
                   ))}
                 </motion.div>
                 <motion.div variants={fadeUp} custom={3} className="mt-7 md:mt-10 flex flex-col sm:flex-row lg:flex-nowrap gap-3 justify-center lg:justify-start">
-                  <a href="mailto:kenc@hartecars.com" className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-blue-600 text-white font-bold text-sm sm:text-base hover:bg-blue-500 transition shadow-lg shadow-blue-600/25 whitespace-nowrap">
+                  <a href="mailto:ken@ken.cc" className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-blue-600 text-white font-bold text-sm sm:text-base hover:bg-blue-500 transition shadow-lg shadow-blue-600/25 whitespace-nowrap">
                     Get In Touch
                   </a>
                   <a href="tel:+12035095054" className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-white/5 border border-white/15 text-white font-bold text-sm sm:text-base hover:bg-white/10 transition whitespace-nowrap">
