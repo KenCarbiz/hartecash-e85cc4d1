@@ -74,7 +74,7 @@ function Section({ id, children, isPresenting, currentSlide }: {
         backgroundImage: "linear-gradient(hsl(210 100% 60%) 1px, transparent 1px), linear-gradient(90deg, hsl(210 100% 60%) 1px, transparent 1px)",
         backgroundSize: "60px 60px"
       }} />
-      <div className={`relative z-10 w-full max-w-7xl mx-auto ${isPresenting ? "px-12" : "px-6 lg:px-16 xl:px-20 py-20 md:py-28"}`}>
+      <div className={`relative z-10 w-full ${id === "hero" ? "max-w-[90rem]" : "max-w-7xl"} mx-auto ${isPresenting ? "px-12" : "px-6 lg:px-16 xl:px-20 py-20 md:py-28"}`}>
         {children}
       </div>
     </section>
@@ -263,12 +263,12 @@ export default function KenPage() {
           <div className="absolute top-1/4 left-1/4 w-[700px] h-[700px] rounded-full bg-blue-600/10 blur-[160px] pointer-events-none" />
           <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full bg-indigo-600/10 blur-[140px] pointer-events-none" />
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} className="relative">
-            <div className="flex flex-col lg:flex-row items-center gap-8 md:gap-12 lg:gap-24 xl:gap-32">
+            <div className="flex flex-col lg:flex-row items-center gap-8 md:gap-12 lg:gap-16 xl:gap-20">
               {/* Portrait */}
-              <motion.div variants={fadeUp} custom={0} className="shrink-0">
+              <motion.div variants={fadeUp} custom={0} className="shrink-0 lg:flex-1 lg:max-w-[55%]">
                 <div className="relative">
                   <div className="absolute -inset-4 rounded-3xl bg-gradient-to-br from-blue-500/25 to-indigo-500/25 blur-2xl" />
-                  <div className="relative w-52 sm:w-72 md:w-80 lg:w-[440px] xl:w-[480px] rounded-3xl overflow-hidden shadow-2xl shadow-blue-900/40 border border-white/10">
+                  <div className="relative w-full sm:w-72 md:w-80 lg:w-full rounded-3xl overflow-hidden shadow-2xl shadow-blue-900/40 border border-white/10">
                     {HERO_IMAGES.map((src, i) => (
                       <img
                         key={i}
