@@ -130,7 +130,7 @@ function RotatingCTAHeadline() {
 function MetricCard({ value, prefix, suffix, label }: { value: number; prefix?: string; suffix?: string; label: string }) {
   return (
     <div className="rounded-2xl p-4 sm:p-8 text-center bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/[0.07] transition-colors">
-      <AnimatedNumber value={value} prefix={prefix} suffix={suffix} className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-blue-400 break-all" />
+      <AnimatedNumber value={value} prefix={prefix} suffix={suffix} className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-blue-400 whitespace-nowrap" />
       <p className="text-xs sm:text-sm mt-2 sm:mt-3 text-white/60">{label}</p>
     </div>
   );
