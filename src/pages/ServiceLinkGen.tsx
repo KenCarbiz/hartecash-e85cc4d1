@@ -18,9 +18,9 @@ const BASE_DOMAIN = "https://hartecash.com";
 
 function buildLink(vin: string, date: string, time: string): string {
   const parts: string[] = [];
-  if (vin) parts.push(`vin=${encodeURIComponent(vin.trim())}`);
-  if (date) parts.push(`date=${encodeURIComponent(date.trim())}`);
-  if (time) parts.push(`time=${encodeURIComponent(time.trim())}`);
+  if (vin) parts.push(`vin=${vin.trim()}`);
+  if (date) parts.push(`date=${date.trim()}`);
+  if (time) parts.push(`time=${time.trim().replace(/ /g, "%20")}`);
   return `${BASE_DOMAIN}/service?${parts.join("&")}`;
 }
 
