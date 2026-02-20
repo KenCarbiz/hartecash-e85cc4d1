@@ -336,7 +336,7 @@ export default function PitchDeck() {
             <motion.p variants={fadeUp} custom={1} className="text-lg text-white/50 max-w-2xl mb-16">
               40 million used cars are sold annually in the U.S. Dealers who can acquire inventory directly from consumers — without auctions — hold the ultimate competitive advantage.
             </motion.p>
-            <motion.div variants={fadeUp} custom={2} className="grid md:grid-cols-4 gap-6">
+            <motion.div variants={fadeUp} custom={2} className="grid grid-cols-2 lg:grid-cols-4 gap-6">
               <MetricCard value={40} suffix="M" label="Used cars sold annually in the U.S." dark />
               <MetricCard value={400} prefix="$" suffix="B" label="Total U.S. used vehicle market" dark />
               <MetricCard value={73} suffix="%" label="of consumers prefer selling online first" dark />
@@ -1088,7 +1088,7 @@ export default function PitchDeck() {
             <motion.p variants={fadeUp} custom={1} className="text-lg text-muted-foreground max-w-2xl mx-auto mb-16">
               This isn't a pitch for something we're going to build. It's running in production today — processing real leads, real appraisals, and real purchases.
             </motion.p>
-            <motion.div variants={fadeUp} custom={2} className="grid md:grid-cols-4 gap-6">
+            <motion.div variants={fadeUp} custom={2} className="grid grid-cols-2 lg:grid-cols-4 gap-6">
               <MetricCard value={10} suffix="+" label="Pipeline stages managed" />
               <MetricCard value={4} label="Staff permission tiers" />
               <MetricCard value={6} label="Guided photo categories" />
@@ -1105,7 +1105,7 @@ export default function PitchDeck() {
             <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-6xl font-black mb-14 leading-tight">
               The <span className="text-blue-400">Unfair Advantage</span>
             </motion.h2>
-            <motion.div variants={fadeUp} custom={1} className="grid md:grid-cols-4 gap-6">
+            <motion.div variants={fadeUp} custom={1} className="grid grid-cols-2 lg:grid-cols-4 gap-6">
               {[
                 { icon: DollarSign, title: "Higher Margins", desc: "Acquire inventory at wholesale directly from consumers. Skip the auction. Skip the transportation. Keep the profit." },
                 { icon: Zap, title: "Speed to Deal", desc: "From submission to check in hand — every step optimized. Less time per deal means more deals per month." },
