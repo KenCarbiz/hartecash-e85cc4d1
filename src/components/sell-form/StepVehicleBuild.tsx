@@ -22,7 +22,7 @@ const COLOR_OPTIONS = [
   { label: "Gold", hex: "#b8860b" },
   { label: "Orange", hex: "#e36414" },
   { label: "Beige", hex: "#d4c5a9" },
-  { label: "Other", hex: "linear-gradient(135deg, #a0a0a0 50%, #d4d4d4 50%)" },
+  { label: "Other", hex: "none" },
 ];
 
 const ColorDropdown = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
@@ -52,8 +52,8 @@ const ColorDropdown = ({ value, onChange }: { value: string; onChange: (v: strin
           {selected ? (
             <>
               <span
-                className="w-5 h-5 rounded-full shrink-0 border border-border"
-                style={{ background: selected.hex }}
+                className={`w-5 h-5 rounded-full shrink-0 ${selected.hex === "none" ? "border-2 border-dashed border-muted-foreground" : "border border-border"}`}
+                style={selected.hex !== "none" ? { background: selected.hex } : undefined}
               />
               <span className="text-card-foreground font-medium">{selected.label}</span>
             </>
@@ -76,8 +76,8 @@ const ColorDropdown = ({ value, onChange }: { value: string; onChange: (v: strin
               }`}
             >
               <span
-                className="w-5 h-5 rounded-full shrink-0 border border-border"
-                style={{ background: color.hex }}
+                className={`w-5 h-5 rounded-full shrink-0 ${color.hex === "none" ? "border-2 border-dashed border-muted-foreground" : "border border-border"}`}
+                style={color.hex !== "none" ? { background: color.hex } : undefined}
               />
               {color.label}
             </button>
