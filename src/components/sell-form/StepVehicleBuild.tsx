@@ -22,7 +22,7 @@ const COLOR_OPTIONS = [
   { label: "Gold", hex: "#b8860b" },
   { label: "Orange", hex: "#e36414" },
   { label: "Beige", hex: "#d4c5a9" },
-  { label: "Other", hex: "conic-gradient(red,yellow,lime,aqua,blue,magenta,red)" },
+  { label: "Other", hex: "linear-gradient(135deg, #a0a0a0 50%, #d4d4d4 50%)" },
 ];
 
 const ColorDropdown = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
