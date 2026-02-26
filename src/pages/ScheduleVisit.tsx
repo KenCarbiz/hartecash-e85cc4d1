@@ -289,6 +289,15 @@ const ScheduleVisit = () => {
                 />
               </div>
 
+              <div className="p-3 bg-muted/50 border border-border rounded-lg">
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  By submitting, you consent to receive autodialed calls, texts (SMS/MMS), and emails from Harte Auto Group at the number and email provided regarding your appointment and vehicle. Consent is not a condition of purchase. Msg & data rates may apply. Msg frequency varies. Reply STOP to opt out. See our{" "}
+                  <a href="/privacy#sms-consent" target="_blank" rel="noopener noreferrer" className="underline text-primary hover:no-underline">Privacy Policy</a>{" "}
+                  and{" "}
+                  <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline text-primary hover:no-underline">Terms of Service</a>.
+                </p>
+              </div>
+
               <Button type="submit" className="w-full" size="lg" disabled={submitting}>
                 {submitting ? (
                   <>

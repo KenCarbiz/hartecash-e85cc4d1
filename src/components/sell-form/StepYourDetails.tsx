@@ -48,6 +48,15 @@ const StepYourDetails = ({ formData, update }: Props) => {
           className="py-3.5 px-4 text-base border-2 border-input focus:border-accent focus:ring-accent/10"
         />
       </FormField>
+
+      <div className="p-3 bg-muted/50 border border-border rounded-lg mb-5">
+        <p className="text-[11px] text-muted-foreground leading-relaxed">
+          By submitting this form, you consent to receive autodialed calls, texts (SMS/MMS), and emails from Harte Auto Group at the phone number and email provided regarding your vehicle submission, offer, and appointment. Consent is not a condition of purchase. Msg & data rates may apply. Msg frequency varies. Reply STOP to opt out. See our{" "}
+          <a href="/privacy#sms-consent" target="_blank" rel="noopener noreferrer" className="underline text-primary hover:no-underline">Privacy Policy</a>{" "}
+          and{" "}
+          <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline text-primary hover:no-underline">Terms of Service</a>.
+        </p>
+      </div>
       <FormField label="What would you like to do?" hint="Sell outright, trade in for tax savings, or buy out your lease.">
         <div className="grid grid-cols-2 gap-2">
           {["Sell", "Trade-In", "Lease Buyout", "Not Sure"].map((opt) => (

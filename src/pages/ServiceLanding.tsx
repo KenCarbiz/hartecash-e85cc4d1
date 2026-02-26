@@ -412,6 +412,15 @@ const ServiceLanding = () => {
                       className="bg-[hsl(222,47%,12%)] border-[hsl(217,33%,22%)] text-[hsl(210,40%,98%)] placeholder:text-[hsl(215,20%,45%)]" />
                   </div>
 
+                  <div className="p-3 bg-[hsl(222,47%,12%)] border border-[hsl(217,33%,22%)] rounded-lg">
+                    <p className="text-[11px] text-[hsl(215,20%,50%)] leading-relaxed">
+                      By submitting, you consent to receive autodialed calls, texts (SMS/MMS), and emails from Harte Auto Group at the number and email provided regarding your vehicle and offer. Consent is not a condition of purchase. Msg & data rates may apply. Msg frequency varies. Reply STOP to opt out. See our{" "}
+                      <a href="/privacy#sms-consent" target="_blank" rel="noopener noreferrer" className="underline text-[hsl(210,80%,60%)] hover:no-underline">Privacy Policy</a>{" "}
+                      and{" "}
+                      <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline text-[hsl(210,80%,60%)] hover:no-underline">Terms of Service</a>.
+                    </p>
+                  </div>
+
                   <div className="flex gap-3 pt-2">
                     <Button type="button" variant="outline" onClick={() => setStep(0)}
                       className="flex-1 py-4 bg-transparent border-[hsl(217,33%,22%)] text-[hsl(210,40%,98%)] hover:bg-[hsl(222,47%,12%)]">
@@ -634,6 +643,10 @@ const ServiceLanding = () => {
         <p className="text-xs text-[hsl(215,20%,45%)]">
           Family-owned since 1952 • 150 Weston Street, Hartford, CT 06120 • (866) 851-7390
         </p>
+        <div className="flex justify-center gap-4 mt-3">
+          <a href="/privacy" className="text-xs text-[hsl(215,20%,45%)] hover:text-[hsl(215,20%,65%)] underline transition-colors">Privacy Policy</a>
+          <a href="/terms" className="text-xs text-[hsl(215,20%,45%)] hover:text-[hsl(215,20%,65%)] underline transition-colors">Terms of Service</a>
+        </div>
       </footer>
     </div>
   );

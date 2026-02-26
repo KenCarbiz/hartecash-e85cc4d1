@@ -28,6 +28,8 @@ const SiteFooter = () => {
           <div className="flex flex-col gap-2">
             <Link to="/my-submission" className="text-sm opacity-60 hover:opacity-90 transition-opacity">View My Offer</Link>
             <Link to="/schedule" className="text-sm opacity-60 hover:opacity-90 transition-opacity">Schedule a Visit</Link>
+            <Link to="/privacy" className="text-sm opacity-60 hover:opacity-90 transition-opacity">Privacy Policy</Link>
+            <Link to="/terms" className="text-sm opacity-60 hover:opacity-90 transition-opacity">Terms of Service</Link>
             <Link to="/admin/login" className="text-xs opacity-40 hover:opacity-70 transition-opacity mt-2">Admin</Link>
           </div>
         </div>

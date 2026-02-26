@@ -18,6 +18,8 @@ const PitchDeck = lazy(() => import("./pages/PitchDeck"));
 const ServiceLanding = lazy(() => import("./pages/ServiceLanding"));
 const KenPage = lazy(() => import("./pages/KenPage"));
 const ServiceLinkGen = lazy(() => import("./pages/ServiceLinkGen"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 
 const queryClient = new QueryClient();
 
@@ -41,6 +43,8 @@ const App = () => (
             <Route path="/pitch" element={<PitchDeck />} />
             <Route path="/ken" element={<KenPage />} />
             <Route path="/servicelinkgen" element={<ServiceLinkGen />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
