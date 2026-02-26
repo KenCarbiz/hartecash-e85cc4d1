@@ -1,3 +1,5 @@
+import { useState, useRef, useEffect } from "react";
+import { ChevronDown } from "lucide-react";
 import FormField from "./FormField";
 import RadioOption from "./RadioOption";
 import type { FormData, VehicleInfo } from "./types";
@@ -9,19 +11,82 @@ interface Props {
 }
 
 const COLOR_OPTIONS = [
-  { label: "Black", hex: "#1a1a1a" },
   { label: "White", hex: "#f5f5f5" },
-  { label: "Silver", hex: "#c0c0c0" },
   { label: "Gray", hex: "#808080" },
-  { label: "Red", hex: "#cc2936" },
+  { label: "Silver", hex: "#c0c0c0" },
+  { label: "Black", hex: "#1a1a1a" },
   { label: "Blue", hex: "#1e3a8a" },
-  { label: "Brown", hex: "#6b3a2a" },
+  { label: "Red", hex: "#cc2936" },
   { label: "Green", hex: "#2d6a4f" },
+  { label: "Brown", hex: "#6b3a2a" },
   { label: "Gold", hex: "#b8860b" },
   { label: "Orange", hex: "#e36414" },
   { label: "Beige", hex: "#d4c5a9" },
   { label: "Other", hex: "conic-gradient(red,yellow,lime,aqua,blue,magenta,red)" },
 ];
+
+const ColorDropdown = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const selected = COLOR_OPTIONS.find((c) => c.label === value);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className={`w-full flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl border-2 text-base transition-all bg-card ${
+          open ? "border-accent ring-2 ring-accent/10" : "border-input"
+        }`}
+      >
+        <span className="flex items-center gap-3">
+          {selected ? (
+            <>
+              <span
+                className="w-5 h-5 rounded-full shrink-0 border border-border"
+                style={{ background: selected.hex }}
+              />
+              <span className="text-card-foreground font-medium">{selected.label}</span>
+            </>
+          ) : (
+            <span className="text-muted-foreground">Exterior color</span>
+          )}
+        </span>
+        <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="absolute z-50 mt-1 w-full bg-card border border-border rounded-xl shadow-xl max-h-64 overflow-y-auto">
+          {COLOR_OPTIONS.map((color) => (
+            <button
+              key={color.label}
+              type="button"
+              onClick={() => { onChange(color.label); setOpen(false); }}
+              className={`w-full flex items-center gap-3 px-4 py-3 text-left text-[15px] transition-colors hover:bg-accent/5 ${
+                value === color.label ? "bg-accent/10 font-semibold text-card-foreground" : "text-card-foreground"
+              }`}
+            >
+              <span
+                className="w-5 h-5 rounded-full shrink-0 border border-border"
+                style={{ background: color.hex }}
+              />
+              {color.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const StepVehicleBuild = ({ formData, update, vehicleInfo }: Props) => (
   <>
@@ -33,28 +98,7 @@ const StepVehicleBuild = ({ formData, update, vehicleInfo }: Props) => (
       </div>
     )}
     <FormField label="What color is your vehicle?">
-      <div className="grid grid-cols-3 gap-2">
-        {COLOR_OPTIONS.map((color) => (
-          <button
-            key={color.label}
-            type="button"
-            onClick={() => update("exteriorColor", color.label)}
-            className={`flex items-center gap-2.5 px-3 py-3 rounded-xl border-2 transition-all text-left text-sm font-medium ${
-              formData.exteriorColor === color.label
-                ? "border-accent bg-accent/10 text-card-foreground shadow-sm"
-                : "border-input bg-card text-muted-foreground hover:border-accent/50"
-            }`}
-          >
-            <span
-              className="w-5 h-5 rounded-full shrink-0 border border-border"
-              style={{
-                background: color.label === "Other" ? color.hex : color.hex,
-              }}
-            />
-            <span className="truncate">{color.label}</span>
-          </button>
-        ))}
-      </div>
+      <ColorDropdown value={formData.exteriorColor} onChange={(v) => update("exteriorColor", v)} />
     </FormField>
 
     <FormField label="What is your vehicle's drivetrain?">
