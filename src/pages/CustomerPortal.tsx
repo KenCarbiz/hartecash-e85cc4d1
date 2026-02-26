@@ -215,9 +215,16 @@ const CustomerPortal = () => {
               ${s.offered_price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
             <p className="text-xs text-muted-foreground mt-1">Subject to in-person inspection</p>
-            <Button variant="outline" size="sm" className="mt-3" onClick={handlePrintOffer}>
-              <Printer className="w-4 h-4 mr-1" /> Print Offer
-            </Button>
+            <div className="flex gap-2 mt-3">
+              <Link to={`/offer/${s.token}`}>
+                <Button size="sm" className="gap-1 bg-accent hover:bg-accent/90 text-accent-foreground">
+                  View Full Offer
+                </Button>
+              </Link>
+              <Button variant="outline" size="sm" onClick={handlePrintOffer}>
+                <Printer className="w-4 h-4 mr-1" /> Print
+              </Button>
+            </div>
           </div>
         )}
 
