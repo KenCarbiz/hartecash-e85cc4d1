@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, DollarSign, ArrowDown, TrendingUp, ShieldCheck, Info, Printer } from "lucide-react";
+import { ArrowLeft, DollarSign, ArrowDown, TrendingUp, ShieldCheck, Info, Printer, CheckCircle, AlertTriangle, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import harteLogo from "@/assets/harte-logo-white.png";
@@ -21,6 +21,22 @@ interface OfferSubmission {
   offered_price: number | null;
   token: string;
   zip: string | null;
+  vin: string | null;
+}
+
+interface ConditionDetails {
+  accidents: string | null;
+  drivable: string | null;
+  exterior_damage: string[] | null;
+  interior_damage: string[] | null;
+  mechanical_issues: string[] | null;
+  engine_issues: string[] | null;
+  tech_issues: string[] | null;
+  smoked_in: string | null;
+  tires_replaced: string | null;
+  num_keys: string | null;
+  windshield_damage: string | null;
+  modifications: string | null;
 }
 
 const OfferPage = () => {
@@ -29,6 +45,8 @@ const OfferPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState<"sell" | "trade">("sell");
+  const [condition, setCondition] = useState<ConditionDetails | null>(null);
+
   const explanationRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -37,9 +55,18 @@ const OfferPage = () => {
       const minDelay = new Promise(r => setTimeout(r, 1200));
       const query = supabase.rpc("get_submission_portal", { _token: token });
       const [, { data, error: err }] = await Promise.all([minDelay, query]);
-      if (err || !data || data.length === 0) setError("Offer not found.");
-      else setSubmission(data[0] as unknown as OfferSubmission);
+      if (err || !data || data.length === 0) { setError("Offer not found."); setLoading(false); return; }
+      const sub = data[0] as unknown as OfferSubmission;
+      setSubmission(sub);
       setLoading(false);
+
+      // Fetch condition details separately (uses the submission id)
+      const { data: condData } = await supabase
+        .from("submissions")
+        .select("accidents, drivable, exterior_damage, interior_damage, mechanical_issues, engine_issues, tech_issues, smoked_in, tires_replaced, num_keys, windshield_damage, modifications")
+        .eq("token", token)
+        .maybeSingle();
+      if (condData) setCondition(condData as ConditionDetails);
     };
     fetchData();
   }, [token]);
@@ -213,7 +240,142 @@ const OfferPage = () => {
           </div>
         </div>
 
-        {/* Trade-In Explanation Section */}
+        {/* What's Behind Your Offer */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="bg-card rounded-xl p-5 shadow-lg"
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+              <Search className="w-4 h-4 text-primary" />
+            </div>
+            <h3 className="font-bold text-card-foreground">What's Behind Your Offer</h3>
+          </div>
+
+          <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+            We combine what you told us about your {vehicleStr || "vehicle"} with market data, service history records, 
+            and condition details to create a fair cash offer just for you.
+          </p>
+
+          {/* Two-column layout */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Left: Key details */}
+            <div className="space-y-2.5">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Key Details</p>
+              {s.vin && (
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-muted-foreground font-mono text-xs">VIN</span>
+                  <span className="font-medium text-xs">{s.vin.slice(-6).toUpperCase()}</span>
+                </div>
+              )}
+              {s.overall_condition && (
+                <div className="flex items-center gap-2 text-sm">
+                  <CheckCircle className="w-3.5 h-3.5 text-success shrink-0" />
+                  <span className="capitalize">{s.overall_condition} condition</span>
+                </div>
+              )}
+              {s.mileage && (
+                <div className="flex items-center gap-2 text-sm">
+                  <CheckCircle className="w-3.5 h-3.5 text-success shrink-0" />
+                  <span>{Number(s.mileage).toLocaleString()} miles</span>
+                </div>
+              )}
+              {condition?.accidents && (
+                <div className="flex items-center gap-2 text-sm">
+                  {condition.accidents.toLowerCase().includes("no") ? (
+                    <CheckCircle className="w-3.5 h-3.5 text-success shrink-0" />
+                  ) : (
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                  )}
+                  <span>{condition.accidents}</span>
+                </div>
+              )}
+              {condition?.num_keys && (
+                <div className="flex items-center gap-2 text-sm">
+                  <CheckCircle className="w-3.5 h-3.5 text-success shrink-0" />
+                  <span>{condition.num_keys} keys</span>
+                </div>
+              )}
+              {condition?.smoked_in && (
+                <div className="flex items-center gap-2 text-sm">
+                  {condition.smoked_in.toLowerCase() === "no" ? (
+                    <CheckCircle className="w-3.5 h-3.5 text-success shrink-0" />
+                  ) : (
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                  )}
+                  <span>{condition.smoked_in === "No" ? "Non-smoker" : "Smoked in"}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Right: Condition factors */}
+            <div className="space-y-2.5">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Condition</p>
+              {(!condition?.exterior_damage || condition.exterior_damage.length === 0) ? (
+                <div className="flex items-center gap-2 text-sm">
+                  <CheckCircle className="w-3.5 h-3.5 text-success shrink-0" />
+                  <span>No exterior damage</span>
+                </div>
+              ) : (
+                <div className="flex items-start gap-2 text-sm">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                  <span className="capitalize">{condition.exterior_damage.join(", ")}</span>
+                </div>
+              )}
+              {(!condition?.interior_damage || condition.interior_damage.length === 0) ? (
+                <div className="flex items-center gap-2 text-sm">
+                  <CheckCircle className="w-3.5 h-3.5 text-success shrink-0" />
+                  <span>No interior damage</span>
+                </div>
+              ) : (
+                <div className="flex items-start gap-2 text-sm">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                  <span className="capitalize">{condition.interior_damage.join(", ")}</span>
+                </div>
+              )}
+              {(!condition?.mechanical_issues || condition.mechanical_issues.length === 0) ? (
+                <div className="flex items-center gap-2 text-sm">
+                  <CheckCircle className="w-3.5 h-3.5 text-success shrink-0" />
+                  <span>No mechanical issues</span>
+                </div>
+              ) : (
+                <div className="flex items-start gap-2 text-sm">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                  <span className="capitalize">{condition.mechanical_issues.join(", ")}</span>
+                </div>
+              )}
+              {condition?.windshield_damage && (
+                <div className="flex items-center gap-2 text-sm">
+                  {condition.windshield_damage.toLowerCase().includes("none") ? (
+                    <>
+                      <CheckCircle className="w-3.5 h-3.5 text-success shrink-0" />
+                      <span>No windshield damage</span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                      <span>{condition.windshield_damage}</span>
+                    </>
+                  )}
+                </div>
+              )}
+              {condition?.modifications && condition.modifications.toLowerCase() !== "none" && (
+                <div className="flex items-center gap-2 text-sm">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                  <span>Modified</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <p className="text-xs text-muted-foreground mt-4 pt-3 border-t border-border">
+            We use the details you provided along with market analytics to create your offer.
+          </p>
+        </motion.div>
+
         {taxRate > 0 && (
           <div ref={explanationRef} className="scroll-mt-40">
             <motion.div
