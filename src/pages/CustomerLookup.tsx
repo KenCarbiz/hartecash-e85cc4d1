@@ -39,7 +39,7 @@ const CustomerLookup = () => {
     <div className="min-h-screen bg-background">
       <div className="bg-primary text-primary-foreground px-6 py-4">
         <div className="max-w-lg mx-auto flex items-center gap-3">
-          <img src={harteLogo} alt="Harte" className="h-12 w-auto" />
+          <img src={harteLogo} alt="Harte" className="h-20 w-auto" />
           <h1 className="font-bold text-lg">Find My Submission</h1>
         </div>
       </div>
