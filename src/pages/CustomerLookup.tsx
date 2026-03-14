@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Car } from "lucide-react";
-import harteLogo from "@/assets/harte-logo.png";
+import harteLogo from "@/assets/harte-logo-white.png";
 
 interface FoundSubmission {
   token: string;
