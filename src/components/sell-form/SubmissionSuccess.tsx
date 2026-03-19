@@ -1,17 +1,22 @@
 import { useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { CheckCircle, Smartphone } from "lucide-react";
+import { CheckCircle, Smartphone, DollarSign } from "lucide-react";
 import confetti from "canvas-confetti";
 import { motion } from "framer-motion";
 import type { VehicleInfo } from "./types";
+import type { OfferEstimate } from "@/lib/offerCalculator";
 
 interface Props {
   uploadUrl: string;
   vehicleInfo: VehicleInfo | null;
   nextStep: string;
+  offerEstimate: OfferEstimate | null;
 }
 
-const SubmissionSuccess = ({ uploadUrl, vehicleInfo, nextStep }: Props) => {
+const formatCurrency = (n: number) =>
+  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
+
+const SubmissionSuccess = ({ uploadUrl, vehicleInfo, nextStep, offerEstimate }: Props) => {
   useEffect(() => {
     const duration = 2000;
     const end = Date.now() + duration;
@@ -23,6 +28,34 @@ const SubmissionSuccess = ({ uploadUrl, vehicleInfo, nextStep }: Props) => {
     frame();
   }, []);
 
+  const OfferCard = () => {
+    if (!offerEstimate) return null;
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.5 }}
+        className="bg-gradient-to-br from-success/10 to-accent/10 border-2 border-success/30 rounded-2xl p-6 mb-6"
+      >
+        <div className="flex items-center justify-center gap-2 mb-1">
+          <DollarSign className="w-5 h-5 text-success" />
+          <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+            Your Estimated Offer
+          </span>
+        </div>
+        <div className="text-center">
+          <span className="text-3xl md:text-4xl font-extrabold text-card-foreground">
+            {formatCurrency(offerEstimate.low)} – {formatCurrency(offerEstimate.high)}
+          </span>
+        </div>
+        <p className="text-xs text-muted-foreground text-center mt-3 leading-relaxed">
+          This is a preliminary estimate based on market data and the condition you reported.
+          Your final guaranteed offer will be confirmed after a quick review.
+        </p>
+      </motion.div>
+    );
+  };
+
   if (nextStep === "visit") {
     return (
       <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }} className="text-center py-6">
@@ -31,10 +64,11 @@ const SubmissionSuccess = ({ uploadUrl, vehicleInfo, nextStep }: Props) => {
         </motion.div>
         <h3 className="text-2xl font-bold text-card-foreground mb-2">You're All Set!</h3>
         {vehicleInfo && (
-          <p className="text-base font-semibold text-card-foreground mb-2">
+          <p className="text-base font-semibold text-card-foreground mb-4">
             {vehicleInfo.year} {vehicleInfo.make} {vehicleInfo.model}
           </p>
         )}
+        <OfferCard />
         <p className="text-muted-foreground">
           We'll contact you shortly to schedule your in-person visit.
         </p>
@@ -54,8 +88,10 @@ const SubmissionSuccess = ({ uploadUrl, vehicleInfo, nextStep }: Props) => {
         </p>
       )}
       <p className="text-muted-foreground text-sm mb-5">
-        Scan this QR code with your phone to take and upload vehicle photos.
+        Upload photos to lock in your offer. The faster we see your vehicle, the sooner you get paid.
       </p>
+
+      <OfferCard />
 
       <div className="bg-white p-4 rounded-xl inline-block shadow-lg mb-5">
         <QRCodeSVG value={uploadUrl} size={200} level="H" />
