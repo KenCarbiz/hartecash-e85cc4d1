@@ -252,6 +252,10 @@ const SellCarForm = () => {
       crypto.getRandomValues(tokenBytes);
       const generatedToken = Array.from(tokenBytes).map(b => b.toString(16).padStart(2, '0')).join('');
 
+      // Calculate offer estimate from BB data + condition
+      const estimate = calculateOffer(bbSelectedVehicle, formData, selectedAddDeducts);
+      setOfferEstimate(estimate);
+
       const { error } = await supabase
         .from("submissions")
         .insert({
@@ -289,7 +293,11 @@ const SellCarForm = () => {
           loan_payment: formData.loanPayment || null,
           next_step: formData.nextStep || null,
           lead_source: "inventory",
-        });
+          bb_tradein_avg: bbSelectedVehicle?.tradein?.avg || null,
+          bb_wholesale_avg: bbSelectedVehicle?.wholesale?.avg || null,
+          estimated_offer_low: estimate?.low || null,
+          estimated_offer_high: estimate?.high || null,
+        } as any);
 
       if (error) throw error;
 
