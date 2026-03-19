@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.bb-test]
 verify_jwt = false
+
+[functions.bb-lookup]
+verify_jwt = false
