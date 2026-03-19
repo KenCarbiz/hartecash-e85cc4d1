@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect } from "react";
-import { Shield } from "lucide-react";
+import { Shield, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { logConsent } from "@/lib/consent";
 import { STEPS, initialFormData } from "./sell-form/types";
-import type { FormData, VehicleInfo } from "./sell-form/types";
+import type { FormData, VehicleInfo, BBVehicle } from "./sell-form/types";
 import StepVehicleInfo from "./sell-form/StepVehicleInfo";
 import StepVehicleBuild from "./sell-form/StepVehicleBuild";
+import StepSelectTrim from "./sell-form/StepSelectTrim";
 import StepConditionHistory from "./sell-form/StepConditionHistory";
 import StepYourDetails from "./sell-form/StepYourDetails";
 import StepGetOffer from "./sell-form/StepGetOffer";
@@ -31,6 +32,14 @@ const SellCarForm = () => {
   const [honeypot, setHoneypot] = useState("");
   const formRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  // Black Book state
+  const [bbVehicles, setBbVehicles] = useState<BBVehicle[]>([]);
+  const [bbSelectedVehicle, setBbSelectedVehicle] = useState<BBVehicle | null>(null);
+  const [bbLoading, setBbLoading] = useState(false);
+  const [selectedAddDeducts, setSelectedAddDeducts] = useState<string[]>([]);
+  // Whether we need a trim selection step (plate path with multiple results)
+  const [showTrimStep, setShowTrimStep] = useState(false);
 
   useEffect(() => {
     if (step > 0 && formRef.current) {
@@ -56,18 +65,118 @@ const SellCarForm = () => {
       };
     });
 
+  const toggleAddDeduct = (uoc: string) => {
+    setSelectedAddDeducts((prev) =>
+      prev.includes(uoc) ? prev.filter((u) => u !== uoc) : [...prev, uoc]
+    );
+  };
+
+  // Determine actual displayed steps based on whether trim selection is needed
+  const getDisplaySteps = () => {
+    if (showTrimStep) {
+      return ["Vehicle Info", "Select Your Vehicle", "Vehicle Build", "Condition & History", "Your Details", "Get Your Offer"];
+    }
+    return STEPS;
+  };
+
+  const displaySteps = getDisplaySteps();
+  const totalSteps = displaySteps.length;
+
+  const lookupBlackBook = async (): Promise<boolean> => {
+    const isPlate = formData.plate.trim().length > 0;
+    const isVin = formData.vin.trim().length >= 9;
+    if (!isPlate && !isVin) return true; // No lookup needed
+
+    setBbLoading(true);
+    try {
+      const mileageNum = parseInt(formData.mileage.replace(/[^0-9]/g, ""));
+      const body: Record<string, unknown> = {
+        lookup_type: isVin ? "vin" : "plate",
+        mileage: mileageNum || undefined,
+        state: formData.state || "CT",
+      };
+      if (isVin) body.vin = formData.vin.trim();
+      else {
+        body.plate = formData.plate.trim();
+        body.state = formData.state.trim();
+      }
+
+      const { data, error } = await supabase.functions.invoke("bb-lookup", { body });
+
+      if (error || data?.error) {
+        console.error("BB lookup failed:", error || data?.error);
+        // Fall back — don't block the user
+        toast({ title: "Vehicle lookup unavailable", description: "We'll continue with manual entry.", variant: "default" });
+        setBbLoading(false);
+        return true;
+      }
+
+      const vehicles: BBVehicle[] = data.vehicles || [];
+
+      if (vehicles.length === 0) {
+        toast({ title: "Vehicle not found", description: "Please check your info and try again, or continue manually.", variant: "destructive" });
+        setBbLoading(false);
+        return false;
+      }
+
+      setBbVehicles(vehicles);
+
+      // Auto-select add/deducts that are pre-matched (auto = Y, M, or D)
+      const autoSelected = vehicles[0].add_deduct_list
+        .filter((ad) => ad.auto !== "N")
+        .map((ad) => ad.uoc);
+      setSelectedAddDeducts(autoSelected);
+
+      if (vehicles.length === 1) {
+        // Single match — go straight to vehicle build
+        const v = vehicles[0];
+        setBbSelectedVehicle(v);
+        setVehicleInfo({ year: v.year, make: v.make, model: v.model });
+        setFormData((prev) => ({ ...prev, bbUvc: v.uvc }));
+        setShowTrimStep(false);
+      } else {
+        // Multiple matches — need trim selection step
+        setShowTrimStep(true);
+      }
+
+      setBbLoading(false);
+      return true;
+    } catch (err) {
+      console.error("BB lookup error:", err);
+      setBbLoading(false);
+      return true; // Don't block
+    }
+  };
+
+  const handleTrimSelect = (uvc: string) => {
+    const v = bbVehicles.find((veh) => veh.uvc === uvc);
+    if (v) {
+      setBbSelectedVehicle(v);
+      setVehicleInfo({ year: v.year, make: v.make, model: v.model });
+      setFormData((prev) => ({ ...prev, bbUvc: v.uvc }));
+
+      const autoSelected = v.add_deduct_list
+        .filter((ad) => ad.auto !== "N")
+        .map((ad) => ad.uoc);
+      setSelectedAddDeducts(autoSelected);
+    }
+  };
+
   const validateStep = (): boolean => {
     const missing: string[] = [];
+    const currentStepName = displaySteps[step];
 
-    if (step === 0) {
+    if (currentStepName === "Vehicle Info") {
       if (!formData.vin.trim() && !formData.plate.trim()) missing.push("VIN or License Plate");
       if (formData.plate.trim() && !formData.state.trim()) missing.push("State");
       if (!formData.mileage.trim()) missing.push("Mileage");
-    } else if (step === 1) {
+    } else if (currentStepName === "Select Your Vehicle") {
+      if (!formData.bbUvc) missing.push("Please select your vehicle");
+    } else if (currentStepName === "Vehicle Build") {
       if (!formData.exteriorColor.trim()) missing.push("Exterior Color");
       if (!formData.drivetrain) missing.push("Drivetrain");
       if (!formData.modifications) missing.push("Modifications");
-    } else if (step === 2) {
+    } else if (currentStepName === "Condition & History") {
       if (!formData.overallCondition) missing.push("Overall Condition");
       if (formData.exteriorDamage.length === 0) missing.push("Exterior Damage");
       if (!formData.windshieldDamage) missing.push("Windshield Damage");
@@ -81,13 +190,13 @@ const SellCarForm = () => {
       if (!formData.smokedIn) missing.push("Smoked In");
       if (!formData.tiresReplaced) missing.push("Tires Replaced");
       if (!formData.numKeys) missing.push("Number of Keys");
-    } else if (step === 3) {
+    } else if (currentStepName === "Your Details") {
       if (!formData.name.trim()) missing.push("Full Name");
       if (!formData.phone.trim()) missing.push("Phone Number");
       if (!formData.email.trim()) missing.push("Email Address");
       if (!formData.zip.trim()) missing.push("ZIP Code");
       if (!formData.loanStatus) missing.push("Sell or Trade-In");
-    } else if (step === 4) {
+    } else if (currentStepName === "Get Your Offer") {
       if (!formData.nextStep) missing.push("Next Step");
     }
 
@@ -104,39 +213,39 @@ const SellCarForm = () => {
 
   const handleNext = async () => {
     if (!validateStep()) return;
-    // Auto-decode VIN if on step 0, VIN is entered but not yet looked up
-    if (step === 0 && !vehicleInfo && formData.vin.trim().length === 17) {
-      try {
-        const res = await fetch(
-          `https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${encodeURIComponent(formData.vin.trim())}?format=json`
-        );
-        const data = await res.json();
-        const results = data.Results as { Variable: string; Value: string | null }[];
-        const get = (name: string) => results.find((r) => r.Variable === name)?.Value || "";
-        const year = get("Model Year");
-        const make = get("Make");
-        const model = get("Model");
-        if (year && make && model) setVehicleInfo({ year, make, model });
-      } catch { /* silently continue */ }
+
+    // On step 0 (Vehicle Info), trigger BB lookup
+    if (displaySteps[step] === "Vehicle Info") {
+      const success = await lookupBlackBook();
+      if (!success) return;
     }
-    if (step < STEPS.length - 1) { setDirection(1); setStep(step + 1); }
+
+    if (step < totalSteps - 1) {
+      setDirection(1);
+      setStep(step + 1);
+    }
   };
-  const handleBack = () => { if (step > 0) { setDirection(-1); setStep(step - 1); } };
+
+  const handleBack = () => {
+    if (step > 0) {
+      setDirection(-1);
+      setStep(step - 1);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateStep()) return;
-    // Honeypot check
     if (honeypot) return;
-    // Cooldown check
+
     const lastSubmit = localStorage.getItem("lastSubmissionTime");
     if (lastSubmit && Date.now() - parseInt(lastSubmit) < 120000) {
       toast({ title: "Please wait", description: "You recently submitted. Please wait a couple of minutes.", variant: "destructive" });
       return;
     }
+
     setSubmitting(true);
     try {
-      // Generate token client-side to avoid needing SELECT permission
       const tokenBytes = new Uint8Array(16);
       crypto.getRandomValues(tokenBytes);
       const generatedToken = Array.from(tokenBytes).map(b => b.toString(16).padStart(2, '0')).join('');
@@ -186,7 +295,6 @@ const SellCarForm = () => {
       setUploadUrl(`${baseUrl}/upload/${generatedToken}`);
       localStorage.setItem("lastSubmissionTime", Date.now().toString());
 
-      // Log TCPA consent
       logConsent({
         customerName: formData.name,
         customerPhone: formData.phone,
@@ -214,12 +322,42 @@ const SellCarForm = () => {
     );
   }
 
+  const currentStepName = displaySteps[step];
+
+  const renderStep = () => {
+    switch (currentStepName) {
+      case "Vehicle Info":
+        return <StepVehicleInfo formData={formData} update={update} vehicleInfo={vehicleInfo} setVehicleInfo={setVehicleInfo} />;
+      case "Select Your Vehicle":
+        return <StepSelectTrim vehicles={bbVehicles} selectedUvc={formData.bbUvc} onSelect={(uvc) => { handleTrimSelect(uvc); }} />;
+      case "Vehicle Build":
+        return (
+          <StepVehicleBuild
+            formData={formData}
+            update={update}
+            vehicleInfo={vehicleInfo}
+            bbVehicle={bbSelectedVehicle}
+            selectedAddDeducts={selectedAddDeducts}
+            onToggleAddDeduct={toggleAddDeduct}
+          />
+        );
+      case "Condition & History":
+        return <StepConditionHistory formData={formData} updateArray={updateArray} update={update} />;
+      case "Your Details":
+        return <StepYourDetails formData={formData} update={update} />;
+      case "Get Your Offer":
+        return <StepGetOffer formData={formData} update={update} vehicleInfo={vehicleInfo} />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div ref={formRef} className="bg-card rounded-2xl shadow-xl mx-auto -mt-10 mb-10 p-6 md:p-8 relative z-10 max-w-lg w-[calc(100%-40px)]">
       {/* Progress */}
       <div className="mb-6 pb-5 border-b-2 border-muted">
         <div className="flex justify-center items-center gap-3 mb-3">
-          {STEPS.map((_, i) => (
+          {displaySteps.map((_, i) => (
             <div
               key={i}
               className={`w-3 h-3 rounded-full transition-all ${
@@ -229,12 +367,11 @@ const SellCarForm = () => {
           ))}
         </div>
         <p className="text-center text-sm text-muted-foreground font-medium">
-          Step {step + 1} of {STEPS.length}: <strong className="text-card-foreground font-bold">{STEPS[step]}</strong>
+          Step {step + 1} of {totalSteps}: <strong className="text-card-foreground font-bold">{currentStepName}</strong>
         </p>
       </div>
 
       <form onSubmit={handleSubmit}>
-        {/* Honeypot field - hidden from real users */}
         <input
           type="text"
           name="website"
@@ -255,11 +392,7 @@ const SellCarForm = () => {
             exit="exit"
             transition={{ duration: 0.25, ease: "easeInOut" }}
           >
-            {step === 0 && <StepVehicleInfo formData={formData} update={update} vehicleInfo={vehicleInfo} setVehicleInfo={setVehicleInfo} />}
-            {step === 1 && <StepVehicleBuild formData={formData} update={update} vehicleInfo={vehicleInfo} />}
-            {step === 2 && <StepConditionHistory formData={formData} updateArray={updateArray} update={update} />}
-            {step === 3 && <StepYourDetails formData={formData} update={update} />}
-            {step === 4 && <StepGetOffer formData={formData} update={update} vehicleInfo={vehicleInfo} />}
+            {renderStep()}
           </motion.div>
         </AnimatePresence>
 
@@ -269,13 +402,21 @@ const SellCarForm = () => {
               Back
             </Button>
           )}
-          {step < STEPS.length - 1 ? (
+          {step < totalSteps - 1 ? (
             <Button
               type="button"
               onClick={handleNext}
+              disabled={bbLoading}
               className="flex-1 py-4 bg-accent hover:bg-accent/90 text-accent-foreground text-[17px] font-bold shadow-lg shadow-accent/30 hover:-translate-y-0.5 transition-all"
             >
-              Continue
+              {bbLoading ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Looking up vehicle…
+                </span>
+              ) : (
+                "Continue"
+              )}
             </Button>
           ) : (
             <Button

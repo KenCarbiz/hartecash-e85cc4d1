@@ -4,12 +4,43 @@ export interface VehicleInfo {
   model: string;
 }
 
+// Black Book vehicle data returned from edge function
+export interface BBAddDeduct {
+  uoc: string;
+  name: string;
+  auto: string; // "Y" | "N" | "M" | "D"
+  avg: number;
+  clean: number;
+  rough: number;
+  xclean: number;
+}
+
+export interface BBVehicle {
+  uvc: string;
+  vin: string;
+  year: string;
+  make: string;
+  model: string;
+  series: string;
+  style: string;
+  class_name: string;
+  msrp: number;
+  price_includes: string;
+  add_deduct_list: BBAddDeduct[];
+  wholesale: { xclean: number; clean: number; avg: number; rough: number };
+  tradein: { clean: number; avg: number; rough: number };
+  retail: { xclean: number; clean: number; avg: number; rough: number };
+}
+
 export interface FormData {
   // Vehicle Info
   plate: string;
   state: string;
   vin: string;
   mileage: string;
+  // Black Book data
+  bbUvc: string;
+  bbSelectedAddDeducts: string[]; // UOC codes selected by user
   // Vehicle Build
   exteriorColor: string;
   drivetrain: string;
@@ -46,6 +77,8 @@ export const initialFormData: FormData = {
   state: "",
   vin: "",
   mileage: "",
+  bbUvc: "",
+  bbSelectedAddDeducts: [],
   exteriorColor: "",
   drivetrain: "",
   modifications: "",
