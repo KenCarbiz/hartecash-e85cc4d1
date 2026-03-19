@@ -120,6 +120,13 @@ const OfferPage = () => {
     </div>
   );
 
+  const { state, rate: taxRate } = getTaxRateFromZip(s.zip || "");
+  const stateName = state ? STATE_NAMES[state] || state : null;
+  const taxPercent = (taxRate * 100).toFixed(2);
+  const taxSavings = cashOffer * taxRate;
+  const tradeInValue = calcTradeInValue(cashOffer, taxRate);
+  const tradeInValueLow = isEstimate ? calcTradeInValue(estimateLow, taxRate) : tradeInValue;
+
   const handlePrint = () => {
     window.print();
   };
