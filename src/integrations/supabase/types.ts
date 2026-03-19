@@ -211,6 +211,8 @@ export type Database = {
           appointment_date: string | null
           appointment_set: boolean
           appraised_by: string | null
+          bb_tradein_avg: number | null
+          bb_wholesale_avg: number | null
           check_request_done: boolean
           created_at: string
           docs_uploaded: boolean
@@ -218,6 +220,8 @@ export type Database = {
           drivetrain: string | null
           email: string | null
           engine_issues: string[] | null
+          estimated_offer_high: number | null
+          estimated_offer_low: number | null
           exterior_color: string | null
           exterior_damage: string[] | null
           id: string
@@ -264,6 +268,8 @@ export type Database = {
           appointment_date?: string | null
           appointment_set?: boolean
           appraised_by?: string | null
+          bb_tradein_avg?: number | null
+          bb_wholesale_avg?: number | null
           check_request_done?: boolean
           created_at?: string
           docs_uploaded?: boolean
@@ -271,6 +277,8 @@ export type Database = {
           drivetrain?: string | null
           email?: string | null
           engine_issues?: string[] | null
+          estimated_offer_high?: number | null
+          estimated_offer_low?: number | null
           exterior_color?: string | null
           exterior_damage?: string[] | null
           id?: string
@@ -317,6 +325,8 @@ export type Database = {
           appointment_date?: string | null
           appointment_set?: boolean
           appraised_by?: string | null
+          bb_tradein_avg?: number | null
+          bb_wholesale_avg?: number | null
           check_request_done?: boolean
           created_at?: string
           docs_uploaded?: boolean
@@ -324,6 +334,8 @@ export type Database = {
           drivetrain?: string | null
           email?: string | null
           engine_issues?: string[] | null
+          estimated_offer_high?: number | null
+          estimated_offer_low?: number | null
           exterior_color?: string | null
           exterior_damage?: string[] | null
           id?: string
