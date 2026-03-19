@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.send-appointment-confirmation]
 verify_jwt = false
+
+[functions.bb-test]
+verify_jwt = false
