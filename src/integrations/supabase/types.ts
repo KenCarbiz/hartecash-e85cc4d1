@@ -144,6 +144,75 @@ export type Database = {
         }
         Relationships: []
       }
+      offer_rules: {
+        Row: {
+          adjustment_pct: number
+          created_at: string
+          criteria: Json
+          dealership_id: string
+          flag_in_dashboard: boolean
+          id: string
+          is_active: boolean
+          name: string
+          priority: number
+          rule_type: string
+        }
+        Insert: {
+          adjustment_pct?: number
+          created_at?: string
+          criteria?: Json
+          dealership_id?: string
+          flag_in_dashboard?: boolean
+          id?: string
+          is_active?: boolean
+          name: string
+          priority?: number
+          rule_type?: string
+        }
+        Update: {
+          adjustment_pct?: number
+          created_at?: string
+          criteria?: Json
+          dealership_id?: string
+          flag_in_dashboard?: boolean
+          id?: string
+          is_active?: boolean
+          name?: string
+          priority?: number
+          rule_type?: string
+        }
+        Relationships: []
+      }
+      offer_settings: {
+        Row: {
+          bb_value_basis: string
+          created_at: string
+          dealership_id: string
+          deductions_config: Json
+          global_adjustment_pct: number
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          bb_value_basis?: string
+          created_at?: string
+          dealership_id?: string
+          deductions_config?: Json
+          global_adjustment_pct?: number
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          bb_value_basis?: string
+          created_at?: string
+          dealership_id?: string
+          deductions_config?: Json
+          global_adjustment_pct?: number
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pending_admin_requests: {
         Row: {
           created_at: string
@@ -227,11 +296,13 @@ export type Database = {
           id: string
           interior_damage: string[] | null
           internal_notes: string | null
+          is_hot_lead: boolean
           lead_source: string
           loan_balance: string | null
           loan_company: string | null
           loan_payment: string | null
           loan_status: string | null
+          matched_rule_ids: string[] | null
           mechanical_issues: string[] | null
           mileage: string | null
           modifications: string | null
@@ -284,11 +355,13 @@ export type Database = {
           id?: string
           interior_damage?: string[] | null
           internal_notes?: string | null
+          is_hot_lead?: boolean
           lead_source?: string
           loan_balance?: string | null
           loan_company?: string | null
           loan_payment?: string | null
           loan_status?: string | null
+          matched_rule_ids?: string[] | null
           mechanical_issues?: string[] | null
           mileage?: string | null
           modifications?: string | null
@@ -341,11 +414,13 @@ export type Database = {
           id?: string
           interior_damage?: string[] | null
           internal_notes?: string | null
+          is_hot_lead?: boolean
           lead_source?: string
           loan_balance?: string | null
           loan_company?: string | null
           loan_payment?: string | null
           loan_status?: string | null
+          matched_rule_ids?: string[] | null
           mechanical_issues?: string[] | null
           mileage?: string | null
           modifications?: string | null

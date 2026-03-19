@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatPhone } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LogOut, Search, Trash2, Eye, ChevronLeft, ChevronRight, UserCheck, UserX, Users, Check, Circle, DollarSign, StickyNote, XCircle, Save, Printer, FileText, QrCode, ExternalLink, ClipboardCheck, Upload, CalendarDays, Plus, Phone, Mail, AlertTriangle, Clock, History, Moon, Sun, ShieldCheck } from "lucide-react";
+import { LogOut, Search, Trash2, Eye, ChevronLeft, ChevronRight, UserCheck, UserX, Users, Check, Circle, DollarSign, StickyNote, XCircle, Save, Printer, FileText, QrCode, ExternalLink, ClipboardCheck, Upload, CalendarDays, Plus, Phone, Mail, AlertTriangle, Clock, History, Moon, Sun, ShieldCheck, SlidersHorizontal } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { QRCodeSVG } from "qrcode.react";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,6 +19,7 @@ import StaffManagement from "@/components/admin/StaffManagement";
 import StaffFileUpload from "@/components/admin/StaffFileUpload";
 import DashboardAnalytics from "@/components/admin/DashboardAnalytics";
 import ConsentLog from "@/components/admin/ConsentLog";
+import OfferSettings from "@/components/admin/OfferSettings";
 import { Badge } from "@/components/ui/badge";
 
 interface PendingRequest {
@@ -1047,6 +1048,12 @@ const AdminDashboard = () => {
               <ShieldCheck className="w-4 h-4 mr-1" />
               Consent Log
             </TabsTrigger>
+            {canManageAccess && (
+              <TabsTrigger value="offer-settings">
+                <SlidersHorizontal className="w-4 h-4 mr-1" />
+                Offer Settings
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* Analytics Dashboard */}
@@ -1175,9 +1182,12 @@ const AdminDashboard = () => {
                               {sub.name || "—"}
                             </td>
                             <td className="px-3 py-3 whitespace-nowrap">
-                              {sub.vehicle_year && sub.vehicle_make
-                                ? `${sub.vehicle_year} ${sub.vehicle_make} ${sub.vehicle_model || ""}`
-                                : sub.plate || "—"}
+                              <span className="flex items-center gap-1">
+                                {(sub as any).is_hot_lead && <span title="Hot Lead">🔥</span>}
+                                {sub.vehicle_year && sub.vehicle_make
+                                  ? `${sub.vehicle_year} ${sub.vehicle_make} ${sub.vehicle_model || ""}`
+                                  : sub.plate || "—"}
+                              </span>
                             </td>
                             <td className="px-3 py-3 text-xs font-mono text-muted-foreground whitespace-nowrap">
                               {sub.vin || "—"}
@@ -1396,6 +1406,12 @@ const AdminDashboard = () => {
           <TabsContent value="consent">
             <ConsentLog />
           </TabsContent>
+
+          {canManageAccess && (
+            <TabsContent value="offer-settings">
+              <OfferSettings />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
 

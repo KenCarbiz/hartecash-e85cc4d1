@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { logConsent } from "@/lib/consent";
-import { calculateOffer, type OfferEstimate } from "@/lib/offerCalculator";
+import { calculateOffer, type OfferEstimate, type OfferSettings, type OfferRule } from "@/lib/offerCalculator";
 import { STEPS, initialFormData } from "./sell-form/types";
 import type { FormData, VehicleInfo, BBVehicle } from "./sell-form/types";
 import StepVehicleInfo from "./sell-form/StepVehicleInfo";
@@ -252,8 +252,20 @@ const SellCarForm = () => {
       crypto.getRandomValues(tokenBytes);
       const generatedToken = Array.from(tokenBytes).map(b => b.toString(16).padStart(2, '0')).join('');
 
-      // Calculate offer estimate from BB data + condition
-      const estimate = calculateOffer(bbSelectedVehicle, formData, selectedAddDeducts);
+      // Fetch admin offer settings & rules
+      let offerSettingsData: OfferSettings | null = null;
+      let offerRulesData: OfferRule[] = [];
+      try {
+        const [settingsRes, rulesRes] = await Promise.all([
+          supabase.from("offer_settings" as any).select("*").eq("dealership_id", "default").maybeSingle(),
+          supabase.from("offer_rules" as any).select("*").eq("dealership_id", "default").eq("is_active", true),
+        ]);
+        if (settingsRes.data) offerSettingsData = settingsRes.data as unknown as OfferSettings;
+        if (rulesRes.data) offerRulesData = rulesRes.data as unknown as OfferRule[];
+      } catch { /* use defaults */ }
+
+      // Calculate offer estimate from BB data + condition + settings
+      const estimate = calculateOffer(bbSelectedVehicle, formData, selectedAddDeducts, offerSettingsData, offerRulesData);
       setOfferEstimate(estimate);
 
       const { error } = await supabase
@@ -297,6 +309,8 @@ const SellCarForm = () => {
           bb_wholesale_avg: bbSelectedVehicle?.wholesale?.avg || null,
           estimated_offer_low: estimate?.low || null,
           estimated_offer_high: estimate?.high || null,
+          is_hot_lead: estimate?.isHotLead || false,
+          matched_rule_ids: estimate?.matchedRuleIds?.length ? estimate.matchedRuleIds : null,
         } as any);
 
       if (error) throw error;
