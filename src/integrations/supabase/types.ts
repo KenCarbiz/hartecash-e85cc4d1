@@ -424,9 +424,12 @@ export type Database = {
         Args: { _token: string }
         Returns: {
           acv_value: number
+          bb_tradein_avg: number
           created_at: string
           docs_uploaded: boolean
           email: string
+          estimated_offer_high: number
+          estimated_offer_low: number
           exterior_color: string
           id: string
           loan_status: string
