@@ -132,7 +132,7 @@ const OfferPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background print:bg-white">
+    <div className="print-native min-h-screen bg-background print:bg-white">
       {/* Header */}
       <div className="bg-gradient-to-r from-primary via-[hsl(210,100%,30%)] to-primary text-primary-foreground px-6 py-5 print:py-3">
         <div className="max-w-lg mx-auto">

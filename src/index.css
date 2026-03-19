@@ -113,8 +113,8 @@
     background: white !important;
   }
 
-  /* Hide everything except the portal */
-  #root {
+  /* Hide everything except the portal — skip when .print-native is present */
+  #root:not(:has(.print-native)) {
     display: none !important;
   }
 
