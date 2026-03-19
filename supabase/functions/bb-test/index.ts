@@ -12,17 +12,10 @@ serve(async (req) => {
 
   const username = Deno.env.get("BLACKBOOK_USERNAME");
   const password = Deno.env.get("BLACKBOOK_PASSWORD");
-  
-  if (!username || !password) {
-    return new Response(JSON.stringify({ error: "BB credentials not configured" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
-    });
-  }
-
   const credentials = btoa(`${username}:${password}`);
-  const vin = "1G1AL18F287276069";
-  
-  const url = `https://service.blackbookcloud.com/UsedCarWS/UsedCarWS/UsedVehicle/VIN/${vin}?mileage=45000&state=CT&template=11`;
+
+  // Test plate lookup - using a sample plate
+  const url = `https://service.blackbookcloud.com/UsedCarWS/UsedCarWS/UsedVehicle/Plate/ABC1234?state=CT&mileage=45000&template=11`;
   
   const res = await fetch(url, {
     headers: {
