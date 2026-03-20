@@ -600,8 +600,8 @@ const AdminDashboard = () => {
       await supabase.from("activity_log").insert({
         submission_id: sub.id,
         action: "Status Changed",
-        old_value: PROGRESS_STAGES.find(s => s.key === oldStatus)?.label || oldStatus,
-        new_value: PROGRESS_STAGES.find(s => s.key === newStatus)?.label || newStatus,
+        old_value: getStatusLabel(oldStatus),
+        new_value: getStatusLabel(newStatus),
         performed_by: userRole,
       });
       toast({ title: "Status updated" });
