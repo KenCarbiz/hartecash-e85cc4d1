@@ -453,6 +453,7 @@ const AdminDashboard = () => {
     setDocs([]);
     setActivityLog([]);
     setSelectedApptTime(null);
+    setSelectedApptLocation(null);
     setOptOutStatus({ email: false, sms: false });
     fetchActivityLog(sub.id);
     checkDuplicates(sub);
