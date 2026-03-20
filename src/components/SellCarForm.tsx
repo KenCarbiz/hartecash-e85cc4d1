@@ -370,6 +370,19 @@ const SellCarForm = () => {
     }
   };
 
+  if (showCalculating) {
+    return (
+      <div className="fixed inset-0 z-50">
+        <CalculatingOffer
+          vehicleYear={vehicleInfo?.year}
+          vehicleMake={vehicleInfo?.make}
+          vehicleModel={vehicleInfo?.model}
+          onComplete={handleCalculatingComplete}
+        />
+      </div>
+    );
+  }
+
   return (
     <div ref={formRef} className="bg-card rounded-2xl shadow-xl mx-auto -mt-10 mb-10 p-6 md:p-8 relative z-10 max-w-lg w-[calc(100%-40px)]">
       {/* Progress */}
