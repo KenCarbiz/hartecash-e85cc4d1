@@ -869,6 +869,19 @@ const AdminDashboard = () => {
     const vehicleStr = [s.vehicle_year, s.vehicle_make, s.vehicle_model].filter(Boolean).join(" ") || "N/A";
     const today = new Date().toLocaleDateString();
 
+    // Convert logo to base64 for the print window
+    const logoSrc = siteConfig?.logo_url || harteLogoFallback;
+    let logoBase64 = "";
+    try {
+      const resp = await fetch(logoSrc);
+      const blob = await resp.blob();
+      logoBase64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+    } catch { logoBase64 = ""; }
+
     // Helper to fetch signed URLs from a doc folder
     const fetchDocImages = async (folder: string): Promise<string[]> => {
       const urls: string[] = [];
