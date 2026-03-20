@@ -1458,6 +1458,9 @@ const AdminDashboard = () => {
               <TabsContent value="testimonials">
                 <TestimonialManagement />
               </TabsContent>
+              <TabsContent value="comparison">
+                <ComparisonConfig />
+              </TabsContent>
             </>
           )}
         </Tabs>
