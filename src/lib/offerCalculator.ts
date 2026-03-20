@@ -141,6 +141,7 @@ const DEFAULT_SETTINGS: OfferSettings = {
   offer_floor: 500,
   offer_ceiling: null,
   age_tiers: [],
+  mileage_tiers: [],
 };
 
 /** Extract the correct BB value based on the configured basis */
