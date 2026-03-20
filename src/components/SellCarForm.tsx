@@ -345,7 +345,7 @@ const SellCarForm = () => {
   const renderStep = () => {
     switch (currentStepName) {
       case "Vehicle Info":
-        return <StepVehicleInfo formData={formData} update={update} vehicleInfo={vehicleInfo} setVehicleInfo={setVehicleInfo} />;
+        return <StepVehicleInfo formData={formData} update={update} vehicleInfo={vehicleInfo} setVehicleInfo={setVehicleInfo} bbSelectedVehicle={bbSelectedVehicle} />;
       case "Select Your Vehicle":
         return <StepSelectTrim vehicles={bbVehicles} selectedUvc={formData.bbUvc} onSelect={(uvc) => { handleTrimSelect(uvc); }} />;
       case "Vehicle Build":
