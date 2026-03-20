@@ -471,10 +471,26 @@ const OfferPage = () => {
       className="bg-gradient-to-br from-accent/10 via-accent/5 to-transparent border-2 border-accent/30 rounded-xl p-6 print:hidden"
     >
       <div className="text-center mb-4">
+        <div className="inline-flex items-center gap-1.5 bg-accent/10 text-accent text-xs font-semibold px-3 py-1 rounded-full mb-2">
+          <Zap className="w-3.5 h-3.5" />
+          Fast-Track Your Deal
+        </div>
         <h3 className="font-bold text-lg text-card-foreground mb-1">Ready to Lock In Your Price?</h3>
         <p className="text-sm text-muted-foreground">
-          Upload photos and documents to finalize your offer and get paid fast.
+          Upload photos and documents now to speed up your appointment and get paid faster.
         </p>
+      </div>
+
+      {/* Speed benefits */}
+      <div className="flex items-center gap-4 justify-center mb-4 text-xs text-muted-foreground">
+        <span className="flex items-center gap-1">
+          <Clock className="w-3.5 h-3.5 text-success" />
+          Faster processing
+        </span>
+        <span className="flex items-center gap-1">
+          <CheckCircle className="w-3.5 h-3.5 text-success" />
+          Less time at visit
+        </span>
       </div>
 
       <div className="space-y-2.5 mb-5">
@@ -512,6 +528,14 @@ const OfferPage = () => {
           Accept & Continue <ArrowRight className="w-5 h-5" />
         </Button>
       </Link>
+
+      {/* Subtle inspection upside note */}
+      <div className="flex items-start gap-2 mt-4 pt-3 border-t border-border/50">
+        <Sparkles className="w-4 h-4 text-success shrink-0 mt-0.5" />
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          Vehicles that arrive in better-than-reported condition at final inspection may qualify for a higher offer.
+        </p>
+      </div>
     </motion.div>
   );
 
