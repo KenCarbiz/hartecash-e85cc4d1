@@ -109,7 +109,7 @@ export const initialFormData: FormData = {
 export const STEPS = [
   "Vehicle Info",
   "Vehicle Build",
-  "Condition & History",
-  "Your Details",
-  "Get Your Offer",
+  "Condition",
+  "History",
+  "Finalize",
 ];

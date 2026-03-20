@@ -134,14 +134,6 @@ const StepVehicleInfo = ({ formData, update, vehicleInfo, setVehicleInfo }: Prop
         </>
       )}
 
-      <FormField label="Current Mileage">
-        <Input
-          placeholder="e.g. 45,000"
-          value={formData.mileage}
-          onChange={(e) => update("mileage", e.target.value)}
-          className="py-3.5 px-4 text-base border-2 border-input focus:border-accent focus:ring-accent/10"
-        />
-      </FormField>
     </>
   );
 };

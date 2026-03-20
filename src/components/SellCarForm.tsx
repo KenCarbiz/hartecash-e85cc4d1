@@ -1,20 +1,20 @@
 import { useState, useRef, useEffect } from "react";
 import { Shield, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { logConsent } from "@/lib/consent";
 import { calculateOffer, type OfferEstimate, type OfferSettings, type OfferRule } from "@/lib/offerCalculator";
-import { STEPS, initialFormData } from "./sell-form/types";
-import { useFormConfig, type FormConfig } from "@/hooks/useFormConfig";
+import { initialFormData } from "./sell-form/types";
+import { useFormConfig } from "@/hooks/useFormConfig";
 import type { FormData, VehicleInfo, BBVehicle } from "./sell-form/types";
 import StepVehicleInfo from "./sell-form/StepVehicleInfo";
 import StepVehicleBuild from "./sell-form/StepVehicleBuild";
 import StepSelectTrim from "./sell-form/StepSelectTrim";
-import StepConditionHistory from "./sell-form/StepConditionHistory";
-import StepYourDetails from "./sell-form/StepYourDetails";
-import StepGetOffer from "./sell-form/StepGetOffer";
-import SubmissionSuccess from "./sell-form/SubmissionSuccess";
+import StepCondition from "./sell-form/StepCondition";
+import StepHistory from "./sell-form/StepHistory";
+import StepFinalize from "./sell-form/StepFinalize";
 import { motion, AnimatePresence } from "framer-motion";
 
 const stepVariants = {
@@ -24,13 +24,11 @@ const stepVariants = {
 };
 
 const SellCarForm = () => {
+  const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
   const [vehicleInfo, setVehicleInfo] = useState<VehicleInfo | null>(null);
   const [formData, setFormData] = useState<FormData>(initialFormData);
-  const [submitted, setSubmitted] = useState(false);
-  const [uploadUrl, setUploadUrl] = useState("");
-  const [offerEstimate, setOfferEstimate] = useState<OfferEstimate | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [honeypot, setHoneypot] = useState("");
   const formRef = useRef<HTMLDivElement>(null);
@@ -42,7 +40,6 @@ const SellCarForm = () => {
   const [bbSelectedVehicle, setBbSelectedVehicle] = useState<BBVehicle | null>(null);
   const [bbLoading, setBbLoading] = useState(false);
   const [selectedAddDeducts, setSelectedAddDeducts] = useState<string[]>([]);
-  // Whether we need a trim selection step (plate path with multiple results)
   const [showTrimStep, setShowTrimStep] = useState(false);
 
   useEffect(() => {
@@ -75,13 +72,13 @@ const SellCarForm = () => {
     );
   };
 
-  // Determine actual displayed steps based on whether trim selection is needed
+  // New Carvana-style step order
   const getDisplaySteps = () => {
     const steps: string[] = ["Vehicle Info"];
     if (showTrimStep) steps.push("Select Your Vehicle");
     if (formConfig.step_vehicle_build) steps.push("Vehicle Build");
-    if (formConfig.step_condition_history) steps.push("Condition & History");
-    steps.push("Your Details", "Get Your Offer");
+    if (formConfig.step_condition_history) steps.push("Condition");
+    steps.push("History", "Finalize");
     return steps;
   };
 
@@ -91,14 +88,12 @@ const SellCarForm = () => {
   const lookupBlackBook = async (): Promise<boolean> => {
     const isPlate = formData.plate.trim().length > 0;
     const isVin = formData.vin.trim().length >= 9;
-    if (!isPlate && !isVin) return true; // No lookup needed
+    if (!isPlate && !isVin) return true;
 
     setBbLoading(true);
     try {
-      const mileageNum = parseInt(formData.mileage.replace(/[^0-9]/g, ""));
       const body: Record<string, unknown> = {
         lookup_type: isVin ? "vin" : "plate",
-        mileage: mileageNum || undefined,
         state: formData.state || "CT",
       };
       if (isVin) body.vin = formData.vin.trim();
@@ -111,7 +106,6 @@ const SellCarForm = () => {
 
       if (error || data?.error) {
         console.error("BB lookup failed:", error || data?.error);
-        // Fall back — don't block the user
         toast({ title: "Vehicle lookup unavailable", description: "We'll continue with manual entry.", variant: "default" });
         setBbLoading(false);
         return true;
@@ -127,21 +121,18 @@ const SellCarForm = () => {
 
       setBbVehicles(vehicles);
 
-      // Auto-select add/deducts that are pre-matched (auto = Y, M, or D)
       const autoSelected = vehicles[0].add_deduct_list
         .filter((ad) => ad.auto !== "N")
         .map((ad) => ad.uoc);
       setSelectedAddDeducts(autoSelected);
 
       if (vehicles.length === 1) {
-        // Single match — go straight to vehicle build
         const v = vehicles[0];
         setBbSelectedVehicle(v);
         setVehicleInfo({ year: v.year, make: v.make, model: v.model });
         setFormData((prev) => ({ ...prev, bbUvc: v.uvc }));
         setShowTrimStep(false);
       } else {
-        // Multiple matches — need trim selection step
         setShowTrimStep(true);
       }
 
@@ -150,7 +141,7 @@ const SellCarForm = () => {
     } catch (err) {
       console.error("BB lookup error:", err);
       setBbLoading(false);
-      return true; // Don't block
+      return true;
     }
   };
 
@@ -175,14 +166,13 @@ const SellCarForm = () => {
     if (currentStepName === "Vehicle Info") {
       if (!formData.vin.trim() && !formData.plate.trim()) missing.push("VIN or License Plate");
       if (formData.plate.trim() && !formData.state.trim()) missing.push("State");
-      if (!formData.mileage.trim()) missing.push("Mileage");
     } else if (currentStepName === "Select Your Vehicle") {
       if (!formData.bbUvc) missing.push("Please select your vehicle");
     } else if (currentStepName === "Vehicle Build") {
       if (formConfig.q_exterior_color && !formData.exteriorColor.trim()) missing.push("Exterior Color");
       if (formConfig.q_drivetrain && !formData.drivetrain) missing.push("Drivetrain");
       if (formConfig.q_modifications && !formData.modifications) missing.push("Modifications");
-    } else if (currentStepName === "Condition & History") {
+    } else if (currentStepName === "Condition") {
       if (formConfig.q_overall_condition && !formData.overallCondition) missing.push("Overall Condition");
       if (formConfig.q_exterior_damage && formData.exteriorDamage.length === 0) missing.push("Exterior Damage");
       if (formConfig.q_windshield_damage && !formData.windshieldDamage) missing.push("Windshield Damage");
@@ -192,18 +182,16 @@ const SellCarForm = () => {
       if (formConfig.q_engine_issues && formData.engineIssues.length === 0) missing.push("Engine Issues");
       if (formConfig.q_mechanical_issues && formData.mechanicalIssues.length === 0) missing.push("Mechanical Issues");
       if (formConfig.q_drivable && !formData.drivable) missing.push("Drivable");
+    } else if (currentStepName === "History") {
+      if (!formData.mileage.trim()) missing.push("Mileage");
       if (formConfig.q_accidents && !formData.accidents) missing.push("Accidents");
       if (formConfig.q_smoked_in && !formData.smokedIn) missing.push("Smoked In");
       if (formConfig.q_tires_replaced && !formData.tiresReplaced) missing.push("Tires Replaced");
       if (formConfig.q_num_keys && !formData.numKeys) missing.push("Number of Keys");
-    } else if (currentStepName === "Your Details") {
-      if (!formData.name.trim()) missing.push("Full Name");
-      if (!formData.phone.trim()) missing.push("Phone Number");
+    } else if (currentStepName === "Finalize") {
       if (!formData.email.trim()) missing.push("Email Address");
       if (!formData.zip.trim()) missing.push("ZIP Code");
       if (!formData.loanStatus) missing.push("Sell or Trade-In");
-    } else if (currentStepName === "Get Your Offer") {
-      if (formConfig.q_next_step && !formData.nextStep) missing.push("Next Step");
     }
 
     if (missing.length > 0) {
@@ -220,7 +208,6 @@ const SellCarForm = () => {
   const handleNext = async () => {
     if (!validateStep()) return;
 
-    // On step 0 (Vehicle Info), trigger BB lookup
     if (displaySteps[step] === "Vehicle Info") {
       const success = await lookupBlackBook();
       if (!success) return;
@@ -268,9 +255,8 @@ const SellCarForm = () => {
         if (rulesRes.data) offerRulesData = rulesRes.data as unknown as OfferRule[];
       } catch { /* use defaults */ }
 
-      // Calculate offer estimate from BB data + condition + settings
+      // Calculate offer estimate
       const estimate = calculateOffer(bbSelectedVehicle, formData, selectedAddDeducts, offerSettingsData, offerRulesData);
-      setOfferEstimate(estimate);
 
       const { error } = await supabase
         .from("submissions")
@@ -307,7 +293,7 @@ const SellCarForm = () => {
           loan_company: formData.loanCompany || null,
           loan_balance: formData.loanBalance || null,
           loan_payment: formData.loanPayment || null,
-          next_step: formData.nextStep || null,
+          next_step: "photos", // default — they'll choose on offer page
           lead_source: "inventory",
           bb_tradein_avg: bbSelectedVehicle?.tradein?.avg || null,
           bb_wholesale_avg: bbSelectedVehicle?.wholesale?.avg || null,
@@ -319,8 +305,6 @@ const SellCarForm = () => {
 
       if (error) throw error;
 
-      const baseUrl = window.location.origin;
-      setUploadUrl(`${baseUrl}/upload/${generatedToken}`);
       localStorage.setItem("lastSubmissionTime", Date.now().toString());
 
       logConsent({
@@ -331,25 +315,13 @@ const SellCarForm = () => {
         submissionToken: generatedToken,
       });
 
-      setSubmitted(true);
+      // Redirect to personalized offer page
+      navigate(`/offer/${generatedToken}`);
     } catch (err) {
       toast({ title: "Submission failed", description: "Something went wrong. Please try again.", variant: "destructive" });
     }
     setSubmitting(false);
   };
-
-  if (submitted) {
-    return (
-      <div className="bg-card rounded-2xl shadow-xl mx-auto -mt-10 mb-10 p-6 md:p-8 relative z-10 max-w-lg w-[calc(100%-40px)]">
-        <SubmissionSuccess
-          uploadUrl={uploadUrl}
-          vehicleInfo={vehicleInfo}
-          nextStep={formData.nextStep}
-          offerEstimate={offerEstimate}
-        />
-      </div>
-    );
-  }
 
   const currentStepName = displaySteps[step];
 
@@ -371,12 +343,12 @@ const SellCarForm = () => {
             formConfig={formConfig}
           />
         );
-      case "Condition & History":
-        return <StepConditionHistory formData={formData} updateArray={updateArray} update={update} formConfig={formConfig} />;
-      case "Your Details":
-        return <StepYourDetails formData={formData} update={update} formConfig={formConfig} />;
-      case "Get Your Offer":
-        return <StepGetOffer formData={formData} update={update} vehicleInfo={vehicleInfo} formConfig={formConfig} />;
+      case "Condition":
+        return <StepCondition formData={formData} updateArray={updateArray} update={update} formConfig={formConfig} />;
+      case "History":
+        return <StepHistory formData={formData} update={update} formConfig={formConfig} />;
+      case "Finalize":
+        return <StepFinalize formData={formData} update={update} formConfig={formConfig} />;
       default:
         return null;
     }
@@ -454,7 +426,14 @@ const SellCarForm = () => {
               disabled={submitting}
               className="flex-1 py-4 bg-accent hover:bg-accent/90 text-accent-foreground text-[17px] font-bold shadow-lg shadow-accent/30 hover:-translate-y-0.5 transition-all"
             >
-              {submitting ? "Submitting..." : "Get My Cash Offer →"}
+              {submitting ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Calculating your offer…
+                </span>
+              ) : (
+                "Get My Offer →"
+              )}
             </Button>
           )}
         </div>
