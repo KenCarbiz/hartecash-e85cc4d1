@@ -580,36 +580,277 @@ const OfferPage = () => {
     </motion.div>
   );
 
-  /* Print QR section */
-  const PrintQR = (
-    <div className="hidden print:block border-2 border-border rounded-xl p-6 mt-4">
-      <div className="text-center mb-4">
-        <h3 className="font-bold text-lg text-foreground">Continue Your Process Online</h3>
-        <p className="text-sm text-muted-foreground mt-1">
-          Scan a QR code below with your phone to upload photos or documents and lock in your offer.
-        </p>
-      </div>
-      <div className="flex justify-center gap-12">
-        <div className="flex flex-col items-center gap-2">
-          <QRCodeSVG value={`${window.location.origin}/upload/${token}`} size={120} level="M" />
-          <div className="flex items-center gap-1.5 mt-1">
-            <Camera className="w-4 h-4" />
-            <span className="text-sm font-semibold">Upload Photos</span>
+  /* ─── Custom Print Layout (one 8.5x11 page) ─── */
+  const isTrade = s.loan_status === "Trade-In";
+  const isLeaseBuyout = s.loan_status === "Lease Buyout";
+  const displayValue = isTrade ? tradeInValue : cashOffer;
+  const displayValueLow = isTrade ? tradeInValueLow : estimateLow;
+  const displayLabel = isTrade
+    ? "Trade-In Total Value"
+    : isLeaseBuyout
+    ? "Lease Buyout Cash Offer"
+    : "Cash Offer";
+
+  const portalUrl = `${window.location.origin}/my-submission/${token}`;
+
+  const PrintLayout = (
+    <div className="hidden print:block print-offer-layout">
+      {/* Header bar */}
+      <div className="flex items-center justify-between border-b-2 border-primary pb-3 mb-4">
+        <div className="flex items-center gap-3">
+          <img src={harteLogo} alt="Harte Auto Group" className="h-9 w-auto brightness-0" />
+          <div>
+            <p className="text-[10px] text-muted-foreground leading-tight">Vehicle Purchase Program</p>
+            <p className="text-[10px] text-muted-foreground">
+              {createdDate?.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+            </p>
           </div>
-          <p className="text-xs text-muted-foreground text-center max-w-[140px]">Exterior, interior & odometer</p>
         </div>
-        <div className="flex flex-col items-center gap-2">
-          <QRCodeSVG value={`${window.location.origin}/docs/${token}`} size={120} level="M" />
-          <div className="flex items-center gap-1.5 mt-1">
-            <FileText className="w-4 h-4" />
-            <span className="text-sm font-semibold">Upload Documents</span>
-          </div>
-          <p className="text-xs text-muted-foreground text-center max-w-[140px]">Title, registration & license</p>
+        <div className="text-right">
+          <p className="text-xs font-semibold text-foreground">Prepared for</p>
+          <p className="text-sm font-bold text-foreground">{s.name || "Customer"}</p>
         </div>
       </div>
-      <p className="text-center text-xs text-muted-foreground mt-4 pt-3 border-t border-border">
-        Or visit: {window.location.origin}/offer/{token}
-      </p>
+
+      {/* Main content: 2-column */}
+      <div className="grid grid-cols-5 gap-5 mb-4">
+        {/* Left: Vehicle Image + Details */}
+        <div className="col-span-2">
+          {/* Vehicle image placeholder for print */}
+          {s.vehicle_year && s.vehicle_make && s.vehicle_model && (
+            <div className="mb-3">
+              <VehicleImage
+                year={s.vehicle_year}
+                make={s.vehicle_make}
+                model={s.vehicle_model}
+                selectedColor={s.exterior_color || ""}
+                compact
+              />
+            </div>
+          )}
+
+          {/* Vehicle Details Card */}
+          <div className="border border-border rounded-lg p-3 mb-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Vehicle Details</p>
+            <div className="space-y-1.5 text-xs">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Vehicle</span>
+                <span className="font-semibold text-foreground">{vehicleStr}</span>
+              </div>
+              {s.vin && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">VIN</span>
+                  <span className="font-mono font-semibold text-foreground text-[10px]">{s.vin}</span>
+                </div>
+              )}
+              {s.mileage && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Mileage</span>
+                  <span className="font-semibold">{Number(s.mileage).toLocaleString()} mi</span>
+                </div>
+              )}
+              {s.exterior_color && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Exterior Color</span>
+                  <span className="font-semibold">{s.exterior_color}</span>
+                </div>
+              )}
+              {s.overall_condition && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Reported Condition</span>
+                  <span className="font-semibold capitalize">{s.overall_condition}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Condition Summary */}
+          {condition && (
+            <div className="border border-border rounded-lg p-3">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Condition Summary</p>
+              <div className="space-y-1 text-xs">
+                {condition.accidents && (
+                  <div className="flex items-center gap-1.5">
+                    {condition.accidents.toLowerCase().includes("no") ? (
+                      <CheckCircle className="w-3 h-3 text-success shrink-0" />
+                    ) : (
+                      <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0" />
+                    )}
+                    <span>{condition.accidents}</span>
+                  </div>
+                )}
+                <div className="flex items-center gap-1.5">
+                  {(!condition.exterior_damage || condition.exterior_damage.length === 0) ? (
+                    <>
+                      <CheckCircle className="w-3 h-3 text-success shrink-0" />
+                      <span>No exterior damage</span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0" />
+                      <span className="capitalize">{condition.exterior_damage.join(", ")}</span>
+                    </>
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {(!condition.interior_damage || condition.interior_damage.length === 0) ? (
+                    <>
+                      <CheckCircle className="w-3 h-3 text-success shrink-0" />
+                      <span>No interior damage</span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0" />
+                      <span className="capitalize">{condition.interior_damage.join(", ")}</span>
+                    </>
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {(!condition.mechanical_issues || condition.mechanical_issues.length === 0) ? (
+                    <>
+                      <CheckCircle className="w-3 h-3 text-success shrink-0" />
+                      <span>No mechanical issues</span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0" />
+                      <span className="capitalize">{condition.mechanical_issues.join(", ")}</span>
+                    </>
+                  )}
+                </div>
+                {condition.num_keys && (
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle className="w-3 h-3 text-success shrink-0" />
+                    <span>{condition.num_keys} keys</span>
+                  </div>
+                )}
+                {condition.tires_replaced && (
+                  <div className="flex items-center gap-1.5">
+                    {condition.tires_replaced.toLowerCase() === "yes" ? (
+                      <CheckCircle className="w-3 h-3 text-success shrink-0" />
+                    ) : (
+                      <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0" />
+                    )}
+                    <span>Tires {condition.tires_replaced.toLowerCase() === "yes" ? "replaced" : "not replaced"}</span>
+                  </div>
+                )}
+                {condition.smoked_in && (
+                  <div className="flex items-center gap-1.5">
+                    {condition.smoked_in.toLowerCase() === "no" ? (
+                      <CheckCircle className="w-3 h-3 text-success shrink-0" />
+                    ) : (
+                      <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0" />
+                    )}
+                    <span>{condition.smoked_in === "No" ? "Non-smoker" : "Smoked in"}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right: Offer Presentation */}
+        <div className="col-span-3">
+          {/* Big offer card */}
+          <div className="border-2 border-primary rounded-xl p-5 mb-4 text-center">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+              {isEstimate ? `Estimated ${displayLabel}` : displayLabel}
+            </p>
+            <p className="text-[10px] text-muted-foreground mb-2">
+              for your {vehicleStr}
+            </p>
+            {isEstimate ? (
+              <p className="text-4xl font-extrabold text-foreground tracking-tight">
+                ${displayValueLow.toLocaleString("en-US", { maximumFractionDigits: 0 })} – ${displayValue.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+              </p>
+            ) : (
+              <p className="text-4xl font-extrabold text-foreground tracking-tight">
+                ${displayValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </p>
+            )}
+            <p className="text-[10px] text-muted-foreground mt-2">
+              {isEstimate ? "Preliminary estimate · Final offer after review" : "Subject to in-person inspection"}
+            </p>
+
+            {/* Trade-in breakdown (only for trade-in) */}
+            {isTrade && taxRate > 0 && !isEstimate && (
+              <div className="mt-3 pt-3 border-t border-border space-y-1 text-xs text-left">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Vehicle value</span>
+                  <span className="font-medium">${cashOffer.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{stateName} sales tax credit ({taxPercent}%)</span>
+                  <span className="font-medium text-success">+${taxSavings.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+                </div>
+                <div className="flex justify-between pt-1 border-t border-border font-bold">
+                  <span>Total Trade-In Value</span>
+                  <span>${tradeInValue.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Price guarantee */}
+            {createdDate && !isExpired && (
+              <div className="mt-3 pt-2 border-t border-border">
+                <p className="text-[10px] text-muted-foreground flex items-center justify-center gap-1">
+                  <ShieldCheck className="w-3 h-3" />
+                  Price guaranteed for {daysRemaining} {daysRemaining === 1 ? "day" : "days"}
+                  {expiresDate && <span> · expires {expiresDate.toLocaleDateString()}</span>}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* What to bring / next steps */}
+          <div className="border border-border rounded-lg p-3 mb-4">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">What to Bring to Your Visit</p>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="flex items-center gap-1.5">
+                <CheckCircle className="w-3 h-3 text-primary shrink-0" />
+                <span>Valid driver's license</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <CheckCircle className="w-3 h-3 text-primary shrink-0" />
+                <span>Vehicle title</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <CheckCircle className="w-3 h-3 text-primary shrink-0" />
+                <span>Current registration</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <CheckCircle className="w-3 h-3 text-primary shrink-0" />
+                <span>All vehicle keys</span>
+              </div>
+              {(isTrade || s.loan_status === "Sell" || s.loan_status === "Not Sure") && (
+                <div className="flex items-center gap-1.5 col-span-2">
+                  <CheckCircle className="w-3 h-3 text-primary shrink-0" />
+                  <span>Loan payoff letter (if applicable)</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* QR Code — single combined */}
+          <div className="border border-border rounded-lg p-4 flex items-center gap-5">
+            <QRCodeSVG value={portalUrl} size={90} level="M" />
+            <div className="flex-1">
+              <p className="text-xs font-bold text-foreground mb-1">Upload Photos & Documents</p>
+              <p className="text-[10px] text-muted-foreground leading-relaxed mb-1.5">
+                Scan this QR code with your phone to upload vehicle photos and documents.
+                This will speed up your visit and help you get paid faster.
+              </p>
+              <p className="text-[9px] font-mono text-muted-foreground break-all">{portalUrl}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="border-t border-border pt-2 flex items-center justify-between text-[9px] text-muted-foreground">
+        <p>Offer valid subject to in-person inspection · {config.dealership_name || "Harte Auto Group"}</p>
+        <p>{config.phone} · {config.address}</p>
+      </div>
     </div>
   );
 
