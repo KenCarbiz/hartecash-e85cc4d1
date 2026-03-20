@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { Upload, Copy, FileSpreadsheet, Link2, CheckCircle2, Trash2, Sun, Moon } from "lucide-react";
-import * as XLSX from "xlsx";
+import readXlsxFile from "read-excel-file";
 import serviceLogo from "@/assets/harte-service-logo.png";
 
 interface CustomerRow {
