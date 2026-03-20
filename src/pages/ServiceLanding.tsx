@@ -16,23 +16,32 @@ interface VehicleInfo {
   year: string;
   make: string;
   model: string;
+  trim?: string;
 }
 
-const decodeVin = async (vin: string): Promise<VehicleInfo | null> => {
+interface BBValues {
+  tradein_avg: number | null;
+  wholesale_avg: number | null;
+}
+
+const lookupVinViaBB = async (vin: string): Promise<{ vehicle: VehicleInfo | null; bbValues: BBValues }> => {
   try {
-    const res = await fetch(
-      `https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${encodeURIComponent(vin)}?format=json`
-    );
-    const data = await res.json();
-    const results = data.Results as { Variable: string; Value: string | null }[];
-    const get = (name: string) => results.find((r) => r.Variable === name)?.Value || "";
-    const year = get("Model Year");
-    const make = get("Make");
-    const model = get("Model");
-    if (year && make && model) return { year, make, model };
-    return null;
+    const { data, error } = await supabase.functions.invoke("bb-lookup", {
+      body: { lookup_type: "vin", vin, state: "CT" },
+    });
+    if (error || data?.error || !data?.vehicles?.length) {
+      return { vehicle: null, bbValues: { tradein_avg: null, wholesale_avg: null } };
+    }
+    const v = data.vehicles[0];
+    return {
+      vehicle: { year: v.year, make: v.make, model: v.model, trim: v.series || "" },
+      bbValues: {
+        tradein_avg: v.adjusted_tradein_avg ?? v.base_tradein_avg ?? null,
+        wholesale_avg: v.adjusted_wholesale_avg ?? v.base_wholesale_avg ?? null,
+      },
+    };
   } catch {
-    return null;
+    return { vehicle: null, bbValues: { tradein_avg: null, wholesale_avg: null } };
   }
 };
 
