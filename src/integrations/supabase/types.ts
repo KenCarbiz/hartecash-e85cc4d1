@@ -269,6 +269,24 @@ export type Database = {
         }
         Relationships: []
       }
+      lookup_attempts: {
+        Row: {
+          attempted_at: string
+          id: string
+          ip_hash: string
+        }
+        Insert: {
+          attempted_at?: string
+          id?: string
+          ip_hash: string
+        }
+        Update: {
+          attempted_at?: string
+          id?: string
+          ip_hash?: string
+        }
+        Relationships: []
+      }
       notification_settings: {
         Row: {
           appointment_channels: string[]
@@ -876,6 +894,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_old_lookup_attempts: { Args: never; Returns: undefined }
       get_all_staff: {
         Args: never
         Returns: {

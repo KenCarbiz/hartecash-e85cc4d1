@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { Upload, Copy, FileSpreadsheet, Link2, CheckCircle2, Trash2, Sun, Moon } from "lucide-react";
-import * as XLSX from "xlsx";
+// @ts-ignore - read-excel-file types
+import readXlsxFile from "read-excel-file";
 import serviceLogo from "@/assets/harte-service-logo.png";
 
 interface CustomerRow {
@@ -133,19 +134,17 @@ const ServiceLinkGen = () => {
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const data = new Uint8Array(evt.target?.result as ArrayBuffer);
-      const wb = XLSX.read(data, { type: "array" });
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const json: string[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
-      const firstRow = (json[0] || []).map((c) => String(c).toLowerCase());
+    
+    const isCSV = file.name.toLowerCase().endsWith('.csv');
+    
+    const processRows = (json: (string | null)[][]) => {
+      const firstRow = (json[0] || []).map((c) => String(c ?? "").toLowerCase());
       const startIdx = firstRow.some((c) => /name|vin|date|time/.test(c)) ? 1 : 0;
       const parsed: CustomerRow[] = json.slice(startIdx).filter((r) => r.length >= 2 && r.some(Boolean)).map((r) => {
-        const name = String(r[0] || "").trim();
-        const vin = String(r[1] || "").trim();
-        const date = normaliseDate(String(r[2] || ""));
-        const time = String(r[3] || "").trim();
+        const name = String(r[0] ?? "").trim();
+        const vin = String(r[1] ?? "").trim();
+        const date = normaliseDate(String(r[2] ?? ""));
+        const time = String(r[3] ?? "").trim();
         return { name, vin, date, time, link: buildLink(vin, date, time) };
       });
       if (parsed.length === 0) {
@@ -155,7 +154,35 @@ const ServiceLinkGen = () => {
       setRows(parsed);
       toast({ title: `${parsed.length} link${parsed.length > 1 ? "s" : ""} generated from file` });
     };
-    reader.readAsArrayBuffer(file);
+
+    if (isCSV) {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const text = evt.target?.result as string;
+        const lines = text.split(/\r?\n/).filter(l => l.trim());
+        const json = lines.map(line => {
+          const cells: string[] = [];
+          let current = '';
+          let inQuotes = false;
+          for (const char of line) {
+            if (char === '"') { inQuotes = !inQuotes; }
+            else if (char === ',' && !inQuotes) { cells.push(current); current = ''; }
+            else { current += char; }
+          }
+          cells.push(current);
+          return cells;
+        });
+        processRows(json);
+      };
+      reader.readAsText(file);
+    } else {
+      readXlsxFile(file).then((rows: any[][]) => {
+        const json = rows.map(row => row.map(cell => cell != null ? String(cell) : null));
+        processRows(json);
+      }).catch(() => {
+        toast({ title: "Failed to read file", variant: "destructive" });
+      });
+    }
     e.target.value = "";
   }, []);
 
