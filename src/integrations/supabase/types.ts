@@ -454,6 +454,8 @@ export type Database = {
         Row: {
           accent_color: string
           address: string | null
+          comparison_features: Json
+          competitor_columns: Json
           created_at: string
           dealership_id: string
           dealership_name: string
@@ -481,6 +483,8 @@ export type Database = {
         Insert: {
           accent_color?: string
           address?: string | null
+          comparison_features?: Json
+          competitor_columns?: Json
           created_at?: string
           dealership_id?: string
           dealership_name?: string
@@ -508,6 +512,8 @@ export type Database = {
         Update: {
           accent_color?: string
           address?: string | null
+          comparison_features?: Json
+          competitor_columns?: Json
           created_at?: string
           dealership_id?: string
           dealership_name?: string
