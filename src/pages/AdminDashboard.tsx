@@ -1306,6 +1306,7 @@ const AdminDashboard = () => {
                         <th className="text-left px-3 py-2 font-semibold text-muted-foreground">Time</th>
                         <th className="text-left px-3 py-2 font-semibold text-muted-foreground">Customer</th>
                         <th className="text-left px-3 py-2 font-semibold text-muted-foreground">Vehicle</th>
+                        <th className="text-left px-3 py-2 font-semibold text-muted-foreground">Location</th>
                         <th className="text-left px-3 py-2 font-semibold text-muted-foreground">Status</th>
                         <th className="text-right px-3 py-2 font-semibold text-muted-foreground">Actions</th>
                       </tr>
