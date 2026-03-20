@@ -1065,6 +1065,10 @@ const AdminDashboard = () => {
                   <Bell className="w-4 h-4 mr-1" />
                   Notifications
                 </TabsTrigger>
+                <TabsTrigger value="form-config">
+                  <ListChecks className="w-4 h-4 mr-1" />
+                  Form Config
+                </TabsTrigger>
               </>
             )}
           </TabsList>
