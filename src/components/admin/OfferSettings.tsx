@@ -240,6 +240,16 @@ const OfferSettings = () => {
         age_tiers: Array.isArray(d.age_tiers) ? d.age_tiers : [],
         mileage_tiers: Array.isArray(d.mileage_tiers) ? d.mileage_tiers : [],
       } as OfferSettingsRow);
+      setSavedSettings({
+        ...d,
+        deduction_amounts: d.deduction_amounts || DEFAULT_DEDUCTION_AMOUNTS,
+        condition_multipliers: d.condition_multipliers || DEFAULT_CONDITION_MULTIPLIERS,
+        recon_cost: d.recon_cost ?? 0,
+        offer_floor: d.offer_floor ?? 500,
+        offer_ceiling: d.offer_ceiling ?? null,
+        age_tiers: Array.isArray(d.age_tiers) ? d.age_tiers : [],
+        mileage_tiers: Array.isArray(d.mileage_tiers) ? d.mileage_tiers : [],
+      } as OfferSettingsRow);
     }
     if (rulesRes.data) {
       setRules((rulesRes.data as any[]).map(r => ({ ...r, adjustment_type: r.adjustment_type || "pct" })) as OfferRule[]);
