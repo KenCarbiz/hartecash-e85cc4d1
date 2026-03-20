@@ -12,66 +12,115 @@ interface Props {
   compact?: boolean;
 }
 
+// Preload an image and resolve when ready
+const preloadImage = (url: string): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(url);
+    img.onerror = reject;
+    img.src = url;
+  });
+
 const VehicleImage = ({ year, make, model, style, selectedColor, compact = false }: Props) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
   const currentColorRef = useRef<string>("");
+  const prefetchedRef = useRef<Set<string>>(new Set());
 
-  const fetchImage = useCallback(async (color: string) => {
+  const buildCacheKey = useCallback((color: string) => {
+    const colorKey = (color || "white").toLowerCase().replace(/\s+/g, "_");
+    return `vehicle-img-${year}-${make}-${model}-${colorKey}`.toLowerCase().replace(/\s+/g, "_");
+  }, [year, make, model]);
+
+  const fetchImage = useCallback(async (color: string, isPrefetch = false) => {
     if (!year || !make || !model) return;
 
-    const colorKey = (color || "white").toLowerCase().replace(/\s+/g, "_");
-    const cacheKey = `vehicle-img-${year}-${make}-${model}-${colorKey}`.toLowerCase().replace(/\s+/g, "_");
+    const cacheKey = buildCacheKey(color);
 
     // Check localStorage cache
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
-      setImageUrl(cached);
-      setLoading(false);
+      if (!isPrefetch) {
+        // Preload into browser cache for instant display
+        try { await preloadImage(cached); } catch {}
+        if (currentColorRef.current === color) {
+          setImageUrl(cached);
+          setLoading(false);
+        }
+      }
       return;
     }
 
-    setLoading(true);
-    setError(false);
+    if (!isPrefetch) {
+      setLoading(true);
+      setError(false);
+    }
+
     try {
       const { data, error: fnErr } = await supabase.functions.invoke("generate-vehicle-image", {
         body: { year, make, model, style, color: color || "white" },
       });
 
-      // Only update if this is still the current color request
-      if (currentColorRef.current !== color) return;
+      if (currentColorRef.current !== color && !isPrefetch) return;
 
       if (fnErr || data?.error) {
-        console.error("Vehicle image error:", fnErr || data?.error);
-        setError(true);
-        setLoading(false);
+        if (!isPrefetch) {
+          console.error("Vehicle image error:", fnErr || data?.error);
+          setError(true);
+          setLoading(false);
+        }
         return;
       }
 
       if (data?.image_url) {
-        setImageUrl(data.image_url);
         localStorage.setItem(cacheKey, data.image_url);
+        if (!isPrefetch && currentColorRef.current === color) {
+          // Preload into browser memory
+          try { await preloadImage(data.image_url); } catch {}
+          setImageUrl(data.image_url);
+        }
       }
     } catch (err) {
-      if (currentColorRef.current === color) {
+      if (!isPrefetch && currentColorRef.current === color) {
         console.error("Vehicle image fetch failed:", err);
         setError(true);
       }
     }
-    if (currentColorRef.current === color) setLoading(false);
-  }, [year, make, model, style]);
+    if (!isPrefetch && currentColorRef.current === color) setLoading(false);
+  }, [year, make, model, style, buildCacheKey]);
 
-  // Fetch on mount (no color yet = white base)
+  // Prefetch common colors in the background after initial load
+  const prefetchCommonColors = useCallback(() => {
+    if (!year || !make || !model) return;
+    const commonColors = ["White", "Black", "Silver", "Gray", "Red", "Blue"];
+    
+    // Stagger prefetch requests to avoid overwhelming
+    commonColors.forEach((color, i) => {
+      const key = color.toLowerCase();
+      if (prefetchedRef.current.has(key)) return;
+      if (localStorage.getItem(buildCacheKey(color))) {
+        prefetchedRef.current.add(key);
+        return;
+      }
+      prefetchedRef.current.add(key);
+      setTimeout(() => fetchImage(color, true), 2000 + i * 3000);
+    });
+  }, [year, make, model, buildCacheKey, fetchImage]);
+
+  // Fetch on mount
   useEffect(() => {
     if (!year || !make || !model) return;
     const color = selectedColor || "white";
     currentColorRef.current = color;
-    fetchImage(color);
+    fetchImage(color).then(() => {
+      // After initial image loads, start prefetching common colors
+      prefetchCommonColors();
+    });
   }, [year, make, model, style]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Re-fetch when color changes (debounced to avoid rapid API calls)
+  // Re-fetch when color changes (reduced debounce for snappier feel)
   useEffect(() => {
     if (!year || !make || !model) return;
     const color = selectedColor || "white";
@@ -79,27 +128,40 @@ const VehicleImage = ({ year, make, model, style, selectedColor, compact = false
 
     currentColorRef.current = color;
 
+    // If cached, show immediately (no debounce needed)
+    const cacheKey = buildCacheKey(color);
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      setImageUrl(cached);
+      return;
+    }
+
+    // Only debounce uncached images
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       fetchImage(color);
-    }, 600);
+    }, 350);
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [selectedColor, fetchImage, year, make, model]);
+  }, [selectedColor, fetchImage, year, make, model, buildCacheKey]);
 
   if (!year || !make || !model) return null;
 
   return (
     <div className={`relative w-full rounded-xl overflow-hidden bg-gradient-to-b from-muted/30 to-transparent ${compact ? "mb-2" : "mb-4"}`}
          style={{ aspectRatio: compact ? "16/7" : "16/9" }}>
+      {/* Loading indicator — small and non-intrusive when we already have an image */}
       {loading && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 z-10">
-          <Loader2 className="w-8 h-8 text-accent animate-spin" />
-          <p className="text-xs text-muted-foreground">
-            {imageUrl ? "Updating color…" : "Generating vehicle image…"}
-          </p>
+        <div className={`absolute z-10 ${imageUrl
+          ? "top-2 right-2 bg-card/80 backdrop-blur-sm rounded-full p-1.5 shadow-sm border border-border"
+          : "inset-0 flex flex-col items-center justify-center gap-2"
+        }`}>
+          <Loader2 className={`text-accent animate-spin ${imageUrl ? "w-4 h-4" : "w-8 h-8"}`} />
+          {!imageUrl && (
+            <p className="text-xs text-muted-foreground">Generating vehicle image…</p>
+          )}
         </div>
       )}
 
@@ -115,8 +177,8 @@ const VehicleImage = ({ year, make, model, style, selectedColor, compact = false
           <motion.div
             key={imageUrl}
             initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: loading ? 0.4 : 1, scale: 1 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
             className="absolute inset-0 flex items-center justify-center p-2"
           >
             <img

@@ -30,13 +30,13 @@ serve(async (req) => {
       });
     }
 
-    // Include color in cache key so each color gets its own image
     const colorSlug = (color || "white").toLowerCase().replace(/[^a-z0-9]/g, "_");
     const cacheKey = `${year}-${make}-${model}${style ? `-${style}` : ""}-${colorSlug}`.toLowerCase().replace(/[^a-z0-9_-]/g, "_");
     const storagePath = `vehicle-images/${cacheKey}.png`;
 
-    // Check if image already exists in storage
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // Check storage cache first
     const { data: existing } = await supabase.storage
       .from("submission-photos")
       .createSignedUrl(storagePath, 60 * 60 * 24 * 30);
@@ -47,7 +47,7 @@ serve(async (req) => {
       });
     }
 
-    // Generate image via AI with the specified color
+    // Generate image via AI
     const vehicleDesc = `${year} ${make} ${model}${style ? ` ${style}` : ""}`;
     const colorDesc = color && color.toLowerCase() !== "other" ? color : "white";
     const prompt = `A photorealistic side profile view of a ${vehicleDesc} car in ${colorDesc} color, on a clean solid white background. Professional automotive photography style, studio lighting, sharp details, no text or watermarks. The car should be facing right. The car body color must be clearly ${colorDesc}. Clean isolated vehicle shot suitable for a car dealership website.`;
@@ -55,7 +55,6 @@ serve(async (req) => {
     const models = [
       "google/gemini-3.1-flash-image-preview",
       "google/gemini-3-pro-image-preview",
-      "google/gemini-2.5-flash-image",
     ];
 
     let imageDataUrl: string | null = null;
@@ -98,32 +97,25 @@ serve(async (req) => {
       throw new Error(`All models failed. Last: ${lastError}`);
     }
 
-    // Extract base64 data and upload to storage
+    // Return the data URL immediately — upload to storage in the background
+    // This saves 1-3 seconds of upload wait time for the user
     const base64Data = imageDataUrl.replace(/^data:image\/\w+;base64,/, "");
     const imageBytes = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
 
-    const { error: uploadErr } = await supabase.storage
+    // Fire-and-forget: upload to storage for future cache hits
+    supabase.storage
       .from("submission-photos")
       .upload(storagePath, imageBytes, {
         contentType: "image/png",
         upsert: true,
+      })
+      .then(({ error: uploadErr }) => {
+        if (uploadErr) console.error("Background storage upload failed:", uploadErr);
+        else console.log(`Cached ${storagePath} to storage`);
       });
 
-    if (uploadErr) {
-      console.error("Storage upload failed:", uploadErr);
-      return new Response(JSON.stringify({ image_url: imageDataUrl, cached: false }), {
-        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
-
-    // Get a signed URL for the stored image
-    const { data: signedData } = await supabase.storage
-      .from("submission-photos")
-      .createSignedUrl(storagePath, 60 * 60 * 24 * 30);
-
-    const finalUrl = signedData?.signedUrl || imageDataUrl;
-
-    return new Response(JSON.stringify({ image_url: finalUrl, cached: false }), {
+    // Return immediately with the data URL
+    return new Response(JSON.stringify({ image_url: imageDataUrl, cached: false }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
 
