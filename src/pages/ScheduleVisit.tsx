@@ -139,15 +139,15 @@ const ScheduleVisit = () => {
   if (submitted) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
-        <div className="bg-primary text-primary-foreground px-6 py-4">
+        <div className="bg-card border-b border-border px-6 py-4">
           <div className="max-w-lg mx-auto flex items-center gap-3">
             {submissionToken && (
-              <Link to={`/my-submission/${submissionToken}`} className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">
+              <Link to={`/my-submission/${submissionToken}`} className="text-muted-foreground hover:text-foreground transition-colors">
                 <ArrowLeft className="w-5 h-5" />
               </Link>
             )}
             <img src={harteLogo} alt="Harte" className="h-12 w-auto" />
-            <h1 className="font-bold text-lg">Schedule a Visit</h1>
+            <h1 className="font-bold text-lg text-foreground">Schedule a Visit</h1>
           </div>
         </div>
         <main className="flex-1 flex items-center justify-center p-4">
@@ -170,15 +170,15 @@ const ScheduleVisit = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <div className="bg-primary text-primary-foreground px-6 py-4">
+      <div className="bg-card border-b border-border px-6 py-4">
         <div className="max-w-lg mx-auto flex items-center gap-3">
           {submissionToken && (
-            <Link to={`/my-submission/${submissionToken}`} className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">
+            <Link to={`/my-submission/${submissionToken}`} className="text-muted-foreground hover:text-foreground transition-colors">
               <ArrowLeft className="w-5 h-5" />
             </Link>
           )}
           <img src={harteLogo} alt="Harte" className="h-12 w-auto" />
-          <h1 className="font-bold text-lg">Schedule a Visit</h1>
+          <h1 className="font-bold text-lg text-foreground">Schedule a Visit</h1>
         </div>
       </div>
       <main className="flex-1 flex items-center justify-center p-4 py-12">
