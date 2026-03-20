@@ -12,6 +12,8 @@ interface Props {
 }
 
 const StepYourDetails = ({ formData, update, formConfig }: Props) => {
+  const { config } = useSiteConfig();
+  const dealerName = config.dealership_name || "our dealership";
   const showLoanSection = !formConfig || formConfig.q_loan_details;
   const showLoanFields = showLoanSection && (formData.loanStatus === "Sell" || formData.loanStatus === "Trade-In");
   const showLeaseFields = showLoanSection && formData.loanStatus === "Lease Buyout";
