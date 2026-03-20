@@ -28,6 +28,16 @@ const SiteFooter = () => {
               </a>
             )}
           </div>
+          <div className="mt-4 pt-3 border-t border-white/10">
+            <h5 className="text-xs font-bold uppercase tracking-wider opacity-50 mb-2">Our Locations</h5>
+            <div className="text-xs opacity-50 leading-relaxed space-y-0.5">
+              <p>Harte Nissan — Hartford, CT</p>
+              <p>Harte Infiniti — Hartford, CT</p>
+              <p>George Harte Nissan — West Haven, CT</p>
+              <p>George Harte Infiniti — Wallingford, CT</p>
+              <p>Harte Hyundai — Old Saybrook, CT</p>
+            </div>
+          </div>
         </div>
         <div className="mt-6 lg:mt-0">
           <h4 className="text-sm font-bold uppercase tracking-wider opacity-70 mb-3">Quick Links</h4>
@@ -39,18 +49,6 @@ const SiteFooter = () => {
             <Link to="/admin/login" className="text-xs opacity-40 hover:opacity-70 transition-opacity mt-2">Admin</Link>
             <Link to="/sitemap" className="text-xs opacity-40 hover:opacity-70 transition-opacity">.</Link>
           </div>
-        </div>
-      </div>
-
-      {/* Dealership Locations */}
-      <div className="max-w-6xl mx-auto mt-8 pt-6 border-t border-white/10">
-        <h4 className="text-xs font-bold uppercase tracking-wider opacity-50 mb-3 text-center">Our Locations</h4>
-        <div className="flex flex-wrap justify-center gap-x-6 gap-y-1 text-xs opacity-50">
-          <span>Harte Nissan — Hartford, CT</span>
-          <span>Harte Infiniti — Hartford, CT</span>
-          <span>George Harte Nissan — West Haven, CT</span>
-          <span>George Harte Infiniti — Wallingford, CT</span>
-          <span>Harte Hyundai — Old Saybrook, CT</span>
         </div>
       </div>
     </footer>
