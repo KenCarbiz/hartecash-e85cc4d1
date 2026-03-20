@@ -909,8 +909,8 @@ const AdminDashboard = () => {
     const css = [
       "* { margin: 0; padding: 0; box-sizing: border-box; }",
       "body { font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif; color: #1a2a3a; background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }",
-      ".header { background: #2a4365; color: white; padding: 24px 32px; text-align: center; }",
-      ".header h1 { font-size: 22px; font-weight: 700; }",
+      ".header { background: #2a4365; color: white; padding: 20px 32px; text-align: center; }",
+      ".header img { height: 60px; margin: 0 auto 6px; display: block; }",
       ".header p { font-size: 13px; opacity: 0.8; margin-top: 4px; }",
       ".content { padding: 24px 32px; }",
       ".title { font-size: 18px; font-weight: 700; text-align: center; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 2px; }",
