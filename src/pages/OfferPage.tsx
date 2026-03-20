@@ -848,7 +848,7 @@ const OfferPage = () => {
 
       {/* Footer */}
       <div className="border-t border-border pt-2 flex items-center justify-between text-[9px] text-muted-foreground">
-        <p>Offer valid subject to in-person inspection · {config.dealership_name || "Harte Auto Group"}</p>
+        <p>Offer valid subject to in-person inspection · {config.dealership_name || "Our Dealership"}</p>
         <p>{config.phone} · {config.address}</p>
       </div>
     </div>

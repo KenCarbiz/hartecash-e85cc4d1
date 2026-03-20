@@ -71,7 +71,7 @@ const Unsubscribe = () => {
           <ShieldOff className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <h1 className="text-2xl font-bold mb-2">Unsubscribe</h1>
           <p className="text-muted-foreground">
-            Choose which communications you'd like to stop receiving from Harte Auto Group.
+            Choose which communications you'd like to stop receiving.
           </p>
         </div>
 
