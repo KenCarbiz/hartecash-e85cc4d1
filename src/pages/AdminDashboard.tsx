@@ -1822,58 +1822,63 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
-              {/* Deal Progress with cumulative highlighting */}
+              {/* Acquisition Tracker — Horizontal Progress Bar */}
               <div data-print-section className="bg-muted/40 rounded-lg p-4">
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Deal Progress</h3>
-                <div className="space-y-1.5">
-                  {PROGRESS_STAGES.map((stage, i) => {
-                    const isDeadLead = selected.progress_status === "dead_lead";
-                    const currentIdx = PROGRESS_STAGES.findIndex(s => s.key === selected.progress_status);
-                    const isComplete = !isDeadLead && i < currentIdx;
-                    const isCurrent = i === currentIdx;
-                    const isDead = stage.key === "dead_lead" && isDeadLead;
-                    return (
-                      <div key={stage.key} data-print-stage={isDead ? "dead" : isComplete ? "complete" : isCurrent ? "current" : undefined} className={`flex items-center gap-2.5 px-3 py-1.5 rounded-md transition-colors ${
-                        isDead ? "bg-destructive/15" :
-                        isComplete ? "bg-success/15" :
-                        isCurrent ? "bg-accent/20" :
-                        ""
-                      }`}>
-                        <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          isDead ? "bg-destructive text-destructive-foreground" :
-                          isComplete ? "bg-success text-success-foreground" :
-                          isCurrent ? "bg-accent text-accent-foreground" :
-                          "bg-muted text-muted-foreground"
-                        }`}>
-                          {isDead ? <XCircle className="w-3 h-3" /> :
-                           isComplete ? <Check className="w-3 h-3" /> :
-                           <Circle className="w-3 h-3" />}
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4">Acquisition Tracker</h3>
+                {selected.progress_status === "dead_lead" ? (
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-destructive/15">
+                    <XCircle className="w-5 h-5 text-destructive" />
+                    <span className="font-bold text-destructive text-sm">Dead Lead</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-0 w-full">
+                    {PROGRESS_STAGES.filter(s => s.key !== "dead_lead").map((stage, i, arr) => {
+                      const currentStageIdx = getStageIndex(selected.progress_status);
+                      const isComplete = i < currentStageIdx;
+                      const isCurrent = i === currentStageIdx;
+                      return (
+                        <div key={stage.key} className="flex items-center flex-1 min-w-0">
+                          <div className="flex flex-col items-center w-full">
+                            <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold transition-all ${
+                              isComplete ? "bg-success text-success-foreground shadow-sm" :
+                              isCurrent ? "bg-primary text-primary-foreground shadow-md ring-2 ring-primary/30" :
+                              "bg-muted text-muted-foreground"
+                            }`}>
+                              {isComplete ? <Check className="w-3.5 h-3.5" /> : i + 1}
+                            </div>
+                            <span className={`text-[10px] mt-1.5 text-center leading-tight max-w-[70px] ${
+                              isCurrent ? "font-bold text-card-foreground" :
+                              isComplete ? "font-medium text-card-foreground" :
+                              "text-muted-foreground"
+                            }`}>
+                              {stage.label}
+                            </span>
+                          </div>
+                          {i < arr.length - 1 && (
+                            <div className={`h-[2px] flex-1 min-w-[8px] -mt-4 ${
+                              isComplete ? "bg-success" : "bg-border"
+                            }`} />
+                          )}
                         </div>
-                        <span className={`text-sm ${
-                          isDead ? "font-bold text-destructive" :
-                          isCurrent ? "font-bold text-card-foreground" :
-                          isComplete ? "font-medium text-card-foreground" :
-                          "text-muted-foreground"
-                        }`}>
-                          {stage.label}
-                        </span>
-                        {stage.key === "appraisal_completed" && (isComplete || isCurrent) && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="ml-auto h-6 text-xs"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              window.open(getDocsUrl(selected.token), "_blank");
-                            }}
-                          >
-                            <Upload className="w-3 h-3 mr-1" /> Upload Appraisal
-                          </Button>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Upload Appraisal button when at appraisal stage */}
+                {(selected.progress_status === "appraisal_completed" || selected.progress_status === "manager_approval") && (
+                  <div className="mt-3 flex justify-end">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => window.open(getDocsUrl(selected.token), "_blank")}
+                    >
+                      <Upload className="w-3 h-3 mr-1" /> Upload Appraisal
+                    </Button>
+                  </div>
+                )}
+
                 <div className="mt-4">
                   <label className="text-xs font-medium text-muted-foreground mb-1 block">Update Status</label>
                   <Select
@@ -1889,7 +1894,7 @@ const AdminDashboard = () => {
                   >
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {PROGRESS_STAGES.map(s => {
+                      {ALL_STATUS_OPTIONS.map(s => {
                         const isApprovalStage = ["manager_approval", "price_agreed", "purchase_complete"].includes(s.key);
                         return (
                           <SelectItem key={s.key} value={s.key} disabled={isApprovalStage && !canApprove}>
