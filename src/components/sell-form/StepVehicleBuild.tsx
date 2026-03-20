@@ -4,6 +4,7 @@ import FormField from "./FormField";
 import RadioOption from "./RadioOption";
 import CheckboxOption from "./CheckboxOption";
 import type { FormData, VehicleInfo, BBVehicle } from "./types";
+import type { FormConfig } from "@/hooks/useFormConfig";
 
 interface Props {
   formData: FormData;
@@ -12,6 +13,7 @@ interface Props {
   bbVehicle?: BBVehicle | null;
   selectedAddDeducts: string[];
   onToggleAddDeduct: (uoc: string) => void;
+  formConfig?: FormConfig;
 }
 
 const COLOR_OPTIONS = [
