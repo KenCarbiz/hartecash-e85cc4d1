@@ -50,6 +50,12 @@ interface AgeTier {
   adjustment_pct: number;
 }
 
+interface MileageTier {
+  min_miles: number;
+  max_miles: number;
+  adjustment_flat: number;
+}
+
 interface ConditionMultipliers {
   excellent: number;
   good: number;
@@ -69,6 +75,7 @@ interface OfferSettingsRow {
   offer_floor: number;
   offer_ceiling: number | null;
   age_tiers: AgeTier[];
+  mileage_tiers: MileageTier[];
 }
 
 interface OfferRule {
@@ -190,6 +197,7 @@ const OfferSettings = () => {
         offer_floor: d.offer_floor ?? 500,
         offer_ceiling: d.offer_ceiling ?? null,
         age_tiers: Array.isArray(d.age_tiers) ? d.age_tiers : [],
+        mileage_tiers: Array.isArray(d.mileage_tiers) ? d.mileage_tiers : [],
       } as OfferSettingsRow);
     }
     if (rulesRes.data) {
@@ -211,6 +219,7 @@ const OfferSettings = () => {
       offer_floor: settings.offer_floor,
       offer_ceiling: settings.offer_ceiling,
       age_tiers: settings.age_tiers as any,
+      mileage_tiers: settings.mileage_tiers as any,
       updated_at: new Date().toISOString(),
     } as any).eq("id", settings.id);
 
@@ -536,6 +545,96 @@ const OfferSettings = () => {
         </Button>
       </div>
 
+      {/* ── Section 3c: Mileage-Based Tier Adjustments ── */}
+      <div className="bg-card rounded-xl p-5 shadow-lg border border-border">
+        <div className="flex items-center gap-2 mb-4">
+          <Gauge className="w-5 h-5 text-primary" />
+          <h3 className="font-bold text-card-foreground">Mileage-Based Deductions</h3>
+        </div>
+        <p className="text-sm text-muted-foreground mb-4">
+          Auto-deduct a flat dollar amount based on the vehicle's reported mileage. Only the first matching tier is applied.
+        </p>
+        <div className="space-y-2">
+          {settings.mileage_tiers.map((tier, idx) => (
+            <div key={idx} className="flex items-center gap-3 px-4 py-3 rounded-lg border bg-muted/30 border-border">
+              <div className="flex items-center gap-2 flex-1 flex-wrap">
+                <Input
+                  type="number"
+                  value={tier.min_miles}
+                  onChange={(e) => {
+                    const updated = [...settings.mileage_tiers];
+                    updated[idx] = { ...updated[idx], min_miles: Number(e.target.value) };
+                    setSettings({ ...settings, mileage_tiers: updated });
+                  }}
+                  className="w-28 h-8 text-sm"
+                  min="0"
+                  step="5000"
+                />
+                <span className="text-sm text-muted-foreground">to</span>
+                <Input
+                  type="number"
+                  value={tier.max_miles}
+                  onChange={(e) => {
+                    const updated = [...settings.mileage_tiers];
+                    updated[idx] = { ...updated[idx], max_miles: Number(e.target.value) };
+                    setSettings({ ...settings, mileage_tiers: updated });
+                  }}
+                  className="w-28 h-8 text-sm"
+                  min="0"
+                  step="5000"
+                />
+                <span className="text-sm text-muted-foreground">miles →</span>
+                <div className="flex items-center gap-1">
+                  <DollarSign className="w-3 h-3 text-muted-foreground" />
+                  <Input
+                    type="number"
+                    value={tier.adjustment_flat}
+                    onChange={(e) => {
+                      const updated = [...settings.mileage_tiers];
+                      updated[idx] = { ...updated[idx], adjustment_flat: Number(e.target.value) };
+                      setSettings({ ...settings, mileage_tiers: updated });
+                    }}
+                    className="w-24 h-8 text-sm"
+                    step="100"
+                  />
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {tier.adjustment_flat > 0 ? "↑ boost" : tier.adjustment_flat < 0 ? "↓ deduct" : "no change"}
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  const updated = settings.mileage_tiers.filter((_, i) => i !== idx);
+                  setSettings({ ...settings, mileage_tiers: updated });
+                }}
+                className="text-destructive hover:text-destructive shrink-0"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-3 gap-1"
+          onClick={() => {
+            const lastMax = settings.mileage_tiers.length > 0
+              ? settings.mileage_tiers[settings.mileage_tiers.length - 1].max_miles + 1
+              : 80000;
+            setSettings({
+              ...settings,
+              mileage_tiers: [...settings.mileage_tiers, { min_miles: lastMax, max_miles: lastMax + 20000, adjustment_flat: -500 }],
+            });
+          }}
+        >
+          <Plus className="w-4 h-4" /> Add Tier
+        </Button>
+      </div>
+
+      {/* ── Section 4: Deduction Toggles + Amounts ── */}
       <div className="bg-card rounded-xl p-5 shadow-lg border border-border">
         <div className="flex items-center gap-2 mb-4">
           <AlertTriangle className="w-5 h-5 text-amber-500" />

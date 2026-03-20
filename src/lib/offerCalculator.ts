@@ -55,6 +55,12 @@ export interface AgeTier {
   adjustment_pct: number;
 }
 
+export interface MileageTier {
+  min_miles: number;
+  max_miles: number;
+  adjustment_flat: number;
+}
+
 export interface OfferSettings {
   bb_value_basis: string;
   global_adjustment_pct: number;
@@ -65,6 +71,7 @@ export interface OfferSettings {
   offer_floor: number;
   offer_ceiling: number | null;
   age_tiers: AgeTier[];
+  mileage_tiers: MileageTier[];
 }
 
 export interface OfferRule {
@@ -134,6 +141,7 @@ const DEFAULT_SETTINGS: OfferSettings = {
   offer_floor: 500,
   offer_ceiling: null,
   age_tiers: [],
+  mileage_tiers: [],
 };
 
 /** Extract the correct BB value based on the configured basis */
@@ -263,8 +271,19 @@ export function calculateOffer(
     }
   }
 
-  // 8. Apply matching rules
+  // 7b. Apply mileage-based tier adjustments (flat dollar)
   const mileage = parseInt(formData.mileage.replace(/[^0-9]/g, "")) || 0;
+  const mileageTiers = cfg.mileage_tiers || [];
+  if (mileageTiers.length > 0) {
+    for (const tier of mileageTiers) {
+      if (mileage >= tier.min_miles && mileage <= tier.max_miles) {
+        high = Math.round(high + tier.adjustment_flat);
+        break;
+      }
+    }
+  }
+
+  // 8. Apply matching rules
   const vehicleYear = bbVehicle.year;
   const vehicleMake = bbVehicle.make;
   const vehicleModel = bbVehicle.model;

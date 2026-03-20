@@ -197,6 +197,7 @@ export type Database = {
           deductions_config: Json
           global_adjustment_pct: number
           id: string
+          mileage_tiers: Json
           offer_ceiling: number | null
           offer_floor: number
           recon_cost: number
@@ -212,6 +213,7 @@ export type Database = {
           deductions_config?: Json
           global_adjustment_pct?: number
           id?: string
+          mileage_tiers?: Json
           offer_ceiling?: number | null
           offer_floor?: number
           recon_cost?: number
@@ -227,6 +229,7 @@ export type Database = {
           deductions_config?: Json
           global_adjustment_pct?: number
           id?: string
+          mileage_tiers?: Json
           offer_ceiling?: number | null
           offer_floor?: number
           recon_cost?: number
