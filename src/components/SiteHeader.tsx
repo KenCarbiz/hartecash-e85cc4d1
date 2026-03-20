@@ -28,7 +28,17 @@ const SiteHeader = () => {
             <Link to="/my-submission" className="hover:text-accent transition-colors">View My Offer</Link>
           </nav>
 
-          <div className="relative lg:hidden" onMouseEnter={show} onMouseLeave={hide}>
+          <div className="flex items-center gap-2 lg:hidden">
+            {config.phone && (
+              <a
+                href={`tel:${config.phone.replace(/\D/g, "")}`}
+                aria-label="Call us"
+                className="p-2 rounded-full hover:bg-muted transition-colors"
+              >
+                <Phone className="w-5 h-5 text-primary" />
+              </a>
+            )}
+          <div className="relative" onMouseEnter={show} onMouseLeave={hide}>
             <button
               aria-label="Customer menu"
               className="p-2 rounded-full hover:bg-muted transition-colors"
