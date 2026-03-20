@@ -1581,6 +1581,18 @@ const AdminDashboard = () => {
               {/* Vehicle Card */}
               <div data-print-section className="bg-muted/40 rounded-lg p-4">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Vehicle Details</h3>
+                {/* Vehicle Image */}
+                {selected.vehicle_year && selected.vehicle_make && selected.vehicle_model && (
+                  <div className="mb-4 rounded-lg overflow-hidden bg-gradient-to-b from-muted/30 to-transparent" style={{ aspectRatio: "16/7" }}>
+                    <VehicleImage
+                      year={selected.vehicle_year}
+                      make={selected.vehicle_make}
+                      model={selected.vehicle_model}
+                      selectedColor={selected.exterior_color || ""}
+                      compact
+                    />
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-x-6 gap-y-2">
                   <DetailRow label="Year/Make/Model" value={`${selected.vehicle_year || ""} ${selected.vehicle_make || ""} ${selected.vehicle_model || ""}`.trim() || null} />
                   <DetailRow label="VIN" value={selected.vin} />

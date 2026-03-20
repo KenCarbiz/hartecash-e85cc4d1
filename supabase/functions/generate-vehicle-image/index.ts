@@ -22,7 +22,7 @@ serve(async (req) => {
   const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
   try {
-    const { year, make, model, style } = await req.json();
+    const { year, make, model, style, color } = await req.json();
 
     if (!year || !make || !model) {
       return new Response(JSON.stringify({ error: "year, make, and model are required" }), {
@@ -30,15 +30,16 @@ serve(async (req) => {
       });
     }
 
-    // Create a cache key to avoid regenerating
-    const cacheKey = `${year}-${make}-${model}${style ? `-${style}` : ""}`.toLowerCase().replace(/[^a-z0-9-]/g, "_");
+    // Include color in cache key so each color gets its own image
+    const colorSlug = (color || "white").toLowerCase().replace(/[^a-z0-9]/g, "_");
+    const cacheKey = `${year}-${make}-${model}${style ? `-${style}` : ""}-${colorSlug}`.toLowerCase().replace(/[^a-z0-9_-]/g, "_");
     const storagePath = `vehicle-images/${cacheKey}.png`;
 
     // Check if image already exists in storage
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     const { data: existing } = await supabase.storage
       .from("submission-photos")
-      .createSignedUrl(storagePath, 60 * 60 * 24 * 30); // 30 day URL
+      .createSignedUrl(storagePath, 60 * 60 * 24 * 30);
 
     if (existing?.signedUrl) {
       return new Response(JSON.stringify({ image_url: existing.signedUrl, cached: true }), {
@@ -46,9 +47,10 @@ serve(async (req) => {
       });
     }
 
-    // Generate image via AI — try multiple models as fallback
+    // Generate image via AI with the specified color
     const vehicleDesc = `${year} ${make} ${model}${style ? ` ${style}` : ""}`;
-    const prompt = `A photorealistic side profile view of a ${vehicleDesc} car, white/light silver color, on a clean solid white background. Professional automotive photography style, studio lighting, sharp details, no text or watermarks. The car should be facing right. Clean isolated vehicle shot suitable for a car dealership website.`;
+    const colorDesc = color && color.toLowerCase() !== "other" ? color : "white";
+    const prompt = `A photorealistic side profile view of a ${vehicleDesc} car in ${colorDesc} color, on a clean solid white background. Professional automotive photography style, studio lighting, sharp details, no text or watermarks. The car should be facing right. The car body color must be clearly ${colorDesc}. Clean isolated vehicle shot suitable for a car dealership website.`;
 
     const models = [
       "google/gemini-3.1-flash-image-preview",
@@ -83,7 +85,7 @@ serve(async (req) => {
         const aiData = await aiRes.json();
         imageDataUrl = aiData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
         if (imageDataUrl) {
-          console.log(`Successfully generated image with ${aiModel}`);
+          console.log(`Successfully generated ${colorDesc} image with ${aiModel}`);
           break;
         }
       } catch (e) {
@@ -108,7 +110,6 @@ serve(async (req) => {
       });
 
     if (uploadErr) {
-      // Still return the data URL if storage fails
       console.error("Storage upload failed:", uploadErr);
       return new Response(JSON.stringify({ image_url: imageDataUrl, cached: false }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
