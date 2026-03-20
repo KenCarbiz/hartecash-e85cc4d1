@@ -1,27 +1,33 @@
 import { Link } from "react-router-dom";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 const SiteFooter = () => {
+  const { config } = useSiteConfig();
+  const dealerName = config.dealership_name || "Our Dealership";
+
   return (
     <footer className="bg-[hsl(220,13%,18%)] text-primary-foreground py-10 lg:py-14 px-5">
       <div className="max-w-6xl mx-auto lg:grid lg:grid-cols-3 lg:gap-8 text-center lg:text-left">
         <div>
-          <h3 className="text-xl font-bold mb-4 opacity-90">HARTE AUTO GROUP</h3>
-          <p className="text-sm opacity-60 mb-2">
-            Proudly serving Connecticut since 1952
-          </p>
+          <h3 className="text-xl font-bold mb-4 opacity-90">{dealerName.toUpperCase()}</h3>
+          {config.address && (
+            <p className="text-sm opacity-60 mb-2">{config.address}</p>
+          )}
           <p className="text-sm opacity-60">
-            © {new Date().getFullYear()} Harte Auto Group. All rights reserved.
+            © {new Date().getFullYear()} {dealerName}. All rights reserved.
           </p>
         </div>
         <div className="mt-6 lg:mt-0">
-          <h4 className="text-sm font-bold uppercase tracking-wider opacity-70 mb-3">Locations</h4>
-          <p className="text-sm opacity-60 leading-relaxed">
-            Hartford, CT<br />
-            Wallingford, CT<br />
-            Meriden, CT<br />
-            West Haven, CT<br />
-            Old Saybrook, CT
-          </p>
+          <h4 className="text-sm font-bold uppercase tracking-wider opacity-70 mb-3">Contact</h4>
+          <div className="text-sm opacity-60 leading-relaxed space-y-1">
+            {config.phone && <p>{config.phone}</p>}
+            {config.email && <p>{config.email}</p>}
+            {config.website_url && (
+              <a href={config.website_url} target="_blank" rel="noopener noreferrer" className="hover:opacity-90 transition-opacity block">
+                {config.website_url.replace(/^https?:\/\//, "")}
+              </a>
+            )}
+          </div>
         </div>
         <div className="mt-6 lg:mt-0">
           <h4 className="text-sm font-bold uppercase tracking-wider opacity-70 mb-3">Quick Links</h4>

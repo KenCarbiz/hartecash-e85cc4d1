@@ -24,7 +24,7 @@ export async function logConsent({
       customer_phone: customerPhone || null,
       customer_email: customerEmail || null,
       consent_type: "sms_calls_email",
-      consent_text: CONSENT_TEXT,
+      consent_text: buildConsentText(dealershipName || "our dealership"),
       form_source: formSource,
       submission_token: submissionToken || null,
       user_agent: navigator.userAgent || null,
