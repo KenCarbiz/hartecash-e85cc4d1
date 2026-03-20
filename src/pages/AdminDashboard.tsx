@@ -1050,10 +1050,16 @@ const AdminDashboard = () => {
               Consent Log
             </TabsTrigger>
             {canManageAccess && (
-              <TabsTrigger value="offer-settings">
-                <SlidersHorizontal className="w-4 h-4 mr-1" />
-                Offer Settings
-              </TabsTrigger>
+              <>
+                <TabsTrigger value="offer-settings">
+                  <SlidersHorizontal className="w-4 h-4 mr-1" />
+                  Offer Settings
+                </TabsTrigger>
+                <TabsTrigger value="site-config">
+                  <Settings className="w-4 h-4 mr-1" />
+                  Site Config
+                </TabsTrigger>
+              </>
             )}
           </TabsList>
 
