@@ -710,10 +710,7 @@ const OfferPage = () => {
               {NoTaxBlock}
               {AcceptCTA}
               <p className="text-center text-xs text-muted-foreground">
-                <button onClick={() => setDisclosureOpen(true)} className="underline decoration-dotted underline-offset-2 hover:text-primary transition-colors cursor-pointer">
-                  Offer valid subject to in-person inspection
-                </button>
-                {" "}• 🔒 Your information is kept secure
+                <InspectionDisclosure /> • 🔒 Your information is kept secure
               </p>
             </div>
           </div>
