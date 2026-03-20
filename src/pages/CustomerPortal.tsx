@@ -340,7 +340,10 @@ const CustomerPortal = () => {
               )}
 
               {currentStageIdx >= CUSTOMER_VISIBLE_STAGES.indexOf("offer_made") && !isComplete && (
-                <WhatToBringCard />
+                <>
+                  <WhatToBringCard />
+                  <WhatToExpect />
+                </>
               )}
 
               {ScheduleVisitCTA}
