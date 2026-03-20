@@ -1468,6 +1468,9 @@ const AdminDashboard = () => {
               <TabsContent value="comparison">
                 <ComparisonConfig />
               </TabsContent>
+              <TabsContent value="follow-ups">
+                <FollowUpLog />
+              </TabsContent>
             </>
           )}
         </Tabs>
