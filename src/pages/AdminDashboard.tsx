@@ -718,17 +718,16 @@ const AdminDashboard = () => {
 
     const vehicleStr = [s.vehicle_year, s.vehicle_make, s.vehicle_model].filter(Boolean).join(" ") || null;
 
-    // Build deal progress HTML
+    // Build deal progress HTML (uses consolidated 7-step tracker)
     const isDeadLead = s.progress_status === "dead_lead";
-    const currentIdx = PROGRESS_STAGES.findIndex(st => st.key === s.progress_status);
-    const progressHtml = PROGRESS_STAGES.map((st, i) => {
-      const isComplete = !isDeadLead && i < currentIdx;
-      const isCurrent = i === currentIdx;
-      const isDead = st.key === "dead_lead" && isDeadLead;
-      const cls = isDead ? "stage stage-dead" : isComplete ? "stage stage-complete" : isCurrent ? "stage stage-current" : "stage stage-inactive";
-      const dot = isDead ? "✕" : isComplete ? "✓" : "○";
+    const currentStageIdx = getStageIndex(s.progress_status);
+    const progressHtml = PROGRESS_STAGES.filter(st => st.key !== "dead_lead").map((st, i) => {
+      const isComplete = !isDeadLead && i < currentStageIdx;
+      const isCurrent = !isDeadLead && i === currentStageIdx;
+      const cls = isComplete ? "stage stage-complete" : isCurrent ? "stage stage-current" : "stage stage-inactive";
+      const dot = isComplete ? "✓" : isCurrent ? "●" : "○";
       return '<div class="' + cls + '"><div class="stage-dot">' + dot + '</div><span class="stage-label">' + st.label + "</span></div>";
-    }).join("");
+    }).join("") + (isDeadLead ? '<div class="stage stage-dead"><div class="stage-dot">✕</div><span class="stage-label">Dead Lead</span></div>' : "");
 
     const photosHtml = photos.length > 0
       ? '<div class="section"><div class="section-title">Photos (' + photos.length + ')</div><div class="photos-grid">' +
