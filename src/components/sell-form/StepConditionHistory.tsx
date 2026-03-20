@@ -83,7 +83,7 @@ const kbbDefinitions = [
   },
 ];
 
-const StepConditionHistory = ({ formData, updateArray, update }: Props) => {
+const StepConditionHistory = ({ formData, updateArray, update, formConfig }: Props) => {
   const [showKbb, setShowKbb] = useState(false);
 
   return (
