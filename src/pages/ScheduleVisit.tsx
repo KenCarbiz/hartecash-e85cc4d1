@@ -12,6 +12,15 @@ import { CalendarDays, CheckCircle2, Loader2, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import harteLogo from "@/assets/harte-logo-white.png";
 
+// Harte Auto Group store locations
+const STORE_LOCATIONS = [
+  { value: "hartford", label: "Harte Nissan — Hartford" },
+  { value: "wallingford", label: "Harte Infiniti — Wallingford" },
+  { value: "meriden", label: "Harte Volkswagen — Meriden" },
+  { value: "west_haven", label: "Harte Hyundai — West Haven" },
+  { value: "old_saybrook", label: "Harte Nissan — Old Saybrook" },
+];
+
 // Store hours: Mon-Thu 9AM-7PM, Fri-Sat 9AM-6PM, Sun Closed
 const WEEKDAY_SLOTS = [
   "9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM",
