@@ -341,6 +341,8 @@ const CustomerPortal = () => {
               {ScheduleVisitCTA}
 
               <PortalFAQ />
+
+              <CommunicationPreferences token={s.token} email={s.email} phone={s.phone} />
             </div>
           </div>
         </div>
