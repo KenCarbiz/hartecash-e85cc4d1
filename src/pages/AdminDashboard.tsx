@@ -2317,8 +2317,8 @@ const AdminDashboard = () => {
                         await supabase.from("activity_log").insert({
                           submission_id: selected.id,
                           action: "Status Changed",
-                          old_value: PROGRESS_STAGES.find(s => s.key === oldSub.progress_status)?.label || oldSub.progress_status,
-                          new_value: PROGRESS_STAGES.find(s => s.key === selected.progress_status)?.label || selected.progress_status,
+                          old_value: getStatusLabel(oldSub.progress_status),
+                          new_value: getStatusLabel(selected.progress_status),
                           performed_by: userRole,
                         });
                       }
