@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import FormField from "./FormField";
 import RadioOption from "./RadioOption";
 import CheckboxOption from "./CheckboxOption";
+import VehicleImage from "./VehicleImage";
 import type { FormData, VehicleInfo, BBVehicle } from "./types";
 import type { FormConfig } from "@/hooks/useFormConfig";
 
