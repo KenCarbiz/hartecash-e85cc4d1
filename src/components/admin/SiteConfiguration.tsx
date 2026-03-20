@@ -347,6 +347,26 @@ const SiteConfiguration = () => {
         </div>
       </Section>
 
+      {/* Animations */}
+      <Section icon={Sparkles} title="Animations">
+        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
+          <div>
+            <Label className="text-sm font-semibold">Scroll Reveal Animations</Label>
+            <p className="text-xs text-muted-foreground mt-0.5">Enable scroll-triggered entrance animations on landing page sections like the comparison table.</p>
+          </div>
+          <Switch
+            checked={config.enable_animations}
+            onCheckedChange={v => {
+              setConfig(prev => {
+                const next = { ...prev, enable_animations: v };
+                setHasChanges(JSON.stringify(next) !== JSON.stringify(savedConfig));
+                return next;
+              });
+            }}
+          />
+        </div>
+      </Section>
+
       {/* Preview */}
       <div className="rounded-xl border border-border bg-muted/30 p-4">
         <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Live Preview</h4>
