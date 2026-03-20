@@ -9,6 +9,7 @@ import { Trash2, Shield, Info, Phone, Save, UserPlus } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import AvatarCropDialog from "./AvatarCropDialog";
 
 interface StaffMember {
   user_id: string;
@@ -17,6 +18,7 @@ interface StaffMember {
   role: string;
   role_id: string;
   phone_number?: string | null;
+  profile_image_url?: string | null;
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -294,6 +296,7 @@ const StaffManagement = () => {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/50">
+              <th className="text-left px-4 py-3 font-semibold text-muted-foreground w-12"></th>
               <th className="text-left px-4 py-3 font-semibold text-muted-foreground">User</th>
               <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Phone</th>
               <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Current Role</th>
@@ -304,6 +307,13 @@ const StaffManagement = () => {
           <tbody>
             {staff.map((member, idx) => (
               <tr key={member.role_id} className={`border-b border-border last:border-0 hover:bg-muted/30 transition-colors ${idx % 2 === 1 ? "bg-muted/10" : ""}`}>
+                <td className="px-4 py-3">
+                  <AvatarCropDialog
+                    userId={member.user_id}
+                    currentUrl={member.profile_image_url}
+                    onUploaded={(url) => setStaff(prev => prev.map(s => s.user_id === member.user_id ? { ...s, profile_image_url: url } : s))}
+                  />
+                </td>
                 <td className="px-4 py-3">
                   <div className="font-medium text-card-foreground">{member.display_name || member.email || "Unknown"}</div>
                   {member.display_name && member.email && (

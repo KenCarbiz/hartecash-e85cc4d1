@@ -274,6 +274,7 @@ export type Database = {
           email: string | null
           id: string
           phone_number: string | null
+          profile_image_url: string | null
           user_id: string
         }
         Insert: {
@@ -282,6 +283,7 @@ export type Database = {
           email?: string | null
           id?: string
           phone_number?: string | null
+          profile_image_url?: string | null
           user_id: string
         }
         Update: {
@@ -290,6 +292,7 @@ export type Database = {
           email?: string | null
           id?: string
           phone_number?: string | null
+          profile_image_url?: string | null
           user_id?: string
         }
         Relationships: []
@@ -503,6 +506,7 @@ export type Database = {
           display_name: string
           email: string
           phone_number: string
+          profile_image_url: string
           role: string
           role_id: string
           user_id: string
