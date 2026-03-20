@@ -250,7 +250,20 @@ export function calculateOffer(
     high = Math.round(high * (1 + cfg.global_adjustment_pct / 100));
   }
 
-  // 7. Apply matching rules
+  // 7. Apply age-based tier adjustments
+  const ageTiers = cfg.age_tiers || [];
+  if (ageTiers.length > 0 && bbVehicle.year) {
+    const currentYear = new Date().getFullYear();
+    const vehicleAge = currentYear - Number(bbVehicle.year);
+    for (const tier of ageTiers) {
+      if (vehicleAge >= tier.min_years && vehicleAge <= tier.max_years) {
+        high = Math.round(high * (1 + tier.adjustment_pct / 100));
+        break; // Only apply the first matching tier
+      }
+    }
+  }
+
+  // 8. Apply matching rules
   const mileage = parseInt(formData.mileage.replace(/[^0-9]/g, "")) || 0;
   const vehicleYear = bbVehicle.year;
   const vehicleMake = bbVehicle.make;
