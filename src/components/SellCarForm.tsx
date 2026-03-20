@@ -368,14 +368,15 @@ const SellCarForm = () => {
             bbVehicle={bbSelectedVehicle}
             selectedAddDeducts={selectedAddDeducts}
             onToggleAddDeduct={toggleAddDeduct}
+            formConfig={formConfig}
           />
         );
       case "Condition & History":
-        return <StepConditionHistory formData={formData} updateArray={updateArray} update={update} />;
+        return <StepConditionHistory formData={formData} updateArray={updateArray} update={update} formConfig={formConfig} />;
       case "Your Details":
-        return <StepYourDetails formData={formData} update={update} />;
+        return <StepYourDetails formData={formData} update={update} formConfig={formConfig} />;
       case "Get Your Offer":
-        return <StepGetOffer formData={formData} update={update} vehicleInfo={vehicleInfo} />;
+        return <StepGetOffer formData={formData} update={update} vehicleInfo={vehicleInfo} formConfig={formConfig} />;
       default:
         return null;
     }
