@@ -120,7 +120,7 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Harte Auto <onboarding@resend.dev>",
+        from: `${dealerName} <onboarding@resend.dev>`,
         to: [customer_email],
         subject: `🚗 You've Got a Date With Us — ${formattedDate} at ${sanitize(preferred_time)}`,
         html: `
