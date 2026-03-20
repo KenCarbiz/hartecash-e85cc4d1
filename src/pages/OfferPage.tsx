@@ -149,6 +149,41 @@ const OfferPage = () => {
   const tradeInValue = calcTradeInValue(cashOffer, taxRate);
   const tradeInValueLow = isEstimate ? calcTradeInValue(estimateLow, taxRate) : tradeInValue;
 
+  // Price guarantee countdown
+  const guaranteeDays = config.price_guarantee_days || 8;
+  const createdDate = s.created_at ? new Date(s.created_at) : null;
+  const expiresDate = createdDate ? new Date(createdDate.getTime() + guaranteeDays * 24 * 60 * 60 * 1000) : null;
+  const now = new Date();
+  const msRemaining = expiresDate ? expiresDate.getTime() - now.getTime() : 0;
+  const daysRemaining = Math.max(0, Math.ceil(msRemaining / (1000 * 60 * 60 * 24)));
+  const isExpired = daysRemaining <= 0;
+  const isUrgent = daysRemaining <= 2 && !isExpired;
+
+  const GuaranteeBadge = createdDate && (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.3, delay: 0.15 }}
+      className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold print:border print:border-border ${
+        isExpired
+          ? "bg-destructive/10 text-destructive"
+          : isUrgent
+          ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+          : "bg-success/10 text-success"
+      }`}
+    >
+      <ShieldCheck className="w-4 h-4 shrink-0" />
+      {isExpired ? (
+        <span>Price guarantee expired — contact us for an updated offer</span>
+      ) : (
+        <span>
+          Price guaranteed for {daysRemaining} {daysRemaining === 1 ? "day" : "days"}
+          {expiresDate && <span className="opacity-70"> · expires {expiresDate.toLocaleDateString()}</span>}
+        </span>
+      )}
+    </motion.div>
+  );
+
   const handlePrint = () => {
     window.print();
   };
