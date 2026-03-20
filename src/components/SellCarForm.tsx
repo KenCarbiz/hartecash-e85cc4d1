@@ -320,13 +320,24 @@ const SellCarForm = () => {
         submissionToken: generatedToken,
       });
 
-      // Redirect to personalized offer page
-      navigate(`/offer/${generatedToken}`);
+      // Show calculating animation if enabled, otherwise navigate directly
+      if (config.use_animated_calculating) {
+        setPendingToken(generatedToken);
+        setShowCalculating(true);
+      } else {
+        navigate(`/offer/${generatedToken}`);
+      }
     } catch (err) {
       toast({ title: "Submission failed", description: "Something went wrong. Please try again.", variant: "destructive" });
     }
     setSubmitting(false);
   };
+
+  const handleCalculatingComplete = useCallback(() => {
+    if (pendingToken) {
+      navigate(`/offer/${pendingToken}`);
+    }
+  }, [pendingToken, navigate]);
 
   const currentStepName = displaySteps[step];
 
