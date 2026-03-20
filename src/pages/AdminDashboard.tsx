@@ -162,6 +162,7 @@ const AdminDashboard = () => {
   const [activityLog, setActivityLog] = useState<{ id: string; action: string; old_value: string | null; new_value: string | null; performed_by: string | null; created_at: string }[]>([]);
   const [duplicateWarnings, setDuplicateWarnings] = useState<Record<string, string[]>>({});
   const [selectedApptTime, setSelectedApptTime] = useState<string | null>(null);
+  const [optOutStatus, setOptOutStatus] = useState<{ email: boolean; sms: boolean }>({ email: false, sms: false });
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -438,8 +439,20 @@ const AdminDashboard = () => {
     setDocs([]);
     setActivityLog([]);
     setSelectedApptTime(null);
+    setOptOutStatus({ email: false, sms: false });
     fetchActivityLog(sub.id);
     checkDuplicates(sub);
+
+    // Check opt-out status
+    if (sub.email || sub.phone) {
+      const optEmail = sub.email
+        ? (await supabase.from("opt_outs" as any).select("id").eq("email", sub.email).eq("channel", "email").maybeSingle()).data
+        : null;
+      const optSms = sub.phone
+        ? (await supabase.from("opt_outs" as any).select("id").eq("phone", sub.phone).eq("channel", "sms").maybeSingle()).data
+        : null;
+      setOptOutStatus({ email: !!optEmail, sms: !!optSms });
+    }
 
     // Fetch linked appointment time
     if (sub.appointment_set) {
@@ -1508,6 +1521,29 @@ const AdminDashboard = () => {
                     {duplicateWarnings[selected.id].map((w, i) => (
                       <p key={i} className="text-xs text-destructive/80">{w}</p>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Opt-Out Status */}
+              {(optOutStatus.email || optOutStatus.sms) && (
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 flex items-start gap-2">
+                  <Bell className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-bold text-amber-700 dark:text-amber-300">Customer Unsubscribed</p>
+                    <div className="flex gap-2 mt-1">
+                      {optOutStatus.email && (
+                        <Badge variant="outline" className="text-xs border-amber-500/40 text-amber-700 dark:text-amber-300">
+                          <Mail className="w-3 h-3 mr-1" /> Email opted out
+                        </Badge>
+                      )}
+                      {optOutStatus.sms && (
+                        <Badge variant="outline" className="text-xs border-amber-500/40 text-amber-700 dark:text-amber-300">
+                          <Phone className="w-3 h-3 mr-1" /> SMS opted out
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-amber-600/80 dark:text-amber-400/80 mt-1">Follow-up messages to opted-out channels will be skipped automatically.</p>
                   </div>
                 </div>
               )}
