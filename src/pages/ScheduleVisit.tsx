@@ -146,7 +146,7 @@ const ScheduleVisit = () => {
                 <ArrowLeft className="w-5 h-5" />
               </Link>
             )}
-            <img src={harteLogo} alt="Harte" className="h-12 w-auto" />
+            <img src={harteLogo} alt="Harte" className="h-[60px] w-auto" />
             <h1 className="font-bold text-lg">Schedule a Visit</h1>
           </div>
         </div>
@@ -177,7 +177,7 @@ const ScheduleVisit = () => {
               <ArrowLeft className="w-5 h-5" />
             </Link>
           )}
-          <img src={harteLogo} alt="Harte" className="h-12 w-auto" />
+          <img src={harteLogo} alt="Harte" className="h-[60px] w-auto" />
           <h1 className="font-bold text-lg">Schedule a Visit</h1>
         </div>
       </div>
