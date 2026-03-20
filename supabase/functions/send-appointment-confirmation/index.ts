@@ -63,11 +63,11 @@ Deno.serve(async (req) => {
     }
 
     const STORE_LOCATIONS: Record<string, string> = {
-      hartford: "Harte Nissan — Hartford",
-      wallingford: "Harte Infiniti — Wallingford",
-      meriden: "Harte Volkswagen — Meriden",
-      west_haven: "Harte Hyundai — West Haven",
-      old_saybrook: "Harte Nissan — Old Saybrook",
+      hartford_nissan: "Harte Nissan — Hartford, CT",
+      hartford_infiniti: "Harte Infiniti — Hartford, CT",
+      west_haven: "George Harte Nissan — West Haven, CT",
+      wallingford: "George Harte Infiniti — Wallingford, CT",
+      old_saybrook: "Harte Hyundai — Old Saybrook, CT",
     };
 
     const customer_name = typeof appointment.customer_name === "string" ? appointment.customer_name.trim().slice(0, 200) : "";

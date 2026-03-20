@@ -14,11 +14,11 @@ import harteLogo from "@/assets/harte-logo-white.png";
 
 // Harte Auto Group store locations
 const STORE_LOCATIONS = [
-  { value: "hartford", label: "Harte Nissan — Hartford" },
-  { value: "wallingford", label: "Harte Infiniti — Wallingford" },
-  { value: "meriden", label: "Harte Volkswagen — Meriden" },
-  { value: "west_haven", label: "Harte Hyundai — West Haven" },
-  { value: "old_saybrook", label: "Harte Nissan — Old Saybrook" },
+  { value: "hartford_nissan", label: "Harte Nissan — Hartford, CT" },
+  { value: "hartford_infiniti", label: "Harte Infiniti — Hartford, CT" },
+  { value: "west_haven", label: "George Harte Nissan — West Haven, CT" },
+  { value: "wallingford", label: "George Harte Infiniti — Wallingford, CT" },
+  { value: "old_saybrook", label: "Harte Hyundai — Old Saybrook, CT" },
 ];
 
 // Store hours: Mon-Thu 9AM-7PM, Fri-Sat 9AM-6PM, Sun Closed
