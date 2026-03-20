@@ -23,6 +23,7 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const OfferPage = lazy(() => import("./pages/OfferPage"));
 const Sitemap = lazy(() => import("./pages/Sitemap"));
+const ReviewPage = lazy(() => import("./pages/ReviewPage"));
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,7 @@ const App = () => (
               <Route path="/terms" element={<TermsOfService />} />
               <Route path="/offer/:token" element={<OfferPage />} />
               <Route path="/sitemap" element={<Sitemap />} />
+              <Route path="/review/:token" element={<ReviewPage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

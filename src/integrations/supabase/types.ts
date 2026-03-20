@@ -467,6 +467,8 @@ export type Database = {
           phone: string | null
           price_guarantee_days: number
           primary_color: string
+          review_request_message: string
+          review_request_subject: string
           stats_cars_purchased: string | null
           stats_rating: string | null
           stats_reviews_count: string | null
@@ -492,6 +494,8 @@ export type Database = {
           phone?: string | null
           price_guarantee_days?: number
           primary_color?: string
+          review_request_message?: string
+          review_request_subject?: string
           stats_cars_purchased?: string | null
           stats_rating?: string | null
           stats_reviews_count?: string | null
@@ -517,6 +521,8 @@ export type Database = {
           phone?: string | null
           price_guarantee_days?: number
           primary_color?: string
+          review_request_message?: string
+          review_request_subject?: string
           stats_cars_purchased?: string | null
           stats_rating?: string | null
           stats_reviews_count?: string | null
@@ -574,6 +580,8 @@ export type Database = {
           photos_uploaded: boolean
           plate: string | null
           progress_status: string
+          review_requested: boolean
+          review_requested_at: string | null
           smoked_in: string | null
           state: string | null
           status_updated_at: string | null
@@ -633,6 +641,8 @@ export type Database = {
           photos_uploaded?: boolean
           plate?: string | null
           progress_status?: string
+          review_requested?: boolean
+          review_requested_at?: string | null
           smoked_in?: string | null
           state?: string | null
           status_updated_at?: string | null
@@ -692,6 +702,8 @@ export type Database = {
           photos_uploaded?: boolean
           plate?: string | null
           progress_status?: string
+          review_requested?: boolean
+          review_requested_at?: string | null
           smoked_in?: string | null
           state?: string | null
           status_updated_at?: string | null

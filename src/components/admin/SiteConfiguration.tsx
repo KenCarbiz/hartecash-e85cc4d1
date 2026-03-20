@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Save, Loader2, ChevronDown, Building2, Palette, Type, BarChart3, Upload } from "lucide-react";
+import { Save, Loader2, ChevronDown, Building2, Palette, Type, BarChart3, Upload, Star } from "lucide-react";
 
 interface SiteConfig {
   id: string;
@@ -29,6 +29,8 @@ interface SiteConfig {
   stats_years_in_business: string;
   stats_rating: string;
   stats_reviews_count: string;
+  review_request_subject: string;
+  review_request_message: string;
 }
 
 const DEFAULT_CONFIG: SiteConfig = {
@@ -52,6 +54,8 @@ const DEFAULT_CONFIG: SiteConfig = {
   stats_years_in_business: "78 yrs",
   stats_rating: "4.9",
   stats_reviews_count: "2,400+",
+  review_request_subject: "We'd Love Your Feedback!",
+  review_request_message: "Thank you for choosing us! We hope you had a great experience selling your vehicle. Would you take a moment to share your feedback? Your review helps other car owners make the right choice.",
 };
 
 interface SectionProps {
@@ -294,6 +298,23 @@ const SiteConfiguration = () => {
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold">Price Guarantee (days)</Label>
             <Input type="number" value={config.price_guarantee_days} onChange={e => update("price_guarantee_days", parseInt(e.target.value) || 0)} className="w-24" />
+          </div>
+        </div>
+      </Section>
+
+      {/* Review Request Email */}
+      <Section icon={Star} title="Review Request Email">
+        <p className="text-xs text-muted-foreground mb-3">
+          This message is sent to customers after a purchase is completed when you click "Send Review Request."
+        </p>
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Email Subject</Label>
+            <Input value={config.review_request_subject} onChange={e => update("review_request_subject", e.target.value)} placeholder="We'd Love Your Feedback!" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Email Message</Label>
+            <Textarea value={config.review_request_message} onChange={e => update("review_request_message", e.target.value)} rows={4} placeholder="Thank you for choosing us..." />
           </div>
         </div>
       </Section>
