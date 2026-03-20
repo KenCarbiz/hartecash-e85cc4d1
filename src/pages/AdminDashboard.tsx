@@ -1286,7 +1286,7 @@ const AdminDashboard = () => {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {PROGRESS_STAGES.map(s => {
+                                  {ALL_STATUS_OPTIONS.map(s => {
                                     const isApprovalStage = ["manager_approval", "price_agreed", "purchase_complete"].includes(s.key);
                                     return (
                                       <SelectItem key={s.key} value={s.key} disabled={isApprovalStage && !canApprove}>
