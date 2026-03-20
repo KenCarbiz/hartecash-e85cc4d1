@@ -32,9 +32,12 @@ const SellCarForm = () => {
   const [vehicleInfo, setVehicleInfo] = useState<VehicleInfo | null>(null);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [submitting, setSubmitting] = useState(false);
+  const [showCalculating, setShowCalculating] = useState(false);
+  const [pendingToken, setPendingToken] = useState<string | null>(null);
   const [honeypot, setHoneypot] = useState("");
   const formRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const { config } = useSiteConfig();
   const { formConfig } = useFormConfig();
 
   // Black Book state
