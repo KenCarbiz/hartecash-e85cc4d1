@@ -1,6 +1,9 @@
 import { Shield } from "lucide-react";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 const CTABanner = () => {
+  const { config } = useSiteConfig();
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -12,11 +15,11 @@ const CTABanner = () => {
           Ready to Sell Your Car?
         </h2>
         <p className="text-base lg:text-lg mb-4 opacity-95">
-          Join 2,400+ happy sellers. Get your cash offer today.
+          Join {config.stats_reviews_count || "2,400+"}  happy sellers. Get your cash offer today.
         </p>
         <div className="inline-flex items-center gap-2 bg-card/15 border border-card/30 rounded-full px-4 py-1.5 mb-6">
           <Shield className="w-4 h-4" />
-          <span className="text-sm font-bold">8-Day Price Guarantee — No Pressure</span>
+          <span className="text-sm font-bold">{config.price_guarantee_days || 8}-Day Price Guarantee — No Pressure</span>
         </div>
         <div>
           <button

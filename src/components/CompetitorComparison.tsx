@@ -87,7 +87,7 @@ const CompetitorComparison = () => {
                 <tr className="border-b-2 border-border">
                   <th className="text-left px-4 py-3 font-semibold text-muted-foreground w-[40%]">Feature</th>
                   <th className="text-center px-3 py-3 font-bold text-accent w-[15%]">
-                    <span className="block text-xs uppercase tracking-wider">Harte</span>
+                    <span className="block text-xs uppercase tracking-wider">{shortName}</span>
                   </th>
                   <th className="text-center px-3 py-3 font-semibold text-muted-foreground w-[15%]">
                     <span className="block text-xs uppercase tracking-wider">CarMax</span>
