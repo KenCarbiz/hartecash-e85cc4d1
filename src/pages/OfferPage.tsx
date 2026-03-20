@@ -867,7 +867,7 @@ const OfferPage = () => {
             Back to portal
           </Link>
           <div className="flex items-center gap-3">
-            <img src={harteLogo} alt="Harte Auto Group" className="h-10 w-auto" />
+            <img src={config.logo_white_url || harteLogoFallback} alt={config.dealership_name || "Dealership"} className="h-10 w-auto" />
             <div className="flex-1">
               <h1 className="font-bold text-lg lg:text-xl">Your Offer</h1>
               {firstName && <p className="text-sm opacity-80">{firstName}, here's your personalized offer</p>}

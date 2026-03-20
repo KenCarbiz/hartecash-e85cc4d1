@@ -1027,7 +1027,7 @@ const AdminDashboard = () => {
         <div className="px-4 py-1 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <SidebarTrigger className="text-white/80 hover:text-white hover:bg-white/10 -ml-1" />
-            <img src={harteLogoWhite} alt="Harte Auto Group" className="h-20 w-auto" />
+            <img src={harteLogoWhiteFallback} alt="Dashboard" className="h-20 w-auto" />
             <div>
               <span className="text-lg font-bold">Dashboard</span>
               <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-white/20 text-white/90 font-medium">

@@ -288,7 +288,7 @@ const CustomerPortal = () => {
             Back to my submissions
           </Link>
           <div className="flex items-center gap-3">
-            <img src={harteLogo} alt="Harte" className="h-12 w-auto" />
+            <img src={config.logo_url || harteLogoFallback} alt={config.dealership_name || "Dealership"} className="h-12 w-auto" />
             <div className="flex-1">
               <h1 className="font-bold text-lg lg:text-xl">{vehicleStr || "My Submission"}</h1>
               {firstName && (
