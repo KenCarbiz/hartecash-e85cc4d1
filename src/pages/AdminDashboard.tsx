@@ -1060,6 +1060,10 @@ const AdminDashboard = () => {
                   <Settings className="w-4 h-4 mr-1" />
                   Site Config
                 </TabsTrigger>
+                <TabsTrigger value="notifications">
+                  <Bell className="w-4 h-4 mr-1" />
+                  Notifications
+                </TabsTrigger>
               </>
             )}
           </TabsList>
