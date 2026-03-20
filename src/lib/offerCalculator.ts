@@ -284,7 +284,6 @@ export function calculateOffer(
   }
 
   // 8. Apply matching rules
-  const mileage = parseInt(formData.mileage.replace(/[^0-9]/g, "")) || 0;
   const vehicleYear = bbVehicle.year;
   const vehicleMake = bbVehicle.make;
   const vehicleModel = bbVehicle.model;
