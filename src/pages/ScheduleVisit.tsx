@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CalendarDays, CheckCircle2, Loader2, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import harteLogo from "@/assets/harte-logo.png";
+import harteLogo from "@/assets/harte-logo-white.png";
 
 // Store hours: Mon-Thu 9AM-7PM, Fri-Sat 9AM-6PM, Sun Closed
 const WEEKDAY_SLOTS = [
