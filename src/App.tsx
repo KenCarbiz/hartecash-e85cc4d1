@@ -25,6 +25,7 @@ const OfferPage = lazy(() => import("./pages/OfferPage"));
 const Sitemap = lazy(() => import("./pages/Sitemap"));
 const ReviewPage = lazy(() => import("./pages/ReviewPage"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
+const TradeLanding = lazy(() => import("./pages/TradeLanding"));
 
 const queryClient = new QueryClient();
 
