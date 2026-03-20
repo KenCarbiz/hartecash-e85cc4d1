@@ -1430,6 +1430,11 @@ const AdminDashboard = () => {
               <SiteConfiguration />
             </TabsContent>
           )}
+          {canManageAccess && (
+            <TabsContent value="notifications">
+              <NotificationSettings />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
 
