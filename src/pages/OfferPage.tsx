@@ -598,7 +598,7 @@ const OfferPage = () => {
       {/* Header bar */}
       <div className="flex items-center justify-between border-b-2 border-primary pb-3 mb-4">
         <div className="flex items-center gap-3">
-          <img src={harteLogo} alt="Harte Auto Group" className="h-9 w-auto brightness-0" />
+          <img src={config.logo_url || config.logo_white_url || harteLogoFallback} alt={config.dealership_name || "Dealership"} className="h-9 w-auto brightness-0" />
           <div>
             <p className="text-[10px] text-muted-foreground leading-tight">Vehicle Purchase Program</p>
             <p className="text-[10px] text-muted-foreground">
