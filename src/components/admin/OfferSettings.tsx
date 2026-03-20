@@ -634,6 +634,8 @@ const OfferSettings = () => {
         </Button>
       </div>
 
+      {/* ── Section 4: Deduction Toggles + Amounts ── */}
+      <div className="bg-card rounded-xl p-5 shadow-lg border border-border">
         <div className="flex items-center gap-2 mb-4">
           <AlertTriangle className="w-5 h-5 text-amber-500" />
           <h3 className="font-bold text-card-foreground">Condition Deductions</h3>
