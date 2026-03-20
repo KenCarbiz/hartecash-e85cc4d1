@@ -1,6 +1,10 @@
 import { Check, X, Minus } from "lucide-react";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 const CompetitorComparison = () => {
+  const { config } = useSiteConfig();
+  const name = config.dealership_name || "Harte Auto Group";
+  const shortName = name.split(" ")[0]; // e.g. "Harte"
   const features = [
     {
       label: "Same-Day Cash Offer",
