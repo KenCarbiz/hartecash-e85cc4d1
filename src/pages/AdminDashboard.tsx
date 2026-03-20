@@ -1344,7 +1344,26 @@ const AdminDashboard = () => {
                             <div className="text-xs text-muted-foreground">{appt.customer_email}</div>
                           </td>
                           <td className="px-3 py-2 text-sm">{appt.vehicle_info || "—"}</td>
-                          <td className="px-3 py-2 text-sm">{STORE_LOCATIONS.find(l => l.value === appt.store_location)?.label || appt.store_location || "—"}</td>
+                          <td className="px-3 py-2 text-sm">
+                            <Select
+                              value={appt.store_location || "unset"}
+                              onValueChange={async (val) => {
+                                const newLoc = val === "unset" ? null : val;
+                                const { error } = await supabase.from("appointments").update({ store_location: newLoc } as any).eq("id", appt.id);
+                                if (!error) setAppointments(prev => prev.map(a => a.id === appt.id ? { ...a, store_location: newLoc } : a));
+                              }}
+                            >
+                              <SelectTrigger className="h-8 w-[200px] text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="unset">Not Set</SelectItem>
+                                {STORE_LOCATIONS.map(loc => (
+                                  <SelectItem key={loc.value} value={loc.value}>{loc.label}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </td>
                           <td className="px-3 py-2">
                             <Badge variant={appt.status === "Confirmed" ? "default" : appt.status === "Completed" ? "secondary" : "outline"} className="text-xs">
                               {appt.status}
