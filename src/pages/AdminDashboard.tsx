@@ -116,17 +116,48 @@ const PAGE_SIZE = 20;
 
 const PROGRESS_STAGES = [
   { key: "new", label: "New Lead" },
-  { key: "contacted", label: "Customer Contacted" },
-  { key: "inspection_scheduled", label: "In-Person Inspection Scheduled" },
-  { key: "inspection_completed", label: "In-Person Inspection Completed" },
-  { key: "title_verified", label: "Title Verified" },
-  { key: "ownership_verified", label: "Ownership Verified" },
-  { key: "appraisal_completed", label: "Final Appraisal Completed" },
-  { key: "manager_approval", label: "Manager / Appraiser Approval" },
+  { key: "contacted", label: "Contacted" },
+  { key: "inspection", label: "Inspection", keys: ["inspection_scheduled", "inspection_completed"] },
+  { key: "docs_verified", label: "Docs & Title", keys: ["title_verified", "ownership_verified"] },
+  { key: "appraised", label: "Appraised", keys: ["appraisal_completed", "manager_approval"] },
   { key: "price_agreed", label: "Price Agreed" },
-  { key: "purchase_complete", label: "Purchase Complete" },
+  { key: "purchase_complete", label: "Purchased" },
   { key: "dead_lead", label: "Dead Lead" },
 ];
+
+// Map any DB progress_status value to its PROGRESS_STAGES index
+const getStageIndex = (dbStatus: string): number => {
+  const idx = PROGRESS_STAGES.findIndex(s => s.key === dbStatus || s.keys?.includes(dbStatus));
+  return idx >= 0 ? idx : 0;
+};
+
+// Map a consolidated stage key to the correct DB status key for saving
+const STAGE_DB_KEYS: Record<string, string> = {
+  new: "new",
+  contacted: "contacted",
+  inspection: "inspection_scheduled",
+  docs_verified: "title_verified",
+  appraised: "appraisal_completed",
+  price_agreed: "price_agreed",
+  purchase_complete: "purchase_complete",
+  dead_lead: "dead_lead",
+};
+
+// Sub-status options for stages with multiple DB keys
+const STAGE_SUB_OPTIONS: Record<string, { key: string; label: string }[]> = {
+  inspection: [
+    { key: "inspection_scheduled", label: "Scheduled" },
+    { key: "inspection_completed", label: "Completed" },
+  ],
+  docs_verified: [
+    { key: "title_verified", label: "Title Verified" },
+    { key: "ownership_verified", label: "Ownership Verified" },
+  ],
+  appraised: [
+    { key: "appraisal_completed", label: "Final Appraisal" },
+    { key: "manager_approval", label: "Manager Approval" },
+  ],
+};
 
 const ROLE_LABELS: Record<string, string> = {
   admin: "Admin",
