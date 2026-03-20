@@ -153,13 +153,14 @@ export default function NotificationSettings() {
   };
 
   const addPhone = () => {
-    const phone = newPhone.trim();
-    if (!phone || phone.length < 10) {
+    const digits = newPhone.trim().replace(/\D/g, "");
+    if (digits.length < 10) {
       toast({ title: "Invalid phone number", variant: "destructive" });
       return;
     }
-    if (config.sms_recipients.includes(phone)) return;
-    setConfig(c => ({ ...c, sms_recipients: [...c.sms_recipients, phone] }));
+    const formatted = formatPhone(digits);
+    if (config.sms_recipients.some(p => p.replace(/\D/g, "") === digits)) return;
+    setConfig(c => ({ ...c, sms_recipients: [...c.sms_recipients, formatted] }));
     setNewPhone("");
   };
 
