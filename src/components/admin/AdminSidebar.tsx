@@ -82,7 +82,7 @@ const AdminSidebar = ({
                     onClick={() => onSectionChange(item.key)}
                     isActive={isActive}
                     tooltip={collapsed ? item.label : undefined}
-                    className="transition-colors"
+                    className="transition-all duration-200 dark:hover:bg-white/8 dark:hover:shadow-[0_0_12px_rgba(255,255,255,0.06)] dark:data-[active=true]:shadow-[0_0_16px_rgba(100,160,255,0.12)]"
                   >
                     <Icon className="w-4 h-4 shrink-0" />
                     {!collapsed && (
