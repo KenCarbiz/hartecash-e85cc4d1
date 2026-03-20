@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
