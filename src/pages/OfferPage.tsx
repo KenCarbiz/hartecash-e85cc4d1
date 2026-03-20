@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import harteLogo from "@/assets/harte-logo-white.png";
 import PortalSkeleton from "@/components/PortalSkeleton";
 import { getTaxRateFromZip, calcTradeInValue, STATE_NAMES } from "@/lib/salesTax";
+import VehicleImage from "@/components/sell-form/VehicleImage";
 
 interface OfferSubmission {
   id: string;
