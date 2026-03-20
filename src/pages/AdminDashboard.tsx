@@ -1249,8 +1249,8 @@ const AdminDashboard = () => {
                               </span>
                             </td>
                             <td className="px-3 py-3">
-                              <Badge variant={sub.lead_source === "service" ? "secondary" : "outline"} className="text-xs">
-                                {sub.lead_source === "service" ? "Service" : "Inventory"}
+                              <Badge variant={sub.lead_source === "service" ? "secondary" : sub.lead_source === "in_store_trade" ? "default" : "outline"} className="text-xs">
+                                {sub.lead_source === "service" ? "Service" : sub.lead_source === "in_store_trade" ? "In-Store" : "Off Street"}
                               </Badge>
                             </td>
                             <td className="px-3 py-3">
