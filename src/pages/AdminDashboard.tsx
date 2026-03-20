@@ -2054,6 +2054,13 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
+              {/* Follow-Up Sequence */}
+              <FollowUpPanel
+                submissionId={selected.id}
+                hasOffer={!!(selected.offered_price || (selected as any).estimated_offer_high)}
+                progressStatus={selected.progress_status}
+              />
+
               {/* Activity Log */}
               <div data-print-section className="bg-muted/40 rounded-lg p-4">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">
