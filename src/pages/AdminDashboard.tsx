@@ -2236,6 +2236,15 @@ const AdminDashboard = () => {
               <p className="text-xs text-muted-foreground">Linking will update the customer's status to "Inspection Scheduled".</p>
             </div>
             <div className="space-y-1.5">
+              <Label>Store Location</Label>
+              <Select value={apptForm.store_location} onValueChange={(v) => setApptForm(p => ({ ...p, store_location: v }))}>
+                <SelectTrigger><SelectValue placeholder="Select location" /></SelectTrigger>
+                <SelectContent>
+                  {STORE_LOCATIONS.map(loc => <SelectItem key={loc.value} value={loc.value}>{loc.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
               <Label>Vehicle Info</Label>
               <Input value={apptForm.vehicle_info} onChange={(e) => setApptForm(p => ({ ...p, vehicle_info: e.target.value }))} placeholder="e.g. 2020 Toyota Camry" />
             </div>
