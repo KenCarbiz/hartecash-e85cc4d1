@@ -368,13 +368,9 @@ const OfferSettings = () => {
   const hotListRules = rules.filter((r) => r.rule_type === "hot_list");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* ── Section 1: Value Basis ── */}
-      <div className="bg-card rounded-xl p-5 shadow-lg border border-border">
-        <div className="flex items-center gap-2 mb-4">
-          <SlidersHorizontal className="w-5 h-5 text-primary" />
-          <h3 className="font-bold text-card-foreground">Valuation Basis</h3>
-        </div>
+      <Section icon={<SlidersHorizontal className="w-5 h-5 text-primary" />} title="Valuation Basis" defaultOpen>
         <p className="text-sm text-muted-foreground mb-3">
           Choose which Black Book value is used as the starting point for all offers.
         </p>
@@ -386,14 +382,10 @@ const OfferSettings = () => {
             ))}
           </SelectContent>
         </Select>
-      </div>
+      </Section>
 
       {/* ── Section 2: Condition Multipliers ── */}
-      <div className="bg-card rounded-xl p-5 shadow-lg border border-border">
-        <div className="flex items-center gap-2 mb-4">
-          <Gauge className="w-5 h-5 text-primary" />
-          <h3 className="font-bold text-card-foreground">Condition Multipliers</h3>
-        </div>
+      <Section icon={<Gauge className="w-5 h-5 text-primary" />} title="Condition Multipliers">
         <p className="text-sm text-muted-foreground mb-4">
           Adjust the multiplier applied to the base value for each condition grade. A multiplier of 1.0 means no change.
         </p>
@@ -425,16 +417,11 @@ const OfferSettings = () => {
             </div>
           ))}
         </div>
-      </div>
+      </Section>
 
-      {/* ── Section 3: Global Adjustment + Recon + Floor/Ceiling ── */}
-      <div className="bg-card rounded-xl p-5 shadow-lg border border-border">
-        <div className="flex items-center gap-2 mb-4">
-          <Zap className="w-5 h-5 text-accent" />
-          <h3 className="font-bold text-card-foreground">Global Controls</h3>
-        </div>
+      {/* ── Section 3: Global Controls ── */}
+      <Section icon={<Zap className="w-5 h-5 text-accent" />} title="Global Controls" defaultOpen>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {/* Global % */}
           <div>
             <Label className="text-sm font-semibold">Global Adjustment %</Label>
             <p className="text-xs text-muted-foreground mb-2">Blanket % increase/decrease on all offers.</p>
@@ -449,7 +436,6 @@ const OfferSettings = () => {
               <span className="text-sm font-semibold text-muted-foreground">%</span>
             </div>
           </div>
-          {/* Recon Cost */}
           <div>
             <Label className="text-sm font-semibold">Reconditioning Cost</Label>
             <p className="text-xs text-muted-foreground mb-2">Flat $ deducted from every offer (transport, detail, inspection).</p>
@@ -464,7 +450,6 @@ const OfferSettings = () => {
               />
             </div>
           </div>
-          {/* Offer Floor */}
           <div>
             <Label className="text-sm font-semibold">Offer Floor (Minimum)</Label>
             <p className="text-xs text-muted-foreground mb-2">No offer will go below this amount.</p>
@@ -479,7 +464,6 @@ const OfferSettings = () => {
               />
             </div>
           </div>
-          {/* Offer Ceiling */}
           <div>
             <Label className="text-sm font-semibold">Offer Ceiling (Maximum)</Label>
             <p className="text-xs text-muted-foreground mb-2">No offer will exceed this amount. Leave blank for no cap.</p>
@@ -496,14 +480,10 @@ const OfferSettings = () => {
             </div>
           </div>
         </div>
-      </div>
+      </Section>
 
-      {/* ── Section 3b: Age-Based Tier Adjustments ── */}
-      <div className="bg-card rounded-xl p-5 shadow-lg border border-border">
-        <div className="flex items-center gap-2 mb-4">
-          <Calendar className="w-5 h-5 text-primary" />
-          <h3 className="font-bold text-card-foreground">Age-Based Adjustments</h3>
-        </div>
+      {/* ── Section 3b: Age Tiers ── */}
+      <Section icon={<Calendar className="w-5 h-5 text-primary" />} title="Age-Based Adjustments">
         <p className="text-sm text-muted-foreground mb-4">
           Automatically adjust offers based on vehicle age. Only the first matching tier is applied (ordered top to bottom).
         </p>
@@ -511,86 +491,32 @@ const OfferSettings = () => {
           {settings.age_tiers.map((tier, idx) => (
             <div key={idx} className="flex items-center gap-3 px-4 py-3 rounded-lg border bg-muted/30 border-border">
               <div className="flex items-center gap-2 flex-1">
-                <Input
-                  type="number"
-                  value={tier.min_years}
-                  onChange={(e) => {
-                    const updated = [...settings.age_tiers];
-                    updated[idx] = { ...updated[idx], min_years: Number(e.target.value) };
-                    setSettings({ ...settings, age_tiers: updated });
-                  }}
-                  className="w-20 h-8 text-sm"
-                  min="0"
-                />
+                <Input type="number" value={tier.min_years} onChange={(e) => { const u = [...settings.age_tiers]; u[idx] = { ...u[idx], min_years: Number(e.target.value) }; setSettings({ ...settings, age_tiers: u }); }} className="w-20 h-8 text-sm" min="0" />
                 <span className="text-sm text-muted-foreground">to</span>
-                <Input
-                  type="number"
-                  value={tier.max_years}
-                  onChange={(e) => {
-                    const updated = [...settings.age_tiers];
-                    updated[idx] = { ...updated[idx], max_years: Number(e.target.value) };
-                    setSettings({ ...settings, age_tiers: updated });
-                  }}
-                  className="w-20 h-8 text-sm"
-                  min="0"
-                />
+                <Input type="number" value={tier.max_years} onChange={(e) => { const u = [...settings.age_tiers]; u[idx] = { ...u[idx], max_years: Number(e.target.value) }; setSettings({ ...settings, age_tiers: u }); }} className="w-20 h-8 text-sm" min="0" />
                 <span className="text-sm text-muted-foreground">years old →</span>
                 <div className="flex items-center gap-1">
-                  <Input
-                    type="number"
-                    value={tier.adjustment_pct}
-                    onChange={(e) => {
-                      const updated = [...settings.age_tiers];
-                      updated[idx] = { ...updated[idx], adjustment_pct: Number(e.target.value) };
-                      setSettings({ ...settings, age_tiers: updated });
-                    }}
-                    className="w-20 h-8 text-sm"
-                    step="0.5"
-                  />
+                  <Input type="number" value={tier.adjustment_pct} onChange={(e) => { const u = [...settings.age_tiers]; u[idx] = { ...u[idx], adjustment_pct: Number(e.target.value) }; setSettings({ ...settings, age_tiers: u }); }} className="w-20 h-8 text-sm" step="0.5" />
                   <span className="text-sm font-semibold text-muted-foreground">%</span>
                 </div>
-                <span className="text-xs text-muted-foreground">
-                  {tier.adjustment_pct > 0 ? "↑ boost" : tier.adjustment_pct < 0 ? "↓ penalty" : "no change"}
-                </span>
+                <span className="text-xs text-muted-foreground">{tier.adjustment_pct > 0 ? "↑ boost" : tier.adjustment_pct < 0 ? "↓ penalty" : "no change"}</span>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  const updated = settings.age_tiers.filter((_, i) => i !== idx);
-                  setSettings({ ...settings, age_tiers: updated });
-                }}
-                className="text-destructive hover:text-destructive shrink-0"
-              >
+              <Button variant="ghost" size="sm" onClick={() => setSettings({ ...settings, age_tiers: settings.age_tiers.filter((_, i) => i !== idx) })} className="text-destructive hover:text-destructive shrink-0">
                 <Trash2 className="w-4 h-4" />
               </Button>
             </div>
           ))}
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="mt-3 gap-1"
-          onClick={() => {
-            const lastMax = settings.age_tiers.length > 0
-              ? settings.age_tiers[settings.age_tiers.length - 1].max_years + 1
-              : 5;
-            setSettings({
-              ...settings,
-              age_tiers: [...settings.age_tiers, { min_years: lastMax, max_years: lastMax + 4, adjustment_pct: -3 }],
-            });
-          }}
-        >
+        <Button variant="outline" size="sm" className="mt-3 gap-1" onClick={() => {
+          const lastMax = settings.age_tiers.length > 0 ? settings.age_tiers[settings.age_tiers.length - 1].max_years + 1 : 5;
+          setSettings({ ...settings, age_tiers: [...settings.age_tiers, { min_years: lastMax, max_years: lastMax + 4, adjustment_pct: -3 }] });
+        }}>
           <Plus className="w-4 h-4" /> Add Tier
         </Button>
-      </div>
+      </Section>
 
-      {/* ── Section 3c: Mileage-Based Tier Adjustments ── */}
-      <div className="bg-card rounded-xl p-5 shadow-lg border border-border">
-        <div className="flex items-center gap-2 mb-4">
-          <Gauge className="w-5 h-5 text-primary" />
-          <h3 className="font-bold text-card-foreground">Mileage-Based Deductions</h3>
-        </div>
+      {/* ── Section 3c: Mileage Tiers ── */}
+      <Section icon={<Gauge className="w-5 h-5 text-primary" />} title="Mileage-Based Deductions">
         <p className="text-sm text-muted-foreground mb-4">
           Auto-deduct a flat dollar amount based on the vehicle's reported mileage. Only the first matching tier is applied.
         </p>
@@ -598,88 +524,32 @@ const OfferSettings = () => {
           {settings.mileage_tiers.map((tier, idx) => (
             <div key={idx} className="flex items-center gap-3 px-4 py-3 rounded-lg border bg-muted/30 border-border">
               <div className="flex items-center gap-2 flex-1 flex-wrap">
-                <Input
-                  type="number"
-                  value={tier.min_miles}
-                  onChange={(e) => {
-                    const updated = [...settings.mileage_tiers];
-                    updated[idx] = { ...updated[idx], min_miles: Number(e.target.value) };
-                    setSettings({ ...settings, mileage_tiers: updated });
-                  }}
-                  className="w-28 h-8 text-sm"
-                  min="0"
-                  step="5000"
-                />
+                <Input type="number" value={tier.min_miles} onChange={(e) => { const u = [...settings.mileage_tiers]; u[idx] = { ...u[idx], min_miles: Number(e.target.value) }; setSettings({ ...settings, mileage_tiers: u }); }} className="w-28 h-8 text-sm" min="0" step="5000" />
                 <span className="text-sm text-muted-foreground">to</span>
-                <Input
-                  type="number"
-                  value={tier.max_miles}
-                  onChange={(e) => {
-                    const updated = [...settings.mileage_tiers];
-                    updated[idx] = { ...updated[idx], max_miles: Number(e.target.value) };
-                    setSettings({ ...settings, mileage_tiers: updated });
-                  }}
-                  className="w-28 h-8 text-sm"
-                  min="0"
-                  step="5000"
-                />
+                <Input type="number" value={tier.max_miles} onChange={(e) => { const u = [...settings.mileage_tiers]; u[idx] = { ...u[idx], max_miles: Number(e.target.value) }; setSettings({ ...settings, mileage_tiers: u }); }} className="w-28 h-8 text-sm" min="0" step="5000" />
                 <span className="text-sm text-muted-foreground">miles →</span>
                 <div className="flex items-center gap-1">
                   <DollarSign className="w-3 h-3 text-muted-foreground" />
-                  <Input
-                    type="number"
-                    value={tier.adjustment_flat}
-                    onChange={(e) => {
-                      const updated = [...settings.mileage_tiers];
-                      updated[idx] = { ...updated[idx], adjustment_flat: Number(e.target.value) };
-                      setSettings({ ...settings, mileage_tiers: updated });
-                    }}
-                    className="w-24 h-8 text-sm"
-                    step="100"
-                  />
+                  <Input type="number" value={tier.adjustment_flat} onChange={(e) => { const u = [...settings.mileage_tiers]; u[idx] = { ...u[idx], adjustment_flat: Number(e.target.value) }; setSettings({ ...settings, mileage_tiers: u }); }} className="w-24 h-8 text-sm" step="100" />
                 </div>
-                <span className="text-xs text-muted-foreground">
-                  {tier.adjustment_flat > 0 ? "↑ boost" : tier.adjustment_flat < 0 ? "↓ deduct" : "no change"}
-                </span>
+                <span className="text-xs text-muted-foreground">{tier.adjustment_flat > 0 ? "↑ boost" : tier.adjustment_flat < 0 ? "↓ deduct" : "no change"}</span>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  const updated = settings.mileage_tiers.filter((_, i) => i !== idx);
-                  setSettings({ ...settings, mileage_tiers: updated });
-                }}
-                className="text-destructive hover:text-destructive shrink-0"
-              >
+              <Button variant="ghost" size="sm" onClick={() => setSettings({ ...settings, mileage_tiers: settings.mileage_tiers.filter((_, i) => i !== idx) })} className="text-destructive hover:text-destructive shrink-0">
                 <Trash2 className="w-4 h-4" />
               </Button>
             </div>
           ))}
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="mt-3 gap-1"
-          onClick={() => {
-            const lastMax = settings.mileage_tiers.length > 0
-              ? settings.mileage_tiers[settings.mileage_tiers.length - 1].max_miles + 1
-              : 80000;
-            setSettings({
-              ...settings,
-              mileage_tiers: [...settings.mileage_tiers, { min_miles: lastMax, max_miles: lastMax + 20000, adjustment_flat: -500 }],
-            });
-          }}
-        >
+        <Button variant="outline" size="sm" className="mt-3 gap-1" onClick={() => {
+          const lastMax = settings.mileage_tiers.length > 0 ? settings.mileage_tiers[settings.mileage_tiers.length - 1].max_miles + 1 : 80000;
+          setSettings({ ...settings, mileage_tiers: [...settings.mileage_tiers, { min_miles: lastMax, max_miles: lastMax + 20000, adjustment_flat: -500 }] });
+        }}>
           <Plus className="w-4 h-4" /> Add Tier
         </Button>
-      </div>
+      </Section>
 
-      {/* ── Section 4: Deduction Toggles + Amounts ── */}
-      <div className="bg-card rounded-xl p-5 shadow-lg border border-border">
-        <div className="flex items-center gap-2 mb-4">
-          <AlertTriangle className="w-5 h-5 text-amber-500" />
-          <h3 className="font-bold text-card-foreground">Condition Deductions</h3>
-        </div>
+      {/* ── Section 4: Deductions ── */}
+      <Section icon={<AlertTriangle className="w-5 h-5 text-amber-500" />} title="Condition Deductions">
         <p className="text-sm text-muted-foreground mb-4">
           Toggle which condition factors deduct from the offer and set the dollar amount for each.
         </p>
@@ -687,7 +557,6 @@ const OfferSettings = () => {
           {Object.entries(DEDUCTION_LABELS).map(([key, config]) => {
             const enabled = settings.deductions_config[key as keyof DeductionsConfig] ?? true;
             const amountKeys = Array.isArray(config.amountKey) ? config.amountKey : [config.amountKey];
-
             return (
               <div key={key} className={`rounded-lg border ${enabled ? "bg-muted/30 border-border" : "bg-muted/10 border-border/50 opacity-60"}`}>
                 <div className="flex items-center justify-between px-4 py-3">
@@ -701,13 +570,7 @@ const OfferSettings = () => {
                         <span className="text-xs text-muted-foreground whitespace-nowrap">{AMOUNT_LABELS[amtKey] || amtKey}:</span>
                         <div className="flex items-center gap-0.5">
                           <DollarSign className="w-3 h-3 text-muted-foreground" />
-                          <Input
-                            type="number"
-                            value={settings.deduction_amounts[amtKey as keyof DeductionAmounts] ?? 0}
-                            onChange={(e) => updateDeductionAmount(amtKey, Number(e.target.value))}
-                            className="w-20 h-7 text-xs"
-                            step="25"
-                          />
+                          <Input type="number" value={settings.deduction_amounts[amtKey as keyof DeductionAmounts] ?? 0} onChange={(e) => updateDeductionAmount(amtKey, Number(e.target.value))} className="w-20 h-7 text-xs" step="25" />
                         </div>
                       </div>
                     ))}
@@ -717,7 +580,7 @@ const OfferSettings = () => {
             );
           })}
         </div>
-      </div>
+      </Section>
 
       {/* Save button */}
       <Button onClick={handleSaveSettings} disabled={saving} className="gap-2 bg-accent hover:bg-accent/90 text-accent-foreground">
@@ -726,33 +589,15 @@ const OfferSettings = () => {
       </Button>
 
       {/* ── Offer Simulator ── */}
-      <OfferSimulator
-        settings={{
-          bb_value_basis: settings.bb_value_basis,
-          global_adjustment_pct: settings.global_adjustment_pct,
-          deductions_config: settings.deductions_config,
-          deduction_amounts: settings.deduction_amounts,
-          condition_multipliers: settings.condition_multipliers,
-          recon_cost: settings.recon_cost,
-          offer_floor: settings.offer_floor,
-          offer_ceiling: settings.offer_ceiling,
-          age_tiers: settings.age_tiers,
-          mileage_tiers: settings.mileage_tiers,
-        }}
-        rules={rules}
-      />
+      <OfferSimulator settings={settings} rules={rules} />
 
       {/* ── Section 5: Criteria-Based Rules ── */}
-      <div className="bg-card rounded-xl p-5 shadow-lg border border-border">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Target className="w-5 h-5 text-primary" />
-            <h3 className="font-bold text-card-foreground">Criteria-Based Rules</h3>
-          </div>
-          <Button size="sm" variant="outline" onClick={() => openNewRule("criteria")} className="gap-1">
-            <Plus className="w-4 h-4" /> Add Rule
-          </Button>
-        </div>
+      <Section
+        icon={<Target className="w-5 h-5 text-primary" />}
+        title="Criteria-Based Rules"
+        defaultOpen
+        headerRight={<Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); openNewRule("criteria"); }} className="gap-1"><Plus className="w-4 h-4" /> Add Rule</Button>}
+      >
         <p className="text-sm text-muted-foreground mb-4">
           Adjust offers automatically based on vehicle attributes. Supports both percentage and flat dollar adjustments.
         </p>
@@ -765,19 +610,16 @@ const OfferSettings = () => {
             ))}
           </div>
         )}
-      </div>
+      </Section>
 
       {/* ── Section 6: Hot List ── */}
-      <div className="bg-card rounded-xl p-5 shadow-lg border border-border border-l-4 border-l-destructive/50">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Flame className="w-5 h-5 text-destructive" />
-            <h3 className="font-bold text-card-foreground">Hot List — Cars We Want</h3>
-          </div>
-          <Button size="sm" variant="outline" onClick={() => openNewRule("hot_list")} className="gap-1">
-            <Plus className="w-4 h-4" /> Add Vehicle
-          </Button>
-        </div>
+      <Section
+        icon={<Flame className="w-5 h-5 text-destructive" />}
+        title="Hot List — Cars We Want"
+        defaultOpen
+        className="border-l-4 border-l-destructive/50"
+        headerRight={<Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); openNewRule("hot_list"); }} className="gap-1"><Plus className="w-4 h-4" /> Add Vehicle</Button>}
+      >
         <p className="text-sm text-muted-foreground mb-4">
           Add vehicles you're actively looking for. Matching submissions get an automatic offer boost and are flagged in the dashboard.
         </p>
@@ -790,7 +632,7 @@ const OfferSettings = () => {
             ))}
           </div>
         )}
-      </div>
+      </Section>
 
       {/* ── Rule Dialog ── */}
       <Dialog open={showRuleDialog} onOpenChange={setShowRuleDialog}>
