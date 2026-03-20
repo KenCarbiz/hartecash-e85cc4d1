@@ -1960,8 +1960,8 @@ const AdminDashboard = () => {
 
               {/* Check Request */}
               {(() => {
-                const priceAgreedIdx = PROGRESS_STAGES.findIndex(s => s.key === "price_agreed");
-                const currentIdx = PROGRESS_STAGES.findIndex(s => s.key === selected.progress_status);
+                const priceAgreedIdx = getStageIndex("price_agreed");
+                const currentIdx = getStageIndex(selected.progress_status);
                 const isPriceAgreedOrBeyond = selected.progress_status !== "dead_lead" && currentIdx >= priceAgreedIdx && selected.offered_price;
                 return (
                   <div data-print-section className="bg-muted/40 rounded-lg p-4">
