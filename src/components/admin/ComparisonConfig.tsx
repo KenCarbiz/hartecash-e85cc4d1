@@ -210,10 +210,17 @@ const ComparisonConfig = () => {
         {features.map((f, fIdx) => (
           <div
             key={fIdx}
-            className="grid gap-2 items-center bg-card border border-border rounded-lg px-2 py-1.5"
+            draggable
+            onDragStart={() => handleDragStart(fIdx)}
+            onDragOver={(e) => handleDragOver(e, fIdx)}
+            onDrop={() => handleDrop(fIdx)}
+            onDragEnd={handleDragEnd}
+            className={`grid gap-2 items-center bg-card border rounded-lg px-2 py-1.5 transition-all ${
+              dragIdx === fIdx ? "opacity-40 border-accent" : dragOverIdx === fIdx ? "border-accent border-2 shadow-md" : "border-border"
+            }`}
             style={{ gridTemplateColumns: `24px 1fr repeat(${columns.length + 1}, 90px) 32px` }}
           >
-            <GripVertical className="w-4 h-4 text-muted-foreground" />
+            <GripVertical className="w-4 h-4 text-muted-foreground cursor-grab active:cursor-grabbing" />
             <Input
               value={f.label}
               onChange={e => updateFeatureLabel(fIdx, e.target.value)}
