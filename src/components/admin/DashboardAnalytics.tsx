@@ -59,6 +59,7 @@ const FUNNEL_STAGES = [
 const SOURCE_CONFIG: { key: string; label: string; color: string; ring: string }[] = [
   { key: "inventory", label: "Off Street Purchase", color: "hsl(210, 70%, 50%)", ring: "hsl(210, 70%, 50%)" },
   { key: "service", label: "Service Drive", color: "hsl(160, 60%, 45%)", ring: "hsl(160, 60%, 45%)" },
+  { key: "trade", label: "Trade-In", color: "hsl(280, 60%, 55%)", ring: "hsl(280, 60%, 55%)" },
   { key: "in_store_trade", label: "In-Store Trade", color: "hsl(35, 85%, 55%)", ring: "hsl(35, 85%, 55%)" },
 ];
 
