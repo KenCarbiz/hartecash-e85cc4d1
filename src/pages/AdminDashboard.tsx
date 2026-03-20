@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatPhone } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LogOut, Search, Trash2, Eye, ChevronLeft, ChevronRight, UserCheck, UserX, Users, Check, Circle, DollarSign, StickyNote, XCircle, Save, Printer, FileText, QrCode, ExternalLink, ClipboardCheck, Upload, CalendarDays, Plus, Phone, Mail, AlertTriangle, Clock, History, Moon, Sun, ShieldCheck, SlidersHorizontal, Settings, Bell, ListChecks, MessageSquareQuote, Star, BarChart3 } from "lucide-react";
+import { LogOut, Search, Trash2, Eye, ChevronLeft, ChevronRight, UserCheck, UserX, Users, Check, Circle, DollarSign, StickyNote, XCircle, Save, Printer, FileText, QrCode, ExternalLink, ClipboardCheck, Upload, CalendarDays, Plus, Phone, Mail, AlertTriangle, Clock, History, Moon, Sun, ShieldCheck, SlidersHorizontal, Settings, Bell, ListChecks, MessageSquareQuote, Star, BarChart3, Send } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { QRCodeSVG } from "qrcode.react";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,6 +27,7 @@ import TestimonialManagement from "@/components/admin/TestimonialManagement";
 import ComparisonConfig from "@/components/admin/ComparisonConfig";
 import VehicleImage from "@/components/sell-form/VehicleImage";
 import FollowUpPanel from "@/components/admin/FollowUpPanel";
+import FollowUpLog from "@/components/admin/FollowUpLog";
 import { Badge } from "@/components/ui/badge";
 
 interface PendingRequest {
@@ -1081,6 +1082,10 @@ const AdminDashboard = () => {
                   <BarChart3 className="w-4 h-4 mr-1" />
                   Comparison
                 </TabsTrigger>
+                <TabsTrigger value="follow-ups">
+                  <Send className="w-4 h-4 mr-1" />
+                  Follow-Ups
+                </TabsTrigger>
               </>
             )}
           </TabsList>
@@ -1462,6 +1467,9 @@ const AdminDashboard = () => {
               </TabsContent>
               <TabsContent value="comparison">
                 <ComparisonConfig />
+              </TabsContent>
+              <TabsContent value="follow-ups">
+                <FollowUpLog />
               </TabsContent>
             </>
           )}
