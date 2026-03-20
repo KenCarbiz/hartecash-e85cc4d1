@@ -64,7 +64,7 @@ const AdminSidebar = ({
       ]
     : [];
 
-  const renderGroup = (label: string, items: typeof mainItems) => {
+  const renderGroup = (label: string, items: { key: string; label: string; icon: React.ElementType; badge?: string; badgeVariant?: string }[]) => {
     if (items.length === 0) return null;
     return (
       <SidebarGroup>
