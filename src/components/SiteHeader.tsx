@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { UserRound, CalendarCheck, FileText, ArrowLeftRight } from "lucide-react";
+import { UserRound, CalendarCheck, FileText, ArrowLeftRight, Phone } from "lucide-react";
 import harteLogo from "@/assets/harte-logo.png";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 
@@ -28,7 +28,17 @@ const SiteHeader = () => {
             <Link to="/my-submission" className="hover:text-accent transition-colors">View My Offer</Link>
           </nav>
 
-          <div className="relative lg:hidden" onMouseEnter={show} onMouseLeave={hide}>
+          <div className="flex items-center gap-2 lg:hidden">
+            {config.phone && (
+              <a
+                href={`tel:${config.phone.replace(/\D/g, "")}`}
+                aria-label="Call us"
+                className="p-2 rounded-full hover:bg-muted transition-colors"
+              >
+                <Phone className="w-5 h-5 text-primary" />
+              </a>
+            )}
+          <div className="relative" onMouseEnter={show} onMouseLeave={hide}>
             <button
               aria-label="Customer menu"
               className="p-2 rounded-full hover:bg-muted transition-colors"
@@ -65,6 +75,7 @@ const SiteHeader = () => {
                 </Link>
               </div>
             )}
+          </div>
           </div>
         </div>
       </div>
