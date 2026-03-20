@@ -149,6 +149,7 @@ Deno.serve(async (req) => {
                 <p style="margin: 10px 0;"><strong>📅 When:</strong> ${formattedDate}</p>
                 <p style="margin: 10px 0;"><strong>⏰ Time:</strong> ${sanitize(preferred_time)} (yes, we'll actually be ready for you)</p>
                 ${vehicle_info ? `<p style="margin: 10px 0;"><strong>🚗 Your Ride:</strong> ${sanitize(vehicle_info)}</p>` : ""}
+                ${store_location_label ? `<p style="margin: 10px 0;"><strong>📍 Location:</strong> ${sanitize(store_location_label)}</p>` : ""}
                 <p style="margin: 10px 0;"><strong>📞 Your Phone:</strong> ${sanitize(customer_phone)}</p>
               </div>
 
