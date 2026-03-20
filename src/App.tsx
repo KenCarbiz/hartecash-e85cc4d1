@@ -24,6 +24,7 @@ const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const OfferPage = lazy(() => import("./pages/OfferPage"));
 const Sitemap = lazy(() => import("./pages/Sitemap"));
 const ReviewPage = lazy(() => import("./pages/ReviewPage"));
+const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 
 const queryClient = new QueryClient();
 
