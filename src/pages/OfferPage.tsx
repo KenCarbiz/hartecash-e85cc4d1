@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import harteLogo from "@/assets/harte-logo-white.png";
 import PortalSkeleton from "@/components/PortalSkeleton";
 import { getTaxRateFromZip, calcTradeInValue, STATE_NAMES } from "@/lib/salesTax";
+import VehicleImage from "@/components/sell-form/VehicleImage";
 
 interface OfferSubmission {
   id: string;
@@ -249,6 +250,17 @@ const OfferPage = () => {
 
       {/* Page Content */}
       <div className="max-w-lg mx-auto p-6 space-y-5">
+
+        {/* Vehicle Image */}
+        {s.vehicle_year && s.vehicle_make && s.vehicle_model && (
+          <VehicleImage
+            year={s.vehicle_year}
+            make={s.vehicle_make}
+            model={s.vehicle_model}
+            selectedColor={s.exterior_color || ""}
+            compact
+          />
+        )}
 
         {/* Vehicle Summary Card */}
         <div className="bg-card rounded-xl p-5 shadow-lg">
