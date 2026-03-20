@@ -63,6 +63,7 @@ export type Database = {
           preferred_date: string
           preferred_time: string
           status: string
+          store_location: string | null
           submission_token: string | null
           vehicle_info: string | null
         }
@@ -76,6 +77,7 @@ export type Database = {
           preferred_date: string
           preferred_time: string
           status?: string
+          store_location?: string | null
           submission_token?: string | null
           vehicle_info?: string | null
         }
@@ -89,6 +91,7 @@ export type Database = {
           preferred_date?: string
           preferred_time?: string
           status?: string
+          store_location?: string | null
           submission_token?: string | null
           vehicle_info?: string | null
         }
