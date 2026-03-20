@@ -16,23 +16,32 @@ interface VehicleInfo {
   year: string;
   make: string;
   model: string;
+  trim?: string;
 }
 
-const decodeVin = async (vin: string): Promise<VehicleInfo | null> => {
+interface BBValues {
+  tradein_avg: number | null;
+  wholesale_avg: number | null;
+}
+
+const lookupVinViaBB = async (vin: string): Promise<{ vehicle: VehicleInfo | null; bbValues: BBValues }> => {
   try {
-    const res = await fetch(
-      `https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${encodeURIComponent(vin)}?format=json`
-    );
-    const data = await res.json();
-    const results = data.Results as { Variable: string; Value: string | null }[];
-    const get = (name: string) => results.find((r) => r.Variable === name)?.Value || "";
-    const year = get("Model Year");
-    const make = get("Make");
-    const model = get("Model");
-    if (year && make && model) return { year, make, model };
-    return null;
+    const { data, error } = await supabase.functions.invoke("bb-lookup", {
+      body: { lookup_type: "vin", vin, state: "CT" },
+    });
+    if (error || data?.error || !data?.vehicles?.length) {
+      return { vehicle: null, bbValues: { tradein_avg: null, wholesale_avg: null } };
+    }
+    const v = data.vehicles[0];
+    return {
+      vehicle: { year: v.year, make: v.make, model: v.model, trim: v.series || "" },
+      bbValues: {
+        tradein_avg: v.adjusted_tradein_avg ?? v.base_tradein_avg ?? null,
+        wholesale_avg: v.adjusted_wholesale_avg ?? v.base_wholesale_avg ?? null,
+      },
+    };
   } catch {
-    return null;
+    return { vehicle: null, bbValues: { tradein_avg: null, wholesale_avg: null } };
   }
 };
 
@@ -102,6 +111,7 @@ const ServiceLanding = () => {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [vehicleInfo, setVehicleInfo] = useState<VehicleInfo | null>(null);
+  const [bbValues, setBbValues] = useState<BBValues>({ tradein_avg: null, wholesale_avg: null });
   const [vinLoading, setVinLoading] = useState(false);
   const [vinError, setVinError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -117,9 +127,12 @@ const ServiceLanding = () => {
     const trimmedVin = vinParam.trim();
     if (trimmedVin && trimmedVin.length === 17) {
       setVinLoading(true);
-      decodeVin(trimmedVin).then((info) => {
+      lookupVinViaBB(trimmedVin).then(({ vehicle, bbValues: bv }) => {
         setVinLoading(false);
-        if (info) setVehicleInfo(info);
+        if (vehicle) {
+          setVehicleInfo(vehicle);
+          setBbValues(bv);
+        }
       });
     }
   }, [vinParam]);
@@ -134,10 +147,15 @@ const ServiceLanding = () => {
     setVinError("");
     setVinLoading(true);
     setVehicleInfo(null);
-    const info = await decodeVin(trimmedVin);
+    setBbValues({ tradein_avg: null, wholesale_avg: null });
+    const { vehicle, bbValues: bv } = await lookupVinViaBB(trimmedVin);
     setVinLoading(false);
-    if (info) setVehicleInfo(info);
-    else setVinError("Could not decode this VIN. Please check and try again.");
+    if (vehicle) {
+      setVehicleInfo(vehicle);
+      setBbValues(bv);
+    } else {
+      setVinError("Could not decode this VIN. Please check and try again.");
+    }
   };
 
   const handleStep1 = () => {
@@ -183,6 +201,8 @@ const ServiceLanding = () => {
         name: name || null,
         phone: phone || null,
         email: email || null,
+        bb_tradein_avg: bbValues.tradein_avg,
+        bb_wholesale_avg: bbValues.wholesale_avg,
         next_step: "service_trade",
         loan_status: "sell",
         lead_source: "service",
@@ -347,7 +367,15 @@ const ServiceLanding = () => {
                         <CheckCircle className="w-5 h-5 text-success" />
                         <span className="text-sm font-bold">Vehicle Found</span>
                       </div>
-                      <p className="text-lg font-semibold">{vehicleInfo.year} {vehicleInfo.make} {vehicleInfo.model}</p>
+                      <p className="text-lg font-semibold">
+                        {vehicleInfo.year} {vehicleInfo.make} {vehicleInfo.model}
+                        {vehicleInfo.trim && <span className="text-sm font-normal text-[hsl(215,20%,65%)]"> {vehicleInfo.trim}</span>}
+                      </p>
+                      {bbValues.tradein_avg && (
+                        <p className="text-sm mt-1 text-[hsl(160,60%,70%)]">
+                          Estimated value: <span className="font-bold">${bbValues.tradein_avg.toLocaleString()}</span>
+                        </p>
+                      )}
                     </motion.div>
                   )}
 
