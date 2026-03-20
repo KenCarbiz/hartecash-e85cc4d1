@@ -124,7 +124,7 @@ function getEmailTemplate(touch: number, sub: SubmissionData, siteUrl: string, d
             </div>
             <p style="color: #666; font-size: 14px;">Questions? Reply to this email or call us — we're happy to help.</p>
             <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
-            <p style="color: #999; font-size: 12px;">Harte Auto Group • <a href="${portalUrl}" style="color: #2563eb;">View your portal</a></p>
+            <p style="color: #999; font-size: 12px;">${dealerName} • <a href="${portalUrl}" style="color: #2563eb;">View your portal</a></p>
             ${unsubFooter}
           </div>
         </div>
