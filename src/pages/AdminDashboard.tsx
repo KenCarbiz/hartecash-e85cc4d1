@@ -155,6 +155,7 @@ const AdminDashboard = () => {
   const [total, setTotal] = useState(0);
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [apptLocationFilter, setApptLocationFilter] = useState<string>("all");
   const [showCreateAppt, setShowCreateAppt] = useState(false);
   const [apptForm, setApptForm] = useState({
     customer_name: "",
