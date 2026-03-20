@@ -57,7 +57,7 @@ const OfferPage = () => {
   const [activeTab, setActiveTab] = useState<"sell" | "trade">("sell");
   const [condition, setCondition] = useState<ConditionDetails | null>(null);
   const [calculatingDone, setCalculatingDone] = useState(false);
-  const [disclosureOpen, setDisclosureOpen] = useState(false);
+  
   const { config } = useSiteConfig();
 
   const explanationRef = useRef<HTMLDivElement>(null);
