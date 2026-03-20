@@ -302,6 +302,23 @@ const SiteConfiguration = () => {
         </div>
       </Section>
 
+      {/* Review Request Email */}
+      <Section icon={Star} title="Review Request Email">
+        <p className="text-xs text-muted-foreground mb-3">
+          This message is sent to customers after a purchase is completed when you click "Send Review Request."
+        </p>
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Email Subject</Label>
+            <Input value={config.review_request_subject} onChange={e => update("review_request_subject", e.target.value)} placeholder="We'd Love Your Feedback!" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Email Message</Label>
+            <Textarea value={config.review_request_message} onChange={e => update("review_request_message", e.target.value)} rows={4} placeholder="Thank you for choosing us..." />
+          </div>
+        </div>
+      </Section>
+
       {/* Stats */}
       <Section icon={BarChart3} title="Trust Statistics">
         <p className="text-xs text-muted-foreground mb-3">
