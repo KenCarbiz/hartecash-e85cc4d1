@@ -6,11 +6,13 @@ import FormField from "./FormField";
 import RadioOption from "./RadioOption";
 import CheckboxOption from "./CheckboxOption";
 import type { FormData } from "./types";
+import type { FormConfig } from "@/hooks/useFormConfig";
 
 interface Props {
   formData: FormData;
   updateArray: (field: string, value: string) => void;
   update: (field: string, value: string) => void;
+  formConfig?: FormConfig;
 }
 
 const conditionRatings = [
