@@ -94,7 +94,7 @@ const ColorDropdown = ({ value, onChange }: { value: string; onChange: (v: strin
   );
 };
 
-const StepVehicleBuild = ({ formData, update, vehicleInfo, bbVehicle, selectedAddDeducts, onToggleAddDeduct }: Props) => {
+const StepVehicleBuild = ({ formData, update, vehicleInfo, bbVehicle, selectedAddDeducts, onToggleAddDeduct, formConfig }: Props) => {
   // Derive drivetrain from BB data if available (from price_includes or style)
   const bbDrivetrain = bbVehicle
     ? (() => {
