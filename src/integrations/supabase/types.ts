@@ -144,6 +144,87 @@ export type Database = {
         }
         Relationships: []
       }
+      form_config: {
+        Row: {
+          created_at: string
+          dealership_id: string
+          id: string
+          q_accidents: boolean
+          q_drivable: boolean
+          q_drivetrain: boolean
+          q_engine_issues: boolean
+          q_exterior_color: boolean
+          q_exterior_damage: boolean
+          q_interior_damage: boolean
+          q_loan_details: boolean
+          q_mechanical_issues: boolean
+          q_modifications: boolean
+          q_moonroof: boolean
+          q_next_step: boolean
+          q_num_keys: boolean
+          q_overall_condition: boolean
+          q_smoked_in: boolean
+          q_tech_issues: boolean
+          q_tires_replaced: boolean
+          q_windshield_damage: boolean
+          step_condition_history: boolean
+          step_vehicle_build: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dealership_id?: string
+          id?: string
+          q_accidents?: boolean
+          q_drivable?: boolean
+          q_drivetrain?: boolean
+          q_engine_issues?: boolean
+          q_exterior_color?: boolean
+          q_exterior_damage?: boolean
+          q_interior_damage?: boolean
+          q_loan_details?: boolean
+          q_mechanical_issues?: boolean
+          q_modifications?: boolean
+          q_moonroof?: boolean
+          q_next_step?: boolean
+          q_num_keys?: boolean
+          q_overall_condition?: boolean
+          q_smoked_in?: boolean
+          q_tech_issues?: boolean
+          q_tires_replaced?: boolean
+          q_windshield_damage?: boolean
+          step_condition_history?: boolean
+          step_vehicle_build?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dealership_id?: string
+          id?: string
+          q_accidents?: boolean
+          q_drivable?: boolean
+          q_drivetrain?: boolean
+          q_engine_issues?: boolean
+          q_exterior_color?: boolean
+          q_exterior_damage?: boolean
+          q_interior_damage?: boolean
+          q_loan_details?: boolean
+          q_mechanical_issues?: boolean
+          q_modifications?: boolean
+          q_moonroof?: boolean
+          q_next_step?: boolean
+          q_num_keys?: boolean
+          q_overall_condition?: boolean
+          q_smoked_in?: boolean
+          q_tech_issues?: boolean
+          q_tires_replaced?: boolean
+          q_windshield_damage?: boolean
+          step_condition_history?: boolean
+          step_vehicle_build?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notification_settings: {
         Row: {
           appointment_channels: string[]

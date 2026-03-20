@@ -4,6 +4,7 @@ import FormField from "./FormField";
 import RadioOption from "./RadioOption";
 import CheckboxOption from "./CheckboxOption";
 import type { FormData, VehicleInfo, BBVehicle } from "./types";
+import type { FormConfig } from "@/hooks/useFormConfig";
 
 interface Props {
   formData: FormData;
@@ -12,6 +13,7 @@ interface Props {
   bbVehicle?: BBVehicle | null;
   selectedAddDeducts: string[];
   onToggleAddDeduct: (uoc: string) => void;
+  formConfig?: FormConfig;
 }
 
 const COLOR_OPTIONS = [
@@ -92,7 +94,7 @@ const ColorDropdown = ({ value, onChange }: { value: string; onChange: (v: strin
   );
 };
 
-const StepVehicleBuild = ({ formData, update, vehicleInfo, bbVehicle, selectedAddDeducts, onToggleAddDeduct }: Props) => {
+const StepVehicleBuild = ({ formData, update, vehicleInfo, bbVehicle, selectedAddDeducts, onToggleAddDeduct, formConfig }: Props) => {
   // Derive drivetrain from BB data if available (from price_includes or style)
   const bbDrivetrain = bbVehicle
     ? (() => {
@@ -135,27 +137,31 @@ const StepVehicleBuild = ({ formData, update, vehicleInfo, bbVehicle, selectedAd
         </div>
       )}
 
-      <FormField label="What color is your vehicle?">
-        <ColorDropdown value={formData.exteriorColor} onChange={(v) => update("exteriorColor", v)} />
-      </FormField>
+      {(!formConfig || formConfig.q_exterior_color) && (
+        <FormField label="What color is your vehicle?">
+          <ColorDropdown value={formData.exteriorColor} onChange={(v) => update("exteriorColor", v)} />
+        </FormField>
+      )}
 
-      <FormField label="What is your vehicle's drivetrain?">
-        <div className="grid grid-cols-2 gap-2">
-          {["FWD", "RWD", "AWD", "4WD"].map((opt) => (
-            <RadioOption
-              key={opt}
-              label={opt}
-              selected={formData.drivetrain === opt}
-              onClick={() => update("drivetrain", opt)}
-            />
-          ))}
-        </div>
-        {bbDrivetrain && (
-          <p className="text-xs text-muted-foreground mt-1.5">
-            Auto-detected: <strong>{bbDrivetrain}</strong> — change if incorrect
-          </p>
-        )}
-      </FormField>
+      {(!formConfig || formConfig.q_drivetrain) && (
+        <FormField label="What is your vehicle's drivetrain?">
+          <div className="grid grid-cols-2 gap-2">
+            {["FWD", "RWD", "AWD", "4WD"].map((opt) => (
+              <RadioOption
+                key={opt}
+                label={opt}
+                selected={formData.drivetrain === opt}
+                onClick={() => update("drivetrain", opt)}
+              />
+            ))}
+          </div>
+          {bbDrivetrain && (
+            <p className="text-xs text-muted-foreground mt-1.5">
+              Auto-detected: <strong>{bbDrivetrain}</strong> — change if incorrect
+            </p>
+          )}
+        </FormField>
+      )}
 
       {/* Auto-applied equipment from VIN */}
       {autoAddDeducts.length > 0 && (
@@ -187,20 +193,22 @@ const StepVehicleBuild = ({ formData, update, vehicleInfo, bbVehicle, selectedAd
         </FormField>
       )}
 
-      <FormField label="Does your vehicle have any modifications?">
-        <div className="grid grid-cols-2 gap-2">
-          <RadioOption
-            label="No modifications"
-            selected={formData.modifications === "none"}
-            onClick={() => update("modifications", "none")}
-          />
-          <RadioOption
-            label="Has modifications"
-            selected={formData.modifications === "yes"}
-            onClick={() => update("modifications", "yes")}
-          />
-        </div>
-      </FormField>
+      {(!formConfig || formConfig.q_modifications) && (
+        <FormField label="Does your vehicle have any modifications?">
+          <div className="grid grid-cols-2 gap-2">
+            <RadioOption
+              label="No modifications"
+              selected={formData.modifications === "none"}
+              onClick={() => update("modifications", "none")}
+            />
+            <RadioOption
+              label="Has modifications"
+              selected={formData.modifications === "yes"}
+              onClick={() => update("modifications", "yes")}
+            />
+          </div>
+        </FormField>
+      )}
     </>
   );
 };

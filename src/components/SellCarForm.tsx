@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { logConsent } from "@/lib/consent";
 import { calculateOffer, type OfferEstimate, type OfferSettings, type OfferRule } from "@/lib/offerCalculator";
 import { STEPS, initialFormData } from "./sell-form/types";
+import { useFormConfig, type FormConfig } from "@/hooks/useFormConfig";
 import type { FormData, VehicleInfo, BBVehicle } from "./sell-form/types";
 import StepVehicleInfo from "./sell-form/StepVehicleInfo";
 import StepVehicleBuild from "./sell-form/StepVehicleBuild";
@@ -34,6 +35,7 @@ const SellCarForm = () => {
   const [honeypot, setHoneypot] = useState("");
   const formRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const { formConfig } = useFormConfig();
 
   // Black Book state
   const [bbVehicles, setBbVehicles] = useState<BBVehicle[]>([]);
@@ -75,10 +77,12 @@ const SellCarForm = () => {
 
   // Determine actual displayed steps based on whether trim selection is needed
   const getDisplaySteps = () => {
-    if (showTrimStep) {
-      return ["Vehicle Info", "Select Your Vehicle", "Vehicle Build", "Condition & History", "Your Details", "Get Your Offer"];
-    }
-    return STEPS;
+    const steps: string[] = ["Vehicle Info"];
+    if (showTrimStep) steps.push("Select Your Vehicle");
+    if (formConfig.step_vehicle_build) steps.push("Vehicle Build");
+    if (formConfig.step_condition_history) steps.push("Condition & History");
+    steps.push("Your Details", "Get Your Offer");
+    return steps;
   };
 
   const displaySteps = getDisplaySteps();
@@ -175,23 +179,23 @@ const SellCarForm = () => {
     } else if (currentStepName === "Select Your Vehicle") {
       if (!formData.bbUvc) missing.push("Please select your vehicle");
     } else if (currentStepName === "Vehicle Build") {
-      if (!formData.exteriorColor.trim()) missing.push("Exterior Color");
-      if (!formData.drivetrain) missing.push("Drivetrain");
-      if (!formData.modifications) missing.push("Modifications");
+      if (formConfig.q_exterior_color && !formData.exteriorColor.trim()) missing.push("Exterior Color");
+      if (formConfig.q_drivetrain && !formData.drivetrain) missing.push("Drivetrain");
+      if (formConfig.q_modifications && !formData.modifications) missing.push("Modifications");
     } else if (currentStepName === "Condition & History") {
-      if (!formData.overallCondition) missing.push("Overall Condition");
-      if (formData.exteriorDamage.length === 0) missing.push("Exterior Damage");
-      if (!formData.windshieldDamage) missing.push("Windshield Damage");
-      if (!formData.moonroof) missing.push("Moonroof");
-      if (formData.interiorDamage.length === 0) missing.push("Interior Damage");
-      if (formData.techIssues.length === 0) missing.push("Technology Issues");
-      if (formData.engineIssues.length === 0) missing.push("Engine Issues");
-      if (formData.mechanicalIssues.length === 0) missing.push("Mechanical Issues");
-      if (!formData.drivable) missing.push("Drivable");
-      if (!formData.accidents) missing.push("Accidents");
-      if (!formData.smokedIn) missing.push("Smoked In");
-      if (!formData.tiresReplaced) missing.push("Tires Replaced");
-      if (!formData.numKeys) missing.push("Number of Keys");
+      if (formConfig.q_overall_condition && !formData.overallCondition) missing.push("Overall Condition");
+      if (formConfig.q_exterior_damage && formData.exteriorDamage.length === 0) missing.push("Exterior Damage");
+      if (formConfig.q_windshield_damage && !formData.windshieldDamage) missing.push("Windshield Damage");
+      if (formConfig.q_moonroof && !formData.moonroof) missing.push("Moonroof");
+      if (formConfig.q_interior_damage && formData.interiorDamage.length === 0) missing.push("Interior Damage");
+      if (formConfig.q_tech_issues && formData.techIssues.length === 0) missing.push("Technology Issues");
+      if (formConfig.q_engine_issues && formData.engineIssues.length === 0) missing.push("Engine Issues");
+      if (formConfig.q_mechanical_issues && formData.mechanicalIssues.length === 0) missing.push("Mechanical Issues");
+      if (formConfig.q_drivable && !formData.drivable) missing.push("Drivable");
+      if (formConfig.q_accidents && !formData.accidents) missing.push("Accidents");
+      if (formConfig.q_smoked_in && !formData.smokedIn) missing.push("Smoked In");
+      if (formConfig.q_tires_replaced && !formData.tiresReplaced) missing.push("Tires Replaced");
+      if (formConfig.q_num_keys && !formData.numKeys) missing.push("Number of Keys");
     } else if (currentStepName === "Your Details") {
       if (!formData.name.trim()) missing.push("Full Name");
       if (!formData.phone.trim()) missing.push("Phone Number");
@@ -199,7 +203,7 @@ const SellCarForm = () => {
       if (!formData.zip.trim()) missing.push("ZIP Code");
       if (!formData.loanStatus) missing.push("Sell or Trade-In");
     } else if (currentStepName === "Get Your Offer") {
-      if (!formData.nextStep) missing.push("Next Step");
+      if (formConfig.q_next_step && !formData.nextStep) missing.push("Next Step");
     }
 
     if (missing.length > 0) {
@@ -364,14 +368,15 @@ const SellCarForm = () => {
             bbVehicle={bbSelectedVehicle}
             selectedAddDeducts={selectedAddDeducts}
             onToggleAddDeduct={toggleAddDeduct}
+            formConfig={formConfig}
           />
         );
       case "Condition & History":
-        return <StepConditionHistory formData={formData} updateArray={updateArray} update={update} />;
+        return <StepConditionHistory formData={formData} updateArray={updateArray} update={update} formConfig={formConfig} />;
       case "Your Details":
-        return <StepYourDetails formData={formData} update={update} />;
+        return <StepYourDetails formData={formData} update={update} formConfig={formConfig} />;
       case "Get Your Offer":
-        return <StepGetOffer formData={formData} update={update} vehicleInfo={vehicleInfo} />;
+        return <StepGetOffer formData={formData} update={update} vehicleInfo={vehicleInfo} formConfig={formConfig} />;
       default:
         return null;
     }

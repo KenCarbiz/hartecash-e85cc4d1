@@ -6,11 +6,13 @@ import FormField from "./FormField";
 import RadioOption from "./RadioOption";
 import CheckboxOption from "./CheckboxOption";
 import type { FormData } from "./types";
+import type { FormConfig } from "@/hooks/useFormConfig";
 
 interface Props {
   formData: FormData;
   updateArray: (field: string, value: string) => void;
   update: (field: string, value: string) => void;
+  formConfig?: FormConfig;
 }
 
 const conditionRatings = [
@@ -81,7 +83,7 @@ const kbbDefinitions = [
   },
 ];
 
-const StepConditionHistory = ({ formData, updateArray, update }: Props) => {
+const StepConditionHistory = ({ formData, updateArray, update, formConfig }: Props) => {
   const [showKbb, setShowKbb] = useState(false);
 
   return (
@@ -111,6 +113,7 @@ const StepConditionHistory = ({ formData, updateArray, update }: Props) => {
       </DialogContent>
     </Dialog>
 
+    {(!formConfig || formConfig.q_overall_condition) && (
     <FormField label="What is the overall condition of your vehicle?">
       <button
         type="button"
@@ -149,7 +152,9 @@ const StepConditionHistory = ({ formData, updateArray, update }: Props) => {
         })}
       </div>
     </FormField>
+    )}
 
+    {(!formConfig || formConfig.q_exterior_damage) && (
     <FormField label="Is there any exterior damage?">
       <div className="grid gap-2">
         {exteriorOptions.map((opt) => (
@@ -157,7 +162,9 @@ const StepConditionHistory = ({ formData, updateArray, update }: Props) => {
         ))}
       </div>
     </FormField>
+    )}
 
+    {(!formConfig || formConfig.q_windshield_damage) && (
     <FormField label="Is your front windshield damaged?">
       <div className="grid gap-2">
         {["No windshield damage", "Minor chips or pitting", "Major cracks or chips"].map((opt) => (
@@ -165,7 +172,9 @@ const StepConditionHistory = ({ formData, updateArray, update }: Props) => {
         ))}
       </div>
     </FormField>
+    )}
 
+    {(!formConfig || formConfig.q_moonroof) && (
     <FormField label="If your vehicle has a moonroof, does it work?">
       <div className="grid gap-2">
         {["Works great", "Doesn't work", "No moonroof"].map((opt) => (
@@ -173,7 +182,9 @@ const StepConditionHistory = ({ formData, updateArray, update }: Props) => {
         ))}
       </div>
     </FormField>
+    )}
 
+    {(!formConfig || formConfig.q_interior_damage) && (
     <FormField label="Is there any interior damage?">
       <div className="grid gap-2">
         {interiorOptions.map((opt) => (
@@ -181,7 +192,9 @@ const StepConditionHistory = ({ formData, updateArray, update }: Props) => {
         ))}
       </div>
     </FormField>
+    )}
 
+    {(!formConfig || formConfig.q_tech_issues) && (
     <FormField label="Are there any technology system issues?">
       <div className="grid gap-2">
         {techOptions.map((opt) => (
@@ -189,7 +202,9 @@ const StepConditionHistory = ({ formData, updateArray, update }: Props) => {
         ))}
       </div>
     </FormField>
+    )}
 
+    {(!formConfig || formConfig.q_engine_issues) && (
     <FormField label="Are there any engine issues?">
       <div className="grid gap-2">
         {engineOptions.map((opt) => (
@@ -197,7 +212,9 @@ const StepConditionHistory = ({ formData, updateArray, update }: Props) => {
         ))}
       </div>
     </FormField>
+    )}
 
+    {(!formConfig || formConfig.q_mechanical_issues) && (
     <FormField label="Are there any mechanical or electrical issues?">
       <div className="grid gap-2">
         {mechanicalOptions.map((opt) => (
@@ -205,19 +222,25 @@ const StepConditionHistory = ({ formData, updateArray, update }: Props) => {
         ))}
       </div>
     </FormField>
+    )}
 
+    {(!formConfig || formConfig.q_drivable) && (
     <FormField label="Can your vehicle be safely driven?">
       <div className="grid grid-cols-2 gap-2">
         <RadioOption label="Drivable" selected={formData.drivable === "Drivable"} onClick={() => update("drivable", "Drivable")} />
         <RadioOption label="Not drivable" selected={formData.drivable === "Not drivable"} onClick={() => update("drivable", "Not drivable")} />
       </div>
     </FormField>
+    )}
 
     {/* History section */}
+    {(!formConfig || formConfig.q_accidents || formConfig.q_smoked_in || formConfig.q_tires_replaced || formConfig.q_num_keys) && (
     <div className="border-t-2 border-muted pt-5 mt-5">
       <h3 className="text-base font-bold text-card-foreground mb-4">Vehicle History</h3>
     </div>
+    )}
 
+    {(!formConfig || formConfig.q_accidents) && (
     <FormField label="Has your vehicle been in an accident?">
       <div className="grid gap-2">
         {["No accidents", "1 accident", "2+ accidents"].map((opt) => (
@@ -225,14 +248,18 @@ const StepConditionHistory = ({ formData, updateArray, update }: Props) => {
         ))}
       </div>
     </FormField>
+    )}
 
+    {(!formConfig || formConfig.q_smoked_in) && (
     <FormField label="Has your vehicle been smoked in?">
       <div className="grid grid-cols-2 gap-2">
         <RadioOption label="Not smoked in" selected={formData.smokedIn === "No"} onClick={() => update("smokedIn", "No")} />
         <RadioOption label="Smoked in" selected={formData.smokedIn === "Yes"} onClick={() => update("smokedIn", "Yes")} />
       </div>
     </FormField>
+    )}
 
+    {(!formConfig || formConfig.q_tires_replaced) && (
     <FormField label="How many tires replaced in the past 12 months?">
       <div className="grid grid-cols-3 gap-2">
         {["None", "1", "2", "3", "4"].map((opt) => (
@@ -240,13 +267,16 @@ const StepConditionHistory = ({ formData, updateArray, update }: Props) => {
         ))}
       </div>
     </FormField>
+    )}
 
+    {(!formConfig || formConfig.q_num_keys) && (
     <FormField label="How many keys do you have?">
       <div className="grid grid-cols-2 gap-2">
         <RadioOption label="1 key" selected={formData.numKeys === "1"} onClick={() => update("numKeys", "1")} />
         <RadioOption label="2+ keys" selected={formData.numKeys === "2+"} onClick={() => update("numKeys", "2+")} />
       </div>
     </FormField>
+    )}
   </>
   );
 };

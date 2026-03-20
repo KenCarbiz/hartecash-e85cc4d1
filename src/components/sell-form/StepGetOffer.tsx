@@ -1,13 +1,15 @@
 import { Camera, MapPin } from "lucide-react";
 import type { FormData, VehicleInfo } from "./types";
+import type { FormConfig } from "@/hooks/useFormConfig";
 
 interface Props {
   formData: FormData;
   update: (field: string, value: string) => void;
   vehicleInfo: VehicleInfo | null;
+  formConfig?: FormConfig;
 }
 
-const StepGetOffer = ({ formData, update, vehicleInfo }: Props) => {
+const StepGetOffer = ({ formData, update, vehicleInfo, formConfig }: Props) => {
   const nextStepValue = formData?.nextStep ?? "";
 
   return (
