@@ -1335,7 +1335,7 @@ const AdminDashboard = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {appointments.map((appt) => (
+                      {filteredAppointments.map((appt) => (
                         <tr key={appt.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
                           <td className="px-3 py-2 text-sm">{new Date(appt.preferred_date + "T12:00:00").toLocaleDateString()}</td>
                           <td className="px-3 py-2 text-sm">{appt.preferred_time}</td>
@@ -1367,7 +1367,8 @@ const AdminDashboard = () => {
                   </table>
                 </div>
               </div>
-            )}
+            );
+            })()}
             </div>
           )}
 
