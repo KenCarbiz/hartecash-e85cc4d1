@@ -19,8 +19,8 @@ function getNextAction(status: string, photosUploaded: boolean, docsUploaded: bo
   if (!photosUploaded) {
     return {
       emoji: "📸",
-      title: "Upload Your Photos",
-      description: "Help us give you the best offer by uploading clear photos of your vehicle.",
+      title: "Upload Photos & Documents",
+      description: "Uploading photos and documents will speed up the process and get you a check faster.",
       actionLabel: "Upload Photos",
       actionIcon: Camera,
       linkType: "upload" as const,
