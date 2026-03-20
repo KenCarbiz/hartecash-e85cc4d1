@@ -1011,12 +1011,23 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background transition-colors duration-300">
-      {/* Header */}
+    <SidebarProvider>
+    <div className="min-h-screen bg-background transition-colors duration-300 flex w-full">
+      <AdminSidebar
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+        canManageAccess={canManageAccess}
+        submissionCount={total}
+        appointmentCount={appointments.length}
+        pendingRequestCount={pendingRequests.length}
+      />
+
+      <div className="flex-1 flex flex-col min-w-0">
       <header className="sticky top-0 z-50 bg-gradient-to-r from-[hsl(210,100%,15%)] via-[hsl(210,100%,20%)] to-[hsl(220,80%,18%)] text-white shadow-lg">
-        <div className="max-w-[1400px] mx-auto px-4 py-1 flex items-center justify-between">
+        <div className="px-4 py-1 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={harteLogoWhite} alt="Harte Auto Group" className="h-28 w-auto" />
+            <SidebarTrigger className="text-white/80 hover:text-white hover:bg-white/10 -ml-1" />
+            <img src={harteLogoWhite} alt="Harte Auto Group" className="h-20 w-auto" />
             <div>
               <span className="text-lg font-bold">Dashboard</span>
               <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-white/20 text-white/90 font-medium">
@@ -1025,13 +1036,7 @@ const AdminDashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setDarkMode(!darkMode)}
-              className="text-white/80 hover:text-white hover:bg-white/10"
-              title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
-            >
+            <Button variant="ghost" size="sm" onClick={() => setDarkMode(!darkMode)} className="text-white/80 hover:text-white hover:bg-white/10" title={darkMode ? "Switch to light mode" : "Switch to dark mode"}>
               {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </Button>
             <Button variant="ghost" size="sm" onClick={handleLogout} className="text-white/80 hover:text-white hover:bg-white/10">
@@ -1041,76 +1046,15 @@ const AdminDashboard = () => {
         </div>
       </header>
 
-      {/* Content */}
-      <div className="max-w-[1400px] mx-auto px-4 py-6">
-        <Tabs defaultValue="submissions">
-          <TabsList className="mb-4 flex flex-wrap h-auto gap-1">
-            <TabsTrigger value="submissions">Submissions ({total})</TabsTrigger>
-            <TabsTrigger value="appointments">
-              <CalendarDays className="w-4 h-4 mr-1" />
-              Appointments ({appointments.length})
-            </TabsTrigger>
-            {canManageAccess && (
-              <>
-                <TabsTrigger value="staff">
-                  <Users className="w-4 h-4 mr-1" />
-                  Staff
-                </TabsTrigger>
-                <TabsTrigger value="requests" className="relative">
-                  <Users className="w-4 h-4 mr-1" />
-                  Access Requests
-                  {pendingRequests.length > 0 && (
-                    <span className="ml-1.5 inline-flex items-center justify-center w-5 h-5 rounded-full bg-destructive text-destructive-foreground text-xs font-bold">
-                      {pendingRequests.length}
-                    </span>
-                  )}
-                </TabsTrigger>
-              </>
-            )}
-            <TabsTrigger value="consent">
-              <ShieldCheck className="w-4 h-4 mr-1" />
-              Consent Log
-            </TabsTrigger>
-            {canManageAccess && (
-              <>
-                <TabsTrigger value="offer-settings">
-                  <SlidersHorizontal className="w-4 h-4 mr-1" />
-                  Offer Settings
-                </TabsTrigger>
-                <TabsTrigger value="site-config">
-                  <Settings className="w-4 h-4 mr-1" />
-                  Site Config
-                </TabsTrigger>
-                <TabsTrigger value="notifications">
-                  <Bell className="w-4 h-4 mr-1" />
-                  Notifications
-                </TabsTrigger>
-                <TabsTrigger value="form-config">
-                  <ListChecks className="w-4 h-4 mr-1" />
-                  Form Config
-                </TabsTrigger>
-                <TabsTrigger value="testimonials">
-                  <MessageSquareQuote className="w-4 h-4 mr-1" />
-                  Testimonials
-                </TabsTrigger>
-                <TabsTrigger value="comparison">
-                  <BarChart3 className="w-4 h-4 mr-1" />
-                  Comparison
-                </TabsTrigger>
-                <TabsTrigger value="follow-ups">
-                  <Send className="w-4 h-4 mr-1" />
-                  Follow-Ups
-                </TabsTrigger>
-              </>
-            )}
-          </TabsList>
+      <div className="flex-1 px-4 py-6 overflow-auto">
+        <div className="max-w-[1400px] mx-auto">
 
-          {/* Analytics Dashboard */}
-          <div className="mb-6">
-            <DashboardAnalytics />
-          </div>
+          {activeSection === "submissions" && (
+            <div className="mb-6"><DashboardAnalytics /></div>
+          )}
 
-          <TabsContent value="submissions">
+          {activeSection === "submissions" && (
+            <div>
             <div className="mb-4 flex items-center justify-between gap-3">
               <div className="relative flex-1 max-w-xs">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
