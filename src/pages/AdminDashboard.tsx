@@ -114,14 +114,13 @@ interface Submission {
 
 const PAGE_SIZE = 20;
 
-// Consolidated 7-step tracker for visual display
+// Consolidated 6-step tracker for visual display
 const PROGRESS_STAGES = [
   { key: "new", label: "New Lead", dbKeys: ["new"] },
   { key: "contacted", label: "Contacted", dbKeys: ["contacted"] },
-  { key: "inspection", label: "Inspection", dbKeys: ["inspection_scheduled", "inspection_completed"] },
-  { key: "docs_verified", label: "Docs & Title", dbKeys: ["title_verified", "ownership_verified"] },
-  { key: "appraised", label: "Appraised", dbKeys: ["appraisal_completed", "manager_approval"] },
-  { key: "price_agreed", label: "Price Agreed", dbKeys: ["price_agreed"] },
+  { key: "inspected", label: "Inspection / Appraised", dbKeys: ["inspection_scheduled", "inspection_completed", "appraisal_completed"] },
+  { key: "price_agreed", label: "Price Agreed", dbKeys: ["manager_approval", "price_agreed"] },
+  { key: "docs_title", label: "Docs & Title", dbKeys: ["title_verified", "ownership_verified"] },
   { key: "purchase_complete", label: "Purchased", dbKeys: ["purchase_complete"] },
   { key: "dead_lead", label: "Dead Lead", dbKeys: ["dead_lead"] },
 ];
@@ -132,11 +131,11 @@ const ALL_STATUS_OPTIONS = [
   { key: "contacted", label: "Contacted" },
   { key: "inspection_scheduled", label: "Inspection Scheduled" },
   { key: "inspection_completed", label: "Inspection Completed" },
-  { key: "title_verified", label: "Title Verified" },
-  { key: "ownership_verified", label: "Ownership Verified" },
   { key: "appraisal_completed", label: "Appraisal Completed" },
   { key: "manager_approval", label: "Manager Approval" },
   { key: "price_agreed", label: "Price Agreed" },
+  { key: "title_verified", label: "Title Verified" },
+  { key: "ownership_verified", label: "Ownership Verified" },
   { key: "purchase_complete", label: "Purchased" },
   { key: "dead_lead", label: "Dead Lead" },
 ];
