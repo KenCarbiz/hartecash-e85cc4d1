@@ -221,9 +221,6 @@
     font-size: 11px;
   }
 
-  .print\\:!hidden {
-    display: none !important;
-  }
 
   @page {
     margin: 0.4in 0.5in;

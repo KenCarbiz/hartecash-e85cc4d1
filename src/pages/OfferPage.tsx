@@ -877,7 +877,7 @@ const OfferPage = () => {
       </div>
 
       {/* ─── DESKTOP: Two-column layout ─── */}
-      <div className="hidden lg:block print:!hidden">
+      <div className="hidden lg:block print:hidden">
         <div className="max-w-5xl mx-auto px-6 py-8">
           <div className="grid grid-cols-5 gap-8">
             {/* Left column — vehicle + offer (sticky) */}
@@ -965,7 +965,7 @@ const OfferPage = () => {
       </div>
 
       {/* ─── MOBILE: Single-column layout (original) ─── */}
-      <div className="lg:hidden print:!hidden">
+      <div className="lg:hidden print:hidden">
         {/* Floating Sticky Value Box */}
         <div className="sticky top-0 z-30 bg-card/95 backdrop-blur-md border-b border-border shadow-lg print:static print:shadow-none">
           <div className="max-w-lg mx-auto px-6 py-4">
