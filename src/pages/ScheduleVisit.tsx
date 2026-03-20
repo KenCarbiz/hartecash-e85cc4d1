@@ -169,8 +169,11 @@ const ScheduleVisit = () => {
               <p className="text-muted-foreground">
                 We've received your appointment request for{" "}
                 <strong>{form.preferred_date}</strong> at{" "}
-                <strong>{form.preferred_time}</strong>. Our team will reach out
-                shortly to confirm.
+                <strong>{form.preferred_time}</strong>
+                {form.store_location && (
+                  <> at <strong>{STORE_LOCATIONS.find(l => l.value === form.store_location)?.label || form.store_location}</strong></>
+                )}
+                . Our team will reach out shortly to confirm.
               </p>
             </CardContent>
           </Card>
