@@ -493,6 +493,58 @@ const OfferPage = () => {
           </div>
         )}
 
+        {/* Accept & Lock In CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="bg-gradient-to-br from-accent/10 via-accent/5 to-transparent border-2 border-accent/30 rounded-xl p-6 print:hidden"
+        >
+          <div className="text-center mb-4">
+            <h3 className="font-bold text-lg text-card-foreground mb-1">Ready to Lock In Your Price?</h3>
+            <p className="text-sm text-muted-foreground">
+              Upload photos and documents to finalize your offer and get paid fast.
+            </p>
+          </div>
+
+          <div className="space-y-2.5 mb-5">
+            <Link
+              to={`/upload/${token}`}
+              className="flex items-center gap-3 p-3 rounded-lg bg-card hover:bg-muted/50 transition-colors border border-border"
+            >
+              <div className="w-9 h-9 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+                <Camera className="w-4.5 h-4.5 text-accent" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-card-foreground">Upload Vehicle Photos</p>
+                <p className="text-xs text-muted-foreground">Exterior, interior & odometer shots</p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-muted-foreground" />
+            </Link>
+
+            <Link
+              to={`/docs/${token}`}
+              className="flex items-center gap-3 p-3 rounded-lg bg-card hover:bg-muted/50 transition-colors border border-border"
+            >
+              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <FileText className="w-4.5 h-4.5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-card-foreground">Upload Documents</p>
+                <p className="text-xs text-muted-foreground">Title, registration & license</p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-muted-foreground" />
+            </Link>
+          </div>
+
+          <Link to={`/upload/${token}`}>
+            <Button className="w-full py-5 text-base font-bold bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg shadow-accent/20 gap-2">
+              Accept & Continue <ArrowRight className="w-5 h-5" />
+            </Button>
+          </Link>
+        </motion.div>
+
         {/* Print / Actions */}
         <div className="flex gap-3 print:hidden">
           <Button variant="outline" className="flex-1 gap-2" onClick={handlePrint}>
