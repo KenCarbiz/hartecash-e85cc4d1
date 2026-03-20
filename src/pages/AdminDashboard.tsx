@@ -1198,6 +1198,7 @@ const AdminDashboard = () => {
                         <SelectItem value="__all__">All sources</SelectItem>
                         <SelectItem value="inventory">Off Street Purchase</SelectItem>
                         <SelectItem value="service">Service Drive</SelectItem>
+                        <SelectItem value="trade">Trade-In</SelectItem>
                         <SelectItem value="in_store_trade">In-Store Trade</SelectItem>
                       </SelectContent>
                     </Select>
@@ -1291,8 +1292,8 @@ const AdminDashboard = () => {
                               </span>
                             </td>
                             <td className="px-3 py-3">
-                              <Badge variant={sub.lead_source === "service" ? "secondary" : sub.lead_source === "in_store_trade" ? "default" : "outline"} className="text-xs">
-                                {sub.lead_source === "service" ? "Service" : sub.lead_source === "in_store_trade" ? "In-Store" : "Off Street"}
+                              <Badge variant={sub.lead_source === "service" ? "secondary" : sub.lead_source === "in_store_trade" ? "default" : sub.lead_source === "trade" ? "default" : "outline"} className="text-xs">
+                                {sub.lead_source === "service" ? "Service" : sub.lead_source === "in_store_trade" ? "In-Store" : sub.lead_source === "trade" ? "Trade-In" : "Off Street"}
                               </Badge>
                             </td>
                             <td className="px-3 py-3">
@@ -1838,6 +1839,7 @@ const AdminDashboard = () => {
                       <SelectContent>
                         <SelectItem value="inventory">Off Street Purchase</SelectItem>
                         <SelectItem value="service">Service Drive</SelectItem>
+                        <SelectItem value="trade">Trade-In</SelectItem>
                         <SelectItem value="in_store_trade">In-Store Trade</SelectItem>
                       </SelectContent>
                     </Select>
