@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, DollarSign, ArrowDown, TrendingUp, ShieldCheck, Info, Printer, CheckCircle, AlertTriangle, Search, Camera, FileText, ArrowRight } from "lucide-react";
+import { ArrowLeft, DollarSign, ArrowDown, TrendingUp, ShieldCheck, Info, Printer, CheckCircle, AlertTriangle, Search, Camera, FileText, ArrowRight, QrCode } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import harteLogo from "@/assets/harte-logo-white.png";
@@ -589,6 +590,49 @@ const OfferPage = () => {
               Back to Portal
             </Button>
           </Link>
+        </div>
+
+        {/* Print-only: QR codes to continue process */}
+        <div className="hidden print:block border-2 border-border rounded-xl p-6 mt-4">
+          <div className="text-center mb-4">
+            <h3 className="font-bold text-lg text-foreground">Continue Your Process Online</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Scan a QR code below with your phone to upload photos or documents and lock in your offer.
+            </p>
+          </div>
+          <div className="flex justify-center gap-12">
+            <div className="flex flex-col items-center gap-2">
+              <QRCodeSVG
+                value={`${window.location.origin}/upload/${token}`}
+                size={120}
+                level="M"
+              />
+              <div className="flex items-center gap-1.5 mt-1">
+                <Camera className="w-4 h-4" />
+                <span className="text-sm font-semibold">Upload Photos</span>
+              </div>
+              <p className="text-xs text-muted-foreground text-center max-w-[140px]">
+                Exterior, interior & odometer
+              </p>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <QRCodeSVG
+                value={`${window.location.origin}/docs/${token}`}
+                size={120}
+                level="M"
+              />
+              <div className="flex items-center gap-1.5 mt-1">
+                <FileText className="w-4 h-4" />
+                <span className="text-sm font-semibold">Upload Documents</span>
+              </div>
+              <p className="text-xs text-muted-foreground text-center max-w-[140px]">
+                Title, registration & license
+              </p>
+            </div>
+          </div>
+          <p className="text-center text-xs text-muted-foreground mt-4 pt-3 border-t border-border">
+            Or visit: {window.location.origin}/offer/{token}
+          </p>
         </div>
 
         {/* Fine print */}
