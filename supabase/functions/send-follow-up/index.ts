@@ -99,7 +99,7 @@ function getEmailTemplate(touch: number, sub: SubmissionData, siteUrl: string, d
               <a href="${scheduleUrl}" style="background: #0a2647; color: white; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">Schedule Your Visit →</a>
             </div>
             <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
-            <p style="color: #999; font-size: 12px;">Harte Auto Group • <a href="${portalUrl}" style="color: #2563eb;">View your portal</a></p>
+            <p style="color: #999; font-size: 12px;">${dealerName} • <a href="${portalUrl}" style="color: #2563eb;">View your portal</a></p>
             ${unsubFooter}
           </div>
         </div>
