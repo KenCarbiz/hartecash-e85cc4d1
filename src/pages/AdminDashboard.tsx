@@ -279,10 +279,11 @@ const AdminDashboard = () => {
         customer_phone: apptForm.customer_phone,
         preferred_date: apptForm.preferred_date,
         preferred_time: apptForm.preferred_time,
+        store_location: apptForm.store_location || null,
         vehicle_info: apptForm.vehicle_info || null,
         notes: apptForm.notes || null,
         submission_token: apptForm.submission_token || null,
-      });
+      } as any);
       if (error) throw error;
 
       // If linked to a submission, update its status and appointment info
