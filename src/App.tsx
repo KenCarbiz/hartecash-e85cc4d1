@@ -28,33 +28,34 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Suspense fallback={null}>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/upload/:token" element={<UploadPhotos />} />
-            <Route path="/docs/:token" element={<UploadDocs />} />
-            <Route path="/my-submission" element={<CustomerLookup />} />
-            <Route path="/my-submission/:token" element={<CustomerPortal />} />
-            <Route path="/schedule" element={<ScheduleVisit />} />
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/service" element={<ServiceLanding />} />
-            <Route path="/pitch" element={<PitchDeck />} />
-            <Route path="/ken" element={<KenPage />} />
-            <Route path="/servicelinkgen" element={<ServiceLinkGen />} />
-            <Route path="/privacy" element={<PrivacyPolicy />} />
-            <Route path="/terms" element={<TermsOfService />} />
-            <Route path="/offer/:token" element={<OfferPage />} />
-            <Route path="/sitemap" element={<Sitemap />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Suspense fallback={null}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/upload/:token" element={<UploadPhotos />} />
+              <Route path="/docs/:token" element={<UploadDocs />} />
+              <Route path="/my-submission" element={<CustomerLookup />} />
+              <Route path="/my-submission/:token" element={<CustomerPortal />} />
+              <Route path="/schedule" element={<ScheduleVisit />} />
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/service" element={<ServiceLanding />} />
+              <Route path="/pitch" element={<PitchDeck />} />
+              <Route path="/ken" element={<KenPage />} />
+              <Route path="/servicelinkgen" element={<ServiceLinkGen />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/terms" element={<TermsOfService />} />
+              <Route path="/offer/:token" element={<OfferPage />} />
+              <Route path="/sitemap" element={<Sitemap />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );
