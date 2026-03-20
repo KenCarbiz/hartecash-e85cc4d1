@@ -118,10 +118,26 @@ const SiteConfiguration = () => {
   const handleSave = async () => {
     setSaving(true);
     const { id, ...rest } = config;
-    const { error } = await supabase
+    const payload = { ...rest, dealership_id: "default", updated_at: new Date().toISOString() };
+
+    // Try update first, if no rows affected then insert
+    const { data: existing } = await supabase
       .from("site_config")
-      .update({ ...rest, updated_at: new Date().toISOString() })
-      .eq("dealership_id", "default");
+      .select("id")
+      .eq("dealership_id", "default")
+      .maybeSingle();
+
+    let error;
+    if (existing) {
+      ({ error } = await supabase
+        .from("site_config")
+        .update(payload)
+        .eq("id", existing.id));
+    } else {
+      ({ error } = await supabase
+        .from("site_config")
+        .insert(payload));
+    }
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
