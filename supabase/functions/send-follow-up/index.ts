@@ -239,7 +239,7 @@ Deno.serve(async (req) => {
       results.email = "opted_out";
     } else if (resendKey && sub.email) {
       try {
-        const template = getEmailTemplate(touch_number, sub as SubmissionData, siteUrl);
+        const template = getEmailTemplate(touch_number, sub as SubmissionData, siteUrl, dealerName);
         const emailRes = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {
