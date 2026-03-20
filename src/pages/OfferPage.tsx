@@ -959,7 +959,7 @@ const OfferPage = () => {
             </div>
           </div>
         </div>
-        {PrintQR}
+        {PrintLayout}
       </div>
 
       {/* ─── MOBILE: Single-column layout (original) ─── */}
