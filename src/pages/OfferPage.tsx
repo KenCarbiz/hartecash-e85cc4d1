@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, DollarSign, ArrowDown, TrendingUp, ShieldCheck, Info, Printer, CheckCircle, AlertTriangle, Search, Camera, FileText, ArrowRight } from "lucide-react";
@@ -6,8 +6,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import harteLogo from "@/assets/harte-logo-white.png";
 import PortalSkeleton from "@/components/PortalSkeleton";
+import CalculatingOffer from "@/components/CalculatingOffer";
 import { getTaxRateFromZip, calcTradeInValue, STATE_NAMES } from "@/lib/salesTax";
 import VehicleImage from "@/components/sell-form/VehicleImage";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 interface OfferSubmission {
   id: string;
@@ -50,21 +52,24 @@ const OfferPage = () => {
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState<"sell" | "trade">("sell");
   const [condition, setCondition] = useState<ConditionDetails | null>(null);
+  const [calculatingDone, setCalculatingDone] = useState(false);
+  const { config } = useSiteConfig();
 
   const explanationRef = useRef<HTMLDivElement>(null);
+
+  const handleCalculatingComplete = useCallback(() => {
+    setCalculatingDone(true);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
       if (!token) { setError("Invalid link."); setLoading(false); return; }
-      const minDelay = new Promise(r => setTimeout(r, 1200));
-      const query = supabase.rpc("get_submission_portal", { _token: token });
-      const [, { data, error: err }] = await Promise.all([minDelay, query]);
+      const { data, error: err } = await supabase.rpc("get_submission_portal", { _token: token });
       if (err || !data || data.length === 0) { setError("Offer not found."); setLoading(false); return; }
       const sub = data[0] as unknown as OfferSubmission;
       setSubmission(sub);
       setLoading(false);
 
-      // Fetch condition details separately (uses the submission id)
       const { data: condData } = await supabase
         .from("submissions")
         .select("accidents, drivable, exterior_damage, interior_damage, mechanical_issues, engine_issues, tech_issues, smoked_in, tires_replaced, num_keys, windshield_damage, modifications")
@@ -82,7 +87,22 @@ const OfferPage = () => {
     }, 100);
   };
 
-  if (loading) return <PortalSkeleton />;
+  const useAnimated = config.use_animated_calculating;
+
+  if (loading) {
+    return useAnimated ? <CalculatingOffer previewMode /> : <PortalSkeleton />;
+  }
+
+  if (!calculatingDone && useAnimated && submission && !error) {
+    return (
+      <CalculatingOffer
+        vehicleYear={submission.vehicle_year || undefined}
+        vehicleMake={submission.vehicle_make || undefined}
+        vehicleModel={submission.vehicle_model || undefined}
+        onComplete={handleCalculatingComplete}
+      />
+    );
+  }
 
   if (error || !submission) return (
     <div className="min-h-screen flex items-center justify-center bg-background p-6">

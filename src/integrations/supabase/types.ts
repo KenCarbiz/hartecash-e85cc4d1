@@ -479,6 +479,7 @@ export type Database = {
           success_color: string
           tagline: string
           updated_at: string
+          use_animated_calculating: boolean
           website_url: string | null
         }
         Insert: {
@@ -509,6 +510,7 @@ export type Database = {
           success_color?: string
           tagline?: string
           updated_at?: string
+          use_animated_calculating?: boolean
           website_url?: string | null
         }
         Update: {
@@ -539,6 +541,7 @@ export type Database = {
           success_color?: string
           tagline?: string
           updated_at?: string
+          use_animated_calculating?: boolean
           website_url?: string | null
         }
         Relationships: []
