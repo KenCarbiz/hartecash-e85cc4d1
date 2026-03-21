@@ -872,11 +872,12 @@ const OfferPage = () => {
                 )}
 
                 {/* Offer card */}
-                <div className="bg-card rounded-xl p-6 shadow-lg space-y-4">
+                <div className="bg-card rounded-xl p-6 shadow-lg space-y-5">
                   {TabSwitcher}
                   {OfferDisplay}
                   {TradeInBounce}
                   {GuaranteeBadge}
+                  {AcceptButton}
                 </div>
 
                 {/* Vehicle Summary */}
