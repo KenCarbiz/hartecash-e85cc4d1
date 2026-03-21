@@ -1001,7 +1001,7 @@ const OfferPage = () => {
           {ConditionBlock}
           {TradeInExplanation}
           {NoTaxBlock}
-          {AcceptCTA}
+          
 
           {/* Print / Actions */}
           <div className="flex gap-3 print:hidden">
