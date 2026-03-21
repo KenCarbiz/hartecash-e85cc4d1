@@ -1636,6 +1636,9 @@ const AdminDashboard = () => {
           {/* Comparison */}
           {activeSection === "comparison" && canManageAccess && <ComparisonConfig />}
 
+          {/* Locations */}
+          {activeSection === "locations" && canManageAccess && <LocationManagement />}
+
           {/* Follow-Ups */}
           {activeSection === "follow-ups" && <FollowUpLog />}
 
