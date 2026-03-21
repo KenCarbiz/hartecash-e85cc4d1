@@ -551,7 +551,7 @@ const OfferPage = () => {
         </div>
       )}
 
-      <Link to={`/deal/${token}`}>
+      <Link to={`/deal/${token}${activeTab === "trade" ? "?mode=trade" : ""}`}>
         <Button className="w-full py-5 text-base font-bold bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg shadow-accent/20 gap-2">
           <CheckCircle className="w-5 h-5" />
           Accept & Lock In Your Price

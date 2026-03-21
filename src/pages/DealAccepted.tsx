@@ -25,6 +25,8 @@ interface DealSubmission {
   offered_price: number | null;
   estimated_offer_low: number | null;
   estimated_offer_high: number | null;
+  bb_tradein_avg: number | null;
+  zip: string | null;
   token: string;
   created_at: string | null;
 }
