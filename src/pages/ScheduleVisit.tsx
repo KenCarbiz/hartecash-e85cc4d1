@@ -319,7 +319,6 @@ const ScheduleVisit = () => {
                 <Select
                   value={form.store_location}
                   onValueChange={(v) => handleChange("store_location", v)}
-                  required
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select a store location" />
