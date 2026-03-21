@@ -568,12 +568,12 @@ const OfferPage = () => {
     </motion.div>
   );
 
-  /* ─── Custom Print Layout (one 8.5x11 page) ─── */
-  const isTrade = s.loan_status === "Trade-In";
+  // Print uses activeTab to determine sell vs trade display
   const isLeaseBuyout = s.loan_status === "Lease Buyout";
-  const displayValue = isTrade ? tradeInValue : cashOffer;
-  const displayValueLow = isTrade ? tradeInValueLow : estimateLow;
-  const displayLabel = isTrade
+  const printIsTrade = activeTab === "trade";
+  const printDisplayValue = printIsTrade ? tradeInValue : cashOffer;
+  const printDisplayValueLow = printIsTrade ? tradeInValueLow : estimateLow;
+  const printDisplayLabel = printIsTrade
     ? "Trade-In Total Value"
     : isLeaseBuyout
     ? "Lease Buyout Cash Offer"
@@ -583,217 +583,205 @@ const OfferPage = () => {
 
   const PrintLayout = (
     <div className="hidden print:block print-offer-layout">
-      {/* Header bar */}
-      <div className="flex items-center justify-between border-b-2 border-primary pb-3 mb-4">
-        <div className="flex items-center gap-3">
-          <img src={config.logo_url || config.logo_white_url || harteLogoFallback} alt={config.dealership_name || "Dealership"} className="h-9 w-auto brightness-0" />
-          <div>
-            <p className="text-[10px] text-muted-foreground leading-tight">Vehicle Purchase Program</p>
-            <p className="text-[10px] text-muted-foreground">
+      {/* Premium Header */}
+      <div className="flex items-center justify-between pb-4 mb-5 border-b-[3px] border-primary">
+        <div className="flex items-center gap-4">
+          <img src={config.logo_url || config.logo_white_url || harteLogoFallback} alt={config.dealership_name || "Dealership"} className="h-11 w-auto brightness-0" />
+          <div className="border-l-2 border-border pl-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">Vehicle Purchase Program</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
               {createdDate?.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
             </p>
           </div>
         </div>
         <div className="text-right">
-          <p className="text-xs font-semibold text-foreground">Prepared for</p>
-          <p className="text-sm font-bold text-foreground">{s.name || "Customer"}</p>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Prepared for</p>
+          <p className="text-base font-bold text-foreground">{s.name || "Customer"}</p>
         </div>
       </div>
 
-      {/* Main content: 2-column */}
-      <div className="grid grid-cols-5 gap-5 mb-4">
-        {/* Left: Vehicle Image + Details */}
-        <div className="col-span-2">
-          {/* Vehicle image placeholder for print */}
+      {/* Hero: Offer + Vehicle side by side */}
+      <div className="grid grid-cols-2 gap-6 mb-5">
+        {/* Vehicle Image — large, full width of left column */}
+        <div>
           {s.vehicle_year && s.vehicle_make && s.vehicle_model && (
-            <div className="mb-3">
+            <div className="rounded-xl overflow-hidden border border-border bg-muted/30">
               <VehicleImage
                 year={s.vehicle_year}
                 make={s.vehicle_make}
                 model={s.vehicle_model}
                 selectedColor={s.exterior_color || ""}
-                compact
               />
             </div>
           )}
-
-          {/* Vehicle Details Card */}
-          <div className="border border-border rounded-lg p-3 mb-3">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Vehicle Details</p>
-            <div className="space-y-1.5 text-xs">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Vehicle</span>
-                <span className="font-semibold text-foreground">{vehicleStr}</span>
-              </div>
-              {s.vin && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">VIN</span>
-                  <span className="font-mono font-semibold text-foreground text-[10px]">{s.vin}</span>
-                </div>
-              )}
-              {s.mileage && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Mileage</span>
-                  <span className="font-semibold">{Number(s.mileage).toLocaleString()} mi</span>
-                </div>
-              )}
-              {s.exterior_color && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Exterior Color</span>
-                  <span className="font-semibold">{s.exterior_color}</span>
-                </div>
-              )}
-              {s.overall_condition && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Reported Condition</span>
-                  <span className="font-semibold capitalize">{s.overall_condition}</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Condition Summary */}
-          {condition && (
-            <div className="border border-border rounded-lg p-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Condition Summary</p>
-              <div className="space-y-1 text-xs">
-                {condition.accidents && (
-                  <div className="flex items-center gap-1.5">
-                    {condition.accidents.toLowerCase().includes("no") ? (
-                      <CheckCircle className="w-3 h-3 text-success shrink-0" />
-                    ) : (
-                      <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0" />
-                    )}
-                    <span>{condition.accidents}</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-1.5">
-                  {(!condition.exterior_damage || condition.exterior_damage.length === 0) ? (
-                    <>
-                      <CheckCircle className="w-3 h-3 text-success shrink-0" />
-                      <span>No exterior damage</span>
-                    </>
-                  ) : (
-                    <>
-                      <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0" />
-                      <span className="capitalize">{condition.exterior_damage.join(", ")}</span>
-                    </>
-                  )}
-                </div>
-                <div className="flex items-center gap-1.5">
-                  {(!condition.interior_damage || condition.interior_damage.length === 0) ? (
-                    <>
-                      <CheckCircle className="w-3 h-3 text-success shrink-0" />
-                      <span>No interior damage</span>
-                    </>
-                  ) : (
-                    <>
-                      <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0" />
-                      <span className="capitalize">{condition.interior_damage.join(", ")}</span>
-                    </>
-                  )}
-                </div>
-                <div className="flex items-center gap-1.5">
-                  {(!condition.mechanical_issues || condition.mechanical_issues.length === 0) ? (
-                    <>
-                      <CheckCircle className="w-3 h-3 text-success shrink-0" />
-                      <span>No mechanical issues</span>
-                    </>
-                  ) : (
-                    <>
-                      <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0" />
-                      <span className="capitalize">{condition.mechanical_issues.join(", ")}</span>
-                    </>
-                  )}
-                </div>
-                {condition.num_keys && (
-                  <div className="flex items-center gap-1.5">
-                    <CheckCircle className="w-3 h-3 text-success shrink-0" />
-                    <span>{condition.num_keys} keys</span>
-                  </div>
-                )}
-                {condition.tires_replaced && (
-                  <div className="flex items-center gap-1.5">
-                    {condition.tires_replaced.toLowerCase() === "yes" ? (
-                      <CheckCircle className="w-3 h-3 text-success shrink-0" />
-                    ) : (
-                      <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0" />
-                    )}
-                    <span>Tires {condition.tires_replaced.toLowerCase() === "yes" ? "replaced" : "not replaced"}</span>
-                  </div>
-                )}
-                {condition.smoked_in && (
-                  <div className="flex items-center gap-1.5">
-                    {condition.smoked_in.toLowerCase() === "no" ? (
-                      <CheckCircle className="w-3 h-3 text-success shrink-0" />
-                    ) : (
-                      <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0" />
-                    )}
-                    <span>{condition.smoked_in === "No" ? "Non-smoker" : "Smoked in"}</span>
-                  </div>
-                )}
-              </div>
-            </div>
+          <p className="text-sm font-bold text-foreground mt-2">{vehicleStr}</p>
+          {s.vin && (
+            <p className="text-[10px] font-mono text-muted-foreground">VIN: {s.vin}</p>
           )}
         </div>
 
-        {/* Right: Offer Presentation */}
-        <div className="col-span-3">
-          {/* Big offer card */}
-          <div className="border-2 border-primary rounded-xl p-5 mb-4 text-center">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-              {isEstimate ? `Estimated ${displayLabel}` : displayLabel}
+        {/* Offer Card */}
+        <div className="border-2 border-primary rounded-xl p-5 flex flex-col justify-center">
+          {/* Offer type badge */}
+          <div className="flex justify-center mb-2">
+            <span className="text-[9px] font-bold uppercase tracking-[0.2em] bg-primary/10 text-primary px-3 py-1 rounded-full">
+              {printIsTrade ? "Trade-In Offer" : "Cash Offer"}
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground text-center mb-1">
+            {isEstimate ? `Estimated ${printDisplayLabel}` : printDisplayLabel}
+          </p>
+          <p className="text-[10px] text-muted-foreground text-center mb-2">
+            for your {vehicleStr}
+          </p>
+          {isEstimate ? (
+            <p className="text-3xl font-extrabold text-foreground tracking-tight text-center">
+              ${printDisplayValueLow.toLocaleString("en-US", { maximumFractionDigits: 0 })} – ${printDisplayValue.toLocaleString("en-US", { maximumFractionDigits: 0 })}
             </p>
-            <p className="text-[10px] text-muted-foreground mb-2">
-              for your {vehicleStr}
+          ) : (
+            <p className="text-3xl font-extrabold text-foreground tracking-tight text-center">
+              ${printDisplayValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
-            {isEstimate ? (
-              <p className="text-4xl font-extrabold text-foreground tracking-tight">
-                ${displayValueLow.toLocaleString("en-US", { maximumFractionDigits: 0 })} – ${displayValue.toLocaleString("en-US", { maximumFractionDigits: 0 })}
-              </p>
-            ) : (
-              <p className="text-4xl font-extrabold text-foreground tracking-tight">
-                ${displayValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </p>
-            )}
-            <p className="text-[10px] text-muted-foreground mt-2">
-              {isEstimate ? "Preliminary estimate · Final offer after review" : "Subject to in-person inspection"}
-            </p>
+          )}
+          <p className="text-[10px] text-muted-foreground mt-2 text-center">
+            {isEstimate ? "Preliminary estimate · Final offer after review" : "Subject to in-person inspection"}
+          </p>
 
-            {/* Trade-in breakdown (only for trade-in) */}
-            {isTrade && taxRate > 0 && !isEstimate && (
-              <div className="mt-3 pt-3 border-t border-border space-y-1 text-xs text-left">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Vehicle value</span>
-                  <span className="font-medium">${cashOffer.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{stateName} sales tax credit ({taxPercent}%)</span>
-                  <span className="font-medium text-success">+${taxSavings.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
-                </div>
-                <div className="flex justify-between pt-1 border-t border-border font-bold">
-                  <span>Total Trade-In Value</span>
-                  <span>${tradeInValue.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
-                </div>
+          {/* Trade-in breakdown */}
+          {printIsTrade && taxRate > 0 && !isEstimate && (
+            <div className="mt-3 pt-3 border-t border-border space-y-1 text-xs">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Vehicle value</span>
+                <span className="font-medium">${cashOffer.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">{stateName} tax credit ({taxPercent}%)</span>
+                <span className="font-medium text-success">+${taxSavings.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+              </div>
+              <div className="flex justify-between pt-1 border-t border-border font-bold">
+                <span>Total Trade-In Value</span>
+                <span>${tradeInValue.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Price guarantee */}
+          {createdDate && !isExpired && (
+            <div className="mt-3 pt-2 border-t border-border">
+              <p className="text-[10px] text-muted-foreground flex items-center justify-center gap-1">
+                <ShieldCheck className="w-3 h-3" />
+                Price guaranteed for {daysRemaining} {daysRemaining === 1 ? "day" : "days"}
+                {expiresDate && <span> · expires {expiresDate.toLocaleDateString()}</span>}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Details row: 3-column grid */}
+      <div className="grid grid-cols-3 gap-4 mb-5">
+        {/* Vehicle Details */}
+        <div className="border border-border rounded-lg p-3">
+          <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-2 pb-1.5 border-b border-border">Vehicle Details</p>
+          <div className="space-y-1.5 text-xs">
+            {s.mileage && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Mileage</span>
+                <span className="font-semibold">{Number(s.mileage).toLocaleString()} mi</span>
               </div>
             )}
-
-            {/* Price guarantee */}
-            {createdDate && !isExpired && (
-              <div className="mt-3 pt-2 border-t border-border">
-                <p className="text-[10px] text-muted-foreground flex items-center justify-center gap-1">
-                  <ShieldCheck className="w-3 h-3" />
-                  Price guaranteed for {daysRemaining} {daysRemaining === 1 ? "day" : "days"}
-                  {expiresDate && <span> · expires {expiresDate.toLocaleDateString()}</span>}
-                </p>
+            {s.exterior_color && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Exterior</span>
+                <span className="font-semibold">{s.exterior_color}</span>
+              </div>
+            )}
+            {s.overall_condition && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Condition</span>
+                <span className="font-semibold capitalize">{s.overall_condition}</span>
               </div>
             )}
           </div>
+        </div>
 
-          {/* What to bring / next steps */}
-          <div className="border border-border rounded-lg p-3 mb-4">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">What to Bring to Your Visit</p>
-            <div className="grid grid-cols-2 gap-2 text-xs">
+        {/* Condition Summary */}
+        <div className="border border-border rounded-lg p-3">
+          <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-2 pb-1.5 border-b border-border">Condition Report</p>
+          <div className="space-y-1 text-xs">
+            {condition?.accidents && (
+              <div className="flex items-center gap-1.5">
+                {condition.accidents.toLowerCase().includes("no") ? (
+                  <CheckCircle className="w-3 h-3 text-success shrink-0" />
+                ) : (
+                  <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0" />
+                )}
+                <span>{condition.accidents}</span>
+              </div>
+            )}
+            <div className="flex items-center gap-1.5">
+              {(!condition?.exterior_damage || condition.exterior_damage.length === 0) ? (
+                <>
+                  <CheckCircle className="w-3 h-3 text-success shrink-0" />
+                  <span>No exterior damage</span>
+                </>
+              ) : (
+                <>
+                  <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0" />
+                  <span className="capitalize">{condition.exterior_damage.join(", ")}</span>
+                </>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5">
+              {(!condition?.interior_damage || condition.interior_damage.length === 0) ? (
+                <>
+                  <CheckCircle className="w-3 h-3 text-success shrink-0" />
+                  <span>No interior damage</span>
+                </>
+              ) : (
+                <>
+                  <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0" />
+                  <span className="capitalize">{condition.interior_damage.join(", ")}</span>
+                </>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5">
+              {(!condition?.mechanical_issues || condition.mechanical_issues.length === 0) ? (
+                <>
+                  <CheckCircle className="w-3 h-3 text-success shrink-0" />
+                  <span>No mechanical issues</span>
+                </>
+              ) : (
+                <>
+                  <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0" />
+                  <span className="capitalize">{condition.mechanical_issues.join(", ")}</span>
+                </>
+              )}
+            </div>
+            {condition?.num_keys && (
+              <div className="flex items-center gap-1.5">
+                <CheckCircle className="w-3 h-3 text-success shrink-0" />
+                <span>{condition.num_keys} keys</span>
+              </div>
+            )}
+            {condition?.smoked_in && (
+              <div className="flex items-center gap-1.5">
+                {condition.smoked_in.toLowerCase() === "no" ? (
+                  <CheckCircle className="w-3 h-3 text-success shrink-0" />
+                ) : (
+                  <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0" />
+                )}
+                <span>{condition.smoked_in === "No" ? "Non-smoker" : "Smoked in"}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* What to Bring + QR */}
+        <div className="space-y-3">
+          <div className="border border-border rounded-lg p-3">
+            <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-2 pb-1.5 border-b border-border">Bring to Your Visit</p>
+            <div className="space-y-1.5 text-xs">
               <div className="flex items-center gap-1.5">
                 <CheckCircle className="w-3 h-3 text-primary shrink-0" />
                 <span>Valid driver's license</span>
@@ -810,33 +798,24 @@ const OfferPage = () => {
                 <CheckCircle className="w-3 h-3 text-primary shrink-0" />
                 <span>All vehicle keys</span>
               </div>
-              {(isTrade || s.loan_status === "Sell" || s.loan_status === "Not Sure") && (
-                <div className="flex items-center gap-1.5 col-span-2">
-                  <CheckCircle className="w-3 h-3 text-primary shrink-0" />
-                  <span>Loan payoff letter (if applicable)</span>
-                </div>
-              )}
             </div>
           </div>
 
-          {/* QR Code — single combined */}
-          <div className="border border-border rounded-lg p-4 flex items-center gap-5">
-            <QRCodeSVG value={portalUrl} size={90} level="M" />
+          <div className="border border-border rounded-lg p-3 flex items-center gap-3">
+            <QRCodeSVG value={portalUrl} size={60} level="M" />
             <div className="flex-1">
-              <p className="text-xs font-bold text-foreground mb-1">Upload Photos & Documents</p>
-              <p className="text-[10px] text-muted-foreground leading-relaxed mb-1.5">
-                Scan this QR code with your phone to upload vehicle photos and documents.
-                This will speed up your visit and help you get paid faster.
+              <p className="text-[10px] font-bold text-foreground">Upload Photos</p>
+              <p className="text-[9px] text-muted-foreground leading-relaxed">
+                Scan to upload photos & documents to fast-track your deal.
               </p>
-              <p className="text-[9px] font-mono text-muted-foreground break-all">{portalUrl}</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="border-t border-border pt-2 flex items-center justify-between text-[9px] text-muted-foreground">
-        <p>Offer valid subject to in-person inspection · {config.dealership_name || "Our Dealership"}</p>
+      <div className="border-t-2 border-primary/20 pt-2 flex items-center justify-between text-[9px] text-muted-foreground">
+        <p className="font-medium">Offer valid subject to in-person inspection · {config.dealership_name || "Our Dealership"}</p>
         <p>{config.phone} · {config.address}</p>
       </div>
     </div>
