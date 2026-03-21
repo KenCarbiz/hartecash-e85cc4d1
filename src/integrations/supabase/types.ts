@@ -149,29 +149,38 @@ export type Database = {
       }
       dealership_locations: {
         Row: {
+          address: string | null
           city: string
           created_at: string
           id: string
           is_active: boolean
           name: string
+          show_in_footer: boolean
+          show_in_scheduling: boolean
           sort_order: number
           state: string
         }
         Insert: {
+          address?: string | null
           city: string
           created_at?: string
           id?: string
           is_active?: boolean
           name: string
+          show_in_footer?: boolean
+          show_in_scheduling?: boolean
           sort_order?: number
           state?: string
         }
         Update: {
+          address?: string | null
           city?: string
           created_at?: string
           id?: string
           is_active?: boolean
           name?: string
+          show_in_footer?: boolean
+          show_in_scheduling?: boolean
           sort_order?: number
           state?: string
         }
