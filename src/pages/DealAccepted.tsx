@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useSearchParams, Link } from "react-router-dom";
+import confetti from "canvas-confetti";
 import { supabase } from "@/integrations/supabase/client";
 import { Camera, FileText, CalendarCheck, ArrowRight, Zap, Clock, CheckCircle, Sparkles, ShieldCheck, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
