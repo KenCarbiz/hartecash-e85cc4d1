@@ -288,7 +288,7 @@ const ScheduleVisit = () => {
                     <p className="text-sm text-destructive font-medium py-2">
                       We are closed on Sundays. Please select another date.
                     </p>
-                  ) : (
+                  ) : mounted ? (
                     <Select
                       value={form.preferred_time || undefined}
                       onValueChange={(v) => handleChange("preferred_time", v)}
@@ -305,6 +305,8 @@ const ScheduleVisit = () => {
                         ))}
                       </SelectContent>
                     </Select>
+                  ) : (
+                    <div className="h-10 rounded-md border border-input bg-background" />
                   )}
                   {form.preferred_date && !selectedDateIsSunday && (
                     <p className="text-xs text-muted-foreground">
