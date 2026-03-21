@@ -317,7 +317,7 @@ const ScheduleVisit = () => {
               <div className="space-y-2">
                 <Label htmlFor="store_location">Preferred Location *</Label>
                 <Select
-                  value={form.store_location}
+                  value={form.store_location || undefined}
                   onValueChange={(v) => handleChange("store_location", v)}
                 >
                   <SelectTrigger>
