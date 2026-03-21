@@ -35,7 +35,18 @@ const DealAccepted = () => {
   const [loading, setLoading] = useState(true);
   const { config } = useSiteConfig();
 
+  // Confetti celebration on mount
   useEffect(() => {
+    const duration = 2500;
+    const end = Date.now() + duration;
+    const frame = () => {
+      confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 }, colors: ["#10b981", "#0056a0", "#e63946"] });
+      confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 }, colors: ["#10b981", "#0056a0", "#e63946"] });
+      if (Date.now() < end) requestAnimationFrame(frame);
+    };
+    frame();
+  }, []);
+
     const fetchData = async () => {
       if (!token) { setLoading(false); return; }
       
