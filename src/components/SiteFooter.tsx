@@ -21,6 +21,7 @@ const SiteFooter = () => {
         .from("dealership_locations" as any)
         .select("id, name, city, state")
         .eq("is_active", true)
+        .eq("show_in_footer", true)
         .order("sort_order");
       if (data) setLocations(data as unknown as DealerLocation[]);
     };

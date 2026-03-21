@@ -5,15 +5,19 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, GripVertical, Save, Loader2, MapPin } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Plus, Trash2, GripVertical, Save, Loader2, MapPin, ChevronDown, ChevronRight } from "lucide-react";
 
 interface Location {
   id: string;
   name: string;
   city: string;
   state: string;
+  address: string;
   sort_order: number;
   is_active: boolean;
+  show_in_footer: boolean;
+  show_in_scheduling: boolean;
 }
 
 const LocationManagement = () => {
@@ -24,6 +28,7 @@ const LocationManagement = () => {
   const [newName, setNewName] = useState("");
   const [newCity, setNewCity] = useState("");
   const [newState, setNewState] = useState("CT");
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
   const fetchLocations = async () => {
     const { data, error } = await supabase
@@ -35,6 +40,14 @@ const LocationManagement = () => {
   };
 
   useEffect(() => { fetchLocations(); }, []);
+
+  const toggleExpanded = (id: string) => {
+    setExpandedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
 
   const addLocation = async () => {
     if (!newName.trim() || !newCity.trim()) {
@@ -54,13 +67,13 @@ const LocationManagement = () => {
     }
   };
 
-  const toggleActive = async (id: string, isActive: boolean) => {
+  const toggleField = async (id: string, field: "is_active" | "show_in_footer" | "show_in_scheduling", current: boolean) => {
     const { error } = await supabase
       .from("dealership_locations" as any)
-      .update({ is_active: !isActive })
+      .update({ [field]: !current })
       .eq("id", id);
     if (!error) {
-      setLocations(prev => prev.map(l => l.id === id ? { ...l, is_active: !isActive } : l));
+      setLocations(prev => prev.map(l => l.id === id ? { ...l, [field]: !current } : l));
     }
   };
 
@@ -85,7 +98,7 @@ const LocationManagement = () => {
     for (const loc of locations) {
       const { error } = await supabase
         .from("dealership_locations" as any)
-        .update({ name: loc.name, city: loc.city, state: loc.state, sort_order: loc.sort_order })
+        .update({ name: loc.name, city: loc.city, state: loc.state, address: loc.address, sort_order: loc.sort_order })
         .eq("id", loc.id);
       if (error) hasError = true;
     }
@@ -123,7 +136,7 @@ const LocationManagement = () => {
         </div>
         <Button onClick={saveAll} disabled={saving} className="gap-2">
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          Save Order
+          Save All
         </Button>
       </div>
 
@@ -132,38 +145,73 @@ const LocationManagement = () => {
         {locations.map((loc, index) => (
           <div
             key={loc.id}
-            className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${loc.is_active ? "bg-card border-border" : "bg-muted/50 border-border/50 opacity-60"}`}
+            className={`rounded-lg border transition-colors ${loc.is_active ? "bg-card border-border" : "bg-muted/50 border-border/50 opacity-60"}`}
           >
-            <div className="flex flex-col gap-0.5">
-              <button onClick={() => moveUp(index)} disabled={index === 0} className="text-muted-foreground hover:text-foreground disabled:opacity-30 text-xs">▲</button>
-              <GripVertical className="w-4 h-4 text-muted-foreground/40" />
-              <button onClick={() => moveDown(index)} disabled={index === locations.length - 1} className="text-muted-foreground hover:text-foreground disabled:opacity-30 text-xs">▼</button>
+            {/* Main row */}
+            <div className="flex items-center gap-3 p-3">
+              <div className="flex flex-col gap-0.5">
+                <button onClick={() => moveUp(index)} disabled={index === 0} className="text-muted-foreground hover:text-foreground disabled:opacity-30 text-xs">▲</button>
+                <GripVertical className="w-4 h-4 text-muted-foreground/40" />
+                <button onClick={() => moveDown(index)} disabled={index === locations.length - 1} className="text-muted-foreground hover:text-foreground disabled:opacity-30 text-xs">▼</button>
+              </div>
+              <div className="flex-1 grid grid-cols-3 gap-2">
+                <Input
+                  value={loc.name}
+                  onChange={(e) => updateLocation(loc.id, "name", e.target.value)}
+                  placeholder="Location name"
+                  className="text-sm"
+                />
+                <Input
+                  value={loc.city}
+                  onChange={(e) => updateLocation(loc.id, "city", e.target.value)}
+                  placeholder="City"
+                  className="text-sm"
+                />
+                <Input
+                  value={loc.state}
+                  onChange={(e) => updateLocation(loc.id, "state", e.target.value)}
+                  placeholder="State"
+                  className="text-sm w-20"
+                />
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5" title="Active">
+                  <Label className="text-[10px] text-muted-foreground">Active</Label>
+                  <Switch checked={loc.is_active} onCheckedChange={() => toggleField(loc.id, "is_active", loc.is_active)} />
+                </div>
+                <div className="flex items-center gap-1.5" title="Show in Footer">
+                  <Label className="text-[10px] text-muted-foreground">Footer</Label>
+                  <Switch checked={loc.show_in_footer} onCheckedChange={() => toggleField(loc.id, "show_in_footer", loc.show_in_footer)} />
+                </div>
+                <div className="flex items-center gap-1.5" title="Show in Scheduling">
+                  <Label className="text-[10px] text-muted-foreground">Sched.</Label>
+                  <Switch checked={loc.show_in_scheduling} onCheckedChange={() => toggleField(loc.id, "show_in_scheduling", loc.show_in_scheduling)} />
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => deleteLocation(loc.id)} className="text-destructive hover:text-destructive/80 h-8 w-8">
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
-            <div className="flex-1 grid grid-cols-3 gap-2">
-              <Input
-                value={loc.name}
-                onChange={(e) => updateLocation(loc.id, "name", e.target.value)}
-                placeholder="Location name"
-                className="text-sm"
-              />
-              <Input
-                value={loc.city}
-                onChange={(e) => updateLocation(loc.id, "city", e.target.value)}
-                placeholder="City"
-                className="text-sm"
-              />
-              <Input
-                value={loc.state}
-                onChange={(e) => updateLocation(loc.id, "state", e.target.value)}
-                placeholder="State"
-                className="text-sm w-20"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Switch checked={loc.is_active} onCheckedChange={() => toggleActive(loc.id, loc.is_active)} />
-              <Button variant="ghost" size="icon" onClick={() => deleteLocation(loc.id)} className="text-destructive hover:text-destructive/80 h-8 w-8">
-                <Trash2 className="w-4 h-4" />
-              </Button>
+
+            {/* Collapsible address */}
+            <div className="border-t border-border/50">
+              <button
+                onClick={() => toggleExpanded(loc.id)}
+                className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground hover:text-foreground w-full text-left transition-colors"
+              >
+                {expandedIds.has(loc.id) ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                {loc.address ? "Address: " + loc.address : "Add address…"}
+              </button>
+              {expandedIds.has(loc.id) && (
+                <div className="px-3 pb-3">
+                  <Input
+                    value={loc.address || ""}
+                    onChange={(e) => updateLocation(loc.id, "address", e.target.value)}
+                    placeholder="Full street address (e.g. 123 Main St, Hartford, CT 06103)"
+                    className="text-sm"
+                  />
+                </div>
+              )}
             </div>
           </div>
         ))}

@@ -60,11 +60,12 @@ const ScheduleVisit = () => {
   useEffect(() => {
     const fetchLocations = async () => {
       const { data } = await supabase
-        .from("dealership_locations")
+        .from("dealership_locations" as any)
         .select("id, name, city, state")
         .eq("is_active", true)
+        .eq("show_in_scheduling", true)
         .order("sort_order");
-      if (data) setLocations(data);
+      if (data) setLocations(data as unknown as DealerLocation[]);
     };
     fetchLocations();
   }, []);
