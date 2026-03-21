@@ -874,13 +874,14 @@ const OfferPage = () => {
               <div className="sticky top-6 space-y-5">
                 {/* Vehicle Image */}
                 {s.vehicle_year && s.vehicle_make && s.vehicle_model && (
-                  <VehicleImage
-                    year={s.vehicle_year}
-                    make={s.vehicle_make}
-                    model={s.vehicle_model}
-                    selectedColor={s.exterior_color || ""}
-                    compact
-                  />
+                  <div className="bg-card rounded-xl shadow-lg overflow-hidden">
+                    <VehicleImage
+                      year={s.vehicle_year}
+                      make={s.vehicle_make}
+                      model={s.vehicle_model}
+                      selectedColor={s.exterior_color || ""}
+                    />
+                  </div>
                 )}
 
                 {/* Offer card */}
