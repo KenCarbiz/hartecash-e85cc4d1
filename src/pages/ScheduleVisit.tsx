@@ -313,26 +313,19 @@ const ScheduleVisit = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="store_location">Preferred Location *</Label>
-                {mounted ? (
-                  <Select
-                    value={form.store_location || undefined}
-                    onValueChange={(v) => handleChange("store_location", v)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a store location" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {locations.map((loc) => (
-                        <SelectItem key={loc.id} value={loc.id}>
-                          {loc.name} — {loc.city}, {loc.state}
-                          {loc.show_in_scheduling && loc.address && ` (${loc.address})`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <div className="h-10 rounded-md border border-input bg-background" />
-                )}
+                <select
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  value={form.store_location}
+                  onChange={(e) => handleChange("store_location", e.target.value)}
+                >
+                  <option value="">Select a store location</option>
+                  {locations.map((loc) => (
+                    <option key={loc.id} value={loc.id}>
+                      {loc.name} — {loc.city}, {loc.state}
+                      {loc.show_in_scheduling && loc.address ? ` (${loc.address})` : ""}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="space-y-2">
