@@ -7,7 +7,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import InspectionDisclosure from "@/components/portal/InspectionDisclosure";
-import WhatToExpect from "@/components/portal/WhatToExpect";
 import harteLogoFallback from "@/assets/harte-logo-white.png";
 import PortalSkeleton from "@/components/PortalSkeleton";
 import CalculatingOffer from "@/components/CalculatingOffer";
@@ -196,26 +195,38 @@ const OfferPage = () => {
   /* ─── Shared sub-components rendered inline ─── */
 
   const TabSwitcher = (
-    <div className="flex gap-1.5 bg-muted rounded-xl p-1.5 print:hidden">
+    <div className="relative flex bg-muted/60 rounded-2xl p-1 print:hidden border border-border/50">
+      {/* Animated background pill */}
+      <motion.div
+        className="absolute top-1 bottom-1 rounded-xl bg-gradient-to-r from-primary to-primary/80 shadow-lg shadow-primary/20"
+        layout
+        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+        style={{
+          width: "calc(50% - 4px)",
+          left: activeTab === "sell" ? "4px" : "calc(50% + 0px)",
+        }}
+      />
       <button
         onClick={() => setActiveTab("sell")}
-        className={`flex-1 text-base font-bold py-3 px-4 rounded-lg transition-all ${
+        className={`relative z-10 flex-1 flex items-center justify-center gap-2 text-sm font-bold py-3.5 px-4 rounded-xl transition-colors duration-200 ${
           activeTab === "sell"
-            ? "bg-card text-card-foreground shadow-md"
+            ? "text-primary-foreground"
             : "text-muted-foreground hover:text-card-foreground"
         }`}
       >
-        💵 Sell to Us
+        <DollarSign className="w-4 h-4" />
+        Cash Offer
       </button>
       <button
         onClick={scrollToExplanation}
-        className={`flex-1 text-base font-bold py-3 px-4 rounded-lg transition-all ${
+        className={`relative z-10 flex-1 flex items-center justify-center gap-2 text-sm font-bold py-3.5 px-4 rounded-xl transition-colors duration-200 ${
           activeTab === "trade"
-            ? "bg-card text-card-foreground shadow-md"
+            ? "text-primary-foreground"
             : "text-muted-foreground hover:text-card-foreground"
         }`}
       >
-        🔄 Trade-In Value
+        <TrendingUp className="w-4 h-4" />
+        Trade-In Value
       </button>
     </div>
   );
@@ -862,13 +873,14 @@ const OfferPage = () => {
               <div className="sticky top-6 space-y-5">
                 {/* Vehicle Image */}
                 {s.vehicle_year && s.vehicle_make && s.vehicle_model && (
-                  <VehicleImage
-                    year={s.vehicle_year}
-                    make={s.vehicle_make}
-                    model={s.vehicle_model}
-                    selectedColor={s.exterior_color || ""}
-                    compact
-                  />
+                  <div className="bg-card rounded-xl shadow-lg overflow-hidden">
+                    <VehicleImage
+                      year={s.vehicle_year}
+                      make={s.vehicle_make}
+                      model={s.vehicle_model}
+                      selectedColor={s.exterior_color || ""}
+                    />
+                  </div>
                 )}
 
                 {/* Offer card */}
@@ -933,7 +945,6 @@ const OfferPage = () => {
               {TradeInExplanation}
               {NoTaxBlock}
               
-              <WhatToExpect />
               <p className="text-center text-xs text-muted-foreground">
                 <InspectionDisclosure /> • 🔒 Your information is kept secure
               </p>
@@ -958,13 +969,14 @@ const OfferPage = () => {
         <div className="max-w-lg mx-auto p-6 space-y-5">
           {/* Vehicle Image */}
           {s.vehicle_year && s.vehicle_make && s.vehicle_model && (
-            <VehicleImage
-              year={s.vehicle_year}
-              make={s.vehicle_make}
-              model={s.vehicle_model}
-              selectedColor={s.exterior_color || ""}
-              compact
-            />
+            <div className="bg-card rounded-xl shadow-lg overflow-hidden">
+              <VehicleImage
+                year={s.vehicle_year}
+                make={s.vehicle_make}
+                model={s.vehicle_model}
+                selectedColor={s.exterior_color || ""}
+              />
+            </div>
           )}
 
           {/* Vehicle Summary */}
@@ -1018,7 +1030,7 @@ const OfferPage = () => {
           </div>
 
 
-          <WhatToExpect />
+          
 
           <p className="text-center text-xs text-muted-foreground">
             <InspectionDisclosure /> • 🔒 Your information is kept secure
