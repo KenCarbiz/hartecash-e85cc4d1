@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useSearchParams, Link } from "react-router-dom";
 import confetti from "canvas-confetti";
 import { supabase } from "@/integrations/supabase/client";
-import { Camera, FileText, CalendarCheck, ArrowRight, Zap, Clock, CheckCircle, Sparkles, ShieldCheck, ArrowLeft } from "lucide-react";
+import { Camera, FileText, CalendarCheck, ArrowRight, Zap, Clock, CheckCircle, Sparkles, ShieldCheck, ArrowLeft, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import VehicleImage from "@/components/sell-form/VehicleImage";
@@ -10,6 +10,7 @@ import WhatToExpect from "@/components/portal/WhatToExpect";
 import InspectionDisclosure from "@/components/portal/InspectionDisclosure";
 import harteLogoFallback from "@/assets/harte-logo-white.png";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { getTaxRateFromZip, calcTradeInValue } from "@/lib/salesTax";
 
 interface DealSubmission {
   vehicle_year: string | null;
@@ -24,6 +25,8 @@ interface DealSubmission {
   offered_price: number | null;
   estimated_offer_low: number | null;
   estimated_offer_high: number | null;
+  bb_tradein_avg: number | null;
+  zip: string | null;
   token: string;
   created_at: string | null;
 }
@@ -89,6 +92,14 @@ const DealAccepted = () => {
   const cashOffer = s.offered_price || s.estimated_offer_high || 0;
   const estimateLow = s.estimated_offer_low || 0;
   const isEstimate = !s.offered_price && !!s.estimated_offer_high;
+  const isTradeIn = searchParams.get("mode") === "trade";
+
+  // Trade-in value calculation
+  const taxInfo = s.zip ? getTaxRateFromZip(s.zip) : { state: null, rate: 0 };
+  const taxRate = taxInfo.rate;
+  const tradeInValue = calcTradeInValue(cashOffer, taxRate);
+  const tradeInValueLow = isEstimate ? calcTradeInValue(estimateLow, taxRate) : tradeInValue;
+  const showTradeIn = isTradeIn && taxRate > 0;
 
   const guaranteeDays = config.price_guarantee_days || 8;
   const createdDate = s.created_at ? new Date(s.created_at) : null;
@@ -165,15 +176,35 @@ const DealAccepted = () => {
             </div>
           )}
           <div className="flex-1 text-center md:text-left">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">
-              {isEstimate ? "Estimated Offer" : "Your Locked-In Price"}
-            </p>
-            <p className="text-3xl md:text-4xl font-extrabold text-accent tracking-tight">
-              {isEstimate
-                ? `$${estimateLow.toLocaleString("en-US", { maximumFractionDigits: 0 })} – $${cashOffer.toLocaleString("en-US", { maximumFractionDigits: 0 })}`
-                : `$${cashOffer.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-              }
-            </p>
+            {showTradeIn ? (
+              <>
+                <div className="inline-flex items-center gap-1.5 bg-success/10 text-success text-xs font-semibold px-3 py-1 rounded-full mb-2">
+                  <TrendingUp className="w-3.5 h-3.5" />
+                  Trade-In Value
+                </div>
+                <p className="text-3xl md:text-4xl font-extrabold text-success tracking-tight">
+                  {isEstimate
+                    ? `$${tradeInValueLow.toLocaleString("en-US", { maximumFractionDigits: 0 })} – $${tradeInValue.toLocaleString("en-US", { maximumFractionDigits: 0 })}`
+                    : `$${tradeInValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                  }
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Includes {(taxRate * 100).toFixed(2)}% sales tax credit
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">
+                  {isEstimate ? "Estimated Offer" : "Your Locked-In Price"}
+                </p>
+                <p className="text-3xl md:text-4xl font-extrabold text-accent tracking-tight">
+                  {isEstimate
+                    ? `$${estimateLow.toLocaleString("en-US", { maximumFractionDigits: 0 })} – $${cashOffer.toLocaleString("en-US", { maximumFractionDigits: 0 })}`
+                    : `$${cashOffer.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                  }
+                </p>
+              </>
+            )}
             <p className="font-semibold text-card-foreground mt-1">{vehicleStr}</p>
             {s.mileage && (
               <p className="text-sm text-muted-foreground">{Number(s.mileage).toLocaleString()} miles · {s.overall_condition || "—"} condition</p>
