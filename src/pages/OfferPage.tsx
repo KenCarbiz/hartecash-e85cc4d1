@@ -946,11 +946,12 @@ const OfferPage = () => {
       <div className="lg:hidden print:hidden">
         {/* Floating Sticky Value Box */}
         <div className="sticky top-0 z-30 bg-card/95 backdrop-blur-md border-b border-border shadow-lg print:static print:shadow-none">
-          <div className="max-w-lg mx-auto px-6 py-4">
-            <div className="mb-3">{TabSwitcher}</div>
+          <div className="max-w-lg mx-auto px-6 py-4 space-y-3">
+            {TabSwitcher}
             {OfferDisplay}
             {TradeInBounce}
             {GuaranteeBadge}
+            {AcceptButton}
           </div>
         </div>
 
