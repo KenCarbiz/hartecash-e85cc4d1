@@ -8,6 +8,8 @@ interface DealerLocation {
   name: string;
   city: string;
   state: string;
+  address: string | null;
+  show_in_footer: boolean;
 }
 
 const SiteFooter = () => {
