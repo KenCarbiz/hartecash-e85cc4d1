@@ -21,9 +21,8 @@ const SiteFooter = () => {
     const fetchLocations = async () => {
       const { data } = await supabase
         .from("dealership_locations" as any)
-        .select("id, name, city, state")
+        .select("id, name, city, state, address, show_in_footer")
         .eq("is_active", true)
-        .eq("show_in_footer", true)
         .order("sort_order");
       if (data) setLocations(data as unknown as DealerLocation[]);
     };
