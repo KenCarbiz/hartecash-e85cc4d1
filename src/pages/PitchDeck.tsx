@@ -1368,6 +1368,8 @@ export default function PitchDeck() {
             </motion.div>
           </motion.div>
         </Section>
+        </>
+        )}
 
       </AnimatePresence>
     </div>
