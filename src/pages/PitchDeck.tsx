@@ -3,7 +3,7 @@ import ServiceDriveInlineContent from "@/components/pitch/ServiceDriveInlineCont
 import TradePitchInlineContent from "@/components/pitch/TradePitchInlineContent";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import harteLogo from "@/assets/harte-logo.png";
-import presenterLogo from "@/assets/pitch/pitch-top-logo.png";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 import screenshotLanding from "@/assets/pitch/screenshot-landing.png";
 import screenshotPortal from "@/assets/pitch/screenshot-portal.jpg";
 import screenshotUploadMobile from "@/assets/pitch/screenshot-upload-mobile.jpg";
