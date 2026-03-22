@@ -351,7 +351,7 @@ export default function PitchDeck() {
             <motion.p variants={fadeUp} custom={2} className="text-lg md:text-xl text-white/50 max-w-2xl mx-auto mb-14 leading-relaxed">
               A full-stack, dealer-branded platform that captures, manages, and converts direct consumer vehicle purchases — end to end.
             </motion.p>
-            <motion.div variants={fadeUp} custom={3} className="flex flex-wrap items-center justify-center gap-8 text-sm text-white/40 mb-14">
+            <motion.div variants={fadeUp} custom={3} className="flex flex-wrap items-center justify-center gap-8 text-sm text-white/40 mb-16">
               {[
                 { icon: Zap, label: "Cash in 24 Hours" },
                 { icon: Shield, label: "Enterprise Security" },
