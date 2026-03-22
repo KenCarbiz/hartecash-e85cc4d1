@@ -217,6 +217,7 @@ function ChannelCard({ icon: Icon, title, desc, active, iconColor, onClick }: { 
 
 /* ═══════════════════════════ MAIN ═══════════════════════════ */
 export default function PitchDeck() {
+  const { config } = useSiteConfig();
   const [activeProng, setActiveProng] = useState<"off-street" | "service" | "trade">("off-street");
   const heroRef = useRef<HTMLDivElement>(null);
   const [isPresenting, setIsPresenting] = useState(false);
