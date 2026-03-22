@@ -188,16 +188,30 @@ function MockupFrame({ title, dark, children }: { title: string; dark?: boolean;
 }
 
 /* ─── Acquisition Channel Card ─── */
-function ChannelCard({ icon: Icon, title, desc, active, iconColor }: { icon: any; title: string; desc: string; active?: boolean; iconColor: string }) {
+function ChannelCard({ icon: Icon, title, desc, active, iconColor, onClick }: { icon: any; title: string; desc: string; active?: boolean; iconColor: string; onClick?: () => void }) {
+  const activeColor = iconColor.includes("blue") ? "border-blue-400/50 bg-blue-500/15 ring-2 ring-blue-400/30" 
+    : iconColor.includes("emerald") ? "border-emerald-400/50 bg-emerald-500/15 ring-2 ring-emerald-400/30"
+    : "border-amber-400/50 bg-amber-500/15 ring-2 ring-amber-400/30";
+  const hoverColor = iconColor.includes("blue") ? "hover:border-blue-400/50 hover:bg-blue-500/10" 
+    : iconColor.includes("emerald") ? "hover:border-emerald-400/50 hover:bg-emerald-500/10"
+    : "hover:border-amber-400/50 hover:bg-amber-500/10";
+  const dotColor = iconColor.includes("blue") ? "bg-blue-400" 
+    : iconColor.includes("emerald") ? "bg-emerald-400"
+    : "bg-amber-400";
   return (
-    <div className={`rounded-2xl p-6 ${active ? "bg-white/[0.07] border border-blue-500/30" : "bg-white/5 border border-white/10"} relative`}>
-      {active && <span className="absolute top-3 right-3 w-2.5 h-2.5 rounded-full bg-blue-400 animate-pulse" />}
-      <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${iconColor}`}>
-        <Icon className="w-6 h-6" />
+    <button
+      onClick={onClick}
+      className={`group relative rounded-2xl border backdrop-blur-sm p-8 text-left transition-all duration-300 cursor-pointer ${
+        active ? activeColor : `border-white/10 bg-white/5 ${hoverColor}`
+      }`}
+    >
+      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform ${iconColor}`}>
+        <Icon className="w-7 h-7" />
       </div>
-      <h3 className="font-bold text-lg text-white mb-2">{title}</h3>
+      <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
       <p className="text-sm text-white/50 leading-relaxed">{desc}</p>
-    </div>
+      {active && <span className={`absolute top-3 right-3 w-2.5 h-2.5 rounded-full ${dotColor} animate-pulse`} />}
+    </button>
   );
 }
 
