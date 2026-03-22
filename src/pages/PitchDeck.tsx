@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import ServiceDriveInlineContent from "@/components/pitch/ServiceDriveInlineContent";
 import TradePitchInlineContent from "@/components/pitch/TradePitchInlineContent";
 import { motion, AnimatePresence, useInView } from "framer-motion";
-import harteLogo from "@/assets/harte-logo.png";
+import harteLogo from "@/assets/harte-logo-outline.png";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import screenshotLanding from "@/assets/pitch/screenshot-landing.png";
 import screenshotPortal from "@/assets/pitch/screenshot-portal.jpg";
