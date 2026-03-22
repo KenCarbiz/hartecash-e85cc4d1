@@ -1301,7 +1301,7 @@ export default function PitchDeck() {
             </motion.div>
             <motion.div variants={fadeUp} custom={4} className="mt-10 flex flex-col items-center gap-2">
               <p className="text-sm text-white/30">
-                <a href="tel:2035095054" className="hover:text-white/50 transition">(203) 509-5054</a> · <a href="mailto:ken@ken.cc" className="hover:text-white/50 transition">ken@ken.cc</a>
+                <a href="tel:2035095054" className="hover:text-white/50 transition">(203) 509-5054</a> · <a href="mailto:kenc@hartecars.com" className="hover:text-white/50 transition">kenc@hartecars.com</a>
               </p>
               <a href="/sitemap" className="text-xs text-white/20 hover:text-white/40 transition mt-2">
                 Explore Service Drive & In-Store Trade → <span className="underline">See Full Platform</span>
