@@ -34,6 +34,7 @@ import FollowUpPanel from "@/components/admin/FollowUpPanel";
 import FollowUpLog from "@/components/admin/FollowUpLog";
 import NotificationLog from "@/components/admin/NotificationLog";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface PendingRequest {
   id: string;
@@ -2172,9 +2173,20 @@ const AdminDashboard = () => {
               {(() => {
                 const isAutoPopulated = selected.offered_price != null && selected.estimated_offer_high != null && selected.offered_price === selected.estimated_offer_high;
                 const priceSourceBadge = selected.offered_price != null ? (
-                  <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ml-2 ${isAutoPopulated ? "bg-accent/10 text-accent" : "bg-primary/10 text-primary"}`}>
-                    {isAutoPopulated ? "Auto · Customer Accepted" : "Staff Set"}
-                  </span>
+                  <TooltipProvider delayDuration={200}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ml-2 cursor-help ${isAutoPopulated ? "bg-accent/10 text-accent" : "bg-primary/10 text-primary"}`}>
+                          {isAutoPopulated ? "Auto · Customer Accepted" : "Staff Set"}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-[240px] text-xs">
+                        {isAutoPopulated
+                          ? "This price was automatically set to the top of the estimate range when the customer accepted their offer."
+                          : "This price was manually entered by a manager or admin."}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 ) : null;
                 return canSetPrice ? (
                   <div data-print-section className="bg-muted/40 rounded-lg p-4">
