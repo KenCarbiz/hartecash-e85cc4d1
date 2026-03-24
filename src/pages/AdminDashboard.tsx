@@ -244,9 +244,15 @@ const AdminDashboard = () => {
     if (userRole) {
       fetchSubmissions();
       fetchAppointments();
+      fetchLocations();
       if (canManageAccess) fetchPendingRequests();
     }
   }, [page, userRole]);
+
+  const fetchLocations = async () => {
+    const { data } = await supabase.from("dealership_locations").select("id, name, city, state").eq("is_active", true).order("sort_order");
+    if (data) setDealerLocations(data);
+  };
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
