@@ -4,6 +4,7 @@ import { DollarSign, TrendingUp, CheckCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { getTaxRateFromZip, calcTradeInValue, STATE_NAMES } from "@/lib/salesTax";
+import AcceptedOfferCard from "@/components/portal/AcceptedOfferCard";
 
 interface PortalOfferCardProps {
   offeredPrice: number | null;
