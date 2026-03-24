@@ -38,6 +38,7 @@ interface OfferSubmission {
   vin: string | null;
   created_at: string | null;
   loan_status: string | null;
+  progress_status: string | null;
 }
 
 interface ConditionDetails {
