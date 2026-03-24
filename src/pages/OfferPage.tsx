@@ -343,7 +343,7 @@ const OfferPage = () => {
               </div>
               <div>
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider">VIN</p>
-                <p className="text-sm font-medium font-mono">{s.vin.slice(-8).toUpperCase()}</p>
+                <p className="text-sm font-medium font-mono">{s.vin.toUpperCase()}</p>
               </div>
             </div>
           )}
