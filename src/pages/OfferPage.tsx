@@ -681,9 +681,10 @@ const OfferPage = () => {
   });
 
   // Tech issues
-  const noTech = !condition?.tech_issues || condition.tech_issues.length === 0 || (condition.tech_issues.length === 1 && condition.tech_issues[0] === "none");
+  const techItems = condition?.tech_issues?.filter(v => v !== "none") || [];
+  const noTech = techItems.length === 0;
   conditionItems.push({
-    label: noTech ? "Technology Issues: None" : `Technology Issues: ${condition!.tech_issues!.filter(v => v !== "none").join(", ")}`,
+    label: noTech ? "Technology Issues: None" : `Technology Issues: ${techItems.length} issue${techItems.length > 1 ? "s" : ""}`,
     status: noTech ? "good" : "warn",
     icon: <Search className="w-3.5 h-3.5" />,
     field: "tech_issues",
