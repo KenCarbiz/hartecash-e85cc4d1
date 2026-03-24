@@ -642,9 +642,10 @@ const OfferPage = () => {
   });
 
   // Interior damage
-  const noInteriorDmg = !condition?.interior_damage || condition.interior_damage.length === 0 || (condition.interior_damage.length === 1 && condition.interior_damage[0] === "none");
+  const intItems = condition?.interior_damage?.filter(v => v !== "none") || [];
+  const noInteriorDmg = intItems.length === 0;
   conditionItems.push({
-    label: noInteriorDmg ? "Interior Damage: None" : `Interior Damage: ${condition!.interior_damage!.filter(v => v !== "none").join(", ")}`,
+    label: noInteriorDmg ? "Interior Damage: None" : `Interior Damage: ${intItems.length} issue${intItems.length > 1 ? "s" : ""}`,
     status: noInteriorDmg ? "good" : "warn",
     icon: <CircleDot className="w-3.5 h-3.5" />,
     field: "interior_damage",
