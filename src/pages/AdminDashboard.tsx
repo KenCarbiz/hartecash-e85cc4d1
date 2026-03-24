@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatPhone } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LogOut, Search, Trash2, Eye, ChevronLeft, ChevronRight, UserCheck, UserX, Users, Check, Circle, DollarSign, StickyNote, XCircle, Save, Printer, FileText, QrCode, ExternalLink, ClipboardCheck, Upload, CalendarDays, Plus, Phone, Mail, AlertTriangle, Clock, History, Moon, Sun, ShieldCheck, SlidersHorizontal, Settings, Bell, ListChecks, MessageSquareQuote, Star, BarChart3, Send, PanelLeftClose, PanelLeft, CalendarClock, CheckCircle, Car, Gauge, Palette, Wrench, Key, Wind, Cigarette, CircleDot, Settings2, TrendingUp, Sparkles, Info, Camera } from "lucide-react";
+import { LogOut, Search, Trash2, Eye, ChevronLeft, ChevronRight, UserCheck, UserX, Users, Check, Circle, DollarSign, StickyNote, XCircle, Save, Printer, FileText, QrCode, ExternalLink, ClipboardCheck, Upload, CalendarDays, Plus, Phone, Mail, AlertTriangle, Clock, History, Moon, Sun, ShieldCheck, SlidersHorizontal, Settings, Bell, ListChecks, MessageSquareQuote, Star, BarChart3, Send, PanelLeftClose, PanelLeft, CalendarClock, CheckCircle, Car, Gauge, Palette, Wrench, Key, Wind, Cigarette, CircleDot, Settings2, TrendingUp, Sparkles, Info, Camera, UserPlus, PhoneCall, ClipboardList, Handshake, BadgeCheck, Trophy, type LucideIcon } from "lucide-react";
 import { mapStatusToStepIndex } from "@/components/portal/ProgressSteps";
 import { Checkbox } from "@/components/ui/checkbox";
 import { QRCodeSVG } from "qrcode.react";
