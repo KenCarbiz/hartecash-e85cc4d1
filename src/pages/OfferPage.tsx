@@ -1226,6 +1226,43 @@ const OfferPage = () => {
         </div>
       </div>
 
+      {/* Appointment Details (if scheduled) */}
+      {appointment && (
+        <div className="border-2 border-primary/30 bg-primary/5 rounded-lg p-4 mb-4">
+          <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-primary/20">
+            <CalendarCheck className="w-4 h-4 text-primary" />
+            <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-primary">Scheduled Inspection</p>
+          </div>
+          <div className="grid grid-cols-3 gap-4 text-xs">
+            <div className="flex items-start gap-2">
+              <CalendarCheck className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
+              <div>
+                <p className="text-[9px] text-muted-foreground uppercase tracking-wide">Date</p>
+                <p className="font-semibold text-foreground">
+                  {new Date(appointment.preferred_date + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <Clock className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
+              <div>
+                <p className="text-[9px] text-muted-foreground uppercase tracking-wide">Time</p>
+                <p className="font-semibold text-foreground">{appointment.preferred_time}</p>
+              </div>
+            </div>
+            {appointment.store_location && (
+              <div className="flex items-start gap-2">
+                <MapPin className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-[9px] text-muted-foreground uppercase tracking-wide">Location</p>
+                  <p className="font-semibold text-foreground">{appointment.store_location}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* What to Bring + QR */}
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div className="border border-border rounded-lg p-3">
