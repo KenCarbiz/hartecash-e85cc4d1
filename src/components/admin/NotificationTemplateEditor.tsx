@@ -58,6 +58,7 @@ export default function NotificationTemplateEditor({ open, onOpenChange, trigger
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showVars, setShowVars] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     if (open && defaults) {
