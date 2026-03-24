@@ -707,10 +707,10 @@ const OfferPage = () => {
   const noWindshield = !condition?.windshield_damage || windshieldVal === "none" || windshieldVal === "no" || windshieldVal.includes("no damage") || windshieldVal.includes("no windshield");
   const windshieldLabel = noWindshield
     ? "No Damage"
-    : windshieldVal === "chipped"
-    ? "Chipped"
-    : windshieldVal === "cracked"
+    : windshieldVal.includes("crack") || windshieldVal.includes("major")
     ? "Cracked"
+    : windshieldVal.includes("chip") || windshieldVal.includes("pitting") || windshieldVal.includes("minor")
+    ? "Chipped"
     : condition!.windshield_damage;
   if (condition?.windshield_damage !== undefined) {
     conditionItems.push({
