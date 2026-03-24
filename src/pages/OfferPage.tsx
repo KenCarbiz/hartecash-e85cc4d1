@@ -412,16 +412,25 @@ const OfferPage = () => {
 
   const AcceptButton = (
     <div className="print:hidden space-y-2">
-      <Link to={`/deal/${token}${activeTab === "trade" ? "?mode=trade" : ""}`}>
-        <Button className="w-full py-5 text-base font-bold bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg shadow-accent/20 gap-2 rounded-xl">
+      {hasOfferedPrice ? (
+        <div className="w-full py-3 flex items-center justify-center gap-2 rounded-xl bg-success text-white font-bold text-base">
           <CheckCircle className="w-5 h-5" />
-          Accept & Lock In Your Price
-          <ArrowRight className="w-5 h-5" />
-        </Button>
-      </Link>
-      <p className="text-[11px] text-muted-foreground text-center">
-        Click to lock in your price · No obligation until inspection
-      </p>
+          Offer Accepted
+        </div>
+      ) : (
+        <>
+          <Link to={`/deal/${token}${activeTab === "trade" ? "?mode=trade" : ""}`}>
+            <Button className="w-full py-5 text-base font-bold bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg shadow-accent/20 gap-2 rounded-xl">
+              <CheckCircle className="w-5 h-5" />
+              Accept & Lock In Your Price
+              <ArrowRight className="w-5 h-5" />
+            </Button>
+          </Link>
+          <p className="text-[11px] text-muted-foreground text-center">
+            Click to lock in your price · No obligation until inspection
+          </p>
+        </>
+      )}
     </div>
   );
 
