@@ -31,7 +31,7 @@ const SAMPLE_DATA: Record<string, string> = {
 function replaceSampleData(text: string): string {
   let result = text;
   for (const [key, val] of Object.entries(SAMPLE_DATA)) {
-    result = result.replaceAll(key, val);
+    result = result.split(key).join(val);
   }
   return result;
 }
