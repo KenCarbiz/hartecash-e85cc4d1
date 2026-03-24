@@ -64,6 +64,7 @@ const DEFAULT_CONFIG: SiteConfig = {
   review_request_message: "Thank you for choosing us! We hope you had a great experience selling your vehicle. Would you take a moment to share your feedback? Your review helps other car owners make the right choice.",
   enable_animations: false,
   use_animated_calculating: false,
+  enable_dl_ocr: false,
 };
 
 interface SectionProps {
