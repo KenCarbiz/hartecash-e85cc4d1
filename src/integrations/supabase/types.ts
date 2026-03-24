@@ -928,6 +928,42 @@ export type Database = {
         }
         Relationships: []
       }
+      vehicle_image_cache: {
+        Row: {
+          cache_key: string
+          created_at: string
+          exterior_color: string
+          id: string
+          storage_path: string
+          vehicle_make: string
+          vehicle_model: string
+          vehicle_style: string | null
+          vehicle_year: string
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string
+          exterior_color?: string
+          id?: string
+          storage_path: string
+          vehicle_make: string
+          vehicle_model: string
+          vehicle_style?: string | null
+          vehicle_year: string
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string
+          exterior_color?: string
+          id?: string
+          storage_path?: string
+          vehicle_make?: string
+          vehicle_model?: string
+          vehicle_style?: string | null
+          vehicle_year?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
