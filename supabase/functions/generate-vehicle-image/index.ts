@@ -36,18 +36,32 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Check storage cache first
-    const { data: existing } = await supabase.storage
-      .from("submission-photos")
-      .createSignedUrl(storagePath, 60 * 60 * 24 * 30);
+    // 1. Check the DB cache table first (reliable — only written after successful upload)
+    const { data: cachedRow } = await supabase
+      .from("vehicle_image_cache")
+      .select("storage_path")
+      .eq("cache_key", cacheKey)
+      .maybeSingle();
 
-    if (existing?.signedUrl) {
-      return new Response(JSON.stringify({ image_url: existing.signedUrl, cached: true }), {
-        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
+    if (cachedRow?.storage_path) {
+      const { data: signedData } = await supabase.storage
+        .from("submission-photos")
+        .createSignedUrl(cachedRow.storage_path, 60 * 60 * 24 * 30); // 30 day URL
+
+      if (signedData?.signedUrl) {
+        console.log(`Cache HIT for ${cacheKey}`);
+        return new Response(JSON.stringify({ image_url: signedData.signedUrl, cached: true }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+      // Signed URL failed — file may have been deleted, remove stale cache entry
+      await supabase.from("vehicle_image_cache").delete().eq("cache_key", cacheKey);
+      console.log(`Stale cache entry removed for ${cacheKey}`);
     }
 
-    // Generate image via AI
+    console.log(`Cache MISS for ${cacheKey} — generating image...`);
+
+    // 2. Generate image via AI
     const vehicleDesc = `${year} ${make} ${model}${style ? ` ${style}` : ""}`;
     const colorDesc = color && color.toLowerCase() !== "other" ? color : "white";
     const prompt = `A photorealistic side profile view of a ${vehicleDesc} car in ${colorDesc} color, on a clean solid white background. Professional automotive photography style, studio lighting, sharp details, no text or watermarks. The car should be facing right. The car body color must be clearly ${colorDesc}. Clean isolated vehicle shot suitable for a car dealership website.`;
@@ -97,21 +111,35 @@ serve(async (req) => {
       throw new Error(`All models failed. Last: ${lastError}`);
     }
 
-    // Return the data URL immediately — upload to storage in the background
-    // This saves 1-3 seconds of upload wait time for the user
+    // 3. Upload to storage and register in cache table
     const base64Data = imageDataUrl.replace(/^data:image\/\w+;base64,/, "");
     const imageBytes = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
 
-    // Fire-and-forget: upload to storage for future cache hits
+    // Upload to storage, then record in DB cache (fire-and-forget for speed)
     supabase.storage
       .from("submission-photos")
       .upload(storagePath, imageBytes, {
         contentType: "image/png",
         upsert: true,
       })
-      .then(({ error: uploadErr }) => {
-        if (uploadErr) console.error("Background storage upload failed:", uploadErr);
-        else console.log(`Cached ${storagePath} to storage`);
+      .then(async ({ error: uploadErr }) => {
+        if (uploadErr) {
+          console.error("Storage upload failed:", uploadErr);
+          return;
+        }
+        // Register in vehicle_image_cache table so future lookups are fast & reliable
+        const { error: insertErr } = await supabase.from("vehicle_image_cache").upsert({
+          cache_key: cacheKey,
+          vehicle_year: year,
+          vehicle_make: make,
+          vehicle_model: model,
+          vehicle_style: style || null,
+          exterior_color: colorDesc,
+          storage_path: storagePath,
+        }, { onConflict: "cache_key" });
+
+        if (insertErr) console.error("Cache table insert failed:", insertErr);
+        else console.log(`Cached ${cacheKey} → ${storagePath}`);
       });
 
     // Return immediately with the data URL
