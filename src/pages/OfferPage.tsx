@@ -749,15 +749,16 @@ const OfferPage = () => {
   // Tires
   if (condition?.tires_replaced !== undefined) {
     const tiresVal = (condition.tires_replaced || "").toLowerCase();
-    const tiresGood = tiresVal !== "none" && tiresVal !== "0" && tiresVal !== "no" && tiresVal !== "";
+    const tiresCount = parseInt(tiresVal) || 0;
+    const tiresGood = tiresCount > 0;
     conditionItems.push({
       label: tiresGood ? `Tires Replaced: ${condition.tires_replaced}` : "Tires Replaced: None",
       status: tiresGood ? "good" : "warn",
       icon: <CircleDot className="w-3.5 h-3.5" />,
       field: "tires_replaced",
       editType: "select",
-      editOptions: YES_NO,
-      editValue: condition?.tires_replaced || "no",
+      editOptions: TIRE_OPTIONS,
+      editValue: condition?.tires_replaced || "None",
     });
   }
 
