@@ -629,9 +629,10 @@ const OfferPage = () => {
   });
 
   // Exterior damage
-  const noExteriorDmg = !condition?.exterior_damage || condition.exterior_damage.length === 0 || (condition.exterior_damage.length === 1 && condition.exterior_damage[0] === "none");
+  const extItems = condition?.exterior_damage?.filter(v => v !== "none") || [];
+  const noExteriorDmg = extItems.length === 0;
   conditionItems.push({
-    label: noExteriorDmg ? "Exterior Damage: None" : `Exterior Damage: ${condition!.exterior_damage!.filter(v => v !== "none").join(", ")}`,
+    label: noExteriorDmg ? "Exterior Damage: None" : `Exterior Damage: ${extItems.length} issue${extItems.length > 1 ? "s" : ""}`,
     status: noExteriorDmg ? "good" : "warn",
     icon: <Palette className="w-3.5 h-3.5" />,
     field: "exterior_damage",
@@ -641,9 +642,10 @@ const OfferPage = () => {
   });
 
   // Interior damage
-  const noInteriorDmg = !condition?.interior_damage || condition.interior_damage.length === 0 || (condition.interior_damage.length === 1 && condition.interior_damage[0] === "none");
+  const intItems = condition?.interior_damage?.filter(v => v !== "none") || [];
+  const noInteriorDmg = intItems.length === 0;
   conditionItems.push({
-    label: noInteriorDmg ? "Interior Damage: None" : `Interior Damage: ${condition!.interior_damage!.filter(v => v !== "none").join(", ")}`,
+    label: noInteriorDmg ? "Interior Damage: None" : `Interior Damage: ${intItems.length} issue${intItems.length > 1 ? "s" : ""}`,
     status: noInteriorDmg ? "good" : "warn",
     icon: <CircleDot className="w-3.5 h-3.5" />,
     field: "interior_damage",
@@ -653,9 +655,10 @@ const OfferPage = () => {
   });
 
   // Mechanical issues
-  const noMechanical = !condition?.mechanical_issues || condition.mechanical_issues.length === 0 || (condition.mechanical_issues.length === 1 && condition.mechanical_issues[0] === "none");
+  const mechItems = condition?.mechanical_issues?.filter(v => v !== "none") || [];
+  const noMechanical = mechItems.length === 0;
   conditionItems.push({
-    label: noMechanical ? "Mechanical Issues: None" : `Mechanical Issues: ${condition!.mechanical_issues!.filter(v => v !== "none").join(", ")}`,
+    label: noMechanical ? "Mechanical Issues: None" : `Mechanical Issues: ${mechItems.length} issue${mechItems.length > 1 ? "s" : ""}`,
     status: noMechanical ? "good" : "warn",
     icon: <Wrench className="w-3.5 h-3.5" />,
     field: "mechanical_issues",
@@ -665,9 +668,10 @@ const OfferPage = () => {
   });
 
   // Engine issues
-  const noEngine = !condition?.engine_issues || condition.engine_issues.length === 0 || (condition.engine_issues.length === 1 && condition.engine_issues[0] === "none");
+  const engItems = condition?.engine_issues?.filter(v => v !== "none") || [];
+  const noEngine = engItems.length === 0;
   conditionItems.push({
-    label: noEngine ? "Engine Issues: None" : `Engine Issues: ${condition!.engine_issues!.filter(v => v !== "none").join(", ")}`,
+    label: noEngine ? "Engine Issues: None" : `Engine Issues: ${engItems.length} issue${engItems.length > 1 ? "s" : ""}`,
     status: noEngine ? "good" : "warn",
     icon: <Settings2 className="w-3.5 h-3.5" />,
     field: "engine_issues",
@@ -677,9 +681,10 @@ const OfferPage = () => {
   });
 
   // Tech issues
-  const noTech = !condition?.tech_issues || condition.tech_issues.length === 0 || (condition.tech_issues.length === 1 && condition.tech_issues[0] === "none");
+  const techItems = condition?.tech_issues?.filter(v => v !== "none") || [];
+  const noTech = techItems.length === 0;
   conditionItems.push({
-    label: noTech ? "Technology Issues: None" : `Technology Issues: ${condition!.tech_issues!.filter(v => v !== "none").join(", ")}`,
+    label: noTech ? "Technology Issues: None" : `Technology Issues: ${techItems.length} issue${techItems.length > 1 ? "s" : ""}`,
     status: noTech ? "good" : "warn",
     icon: <Search className="w-3.5 h-3.5" />,
     field: "tech_issues",
