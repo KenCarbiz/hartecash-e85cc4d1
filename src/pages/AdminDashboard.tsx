@@ -119,23 +119,23 @@ const PAGE_SIZE = 20;
 
 // Consolidated 6-step tracker for visual display — two variants based on offer acceptance
 const PROGRESS_STAGES_NOT_ACCEPTED = [
-  { key: "new", label: "New Lead", dbKeys: ["new"] },
-  { key: "contacted", label: "Contacted", dbKeys: ["contacted"] },
-  { key: "inspected", label: "Inspection / Final Appraisal", dbKeys: ["inspection_scheduled", "inspection_completed", "appraisal_completed"] },
-  { key: "price_agreed", label: "Deal Finalized", dbKeys: ["manager_approval", "price_agreed"] },
-  { key: "docs_title", label: "Paperwork Completed", dbKeys: ["title_verified", "ownership_verified"] },
-  { key: "purchase_complete", label: "Purchased", dbKeys: ["purchase_complete"] },
-  { key: "dead_lead", label: "Dead Lead", dbKeys: ["dead_lead"] },
+  { key: "new", label: "New Lead", dbKeys: ["new"], icon: UserPlus as LucideIcon },
+  { key: "contacted", label: "Contacted", dbKeys: ["contacted"], icon: PhoneCall as LucideIcon },
+  { key: "inspected", label: "Inspection / Final Appraisal", dbKeys: ["inspection_scheduled", "inspection_completed", "appraisal_completed"], icon: ClipboardList as LucideIcon },
+  { key: "price_agreed", label: "Deal Finalized", dbKeys: ["manager_approval", "price_agreed"], icon: Handshake as LucideIcon },
+  { key: "docs_title", label: "Paperwork Completed", dbKeys: ["title_verified", "ownership_verified"], icon: BadgeCheck as LucideIcon },
+  { key: "purchase_complete", label: "Purchased", dbKeys: ["purchase_complete"], icon: Trophy as LucideIcon },
+  { key: "dead_lead", label: "Dead Lead", dbKeys: ["dead_lead"], icon: XCircle as LucideIcon },
 ];
 
 const PROGRESS_STAGES_ACCEPTED = [
-  { key: "new", label: "New Lead", dbKeys: ["new"] },
-  { key: "contacted", label: "Offer Accepted", dbKeys: ["contacted"] },
-  { key: "inspected", label: "Inspection / Final Appraisal", dbKeys: ["inspection_scheduled", "inspection_completed", "appraisal_completed"] },
-  { key: "price_agreed", label: "Deal Finalized", dbKeys: ["manager_approval", "price_agreed"] },
-  { key: "docs_title", label: "Paperwork Completed", dbKeys: ["title_verified", "ownership_verified"] },
-  { key: "purchase_complete", label: "Purchased", dbKeys: ["purchase_complete"] },
-  { key: "dead_lead", label: "Dead Lead", dbKeys: ["dead_lead"] },
+  { key: "new", label: "New Lead", dbKeys: ["new"], icon: UserPlus as LucideIcon },
+  { key: "contacted", label: "Offer Accepted", dbKeys: ["contacted"], icon: CheckCircle as LucideIcon },
+  { key: "inspected", label: "Inspection / Final Appraisal", dbKeys: ["inspection_scheduled", "inspection_completed", "appraisal_completed"], icon: ClipboardList as LucideIcon },
+  { key: "price_agreed", label: "Deal Finalized", dbKeys: ["manager_approval", "price_agreed"], icon: Handshake as LucideIcon },
+  { key: "docs_title", label: "Paperwork Completed", dbKeys: ["title_verified", "ownership_verified"], icon: BadgeCheck as LucideIcon },
+  { key: "purchase_complete", label: "Purchased", dbKeys: ["purchase_complete"], icon: Trophy as LucideIcon },
+  { key: "dead_lead", label: "Dead Lead", dbKeys: ["dead_lead"], icon: XCircle as LucideIcon },
 ];
 
 // Helper to get the right stages array for a submission
