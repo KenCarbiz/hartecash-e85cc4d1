@@ -7,10 +7,11 @@ interface ProgressStepsProps {
 }
 
 const STEPS = [
-  { label: "Submitted" },
-  { label: "Under Review" },
-  { label: "Offer Ready" },
-  { label: "Complete" },
+  { label: "Offer Accepted" },
+  { label: "Inspection Done" },
+  { label: "Deal Finalized" },
+  { label: "Paperwork Complete" },
+  { label: "Check Received" },
 ];
 
 const ProgressSteps = ({ currentStageIdx, isComplete }: ProgressStepsProps) => {
@@ -74,16 +75,19 @@ export default ProgressSteps;
 export function mapStatusToStepIndex(mappedStatus: string): number {
   switch (mappedStatus) {
     case "new":
-      return 0;
     case "contacted":
-      return 1;
     case "offer_made":
+      return 0;
     case "inspection_scheduled":
     case "inspection_completed":
+      return 1;
     case "price_agreed":
       return 2;
-    case "purchase_complete":
+    case "title_verified":
+    case "ownership_verified":
       return 3;
+    case "purchase_complete":
+      return 4;
     default:
       return 0;
   }
