@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatPhone } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LogOut, Search, Trash2, Eye, ChevronLeft, ChevronRight, UserCheck, UserX, Users, Check, Circle, DollarSign, StickyNote, XCircle, Save, Printer, FileText, QrCode, ExternalLink, ClipboardCheck, Upload, CalendarDays, Plus, Phone, Mail, AlertTriangle, Clock, History, Moon, Sun, ShieldCheck, SlidersHorizontal, Settings, Bell, ListChecks, MessageSquareQuote, Star, BarChart3, Send, PanelLeftClose, PanelLeft, CalendarClock, CheckCircle } from "lucide-react";
+import { LogOut, Search, Trash2, Eye, ChevronLeft, ChevronRight, UserCheck, UserX, Users, Check, Circle, DollarSign, StickyNote, XCircle, Save, Printer, FileText, QrCode, ExternalLink, ClipboardCheck, Upload, CalendarDays, Plus, Phone, Mail, AlertTriangle, Clock, History, Moon, Sun, ShieldCheck, SlidersHorizontal, Settings, Bell, ListChecks, MessageSquareQuote, Star, BarChart3, Send, PanelLeftClose, PanelLeft, CalendarClock, CheckCircle, Car, Gauge, Palette, Wrench, Key, Wind, Cigarette, CircleDot, Settings2, TrendingUp, Sparkles, Info } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { QRCodeSVG } from "qrcode.react";
 import { Textarea } from "@/components/ui/textarea";
@@ -1102,20 +1102,23 @@ const AdminDashboard = () => {
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
-  const DetailRow = ({ label, value }: { label: string; value: string | null | undefined }) => {
+  const DetailRow = ({ label, value, icon }: { label: string; value: string | null | undefined; icon?: React.ReactNode }) => {
     if (!value) return null;
     return (
-      <div className="flex justify-between py-1.5 border-b border-border last:border-0">
-        <span className="text-sm text-muted-foreground">{label}</span>
+      <div className="flex items-center justify-between py-1.5 border-b border-border last:border-0">
+        <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+          {icon && <span className="text-muted-foreground/70">{icon}</span>}
+          {label}
+        </span>
         <span className="text-sm font-medium text-card-foreground text-right max-w-[60%]">{value}</span>
       </div>
     );
   };
 
-  const ArrayDetail = ({ label, value }: { label: string; value: string[] | null | undefined }) => {
+  const ArrayDetail = ({ label, value, icon }: { label: string; value: string[] | null | undefined; icon?: React.ReactNode }) => {
     if (!value || value.length === 0 || (value.length === 1 && value[0] === "none")) return null;
     return (
-      <DetailRow label={label} value={value.join(", ")} />
+      <DetailRow label={label} value={value.join(", ")} icon={icon} />
     );
   };
 
@@ -1719,7 +1722,7 @@ const AdminDashboard = () => {
 
               {/* Contact Card - Editable */}
               <div data-print-section className="bg-muted/40 rounded-lg p-4">
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Contact Information</h3>
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5"><Users className="w-3.5 h-3.5" />Contact Information</h3>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                   <div className="space-y-1">
                     <Label className="text-xs text-muted-foreground">Name</Label>
@@ -1795,7 +1798,9 @@ const AdminDashboard = () => {
 
               {/* Vehicle Card */}
               <div data-print-section className="bg-muted/40 rounded-lg p-4">
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Vehicle Details</h3>
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                  <Car className="w-3.5 h-3.5" />Vehicle Details
+                </h3>
                 {/* Vehicle Image */}
                 {selected.vehicle_year && selected.vehicle_make && selected.vehicle_model && (
                   <div className="mb-4 rounded-lg overflow-hidden bg-gradient-to-b from-muted/30 to-transparent" style={{ aspectRatio: "16/7" }}>
@@ -1809,45 +1814,49 @@ const AdminDashboard = () => {
                   </div>
                 )}
                 <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-                  <DetailRow label="Year/Make/Model" value={`${selected.vehicle_year || ""} ${selected.vehicle_make || ""} ${selected.vehicle_model || ""}`.trim() || null} />
-                  <DetailRow label="VIN" value={selected.vin} />
-                  <DetailRow label="Plate" value={selected.plate} />
-                  <DetailRow label="Mileage" value={selected.mileage} />
-                  <DetailRow label="Exterior Color" value={selected.exterior_color} />
-                  <DetailRow label="Drivetrain" value={selected.drivetrain} />
-                  <DetailRow label="Modifications" value={selected.modifications} />
+                  <DetailRow label="Year/Make/Model" value={`${selected.vehicle_year || ""} ${selected.vehicle_make || ""} ${selected.vehicle_model || ""}`.trim() || null} icon={<Car className="w-3.5 h-3.5" />} />
+                  <DetailRow label="VIN" value={selected.vin} icon={<Info className="w-3.5 h-3.5" />} />
+                  <DetailRow label="Plate" value={selected.plate} icon={<FileText className="w-3.5 h-3.5" />} />
+                  <DetailRow label="Mileage" value={selected.mileage} icon={<Gauge className="w-3.5 h-3.5" />} />
+                  <DetailRow label="Exterior Color" value={selected.exterior_color} icon={<Palette className="w-3.5 h-3.5" />} />
+                  <DetailRow label="Drivetrain" value={selected.drivetrain} icon={<Settings2 className="w-3.5 h-3.5" />} />
+                  <DetailRow label="Modifications" value={selected.modifications} icon={<Settings2 className="w-3.5 h-3.5" />} />
                 </div>
               </div>
 
               {/* Condition Card */}
               <div data-print-section className="bg-muted/40 rounded-lg p-4">
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Condition & History</h3>
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                  <Search className="w-3.5 h-3.5" />Condition & History
+                </h3>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-                  <DetailRow label="Overall" value={selected.overall_condition} />
-                  <DetailRow label="Drivable" value={selected.drivable} />
-                  <ArrayDetail label="Exterior Damage" value={selected.exterior_damage} />
-                  <DetailRow label="Windshield" value={selected.windshield_damage} />
+                  <DetailRow label="Overall" value={selected.overall_condition} icon={<Sparkles className="w-3.5 h-3.5" />} />
+                  <DetailRow label="Drivable" value={selected.drivable} icon={<Car className="w-3.5 h-3.5" />} />
+                  <ArrayDetail label="Exterior Damage" value={selected.exterior_damage} icon={<Palette className="w-3.5 h-3.5" />} />
+                  <DetailRow label="Windshield" value={selected.windshield_damage} icon={<Wind className="w-3.5 h-3.5" />} />
                   <DetailRow label="Moonroof" value={selected.moonroof} />
-                  <ArrayDetail label="Interior Damage" value={selected.interior_damage} />
-                  <ArrayDetail label="Tech Issues" value={selected.tech_issues} />
-                  <ArrayDetail label="Engine Issues" value={selected.engine_issues} />
-                  <ArrayDetail label="Mechanical Issues" value={selected.mechanical_issues} />
-                  <DetailRow label="Accidents" value={selected.accidents} />
-                  <DetailRow label="Smoked In" value={selected.smoked_in} />
-                  <DetailRow label="Tires Replaced" value={selected.tires_replaced} />
-                  <DetailRow label="Keys" value={selected.num_keys} />
+                  <ArrayDetail label="Interior Damage" value={selected.interior_damage} icon={<CircleDot className="w-3.5 h-3.5" />} />
+                  <ArrayDetail label="Tech Issues" value={selected.tech_issues} icon={<Search className="w-3.5 h-3.5" />} />
+                  <ArrayDetail label="Engine Issues" value={selected.engine_issues} icon={<Settings2 className="w-3.5 h-3.5" />} />
+                  <ArrayDetail label="Mechanical Issues" value={selected.mechanical_issues} icon={<Wrench className="w-3.5 h-3.5" />} />
+                  <DetailRow label="Accidents" value={selected.accidents} icon={<Car className="w-3.5 h-3.5" />} />
+                  <DetailRow label="Smoked In" value={selected.smoked_in} icon={<Cigarette className="w-3.5 h-3.5" />} />
+                  <DetailRow label="Tires Replaced" value={selected.tires_replaced} icon={<CircleDot className="w-3.5 h-3.5" />} />
+                  <DetailRow label="Keys" value={selected.num_keys} icon={<Key className="w-3.5 h-3.5" />} />
                 </div>
               </div>
 
               {/* Loan Info */}
               <div data-print-section className="bg-muted/40 rounded-lg p-4">
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Loan & Info</h3>
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                  <DollarSign className="w-3.5 h-3.5" />Loan & Info
+                </h3>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-                  <DetailRow label="Loan Status" value={selected.loan_status} />
-                  <DetailRow label="Loan Company" value={(selected as any).loan_company} />
-                  <DetailRow label="Loan Balance" value={(selected as any).loan_balance} />
-                  <DetailRow label="Loan Payment" value={(selected as any).loan_payment} />
-                  <DetailRow label="Next Step" value={selected.next_step} />
+                  <DetailRow label="Loan Status" value={selected.loan_status} icon={<Info className="w-3.5 h-3.5" />} />
+                  <DetailRow label="Loan Company" value={(selected as any).loan_company} icon={<FileText className="w-3.5 h-3.5" />} />
+                  <DetailRow label="Loan Balance" value={(selected as any).loan_balance} icon={<DollarSign className="w-3.5 h-3.5" />} />
+                  <DetailRow label="Loan Payment" value={(selected as any).loan_payment} icon={<DollarSign className="w-3.5 h-3.5" />} />
+                  <DetailRow label="Next Step" value={selected.next_step} icon={<TrendingUp className="w-3.5 h-3.5" />} />
                   <div className="flex items-center justify-between col-span-2 mt-1">
                     <span className="text-xs text-muted-foreground">Lead Source</span>
                     <Select
