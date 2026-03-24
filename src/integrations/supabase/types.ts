@@ -998,6 +998,7 @@ export type Database = {
         Args: { _token: string }
         Returns: {
           acv_value: number
+          appointment_set: boolean
           bb_tradein_avg: number
           created_at: string
           docs_uploaded: boolean

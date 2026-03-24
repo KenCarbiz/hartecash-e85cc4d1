@@ -1,14 +1,7 @@
 import { useState, useEffect } from "react";
-
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, DollarSign, Car } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import {
-  Car, CheckCircle, Circle, Clock,
-  DollarSign, Inbox, Search, BadgeDollarSign, CalendarCheck,
-  ClipboardCheck, Handshake, PartyPopper, type LucideIcon
-} from "lucide-react";
 import harteLogoFallback from "@/assets/harte-logo.png";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { motion } from "framer-motion";
@@ -24,6 +17,7 @@ import LoanPayoffCard from "@/components/portal/LoanPayoffCard";
 import CommunicationPreferences from "@/components/portal/CommunicationPreferences";
 import InspectionDisclosure from "@/components/portal/InspectionDisclosure";
 import WhatToExpect from "@/components/portal/WhatToExpect";
+import ProgressSteps, { mapStatusToStepIndex } from "@/components/portal/ProgressSteps";
 
 interface PortalSubmission {
   id: string;
@@ -47,23 +41,8 @@ interface PortalSubmission {
   estimated_offer_low: number | null;
   estimated_offer_high: number | null;
   bb_tradein_avg: number | null;
+  appointment_set: boolean;
 }
-
-interface StageInfo {
-  label: string;
-  icon: LucideIcon;
-  helperText: string;
-}
-
-const STAGE_CONFIG: Record<string, StageInfo> = {
-  new: { label: "Submission Received", icon: Inbox, helperText: "We've received your vehicle info and our team will begin reviewing it shortly." },
-  contacted: { label: "Under Review", icon: Search, helperText: "Our team is evaluating your vehicle details. We'll be in touch soon!" },
-  offer_made: { label: "Initial Offer", icon: BadgeDollarSign, helperText: "We've prepared a cash offer for your vehicle. Check it out above!" },
-  inspection_scheduled: { label: "Inspection Scheduled", icon: CalendarCheck, helperText: "Your in-person inspection is booked. Bring your vehicle and we'll take a look!" },
-  inspection_completed: { label: "Inspection Complete", icon: ClipboardCheck, helperText: "We've inspected your vehicle and are finalizing the details." },
-  price_agreed: { label: "Final Offer Accepted", icon: Handshake, helperText: "We've agreed on a price! We're preparing everything for the purchase." },
-  purchase_complete: { label: "Purchase Complete 🎉", icon: PartyPopper, helperText: "Congratulations! The deal is done. Thank you for choosing us!" },
-};
 
 const STAGE_MAPPING: Record<string, string> = {
   title_verified: "inspection_completed",
@@ -73,17 +52,12 @@ const STAGE_MAPPING: Record<string, string> = {
   dead_lead: "new",
 };
 
-const CUSTOMER_VISIBLE_STAGES = [
-  "new", "contacted", "offer_made", "inspection_scheduled", "inspection_completed",
-  "price_agreed", "purchase_complete",
-];
-
 const LOAN_STATUS_LABELS: Record<string, string> = {
-  "paid_off": "Paid Off",
-  "has_loan": "Has Loan",
-  "sell": "Looking to Sell",
-  "trade": "Looking to Trade",
-  "lease": "Lease",
+  paid_off: "Paid Off",
+  has_loan: "Has Loan",
+  sell: "Looking to Sell",
+  trade: "Looking to Trade",
+  lease: "Lease",
 };
 
 const CustomerPortal = () => {
@@ -94,16 +68,16 @@ const CustomerPortal = () => {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const fetch = async () => {
+    const fetchData = async () => {
       if (!token) { setError("Invalid link."); setLoading(false); return; }
       const minDelay = new Promise(r => setTimeout(r, 1200));
-      const fetchData = supabase.rpc("get_submission_portal", { _token: token });
-      const [, { data, error: err }] = await Promise.all([minDelay, fetchData]);
+      const query = supabase.rpc("get_submission_portal", { _token: token });
+      const [, { data, error: err }] = await Promise.all([minDelay, query]);
       if (err || !data || data.length === 0) setError("Submission not found. Please check your link.");
-      else setSubmission(data[0] as PortalSubmission);
+      else setSubmission(data[0] as unknown as PortalSubmission);
       setLoading(false);
     };
-    fetch();
+    fetchData();
   }, [token]);
 
   if (loading) return <PortalSkeleton />;
@@ -127,11 +101,11 @@ const CustomerPortal = () => {
   const vehicleStr = [s.vehicle_year, s.vehicle_make, s.vehicle_model].filter(Boolean).join(" ");
   const firstName = s.name?.split(" ")[0] || "";
   let mappedStatus = STAGE_MAPPING[s.progress_status] || s.progress_status;
-  if (mappedStatus === "contacted" && s.offered_price) {
-    mappedStatus = "offer_made";
-  }
-  const currentStageIdx = CUSTOMER_VISIBLE_STAGES.indexOf(mappedStatus);
+  if (mappedStatus === "contacted" && s.offered_price) mappedStatus = "offer_made";
+  const stepIdx = mapStatusToStepIndex(mappedStatus);
   const isComplete = mappedStatus === "purchase_complete";
+
+  const scheduleLink = `/schedule?token=${s.token}&vehicle=${encodeURIComponent(vehicleStr)}&name=${encodeURIComponent(s.name || "")}&email=${encodeURIComponent(s.email || "")}&phone=${encodeURIComponent(s.phone || "")}`;
 
   /* ─── Shared blocks ─── */
 
@@ -151,13 +125,10 @@ const CustomerPortal = () => {
               </p>
               <p className="text-3xl md:text-4xl font-extrabold text-accent-foreground">
                 {s.offered_price
-                  ? `$${s.offered_price.toLocaleString('en-US', { maximumFractionDigits: 0 })}`
-                  : `$${s.estimated_offer_low?.toLocaleString('en-US', { maximumFractionDigits: 0 })} – $${s.estimated_offer_high?.toLocaleString('en-US', { maximumFractionDigits: 0 })}`
-                }
+                  ? `$${s.offered_price.toLocaleString("en-US", { maximumFractionDigits: 0 })}`
+                  : `$${s.estimated_offer_low?.toLocaleString("en-US", { maximumFractionDigits: 0 })} – $${s.estimated_offer_high?.toLocaleString("en-US", { maximumFractionDigits: 0 })}`}
               </p>
-              <p className="text-accent-foreground/70 text-sm mt-1">
-                Tap to see your full offer with trade-in value →
-              </p>
+              <p className="text-accent-foreground/70 text-sm mt-1">Tap to see your full offer with trade-in value →</p>
             </div>
             <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center shrink-0">
               <DollarSign className="w-7 h-7 text-accent-foreground" />
@@ -166,73 +137,6 @@ const CustomerPortal = () => {
         </div>
       </Link>
     </motion.div>
-  );
-
-  const ProgressTracker = (
-    <div className="bg-card rounded-xl p-5 shadow-lg">
-      <div className="flex items-center gap-2 mb-4">
-        <Clock className="w-5 h-5 text-primary" />
-        <h3 className="font-bold text-card-foreground">Your Progress</h3>
-      </div>
-      <div className="relative pl-6">
-        <div className="absolute left-[11px] top-2 bottom-2 w-0.5 bg-border" />
-        <motion.div
-          className="absolute left-[11px] top-2 w-0.5 bg-success"
-          initial={{ height: 0 }}
-          animate={{ height: currentStageIdx >= 0 ? `${Math.min((currentStageIdx / (CUSTOMER_VISIBLE_STAGES.length - 1)) * 100, 100)}%` : "0%" }}
-          transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
-        />
-        {CUSTOMER_VISIBLE_STAGES.map((stage, i) => {
-          const isStageComplete = currentStageIdx > i || isComplete;
-          const isCurrent = currentStageIdx === i && !isComplete;
-          const config = STAGE_CONFIG[stage];
-          const StageIcon = config?.icon || Circle;
-          return (
-            <motion.div
-              key={stage}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.08, duration: 0.3 }}
-              className="relative flex items-start gap-3 py-2.5"
-            >
-              <div className="absolute -left-6 flex items-center justify-center mt-0.5">
-                {isStageComplete ? (
-                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: i * 0.08 + 0.2, type: "spring" }}>
-                    <CheckCircle className="w-6 h-6 text-success" />
-                  </motion.div>
-                ) : isCurrent ? (
-                  <div className="relative">
-                    <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center">
-                      <StageIcon className="w-3.5 h-3.5 text-white" />
-                    </div>
-                    <span className="absolute inset-0 rounded-full animate-ping bg-accent/30" />
-                  </div>
-                ) : (
-                  <div className="w-6 h-6 rounded-full border-2 border-muted-foreground/20 flex items-center justify-center">
-                    <StageIcon className="w-3.5 h-3.5 text-muted-foreground/30" />
-                  </div>
-                )}
-              </div>
-              <div>
-                <span className={`text-sm ${isCurrent ? "font-bold text-card-foreground" : isStageComplete ? "text-card-foreground" : "text-muted-foreground/60"}`}>
-                  {config?.label || stage}
-                </span>
-                {isCurrent && config?.helperText && (
-                  <motion.p
-                    initial={{ opacity: 0, y: -4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4, duration: 0.3 }}
-                    className="text-xs text-muted-foreground mt-0.5 leading-relaxed"
-                  >
-                    {config.helperText}
-                  </motion.p>
-                )}
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
-    </div>
   );
 
   const VehicleDetails = (vehicleStr || s.mileage || s.exterior_color || s.overall_condition || s.loan_status) && (
@@ -246,28 +150,9 @@ const CustomerPortal = () => {
         {s.mileage && <div className="flex justify-between"><span className="text-muted-foreground">Mileage</span><span className="font-medium">{s.mileage}</span></div>}
         {s.exterior_color && <div className="flex justify-between"><span className="text-muted-foreground">Color</span><span className="font-medium">{s.exterior_color}</span></div>}
         {s.overall_condition && <div className="flex justify-between"><span className="text-muted-foreground">Condition</span><span className="font-medium capitalize">{s.overall_condition}</span></div>}
-        {s.loan_status && (
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Loan</span>
-            <span className="font-medium">{LOAN_STATUS_LABELS[s.loan_status] || s.loan_status}</span>
-          </div>
-        )}
+        {s.loan_status && <div className="flex justify-between"><span className="text-muted-foreground">Loan</span><span className="font-medium">{LOAN_STATUS_LABELS[s.loan_status] || s.loan_status}</span></div>}
       </div>
     </div>
-  );
-
-  const ScheduleVisitCTA = currentStageIdx >= CUSTOMER_VISIBLE_STAGES.indexOf("offer_made") && !isComplete && (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-      <Link to={`/schedule?token=${s.token}&vehicle=${encodeURIComponent(vehicleStr)}&name=${encodeURIComponent(s.name || "")}&email=${encodeURIComponent(s.email || "")}&phone=${encodeURIComponent(s.phone || "")}`}>
-        <Button className="w-full gap-2 text-base py-6 bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg">
-          <CalendarCheck className="w-5 h-5" />
-          Schedule Your Visit
-        </Button>
-      </Link>
-      <p className="text-xs text-muted-foreground text-center mt-1.5">
-        Estimated visit: 15–25 minutes • Book your appointment now
-      </p>
-    </motion.div>
   );
 
   const SubmittedFooter = (
@@ -277,6 +162,25 @@ const CustomerPortal = () => {
       🔒 Your information is kept secure
     </p>
   );
+
+  const checklistProps = {
+    photosUploaded: s.photos_uploaded,
+    docsUploaded: s.docs_uploaded,
+    appointmentSet: s.appointment_set,
+    token: s.token,
+    scheduleLink,
+  };
+
+  const whatsNextProps = {
+    mappedStatus,
+    photosUploaded: s.photos_uploaded,
+    docsUploaded: s.docs_uploaded,
+    token: s.token,
+    vehicleStr,
+    name: s.name || "",
+    email: s.email || "",
+    phone: s.phone || "",
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -291,122 +195,70 @@ const CustomerPortal = () => {
             <img src={config.logo_url || harteLogoFallback} alt={config.dealership_name || "Dealership"} className="h-12 w-auto" />
             <div className="flex-1">
               <h1 className="font-bold text-lg lg:text-xl">{vehicleStr || "My Submission"}</h1>
-              {firstName && (
-                <p className="text-sm opacity-80">Welcome back, {firstName}!</p>
-              )}
+              {firstName && <p className="text-sm opacity-80">Welcome back, {firstName}!</p>}
             </div>
           </div>
         </div>
       </div>
 
+      {/* Progress bar — full width under header */}
+      <div className="max-w-5xl mx-auto px-6 -mt-0 pt-5">
+        <ProgressSteps currentStageIdx={stepIdx} isComplete={isComplete} />
+      </div>
+
       {/* ─── DESKTOP: Two-column layout ─── */}
       <div className="hidden lg:block">
-        <div className="max-w-5xl mx-auto px-6 py-8">
+        <div className="max-w-5xl mx-auto px-6 py-6">
           <div className="grid grid-cols-5 gap-8">
-            {/* Left column — sticky: offer, progress, vehicle info, dealer */}
+            {/* Left column — sticky */}
             <div className="col-span-2">
               <div className="sticky top-6 space-y-5">
                 {OfferCTA}
-                {ProgressTracker}
                 {VehicleDetails}
                 <DealerContactCard />
                 {SubmittedFooter}
               </div>
             </div>
 
-            {/* Right column — actions, content, FAQ */}
+            {/* Right column */}
             <div className="col-span-3 space-y-5">
-              <WhatsNextCard
-                mappedStatus={mappedStatus}
-                photosUploaded={s.photos_uploaded}
-                docsUploaded={s.docs_uploaded}
-                token={s.token}
-                vehicleStr={vehicleStr}
-                name={s.name || ""}
-                email={s.email || ""}
-                phone={s.phone || ""}
-              />
-
-              <CompletionChecklist
-                photosUploaded={s.photos_uploaded}
-                docsUploaded={s.docs_uploaded}
-                token={s.token}
-              />
-
+              <WhatsNextCard {...whatsNextProps} />
+              <CompletionChecklist {...checklistProps} />
               <VehiclePhotos token={s.token} photosUploaded={s.photos_uploaded} />
-
               <PaymentInfoCard />
-
-              {s.loan_status && ["has_loan", "lease"].includes(s.loan_status) && (
-                <LoanPayoffCard />
-              )}
-
-              {currentStageIdx >= CUSTOMER_VISIBLE_STAGES.indexOf("offer_made") && !isComplete && (
+              {s.loan_status && ["has_loan", "lease"].includes(s.loan_status) && <LoanPayoffCard />}
+              {stepIdx >= 2 && !isComplete && (
                 <>
                   <WhatToBringCard />
                   <WhatToExpect />
                 </>
               )}
-
-              {ScheduleVisitCTA}
-
               <PortalFAQ />
-
               <CommunicationPreferences token={s.token} email={s.email} phone={s.phone} />
             </div>
           </div>
         </div>
       </div>
 
-      {/* ─── MOBILE: Single-column layout (original) ─── */}
+      {/* ─── MOBILE: Single-column ─── */}
       <div className="lg:hidden">
         <div className="max-w-lg mx-auto p-6 space-y-5">
-          <WhatsNextCard
-            mappedStatus={mappedStatus}
-            photosUploaded={s.photos_uploaded}
-            docsUploaded={s.docs_uploaded}
-            token={s.token}
-            vehicleStr={vehicleStr}
-            name={s.name || ""}
-            email={s.email || ""}
-            phone={s.phone || ""}
-          />
-
+          <WhatsNextCard {...whatsNextProps} />
           {OfferCTA}
-
-          <CompletionChecklist
-            photosUploaded={s.photos_uploaded}
-            docsUploaded={s.docs_uploaded}
-            token={s.token}
-          />
-
-          {ProgressTracker}
-
+          <CompletionChecklist {...checklistProps} />
           <VehiclePhotos token={s.token} photosUploaded={s.photos_uploaded} />
-
           {VehicleDetails}
-
           <PaymentInfoCard />
-
-          {s.loan_status && ["has_loan", "lease"].includes(s.loan_status) && (
-            <LoanPayoffCard />
-          )}
-
-          {currentStageIdx >= CUSTOMER_VISIBLE_STAGES.indexOf("offer_made") && !isComplete && (
+          {s.loan_status && ["has_loan", "lease"].includes(s.loan_status) && <LoanPayoffCard />}
+          {stepIdx >= 2 && !isComplete && (
             <>
               <WhatToBringCard />
               <WhatToExpect />
             </>
           )}
-
-          {ScheduleVisitCTA}
-
           <PortalFAQ />
-
-              <CommunicationPreferences token={s.token} email={s.email} phone={s.phone} />
-
+          <CommunicationPreferences token={s.token} email={s.email} phone={s.phone} />
           <DealerContactCard />
-
           {SubmittedFooter}
         </div>
       </div>
