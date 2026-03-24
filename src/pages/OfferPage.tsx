@@ -1009,12 +1009,20 @@ const OfferPage = () => {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
-      className="bg-gradient-to-br from-accent/10 via-accent/5 to-transparent border-2 border-accent/30 rounded-xl p-6 print:hidden"
+      className={`rounded-xl p-6 print:hidden ${
+        hasOfferedPrice
+          ? "bg-gradient-to-br from-success/10 via-success/5 to-transparent border-2 border-success/30"
+          : "bg-gradient-to-br from-accent/10 via-accent/5 to-transparent border-2 border-accent/30"
+      }`}
     >
       <div className="text-center mb-4">
-        <h3 className="font-bold text-xl text-card-foreground mb-1">Ready to Lock In Your Price?</h3>
+        <h3 className="font-bold text-xl text-card-foreground mb-1">
+          {hasOfferedPrice ? "Your Offer Has Been Accepted!" : "Ready to Lock In Your Price?"}
+        </h3>
         <p className="text-sm text-muted-foreground">
-          Accept your offer and we'll reach out to get everything set up.
+          {hasOfferedPrice
+            ? "Your price is locked in. Complete your checklist to finalize the deal."
+            : "Accept your offer and we'll reach out to get everything set up."}
         </p>
       </div>
 
@@ -1025,13 +1033,20 @@ const OfferPage = () => {
         </div>
       )}
 
-      <Link to={`/deal/${token}${activeTab === "trade" ? "?mode=trade" : ""}`}>
-        <Button className="w-full py-5 text-base font-bold bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg shadow-accent/20 gap-2">
+      {hasOfferedPrice ? (
+        <div className="w-full py-3 flex items-center justify-center gap-2 rounded-xl bg-success text-white font-bold text-base">
           <CheckCircle className="w-5 h-5" />
-          Accept & Lock In Your Price
-          <ArrowRight className="w-5 h-5" />
-        </Button>
-      </Link>
+          Offer Accepted
+        </div>
+      ) : (
+        <Link to={`/deal/${token}${activeTab === "trade" ? "?mode=trade" : ""}`}>
+          <Button className="w-full py-5 text-base font-bold bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg shadow-accent/20 gap-2">
+            <CheckCircle className="w-5 h-5" />
+            Accept & Lock In Your Price
+            <ArrowRight className="w-5 h-5" />
+          </Button>
+        </Link>
+      )}
 
       <div className="flex items-start gap-2 mt-4 pt-3 border-t border-border/50">
         <Sparkles className="w-4 h-4 text-success shrink-0 mt-0.5" />
