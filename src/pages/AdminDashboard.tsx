@@ -452,8 +452,24 @@ const AdminDashboard = () => {
       setAppointments(prev => prev.map(a => a.id === rescheduleAppt.id ? updatedAppt : a));
       toast({ title: "Rescheduled", description: "Appointment date and time updated." });
 
-      // Send reschedule notification email
-      if (rescheduleAppt.customer_email) {
+      // Send reschedule notification via configurable templates (email + SMS)
+      if (rescheduleAppt.submission_token) {
+        const linkedSub = submissions.find(s => s.token === rescheduleAppt.submission_token);
+        if (linkedSub) {
+          // Fetch location name
+          const loc = locations.find(l => l.id === (rescheduleAppt.store_location || ""));
+          supabase.functions.invoke("send-notification", {
+            body: {
+              trigger_key: "customer_appointment_rescheduled",
+              submission_id: linkedSub.id,
+              appointment_date: rescheduleForm.preferred_date,
+              appointment_time: rescheduleForm.preferred_time,
+              location: loc?.name || rescheduleAppt.store_location || "",
+            },
+          }).catch(console.error);
+        }
+      } else if (rescheduleAppt.customer_email) {
+        // Fallback to legacy reschedule notification for unlinked appointments
         supabase.functions.invoke("send-reschedule-notification", {
           body: {
             appointment: {
@@ -468,9 +484,7 @@ const AdminDashboard = () => {
               store_location: rescheduleAppt.store_location,
             },
           },
-        }).then(({ error: fnErr }) => {
-          if (fnErr) console.error("Reschedule email error:", fnErr);
-        });
+        }).catch(console.error);
       }
 
       setRescheduleAppt(null);
