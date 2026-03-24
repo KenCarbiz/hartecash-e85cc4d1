@@ -111,14 +111,14 @@ const DealAccepted = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-gradient-to-r from-primary via-[hsl(210,100%,30%)] to-primary text-primary-foreground px-6 py-5">
+      <div className="bg-gradient-to-r from-primary via-[hsl(210,100%,30%)] to-primary text-primary-foreground px-6 py-1">
         <div className="max-w-5xl mx-auto">
           <Link to={`/offer/${token}`} className="inline-flex items-center gap-1 text-xs text-primary-foreground/70 hover:text-primary-foreground transition-colors mb-1.5">
             <ArrowLeft className="w-3.5 h-3.5" />
             Back to offer
           </Link>
           <div className="flex items-center gap-3">
-            <img src={config.logo_white_url || harteLogoFallback} alt={config.dealership_name || "Dealership"} className="h-10 w-auto" />
+            <img src={config.logo_white_url || harteLogoFallback} alt={config.dealership_name || "Dealership"} className="h-[70px] w-auto" />
             <div className="flex-1">
               <h1 className="font-bold text-lg lg:text-xl">Deal Accepted!</h1>
               {firstName && <p className="text-sm opacity-80">{firstName}, your price is locked in</p>}
