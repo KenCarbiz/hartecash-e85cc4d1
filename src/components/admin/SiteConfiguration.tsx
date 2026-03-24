@@ -414,6 +414,30 @@ const SiteConfiguration = () => {
         </div>
       </Section>
 
+      {/* AI & Automation */}
+      <Section icon={ScanLine} title="AI & Automation">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
+            <div className="flex-1 mr-3">
+              <Label className="text-sm font-semibold">Driver's License OCR Auto-Fill</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                When a driver's license photo is uploaded (by customer or staff), use AI to extract the customer's name and address and auto-fill empty fields on their record.
+              </p>
+            </div>
+            <Switch
+              checked={config.enable_dl_ocr}
+              onCheckedChange={v => {
+                setConfig(prev => {
+                  const next = { ...prev, enable_dl_ocr: v };
+                  setHasChanges(JSON.stringify(next) !== JSON.stringify(savedConfig));
+                  return next;
+                });
+              }}
+            />
+          </div>
+        </div>
+      </Section>
+
       {/* Preview */}
       <div className="rounded-xl border border-border bg-muted/30 p-4">
         <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Live Preview</h4>
