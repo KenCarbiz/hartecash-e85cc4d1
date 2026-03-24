@@ -161,8 +161,7 @@ const CustomerPortal = () => {
     exteriorColor: s.exterior_color,
     overallCondition: s.overall_condition,
     drivetrain: condition?.drivetrain || null,
-    canEdit,
-    onFieldUpdate: canEdit ? (field: string, value: string) => handleFieldUpdate(field, value) : undefined,
+    canEdit: false,
   };
 
   return (
