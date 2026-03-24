@@ -17,7 +17,7 @@ import { InlineEdit } from "@/components/offer/InlineEdit";
 import { recalculateFromSubmission, type SubmissionCondition } from "@/lib/recalculateOffer";
 import type { OfferSettings, OfferRule } from "@/lib/offerCalculator";
 import { useToast } from "@/hooks/use-toast";
-import AcceptedOfferCard from "@/components/portal/AcceptedOfferCard";
+
 
 interface OfferSubmission {
   id: string;
