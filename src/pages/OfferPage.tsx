@@ -87,6 +87,14 @@ const KEY_OPTIONS = [
   { value: "0", label: "No Keys" },
 ];
 
+const TIRE_OPTIONS = [
+  { value: "None", label: "None" },
+  { value: "1", label: "1 Tire" },
+  { value: "2", label: "2 Tires" },
+  { value: "3", label: "3 Tires" },
+  { value: "4", label: "4 Tires" },
+];
+
 const EXTERIOR_DAMAGE_OPTIONS = [
   { value: "none", label: "None" },
   { value: "dents", label: "Dents" },
@@ -741,23 +749,25 @@ const OfferPage = () => {
   // Tires
   if (condition?.tires_replaced !== undefined) {
     const tiresVal = (condition.tires_replaced || "").toLowerCase();
-    const tiresGood = tiresVal !== "none" && tiresVal !== "0" && tiresVal !== "no" && tiresVal !== "";
+    const tiresCount = parseInt(tiresVal) || 0;
+    const tiresGood = tiresCount > 0;
     conditionItems.push({
       label: tiresGood ? `Tires Replaced: ${condition.tires_replaced}` : "Tires Replaced: None",
       status: tiresGood ? "good" : "warn",
       icon: <CircleDot className="w-3.5 h-3.5" />,
       field: "tires_replaced",
       editType: "select",
-      editOptions: YES_NO,
-      editValue: condition?.tires_replaced || "no",
+      editOptions: TIRE_OPTIONS,
+      editValue: condition?.tires_replaced || "None",
     });
   }
 
   // Keys
   if (condition?.num_keys) {
+    const oneKeyOrNone = condition.num_keys === "1" || condition.num_keys === "0";
     conditionItems.push({
       label: `Keys: ${condition.num_keys} key${condition.num_keys === "1" ? "" : "s"} available`,
-      status: condition.num_keys === "0" ? "warn" : "good",
+      status: oneKeyOrNone ? "warn" : "good",
       icon: <Key className="w-3.5 h-3.5" />,
       field: "num_keys",
       editType: "select",
