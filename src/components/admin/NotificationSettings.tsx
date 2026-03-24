@@ -52,6 +52,8 @@ interface NotificationConfig {
   quiet_hours_enabled: boolean;
   quiet_hours_start: string;
   quiet_hours_end: string;
+  // Per-trigger recipients override
+  staff_trigger_recipients: Record<string, { emails: string[]; phones: string[] }>;
 }
 
 const DEFAULTS: NotificationConfig = {
