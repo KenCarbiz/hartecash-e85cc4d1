@@ -2537,6 +2537,27 @@ const AdminDashboard = () => {
                           performed_by: userRole,
                         });
                       }
+                      // ── Notification triggers ──
+                      if (oldSub) {
+                        // Offer Ready: first time offered_price is set
+                        if (!oldSub.offered_price && selected.offered_price) {
+                          supabase.functions.invoke("send-notification", {
+                            body: { trigger_key: "customer_offer_ready", submission_id: selected.id },
+                          }).catch(console.error);
+                        }
+                        // Offer Increased: offered_price went up
+                        if (oldSub.offered_price && selected.offered_price && selected.offered_price > oldSub.offered_price) {
+                          supabase.functions.invoke("send-notification", {
+                            body: { trigger_key: "customer_offer_increased", submission_id: selected.id },
+                          }).catch(console.error);
+                        }
+                        // Deal Completed: status changed to purchase_complete
+                        if (oldSub.progress_status !== "purchase_complete" && selected.progress_status === "purchase_complete") {
+                          supabase.functions.invoke("send-notification", {
+                            body: { trigger_key: "staff_deal_completed", submission_id: selected.id },
+                          }).catch(console.error);
+                        }
+                      }
                       // Re-fetch submission to get server-set fields like appraised_by
                       const { data: refreshed } = await supabase.from("submissions").select("*").eq("id", selected.id).maybeSingle();
                       if (refreshed) {
