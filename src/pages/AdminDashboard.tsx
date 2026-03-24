@@ -42,14 +42,13 @@ interface PendingRequest {
   created_at: string;
 }
 
-const STORE_LOCATIONS = [
-  { value: "hartford_nissan", label: "Harte Nissan — Hartford, CT" },
-  { value: "hartford_infiniti", label: "Harte Infiniti — Hartford, CT" },
-  { value: "west_haven", label: "George Harte Nissan — West Haven, CT" },
-  { value: "wallingford", label: "George Harte Infiniti — Wallingford, CT" },
-  { value: "old_saybrook", label: "Harte Hyundai — Old Saybrook, CT" },
-];
-
+// Dynamic locations loaded from DB — replaces hardcoded STORE_LOCATIONS
+interface DealerLocation {
+  id: string;
+  name: string;
+  city: string;
+  state: string;
+}
 interface Appointment {
   id: string;
   submission_token: string | null;
