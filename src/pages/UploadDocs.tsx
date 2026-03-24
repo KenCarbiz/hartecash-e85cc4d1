@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { FileText, CheckCircle, Upload, X, Plus, ArrowLeft } from "lucide-react";
+import { FileText, CheckCircle, Upload, X, Plus, ArrowLeft, CircleCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import MobileQRBanner from "@/components/upload/MobileQRBanner";
 import harteLogoWhite from "@/assets/harte-logo-white.png";
@@ -10,10 +10,8 @@ const DOC_TYPES = [
   { key: "drivers_license_front", label: "Driver's License (Front)", emoji: "🪪" },
   { key: "drivers_license_back", label: "Driver's License (Back)", emoji: "🪪" },
   { key: "registration", label: "Registration", emoji: "📋" },
-  { key: "title_inquiry", label: "Title Inquiry by Dealer", emoji: "🔍" },
   { key: "title_front", label: "Title (Front)", emoji: "📄" },
   { key: "title_back", label: "Title (Back)", emoji: "📄" },
-  { key: "payoff_verification", label: "Payoff Verification (if necessary)", emoji: "💰" },
 ];
 
 interface SubmissionInfo {
@@ -49,7 +47,7 @@ const UploadDocs = () => {
     fetchSubmission();
   }, [token]);
 
-  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+  const MAX_FILE_SIZE = 10 * 1024 * 1024;
   const MAX_FILES = 30;
 
   const addFiles = (newFiles: FileList | null) => {
@@ -107,6 +105,18 @@ const UploadDocs = () => {
     setTimeout(() => fileInputRef.current?.click(), 50);
   };
 
+  const filesPerType = (type: string) => files.filter(f => f.docType === type);
+
+  // Completion check: DL front + DL back + (registration OR (title front + title back))
+  const isComplete = useMemo(() => {
+    const hasDLFront = filesPerType("drivers_license_front").length > 0;
+    const hasDLBack = filesPerType("drivers_license_back").length > 0;
+    const hasRegistration = filesPerType("registration").length > 0;
+    const hasTitleFront = filesPerType("title_front").length > 0;
+    const hasTitleBack = filesPerType("title_back").length > 0;
+    return hasDLFront && hasDLBack && (hasRegistration || (hasTitleFront && hasTitleBack));
+  }, [files]);
+
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="animate-spin w-8 h-8 border-4 border-accent border-t-transparent rounded-full" />
@@ -142,8 +152,6 @@ const UploadDocs = () => {
     </div>
   );
 
-  const filesPerType = (type: string) => files.filter(f => f.docType === type);
-
   return (
     <div className="min-h-screen bg-background">
       <div className="bg-primary text-primary-foreground px-6 py-4 mb-0">
@@ -167,15 +175,34 @@ const UploadDocs = () => {
 
         <MobileQRBanner url={`${window.location.origin}/docs/${token}`} />
 
-        <div className="bg-card rounded-xl p-5 shadow-lg mb-6">
-          <h3 className="font-bold text-card-foreground mb-3">Documents needed:</h3>
+        {/* Completion banner */}
+        {isComplete && (
+          <div className="bg-success/10 border border-success/30 rounded-xl p-4 mb-4 flex items-center gap-3">
+            <CircleCheck className="w-6 h-6 text-success flex-shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-success">All required documents added!</p>
+              <p className="text-xs text-muted-foreground">You can still add more if needed.</p>
+            </div>
+          </div>
+        )}
+
+        <div className={`bg-card rounded-xl p-5 shadow-lg mb-6 transition-colors ${isComplete ? "ring-2 ring-success/40" : ""}`}>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-bold text-card-foreground">Documents needed:</h3>
+            {isComplete && <span className="text-xs bg-success/10 text-success font-semibold px-2 py-0.5 rounded-full">Complete ✓</span>}
+          </div>
+          <p className="text-xs text-muted-foreground mb-3">
+            Required: Driver's license (front & back) + either registration or title (front & back)
+          </p>
           <div className="space-y-3">
             {DOC_TYPES.map(dt => {
               const typeFiles = filesPerType(dt.key);
+              const hasFile = typeFiles.length > 0;
               return (
-                <div key={dt.key} className="border border-border rounded-lg p-3">
+                <div key={dt.key} className={`border rounded-lg p-3 transition-colors ${hasFile ? "border-success/40 bg-success/5" : "border-border"}`}>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-card-foreground">
+                    <span className="text-sm font-medium text-card-foreground flex items-center gap-1.5">
+                      {hasFile ? <CheckCircle className="w-4 h-4 text-success" /> : null}
                       {dt.emoji} {dt.label}
                     </span>
                     <Button
@@ -183,7 +210,7 @@ const UploadDocs = () => {
                       size="sm"
                       onClick={() => triggerUpload(dt.key)}
                     >
-                      <Plus className="w-3 h-3 mr-1" /> Add
+                      <Plus className="w-3 h-3 mr-1" /> {hasFile ? "More" : "Add"}
                     </Button>
                   </div>
                   {typeFiles.length > 0 && (
@@ -226,7 +253,11 @@ const UploadDocs = () => {
         <Button
           onClick={handleUpload}
           disabled={files.length === 0 || uploading}
-          className="w-full py-4 bg-accent hover:bg-accent/90 text-accent-foreground text-[17px] font-bold shadow-lg shadow-accent/30"
+          className={`w-full py-4 text-[17px] font-bold shadow-lg ${
+            isComplete
+              ? "bg-success hover:bg-success/90 text-success-foreground shadow-success/30"
+              : "bg-accent hover:bg-accent/90 text-accent-foreground shadow-accent/30"
+          }`}
         >
           {uploading ? "Uploading..." : `Upload ${files.length} Document${files.length !== 1 ? "s" : ""}`}
         </Button>
