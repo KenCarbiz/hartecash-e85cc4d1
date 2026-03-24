@@ -1640,6 +1640,9 @@ const AdminDashboard = () => {
           {/* Locations */}
           {activeSection === "locations" && canManageAccess && <LocationManagement />}
 
+          {/* Vehicle Image Inventory */}
+          {activeSection === "image-inventory" && canManageAccess && <VehicleImageInventory />}
+
           {/* Follow-Ups */}
           {activeSection === "follow-ups" && <FollowUpLog />}
 

@@ -62,6 +62,7 @@ const AdminSidebar = ({
         { key: "testimonials", label: "Testimonials", icon: MessageSquareQuote },
         { key: "comparison", label: "Comparison", icon: BarChart3 },
         { key: "locations", label: "Locations", icon: MapPin },
+        { key: "image-inventory", label: "Image Cache", icon: Car },
       ]
     : [];
 
