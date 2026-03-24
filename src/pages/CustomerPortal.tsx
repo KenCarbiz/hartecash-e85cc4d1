@@ -290,7 +290,6 @@ const CustomerPortal = () => {
                 <PortalVehicleSummary {...vehicleSummaryProps} />
                 <DealerContactCard />
                 <CommunicationPreferences token={s.token} email={s.email} phone={s.phone} />
-                {SubmittedFooter}
               </div>
             </div>
 
@@ -332,8 +331,12 @@ const CustomerPortal = () => {
           <PortalFAQ />
           <DealerContactCard />
           <CommunicationPreferences token={s.token} email={s.email} phone={s.phone} />
-          {SubmittedFooter}
         </div>
+      </div>
+
+      {/* Full-width centered footer */}
+      <div className="max-w-5xl mx-auto px-6 py-6">
+        {SubmittedFooter}
       </div>
     </div>
   );
