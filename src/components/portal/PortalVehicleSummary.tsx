@@ -2,13 +2,6 @@ import { Car, Gauge, Palette, Settings2, CheckCircle, Pencil } from "lucide-reac
 import { motion } from "framer-motion";
 import { InlineEdit } from "@/components/offer/InlineEdit";
 
-const CONDITION_OPTIONS = [
-  { value: "excellent", label: "Excellent" },
-  { value: "good", label: "Good" },
-  { value: "fair", label: "Fair" },
-  { value: "rough", label: "Rough" },
-];
-
 interface PortalVehicleSummaryProps {
   vehicleStr: string;
   vin: string | null;
