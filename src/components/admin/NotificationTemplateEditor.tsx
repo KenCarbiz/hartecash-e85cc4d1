@@ -197,6 +197,19 @@ export default function NotificationTemplateEditor({ open, onOpenChange, trigger
               </CollapsibleContent>
             </Collapsible>
 
+            {/* Preview Toggle */}
+            <div className="flex items-center justify-end">
+              <Button
+                variant={showPreview ? "secondary" : "outline"}
+                size="sm"
+                onClick={() => setShowPreview(!showPreview)}
+                className="text-xs h-7 gap-1.5"
+              >
+                {showPreview ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                {showPreview ? "Hide Preview" : "Show Preview"}
+              </Button>
+            </div>
+
             <Tabs defaultValue="email" className="mt-2">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="email" className="flex items-center gap-1.5">
@@ -212,60 +225,104 @@ export default function NotificationTemplateEditor({ open, onOpenChange, trigger
               </TabsList>
 
               <TabsContent value="email" className="space-y-3 mt-3">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium">Subject Line</Label>
-                  {isEmailCustom && (
-                    <Button variant="ghost" size="sm" onClick={resetEmail} className="text-xs h-7 gap-1 text-muted-foreground">
-                      <RotateCcw className="w-3 h-3" /> Reset to default
-                    </Button>
-                  )}
-                </div>
-                <Input
-                  value={emailSubject}
-                  onChange={e => setEmailSubject(e.target.value)}
-                  placeholder="Email subject..."
-                  className="text-sm"
-                />
-                <div>
-                  <Label className="text-sm font-medium">Email Body</Label>
-                  <Textarea
-                    value={emailBody}
-                    onChange={e => setEmailBody(e.target.value)}
-                    placeholder="Email body..."
-                    className="mt-1.5 text-sm min-h-[180px] font-mono"
-                  />
-                </div>
-                {isEmailCustom && (
-                  <p className="text-[11px] text-muted-foreground italic">
-                    ✏️ Customized — differs from the default template
-                  </p>
+                {showPreview ? (
+                  <div className="space-y-3">
+                    <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Mail className="w-3.5 h-3.5" />
+                        <span>Email Preview</span>
+                        <Badge variant="outline" className="text-[9px]">Sample Data</Badge>
+                      </div>
+                      <div className="rounded-md bg-background border border-border overflow-hidden">
+                        <div className="bg-primary text-primary-foreground px-4 py-3 text-center">
+                          <p className="font-semibold text-sm">{replaceSampleData(emailSubject)}</p>
+                        </div>
+                        <div className="p-4 text-sm leading-relaxed whitespace-pre-wrap">
+                          {replaceSampleData(emailBody)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-medium">Subject Line</Label>
+                      {isEmailCustom && (
+                        <Button variant="ghost" size="sm" onClick={resetEmail} className="text-xs h-7 gap-1 text-muted-foreground">
+                          <RotateCcw className="w-3 h-3" /> Reset to default
+                        </Button>
+                      )}
+                    </div>
+                    <Input
+                      value={emailSubject}
+                      onChange={e => setEmailSubject(e.target.value)}
+                      placeholder="Email subject..."
+                      className="text-sm"
+                    />
+                    <div>
+                      <Label className="text-sm font-medium">Email Body</Label>
+                      <Textarea
+                        value={emailBody}
+                        onChange={e => setEmailBody(e.target.value)}
+                        placeholder="Email body..."
+                        className="mt-1.5 text-sm min-h-[180px] font-mono"
+                      />
+                    </div>
+                    {isEmailCustom && (
+                      <p className="text-[11px] text-muted-foreground italic">
+                        ✏️ Customized — differs from the default template
+                      </p>
+                    )}
+                  </>
                 )}
               </TabsContent>
 
               <TabsContent value="sms" className="space-y-3 mt-3">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium">SMS Message</Label>
-                  {isSmsCustom && (
-                    <Button variant="ghost" size="sm" onClick={resetSms} className="text-xs h-7 gap-1 text-muted-foreground">
-                      <RotateCcw className="w-3 h-3" /> Reset to default
-                    </Button>
-                  )}
-                </div>
-                <Textarea
-                  value={smsBody}
-                  onChange={e => setSmsBody(e.target.value)}
-                  placeholder="SMS message..."
-                  className="text-sm min-h-[100px] font-mono"
-                />
-                <div className="flex items-center justify-between">
-                  <p className="text-[11px] text-muted-foreground">
-                    {smsBody.length} characters
-                    {smsBody.length > 160 && " (may be split into multiple SMS segments)"}
-                  </p>
-                  {isSmsCustom && (
-                    <p className="text-[11px] text-muted-foreground italic">✏️ Customized</p>
-                  )}
-                </div>
+                {showPreview ? (
+                  <div className="space-y-3">
+                    <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Phone className="w-3.5 h-3.5" />
+                        <span>SMS Preview</span>
+                        <Badge variant="outline" className="text-[9px]">Sample Data</Badge>
+                      </div>
+                      <div className="max-w-xs mx-auto">
+                        <div className="rounded-2xl bg-primary/10 border border-primary/20 px-4 py-3 text-sm leading-relaxed">
+                          {replaceSampleData(smsBody)}
+                        </div>
+                        <p className="text-[11px] text-muted-foreground mt-2 text-center">
+                          {replaceSampleData(smsBody).length} characters
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-medium">SMS Message</Label>
+                      {isSmsCustom && (
+                        <Button variant="ghost" size="sm" onClick={resetSms} className="text-xs h-7 gap-1 text-muted-foreground">
+                          <RotateCcw className="w-3 h-3" /> Reset to default
+                        </Button>
+                      )}
+                    </div>
+                    <Textarea
+                      value={smsBody}
+                      onChange={e => setSmsBody(e.target.value)}
+                      placeholder="SMS message..."
+                      className="text-sm min-h-[100px] font-mono"
+                    />
+                    <div className="flex items-center justify-between">
+                      <p className="text-[11px] text-muted-foreground">
+                        {smsBody.length} characters
+                        {smsBody.length > 160 && " (may be split into multiple SMS segments)"}
+                      </p>
+                      {isSmsCustom && (
+                        <p className="text-[11px] text-muted-foreground italic">✏️ Customized</p>
+                      )}
+                    </div>
+                  </>
+                )}
               </TabsContent>
             </Tabs>
           </>
