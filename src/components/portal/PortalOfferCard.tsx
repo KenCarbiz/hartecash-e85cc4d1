@@ -4,6 +4,7 @@ import { DollarSign, TrendingUp, CheckCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { getTaxRateFromZip, calcTradeInValue, STATE_NAMES } from "@/lib/salesTax";
+import AcceptedOfferCard from "@/components/portal/AcceptedOfferCard";
 
 interface PortalOfferCardProps {
   offeredPrice: number | null;
@@ -12,6 +13,8 @@ interface PortalOfferCardProps {
   zip: string | null;
   vehicleStr: string;
   token: string;
+  createdAt: string | null;
+  guaranteeDays: number;
 }
 
 const PortalOfferCard = ({
@@ -21,6 +24,8 @@ const PortalOfferCard = ({
   zip,
   vehicleStr,
   token,
+  createdAt,
+  guaranteeDays,
 }: PortalOfferCardProps) => {
   const [activeTab, setActiveTab] = useState<"sell" | "trade">("sell");
 
@@ -42,34 +47,15 @@ const PortalOfferCard = ({
   // Accepted: simple green card
   if (isAccepted) {
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4, delay: 0.2 }}
-      >
-        <Link to={`/offer/${token}`}>
-          <div className="relative overflow-hidden bg-gradient-to-r from-success to-success/80 rounded-2xl p-6 shadow-xl cursor-pointer hover:shadow-2xl hover:-translate-y-0.5 transition-all">
-            <div className="absolute inset-0 -translate-x-full animate-[shimmer_3s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-1.5 mb-1">
-                  <CheckCircle className="w-4 h-4 text-white/80" />
-                  <p className="text-white/80 text-xs font-semibold uppercase tracking-wider">
-                    Accepted Offer
-                  </p>
-                </div>
-                <p className="text-3xl md:text-4xl font-extrabold text-white">
-                  ${offeredPrice!.toLocaleString("en-US", { maximumFractionDigits: 0 })}
-                </p>
-                <p className="text-white/70 text-sm mt-1">Tap to view full offer details →</p>
-              </div>
-              <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-                <DollarSign className="w-7 h-7 text-white" />
-              </div>
-            </div>
-          </div>
-        </Link>
-      </motion.div>
+      <AcceptedOfferCard
+        offeredPrice={offeredPrice!}
+        zip={zip}
+        vehicleStr={vehicleStr}
+        token={token}
+        createdAt={createdAt}
+        guaranteeDays={guaranteeDays}
+        compact
+      />
     );
   }
 

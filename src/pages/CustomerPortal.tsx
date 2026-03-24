@@ -239,6 +239,8 @@ const CustomerPortal = () => {
     zip: s.zip,
     vehicleStr,
     token: s.token,
+    createdAt: s.created_at,
+    guaranteeDays: config.price_guarantee_days || 8,
   };
 
   const vehicleSummaryProps = {
