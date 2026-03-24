@@ -76,7 +76,10 @@ export function InlineEdit({
         <span className="truncate">{type === "multi-select" && multiValue
           ? (multiValue.length === 0 || (multiValue.length === 1 && multiValue[0] === "none")
             ? "None"
-            : multiValue.filter(v => v !== "none").join(", "))
+            : (() => {
+                const issues = multiValue.filter(v => v !== "none");
+                return `${issues.length} issue${issues.length > 1 ? "s" : ""}`;
+              })())
           : value || "—"}</span>
         <Pencil className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
       </button>
