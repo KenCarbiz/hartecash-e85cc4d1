@@ -935,14 +935,18 @@ const OfferPage = () => {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.5 }}
-        className="bg-card rounded-xl p-5 shadow-lg border-2 border-success/20"
+        className="bg-card rounded-xl shadow-lg overflow-hidden border-2 border-success/20"
       >
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-8 h-8 rounded-full bg-success/10 flex items-center justify-center">
-            <TrendingUp className="w-4 h-4 text-success" />
+        <div className="bg-gradient-to-r from-success/5 to-success/10 px-5 py-3 border-b border-border/50">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-success/10 flex items-center justify-center">
+              <TrendingUp className="w-4 h-4 text-success" />
+            </div>
+            <h3 className="font-bold text-card-foreground">Trade-In Tax Credit Explained</h3>
           </div>
-          <h3 className="font-bold text-card-foreground">Trade-In Tax Credit Explained</h3>
         </div>
+
+        <div className="p-5">
 
         <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
           When you trade in your vehicle toward a new or pre-owned purchase at {config.dealership_name || "our dealership"}, 
@@ -982,6 +986,7 @@ const OfferPage = () => {
             <span className="font-mono text-card-foreground"> ${cashOffer.toLocaleString()} × {(1 + taxRate).toFixed(4)} = ${tradeInValue.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>. 
             Actual tax may vary. Applies when used as trade-in on a new or pre-owned vehicle purchase.
           </p>
+        </div>
         </div>
       </motion.div>
     </div>
