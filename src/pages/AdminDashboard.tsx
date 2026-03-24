@@ -1798,7 +1798,9 @@ const AdminDashboard = () => {
 
               {/* Vehicle Card */}
               <div data-print-section className="bg-muted/40 rounded-lg p-4">
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Vehicle Details</h3>
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                  <Car className="w-3.5 h-3.5" />Vehicle Details
+                </h3>
                 {/* Vehicle Image */}
                 {selected.vehicle_year && selected.vehicle_make && selected.vehicle_model && (
                   <div className="mb-4 rounded-lg overflow-hidden bg-gradient-to-b from-muted/30 to-transparent" style={{ aspectRatio: "16/7" }}>
@@ -1812,33 +1814,35 @@ const AdminDashboard = () => {
                   </div>
                 )}
                 <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-                  <DetailRow label="Year/Make/Model" value={`${selected.vehicle_year || ""} ${selected.vehicle_make || ""} ${selected.vehicle_model || ""}`.trim() || null} />
-                  <DetailRow label="VIN" value={selected.vin} />
-                  <DetailRow label="Plate" value={selected.plate} />
-                  <DetailRow label="Mileage" value={selected.mileage} />
-                  <DetailRow label="Exterior Color" value={selected.exterior_color} />
-                  <DetailRow label="Drivetrain" value={selected.drivetrain} />
-                  <DetailRow label="Modifications" value={selected.modifications} />
+                  <DetailRow label="Year/Make/Model" value={`${selected.vehicle_year || ""} ${selected.vehicle_make || ""} ${selected.vehicle_model || ""}`.trim() || null} icon={<Car className="w-3.5 h-3.5" />} />
+                  <DetailRow label="VIN" value={selected.vin} icon={<Info className="w-3.5 h-3.5" />} />
+                  <DetailRow label="Plate" value={selected.plate} icon={<FileText className="w-3.5 h-3.5" />} />
+                  <DetailRow label="Mileage" value={selected.mileage} icon={<Gauge className="w-3.5 h-3.5" />} />
+                  <DetailRow label="Exterior Color" value={selected.exterior_color} icon={<Palette className="w-3.5 h-3.5" />} />
+                  <DetailRow label="Drivetrain" value={selected.drivetrain} icon={<Settings2 className="w-3.5 h-3.5" />} />
+                  <DetailRow label="Modifications" value={selected.modifications} icon={<Settings2 className="w-3.5 h-3.5" />} />
                 </div>
               </div>
 
               {/* Condition Card */}
               <div data-print-section className="bg-muted/40 rounded-lg p-4">
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Condition & History</h3>
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                  <Search className="w-3.5 h-3.5" />Condition & History
+                </h3>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-                  <DetailRow label="Overall" value={selected.overall_condition} />
-                  <DetailRow label="Drivable" value={selected.drivable} />
-                  <ArrayDetail label="Exterior Damage" value={selected.exterior_damage} />
-                  <DetailRow label="Windshield" value={selected.windshield_damage} />
+                  <DetailRow label="Overall" value={selected.overall_condition} icon={<Sparkles className="w-3.5 h-3.5" />} />
+                  <DetailRow label="Drivable" value={selected.drivable} icon={<Car className="w-3.5 h-3.5" />} />
+                  <ArrayDetail label="Exterior Damage" value={selected.exterior_damage} icon={<Palette className="w-3.5 h-3.5" />} />
+                  <DetailRow label="Windshield" value={selected.windshield_damage} icon={<Wind className="w-3.5 h-3.5" />} />
                   <DetailRow label="Moonroof" value={selected.moonroof} />
-                  <ArrayDetail label="Interior Damage" value={selected.interior_damage} />
-                  <ArrayDetail label="Tech Issues" value={selected.tech_issues} />
-                  <ArrayDetail label="Engine Issues" value={selected.engine_issues} />
-                  <ArrayDetail label="Mechanical Issues" value={selected.mechanical_issues} />
-                  <DetailRow label="Accidents" value={selected.accidents} />
-                  <DetailRow label="Smoked In" value={selected.smoked_in} />
-                  <DetailRow label="Tires Replaced" value={selected.tires_replaced} />
-                  <DetailRow label="Keys" value={selected.num_keys} />
+                  <ArrayDetail label="Interior Damage" value={selected.interior_damage} icon={<CircleDot className="w-3.5 h-3.5" />} />
+                  <ArrayDetail label="Tech Issues" value={selected.tech_issues} icon={<Search className="w-3.5 h-3.5" />} />
+                  <ArrayDetail label="Engine Issues" value={selected.engine_issues} icon={<Settings2 className="w-3.5 h-3.5" />} />
+                  <ArrayDetail label="Mechanical Issues" value={selected.mechanical_issues} icon={<Wrench className="w-3.5 h-3.5" />} />
+                  <DetailRow label="Accidents" value={selected.accidents} icon={<Car className="w-3.5 h-3.5" />} />
+                  <DetailRow label="Smoked In" value={selected.smoked_in} icon={<Cigarette className="w-3.5 h-3.5" />} />
+                  <DetailRow label="Tires Replaced" value={selected.tires_replaced} icon={<CircleDot className="w-3.5 h-3.5" />} />
+                  <DetailRow label="Keys" value={selected.num_keys} icon={<Key className="w-3.5 h-3.5" />} />
                 </div>
               </div>
 
