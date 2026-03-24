@@ -116,6 +116,7 @@ export default function NotificationSettings() {
   const [saving, setSaving] = useState(false);
   const [newEmail, setNewEmail] = useState("");
   const [newPhone, setNewPhone] = useState("");
+  const [editingTemplate, setEditingTemplate] = useState<{ key: string; label: string } | null>(null);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     recipients: true,
     triggers: true,
