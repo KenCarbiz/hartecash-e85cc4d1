@@ -20,18 +20,18 @@ const CompletionChecklist = ({ photosUploaded, docsUploaded, appointmentSet, tok
       actionLabel: "Schedule Now",
     },
     {
-      label: "Vehicle Photos",
-      done: photosUploaded,
-      icon: Camera,
-      link: `/upload/${token}`,
-      actionLabel: "Upload Photos",
-    },
-    {
       label: "Documents",
       done: docsUploaded,
       icon: FileText,
       link: `/docs/${token}`,
       actionLabel: "Upload Documents",
+    },
+    {
+      label: "Vehicle Photos",
+      done: photosUploaded,
+      icon: Camera,
+      link: `/upload/${token}`,
+      actionLabel: "Upload Photos",
     },
   ];
 
