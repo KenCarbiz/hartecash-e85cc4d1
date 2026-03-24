@@ -13,6 +13,13 @@ interface CompletionChecklistProps {
 const CompletionChecklist = ({ photosUploaded, docsUploaded, appointmentSet, token, scheduleLink }: CompletionChecklistProps) => {
   const items = [
     {
+      label: "Schedule Inspection",
+      done: appointmentSet,
+      icon: CalendarCheck,
+      link: scheduleLink,
+      actionLabel: "Schedule Now",
+    },
+    {
       label: "Vehicle Photos",
       done: photosUploaded,
       icon: Camera,
@@ -25,13 +32,6 @@ const CompletionChecklist = ({ photosUploaded, docsUploaded, appointmentSet, tok
       icon: FileText,
       link: `/docs/${token}`,
       actionLabel: "Upload Documents",
-    },
-    {
-      label: "Schedule Inspection",
-      done: appointmentSet,
-      icon: CalendarCheck,
-      link: scheduleLink,
-      actionLabel: "Schedule Now",
     },
   ];
 
