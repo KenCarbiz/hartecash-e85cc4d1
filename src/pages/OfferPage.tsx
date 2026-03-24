@@ -764,9 +764,10 @@ const OfferPage = () => {
 
   // Keys
   if (condition?.num_keys) {
+    const oneKeyOrNone = condition.num_keys === "1" || condition.num_keys === "0";
     conditionItems.push({
       label: `Keys: ${condition.num_keys} key${condition.num_keys === "1" ? "" : "s"} available`,
-      status: condition.num_keys === "0" ? "warn" : "good",
+      status: oneKeyOrNone ? "warn" : "good",
       icon: <Key className="w-3.5 h-3.5" />,
       field: "num_keys",
       editType: "select",
