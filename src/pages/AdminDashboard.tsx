@@ -1005,7 +1005,7 @@ const AdminDashboard = () => {
         </div>
       </div>
       ${makeDocSection("Appraisal Document", appraisalImages)}
-      ${makeDocSection("Driver's License", dlImages)}
+      ${makeDocSection("Driver's License", allDlImages)}
       ${makeDocSection("Title", titleImages)}
       ${makeDocSection("Payoff Documentation", payoffImages)}
     </body></html>`;
