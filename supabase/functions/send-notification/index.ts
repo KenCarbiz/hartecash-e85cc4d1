@@ -43,6 +43,36 @@ const DEFAULT_TEMPLATES: Record<string, { email_subject: string; email_body: str
     email_body: "A deal has been completed.\n\nCustomer: {{customer_name}}\nVehicle: {{vehicle}}\n\nThe purchase has been finalized.",
     sms_body: "✅ Deal completed: {{customer_name}} — {{vehicle}}.",
   },
+  new_submission: {
+    email_subject: "🚗 New Submission — {{customer_name}}",
+    email_body: "A new vehicle submission has come in.\n\nCustomer: {{customer_name}}\nVehicle: {{vehicle}}\nMileage: {{mileage}}\n\nView details in the admin dashboard.",
+    sms_body: "🚗 New submission from {{customer_name}} — {{vehicle}}. Check the dashboard!",
+  },
+  hot_lead: {
+    email_subject: "🔥 Hot Lead — {{customer_name}}",
+    email_body: "A hot lead has been flagged!\n\nCustomer: {{customer_name}}\nVehicle: {{vehicle}}\nMileage: {{mileage}}\n\nThis lead matches high-value criteria. Follow up quickly!",
+    sms_body: "🔥 Hot lead: {{customer_name}} — {{vehicle}}. Follow up ASAP!",
+  },
+  appointment_booked: {
+    email_subject: "📅 New Appointment — {{customer_name}}",
+    email_body: "A new appointment has been booked.\n\nCustomer: {{customer_name}}\nVehicle: {{vehicle}}\nDate: {{appointment_date}}\nTime: {{appointment_time}}\nLocation: {{location}}",
+    sms_body: "📅 New appt: {{customer_name}} — {{vehicle}} on {{appointment_date}} at {{appointment_time}}.",
+  },
+  photos_uploaded: {
+    email_subject: "📸 Photos Uploaded — {{customer_name}}",
+    email_body: "{{customer_name}} has uploaded photos for their {{vehicle}}.\n\nView them in the admin dashboard.",
+    sms_body: "📸 {{customer_name}} uploaded photos for their {{vehicle}}.",
+  },
+  docs_uploaded: {
+    email_subject: "📄 Documents Uploaded — {{customer_name}}",
+    email_body: "{{customer_name}} has uploaded documents for their {{vehicle}}.\n\nView them in the admin dashboard.",
+    sms_body: "📄 {{customer_name}} uploaded documents for their {{vehicle}}.",
+  },
+  status_change: {
+    email_subject: "Status Update — {{customer_name}}",
+    email_body: "A submission status has changed.\n\nCustomer: {{customer_name}}\nVehicle: {{vehicle}}\nNew Status: {{status}}",
+    sms_body: "Status update: {{customer_name}} — {{vehicle}} is now {{status}}.",
+  },
 };
 
 const sanitize = (str: string | null | undefined) =>
