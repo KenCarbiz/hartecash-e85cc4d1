@@ -113,8 +113,6 @@ const CustomerPortal = () => {
   const stepIdx = mapStatusToStepIndex(mappedStatus);
   const isComplete = mappedStatus === "purchase_complete";
 
-  // Can edit only if no manual offered_price (not accepted) and has BB data
-  const canEdit = !s.offered_price && !!s.bb_tradein_avg;
 
   const scheduleLink = `/schedule?token=${s.token}&vehicle=${encodeURIComponent(vehicleStr)}&name=${encodeURIComponent(s.name || "")}&email=${encodeURIComponent(s.email || "")}&phone=${encodeURIComponent(s.phone || "")}`;
 
