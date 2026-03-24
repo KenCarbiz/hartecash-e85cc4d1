@@ -169,6 +169,7 @@ export default function NotificationSettings() {
         customer_appointment_reminder_channels: (d.customer_appointment_reminder_channels as string[]) || ["email", "sms"],
         notify_customer_appointment_rescheduled: d.notify_customer_appointment_rescheduled ?? true,
         customer_appointment_rescheduled_channels: (d.customer_appointment_rescheduled_channels as string[]) || ["email", "sms"],
+        staff_trigger_recipients: (d.staff_trigger_recipients as Record<string, { emails: string[]; phones: string[] }>) || {},
       });
     }
     setLoading(false);
