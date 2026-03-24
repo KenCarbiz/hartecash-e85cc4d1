@@ -1722,7 +1722,7 @@ const AdminDashboard = () => {
 
               {/* Contact Card - Editable */}
               <div data-print-section className="bg-muted/40 rounded-lg p-4">
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Contact Information</h3>
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5"><Users className="w-3.5 h-3.5" />Contact Information</h3>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                   <div className="space-y-1">
                     <Label className="text-xs text-muted-foreground">Name</Label>
