@@ -27,6 +27,7 @@ const ReviewPage = lazy(() => import("./pages/ReviewPage"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const TradeLanding = lazy(() => import("./pages/TradeLanding"));
 const DealAccepted = lazy(() => import("./pages/DealAccepted"));
+const OfferDisclosure = lazy(() => import("./pages/OfferDisclosure"));
 
 const queryClient = new QueryClient();
 
@@ -59,6 +60,7 @@ const App = () => (
               <Route path="/unsubscribe" element={<Unsubscribe />} />
               <Route path="/trade" element={<TradeLanding />} />
               <Route path="/deal/:token" element={<DealAccepted />} />
+              <Route path="/disclosure" element={<OfferDisclosure />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

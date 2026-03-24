@@ -227,3 +227,18 @@
     size: letter;
   }
 }
+
+/* Prose styles for disclosure page accordion content */
+.prose-disclosure p {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.85;
+  color: hsl(var(--muted-foreground));
+}
+.prose-disclosure p:last-child {
+  margin-bottom: 0;
+}
+.prose-disclosure strong {
+  color: hsl(var(--foreground));
+  font-weight: 600;
+}
