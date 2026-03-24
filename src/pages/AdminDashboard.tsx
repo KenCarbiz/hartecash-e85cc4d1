@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatPhone } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LogOut, Search, Trash2, Eye, ChevronLeft, ChevronRight, UserCheck, UserX, Users, Check, Circle, DollarSign, StickyNote, XCircle, Save, Printer, FileText, QrCode, ExternalLink, ClipboardCheck, Upload, CalendarDays, Plus, Phone, Mail, AlertTriangle, Clock, History, Moon, Sun, ShieldCheck, SlidersHorizontal, Settings, Bell, ListChecks, MessageSquareQuote, Star, BarChart3, Send, PanelLeftClose, PanelLeft, CalendarClock, CheckCircle, Car, Gauge, Palette, Wrench, Key, Wind, Cigarette, CircleDot, Settings2, TrendingUp, Sparkles, Info } from "lucide-react";
+import { LogOut, Search, Trash2, Eye, ChevronLeft, ChevronRight, UserCheck, UserX, Users, Check, Circle, DollarSign, StickyNote, XCircle, Save, Printer, FileText, QrCode, ExternalLink, ClipboardCheck, Upload, CalendarDays, Plus, Phone, Mail, AlertTriangle, Clock, History, Moon, Sun, ShieldCheck, SlidersHorizontal, Settings, Bell, ListChecks, MessageSquareQuote, Star, BarChart3, Send, PanelLeftClose, PanelLeft, CalendarClock, CheckCircle, Car, Gauge, Palette, Wrench, Key, Wind, Cigarette, CircleDot, Settings2, TrendingUp, Sparkles, Info, Camera } from "lucide-react";
+import { mapStatusToStepIndex } from "@/components/portal/ProgressSteps";
 import { Checkbox } from "@/components/ui/checkbox";
 import { QRCodeSVG } from "qrcode.react";
 import { Textarea } from "@/components/ui/textarea";
@@ -82,6 +83,7 @@ interface Submission {
   overall_condition: string | null;
   next_step: string | null;
   photos_uploaded: boolean;
+  docs_uploaded: boolean;
   loan_status: string | null;
   exterior_color: string | null;
   drivetrain: string | null;
@@ -1884,18 +1886,102 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
-              {/* Customer Accepted Offer Badge */}
-              {selected.progress_status !== "new" && selected.progress_status !== "dead_lead" && (
-                <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-success/10 border border-success/20">
-                  <CheckCircle className="w-5 h-5 text-success" />
-                  <span className="font-bold text-success text-sm">Customer Accepted Offer</span>
-                  {selected.status_updated_at && (
-                    <span className="text-xs text-muted-foreground ml-auto">
-                      {new Date(selected.status_updated_at).toLocaleDateString()}
-                    </span>
-                  )}
-                </div>
-              )}
+              {/* Customer Deal Progress — mirrors the customer portal view */}
+              {selected.progress_status !== "new" && selected.progress_status !== "dead_lead" && (() => {
+                const STAGE_MAPPING: Record<string, string> = {
+                  title_verified: "inspection_completed",
+                  ownership_verified: "inspection_completed",
+                  appraisal_completed: "inspection_completed",
+                  manager_approval: "inspection_completed",
+                  dead_lead: "new",
+                };
+                let mappedStatus = STAGE_MAPPING[selected.progress_status] || selected.progress_status;
+                if (mappedStatus === "contacted" && selected.offered_price) mappedStatus = "offer_made";
+                const stepIdx = mapStatusToStepIndex(mappedStatus);
+                const isComplete = mappedStatus === "purchase_complete";
+
+                const CUSTOMER_STEPS = [
+                  { label: "Offer Accepted", icon: CheckCircle },
+                  { label: "Inspection Done", icon: Car },
+                  { label: "Deal Finalized", icon: DollarSign },
+                  { label: "Paperwork Complete", icon: FileText },
+                  { label: "Check Received", icon: Check },
+                ];
+
+                return (
+                  <div data-print-section className="bg-muted/40 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+                        <Eye className="w-3.5 h-3.5" />
+                        Customer's Deal Progress
+                      </h3>
+                      <span className="text-[10px] text-muted-foreground">What the customer sees</span>
+                    </div>
+
+                    {/* Checklist status pills */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                        selected.appointment_set ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
+                      }`}>
+                        <CalendarDays className="w-3 h-3" />
+                        Inspection {selected.appointment_set ? "Scheduled" : "Not Set"}
+                      </div>
+                      <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                        selected.docs_uploaded ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
+                      }`}>
+                        <FileText className="w-3 h-3" />
+                        Docs {selected.docs_uploaded ? "Uploaded" : "Pending"}
+                      </div>
+                      <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                        selected.photos_uploaded ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
+                      }`}>
+                        <Camera className="w-3 h-3" />
+                        Photos {selected.photos_uploaded ? "Uploaded" : "Pending"}
+                      </div>
+                    </div>
+
+                    {/* 5-step progress bar */}
+                    <div className="flex items-start justify-between gap-0">
+                      {CUSTOMER_STEPS.map((step, i, arr) => {
+                        const done = isComplete || stepIdx > i;
+                        const active = stepIdx === i && !isComplete;
+                        const StepIcon = step.icon;
+                        const isPendingInspection = i === 1 && active && !selected.appointment_set;
+
+                        return (
+                          <div key={step.label} className="flex items-center flex-1 min-w-0">
+                            <div className="flex flex-col items-center w-full">
+                              <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
+                                done ? "bg-success text-white shadow-sm" :
+                                isPendingInspection ? "bg-yellow-500 text-white shadow-sm" :
+                                active ? "bg-accent text-accent-foreground shadow-md ring-2 ring-accent/30" :
+                                "bg-muted text-muted-foreground"
+                              }`}>
+                                {done ? <Check className="w-3.5 h-3.5" /> :
+                                 isPendingInspection ? <Clock className="w-3.5 h-3.5" /> :
+                                 <StepIcon className="w-3.5 h-3.5" />}
+                              </div>
+                              <span className={`text-[10px] mt-1.5 text-center leading-tight max-w-[70px] ${
+                                done ? "font-medium text-card-foreground" :
+                                isPendingInspection ? "font-bold text-yellow-600 dark:text-yellow-400" :
+                                active ? "font-bold text-card-foreground" :
+                                "text-muted-foreground/50"
+                              }`}>
+                                {step.label}
+                              </span>
+                            </div>
+                            {i < arr.length - 1 && (
+                              <div className={`h-[2px] flex-1 min-w-[8px] -mt-4 ${
+                                done ? "bg-success" : "bg-border"
+                              }`} />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Acquisition Tracker — Horizontal Progress Bar */}
               <div data-print-section className="bg-muted/40 rounded-lg p-4">
