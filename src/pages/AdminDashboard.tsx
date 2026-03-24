@@ -117,16 +117,36 @@ interface Submission {
 
 const PAGE_SIZE = 20;
 
-// Consolidated 6-step tracker for visual display
-const PROGRESS_STAGES = [
+// Consolidated 6-step tracker for visual display — two variants based on offer acceptance
+const PROGRESS_STAGES_NOT_ACCEPTED = [
   { key: "new", label: "New Lead", dbKeys: ["new"] },
   { key: "contacted", label: "Contacted", dbKeys: ["contacted"] },
-  { key: "inspected", label: "Inspection / Appraised", dbKeys: ["inspection_scheduled", "inspection_completed", "appraisal_completed"] },
-  { key: "price_agreed", label: "Price Agreed", dbKeys: ["manager_approval", "price_agreed"] },
-  { key: "docs_title", label: "Docs & Title", dbKeys: ["title_verified", "ownership_verified"] },
+  { key: "inspected", label: "Inspection / Final Appraisal", dbKeys: ["inspection_scheduled", "inspection_completed", "appraisal_completed"] },
+  { key: "price_agreed", label: "Deal Finalized", dbKeys: ["manager_approval", "price_agreed"] },
+  { key: "docs_title", label: "Paperwork Completed", dbKeys: ["title_verified", "ownership_verified"] },
   { key: "purchase_complete", label: "Purchased", dbKeys: ["purchase_complete"] },
   { key: "dead_lead", label: "Dead Lead", dbKeys: ["dead_lead"] },
 ];
+
+const PROGRESS_STAGES_ACCEPTED = [
+  { key: "new", label: "New Lead", dbKeys: ["new"] },
+  { key: "contacted", label: "Offer Accepted", dbKeys: ["contacted"] },
+  { key: "inspected", label: "Inspection / Final Appraisal", dbKeys: ["inspection_scheduled", "inspection_completed", "appraisal_completed"] },
+  { key: "price_agreed", label: "Deal Finalized", dbKeys: ["manager_approval", "price_agreed"] },
+  { key: "docs_title", label: "Paperwork Completed", dbKeys: ["title_verified", "ownership_verified"] },
+  { key: "purchase_complete", label: "Purchased", dbKeys: ["purchase_complete"] },
+  { key: "dead_lead", label: "Dead Lead", dbKeys: ["dead_lead"] },
+];
+
+// Helper to get the right stages array for a submission
+const getProgressStages = (sub: { offered_price?: number | null; progress_status: string }) => {
+  const ACCEPTED_STATUSES = ['contacted', 'inspection_scheduled', 'inspection_completed', 'appraisal_completed', 'manager_approval', 'price_agreed', 'title_verified', 'ownership_verified', 'purchase_complete'];
+  const isAccepted = !!sub.offered_price || ACCEPTED_STATUSES.includes(sub.progress_status);
+  return isAccepted ? PROGRESS_STAGES_ACCEPTED : PROGRESS_STAGES_NOT_ACCEPTED;
+};
+
+// Default reference for stage index lookups that don't depend on acceptance
+const PROGRESS_STAGES = PROGRESS_STAGES_NOT_ACCEPTED;
 
 // Full list of DB status keys for dropdowns (preserves granular control)
 const ALL_STATUS_OPTIONS = [
