@@ -334,6 +334,7 @@ export type Database = {
           customer_appointment_reminder_channels: string[]
           customer_appointment_rescheduled_channels: string[]
           customer_offer_accepted_channels: string[]
+          customer_offer_increased_channels: string[]
           customer_offer_ready_channels: string[]
           dealership_id: string
           docs_uploaded_channels: string[]
@@ -346,6 +347,7 @@ export type Database = {
           notify_customer_appointment_reminder: boolean
           notify_customer_appointment_rescheduled: boolean
           notify_customer_offer_accepted: boolean
+          notify_customer_offer_increased: boolean
           notify_customer_offer_ready: boolean
           notify_docs_uploaded: boolean
           notify_hot_lead: boolean
@@ -371,6 +373,7 @@ export type Database = {
           customer_appointment_reminder_channels?: string[]
           customer_appointment_rescheduled_channels?: string[]
           customer_offer_accepted_channels?: string[]
+          customer_offer_increased_channels?: string[]
           customer_offer_ready_channels?: string[]
           dealership_id?: string
           docs_uploaded_channels?: string[]
@@ -383,6 +386,7 @@ export type Database = {
           notify_customer_appointment_reminder?: boolean
           notify_customer_appointment_rescheduled?: boolean
           notify_customer_offer_accepted?: boolean
+          notify_customer_offer_increased?: boolean
           notify_customer_offer_ready?: boolean
           notify_docs_uploaded?: boolean
           notify_hot_lead?: boolean
@@ -408,6 +412,7 @@ export type Database = {
           customer_appointment_reminder_channels?: string[]
           customer_appointment_rescheduled_channels?: string[]
           customer_offer_accepted_channels?: string[]
+          customer_offer_increased_channels?: string[]
           customer_offer_ready_channels?: string[]
           dealership_id?: string
           docs_uploaded_channels?: string[]
@@ -420,6 +425,7 @@ export type Database = {
           notify_customer_appointment_reminder?: boolean
           notify_customer_appointment_rescheduled?: boolean
           notify_customer_offer_accepted?: boolean
+          notify_customer_offer_increased?: boolean
           notify_customer_offer_ready?: boolean
           notify_docs_uploaded?: boolean
           notify_hot_lead?: boolean
