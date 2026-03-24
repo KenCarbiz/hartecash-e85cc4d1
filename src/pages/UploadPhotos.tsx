@@ -241,6 +241,8 @@ const UploadPhotos = () => {
 
         <MobileQRBanner url={`${window.location.origin}/upload/${token}`} />
 
+        <PhotoGuide />
+
         {/* Progress indicator */}
         <div className="mb-5">
           <div className="flex items-center justify-between mb-1.5">
