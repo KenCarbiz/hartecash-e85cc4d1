@@ -616,9 +616,10 @@ const OfferPage = () => {
   const conditionItems: ConditionItem[] = [];
 
   // Accidents
-  const noAccidents = !condition?.accidents || condition.accidents.toLowerCase().includes("no") || condition.accidents.toLowerCase() === "none" || condition.accidents === "0";
+  const accidentsVal = (condition?.accidents || "").toLowerCase();
+  const noAccidents = !condition?.accidents || accidentsVal.includes("no") || accidentsVal === "none" || accidentsVal === "0";
   conditionItems.push({
-    label: noAccidents ? "No accidents reported" : `${condition!.accidents} accident${condition!.accidents === "1" ? "" : "s"} reported`,
+    label: noAccidents ? "Accidents: None" : `Accidents: ${condition!.accidents}`,
     status: noAccidents ? "good" : "warn",
     icon: <Car className="w-3.5 h-3.5" />,
     field: "accidents",
@@ -630,7 +631,7 @@ const OfferPage = () => {
   // Exterior damage
   const noExteriorDmg = !condition?.exterior_damage || condition.exterior_damage.length === 0 || (condition.exterior_damage.length === 1 && condition.exterior_damage[0] === "none");
   conditionItems.push({
-    label: noExteriorDmg ? "No exterior damage" : `Exterior: ${condition!.exterior_damage!.filter(v => v !== "none").join(", ")}`,
+    label: noExteriorDmg ? "Exterior Damage: None" : `Exterior Damage: ${condition!.exterior_damage!.filter(v => v !== "none").join(", ")}`,
     status: noExteriorDmg ? "good" : "warn",
     icon: <Palette className="w-3.5 h-3.5" />,
     field: "exterior_damage",
@@ -642,7 +643,7 @@ const OfferPage = () => {
   // Interior damage
   const noInteriorDmg = !condition?.interior_damage || condition.interior_damage.length === 0 || (condition.interior_damage.length === 1 && condition.interior_damage[0] === "none");
   conditionItems.push({
-    label: noInteriorDmg ? "No interior damage" : `Interior: ${condition!.interior_damage!.filter(v => v !== "none").join(", ")}`,
+    label: noInteriorDmg ? "Interior Damage: None" : `Interior Damage: ${condition!.interior_damage!.filter(v => v !== "none").join(", ")}`,
     status: noInteriorDmg ? "good" : "warn",
     icon: <CircleDot className="w-3.5 h-3.5" />,
     field: "interior_damage",
@@ -654,7 +655,7 @@ const OfferPage = () => {
   // Mechanical issues
   const noMechanical = !condition?.mechanical_issues || condition.mechanical_issues.length === 0 || (condition.mechanical_issues.length === 1 && condition.mechanical_issues[0] === "none");
   conditionItems.push({
-    label: noMechanical ? "No mechanical issues" : `Mechanical: ${condition!.mechanical_issues!.filter(v => v !== "none").join(", ")}`,
+    label: noMechanical ? "Mechanical Issues: None" : `Mechanical Issues: ${condition!.mechanical_issues!.filter(v => v !== "none").join(", ")}`,
     status: noMechanical ? "good" : "warn",
     icon: <Wrench className="w-3.5 h-3.5" />,
     field: "mechanical_issues",
@@ -666,7 +667,7 @@ const OfferPage = () => {
   // Engine issues
   const noEngine = !condition?.engine_issues || condition.engine_issues.length === 0 || (condition.engine_issues.length === 1 && condition.engine_issues[0] === "none");
   conditionItems.push({
-    label: noEngine ? "No engine issues" : `Engine: ${condition!.engine_issues!.filter(v => v !== "none").join(", ")}`,
+    label: noEngine ? "Engine Issues: None" : `Engine Issues: ${condition!.engine_issues!.filter(v => v !== "none").join(", ")}`,
     status: noEngine ? "good" : "warn",
     icon: <Settings2 className="w-3.5 h-3.5" />,
     field: "engine_issues",
@@ -678,7 +679,7 @@ const OfferPage = () => {
   // Tech issues
   const noTech = !condition?.tech_issues || condition.tech_issues.length === 0 || (condition.tech_issues.length === 1 && condition.tech_issues[0] === "none");
   conditionItems.push({
-    label: noTech ? "No technology issues" : `Tech: ${condition!.tech_issues!.filter(v => v !== "none").join(", ")}`,
+    label: noTech ? "Technology Issues: None" : `Technology Issues: ${condition!.tech_issues!.filter(v => v !== "none").join(", ")}`,
     status: noTech ? "good" : "warn",
     icon: <Search className="w-3.5 h-3.5" />,
     field: "tech_issues",
@@ -688,10 +689,11 @@ const OfferPage = () => {
   });
 
   // Windshield
-  const noWindshield = !condition?.windshield_damage || condition.windshield_damage.toLowerCase().includes("none") || condition.windshield_damage.toLowerCase() === "no";
+  const windshieldVal = (condition?.windshield_damage || "").toLowerCase();
+  const noWindshield = !condition?.windshield_damage || windshieldVal.includes("none") || windshieldVal.includes("no windshield") || windshieldVal === "no" || windshieldVal === "no windshield damage";
   if (condition?.windshield_damage !== undefined) {
     conditionItems.push({
-      label: noWindshield ? "No windshield damage" : `Windshield: ${condition!.windshield_damage}`,
+      label: noWindshield ? "Windshield: No damage" : `Windshield: ${condition!.windshield_damage}`,
       status: noWindshield ? "good" : "warn",
       icon: <Wind className="w-3.5 h-3.5" />,
       field: "windshield_damage",
@@ -702,10 +704,11 @@ const OfferPage = () => {
   }
 
   // Smoked in
-  const notSmokedIn = !condition?.smoked_in || condition.smoked_in.toLowerCase() === "no";
+  const smokedVal = (condition?.smoked_in || "").toLowerCase();
+  const notSmokedIn = !condition?.smoked_in || smokedVal === "no" || smokedVal === "not smoked in";
   if (condition?.smoked_in !== undefined) {
     conditionItems.push({
-      label: notSmokedIn ? "Non-smoker vehicle" : "Smoked in vehicle",
+      label: notSmokedIn ? "Smoked In: No" : "Smoked In: Yes",
       status: notSmokedIn ? "good" : "warn",
       icon: <Cigarette className="w-3.5 h-3.5" />,
       field: "smoked_in",
@@ -717,9 +720,10 @@ const OfferPage = () => {
 
   // Drivable
   if (condition?.drivable !== undefined) {
-    const isDrivable = !condition.drivable || condition.drivable.toLowerCase() === "yes";
+    const drivableVal = (condition.drivable || "").toLowerCase();
+    const isDrivable = !condition.drivable || drivableVal === "yes" || drivableVal === "drivable";
     conditionItems.push({
-      label: isDrivable ? "Vehicle is drivable" : "Vehicle is not drivable",
+      label: isDrivable ? "Drivable: Yes" : "Drivable: No",
       status: isDrivable ? "good" : "warn",
       icon: <Car className="w-3.5 h-3.5" />,
       field: "drivable",
@@ -731,9 +735,10 @@ const OfferPage = () => {
 
   // Tires
   if (condition?.tires_replaced !== undefined) {
-    const tiresGood = condition.tires_replaced?.toLowerCase() === "yes";
+    const tiresVal = (condition.tires_replaced || "").toLowerCase();
+    const tiresGood = tiresVal !== "none" && tiresVal !== "0" && tiresVal !== "no" && tiresVal !== "";
     conditionItems.push({
-      label: tiresGood ? "Tires recently replaced" : "Tires not recently replaced",
+      label: tiresGood ? `Tires Replaced: ${condition.tires_replaced}` : "Tires Replaced: None",
       status: tiresGood ? "good" : "warn",
       icon: <CircleDot className="w-3.5 h-3.5" />,
       field: "tires_replaced",
@@ -746,7 +751,7 @@ const OfferPage = () => {
   // Keys
   if (condition?.num_keys) {
     conditionItems.push({
-      label: `${condition.num_keys} key${condition.num_keys === "1" ? "" : "s"} available`,
+      label: `Keys: ${condition.num_keys} key${condition.num_keys === "1" ? "" : "s"} available`,
       status: condition.num_keys === "0" ? "warn" : "good",
       icon: <Key className="w-3.5 h-3.5" />,
       field: "num_keys",
@@ -760,7 +765,7 @@ const OfferPage = () => {
   const noMods = !condition?.modifications || condition.modifications.toLowerCase() === "none" || condition.modifications.toLowerCase() === "no";
   if (condition?.modifications !== undefined) {
     conditionItems.push({
-      label: noMods ? "No aftermarket modifications" : `Modified: ${condition!.modifications}`,
+      label: noMods ? "Modifications: None" : `Modifications: ${condition!.modifications}`,
       status: noMods ? "good" : "warn",
       icon: <Settings2 className="w-3.5 h-3.5" />,
     });
