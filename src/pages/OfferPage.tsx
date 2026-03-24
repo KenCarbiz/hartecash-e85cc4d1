@@ -984,7 +984,7 @@ const OfferPage = () => {
             The tax credit is based on {stateName ? `${stateName}'s` : "your state's"} {taxPercent}% sales tax rate, 
             determined by your zip code ({s.zip}). The formula is: 
             <span className="font-mono text-card-foreground"> ${cashOffer.toLocaleString()} × {(1 + taxRate).toFixed(4)} = ${tradeInValue.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>. 
-            Actual tax may vary. Applies when used as trade-in on a new or pre-owned vehicle purchase.
+            Actual tax credit may vary and is subject to qualifications.
           </p>
         </div>
         </div>
