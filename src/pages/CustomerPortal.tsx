@@ -61,12 +61,8 @@ const STAGE_MAPPING: Record<string, string> = {
 const CustomerPortal = () => {
   const { token } = useParams<{ token: string }>();
   const { config } = useSiteConfig();
-  const { toast } = useToast();
   const [submission, setSubmission] = useState<PortalSubmission | null>(null);
   const [condition, setCondition] = useState<ConditionData | null>(null);
-  const [offerSettings, setOfferSettings] = useState<OfferSettings | null>(null);
-  const [offerRules, setOfferRules] = useState<OfferRule[]>([]);
-  const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
