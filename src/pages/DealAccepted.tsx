@@ -59,7 +59,18 @@ const DealAccepted = () => {
       
       const { data } = await supabase.rpc("get_submission_portal", { _token: token });
       if (data && data.length > 0) {
-        setSubmission(data[0] as unknown as DealSubmission);
+        const sub = data[0] as unknown as DealSubmission;
+        setSubmission(sub);
+
+        // Fire Customer Accepted notification (staff) + Offer Accepted confirmation (customer)
+        if ((sub as any).id) {
+          supabase.functions.invoke("send-notification", {
+            body: { trigger_key: "staff_customer_accepted", submission_id: (sub as any).id },
+          }).catch(console.error);
+          supabase.functions.invoke("send-notification", {
+            body: { trigger_key: "customer_offer_accepted", submission_id: (sub as any).id },
+          }).catch(console.error);
+        }
       }
       setLoading(false);
     };

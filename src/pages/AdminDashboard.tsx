@@ -452,8 +452,24 @@ const AdminDashboard = () => {
       setAppointments(prev => prev.map(a => a.id === rescheduleAppt.id ? updatedAppt : a));
       toast({ title: "Rescheduled", description: "Appointment date and time updated." });
 
-      // Send reschedule notification email
-      if (rescheduleAppt.customer_email) {
+      // Send reschedule notification via configurable templates (email + SMS)
+      if (rescheduleAppt.submission_token) {
+        const linkedSub = submissions.find(s => s.token === rescheduleAppt.submission_token);
+        if (linkedSub) {
+          // Fetch location name
+          const loc = dealerLocations.find(l => l.id === (rescheduleAppt.store_location || ""));
+          supabase.functions.invoke("send-notification", {
+            body: {
+              trigger_key: "customer_appointment_rescheduled",
+              submission_id: linkedSub.id,
+              appointment_date: rescheduleForm.preferred_date,
+              appointment_time: rescheduleForm.preferred_time,
+              location: loc?.name || rescheduleAppt.store_location || "",
+            },
+          }).catch(console.error);
+        }
+      } else if (rescheduleAppt.customer_email) {
+        // Fallback to legacy reschedule notification for unlinked appointments
         supabase.functions.invoke("send-reschedule-notification", {
           body: {
             appointment: {
@@ -468,9 +484,7 @@ const AdminDashboard = () => {
               store_location: rescheduleAppt.store_location,
             },
           },
-        }).then(({ error: fnErr }) => {
-          if (fnErr) console.error("Reschedule email error:", fnErr);
-        });
+        }).catch(console.error);
       }
 
       setRescheduleAppt(null);
@@ -666,6 +680,12 @@ const AdminDashboard = () => {
         new_value: getStatusLabel(newStatus),
         performed_by: userRole,
       });
+      // Deal Completed notification
+      if (oldStatus !== "purchase_complete" && newStatus === "purchase_complete") {
+        supabase.functions.invoke("send-notification", {
+          body: { trigger_key: "staff_deal_completed", submission_id: sub.id },
+        }).catch(console.error);
+      }
       toast({ title: "Status updated" });
     } else {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -2536,6 +2556,27 @@ const AdminDashboard = () => {
                           new_value: selected.offered_price ? `$${selected.offered_price.toLocaleString()}` : "None",
                           performed_by: userRole,
                         });
+                      }
+                      // ── Notification triggers ──
+                      if (oldSub) {
+                        // Offer Ready: first time offered_price is set
+                        if (!oldSub.offered_price && selected.offered_price) {
+                          supabase.functions.invoke("send-notification", {
+                            body: { trigger_key: "customer_offer_ready", submission_id: selected.id },
+                          }).catch(console.error);
+                        }
+                        // Offer Increased: offered_price went up
+                        if (oldSub.offered_price && selected.offered_price && selected.offered_price > oldSub.offered_price) {
+                          supabase.functions.invoke("send-notification", {
+                            body: { trigger_key: "customer_offer_increased", submission_id: selected.id },
+                          }).catch(console.error);
+                        }
+                        // Deal Completed: status changed to purchase_complete
+                        if (oldSub.progress_status !== "purchase_complete" && selected.progress_status === "purchase_complete") {
+                          supabase.functions.invoke("send-notification", {
+                            body: { trigger_key: "staff_deal_completed", submission_id: selected.id },
+                          }).catch(console.error);
+                        }
                       }
                       // Re-fetch submission to get server-set fields like appraised_by
                       const { data: refreshed } = await supabase.from("submissions").select("*").eq("id", selected.id).maybeSingle();
