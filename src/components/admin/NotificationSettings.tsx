@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Save, ChevronDown, Plus, X, Mail, Phone, Bell, BellOff, Moon, Loader2 } from "lucide-react";
+import { Save, ChevronDown, Plus, X, Mail, Phone, Bell, BellOff, Moon, Loader2, UserCheck, CalendarCheck } from "lucide-react";
 
 interface NotificationConfig {
   id?: string;
@@ -30,6 +30,11 @@ interface NotificationConfig {
   quiet_hours_enabled: boolean;
   quiet_hours_start: string;
   quiet_hours_end: string;
+  // Customer-facing notifications
+  notify_customer_offer_accepted: boolean;
+  customer_offer_accepted_channels: string[];
+  notify_customer_appointment_booked: boolean;
+  customer_appointment_channels: string[];
 }
 
 const DEFAULTS: NotificationConfig = {
@@ -51,15 +56,36 @@ const DEFAULTS: NotificationConfig = {
   quiet_hours_enabled: false,
   quiet_hours_start: "21:00",
   quiet_hours_end: "08:00",
+  notify_customer_offer_accepted: true,
+  customer_offer_accepted_channels: ["email", "sms"],
+  notify_customer_appointment_booked: true,
+  customer_appointment_channels: ["email", "sms"],
 };
 
-const TRIGGERS = [
+const STAFF_TRIGGERS = [
   { key: "new_submission", label: "New Lead Submission", desc: "When a customer submits the sell form", channelKey: "new_submission_channels" },
   { key: "hot_lead", label: "Hot Lead Flagged", desc: "When a submission is flagged as a hot lead by offer rules", channelKey: "hot_lead_channels" },
   { key: "appointment_booked", label: "Appointment Booked", desc: "When a customer schedules a visit", channelKey: "appointment_channels" },
   { key: "photos_uploaded", label: "Photos Uploaded", desc: "When a customer uploads vehicle photos", channelKey: "photos_uploaded_channels" },
   { key: "docs_uploaded", label: "Documents Uploaded", desc: "When a customer uploads documents", channelKey: "docs_uploaded_channels" },
   { key: "status_change", label: "Status Change", desc: "When a submission status is updated", channelKey: "status_change_channels" },
+] as const;
+
+const CUSTOMER_TRIGGERS = [
+  {
+    key: "customer_offer_accepted",
+    label: "Offer Accepted Confirmation",
+    desc: "Send the customer their accepted offer amount, vehicle details, and next steps",
+    channelKey: "customer_offer_accepted_channels",
+    icon: UserCheck,
+  },
+  {
+    key: "customer_appointment_booked",
+    label: "Appointment Confirmation",
+    desc: "Send the customer their appointment date/time, dealership address, accepted offer, and what to bring",
+    channelKey: "customer_appointment_channels",
+    icon: CalendarCheck,
+  },
 ] as const;
 
 export default function NotificationSettings() {
@@ -72,6 +98,7 @@ export default function NotificationSettings() {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     recipients: true,
     triggers: true,
+    customer: true,
     quiet: false,
   });
 
@@ -81,7 +108,7 @@ export default function NotificationSettings() {
 
   const fetchSettings = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("notification_settings")
       .select("*")
       .eq("dealership_id", "default")
@@ -98,6 +125,10 @@ export default function NotificationSettings() {
         photos_uploaded_channels: (data.photos_uploaded_channels as string[]) || ["email"],
         docs_uploaded_channels: (data.docs_uploaded_channels as string[]) || ["email"],
         status_change_channels: (data.status_change_channels as string[]) || ["email"],
+        notify_customer_offer_accepted: data.notify_customer_offer_accepted ?? true,
+        customer_offer_accepted_channels: (data.customer_offer_accepted_channels as string[]) || ["email", "sms"],
+        notify_customer_appointment_booked: data.notify_customer_appointment_booked ?? true,
+        customer_appointment_channels: (data.customer_appointment_channels as string[]) || ["email", "sms"],
       });
     }
     setLoading(false);
@@ -192,6 +223,31 @@ export default function NotificationSettings() {
     );
   }
 
+  const renderChannelButtons = (channelKey: string, channels: string[]) => (
+    <div className="flex gap-1.5">
+      <button
+        onClick={() => toggleChannel(channelKey, "email")}
+        className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+          channels.includes("email")
+            ? "bg-primary/10 text-primary border border-primary/20"
+            : "bg-muted text-muted-foreground border border-transparent"
+        }`}
+      >
+        <Mail className="w-3 h-3" /> Email
+      </button>
+      <button
+        onClick={() => toggleChannel(channelKey, "sms")}
+        className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+          channels.includes("sms")
+            ? "bg-primary/10 text-primary border border-primary/20"
+            : "bg-muted text-muted-foreground border border-transparent"
+        }`}
+      >
+        <Phone className="w-3 h-3" /> SMS
+      </button>
+    </div>
+  );
+
   return (
     <div className="space-y-4 max-w-3xl">
       <div className="flex items-center justify-between">
@@ -210,7 +266,7 @@ export default function NotificationSettings() {
         <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
           <div className="flex items-center gap-2 font-medium">
             <Mail className="w-4 h-4" />
-            Recipients
+            Staff Recipients
           </div>
           <ChevronDown className={`w-4 h-4 transition-transform ${openSections.recipients ? "rotate-180" : ""}`} />
         </CollapsibleTrigger>
@@ -281,17 +337,17 @@ export default function NotificationSettings() {
         </CollapsibleContent>
       </Collapsible>
 
-      {/* Alert Triggers */}
+      {/* Staff Alert Triggers */}
       <Collapsible open={openSections.triggers} onOpenChange={() => toggle("triggers")}>
         <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
           <div className="flex items-center gap-2 font-medium">
             <Bell className="w-4 h-4" />
-            Alert Triggers
+            Staff Alert Triggers
           </div>
           <ChevronDown className={`w-4 h-4 transition-transform ${openSections.triggers ? "rotate-180" : ""}`} />
         </CollapsibleTrigger>
         <CollapsibleContent className="pt-3 space-y-2 px-1">
-          {TRIGGERS.map(trigger => {
+          {STAFF_TRIGGERS.map(trigger => {
             const enabled = (config as any)[`notify_${trigger.key}`] as boolean;
             const channels = (config as any)[trigger.channelKey] as string[];
             return (
@@ -311,33 +367,63 @@ export default function NotificationSettings() {
                     <p className="text-xs text-muted-foreground">{trigger.desc}</p>
                   </div>
                 </div>
-                {enabled && (
-                  <div className="flex gap-1.5">
-                    <button
-                      onClick={() => toggleChannel(trigger.channelKey, "email")}
-                      className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
-                        channels.includes("email")
-                          ? "bg-primary/10 text-primary border border-primary/20"
-                          : "bg-muted text-muted-foreground border border-transparent"
-                      }`}
-                    >
-                      <Mail className="w-3 h-3" /> Email
-                    </button>
-                    <button
-                      onClick={() => toggleChannel(trigger.channelKey, "sms")}
-                      className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
-                        channels.includes("sms")
-                          ? "bg-primary/10 text-primary border border-primary/20"
-                          : "bg-muted text-muted-foreground border border-transparent"
-                      }`}
-                    >
-                      <Phone className="w-3 h-3" /> SMS
-                    </button>
-                  </div>
-                )}
+                {enabled && renderChannelButtons(trigger.channelKey, channels)}
               </div>
             );
           })}
+        </CollapsibleContent>
+      </Collapsible>
+
+      {/* Customer Notifications */}
+      <Collapsible open={openSections.customer} onOpenChange={() => toggle("customer")}>
+        <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
+          <div className="flex items-center gap-2 font-medium">
+            <UserCheck className="w-4 h-4" />
+            Customer Notifications
+          </div>
+          <ChevronDown className={`w-4 h-4 transition-transform ${openSections.customer ? "rotate-180" : ""}`} />
+        </CollapsibleTrigger>
+        <CollapsibleContent className="pt-3 space-y-2 px-1">
+          <p className="text-xs text-muted-foreground mb-2">
+            These are sent directly to the customer's email/phone on file when the event occurs.
+          </p>
+          {CUSTOMER_TRIGGERS.map(trigger => {
+            const enabled = (config as any)[`notify_${trigger.key}`] as boolean;
+            const channels = (config as any)[trigger.channelKey] as string[];
+            const Icon = trigger.icon;
+            return (
+              <div
+                key={trigger.key}
+                className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
+                  enabled ? "bg-background border-border" : "bg-muted/30 border-transparent opacity-60"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Switch
+                    checked={enabled}
+                    onCheckedChange={() => toggleTrigger(trigger.key)}
+                  />
+                  <div className="flex items-start gap-2">
+                    <Icon className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium">{trigger.label}</p>
+                      <p className="text-xs text-muted-foreground">{trigger.desc}</p>
+                    </div>
+                  </div>
+                </div>
+                {enabled && renderChannelButtons(trigger.channelKey, channels)}
+              </div>
+            );
+          })}
+
+          <div className="mt-3 p-3 bg-muted/30 rounded-lg border border-dashed border-border">
+            <p className="text-xs text-muted-foreground">
+              <strong>Offer Accepted:</strong> Sends the customer their offer amount, vehicle info, and what to do next.
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              <strong>Appointment Confirmation:</strong> Sends the accepted offer, inspection date & time, dealership address, and a list of what to bring (vehicle, keys, ID, title/registration).
+            </p>
+          </div>
         </CollapsibleContent>
       </Collapsible>
 
