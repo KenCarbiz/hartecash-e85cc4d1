@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatPhone } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LogOut, Search, Trash2, Eye, ChevronLeft, ChevronRight, UserCheck, UserX, Users, Check, Circle, DollarSign, StickyNote, XCircle, Save, Printer, FileText, QrCode, ExternalLink, ClipboardCheck, Upload, CalendarDays, Plus, Phone, Mail, AlertTriangle, Clock, History, Moon, Sun, ShieldCheck, SlidersHorizontal, Settings, Bell, ListChecks, MessageSquareQuote, Star, BarChart3, Send, PanelLeftClose, PanelLeft, CalendarClock, CheckCircle, Car, Gauge, Palette, Wrench, Key, Wind, Cigarette, CircleDot, Settings2, TrendingUp, Sparkles, Info, Camera } from "lucide-react";
+import { LogOut, Search, Trash2, Eye, ChevronLeft, ChevronRight, UserCheck, UserX, Users, Check, Circle, DollarSign, StickyNote, XCircle, Save, Printer, FileText, QrCode, ExternalLink, ClipboardCheck, Upload, CalendarDays, Plus, Phone, Mail, AlertTriangle, Clock, History, Moon, Sun, ShieldCheck, SlidersHorizontal, Settings, Bell, ListChecks, MessageSquareQuote, Star, BarChart3, Send, PanelLeftClose, PanelLeft, CalendarClock, CheckCircle, Car, Gauge, Palette, Wrench, Key, Wind, Cigarette, CircleDot, Settings2, TrendingUp, Sparkles, Info, Camera, UserPlus, PhoneCall, ClipboardList, Handshake, BadgeCheck, Trophy, type LucideIcon } from "lucide-react";
 import { mapStatusToStepIndex } from "@/components/portal/ProgressSteps";
 import { Checkbox } from "@/components/ui/checkbox";
 import { QRCodeSVG } from "qrcode.react";
@@ -119,23 +119,23 @@ const PAGE_SIZE = 20;
 
 // Consolidated 6-step tracker for visual display — two variants based on offer acceptance
 const PROGRESS_STAGES_NOT_ACCEPTED = [
-  { key: "new", label: "New Lead", dbKeys: ["new"] },
-  { key: "contacted", label: "Contacted", dbKeys: ["contacted"] },
-  { key: "inspected", label: "Inspection / Final Appraisal", dbKeys: ["inspection_scheduled", "inspection_completed", "appraisal_completed"] },
-  { key: "price_agreed", label: "Deal Finalized", dbKeys: ["manager_approval", "price_agreed"] },
-  { key: "docs_title", label: "Paperwork Completed", dbKeys: ["title_verified", "ownership_verified"] },
-  { key: "purchase_complete", label: "Purchased", dbKeys: ["purchase_complete"] },
-  { key: "dead_lead", label: "Dead Lead", dbKeys: ["dead_lead"] },
+  { key: "new", label: "New Lead", dbKeys: ["new"], icon: UserPlus as LucideIcon },
+  { key: "contacted", label: "Contacted", dbKeys: ["contacted"], icon: PhoneCall as LucideIcon },
+  { key: "inspected", label: "Inspection / Final Appraisal", dbKeys: ["inspection_scheduled", "inspection_completed", "appraisal_completed"], icon: ClipboardList as LucideIcon },
+  { key: "price_agreed", label: "Deal Finalized", dbKeys: ["manager_approval", "price_agreed"], icon: Handshake as LucideIcon },
+  { key: "docs_title", label: "Paperwork Completed", dbKeys: ["title_verified", "ownership_verified"], icon: BadgeCheck as LucideIcon },
+  { key: "purchase_complete", label: "Purchased", dbKeys: ["purchase_complete"], icon: Trophy as LucideIcon },
+  { key: "dead_lead", label: "Dead Lead", dbKeys: ["dead_lead"], icon: XCircle as LucideIcon },
 ];
 
 const PROGRESS_STAGES_ACCEPTED = [
-  { key: "new", label: "New Lead", dbKeys: ["new"] },
-  { key: "contacted", label: "Offer Accepted", dbKeys: ["contacted"] },
-  { key: "inspected", label: "Inspection / Final Appraisal", dbKeys: ["inspection_scheduled", "inspection_completed", "appraisal_completed"] },
-  { key: "price_agreed", label: "Deal Finalized", dbKeys: ["manager_approval", "price_agreed"] },
-  { key: "docs_title", label: "Paperwork Completed", dbKeys: ["title_verified", "ownership_verified"] },
-  { key: "purchase_complete", label: "Purchased", dbKeys: ["purchase_complete"] },
-  { key: "dead_lead", label: "Dead Lead", dbKeys: ["dead_lead"] },
+  { key: "new", label: "New Lead", dbKeys: ["new"], icon: UserPlus as LucideIcon },
+  { key: "contacted", label: "Offer Accepted", dbKeys: ["contacted"], icon: CheckCircle as LucideIcon },
+  { key: "inspected", label: "Inspection / Final Appraisal", dbKeys: ["inspection_scheduled", "inspection_completed", "appraisal_completed"], icon: ClipboardList as LucideIcon },
+  { key: "price_agreed", label: "Deal Finalized", dbKeys: ["manager_approval", "price_agreed"], icon: Handshake as LucideIcon },
+  { key: "docs_title", label: "Paperwork Completed", dbKeys: ["title_verified", "ownership_verified"], icon: BadgeCheck as LucideIcon },
+  { key: "purchase_complete", label: "Purchased", dbKeys: ["purchase_complete"], icon: Trophy as LucideIcon },
+  { key: "dead_lead", label: "Dead Lead", dbKeys: ["dead_lead"], icon: XCircle as LucideIcon },
 ];
 
 // Helper to get the right stages array for a submission
@@ -1937,10 +1937,10 @@ const AdminDashboard = () => {
 
                 const CUSTOMER_STEPS = [
                   { label: "Offer Accepted", icon: CheckCircle },
-                  { label: "Inspection Done", icon: Car },
-                  { label: "Deal Finalized", icon: DollarSign },
-                  { label: "Paperwork Complete", icon: FileText },
-                  { label: "Check Received", icon: Check },
+                  { label: "Inspection Done", icon: ClipboardList },
+                  { label: "Deal Finalized", icon: Handshake },
+                  { label: "Paperwork Complete", icon: BadgeCheck },
+                  { label: "Check Received", icon: Trophy },
                 ];
 
                 return (
@@ -2040,7 +2040,7 @@ const AdminDashboard = () => {
                               isCurrent ? "bg-primary text-primary-foreground shadow-md ring-2 ring-primary/30" :
                               "bg-muted text-muted-foreground"
                             }`}>
-                              {isComplete ? <Check className="w-3.5 h-3.5" /> : i + 1}
+                              {isComplete ? <Check className="w-3.5 h-3.5" /> : <stage.icon className="w-3.5 h-3.5" />}
                             </div>
                             <span className={`text-[10px] mt-1.5 text-center leading-tight max-w-[70px] ${
                               isCurrent ? "font-bold text-card-foreground" :
