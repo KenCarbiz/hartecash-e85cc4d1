@@ -8,33 +8,45 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Save, ChevronDown, Plus, X, Mail, Phone, Bell, BellOff, Moon, Loader2, UserCheck, CalendarCheck } from "lucide-react";
+import { Save, ChevronDown, Plus, X, Mail, Phone, Bell, BellOff, Moon, Loader2, UserCheck, CalendarCheck, DollarSign, CalendarClock, RefreshCw, Handshake, PartyPopper } from "lucide-react";
 
 interface NotificationConfig {
   id?: string;
   dealership_id: string;
   email_recipients: string[];
   sms_recipients: string[];
+  // Staff triggers
   notify_new_submission: boolean;
   notify_hot_lead: boolean;
   notify_appointment_booked: boolean;
   notify_photos_uploaded: boolean;
   notify_docs_uploaded: boolean;
   notify_status_change: boolean;
+  notify_staff_customer_accepted: boolean;
+  notify_staff_deal_completed: boolean;
   new_submission_channels: string[];
   hot_lead_channels: string[];
   appointment_channels: string[];
   photos_uploaded_channels: string[];
   docs_uploaded_channels: string[];
   status_change_channels: string[];
-  quiet_hours_enabled: boolean;
-  quiet_hours_start: string;
-  quiet_hours_end: string;
-  // Customer-facing notifications
+  staff_customer_accepted_channels: string[];
+  staff_deal_completed_channels: string[];
+  // Customer triggers
   notify_customer_offer_accepted: boolean;
   customer_offer_accepted_channels: string[];
   notify_customer_appointment_booked: boolean;
   customer_appointment_channels: string[];
+  notify_customer_offer_ready: boolean;
+  customer_offer_ready_channels: string[];
+  notify_customer_appointment_reminder: boolean;
+  customer_appointment_reminder_channels: string[];
+  notify_customer_appointment_rescheduled: boolean;
+  customer_appointment_rescheduled_channels: string[];
+  // Quiet hours
+  quiet_hours_enabled: boolean;
+  quiet_hours_start: string;
+  quiet_hours_end: string;
 }
 
 const DEFAULTS: NotificationConfig = {
@@ -47,45 +59,48 @@ const DEFAULTS: NotificationConfig = {
   notify_photos_uploaded: false,
   notify_docs_uploaded: false,
   notify_status_change: false,
+  notify_staff_customer_accepted: true,
+  notify_staff_deal_completed: true,
   new_submission_channels: ["email", "sms"],
   hot_lead_channels: ["email", "sms"],
   appointment_channels: ["email", "sms"],
   photos_uploaded_channels: ["email"],
   docs_uploaded_channels: ["email"],
   status_change_channels: ["email"],
-  quiet_hours_enabled: false,
-  quiet_hours_start: "21:00",
-  quiet_hours_end: "08:00",
+  staff_customer_accepted_channels: ["email", "sms"],
+  staff_deal_completed_channels: ["email"],
   notify_customer_offer_accepted: true,
   customer_offer_accepted_channels: ["email", "sms"],
   notify_customer_appointment_booked: true,
   customer_appointment_channels: ["email", "sms"],
+  notify_customer_offer_ready: true,
+  customer_offer_ready_channels: ["email"],
+  notify_customer_appointment_reminder: true,
+  customer_appointment_reminder_channels: ["email", "sms"],
+  notify_customer_appointment_rescheduled: true,
+  customer_appointment_rescheduled_channels: ["email", "sms"],
+  quiet_hours_enabled: false,
+  quiet_hours_start: "21:00",
+  quiet_hours_end: "08:00",
 };
 
 const STAFF_TRIGGERS = [
-  { key: "new_submission", label: "New Lead Submission", desc: "When a customer submits the sell form", channelKey: "new_submission_channels" },
-  { key: "hot_lead", label: "Hot Lead Flagged", desc: "When a submission is flagged as a hot lead by offer rules", channelKey: "hot_lead_channels" },
-  { key: "appointment_booked", label: "Appointment Booked", desc: "When a customer schedules a visit", channelKey: "appointment_channels" },
-  { key: "photos_uploaded", label: "Photos Uploaded", desc: "When a customer uploads vehicle photos", channelKey: "photos_uploaded_channels" },
-  { key: "docs_uploaded", label: "Documents Uploaded", desc: "When a customer uploads documents", channelKey: "docs_uploaded_channels" },
-  { key: "status_change", label: "Status Change", desc: "When a submission status is updated", channelKey: "status_change_channels" },
+  { key: "new_submission", label: "New Lead Submission", desc: "When a customer submits the sell form", channelKey: "new_submission_channels", icon: Bell },
+  { key: "hot_lead", label: "Hot Lead Flagged", desc: "When a submission is flagged as a hot lead by offer rules", channelKey: "hot_lead_channels", icon: Bell },
+  { key: "appointment_booked", label: "Appointment Booked", desc: "When a customer schedules a visit", channelKey: "appointment_channels", icon: CalendarCheck },
+  { key: "photos_uploaded", label: "Photos Uploaded", desc: "When a customer uploads vehicle photos", channelKey: "photos_uploaded_channels", icon: Bell },
+  { key: "docs_uploaded", label: "Documents Uploaded", desc: "When a customer uploads documents", channelKey: "docs_uploaded_channels", icon: Bell },
+  { key: "status_change", label: "Status Change", desc: "When a submission status is updated", channelKey: "status_change_channels", icon: Bell },
+  { key: "staff_customer_accepted", label: "Customer Accepted Offer", desc: "Alert staff immediately when a customer clicks 'Accept Offer'", channelKey: "staff_customer_accepted_channels", icon: Handshake },
+  { key: "staff_deal_completed", label: "Deal Completed", desc: "When a submission reaches 'Purchase Complete' status", channelKey: "staff_deal_completed_channels", icon: PartyPopper },
 ] as const;
 
 const CUSTOMER_TRIGGERS = [
-  {
-    key: "customer_offer_accepted",
-    label: "Offer Accepted Confirmation",
-    desc: "Send the customer their accepted offer amount, vehicle details, and next steps",
-    channelKey: "customer_offer_accepted_channels",
-    icon: UserCheck,
-  },
-  {
-    key: "customer_appointment_booked",
-    label: "Appointment Confirmation",
-    desc: "Send the customer their appointment date/time, dealership address, accepted offer, and what to bring",
-    channelKey: "customer_appointment_channels",
-    icon: CalendarCheck,
-  },
+  { key: "customer_offer_ready", label: "Offer Ready", desc: "Notify customer when their cash offer has been set — includes offer amount & link to view", channelKey: "customer_offer_ready_channels", icon: DollarSign },
+  { key: "customer_offer_accepted", label: "Offer Accepted Confirmation", desc: "Confirm the accepted offer amount, vehicle details, and next steps", channelKey: "customer_offer_accepted_channels", icon: UserCheck },
+  { key: "customer_appointment_booked", label: "Appointment Confirmation", desc: "Send appointment date/time, dealership address, accepted offer, and what to bring", channelKey: "customer_appointment_channels", icon: CalendarCheck },
+  { key: "customer_appointment_reminder", label: "Appointment Reminder (24hr)", desc: "Remind customer 24 hours before their scheduled inspection with address and what to bring", channelKey: "customer_appointment_reminder_channels", icon: CalendarClock },
+  { key: "customer_appointment_rescheduled", label: "Appointment Rescheduled", desc: "Notify customer when their appointment is rescheduled with new date/time and location", channelKey: "customer_appointment_rescheduled_channels", icon: RefreshCw },
 ] as const;
 
 export default function NotificationSettings() {
@@ -114,21 +129,32 @@ export default function NotificationSettings() {
       .eq("dealership_id", "default")
       .maybeSingle();
     if (data) {
+      const d = data as any;
       setConfig({
         ...DEFAULTS,
         ...data,
-        email_recipients: (data.email_recipients as string[]) || [],
-        sms_recipients: (data.sms_recipients as string[]) || [],
-        new_submission_channels: (data.new_submission_channels as string[]) || ["email", "sms"],
-        hot_lead_channels: (data.hot_lead_channels as string[]) || ["email", "sms"],
-        appointment_channels: (data.appointment_channels as string[]) || ["email", "sms"],
-        photos_uploaded_channels: (data.photos_uploaded_channels as string[]) || ["email"],
-        docs_uploaded_channels: (data.docs_uploaded_channels as string[]) || ["email"],
-        status_change_channels: (data.status_change_channels as string[]) || ["email"],
-        notify_customer_offer_accepted: data.notify_customer_offer_accepted ?? true,
-        customer_offer_accepted_channels: (data.customer_offer_accepted_channels as string[]) || ["email", "sms"],
-        notify_customer_appointment_booked: data.notify_customer_appointment_booked ?? true,
-        customer_appointment_channels: (data.customer_appointment_channels as string[]) || ["email", "sms"],
+        email_recipients: (d.email_recipients as string[]) || [],
+        sms_recipients: (d.sms_recipients as string[]) || [],
+        new_submission_channels: (d.new_submission_channels as string[]) || ["email", "sms"],
+        hot_lead_channels: (d.hot_lead_channels as string[]) || ["email", "sms"],
+        appointment_channels: (d.appointment_channels as string[]) || ["email", "sms"],
+        photos_uploaded_channels: (d.photos_uploaded_channels as string[]) || ["email"],
+        docs_uploaded_channels: (d.docs_uploaded_channels as string[]) || ["email"],
+        status_change_channels: (d.status_change_channels as string[]) || ["email"],
+        staff_customer_accepted_channels: (d.staff_customer_accepted_channels as string[]) || ["email", "sms"],
+        staff_deal_completed_channels: (d.staff_deal_completed_channels as string[]) || ["email"],
+        notify_staff_customer_accepted: d.notify_staff_customer_accepted ?? true,
+        notify_staff_deal_completed: d.notify_staff_deal_completed ?? true,
+        notify_customer_offer_accepted: d.notify_customer_offer_accepted ?? true,
+        customer_offer_accepted_channels: (d.customer_offer_accepted_channels as string[]) || ["email", "sms"],
+        notify_customer_appointment_booked: d.notify_customer_appointment_booked ?? true,
+        customer_appointment_channels: (d.customer_appointment_channels as string[]) || ["email", "sms"],
+        notify_customer_offer_ready: d.notify_customer_offer_ready ?? true,
+        customer_offer_ready_channels: (d.customer_offer_ready_channels as string[]) || ["email"],
+        notify_customer_appointment_reminder: d.notify_customer_appointment_reminder ?? true,
+        customer_appointment_reminder_channels: (d.customer_appointment_reminder_channels as string[]) || ["email", "sms"],
+        notify_customer_appointment_rescheduled: d.notify_customer_appointment_rescheduled ?? true,
+        customer_appointment_rescheduled_channels: (d.customer_appointment_rescheduled_channels as string[]) || ["email", "sms"],
       });
     }
     setLoading(false);
@@ -136,10 +162,7 @@ export default function NotificationSettings() {
 
   const handleSave = async () => {
     setSaving(true);
-    const payload = {
-      ...config,
-      updated_at: new Date().toISOString(),
-    };
+    const payload = { ...config, updated_at: new Date().toISOString() };
     delete (payload as any).id;
 
     const { data: existing } = await supabase
@@ -150,14 +173,9 @@ export default function NotificationSettings() {
 
     let error;
     if (existing) {
-      ({ error } = await supabase
-        .from("notification_settings")
-        .update(payload)
-        .eq("id", existing.id));
+      ({ error } = await supabase.from("notification_settings").update(payload).eq("id", existing.id));
     } else {
-      ({ error } = await supabase
-        .from("notification_settings")
-        .insert(payload));
+      ({ error } = await supabase.from("notification_settings").insert(payload));
     }
 
     setSaving(false);
@@ -224,7 +242,7 @@ export default function NotificationSettings() {
   }
 
   const renderChannelButtons = (channelKey: string, channels: string[]) => (
-    <div className="flex gap-1.5">
+    <div className="flex gap-1.5 shrink-0">
       <button
         onClick={() => toggleChannel(channelKey, "email")}
         className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
@@ -248,6 +266,32 @@ export default function NotificationSettings() {
     </div>
   );
 
+  const renderTriggerRow = (trigger: { key: string; label: string; desc: string; channelKey: string; icon: any }) => {
+    const enabled = (config as any)[`notify_${trigger.key}`] as boolean;
+    const channels = (config as any)[trigger.channelKey] as string[];
+    const Icon = trigger.icon;
+    return (
+      <div
+        key={trigger.key}
+        className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
+          enabled ? "bg-background border-border" : "bg-muted/30 border-transparent opacity-60"
+        }`}
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <Switch checked={enabled} onCheckedChange={() => toggleTrigger(trigger.key)} />
+          <div className="flex items-start gap-2 min-w-0">
+            <Icon className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
+            <div className="min-w-0">
+              <p className="text-sm font-medium">{trigger.label}</p>
+              <p className="text-xs text-muted-foreground">{trigger.desc}</p>
+            </div>
+          </div>
+        </div>
+        {enabled && renderChannelButtons(trigger.channelKey, channels)}
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-4 max-w-3xl">
       <div className="flex items-center justify-between">
@@ -261,7 +305,7 @@ export default function NotificationSettings() {
         </Button>
       </div>
 
-      {/* Recipients */}
+      {/* Staff Recipients */}
       <Collapsible open={openSections.recipients} onOpenChange={() => toggle("recipients")}>
         <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
           <div className="flex items-center gap-2 font-medium">
@@ -271,7 +315,6 @@ export default function NotificationSettings() {
           <ChevronDown className={`w-4 h-4 transition-transform ${openSections.recipients ? "rotate-180" : ""}`} />
         </CollapsibleTrigger>
         <CollapsibleContent className="pt-3 space-y-4 px-1">
-          {/* Email recipients */}
           <div className="space-y-2">
             <Label className="text-sm font-medium flex items-center gap-1.5">
               <Mail className="w-3.5 h-3.5" /> Email Recipients
@@ -280,9 +323,7 @@ export default function NotificationSettings() {
               {config.email_recipients.map(email => (
                 <Badge key={email} variant="secondary" className="gap-1 pr-1">
                   {email}
-                  <button onClick={() => removeEmail(email)} className="hover:text-destructive">
-                    <X className="w-3 h-3" />
-                  </button>
+                  <button onClick={() => removeEmail(email)} className="hover:text-destructive"><X className="w-3 h-3" /></button>
                 </Badge>
               ))}
               {config.email_recipients.length === 0 && (
@@ -290,20 +331,10 @@ export default function NotificationSettings() {
               )}
             </div>
             <div className="flex gap-2">
-              <Input
-                placeholder="staff@example.com"
-                value={newEmail}
-                onChange={e => setNewEmail(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && addEmail()}
-                className="max-w-xs text-sm"
-              />
-              <Button size="sm" variant="outline" onClick={addEmail}>
-                <Plus className="w-3.5 h-3.5 mr-1" /> Add
-              </Button>
+              <Input placeholder="staff@example.com" value={newEmail} onChange={e => setNewEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && addEmail()} className="max-w-xs text-sm" />
+              <Button size="sm" variant="outline" onClick={addEmail}><Plus className="w-3.5 h-3.5 mr-1" /> Add</Button>
             </div>
           </div>
-
-          {/* SMS recipients */}
           <div className="space-y-2">
             <Label className="text-sm font-medium flex items-center gap-1.5">
               <Phone className="w-3.5 h-3.5" /> SMS Recipients
@@ -312,9 +343,7 @@ export default function NotificationSettings() {
               {config.sms_recipients.map(phone => (
                 <Badge key={phone} variant="secondary" className="gap-1 pr-1">
                   {formatPhone(phone) || phone}
-                  <button onClick={() => removePhone(phone)} className="hover:text-destructive">
-                    <X className="w-3 h-3" />
-                  </button>
+                  <button onClick={() => removePhone(phone)} className="hover:text-destructive"><X className="w-3 h-3" /></button>
                 </Badge>
               ))}
               {config.sms_recipients.length === 0 && (
@@ -322,16 +351,8 @@ export default function NotificationSettings() {
               )}
             </div>
             <div className="flex gap-2">
-              <Input
-                placeholder="(555) 123-4567"
-                value={newPhone}
-                onChange={e => setNewPhone(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && addPhone()}
-                className="max-w-xs text-sm"
-              />
-              <Button size="sm" variant="outline" onClick={addPhone}>
-                <Plus className="w-3.5 h-3.5 mr-1" /> Add
-              </Button>
+              <Input placeholder="(555) 123-4567" value={newPhone} onChange={e => setNewPhone(e.target.value)} onKeyDown={e => e.key === "Enter" && addPhone()} className="max-w-xs text-sm" />
+              <Button size="sm" variant="outline" onClick={addPhone}><Plus className="w-3.5 h-3.5 mr-1" /> Add</Button>
             </div>
           </div>
         </CollapsibleContent>
@@ -343,34 +364,15 @@ export default function NotificationSettings() {
           <div className="flex items-center gap-2 font-medium">
             <Bell className="w-4 h-4" />
             Staff Alert Triggers
+            <Badge variant="outline" className="text-[10px] ml-1">{STAFF_TRIGGERS.length}</Badge>
           </div>
           <ChevronDown className={`w-4 h-4 transition-transform ${openSections.triggers ? "rotate-180" : ""}`} />
         </CollapsibleTrigger>
         <CollapsibleContent className="pt-3 space-y-2 px-1">
-          {STAFF_TRIGGERS.map(trigger => {
-            const enabled = (config as any)[`notify_${trigger.key}`] as boolean;
-            const channels = (config as any)[trigger.channelKey] as string[];
-            return (
-              <div
-                key={trigger.key}
-                className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
-                  enabled ? "bg-background border-border" : "bg-muted/30 border-transparent opacity-60"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Switch
-                    checked={enabled}
-                    onCheckedChange={() => toggleTrigger(trigger.key)}
-                  />
-                  <div>
-                    <p className="text-sm font-medium">{trigger.label}</p>
-                    <p className="text-xs text-muted-foreground">{trigger.desc}</p>
-                  </div>
-                </div>
-                {enabled && renderChannelButtons(trigger.channelKey, channels)}
-              </div>
-            );
-          })}
+          <p className="text-xs text-muted-foreground mb-2">
+            These alerts are sent to your configured staff recipients above.
+          </p>
+          {STAFF_TRIGGERS.map(trigger => renderTriggerRow(trigger))}
         </CollapsibleContent>
       </Collapsible>
 
@@ -380,6 +382,7 @@ export default function NotificationSettings() {
           <div className="flex items-center gap-2 font-medium">
             <UserCheck className="w-4 h-4" />
             Customer Notifications
+            <Badge variant="outline" className="text-[10px] ml-1">{CUSTOMER_TRIGGERS.length}</Badge>
           </div>
           <ChevronDown className={`w-4 h-4 transition-transform ${openSections.customer ? "rotate-180" : ""}`} />
         </CollapsibleTrigger>
@@ -387,43 +390,7 @@ export default function NotificationSettings() {
           <p className="text-xs text-muted-foreground mb-2">
             These are sent directly to the customer's email/phone on file when the event occurs.
           </p>
-          {CUSTOMER_TRIGGERS.map(trigger => {
-            const enabled = (config as any)[`notify_${trigger.key}`] as boolean;
-            const channels = (config as any)[trigger.channelKey] as string[];
-            const Icon = trigger.icon;
-            return (
-              <div
-                key={trigger.key}
-                className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
-                  enabled ? "bg-background border-border" : "bg-muted/30 border-transparent opacity-60"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Switch
-                    checked={enabled}
-                    onCheckedChange={() => toggleTrigger(trigger.key)}
-                  />
-                  <div className="flex items-start gap-2">
-                    <Icon className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium">{trigger.label}</p>
-                      <p className="text-xs text-muted-foreground">{trigger.desc}</p>
-                    </div>
-                  </div>
-                </div>
-                {enabled && renderChannelButtons(trigger.channelKey, channels)}
-              </div>
-            );
-          })}
-
-          <div className="mt-3 p-3 bg-muted/30 rounded-lg border border-dashed border-border">
-            <p className="text-xs text-muted-foreground">
-              <strong>Offer Accepted:</strong> Sends the customer their offer amount, vehicle info, and what to do next.
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              <strong>Appointment Confirmation:</strong> Sends the accepted offer, inspection date & time, dealership address, and a list of what to bring (vehicle, keys, ID, title/registration).
-            </p>
-          </div>
+          {CUSTOMER_TRIGGERS.map(trigger => renderTriggerRow(trigger))}
         </CollapsibleContent>
       </Collapsible>
 
@@ -442,30 +409,17 @@ export default function NotificationSettings() {
               <p className="text-sm font-medium">Enable Quiet Hours</p>
               <p className="text-xs text-muted-foreground">Suppress SMS notifications during off-hours (emails still queue)</p>
             </div>
-            <Switch
-              checked={config.quiet_hours_enabled}
-              onCheckedChange={v => setConfig(c => ({ ...c, quiet_hours_enabled: v }))}
-            />
+            <Switch checked={config.quiet_hours_enabled} onCheckedChange={v => setConfig(c => ({ ...c, quiet_hours_enabled: v }))} />
           </div>
           {config.quiet_hours_enabled && (
             <div className="flex items-center gap-4 pl-1">
               <div className="space-y-1">
                 <Label className="text-xs">Start</Label>
-                <Input
-                  type="time"
-                  value={config.quiet_hours_start}
-                  onChange={e => setConfig(c => ({ ...c, quiet_hours_start: e.target.value }))}
-                  className="w-32 text-sm"
-                />
+                <Input type="time" value={config.quiet_hours_start} onChange={e => setConfig(c => ({ ...c, quiet_hours_start: e.target.value }))} className="w-32 text-sm" />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">End</Label>
-                <Input
-                  type="time"
-                  value={config.quiet_hours_end}
-                  onChange={e => setConfig(c => ({ ...c, quiet_hours_end: e.target.value }))}
-                  className="w-32 text-sm"
-                />
+                <Input type="time" value={config.quiet_hours_end} onChange={e => setConfig(c => ({ ...c, quiet_hours_end: e.target.value }))} className="w-32 text-sm" />
               </div>
               <div className="mt-5">
                 <Badge variant="outline" className="text-xs">

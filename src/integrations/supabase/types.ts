@@ -331,7 +331,10 @@ export type Database = {
           appointment_channels: string[]
           created_at: string
           customer_appointment_channels: string[]
+          customer_appointment_reminder_channels: string[]
+          customer_appointment_rescheduled_channels: string[]
           customer_offer_accepted_channels: string[]
+          customer_offer_ready_channels: string[]
           dealership_id: string
           docs_uploaded_channels: string[]
           email_recipients: string[]
@@ -340,17 +343,24 @@ export type Database = {
           new_submission_channels: string[]
           notify_appointment_booked: boolean
           notify_customer_appointment_booked: boolean
+          notify_customer_appointment_reminder: boolean
+          notify_customer_appointment_rescheduled: boolean
           notify_customer_offer_accepted: boolean
+          notify_customer_offer_ready: boolean
           notify_docs_uploaded: boolean
           notify_hot_lead: boolean
           notify_new_submission: boolean
           notify_photos_uploaded: boolean
+          notify_staff_customer_accepted: boolean
+          notify_staff_deal_completed: boolean
           notify_status_change: boolean
           photos_uploaded_channels: string[]
           quiet_hours_enabled: boolean
           quiet_hours_end: string
           quiet_hours_start: string
           sms_recipients: string[]
+          staff_customer_accepted_channels: string[]
+          staff_deal_completed_channels: string[]
           status_change_channels: string[]
           updated_at: string
         }
@@ -358,7 +368,10 @@ export type Database = {
           appointment_channels?: string[]
           created_at?: string
           customer_appointment_channels?: string[]
+          customer_appointment_reminder_channels?: string[]
+          customer_appointment_rescheduled_channels?: string[]
           customer_offer_accepted_channels?: string[]
+          customer_offer_ready_channels?: string[]
           dealership_id?: string
           docs_uploaded_channels?: string[]
           email_recipients?: string[]
@@ -367,17 +380,24 @@ export type Database = {
           new_submission_channels?: string[]
           notify_appointment_booked?: boolean
           notify_customer_appointment_booked?: boolean
+          notify_customer_appointment_reminder?: boolean
+          notify_customer_appointment_rescheduled?: boolean
           notify_customer_offer_accepted?: boolean
+          notify_customer_offer_ready?: boolean
           notify_docs_uploaded?: boolean
           notify_hot_lead?: boolean
           notify_new_submission?: boolean
           notify_photos_uploaded?: boolean
+          notify_staff_customer_accepted?: boolean
+          notify_staff_deal_completed?: boolean
           notify_status_change?: boolean
           photos_uploaded_channels?: string[]
           quiet_hours_enabled?: boolean
           quiet_hours_end?: string
           quiet_hours_start?: string
           sms_recipients?: string[]
+          staff_customer_accepted_channels?: string[]
+          staff_deal_completed_channels?: string[]
           status_change_channels?: string[]
           updated_at?: string
         }
@@ -385,7 +405,10 @@ export type Database = {
           appointment_channels?: string[]
           created_at?: string
           customer_appointment_channels?: string[]
+          customer_appointment_reminder_channels?: string[]
+          customer_appointment_rescheduled_channels?: string[]
           customer_offer_accepted_channels?: string[]
+          customer_offer_ready_channels?: string[]
           dealership_id?: string
           docs_uploaded_channels?: string[]
           email_recipients?: string[]
@@ -394,17 +417,24 @@ export type Database = {
           new_submission_channels?: string[]
           notify_appointment_booked?: boolean
           notify_customer_appointment_booked?: boolean
+          notify_customer_appointment_reminder?: boolean
+          notify_customer_appointment_rescheduled?: boolean
           notify_customer_offer_accepted?: boolean
+          notify_customer_offer_ready?: boolean
           notify_docs_uploaded?: boolean
           notify_hot_lead?: boolean
           notify_new_submission?: boolean
           notify_photos_uploaded?: boolean
+          notify_staff_customer_accepted?: boolean
+          notify_staff_deal_completed?: boolean
           notify_status_change?: boolean
           photos_uploaded_channels?: string[]
           quiet_hours_enabled?: boolean
           quiet_hours_end?: string
           quiet_hours_start?: string
           sms_recipients?: string[]
+          staff_customer_accepted_channels?: string[]
+          staff_deal_completed_channels?: string[]
           status_change_channels?: string[]
           updated_at?: string
         }
