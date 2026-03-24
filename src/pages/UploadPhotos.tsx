@@ -225,12 +225,12 @@ const UploadPhotos = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="bg-primary text-primary-foreground px-6 py-1 mb-0">
+      <div className="bg-primary text-primary-foreground px-6 py-4 mb-0">
         <div className="max-w-lg mx-auto flex items-center gap-3">
           <Link to={`/my-submission/${token}`} className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <img src={config.logo_white_url || harteLogoFallback} alt={config.dealership_name} className="h-12 w-auto" />
+          <img src={config.logo_white_url || harteLogoFallback} alt={config.dealership_name} className="h-[70px] w-auto" />
           <h1 className="font-bold text-lg">Upload Vehicle Photos</h1>
         </div>
       </div>
