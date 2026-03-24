@@ -2,13 +2,6 @@ import { Car, Gauge, Palette, Settings2, CheckCircle, Pencil } from "lucide-reac
 import { motion } from "framer-motion";
 import { InlineEdit } from "@/components/offer/InlineEdit";
 
-const CONDITION_OPTIONS = [
-  { value: "excellent", label: "Excellent" },
-  { value: "good", label: "Good" },
-  { value: "fair", label: "Fair" },
-  { value: "rough", label: "Rough" },
-];
-
 interface PortalVehicleSummaryProps {
   vehicleStr: string;
   vin: string | null;
@@ -86,23 +79,14 @@ const PortalVehicleSummary = ({
               </div>
             </div>
           )}
-          {(exteriorColor || canEdit) && (
+          {exteriorColor && (
             <div className="flex items-center gap-2.5">
               <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
                 <Palette className="w-3.5 h-3.5 text-muted-foreground" />
               </div>
               <div>
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Color</p>
-                {canEdit && onFieldUpdate ? (
-                  <InlineEdit
-                    value={exteriorColor || "—"}
-                    onSave={(val) => onFieldUpdate("exterior_color", val)}
-                    label="color"
-                    className="text-sm font-medium"
-                  />
-                ) : (
-                  <p className="text-sm font-medium">{exteriorColor || "—"}</p>
-                )}
+                <p className="text-sm font-medium">{exteriorColor}</p>
               </div>
             </div>
           )}
@@ -117,25 +101,14 @@ const PortalVehicleSummary = ({
               </div>
             </div>
           )}
-          {(overallCondition || canEdit) && (
+          {overallCondition && (
             <div className="flex items-center gap-2.5">
               <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
                 <CheckCircle className="w-3.5 h-3.5 text-muted-foreground" />
               </div>
               <div>
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Condition</p>
-                {canEdit && onFieldUpdate ? (
-                  <InlineEdit
-                    value={overallCondition || "good"}
-                    onSave={(val) => onFieldUpdate("overall_condition", val)}
-                    type="select"
-                    options={CONDITION_OPTIONS}
-                    label="condition"
-                    className="text-sm font-medium capitalize"
-                  />
-                ) : (
-                  <p className="text-sm font-medium capitalize">{overallCondition || "—"}</p>
-                )}
+                <p className="text-sm font-medium capitalize">{overallCondition}</p>
               </div>
             </div>
           )}

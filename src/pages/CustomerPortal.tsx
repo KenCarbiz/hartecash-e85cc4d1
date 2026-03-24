@@ -19,8 +19,23 @@ import WhatToExpect from "@/components/portal/WhatToExpect";
 import ProgressSteps, { mapStatusToStepIndex } from "@/components/portal/ProgressSteps";
 import PortalOfferCard from "@/components/portal/PortalOfferCard";
 import PortalVehicleSummary from "@/components/portal/PortalVehicleSummary";
+import { recalculateFromSubmission, type SubmissionCondition } from "@/lib/recalculateOffer";
+import type { OfferSettings, OfferRule } from "@/lib/offerCalculator";
+import { useToast } from "@/hooks/use-toast";
+
 interface ConditionData {
   drivetrain: string | null;
+  accidents: string | null;
+  exterior_damage: string[] | null;
+  interior_damage: string[] | null;
+  mechanical_issues: string[] | null;
+  engine_issues: string[] | null;
+  tech_issues: string[] | null;
+  windshield_damage: string | null;
+  smoked_in: string | null;
+  tires_replaced: string | null;
+  num_keys: string | null;
+  drivable: string | null;
 }
 
 interface PortalSubmission {
@@ -61,8 +76,11 @@ const STAGE_MAPPING: Record<string, string> = {
 const CustomerPortal = () => {
   const { token } = useParams<{ token: string }>();
   const { config } = useSiteConfig();
+  const { toast } = useToast();
   const [submission, setSubmission] = useState<PortalSubmission | null>(null);
   const [condition, setCondition] = useState<ConditionData | null>(null);
+  const [offerSettings, setOfferSettings] = useState<OfferSettings | null>(null);
+  const [offerRules, setOfferRules] = useState<OfferRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -76,17 +94,84 @@ const CustomerPortal = () => {
       setSubmission(data[0] as unknown as PortalSubmission);
       setLoading(false);
 
-      // Fetch drivetrain for vehicle summary
-      const { data: condData } = await supabase
-        .from("submissions")
-        .select("drivetrain")
-        .eq("token", token)
-        .maybeSingle();
-      if (condData) setCondition(condData as ConditionData);
+      // Fetch condition + offer config for mileage recalculation
+      const [condRes, settingsRes, rulesRes] = await Promise.all([
+        supabase
+          .from("submissions")
+          .select("drivetrain, accidents, drivable, exterior_damage, interior_damage, mechanical_issues, engine_issues, tech_issues, smoked_in, tires_replaced, num_keys, windshield_damage")
+          .eq("token", token)
+          .maybeSingle(),
+        supabase.from("offer_settings" as any).select("*").eq("dealership_id", "default").maybeSingle(),
+        supabase.from("offer_rules" as any).select("*").eq("dealership_id", "default").eq("is_active", true),
+      ]);
+      if (condRes.data) setCondition(condRes.data as ConditionData);
+      if (settingsRes.data) setOfferSettings(settingsRes.data as unknown as OfferSettings);
+      if (rulesRes.data) setOfferRules(rulesRes.data as unknown as OfferRule[]);
     };
     fetchData();
   }, [token]);
 
+  /* ─── Mileage update handler ─── */
+  const handleMileageUpdate = async (newMileage: string) => {
+    if (!submission || !condition) return;
+
+    const newSubmission = { ...submission, mileage: newMileage };
+
+    // Recalculate offer if we have bb data and no manual offered_price
+    if (submission.bb_tradein_avg && !submission.offered_price) {
+      const subCond: SubmissionCondition = {
+        overall_condition: submission.overall_condition,
+        mileage: newMileage,
+        vehicle_year: submission.vehicle_year,
+        vehicle_make: submission.vehicle_make,
+        vehicle_model: submission.vehicle_model,
+        accidents: condition.accidents,
+        exterior_damage: condition.exterior_damage,
+        interior_damage: condition.interior_damage,
+        mechanical_issues: condition.mechanical_issues,
+        engine_issues: condition.engine_issues,
+        tech_issues: condition.tech_issues,
+        windshield_damage: condition.windshield_damage,
+        smoked_in: condition.smoked_in,
+        tires_replaced: condition.tires_replaced,
+        num_keys: condition.num_keys,
+        drivable: condition.drivable,
+      };
+
+      const newEstimate = recalculateFromSubmission(
+        submission.bb_tradein_avg,
+        subCond,
+        offerSettings,
+        offerRules
+      );
+
+      if (newEstimate) {
+        newSubmission.estimated_offer_low = newEstimate.low;
+        newSubmission.estimated_offer_high = newEstimate.high;
+      }
+    }
+
+    setSubmission(newSubmission);
+
+    // Save to database
+    try {
+      const updateData: Record<string, any> = { mileage: newMileage };
+      if (newSubmission.estimated_offer_low !== submission.estimated_offer_low ||
+          newSubmission.estimated_offer_high !== submission.estimated_offer_high) {
+        updateData.estimated_offer_low = newSubmission.estimated_offer_low;
+        updateData.estimated_offer_high = newSubmission.estimated_offer_high;
+      }
+
+      await supabase
+        .from("submissions")
+        .update(updateData as any)
+        .eq("token", token!);
+
+      toast({ title: "Mileage updated", description: "Your offer has been recalculated." });
+    } catch {
+      toast({ title: "Update failed", description: "Please try again.", variant: "destructive" });
+    }
+  };
 
   if (loading) return <PortalSkeleton />;
 
@@ -113,6 +198,8 @@ const CustomerPortal = () => {
   const stepIdx = mapStatusToStepIndex(mappedStatus);
   const isComplete = mappedStatus === "purchase_complete";
 
+  // Mileage editable only when no offered_price and has BB data
+  const canEditMileage = !s.offered_price && !!s.bb_tradein_avg;
 
   const scheduleLink = `/schedule?token=${s.token}&vehicle=${encodeURIComponent(vehicleStr)}&name=${encodeURIComponent(s.name || "")}&email=${encodeURIComponent(s.email || "")}&phone=${encodeURIComponent(s.phone || "")}`;
 
@@ -159,7 +246,12 @@ const CustomerPortal = () => {
     exteriorColor: s.exterior_color,
     overallCondition: s.overall_condition,
     drivetrain: condition?.drivetrain || null,
-    canEdit: false,
+    canEdit: canEditMileage,
+    onFieldUpdate: canEditMileage
+      ? (field: string, value: string) => {
+          if (field === "mileage") handleMileageUpdate(value);
+        }
+      : undefined,
   };
 
   return (
@@ -196,6 +288,7 @@ const CustomerPortal = () => {
                 <PortalOfferCard {...offerCardProps} />
                 <PortalVehicleSummary {...vehicleSummaryProps} />
                 <DealerContactCard />
+                <CommunicationPreferences token={s.token} email={s.email} phone={s.phone} />
                 {SubmittedFooter}
               </div>
             </div>
@@ -214,7 +307,6 @@ const CustomerPortal = () => {
                 </>
               )}
               <PortalFAQ />
-              <CommunicationPreferences token={s.token} email={s.email} phone={s.phone} />
             </div>
           </div>
         </div>
@@ -237,8 +329,8 @@ const CustomerPortal = () => {
             </>
           )}
           <PortalFAQ />
-          <CommunicationPreferences token={s.token} email={s.email} phone={s.phone} />
           <DealerContactCard />
+          <CommunicationPreferences token={s.token} email={s.email} phone={s.phone} />
           {SubmittedFooter}
         </div>
       </div>
