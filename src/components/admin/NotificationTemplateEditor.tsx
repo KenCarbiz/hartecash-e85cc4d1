@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { DEFAULT_TEMPLATES, PLACEHOLDER_VARS, type TemplateDefaults } from "@/lib/notificationDefaults";
@@ -12,7 +12,29 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Save, RotateCcw, Loader2, ChevronDown, Info, Mail, Phone } from "lucide-react";
+import { Save, RotateCcw, Loader2, ChevronDown, Info, Mail, Phone, Eye, EyeOff } from "lucide-react";
+
+const SAMPLE_DATA: Record<string, string> = {
+  "{{customer_name}}": "Sarah Johnson",
+  "{{vehicle}}": "2021 Toyota Camry",
+  "{{mileage}}": "34,200",
+  "{{offer_amount}}": "$18,500",
+  "{{portal_link}}": "https://hartecash.lovable.app/offer/abc123",
+  "{{appointment_date}}": "January 15, 2026",
+  "{{appointment_time}}": "10:30 AM",
+  "{{location}}": "Harte Auto — Hartford, CT",
+  "{{dealership_name}}": "Harte Auto Group",
+  "{{status}}": "Offer Made",
+  "{{guarantee_days}}": "8",
+};
+
+function replaceSampleData(text: string): string {
+  let result = text;
+  for (const [key, val] of Object.entries(SAMPLE_DATA)) {
+    result = result.replaceAll(key, val);
+  }
+  return result;
+}
 
 interface Props {
   open: boolean;
