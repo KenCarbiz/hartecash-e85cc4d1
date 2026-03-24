@@ -220,6 +220,7 @@ const AdminDashboard = () => {
   const [rescheduleAppt, setRescheduleAppt] = useState<Appointment | null>(null);
   const [rescheduleForm, setRescheduleForm] = useState({ preferred_date: "", preferred_time: "" });
   const [userRole, setUserRole] = useState<string>("");
+  const [userName, setUserName] = useState<string>("");
   const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [activityLog, setActivityLog] = useState<{ id: string; action: string; old_value: string | null; new_value: string | null; performed_by: string | null; created_at: string }[]>([]);
   const [duplicateWarnings, setDuplicateWarnings] = useState<Record<string, string[]>>({});
