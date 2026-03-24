@@ -184,7 +184,7 @@ const VehicleImage = ({ year, make, model, style, selectedColor, compact = false
             <img
               src={imageUrl}
               alt={`${year} ${make} ${model}${selectedColor ? ` in ${selectedColor}` : ""}`}
-              className="max-w-full max-h-full object-contain drop-shadow-lg"
+              className="max-w-full max-h-full object-contain"
             />
           </motion.div>
         )}
