@@ -655,9 +655,10 @@ const OfferPage = () => {
   });
 
   // Mechanical issues
-  const noMechanical = !condition?.mechanical_issues || condition.mechanical_issues.length === 0 || (condition.mechanical_issues.length === 1 && condition.mechanical_issues[0] === "none");
+  const mechItems = condition?.mechanical_issues?.filter(v => v !== "none") || [];
+  const noMechanical = mechItems.length === 0;
   conditionItems.push({
-    label: noMechanical ? "Mechanical Issues: None" : `Mechanical Issues: ${condition!.mechanical_issues!.filter(v => v !== "none").join(", ")}`,
+    label: noMechanical ? "Mechanical Issues: None" : `Mechanical Issues: ${mechItems.length} issue${mechItems.length > 1 ? "s" : ""}`,
     status: noMechanical ? "good" : "warn",
     icon: <Wrench className="w-3.5 h-3.5" />,
     field: "mechanical_issues",
