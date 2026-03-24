@@ -83,6 +83,7 @@ interface Submission {
   overall_condition: string | null;
   next_step: string | null;
   photos_uploaded: boolean;
+  docs_uploaded: boolean;
   loan_status: string | null;
   exterior_color: string | null;
   drivetrain: string | null;
