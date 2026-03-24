@@ -14,6 +14,7 @@ interface PortalOfferCardProps {
   token: string;
   createdAt: string | null;
   guaranteeDays: number;
+  isAccepted?: boolean;
 }
 
 function useCountdown(expiresDate: Date | null) {
@@ -41,16 +42,17 @@ const PortalOfferCard = ({
   token,
   createdAt,
   guaranteeDays,
+  isAccepted: isAcceptedOverride = false,
 }: PortalOfferCardProps) => {
   const [activeTab, setActiveTab] = useState<"sell" | "trade">("sell");
 
   const hasOffer = !!offeredPrice || !!estimatedOfferHigh;
   if (!hasOffer) return null;
 
-  const isAccepted = !!offeredPrice;
+  const isAccepted = isAcceptedOverride || !!offeredPrice;
   const cashOffer = offeredPrice || estimatedOfferHigh || 0;
   const estimateLow = estimatedOfferLow || 0;
-  const isEstimate = !offeredPrice && !!estimatedOfferHigh;
+  const isEstimate = !isAccepted && !!estimatedOfferHigh;
 
   const { state, rate: taxRate } = getTaxRateFromZip(zip || "");
   const stateName = state ? STATE_NAMES[state] || state : null;
