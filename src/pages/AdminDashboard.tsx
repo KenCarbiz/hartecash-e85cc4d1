@@ -42,14 +42,13 @@ interface PendingRequest {
   created_at: string;
 }
 
-const STORE_LOCATIONS = [
-  { value: "hartford_nissan", label: "Harte Nissan — Hartford, CT" },
-  { value: "hartford_infiniti", label: "Harte Infiniti — Hartford, CT" },
-  { value: "west_haven", label: "George Harte Nissan — West Haven, CT" },
-  { value: "wallingford", label: "George Harte Infiniti — Wallingford, CT" },
-  { value: "old_saybrook", label: "Harte Hyundai — Old Saybrook, CT" },
-];
-
+// Dynamic locations loaded from DB — replaces hardcoded STORE_LOCATIONS
+interface DealerLocation {
+  id: string;
+  name: string;
+  city: string;
+  state: string;
+}
 interface Appointment {
   id: string;
   submission_token: string | null;
@@ -205,8 +204,17 @@ const AdminDashboard = () => {
   const [selectedApptLocation, setSelectedApptLocation] = useState<string | null>(null);
   const [optOutStatus, setOptOutStatus] = useState<{ email: boolean; sms: boolean }>({ email: false, sms: false });
   const [activeSection, setActiveSection] = useState("submissions");
+  const [dealerLocations, setDealerLocations] = useState<DealerLocation[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Helper: resolve a store_location value (UUID or legacy slug) to a friendly label
+  const getLocationLabel = (loc: string | null) => {
+    if (!loc) return null;
+    const found = dealerLocations.find(l => l.id === loc || l.name.toLowerCase().replace(/\s+/g, "_") === loc);
+    if (found) return `${found.name} — ${found.city}, ${found.state}`;
+    return loc; // fallback to raw value
+  };
 
   const canSetPrice = ["admin", "used_car_manager", "gsm_gm"].includes(userRole);
   const canApprove = ["admin", "gsm_gm"].includes(userRole);
@@ -236,9 +244,15 @@ const AdminDashboard = () => {
     if (userRole) {
       fetchSubmissions();
       fetchAppointments();
+      fetchLocations();
       if (canManageAccess) fetchPendingRequests();
     }
   }, [page, userRole]);
+
+  const fetchLocations = async () => {
+    const { data } = await supabase.from("dealership_locations").select("id, name, city, state").eq("is_active", true).order("sort_order");
+    if (data) setDealerLocations(data);
+  };
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -1409,8 +1423,8 @@ const AdminDashboard = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Locations</SelectItem>
-                    {STORE_LOCATIONS.map(loc => (
-                      <SelectItem key={loc.value} value={loc.value}>{loc.label}</SelectItem>
+                    {dealerLocations.map(loc => (
+                      <SelectItem key={loc.id} value={loc.id}>{loc.name} — {loc.city}, {loc.state}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -1466,8 +1480,8 @@ const AdminDashboard = () => {
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="unset">Not Set</SelectItem>
-                                {STORE_LOCATIONS.map(loc => (
-                                  <SelectItem key={loc.value} value={loc.value}>{loc.label}</SelectItem>
+                                {dealerLocations.map(loc => (
+                                  <SelectItem key={loc.id} value={loc.id}>{loc.name} — {loc.city}, {loc.state}</SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
@@ -2324,7 +2338,7 @@ const AdminDashboard = () => {
                     </p>
                     {selectedApptLocation && (
                       <p className="text-sm text-muted-foreground">
-                        📍 {STORE_LOCATIONS.find(l => l.value === selectedApptLocation)?.label || selectedApptLocation}
+                        📍 {getLocationLabel(selectedApptLocation)}
                       </p>
                     )}
                     <Button
@@ -2582,7 +2596,7 @@ const AdminDashboard = () => {
               <Select value={apptForm.store_location} onValueChange={(v) => setApptForm(p => ({ ...p, store_location: v }))}>
                 <SelectTrigger><SelectValue placeholder="Select location" /></SelectTrigger>
                 <SelectContent>
-                  {STORE_LOCATIONS.map(loc => <SelectItem key={loc.value} value={loc.value}>{loc.label}</SelectItem>)}
+                  {dealerLocations.map(loc => <SelectItem key={loc.id} value={loc.id}>{loc.name} — {loc.city}, {loc.state}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
