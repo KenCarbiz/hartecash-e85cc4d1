@@ -254,6 +254,7 @@ const AdminDashboard = () => {
   const canDelete = userRole === "admin";
   const canManageAccess = userRole === "admin";
   const canUpdateStatus = true; // all staff
+  const { allowedSections, hasAccess } = useStaffPermissions(userId, canManageAccess);
 
   const auditLabel = userName
     ? `${userName} — ${ROLE_LABELS[userRole] || userRole}`
