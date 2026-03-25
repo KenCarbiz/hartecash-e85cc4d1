@@ -8,6 +8,7 @@ const Sitemap = () => {
       title: "Main Pages",
       links: [
         { label: "Home", to: "/" },
+        { label: "About Us", to: "/about" },
         { label: "Service Landing", to: "/service" },
         { label: "Schedule a Visit", to: "/schedule" },
       ],
