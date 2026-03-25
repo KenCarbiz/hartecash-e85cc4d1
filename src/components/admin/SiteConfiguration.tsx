@@ -65,6 +65,8 @@ const DEFAULT_CONFIG: SiteConfig = {
   enable_animations: false,
   use_animated_calculating: false,
   enable_dl_ocr: false,
+  cta_offer_color: "",
+  cta_accept_color: "",
 };
 
 interface SectionProps {
