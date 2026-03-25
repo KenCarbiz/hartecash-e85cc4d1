@@ -38,6 +38,8 @@ const VehicleImageInventory = () => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [showBulkDelete, setShowBulkDelete] = useState(false);
+  const [bulkDeleteMake, setBulkDeleteMake] = useState<string | null>(null);
+  const [bulkDeletingMake, setBulkDeletingMake] = useState(false);
   const { toast } = useToast();
 
   const fetchImages = async () => {
@@ -153,19 +155,15 @@ const VehicleImageInventory = () => {
   const handleBulkDelete = async () => {
     setBulkDeleting(true);
     try {
-      // Delete all files from storage
       const paths = images.map((img) => img.storage_path);
       if (paths.length > 0) {
         await supabase.storage.from("submission-photos").remove(paths);
       }
-
-      // Delete all cache entries
       const ids = images.map((img) => img.id);
       for (let i = 0; i < ids.length; i += 50) {
         const batch = ids.slice(i, i + 50);
         await supabase.from("vehicle_image_cache").delete().in("id", batch);
       }
-
       setImages([]);
       toast({ title: "All cleared", description: `${paths.length} cached image${paths.length !== 1 ? "s" : ""} deleted.` });
     } catch (err: any) {
@@ -173,6 +171,28 @@ const VehicleImageInventory = () => {
     }
     setBulkDeleting(false);
     setShowBulkDelete(false);
+  };
+
+  const handleBulkDeleteMake = async (make: string) => {
+    setBulkDeletingMake(true);
+    try {
+      const makeImages = images.filter((img) => img.vehicle_make === make);
+      const paths = makeImages.map((img) => img.storage_path);
+      if (paths.length > 0) {
+        await supabase.storage.from("submission-photos").remove(paths);
+      }
+      const ids = makeImages.map((img) => img.id);
+      for (let i = 0; i < ids.length; i += 50) {
+        const batch = ids.slice(i, i + 50);
+        await supabase.from("vehicle_image_cache").delete().in("id", batch);
+      }
+      setImages((prev) => prev.filter((img) => img.vehicle_make !== make));
+      toast({ title: `${make} images cleared`, description: `${paths.length} cached image${paths.length !== 1 ? "s" : ""} deleted.` });
+    } catch (err: any) {
+      toast({ title: "Bulk delete failed", description: err.message, variant: "destructive" });
+    }
+    setBulkDeletingMake(false);
+    setBulkDeleteMake(null);
   };
 
   const filtered = images.filter((img) => {
@@ -314,14 +334,25 @@ const VehicleImageInventory = () => {
         <div className="space-y-3">
           {grouped.map(([make, makeImages]) => (
             <Collapsible key={make} open={openMakes.has(make)} onOpenChange={() => toggleMake(make)}>
-              <CollapsibleTrigger className="flex items-center gap-2 w-full text-left py-2.5 px-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
-                <ChevronDown className={`w-4 h-4 transition-transform ${openMakes.has(make) ? "" : "-rotate-90"}`} />
-                <Car className="w-4 h-4 text-primary" />
-                <span className="font-semibold text-sm text-foreground">{make}</span>
-                <span className="text-xs text-muted-foreground ml-auto">
-                  {makeImages.length} image{makeImages.length !== 1 ? "s" : ""}
-                </span>
-              </CollapsibleTrigger>
+              <div className="flex items-center gap-0">
+                <CollapsibleTrigger className="flex items-center gap-2 flex-1 text-left py-2.5 px-4 bg-muted/50 rounded-l-lg hover:bg-muted transition-colors">
+                  <ChevronDown className={`w-4 h-4 transition-transform ${openMakes.has(make) ? "" : "-rotate-90"}`} />
+                  <Car className="w-4 h-4 text-primary" />
+                  <span className="font-semibold text-sm text-foreground">{make}</span>
+                  <span className="text-xs text-muted-foreground ml-auto">
+                    {makeImages.length} image{makeImages.length !== 1 ? "s" : ""}
+                  </span>
+                </CollapsibleTrigger>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-full rounded-l-none rounded-r-lg bg-muted/50 hover:bg-destructive/10 hover:text-destructive text-muted-foreground text-xs px-3 py-2.5"
+                  onClick={(e) => { e.stopPropagation(); setBulkDeleteMake(make); }}
+                >
+                  <Trash2 className="w-3.5 h-3.5 mr-1" />
+                  Delete All
+                </Button>
+              </div>
               <CollapsibleContent className="pt-3 pb-1 px-1">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {makeImages.map(renderCard)}
@@ -377,6 +408,32 @@ const VehicleImageInventory = () => {
                 <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Deleting…</>
               ) : (
                 <>Clear All</>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk delete by manufacturer dialog */}
+      <AlertDialog open={!!bulkDeleteMake} onOpenChange={(open) => !open && setBulkDeleteMake(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete all {bulkDeleteMake} images?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete <strong>all {images.filter((i) => i.vehicle_make === bulkDeleteMake).length} cached image{images.filter((i) => i.vehicle_make === bulkDeleteMake).length !== 1 ? "s" : ""}</strong> for <strong>{bulkDeleteMake}</strong>. New images will be generated on demand when needed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkDeletingMake}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => bulkDeleteMake && handleBulkDeleteMake(bulkDeleteMake)}
+              disabled={bulkDeletingMake}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {bulkDeletingMake ? (
+                <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Deleting…</>
+              ) : (
+                <>Delete All {bulkDeleteMake}</>
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
