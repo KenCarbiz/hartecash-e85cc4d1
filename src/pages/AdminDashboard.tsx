@@ -1753,6 +1753,9 @@ const AdminDashboard = () => {
           {/* Notification Log */}
           {activeSection === "notification-log" && <NotificationLog />}
 
+          {/* Changelog */}
+          {activeSection === "changelog" && canManageAccess && <ChangelogManagement />}
+
         </div>
       </div>
       </div>
