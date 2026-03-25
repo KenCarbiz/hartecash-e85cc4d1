@@ -354,8 +354,8 @@ const SiteConfiguration = () => {
             <Label className="text-xs font-semibold">Hero Layout</Label>
             <div className="flex flex-wrap gap-2">
               {[
-                { value: "centered", label: "Default" },
-                { value: "offset_right", label: "Offset Right" },
+                { value: "offset_right", label: "Default" },
+                { value: "centered", label: "Centered" },
                 { value: "offset_left", label: "Offset Left" },
               ].map((opt) => (
                 <button
