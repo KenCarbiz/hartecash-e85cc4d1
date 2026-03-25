@@ -1,6 +1,17 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
+export interface AboutMilestone {
+  year: string;
+  label: string;
+}
+
+export interface AboutValue {
+  icon: string;
+  title: string;
+  text: string;
+}
+
 export interface SiteConfig {
   dealership_name: string;
   tagline: string;
@@ -24,6 +35,11 @@ export interface SiteConfig {
   enable_animations: boolean;
   use_animated_calculating: boolean;
   enable_dl_ocr: boolean;
+  about_hero_headline: string;
+  about_hero_subtext: string;
+  about_story: string;
+  about_milestones: AboutMilestone[];
+  about_values: AboutValue[];
 }
 
 const DEFAULTS: SiteConfig = {
