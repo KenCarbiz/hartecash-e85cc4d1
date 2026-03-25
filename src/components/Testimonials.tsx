@@ -80,6 +80,15 @@ const Testimonials = () => {
 
   return (
     <section className="py-16 px-5 bg-card overflow-hidden">
+      <div className="flex items-center justify-center gap-3 mb-4">
+        <div className="flex gap-0.5">
+          {[...Array(5)].map((_, j) => (
+            <Star key={j} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+          ))}
+        </div>
+        <span className="text-lg font-bold text-card-foreground">{config.stats_rating || "4.9"}</span>
+        <span className="text-xs text-muted-foreground">{config.stats_reviews_count || "2,400+"} reviews</span>
+      </div>
       <h2 className="text-2xl md:text-[28px] lg:text-[34px] font-extrabold text-center mb-3 text-card-foreground">
         What Our Customers Say
       </h2>

@@ -42,15 +42,6 @@ const Hero = () => {
           </div>
         </div>
 
-        <div className="flex items-center justify-center gap-3 mt-2">
-          <div className="flex gap-0.5">
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-            ))}
-          </div>
-          <span className="text-lg font-bold">{config.stats_rating || "4.9"}</span>
-          <span className="text-xs opacity-80">{config.stats_reviews_count || "2,400+"} reviews</span>
-        </div>
       </div>
     </section>
   );
