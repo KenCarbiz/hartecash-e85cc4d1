@@ -1,3 +1,5 @@
+import SEO from "@/components/SEO";
+import { LocalBusinessJsonLd, FAQPageJsonLd } from "@/components/JsonLd";
 import SiteHeader from "@/components/SiteHeader";
 import Hero from "@/components/Hero";
 import SellCarForm from "@/components/SellCarForm";
