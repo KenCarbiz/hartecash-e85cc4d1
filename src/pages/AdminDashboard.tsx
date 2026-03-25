@@ -1252,6 +1252,10 @@ const AdminDashboard = () => {
         submissionCount={total}
         appointmentCount={appointments.length}
         pendingRequestCount={pendingRequests.length}
+        permissionRequestCount={permissionRequestCount}
+        allowedSections={allowedSections}
+        showRequestAccess={showRequestAccessToggle && !canManageAccess}
+        onRequestAccess={() => setShowRequestAccessDialog(true)}
       />
 
       <div className="flex-1 flex flex-col min-w-0">
