@@ -316,14 +316,25 @@ const VehicleImageInventory = () => {
         <div className="space-y-3">
           {grouped.map(([make, makeImages]) => (
             <Collapsible key={make} open={openMakes.has(make)} onOpenChange={() => toggleMake(make)}>
-              <CollapsibleTrigger className="flex items-center gap-2 w-full text-left py-2.5 px-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
-                <ChevronDown className={`w-4 h-4 transition-transform ${openMakes.has(make) ? "" : "-rotate-90"}`} />
-                <Car className="w-4 h-4 text-primary" />
-                <span className="font-semibold text-sm text-foreground">{make}</span>
-                <span className="text-xs text-muted-foreground ml-auto">
-                  {makeImages.length} image{makeImages.length !== 1 ? "s" : ""}
-                </span>
-              </CollapsibleTrigger>
+              <div className="flex items-center gap-0">
+                <CollapsibleTrigger className="flex items-center gap-2 flex-1 text-left py-2.5 px-4 bg-muted/50 rounded-l-lg hover:bg-muted transition-colors">
+                  <ChevronDown className={`w-4 h-4 transition-transform ${openMakes.has(make) ? "" : "-rotate-90"}`} />
+                  <Car className="w-4 h-4 text-primary" />
+                  <span className="font-semibold text-sm text-foreground">{make}</span>
+                  <span className="text-xs text-muted-foreground ml-auto">
+                    {makeImages.length} image{makeImages.length !== 1 ? "s" : ""}
+                  </span>
+                </CollapsibleTrigger>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-full rounded-l-none rounded-r-lg bg-muted/50 hover:bg-destructive/10 hover:text-destructive text-muted-foreground text-xs px-3 py-2.5"
+                  onClick={(e) => { e.stopPropagation(); setBulkDeleteMake(make); }}
+                >
+                  <Trash2 className="w-3.5 h-3.5 mr-1" />
+                  Delete All
+                </Button>
+              </div>
               <CollapsibleContent className="pt-3 pb-1 px-1">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {makeImages.map(renderCard)}
