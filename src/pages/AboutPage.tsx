@@ -123,6 +123,8 @@ const AboutPage = () => {
               </p>
               <p className="text-xs md:text-sm text-muted-foreground mt-1">Verified Reviews</p>
             </div>
+          </div>
+        </section>
 
         {/* ── Our Story ── */}
         <section className="py-14 md:py-20 px-5" aria-label="Our story">
