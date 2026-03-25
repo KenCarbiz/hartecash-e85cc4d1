@@ -1,3 +1,4 @@
+import SEO from "@/components/SEO";
 import SiteHeader from "@/components/SiteHeader";
 import TradeHero from "@/components/TradeHero";
 import SellCarForm from "@/components/SellCarForm";
@@ -13,6 +14,11 @@ import SiteFooter from "@/components/SiteFooter";
 const TradeLanding = () => {
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Submit Your Trade-In Info | Harte Auto Group"
+        description="Already shopping with us? Submit your trade-in details from home and get your vehicle value ready before you arrive."
+        path="/trade"
+      />
       <SiteHeader />
       <main>
         <TradeHero />
