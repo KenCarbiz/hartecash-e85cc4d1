@@ -80,6 +80,9 @@
     --success: 160 84% 39%;
     --success-foreground: 0 0% 100%;
 
+    --cta-offer: 0 80% 50%;
+    --cta-accept: 0 80% 50%;
+
     --border: 217 33% 17%;
     --input: 217 33% 17%;
     --ring: 210 100% 40%;
