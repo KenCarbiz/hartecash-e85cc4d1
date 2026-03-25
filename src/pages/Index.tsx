@@ -1,5 +1,5 @@
 import SEO from "@/components/SEO";
-import { LocalBusinessJsonLd, FAQPageJsonLd } from "@/components/JsonLd";
+import { LocalBusinessJsonLd, FAQPageJsonLd, HowToJsonLd } from "@/components/JsonLd";
 import SiteHeader from "@/components/SiteHeader";
 import Hero from "@/components/Hero";
 import SellCarForm from "@/components/SellCarForm";
@@ -11,6 +11,7 @@ import Testimonials from "@/components/Testimonials";
 import FAQ from "@/components/FAQ";
 import CTABanner from "@/components/CTABanner";
 import SiteFooter from "@/components/SiteFooter";
+import AboutBlurb from "@/components/AboutBlurb";
 
 const Index = () => {
   return (
@@ -22,6 +23,7 @@ const Index = () => {
       />
       <LocalBusinessJsonLd />
       <FAQPageJsonLd />
+      <HowToJsonLd />
       <SiteHeader />
       <main>
         <Hero />
@@ -33,6 +35,7 @@ const Index = () => {
         <Testimonials />
         <FAQ />
         <CTABanner />
+        <AboutBlurb />
       </main>
       <SiteFooter />
     </div>
