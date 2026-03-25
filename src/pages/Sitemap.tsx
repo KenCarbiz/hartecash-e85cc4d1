@@ -78,6 +78,15 @@ const Sitemap = () => {
             </div>
           ))}
         </div>
+
+        <div className="mt-12 flex justify-center">
+          <Link
+            to="/pitch"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-accent text-accent-foreground font-semibold text-sm shadow-lg shadow-accent/25 hover:shadow-accent/40 hover:scale-[1.03] transition-all duration-200"
+          >
+            🚀 Want a full inventory acquisition platform for your dealership? Click here.
+          </Link>
+        </div>
       </main>
 
       <footer className="border-t border-border py-6 px-5 text-center">
