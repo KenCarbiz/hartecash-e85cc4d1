@@ -12,7 +12,7 @@ const Hero = () => {
   ];
 
   return (
-    <section className="bg-gradient-to-b from-primary to-[hsl(210,100%,36%)] text-primary-foreground px-5 py-12 lg:py-20 pb-16 lg:pb-24 text-center relative">
+    <section className="bg-gradient-to-b from-primary to-[hsl(210,100%,36%)] text-primary-foreground px-5 py-8 lg:py-10 pb-10 lg:pb-14 text-center relative">
       <div className="max-w-4xl mx-auto">
         {/* Price Guarantee Badge */}
         <div className="inline-flex items-center gap-2 bg-success/20 border border-success/40 rounded-full px-4 py-1.5 mb-5">
