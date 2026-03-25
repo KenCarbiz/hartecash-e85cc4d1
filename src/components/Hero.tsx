@@ -30,7 +30,7 @@ const Hero = () => {
         </p>
 
         <div className="max-w-[500px] lg:max-w-none mx-auto mb-3 text-left px-5 md:px-0">
-          <div className="lg:grid lg:grid-cols-2 lg:gap-x-12 lg:gap-y-1.5 lg:max-w-2xl lg:mx-auto">
+          <div className="lg:grid lg:grid-cols-2 lg:gap-y-1.5 lg:max-w-3xl lg:mx-auto">
             {benefits.map((b, i) => (
               <div key={i} className={`flex items-start gap-2 mb-1.5 lg:mb-0 ${i % 2 === 0 ? 'lg:justify-self-start' : 'lg:justify-self-end'}`}>
                 <Check className="w-5 h-5 text-success flex-shrink-0 stroke-[3] mt-0.5" />
