@@ -105,6 +105,48 @@ export type Database = {
           },
         ]
       }
+      changelog_entries: {
+        Row: {
+          created_at: string
+          description: string
+          entry_date: string
+          icon: string
+          id: string
+          is_active: boolean
+          items: string[]
+          sort_order: number
+          tag: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          entry_date?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          items?: string[]
+          sort_order?: number
+          tag?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          entry_date?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          items?: string[]
+          sort_order?: number
+          tag?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       consent_log: {
         Row: {
           consent_text: string
