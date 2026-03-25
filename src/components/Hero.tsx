@@ -5,10 +5,10 @@ const Hero = () => {
   const { config } = useSiteConfig();
 
   const benefits = [
-    { label: "Faster", desc: "Get cash in 24 hours, not weeks of meetups" },
+    { label: "Faster", desc: "Cash in 24 hours" },
     { label: "Safer", desc: "No strangers at your home" },
-    { label: "More Convenient", desc: "One visit, we handle all paperwork" },
-    { label: "Privacy Protected", desc: "We never share your address, name, or phone number" },
+    { label: "Convenient", desc: "One visit, we handle paperwork" },
+    { label: "Private", desc: "We never share your info" },
   ];
 
   return (
