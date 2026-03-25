@@ -1,3 +1,4 @@
+import SEO from "@/components/SEO";
 import SiteHeader from "@/components/SiteHeader";
 import TradeHero from "@/components/TradeHero";
 import SellCarForm from "@/components/SellCarForm";
