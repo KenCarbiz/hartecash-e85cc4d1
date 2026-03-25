@@ -27,6 +27,7 @@ interface SiteConfig {
   success_color: string;
   hero_headline: string;
   hero_subtext: string;
+  hero_layout: string;
   price_guarantee_days: number;
   stats_cars_purchased: string;
   stats_years_in_business: string;
