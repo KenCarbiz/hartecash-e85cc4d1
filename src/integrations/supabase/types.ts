@@ -851,6 +851,7 @@ export type Database = {
           enable_dl_ocr: boolean
           favicon_url: string | null
           hero_headline: string
+          hero_layout: string
           hero_subtext: string
           id: string
           logo_url: string | null
@@ -891,6 +892,7 @@ export type Database = {
           enable_dl_ocr?: boolean
           favicon_url?: string | null
           hero_headline?: string
+          hero_layout?: string
           hero_subtext?: string
           id?: string
           logo_url?: string | null
@@ -931,6 +933,7 @@ export type Database = {
           enable_dl_ocr?: boolean
           favicon_url?: string | null
           hero_headline?: string
+          hero_layout?: string
           hero_subtext?: string
           id?: string
           logo_url?: string | null
