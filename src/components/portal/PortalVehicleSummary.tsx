@@ -47,15 +47,15 @@ const PortalVehicleSummary = ({
         {vehicleStr && (
           <p className="text-lg font-bold text-card-foreground mb-3">{vehicleStr}</p>
         )}
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2.5">
           {vin && (
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2.5 sm:col-span-2">
               <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
                 <span className="text-[10px] font-bold text-muted-foreground">VIN</span>
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider">VIN</p>
-                <p className="text-sm font-medium font-mono">{vin.toUpperCase()}</p>
+                <p className="text-sm font-medium font-mono truncate">{vin.toUpperCase()}</p>
               </div>
             </div>
           )}
