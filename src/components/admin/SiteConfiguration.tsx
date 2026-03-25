@@ -303,35 +303,44 @@ const SiteConfiguration = () => {
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {([
-              { key: "cta_offer_color" as const, label: "\"Get My Offer\" Button", desc: "Form submit & Continue buttons" },
-              { key: "cta_accept_color" as const, label: "\"Accept Offer\" Button", desc: "Accept & Lock In Your Price (accepted badge stays green)" },
-            ]).map(({ key, label, desc }) => (
-              <div key={key} className="space-y-1.5">
-                <Label className="text-xs font-semibold">{label}</Label>
-                <div className="flex items-center gap-2">
+              { key: "cta_offer_color" as const, label: "\"Get My Offer\" Button", btnText: "Get My Offer", desc: "Form submit & Continue buttons" },
+              { key: "cta_accept_color" as const, label: "\"Accept Offer\" Button", btnText: "Accept Offer", desc: "Accept & Lock In Your Price (accepted badge stays green)" },
+            ]).map(({ key, label, btnText, desc }) => {
+              const effectiveColor = config[key] || config.accent_color;
+              return (
+                <div key={key} className="space-y-2">
+                  <Label className="text-xs font-semibold">{label}</Label>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-8 h-8 rounded-md border border-border shrink-0"
+                      style={{ backgroundColor: `hsl(${effectiveColor})` }}
+                    />
+                    <Input
+                      value={config[key]}
+                      onChange={e => update(key, e.target.value)}
+                      className="h-8 text-xs"
+                      placeholder={`Default: ${config.accent_color}`}
+                    />
+                    {config[key] && (
+                      <button
+                        type="button"
+                        onClick={() => update(key, "")}
+                        className="text-xs text-muted-foreground hover:text-foreground whitespace-nowrap"
+                      >
+                        Reset
+                      </button>
+                    )}
+                  </div>
                   <div
-                    className="w-8 h-8 rounded-md border border-border shrink-0"
-                    style={{ backgroundColor: config[key] ? `hsl(${config[key]})` : `hsl(${config.accent_color})` }}
-                  />
-                  <Input
-                    value={config[key]}
-                    onChange={e => update(key, e.target.value)}
-                    className="h-8 text-xs"
-                    placeholder={`Default: ${config.accent_color}`}
-                  />
-                  {config[key] && (
-                    <button
-                      type="button"
-                      onClick={() => update(key, "")}
-                      className="text-xs text-muted-foreground hover:text-foreground whitespace-nowrap"
-                    >
-                      Reset
-                    </button>
-                  )}
+                    className="inline-block px-4 py-2 rounded-lg text-xs font-semibold text-white shadow-sm transition-colors cursor-default"
+                    style={{ backgroundColor: `hsl(${effectiveColor})` }}
+                  >
+                    {btnText}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{desc}</p>
                 </div>
-                <p className="text-xs text-muted-foreground">{desc}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </Section>
