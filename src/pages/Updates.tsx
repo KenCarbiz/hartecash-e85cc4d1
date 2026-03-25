@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Sparkles, Shield, Bell, BarChart3, Wrench, Camera, FileText, Users, DollarSign, CheckCircle, ChevronDown, ChevronRight } from "lucide-react";
+import { ArrowLeft, Sparkles, Shield, Bell, BarChart3, Wrench, Camera, FileText, Users, DollarSign, CheckCircle, ChevronDown, ChevronRight, MapPin, Smartphone, CalendarDays, MessageSquare, Star, Eye, Handshake, ClipboardCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
@@ -28,6 +28,21 @@ const TAG_LABELS: Record<string, string> = {
 
 const updates: Update[] = [
   {
+    date: "2026-03-25",
+    title: "ACV Audit Logging & Portal Mobile Fix",
+    description: "Every ACV value change is now tracked with full attribution, plus mobile layout improvements.",
+    icon: <ClipboardCheck className="w-5 h-5" />,
+    tag: "feature",
+    items: [
+      "ACV value changes now logged in activity log with old → new values",
+      "Staff member name + role recorded on every ACV update",
+      "Vehicle Summary card on customer portal now fully responsive",
+      "VIN display no longer overlaps mileage on mobile devices",
+      "Single-column stacked layout on small screens, 2-column grid on tablet+",
+      "Pitch deck updated with ACV audit trail in comparison table and walkthrough",
+    ],
+  },
+  {
     date: "2026-03-24",
     title: "Price Attribution & Audit Trail",
     description: "Full traceability for offered prices — know exactly who set it and how.",
@@ -41,6 +56,18 @@ const updates: Update[] = [
       "All price changes logged with old → new values and who made the change",
       "accept_offer RPC auto-populates offered_price from estimated_offer_high",
       "Bypass flag for role-check trigger during customer acceptance flow",
+    ],
+  },
+  {
+    date: "2026-03-24",
+    title: "Platform Changelog Page",
+    description: "Public-facing changelog at /updates so staff and stakeholders can track what's new.",
+    icon: <Eye className="w-5 h-5" />,
+    tag: "feature",
+    items: [
+      "Chronological timeline UI with expandable accordion entries",
+      "Categorized tags: Feature, Improvement, Bug Fix, Security",
+      "Accessible from admin sidebar and public URL",
     ],
   },
   {
@@ -73,19 +100,49 @@ const updates: Update[] = [
     ],
   },
   {
+    date: "2026-03-22",
+    title: "Automated Follow-Up Engine",
+    description: "Multi-touch follow-up sequences to re-engage leads who haven't completed their submission.",
+    icon: <MessageSquare className="w-5 h-5" />,
+    tag: "feature",
+    items: [
+      "Configurable follow-up sequences via SMS and email",
+      "Touch number tracking per submission",
+      "Follow-up log with delivery status and error reporting",
+      "Admin panel to view follow-up history per lead",
+      "Edge function for processing and sending follow-ups",
+    ],
+  },
+  {
     date: "2026-03-21",
     title: "Customer Portal & Deal Progress",
     description: "Self-service portal where customers track their deal from offer to purchase.",
     icon: <CheckCircle className="w-5 h-5" />,
     tag: "feature",
     items: [
-      "Customer-facing progress tracker mirrored in admin dashboard",
-      "Accepted offer card with price display",
+      "5-step horizontal progress tracker synced with admin dashboard",
+      "Accepted offer card with price display and green confirmation badge",
       "What to bring checklist and what to expect guide",
-      "Dealer contact card with phone/email",
+      "Dealer contact card with phone/email and business hours",
       "Loan payoff information display",
       "Condition report summary",
-      "Photo and document upload status",
+      "Photo and document upload status tracking",
+      "Communication preferences with email/SMS opt-out toggles",
+    ],
+  },
+  {
+    date: "2026-03-21",
+    title: "Deal Acceptance & Celebration Flow",
+    description: "When a customer accepts their offer, they see a branded celebration page with next steps.",
+    icon: <Handshake className="w-5 h-5" />,
+    tag: "feature",
+    items: [
+      "Confetti celebration animation on offer acceptance",
+      "AI-generated vehicle image displayed with accepted price",
+      "Sales tax savings calculator for trade-in scenarios",
+      "What to Expect and Inspection Disclosure sections",
+      "Direct links to schedule visit, upload photos, and upload documents",
+      "Portal access for ongoing deal tracking",
     ],
   },
   {
@@ -105,18 +162,47 @@ const updates: Update[] = [
     ],
   },
   {
+    date: "2026-03-20",
+    title: "Offer Disclosure Page",
+    description: "Transparent, professional disclosure of all valuation factors — credits and deductions.",
+    icon: <FileText className="w-5 h-5" />,
+    tag: "feature",
+    items: [
+      "Detailed breakdown of credit factors (tires, brakes, battery, service history, etc.)",
+      "Deduction factors with clear explanations",
+      "Expandable sections for each valuation component",
+      "Professional legal-style formatting for transparency and trust",
+    ],
+  },
+  {
     date: "2026-03-19",
     title: "Photo & Document Upload System",
     description: "Mobile-optimized upload flows with QR code handoff and camera capture.",
     icon: <Camera className="w-5 h-5" />,
     tag: "feature",
     items: [
-      "Guided photo capture with angle instructions",
+      "Guided photo capture with angle instructions (6 categories)",
       "QR code banner for desktop-to-mobile handoff",
-      "Document camera capture for driver's license and title",
+      "Document camera capture with state-specific guide overlays",
+      "Driver's license dimensions (ISO ID-1) and state-specific title dimensions",
       "AI-powered driver's license OCR to auto-fill customer details",
       "AI-powered title/VIN parsing",
       "Admin-only delete permissions on uploaded assets",
+    ],
+  },
+  {
+    date: "2026-03-19",
+    title: "Appointment Scheduling & Reminders",
+    description: "Integrated scheduling with location selection, confirmations, and automated reminders.",
+    icon: <CalendarDays className="w-5 h-5" />,
+    tag: "feature",
+    items: [
+      "Multi-location appointment booking with date/time selection",
+      "Pre-filled customer info from submission data",
+      "Automatic SMS & email confirmation to customer and staff",
+      "Appointment reminder edge function for day-before notifications",
+      "Reschedule notification support",
+      "Appointment status tracking in admin dashboard",
     ],
   },
   {
@@ -131,6 +217,20 @@ const updates: Update[] = [
       "Staff profile management with avatar upload and cropping",
       "Staff directory with role badges",
       "Bulk staff import from Excel",
+    ],
+  },
+  {
+    date: "2026-03-18",
+    title: "TCPA Consent Logging",
+    description: "Full regulatory compliance for SMS and call consent under TCPA guidelines.",
+    icon: <Shield className="w-5 h-5" />,
+    tag: "security",
+    items: [
+      "Automatic consent log entry on every form submission",
+      "Records customer name, phone, email, consent text, form source, and submission token",
+      "IP address and user agent captured for audit trail",
+      "Admin consent log viewer with search and filtering",
+      "Consent text dynamically includes dealership name",
     ],
   },
   {
@@ -149,10 +249,23 @@ const updates: Update[] = [
     ],
   },
   {
+    date: "2026-03-17",
+    title: "Review Request System",
+    description: "Post-purchase review collection to build dealership reputation.",
+    icon: <Star className="w-5 h-5" />,
+    tag: "feature",
+    items: [
+      "One-click review request from admin dashboard per submission",
+      "Customer-facing review page with star rating and text input",
+      "Configurable review request email subject and message",
+      "Review request tracking to prevent duplicate sends",
+    ],
+  },
+  {
     date: "2026-03-16",
     title: "Multi-Location Support",
     description: "Manage multiple dealership locations with per-location scheduling and filtering.",
-    icon: <Wrench className="w-5 h-5" />,
+    icon: <MapPin className="w-5 h-5" />,
     tag: "feature",
     items: [
       "Dealership locations table with city/state/address",
@@ -160,6 +273,33 @@ const updates: Update[] = [
       "Location filter in admin dashboard",
       "Footer location display with toggle control",
       "Location labels resolved from IDs throughout dashboard",
+    ],
+  },
+  {
+    date: "2026-03-16",
+    title: "Customer Lookup Portal",
+    description: "Customers can find their submission using email and phone — no login required.",
+    icon: <Smartphone className="w-5 h-5" />,
+    tag: "feature",
+    items: [
+      "Email + phone lookup to retrieve submission tokens",
+      "Multiple submission support if customer has more than one",
+      "Direct link to customer portal from search results",
+      "Rate limiting to prevent abuse",
+    ],
+  },
+  {
+    date: "2026-03-15",
+    title: "Service Drive Acquisition Channel",
+    description: "Capture vehicles from customers already in your service lane.",
+    icon: <Wrench className="w-5 h-5" />,
+    tag: "feature",
+    items: [
+      "Dedicated service drive landing page with VIN/plate lookup",
+      "Service link generator for advisors to send personalized SMS/email",
+      "Service-specific lead source tracking",
+      "Pitch deck section with Service Drive strategy and ROI analysis",
+      "Soft hand-raise flow designed for service advisors",
     ],
   },
   {
@@ -171,11 +311,54 @@ const updates: Update[] = [
     items: [
       "Configurable dealership name, tagline, and hero text",
       "Primary, accent, and success color theming",
-      "Logo and favicon upload",
+      "Logo and favicon upload (standard + white variants)",
       "Competitor comparison table with configurable columns and features",
       "Testimonial management with ratings and sort order",
       "Form field toggle configuration",
       "Stats customization (cars purchased, years in business, rating)",
+    ],
+  },
+  {
+    date: "2026-03-14",
+    title: "In-Store Trade Acquisition Channel",
+    description: "Capture trade-in info from shoppers at your lot — before or after they visit.",
+    icon: <Handshake className="w-5 h-5" />,
+    tag: "feature",
+    items: [
+      "Dedicated trade landing page with branded hero",
+      "Trade-specific lead source tracking",
+      "Pitch deck section with In-Store Trade strategy",
+      "\"Never Lose a Trade\" recovery flow for walk-aways",
+    ],
+  },
+  {
+    date: "2026-03-13",
+    title: "21-Slide Cinematic Pitch Deck",
+    description: "Interactive presentation at /pitch with fullscreen mode and acquisition channel deep-dives.",
+    icon: <Eye className="w-5 h-5" />,
+    tag: "feature",
+    items: [
+      "21 slides covering market, problem, solution, walkthroughs, ROI, and CTA",
+      "Interactive acquisition channel cards (Off-Street, Service Drive, In-Store Trade)",
+      "Fullscreen presentation mode with keyboard navigation",
+      "Customer and Employee walkthrough sequences with live screenshots",
+      "Auction vs. Direct acquisition ROI comparison",
+      "ROI by dealer size (Small, Mid-Size, High-Volume) with cited sources",
+      "Dynamic branding from site config with white logo variant",
+    ],
+  },
+  {
+    date: "2026-03-12",
+    title: "Unsubscribe & Opt-Out Management",
+    description: "One-click opt-out handling for SMS and email with database tracking.",
+    icon: <Bell className="w-5 h-5" />,
+    tag: "security",
+    items: [
+      "Token-based unsubscribe links in all outbound messages",
+      "Per-channel opt-out (SMS, email) stored in opt_outs table",
+      "Edge function to process unsubscribe requests",
+      "Opt-out status checked before sending any notification",
+      "Customer can re-subscribe via portal communication preferences",
     ],
   },
 ];
