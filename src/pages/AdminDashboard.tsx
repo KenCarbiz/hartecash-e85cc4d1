@@ -1795,6 +1795,7 @@ const AdminDashboard = () => {
 
         </div>
       </div>
+      </div>
 
       {/* Request Access Dialog (for non-admin staff) */}
       {userId && (
@@ -1804,8 +1805,6 @@ const AdminDashboard = () => {
           userId={userId}
         />
       )}
-      </div>
-      </div>
 
       {/* Detail Modal */}
       <Dialog open={!!selected} onOpenChange={() => { setSelected(null); setPhotos([]); setDocs([]); }}>
