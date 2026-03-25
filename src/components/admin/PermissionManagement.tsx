@@ -535,10 +535,19 @@ const PermissionManagement = () => {
           staffName={grantingRequest.user_email || "Employee"}
           currentSections={grantSections}
           groups={groups}
-          onSave={(sections) => {
-            setGrantSections(sections);
-            // Actually save
-            handleGrantRequest();
+          onSave={async (sections) => {
+            await saveIndividualSections(grantingRequest.user_id, sections);
+            await supabase.from("permission_access_requests" as any)
+              .update({ status: "approved", reviewed_at: new Date().toISOString() } as any)
+              .eq("id", grantingRequest.id);
+            toast({ title: "Access granted", description: `${sections.length} section${sections.length !== 1 ? "s" : ""} granted.` });
+            try {
+              await supabase.functions.invoke("send-notification", {
+                body: { trigger_key: "access_request_response", to_email: grantingRequest.user_email, data: { status: "approved", group_name: `${sections.length} sections` } },
+              });
+            } catch { /* non-critical */ }
+            setGrantingRequest(null);
+            fetchData();
           }}
           title={`Grant Access — ${grantingRequest.user_email}`}
         />
