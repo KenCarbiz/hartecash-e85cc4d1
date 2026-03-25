@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { CalendarDays, CheckCircle2, Loader2, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import harteLogo from "@/assets/harte-logo-white.png";
+import SEO from "@/components/SEO";
 
 interface DealerLocation {
   id: string;
