@@ -19,6 +19,12 @@ const Sitemap = () => {
       ],
     },
     {
+      title: "Resources",
+      links: [
+        { label: "Platform Updates", to: "/updates" },
+      ],
+    },
+    {
       title: "Legal",
       links: [
         { label: "Privacy Policy", to: "/privacy" },
