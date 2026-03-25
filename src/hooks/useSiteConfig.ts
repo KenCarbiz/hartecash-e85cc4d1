@@ -88,7 +88,7 @@ export function useSiteConfig() {
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
-          const merged = { ...DEFAULTS, ...data } as SiteConfig;
+          const merged = { ...DEFAULTS, ...data } as unknown as SiteConfig;
           cachedConfig = merged;
           setConfig(merged);
         }
