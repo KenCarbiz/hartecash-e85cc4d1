@@ -1007,7 +1007,7 @@
 
     "read-cache": ["read-cache@1.0.0", "", { "dependencies": { "pify": "^2.3.0" } }, "sha512-Owdv/Ft7IjOgm/i0xvNDZ1LrRANRfew4b2prF3OWMQLxLfu3bS8FVhCsrSCMK4lR56Y9ya+AThoTpDCTxCmpRA=="],
 
-    "read-excel-file": ["read-excel-file@7.0.2", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/read-excel-file/-/read-excel-file-7.0.2.tgz", { "dependencies": { "@xmldom/xmldom": "^0.8.11", "fflate": "^0.8.2", "unzipper": "^0.12.3" } }, "sha512-EfEmV3MwKspbRSBtLPS5UMz64YC+4oNjATrKZFGGZQD7MaU7NgO2UWN942o4oPg0F56pKECSvP48nY+Wmiofug=="],
+    "read-excel-file": ["read-excel-file@7.0.3", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/read-excel-file/-/read-excel-file-7.0.3.tgz", { "dependencies": { "@xmldom/xmldom": "^0.8.11", "fflate": "^0.8.2", "unzipper": "^0.12.3" } }, "sha512-S9+WgwNbVFeCRAT90sMuTDqN3Ez9Nz2tywXvdH1XSKM8SxZlrFBjmB0/IiYMBCFx71YSitOUSUDjGLXhAj1V0A=="],
 
     "readable-stream": ["readable-stream@2.3.8", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/readable-stream/-/readable-stream-2.3.8.tgz", { "dependencies": { "core-util-is": "~1.0.0", "inherits": "~2.0.3", "isarray": "~1.0.0", "process-nextick-args": "~2.0.0", "safe-buffer": "~5.1.1", "string_decoder": "~1.1.1", "util-deprecate": "~1.0.1" } }, "sha512-8p0AUk4XODgIewSi0l8Epjs+EVnWiK7NoDIEGU0HhE7+ZyY8D1IMY7odu5lRrFXGg71L15KG8QrPmum45RTtdA=="],
 
