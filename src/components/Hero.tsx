@@ -6,7 +6,7 @@ const Hero = () => {
 
   const benefits = [
     { label: "Faster", desc: "Get cash in 24 hours, not weeks of meetups" },
-    { label: "Safer", desc: "No strangers at your home or getting your personal info" },
+    { label: "Safer", desc: "No strangers at your home" },
     { label: "More Convenient", desc: "One visit, we handle all paperwork" },
     { label: "Privacy Protected", desc: "We never share your address, name, or phone number" },
   ];
