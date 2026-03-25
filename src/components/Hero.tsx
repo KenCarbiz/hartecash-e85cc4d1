@@ -29,12 +29,12 @@ const Hero = () => {
           {config.hero_subtext || "Get a top-dollar cash offer in 2 minutes. No haggling, no stress."}
         </p>
 
-        <div className="max-w-[500px] lg:max-w-none mx-auto mb-3 text-left px-5 md:px-0">
-          <div className="lg:grid lg:grid-cols-2 lg:gap-y-1.5 lg:max-w-3xl lg:mx-auto">
+        <div className="max-w-4xl mx-auto mb-3 px-5 md:px-0">
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-1.5">
             {benefits.map((b, i) => (
-              <div key={i} className={`flex items-start gap-2 mb-1.5 lg:mb-0 ${i % 2 === 0 ? 'lg:justify-self-start' : 'lg:justify-self-end'}`}>
-                <Check className="w-5 h-5 text-success flex-shrink-0 stroke-[3] mt-0.5" />
-                <span className="text-[13px] md:text-[14px] font-medium leading-snug">
+              <div key={i} className="flex items-center gap-1.5">
+                <Check className="w-4 h-4 text-success flex-shrink-0 stroke-[3]" />
+                <span className="text-[13px] md:text-[14px] font-medium whitespace-nowrap">
                   <strong>{b.label}:</strong> {b.desc}
                 </span>
               </div>
