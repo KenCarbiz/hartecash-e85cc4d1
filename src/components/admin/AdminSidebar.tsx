@@ -80,9 +80,8 @@ const AdminSidebar = ({
   const storefrontItems = canManageAccess
     ? [
         { key: "site-config", label: "Site Config", icon: Settings },
-        { key: "locations", label: "Locations", icon: MapPin },
+        ...(locationCount > 1 ? [{ key: "locations", label: "Locations", icon: MapPin }] : []),
         { key: "testimonials", label: "Testimonials", icon: MessageSquareQuote },
-        { key: "comparison", label: "Comparison", icon: BarChart3 },
       ].filter((item) => isAllowed(item.key))
     : [];
 
