@@ -193,8 +193,8 @@ const LocationManagement = () => {
                   <Label className="text-[10px] text-muted-foreground">Addr Footer</Label>
                   <Switch checked={loc.show_in_footer} onCheckedChange={() => toggleField(loc.id, "show_in_footer", loc.show_in_footer)} />
                 </div>
-                <div className="flex items-center gap-1.5" title="Show address in Scheduling">
-                  <Label className="text-[10px] text-muted-foreground">Addr Sched.</Label>
+                <div className="flex items-center gap-1.5" title="Show this location in the customer scheduling dropdown">
+                  <Label className="text-[10px] text-muted-foreground">Scheduling</Label>
                   <Switch checked={loc.show_in_scheduling} onCheckedChange={() => toggleField(loc.id, "show_in_scheduling", loc.show_in_scheduling)} />
                 </div>
                 <Button variant="ghost" size="icon" onClick={() => deleteLocation(loc.id)} className="text-destructive hover:text-destructive/80 h-8 w-8">
