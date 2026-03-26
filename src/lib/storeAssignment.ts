@@ -68,8 +68,17 @@ export async function findStoreByBrand(vehicleMake: string): Promise<string | nu
   const locations = await getLocations();
   const make = vehicleMake.toLowerCase();
 
+  // First try specific brand match (locations with all_brands OFF)
   for (const loc of locations) {
-    if (loc.oem_brands?.some(b => b.toLowerCase() === make)) return loc.id;
+    if (!loc.all_brands && loc.oem_brands?.some(b => b.toLowerCase() === make)) return loc.id;
+  }
+
+  // Then try all_brands locations that don't exclude this make
+  for (const loc of locations) {
+    if (loc.all_brands) {
+      const excluded = loc.excluded_oem_brands?.some(b => b.toLowerCase() === make);
+      if (!excluded) return loc.id;
+    }
   }
 
   return null;
