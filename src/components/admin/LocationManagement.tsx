@@ -78,7 +78,7 @@ const LocationManagement = () => {
     }
   };
 
-  const toggleField = async (id: string, field: "is_active" | "show_in_footer" | "show_in_scheduling", current: boolean) => {
+  const toggleField = async (id: string, field: "is_active" | "show_in_footer" | "show_in_scheduling" | "temporarily_offline", current: boolean) => {
     const { error } = await supabase
       .from("dealership_locations" as any)
       .update({ [field]: !current })
