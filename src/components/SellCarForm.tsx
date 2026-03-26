@@ -311,6 +311,7 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
           estimated_offer_high: estimate?.high || null,
           is_hot_lead: estimate?.isHotLead || false,
           matched_rule_ids: estimate?.matchedRuleIds?.length ? estimate.matchedRuleIds : null,
+          store_location_id: storeLocationId || null,
         } as any);
 
       if (error) throw error;
