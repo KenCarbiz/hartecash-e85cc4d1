@@ -307,49 +307,73 @@ const LocationManagement = () => {
                   {locations.length > 1 && (
                     <div>
                       <Label className="text-xs font-medium text-muted-foreground mb-1.5 flex items-center gap-1.5">
-                        <Radar className="w-3.5 h-3.5" /> Radius Coverage
+                        <Radar className="w-3.5 h-3.5" /> Geographic Coverage Radius
                       </Label>
                       <p className="text-[11px] text-muted-foreground mb-2">
-                        Optionally set a center ZIP and radius to auto-cover surrounding areas instead of listing every ZIP manually.
+                        Enable to steer leads to this store based on proximity. Useful when your group has multiple locations spread across a region.
                       </p>
-                      <div className="flex items-center gap-3">
-                        <div className="w-28">
-                          <Input
-                            value={loc.center_zip || ""}
-                            onChange={(e) => updateLocation(loc.id, "center_zip" as any, e.target.value)}
-                            placeholder="Center ZIP"
-                            className="text-sm font-mono"
-                            maxLength={5}
-                          />
-                        </div>
-                        <div className="flex-1 space-y-1">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-muted-foreground">Radius</span>
-                            <span className="text-xs font-semibold tabular-nums">
-                              {loc.coverage_radius_miles || 0} mi
-                            </span>
-                          </div>
-                          <Slider
-                            value={[loc.coverage_radius_miles || 0]}
-                            onValueChange={([val]) => {
-                              setLocations(prev => prev.map(l => l.id === loc.id ? { ...l, coverage_radius_miles: val } : l));
-                            }}
-                            min={0}
-                            max={50}
-                            step={5}
-                            className="w-full"
-                          />
-                          <div className="flex justify-between text-[10px] text-muted-foreground/60">
-                            <span>0</span>
-                            <span>25 mi</span>
-                            <span>50 mi</span>
-                          </div>
-                        </div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Switch
+                          checked={(loc.coverage_radius_miles || 0) > 0}
+                          onCheckedChange={(on) => {
+                            setLocations(prev => prev.map(l => l.id === loc.id
+                              ? { ...l, coverage_radius_miles: on ? 15 : 0 }
+                              : l
+                            ));
+                          }}
+                        />
+                        <Label className="text-sm">
+                          {(loc.coverage_radius_miles || 0) > 0 ? "Radius routing enabled" : "Off — using ZIP list only"}
+                        </Label>
                       </div>
-                      {loc.center_zip && loc.coverage_radius_miles > 0 && (
-                        <p className="text-[11px] text-primary/80 mt-1.5">
-                          ✓ Leads within {loc.coverage_radius_miles} miles of {loc.center_zip} will route to this store
-                        </p>
+                      {(loc.coverage_radius_miles || 0) > 0 && (
+                        <div className="ml-1 border-l-2 border-border pl-3 space-y-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-28">
+                              <Label className="text-[10px] text-muted-foreground mb-0.5 block">Center ZIP</Label>
+                              <Input
+                                value={loc.center_zip || ""}
+                                onChange={(e) => updateLocation(loc.id, "center_zip" as any, e.target.value)}
+                                placeholder="e.g. 06103"
+                                className="text-sm font-mono"
+                                maxLength={5}
+                              />
+                            </div>
+                            <div className="flex-1 space-y-1">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-muted-foreground">Radius</span>
+                                <span className="text-xs font-semibold tabular-nums">
+                                  {loc.coverage_radius_miles} mi
+                                </span>
+                              </div>
+                              <Slider
+                                value={[loc.coverage_radius_miles || 0]}
+                                onValueChange={([val]) => {
+                                  setLocations(prev => prev.map(l => l.id === loc.id ? { ...l, coverage_radius_miles: val } : l));
+                                }}
+                                min={5}
+                                max={50}
+                                step={5}
+                                className="w-full"
+                              />
+                              <div className="flex justify-between text-[10px] text-muted-foreground/60">
+                                <span>5 mi</span>
+                                <span>25 mi</span>
+                                <span>50 mi</span>
+                              </div>
+                            </div>
+                          </div>
+                          {loc.center_zip && loc.center_zip.length === 5 && (
+                            <p className="text-[11px] text-primary/80">
+                              ✓ Leads within {loc.coverage_radius_miles} miles of {loc.center_zip} will route to this store
+                            </p>
+                          )}
+                          {(!loc.center_zip || loc.center_zip.length < 5) && (
+                            <p className="text-[11px] text-amber-600">
+                              ⚠ Enter a 5-digit center ZIP to activate radius routing
+                            </p>
+                          )}
+                        </div>
                       )}
                     </div>
                   )}
