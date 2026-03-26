@@ -79,6 +79,7 @@ const DEFAULTS: NotificationConfig = {
   status_change_channels: ["email"],
   staff_customer_accepted_channels: ["email", "sms"],
   staff_deal_completed_channels: ["email"],
+  abandoned_lead_channels: ["email", "sms"],
   notify_customer_offer_accepted: true,
   customer_offer_accepted_channels: ["email", "sms"],
   notify_customer_appointment_booked: true,
