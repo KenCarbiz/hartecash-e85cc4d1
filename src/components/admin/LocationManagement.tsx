@@ -378,7 +378,7 @@ const LocationManagement = () => {
                     </div>
                   )}
 
-                  <div>
+                  {locations.length > 1 && <div>
                     <Label className="text-xs font-medium text-muted-foreground mb-1.5 flex items-center gap-1.5">
                       <Car className="w-3.5 h-3.5" /> OEM Brand Mapping
                     </Label>
@@ -533,7 +533,7 @@ const LocationManagement = () => {
                         </div>
                       </div>
                     )}
-                  </div>
+                  </div>}
                 </div>
               )}
             </div>
