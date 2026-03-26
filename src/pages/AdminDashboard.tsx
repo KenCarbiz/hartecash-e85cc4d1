@@ -1318,7 +1318,7 @@ const AdminDashboard = () => {
                 size="sm"
                 onClick={() => setShowFilterPanel(!showFilterPanel)}
               >
-                Filter {(statusFilter || sourceFilter || dateRangeFilter.from || dateRangeFilter.to) && "*"}
+                Filter {(statusFilter || sourceFilter || storeFilter || dateRangeFilter.from || dateRangeFilter.to) && "*"}
               </Button>
             </div>
 
