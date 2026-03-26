@@ -1271,6 +1271,7 @@ const AdminDashboard = () => {
         allowedSections={allowedSections}
         showRequestAccess={showRequestAccessToggle && !canManageAccess}
         onRequestAccess={() => setShowRequestAccessDialog(true)}
+        locationCount={dealerLocations.length}
       />
 
       <div className="flex-1 flex flex-col min-w-0">
