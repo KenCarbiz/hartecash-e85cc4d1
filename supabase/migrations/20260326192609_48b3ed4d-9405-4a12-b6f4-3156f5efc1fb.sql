@@ -1,0 +1,1 @@
+ALTER TABLE public.dealership_locations ADD COLUMN temporarily_offline boolean NOT NULL DEFAULT false;

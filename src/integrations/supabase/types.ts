@@ -206,6 +206,7 @@ export type Database = {
           show_in_scheduling: boolean
           sort_order: number
           state: string
+          temporarily_offline: boolean
           zip_codes: string[]
         }
         Insert: {
@@ -224,6 +225,7 @@ export type Database = {
           show_in_scheduling?: boolean
           sort_order?: number
           state?: string
+          temporarily_offline?: boolean
           zip_codes?: string[]
         }
         Update: {
@@ -242,6 +244,7 @@ export type Database = {
           show_in_scheduling?: boolean
           sort_order?: number
           state?: string
+          temporarily_offline?: boolean
           zip_codes?: string[]
         }
         Relationships: []
