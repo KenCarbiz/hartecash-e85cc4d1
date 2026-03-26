@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  TrendingUp, TrendingDown, Users, DollarSign, Target, UserCheck, Building2
+  TrendingUp, TrendingDown, Users, DollarSign, Target, UserCheck, Building2, AlertTriangle
 } from "lucide-react";
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
