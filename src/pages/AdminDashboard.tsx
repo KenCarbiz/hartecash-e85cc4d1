@@ -31,8 +31,7 @@ import LocationManagement from "@/components/admin/LocationManagement";
 import VehicleImageInventory from "@/components/admin/VehicleImageInventory";
 import VehicleImage from "@/components/sell-form/VehicleImage";
 import FollowUpPanel from "@/components/admin/FollowUpPanel";
-import FollowUpLog from "@/components/admin/FollowUpLog";
-import NotificationLog from "@/components/admin/NotificationLog";
+import CommunicationLog from "@/components/admin/CommunicationLog";
 import ChangelogManagement from "@/components/admin/ChangelogManagement";
 
 import PermissionManagement from "@/components/admin/PermissionManagement";
