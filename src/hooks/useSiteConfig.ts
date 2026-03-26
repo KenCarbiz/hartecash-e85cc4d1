@@ -36,6 +36,7 @@ export interface SiteConfig {
   enable_animations: boolean;
   use_animated_calculating: boolean;
   enable_dl_ocr: boolean;
+  track_abandoned_leads: boolean;
   about_hero_headline: string;
   about_hero_subtext: string;
   about_story: string;
