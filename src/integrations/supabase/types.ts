@@ -192,7 +192,9 @@ export type Database = {
       dealership_locations: {
         Row: {
           address: string | null
+          center_zip: string | null
           city: string
+          coverage_radius_miles: number | null
           created_at: string
           id: string
           is_active: boolean
@@ -206,7 +208,9 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          center_zip?: string | null
           city: string
+          coverage_radius_miles?: number | null
           created_at?: string
           id?: string
           is_active?: boolean
@@ -220,7 +224,9 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          center_zip?: string | null
           city?: string
+          coverage_radius_miles?: number | null
           created_at?: string
           id?: string
           is_active?: boolean
