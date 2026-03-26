@@ -202,6 +202,7 @@ const AdminDashboard = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [sourceFilter, setSourceFilter] = useState<string>("");
+  const [storeFilter, setStoreFilter] = useState<string>("");
   const [dateRangeFilter, setDateRangeFilter] = useState<{ from: string; to: string }>({ from: "", to: "" });
   const [selected, setSelected] = useState<Submission | null>(null);
   const [photos, setPhotos] = useState<{ url: string; name: string }[]>([]);
@@ -1212,6 +1213,15 @@ const AdminDashboard = () => {
     // Source filter
     if (sourceFilter && sourceFilter !== "__all__" && s.lead_source !== sourceFilter) return false;
 
+    // Store filter
+    if (storeFilter && storeFilter !== "__all__") {
+      if (storeFilter === "__unassigned__") {
+        if (s.store_location_id) return false;
+      } else {
+        if (s.store_location_id !== storeFilter) return false;
+      }
+    }
+
     // Date range filter
     if (dateRangeFilter.from || dateRangeFilter.to) {
       const submissionDate = new Date(s.created_at).toISOString().split('T')[0];
@@ -1308,13 +1318,13 @@ const AdminDashboard = () => {
                 size="sm"
                 onClick={() => setShowFilterPanel(!showFilterPanel)}
               >
-                Filter {(statusFilter || sourceFilter || dateRangeFilter.from || dateRangeFilter.to) && "*"}
+                Filter {(statusFilter || sourceFilter || storeFilter || dateRangeFilter.from || dateRangeFilter.to) && "*"}
               </Button>
             </div>
 
             {showFilterPanel && (
               <div className="mb-4 bg-muted/40 rounded-lg border border-border p-4 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                   <div>
                     <Label className="text-xs font-semibold mb-2 block">Status</Label>
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -1347,6 +1357,23 @@ const AdminDashboard = () => {
                     </Select>
                   </div>
                   <div>
+                    <Label className="text-xs font-semibold mb-2 block">Store</Label>
+                    <Select value={storeFilter} onValueChange={setStoreFilter}>
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="All stores" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__all__">All stores</SelectItem>
+                        {dealerLocations.map(loc => (
+                          <SelectItem key={loc.id} value={loc.id}>
+                            {loc.name}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="__unassigned__">Unassigned</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
                     <Label className="text-xs font-semibold mb-2 block">From Date</Label>
                     <Input
                       type="date"
@@ -1372,6 +1399,7 @@ const AdminDashboard = () => {
                     onClick={() => {
                       setStatusFilter("__all__");
                       setSourceFilter("__all__");
+                      setStoreFilter("__all__");
                       setDateRangeFilter({ from: "", to: "" });
                     }}
                     className="text-xs"
