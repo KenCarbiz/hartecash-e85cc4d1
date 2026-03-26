@@ -5,8 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Plus, Trash2, GripVertical, Save, Loader2, MapPin, ChevronDown, ChevronRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Trash2, GripVertical, Save, Loader2, MapPin, ChevronDown, ChevronRight, X, MapPinned, Car } from "lucide-react";
 
 interface Location {
   id: string;
@@ -18,6 +18,8 @@ interface Location {
   is_active: boolean;
   show_in_footer: boolean;
   show_in_scheduling: boolean;
+  zip_codes: string[];
+  oem_brands: string[];
 }
 
 const LocationManagement = () => {
