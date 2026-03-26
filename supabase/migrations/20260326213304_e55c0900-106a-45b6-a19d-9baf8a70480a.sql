@@ -1,0 +1,1 @@
+ALTER TABLE public.site_config ADD COLUMN IF NOT EXISTS track_abandoned_leads boolean NOT NULL DEFAULT true;
