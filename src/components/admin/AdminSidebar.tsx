@@ -135,10 +135,12 @@ const AdminSidebar = ({
   return (
     <Sidebar collapsible="icon" className="border-r border-border">
       <SidebarContent className="pt-2">
-        {renderGroup("Pipeline", mainItems)}
+        {renderGroup("Pipeline", pipelineItems)}
         {renderGroup("Team", teamItems)}
+        {renderGroup("Lead Flow", leadFlowItems)}
+        {renderGroup("Storefront", storefrontItems)}
         {renderGroup("Compliance", complianceItems)}
-        {renderGroup("Configuration", configItems)}
+        {renderGroup("Tools", toolsItems)}
 
         {/* Request Access section for non-admins */}
         {lockedSections.length > 0 && !collapsed && (
