@@ -52,6 +52,7 @@ const AdminSidebar = ({
   const mainItems = [
     { key: "submissions", label: "Submissions", icon: Inbox, badge: submissionCount > 0 ? String(submissionCount) : undefined },
     { key: "appointments", label: "Appointments", icon: CalendarDays, badge: appointmentCount > 0 ? String(appointmentCount) : undefined },
+    { key: "executive", label: "Executive HUD", icon: BarChart3 },
   ].filter((item) => isAllowed(item.key));
 
   const teamItems = canManageAccess
@@ -84,7 +85,7 @@ const AdminSidebar = ({
     : [];
 
   // Collect locked sections for "Request Access" display
-  const allSectionKeys = ["submissions", "appointments", "staff", "requests", "consent", "follow-ups", "notification-log", "offer-settings", "site-config", "notifications", "form-config", "testimonials", "comparison", "locations", "image-inventory", "about-page", "changelog", "permissions"];
+  const allSectionKeys = ["submissions", "appointments", "executive", "staff", "requests", "consent", "follow-ups", "notification-log", "offer-settings", "site-config", "notifications", "form-config", "testimonials", "comparison", "locations", "image-inventory", "about-page", "changelog", "permissions"];
   const lockedSections = showRequestAccess && allowedSections !== null
     ? allSectionKeys.filter((k) => !allowedSections.includes(k))
     : [];

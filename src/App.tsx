@@ -31,6 +31,7 @@ const DealAccepted = lazy(() => import("./pages/DealAccepted"));
 const OfferDisclosure = lazy(() => import("./pages/OfferDisclosure"));
 const Updates = lazy(() => import("./pages/Updates"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
+const ExecutiveDashboard = lazy(() => import("./pages/ExecutiveDashboard"));
 
 const queryClient = new QueryClient();
 
@@ -67,6 +68,7 @@ const App = () => (
               <Route path="/disclosure" element={<OfferDisclosure />} />
               <Route path="/updates" element={<Updates />} />
               <Route path="/about" element={<AboutPage />} />
+              <Route path="/executive" element={<ExecutiveDashboard />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

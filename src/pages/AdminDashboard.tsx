@@ -36,6 +36,7 @@ import NotificationLog from "@/components/admin/NotificationLog";
 import ChangelogManagement from "@/components/admin/ChangelogManagement";
 import AboutPageConfig from "@/components/admin/AboutPageConfig";
 import PermissionManagement from "@/components/admin/PermissionManagement";
+import ExecutiveKPIHub from "@/components/admin/ExecutiveKPIHub";
 import { useStaffPermissions } from "@/hooks/useStaffPermissions";
 import RequestAccessDialog from "@/components/admin/RequestAccessDialog";
 import { Badge } from "@/components/ui/badge";
@@ -1753,6 +1754,9 @@ const AdminDashboard = () => {
 
           {/* Consent Log */}
           {activeSection === "consent" && <ConsentLog />}
+
+          {/* Executive KPI Hub */}
+          {activeSection === "executive" && <ExecutiveKPIHub />}
 
           {/* Offer Settings */}
           {activeSection === "offer-settings" && canManageAccess && <OfferSettings />}
