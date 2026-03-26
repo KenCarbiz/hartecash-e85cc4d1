@@ -77,6 +77,11 @@ const DEFAULTS: SiteConfig = {
   about_story: "",
   about_milestones: [],
   about_values: [],
+  assign_customer_picks: false,
+  assign_auto_zip: true,
+  assign_oem_brand_match: false,
+  assign_buying_center: false,
+  buying_center_location_id: null,
 };
 
 let cachedConfig: SiteConfig | null = null;
