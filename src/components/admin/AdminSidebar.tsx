@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/sidebar";
 import {
   Inbox, CalendarDays, Users, ShieldCheck, SlidersHorizontal,
-  Settings, Bell, ListChecks, MessageSquareQuote, BarChart3, Send, UserCheck, MapPin, Car, ScrollText, Newspaper, Shield, Lock
+  Settings, Bell, ListChecks, MessageSquareQuote, BarChart3, Send, UserCheck, MapPin, Car, ScrollText, Newspaper, Shield, Lock, Wrench
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
@@ -49,43 +49,58 @@ const AdminSidebar = ({
 
   const isAllowed = (key: string) => allowedSections === null || allowedSections.includes(key);
 
-  const mainItems = [
+  // ── Pipeline (daily ops) ──
+  const pipelineItems = [
     { key: "submissions", label: "Submissions", icon: Inbox, badge: submissionCount > 0 ? String(submissionCount) : undefined },
     { key: "appointments", label: "Appointments", icon: CalendarDays, badge: appointmentCount > 0 ? String(appointmentCount) : undefined },
     { key: "executive", label: "Executive HUD", icon: BarChart3 },
   ].filter((item) => isAllowed(item.key));
 
+  // ── Team (people & access) ──
   const teamItems = canManageAccess
     ? [
         { key: "staff", label: "Staff", icon: Users },
+        { key: "permissions", label: "Permissions", icon: Shield, badge: permissionRequestCount > 0 ? String(permissionRequestCount) : undefined, badgeVariant: "destructive" as const },
         { key: "requests", label: "Access Requests", icon: UserCheck, badge: pendingRequestCount > 0 ? String(pendingRequestCount) : undefined, badgeVariant: "destructive" as const },
       ].filter((item) => isAllowed(item.key))
     : [];
 
+  // ── Lead Flow (acquisition engine) ──
+  const leadFlowItems = canManageAccess
+    ? [
+        { key: "offer-settings", label: "Offer Settings", icon: SlidersHorizontal },
+        { key: "form-config", label: "Form Config", icon: ListChecks },
+        { key: "notifications", label: "Notifications", icon: Bell },
+      ].filter((item) => isAllowed(item.key))
+    : [];
+
+  // ── Storefront (brand & presence) ──
+  const storefrontItems = canManageAccess
+    ? [
+        { key: "site-config", label: "Site Config", icon: Settings },
+        { key: "locations", label: "Locations", icon: MapPin },
+        { key: "testimonials", label: "Testimonials", icon: MessageSquareQuote },
+        { key: "comparison", label: "Comparison", icon: BarChart3 },
+      ].filter((item) => isAllowed(item.key))
+    : [];
+
+  // ── Compliance (audit trails) ──
   const complianceItems = [
     { key: "consent", label: "Consent Log", icon: ShieldCheck },
     { key: "follow-ups", label: "Follow-Ups", icon: Send },
     { key: "notification-log", label: "Notification Log", icon: ScrollText },
   ].filter((item) => isAllowed(item.key));
 
-  const configItems = canManageAccess
+  // ── Tools (utilities) ──
+  const toolsItems = canManageAccess
     ? [
-        { key: "offer-settings", label: "Offer Settings", icon: SlidersHorizontal },
-        { key: "site-config", label: "Site Config", icon: Settings },
-        { key: "notifications", label: "Notifications", icon: Bell },
-        { key: "form-config", label: "Form Config", icon: ListChecks },
-        { key: "testimonials", label: "Testimonials", icon: MessageSquareQuote },
-        { key: "comparison", label: "Comparison", icon: BarChart3 },
-        { key: "locations", label: "Locations", icon: MapPin },
         { key: "image-inventory", label: "Image Cache", icon: Car },
-        
         { key: "changelog", label: "Changelog", icon: Newspaper },
-        { key: "permissions", label: "Permissions", icon: Shield, badge: permissionRequestCount > 0 ? String(permissionRequestCount) : undefined, badgeVariant: "destructive" as const },
       ].filter((item) => isAllowed(item.key))
     : [];
 
   // Collect locked sections for "Request Access" display
-  const allSectionKeys = ["submissions", "appointments", "executive", "staff", "requests", "consent", "follow-ups", "notification-log", "offer-settings", "site-config", "notifications", "form-config", "testimonials", "comparison", "locations", "image-inventory", "changelog", "permissions"];
+  const allSectionKeys = ["submissions", "appointments", "executive", "staff", "permissions", "requests", "offer-settings", "form-config", "notifications", "site-config", "locations", "testimonials", "comparison", "consent", "follow-ups", "notification-log", "image-inventory", "changelog"];
   const lockedSections = showRequestAccess && allowedSections !== null
     ? allSectionKeys.filter((k) => !allowedSections.includes(k))
     : [];
@@ -135,10 +150,12 @@ const AdminSidebar = ({
   return (
     <Sidebar collapsible="icon" className="border-r border-border">
       <SidebarContent className="pt-2">
-        {renderGroup("Pipeline", mainItems)}
+        {renderGroup("Pipeline", pipelineItems)}
         {renderGroup("Team", teamItems)}
+        {renderGroup("Lead Flow", leadFlowItems)}
+        {renderGroup("Storefront", storefrontItems)}
         {renderGroup("Compliance", complianceItems)}
-        {renderGroup("Configuration", configItems)}
+        {renderGroup("Tools", toolsItems)}
 
         {/* Request Access section for non-admins */}
         {lockedSections.length > 0 && !collapsed && (
