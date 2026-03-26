@@ -5,8 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Plus, Trash2, GripVertical, Save, Loader2, MapPin, ChevronDown, ChevronRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Trash2, GripVertical, Save, Loader2, MapPin, ChevronDown, ChevronRight, X, MapPinned, Car } from "lucide-react";
 
 interface Location {
   id: string;
@@ -18,6 +18,8 @@ interface Location {
   is_active: boolean;
   show_in_footer: boolean;
   show_in_scheduling: boolean;
+  zip_codes: string[];
+  oem_brands: string[];
 }
 
 const LocationManagement = () => {
@@ -29,6 +31,8 @@ const LocationManagement = () => {
   const [newCity, setNewCity] = useState("");
   const [newState, setNewState] = useState("CT");
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [zipInputs, setZipInputs] = useState<Record<string, string>>({});
+  const [brandInputs, setBrandInputs] = useState<Record<string, string>>({});
 
   const fetchLocations = async () => {
     const { data, error } = await supabase
@@ -98,7 +102,7 @@ const LocationManagement = () => {
     for (const loc of locations) {
       const { error } = await supabase
         .from("dealership_locations" as any)
-        .update({ name: loc.name, city: loc.city, state: loc.state, address: loc.address, sort_order: loc.sort_order })
+        .update({ name: loc.name, city: loc.city, state: loc.state, address: loc.address, sort_order: loc.sort_order, zip_codes: loc.zip_codes || [], oem_brands: loc.oem_brands || [] })
         .eq("id", loc.id);
       if (error) hasError = true;
     }
@@ -193,23 +197,173 @@ const LocationManagement = () => {
               </div>
             </div>
 
-            {/* Collapsible address */}
+            {/* Collapsible details */}
             <div className="border-t border-border/50">
               <button
                 onClick={() => toggleExpanded(loc.id)}
                 className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground hover:text-foreground w-full text-left transition-colors"
               >
                 {expandedIds.has(loc.id) ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-                {loc.address ? "Address: " + loc.address : "Add address…"}
+                <span>Address, ZIP Codes ({loc.zip_codes?.length || 0}), OEM Brands ({loc.oem_brands?.length || 0})</span>
               </button>
               {expandedIds.has(loc.id) && (
-                <div className="px-3 pb-3">
-                  <Input
-                    value={loc.address || ""}
-                    onChange={(e) => updateLocation(loc.id, "address", e.target.value)}
-                    placeholder="Full street address (e.g. 123 Main St, Hartford, CT 06103)"
-                    className="text-sm"
-                  />
+                <div className="px-3 pb-3 space-y-4">
+                  {/* Address */}
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground mb-1 block">Street Address</Label>
+                    <Input
+                      value={loc.address || ""}
+                      onChange={(e) => updateLocation(loc.id, "address", e.target.value)}
+                      placeholder="Full street address (e.g. 123 Main St, Hartford, CT 06103)"
+                      className="text-sm"
+                    />
+                  </div>
+
+                  {/* ZIP Codes */}
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground mb-1.5 flex items-center gap-1.5">
+                      <MapPinned className="w-3.5 h-3.5" /> Coverage ZIP Codes
+                    </Label>
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {(loc.zip_codes || []).map((zip) => (
+                        <Badge key={zip} variant="secondary" className="gap-1 text-xs font-mono pl-2 pr-1 py-0.5">
+                          {zip}
+                          <button
+                            onClick={() => {
+                              setLocations(prev => prev.map(l => l.id === loc.id
+                                ? { ...l, zip_codes: l.zip_codes.filter(z => z !== zip) }
+                                : l
+                              ));
+                            }}
+                            className="hover:text-destructive ml-0.5"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                      {(!loc.zip_codes || loc.zip_codes.length === 0) && (
+                        <span className="text-xs text-muted-foreground italic">No ZIP codes assigned</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={zipInputs[loc.id] || ""}
+                        onChange={(e) => setZipInputs(prev => ({ ...prev, [loc.id]: e.target.value }))}
+                        placeholder="Add ZIPs (comma-separated, e.g. 06101, 06102, 06103)"
+                        className="text-sm font-mono flex-1"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            const raw = zipInputs[loc.id] || "";
+                            const newZips = raw.split(/[,\s]+/).map(z => z.trim()).filter(z => /^\d{5}$/.test(z));
+                            if (newZips.length > 0) {
+                              setLocations(prev => prev.map(l => l.id === loc.id
+                                ? { ...l, zip_codes: [...new Set([...(l.zip_codes || []), ...newZips])] }
+                                : l
+                              ));
+                              setZipInputs(prev => ({ ...prev, [loc.id]: "" }));
+                            }
+                          }
+                        }}
+                      />
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          const raw = zipInputs[loc.id] || "";
+                          const newZips = raw.split(/[,\s]+/).map(z => z.trim()).filter(z => /^\d{5}$/.test(z));
+                          if (newZips.length > 0) {
+                            setLocations(prev => prev.map(l => l.id === loc.id
+                              ? { ...l, zip_codes: [...new Set([...(l.zip_codes || []), ...newZips])] }
+                              : l
+                            ));
+                            setZipInputs(prev => ({ ...prev, [loc.id]: "" }));
+                          }
+                        }}
+                        className="gap-1"
+                      >
+                        <Plus className="w-3 h-3" /> Add
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setLocations(prev => prev.map(l => l.id === loc.id ? { ...l, zip_codes: [] } : l));
+                        }}
+                        className="text-destructive hover:text-destructive/80 text-xs"
+                      >
+                        Clear All
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* OEM Brands */}
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground mb-1.5 flex items-center gap-1.5">
+                      <Car className="w-3.5 h-3.5" /> OEM Brand Mapping
+                    </Label>
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {(loc.oem_brands || []).map((brand) => (
+                        <Badge key={brand} variant="outline" className="gap-1 text-xs pl-2 pr-1 py-0.5 border-primary/30 bg-primary/5">
+                          {brand}
+                          <button
+                            onClick={() => {
+                              setLocations(prev => prev.map(l => l.id === loc.id
+                                ? { ...l, oem_brands: l.oem_brands.filter(b => b !== brand) }
+                                : l
+                              ));
+                            }}
+                            className="hover:text-destructive ml-0.5"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                      {(!loc.oem_brands || loc.oem_brands.length === 0) && (
+                        <span className="text-xs text-muted-foreground italic">No brands assigned</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={brandInputs[loc.id] || ""}
+                        onChange={(e) => setBrandInputs(prev => ({ ...prev, [loc.id]: e.target.value }))}
+                        placeholder="Add brand (e.g. Nissan, Infiniti, Hyundai)"
+                        className="text-sm flex-1"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            const raw = brandInputs[loc.id] || "";
+                            const newBrands = raw.split(",").map(b => b.trim()).filter(Boolean);
+                            if (newBrands.length > 0) {
+                              setLocations(prev => prev.map(l => l.id === loc.id
+                                ? { ...l, oem_brands: [...new Set([...(l.oem_brands || []), ...newBrands])] }
+                                : l
+                              ));
+                              setBrandInputs(prev => ({ ...prev, [loc.id]: "" }));
+                            }
+                          }
+                        }}
+                      />
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          const raw = brandInputs[loc.id] || "";
+                          const newBrands = raw.split(",").map(b => b.trim()).filter(Boolean);
+                          if (newBrands.length > 0) {
+                            setLocations(prev => prev.map(l => l.id === loc.id
+                              ? { ...l, oem_brands: [...new Set([...(l.oem_brands || []), ...newBrands])] }
+                              : l
+                            ));
+                            setBrandInputs(prev => ({ ...prev, [loc.id]: "" }));
+                          }
+                        }}
+                        className="gap-1"
+                      >
+                        <Plus className="w-3 h-3" /> Add
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
