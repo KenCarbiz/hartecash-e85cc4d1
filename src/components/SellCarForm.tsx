@@ -60,6 +60,7 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
   const savePartialRef = useRef<() => void>();
   savePartialRef.current = () => {
     if (submittedRef.current) return;
+    if (!config.track_abandoned_leads) return;
     const hasContact = formData.email.trim().length > 3 && formData.email.includes("@");
     if (!hasContact) return;
 

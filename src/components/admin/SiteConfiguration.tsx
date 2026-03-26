@@ -40,6 +40,7 @@ interface SiteConfig {
   enable_animations: boolean;
   use_animated_calculating: boolean;
   enable_dl_ocr: boolean;
+  track_abandoned_leads: boolean;
   cta_offer_color: string;
   cta_accept_color: string;
   assign_customer_picks: boolean;
@@ -76,6 +77,7 @@ const DEFAULT_CONFIG: SiteConfig = {
   enable_animations: false,
   use_animated_calculating: false,
   enable_dl_ocr: false,
+  track_abandoned_leads: true,
   cta_offer_color: "",
   cta_accept_color: "",
   assign_customer_picks: false,
@@ -528,6 +530,25 @@ const SiteConfiguration = () => {
               onCheckedChange={v => {
                 setConfig(prev => {
                   const next = { ...prev, enable_dl_ocr: v };
+                  setHasChanges(JSON.stringify(next) !== JSON.stringify(savedConfig));
+                  return next;
+                });
+              }}
+            />
+          </div>
+
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
+            <div className="flex-1 mr-3">
+              <Label className="text-sm font-semibold">Abandoned Lead Tracking</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Automatically capture partial form submissions when a customer provides contact info but doesn't complete the process. Abandoned leads appear in the submissions list and Executive HUD for follow-up.
+              </p>
+            </div>
+            <Switch
+              checked={config.track_abandoned_leads}
+              onCheckedChange={v => {
+                setConfig(prev => {
+                  const next = { ...prev, track_abandoned_leads: v };
                   setHasChanges(JSON.stringify(next) !== JSON.stringify(savedConfig));
                   return next;
                 });

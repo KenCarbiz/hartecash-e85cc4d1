@@ -897,6 +897,7 @@ export type Database = {
           stats_years_in_business: string | null
           success_color: string
           tagline: string
+          track_abandoned_leads: boolean
           updated_at: string
           use_animated_calculating: boolean
           website_url: string | null
@@ -943,6 +944,7 @@ export type Database = {
           stats_years_in_business?: string | null
           success_color?: string
           tagline?: string
+          track_abandoned_leads?: boolean
           updated_at?: string
           use_animated_calculating?: boolean
           website_url?: string | null
@@ -989,6 +991,7 @@ export type Database = {
           stats_years_in_business?: string | null
           success_color?: string
           tagline?: string
+          track_abandoned_leads?: boolean
           updated_at?: string
           use_animated_calculating?: boolean
           website_url?: string | null

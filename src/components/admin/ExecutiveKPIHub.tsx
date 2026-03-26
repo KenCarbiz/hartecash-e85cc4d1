@@ -70,25 +70,37 @@ const ExecutiveKPIHub = ({ standalone = false }: ExecutiveKPIHubProps) => {
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<"30" | "60" | "90" | "all">("all");
+  const [trackAbandoned, setTrackAbandoned] = useState(true);
 
   useEffect(() => {
     Promise.all([
       supabase.from("submissions").select("id, created_at, progress_status, offered_price, acv_value, lead_source, store_location_id, status_updated_at, status_updated_by, appraised_by"),
       supabase.from("dealership_locations").select("id, name, city, state").eq("is_active", true).order("sort_order"),
-    ]).then(([{ data: subData }, { data: locData }]) => {
+      supabase.from("site_config").select("track_abandoned_leads").eq("dealership_id", "default").maybeSingle(),
+    ]).then(([{ data: subData }, { data: locData }, { data: cfgData }]) => {
       if (subData) setSubs(subData as any);
       if (locData) setLocations(locData);
+      if (cfgData && typeof (cfgData as any).track_abandoned_leads === "boolean") {
+        setTrackAbandoned((cfgData as any).track_abandoned_leads);
+      }
       setLoading(false);
     });
   }, []);
 
   const filteredSubs = useMemo(() => {
-    if (timeRange === "all") return subs;
-    const days = parseInt(timeRange);
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - days);
-    return subs.filter(s => new Date(s.created_at) >= cutoff);
-  }, [subs, timeRange]);
+    let result = subs;
+    // Exclude abandoned/partial leads when tracking is disabled
+    if (!trackAbandoned) {
+      result = result.filter(s => s.progress_status !== "partial");
+    }
+    if (timeRange !== "all") {
+      const days = parseInt(timeRange);
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - days);
+      result = result.filter(s => new Date(s.created_at) >= cutoff);
+    }
+    return result;
+  }, [subs, timeRange, trackAbandoned]);
 
   /* ── aggregate KPIs ─────────────────────────────── */
   const kpis = useMemo(() => {
