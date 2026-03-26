@@ -23,6 +23,8 @@ interface Location {
   oem_brands: string[];
   center_zip: string;
   coverage_radius_miles: number;
+  all_brands: boolean;
+  excluded_oem_brands: string[];
 }
 
 const LocationManagement = () => {
@@ -36,6 +38,7 @@ const LocationManagement = () => {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [zipInputs, setZipInputs] = useState<Record<string, string>>({});
   const [brandInputs, setBrandInputs] = useState<Record<string, string>>({});
+  const [excludedBrandInputs, setExcludedBrandInputs] = useState<Record<string, string>>({});
 
   const fetchLocations = async () => {
     const { data, error } = await supabase
@@ -105,7 +108,7 @@ const LocationManagement = () => {
     for (const loc of locations) {
       const { error } = await supabase
         .from("dealership_locations" as any)
-        .update({ name: loc.name, city: loc.city, state: loc.state, address: loc.address, sort_order: loc.sort_order, zip_codes: loc.zip_codes || [], oem_brands: loc.oem_brands || [], center_zip: loc.center_zip || '', coverage_radius_miles: loc.coverage_radius_miles || 0 })
+        .update({ name: loc.name, city: loc.city, state: loc.state, address: loc.address, sort_order: loc.sort_order, zip_codes: loc.zip_codes || [], oem_brands: loc.oem_brands || [], center_zip: loc.center_zip || '', coverage_radius_miles: loc.coverage_radius_miles || 0, all_brands: loc.all_brands ?? true, excluded_oem_brands: loc.excluded_oem_brands || [] })
         .eq("id", loc.id);
       if (error) hasError = true;
     }
@@ -207,7 +210,7 @@ const LocationManagement = () => {
                 className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground hover:text-foreground w-full text-left transition-colors"
               >
                 {expandedIds.has(loc.id) ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-                <span>Address, ZIP Codes ({loc.zip_codes?.length || 0}){loc.coverage_radius_miles > 0 ? ` + ${loc.coverage_radius_miles}mi radius` : ''}, OEM Brands ({loc.oem_brands?.length || 0})</span>
+                <span>Address, ZIP Codes ({loc.zip_codes?.length || 0}){loc.coverage_radius_miles > 0 ? ` + ${loc.coverage_radius_miles}mi radius` : ''}, Brands: {(loc.all_brands ?? true) ? `All${(loc.excluded_oem_brands?.length || 0) > 0 ? ` (−${loc.excluded_oem_brands.length})` : ''}` : `${loc.oem_brands?.length || 0} specific`}</span>
               </button>
               {expandedIds.has(loc.id) && (
                 <div className="px-3 pb-3 space-y-4">
@@ -355,67 +358,157 @@ const LocationManagement = () => {
                     <Label className="text-xs font-medium text-muted-foreground mb-1.5 flex items-center gap-1.5">
                       <Car className="w-3.5 h-3.5" /> OEM Brand Mapping
                     </Label>
-                    <div className="flex flex-wrap gap-1.5 mb-2">
-                      {(loc.oem_brands || []).map((brand) => (
-                        <Badge key={brand} variant="outline" className="gap-1 text-xs pl-2 pr-1 py-0.5 border-primary/30 bg-primary/5">
-                          {brand}
-                          <button
-                            onClick={() => {
-                              setLocations(prev => prev.map(l => l.id === loc.id
-                                ? { ...l, oem_brands: l.oem_brands.filter(b => b !== brand) }
-                                : l
-                              ));
-                            }}
-                            className="hover:text-destructive ml-0.5"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </Badge>
-                      ))}
-                      {(!loc.oem_brands || loc.oem_brands.length === 0) && (
-                        <span className="text-xs text-muted-foreground italic">No brands assigned</span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        value={brandInputs[loc.id] || ""}
-                        onChange={(e) => setBrandInputs(prev => ({ ...prev, [loc.id]: e.target.value }))}
-                        placeholder="Add brand (e.g. Nissan, Infiniti, Hyundai)"
-                        className="text-sm flex-1"
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            const raw = brandInputs[loc.id] || "";
-                            const newBrands = raw.split(",").map(b => b.trim()).filter(Boolean);
-                            if (newBrands.length > 0) {
-                              setLocations(prev => prev.map(l => l.id === loc.id
-                                ? { ...l, oem_brands: [...new Set([...(l.oem_brands || []), ...newBrands])] }
-                                : l
-                              ));
-                              setBrandInputs(prev => ({ ...prev, [loc.id]: "" }));
-                            }
-                          }
+
+                    {/* All Brands toggle */}
+                    <div className="flex items-center gap-2 mb-3">
+                      <Switch
+                        checked={loc.all_brands ?? true}
+                        onCheckedChange={(checked) => {
+                          setLocations(prev => prev.map(l => l.id === loc.id ? { ...l, all_brands: checked } : l));
                         }}
                       />
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          const raw = brandInputs[loc.id] || "";
-                          const newBrands = raw.split(",").map(b => b.trim()).filter(Boolean);
-                          if (newBrands.length > 0) {
-                            setLocations(prev => prev.map(l => l.id === loc.id
-                              ? { ...l, oem_brands: [...new Set([...(l.oem_brands || []), ...newBrands])] }
-                              : l
-                            ));
-                            setBrandInputs(prev => ({ ...prev, [loc.id]: "" }));
-                          }
-                        }}
-                        className="gap-1"
-                      >
-                        <Plus className="w-3 h-3" /> Add
-                      </Button>
+                      <Label className="text-sm">
+                        {(loc.all_brands ?? true) ? "All Brands" : "Specific Brands Only"}
+                      </Label>
+                      {(loc.all_brands ?? true) && (
+                        <Badge variant="secondary" className="text-[10px]">Accepts every make</Badge>
+                      )}
                     </div>
+
+                    {/* When All Brands is ON — show excluded brands */}
+                    {(loc.all_brands ?? true) && (
+                      <div className="ml-1 border-l-2 border-border pl-3 space-y-2">
+                        <p className="text-[11px] text-muted-foreground">Optionally exclude specific brands from this location:</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {(loc.excluded_oem_brands || []).map((brand) => (
+                            <Badge key={brand} variant="destructive" className="gap-1 text-xs pl-2 pr-1 py-0.5 bg-destructive/10 text-destructive border-destructive/20">
+                              {brand}
+                              <button
+                                onClick={() => {
+                                  setLocations(prev => prev.map(l => l.id === loc.id
+                                    ? { ...l, excluded_oem_brands: l.excluded_oem_brands.filter(b => b !== brand) }
+                                    : l
+                                  ));
+                                }}
+                                className="hover:text-destructive/80 ml-0.5"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </Badge>
+                          ))}
+                          {(!loc.excluded_oem_brands || loc.excluded_oem_brands.length === 0) && (
+                            <span className="text-xs text-muted-foreground italic">No exclusions — all brands accepted</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={excludedBrandInputs[loc.id] || ""}
+                            onChange={(e) => setExcludedBrandInputs(prev => ({ ...prev, [loc.id]: e.target.value }))}
+                            placeholder="Exclude brand (e.g. Porsche, Maserati)"
+                            className="text-sm flex-1"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                const raw = excludedBrandInputs[loc.id] || "";
+                                const newBrands = raw.split(",").map(b => b.trim()).filter(Boolean);
+                                if (newBrands.length > 0) {
+                                  setLocations(prev => prev.map(l => l.id === loc.id
+                                    ? { ...l, excluded_oem_brands: [...new Set([...(l.excluded_oem_brands || []), ...newBrands])] }
+                                    : l
+                                  ));
+                                  setExcludedBrandInputs(prev => ({ ...prev, [loc.id]: "" }));
+                                }
+                              }
+                            }}
+                          />
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              const raw = excludedBrandInputs[loc.id] || "";
+                              const newBrands = raw.split(",").map(b => b.trim()).filter(Boolean);
+                              if (newBrands.length > 0) {
+                                setLocations(prev => prev.map(l => l.id === loc.id
+                                  ? { ...l, excluded_oem_brands: [...new Set([...(l.excluded_oem_brands || []), ...newBrands])] }
+                                  : l
+                                ));
+                                setExcludedBrandInputs(prev => ({ ...prev, [loc.id]: "" }));
+                              }
+                            }}
+                            className="gap-1"
+                          >
+                            <Plus className="w-3 h-3" /> Exclude
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* When All Brands is OFF — show specific included brands */}
+                    {!(loc.all_brands ?? true) && (
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap gap-1.5">
+                          {(loc.oem_brands || []).map((brand) => (
+                            <Badge key={brand} variant="outline" className="gap-1 text-xs pl-2 pr-1 py-0.5 border-primary/30 bg-primary/5">
+                              {brand}
+                              <button
+                                onClick={() => {
+                                  setLocations(prev => prev.map(l => l.id === loc.id
+                                    ? { ...l, oem_brands: l.oem_brands.filter(b => b !== brand) }
+                                    : l
+                                  ));
+                                }}
+                                className="hover:text-destructive ml-0.5"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </Badge>
+                          ))}
+                          {(!loc.oem_brands || loc.oem_brands.length === 0) && (
+                            <span className="text-xs text-muted-foreground italic">No brands assigned — add specific brands this location handles</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={brandInputs[loc.id] || ""}
+                            onChange={(e) => setBrandInputs(prev => ({ ...prev, [loc.id]: e.target.value }))}
+                            placeholder="Add brand (e.g. Nissan, Infiniti, Hyundai)"
+                            className="text-sm flex-1"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                const raw = brandInputs[loc.id] || "";
+                                const newBrands = raw.split(",").map(b => b.trim()).filter(Boolean);
+                                if (newBrands.length > 0) {
+                                  setLocations(prev => prev.map(l => l.id === loc.id
+                                    ? { ...l, oem_brands: [...new Set([...(l.oem_brands || []), ...newBrands])] }
+                                    : l
+                                  ));
+                                  setBrandInputs(prev => ({ ...prev, [loc.id]: "" }));
+                                }
+                              }
+                            }}
+                          />
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              const raw = brandInputs[loc.id] || "";
+                              const newBrands = raw.split(",").map(b => b.trim()).filter(Boolean);
+                              if (newBrands.length > 0) {
+                                setLocations(prev => prev.map(l => l.id === loc.id
+                                  ? { ...l, oem_brands: [...new Set([...(l.oem_brands || []), ...newBrands])] }
+                                  : l
+                                ));
+                                setBrandInputs(prev => ({ ...prev, [loc.id]: "" }));
+                              }
+                            }}
+                            className="gap-1"
+                          >
+                            <Plus className="w-3 h-3" /> Add
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

@@ -192,10 +192,12 @@ export type Database = {
       dealership_locations: {
         Row: {
           address: string | null
+          all_brands: boolean
           center_zip: string | null
           city: string
           coverage_radius_miles: number | null
           created_at: string
+          excluded_oem_brands: string[]
           id: string
           is_active: boolean
           name: string
@@ -208,10 +210,12 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          all_brands?: boolean
           center_zip?: string | null
           city: string
           coverage_radius_miles?: number | null
           created_at?: string
+          excluded_oem_brands?: string[]
           id?: string
           is_active?: boolean
           name: string
@@ -224,10 +228,12 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          all_brands?: boolean
           center_zip?: string | null
           city?: string
           coverage_radius_miles?: number | null
           created_at?: string
+          excluded_oem_brands?: string[]
           id?: string
           is_active?: boolean
           name?: string

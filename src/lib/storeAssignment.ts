@@ -9,6 +9,8 @@ interface LocationWithZips {
   oem_brands: string[];
   center_zip: string;
   coverage_radius_miles: number;
+  all_brands: boolean;
+  excluded_oem_brands: string[];
 }
 
 let cachedLocations: LocationWithZips[] | null = null;
@@ -17,7 +19,7 @@ async function getLocations(): Promise<LocationWithZips[]> {
   if (!cachedLocations) {
     const { data } = await supabase
       .from("dealership_locations")
-      .select("id, name, city, state, zip_codes, oem_brands, center_zip, coverage_radius_miles")
+      .select("id, name, city, state, zip_codes, oem_brands, center_zip, coverage_radius_miles, all_brands, excluded_oem_brands")
       .eq("is_active", true)
       .order("sort_order");
     cachedLocations = (data as any) || [];
@@ -66,8 +68,17 @@ export async function findStoreByBrand(vehicleMake: string): Promise<string | nu
   const locations = await getLocations();
   const make = vehicleMake.toLowerCase();
 
+  // First try specific brand match (locations with all_brands OFF)
   for (const loc of locations) {
-    if (loc.oem_brands?.some(b => b.toLowerCase() === make)) return loc.id;
+    if (!loc.all_brands && loc.oem_brands?.some(b => b.toLowerCase() === make)) return loc.id;
+  }
+
+  // Then try all_brands locations that don't exclude this make
+  for (const loc of locations) {
+    if (loc.all_brands) {
+      const excluded = loc.excluded_oem_brands?.some(b => b.toLowerCase() === make);
+      if (!excluded) return loc.id;
+    }
   }
 
   return null;
