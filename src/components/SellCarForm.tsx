@@ -293,6 +293,7 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
     e.preventDefault();
     if (!validateStep()) return;
     if (honeypot) return;
+    submittedRef.current = true;
 
     const lastSubmit = localStorage.getItem("lastSubmissionTime");
     if (lastSubmit && Date.now() - parseInt(lastSubmit) < 120000) {
