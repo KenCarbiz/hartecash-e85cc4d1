@@ -85,7 +85,7 @@ const AdminSidebar = ({
     : [];
 
   // Collect locked sections for "Request Access" display
-  const allSectionKeys = ["submissions", "appointments", "staff", "requests", "consent", "follow-ups", "notification-log", "offer-settings", "site-config", "notifications", "form-config", "testimonials", "comparison", "locations", "image-inventory", "about-page", "changelog", "permissions"];
+  const allSectionKeys = ["submissions", "appointments", "executive", "staff", "requests", "consent", "follow-ups", "notification-log", "offer-settings", "site-config", "notifications", "form-config", "testimonials", "comparison", "locations", "image-inventory", "about-page", "changelog", "permissions"];
   const lockedSections = showRequestAccess && allowedSections !== null
     ? allSectionKeys.filter((k) => !allowedSections.includes(k))
     : [];
