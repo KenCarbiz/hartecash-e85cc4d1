@@ -123,6 +123,7 @@ interface Submission {
   address_state: string | null;
   lead_source: string;
   store_location_id: string | null;
+  is_hot_lead: boolean;
 }
 
 const PAGE_SIZE = 20;
