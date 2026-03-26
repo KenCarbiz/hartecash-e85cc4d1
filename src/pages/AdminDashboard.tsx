@@ -1211,6 +1211,8 @@ const AdminDashboard = () => {
     // Status filter
     if (statusFilter === "__hot__") {
       if (!s.is_hot_lead) return false;
+    } else if (statusFilter === "__mine__") {
+      if (s.status_updated_by !== auditLabel && !s.appraised_by?.includes(userName)) return false;
     } else if (statusFilter && statusFilter !== "__all__" && s.progress_status !== statusFilter) return false;
 
     // Source filter
