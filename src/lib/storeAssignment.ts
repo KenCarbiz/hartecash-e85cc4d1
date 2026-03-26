@@ -11,6 +11,7 @@ interface LocationWithZips {
   coverage_radius_miles: number;
   all_brands: boolean;
   excluded_oem_brands: string[];
+  temporarily_offline: boolean;
 }
 
 let cachedLocations: LocationWithZips[] | null = null;
@@ -19,12 +20,17 @@ async function getLocations(): Promise<LocationWithZips[]> {
   if (!cachedLocations) {
     const { data } = await supabase
       .from("dealership_locations")
-      .select("id, name, city, state, zip_codes, oem_brands, center_zip, coverage_radius_miles, all_brands, excluded_oem_brands")
+      .select("id, name, city, state, zip_codes, oem_brands, center_zip, coverage_radius_miles, all_brands, excluded_oem_brands, temporarily_offline")
       .eq("is_active", true)
       .order("sort_order");
     cachedLocations = (data as any) || [];
   }
   return cachedLocations!;
+}
+
+/** Returns only locations that are not temporarily offline */
+function getAvailableLocations(locations: LocationWithZips[]): LocationWithZips[] {
+  return locations.filter(l => !l.temporarily_offline);
 }
 
 /**
