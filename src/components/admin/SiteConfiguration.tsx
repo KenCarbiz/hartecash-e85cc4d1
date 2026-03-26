@@ -559,7 +559,8 @@ const SiteConfiguration = () => {
         </div>
       </Section>
 
-      {/* Store Assignment */}
+      {/* Store Assignment — only show when multiple locations */}
+      {dealerLocations.length > 1 && (
       <Section icon={MapPin} title="Store Assignment Rules">
         <p className="text-xs text-muted-foreground mb-4">
           Control how incoming leads from the <strong>Sell Your Car</strong> landing page are assigned to dealership locations. These settings do not affect the /trade page.
