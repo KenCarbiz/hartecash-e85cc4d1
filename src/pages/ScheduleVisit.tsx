@@ -382,22 +382,24 @@ const ScheduleVisit = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="store_location">Preferred Location *</Label>
-                <select
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  value={form.store_location}
-                  onChange={(e) => handleChange("store_location", e.target.value)}
-                >
-                  <option value="">Select a store location</option>
-                  {locations.map((loc) => (
-                    <option key={loc.id} value={loc.id}>
-                      {loc.name} — {loc.city}, {loc.state}
-                      {loc.show_in_scheduling && loc.address ? ` (${loc.address})` : ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {locations.length > 1 && (
+                <div className="space-y-2">
+                  <Label htmlFor="store_location">Preferred Location *</Label>
+                  <select
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    value={form.store_location}
+                    onChange={(e) => handleChange("store_location", e.target.value)}
+                  >
+                    <option value="">Select a store location</option>
+                    {locations.map((loc) => (
+                      <option key={loc.id} value={loc.id}>
+                        {loc.name} — {loc.city}, {loc.state}
+                        {loc.address ? ` (${loc.address})` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="vehicle_info">Vehicle Info (optional)</Label>
