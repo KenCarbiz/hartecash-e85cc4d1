@@ -1438,6 +1438,11 @@ const AdminDashboard = () => {
                               <Badge variant={sub.lead_source === "service" ? "secondary" : sub.lead_source === "in_store_trade" ? "default" : sub.lead_source === "trade" ? "default" : "outline"} className="text-xs">
                                 {sub.lead_source === "service" ? "Service" : sub.lead_source === "in_store_trade" ? "In-Store" : sub.lead_source === "trade" ? "Trade-In" : "Off Street"}
                               </Badge>
+                              {sub.store_location_id && (
+                                <p className="text-[10px] text-muted-foreground mt-0.5 truncate max-w-[120px]">
+                                  {dealerLocations.find(l => l.id === sub.store_location_id)?.name || "—"}
+                                </p>
+                              )}
                             </td>
                             <td className="px-3 py-3">
                               <div className="flex flex-col gap-1">
