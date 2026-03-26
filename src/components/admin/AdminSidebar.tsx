@@ -88,8 +88,7 @@ const AdminSidebar = ({
   // ── Compliance (audit trails) ──
   const complianceItems = [
     { key: "consent", label: "Consent Log", icon: ShieldCheck },
-    { key: "follow-ups", label: "Follow-Ups", icon: Send },
-    { key: "notification-log", label: "Notification Log", icon: ScrollText },
+    { key: "comm-log", label: "Communication Log", icon: MessageCircle },
   ].filter((item) => isAllowed(item.key));
 
   // ── Tools (utilities) ──
