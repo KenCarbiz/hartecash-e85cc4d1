@@ -1324,7 +1324,7 @@ const AdminDashboard = () => {
 
             {showFilterPanel && (
               <div className="mb-4 bg-muted/40 rounded-lg border border-border p-4 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                   <div>
                     <Label className="text-xs font-semibold mb-2 block">Status</Label>
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -1357,6 +1357,23 @@ const AdminDashboard = () => {
                     </Select>
                   </div>
                   <div>
+                    <Label className="text-xs font-semibold mb-2 block">Store</Label>
+                    <Select value={storeFilter} onValueChange={setStoreFilter}>
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="All stores" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__all__">All stores</SelectItem>
+                        {dealerLocations.map(loc => (
+                          <SelectItem key={loc.id} value={loc.id}>
+                            {loc.name}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="__unassigned__">Unassigned</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
                     <Label className="text-xs font-semibold mb-2 block">From Date</Label>
                     <Input
                       type="date"
@@ -1382,6 +1399,7 @@ const AdminDashboard = () => {
                     onClick={() => {
                       setStatusFilter("__all__");
                       setSourceFilter("__all__");
+                      setStoreFilter("__all__");
                       setDateRangeFilter({ from: "", to: "" });
                     }}
                     className="text-xs"
