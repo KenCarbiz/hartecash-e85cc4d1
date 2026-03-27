@@ -1,21 +1,20 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Calculator, TrendingDown, TrendingUp, Minus, ArrowRight, Search, Loader2, Car, CheckSquare,
   SlidersHorizontal, Gauge, Zap, AlertTriangle, DollarSign, ChevronDown, Calendar, Plus, Trash2,
-  ToggleLeft, Layers,
+  Layers, ArrowDown, GripVertical, Pencil, X, Check,
 } from "lucide-react";
 import { calculateOffer, type OfferSettings, type OfferRule, type OfferEstimate } from "@/lib/offerCalculator";
 import type { FormData, BBVehicle, BBAddDeduct } from "@/components/sell-form/types";
 import { supabase } from "@/integrations/supabase/client";
-import OfferWaterfall from "./OfferWaterfall";
 import ProfitSpreadGauge from "./ProfitSpreadGauge";
 import MarketContextPanel from "./MarketContextPanel";
 import { useToast } from "@/hooks/use-toast";
@@ -24,9 +23,7 @@ interface Props {
   settings: OfferSettings;
   savedSettings: OfferSettings | null;
   rules: OfferRule[];
-  /** When true, show inline controls to tweak settings in real-time */
   inlineControls?: boolean;
-  /** Called when inline controls change a setting */
   onSettingsChange?: (settings: OfferSettings) => void;
 }
 
@@ -46,7 +43,6 @@ const BB_VALUE_OPTIONS = [
   { value: "retail_rough", label: "Retail – Rough" },
 ];
 
-// Group BB options by category for the clickable tiles
 const BB_CATEGORIES = [
   {
     label: "Wholesale",
@@ -102,144 +98,156 @@ const AMOUNT_SHORT: Record<string, string> = {
   missing_keys_1: "1key", missing_keys_0: "0key",
 };
 
-function buildTestData(baseValue: number, year: string, make: string, model: string, mileage: string, condition: string, accidents: string, exteriorItems: number, mechanicalItems: number, drivable: string, smokedIn: string) {
-  const bbVehicle: BBVehicle = {
-    uvc: "SIM", vin: "", year, make, model,
-    series: "", style: "", class_name: "", msrp: 0, price_includes: "",
-    drivetrain: "", transmission: "", engine: "", fuel_type: "",
-    mileage_adj: 0, regional_adj: 0, base_whole_avg: baseValue,
-    add_deduct_list: [],
-    wholesale: { xclean: baseValue, clean: baseValue, avg: baseValue, rough: baseValue },
-    tradein: { clean: baseValue, avg: baseValue, rough: baseValue },
-    retail: { xclean: baseValue, clean: baseValue, avg: baseValue, rough: baseValue },
-  };
-  const formData: FormData = {
-    plate: "", state: "", vin: "", mileage,
-    bbUvc: "", bbSelectedAddDeducts: [],
-    exteriorColor: "", drivetrain: "", modifications: "",
-    overallCondition: condition,
-    exteriorDamage: Array.from({ length: exteriorItems }, (_, i) => `item_${i}`),
-    windshieldDamage: "", moonroof: "",
-    interiorDamage: [], techIssues: [], engineIssues: [],
-    mechanicalIssues: Array.from({ length: mechanicalItems }, (_, i) => `item_${i}`),
-    drivable, accidents, smokedIn, tiresReplaced: "yes", numKeys: "2",
-    name: "", phone: "", email: "", zip: "",
-    loanStatus: "", loanCompany: "", loanBalance: "", loanPayment: "",
-    nextStep: "", preferredLocationId: "", salespersonName: "",
-  };
-  return { bbVehicle, formData };
+// ═══════════════════════════════════════════════════════════════
+// INTERACTIVE WATERFALL BLOCK
+// Each step in the pricing calculation is an editable block
+// ═══════════════════════════════════════════════════════════════
+
+interface WaterfallBlock {
+  id: string;
+  label: string;
+  value: number;
+  runningTotal: number;
+  type: "base" | "add" | "subtract" | "total";
+  editable: boolean;
+  editKey?: string; // which setting key to modify
+  editType?: "flat" | "pct" | "multiplier";
+  currentEditValue?: number;
 }
 
-// ── Compact collapsible section ──
-const InlineSection = ({ icon, title, children, defaultOpen = false, badge }: {
-  icon: React.ReactNode; title: string; children: React.ReactNode; defaultOpen?: boolean; badge?: React.ReactNode;
-}) => {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <Collapsible open={open} onOpenChange={setOpen}>
-      <CollapsibleTrigger asChild>
-        <button className="flex items-center justify-between w-full px-3 py-2 text-left hover:bg-muted/30 transition-colors rounded-lg border border-border">
-          <div className="flex items-center gap-1.5">
-            {icon}
-            <span className="font-semibold text-[11px] text-card-foreground">{title}</span>
-            {badge}
-          </div>
-          <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
-        </button>
-      </CollapsibleTrigger>
-      <CollapsibleContent>
-        <div className="px-1 py-2">{children}</div>
-      </CollapsibleContent>
-    </Collapsible>
-  );
-};
-
-// ── BB Value Tile Grid ──
-const BBValueTiles = ({
-  bbVehicle,
-  selectedBasis,
-  onSelectBasis,
+const InteractiveWaterfallBlock = ({
+  block,
+  maxVal,
+  onValueChange,
+  isExpanded,
+  onToggleExpand,
 }: {
-  bbVehicle: BBVehicle;
-  selectedBasis: string;
-  onSelectBasis: (basis: string) => void;
+  block: WaterfallBlock;
+  maxVal: number;
+  onValueChange?: (editKey: string, value: number, editType: string) => void;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
 }) => {
+  const barWidth = maxVal > 0 ? Math.abs(block.type === "total" || block.type === "base" ? block.runningTotal : block.value) / maxVal * 100 : 0;
+  const isBase = block.type === "base";
+  const isTotal = block.type === "total";
+  const isPositive = block.type === "add";
+  const isNegative = block.type === "subtract";
+
+  const barColor = isBase
+    ? "bg-primary/25 border-primary/40"
+    : isTotal
+    ? "bg-primary border-primary/60"
+    : isPositive
+    ? "bg-emerald-500/25 border-emerald-500/40"
+    : "bg-destructive/25 border-destructive/40";
+
+  const textColor = isTotal
+    ? "text-primary-foreground"
+    : isBase
+    ? "text-primary"
+    : isPositive
+    ? "text-emerald-700 dark:text-emerald-400"
+    : "text-destructive";
+
   return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-1.5 mb-1">
-        <DollarSign className="w-3.5 h-3.5 text-primary" />
-        <span className="text-[11px] font-bold text-card-foreground uppercase tracking-wider">Select Base Value</span>
-        <span className="text-[9px] text-muted-foreground ml-1">(click to set valuation basis)</span>
-      </div>
-      {BB_CATEGORIES.map(cat => {
-        const data = bbVehicle[cat.dataKey] as Record<string, number> | undefined;
-        if (!data) return null;
-        return (
-          <div key={cat.label}>
-            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5 block">{cat.label}</span>
-            <div className="grid grid-cols-4 gap-1">
-              {cat.tiers.map(tier => {
-                const value = data[tier.tierKey] || 0;
-                const isSelected = selectedBasis === tier.key;
-                if (value <= 0) return null;
-                return (
-                  <button
-                    key={tier.key}
-                    onClick={() => onSelectBasis(tier.key)}
-                    className={`rounded-md px-2 py-1.5 text-center transition-all border ${
-                      isSelected
-                        ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30 shadow-sm"
-                        : "bg-muted/40 border-border hover:border-primary/40 hover:bg-primary/5 text-card-foreground"
-                    }`}
-                  >
-                    <div className="text-[9px] font-medium opacity-80">{tier.short}</div>
-                    <div className={`text-sm font-bold ${isSelected ? "" : "text-card-foreground"}`}>
-                      ${value.toLocaleString()}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+    <div className="group">
+      <button
+        onClick={block.editable ? onToggleExpand : undefined}
+        className={`flex items-center gap-2 w-full text-left transition-all rounded-md px-1 py-0.5 ${
+          block.editable ? "hover:bg-muted/50 cursor-pointer" : "cursor-default"
+        } ${isExpanded ? "bg-muted/50" : ""}`}
+      >
+        {/* Drag/edit indicator */}
+        <div className="w-4 shrink-0 flex items-center justify-center">
+          {block.editable ? (
+            <Pencil className={`w-2.5 h-2.5 transition-opacity ${isExpanded ? "text-primary opacity-100" : "text-muted-foreground opacity-0 group-hover:opacity-100"}`} />
+          ) : null}
+        </div>
+
+        {/* Label */}
+        <div className="w-28 shrink-0 text-right pr-1">
+          <span className={`text-[11px] leading-tight ${isTotal ? "font-bold text-card-foreground" : "text-muted-foreground"}`}>
+            {block.label}
+          </span>
+        </div>
+
+        {/* Bar */}
+        <div className="flex-1 h-7 relative rounded-sm overflow-hidden bg-muted/20">
+          <div
+            className={`h-full rounded-sm border flex items-center transition-all duration-300 ${barColor}`}
+            style={{ width: `${Math.max(barWidth, 4)}%` }}
+          >
+            <span className={`text-[11px] font-bold px-2 truncate whitespace-nowrap ${textColor}`}>
+              {isBase || isTotal
+                ? `$${block.runningTotal.toLocaleString()}`
+                : `${block.value >= 0 ? "+" : ""}$${block.value.toLocaleString()}`}
+            </span>
           </div>
-        );
-      })}
+        </div>
+
+        {/* Arrow icon */}
+        <div className="w-4 shrink-0">
+          {isPositive && <TrendingUp className="w-3 h-3 text-emerald-500" />}
+          {isNegative && <TrendingDown className="w-3 h-3 text-destructive" />}
+          {(isBase || isTotal) && <Minus className="w-3 h-3 text-muted-foreground" />}
+        </div>
+      </button>
+
+      {/* Expanded inline editor */}
+      {isExpanded && block.editable && block.editKey && onValueChange && (
+        <div className="ml-6 mr-6 mt-1 mb-2 p-2 bg-card border border-border rounded-lg shadow-sm">
+          <div className="flex items-center gap-2">
+            <Label className="text-[10px] font-semibold text-muted-foreground shrink-0">
+              {block.editType === "pct" ? "%" : block.editType === "multiplier" ? "×" : "$"}
+            </Label>
+            <Input
+              type="number"
+              value={block.currentEditValue ?? 0}
+              onChange={e => onValueChange(block.editKey!, Number(e.target.value), block.editType || "flat")}
+              className="h-7 text-sm w-28"
+              step={block.editType === "multiplier" ? "0.01" : block.editType === "pct" ? "0.5" : "50"}
+              autoFocus
+            />
+            <Slider
+              value={[block.editType === "multiplier"
+                ? (block.currentEditValue ?? 1) * 100
+                : block.currentEditValue ?? 0]}
+              min={block.editType === "multiplier" ? 50 : block.editType === "pct" ? -30 : -5000}
+              max={block.editType === "multiplier" ? 130 : block.editType === "pct" ? 30 : 5000}
+              step={block.editType === "multiplier" ? 1 : block.editType === "pct" ? 0.5 : 25}
+              onValueChange={([v]) => {
+                const val = block.editType === "multiplier" ? v / 100 : v;
+                onValueChange(block.editKey!, val, block.editType || "flat");
+              }}
+              className="flex-1"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
+
+// ═══════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ═══════════════════════════════════════════════════════════════
+
 const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true, onSettingsChange }: Props) => {
   const { toast } = useToast();
-  const [tab, setTab] = useState<string>("live");
 
   // Local settings copy for inline adjustments
   const [localSettings, setLocalSettings] = useState<OfferSettings>(settings);
-
-  // "Apply to all bases" toggles
-  const [applyMultipliersToAll, setApplyMultipliersToAll] = useState(true);
-  const [applyDeductionsToAll, setApplyDeductionsToAll] = useState(true);
-
-  // Sync when parent settings change
   const activeSettings = inlineControls ? localSettings : settings;
 
-  const updateLocalSetting = <K extends keyof OfferSettings>(key: K, value: OfferSettings[K]) => {
-    const next = { ...localSettings, [key]: value };
-    setLocalSettings(next);
-    onSettingsChange?.(next);
-  };
-
-  // Manual mode state
-  const [baseValue, setBaseValue] = useState(18000);
-  const [year, setYear] = useState("2018");
-  const [mileage, setMileage] = useState("85000");
-  const [condition, setCondition] = useState<string>("good");
-  const [make, setMake] = useState("Toyota");
-  const [model, setModel] = useState("Camry");
-  const [accidents, setAccidents] = useState("0");
-  const [exteriorItems, setExteriorItems] = useState(0);
-  const [mechanicalItems, setMechanicalItems] = useState(0);
-  const [drivable, setDrivable] = useState("yes");
-  const [smokedIn, setSmokedIn] = useState("no");
-  const [compareMode, setCompareMode] = useState(false);
+  const updateLocalSetting = useCallback(<K extends keyof OfferSettings>(key: K, value: OfferSettings[K]) => {
+    setLocalSettings(prev => {
+      const next = { ...prev, [key]: value };
+      onSettingsChange?.(next);
+      return next;
+    });
+  }, [onSettingsChange]);
 
   // Live VIN mode state
   const [liveVin, setLiveVin] = useState("");
@@ -253,24 +261,18 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
   const [liveLoading, setLiveLoading] = useState(false);
   const [liveBbVehicle, setLiveBbVehicle] = useState<BBVehicle | null>(null);
   const [liveSelectedAddDeducts, setLiveSelectedAddDeducts] = useState<string[]>([]);
+  const [expandedBlock, setExpandedBlock] = useState<string | null>(null);
+  const [compareMode, setCompareMode] = useState(false);
+  const [showDetailPanel, setShowDetailPanel] = useState<string | null>(null);
 
-  // Manual mode calculations
-  const { bbVehicle, formData } = useMemo(
-    () => buildTestData(baseValue, year, make, model, mileage, condition, accidents, exteriorItems, mechanicalItems, drivable, smokedIn),
-    [baseValue, year, make, model, mileage, condition, accidents, exteriorItems, mechanicalItems, drivable, smokedIn]
-  );
+  // Sync when parent settings change
+  const prevSettingsRef = useRef(settings);
+  if (settings !== prevSettingsRef.current) {
+    prevSettingsRef.current = settings;
+    setLocalSettings(settings);
+  }
 
-  const result = useMemo(
-    () => calculateOffer(bbVehicle, formData, [], activeSettings, rules),
-    [bbVehicle, formData, activeSettings, rules]
-  );
-
-  const savedResult = useMemo(
-    () => savedSettings ? calculateOffer(bbVehicle, formData, [], savedSettings, rules) : null,
-    [bbVehicle, formData, savedSettings, rules]
-  );
-
-  // Live mode calculations
+  // Live form data
   const liveFormData: FormData = useMemo(() => ({
     plate: "", state: "", vin: liveVin, mileage: liveMileage,
     bbUvc: "", bbSelectedAddDeducts: liveSelectedAddDeducts,
@@ -292,7 +294,6 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
     [liveBbVehicle, liveFormData, liveSelectedAddDeducts, activeSettings, rules]
   );
 
-  // What-If: calculate with saved settings for comparison
   const liveSavedResult = useMemo(
     () => (liveBbVehicle && savedSettings && compareMode) ? calculateOffer(liveBbVehicle, liveFormData, liveSelectedAddDeducts, savedSettings, rules) : null,
     [liveBbVehicle, liveFormData, liveSelectedAddDeducts, savedSettings, rules, compareMode]
@@ -300,18 +301,108 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
 
   const whatIfDelta = (liveResult && liveSavedResult) ? liveResult.high - liveSavedResult.high : 0;
 
-  // Calculate offers for all bases to show in tiles (for context)
-  const allBasisResults = useMemo(() => {
-    if (!liveBbVehicle) return null;
-    const results: Record<string, OfferEstimate | null> = {};
-    for (const cat of BB_CATEGORIES) {
-      for (const tier of cat.tiers) {
-        const tempSettings = { ...activeSettings, bb_value_basis: tier.key };
-        results[tier.key] = calculateOffer(liveBbVehicle, liveFormData, liveSelectedAddDeducts, tempSettings, rules);
-      }
+  const equipmentTotal = liveBbVehicle ? calcEquipmentTotal(liveBbVehicle, liveSelectedAddDeducts) : 0;
+
+  // Build interactive waterfall blocks
+  const waterfallBlocks: WaterfallBlock[] = useMemo(() => {
+    if (!liveResult || !liveBbVehicle) return [];
+    const blocks: WaterfallBlock[] = [];
+    let running = liveResult.baseValue;
+    const condMult = activeSettings.condition_multipliers?.[liveCondition as keyof typeof activeSettings.condition_multipliers] ?? 1;
+    const currentYear = new Date().getFullYear();
+    const vehicleAge = currentYear - Number(liveBbVehicle.year);
+    const mileageNum = parseInt(liveMileage.replace(/[^0-9]/g, "")) || 0;
+    const matchedAge = (activeSettings.age_tiers || []).find(t => vehicleAge >= t.min_years && vehicleAge <= t.max_years);
+    const matchedMileage = (activeSettings.mileage_tiers || []).find(t => mileageNum >= t.min_miles && mileageNum <= t.max_miles);
+
+    // 1. Base
+    blocks.push({ id: "base", label: "Base Value", value: running, runningTotal: running, type: "base", editable: true, editKey: "bb_value_basis", editType: "flat" });
+
+    // 2. Condition
+    const condAdj = Math.round(liveResult.baseValue * condMult) - liveResult.baseValue;
+    if (condAdj !== 0) {
+      running += condAdj;
+      blocks.push({ id: "condition", label: `Condition (${liveCondition})`, value: condAdj, runningTotal: running, type: condAdj >= 0 ? "add" : "subtract", editable: true, editKey: "condition_multiplier", editType: "multiplier", currentEditValue: condMult });
+    } else {
+      blocks.push({ id: "condition", label: `Condition (${liveCondition})`, value: 0, runningTotal: running, type: "add", editable: true, editKey: "condition_multiplier", editType: "multiplier", currentEditValue: condMult });
     }
-    return results;
-  }, [liveBbVehicle, liveFormData, liveSelectedAddDeducts, activeSettings, rules]);
+
+    // 3. Equipment
+    if (equipmentTotal !== 0) {
+      running += equipmentTotal;
+      blocks.push({ id: "equipment", label: "Equipment", value: equipmentTotal, runningTotal: running, type: equipmentTotal >= 0 ? "add" : "subtract", editable: false });
+    }
+
+    // 4. Deductions
+    if (liveResult.totalDeductions > 0) {
+      running -= liveResult.totalDeductions;
+      blocks.push({ id: "deductions", label: "Deductions", value: -liveResult.totalDeductions, runningTotal: running, type: "subtract", editable: true, editKey: "deductions_detail" });
+    }
+
+    // 5. Recon
+    if (activeSettings.recon_cost > 0) {
+      running -= activeSettings.recon_cost;
+      blocks.push({ id: "recon", label: "Recon Cost", value: -activeSettings.recon_cost, runningTotal: running, type: "subtract", editable: true, editKey: "recon_cost", editType: "flat", currentEditValue: activeSettings.recon_cost });
+    }
+
+    // 6. Global %
+    if (activeSettings.global_adjustment_pct !== 0) {
+      const adj = Math.round(running * (activeSettings.global_adjustment_pct / 100));
+      running += adj;
+      blocks.push({ id: "global", label: `Global (${activeSettings.global_adjustment_pct > 0 ? "+" : ""}${activeSettings.global_adjustment_pct}%)`, value: adj, runningTotal: running, type: adj >= 0 ? "add" : "subtract", editable: true, editKey: "global_adjustment_pct", editType: "pct", currentEditValue: activeSettings.global_adjustment_pct });
+    } else {
+      blocks.push({ id: "global", label: "Global %", value: 0, runningTotal: running, type: "add", editable: true, editKey: "global_adjustment_pct", editType: "pct", currentEditValue: 0 });
+    }
+
+    // 7. Regional
+    if (activeSettings.regional_adjustment_pct !== 0) {
+      const adj = Math.round(running * (activeSettings.regional_adjustment_pct / 100));
+      running += adj;
+      blocks.push({ id: "regional", label: `Regional (${activeSettings.regional_adjustment_pct > 0 ? "+" : ""}${activeSettings.regional_adjustment_pct}%)`, value: adj, runningTotal: running, type: adj >= 0 ? "add" : "subtract", editable: true, editKey: "regional_adjustment_pct", editType: "pct", currentEditValue: activeSettings.regional_adjustment_pct });
+    }
+
+    // 8. Age
+    if (matchedAge) {
+      const adj = Math.round(running * (matchedAge.adjustment_pct / 100));
+      running += adj;
+      blocks.push({ id: "age", label: `Age (${vehicleAge}yr)`, value: adj, runningTotal: running, type: adj >= 0 ? "add" : "subtract", editable: false });
+    }
+
+    // 9. Mileage
+    if (matchedMileage) {
+      running += matchedMileage.adjustment_flat;
+      blocks.push({ id: "mileage", label: `Mileage (${mileageNum.toLocaleString()}mi)`, value: matchedMileage.adjustment_flat, runningTotal: running, type: matchedMileage.adjustment_flat >= 0 ? "add" : "subtract", editable: false });
+    }
+
+    // 10. Floor/Ceiling
+    const clamped = Math.max(running, activeSettings.offer_floor || 500);
+    if (clamped !== running) {
+      blocks.push({ id: "floor", label: `Floor ($${(activeSettings.offer_floor || 500).toLocaleString()})`, value: clamped - running, runningTotal: clamped, type: "add", editable: true, editKey: "offer_floor", editType: "flat", currentEditValue: activeSettings.offer_floor });
+      running = clamped;
+    }
+
+    // Final
+    blocks.push({ id: "final", label: "FINAL OFFER", value: liveResult.high, runningTotal: liveResult.high, type: "total", editable: false });
+
+    return blocks;
+  }, [liveResult, liveBbVehicle, activeSettings, liveCondition, liveMileage, equipmentTotal]);
+
+  const maxVal = Math.max(...waterfallBlocks.map(s => Math.max(Math.abs(s.runningTotal), Math.abs(s.value), s.type === "base" ? s.value : 0)), 1);
+
+  // Handle waterfall block value changes
+  const handleBlockValueChange = useCallback((editKey: string, value: number, editType: string) => {
+    if (editKey === "condition_multiplier") {
+      updateLocalSetting("condition_multipliers", { ...localSettings.condition_multipliers, [liveCondition]: value });
+    } else if (editKey === "recon_cost") {
+      updateLocalSetting("recon_cost", value);
+    } else if (editKey === "global_adjustment_pct") {
+      updateLocalSetting("global_adjustment_pct", value);
+    } else if (editKey === "regional_adjustment_pct") {
+      updateLocalSetting("regional_adjustment_pct", value);
+    } else if (editKey === "offer_floor") {
+      updateLocalSetting("offer_floor", value);
+    }
+  }, [localSettings, liveCondition, updateLocalSetting]);
 
   const handleVinLookup = async () => {
     const cleanVin = liveVin.trim().toUpperCase();
@@ -326,15 +417,9 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
         body: { lookup_type: "vin", vin: cleanVin, mileage: parseInt(liveMileage.replace(/[^0-9]/g, "")) || 50000 },
       });
       if (error) throw error;
-      if (data?.error) {
-        toast({ title: "Lookup Error", description: data.error, variant: "destructive" });
-        return;
-      }
+      if (data?.error) { toast({ title: "Lookup Error", description: data.error, variant: "destructive" }); return; }
       const vehicles = data?.vehicles || [];
-      if (vehicles.length === 0) {
-        toast({ title: "No Results", description: "No vehicles found for that VIN.", variant: "destructive" });
-        return;
-      }
+      if (vehicles.length === 0) { toast({ title: "No Results", description: "No vehicles found for that VIN.", variant: "destructive" }); return; }
       const vehicle = vehicles[0] as BBVehicle;
       setLiveBbVehicle(vehicle);
       const autoSelected = (vehicle.add_deduct_list || [])
@@ -356,539 +441,449 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
     );
   };
 
-  // Determine which result/bbVehicle to show in the unified panel
-  const activeResult = tab === "live" ? liveResult : result;
-  const activeBbVehicle = tab === "live" ? liveBbVehicle : bbVehicle;
-  const activeCondition = tab === "live" ? liveCondition : condition;
-  const activeMileage = tab === "live" ? liveMileage : mileage;
-  const activeYear = tab === "live" ? (liveBbVehicle?.year || "") : year;
-
   return (
-    <div className="bg-card rounded-xl p-5 shadow-lg border border-border border-l-4 border-l-primary/50">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Calculator className="w-5 h-5 text-primary" />
-          <h3 className="font-bold text-card-foreground">Pricing Workbench</h3>
+    <div className="bg-card rounded-xl p-5 shadow-lg border border-border">
+      {/* ── VIN + Mileage Input ── */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <div className="flex-1">
+          <Label className="text-xs font-semibold">VIN</Label>
+          <Input value={liveVin} onChange={e => setLiveVin(e.target.value.toUpperCase())} placeholder="Enter 17-character VIN" maxLength={17} className="h-9 font-mono tracking-wider" />
+        </div>
+        <div className="w-32">
+          <Label className="text-xs font-semibold">Mileage</Label>
+          <Input type="number" value={liveMileage} onChange={e => setLiveMileage(e.target.value)} step="5000" className="h-9" />
+        </div>
+        <div className="flex items-end">
+          <Button onClick={handleVinLookup} disabled={liveLoading || liveVin.trim().length !== 17} className="h-9 gap-1.5">
+            {liveLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+            {liveLoading ? "Looking up…" : "Look Up"}
+          </Button>
         </div>
       </div>
 
-      <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="live" className="gap-1.5"><Search className="w-3.5 h-3.5" />Live VIN Lookup</TabsTrigger>
-          <TabsTrigger value="manual" className="gap-1.5"><Calculator className="w-3.5 h-3.5" />Manual</TabsTrigger>
-        </TabsList>
+      {!liveBbVehicle && !liveLoading && (
+        <div className="bg-muted/40 rounded-lg p-8 text-sm text-muted-foreground text-center">
+          <Car className="w-8 h-8 mx-auto mb-2 opacity-40" />
+          Enter a VIN and mileage, then click <strong>Look Up</strong> to start building your pricing model.
+        </div>
+      )}
 
-        {/* ── Live VIN Tab ── */}
-        <TabsContent value="live">
-          {/* VIN + Mileage inputs */}
-          <div className="flex flex-col sm:flex-row gap-3 mb-4">
-            <div className="flex-1">
-              <Label className="text-xs font-semibold">VIN</Label>
-              <Input value={liveVin} onChange={e => setLiveVin(e.target.value.toUpperCase())} placeholder="Enter 17-character VIN" maxLength={17} className="h-9 font-mono tracking-wider" />
+      {liveBbVehicle && (
+        <>
+          {/* Vehicle Summary */}
+          <div className="bg-muted/40 rounded-lg border border-border p-3 mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Car className="w-4 h-4 text-primary" />
+              <span className="font-bold text-sm text-card-foreground">
+                {liveBbVehicle.year} {liveBbVehicle.make} {liveBbVehicle.model} {liveBbVehicle.series}
+              </span>
+              {liveBbVehicle.class_name && (
+                <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">{liveBbVehicle.class_name}</span>
+              )}
             </div>
-            <div className="w-32">
-              <Label className="text-xs font-semibold">Mileage</Label>
-              <Input type="number" value={liveMileage} onChange={e => setLiveMileage(e.target.value)} step="5000" className="h-9" />
-            </div>
-            <div className="flex items-end">
-              <Button onClick={handleVinLookup} disabled={liveLoading || liveVin.trim().length !== 17} className="h-9 gap-1.5">
-                {liveLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                {liveLoading ? "Looking up…" : "Look Up"}
-              </Button>
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-xs">
+              <div><span className="text-muted-foreground">Style:</span> <span className="font-medium text-card-foreground">{liveBbVehicle.style || "—"}</span></div>
+              <div><span className="text-muted-foreground">Drivetrain:</span> <span className="font-medium text-card-foreground">{liveBbVehicle.drivetrain || "—"}</span></div>
+              <div><span className="text-muted-foreground">Engine:</span> <span className="font-medium text-card-foreground">{liveBbVehicle.engine || "—"}</span></div>
+              <div><span className="text-muted-foreground">Trans:</span> <span className="font-medium text-card-foreground">{liveBbVehicle.transmission || "—"}</span></div>
+              <div><span className="text-muted-foreground">MSRP:</span> <span className="font-medium text-card-foreground">${Number(liveBbVehicle.msrp || 0).toLocaleString()}</span></div>
+              <div><span className="text-muted-foreground">Fuel:</span> <span className="font-medium text-card-foreground">{liveBbVehicle.fuel_type || "—"}</span></div>
             </div>
           </div>
 
-          {liveBbVehicle && (
-            <>
-              {/* Vehicle summary */}
-              <div className="bg-muted/40 rounded-lg border border-border p-3 mb-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Car className="w-4 h-4 text-primary" />
-                  <span className="font-bold text-sm text-card-foreground">
-                    {liveBbVehicle.year} {liveBbVehicle.make} {liveBbVehicle.model} {liveBbVehicle.series}
-                  </span>
-                  {liveBbVehicle.class_name && (
-                    <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">{liveBbVehicle.class_name}</span>
-                  )}
-                </div>
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-xs">
-                  <div><span className="text-muted-foreground">Style:</span> <span className="font-medium">{liveBbVehicle.style || "—"}</span></div>
-                  <div><span className="text-muted-foreground">Drivetrain:</span> <span className="font-medium">{liveBbVehicle.drivetrain || "—"}</span></div>
-                  <div><span className="text-muted-foreground">Engine:</span> <span className="font-medium">{liveBbVehicle.engine || "—"}</span></div>
-                  <div><span className="text-muted-foreground">Trans:</span> <span className="font-medium">{liveBbVehicle.transmission || "—"}</span></div>
-                  <div><span className="text-muted-foreground">MSRP:</span> <span className="font-medium">${Number(liveBbVehicle.msrp || 0).toLocaleString()}</span></div>
-                  <div><span className="text-muted-foreground">Fuel:</span> <span className="font-medium">{liveBbVehicle.fuel_type || "—"}</span></div>
-                </div>
-              </div>
+          {/* ══ TWO-COLUMN LAYOUT ══ */}
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4">
 
-              {/* ═══ STEP 1: SELECT BASE VALUE ═══ */}
-              <div className="bg-gradient-to-r from-primary/5 to-transparent rounded-lg border border-primary/20 p-3 mb-4">
-                <BBValueTiles
-                  bbVehicle={liveBbVehicle}
-                  selectedBasis={localSettings.bb_value_basis}
-                  onSelectBasis={(basis) => updateLocalSetting("bb_value_basis", basis)}
-                />
-                {/* Show the selected basis label */}
-                <div className="mt-2 flex items-center gap-2">
-                  <span className="text-[10px] text-muted-foreground">Selected:</span>
-                  <span className="text-xs font-bold text-primary">
-                    {BB_VALUE_OPTIONS.find(o => o.value === localSettings.bb_value_basis)?.label || localSettings.bb_value_basis}
-                  </span>
-                  {/* Or pick from dropdown */}
-                  <Select value={localSettings.bb_value_basis} onValueChange={v => updateLocalSetting("bb_value_basis", v)}>
-                    <SelectTrigger className="h-6 text-[10px] w-auto min-w-[140px]"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {BB_VALUE_OPTIONS.map(opt => <SelectItem key={opt.value} value={opt.value} className="text-xs">{opt.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+            {/* ── LEFT: Interactive Waterfall Builder ── */}
+            <div className="space-y-4">
+              {/* STEP 1: Select Base Value — BB Tiles */}
+              <div className="bg-gradient-to-r from-primary/5 to-transparent rounded-lg border border-primary/20 p-3">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <DollarSign className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-[11px] font-bold text-card-foreground uppercase tracking-wider">① Select Starting Value</span>
                 </div>
-              </div>
-
-              {/* ═══ UNIFIED SPLIT LAYOUT ═══ */}
-              <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-4">
-                {/* ── LEFT: Controls Panel ── */}
-                <div className="space-y-2 overflow-y-auto max-h-[600px] pr-1">
-                  {/* Vehicle condition inputs */}
-                  <InlineSection icon={<Car className="w-3.5 h-3.5 text-primary" />} title="Vehicle Condition" defaultOpen>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <Label className="text-[10px] font-semibold">Condition</Label>
-                        <Select value={liveCondition} onValueChange={setLiveCondition}>
-                          <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {CONDITIONS.map(c => <SelectItem key={c} value={c} className="capitalize text-xs">{c}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label className="text-[10px] font-semibold">Accidents</Label>
-                        <Select value={liveAccidents} onValueChange={setLiveAccidents}>
-                          <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="0">None</SelectItem>
-                            <SelectItem value="1">1</SelectItem>
-                            <SelectItem value="2">2</SelectItem>
-                            <SelectItem value="3+">3+</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label className="text-[10px] font-semibold">Drivable?</Label>
-                        <Select value={liveDrivable} onValueChange={setLiveDrivable}>
-                          <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="yes">Yes</SelectItem>
-                            <SelectItem value="no">No</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label className="text-[10px] font-semibold">Smoked?</Label>
-                        <Select value={liveSmokedIn} onValueChange={setLiveSmokedIn}>
-                          <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="no">No</SelectItem>
-                            <SelectItem value="yes">Yes</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label className="text-[10px] font-semibold">Ext. Damage</Label>
-                        <Input type="number" min={0} max={10} value={liveExteriorItems} onChange={e => setLiveExteriorItems(Number(e.target.value))} className="h-7 text-xs" />
-                      </div>
-                      <div>
-                        <Label className="text-[10px] font-semibold">Mech. Issues</Label>
-                        <Input type="number" min={0} max={10} value={liveMechanicalItems} onChange={e => setLiveMechanicalItems(Number(e.target.value))} className="h-7 text-xs" />
-                      </div>
-                    </div>
-                  </InlineSection>
-
-                  {/* Equipment */}
-                  {liveBbVehicle.add_deduct_list?.length > 0 && (
-                    <InlineSection icon={<CheckSquare className="w-3.5 h-3.5 text-primary" />} title={`Equipment (${liveSelectedAddDeducts.length}/${liveBbVehicle.add_deduct_list.length})`}>
-                      <div className="space-y-0.5 max-h-36 overflow-y-auto">
-                        {liveBbVehicle.add_deduct_list.map((ad: BBAddDeduct) => {
-                          const isSelected = liveSelectedAddDeducts.includes(ad.uoc);
-                          const dollarStr = ad.avg !== 0 ? ` (${ad.avg > 0 ? "+" : ""}$${Math.abs(ad.avg)})` : "";
+                {BB_CATEGORIES.map(cat => {
+                  const data = liveBbVehicle[cat.dataKey] as Record<string, number> | undefined;
+                  if (!data) return null;
+                  return (
+                    <div key={cat.label} className="mb-1.5">
+                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block mb-0.5">{cat.label}</span>
+                      <div className="grid grid-cols-4 gap-1">
+                        {cat.tiers.map(tier => {
+                          const value = data[tier.tierKey] || 0;
+                          const isSelected = localSettings.bb_value_basis === tier.key;
+                          if (value <= 0) return null;
                           return (
-                            <label key={ad.uoc} className={`flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer text-[10px] ${isSelected ? "bg-primary/10 text-card-foreground" : "text-muted-foreground hover:bg-muted"}`}>
-                              <input type="checkbox" checked={isSelected} onChange={() => toggleLiveAddDeduct(ad.uoc)} className="rounded border-border w-3 h-3" />
-                              <span className="truncate">{ad.name}{dollarStr}</span>
-                              {ad.auto !== "N" && <span className="text-[8px] bg-green-500/10 text-green-600 px-1 rounded shrink-0">auto</span>}
-                            </label>
+                            <button
+                              key={tier.key}
+                              onClick={() => updateLocalSetting("bb_value_basis", tier.key)}
+                              className={`rounded-md px-2 py-1.5 text-center transition-all border ${
+                                isSelected
+                                  ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30 shadow-sm"
+                                  : "bg-muted/40 border-border hover:border-primary/40 hover:bg-primary/5 text-card-foreground"
+                              }`}
+                            >
+                              <div className="text-[9px] font-medium opacity-80">{tier.short}</div>
+                              <div className={`text-sm font-bold ${isSelected ? "" : "text-card-foreground"}`}>
+                                ${value.toLocaleString()}
+                              </div>
+                            </button>
                           );
                         })}
                       </div>
-                    </InlineSection>
-                  )}
-
-                  {/* ── Inline Pricing Controls ── */}
-                  {inlineControls && (
-                    <>
-                      {/* Condition Multipliers with "Apply to All" toggle */}
-                      <InlineSection
-                        icon={<Gauge className="w-3.5 h-3.5 text-primary" />}
-                        title="Condition Multipliers"
-                        badge={
-                          <span className="flex items-center gap-1 ml-2">
-                            <span className="text-[8px] text-muted-foreground">{applyMultipliersToAll ? "All bases" : "Selected only"}</span>
-                          </span>
-                        }
-                      >
-                        {/* Apply scope toggle */}
-                        <div className="flex items-center justify-between mb-2 px-1 py-1 rounded bg-muted/30 border border-border">
-                          <div className="flex items-center gap-1">
-                            <Layers className="w-3 h-3 text-muted-foreground" />
-                            <span className="text-[9px] font-semibold text-muted-foreground">Apply to all valuation bases</span>
-                          </div>
-                          <Switch
-                            checked={applyMultipliersToAll}
-                            onCheckedChange={setApplyMultipliersToAll}
-                            className="scale-[0.65]"
-                          />
-                        </div>
-                        {!applyMultipliersToAll && (
-                          <p className="text-[8px] text-muted-foreground mb-1 px-1">
-                            Multipliers affect only <strong>{BB_VALUE_OPTIONS.find(o => o.value === localSettings.bb_value_basis)?.label}</strong>. Switch bases above to see per-basis impact.
-                          </p>
-                        )}
-                        <div className="grid grid-cols-2 gap-2">
-                          {(["excellent", "good", "fair", "rough"] as const).map(grade => {
-                            const mult = localSettings.condition_multipliers[grade];
-                            const isActive = grade === liveCondition;
-                            return (
-                              <div key={grade} className={`space-y-1 rounded-md p-1.5 ${isActive ? "bg-primary/10 ring-1 ring-primary/20" : ""}`}>
-                                <div className="flex items-center justify-between">
-                                  <Label className="capitalize text-[10px] font-semibold">{grade}</Label>
-                                  {isActive && <span className="text-[7px] bg-primary text-primary-foreground px-1 rounded">ACTIVE</span>}
-                                </div>
-                                <Input
-                                  type="number" step="0.01" min="0" max="2"
-                                  value={mult}
-                                  onChange={e => updateLocalSetting("condition_multipliers", { ...localSettings.condition_multipliers, [grade]: Number(e.target.value) })}
-                                  className="w-full h-6 text-[10px]"
-                                />
-                                <Slider
-                                  value={[mult * 100]}
-                                  min={50} max={130} step={1}
-                                  onValueChange={([v]) => updateLocalSetting("condition_multipliers", { ...localSettings.condition_multipliers, [grade]: Math.round(v) / 100 })}
-                                />
-                                <span className="text-[8px] text-muted-foreground">
-                                  {mult > 1 ? `+${((mult - 1) * 100).toFixed(0)}%` : mult < 1 ? `${((mult - 1) * 100).toFixed(0)}%` : "0%"}
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </InlineSection>
-
-                      <InlineSection icon={<Zap className="w-3.5 h-3.5 text-accent" />} title="Global Controls" defaultOpen>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <Label className="text-[10px] font-semibold">Global %</Label>
-                            <Input type="number" value={localSettings.global_adjustment_pct} onChange={e => updateLocalSetting("global_adjustment_pct", Number(e.target.value))} className="h-6 text-[10px]" step="0.5" />
-                          </div>
-                          <div>
-                            <Label className="text-[10px] font-semibold">Regional %</Label>
-                            <Input type="number" value={localSettings.regional_adjustment_pct} onChange={e => updateLocalSetting("regional_adjustment_pct", Number(e.target.value))} className="h-6 text-[10px]" step="0.5" />
-                          </div>
-                          <div>
-                            <Label className="text-[10px] font-semibold">Recon Cost</Label>
-                            <Input type="number" value={localSettings.recon_cost} onChange={e => updateLocalSetting("recon_cost", Number(e.target.value))} className="h-6 text-[10px]" step="50" />
-                          </div>
-                          <div>
-                            <Label className="text-[10px] font-semibold">Floor</Label>
-                            <Input type="number" value={localSettings.offer_floor} onChange={e => updateLocalSetting("offer_floor", Number(e.target.value))} className="h-6 text-[10px]" step="100" />
-                          </div>
-                        </div>
-                      </InlineSection>
-
-                      <InlineSection icon={<Calendar className="w-3.5 h-3.5 text-primary" />} title={`Age Tiers (${(localSettings.age_tiers || []).length})`}>
-                        <div className="space-y-1">
-                          {(localSettings.age_tiers || []).map((tier, idx) => (
-                            <div key={idx} className="flex items-center gap-1 text-[10px]">
-                              <Input type="number" value={tier.min_years} onChange={e => { const u = [...(localSettings.age_tiers || [])]; u[idx] = { ...u[idx], min_years: Number(e.target.value) }; updateLocalSetting("age_tiers", u); }} className="w-12 h-5 text-[10px]" />
-                              <span>-</span>
-                              <Input type="number" value={tier.max_years} onChange={e => { const u = [...(localSettings.age_tiers || [])]; u[idx] = { ...u[idx], max_years: Number(e.target.value) }; updateLocalSetting("age_tiers", u); }} className="w-12 h-5 text-[10px]" />
-                              <span>yr →</span>
-                              <Input type="number" value={tier.adjustment_pct} onChange={e => { const u = [...(localSettings.age_tiers || [])]; u[idx] = { ...u[idx], adjustment_pct: Number(e.target.value) }; updateLocalSetting("age_tiers", u); }} className="w-14 h-5 text-[10px]" step="0.5" />
-                              <span>%</span>
-                              <Button variant="ghost" size="sm" className="h-5 w-5 p-0 text-destructive" onClick={() => updateLocalSetting("age_tiers", (localSettings.age_tiers || []).filter((_, i) => i !== idx))}>
-                                <Trash2 className="w-2.5 h-2.5" />
-                              </Button>
-                            </div>
-                          ))}
-                          <Button variant="outline" size="sm" className="h-5 text-[9px] gap-0.5 px-2" onClick={() => {
-                            const tiers = localSettings.age_tiers || [];
-                            const last = tiers.length > 0 ? tiers[tiers.length - 1].max_years + 1 : 5;
-                            updateLocalSetting("age_tiers", [...tiers, { min_years: last, max_years: last + 4, adjustment_pct: -3 }]);
-                          }}>
-                            <Plus className="w-2.5 h-2.5" /> Add
-                          </Button>
-                        </div>
-                      </InlineSection>
-
-                      <InlineSection icon={<Gauge className="w-3.5 h-3.5 text-primary" />} title={`Mileage Tiers (${(localSettings.mileage_tiers || []).length})`}>
-                        <div className="space-y-1">
-                          {(localSettings.mileage_tiers || []).map((tier, idx) => (
-                            <div key={idx} className="flex items-center gap-1 text-[10px]">
-                              <Input type="number" value={tier.min_miles} onChange={e => { const u = [...(localSettings.mileage_tiers || [])]; u[idx] = { ...u[idx], min_miles: Number(e.target.value) }; updateLocalSetting("mileage_tiers", u); }} className="w-16 h-5 text-[10px]" step="5000" />
-                              <span>-</span>
-                              <Input type="number" value={tier.max_miles} onChange={e => { const u = [...(localSettings.mileage_tiers || [])]; u[idx] = { ...u[idx], max_miles: Number(e.target.value) }; updateLocalSetting("mileage_tiers", u); }} className="w-16 h-5 text-[10px]" step="5000" />
-                              <span>mi →$</span>
-                              <Input type="number" value={tier.adjustment_flat} onChange={e => { const u = [...(localSettings.mileage_tiers || [])]; u[idx] = { ...u[idx], adjustment_flat: Number(e.target.value) }; updateLocalSetting("mileage_tiers", u); }} className="w-16 h-5 text-[10px]" step="100" />
-                              <Button variant="ghost" size="sm" className="h-5 w-5 p-0 text-destructive" onClick={() => updateLocalSetting("mileage_tiers", (localSettings.mileage_tiers || []).filter((_, i) => i !== idx))}>
-                                <Trash2 className="w-2.5 h-2.5" />
-                              </Button>
-                            </div>
-                          ))}
-                          <Button variant="outline" size="sm" className="h-5 text-[9px] gap-0.5 px-2" onClick={() => {
-                            const tiers = localSettings.mileage_tiers || [];
-                            const last = tiers.length > 0 ? tiers[tiers.length - 1].max_miles + 1 : 80000;
-                            updateLocalSetting("mileage_tiers", [...tiers, { min_miles: last, max_miles: last + 20000, adjustment_flat: -500 }]);
-                          }}>
-                            <Plus className="w-2.5 h-2.5" /> Add
-                          </Button>
-                        </div>
-                      </InlineSection>
-
-                      {/* Deductions with "Apply to All" toggle */}
-                      <InlineSection
-                        icon={<AlertTriangle className="w-3.5 h-3.5 text-amber-500" />}
-                        title="Deductions"
-                        badge={
-                          <span className="flex items-center gap-1 ml-2">
-                            <span className="text-[8px] text-muted-foreground">{applyDeductionsToAll ? "All bases" : "Selected only"}</span>
-                          </span>
-                        }
-                      >
-                        {/* Apply scope toggle */}
-                        <div className="flex items-center justify-between mb-2 px-1 py-1 rounded bg-muted/30 border border-border">
-                          <div className="flex items-center gap-1">
-                            <Layers className="w-3 h-3 text-muted-foreground" />
-                            <span className="text-[9px] font-semibold text-muted-foreground">Apply to all valuation bases</span>
-                          </div>
-                          <Switch
-                            checked={applyDeductionsToAll}
-                            onCheckedChange={setApplyDeductionsToAll}
-                            className="scale-[0.65]"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          {Object.entries(DEDUCTION_LABELS).map(([key, config]) => {
-                            const enabled = (localSettings.deductions_config as any)?.[key] ?? true;
-                            return (
-                              <div key={key} className={`rounded border px-2 py-1 ${enabled ? "bg-muted/30 border-border" : "bg-muted/10 border-border/50 opacity-50"}`}>
-                                <div className="flex items-center justify-between">
-                                  <span className="text-[10px] font-semibold">{config.label}</span>
-                                  <Switch
-                                    checked={enabled}
-                                    onCheckedChange={() => updateLocalSetting("deductions_config", { ...localSettings.deductions_config, [key]: !enabled })}
-                                    className="scale-75"
-                                  />
-                                </div>
-                                {enabled && (
-                                  <div className="flex flex-wrap gap-1 mt-1">
-                                    {config.amountKeys.map(amtKey => (
-                                      <div key={amtKey} className="flex items-center gap-0.5">
-                                        <span className="text-[8px] text-muted-foreground">{AMOUNT_SHORT[amtKey]}:</span>
-                                        <Input
-                                          type="number"
-                                          value={(localSettings.deduction_amounts as any)?.[amtKey] ?? 0}
-                                          onChange={e => updateLocalSetting("deduction_amounts", { ...localSettings.deduction_amounts, [amtKey]: Number(e.target.value) })}
-                                          className="w-14 h-5 text-[9px]" step="25"
-                                        />
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </InlineSection>
-                    </>
-                  )}
-                </div>
-
-                {/* ── RIGHT: Results Panel ── */}
-                <div className="space-y-4 overflow-y-auto max-h-[600px] pr-1">
-                  {liveResult && (
-                    <>
-                      {/* What-If Toggle */}
-                      {savedSettings && (
-                        <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-border bg-muted/30">
-                          <div className="flex items-center gap-2">
-                            <ArrowRight className="w-3.5 h-3.5 text-primary" />
-                            <span className="text-xs font-semibold text-card-foreground">What-If Comparison</span>
-                            {compareMode && whatIfDelta !== 0 && (
-                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${whatIfDelta > 0 ? "bg-green-500/10 text-green-600" : "bg-destructive/10 text-destructive"}`}>
-                                Net: {whatIfDelta > 0 ? "+" : ""}${whatIfDelta.toLocaleString()}
-                              </span>
-                            )}
-                          </div>
-                          <Switch checked={compareMode} onCheckedChange={setCompareMode} className="scale-90" />
-                        </div>
-                      )}
-
-                      {/* Side-by-side or single result */}
-                      {compareMode && liveSavedResult ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          <div>
-                            <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-1 flex items-center gap-1">
-                              <span className="w-2 h-2 rounded-full bg-muted-foreground/40 inline-block" /> Current (Saved)
-                            </div>
-                            <ResultCard
-                              label="Saved Settings"
-                              result={liveSavedResult}
-                              condition={liveCondition}
-                              settings={savedSettings!}
-                              mileage={liveMileage}
-                              year={liveBbVehicle!.year}
-                              variant="muted"
-                              equipmentTotal={calcEquipmentTotal(liveBbVehicle!, liveSelectedAddDeducts)}
-                            />
-                          </div>
-                          <div>
-                            <div className="text-[10px] uppercase tracking-wider font-bold text-primary mb-1 flex items-center gap-1">
-                              <span className="w-2 h-2 rounded-full bg-primary inline-block" /> Proposed (Editing)
-                            </div>
-                            <ResultCard
-                              label="Proposed Settings"
-                              result={liveResult}
-                              condition={liveCondition}
-                              settings={activeSettings}
-                              mileage={liveMileage}
-                              year={liveBbVehicle!.year}
-                              variant="primary"
-                              delta={whatIfDelta}
-                              equipmentTotal={calcEquipmentTotal(liveBbVehicle!, liveSelectedAddDeducts)}
-                            />
-                          </div>
-                        </div>
-                      ) : (
-                        <ResultCard
-                          label="Live Offer Estimate"
-                          result={liveResult}
-                          condition={liveCondition}
-                          settings={activeSettings}
-                          mileage={liveMileage}
-                          year={liveBbVehicle!.year}
-                          variant="primary"
-                          equipmentTotal={calcEquipmentTotal(liveBbVehicle!, liveSelectedAddDeducts)}
-                        />
-                      )}
-
-                      {/* Profit Spread Gauge */}
-                      <div className="rounded-lg border border-border bg-muted/20 p-4">
-                        <ProfitSpreadGauge
-                          offerHigh={liveResult.high}
-                          wholesaleAvg={Number(liveBbVehicle!.wholesale?.avg || 0)}
-                          tradeinAvg={Number(liveBbVehicle!.tradein?.avg || 0)}
-                          retailAvg={Number(liveBbVehicle!.retail?.avg || 0)}
-                          retailClean={Number(liveBbVehicle!.retail?.clean || 0)}
-                          msrp={Number(liveBbVehicle!.msrp || 0)}
-                        />
-                      </div>
-
-                      {/* Market Context */}
-                      <div className="rounded-lg border border-border bg-muted/20 p-4">
-                        <MarketContextPanel bbVehicle={liveBbVehicle!} offerHigh={liveResult.high} />
-                      </div>
-                    </>
-                  )}
-
-                  {!liveResult && (
-                    <div className="bg-muted/40 rounded-lg p-6 text-sm text-muted-foreground text-center">
-                      Adjust vehicle condition on the left to calculate an offer.
                     </div>
-                  )}
+                  );
+                })}
+              </div>
+
+              {/* STEP 2: Vehicle Condition */}
+              <div className="rounded-lg border border-border p-3">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Car className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-[11px] font-bold text-card-foreground uppercase tracking-wider">② Vehicle Condition</span>
+                </div>
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                  <div>
+                    <Label className="text-[10px] font-semibold">Condition</Label>
+                    <Select value={liveCondition} onValueChange={setLiveCondition}>
+                      <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {CONDITIONS.map(c => <SelectItem key={c} value={c} className="capitalize text-xs">{c}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-[10px] font-semibold">Accidents</Label>
+                    <Select value={liveAccidents} onValueChange={setLiveAccidents}>
+                      <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">None</SelectItem>
+                        <SelectItem value="1">1</SelectItem>
+                        <SelectItem value="2">2</SelectItem>
+                        <SelectItem value="3+">3+</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-[10px] font-semibold">Drivable?</Label>
+                    <Select value={liveDrivable} onValueChange={setLiveDrivable}>
+                      <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="yes">Yes</SelectItem>
+                        <SelectItem value="no">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-[10px] font-semibold">Smoked?</Label>
+                    <Select value={liveSmokedIn} onValueChange={setLiveSmokedIn}>
+                      <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="no">No</SelectItem>
+                        <SelectItem value="yes">Yes</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-[10px] font-semibold">Ext. Damage</Label>
+                    <Input type="number" min={0} max={10} value={liveExteriorItems} onChange={e => setLiveExteriorItems(Number(e.target.value))} className="h-7 text-xs" />
+                  </div>
+                  <div>
+                    <Label className="text-[10px] font-semibold">Mech. Issues</Label>
+                    <Input type="number" min={0} max={10} value={liveMechanicalItems} onChange={e => setLiveMechanicalItems(Number(e.target.value))} className="h-7 text-xs" />
+                  </div>
                 </div>
               </div>
-            </>
-          )}
 
-          {!liveBbVehicle && !liveLoading && (
-            <div className="bg-muted/40 rounded-lg p-8 text-sm text-muted-foreground text-center">
-              <Car className="w-8 h-8 mx-auto mb-2 opacity-40" />
-              Enter a VIN and mileage above, then click <strong>Look Up</strong> to pull live valuation data and start tuning your pricing model.
-            </div>
-          )}
-        </TabsContent>
+              {/* Equipment */}
+              {liveBbVehicle.add_deduct_list?.length > 0 && (
+                <Collapsible>
+                  <CollapsibleTrigger asChild>
+                    <button className="flex items-center justify-between w-full px-3 py-2 text-left hover:bg-muted/30 transition-colors rounded-lg border border-border">
+                      <div className="flex items-center gap-1.5">
+                        <CheckSquare className="w-3.5 h-3.5 text-primary" />
+                        <span className="font-semibold text-[11px] text-card-foreground">Equipment ({liveSelectedAddDeducts.length}/{liveBbVehicle.add_deduct_list.length})</span>
+                        {equipmentTotal !== 0 && (
+                          <Badge variant="secondary" className={`text-[9px] ${equipmentTotal > 0 ? "text-emerald-600" : "text-destructive"}`}>
+                            {equipmentTotal > 0 ? "+" : ""}${equipmentTotal.toLocaleString()}
+                          </Badge>
+                        )}
+                      </div>
+                      <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                    </button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="space-y-0.5 max-h-36 overflow-y-auto px-1 py-2">
+                      {liveBbVehicle.add_deduct_list.map((ad: BBAddDeduct) => {
+                        const isSelected = liveSelectedAddDeducts.includes(ad.uoc);
+                        const dollarStr = ad.avg !== 0 ? ` (${ad.avg > 0 ? "+" : ""}$${Math.abs(ad.avg)})` : "";
+                        return (
+                          <label key={ad.uoc} className={`flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer text-[10px] ${isSelected ? "bg-primary/10 text-card-foreground" : "text-muted-foreground hover:bg-muted"}`}>
+                            <input type="checkbox" checked={isSelected} onChange={() => toggleLiveAddDeduct(ad.uoc)} className="rounded border-border w-3 h-3" />
+                            <span className="truncate">{ad.name}{dollarStr}</span>
+                            {ad.auto !== "N" && <span className="text-[8px] bg-emerald-500/10 text-emerald-600 px-1 rounded shrink-0">auto</span>}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
 
-        {/* ── Manual Mode ── */}
-        <TabsContent value="manual">
-          <p className="text-sm text-muted-foreground mb-3">
-            Enter a hypothetical vehicle to preview how your settings calculate an offer.
-          </p>
+              {/* STEP 3: Interactive Waterfall Builder */}
+              {liveResult && (
+                <div className="rounded-lg border border-border p-3 bg-gradient-to-b from-muted/20 to-transparent">
+                  <div className="flex items-center gap-1.5 mb-3">
+                    <ArrowDown className="w-3.5 h-3.5 text-primary" />
+                    <span className="text-[11px] font-bold text-card-foreground uppercase tracking-wider">③ Price Waterfall — Click any bar to adjust</span>
+                  </div>
+                  <div className="space-y-0.5">
+                    {waterfallBlocks.map(block => (
+                      <InteractiveWaterfallBlock
+                        key={block.id}
+                        block={block}
+                        maxVal={maxVal}
+                        onValueChange={handleBlockValueChange}
+                        isExpanded={expandedBlock === block.id}
+                        onToggleExpand={() => setExpandedBlock(prev => prev === block.id ? null : block.id)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-            <div>
-              <Label className="text-xs font-semibold">Base BB Value ($)</Label>
-              <Input type="number" value={baseValue} onChange={e => setBaseValue(Number(e.target.value))} step="500" className="h-8 text-sm" />
+              {/* Detailed Controls — Collapsible panels for fine-tuning */}
+              {inlineControls && liveResult && (
+                <div className="space-y-2">
+                  {/* Condition Multipliers Detail */}
+                  <Collapsible>
+                    <CollapsibleTrigger asChild>
+                      <button className="flex items-center justify-between w-full px-3 py-2 text-left hover:bg-muted/30 transition-colors rounded-lg border border-border">
+                        <div className="flex items-center gap-1.5">
+                          <Gauge className="w-3.5 h-3.5 text-primary" />
+                          <span className="font-semibold text-[11px] text-card-foreground">Condition Multipliers</span>
+                        </div>
+                        <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                      </button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2">
+                        {(["excellent", "good", "fair", "rough"] as const).map(grade => {
+                          const mult = localSettings.condition_multipliers[grade];
+                          const isActive = grade === liveCondition;
+                          return (
+                            <div key={grade} className={`space-y-1 rounded-md p-1.5 ${isActive ? "bg-primary/10 ring-1 ring-primary/20" : ""}`}>
+                              <div className="flex items-center justify-between">
+                                <Label className="capitalize text-[10px] font-semibold">{grade}</Label>
+                                {isActive && <span className="text-[7px] bg-primary text-primary-foreground px-1 rounded">ACTIVE</span>}
+                              </div>
+                              <Input
+                                type="number" step="0.01" min="0" max="2"
+                                value={mult}
+                                onChange={e => updateLocalSetting("condition_multipliers", { ...localSettings.condition_multipliers, [grade]: Number(e.target.value) })}
+                                className="w-full h-6 text-[10px]"
+                              />
+                              <Slider
+                                value={[mult * 100]}
+                                min={50} max={130} step={1}
+                                onValueChange={([v]) => updateLocalSetting("condition_multipliers", { ...localSettings.condition_multipliers, [grade]: Math.round(v) / 100 })}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+
+                  {/* Age Tiers */}
+                  <Collapsible>
+                    <CollapsibleTrigger asChild>
+                      <button className="flex items-center justify-between w-full px-3 py-2 text-left hover:bg-muted/30 transition-colors rounded-lg border border-border">
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5 text-primary" />
+                          <span className="font-semibold text-[11px] text-card-foreground">Age Tiers ({(localSettings.age_tiers || []).length})</span>
+                        </div>
+                        <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                      </button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="space-y-1 p-2">
+                        {(localSettings.age_tiers || []).map((tier, idx) => (
+                          <div key={idx} className="flex items-center gap-1 text-[10px]">
+                            <Input type="number" value={tier.min_years} onChange={e => { const u = [...(localSettings.age_tiers || [])]; u[idx] = { ...u[idx], min_years: Number(e.target.value) }; updateLocalSetting("age_tiers", u); }} className="w-12 h-5 text-[10px]" />
+                            <span>–</span>
+                            <Input type="number" value={tier.max_years} onChange={e => { const u = [...(localSettings.age_tiers || [])]; u[idx] = { ...u[idx], max_years: Number(e.target.value) }; updateLocalSetting("age_tiers", u); }} className="w-12 h-5 text-[10px]" />
+                            <span>yr →</span>
+                            <Input type="number" value={tier.adjustment_pct} onChange={e => { const u = [...(localSettings.age_tiers || [])]; u[idx] = { ...u[idx], adjustment_pct: Number(e.target.value) }; updateLocalSetting("age_tiers", u); }} className="w-14 h-5 text-[10px]" step="0.5" />
+                            <span>%</span>
+                            <Button variant="ghost" size="sm" className="h-5 w-5 p-0 text-destructive" onClick={() => updateLocalSetting("age_tiers", (localSettings.age_tiers || []).filter((_, i) => i !== idx))}><Trash2 className="w-2.5 h-2.5" /></Button>
+                          </div>
+                        ))}
+                        <Button variant="outline" size="sm" className="h-5 text-[9px] gap-0.5 px-2" onClick={() => {
+                          const tiers = localSettings.age_tiers || [];
+                          const last = tiers.length > 0 ? tiers[tiers.length - 1].max_years + 1 : 5;
+                          updateLocalSetting("age_tiers", [...tiers, { min_years: last, max_years: last + 4, adjustment_pct: -3 }]);
+                        }}><Plus className="w-2.5 h-2.5" /> Add</Button>
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+
+                  {/* Mileage Tiers */}
+                  <Collapsible>
+                    <CollapsibleTrigger asChild>
+                      <button className="flex items-center justify-between w-full px-3 py-2 text-left hover:bg-muted/30 transition-colors rounded-lg border border-border">
+                        <div className="flex items-center gap-1.5">
+                          <Gauge className="w-3.5 h-3.5 text-primary" />
+                          <span className="font-semibold text-[11px] text-card-foreground">Mileage Tiers ({(localSettings.mileage_tiers || []).length})</span>
+                        </div>
+                        <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                      </button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="space-y-1 p-2">
+                        {(localSettings.mileage_tiers || []).map((tier, idx) => (
+                          <div key={idx} className="flex items-center gap-1 text-[10px]">
+                            <Input type="number" value={tier.min_miles} onChange={e => { const u = [...(localSettings.mileage_tiers || [])]; u[idx] = { ...u[idx], min_miles: Number(e.target.value) }; updateLocalSetting("mileage_tiers", u); }} className="w-16 h-5 text-[10px]" step="5000" />
+                            <span>–</span>
+                            <Input type="number" value={tier.max_miles} onChange={e => { const u = [...(localSettings.mileage_tiers || [])]; u[idx] = { ...u[idx], max_miles: Number(e.target.value) }; updateLocalSetting("mileage_tiers", u); }} className="w-16 h-5 text-[10px]" step="5000" />
+                            <span>mi →$</span>
+                            <Input type="number" value={tier.adjustment_flat} onChange={e => { const u = [...(localSettings.mileage_tiers || [])]; u[idx] = { ...u[idx], adjustment_flat: Number(e.target.value) }; updateLocalSetting("mileage_tiers", u); }} className="w-16 h-5 text-[10px]" step="100" />
+                            <Button variant="ghost" size="sm" className="h-5 w-5 p-0 text-destructive" onClick={() => updateLocalSetting("mileage_tiers", (localSettings.mileage_tiers || []).filter((_, i) => i !== idx))}><Trash2 className="w-2.5 h-2.5" /></Button>
+                          </div>
+                        ))}
+                        <Button variant="outline" size="sm" className="h-5 text-[9px] gap-0.5 px-2" onClick={() => {
+                          const tiers = localSettings.mileage_tiers || [];
+                          const last = tiers.length > 0 ? tiers[tiers.length - 1].max_miles + 1 : 80000;
+                          updateLocalSetting("mileage_tiers", [...tiers, { min_miles: last, max_miles: last + 20000, adjustment_flat: -500 }]);
+                        }}><Plus className="w-2.5 h-2.5" /> Add</Button>
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+
+                  {/* Deductions Detail */}
+                  <Collapsible>
+                    <CollapsibleTrigger asChild>
+                      <button className="flex items-center justify-between w-full px-3 py-2 text-left hover:bg-muted/30 transition-colors rounded-lg border border-border">
+                        <div className="flex items-center gap-1.5">
+                          <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                          <span className="font-semibold text-[11px] text-card-foreground">Deduction Amounts</span>
+                        </div>
+                        <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                      </button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="space-y-1 p-2">
+                        {Object.entries(DEDUCTION_LABELS).map(([key, config]) => {
+                          const enabled = (localSettings.deductions_config as any)?.[key] ?? true;
+                          return (
+                            <div key={key} className={`rounded border px-2 py-1 ${enabled ? "bg-muted/30 border-border" : "bg-muted/10 border-border/50 opacity-50"}`}>
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-semibold text-card-foreground">{config.label}</span>
+                                <Switch
+                                  checked={enabled}
+                                  onCheckedChange={() => updateLocalSetting("deductions_config", { ...localSettings.deductions_config, [key]: !enabled })}
+                                  className="scale-75"
+                                />
+                              </div>
+                              {enabled && (
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {config.amountKeys.map(amtKey => (
+                                    <div key={amtKey} className="flex items-center gap-0.5">
+                                      <span className="text-[8px] text-muted-foreground">{AMOUNT_SHORT[amtKey]}:</span>
+                                      <Input
+                                        type="number"
+                                        value={(localSettings.deduction_amounts as any)?.[amtKey] ?? 0}
+                                        onChange={e => updateLocalSetting("deduction_amounts", { ...localSettings.deduction_amounts, [amtKey]: Number(e.target.value) })}
+                                        className="w-14 h-5 text-[9px]" step="25"
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </div>
+              )}
             </div>
-            <div>
-              <Label className="text-xs font-semibold">Year</Label>
-              <Input type="number" value={year} onChange={e => setYear(e.target.value)} className="h-8 text-sm" />
-            </div>
-            <div>
-              <Label className="text-xs font-semibold">Mileage</Label>
-              <Input type="number" value={mileage} onChange={e => setMileage(e.target.value)} step="5000" className="h-8 text-sm" />
-            </div>
-            <div>
-              <Label className="text-xs font-semibold">Condition</Label>
-              <Select value={condition} onValueChange={setCondition}>
-                <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {CONDITIONS.map(c => <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs font-semibold">Make</Label>
-              <Input value={make} onChange={e => setMake(e.target.value)} className="h-8 text-sm" />
-            </div>
-            <div>
-              <Label className="text-xs font-semibold">Model</Label>
-              <Input value={model} onChange={e => setModel(e.target.value)} className="h-8 text-sm" />
-            </div>
-            <div>
-              <Label className="text-xs font-semibold">Accidents</Label>
-              <Select value={accidents} onValueChange={setAccidents}>
-                <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="0">None</SelectItem>
-                  <SelectItem value="1">1</SelectItem>
-                  <SelectItem value="2">2</SelectItem>
-                  <SelectItem value="3+">3+</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs font-semibold">Drivable?</Label>
-              <Select value={drivable} onValueChange={setDrivable}>
-                <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="yes">Yes</SelectItem>
-                  <SelectItem value="no">No</SelectItem>
-                </SelectContent>
-              </Select>
+
+            {/* ── RIGHT: Results + Profit + Market ── */}
+            <div className="space-y-4">
+              {liveResult && (
+                <>
+                  {/* Final Offer Card */}
+                  <div className="rounded-xl border-2 border-primary/40 bg-gradient-to-br from-primary/5 to-primary/10 p-5">
+                    <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-1">Final Offer Range</div>
+                    <div className="text-3xl font-bold text-primary">
+                      ${liveResult.low.toLocaleString()} – ${liveResult.high.toLocaleString()}
+                    </div>
+                    {compareMode && liveSavedResult && whatIfDelta !== 0 && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">vs. saved:</span>
+                        <span className={`text-sm font-bold px-2 py-0.5 rounded-full ${whatIfDelta > 0 ? "bg-emerald-500/10 text-emerald-600" : "bg-destructive/10 text-destructive"}`}>
+                          {whatIfDelta > 0 ? "+" : ""}${whatIfDelta.toLocaleString()}
+                        </span>
+                      </div>
+                    )}
+                    {liveResult.matchedRuleIds.length > 0 && (
+                      <div className="flex items-center gap-1 mt-2">
+                        <Badge variant="secondary" className="text-[10px]">{liveResult.matchedRuleIds.length} rule(s) applied</Badge>
+                        {liveResult.isHotLead && <Badge variant="destructive" className="text-[10px]">🔥 Hot</Badge>}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* What-If Toggle */}
+                  {savedSettings && (
+                    <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-border bg-muted/30">
+                      <div className="flex items-center gap-2">
+                        <ArrowRight className="w-3.5 h-3.5 text-primary" />
+                        <span className="text-xs font-semibold text-card-foreground">What-If Comparison</span>
+                      </div>
+                      <Switch checked={compareMode} onCheckedChange={setCompareMode} className="scale-90" />
+                    </div>
+                  )}
+
+                  {compareMode && liveSavedResult && (
+                    <div className="rounded-lg border border-border bg-muted/20 p-3">
+                      <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-1">Saved Model Offer</div>
+                      <div className="text-lg font-bold text-muted-foreground">
+                        ${liveSavedResult.low.toLocaleString()} – ${liveSavedResult.high.toLocaleString()}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Profit Gauge */}
+                  <div className="rounded-lg border border-border bg-muted/20 p-4">
+                    <ProfitSpreadGauge
+                      offerHigh={liveResult.high}
+                      wholesaleAvg={Number(liveBbVehicle.wholesale?.avg || 0)}
+                      tradeinAvg={Number(liveBbVehicle.tradein?.avg || 0)}
+                      retailAvg={Number(liveBbVehicle.retail?.avg || 0)}
+                      retailClean={Number(liveBbVehicle.retail?.clean || 0)}
+                      msrp={Number(liveBbVehicle.msrp || 0)}
+                    />
+                  </div>
+
+                  {/* Market Context */}
+                  <div className="rounded-lg border border-border bg-muted/20 p-4">
+                    <MarketContextPanel bbVehicle={liveBbVehicle} offerHigh={liveResult.high} />
+                  </div>
+                </>
+              )}
+
+              {!liveResult && (
+                <div className="bg-muted/40 rounded-lg p-6 text-sm text-muted-foreground text-center">
+                  Set vehicle condition to see the offer calculation.
+                </div>
+              )}
             </div>
           </div>
-
-          {result && (
-            <ResultCard
-              label="Estimated Offer"
-              result={result}
-              condition={condition}
-              settings={activeSettings}
-              mileage={mileage}
-              year={year}
-              variant="primary"
-            />
-          )}
-        </TabsContent>
-      </Tabs>
+        </>
+      )}
     </div>
   );
 };
@@ -898,91 +893,5 @@ function calcEquipmentTotal(bbVehicle: BBVehicle, selectedUocs: string[]): numbe
     .filter(ad => selectedUocs.includes(ad.uoc))
     .reduce((sum, ad) => sum + (ad.avg || 0), 0);
 }
-
-// ── Result Card ──
-const ResultCard = ({
-  label, result, condition, settings, mileage, year, variant, delta, equipmentTotal,
-}: {
-  label: string;
-  result: OfferEstimate;
-  condition: string;
-  settings: OfferSettings;
-  mileage: string;
-  year: string;
-  variant: "primary" | "muted";
-  delta?: number;
-  equipmentTotal?: number;
-}) => {
-  const currentYear = new Date().getFullYear();
-  const vehicleAge = currentYear - Number(year);
-  const mileageNum = parseInt(mileage.replace(/[^0-9]/g, "")) || 0;
-
-  const matchedAgeTier = (settings.age_tiers || []).find(
-    t => vehicleAge >= t.min_years && vehicleAge <= t.max_years
-  );
-  const matchedMileageTier = (settings.mileage_tiers || []).find(
-    t => mileageNum >= t.min_miles && mileageNum <= t.max_miles
-  );
-
-  const condMult = settings.condition_multipliers?.[condition as keyof typeof settings.condition_multipliers] ?? 1;
-  const borderClass = variant === "primary" ? "border-primary/30" : "border-border";
-
-  return (
-    <div className={`rounded-lg border ${borderClass} bg-muted/40 p-4 space-y-3`}>
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</span>
-        {delta !== undefined && delta !== 0 && (
-          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${delta > 0 ? "bg-green-500/10 text-green-600" : "bg-destructive/10 text-destructive"}`}>
-            {delta > 0 ? "+" : ""}${delta.toLocaleString()}
-          </span>
-        )}
-      </div>
-      <div className="text-2xl font-bold text-primary">
-        ${result.low.toLocaleString()} – ${result.high.toLocaleString()}
-      </div>
-
-      <OfferWaterfall
-        baseValue={result.baseValue}
-        conditionMultiplier={condMult}
-        deductions={result.totalDeductions}
-        reconCost={result.reconCost}
-        equipmentTotal={equipmentTotal || 0}
-        ageTierAdjustment={matchedAgeTier?.adjustment_pct || 0}
-        mileageTierAdjustment={matchedMileageTier?.adjustment_flat || 0}
-        regionalPct={settings.regional_adjustment_pct || 0}
-        globalPct={settings.global_adjustment_pct || 0}
-        rulesAdjustment={result.matchedRuleIds.length}
-        finalHigh={result.high}
-        floor={settings.offer_floor || 500}
-        ceiling={settings.offer_ceiling}
-      />
-
-      {(matchedAgeTier || matchedMileageTier || result.matchedRuleIds.length > 0) && (
-        <div className="flex flex-wrap gap-1.5 pt-1">
-          {matchedAgeTier && (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
-              Age {vehicleAge}yr: {matchedAgeTier.adjustment_pct > 0 ? "+" : ""}{matchedAgeTier.adjustment_pct}%
-            </span>
-          )}
-          {matchedMileageTier && (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
-              {mileageNum.toLocaleString()}mi: {matchedMileageTier.adjustment_flat > 0 ? "+" : ""}${matchedMileageTier.adjustment_flat.toLocaleString()}
-            </span>
-          )}
-          {result.matchedRuleIds.length > 0 && (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-accent/10 text-accent text-xs font-medium">
-              {result.matchedRuleIds.length} rule(s)
-            </span>
-          )}
-          {result.isHotLead && (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-destructive/10 text-destructive text-xs font-medium">
-              🔥 Hot
-            </span>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
 
 export default OfferSimulator;
