@@ -17,7 +17,7 @@ import LoanPayoffCard from "@/components/portal/LoanPayoffCard";
 import CommunicationPreferences from "@/components/portal/CommunicationPreferences";
 import InspectionDisclosure from "@/components/portal/InspectionDisclosure";
 import WhatToExpect from "@/components/portal/WhatToExpect";
-import AIDamageReport from "@/components/portal/AIDamageReport";
+
 import ProgressSteps, { mapStatusToStepIndex } from "@/components/portal/ProgressSteps";
 import PortalOfferCard from "@/components/portal/PortalOfferCard";
 import PortalVehicleSummary from "@/components/portal/PortalVehicleSummary";
@@ -317,7 +317,6 @@ const CustomerPortal = () => {
               <WhatsNextCard {...whatsNextProps} />
               <CompletionChecklist {...checklistProps} />
               <VehiclePhotos token={s.token} photosUploaded={s.photos_uploaded} />
-              {s.photos_uploaded && <AIDamageReport submissionId={s.id} vehicleStr={vehicleStr} />}
               <PaymentInfoCard />
               {s.loan_status && ["has_loan", "lease"].includes(s.loan_status) && <LoanPayoffCard />}
               {stepIdx >= 2 && !isComplete && (
@@ -339,7 +338,7 @@ const CustomerPortal = () => {
           <PortalOfferCard {...offerCardProps} />
           <CompletionChecklist {...checklistProps} />
           <VehiclePhotos token={s.token} photosUploaded={s.photos_uploaded} />
-          {s.photos_uploaded && <AIDamageReport submissionId={s.id} vehicleStr={vehicleStr} />}
+          
           <PortalVehicleSummary {...vehicleSummaryProps} />
           <PaymentInfoCard />
           {s.loan_status && ["has_loan", "lease"].includes(s.loan_status) && <LoanPayoffCard />}
