@@ -357,6 +357,7 @@ const DealerOnboarding = ({ isAdmin = false }: DealerOnboardingProps) => {
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
+                    disabled={readOnly}
                     className={cn("w-full justify-start text-left font-normal", !account.start_date && "text-muted-foreground")}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
