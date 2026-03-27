@@ -206,7 +206,9 @@ const DealerOnboarding = ({ isAdmin = false }: DealerOnboardingProps) => {
         <div>
           <h2 className="text-xl font-bold text-card-foreground">Dealer Onboarding</h2>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Configure the account architecture, BDC model, and billing for this dealership.
+            {readOnly
+              ? "Account configuration (read-only). Contact an admin to make changes."
+              : "Configure the account architecture, BDC model, and billing for this dealership."}
           </p>
         </div>
         <Badge variant="outline" className={cn("gap-1.5 px-3 py-1", statusCfg.color)}>
