@@ -379,6 +379,7 @@ const DealerOnboarding = ({ isAdmin = false }: DealerOnboardingProps) => {
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold">Billing Day of Month</Label>
               <Select
+                disabled={readOnly}
                 value={account.billing_date?.toString() || ""}
                 onValueChange={v => updateField("billing_date", v ? Number(v) : null)}
               >
