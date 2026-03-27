@@ -258,7 +258,7 @@ const AboutPage = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button asChild size="lg" className="gap-2">
-                <Link to="/">Get Your Offer <ChevronRight className="w-4 h-4" /></Link>
+                <Link to="/" onClick={() => window.scrollTo(0, 0)}>Get Your Offer <ChevronRight className="w-4 h-4" /></Link>
               </Button>
               <Button asChild variant="outline" size="lg">
                 <Link to="/schedule">Schedule a Visit</Link>
