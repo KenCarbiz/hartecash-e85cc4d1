@@ -881,6 +881,114 @@ export type Database = {
         }
         Relationships: []
       }
+      pricing_model_access_requests: {
+        Row: {
+          approved_by: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          reviewed_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          approved_by?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          reviewed_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          approved_by?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          reviewed_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pricing_models: {
+        Row: {
+          age_tiers: Json
+          bb_value_basis: string
+          condition_multipliers: Json
+          created_at: string
+          created_by: string | null
+          dealership_id: string
+          deduction_amounts: Json
+          deductions_config: Json
+          description: string
+          global_adjustment_pct: number
+          id: string
+          is_active: boolean
+          is_default: boolean
+          mileage_tiers: Json
+          name: string
+          offer_ceiling: number | null
+          offer_floor: number
+          priority: number
+          recon_cost: number
+          regional_adjustment_pct: number
+          schedule_end: string | null
+          schedule_start: string | null
+          updated_at: string
+        }
+        Insert: {
+          age_tiers?: Json
+          bb_value_basis?: string
+          condition_multipliers?: Json
+          created_at?: string
+          created_by?: string | null
+          dealership_id?: string
+          deduction_amounts?: Json
+          deductions_config?: Json
+          description?: string
+          global_adjustment_pct?: number
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          mileage_tiers?: Json
+          name: string
+          offer_ceiling?: number | null
+          offer_floor?: number
+          priority?: number
+          recon_cost?: number
+          regional_adjustment_pct?: number
+          schedule_end?: string | null
+          schedule_start?: string | null
+          updated_at?: string
+        }
+        Update: {
+          age_tiers?: Json
+          bb_value_basis?: string
+          condition_multipliers?: Json
+          created_at?: string
+          created_by?: string | null
+          dealership_id?: string
+          deduction_amounts?: Json
+          deductions_config?: Json
+          description?: string
+          global_adjustment_pct?: number
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          mileage_tiers?: Json
+          name?: string
+          offer_ceiling?: number | null
+          offer_floor?: number
+          priority?: number
+          recon_cost?: number
+          regional_adjustment_pct?: number
+          schedule_end?: string | null
+          schedule_start?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
