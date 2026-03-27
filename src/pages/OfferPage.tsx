@@ -994,7 +994,6 @@ const OfferPage = () => {
                             onSave={(val) => handleFieldUpdate(item.field!, val)}
                             type="select"
                             options={item.editOptions!}
-                            selectedValue={item.editValue}
                             label={item.field}
                             className="text-sm"
                           />
