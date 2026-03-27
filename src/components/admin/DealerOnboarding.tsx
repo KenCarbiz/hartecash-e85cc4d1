@@ -425,6 +425,7 @@ const DealerOnboarding = ({ isAdmin = false }: DealerOnboardingProps) => {
             onChange={e => updateField("special_instructions", e.target.value)}
             placeholder="e.g. No SMS follow-ups after 6pm, use dealer logo on all customer emails, custom offer floor of $2,000..."
             className="text-sm"
+            disabled={readOnly}
           />
         </CardContent>
       </Card>
