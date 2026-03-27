@@ -200,6 +200,14 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
     [liveBbVehicle, liveFormData, liveSelectedAddDeducts, activeSettings, rules]
   );
 
+  // What-If: calculate with saved settings for comparison
+  const liveSavedResult = useMemo(
+    () => (liveBbVehicle && savedSettings && compareMode) ? calculateOffer(liveBbVehicle, liveFormData, liveSelectedAddDeducts, savedSettings, rules) : null,
+    [liveBbVehicle, liveFormData, liveSelectedAddDeducts, savedSettings, rules, compareMode]
+  );
+
+  const whatIfDelta = (liveResult && liveSavedResult) ? liveResult.high - liveSavedResult.high : 0;
+
   const handleVinLookup = async () => {
     const cleanVin = liveVin.trim().toUpperCase();
     if (cleanVin.length !== 17) {
@@ -531,33 +539,85 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                 <div className="space-y-4">
                   {liveResult && (
                     <>
-                      {/* Offer result */}
-                      <ResultCard
-                        label="Live Offer Estimate"
-                        result={liveResult}
-                        condition={liveCondition}
-                        settings={activeSettings}
-                        mileage={liveMileage}
-                        year={liveBbVehicle.year}
-                        variant="primary"
-                        equipmentTotal={calcEquipmentTotal(liveBbVehicle, liveSelectedAddDeducts)}
-                      />
+                      {/* What-If Toggle */}
+                      {savedSettings && (
+                        <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-border bg-muted/30">
+                          <div className="flex items-center gap-2">
+                            <ArrowRight className="w-3.5 h-3.5 text-primary" />
+                            <span className="text-xs font-semibold text-card-foreground">What-If Comparison</span>
+                            {compareMode && whatIfDelta !== 0 && (
+                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${whatIfDelta > 0 ? "bg-green-500/10 text-green-600" : "bg-destructive/10 text-destructive"}`}>
+                                Net: {whatIfDelta > 0 ? "+" : ""}${whatIfDelta.toLocaleString()}
+                              </span>
+                            )}
+                          </div>
+                          <Switch checked={compareMode} onCheckedChange={setCompareMode} className="scale-90" />
+                        </div>
+                      )}
+
+                      {/* Side-by-side or single result */}
+                      {compareMode && liveSavedResult ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-1 flex items-center gap-1">
+                              <span className="w-2 h-2 rounded-full bg-muted-foreground/40 inline-block" /> Current (Saved)
+                            </div>
+                            <ResultCard
+                              label="Saved Settings"
+                              result={liveSavedResult}
+                              condition={liveCondition}
+                              settings={savedSettings!}
+                              mileage={liveMileage}
+                              year={liveBbVehicle!.year}
+                              variant="muted"
+                              equipmentTotal={calcEquipmentTotal(liveBbVehicle!, liveSelectedAddDeducts)}
+                            />
+                          </div>
+                          <div>
+                            <div className="text-[10px] uppercase tracking-wider font-bold text-primary mb-1 flex items-center gap-1">
+                              <span className="w-2 h-2 rounded-full bg-primary inline-block" /> Proposed (Editing)
+                            </div>
+                            <ResultCard
+                              label="Proposed Settings"
+                              result={liveResult}
+                              condition={liveCondition}
+                              settings={activeSettings}
+                              mileage={liveMileage}
+                              year={liveBbVehicle!.year}
+                              variant="primary"
+                              delta={whatIfDelta}
+                              equipmentTotal={calcEquipmentTotal(liveBbVehicle!, liveSelectedAddDeducts)}
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <ResultCard
+                          label="Live Offer Estimate"
+                          result={liveResult}
+                          condition={liveCondition}
+                          settings={activeSettings}
+                          mileage={liveMileage}
+                          year={liveBbVehicle!.year}
+                          variant="primary"
+                          equipmentTotal={calcEquipmentTotal(liveBbVehicle!, liveSelectedAddDeducts)}
+                        />
+                      )}
 
                       {/* Profit Spread Gauge */}
                       <div className="rounded-lg border border-border bg-muted/20 p-4">
                         <ProfitSpreadGauge
                           offerHigh={liveResult.high}
-                          wholesaleAvg={Number(liveBbVehicle.wholesale?.avg || 0)}
-                          tradeinAvg={Number(liveBbVehicle.tradein?.avg || 0)}
-                          retailAvg={Number(liveBbVehicle.retail?.avg || 0)}
-                          retailClean={Number(liveBbVehicle.retail?.clean || 0)}
-                          msrp={Number(liveBbVehicle.msrp || 0)}
+                          wholesaleAvg={Number(liveBbVehicle!.wholesale?.avg || 0)}
+                          tradeinAvg={Number(liveBbVehicle!.tradein?.avg || 0)}
+                          retailAvg={Number(liveBbVehicle!.retail?.avg || 0)}
+                          retailClean={Number(liveBbVehicle!.retail?.clean || 0)}
+                          msrp={Number(liveBbVehicle!.msrp || 0)}
                         />
                       </div>
 
                       {/* Market Context */}
                       <div className="rounded-lg border border-border bg-muted/20 p-4">
-                        <MarketContextPanel bbVehicle={liveBbVehicle} offerHigh={liveResult.high} />
+                        <MarketContextPanel bbVehicle={liveBbVehicle!} offerHigh={liveResult.high} />
                       </div>
                     </>
                   )}
