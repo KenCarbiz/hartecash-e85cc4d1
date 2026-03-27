@@ -185,6 +185,24 @@ const UploadPhotos = () => {
         }
       }
 
+      // Trigger AI damage analysis for each uploaded category photo (fire-and-forget)
+      if (submission?.id) {
+        for (const [catId, val] of Object.entries(categoryUploads)) {
+          if (!val.file) continue;
+          const matchedFile = allFiles?.find((f) => f.name.startsWith(`${catId}-`));
+          if (matchedFile) {
+            supabase.functions.invoke("analyze-vehicle-damage", {
+              body: {
+                submission_id: submission.id,
+                token,
+                photo_category: catId,
+                photo_path: `${token}/${matchedFile.name}`,
+              },
+            }).catch(console.error);
+          }
+        }
+      }
+
       setDone(true);
     } catch {
       setError("Upload failed. Please try again.");
