@@ -49,7 +49,7 @@ const SLIDES = [
   "hero", "market", "problem", "competition", "cookie-cutter", "solution-intro",
   "cust-walk-1", "cust-walk-2", "cust-walk-3",
   "emp-walk-1", "emp-walk-2", "emp-walk-3",
-  "workflow", "mobile", "security",
+  "workflow", "mobile", "security", "innovations",
   "comparison", "roi", "roi-dealer", "traction", "why-us", "cta",
 ] as const;
 type SlideId = typeof SLIDES[number];
