@@ -11,7 +11,7 @@ interface ProgressStepsProps {
 
 const STEPS = [
   { label: "Offer Accepted" },
-  { label: "Inspection Done" },
+  { label: "Inspection Scheduled" },
   { label: "Deal Finalized" },
   { label: "Paperwork Complete" },
   { label: "Check Received" },
