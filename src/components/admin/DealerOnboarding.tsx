@@ -319,6 +319,7 @@ const DealerOnboarding = ({ isAdmin = false }: DealerOnboardingProps) => {
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold">Plan Tier</Label>
               <Select
+                disabled={readOnly}
                 value={account.plan_tier}
                 onValueChange={v => {
                   const tier = PLAN_TIERS.find(t => t.value === v);
