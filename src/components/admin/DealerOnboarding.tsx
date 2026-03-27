@@ -220,7 +220,7 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate }: DealerOnboardingProps
       </div>
 
       {/* Onboarding Checklist */}
-      <OnboardingChecklist />
+      <OnboardingChecklist onNavigate={onNavigate} />
 
       {/* Architecture */}
       <Card>
