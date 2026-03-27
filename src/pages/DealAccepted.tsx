@@ -137,7 +137,7 @@ const DealAccepted = () => {
       : { opacity: 0, y: 8 },
     animate: { opacity: 1, y: 0, scale: 1 },
     transition: isFirstVisit
-      ? { type: "spring", stiffness: 120, damping: 18, delay: baseDelay + i * stagger }
+      ? { type: "spring" as const, stiffness: 120, damping: 18, delay: baseDelay + i * stagger }
       : { duration: 0.35, delay: baseDelay + i * stagger },
   });
 
