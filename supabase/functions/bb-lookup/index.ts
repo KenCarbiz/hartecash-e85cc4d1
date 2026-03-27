@@ -69,6 +69,28 @@ serve(async (req) => {
 
     const bbData = await bbRes.json();
 
+    // Discovery mode: return raw field keys from first vehicle
+    if (body.discovery_mode) {
+      const firstRaw = (bbData.used_vehicles?.used_vehicle_list || [])[0] || {};
+      const rawKeys = Object.keys(firstRaw);
+      const rawSample: Record<string, unknown> = {};
+      for (const key of rawKeys) {
+        const val = firstRaw[key];
+        if (Array.isArray(val)) {
+          rawSample[key] = `[Array of ${val.length} items]`;
+        } else if (typeof val === 'object' && val !== null) {
+          rawSample[key] = Object.keys(val);
+        } else {
+          rawSample[key] = val;
+        }
+      }
+      // Also include top-level BB response keys
+      const topKeys = Object.keys(bbData);
+      return new Response(JSON.stringify({ top_level_keys: topKeys, first_vehicle_fields: rawSample }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
     // Check for errors
     if (bbData.error_count > 0) {
       const errorMsg = bbData.message_list?.map((m: { description: string }) => m.description).join(", ") || "Vehicle not found";
