@@ -184,8 +184,8 @@ const VehicleCameraCapture = ({
             <div
               className="relative z-10 animate-pulse"
               style={{
-                width: guide.aspectHint === "square" ? "70vw" : "88vw",
-                maxWidth: guide.aspectHint === "square" ? "300px" : "500px",
+                width: guide.aspectHint === "square" ? "84vw" : "96vw",
+                maxWidth: guide.aspectHint === "square" ? "420px" : "720px",
                 aspectRatio: guide.aspectHint === "square" ? "1" : guide.aspectHint === "landscape" ? "16/10" : "10/16",
               }}
             >
