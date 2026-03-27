@@ -81,6 +81,36 @@ export default function Updates() {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-8">
+        {/* Filter chips */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          {(["feature", "improvement", "fix", "security"] as const).map((tag) => {
+            const count = entries.filter((e) => e.tag === tag).length;
+            if (count === 0) return null;
+            const isActive = activeFilter === tag;
+            return (
+              <button
+                key={tag}
+                onClick={() => setActiveFilter(isActive ? null : tag)}
+                className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
+                  isActive
+                    ? `${TAG_STYLES[tag]} border-current`
+                    : "bg-muted text-muted-foreground border-transparent hover:border-border"
+                }`}
+              >
+                {TAG_LABELS[tag]} ({count})
+              </button>
+            );
+          })}
+          {activeFilter && (
+            <button
+              onClick={() => setActiveFilter(null)}
+              className="text-xs text-muted-foreground underline underline-offset-2 ml-1 self-center"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+
         {loading ? (
           <div className="space-y-4">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -95,7 +125,7 @@ export default function Updates() {
           <div className="relative">
             <div className="absolute left-[19px] top-0 bottom-0 w-px bg-border" />
             <div className="space-y-1">
-              {entries.map((entry, idx) => {
+              {filteredEntries.map((entry, idx) => {
                 const isExpanded = expandedIdx === idx;
                 return (
                   <div key={entry.id} className="relative pl-12">
