@@ -1055,6 +1055,8 @@ export type Database = {
           primary_color: string
           review_request_message: string
           review_request_subject: string
+          service_hero_headline: string
+          service_hero_subtext: string
           show_request_access: boolean
           stats_cars_purchased: string | null
           stats_rating: string | null
@@ -1063,6 +1065,8 @@ export type Database = {
           success_color: string
           tagline: string
           track_abandoned_leads: boolean
+          trade_hero_headline: string
+          trade_hero_subtext: string
           updated_at: string
           use_animated_calculating: boolean
           website_url: string | null
@@ -1102,6 +1106,8 @@ export type Database = {
           primary_color?: string
           review_request_message?: string
           review_request_subject?: string
+          service_hero_headline?: string
+          service_hero_subtext?: string
           show_request_access?: boolean
           stats_cars_purchased?: string | null
           stats_rating?: string | null
@@ -1110,6 +1116,8 @@ export type Database = {
           success_color?: string
           tagline?: string
           track_abandoned_leads?: boolean
+          trade_hero_headline?: string
+          trade_hero_subtext?: string
           updated_at?: string
           use_animated_calculating?: boolean
           website_url?: string | null
@@ -1149,6 +1157,8 @@ export type Database = {
           primary_color?: string
           review_request_message?: string
           review_request_subject?: string
+          service_hero_headline?: string
+          service_hero_subtext?: string
           show_request_access?: boolean
           stats_cars_purchased?: string | null
           stats_rating?: string | null
@@ -1157,6 +1167,8 @@ export type Database = {
           success_color?: string
           tagline?: string
           track_abandoned_leads?: boolean
+          trade_hero_headline?: string
+          trade_hero_subtext?: string
           updated_at?: string
           use_animated_calculating?: boolean
           website_url?: string | null
