@@ -136,11 +136,11 @@ const ConditionReport = ({ condition, vehicleStr, canEdit = false, onFieldUpdate
 
   // Windshield
   if (condition.windshield_damage !== undefined && condition.windshield_damage !== null) {
-    const wVal = condition.windshield_damage.toLowerCase();
-    const noW = wVal.includes("none") || wVal === "no" || wVal.includes("no windshield") || wVal.includes("no damage");
+    const wVal = (condition.windshield_damage || "").toLowerCase().trim();
     const hasCrack = wVal.includes("crack") || wVal.includes("major");
     const hasChip = wVal.includes("chip") || wVal.includes("pitting") || wVal.includes("minor");
-    const windshieldDisplay = noW ? "None" : (hasCrack && hasChip) ? "Chipped & Cracked" : hasCrack ? "Cracked" : hasChip ? "Chipped" : condition.windshield_damage;
+    const noW = !wVal || wVal === "none" || wVal === "no" || wVal.includes("no windshield") || wVal.includes("no damage") || (!hasCrack && !hasChip);
+    const windshieldDisplay = noW ? "None" : (hasCrack && hasChip) ? "Chipped & Cracked" : hasCrack ? "Cracked" : hasChip ? "Chipped" : "None";
     items.push({ label: `Windshield: ${windshieldDisplay}`, status: noW ? "good" : "warn", icon: <Wind className="w-3.5 h-3.5" />, field: "windshield_damage", editType: "select", editOptions: WINDSHIELD_OPTIONS, editValue: condition.windshield_damage || "none" });
   }
 

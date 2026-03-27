@@ -824,16 +824,16 @@ const OfferPage = () => {
   });
 
   // Windshield
-  const windshieldVal = (condition?.windshield_damage || "").toLowerCase();
-  const noWindshield = !condition?.windshield_damage || windshieldVal === "none" || windshieldVal === "no" || windshieldVal.includes("no damage") || windshieldVal.includes("no windshield");
+  const windshieldVal = (condition?.windshield_damage || "").toLowerCase().trim();
   const hasCrack = windshieldVal.includes("crack") || windshieldVal.includes("major");
   const hasChip = windshieldVal.includes("chip") || windshieldVal.includes("pitting") || windshieldVal.includes("minor");
+  const noWindshield = !windshieldVal || windshieldVal === "none" || windshieldVal === "no" || windshieldVal.includes("no damage") || windshieldVal.includes("no windshield") || (!hasCrack && !hasChip);
   const windshieldLabel = noWindshield
     ? "None"
     : (hasCrack && hasChip) ? "Chipped & Cracked"
     : hasCrack ? "Cracked"
     : hasChip ? "Chipped"
-    : condition!.windshield_damage;
+    : "None";
   if (condition?.windshield_damage !== undefined) {
     conditionItems.push({
       label: `Windshield: ${windshieldLabel}`,
