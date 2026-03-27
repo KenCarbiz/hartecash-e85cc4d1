@@ -340,6 +340,15 @@ const AdminDashboard = () => {
         setPermissionRequestCount(count || 0);
       }
 
+      // Fetch pricing access request count for admin/GM
+      if (roleData.role === "admin" || roleData.role === "gsm_gm") {
+        const { count: pricingCount } = await supabase
+          .from("pricing_model_access_requests" as any)
+          .select("id", { count: "exact", head: true })
+          .eq("status", "pending");
+        setPricingAccessRequestCount(pricingCount || 0);
+      }
+
       // Fetch show_request_access toggle
       const { data: configData } = await supabase
         .from("site_config")
