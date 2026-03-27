@@ -241,6 +241,7 @@ const AdminDashboard = () => {
   const [dealerLocations, setDealerLocations] = useState<DealerLocation[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [permissionRequestCount, setPermissionRequestCount] = useState(0);
+  const [pricingAccessRequestCount, setPricingAccessRequestCount] = useState(0);
   const [showRequestAccessDialog, setShowRequestAccessDialog] = useState(false);
   const [showRequestAccessToggle, setShowRequestAccessToggle] = useState(true);
   const navigate = useNavigate();
