@@ -452,6 +452,8 @@ const OfferPage = () => {
     </div>
   );
 
+  const acceptUrl = `/deal/${token}${activeTab === "trade" ? "?mode=trade" : ""}`;
+
   const AcceptButton = (
     <div className="print:hidden space-y-2">
       {isAccepted ? (
@@ -461,14 +463,25 @@ const OfferPage = () => {
         </div>
       ) : (
         <>
-          <SlideToAccept
-            onAccept={() => {
-              window.location.href = `/deal/${token}${activeTab === "trade" ? "?mode=trade" : ""}`;
-            }}
-            label="Slide to Accept Your Price"
-          />
+          {/* Mobile: slide gesture */}
+          <div className="lg:hidden">
+            <SlideToAccept
+              onAccept={() => { window.location.href = acceptUrl; }}
+              label="Slide to Accept Your Price"
+            />
+          </div>
+          {/* Desktop: click button */}
+          <div className="hidden lg:block">
+            <Link to={acceptUrl}>
+              <Button className="w-full py-5 text-base font-bold text-white shadow-lg gap-2 rounded-xl" style={{ backgroundColor: "hsl(var(--cta-accept))", boxShadow: "0 10px 15px -3px hsl(var(--cta-accept) / 0.2)" }}>
+                <CheckCircle className="w-5 h-5" />
+                Accept & Lock In Your Price
+                <ArrowRight className="w-5 h-5" />
+              </Button>
+            </Link>
+          </div>
           <p className="text-[11px] text-muted-foreground text-center">
-            Slide to lock in your price · No obligation until inspection
+            No obligation until inspection
           </p>
         </>
       )}
