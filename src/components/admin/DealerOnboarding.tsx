@@ -74,9 +74,10 @@ const DEFAULT_ACCOUNT: Omit<DealerAccount, "id"> = {
 
 interface DealerOnboardingProps {
   isAdmin?: boolean;
+  onNavigate?: (section: string) => void;
 }
 
-const DealerOnboarding = ({ isAdmin = false }: DealerOnboardingProps) => {
+const DealerOnboarding = ({ isAdmin = false, onNavigate }: DealerOnboardingProps) => {
   const [account, setAccount] = useState<Omit<DealerAccount, "id">>(DEFAULT_ACCOUNT);
   const [existingId, setExistingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -219,7 +220,7 @@ const DealerOnboarding = ({ isAdmin = false }: DealerOnboardingProps) => {
       </div>
 
       {/* Onboarding Checklist */}
-      <OnboardingChecklist />
+      <OnboardingChecklist onNavigate={onNavigate} />
 
       {/* Architecture */}
       <Card>

@@ -13,9 +13,14 @@ interface CheckItem {
   label: string;
   icon: React.ElementType;
   done: boolean;
+  section?: string; // admin sidebar section key to navigate to
 }
 
-const OnboardingChecklist = () => {
+interface OnboardingChecklistProps {
+  onNavigate?: (section: string) => void;
+}
+
+const OnboardingChecklist = ({ onNavigate }: OnboardingChecklistProps) => {
   const [items, setItems] = useState<CheckItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -45,78 +50,91 @@ const OnboardingChecklist = () => {
         label: "Account setup completed",
         icon: Building2,
         done: !!(acct?.architecture && acct?.bdc_model && acct?.start_date),
+        section: "onboarding",
       },
       {
         key: "branding",
         label: "Dealership name configured",
         icon: FileText,
         done: !!(cfg?.dealership_name && cfg.dealership_name.trim().length > 0),
+        section: "site-config",
       },
       {
         key: "logo",
         label: "Logo uploaded",
         icon: Image,
         done: !!(cfg?.logo_url && cfg.logo_url.length > 0),
+        section: "site-config",
       },
       {
         key: "logo_white",
         label: "White logo uploaded",
         icon: Image,
         done: !!(cfg?.logo_white_url && cfg.logo_white_url.length > 0),
+        section: "site-config",
       },
       {
         key: "favicon",
         label: "Favicon uploaded",
         icon: ScanLine,
         done: !!(cfg?.favicon_url && cfg.favicon_url.length > 0),
+        section: "site-config",
       },
       {
         key: "colors",
         label: "Brand colors set",
         icon: Palette,
         done: !!(cfg?.primary_color && cfg.primary_color !== "213 80% 20%"),
+        section: "site-config",
       },
       {
         key: "contact_phone",
         label: "Phone number added",
         icon: Phone,
         done: !!(cfg?.phone && cfg.phone.length > 0),
+        section: "site-config",
       },
       {
         key: "contact_email",
         label: "Email address added",
         icon: Mail,
         done: !!(cfg?.email && cfg.email.length > 0),
+        section: "site-config",
       },
       {
         key: "website",
         label: "Website URL added",
         icon: Globe,
         done: !!(cfg?.website_url && cfg.website_url.length > 0),
+        section: "site-config",
       },
       {
         key: "locations",
         label: "At least one location added",
         icon: MapPin,
         done: locCount >= 1,
+        section: "locations",
       },
       {
         key: "notif_email",
         label: "Email notification recipients configured",
         icon: Bell,
         done: !!(notif?.email_recipients && (notif.email_recipients as string[]).length > 0),
+        section: "notifications",
       },
       {
         key: "notif_sms",
         label: "SMS notification recipients configured",
         icon: Bell,
         done: !!(notif?.sms_recipients && (notif.sms_recipients as string[]).length > 0),
+        section: "notifications",
       },
       {
         key: "staff",
         label: "Staff members added",
         icon: Users,
-        done: staffCount >= 2, // at least admin + one other
+        done: staffCount >= 2,
+        section: "staff",
       },
     ];
 
@@ -148,12 +166,16 @@ const OnboardingChecklist = () => {
         <div className="space-y-1">
           {items.map(item => {
             const Icon = item.icon;
+            const clickable = !!item.section && !!onNavigate && !item.done;
             return (
-              <div
+              <button
                 key={item.key}
+                onClick={() => clickable && onNavigate?.(item.section!)}
+                disabled={!clickable}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
-                  item.done ? "text-muted-foreground" : "text-card-foreground"
+                  "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors w-full text-left",
+                  item.done ? "text-muted-foreground" : "text-card-foreground",
+                  clickable && "hover:bg-muted/50 cursor-pointer"
                 )}
               >
                 {item.done ? (
@@ -162,10 +184,13 @@ const OnboardingChecklist = () => {
                   <Circle className="w-4 h-4 shrink-0 text-muted-foreground/40" />
                 )}
                 <Icon className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
-                <span className={cn(item.done && "line-through opacity-60")}>
+                <span className={cn("flex-1", item.done && "line-through opacity-60")}>
                   {item.label}
                 </span>
-              </div>
+                {clickable && (
+                  <span className="text-[10px] text-primary font-medium">Go →</span>
+                )}
+              </button>
             );
           })}
         </div>
