@@ -346,6 +346,7 @@ const DealerOnboarding = ({ isAdmin = false }: DealerOnboardingProps) => {
                 min={0}
                 value={account.plan_cost}
                 onChange={e => updateField("plan_cost", Number(e.target.value))}
+                disabled={readOnly}
               />
             </div>
 
