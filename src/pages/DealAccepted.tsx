@@ -36,12 +36,17 @@ const DealAccepted = () => {
   const [searchParams] = useSearchParams();
   const [submission, setSubmission] = useState<DealSubmission | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isFirstVisit, setIsFirstVisit] = useState(false);
   const { config } = useSiteConfig();
 
   // Confetti celebration — only on first visit
   useEffect(() => {
     const key = `confetti_shown_${token}`;
-    if (sessionStorage.getItem(key)) return;
+    if (sessionStorage.getItem(key)) {
+      setIsFirstVisit(false);
+      return;
+    }
+    setIsFirstVisit(true);
     sessionStorage.setItem(key, "1");
 
     const duration = 2500;
@@ -123,10 +128,23 @@ const DealAccepted = () => {
 
   const scheduleLink = `/schedule?token=${token}&vehicle=${encodeURIComponent(vehicleStr)}&name=${encodeURIComponent(s.name || "")}&email=${encodeURIComponent(s.email || "")}&phone=${encodeURIComponent(s.phone || "")}`;
 
+  // Animation variants: dramatic spring on first visit, subtle fade on revisit
+  const stagger = isFirstVisit ? 0.15 : 0.05;
+  const baseDelay = isFirstVisit ? 0.3 : 0;
+  const entrance = (i: number) => ({
+    initial: isFirstVisit
+      ? { opacity: 0, y: 24, scale: 0.97 }
+      : { opacity: 0, y: 8 },
+    animate: { opacity: 1, y: 0, scale: 1 },
+    transition: isFirstVisit
+      ? { type: "spring" as const, stiffness: 120, damping: 18, delay: baseDelay + i * stagger }
+      : { duration: 0.35, delay: baseDelay + i * stagger },
+  });
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-gradient-to-r from-primary via-[hsl(210,100%,30%)] to-primary text-primary-foreground px-6 py-1">
+      <motion.div {...entrance(0)} className="bg-gradient-to-r from-primary via-[hsl(210,100%,30%)] to-primary text-primary-foreground px-6 py-1">
         <div className="max-w-5xl mx-auto">
           <Link to={`/offer/${token}`} className="inline-flex items-center gap-1 text-xs text-primary-foreground/70 hover:text-primary-foreground transition-colors mb-1.5">
             <ArrowLeft className="w-3.5 h-3.5" />
@@ -140,13 +158,11 @@ const DealAccepted = () => {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Success banner */}
       <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
+        {...entrance(1)}
         className="bg-success/10 border-b border-success/20"
       >
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center gap-3">
@@ -174,9 +190,7 @@ const DealAccepted = () => {
       <div className="max-w-5xl mx-auto px-6 py-8">
         {/* Vehicle + offer recap */}
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
+          {...entrance(2)}
           className="bg-card rounded-xl p-6 shadow-lg mb-8 flex flex-col md:flex-row items-center gap-6"
         >
           {s.vehicle_year && s.vehicle_make && s.vehicle_model && (
@@ -231,9 +245,7 @@ const DealAccepted = () => {
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           {/* Left: Schedule Inspection */}
           <motion.div
-            initial={{ opacity: 0, x: -16 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            {...entrance(3)}
             className="space-y-5"
           >
             <div className="bg-card rounded-xl p-6 shadow-lg border-2 border-primary/20 h-auto">
@@ -273,9 +285,7 @@ const DealAccepted = () => {
 
           {/* Right: Fast Track */}
           <motion.div
-            initial={{ opacity: 0, x: 16 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
+            {...entrance(4)}
           >
             <div className="bg-gradient-to-br from-accent/5 via-accent/3 to-transparent rounded-xl p-6 shadow-lg border-2 border-accent/20 h-full">
               <div className="flex items-center gap-2 mb-1">
