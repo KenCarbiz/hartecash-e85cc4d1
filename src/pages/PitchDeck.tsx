@@ -1122,7 +1122,46 @@ export default function PitchDeck() {
           </motion.div>
         </Section>
 
-        {/* ═══ 16 — COMPARISON ═══ */}
+        {/* ═══ INNOVATIONS ═══ */}
+        <Section id="innovations" dark isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "innovations"}>
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
+            <GlowBadge label="Recent Innovations" />
+            <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-6xl font-black mb-6 leading-tight">
+              Built This Month.<br /><span className="text-blue-400">Already Live.</span>
+            </motion.h2>
+            <motion.p variants={fadeUp} custom={1} className="text-lg text-white/50 max-w-3xl mb-14">
+              We ship fast. These eight features were designed, built, and deployed in the last two weeks — and they're already running in production.
+            </motion.p>
+            <motion.div variants={fadeUp} custom={2} className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+              {[
+                { icon: Camera, title: "Camera Overlays", desc: "Blueprint-style silhouette guides overlay the phone camera — ensuring consistent, professional vehicle photos every time. Front, rear, sides, interior, odometer." },
+                { icon: Cpu, title: "AI Damage Detection", desc: "Gemini Vision analyzes uploaded photos automatically — flagging dents, scratches, and paint damage with severity scoring and confidence levels." },
+                { icon: BarChart3, title: "Interactive Offer Builder", desc: "Waterfall visualization with real-time sliders, profit spread gauge, and what-if comparison mode. Managers see exactly how each lever affects the final number." },
+                { icon: MousePointerClick, title: "Slide-to-Accept", desc: "Apple Pay-style swipe gesture for customers to commit to offers on mobile. High-contrast button on desktop. Psychological commitment loop." },
+                { icon: FileText, title: "Driver's License OCR", desc: "AI parses uploaded ID photos to auto-fill customer name, address, and license number. Eliminates manual data entry errors." },
+                { icon: TrendingUp, title: "Executive KPI Hub", desc: "GM-level analytics dashboard with conversion funnels, pipeline value tracking, and trend analysis. Real-time visibility into the entire operation." },
+                { icon: Repeat, title: "Follow-Up Engine", desc: "Automated multi-touch SMS and email re-engagement sequences for cold leads. Configurable intervals and messaging per touch." },
+                { icon: MapPin, title: "Smart Store Assignment", desc: "Leads automatically route to the right location by ZIP code, OEM brand match, or buying center rules. Zero manual triage." },
+              ].map((item, i) => (
+                <motion.div key={i} variants={scaleIn} custom={i * 0.5 + 3} className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/8 transition-colors">
+                  <div className="w-11 h-11 rounded-xl bg-blue-500/20 flex items-center justify-center mb-4">
+                    <item.icon className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <h3 className="font-bold text-base text-white mb-2">{item.title}</h3>
+                  <p className="text-xs text-white/50 leading-relaxed">{item.desc}</p>
+                </motion.div>
+              ))}
+            </motion.div>
+            <motion.div variants={fadeUp} custom={8} className="mt-10 flex items-center justify-center gap-3">
+              <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-semibold">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                All features live in production
+              </div>
+            </motion.div>
+          </motion.div>
+        </Section>
+
+
         <Section id="comparison" dark isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "comparison"}>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
             <GlowBadge label="Feature Comparison" />
