@@ -256,6 +256,8 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
       if (formConfig.q_tires_replaced && !formData.tiresReplaced) missing.push("Tires Replaced");
       if (formConfig.q_num_keys && !formData.numKeys) missing.push("Number of Keys");
     } else if (currentStepName === "Finalize") {
+      if (!formData.name.trim()) missing.push("Full Name");
+      if (!formData.phone.trim() || formData.phone.replace(/\D/g, "").length < 10) missing.push("Phone Number");
       if (!formData.email.trim()) missing.push("Email Address");
       if (!formData.zip.trim()) missing.push("ZIP Code");
       if (!formData.loanStatus) missing.push("Sell or Trade-In");
