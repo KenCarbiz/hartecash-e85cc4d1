@@ -26,9 +26,10 @@ const ACCIDENT_OPTIONS = [
   { value: "3+", label: "3+ Accidents" },
 ];
 const WINDSHIELD_OPTIONS = [
-  { value: "none", label: "No damage" },
+  { value: "none", label: "None" },
   { value: "chipped", label: "Chipped" },
   { value: "cracked", label: "Cracked" },
+  { value: "chipped_and_cracked", label: "Chipped & Cracked" },
 ];
 const YES_NO = [
   { value: "yes", label: "Yes" },
