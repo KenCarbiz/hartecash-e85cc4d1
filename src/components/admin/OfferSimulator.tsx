@@ -200,6 +200,14 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
     [liveBbVehicle, liveFormData, liveSelectedAddDeducts, activeSettings, rules]
   );
 
+  // What-If: calculate with saved settings for comparison
+  const liveSavedResult = useMemo(
+    () => (liveBbVehicle && savedSettings && compareMode) ? calculateOffer(liveBbVehicle, liveFormData, liveSelectedAddDeducts, savedSettings, rules) : null,
+    [liveBbVehicle, liveFormData, liveSelectedAddDeducts, savedSettings, rules, compareMode]
+  );
+
+  const whatIfDelta = (liveResult && liveSavedResult) ? liveResult.high - liveSavedResult.high : 0;
+
   const handleVinLookup = async () => {
     const cleanVin = liveVin.trim().toUpperCase();
     if (cleanVin.length !== 17) {
