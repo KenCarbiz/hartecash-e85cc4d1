@@ -1505,7 +1505,15 @@ const OfferPage = () => {
                     <Printer className="w-4 h-4" />
                     Print Offer
                   </Button>
-                  <Link to={`/my-submission/${token}`} className="flex-1">
+                  <Link to={`/inspection/${s.id}`} className="flex-1">
+                    <Button variant="outline" className="w-full gap-2">
+                      <Search className="w-4 h-4" />
+                      Inspection Sheet
+                    </Button>
+                  </Link>
+                </div>
+                <div className="print:hidden">
+                  <Link to={`/my-submission/${token}`}>
                     <Button variant="default" className="w-full gap-2">
                       <ArrowLeft className="w-4 h-4" />
                       Back to Portal
@@ -1567,7 +1575,15 @@ const OfferPage = () => {
               <Printer className="w-4 h-4" />
               Print Offer
             </Button>
-            <Link to={`/my-submission/${token}`} className="flex-1">
+            <Link to={`/inspection/${s.id}`} className="flex-1">
+              <Button variant="outline" className="w-full gap-2">
+                <Search className="w-4 h-4" />
+                Inspection Sheet
+              </Button>
+            </Link>
+          </div>
+          <div className="print:hidden">
+            <Link to={`/my-submission/${token}`}>
               <Button variant="default" className="w-full gap-2">
                 <ArrowLeft className="w-4 h-4" />
                 Back to Portal
