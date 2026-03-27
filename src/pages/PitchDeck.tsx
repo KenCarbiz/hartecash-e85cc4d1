@@ -678,8 +678,8 @@ export default function PitchDeck() {
                   desc="Once your team enters an offer, it appears as a bold card: '$24,500.00'. The customer can print it. It updates in real-time as negotiations progress."
                   detail="🖨️ One-click print of the offer for their records"
                 />
-                <WalkStep number={3} icon={CircleDot} title="7-Stage Progress Tracker" dark
-                  desc="Animated progress bar shows exactly where they stand: Received → Review → Offer → Inspection → Verified → Agreed → Complete. No guessing, no phone calls asking 'what's the status?'"
+                <WalkStep number={3} icon={CircleDot} title="5-Stage Progress Tracker" dark
+                  desc="Animated progress bar shows exactly where they stand: Offer Accepted → Inspection Scheduled → Deal Finalized → Paperwork Complete → Check Received. No guessing, no phone calls asking 'what's the status?'"
                   detail="📊 Each stage has custom icons, animations, and helper text"
                 />
                 <WalkStep number={4} icon={ClipboardCheck} title="Smart 'What's Next' Card" dark
