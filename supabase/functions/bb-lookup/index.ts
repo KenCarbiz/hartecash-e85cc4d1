@@ -127,23 +127,27 @@ serve(async (req) => {
       },
     }));
 
-    // Return parsed vehicles + raw keys from first BB vehicle for field discovery
-    const firstRaw = vehicleList[0] || {};
-    const rawKeys = Object.keys(firstRaw);
-    const rawSample: Record<string, unknown> = {};
-    for (const key of rawKeys) {
-      const val = firstRaw[key];
-      // Only include scalar values and short arrays for discovery
-      if (Array.isArray(val)) {
-        rawSample[key] = `[Array of ${val.length} items]`;
-      } else if (typeof val === 'object' && val !== null) {
-        rawSample[key] = Object.keys(val);
-      } else {
-        rawSample[key] = val;
+    // Check if discovery mode is requested
+    if (body.discovery_mode) {
+      const firstRaw = vehicleList[0] || {};
+      const rawKeys = Object.keys(firstRaw);
+      const rawSample: Record<string, unknown> = {};
+      for (const key of rawKeys) {
+        const val = firstRaw[key];
+        if (Array.isArray(val)) {
+          rawSample[key] = `[Array of ${val.length} items]`;
+        } else if (typeof val === 'object' && val !== null) {
+          rawSample[key] = Object.keys(val);
+        } else {
+          rawSample[key] = val;
+        }
       }
+      return new Response(JSON.stringify({ raw_field_discovery: rawSample }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
     }
 
-    return new Response(JSON.stringify({ error: null, vehicles, raw_field_discovery: rawSample }), {
+    return new Response(JSON.stringify({ error: null, vehicles }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
 
