@@ -722,6 +722,20 @@ const OfferPage = () => {
 
   const conditionItems: ConditionItem[] = [];
 
+  // BB-Verified specs with green check / red X
+  if (condition?.bb_class_name) {
+    conditionItems.push({ label: `Vehicle Class: ${condition.bb_class_name}`, status: "good", icon: <Car className="w-3.5 h-3.5" /> });
+  }
+  if (condition?.bb_drivetrain) {
+    conditionItems.push({ label: `Drivetrain: ${condition.bb_drivetrain}`, status: "good", icon: <Settings2 className="w-3.5 h-3.5" /> });
+  }
+  if (condition?.bb_transmission) {
+    conditionItems.push({ label: `Transmission: ${condition.bb_transmission}`, status: "good", icon: <Settings2 className="w-3.5 h-3.5" /> });
+  }
+  if (condition?.bb_engine) {
+    conditionItems.push({ label: `Engine: ${condition.bb_engine}`, status: "good", icon: <Gauge className="w-3.5 h-3.5" /> });
+  }
+
   // Accidents
   const accidentsVal = (condition?.accidents || "").toLowerCase();
   const noAccidents = !condition?.accidents || accidentsVal.includes("no") || accidentsVal === "none" || accidentsVal === "0";
