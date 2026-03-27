@@ -189,7 +189,7 @@ const VehicleCameraCapture = ({
                 aspectRatio: guide.aspectHint === "square" ? "1" : guide.aspectHint === "landscape" ? "16/10" : "10/16",
               }}
             >
-              {guide.svg}
+              <img src={guide.img} alt={`${categoryLabel} alignment guide`} className="w-full h-full object-contain opacity-60" draggable={false} />
             </div>
           </div>
         )}
