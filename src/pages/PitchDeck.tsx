@@ -1422,16 +1422,6 @@ export default function PitchDeck() {
           </motion.div>
         </Section>
 
-        {/* ── Back to Channels ── */}
-        <section className="bg-[hsl(220,25%,6%)] px-6 py-16 text-center border-t border-white/5">
-          <button
-            onClick={scrollToHero}
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-full border border-white/20 text-white font-bold text-lg hover:bg-white/5 transition-colors"
-          >
-            <ChevronUp className="w-5 h-5" /> Back to All Three Channels
-          </button>
-        </section>
-
         {/* ═══ 21 — CTA ═══ */}
         <Section id="cta" dark isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "cta"}>
           <div className="absolute inset-0 bg-gradient-to-b from-blue-600/5 via-transparent to-transparent pointer-events-none" />
@@ -1457,12 +1447,19 @@ export default function PitchDeck() {
               <p className="text-sm text-white/30">
                 <a href="tel:2035095054" className="hover:text-white/50 transition">(203) 509-5054</a> · <a href="mailto:kenc@hartecars.com" className="hover:text-white/50 transition">kenc@hartecars.com</a>
               </p>
-              <a href="/sitemap" className="text-xs text-white/20 hover:text-white/40 transition mt-2">
-                Explore Service Drive & In-Store Trade → <span className="underline">See Full Platform</span>
-              </a>
             </motion.div>
           </motion.div>
         </Section>
+
+        {/* ── Back to Channels ── */}
+        <section className="bg-[hsl(220,25%,6%)] px-6 py-16 text-center border-t border-white/5">
+          <button
+            onClick={scrollToHero}
+            className="inline-flex items-center gap-2 px-8 py-4 rounded-full border border-white/20 text-white font-bold text-lg hover:bg-white/5 transition-colors"
+          >
+            <ChevronUp className="w-5 h-5" /> Back to All Three Channels
+          </button>
+        </section>
         </>
         )}
 
