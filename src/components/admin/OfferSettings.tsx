@@ -116,6 +116,7 @@ interface OfferSettingsRow {
   offer_ceiling: number | null;
   age_tiers: AgeTier[];
   mileage_tiers: MileageTier[];
+  regional_adjustment_pct: number;
 }
 
 interface OfferRule {
