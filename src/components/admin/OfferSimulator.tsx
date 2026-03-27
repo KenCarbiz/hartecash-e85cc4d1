@@ -10,6 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import {
   Calculator, TrendingDown, TrendingUp, Minus, ArrowRight, Search, Loader2, Car, CheckSquare,
   SlidersHorizontal, Gauge, Zap, AlertTriangle, DollarSign, ChevronDown, Calendar, Plus, Trash2,
+  ToggleLeft, Layers,
 } from "lucide-react";
 import { calculateOffer, type OfferSettings, type OfferRule, type OfferEstimate } from "@/lib/offerCalculator";
 import type { FormData, BBVehicle, BBAddDeduct } from "@/components/sell-form/types";
@@ -43,6 +44,39 @@ const BB_VALUE_OPTIONS = [
   { value: "retail_clean", label: "Retail – Clean" },
   { value: "retail_avg", label: "Retail – Average" },
   { value: "retail_rough", label: "Retail – Rough" },
+];
+
+// Group BB options by category for the clickable tiles
+const BB_CATEGORIES = [
+  {
+    label: "Wholesale",
+    tiers: [
+      { key: "wholesale_xclean", short: "X-Clean", tierKey: "xclean" },
+      { key: "wholesale_clean", short: "Clean", tierKey: "clean" },
+      { key: "wholesale_avg", short: "Avg", tierKey: "avg" },
+      { key: "wholesale_rough", short: "Rough", tierKey: "rough" },
+    ],
+    dataKey: "wholesale" as const,
+  },
+  {
+    label: "Trade-In",
+    tiers: [
+      { key: "tradein_clean", short: "Clean", tierKey: "clean" },
+      { key: "tradein_avg", short: "Avg", tierKey: "avg" },
+      { key: "tradein_rough", short: "Rough", tierKey: "rough" },
+    ],
+    dataKey: "tradein" as const,
+  },
+  {
+    label: "Retail",
+    tiers: [
+      { key: "retail_xclean", short: "X-Clean", tierKey: "xclean" },
+      { key: "retail_clean", short: "Clean", tierKey: "clean" },
+      { key: "retail_avg", short: "Avg", tierKey: "avg" },
+      { key: "retail_rough", short: "Rough", tierKey: "rough" },
+    ],
+    dataKey: "retail" as const,
+  },
 ];
 
 const DEDUCTION_LABELS: Record<string, { label: string; amountKeys: string[] }> = {
@@ -97,8 +131,8 @@ function buildTestData(baseValue: number, year: string, make: string, model: str
 }
 
 // ── Compact collapsible section ──
-const InlineSection = ({ icon, title, children, defaultOpen = false }: {
-  icon: React.ReactNode; title: string; children: React.ReactNode; defaultOpen?: boolean;
+const InlineSection = ({ icon, title, children, defaultOpen = false, badge }: {
+  icon: React.ReactNode; title: string; children: React.ReactNode; defaultOpen?: boolean; badge?: React.ReactNode;
 }) => {
   const [open, setOpen] = useState(defaultOpen);
   return (
@@ -108,6 +142,7 @@ const InlineSection = ({ icon, title, children, defaultOpen = false }: {
           <div className="flex items-center gap-1.5">
             {icon}
             <span className="font-semibold text-[11px] text-card-foreground">{title}</span>
+            {badge}
           </div>
           <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
         </button>
@@ -119,12 +154,69 @@ const InlineSection = ({ icon, title, children, defaultOpen = false }: {
   );
 };
 
+// ── BB Value Tile Grid ──
+const BBValueTiles = ({
+  bbVehicle,
+  selectedBasis,
+  onSelectBasis,
+}: {
+  bbVehicle: BBVehicle;
+  selectedBasis: string;
+  onSelectBasis: (basis: string) => void;
+}) => {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-1.5 mb-1">
+        <DollarSign className="w-3.5 h-3.5 text-primary" />
+        <span className="text-[11px] font-bold text-card-foreground uppercase tracking-wider">Select Base Value</span>
+        <span className="text-[9px] text-muted-foreground ml-1">(click to set valuation basis)</span>
+      </div>
+      {BB_CATEGORIES.map(cat => {
+        const data = bbVehicle[cat.dataKey] as Record<string, number> | undefined;
+        if (!data) return null;
+        return (
+          <div key={cat.label}>
+            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5 block">{cat.label}</span>
+            <div className="grid grid-cols-4 gap-1">
+              {cat.tiers.map(tier => {
+                const value = data[tier.tierKey] || 0;
+                const isSelected = selectedBasis === tier.key;
+                if (value <= 0) return null;
+                return (
+                  <button
+                    key={tier.key}
+                    onClick={() => onSelectBasis(tier.key)}
+                    className={`rounded-md px-2 py-1.5 text-center transition-all border ${
+                      isSelected
+                        ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30 shadow-sm"
+                        : "bg-muted/40 border-border hover:border-primary/40 hover:bg-primary/5 text-card-foreground"
+                    }`}
+                  >
+                    <div className="text-[9px] font-medium opacity-80">{tier.short}</div>
+                    <div className={`text-sm font-bold ${isSelected ? "" : "text-card-foreground"}`}>
+                      ${value.toLocaleString()}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true, onSettingsChange }: Props) => {
   const { toast } = useToast();
   const [tab, setTab] = useState<string>("live");
 
   // Local settings copy for inline adjustments
   const [localSettings, setLocalSettings] = useState<OfferSettings>(settings);
+
+  // "Apply to all bases" toggles
+  const [applyMultipliersToAll, setApplyMultipliersToAll] = useState(true);
+  const [applyDeductionsToAll, setApplyDeductionsToAll] = useState(true);
 
   // Sync when parent settings change
   const activeSettings = inlineControls ? localSettings : settings;
@@ -207,6 +299,19 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
   );
 
   const whatIfDelta = (liveResult && liveSavedResult) ? liveResult.high - liveSavedResult.high : 0;
+
+  // Calculate offers for all bases to show in tiles (for context)
+  const allBasisResults = useMemo(() => {
+    if (!liveBbVehicle) return null;
+    const results: Record<string, OfferEstimate | null> = {};
+    for (const cat of BB_CATEGORIES) {
+      for (const tier of cat.tiers) {
+        const tempSettings = { ...activeSettings, bb_value_basis: tier.key };
+        results[tier.key] = calculateOffer(liveBbVehicle, liveFormData, liveSelectedAddDeducts, tempSettings, rules);
+      }
+    }
+    return results;
+  }, [liveBbVehicle, liveFormData, liveSelectedAddDeducts, activeSettings, rules]);
 
   const handleVinLookup = async () => {
     const cleanVin = liveVin.trim().toUpperCase();
@@ -316,6 +421,29 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                 </div>
               </div>
 
+              {/* ═══ STEP 1: SELECT BASE VALUE ═══ */}
+              <div className="bg-gradient-to-r from-primary/5 to-transparent rounded-lg border border-primary/20 p-3 mb-4">
+                <BBValueTiles
+                  bbVehicle={liveBbVehicle}
+                  selectedBasis={localSettings.bb_value_basis}
+                  onSelectBasis={(basis) => updateLocalSetting("bb_value_basis", basis)}
+                />
+                {/* Show the selected basis label */}
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-[10px] text-muted-foreground">Selected:</span>
+                  <span className="text-xs font-bold text-primary">
+                    {BB_VALUE_OPTIONS.find(o => o.value === localSettings.bb_value_basis)?.label || localSettings.bb_value_basis}
+                  </span>
+                  {/* Or pick from dropdown */}
+                  <Select value={localSettings.bb_value_basis} onValueChange={v => updateLocalSetting("bb_value_basis", v)}>
+                    <SelectTrigger className="h-6 text-[10px] w-auto min-w-[140px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {BB_VALUE_OPTIONS.map(opt => <SelectItem key={opt.value} value={opt.value} className="text-xs">{opt.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               {/* ═══ UNIFIED SPLIT LAYOUT ═══ */}
               <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-4">
                 {/* ── LEFT: Controls Panel ── */}
@@ -397,33 +525,60 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                   {/* ── Inline Pricing Controls ── */}
                   {inlineControls && (
                     <>
-                      <InlineSection icon={<SlidersHorizontal className="w-3.5 h-3.5 text-primary" />} title="Valuation Basis" defaultOpen>
-                        <Select value={localSettings.bb_value_basis} onValueChange={v => updateLocalSetting("bb_value_basis", v)}>
-                          <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {BB_VALUE_OPTIONS.map(opt => <SelectItem key={opt.value} value={opt.value} className="text-xs">{opt.label}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </InlineSection>
-
-                      <InlineSection icon={<Gauge className="w-3.5 h-3.5 text-primary" />} title="Condition Multipliers">
+                      {/* Condition Multipliers with "Apply to All" toggle */}
+                      <InlineSection
+                        icon={<Gauge className="w-3.5 h-3.5 text-primary" />}
+                        title="Condition Multipliers"
+                        badge={
+                          <span className="flex items-center gap-1 ml-2">
+                            <span className="text-[8px] text-muted-foreground">{applyMultipliersToAll ? "All bases" : "Selected only"}</span>
+                          </span>
+                        }
+                      >
+                        {/* Apply scope toggle */}
+                        <div className="flex items-center justify-between mb-2 px-1 py-1 rounded bg-muted/30 border border-border">
+                          <div className="flex items-center gap-1">
+                            <Layers className="w-3 h-3 text-muted-foreground" />
+                            <span className="text-[9px] font-semibold text-muted-foreground">Apply to all valuation bases</span>
+                          </div>
+                          <Switch
+                            checked={applyMultipliersToAll}
+                            onCheckedChange={setApplyMultipliersToAll}
+                            className="scale-[0.65]"
+                          />
+                        </div>
+                        {!applyMultipliersToAll && (
+                          <p className="text-[8px] text-muted-foreground mb-1 px-1">
+                            Multipliers affect only <strong>{BB_VALUE_OPTIONS.find(o => o.value === localSettings.bb_value_basis)?.label}</strong>. Switch bases above to see per-basis impact.
+                          </p>
+                        )}
                         <div className="grid grid-cols-2 gap-2">
-                          {(["excellent", "good", "fair", "rough"] as const).map(grade => (
-                            <div key={grade} className="space-y-1">
-                              <Label className="capitalize text-[10px] font-semibold">{grade}</Label>
-                              <Input
-                                type="number" step="0.01" min="0" max="2"
-                                value={localSettings.condition_multipliers[grade]}
-                                onChange={e => updateLocalSetting("condition_multipliers", { ...localSettings.condition_multipliers, [grade]: Number(e.target.value) })}
-                                className="w-full h-6 text-[10px]"
-                              />
-                              <Slider
-                                value={[localSettings.condition_multipliers[grade] * 100]}
-                                min={50} max={130} step={1}
-                                onValueChange={([v]) => updateLocalSetting("condition_multipliers", { ...localSettings.condition_multipliers, [grade]: Math.round(v) / 100 })}
-                              />
-                            </div>
-                          ))}
+                          {(["excellent", "good", "fair", "rough"] as const).map(grade => {
+                            const mult = localSettings.condition_multipliers[grade];
+                            const isActive = grade === liveCondition;
+                            return (
+                              <div key={grade} className={`space-y-1 rounded-md p-1.5 ${isActive ? "bg-primary/10 ring-1 ring-primary/20" : ""}`}>
+                                <div className="flex items-center justify-between">
+                                  <Label className="capitalize text-[10px] font-semibold">{grade}</Label>
+                                  {isActive && <span className="text-[7px] bg-primary text-primary-foreground px-1 rounded">ACTIVE</span>}
+                                </div>
+                                <Input
+                                  type="number" step="0.01" min="0" max="2"
+                                  value={mult}
+                                  onChange={e => updateLocalSetting("condition_multipliers", { ...localSettings.condition_multipliers, [grade]: Number(e.target.value) })}
+                                  className="w-full h-6 text-[10px]"
+                                />
+                                <Slider
+                                  value={[mult * 100]}
+                                  min={50} max={130} step={1}
+                                  onValueChange={([v]) => updateLocalSetting("condition_multipliers", { ...localSettings.condition_multipliers, [grade]: Math.round(v) / 100 })}
+                                />
+                                <span className="text-[8px] text-muted-foreground">
+                                  {mult > 1 ? `+${((mult - 1) * 100).toFixed(0)}%` : mult < 1 ? `${((mult - 1) * 100).toFixed(0)}%` : "0%"}
+                                </span>
+                              </div>
+                            );
+                          })}
                         </div>
                       </InlineSection>
 
@@ -497,7 +652,28 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                         </div>
                       </InlineSection>
 
-                      <InlineSection icon={<AlertTriangle className="w-3.5 h-3.5 text-amber-500" />} title="Deductions">
+                      {/* Deductions with "Apply to All" toggle */}
+                      <InlineSection
+                        icon={<AlertTriangle className="w-3.5 h-3.5 text-amber-500" />}
+                        title="Deductions"
+                        badge={
+                          <span className="flex items-center gap-1 ml-2">
+                            <span className="text-[8px] text-muted-foreground">{applyDeductionsToAll ? "All bases" : "Selected only"}</span>
+                          </span>
+                        }
+                      >
+                        {/* Apply scope toggle */}
+                        <div className="flex items-center justify-between mb-2 px-1 py-1 rounded bg-muted/30 border border-border">
+                          <div className="flex items-center gap-1">
+                            <Layers className="w-3 h-3 text-muted-foreground" />
+                            <span className="text-[9px] font-semibold text-muted-foreground">Apply to all valuation bases</span>
+                          </div>
+                          <Switch
+                            checked={applyDeductionsToAll}
+                            onCheckedChange={setApplyDeductionsToAll}
+                            className="scale-[0.65]"
+                          />
+                        </div>
                         <div className="space-y-1">
                           {Object.entries(DEDUCTION_LABELS).map(([key, config]) => {
                             const enabled = (localSettings.deductions_config as any)?.[key] ?? true;
