@@ -97,7 +97,7 @@ const SubmissionSuccess = ({ uploadUrl, vehicleInfo, nextStep, offerEstimate }: 
       <div className="bg-white p-4 rounded-xl inline-block shadow-lg mb-5 relative">
         <QRCodeSVG value={uploadUrl} size={200} level="H" />
         <img
-          src="/src/assets/harte-logo.png"
+          src={harteLogo}
           alt=""
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-md bg-white p-1 shadow-sm"
         />
