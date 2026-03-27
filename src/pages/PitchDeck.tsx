@@ -1085,8 +1085,9 @@ export default function PitchDeck() {
             <motion.p variants={fadeUp} custom={1} className="text-lg text-white/50 max-w-2xl mx-auto mb-14">
               80% of car sellers start on their phone. Every pixel of this platform is optimized for mobile interaction — not retrofitted.
             </motion.p>
-            <motion.div variants={fadeUp} custom={2} className="grid md:grid-cols-3 gap-6">
+            <motion.div variants={fadeUp} custom={2} className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               <FeaturePill dark icon={Camera} title="Guided Photo Capture" desc="6-slot grid with category labels. Customers know exactly what to photograph — no guessing, no back-and-forth calls." />
+              <FeaturePill dark icon={Eye} title="AI Damage Detection" desc="Every uploaded photo is analyzed by AI vision to flag dents, scratches, and rust — auto-adjusting the condition score." />
               <FeaturePill dark icon={FileText} title="Document Scanning" desc="Title, registration, ID — upload directly from the phone camera into categorized slots. Automatically tracks completion." />
               <FeaturePill dark icon={Smartphone} title="Desktop ↔ Mobile Bridge" desc="QR codes on the desktop experience let customers seamlessly switch to their phone for photos and documents." />
             </motion.div>
