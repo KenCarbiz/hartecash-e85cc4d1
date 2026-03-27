@@ -230,6 +230,13 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
   const [editingRule, setEditingRule] = useState<Partial<OfferRule> | null>(null);
   const [savingRule, setSavingRule] = useState(false);
   const [modelOverrideSettings, setModelOverrideSettings] = useState<OfferSettingsType | null>(null);
+  const syncToModelRef = useRef<((s: OfferSettingsType) => void) | null>(null);
+
+  const handleWorkbenchChange = useCallback((newSettings: OfferSettingsType) => {
+    setModelOverrideSettings(newSettings);
+    // Push workbench changes back into the PricingModelManager's editModel
+    syncToModelRef.current?.(newSettings);
+  }, []);
 
   useEffect(() => { fetchAll(); }, []);
 
