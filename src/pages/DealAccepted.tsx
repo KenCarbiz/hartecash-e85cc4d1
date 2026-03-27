@@ -245,9 +245,7 @@ const DealAccepted = () => {
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           {/* Left: Schedule Inspection */}
           <motion.div
-            initial={{ opacity: 0, x: -16 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            {...entrance(3)}
             className="space-y-5"
           >
             <div className="bg-card rounded-xl p-6 shadow-lg border-2 border-primary/20 h-auto">
