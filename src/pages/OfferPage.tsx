@@ -199,8 +199,7 @@ const OfferPage = () => {
           .select("accidents, drivable, exterior_damage, interior_damage, mechanical_issues, engine_issues, tech_issues, smoked_in, tires_replaced, num_keys, windshield_damage, modifications, drivetrain, bb_msrp, bb_class_name, bb_drivetrain, bb_transmission, bb_fuel_type, bb_engine, bb_mileage_adj, bb_regional_adj, bb_base_whole_avg, bb_retail_avg")
           .eq("token", token)
           .maybeSingle(),
-        supabase.from("offer_settings" as any).select("*").eq("dealership_id", "default").maybeSingle(),
-        supabase.from("offer_rules" as any).select("*").eq("dealership_id", "default").eq("is_active", true),
+        resolveEffectiveSettings("default"),
         supabase
           .from("appointments")
           .select("preferred_date, preferred_time, store_location")

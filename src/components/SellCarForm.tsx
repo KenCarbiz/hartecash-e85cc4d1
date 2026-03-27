@@ -311,16 +311,14 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
       crypto.getRandomValues(tokenBytes);
       const generatedToken = Array.from(tokenBytes).map(b => b.toString(16).padStart(2, '0')).join('');
 
-      // Fetch admin offer settings & rules
+      // Fetch active pricing model (checks pricing_models first, falls back to offer_settings)
       let offerSettingsData: OfferSettings | null = null;
       let offerRulesData: OfferRule[] = [];
       try {
-        const [settingsRes, rulesRes] = await Promise.all([
-          supabase.from("offer_settings" as any).select("*").eq("dealership_id", "default").maybeSingle(),
-          supabase.from("offer_rules" as any).select("*").eq("dealership_id", "default").eq("is_active", true),
-        ]);
-        if (settingsRes.data) offerSettingsData = settingsRes.data as unknown as OfferSettings;
-        if (rulesRes.data) offerRulesData = rulesRes.data as unknown as OfferRule[];
+        const { resolveEffectiveSettings } = await import("@/lib/resolvePricingModel");
+        const resolved = await resolveEffectiveSettings("default");
+        offerSettingsData = resolved.settings;
+        offerRulesData = resolved.rules;
       } catch { /* use defaults */ }
 
       // Calculate offer estimate

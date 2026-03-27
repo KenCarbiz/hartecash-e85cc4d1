@@ -115,8 +115,7 @@ const CustomerPortal = () => {
           .select("drivetrain, accidents, drivable, exterior_damage, interior_damage, mechanical_issues, engine_issues, tech_issues, smoked_in, tires_replaced, num_keys, windshield_damage")
           .eq("token", token)
           .maybeSingle(),
-        supabase.from("offer_settings" as any).select("*").eq("dealership_id", "default").maybeSingle(),
-        supabase.from("offer_rules" as any).select("*").eq("dealership_id", "default").eq("is_active", true),
+        resolveEffectiveSettings("default"),
       ]);
       if (condRes.data) setCondition(condRes.data as ConditionData);
       if (settingsRes.data) setOfferSettings(settingsRes.data as unknown as OfferSettings);
