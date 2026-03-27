@@ -74,7 +74,7 @@ const AdminSidebar = ({
   // ── Lead Flow (acquisition engine) ──
   const leadFlowItems = (canManageAccess || userRole === "gsm_gm")
     ? [
-        { key: "offer-settings", label: "Offer Settings", icon: SlidersHorizontal, badge: pricingAccessRequestCount > 0 ? String(pricingAccessRequestCount) : undefined, badgeVariant: "destructive" as const },
+        { key: "offer-settings", label: "Offer Builder", icon: SlidersHorizontal, badge: pricingAccessRequestCount > 0 ? String(pricingAccessRequestCount) : undefined, badgeVariant: "destructive" as const },
         ...(canManageAccess ? [{ key: "form-config", label: "Form Config", icon: ListChecks }] : []),
         ...(canManageAccess ? [{ key: "notifications", label: "Notifications", icon: Bell }] : []),
       ].filter((item) => isAllowed(item.key))
