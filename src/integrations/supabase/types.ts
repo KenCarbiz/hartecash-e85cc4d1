@@ -189,6 +189,59 @@ export type Database = {
         }
         Relationships: []
       }
+      damage_reports: {
+        Row: {
+          ai_model: string
+          confidence_score: number
+          created_at: string
+          damage_detected: boolean
+          damage_items: Json
+          id: string
+          overall_severity: string
+          photo_category: string
+          photo_path: string
+          raw_response: Json | null
+          submission_id: string
+          suggested_condition: string | null
+        }
+        Insert: {
+          ai_model?: string
+          confidence_score?: number
+          created_at?: string
+          damage_detected?: boolean
+          damage_items?: Json
+          id?: string
+          overall_severity?: string
+          photo_category: string
+          photo_path: string
+          raw_response?: Json | null
+          submission_id: string
+          suggested_condition?: string | null
+        }
+        Update: {
+          ai_model?: string
+          confidence_score?: number
+          created_at?: string
+          damage_detected?: boolean
+          damage_items?: Json
+          id?: string
+          overall_severity?: string
+          photo_category?: string
+          photo_path?: string
+          raw_response?: Json | null
+          submission_id?: string
+          suggested_condition?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "damage_reports_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dealer_accounts: {
         Row: {
           architecture: string
@@ -1225,6 +1278,8 @@ export type Database = {
           address_city: string | null
           address_state: string | null
           address_street: string | null
+          ai_condition_score: string | null
+          ai_damage_summary: string | null
           appointment_date: string | null
           appointment_set: boolean
           appraised_by: string | null
@@ -1299,6 +1354,8 @@ export type Database = {
           address_city?: string | null
           address_state?: string | null
           address_street?: string | null
+          ai_condition_score?: string | null
+          ai_damage_summary?: string | null
           appointment_date?: string | null
           appointment_set?: boolean
           appraised_by?: string | null
@@ -1373,6 +1430,8 @@ export type Database = {
           address_city?: string | null
           address_state?: string | null
           address_street?: string | null
+          ai_condition_score?: string | null
+          ai_damage_summary?: string | null
           appointment_date?: string | null
           appointment_set?: boolean
           appraised_by?: string | null
