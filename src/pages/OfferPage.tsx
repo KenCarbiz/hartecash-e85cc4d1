@@ -849,7 +849,7 @@ const OfferPage = () => {
     : "None";
   if (condition?.windshield_damage !== undefined) {
     conditionItems.push({
-      label: `Windshield: ${windshieldLabel}`,
+      label: `Windshield Issue: ${windshieldLabel}`,
       status: noWindshield ? "good" : "warn",
       icon: <Wind className="w-3.5 h-3.5" />,
       field: "windshield_damage",
