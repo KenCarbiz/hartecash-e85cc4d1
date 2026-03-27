@@ -80,7 +80,7 @@ const HeroOffset = ({ side, leadSource, headlineOverride, subtextOverride }: Her
       transition={{ duration: 0.6, ease: "easeOut", delay: 0.15 }}
     >
       <div className="shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] rounded-2xl">
-        <SellCarForm variant="split" />
+        <SellCarForm variant="split" leadSource={leadSource} />
       </div>
     </motion.div>
   );
