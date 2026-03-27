@@ -216,7 +216,7 @@ const PortalOfferCard = ({
 
             {/* Link back to offer page */}
             <Link
-              to={`/offer/${token}`}
+              to={`/deal/${token}`}
               className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-primary/20 bg-primary/5 text-primary font-semibold text-sm hover:bg-primary/10 transition-colors"
             >
               View Your Offer
