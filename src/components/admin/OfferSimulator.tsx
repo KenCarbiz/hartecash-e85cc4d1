@@ -19,6 +19,8 @@ function buildTestData(baseValue: number, year: string, make: string, model: str
   const bbVehicle: BBVehicle = {
     uvc: "SIM", vin: "", year, make, model,
     series: "", style: "", class_name: "", msrp: 0, price_includes: "",
+    drivetrain: "", transmission: "", engine: "", fuel_type: "",
+    mileage_adj: 0, regional_adj: 0, base_whole_avg: baseValue,
     add_deduct_list: [],
     wholesale: { xclean: baseValue, clean: baseValue, avg: baseValue, rough: baseValue },
     tradein: { clean: baseValue, avg: baseValue, rough: baseValue },
