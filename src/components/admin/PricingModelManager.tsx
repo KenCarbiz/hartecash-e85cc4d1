@@ -206,6 +206,8 @@ const Section = ({
 interface Props {
   /** Called when the active model changes so the simulator can recalculate */
   onModelChange?: (settings: OfferSettings) => void;
+  /** Ref-style callback so parent can push workbench changes back into the edit model */
+  onRegisterSync?: (syncFn: (settings: OfferSettings) => void) => void;
 }
 
 const PricingModelManager = ({ onModelChange }: Props) => {
