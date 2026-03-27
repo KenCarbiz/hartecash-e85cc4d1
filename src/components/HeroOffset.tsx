@@ -84,7 +84,7 @@ const HeroOffset = ({ side }: HeroOffsetProps) => {
     <div className="lg:hidden">
       {/* Compact hero text */}
       <div className="text-center px-5 pt-5 pb-3">
-        <h1 className="text-[22px] font-extrabold tracking-wide leading-tight mb-1.5 uppercase">
+        <h1 className="font-display text-[22px] font-extrabold tracking-wide leading-tight mb-1.5 uppercase">
           {config.hero_headline || "Sell Your Car\nThe Easy Way"}
         </h1>
         <p className="text-sm font-medium opacity-95 leading-relaxed">

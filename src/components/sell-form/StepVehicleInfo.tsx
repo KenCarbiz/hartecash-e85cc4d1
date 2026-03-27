@@ -107,12 +107,26 @@ const StepVehicleInfo = ({ formData, update, vehicleInfo, setVehicleInfo, bbSele
                 placeholder="Enter 17-character VIN"
                 value={formData.vin}
                 onChange={(e) => {
-                  update("vin", e.target.value.toUpperCase());
+                  const val = e.target.value.toUpperCase();
+                  update("vin", val);
                   setVehicleInfo(null);
                   setVinError("");
+                  // Auto-trigger lookup at 17 chars
+                  if (val.trim().length === 17 && !vinLoading) {
+                    setTimeout(async () => {
+                      setVinLoading(true);
+                      setVehicleInfo(null);
+                      const info = await decodeVin(val.trim());
+                      setVinLoading(false);
+                      if (info) setVehicleInfo(info);
+                      else setVinError("Could not decode this VIN. Please check and try again.");
+                    }, 0);
+                  }
                 }}
                 maxLength={17}
-                className="py-3.5 px-4 text-base border-2 border-input focus:border-accent focus:ring-accent/10 flex-1"
+                className={`py-3.5 px-4 text-base border-2 border-input focus:border-accent focus:ring-accent/10 flex-1 transition-all duration-300 ${
+                  formData.vin.trim().length === 17 ? "vin-glow" : ""
+                }`}
               />
               <Button
                 type="button"
