@@ -20,7 +20,7 @@ interface OnboardingChecklistProps {
   onNavigate?: (section: string) => void;
 }
 
-const OnboardingChecklist = () => {
+const OnboardingChecklist = ({ onNavigate }: OnboardingChecklistProps) => {
   const [items, setItems] = useState<CheckItem[]>([]);
   const [loading, setLoading] = useState(true);
 
