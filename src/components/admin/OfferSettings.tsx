@@ -214,7 +214,12 @@ const emptyRule: Omit<OfferRule, "id" | "dealership_id"> = {
   priority: 0,
 };
 
-const OfferSettings = () => {
+interface OfferSettingsProps {
+  userId?: string;
+  userRole?: string;
+}
+
+const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
