@@ -16,6 +16,7 @@ import {
   Save, Loader2, CalendarIcon, Building2, Phone as PhoneIcon, Bot,
   Store, Network, Building, Rocket, CheckCircle, Clock, Pause, XCircle
 } from "lucide-react";
+import OnboardingChecklist from "./OnboardingChecklist";
 
 interface DealerAccount {
   id: string;
@@ -216,6 +217,9 @@ const DealerOnboarding = ({ isAdmin = false }: DealerOnboardingProps) => {
           {statusCfg.label}
         </Badge>
       </div>
+
+      {/* Onboarding Checklist */}
+      <OnboardingChecklist />
 
       {/* Architecture */}
       <Card>
