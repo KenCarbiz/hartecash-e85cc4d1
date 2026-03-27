@@ -1858,7 +1858,7 @@ const AdminDashboard = () => {
           {activeSection === "executive" && <ExecutiveKPIHub />}
 
           {/* Offer Settings */}
-          {activeSection === "offer-settings" && canManageAccess && <OfferSettings />}
+          {activeSection === "offer-settings" && (canManageAccess || userRole === "gsm_gm") && <OfferSettings userId={userId || undefined} userRole={userRole} />}
 
           {/* Site Config */}
           {activeSection === "site-config" && canManageAccess && <SiteConfiguration />}

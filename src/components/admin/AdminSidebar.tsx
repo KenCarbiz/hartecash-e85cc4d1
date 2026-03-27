@@ -42,10 +42,12 @@ const AdminSidebar = ({
   appointmentCount,
   pendingRequestCount,
   permissionRequestCount = 0,
+  pricingAccessRequestCount = 0,
   allowedSections = null,
   showRequestAccess = false,
   onRequestAccess,
   locationCount = 0,
+  userRole = "",
 }: AdminSidebarProps) => {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
