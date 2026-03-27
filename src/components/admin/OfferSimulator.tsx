@@ -575,16 +575,4 @@ const ResultCard = ({
   );
 };
 
-const Stat = ({ label, value, icon }: { label: string; value: string; icon?: "up" | "down" | "neutral" }) => (
-  <div className="flex flex-col">
-    <span className="text-muted-foreground">{label}</span>
-    <span className="font-semibold text-card-foreground flex items-center gap-1">
-      {icon === "up" && <TrendingUp className="w-3 h-3 text-green-500" />}
-      {icon === "down" && <TrendingDown className="w-3 h-3 text-destructive" />}
-      {icon === "neutral" && <Minus className="w-3 h-3 text-muted-foreground" />}
-      {value}
-    </span>
-  </div>
-);
-
 export default OfferSimulator;
