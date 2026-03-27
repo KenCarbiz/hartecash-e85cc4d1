@@ -127,8 +127,23 @@ serve(async (req) => {
       },
     }));
 
-    // Return both parsed vehicles AND the raw BB response for field discovery
-    return new Response(JSON.stringify({ error: null, vehicles, raw_bb_response: bbData }), {
+    // Return parsed vehicles + raw keys from first BB vehicle for field discovery
+    const firstRaw = vehicleList[0] || {};
+    const rawKeys = Object.keys(firstRaw);
+    const rawSample: Record<string, unknown> = {};
+    for (const key of rawKeys) {
+      const val = firstRaw[key];
+      // Only include scalar values and short arrays for discovery
+      if (Array.isArray(val)) {
+        rawSample[key] = `[Array of ${val.length} items]`;
+      } else if (typeof val === 'object' && val !== null) {
+        rawSample[key] = Object.keys(val);
+      } else {
+        rawSample[key] = val;
+      }
+    }
+
+    return new Response(JSON.stringify({ error: null, vehicles, raw_field_discovery: rawSample }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
 
