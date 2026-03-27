@@ -110,7 +110,8 @@ const ConditionReport = ({ condition, vehicleStr, canEdit = false, onFieldUpdate
   // Accidents
   const accVal = (condition.accidents || "").toLowerCase();
   const noAcc = !condition.accidents || accVal.includes("no") || accVal === "none" || accVal === "0";
-  items.push({ label: noAcc ? "Accidents: None" : `Accidents: ${condition.accidents}`, status: noAcc ? "good" : "warn", icon: <Car className="w-3.5 h-3.5" />, field: "accidents", editType: "select", editOptions: ACCIDENT_OPTIONS, editValue: condition.accidents || "0" });
+  const accidentDisplay = noAcc ? "None" : accVal === "1" ? "1" : accVal === "2" ? "2" : accVal === "3+" ? "3+" : condition.accidents;
+  items.push({ label: `Accidents: ${accidentDisplay}`, status: noAcc ? "good" : "warn", icon: <Car className="w-3.5 h-3.5" />, field: "accidents", editType: "select", editOptions: ACCIDENT_OPTIONS, editValue: condition.accidents || "0" });
 
   // Exterior damage
   const ext = condition.exterior_damage?.filter(v => v !== "none") || [];
