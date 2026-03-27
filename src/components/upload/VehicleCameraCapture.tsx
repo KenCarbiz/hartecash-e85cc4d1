@@ -1,6 +1,14 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Camera, X, RotateCcw, Check, FlipHorizontal, ZoomIn } from "lucide-react";
+import { Camera, X, RotateCcw, Check, FlipHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+import overlayFront from "@/assets/overlays/front.png";
+import overlayRear from "@/assets/overlays/rear.png";
+import overlayDriverSide from "@/assets/overlays/driver-side.png";
+import overlayPassengerSide from "@/assets/overlays/passenger-side.png";
+import overlayDashboard from "@/assets/overlays/dashboard.png";
+import overlayInterior from "@/assets/overlays/interior.png";
+import overlayDamage from "@/assets/overlays/damage.png";
 
 interface VehicleCameraCaptureProps {
   categoryId: string;
@@ -10,129 +18,41 @@ interface VehicleCameraCaptureProps {
   onClose: () => void;
 }
 
-// SVG overlay guides for each photo angle
-const OVERLAY_GUIDES: Record<string, { svg: React.ReactNode; tip: string; aspectHint: string }> = {
+const OVERLAY_GUIDES: Record<string, { img: string; tip: string; aspectHint: string }> = {
   front: {
     tip: "Stand centered, 8–10 ft back · Full vehicle in frame",
     aspectHint: "landscape",
-    svg: (
-      <svg viewBox="0 0 400 260" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Car front silhouette */}
-        <path d="M80 200 L90 150 L120 110 L140 90 L260 90 L280 110 L310 150 L320 200 Z" stroke="white" strokeWidth="2" strokeDasharray="8 4" fill="none" opacity="0.6" />
-        {/* Headlights */}
-        <ellipse cx="110" cy="160" rx="20" ry="15" stroke="white" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.4" />
-        <ellipse cx="290" cy="160" rx="20" ry="15" stroke="white" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.4" />
-        {/* Windshield */}
-        <path d="M145 95 L155 60 L245 60 L255 95" stroke="white" strokeWidth="1.5" strokeDasharray="6 3" opacity="0.4" />
-        {/* Wheels */}
-        <ellipse cx="120" cy="210" rx="22" ry="12" stroke="white" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.4" />
-        <ellipse cx="280" cy="210" rx="22" ry="12" stroke="white" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.4" />
-        {/* License plate area */}
-        <rect x="170" y="175" width="60" height="20" rx="3" stroke="white" strokeWidth="1" strokeDasharray="3 2" opacity="0.3" />
-      </svg>
-    ),
+    img: overlayFront,
   },
   rear: {
     tip: "Stand centered · License plate must be readable",
     aspectHint: "landscape",
-    svg: (
-      <svg viewBox="0 0 400 260" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M80 200 L90 150 L110 120 L130 100 L270 100 L290 120 L310 150 L320 200 Z" stroke="white" strokeWidth="2" strokeDasharray="8 4" fill="none" opacity="0.6" />
-        {/* Tail lights */}
-        <rect x="85" y="145" width="30" height="40" rx="5" stroke="white" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.4" />
-        <rect x="285" y="145" width="30" height="40" rx="5" stroke="white" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.4" />
-        {/* Rear window */}
-        <path d="M140 105 L155 70 L245 70 L260 105" stroke="white" strokeWidth="1.5" strokeDasharray="6 3" opacity="0.4" />
-        {/* License plate - highlighted */}
-        <rect x="160" y="170" width="80" height="25" rx="3" stroke="white" strokeWidth="2" strokeDasharray="0" opacity="0.7" />
-        <text x="200" y="187" textAnchor="middle" fill="white" fontSize="9" opacity="0.6">LICENSE PLATE</text>
-      </svg>
-    ),
+    img: overlayRear,
   },
   "driver-side": {
     tip: "Stand 6–8 ft away · Full side, ground to roof",
     aspectHint: "landscape",
-    svg: (
-      <svg viewBox="0 0 400 200" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Side profile silhouette */}
-        <path d="M40 160 L50 130 L80 110 L120 90 L160 60 L250 55 L290 60 L330 90 L350 130 L360 160 Z" stroke="white" strokeWidth="2" strokeDasharray="8 4" fill="none" opacity="0.6" />
-        {/* Windows */}
-        <path d="M160 65 L170 50 L250 47 L280 55 L280 85 L160 85 Z" stroke="white" strokeWidth="1.5" strokeDasharray="5 3" opacity="0.35" />
-        {/* Wheels */}
-        <circle cx="110" cy="165" r="22" stroke="white" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.4" />
-        <circle cx="310" cy="165" r="22" stroke="white" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.4" />
-        {/* Door line */}
-        <line x1="220" y1="60" x2="220" y2="155" stroke="white" strokeWidth="1" strokeDasharray="4 4" opacity="0.25" />
-      </svg>
-    ),
+    img: overlayDriverSide,
   },
   "passenger-side": {
     tip: "Stand 6–8 ft away · Full side, ground to roof",
     aspectHint: "landscape",
-    svg: (
-      <svg viewBox="0 0 400 200" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Side profile (mirrored) */}
-        <path d="M360 160 L350 130 L320 110 L280 90 L240 60 L150 55 L110 60 L70 90 L50 130 L40 160 Z" stroke="white" strokeWidth="2" strokeDasharray="8 4" fill="none" opacity="0.6" />
-        {/* Windows */}
-        <path d="M240 65 L230 50 L150 47 L120 55 L120 85 L240 85 Z" stroke="white" strokeWidth="1.5" strokeDasharray="5 3" opacity="0.35" />
-        {/* Wheels */}
-        <circle cx="290" cy="165" r="22" stroke="white" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.4" />
-        <circle cx="90" cy="165" r="22" stroke="white" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.4" />
-      </svg>
-    ),
+    img: overlayPassengerSide,
   },
   dashboard: {
     tip: "Show odometer reading clearly · Ignition on",
     aspectHint: "landscape",
-    svg: (
-      <svg viewBox="0 0 400 260" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Dashboard outline */}
-        <rect x="50" y="60" width="300" height="140" rx="15" stroke="white" strokeWidth="2" strokeDasharray="8 4" opacity="0.5" />
-        {/* Gauges */}
-        <circle cx="140" cy="130" r="40" stroke="white" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.35" />
-        <circle cx="260" cy="130" r="40" stroke="white" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.35" />
-        {/* Odometer highlight */}
-        <rect x="165" y="150" width="70" height="22" rx="4" stroke="white" strokeWidth="2" opacity="0.7" />
-        <text x="200" y="165" textAnchor="middle" fill="white" fontSize="8" opacity="0.6">ODOMETER</text>
-        {/* Steering wheel hint */}
-        <circle cx="200" cy="230" r="35" stroke="white" strokeWidth="1" strokeDasharray="6 4" opacity="0.2" />
-      </svg>
-    ),
+    img: overlayDashboard,
   },
   interior: {
     tip: "Capture front seats, console, and steering wheel",
     aspectHint: "landscape",
-    svg: (
-      <svg viewBox="0 0 400 300" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Seat outlines */}
-        <rect x="60" y="100" width="120" height="160" rx="20" stroke="white" strokeWidth="1.5" strokeDasharray="6 3" opacity="0.35" />
-        <rect x="220" y="100" width="120" height="160" rx="20" stroke="white" strokeWidth="1.5" strokeDasharray="6 3" opacity="0.35" />
-        {/* Console */}
-        <rect x="180" y="120" width="40" height="120" rx="8" stroke="white" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.3" />
-        {/* Steering wheel */}
-        <circle cx="120" cy="70" r="35" stroke="white" strokeWidth="2" strokeDasharray="6 3" opacity="0.4" />
-        {/* Labels */}
-        <text x="120" y="185" textAnchor="middle" fill="white" fontSize="9" opacity="0.4">DRIVER</text>
-        <text x="280" y="185" textAnchor="middle" fill="white" fontSize="9" opacity="0.4">PASSENGER</text>
-      </svg>
-    ),
+    img: overlayInterior,
   },
   damage: {
     tip: "Get close — 1–2 ft · Focus on scratches, dents, or wear",
     aspectHint: "square",
-    svg: (
-      <svg viewBox="0 0 300 300" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Zoom circle */}
-        <circle cx="150" cy="150" r="100" stroke="white" strokeWidth="2" strokeDasharray="8 4" opacity="0.5" />
-        {/* Crosshair */}
-        <line x1="150" y1="80" x2="150" y2="120" stroke="white" strokeWidth="1.5" opacity="0.4" />
-        <line x1="150" y1="180" x2="150" y2="220" stroke="white" strokeWidth="1.5" opacity="0.4" />
-        <line x1="80" y1="150" x2="120" y2="150" stroke="white" strokeWidth="1.5" opacity="0.4" />
-        <line x1="180" y1="150" x2="220" y2="150" stroke="white" strokeWidth="1.5" opacity="0.4" />
-        {/* Magnifier icon */}
-        <ZoomIn x={130} y={130} width={40} height={40} stroke="white" strokeWidth="1.5" opacity="0.3" />
-      </svg>
-    ),
+    img: overlayDamage,
   },
 };
 
@@ -269,7 +189,7 @@ const VehicleCameraCapture = ({
                 aspectRatio: guide.aspectHint === "square" ? "1" : guide.aspectHint === "landscape" ? "16/10" : "10/16",
               }}
             >
-              {guide.svg}
+              <img src={guide.img} alt={`${categoryLabel} alignment guide`} className="w-full h-full object-contain opacity-60" draggable={false} />
             </div>
           </div>
         )}
