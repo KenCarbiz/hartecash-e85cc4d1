@@ -222,6 +222,7 @@ const OfferSettings = () => {
   const [showRuleDialog, setShowRuleDialog] = useState(false);
   const [editingRule, setEditingRule] = useState<Partial<OfferRule> | null>(null);
   const [savingRule, setSavingRule] = useState(false);
+  const [modelOverrideSettings, setModelOverrideSettings] = useState<OfferSettingsType | null>(null);
 
   useEffect(() => { fetchAll(); }, []);
 
