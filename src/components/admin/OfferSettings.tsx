@@ -422,7 +422,10 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
         </p>
 
         {/* Pricing Model Manager — model save/load/schedule */}
-        <PricingModelManager onModelChange={setModelOverrideSettings} />
+        <PricingModelManager
+          onModelChange={setModelOverrideSettings}
+          onRegisterSync={(fn) => { syncToModelRef.current = fn; }}
+        />
 
         {/* Unified Simulator — all controls inline alongside results */}
         <div className="mt-4">
@@ -431,7 +434,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
             savedSettings={savedSettings}
             rules={rules}
             inlineControls={true}
-            onSettingsChange={(newSettings) => setModelOverrideSettings(newSettings)}
+            onSettingsChange={handleWorkbenchChange}
           />
         </div>
       </div>
