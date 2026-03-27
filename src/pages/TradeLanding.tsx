@@ -1,7 +1,6 @@
 import SEO from "@/components/SEO";
 import SiteHeader from "@/components/SiteHeader";
-import TradeHero from "@/components/TradeHero";
-import SellCarForm from "@/components/SellCarForm";
+import HeroOffset from "@/components/HeroOffset";
 import HowItWorks from "@/components/HowItWorks";
 import ValueProps from "@/components/ValueProps";
 import TrustBadges from "@/components/TrustBadges";
@@ -10,8 +9,15 @@ import Testimonials from "@/components/Testimonials";
 import FAQ from "@/components/FAQ";
 import CTABanner from "@/components/CTABanner";
 import SiteFooter from "@/components/SiteFooter";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 const TradeLanding = () => {
+  const { config } = useSiteConfig();
+  const layout = config.hero_layout || "offset_right";
+
+  const tradeHeadline = config.trade_hero_headline || "Submit Your Trade-In Info";
+  const tradeSubtext = config.trade_hero_subtext || "Already shopping with us? Send us your trade details from home — we'll have your value ready.";
+
   return (
     <div className="min-h-screen bg-background">
       <SEO
@@ -21,8 +27,13 @@ const TradeLanding = () => {
       />
       <SiteHeader />
       <main>
-        <TradeHero />
-        <SellCarForm leadSource="trade" />
+        {layout === "offset_right" ? (
+          <HeroOffset side="right" leadSource="trade" headlineOverride={tradeHeadline} subtextOverride={tradeSubtext} />
+        ) : layout === "offset_left" ? (
+          <HeroOffset side="left" leadSource="trade" headlineOverride={tradeHeadline} subtextOverride={tradeSubtext} />
+        ) : (
+          <HeroOffset side="right" leadSource="trade" headlineOverride={tradeHeadline} subtextOverride={tradeSubtext} />
+        )}
         <HowItWorks />
         <TrustBadges />
         <CompetitorComparison />
