@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import UploadSkeleton from "@/components/UploadSkeleton";
 import MobileQRBanner from "@/components/upload/MobileQRBanner";
 import PhotoGuide from "@/components/upload/PhotoGuide";
+import VehicleCameraCapture from "@/components/upload/VehicleCameraCapture";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useIsMobile } from "@/hooks/use-mobile";
 import harteLogoFallback from "@/assets/harte-logo-white.png";
 
 interface SubmissionInfo {
