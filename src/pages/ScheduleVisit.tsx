@@ -298,18 +298,18 @@ const ScheduleVisit = () => {
               <ArrowLeft className="w-5 h-5" />
             </Link>
           )}
-          <img src={harteLogo} alt="Harte" className="h-[60px] w-auto" />
+          <img src={config.logo_white_url || harteLogo} alt={config.dealership_name} className="h-[70px] w-auto" />
           <h1 className="font-bold text-lg">Schedule a Visit</h1>
         </div>
       </div>
       <main className="flex-1 flex items-center justify-center p-4 py-12">
-        <Card className="max-w-lg w-full">
+        <Card className="max-w-lg w-full shadow-sm border-border">
           <CardHeader className="text-center">
-            <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-              <CalendarDays className="h-6 w-6 text-primary" />
+            <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-primary/5">
+              <CalendarDays className="h-7 w-7 text-primary/70" />
             </div>
-            <CardTitle className="text-2xl">Schedule a Visit</CardTitle>
-            <CardDescription>
+            <CardTitle className="font-display text-2xl tracking-wide">Schedule a Visit</CardTitle>
+            <CardDescription className="leading-relaxed">
               Pick a preferred date and time, and we'll confirm your appointment.
             </CardDescription>
           </CardHeader>
