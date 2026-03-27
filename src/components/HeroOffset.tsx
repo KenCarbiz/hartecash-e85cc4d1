@@ -55,7 +55,7 @@ const HeroOffset = ({ side }: HeroOffsetProps) => {
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
     >
-      <h1 className="font-display text-[48px] font-extrabold tracking-wide leading-tight mb-3 uppercase">
+      <h1 className="font-display text-[48px] font-extrabold tracking-[0.08em] leading-tight mb-3 uppercase">
         {config.hero_headline || "Sell Your Car\nThe Easy Way"}
       </h1>
       <p className="text-xl font-medium opacity-95 mb-6 leading-relaxed">
