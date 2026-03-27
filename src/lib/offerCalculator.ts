@@ -260,6 +260,12 @@ export function calculateOffer(
     high = Math.round(high * (1 + cfg.global_adjustment_pct / 100));
   }
 
+  // 6b. Apply regional adjustment %
+  const regionalPct = cfg.regional_adjustment_pct || 0;
+  if (regionalPct !== 0) {
+    high = Math.round(high * (1 + regionalPct / 100));
+  }
+
   // 7. Apply age-based tier adjustments
   const ageTiers = cfg.age_tiers || [];
   if (ageTiers.length > 0 && bbVehicle.year) {
