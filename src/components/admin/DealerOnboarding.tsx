@@ -430,22 +430,24 @@ const DealerOnboarding = ({ isAdmin = false }: DealerOnboardingProps) => {
         </CardContent>
       </Card>
 
-      {/* Actions */}
-      <div className="flex flex-col sm:flex-row gap-3 pt-2 pb-8">
-        <Button onClick={handleSave} disabled={saving} className="gap-2 flex-1">
-          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          {existingId ? "Update Account" : "Create Account"}
-        </Button>
-        <Button
-          onClick={applyAutoConfig}
-          disabled={applying}
-          variant="outline"
-          className="gap-2 flex-1"
-        >
-          {applying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Rocket className="w-4 h-4" />}
-          Apply Auto-Config
-        </Button>
-      </div>
+      {/* Actions — hidden in read-only mode */}
+      {!readOnly && (
+        <div className="flex flex-col sm:flex-row gap-3 pt-2 pb-8">
+          <Button onClick={handleSave} disabled={saving} className="gap-2 flex-1">
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            {existingId ? "Update Account" : "Create Account"}
+          </Button>
+          <Button
+            onClick={applyAutoConfig}
+            disabled={applying}
+            variant="outline"
+            className="gap-2 flex-1"
+          >
+            {applying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Rocket className="w-4 h-4" />}
+            Apply Auto-Config
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
