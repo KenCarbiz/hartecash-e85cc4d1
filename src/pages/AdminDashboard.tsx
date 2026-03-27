@@ -2154,7 +2154,7 @@ const AdminDashboard = () => {
 
                 const CUSTOMER_STEPS = [
                   { label: "Offer Accepted", icon: CheckCircle },
-                  { label: "Inspection Done", icon: ClipboardList },
+                  { label: "Inspection Scheduled", icon: ClipboardList },
                   { label: "Deal Finalized", icon: Handshake },
                   { label: "Paperwork Complete", icon: BadgeCheck },
                   { label: "Check Received", icon: Trophy },

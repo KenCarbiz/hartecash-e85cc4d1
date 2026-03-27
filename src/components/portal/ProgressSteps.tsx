@@ -31,7 +31,7 @@ const ProgressSteps = ({ currentStageIdx, isComplete, appointmentSet, scheduleLi
           const done = isComplete || currentStageIdx > i;
           const active = currentStageIdx === i && !isComplete;
 
-          // Special: step 1 (Inspection Done) — show pending yellow if active & not yet scheduled
+          // Special: step 1 (Inspection Scheduled) — show pending yellow if active & not yet scheduled
           const isPendingInspection = i === 1 && active && !appointmentSet;
           const isClickable = isPendingInspection;
 
