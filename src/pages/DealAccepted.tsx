@@ -153,8 +153,16 @@ const DealAccepted = () => {
           <div className="flex items-center gap-3">
             <img src={config.logo_white_url || harteLogoFallback} alt={config.dealership_name || "Dealership"} className="h-[70px] w-auto" />
             <div className="flex-1">
-              <h1 className="font-bold text-lg lg:text-xl">Deal Accepted!</h1>
-              {firstName && <p className="text-sm opacity-80">{firstName}, your price is locked in</p>}
+              <h1 className="font-bold text-lg lg:text-xl">
+                {isFirstVisit ? "Deal Accepted!" : "Welcome Back!"}
+              </h1>
+              {firstName && (
+                <p className="text-sm opacity-80">
+                  {isFirstVisit
+                    ? `${firstName}, your price is locked in`
+                    : `${firstName}, your deal is still waiting for you`}
+                </p>
+              )}
             </div>
           </div>
         </div>
