@@ -38,8 +38,12 @@ const DealAccepted = () => {
   const [loading, setLoading] = useState(true);
   const { config } = useSiteConfig();
 
-  // Confetti celebration on mount
+  // Confetti celebration — only on first visit
   useEffect(() => {
+    const key = `confetti_shown_${token}`;
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+
     const duration = 2500;
     const end = Date.now() + duration;
     const frame = () => {
@@ -48,7 +52,7 @@ const DealAccepted = () => {
       if (Date.now() < end) requestAnimationFrame(frame);
     };
     frame();
-  }, []);
+  }, [token]);
 
   useEffect(() => {
     const fetchData = async () => {
