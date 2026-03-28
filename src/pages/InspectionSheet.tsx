@@ -672,7 +672,7 @@ const InspectionSheet = () => {
       </div>
 
       <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
-        <span style="font-size:11px;font-weight:600;color:#64748b;">Completion: ${totalChecked}/${ALL_ITEMS.length} (${Math.round(progressPct)}%)</span>
+        <span style="font-size:11px;font-weight:600;color:#64748b;">Completion: ${totalChecked}/${ACTIVE_ALL_ITEMS.length} (${Math.round(progressPct)}%)</span>
         ${totalIssues > 0 ? `<span style="font-size:11px;font-weight:600;color:#ef4444;">· ${totalIssues} issue${totalIssues > 1 ? "s" : ""} flagged</span>` : ""}
       </div>
 
