@@ -35,6 +35,7 @@ const Updates = lazy(() => import("./pages/Updates"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const ExecutiveDashboard = lazy(() => import("./pages/ExecutiveDashboard"));
 const InspectionSheet = lazy(() => import("./pages/InspectionSheet"));
+const MobileInspection = lazy(() => import("./pages/MobileInspection"));
 
 const queryClient = new QueryClient();
 
