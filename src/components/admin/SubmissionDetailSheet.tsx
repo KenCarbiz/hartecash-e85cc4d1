@@ -322,7 +322,7 @@ const SubmissionDetailSheet = ({
 
   const currentStageIdx = getStageIndex(sub.progress_status);
   const stages = getProgressStages(sub);
-  const isPriceAgreedOrBeyond = sub.progress_status !== "dead_lead" && currentStageIdx >= getStageIndex("price_agreed") && sub.offered_price;
+  const isPriceAgreedOrBeyond = sub.progress_status !== "dead_lead" && currentStageIdx >= getStageIndex("deal_finalized") && sub.offered_price;
   const isAutoPopulated = sub.offered_price != null && sub.estimated_offer_high != null && sub.offered_price === sub.estimated_offer_high;
 
   return (
