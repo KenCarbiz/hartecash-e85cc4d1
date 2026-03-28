@@ -287,6 +287,7 @@ const ChecklistSection = ({
   const checked = items.filter(i => !!grades[i]).length;
   const issues = items.filter(i => grades[i] === "poor" || grades[i] === "damaged").length;
   const allGood = checked === items.length && issues === 0;
+  const allMarkedGood = items.every(i => grades[i] === "good");
 
   return (
     <Card className={`print:shadow-none print:border-foreground/30 break-inside-avoid border-l-4 ${borderAccent} overflow-hidden`}>
