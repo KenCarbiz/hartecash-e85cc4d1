@@ -242,6 +242,7 @@ const InspectionSheet = () => {
   const [damageReports, setDamageReports] = useState<DamageReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showMobileQR, setShowMobileQR] = useState(false);
 
   // Tire & brake
   const [tireDepth, setTireDepth] = useState({ lf: "", rf: "", lr: "", rr: "" });
@@ -413,11 +414,32 @@ const InspectionSheet = () => {
                 </Badge>
               )}
             </div>
-            <Link to={`/inspect/${id}`}>
-              <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary-foreground/20 gap-1">
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-primary-foreground hover:bg-primary-foreground/20 gap-1"
+                onClick={() => setShowMobileQR(prev => !prev)}
+              >
                 <Smartphone className="h-4 w-4" /> Mobile
               </Button>
-            </Link>
+              {showMobileQR && (
+                <div className="absolute right-0 top-full mt-2 z-50 bg-white rounded-xl shadow-2xl p-5 w-64 text-center animate-in fade-in slide-in-from-top-2">
+                  <p className="text-sm font-bold text-gray-900 mb-1">📱 Scan to Inspect</p>
+                  <p className="text-xs text-gray-500 mb-3">Open on your phone to walk around the vehicle</p>
+                  <div className="bg-white p-3 rounded-lg inline-block border border-gray-100 shadow-sm mb-3">
+                    <QRCodeSVG value={`${window.location.origin}/inspect/${id}`} size={160} level="H" />
+                  </div>
+                  <p className="text-[10px] text-gray-400">Point your phone camera at the code</p>
+                  <button
+                    onClick={() => setShowMobileQR(false)}
+                    className="mt-3 text-xs text-gray-400 hover:text-gray-600 underline"
+                  >
+                    Close
+                  </button>
+                </div>
+              )}
+            </div>
             <Button variant="ghost" size="sm" onClick={handlePrint} className="text-primary-foreground hover:bg-primary-foreground/20 gap-1">
               <Printer className="h-4 w-4" /> Print
             </Button>
