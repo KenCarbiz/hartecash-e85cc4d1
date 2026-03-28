@@ -1993,9 +1993,15 @@ const AdminDashboard = () => {
                 </div>
               )}
 
+              {/* Two-Column Layout: Contact + Vehicle */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
               {/* Contact Card - Editable */}
-              <div data-print-section className="bg-muted/40 rounded-lg p-4">
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5"><Users className="w-3.5 h-3.5" />Contact Information</h3>
+              <div data-print-section className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+                <div className="bg-gradient-to-r from-primary/10 to-primary/5 px-4 py-2.5 border-b border-border">
+                  <h3 className="text-xs font-bold text-foreground uppercase tracking-widest flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-primary" />Contact Information</h3>
+                </div>
+                <div className="p-4">
                 <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                   <div className="space-y-1">
                     <Label className="text-xs text-muted-foreground">Name</Label>
