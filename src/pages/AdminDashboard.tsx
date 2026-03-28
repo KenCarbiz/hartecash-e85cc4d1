@@ -2578,6 +2578,8 @@ const AdminDashboard = () => {
                 <StaffFileUpload token={selected.token} bucket="customer-documents" onUploadComplete={() => handleView(selected)} />
               </div>
 
+              </div>{/* End Photos + Docs grid */}
+
               {/* Schedule Appointment from Submission */}
               <div data-print-section className="rounded-xl border border-border bg-card shadow-sm overflow-hidden p-4">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">
