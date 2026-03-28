@@ -287,6 +287,7 @@ const ChecklistSection = ({
   const checked = items.filter(i => !!grades[i]).length;
   const issues = items.filter(i => grades[i] === "poor" || grades[i] === "damaged").length;
   const allGood = checked === items.length && issues === 0;
+  const allMarkedGood = items.every(i => grades[i] === "good");
 
   return (
     <Card className={`print:shadow-none print:border-foreground/30 break-inside-avoid border-l-4 ${borderAccent} overflow-hidden`}>
@@ -328,10 +329,10 @@ const ChecklistSection = ({
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="h-7 text-xs gap-1 border-emerald-400/50 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10"
+                  className={`h-7 text-xs gap-1 ${allMarkedGood ? "border-red-400/50 text-red-600 dark:text-red-400 hover:bg-red-500/10" : "border-emerald-400/50 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10"}`}
                   onClick={e => { e.stopPropagation(); onMarkAllGood(); }}
                 >
-                  <CheckCheck className="w-3.5 h-3.5" /> Mark All Good
+                  <CheckCheck className="w-3.5 h-3.5" /> {allMarkedGood ? "Reset All" : "Mark All Good"}
                 </Button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
@@ -431,11 +432,16 @@ const InspectionSheet = () => {
     setAllNotes(prev => ({ ...prev, [item]: v }));
   }, []);
 
-  // #1 — Mark All Good for a section
+  // #1 — Mark All Good / Reset toggle for a section
   const markAllGood = useCallback((items: string[]) => {
     setAllGrades(prev => {
+      const allAlreadyGood = items.every(i => prev[i] === "good");
       const updated = { ...prev };
-      items.forEach(i => { updated[i] = "good"; });
+      if (allAlreadyGood) {
+        items.forEach(i => { updated[i] = ""; });
+      } else {
+        items.forEach(i => { updated[i] = "good"; });
+      }
       return updated;
     });
   }, []);
