@@ -119,10 +119,16 @@ const InspectionSheet = () => {
             <p className="text-sm text-muted-foreground">{vehicleTitle}</p>
           </div>
         </div>
-        <Button onClick={handlePrint} className="gap-2">
-          <Printer className="h-4 w-4" /> Print
-        </Button>
-      </div>
+        <div className="flex items-center gap-2">
+          <Link to={`/inspect/${id}`}>
+            <Button variant="outline" className="gap-2">
+              <Smartphone className="h-4 w-4" /> Mobile View
+            </Button>
+          </Link>
+          <Button onClick={handlePrint} className="gap-2">
+            <Printer className="h-4 w-4" /> Print
+          </Button>
+        </div>
 
       <div ref={printRef} className="max-w-4xl mx-auto p-6 print:p-4 print:max-w-none space-y-6">
         {/* Print Header */}
