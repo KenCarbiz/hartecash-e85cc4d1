@@ -268,7 +268,7 @@ const AdminDashboard = () => {
     ? `${userName} — ${ROLE_LABELS[userRole] || userRole}`
     : ROLE_LABELS[userRole] || userRole;
 
-              </div>{/* End Condition + Loan grid */}
+              
 
   useEffect(() => {
     checkAuth();
