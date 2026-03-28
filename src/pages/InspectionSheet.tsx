@@ -287,6 +287,26 @@ const InspectionSheet = () => {
     if (!id) return;
     const fetchData = async () => {
       setLoading(true);
+      // Wait for auth session to be restored before querying RLS-protected tables
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        // Listen for auth state change (session restoring from localStorage)
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, sess) => {
+          if (sess) {
+            subscription.unsubscribe();
+            await loadSubmission();
+          } else if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+            setLoading(false);
+          }
+        });
+        // Timeout fallback
+        setTimeout(() => { subscription.unsubscribe(); setLoading(false); }, 5000);
+        return;
+      }
+      await loadSubmission();
+    };
+
+    const loadSubmission = async () => {
       const [subRes, dmgRes] = await Promise.all([
         supabase.from("submissions").select("*").eq("id", id).maybeSingle(),
         supabase.from("damage_reports").select("*").eq("submission_id", id).order("created_at"),
@@ -298,6 +318,7 @@ const InspectionSheet = () => {
       if (dmgRes.data) setDamageReports(dmgRes.data as unknown as DamageReport[]);
       setLoading(false);
     };
+
     fetchData();
   }, [id]);
 
@@ -345,8 +366,11 @@ const InspectionSheet = () => {
 
   if (loading) return <PortalSkeleton />;
   if (!submission) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <p className="text-muted-foreground">Submission not found.</p>
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+      <p className="text-muted-foreground">Submission not found. You may need to sign in first.</p>
+      <Button variant="outline" onClick={() => window.location.href = "/admin-login"}>
+        Sign In
+      </Button>
     </div>
   );
 
