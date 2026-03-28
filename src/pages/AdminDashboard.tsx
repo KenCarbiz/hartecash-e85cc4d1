@@ -2874,9 +2874,11 @@ const AdminDashboard = () => {
                 )}
               </div>
             </div>
+            </div>
+            </ScrollArea>
           )}
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
       {/* Create Appointment Dialog */}
       <Dialog open={showCreateAppt} onOpenChange={setShowCreateAppt}>
