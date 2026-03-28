@@ -366,8 +366,11 @@ const InspectionSheet = () => {
 
   if (loading) return <PortalSkeleton />;
   if (!submission) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <p className="text-muted-foreground">Submission not found.</p>
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+      <p className="text-muted-foreground">Submission not found. You may need to sign in first.</p>
+      <Button variant="outline" onClick={() => window.location.href = "/admin-login"}>
+        Sign In
+      </Button>
     </div>
   );
 
