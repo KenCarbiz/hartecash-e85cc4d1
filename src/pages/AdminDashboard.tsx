@@ -2052,9 +2052,19 @@ const AdminDashboard = () => {
 
               {/* Vehicle Card */}
               <div data-print-section className="bg-muted/40 rounded-lg p-4">
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                  <Car className="w-3.5 h-3.5" />Vehicle Details
-                </h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+                    <Car className="w-3.5 h-3.5" />Vehicle Details
+                  </h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs gap-1"
+                    onClick={() => window.open(`/inspection/${selected.id}`, "_blank")}
+                  >
+                    <ClipboardList className="w-3.5 h-3.5" /> Inspection Sheet
+                  </Button>
+                </div>
                 {/* Vehicle Image */}
                 {selected.vehicle_year && selected.vehicle_make && selected.vehicle_model && (
                   <div className="mb-4 rounded-lg overflow-hidden bg-gradient-to-b from-muted/30 to-transparent" style={{ aspectRatio: "16/7" }}>
