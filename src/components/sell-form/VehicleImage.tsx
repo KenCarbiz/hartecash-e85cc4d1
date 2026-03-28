@@ -150,8 +150,8 @@ const VehicleImage = ({ year, make, model, style, selectedColor, compact = false
   if (!year || !make || !model) return null;
 
   return (
-    <div className={`relative w-full rounded-xl overflow-hidden bg-gradient-to-b from-muted/30 to-transparent ${compact ? "mb-2" : "mb-4"}`}
-         style={{ aspectRatio: compact ? "16/7" : "16/9" }}>
+    <div className={`relative w-full overflow-hidden ${compact ? "mb-2" : "mb-4"}`}
+         style={{ aspectRatio: compact ? "16/7" : "4/3" }}>
       {/* Loading indicator — small and non-intrusive when we already have an image */}
       {loading && (
         <div className={`absolute z-10 ${imageUrl
