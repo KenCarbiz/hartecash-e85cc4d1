@@ -580,7 +580,7 @@ const SubmissionDetailSheet = ({
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {ALL_STATUS_OPTIONS.map(s => {
-                      const locked = ["manager_approval", "price_agreed", "purchase_complete"].includes(s.key) && !canApprove;
+                      const locked = ["deal_finalized", "check_request_submitted", "purchase_complete"].includes(s.key) && !canApprove;
                       return <SelectItem key={s.key} value={s.key} disabled={locked}>{s.label}{locked ? " (GSM/GM only)" : ""}</SelectItem>;
                     })}
                   </SelectContent>
