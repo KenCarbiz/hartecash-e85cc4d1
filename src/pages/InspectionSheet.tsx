@@ -491,7 +491,7 @@ const InspectionSheet = () => {
   // Scroll spy for tabs
   useEffect(() => {
     const handleScroll = () => {
-      for (const section of SECTION_DEFS) {
+      for (const section of ACTIVE_SECTION_DEFS) {
         const el = sectionRefs.current[section.key];
         if (el) {
           const rect = el.getBoundingClientRect();
