@@ -431,11 +431,16 @@ const InspectionSheet = () => {
     setAllNotes(prev => ({ ...prev, [item]: v }));
   }, []);
 
-  // #1 — Mark All Good for a section
+  // #1 — Mark All Good / Reset toggle for a section
   const markAllGood = useCallback((items: string[]) => {
     setAllGrades(prev => {
+      const allAlreadyGood = items.every(i => prev[i] === "good");
       const updated = { ...prev };
-      items.forEach(i => { updated[i] = "good"; });
+      if (allAlreadyGood) {
+        items.forEach(i => { updated[i] = ""; });
+      } else {
+        items.forEach(i => { updated[i] = "good"; });
+      }
       return updated;
     });
   }, []);
