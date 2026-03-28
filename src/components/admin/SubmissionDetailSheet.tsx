@@ -224,12 +224,16 @@ const SubmissionDetailSheet = ({
       fetchDocImages("appraisal"), fetchDocImages("drivers_license"), fetchDocImages("drivers_license_front"),
       fetchDocImages("drivers_license_back"), fetchDocImages("title"), fetchDocImages("payoff_verification"),
     ]);
+    const inspectionTextSections: { title: string; text: string }[] = [];
+    if (sub.internal_notes && sub.internal_notes.includes("[INSPECTION")) {
+      inspectionTextSections.push({ title: "Inspection Report", text: sub.internal_notes });
+    }
     const html = printCheckRequest(sub, logoBase64, [
       { title: "Appraisal Document", images: apprImg },
       { title: "Driver's License", images: [...dlImg, ...dlFImg, ...dlBImg] },
       { title: "Title", images: titleImg },
       { title: "Payoff Documentation", images: payoffImg },
-    ]);
+    ], inspectionTextSections);
     if (html) {
       try {
         const blob = new Blob([html], { type: "text/html" });
