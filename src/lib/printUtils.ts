@@ -253,6 +253,7 @@ export function printCheckRequest(
   s: PrintSubmission,
   logoBase64: string,
   docSections: { title: string; images: string[] }[],
+  textSections?: { title: string; text: string }[],
 ) {
   const vehicleStr = [s.vehicle_year, s.vehicle_make, s.vehicle_model].filter(Boolean).join(" ") || "N/A";
   const today = new Date().toLocaleDateString();
