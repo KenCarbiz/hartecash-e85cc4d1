@@ -1250,15 +1250,15 @@ const OfferPage = () => {
       <div className="grid grid-cols-2 gap-6 mb-5">
         <div>
           {s.vehicle_year && s.vehicle_make && s.vehicle_model && (
-            <div className="rounded-xl overflow-hidden border border-border bg-muted/30">
-              <VehicleImage
-                year={s.vehicle_year}
-                make={s.vehicle_make}
-                model={s.vehicle_model}
-                selectedColor={s.exterior_color || ""}
-              />
-            </div>
-          )}
+                    <div className="overflow-hidden -mx-2">
+                      <VehicleImage
+                        year={s.vehicle_year}
+                        make={s.vehicle_make}
+                        model={s.vehicle_model}
+                        selectedColor={s.exterior_color || ""}
+                      />
+                    </div>
+                  )}
         </div>
 
         <div className="space-y-3">
