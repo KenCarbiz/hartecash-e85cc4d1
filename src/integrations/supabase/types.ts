@@ -481,6 +481,7 @@ export type Database = {
           custom_items: Json
           dealership_id: string
           disabled_fields: Json
+          enable_tire_adjustments: boolean
           id: string
           require_notes: Json
           require_photos: Json
@@ -497,6 +498,10 @@ export type Database = {
           show_oil_life: boolean
           show_paint_readings: boolean
           show_tire_tread_depth: boolean
+          tire_credit_per_32: number
+          tire_credit_threshold: number
+          tire_deduct_per_32: number
+          tire_deduct_threshold: number
           updated_at: string
         }
         Insert: {
@@ -504,6 +509,7 @@ export type Database = {
           custom_items?: Json
           dealership_id?: string
           disabled_fields?: Json
+          enable_tire_adjustments?: boolean
           id?: string
           require_notes?: Json
           require_photos?: Json
@@ -520,6 +526,10 @@ export type Database = {
           show_oil_life?: boolean
           show_paint_readings?: boolean
           show_tire_tread_depth?: boolean
+          tire_credit_per_32?: number
+          tire_credit_threshold?: number
+          tire_deduct_per_32?: number
+          tire_deduct_threshold?: number
           updated_at?: string
         }
         Update: {
@@ -527,6 +537,7 @@ export type Database = {
           custom_items?: Json
           dealership_id?: string
           disabled_fields?: Json
+          enable_tire_adjustments?: boolean
           id?: string
           require_notes?: Json
           require_photos?: Json
@@ -543,6 +554,10 @@ export type Database = {
           show_oil_life?: boolean
           show_paint_readings?: boolean
           show_tire_tread_depth?: boolean
+          tire_credit_per_32?: number
+          tire_credit_threshold?: number
+          tire_deduct_per_32?: number
+          tire_deduct_threshold?: number
           updated_at?: string
         }
         Relationships: []
@@ -1412,6 +1427,11 @@ export type Database = {
           status_updated_by: string | null
           store_location_id: string | null
           tech_issues: string[] | null
+          tire_adjustment: number | null
+          tire_lf: number | null
+          tire_lr: number | null
+          tire_rf: number | null
+          tire_rr: number | null
           tires_replaced: string | null
           token: string
           vehicle_make: string | null
@@ -1489,6 +1509,11 @@ export type Database = {
           status_updated_by?: string | null
           store_location_id?: string | null
           tech_issues?: string[] | null
+          tire_adjustment?: number | null
+          tire_lf?: number | null
+          tire_lr?: number | null
+          tire_rf?: number | null
+          tire_rr?: number | null
           tires_replaced?: string | null
           token?: string
           vehicle_make?: string | null
@@ -1566,6 +1591,11 @@ export type Database = {
           status_updated_by?: string | null
           store_location_id?: string | null
           tech_issues?: string[] | null
+          tire_adjustment?: number | null
+          tire_lf?: number | null
+          tire_lr?: number | null
+          tire_rf?: number | null
+          tire_rr?: number | null
           tires_replaced?: string | null
           token?: string
           vehicle_make?: string | null
@@ -1782,14 +1812,27 @@ export type Database = {
       mark_docs_uploaded: { Args: { _token: string }; Returns: undefined }
       mark_photos_uploaded: { Args: { _token: string }; Returns: undefined }
       remove_staff_role: { Args: { _role_id: string }; Returns: undefined }
-      save_mobile_inspection: {
-        Args: {
-          _internal_notes: string
-          _overall_condition?: string
-          _submission_id: string
-        }
-        Returns: undefined
-      }
+      save_mobile_inspection:
+        | {
+            Args: {
+              _internal_notes: string
+              _overall_condition?: string
+              _submission_id: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              _internal_notes: string
+              _overall_condition?: string
+              _submission_id: string
+              _tire_lf?: number
+              _tire_lr?: number
+              _tire_rf?: number
+              _tire_rr?: number
+            }
+            Returns: Json
+          }
       update_staff_role: {
         Args: {
           _new_role: Database["public"]["Enums"]["app_role"]
