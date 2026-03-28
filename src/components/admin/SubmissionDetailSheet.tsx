@@ -826,7 +826,7 @@ const SubmissionDetailSheet = ({
 
             {/* Sticky Save Bar */}
             <div className="sticky bottom-0 bg-card pt-3 pb-1 border-t border-border flex gap-2 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] rounded-t-lg px-4 -mx-4">
-              <Button className="flex-1" disabled={sub.progress_status === "appraisal_completed" && !sub.acv_value} onClick={handleSave}>
+              <Button className="flex-1" disabled={sub.progress_status === "inspection_completed" && !sub.acv_value} onClick={handleSave}>
                 <Save className="w-4 h-4 mr-2" /> Update Record
               </Button>
               {canDelete && (

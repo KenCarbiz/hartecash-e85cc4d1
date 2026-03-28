@@ -40,20 +40,20 @@ interface FunnelMetrics {
 
 const STAGE_LABELS: Record<string, string> = {
   new: "New Lead",
-  contacted: "Contacted",
+  offer_accepted: "Offer Accepted",
+  not_contacted: "Not Contacted",
   inspection_scheduled: "Inspection Sched.",
   inspection_completed: "Inspection Done",
-  title_verified: "Title Verified",
-  ownership_verified: "Ownership Verified",
-  appraisal_completed: "Appraisal Done",
-  manager_approval: "Mgr Approval",
-  price_agreed: "Price Agreed",
+  deal_finalized: "Deal Finalized",
+  title_ownership_verified: "Title/Ownership",
+  check_request_submitted: "Check Request",
   purchase_complete: "Purchased",
+  manager_approval_inspection: "MAI",
 };
 
 const FUNNEL_STAGES = [
-  "new", "contacted", "inspection_scheduled", "inspection_completed",
-  "appraisal_completed", "price_agreed", "purchase_complete",
+  "new", "offer_accepted", "inspection_scheduled", "inspection_completed",
+  "deal_finalized", "check_request_submitted", "purchase_complete",
 ];
 
 const SOURCE_CONFIG: { key: string; label: string; color: string; ring: string }[] = [
