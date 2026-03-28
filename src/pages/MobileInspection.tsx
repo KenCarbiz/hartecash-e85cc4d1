@@ -52,23 +52,27 @@ const MobileInspection = () => {
 
   useEffect(() => {
     if (!id) return;
-    const fetch = async () => {
+    const fetchData = async () => {
       setLoading(true);
       const [subRes, dmgRes] = await Promise.all([
-        supabase.from("submissions").select("vehicle_year, vehicle_make, vehicle_model, vin, mileage, exterior_color, overall_condition, ai_condition_score, ai_damage_summary").eq("id", id).maybeSingle(),
-        supabase.from("damage_reports").select("damage_items").eq("submission_id", id),
+        supabase.rpc("get_inspection_data", { _submission_id: id }),
+        supabase.rpc("get_inspection_damage", { _submission_id: id }),
       ]);
-      if (subRes.data) {
-        setSubmission(subRes.data);
-        setOverallGrade(subRes.data.overall_condition || "");
+      if (subRes.data && (subRes.data as any[]).length > 0) {
+        const sub = (subRes.data as any[])[0];
+        setSubmission(sub);
+        setOverallGrade(sub.overall_condition || "");
       }
       if (dmgRes.data) {
-        const items = dmgRes.data.flatMap((r: any) => (r.damage_items as DamageItem[]) || []);
+        const items = (dmgRes.data as any[]).flatMap((r: any) => {
+          const di = r.damage_items;
+          return Array.isArray(di) ? di : [];
+        });
         setDamageItems(items);
       }
       setLoading(false);
     };
-    fetch();
+    fetchData();
   }, [id]);
 
   const handleSave = async () => {
