@@ -2073,13 +2073,14 @@ const AdminDashboard = () => {
                     </div>
                   </div>
                 </div>
+                </div>
               </div>
 
               {/* Vehicle Card */}
-              <div data-print-section className="bg-muted/40 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
-                    <Car className="w-3.5 h-3.5" />Vehicle Details
+              <div data-print-section className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+                <div className="bg-gradient-to-r from-primary/10 to-primary/5 px-4 py-2.5 border-b border-border flex items-center justify-between">
+                  <h3 className="text-xs font-bold text-foreground uppercase tracking-widest flex items-center gap-1.5">
+                    <Car className="w-3.5 h-3.5 text-primary" />Vehicle Details
                   </h3>
                   <Button
                     variant="outline"
@@ -2090,6 +2091,7 @@ const AdminDashboard = () => {
                     <ClipboardList className="w-3.5 h-3.5" /> Inspection Sheet
                   </Button>
                 </div>
+                <div className="p-4">
                 {/* Vehicle Image */}
                 {selected.vehicle_year && selected.vehicle_make && selected.vehicle_model && (
                   <div className="mb-4 rounded-lg overflow-hidden bg-gradient-to-b from-muted/30 to-transparent" style={{ aspectRatio: "16/7" }}>
@@ -2111,7 +2113,10 @@ const AdminDashboard = () => {
                   <DetailRow label="Drivetrain" value={selected.drivetrain} icon={<Settings2 className="w-3.5 h-3.5" />} />
                   <DetailRow label="Modifications" value={selected.modifications} icon={<Settings2 className="w-3.5 h-3.5" />} />
                 </div>
+                </div>
               </div>
+
+              </div>{/* End 2-column grid */}
 
               {/* Condition Card */}
               <div data-print-section className="bg-muted/40 rounded-lg p-4">
