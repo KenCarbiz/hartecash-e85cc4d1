@@ -1622,6 +1622,26 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_inspection_damage: {
+        Args: { _submission_id: string }
+        Returns: {
+          damage_items: Json
+        }[]
+      }
+      get_inspection_data: {
+        Args: { _submission_id: string }
+        Returns: {
+          ai_condition_score: string
+          ai_damage_summary: string
+          exterior_color: string
+          mileage: string
+          overall_condition: string
+          vehicle_make: string
+          vehicle_model: string
+          vehicle_year: string
+          vin: string
+        }[]
+      }
       get_submission_by_token: {
         Args: { _token: string }
         Returns: {
@@ -1686,6 +1706,14 @@ export type Database = {
       mark_docs_uploaded: { Args: { _token: string }; Returns: undefined }
       mark_photos_uploaded: { Args: { _token: string }; Returns: undefined }
       remove_staff_role: { Args: { _role_id: string }; Returns: undefined }
+      save_mobile_inspection: {
+        Args: {
+          _internal_notes: string
+          _overall_condition?: string
+          _submission_id: string
+        }
+        Returns: undefined
+      }
       update_staff_role: {
         Args: {
           _new_role: Database["public"]["Enums"]["app_role"]
