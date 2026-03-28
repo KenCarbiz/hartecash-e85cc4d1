@@ -14,27 +14,27 @@ export interface ProgressStage {
 export const PROGRESS_STAGES_NOT_ACCEPTED: ProgressStage[] = [
   { key: "new", label: "New Lead", dbKeys: ["new"], icon: UserPlus },
   { key: "contacted", label: "Contacted", dbKeys: ["contacted"], icon: PhoneCall },
-  { key: "inspected", label: "Inspection / Final Appraisal", dbKeys: ["inspection_scheduled", "inspection_completed", "appraisal_completed"], icon: ClipboardList },
-  { key: "price_agreed", label: "Deal Finalized", dbKeys: ["manager_approval", "price_agreed"], icon: Handshake },
-  { key: "docs_title", label: "Paperwork Completed", dbKeys: ["title_verified", "ownership_verified"], icon: BadgeCheck },
-  { key: "purchase_complete", label: "Purchased", dbKeys: ["purchase_complete"], icon: Trophy },
-  { key: "dead_lead", label: "Dead Lead", dbKeys: ["dead_lead"], icon: XCircle },
+  { key: "inspected", label: "Inspection / Final Appraisal", dbKeys: ["inspection_scheduled", "inspection_completed"], icon: ClipboardList },
+  { key: "deal_finalized", label: "Deal Finalized", dbKeys: ["deal_finalized"], icon: Handshake },
+  { key: "docs_title", label: "Title / Ownership Verified", dbKeys: ["title_ownership_verified"], icon: BadgeCheck },
+  { key: "purchase_complete", label: "Purchased", dbKeys: ["check_request_submitted", "purchase_complete"], icon: Trophy },
+  { key: "dead_lead", label: "Dead Deal", dbKeys: ["dead_lead"], icon: XCircle },
 ];
 
 export const PROGRESS_STAGES_ACCEPTED: ProgressStage[] = [
   { key: "new", label: "New Lead", dbKeys: ["new"], icon: UserPlus },
-  { key: "contacted", label: "Offer Accepted", dbKeys: ["contacted"], icon: CheckCircle },
-  { key: "inspected", label: "Inspection / Final Appraisal", dbKeys: ["inspection_scheduled", "inspection_completed", "appraisal_completed"], icon: ClipboardList },
-  { key: "price_agreed", label: "Deal Finalized", dbKeys: ["manager_approval", "price_agreed"], icon: Handshake },
-  { key: "docs_title", label: "Paperwork Completed", dbKeys: ["title_verified", "ownership_verified"], icon: BadgeCheck },
-  { key: "purchase_complete", label: "Purchased", dbKeys: ["purchase_complete"], icon: Trophy },
-  { key: "dead_lead", label: "Dead Lead", dbKeys: ["dead_lead"], icon: XCircle },
+  { key: "offer_accepted", label: "Offer Accepted", dbKeys: ["offer_accepted"], icon: CheckCircle },
+  { key: "inspected", label: "Inspection", dbKeys: ["inspection_scheduled", "inspection_completed"], icon: ClipboardList },
+  { key: "deal_finalized", label: "Deal Finalized", dbKeys: ["deal_finalized"], icon: Handshake },
+  { key: "docs_title", label: "Title / Ownership Verified", dbKeys: ["title_ownership_verified"], icon: BadgeCheck },
+  { key: "purchase_complete", label: "Purchased", dbKeys: ["check_request_submitted", "purchase_complete"], icon: Trophy },
+  { key: "dead_lead", label: "Dead Deal", dbKeys: ["dead_lead"], icon: XCircle },
 ];
 
 export const PROGRESS_STAGES = PROGRESS_STAGES_NOT_ACCEPTED;
 
 export const getProgressStages = (sub: { offered_price?: number | null; progress_status: string }) => {
-  const ACCEPTED_STATUSES = ['contacted', 'inspection_scheduled', 'inspection_completed', 'appraisal_completed', 'manager_approval', 'price_agreed', 'title_verified', 'ownership_verified', 'purchase_complete'];
+  const ACCEPTED_STATUSES = ['offer_accepted', 'inspection_scheduled', 'inspection_completed', 'deal_finalized', 'title_ownership_verified', 'check_request_submitted', 'purchase_complete'];
   const isAccepted = !!sub.offered_price || ACCEPTED_STATUSES.includes(sub.progress_status);
   return isAccepted ? PROGRESS_STAGES_ACCEPTED : PROGRESS_STAGES_NOT_ACCEPTED;
 };
@@ -45,18 +45,18 @@ export const getStageIndex = (dbStatus: string): number => {
 };
 
 export const ALL_STATUS_OPTIONS = [
-  { key: "partial", label: "Abandoned" },
   { key: "new", label: "New Lead" },
-  { key: "contacted", label: "Contacted" },
+  { key: "offer_accepted", label: "Offer Accepted" },
+  { key: "not_contacted", label: "Not Contacted" },
   { key: "inspection_scheduled", label: "Inspection Scheduled" },
   { key: "inspection_completed", label: "Inspection Completed" },
-  { key: "appraisal_completed", label: "Appraisal Completed" },
-  { key: "manager_approval", label: "Manager Approval" },
-  { key: "price_agreed", label: "Price Agreed" },
-  { key: "title_verified", label: "Title Verified" },
-  { key: "ownership_verified", label: "Ownership Verified" },
+  { key: "deal_finalized", label: "Deal Finalized" },
+  { key: "title_ownership_verified", label: "Title / Ownership Verified" },
+  { key: "check_request_submitted", label: "Check Request Submitted" },
   { key: "purchase_complete", label: "Purchased" },
-  { key: "dead_lead", label: "Dead Lead" },
+  { key: "dead_lead", label: "Dead Deal" },
+  { key: "manager_approval_inspection", label: "MAI (Manager Approval Inspection)" },
+  { key: "partial", label: "Abandoned" },
 ];
 
 export const getStatusLabel = (dbStatus: string): string =>

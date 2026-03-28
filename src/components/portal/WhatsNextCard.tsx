@@ -46,7 +46,7 @@ function getNextAction(status: string, photosUploaded: boolean, docsUploaded: bo
   }
 
   // Priority 1: Schedule inspection if not yet set
-  if (!appointmentSet && ["offer_made", "contacted", "price_agreed", "new"].includes(status)) {
+  if (!appointmentSet && ["offer_accepted", "new"].includes(status)) {
     return {
       emoji: "📅",
       title: "Schedule Your Inspection",
@@ -92,7 +92,7 @@ function getNextAction(status: string, photosUploaded: boolean, docsUploaded: bo
   }
 
   // Everything done but no appointment yet (edge case)
-  if (!appointmentSet && ["offer_made", "contacted", "price_agreed"].includes(status)) {
+  if (!appointmentSet && ["offer_accepted"].includes(status)) {
     return {
       emoji: "📅",
       title: "You're All Set — Just Book Your Visit!",

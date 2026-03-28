@@ -32,7 +32,7 @@ const FollowUpPanel = ({ submissionId, hasOffer, progressStatus }: FollowUpPanel
   const [sending, setSending] = useState<number | null>(null);
   const { toast } = useToast();
 
-  const isCompleted = ["price_agreed", "purchase_complete"].includes(progressStatus);
+  const isCompleted = ["deal_finalized", "purchase_complete"].includes(progressStatus);
 
   useEffect(() => {
     fetchFollowUps();

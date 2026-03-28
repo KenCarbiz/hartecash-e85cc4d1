@@ -322,7 +322,7 @@ const SubmissionDetailSheet = ({
 
   const currentStageIdx = getStageIndex(sub.progress_status);
   const stages = getProgressStages(sub);
-  const isPriceAgreedOrBeyond = sub.progress_status !== "dead_lead" && currentStageIdx >= getStageIndex("price_agreed") && sub.offered_price;
+  const isPriceAgreedOrBeyond = sub.progress_status !== "dead_lead" && currentStageIdx >= getStageIndex("deal_finalized") && sub.offered_price;
   const isAutoPopulated = sub.offered_price != null && sub.estimated_offer_high != null && sub.offered_price === sub.estimated_offer_high;
 
   return (
@@ -556,7 +556,7 @@ const SubmissionDetailSheet = ({
                 </div>
               )}
 
-              {(sub.progress_status === "appraisal_completed" || sub.progress_status === "manager_approval") && (
+              {(sub.progress_status === "inspection_completed" || sub.progress_status === "manager_approval_inspection") && (
                 <div className="mt-3 flex justify-end">
                   <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => window.open(getDocsUrl(sub.token), "_blank")}>
                     <Upload className="w-3 h-3 mr-1" /> Upload Appraisal
@@ -568,9 +568,9 @@ const SubmissionDetailSheet = ({
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Update Status</label>
                 <Select
                   value={sub.progress_status}
-                  disabled={!canUpdateStatus || (["manager_approval", "price_agreed", "purchase_complete"].includes(sub.progress_status) && !canApprove)}
+                  disabled={!canUpdateStatus || (["deal_finalized", "check_request_submitted", "purchase_complete"].includes(sub.progress_status) && !canApprove)}
                   onValueChange={(val) => {
-                    if (["manager_approval", "price_agreed", "purchase_complete"].includes(val) && !canApprove) {
+                    if (["deal_finalized", "check_request_submitted", "purchase_complete"].includes(val) && !canApprove) {
                       toast({ title: "Not authorized", description: "Only GSM/GM can approve.", variant: "destructive" });
                       return;
                     }
@@ -580,14 +580,14 @@ const SubmissionDetailSheet = ({
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {ALL_STATUS_OPTIONS.map(s => {
-                      const locked = ["manager_approval", "price_agreed", "purchase_complete"].includes(s.key) && !canApprove;
+                      const locked = ["deal_finalized", "check_request_submitted", "purchase_complete"].includes(s.key) && !canApprove;
                       return <SelectItem key={s.key} value={s.key} disabled={locked}>{s.label}{locked ? " (GSM/GM only)" : ""}</SelectItem>;
                     })}
                   </SelectContent>
                 </Select>
               </div>
 
-              {sub.progress_status === "appraisal_completed" && (
+              {sub.progress_status === "inspection_completed" && (
                 <div className="mt-3 space-y-2">
                   <label className="text-xs font-medium text-muted-foreground mb-1 block">In-House ACV <span className="text-destructive">*</span></label>
                   <div className="relative">
@@ -826,7 +826,7 @@ const SubmissionDetailSheet = ({
 
             {/* Sticky Save Bar */}
             <div className="sticky bottom-0 bg-card pt-3 pb-1 border-t border-border flex gap-2 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] rounded-t-lg px-4 -mx-4">
-              <Button className="flex-1" disabled={sub.progress_status === "appraisal_completed" && !sub.acv_value} onClick={handleSave}>
+              <Button className="flex-1" disabled={sub.progress_status === "inspection_completed" && !sub.acv_value} onClick={handleSave}>
                 <Save className="w-4 h-4 mr-2" /> Update Record
               </Button>
               {canDelete && (

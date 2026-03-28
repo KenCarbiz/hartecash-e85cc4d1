@@ -289,20 +289,20 @@ const SubmissionsTable = ({
                               sub.progress_status === "purchase_complete" ? "border-success/50 text-success" :
                               sub.progress_status === "dead_lead" ? "border-destructive/50 text-destructive" :
                               sub.progress_status === "partial" ? "border-amber-500/50 text-amber-600" :
-                              sub.progress_status === "new" ? "border-muted text-muted-foreground" :
+                              sub.progress_status === "new" || sub.progress_status === "not_contacted" ? "border-muted text-muted-foreground" :
                               "border-accent/50 text-accent"
                             }`}>
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              {ALL_STATUS_OPTIONS.map(s => {
-                                const locked = ["manager_approval", "price_agreed", "purchase_complete"].includes(s.key) && !canApprove;
+                              {ALL_STATUS_OPTIONS.filter(s => s.key !== "partial").map(s => {
+                                const locked = ["deal_finalized", "check_request_submitted", "purchase_complete"].includes(s.key) && !canApprove;
                                 return <SelectItem key={s.key} value={s.key} disabled={locked}>{s.label}{locked ? " 🔒" : ""}</SelectItem>;
                               })}
                             </SelectContent>
                           </Select>
                           {sub.progress_status === "partial" && <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-600">⚠ Abandoned — needs follow-up</span>}
-                          {sub.progress_status !== "new" && sub.progress_status !== "dead_lead" && sub.progress_status !== "partial" && (
+                          {sub.progress_status === "offer_accepted" && (
                             <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-success"><CheckCircle className="w-3 h-3" /> Offer Accepted</span>
                           )}
                         </div>

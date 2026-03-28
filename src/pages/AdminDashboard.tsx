@@ -196,7 +196,7 @@ const AdminDashboard = () => {
   };
 
   const handleInlineStatusChange = async (sub: Submission, newStatus: string) => {
-    if (["manager_approval", "price_agreed", "purchase_complete"].includes(newStatus) && !canApprove) {
+    if (["deal_finalized", "check_request_submitted", "purchase_complete"].includes(newStatus) && !canApprove) {
       toast({ title: "Not authorized", variant: "destructive" }); return;
     }
     const old = sub.progress_status;

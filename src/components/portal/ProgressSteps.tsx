@@ -108,10 +108,10 @@ export function mapStatusToStepIndex(mappedStatus: string): number {
     case "inspection_scheduled":
     case "inspection_completed":
       return 1;
-    case "price_agreed":
+    case "deal_finalized":
       return 2;
-    case "title_verified":
-    case "ownership_verified":
+    case "title_ownership_verified":
+    case "check_request_submitted":
       return 3;
     case "purchase_complete":
       return 4;

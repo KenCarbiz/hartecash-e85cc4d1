@@ -79,13 +79,12 @@ const STAGE_MAPPING: Record<string, string> = {
 const ACCEPTED_PORTAL_STATUSES = new Set([
   "contacted",
   "offer_made",
+  "offer_accepted",
   "inspection_scheduled",
   "inspection_completed",
-  "appraisal_completed",
-  "manager_approval",
-  "price_agreed",
-  "title_verified",
-  "ownership_verified",
+  "deal_finalized",
+  "title_ownership_verified",
+  "check_request_submitted",
   "purchase_complete",
 ]);
 
