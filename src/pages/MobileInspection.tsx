@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Save, CheckCircle, Gauge, Wrench, Car, Lock } from "lucide-react";
+import { Save, CheckCircle, Gauge, Wrench, Car, Lock, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import TreadDepthPicker from "@/components/inspection/TreadDepthPicker";
 
 interface DamageItem {
   type: string;
@@ -34,7 +35,6 @@ const MobileInspection = () => {
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
 
-  // PIN gate state
   const [pinVerified, setPinVerified] = useState(false);
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState(false);
@@ -44,12 +44,15 @@ const MobileInspection = () => {
   const [damageItems, setDamageItems] = useState<DamageItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [lastAdjustment, setLastAdjustment] = useState<{ adjustment: number; avg_depth: number } | null>(null);
 
-  // Editable fields
-  const [tireLF, setTireLF] = useState("");
-  const [tireRF, setTireRF] = useState("");
-  const [tireLR, setTireLR] = useState("");
-  const [tireRR, setTireRR] = useState("");
+  // Tappable tire depths
+  const [tireLF, setTireLF] = useState<number | null>(null);
+  const [tireRF, setTireRF] = useState<number | null>(null);
+  const [tireLR, setTireLR] = useState<number | null>(null);
+  const [tireRR, setTireRR] = useState<number | null>(null);
+
+  // Other fields
   const [brakeLF, setBrakeLF] = useState("");
   const [brakeRF, setBrakeRF] = useState("");
   const [brakeLR, setBrakeLR] = useState("");
@@ -82,11 +85,8 @@ const MobileInspection = () => {
     }
   };
 
-  // Auto-submit when 4 digits entered
   useEffect(() => {
-    if (pinInput.length === 4 && !pinVerified) {
-      handleVerifyPin();
-    }
+    if (pinInput.length === 4 && !pinVerified) handleVerifyPin();
   }, [pinInput]);
 
   // Load data after PIN verified
@@ -119,7 +119,7 @@ const MobileInspection = () => {
     setSaving(true);
     const notes = [
       `[INSPECTION ${new Date().toLocaleString()}]`,
-      `Tires (tread /32): LF:${tireLF} RF:${tireRF} LR:${tireLR} RR:${tireRR}`,
+      tireLF !== null ? `Tires (tread /32): LF:${tireLF} RF:${tireRF} LR:${tireLR} RR:${tireRR}` : null,
       `Brakes (mm): LF:${brakeLF} RF:${brakeRF} LR:${brakeLR} RR:${brakeRR}`,
       paintReading && `Paint: ${paintReading}`,
       oilLife && `Oil: ${oilLife}`,
@@ -132,17 +132,25 @@ const MobileInspection = () => {
       inspectorNotes && `Notes: ${inspectorNotes}`,
     ].filter(Boolean).join("\n");
 
-    const { error } = await supabase.rpc("save_mobile_inspection", {
+    const { data, error } = await supabase.rpc("save_mobile_inspection", {
       _submission_id: id!,
       _internal_notes: notes,
       _overall_condition: overallGrade || null,
-    });
+      _tire_lf: tireLF,
+      _tire_rf: tireRF,
+      _tire_lr: tireLR,
+      _tire_rr: tireRR,
+    } as any);
 
     setSaving(false);
     if (error) {
       toast({ title: "Error saving", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Inspection saved", description: "Data synced to the submission record." });
+      const result = data as any;
+      if (result && result.adjustment !== undefined) {
+        setLastAdjustment(result);
+      }
+      toast({ title: "Inspection saved", description: "Data synced to the customer file." });
     }
   };
 
@@ -168,12 +176,8 @@ const MobileInspection = () => {
               </InputOTPGroup>
             </InputOTP>
           </div>
-          {pinError && (
-            <p className="text-sm text-destructive font-medium">Incorrect PIN. Please try again.</p>
-          )}
-          {verifying && (
-            <p className="text-sm text-muted-foreground animate-pulse">Verifying...</p>
-          )}
+          {pinError && <p className="text-sm text-destructive font-medium">Incorrect PIN. Please try again.</p>}
+          {verifying && <p className="text-sm text-muted-foreground animate-pulse">Verifying...</p>}
         </div>
       </div>
     );
@@ -197,13 +201,11 @@ const MobileInspection = () => {
     <div className="min-h-screen bg-background pb-24">
       {/* Sticky header */}
       <div className="sticky top-0 z-40 bg-primary text-primary-foreground px-4 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Car className="h-5 w-5" />
-            <div>
-              <p className="font-bold text-sm leading-tight">{vehicleTitle}</p>
-              <p className="text-[10px] opacity-70">VIN: {submission.vin || "N/A"} • {submission.mileage ? `${Number(submission.mileage).toLocaleString()} mi` : ""}</p>
-            </div>
+        <div className="flex items-center gap-2">
+          <Car className="h-5 w-5" />
+          <div>
+            <p className="font-bold text-sm leading-tight">{vehicleTitle}</p>
+            <p className="text-[10px] opacity-70">VIN: {submission.vin || "N/A"} • {submission.mileage ? `${Number(submission.mileage).toLocaleString()} mi` : ""}</p>
           </div>
         </div>
       </div>
@@ -234,28 +236,43 @@ const MobileInspection = () => {
           </Card>
         )}
 
-        {/* Tire Tread Depth */}
+        {/* Tire Tread Depth — Tappable */}
         <Card>
           <CardHeader className="pb-2 pt-4 px-4">
             <CardTitle className="text-sm flex items-center gap-2">
               <Gauge className="h-4 w-4 text-primary" /> Tire Tread Depth (/32")
             </CardTitle>
+            <p className="text-[10px] text-muted-foreground mt-1">Tap the measured depth for each tire</p>
           </CardHeader>
-          <CardContent className="px-4 pb-4">
-            <div className="grid grid-cols-2 gap-3">
-              <MobileField label="Left Front" value={tireLF} onChange={setTireLF} placeholder="/32" />
-              <MobileField label="Right Front" value={tireRF} onChange={setTireRF} placeholder="/32" />
-              <MobileField label="Left Rear" value={tireLR} onChange={setTireLR} placeholder="/32" />
-              <MobileField label="Right Rear" value={tireRR} onChange={setTireRR} placeholder="/32" />
-            </div>
-            <div className="flex justify-between mt-3 text-[10px]">
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /> New 10-11</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-400" /> Good 6-9</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400" /> Fair 4-5</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500" /> Replace ≤3</span>
+          <CardContent className="px-4 pb-4 space-y-4">
+            <TreadDepthPicker label="Left Front" value={tireLF} onChange={setTireLF} />
+            <TreadDepthPicker label="Right Front" value={tireRF} onChange={setTireRF} />
+            <TreadDepthPicker label="Left Rear" value={tireLR} onChange={setTireLR} />
+            <TreadDepthPicker label="Right Rear" value={tireRR} onChange={setTireRR} />
+            
+            {/* Legend */}
+            <div className="flex justify-between text-[10px] pt-1 border-t">
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /> 6+ Add $$$</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400" /> 4-5 No Change</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500" /> ≤3 Deduct $</span>
             </div>
           </CardContent>
         </Card>
+
+        {/* Tire Adjustment Result (after save) */}
+        {lastAdjustment && lastAdjustment.adjustment !== 0 && (
+          <Card className={lastAdjustment.adjustment > 0 ? "border-green-300 bg-green-50" : "border-red-300 bg-red-50"}>
+            <CardContent className="py-3 px-4 flex items-center gap-3">
+              <DollarSign className={`h-5 w-5 ${lastAdjustment.adjustment > 0 ? "text-green-600" : "text-red-600"}`} />
+              <div>
+                <p className={`text-sm font-bold ${lastAdjustment.adjustment > 0 ? "text-green-800" : "text-red-800"}`}>
+                  Tire {lastAdjustment.adjustment > 0 ? "Credit" : "Deduction"}: {lastAdjustment.adjustment > 0 ? "+" : ""}${Math.abs(lastAdjustment.adjustment).toFixed(0)}
+                </p>
+                <p className="text-[10px] text-muted-foreground">Avg depth: {lastAdjustment.avg_depth.toFixed(1)}/32 · Applied to customer file</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Brake Pad Thickness */}
         <Card>
@@ -341,11 +358,7 @@ const MobileInspection = () => {
       {/* Fixed save button */}
       <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur border-t p-4 z-50">
         <Button onClick={handleSave} disabled={saving} className="w-full h-12 text-base gap-2">
-          {saving ? (
-            <span className="animate-spin">⏳</span>
-          ) : (
-            <Save className="h-5 w-5" />
-          )}
+          {saving ? <span className="animate-spin">⏳</span> : <Save className="h-5 w-5" />}
           {saving ? "Saving..." : "Save Inspection"}
         </Button>
       </div>

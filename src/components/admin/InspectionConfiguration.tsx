@@ -94,6 +94,13 @@ const InspectionConfiguration = () => {
   const [showOilLife, setShowOilLife] = useState(true);
   const [showBatteryHealth, setShowBatteryHealth] = useState(true);
 
+  // Tire credit/deduction policy
+  const [enableTireAdjustments, setEnableTireAdjustments] = useState(false);
+  const [tireCreditThreshold, setTireCreditThreshold] = useState(6);
+  const [tireDeductThreshold, setTireDeductThreshold] = useState(3);
+  const [tireCreditPer32, setTireCreditPer32] = useState(25);
+  const [tireDeductPer32, setTireDeductPer32] = useState(50);
+
   // Requirements
   const [requirePhotos, setRequirePhotos] = useState<Record<string, boolean>>({});
   const [requireNotes, setRequireNotes] = useState<Record<string, boolean>>({});
@@ -135,6 +142,11 @@ const InspectionConfiguration = () => {
         setRequirePhotos((data.require_photos as any) || {});
         setRequireNotes((data.require_notes as any) || {});
         setCustomItems((data.custom_items as any) || []);
+        setEnableTireAdjustments((data as any).enable_tire_adjustments ?? false);
+        setTireCreditThreshold((data as any).tire_credit_threshold ?? 6);
+        setTireDeductThreshold((data as any).tire_deduct_threshold ?? 3);
+        setTireCreditPer32((data as any).tire_credit_per_32 ?? 25);
+        setTireDeductPer32((data as any).tire_deduct_per_32 ?? 50);
       }
       setLoading(false);
     };
@@ -163,6 +175,11 @@ const InspectionConfiguration = () => {
         require_photos: requirePhotos as any,
         require_notes: requireNotes as any,
         custom_items: customItems as any,
+        enable_tire_adjustments: enableTireAdjustments,
+        tire_credit_threshold: tireCreditThreshold,
+        tire_deduct_threshold: tireDeductThreshold,
+        tire_credit_per_32: tireCreditPer32,
+        tire_deduct_per_32: tireDeductPer32,
         updated_at: new Date().toISOString(),
       } as any)
       .eq("id", configId);
@@ -339,7 +356,7 @@ const InspectionConfiguration = () => {
 
                   {/* Special sub-toggles for tires */}
                   {sectionKey === "tires" && (
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <label className="flex items-center justify-between text-sm">
                         <span>Tire tread depth (32nds)</span>
                         <Switch checked={showTireTread} onCheckedChange={setShowTireTread} />
@@ -348,6 +365,76 @@ const InspectionConfiguration = () => {
                         <span>Brake pad measurements (mm)</span>
                         <Switch checked={showBrakePads} onCheckedChange={setShowBrakePads} />
                       </label>
+
+                      {/* Tire Credit/Deduction Policy */}
+                      <div className="border-t pt-3 mt-2">
+                        <label className="flex items-center justify-between text-sm font-semibold">
+                          <span className="flex items-center gap-2">
+                            💰 Tire Credit / Deduction Policy
+                          </span>
+                          <Switch checked={enableTireAdjustments} onCheckedChange={setEnableTireAdjustments} />
+                        </label>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          Automatically credit or deduct from the offer based on tire tread depth at inspection
+                        </p>
+
+                        {enableTireAdjustments && (
+                          <div className="mt-3 space-y-3 bg-muted/30 rounded-lg p-3">
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="text-xs text-muted-foreground block mb-1">Credit above (/32)</label>
+                                <Input
+                                  type="number"
+                                  min={1} max={12}
+                                  value={tireCreditThreshold}
+                                  onChange={e => setTireCreditThreshold(Number(e.target.value))}
+                                  className="h-8 text-sm"
+                                />
+                                <p className="text-[9px] text-muted-foreground mt-0.5">Avg depth ≥ this = credit</p>
+                              </div>
+                              <div>
+                                <label className="text-xs text-muted-foreground block mb-1">Deduct below (/32)</label>
+                                <Input
+                                  type="number"
+                                  min={0} max={12}
+                                  value={tireDeductThreshold}
+                                  onChange={e => setTireDeductThreshold(Number(e.target.value))}
+                                  className="h-8 text-sm"
+                                />
+                                <p className="text-[9px] text-muted-foreground mt-0.5">Avg depth ≤ this = deduction</p>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="text-xs text-muted-foreground block mb-1">Credit per /32 per tire ($)</label>
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  value={tireCreditPer32}
+                                  onChange={e => setTireCreditPer32(Number(e.target.value))}
+                                  className="h-8 text-sm"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-xs text-muted-foreground block mb-1">Deduct per /32 per tire ($)</label>
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  value={tireDeductPer32}
+                                  onChange={e => setTireDeductPer32(Number(e.target.value))}
+                                  className="h-8 text-sm"
+                                />
+                              </div>
+                            </div>
+                            <div className="text-[10px] text-muted-foreground bg-background rounded p-2 border">
+                              <strong>Example:</strong> If avg depth is {tireCreditThreshold + 2}/32 (credit threshold {tireCreditThreshold}), 
+                              credit = 2 × ${tireCreditPer32} × 4 tires = <strong className="text-green-600">+${2 * tireCreditPer32 * 4}</strong>.
+                              If avg depth is {Math.max(tireDeductThreshold - 1, 0)}/32 (deduct threshold {tireDeductThreshold}),
+                              deduction = {Math.max(tireDeductThreshold - Math.max(tireDeductThreshold - 1, 0), 0)} × ${tireDeductPer32} × 4 = <strong className="text-red-600">-${Math.max(tireDeductThreshold - Math.max(tireDeductThreshold - 1, 0), 0) * tireDeductPer32 * 4}</strong>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
 
