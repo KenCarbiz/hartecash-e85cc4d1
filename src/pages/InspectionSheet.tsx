@@ -559,7 +559,7 @@ const InspectionSheet = () => {
       `[INSPECTION ${new Date().toLocaleString()}]`,
       ...(inspConfig.section_tires ? [
         `Tires (tread /32): LF:${tireDepth.lf ?? "—"} RF:${tireDepth.rf ?? "—"} LR:${tireDepth.lr ?? "—"} RR:${tireDepth.rr ?? "—"}`,
-        `Brakes (mm): LF:${brakeDepth.lf} RF:${brakeDepth.rf} LR:${brakeDepth.lr} RR:${brakeDepth.rr}`,
+        `Brakes (mm): LF:${brakeDepth.lf ?? "—"} RF:${brakeDepth.rf ?? "—"} LR:${brakeDepth.lr ?? "—"} RR:${brakeDepth.rr ?? "—"}`,
       ] : []),
       ...(inspConfig.section_measurements ? [
         paintReading && `Paint: ${paintReading}`,
