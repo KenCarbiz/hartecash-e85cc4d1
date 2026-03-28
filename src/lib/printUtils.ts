@@ -305,6 +305,7 @@ export function printCheckRequest(
       </div>
     </div>
     ${docSections.map(s => makeDocSection(s.title, s.images)).join("")}
+    ${textSections ? textSections.map(s => makeTextDocSection(s.title, s.text)).join("") : ""}
   </body></html>`;
 
   const printWindow = window.open("", "_blank", "width=800,height=600");
