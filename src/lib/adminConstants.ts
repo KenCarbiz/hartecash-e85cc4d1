@@ -44,6 +44,7 @@ export const getStageIndex = (dbStatus: string): number => {
   return idx >= 0 ? idx : 0;
 };
 
+export const ALL_STATUS_OPTIONS = [
   { key: "new", label: "New Lead" },
   { key: "offer_accepted", label: "Offer Accepted" },
   { key: "not_contacted", label: "Not Contacted" },
