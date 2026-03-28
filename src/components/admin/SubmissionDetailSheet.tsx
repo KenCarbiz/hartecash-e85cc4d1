@@ -333,7 +333,7 @@ const SubmissionDetailSheet = ({
               </SheetTitle>
               <div className="flex items-center gap-2">
                 <Button variant="ghost" size="sm" onClick={() => window.open(`${window.location.origin}/inspection/${sub.id}`, "_blank")} className="text-primary-foreground hover:bg-primary-foreground/20 print:hidden">
-                  <ClipboardList className="w-4 h-4 mr-1" /> Inspection
+                  <ClipboardList className="w-4 h-4 mr-1" /> Inspection Needed
                 </Button>
                 <Button variant="ghost" size="sm" onClick={handlePrint} className="text-primary-foreground hover:bg-primary-foreground/20 print:hidden">
                   <Printer className="w-4 h-4 mr-1" /> Print
@@ -427,9 +427,10 @@ const SubmissionDetailSheet = ({
                   const inspClass = isInspected
                     ? "bg-gradient-to-r from-emerald-500 to-green-500 text-white hover:from-emerald-600 hover:to-green-600 border-0"
                     : "bg-gradient-to-r from-orange-400 to-amber-500 text-white hover:from-orange-500 hover:to-amber-600 border-0";
+                  const inspLabel = isInspected ? "Inspection Completed" : "Inspection Needed";
                   return (
                     <Button size="sm" className={`h-7 text-xs gap-1 ${inspClass}`} onClick={() => window.open(`${window.location.origin}/inspection/${sub.id}`, "_blank")}>
-                      <ClipboardList className="w-3.5 h-3.5" /> Inspection Sheet
+                      <ClipboardList className="w-3.5 h-3.5" /> {inspLabel}
                     </Button>
                   );
                 })()}
