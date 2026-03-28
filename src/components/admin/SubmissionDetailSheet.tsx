@@ -419,7 +419,7 @@ const SubmissionDetailSheet = ({
                 icon={Car}
                 title="Vehicle Details"
                 headerRight={
-                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => window.open(`/inspection/${sub.id}`, "_blank")}>
+                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => window.open(`${window.location.origin}/inspection/${sub.id}`, "_blank")}>
                     <ClipboardList className="w-3.5 h-3.5" /> Inspection Sheet
                   </Button>
                 }
