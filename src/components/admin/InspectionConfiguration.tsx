@@ -148,6 +148,7 @@ const InspectionConfiguration = () => {
         setTireDeductThreshold((data as any).tire_deduct_threshold ?? 3);
         setTireCreditPer32((data as any).tire_credit_per_32 ?? 25);
         setTireDeductPer32((data as any).tire_deduct_per_32 ?? 50);
+        setTireAdjustmentMode((data as any).tire_adjustment_mode || 'whole');
       }
       setLoading(false);
     };
