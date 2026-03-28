@@ -2118,6 +2118,8 @@ const AdminDashboard = () => {
 
               </div>{/* End 2-column grid */}
 
+              {/* Two-Column: Condition + Loan */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               {/* Condition Card */}
               <div data-print-section className="rounded-xl border border-border bg-card shadow-sm overflow-hidden p-4">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
