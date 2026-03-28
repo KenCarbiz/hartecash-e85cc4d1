@@ -260,8 +260,8 @@ const SubmissionsTable = ({
                         <span className="flex items-center gap-1">
                           {sub.is_hot_lead && <span title="Hot Lead">🔥</span>}
                           {sub.vehicle_year && sub.vehicle_make ? `${sub.vehicle_year} ${sub.vehicle_make} ${sub.vehicle_model || ""}` : sub.plate || "—"}
-                          {sub.photos_uploaded && <Camera className="w-3 h-3 text-success ml-1 shrink-0" title="Photos uploaded" />}
-                          {sub.docs_uploaded && <FileText className="w-3 h-3 text-primary ml-0.5 shrink-0" title="Docs uploaded" />}
+                          {sub.photos_uploaded && <span title="Photos uploaded"><Camera className="w-3 h-3 text-success ml-1 shrink-0" /></span>}
+                          {sub.docs_uploaded && <span title="Docs uploaded"><FileText className="w-3 h-3 text-primary ml-0.5 shrink-0" /></span>}
                         </span>
                       </td>
                       <td className="px-3 py-3 text-xs font-mono text-muted-foreground whitespace-nowrap">{sub.vin || "—"}</td>
