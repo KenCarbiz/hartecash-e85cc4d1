@@ -307,7 +307,7 @@ const InspectionSheet = () => {
     // Gather all checklist data into a structured note
     const gatherSection = (title: string, items: string[], grades: Record<string, ConditionGrade>, notes: Record<string, string>) => {
       const entries = items
-        .filter(i => grades[i] && grades[i] !== "")
+        .filter(i => !!grades[i])
         .map(i => `  ${i}: ${(grades[i] || "").toUpperCase()}${notes[i] ? ` — ${notes[i]}` : ""}`);
       return entries.length > 0 ? `[${title}]\n${entries.join("\n")}` : "";
     };
