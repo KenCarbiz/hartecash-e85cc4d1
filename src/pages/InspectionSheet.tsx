@@ -329,10 +329,10 @@ const ChecklistSection = ({
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="h-7 text-xs gap-1 border-emerald-400/50 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10"
+                  className={`h-7 text-xs gap-1 ${allMarkedGood ? "border-red-400/50 text-red-600 dark:text-red-400 hover:bg-red-500/10" : "border-emerald-400/50 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10"}`}
                   onClick={e => { e.stopPropagation(); onMarkAllGood(); }}
                 >
-                  <CheckCheck className="w-3.5 h-3.5" /> Mark All Good
+                  <CheckCheck className="w-3.5 h-3.5" /> {allMarkedGood ? "Reset All" : "Mark All Good"}
                 </Button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
