@@ -132,9 +132,19 @@ const InspectionSheet = () => {
               <h1 className="text-2xl font-black tracking-tight">{config?.dealership_name || "Dealership"}</h1>
               <p className="text-sm text-muted-foreground">Vehicle Inspection Report</p>
             </div>
-            <div className="text-right text-sm">
-              <p className="font-semibold">Date: {new Date().toLocaleDateString()}</p>
-              <p>Inspector: ____________________</p>
+            <div className="flex items-start gap-4">
+              <div className="text-right text-sm">
+                <p className="font-semibold">Date: {new Date().toLocaleDateString()}</p>
+                <p>Inspector: ____________________</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Scan to fill digitally →</p>
+              </div>
+              <div className="border border-foreground/20 rounded p-1">
+                <QRCodeSVG
+                  value={`${window.location.origin}/inspect/${id}`}
+                  size={64}
+                  level="M"
+                />
+              </div>
             </div>
           </div>
         </div>
