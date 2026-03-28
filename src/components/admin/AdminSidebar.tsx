@@ -62,12 +62,11 @@ const AdminSidebar = ({
     { key: "executive", label: "Performance", icon: BarChart3 },
   ].filter((item) => isAllowed(item.key));
 
-  // ── Team (people & access) ──
+  // ── Team (people & access) — Permissions & Access Requests merged into Staff ──
+  const teamBadgeCount = (canManageAccess ? pendingRequestCount + permissionRequestCount : 0);
   const teamItems = canManageAccess
     ? [
-        { key: "staff", label: "Staff", icon: Users },
-        { key: "permissions", label: "Permissions", icon: Shield, badge: permissionRequestCount > 0 ? String(permissionRequestCount) : undefined, badgeVariant: "destructive" as const },
-        { key: "requests", label: "Access Requests", icon: UserCheck, badge: pendingRequestCount > 0 ? String(pendingRequestCount) : undefined, badgeVariant: "destructive" as const },
+        { key: "staff", label: "Staff & Permissions", icon: Users, badge: teamBadgeCount > 0 ? String(teamBadgeCount) : undefined, badgeVariant: "destructive" as const },
       ].filter((item) => isAllowed(item.key))
     : [];
 
@@ -89,21 +88,21 @@ const AdminSidebar = ({
       ].filter((item) => isAllowed(item.key))
     : [];
 
-  // ── Compliance (audit trails) ──
+  // ── Compliance (merged into single tabbed page) ──
   const complianceItems = [
-    { key: "consent", label: "Consent Log", icon: ShieldCheck },
-    { key: "comm-log", label: "Communication Log", icon: MessageCircle },
-  ].filter((item) => isAllowed(item.key));
+    { key: "compliance", label: "Compliance", icon: ShieldCheck },
+  ].filter((item) => isAllowed(item.key) || isAllowed("consent") || isAllowed("comm-log"));
 
-  // ── Tools (utilities) ──
+  // ── Tools (utilities — consolidated) ──
   const toolsItems = [
+    { key: "reports", label: "Reports & Export", icon: Send },
     ...(canManageAccess ? [{ key: "image-inventory", label: "Vehicle Images", icon: Car }] : []),
-    ...(canManageAccess ? [{ key: "changelog", label: "Changelog", icon: Newspaper }] : []),
+    ...(canManageAccess ? [{ key: "system-settings", label: "System Settings", icon: Wrench }] : []),
     { key: "onboarding", label: "Dealer Setup Guide", icon: Rocket },
   ].filter((item) => isAllowed(item.key));
 
   // Collect locked sections for "Request Access" display
-  const allSectionKeys = ["submissions", "appointments", "executive", "staff", "permissions", "requests", "offer-settings", "form-config", "notifications", "site-config", "locations", "testimonials", "consent", "comm-log", "image-inventory", "changelog"];
+  const allSectionKeys = ["submissions", "appointments", "executive", "staff", "offer-settings", "form-config", "notifications", "site-config", "locations", "testimonials", "compliance", "image-inventory", "reports", "system-settings"];
   const lockedSections = showRequestAccess && allowedSections !== null
     ? allSectionKeys.filter((k) => !allowedSections.includes(k))
     : [];
