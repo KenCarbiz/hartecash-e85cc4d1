@@ -175,6 +175,11 @@ const InspectionConfiguration = () => {
         require_photos: requirePhotos as any,
         require_notes: requireNotes as any,
         custom_items: customItems as any,
+        enable_tire_adjustments: enableTireAdjustments,
+        tire_credit_threshold: tireCreditThreshold,
+        tire_deduct_threshold: tireDeductThreshold,
+        tire_credit_per_32: tireCreditPer32,
+        tire_deduct_per_32: tireDeductPer32,
         updated_at: new Date().toISOString(),
       } as any)
       .eq("id", configId);
