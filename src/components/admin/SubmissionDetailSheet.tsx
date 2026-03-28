@@ -616,7 +616,13 @@ const SubmissionDetailSheet = ({
                 {canSetPrice ? (
                   <Input type="number" placeholder="Enter offer amount" value={sub.offered_price?.toString() || ""} onChange={(e) => updateField({ offered_price: e.target.value ? Number(e.target.value) : null })} />
                 ) : (
-                  <p className="text-card-foreground font-medium">${sub.offered_price?.toLocaleString()}</p>
+                  <p className="text-card-foreground font-medium">
+                    {(() => {
+                      const val = sub.offered_price ?? 0;
+                      const [dollars, cents] = val.toFixed(2).split(".");
+                      return <>${Number(dollars).toLocaleString()}.<span className="text-[0.7em] align-baseline">{cents}</span></>;
+                    })()}
+                  </p>
                 )}
               </SectionCard>
             )}
