@@ -1104,7 +1104,7 @@ const InspectionSheet = () => {
           <div className="flex items-center gap-3">
             <ProgressRing progress={progressPct} size={36} strokeWidth={3} />
             <div className="text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">{totalChecked}</span>/{ALL_ITEMS.length} items
+              <span className="font-semibold text-foreground">{totalChecked}</span>/{ACTIVE_ALL_ITEMS.length} items
               {totalIssues > 0 && <span className="ml-2 text-destructive font-medium">• {totalIssues} issue{totalIssues > 1 ? "s" : ""}</span>}
             </div>
           </div>
