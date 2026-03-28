@@ -1010,9 +1010,9 @@ const InspectionSheet = () => {
                       <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
                         <CardContent className="pt-2">
                           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                            <InspectionField label="Paint Meter (mil)" value={paintReading} onChange={setPaintReading} placeholder="e.g. 4.2 avg" />
-                            <InspectionField label="Oil Life %" value={oilLife} onChange={setOilLife} placeholder="e.g. 65%" />
-                            <InspectionField label="Battery Health" value={batteryHealth} onChange={setBatteryHealth} placeholder="e.g. Good — 12.6V" />
+                            {inspConfig.show_paint_readings && <InspectionField label="Paint Meter (mil)" value={paintReading} onChange={setPaintReading} placeholder="e.g. 4.2 avg" />}
+                            {inspConfig.show_oil_life && <InspectionField label="Oil Life %" value={oilLife} onChange={setOilLife} placeholder="e.g. 65%" />}
+                            {inspConfig.show_battery_health && <InspectionField label="Battery Health" value={batteryHealth} onChange={setBatteryHealth} placeholder="e.g. Good — 12.6V" />}
                           </div>
                         </CardContent>
                       </motion.div>
