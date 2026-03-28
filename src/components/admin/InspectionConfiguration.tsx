@@ -142,6 +142,11 @@ const InspectionConfiguration = () => {
         setRequirePhotos((data.require_photos as any) || {});
         setRequireNotes((data.require_notes as any) || {});
         setCustomItems((data.custom_items as any) || []);
+        setEnableTireAdjustments((data as any).enable_tire_adjustments ?? false);
+        setTireCreditThreshold((data as any).tire_credit_threshold ?? 6);
+        setTireDeductThreshold((data as any).tire_deduct_threshold ?? 3);
+        setTireCreditPer32((data as any).tire_credit_per_32 ?? 25);
+        setTireDeductPer32((data as any).tire_deduct_per_32 ?? 50);
       }
       setLoading(false);
     };
