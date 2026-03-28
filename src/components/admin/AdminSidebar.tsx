@@ -190,7 +190,7 @@ const AdminSidebar = ({
               tooltip={collapsed ? "Platform Updates" : undefined}
               className="transition-all duration-200 dark:hover:bg-white/8"
             >
-              <Newspaper className="w-4 h-4 shrink-0" />
+              <ScrollText className="w-4 h-4 shrink-0" />
               {!collapsed && <span className="flex-1 truncate">Platform Updates</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
