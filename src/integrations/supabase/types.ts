@@ -475,6 +475,78 @@ export type Database = {
         }
         Relationships: []
       }
+      inspection_config: {
+        Row: {
+          created_at: string
+          custom_items: Json
+          dealership_id: string
+          disabled_fields: Json
+          id: string
+          require_notes: Json
+          require_photos: Json
+          section_electrical: boolean
+          section_exterior: boolean
+          section_glass: boolean
+          section_interior: boolean
+          section_measurements: boolean
+          section_mechanical: boolean
+          section_order: Json
+          section_tires: boolean
+          show_battery_health: boolean
+          show_brake_pad_measurements: boolean
+          show_oil_life: boolean
+          show_paint_readings: boolean
+          show_tire_tread_depth: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          custom_items?: Json
+          dealership_id?: string
+          disabled_fields?: Json
+          id?: string
+          require_notes?: Json
+          require_photos?: Json
+          section_electrical?: boolean
+          section_exterior?: boolean
+          section_glass?: boolean
+          section_interior?: boolean
+          section_measurements?: boolean
+          section_mechanical?: boolean
+          section_order?: Json
+          section_tires?: boolean
+          show_battery_health?: boolean
+          show_brake_pad_measurements?: boolean
+          show_oil_life?: boolean
+          show_paint_readings?: boolean
+          show_tire_tread_depth?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          custom_items?: Json
+          dealership_id?: string
+          disabled_fields?: Json
+          id?: string
+          require_notes?: Json
+          require_photos?: Json
+          section_electrical?: boolean
+          section_exterior?: boolean
+          section_glass?: boolean
+          section_interior?: boolean
+          section_measurements?: boolean
+          section_mechanical?: boolean
+          section_order?: Json
+          section_tires?: boolean
+          show_battery_health?: boolean
+          show_brake_pad_measurements?: boolean
+          show_oil_life?: boolean
+          show_paint_readings?: boolean
+          show_tire_tread_depth?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       lookup_attempts: {
         Row: {
           attempted_at: string
