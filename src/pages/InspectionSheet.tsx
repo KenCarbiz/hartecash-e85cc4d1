@@ -543,7 +543,116 @@ const InspectionSheet = () => {
     }
   };
 
-  const handlePrint = () => window.print();
+  const handlePrint = () => {
+    const vTitle = `${submission.vehicle_year || ""} ${submission.vehicle_make || ""} ${submission.vehicle_model || ""}`.trim();
+    const dealerName = config?.dealership_name || "Dealership";
+
+    const gradeHTML = (g: ConditionGrade) => {
+      const colors: Record<string, string> = { good: "#10b981", fair: "#f59e0b", poor: "#f97316", damaged: "#ef4444" };
+      const color = colors[g] || "#94a3b8";
+      const label = g ? g.charAt(0).toUpperCase() + g.slice(1) : "Not Checked";
+      return `<span style="display:inline-block;padding:1px 8px;border-radius:4px;font-size:11px;font-weight:600;color:${color};border:1.5px solid ${color}30;background:${color}15;">${label}</span>`;
+    };
+
+    const sectionRows = (items: string[]) =>
+      items.map(item => {
+        const g = allGrades[item] || "";
+        const n = allNotes[item] || "";
+        return `<tr><td style="padding:4px 8px;border-bottom:1px solid #e5e7eb;font-size:12px;">${item}</td><td style="padding:4px 8px;border-bottom:1px solid #e5e7eb;text-align:center;">${gradeHTML(g as ConditionGrade)}</td><td style="padding:4px 8px;border-bottom:1px solid #e5e7eb;font-size:11px;color:#6b7280;">${n}</td></tr>`;
+      }).join("");
+
+    const sectionBlock = (title: string, items: string[]) => {
+      if (!items.length) return "";
+      const checked = items.filter(i => !!allGrades[i]).length;
+      const issues = items.filter(i => allGrades[i] === "poor" || allGrades[i] === "damaged").length;
+      return `
+        <div style="break-inside:avoid;margin-bottom:16px;">
+          <div style="background:#f8fafc;padding:8px 12px;border-radius:6px 6px 0 0;border:1px solid #e2e8f0;border-bottom:2px solid #3b82f6;">
+            <strong style="font-size:13px;">${title}</strong>
+            <span style="float:right;font-size:11px;color:#64748b;">${checked}/${items.length} checked${issues > 0 ? ` · <span style="color:#ef4444">${issues} issue${issues > 1 ? "s" : ""}</span>` : ""}</span>
+          </div>
+          <table style="width:100%;border-collapse:collapse;border:1px solid #e2e8f0;border-top:none;">
+            <thead><tr style="background:#f1f5f9;"><th style="padding:4px 8px;text-align:left;font-size:11px;font-weight:600;border-bottom:1px solid #e2e8f0;">Item</th><th style="padding:4px 8px;text-align:center;font-size:11px;font-weight:600;border-bottom:1px solid #e2e8f0;width:100px;">Grade</th><th style="padding:4px 8px;text-align:left;font-size:11px;font-weight:600;border-bottom:1px solid #e2e8f0;">Notes</th></tr></thead>
+            <tbody>${sectionRows(items)}</tbody>
+          </table>
+        </div>`;
+    };
+
+    const tireBrakeHTML = `
+      <div style="break-inside:avoid;margin-bottom:16px;">
+        <div style="background:#f8fafc;padding:8px 12px;border-radius:6px 6px 0 0;border:1px solid #e2e8f0;border-bottom:2px solid #0ea5e9;">
+          <strong style="font-size:13px;">Tire Tread & Brake Pads</strong>
+        </div>
+        <table style="width:100%;border-collapse:collapse;border:1px solid #e2e8f0;border-top:none;">
+          <thead><tr style="background:#f1f5f9;"><th style="padding:6px;font-size:11px;border-bottom:1px solid #e2e8f0;"></th><th style="padding:6px;font-size:11px;border-bottom:1px solid #e2e8f0;">LF</th><th style="padding:6px;font-size:11px;border-bottom:1px solid #e2e8f0;">RF</th><th style="padding:6px;font-size:11px;border-bottom:1px solid #e2e8f0;">LR</th><th style="padding:6px;font-size:11px;border-bottom:1px solid #e2e8f0;">RR</th></tr></thead>
+          <tbody>
+            <tr><td style="padding:6px;font-size:12px;font-weight:600;border-bottom:1px solid #e2e8f0;">Tread (/32)</td><td style="padding:6px;text-align:center;border-bottom:1px solid #e2e8f0;">${tireDepth.lf || "—"}</td><td style="padding:6px;text-align:center;border-bottom:1px solid #e2e8f0;">${tireDepth.rf || "—"}</td><td style="padding:6px;text-align:center;border-bottom:1px solid #e2e8f0;">${tireDepth.lr || "—"}</td><td style="padding:6px;text-align:center;border-bottom:1px solid #e2e8f0;">${tireDepth.rr || "—"}</td></tr>
+            <tr><td style="padding:6px;font-size:12px;font-weight:600;">Brake (mm)</td><td style="padding:6px;text-align:center;">${brakeDepth.lf || "—"}</td><td style="padding:6px;text-align:center;">${brakeDepth.rf || "—"}</td><td style="padding:6px;text-align:center;">${brakeDepth.lr || "—"}</td><td style="padding:6px;text-align:center;">${brakeDepth.rr || "—"}</td></tr>
+          </tbody>
+        </table>
+      </div>`;
+
+    const measurementsHTML = (paintReading || oilLife || batteryHealth) ? `
+      <div style="break-inside:avoid;margin-bottom:16px;">
+        <div style="background:#f8fafc;padding:8px 12px;border-radius:6px 6px 0 0;border:1px solid #e2e8f0;border-bottom:2px solid #8b5cf6;">
+          <strong style="font-size:13px;">Quick Measurements</strong>
+        </div>
+        <table style="width:100%;border-collapse:collapse;border:1px solid #e2e8f0;border-top:none;">
+          <tbody>
+            ${paintReading ? `<tr><td style="padding:6px 8px;font-size:12px;font-weight:600;border-bottom:1px solid #e2e8f0;width:140px;">Paint Meter</td><td style="padding:6px 8px;font-size:12px;border-bottom:1px solid #e2e8f0;">${paintReading}</td></tr>` : ""}
+            ${oilLife ? `<tr><td style="padding:6px 8px;font-size:12px;font-weight:600;border-bottom:1px solid #e2e8f0;">Oil Life</td><td style="padding:6px 8px;font-size:12px;border-bottom:1px solid #e2e8f0;">${oilLife}</td></tr>` : ""}
+            ${batteryHealth ? `<tr><td style="padding:6px 8px;font-size:12px;font-weight:600;">Battery Health</td><td style="padding:6px 8px;font-size:12px;">${batteryHealth}</td></tr>` : ""}
+          </tbody>
+        </table>
+      </div>` : "";
+
+    const notesHTML = inspectorNotes ? `<div style="break-inside:avoid;margin-bottom:16px;"><div style="background:#f8fafc;padding:8px 12px;border-radius:6px 6px 0 0;border:1px solid #e2e8f0;border-bottom:2px solid #64748b;"><strong style="font-size:13px;">Inspector Notes</strong></div><div style="border:1px solid #e2e8f0;border-top:none;padding:10px 12px;font-size:12px;white-space:pre-wrap;">${inspectorNotes}</div></div>` : "";
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Inspection — ${vTitle}</title>
+      <style>@media print{body{margin:0;padding:16px;}@page{size:letter;margin:0.5in;}}</style>
+    </head><body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1e293b;max-width:800px;margin:0 auto;padding:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1e293b;padding-bottom:12px;margin-bottom:16px;">
+        <div>
+          <h1 style="margin:0;font-size:22px;letter-spacing:-0.5px;">${dealerName}</h1>
+          <p style="margin:2px 0 0;font-size:13px;color:#64748b;">Vehicle Inspection Report</p>
+        </div>
+        <div style="text-align:right;font-size:12px;">
+          <p style="margin:0;font-weight:600;">Date: ${new Date().toLocaleDateString()}</p>
+          <p style="margin:2px 0 0;color:#64748b;">Stock #: ${submission.id?.slice(0, 8).toUpperCase() || "—"}</p>
+        </div>
+      </div>
+
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;gap:32px;flex-wrap:wrap;">
+        <div><span style="font-size:10px;text-transform:uppercase;color:#94a3b8;letter-spacing:0.5px;">Vehicle</span><br><strong style="font-size:14px;">${vTitle}</strong></div>
+        <div><span style="font-size:10px;text-transform:uppercase;color:#94a3b8;letter-spacing:0.5px;">VIN</span><br><strong style="font-size:12px;font-family:monospace;">${submission.vin || "N/A"}</strong></div>
+        <div><span style="font-size:10px;text-transform:uppercase;color:#94a3b8;letter-spacing:0.5px;">Mileage</span><br><strong style="font-size:14px;">${submission.mileage ? Number(submission.mileage).toLocaleString() + " mi" : "N/A"}</strong></div>
+        <div><span style="font-size:10px;text-transform:uppercase;color:#94a3b8;letter-spacing:0.5px;">Color</span><br><strong style="font-size:14px;">${submission.exterior_color || "N/A"}</strong></div>
+        ${overallGrade ? `<div><span style="font-size:10px;text-transform:uppercase;color:#94a3b8;letter-spacing:0.5px;">Overall Grade</span><br><strong style="font-size:14px;text-transform:capitalize;">${overallGrade}</strong></div>` : ""}
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+        <span style="font-size:11px;font-weight:600;color:#64748b;">Completion: ${totalChecked}/${ALL_ITEMS.length} (${Math.round(progressPct)}%)</span>
+        ${totalIssues > 0 ? `<span style="font-size:11px;font-weight:600;color:#ef4444;">· ${totalIssues} issue${totalIssues > 1 ? "s" : ""} flagged</span>` : ""}
+      </div>
+
+      ${tireBrakeHTML}
+      ${measurementsHTML}
+      ${ALL_CHECKLIST_SECTIONS.map(s => sectionBlock(s.label, s.items)).join("")}
+      ${notesHTML}
+
+      <div style="margin-top:32px;padding-top:16px;border-top:2px solid #e2e8f0;display:flex;justify-content:space-between;">
+        <div style="font-size:11px;color:#94a3b8;">Inspector Signature: ________________________________</div>
+        <div style="font-size:11px;color:#94a3b8;">Manager Signature: ________________________________</div>
+      </div>
+    </body></html>`;
+
+    const w = window.open("", "_blank");
+    if (w) {
+      w.document.write(html);
+      w.document.close();
+      setTimeout(() => w.print(), 300);
+    }
+  };
 
   const scrollToSection = (key: string) => {
     setActiveTab(key);
