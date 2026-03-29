@@ -296,17 +296,17 @@ const CustomerPortal = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-gradient-to-r from-primary via-[hsl(210,100%,30%)] to-primary text-primary-foreground px-6 py-1">
+      <div className="bg-gradient-to-br from-primary via-[hsl(210,100%,28%)] to-[hsl(215,90%,22%)] text-primary-foreground px-6 py-4">
         <div className="max-w-5xl mx-auto">
-          <Link to="/my-submission" className="inline-flex items-center gap-1 text-xs text-primary-foreground/70 hover:text-primary-foreground transition-colors mb-1.5">
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Back to my submissions
+          <Link to="/my-submission" className="inline-flex items-center gap-1.5 text-[11px] text-primary-foreground/60 hover:text-primary-foreground transition-colors mb-3 uppercase tracking-wider font-medium">
+            <ArrowLeft className="w-3 h-3" />
+            My submissions
           </Link>
-          <div className="flex items-center gap-3">
-            <img src={config.logo_white_url || harteLogoWhiteFallback} alt={config.dealership_name || "Dealership"} className="h-[70px] w-auto" />
-            <div className="flex-1">
-              <h1 className="font-bold text-lg lg:text-xl">{vehicleStr || "My Submission"}</h1>
-              {firstName && <p className="text-sm opacity-80">Welcome back, {firstName}!</p>}
+          <div className="flex items-center gap-4">
+            <img src={config.logo_white_url || harteLogoWhiteFallback} alt={config.dealership_name || "Dealership"} className="h-[70px] w-auto drop-shadow-lg" />
+            <div className="flex-1 border-l border-primary-foreground/15 pl-4">
+              <h1 className="font-display text-xl lg:text-2xl tracking-wide">{vehicleStr || "My Submission"}</h1>
+              {firstName && <p className="text-sm text-primary-foreground/70 mt-0.5">Welcome back, {firstName}</p>}
             </div>
           </div>
         </div>
