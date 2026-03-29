@@ -559,7 +559,7 @@ const InspectionSheet = () => {
       `[INSPECTION ${new Date().toLocaleString()}]`,
       ...(inspConfig.section_tires ? [
         `Tires (tread /32): LF:${tireDepth.lf ?? "—"} RF:${tireDepth.rf ?? "—"} LR:${tireDepth.lr ?? "—"} RR:${tireDepth.rr ?? "—"}`,
-        `Brakes (mm): LF:${brakeDepth.lf ?? "—"} RF:${brakeDepth.rf ?? "—"} LR:${brakeDepth.lr ?? "—"} RR:${brakeDepth.rr ?? "—"}`,
+        `Brakes (/32): LF:${brakeDepth.lf ?? "—"} RF:${brakeDepth.rf ?? "—"} LR:${brakeDepth.lr ?? "—"} RR:${brakeDepth.rr ?? "—"}`,
       ] : []),
       ...(inspConfig.section_measurements ? [
         paintReading && `Paint: ${paintReading}`,
@@ -639,7 +639,7 @@ const InspectionSheet = () => {
           <thead><tr style="background:#f1f5f9;"><th style="padding:6px;font-size:11px;border-bottom:1px solid #e2e8f0;"></th><th style="padding:6px;font-size:11px;border-bottom:1px solid #e2e8f0;">LF</th><th style="padding:6px;font-size:11px;border-bottom:1px solid #e2e8f0;">RF</th><th style="padding:6px;font-size:11px;border-bottom:1px solid #e2e8f0;">LR</th><th style="padding:6px;font-size:11px;border-bottom:1px solid #e2e8f0;">RR</th></tr></thead>
           <tbody>
             <tr><td style="padding:6px;font-size:12px;font-weight:600;border-bottom:1px solid #e2e8f0;">Tread (/32)</td><td style="padding:6px;text-align:center;border-bottom:1px solid #e2e8f0;">${tireDepth.lf ?? "—"}</td><td style="padding:6px;text-align:center;border-bottom:1px solid #e2e8f0;">${tireDepth.rf ?? "—"}</td><td style="padding:6px;text-align:center;border-bottom:1px solid #e2e8f0;">${tireDepth.lr ?? "—"}</td><td style="padding:6px;text-align:center;border-bottom:1px solid #e2e8f0;">${tireDepth.rr ?? "—"}</td></tr>
-            <tr><td style="padding:6px;font-size:12px;font-weight:600;">Brake (mm)</td><td style="padding:6px;text-align:center;">${brakeDepth.lf ?? "—"}</td><td style="padding:6px;text-align:center;">${brakeDepth.rf ?? "—"}</td><td style="padding:6px;text-align:center;">${brakeDepth.lr ?? "—"}</td><td style="padding:6px;text-align:center;">${brakeDepth.rr ?? "—"}</td></tr>
+            <tr><td style="padding:6px;font-size:12px;font-weight:600;">Brake (/32)</td><td style="padding:6px;text-align:center;">${brakeDepth.lf ?? "—"}</td><td style="padding:6px;text-align:center;">${brakeDepth.rf ?? "—"}</td><td style="padding:6px;text-align:center;">${brakeDepth.lr ?? "—"}</td><td style="padding:6px;text-align:center;">${brakeDepth.rr ?? "—"}</td></tr>
           </tbody>
         </table>
       </div>`;

@@ -171,16 +171,14 @@ const TireDepthDisplay = ({ label, depth }: { label: string; depth: number | nul
 // ── Brake Pad Depth Visual ──
 const BrakePadDisplay = ({ label, depth }: { label: string; depth: number | null }) => {
   if (depth == null) return null;
-  const color = depth >= 8 ? "text-green-600 bg-green-500/10"
-    : depth >= 6 ? "text-green-500 bg-green-400/10"
+  const color = depth >= 6 ? "text-green-600 bg-green-500/10"
     : depth >= 4 ? "text-amber-600 bg-amber-500/10"
-    : depth >= 2 ? "text-orange-600 bg-orange-500/10"
     : "text-destructive bg-destructive/10";
-  const statusLabel = depth >= 8 ? "New" : depth >= 6 ? "Good" : depth >= 4 ? "Fair" : depth >= 2 ? "Low" : "Replace";
+  const statusLabel = depth >= 6 ? "Good" : depth >= 4 ? "Fair" : "Replace";
   return (
     <div className={`rounded-lg p-2 text-center ${color}`}>
       <div className="text-[10px] font-medium opacity-70">{label}</div>
-      <div className="text-lg font-bold">{depth}<span className="text-[10px]">mm</span></div>
+      <div className="text-lg font-bold">{depth}<span className="text-[10px]">/32"</span></div>
       <div className="text-[9px] font-semibold">{statusLabel}</div>
     </div>
   );
@@ -473,7 +471,7 @@ export default function AppraisalTool() {
   // Parse brake pad depths from inspection notes
   const brakeDepths = useMemo(() => {
     if (!inspectionData) return null;
-    const match = inspectionData.match(/Brakes\s*\(mm\):\s*LF:(\d+|—)\s*RF:(\d+|—)\s*LR:(\d+|—)\s*RR:(\d+|—)/);
+    const match = inspectionData.match(/Brakes\s*\((?:mm|\/32)\):\s*LF:(\d+|—)\s*RF:(\d+|—)\s*LR:(\d+|—)\s*RR:(\d+|—)/);
     if (!match) return null;
     const parse = (v: string) => v === "—" ? null : parseInt(v, 10);
     return { lf: parse(match[1]), rf: parse(match[2]), lr: parse(match[3]), rr: parse(match[4]) };
@@ -963,7 +961,7 @@ export default function AppraisalTool() {
                       </div>
                       {avgBrakeDepth != null && (
                         <div className="mt-1.5 px-1">
-                          <span className="text-[10px] text-muted-foreground">Avg: {avgBrakeDepth.toFixed(1)}mm</span>
+                          <span className="text-[10px] text-muted-foreground">Avg: {avgBrakeDepth.toFixed(1)}/32"</span>
                         </div>
                       )}
                     </div>

@@ -122,7 +122,7 @@ const MobileInspection = () => {
     const notes = [
       `[INSPECTION ${new Date().toLocaleString()}]`,
       tireLF !== null ? `Tires (tread /32): LF:${tireLF} RF:${tireRF} LR:${tireLR} RR:${tireRR}` : null,
-      `Brakes (mm): LF:${brakeLF ?? "—"} RF:${brakeRF ?? "—"} LR:${brakeLR ?? "—"} RR:${brakeRR ?? "—"}`,
+      `Brakes (/32): LF:${brakeLF ?? "—"} RF:${brakeRF ?? "—"} LR:${brakeLR ?? "—"} RR:${brakeRR ?? "—"}`,
       paintReading && `Paint: ${paintReading}`,
       oilLife && `Oil: ${oilLife}`,
       batteryHealth && `Battery: ${batteryHealth}`,
