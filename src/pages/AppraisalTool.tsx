@@ -249,6 +249,7 @@ export default function AppraisalTool() {
         setSettings(settingsData as any);
         setLocalSettings(settingsData as any);
         setDealerPack((settingsData as any).dealer_pack ?? 0);
+        setHidePackFromAppraisal((settingsData as any).hide_pack_from_appraisal ?? false);
         setBbValueBasis(settingsData.bb_value_basis || "tradein_avg");
       }
 
