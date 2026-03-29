@@ -1392,6 +1392,7 @@ export type Database = {
           bb_msrp: number | null
           bb_regional_adj: number | null
           bb_retail_avg: number | null
+          bb_selected_options: string[] | null
           bb_tradein_avg: number | null
           bb_transmission: string | null
           bb_wholesale_avg: number | null
@@ -1478,6 +1479,7 @@ export type Database = {
           bb_msrp?: number | null
           bb_regional_adj?: number | null
           bb_retail_avg?: number | null
+          bb_selected_options?: string[] | null
           bb_tradein_avg?: number | null
           bb_transmission?: string | null
           bb_wholesale_avg?: number | null
@@ -1564,6 +1566,7 @@ export type Database = {
           bb_msrp?: number | null
           bb_regional_adj?: number | null
           bb_retail_avg?: number | null
+          bb_selected_options?: string[] | null
           bb_tradein_avg?: number | null
           bb_transmission?: string | null
           bb_wholesale_avg?: number | null
