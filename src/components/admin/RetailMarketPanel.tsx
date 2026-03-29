@@ -155,17 +155,27 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, radiusMiles = 100
 
   return (
     <div className="space-y-3">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <Store className="w-3.5 h-3.5 text-muted-foreground" />
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Live Market Data
-          </span>
+      {/* Header with radius adjuster */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <Store className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Live Market Data
+            </span>
+          </div>
+          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+            <MapPin className="w-3 h-3" />
+            <span>{radius}mi</span>
+          </div>
         </div>
-        <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-          <MapPin className="w-3 h-3" />
-          <span>{radiusMiles}mi radius</span>
+        <div className="flex items-center gap-2">
+          <Slider min={25} max={500} step={25} value={[radius]} onValueChange={([v]) => setRadius(v)} className="flex-1" />
+          {radius !== radiusMiles || !fetched ? (
+            <Button variant="outline" size="sm" className="text-[10px] h-6 px-2 shrink-0" onClick={() => { setFetched(false); setListings([]); setShowListings(false); setTimeout(fetchStats, 50); }} disabled={loading}>
+              {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Refresh"}
+            </Button>
+          ) : null}
         </div>
       </div>
 
