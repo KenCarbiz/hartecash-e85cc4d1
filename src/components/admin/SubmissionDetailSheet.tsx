@@ -21,7 +21,7 @@ import {
   Settings2, Wrench, Key, Wind, Cigarette, CircleDot, Sparkles, TrendingUp,
   AlertTriangle, Bell, Mail, Phone, StickyNote, CalendarDays, Camera,
   ExternalLink, Upload, Check, XCircle, MapPin, Star, History, Clock,
-  ClipboardCheck, ClipboardList, Save, Trash2,
+  ClipboardCheck, ClipboardList, Save, Trash2, CheckCircle2,
 } from "lucide-react";
 import type { Submission, DealerLocation } from "@/lib/adminConstants";
 import {
