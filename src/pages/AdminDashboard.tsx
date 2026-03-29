@@ -24,6 +24,7 @@ import ReportsExport from "@/components/admin/ReportsExport";
 import PermissionManagement from "@/components/admin/PermissionManagement";
 import ExecutiveKPIHub from "@/components/admin/ExecutiveKPIHub";
 import InspectionConfiguration from "@/components/admin/InspectionConfiguration";
+import DepthPolicyManager from "@/components/admin/DepthPolicyManager";
 import RequestAccessDialog from "@/components/admin/RequestAccessDialog";
 import SubmissionsTable from "@/components/admin/SubmissionsTable";
 import SubmissionDetailSheet from "@/components/admin/SubmissionDetailSheet";
