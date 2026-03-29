@@ -623,7 +623,20 @@ const SubmissionDetailSheet = ({
                 ) : undefined
               }>
                 {canSetPrice ? (
-                  <Input type="number" placeholder="Enter offer amount" value={sub.offered_price?.toString() || ""} onChange={(e) => updateField({ offered_price: e.target.value ? Number(e.target.value) : null })} />
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">$</span>
+                    <Input
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="0.00"
+                      className="pl-7"
+                      value={sub.offered_price != null ? Number(sub.offered_price).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ""}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/[^0-9.]/g, "");
+                        updateField({ offered_price: raw ? Number(raw) : null });
+                      }}
+                    />
+                  </div>
                 ) : (
                   <p className="text-card-foreground font-medium">
                     {(() => {
