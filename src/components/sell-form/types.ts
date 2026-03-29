@@ -15,6 +15,12 @@ export interface BBAddDeduct {
   xclean: number;
 }
 
+export interface BBColor {
+  code: string;
+  name: string;
+  rgb: string;
+}
+
 export interface BBVehicle {
   uvc: string;
   vin: string;
@@ -31,6 +37,8 @@ export interface BBVehicle {
   transmission: string;
   engine: string;
   fuel_type: string;
+  // Exterior colors from BB
+  exterior_colors: BBColor[];
   // Value adjustments
   mileage_adj: number;
   regional_adj: number;
