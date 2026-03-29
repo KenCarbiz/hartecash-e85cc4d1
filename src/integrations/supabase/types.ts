@@ -1808,6 +1808,10 @@ export type Database = {
           phone: string
           photos_uploaded: boolean
           progress_status: string
+          tire_lf: number
+          tire_lr: number
+          tire_rf: number
+          tire_rr: number
           token: string
           vehicle_make: string
           vehicle_model: string
