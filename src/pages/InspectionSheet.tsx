@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { formatGrade } from "@/lib/formatGrade";
 import PortalSkeleton from "@/components/PortalSkeleton";
 import VehicleImage from "@/components/sell-form/VehicleImage";
 import { useToast } from "@/hooks/use-toast";

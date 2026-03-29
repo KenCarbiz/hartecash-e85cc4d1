@@ -699,16 +699,16 @@ export default function AppraisalTool() {
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className={`text-xl font-black capitalize ${
+                    <span className={`text-xl font-black ${
                       sub.inspector_grade
                         ? "text-primary"
                         : "text-card-foreground"
                     }`}>
-                      {sub.inspector_grade || sub.overall_condition || "—"}
+                      {formatGrade(sub.inspector_grade || sub.overall_condition) || "—"}
                     </span>
                     {sub.inspector_grade && sub.overall_condition && sub.inspector_grade !== sub.overall_condition && (
                       <span className="text-[10px] text-muted-foreground">
-                        Customer said: <span className="line-through capitalize">{sub.overall_condition}</span>
+                        Customer said: <span className="text-muted-foreground">{formatGrade(sub.overall_condition)}</span>
                       </span>
                     )}
                     {!sub.inspector_grade && sub.overall_condition && (
