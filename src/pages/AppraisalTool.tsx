@@ -771,7 +771,105 @@ export default function AppraisalTool() {
               </div>
             </div>
 
-            {/* Equipment Add/Deducts */}
+            {/* ② b — TIRE & BRAKE HEALTH AT-A-GLANCE */}
+            {(sub.tire_lf != null || sub.brake_lf != null) && (() => {
+              const tires = [
+                { label: "LF", val: sub.tire_lf },
+                { label: "RF", val: sub.tire_rf },
+                { label: "LR", val: sub.tire_lr },
+                { label: "RR", val: sub.tire_rr },
+              ];
+              const brakes = [
+                { label: "LF", val: sub.brake_lf },
+                { label: "RF", val: sub.brake_rf },
+                { label: "LR", val: sub.brake_lr },
+                { label: "RR", val: sub.brake_rr },
+              ];
+              const hasTires = tires.some(t => t.val != null);
+              const hasBrakes = brakes.some(b => b.val != null);
+              if (!hasTires && !hasBrakes) return null;
+
+              const getStatus = (val: number | null) => {
+                if (val == null) return { color: "text-muted-foreground", bg: "bg-muted", label: "—" };
+                if (val <= 3) return { color: "text-red-600", bg: "bg-red-500/10 border-red-400/40", label: "Replace" };
+                if (val <= 5) return { color: "text-amber-600", bg: "bg-amber-500/10 border-amber-400/40", label: "Fair" };
+                return { color: "text-green-600", bg: "bg-green-500/10 border-green-400/40", label: "Good" };
+              };
+
+              const needsTires = hasTires && tires.some(t => t.val != null && t.val <= 3);
+              const needsBrakes = hasBrakes && brakes.some(b => b.val != null && b.val <= 3);
+
+              return (
+                <div className={`rounded-lg border-2 p-3 ${
+                  needsTires || needsBrakes
+                    ? "border-red-400/60 bg-red-500/5"
+                    : "border-border bg-card"
+                }`}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Gauge className="w-4 h-4 text-primary" />
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-card-foreground">
+                      Tire & Brake Health
+                    </span>
+                    {(needsTires || needsBrakes) && (
+                      <Badge variant="destructive" className="text-[9px] ml-auto animate-pulse">
+                        <AlertTriangle className="w-3 h-3 mr-1" />
+                        {needsTires && needsBrakes ? "Tires & Brakes Need Replacement" : needsTires ? "Needs Tires" : "Needs Brakes"}
+                      </Badge>
+                    )}
+                    {!needsTires && !needsBrakes && (
+                      <Badge variant="secondary" className="text-[9px] ml-auto text-green-600 bg-green-500/10 border-green-400/40">
+                        <CheckCircle className="w-3 h-3 mr-1" /> All Good
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {hasTires && (
+                      <div>
+                        <p className="text-[9px] font-bold uppercase text-muted-foreground mb-1.5">Tire Tread (/32")</p>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {tires.map(t => {
+                            const s = getStatus(t.val);
+                            return (
+                              <div key={t.label} className={`rounded-md border px-2 py-1.5 text-center ${s.bg}`}>
+                                <p className="text-[9px] text-muted-foreground">{t.label}</p>
+                                <p className={`text-base font-black ${s.color}`}>{t.val ?? "—"}</p>
+                                <p className={`text-[8px] font-bold uppercase ${s.color}`}>{s.label}</p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                    {hasBrakes && (
+                      <div>
+                        <p className="text-[9px] font-bold uppercase text-muted-foreground mb-1.5">Brake Pads (/32")</p>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {brakes.map(b => {
+                            const s = getStatus(b.val);
+                            return (
+                              <div key={b.label} className={`rounded-md border px-2 py-1.5 text-center ${s.bg}`}>
+                                <p className="text-[9px] text-muted-foreground">{b.label}</p>
+                                <p className={`text-base font-black ${s.color}`}>{b.val ?? "—"}</p>
+                                <p className={`text-[8px] font-bold uppercase ${s.color}`}>{s.label}</p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  {sub.tire_adjustment != null && sub.tire_adjustment !== 0 && (
+                    <div className="mt-2 pt-2 border-t border-border flex items-center justify-between">
+                      <span className="text-[10px] text-muted-foreground">Tire Value Adjustment</span>
+                      <span className={`text-sm font-bold ${sub.tire_adjustment >= 0 ? "text-green-600" : "text-red-600"}`}>
+                        {sub.tire_adjustment >= 0 ? "+" : ""}${Math.abs(sub.tire_adjustment).toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
             {bbVehicle && bbVehicle.add_deduct_list?.length > 0 && (
               <Collapsible>
                 <CollapsibleTrigger asChild>

@@ -1415,6 +1415,7 @@ export type Database = {
           exterior_color: string | null
           exterior_damage: string[] | null
           id: string
+          inspection_data: Json | null
           inspection_pin: string | null
           interior_damage: string[] | null
           internal_notes: string | null
@@ -1503,6 +1504,7 @@ export type Database = {
           exterior_color?: string | null
           exterior_damage?: string[] | null
           id?: string
+          inspection_data?: Json | null
           inspection_pin?: string | null
           interior_damage?: string[] | null
           internal_notes?: string | null
@@ -1591,6 +1593,7 @@ export type Database = {
           exterior_color?: string | null
           exterior_damage?: string[] | null
           id?: string
+          inspection_data?: Json | null
           inspection_pin?: string | null
           interior_damage?: string[] | null
           internal_notes?: string | null

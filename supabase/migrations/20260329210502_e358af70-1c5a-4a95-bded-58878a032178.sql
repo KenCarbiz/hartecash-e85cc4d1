@@ -1,0 +1,1 @@
+ALTER TABLE public.submissions ADD COLUMN IF NOT EXISTS inspection_data jsonb DEFAULT '{}'::jsonb;
