@@ -1,4 +1,5 @@
 import { Car, Gauge, Palette, Settings2, CheckCircle, Pencil, Disc3, Shield } from "lucide-react";
+import { formatGrade } from "@/lib/formatGrade";
 import { motion } from "framer-motion";
 import { InlineEdit } from "@/components/offer/InlineEdit";
 
