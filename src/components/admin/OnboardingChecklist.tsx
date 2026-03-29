@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import {
   CheckCircle, Circle, Image, MapPin, Bell, Building2, Palette, Phone,
-  Mail, Globe, FileText, Users, ScanLine
+  Mail, Globe, FileText, Users, ScanLine, Clock, Facebook, Star
 } from "lucide-react";
 
 interface CheckItem {
