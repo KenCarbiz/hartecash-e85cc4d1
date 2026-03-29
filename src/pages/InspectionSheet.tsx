@@ -707,34 +707,38 @@ const InspectionSheet = () => {
   }, [id]);
 
   // #8 — Animated save with confetti
-  const handleSave = async () => {
+   const handleSave = async () => {
     setSaving(true);
     setSaveSuccess(false);
 
-    const gatherSection = (title: string, items: string[]) => {
-      const entries = items
-        .filter(i => !!allGrades[i])
-        .map(i => `  ${i}: ${(allGrades[i] || "").toUpperCase()}${allNotes[i] ? ` — ${allNotes[i]}` : ""}`);
-      return entries.length > 0 ? `[${title}]\n${entries.join("\n")}` : "";
+    // Build structured inspection data to persist (not dumped into notes)
+    const inspectionData = {
+      grades: allGrades,
+      itemNotes: allNotes,
+      paintReading: paintReading || null,
+      oilLife: oilLife || null,
+      batteryHealth: batteryHealth || null,
+      inspectedAt: new Date().toISOString(),
+      mode: inspectionMode,
     };
 
-    const sections = [
-      `[INSPECTION ${new Date().toLocaleString()}]`,
-      ...(inspConfig.section_measurements ? [
-        paintReading && `Paint: ${paintReading}`,
-        oilLife && `Oil: ${oilLife}`,
-        batteryHealth && `Battery: ${batteryHealth}`,
-      ].filter(Boolean) : []),
-      ...ACTIVE_CHECKLIST_SECTIONS.map(s => gatherSection(s.label.toUpperCase(), s.items)),
-      overallGrade && `Customer Grade: ${customerGrade}`,
-      inspectorGrade && `Final Grade: ${inspectorGrade}`,
-      !inspectorGrade && overallGrade && `Grade: ${overallGrade}`,
-      inspectorNotes && `Notes: ${inspectorNotes}`,
-    ].filter(Boolean).join("\n\n");
+    // Save inspection_data JSON + only the user-typed notes
+    const { error: updateErr } = await supabase
+      .from("submissions")
+      .update({
+        inspection_data: inspectionData,
+        internal_notes: inspectorNotes || null,
+        overall_condition: inspectorGrade || overallGrade || undefined,
+        inspector_grade: inspectorGrade || null,
+        tire_lf: tireDepth.lf, tire_rf: tireDepth.rf, tire_lr: tireDepth.lr, tire_rr: tireDepth.rr,
+        brake_lf: brakeDepth.lf, brake_rf: brakeDepth.rf, brake_lr: brakeDepth.lr, brake_rr: brakeDepth.rr,
+      } as any)
+      .eq("id", id!);
 
+    // Also call RPC for tire adjustment calculation
     const { data, error } = await supabase.rpc("save_mobile_inspection", {
       _submission_id: id!,
-      _internal_notes: sections,
+      _internal_notes: inspectorNotes || "",
       _overall_condition: inspectorGrade || overallGrade || null,
       _tire_lf: tireDepth.lf,
       _tire_rf: tireDepth.rf,
