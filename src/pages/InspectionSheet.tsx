@@ -740,6 +740,7 @@ const InspectionSheet = () => {
   const handlePrint = () => {
     const vTitle = `${submission.vehicle_year || ""} ${submission.vehicle_make || ""} ${submission.vehicle_model || ""}`.trim();
     const dealerName = config?.dealership_name || "Dealership";
+    const logoUrl = config?.logo_url || "";
     const isStandard = inspectionMode === "ucm";
     const formTitle = isStandard ? "Standard Vehicle Inspection" : "Full Technical Inspection";
 
@@ -748,10 +749,12 @@ const InspectionSheet = () => {
       @page { size: letter; margin: 0.4in 0.5in; }
       * { box-sizing: border-box; margin: 0; padding: 0; }
       body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; color: #1a1a1a; font-size: 11px; line-height: 1.4; }
-      .header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 3px solid #111; padding-bottom: 10px; margin-bottom: 14px; }
-      .header h1 { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
-      .header .subtitle { font-size: 12px; color: #555; font-weight: 500; margin-top: 2px; }
-      .header .right { text-align: right; font-size: 10px; color: #666; }
+      .header { display: flex; align-items: center; border-bottom: 3px solid #111; padding-bottom: 10px; margin-bottom: 14px; position: relative; }
+      .header .logo { height: 44px; flex-shrink: 0; }
+      .header .center { flex: 1; text-align: center; }
+      .header .center h1 { font-size: 18px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; }
+      .header .center .subtitle { font-size: 11px; color: #555; font-weight: 500; margin-top: 2px; }
+      .header .right { text-align: right; font-size: 10px; color: #666; flex-shrink: 0; }
       .header .right .date { font-weight: 700; font-size: 11px; color: #111; }
       .vehicle-bar { display: flex; gap: 2px; margin-bottom: 14px; border: 1.5px solid #222; border-radius: 6px; overflow: hidden; }
       .vehicle-bar .cell { flex: 1; padding: 6px 10px; border-right: 1px solid #ddd; }
@@ -768,6 +771,9 @@ const InspectionSheet = () => {
       .grid-2 .item:nth-child(2n) { border-right: none; }
       .item { display: flex; align-items: flex-start; gap: 6px; padding: 5px 8px; }
       .cb { width: 13px; height: 13px; border: 1.5px solid #555; border-radius: 2px; flex-shrink: 0; margin-top: 1px; }
+      .pf-boxes { display: flex; gap: 6px; flex-shrink: 0; }
+      .pf-box { display: flex; align-items: center; gap: 2px; font-size: 8px; font-weight: 600; color: #666; }
+      .pf-box .cb-sm { width: 12px; height: 12px; border: 1.5px solid #555; border-radius: 2px; }
       .item-label { font-size: 10.5px; font-weight: 500; flex: 1; }
       .item-grade { display: flex; gap: 3px; flex-shrink: 0; }
       .item-grade .g { width: 14px; height: 14px; border: 1px solid #bbb; border-radius: 2px; text-align: center; font-size: 7px; line-height: 14px; font-weight: 600; color: #888; }
@@ -806,9 +812,11 @@ const InspectionSheet = () => {
       </div>`;
 
     // ── Build checklist item row ──
+    const passFail = `<div class="pf-boxes"><div class="pf-box"><div class="cb-sm"></div>P</div><div class="pf-box"><div class="cb-sm"></div>F</div></div>`;
+
     const checkItem = (label: string, withGrades: boolean, withNote: boolean = true) => `
       <div class="item">
-        <div class="cb"></div>
+        ${withGrades ? '' : passFail}
         <span class="item-label">${label}</span>
         ${withNote ? '<div class="note-line"></div>' : ''}
         ${withGrades ? gradeColumns : ''}
@@ -955,9 +963,10 @@ const InspectionSheet = () => {
       <style>${css}</style>
     </head><body>
       <div class="header">
-        <div>
-          <h1>${dealerName}</h1>
-          <div class="subtitle">${formTitle}</div>
+        ${logoUrl ? `<img class="logo" src="${logoUrl}" alt="${dealerName}" style="filter:brightness(0);" />` : `<span style="font-size:16px;font-weight:800;">${dealerName}</span>`}
+        <div class="center">
+          <h1>${formTitle}</h1>
+          <div class="subtitle">${vTitle || "Vehicle Inspection"}</div>
         </div>
         <div class="right">
           <div class="date">Date: _____ / _____ / _____</div>
