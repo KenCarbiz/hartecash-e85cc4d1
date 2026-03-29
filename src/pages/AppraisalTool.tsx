@@ -1078,7 +1078,7 @@ export default function AppraisalTool() {
                             : "bg-muted text-muted-foreground border border-border"
                         }`}>
                           <Shield className="w-3 h-3" />
-                          {sub.inspector_grade ? "Final: " : ""}{sub.inspector_grade || sub.overall_condition}
+                          {sub.inspector_grade ? "Final: " : ""}{formatGrade(sub.inspector_grade || sub.overall_condition)}
                         </div>
                       )}
                     </div>
