@@ -328,8 +328,8 @@ const AdminDashboard = () => {
                       {pendingRequests.length === 0 ? (
                         <div className="text-center py-8 text-muted-foreground">No pending access requests.</div>
                       ) : (
-                        <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
-                          <table className="w-full text-sm">
+                        <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden overflow-x-auto">
+                          <table className="w-full text-sm min-w-[600px]">
                             <thead><tr className="border-b border-border bg-muted/50">
                               <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Email</th>
                               <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Requested</th>
