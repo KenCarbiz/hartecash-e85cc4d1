@@ -353,6 +353,57 @@ export type Database = {
         }
         Relationships: []
       }
+      depth_policies: {
+        Row: {
+          all_brands: boolean
+          created_at: string
+          dealership_id: string
+          id: string
+          is_active: boolean
+          max_mileage: number | null
+          max_vehicle_age_years: number | null
+          min_brake_depth: number
+          min_tire_depth: number
+          name: string
+          oem_brands: string[]
+          policy_type: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          all_brands?: boolean
+          created_at?: string
+          dealership_id?: string
+          id?: string
+          is_active?: boolean
+          max_mileage?: number | null
+          max_vehicle_age_years?: number | null
+          min_brake_depth?: number
+          min_tire_depth?: number
+          name: string
+          oem_brands?: string[]
+          policy_type?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          all_brands?: boolean
+          created_at?: string
+          dealership_id?: string
+          id?: string
+          is_active?: boolean
+          max_mileage?: number | null
+          max_vehicle_age_years?: number | null
+          min_brake_depth?: number
+          min_tire_depth?: number
+          name?: string
+          oem_brands?: string[]
+          policy_type?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       follow_ups: {
         Row: {
           channel: string
