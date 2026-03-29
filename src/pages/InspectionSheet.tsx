@@ -438,7 +438,9 @@ const InspectionSheet = () => {
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [showMobileQR, setShowMobileQR] = useState(false);
-  const [inspectionMode, setInspectionMode] = useState<InspectionMode>("ucm");
+  const [inspectionMode, setInspectionMode] = useState<InspectionMode>(
+    inspConfig.default_inspection_mode === "full" ? "full" : "ucm"
+  );
 
   // Get section defs based on inspection mode
   const SECTION_DEFS = getSectionDefs(inspectionMode);
