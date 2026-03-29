@@ -79,6 +79,17 @@ serve(async (req) => {
     }
 
     const vehicleList = bbData.used_vehicles?.used_vehicle_list || [];
+    if (vehicleList.length > 0) {
+      console.log("BB raw vehicle keys:", Object.keys(vehicleList[0]).join(", "));
+      const v0 = vehicleList[0];
+      console.log("BB drivetrain fields:", JSON.stringify({
+        drivetrain: v0.drivetrain, drive_train: v0.drive_train,
+        engine: v0.engine, engine_description: v0.engine_description, engine_desc: v0.engine_desc,
+        transmission: v0.transmission, trans: v0.trans, transmission_description: v0.transmission_description,
+        fuel_type: v0.fuel_type, fuel: v0.fuel, fuel_description: v0.fuel_description,
+        cylinders: v0.cylinders, displacement: v0.displacement,
+      }));
+    }
 
     // Fetch exterior colors for each vehicle UVC via GraphQL
     const colorFetches = vehicleList.map(async (v: Record<string, unknown>) => {
