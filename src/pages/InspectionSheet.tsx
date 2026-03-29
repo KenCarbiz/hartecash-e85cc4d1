@@ -571,10 +571,15 @@ const InspectionSheet = () => {
       inspectorNotes && `Notes: ${inspectorNotes}`,
     ].filter(Boolean).join("\n\n");
 
-    const { error } = await supabase.from("submissions").update({
-      internal_notes: sections,
-      overall_condition: overallGrade || undefined,
-    }).eq("id", id!);
+    const { data, error } = await supabase.rpc("save_mobile_inspection", {
+      _submission_id: id!,
+      _internal_notes: sections,
+      _overall_condition: overallGrade || null,
+      _tire_lf: tireDepth.lf,
+      _tire_rf: tireDepth.rf,
+      _tire_lr: tireDepth.lr,
+      _tire_rr: tireDepth.rr,
+    } as any);
 
     setSaving(false);
     if (error) {
