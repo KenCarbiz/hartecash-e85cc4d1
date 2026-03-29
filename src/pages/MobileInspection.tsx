@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import confetti from "canvas-confetti";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Save, CheckCircle, Gauge, Wrench, Car, Lock, DollarSign } from "lucide-react";
+import { Save, CheckCircle, Gauge, Wrench, Car, Lock, DollarSign, ClipboardCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -34,6 +34,9 @@ const MobileField = ({ label, value, onChange, placeholder }: { label: string; v
 
 const MobileInspection = () => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  const modeParam = searchParams.get("mode");
+  const isFullMode = modeParam === "full";
   const { toast } = useToast();
 
   const [pinVerified, setPinVerified] = useState(false);
@@ -53,20 +56,26 @@ const MobileInspection = () => {
   const [tireLR, setTireLR] = useState<number | null>(null);
   const [tireRR, setTireRR] = useState<number | null>(null);
 
-  // Other fields
+  // Brake depths
   const [brakeLF, setBrakeLF] = useState<number | null>(null);
   const [brakeRF, setBrakeRF] = useState<number | null>(null);
   const [brakeLR, setBrakeLR] = useState<number | null>(null);
   const [brakeRR, setBrakeRR] = useState<number | null>(null);
+
+  // Fields shared by both modes
+  const [overallGrade, setOverallGrade] = useState("");
+  const [inspectorNotes, setInspectorNotes] = useState("");
+
+  // Standard mode quick checks
+  const [acNotes, setAcNotes] = useState("");
+
+  // Full mode deep mechanical fields
   const [paintReading, setPaintReading] = useState("");
   const [oilLife, setOilLife] = useState("");
   const [batteryHealth, setBatteryHealth] = useState("");
-  const [acNotes, setAcNotes] = useState("");
   const [engineNotes, setEngineNotes] = useState("");
   const [transmissionNotes, setTransmissionNotes] = useState("");
   const [suspensionNotes, setSuspensionNotes] = useState("");
-  const [overallGrade, setOverallGrade] = useState("");
-  const [inspectorNotes, setInspectorNotes] = useState("");
 
   // Verify PIN
   const handleVerifyPin = async () => {
@@ -119,16 +128,17 @@ const MobileInspection = () => {
   const handleSave = async () => {
     setSaving(true);
     const notes = [
-      `[INSPECTION ${new Date().toLocaleString()}]`,
+      `[${isFullMode ? "FULL" : "STANDARD"} INSPECTION ${new Date().toLocaleString()}]`,
       tireLF !== null ? `Tires (tread /32): LF:${tireLF} RF:${tireRF} LR:${tireLR} RR:${tireRR}` : null,
       `Brakes (/32): LF:${brakeLF ?? "—"} RF:${brakeRF ?? "—"} LR:${brakeLR ?? "—"} RR:${brakeRR ?? "—"}`,
-      paintReading && `Paint: ${paintReading}`,
-      oilLife && `Oil: ${oilLife}`,
-      batteryHealth && `Battery: ${batteryHealth}`,
       acNotes && `A/C: ${acNotes}`,
-      engineNotes && `Engine: ${engineNotes}`,
-      transmissionNotes && `Trans: ${transmissionNotes}`,
-      suspensionNotes && `Suspension: ${suspensionNotes}`,
+      // Full mode fields
+      isFullMode && paintReading && `Paint: ${paintReading}`,
+      isFullMode && oilLife && `Oil: ${oilLife}`,
+      isFullMode && batteryHealth && `Battery: ${batteryHealth}`,
+      isFullMode && engineNotes && `Engine: ${engineNotes}`,
+      isFullMode && transmissionNotes && `Trans: ${transmissionNotes}`,
+      isFullMode && suspensionNotes && `Suspension: ${suspensionNotes}`,
       overallGrade && `Grade: ${overallGrade}`,
       inspectorNotes && `Notes: ${inspectorNotes}`,
     ].filter(Boolean).join("\n");
@@ -207,12 +217,21 @@ const MobileInspection = () => {
     <div className="min-h-screen bg-background pb-24">
       {/* Sticky header */}
       <div className="sticky top-0 z-40 bg-primary text-primary-foreground px-4 py-3">
-        <div className="flex items-center gap-2">
-          <Car className="h-5 w-5" />
-          <div>
-            <p className="font-bold text-sm leading-tight">{vehicleTitle}</p>
-            <p className="text-[10px] opacity-70">VIN: {submission.vin || "N/A"} • {submission.mileage ? `${Number(submission.mileage).toLocaleString()} mi` : ""}</p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Car className="h-5 w-5" />
+            <div>
+              <p className="font-bold text-sm leading-tight">{vehicleTitle}</p>
+              <p className="text-[10px] opacity-70">VIN: {submission.vin || "N/A"} • {submission.mileage ? `${Number(submission.mileage).toLocaleString()} mi` : ""}</p>
+            </div>
           </div>
+          <Badge variant="outline" className="text-primary-foreground border-primary-foreground/30 text-[10px]">
+            {isFullMode ? (
+              <><Wrench className="w-3 h-3 mr-1" /> Full</>
+            ) : (
+              <><ClipboardCheck className="w-3 h-3 mr-1" /> Standard</>
+            )}
+          </Badge>
         </div>
       </div>
 
@@ -242,7 +261,7 @@ const MobileInspection = () => {
           </Card>
         )}
 
-        {/* Tire Tread & Brake Pads — Combined Widget */}
+        {/* Tire Tread & Brake Pads */}
         <Card>
           <CardHeader className="pb-2 pt-4 px-4">
             <CardTitle className="text-sm flex items-center gap-2">
@@ -252,18 +271,8 @@ const MobileInspection = () => {
           </CardHeader>
           <CardContent className="px-4 pb-4">
             <BrakePadDepthWidget
-              tireDepths={{
-                leftFront: tireLF,
-                rightFront: tireRF,
-                leftRear: tireLR,
-                rightRear: tireRR,
-              }}
-              brakeDepths={{
-                leftFront: brakeLF,
-                rightFront: brakeRF,
-                leftRear: brakeLR,
-                rightRear: brakeRR,
-              }}
+              tireDepths={{ leftFront: tireLF, rightFront: tireRF, leftRear: tireLR, rightRear: tireRR }}
+              brakeDepths={{ leftFront: brakeLF, rightFront: brakeRF, leftRear: brakeLR, rightRear: brakeRR }}
               onTireChange={(id, depth) => {
                 if (id === "leftFront") setTireLF(depth);
                 else if (id === "rightFront") setTireRF(depth);
@@ -296,32 +305,52 @@ const MobileInspection = () => {
           </Card>
         )}
 
-        {/* Mechanical Quick Checks */}
-        <Card>
-          <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Wrench className="h-4 w-4 text-primary" /> Mechanical Checks
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 pb-4 space-y-3">
-            <MobileField label="Paint Meter (mil)" value={paintReading} onChange={setPaintReading} placeholder="e.g. 4.2 avg" />
-            <MobileField label="Oil Life %" value={oilLife} onChange={setOilLife} placeholder="e.g. 65%" />
-            <MobileField label="Battery" value={batteryHealth} onChange={setBatteryHealth} placeholder="e.g. Good — 12.6V" />
-            <MobileField label="A/C" value={acNotes} onChange={setAcNotes} placeholder="e.g. Blowing cold" />
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground mb-1 block">Engine</label>
-              <Textarea value={engineNotes} onChange={e => setEngineNotes(e.target.value)} placeholder="Start quality, leaks, smoke..." className="text-sm min-h-[50px]" />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground mb-1 block">Transmission</label>
-              <Textarea value={transmissionNotes} onChange={e => setTransmissionNotes(e.target.value)} placeholder="Shift quality, noises..." className="text-sm min-h-[50px]" />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground mb-1 block">Suspension / Steering</label>
-              <Textarea value={suspensionNotes} onChange={e => setSuspensionNotes(e.target.value)} placeholder="Play, struts, bushings..." className="text-sm min-h-[50px]" />
-            </div>
-          </CardContent>
-        </Card>
+        {/* Standard Mode: Quick Checks (abbreviated) */}
+        {!isFullMode && (
+          <Card>
+            <CardHeader className="pb-2 pt-4 px-4">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <ClipboardCheck className="h-4 w-4 text-primary" /> Quick Checks
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-4 space-y-3">
+              <MobileField label="A/C" value={acNotes} onChange={setAcNotes} placeholder="e.g. Blowing cold" />
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground mb-1 block">Notes</label>
+                <Textarea value={inspectorNotes} onChange={e => setInspectorNotes(e.target.value)} placeholder="Paint issues, interior concerns, anything notable..." className="text-sm min-h-[80px]" />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Full Mode: Deep Mechanical Checks */}
+        {isFullMode && (
+          <Card>
+            <CardHeader className="pb-2 pt-4 px-4">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Wrench className="h-4 w-4 text-primary" /> Mechanical Checks
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-4 space-y-3">
+              <MobileField label="Paint Meter (mil)" value={paintReading} onChange={setPaintReading} placeholder="e.g. 4.2 avg" />
+              <MobileField label="Oil Life %" value={oilLife} onChange={setOilLife} placeholder="e.g. 65%" />
+              <MobileField label="Battery" value={batteryHealth} onChange={setBatteryHealth} placeholder="e.g. Good — 12.6V" />
+              <MobileField label="A/C" value={acNotes} onChange={setAcNotes} placeholder="e.g. Blowing cold" />
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground mb-1 block">Engine</label>
+                <Textarea value={engineNotes} onChange={e => setEngineNotes(e.target.value)} placeholder="Start quality, leaks, smoke..." className="text-sm min-h-[50px]" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground mb-1 block">Transmission</label>
+                <Textarea value={transmissionNotes} onChange={e => setTransmissionNotes(e.target.value)} placeholder="Shift quality, noises..." className="text-sm min-h-[50px]" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground mb-1 block">Suspension / Steering</label>
+                <Textarea value={suspensionNotes} onChange={e => setSuspensionNotes(e.target.value)} placeholder="Play, struts, bushings..." className="text-sm min-h-[50px]" />
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Final Grade */}
         <Card>
@@ -352,10 +381,12 @@ const MobileInspection = () => {
                 <Badge variant="outline" className="capitalize">{submission.ai_condition_score}</Badge>
               </div>
             )}
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground mb-1 block">Inspector Notes</label>
-              <Textarea value={inspectorNotes} onChange={e => setInspectorNotes(e.target.value)} placeholder="Additional notes..." className="text-sm min-h-[80px]" />
-            </div>
+            {isFullMode && (
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground mb-1 block">Inspector Notes</label>
+                <Textarea value={inspectorNotes} onChange={e => setInspectorNotes(e.target.value)} placeholder="Additional notes..." className="text-sm min-h-[80px]" />
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

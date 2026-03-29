@@ -911,7 +911,7 @@ const InspectionSheet = () => {
                   <p className="text-sm font-bold text-card-foreground mb-1">📱 Scan to Inspect</p>
                   <p className="text-xs text-muted-foreground mb-3">Open on your phone to walk around the vehicle</p>
                   <div className="bg-white p-3 rounded-lg inline-block border shadow-sm mb-3">
-                    <QRCodeSVG value={`${window.location.origin}/inspect/${id}`} size={160} level="H" />
+                    <QRCodeSVG value={`${window.location.origin}/inspect/${id}?mode=${inspectionMode === "full" ? "full" : "standard"}`} size={160} level="H" />
                   </div>
                   {submission?.inspection_pin && (
                     <div className="bg-muted rounded-lg p-2 mb-2">
@@ -992,7 +992,7 @@ const InspectionSheet = () => {
               <p className="text-[10px] text-muted-foreground mt-1">Scan to fill digitally →</p>
             </div>
             <div className="border border-foreground/20 rounded p-1">
-              <QRCodeSVG value={`${window.location.origin}/inspect/${id}`} size={64} level="M" />
+              <QRCodeSVG value={`${window.location.origin}/inspect/${id}?mode=${inspectionMode === "full" ? "full" : "standard"}`} size={64} level="M" />
             </div>
           </div>
         </div>
