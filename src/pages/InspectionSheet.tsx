@@ -812,9 +812,11 @@ const InspectionSheet = () => {
       </div>`;
 
     // ── Build checklist item row ──
+    const passFail = `<div class="pf-boxes"><div class="pf-box"><div class="cb-sm"></div>P</div><div class="pf-box"><div class="cb-sm"></div>F</div></div>`;
+
     const checkItem = (label: string, withGrades: boolean, withNote: boolean = true) => `
       <div class="item">
-        <div class="cb"></div>
+        ${withGrades ? '' : passFail}
         <span class="item-label">${label}</span>
         ${withNote ? '<div class="note-line"></div>' : ''}
         ${withGrades ? gradeColumns : ''}
