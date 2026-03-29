@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Save, GripVertical, Plus, Trash2, ChevronDown, ChevronRight,
   Gauge, ThermometerSun, Paintbrush, Armchair, Wrench, Zap, Eye,
-  Camera, StickyNote, Loader2,
+  Camera, StickyNote, Loader2, ClipboardCheck,
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
