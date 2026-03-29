@@ -1566,14 +1566,14 @@ const InspectionSheet = () => {
               <div>
                 <label className="text-xs font-semibold text-muted-foreground mb-1 block">Customer Self-Assessment</label>
                 <div className="h-10 flex items-center">
-                  <Badge variant="outline" className={`capitalize text-sm px-3 py-1 ${
+                  <Badge variant="outline" className={`text-sm px-3 py-1 ${
                     customerGrade === "excellent" ? "border-emerald-400/50 text-emerald-600 bg-emerald-500/10" :
                     customerGrade === "good" ? "border-emerald-400/50 text-emerald-600 bg-emerald-500/10" :
                     customerGrade === "fair" ? "border-amber-400/50 text-amber-600 bg-amber-500/10" :
                     customerGrade === "rough" || customerGrade === "poor" ? "border-red-400/50 text-red-600 bg-red-500/10" :
                     ""
                   }`}>
-                    {customerGrade || "Not provided"}
+                    {formatGrade(customerGrade) || "Not provided"}
                   </Badge>
                 </div>
               </div>
