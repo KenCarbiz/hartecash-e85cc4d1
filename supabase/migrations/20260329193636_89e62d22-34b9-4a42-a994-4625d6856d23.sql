@@ -1,0 +1,1 @@
+ALTER TABLE public.inspection_config ADD COLUMN IF NOT EXISTS default_inspection_mode text NOT NULL DEFAULT 'standard';

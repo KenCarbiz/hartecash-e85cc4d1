@@ -480,6 +480,7 @@ export type Database = {
           created_at: string
           custom_items: Json
           dealership_id: string
+          default_inspection_mode: string
           disabled_fields: Json
           enable_tire_adjustments: boolean
           id: string
@@ -509,6 +510,7 @@ export type Database = {
           created_at?: string
           custom_items?: Json
           dealership_id?: string
+          default_inspection_mode?: string
           disabled_fields?: Json
           enable_tire_adjustments?: boolean
           id?: string
@@ -538,6 +540,7 @@ export type Database = {
           created_at?: string
           custom_items?: Json
           dealership_id?: string
+          default_inspection_mode?: string
           disabled_fields?: Json
           enable_tire_adjustments?: boolean
           id?: string
