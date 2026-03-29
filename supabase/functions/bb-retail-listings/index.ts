@@ -56,41 +56,66 @@ serve(async (req) => {
     console.log("BB Retail Stats URL:", statsUrl);
 
     const statsRes = await fetch(statsUrl, { headers: authHeaders });
-    const statsData = await statsRes.json();
+    const statsText = await statsRes.text();
+    console.log("BB Retail Stats status:", statsRes.status, "body length:", statsText.length);
 
-    if (statsData.error_count > 0) {
-      const errorMsg = statsData.message_list?.map((m: { description: string }) => m.description).join(", ") || "Retail data not available";
+    if (!statsRes.ok) {
+      console.error("BB Retail Stats HTTP error:", statsRes.status, statsText.substring(0, 500));
+      return new Response(JSON.stringify({ error: `Black Book returned ${statsRes.status}: ${statsText.substring(0, 200)}` }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    if (!statsText || statsText.trim().length === 0) {
+      return new Response(JSON.stringify({ error: "Black Book returned an empty response. This vehicle may not have retail listing data available.", statistics: null, listings: [] }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    let statsData: Record<string, unknown>;
+    try {
+      statsData = JSON.parse(statsText);
+    } catch {
+      console.error("BB Retail Stats JSON parse error, raw:", statsText.substring(0, 500));
+      return new Response(JSON.stringify({ error: "Invalid response from Black Book API", statistics: null, listings: [] }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    // deno-lint-ignore no-explicit-any
+    const sd = statsData as any;
+    console.log("BB Retail Stats keys:", Object.keys(sd));
+
+    if (sd.error_count > 0) {
+      const errorMsg = sd.message_list?.map((m: { description: string }) => m.description).join(", ") || "Retail data not available";
       console.error("BB Retail Stats error:", errorMsg);
       return new Response(JSON.stringify({ error: errorMsg, statistics: null, listings: [] }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
-    // Extract statistics
+    const activeStats = sd.active_statistics;
+    const soldStats = sd.sold_statistics;
     const statistics = {
-      mean_days_to_turn: statsData.mean_days_to_turn ?? null,
-      market_days_supply: statsData.market_days_supply ?? null,
-      active: statsData.active_statistics ? {
-        vehicle_count: statsData.active_statistics.vehicle_count ?? 0,
-        minimum_price: statsData.active_statistics.minimum_price ?? 0,
-        maximum_price: statsData.active_statistics.maximum_price ?? 0,
-        mean_price: statsData.active_statistics.mean_price ?? 0,
-        median_price: statsData.active_statistics.median_price ?? 0,
-        minimum_mileage: statsData.active_statistics.minimum_mileage ?? 0,
-        maximum_mileage: statsData.active_statistics.maximum_mileage ?? 0,
-        mean_mileage: statsData.active_statistics.mean_mileage ?? 0,
-        median_mileage: statsData.active_statistics.median_mileage ?? 0,
+      mean_days_to_turn: sd.mean_days_to_turn ?? null,
+      market_days_supply: sd.market_days_supply ?? null,
+      active: activeStats ? {
+        vehicle_count: activeStats.vehicle_count ?? 0,
+        minimum_price: activeStats.minimum_price ?? 0,
+        maximum_price: activeStats.maximum_price ?? 0,
+        mean_price: activeStats.mean_price ?? 0,
+        median_price: activeStats.median_price ?? 0,
+        mean_mileage: activeStats.mean_mileage ?? 0,
+        median_mileage: activeStats.median_mileage ?? 0,
       } : null,
-      sold: statsData.sold_statistics ? {
-        vehicle_count: statsData.sold_statistics.vehicle_count ?? 0,
-        minimum_price: statsData.sold_statistics.minimum_price ?? 0,
-        maximum_price: statsData.sold_statistics.maximum_price ?? 0,
-        mean_price: statsData.sold_statistics.mean_price ?? 0,
-        median_price: statsData.sold_statistics.median_price ?? 0,
-        minimum_mileage: statsData.sold_statistics.minimum_mileage ?? 0,
-        maximum_mileage: statsData.sold_statistics.maximum_mileage ?? 0,
-        mean_mileage: statsData.sold_statistics.mean_mileage ?? 0,
-        median_mileage: statsData.sold_statistics.median_mileage ?? 0,
+      sold: soldStats ? {
+        vehicle_count: soldStats.vehicle_count ?? 0,
+        minimum_price: soldStats.minimum_price ?? 0,
+        maximum_price: soldStats.maximum_price ?? 0,
+        mean_price: soldStats.mean_price ?? 0,
+        median_price: soldStats.median_price ?? 0,
+        mean_mileage: soldStats.mean_mileage ?? 0,
+        median_mileage: soldStats.median_mileage ?? 0,
       } : null,
     };
 
@@ -114,7 +139,9 @@ serve(async (req) => {
       console.log("BB Retail Listings URL:", listUrl);
 
       const listRes = await fetch(listUrl, { headers: authHeaders });
-      const listData = await listRes.json();
+      const listText = await listRes.text();
+      let listData: Record<string, unknown> = {};
+      try { listData = JSON.parse(listText); } catch { console.error("BB Listings parse error:", listText.substring(0, 300)); }
 
       if (listData.error_count === 0 && listData.listings) {
         listings = (listData.listings as Array<Record<string, unknown>>).map((l) => ({
