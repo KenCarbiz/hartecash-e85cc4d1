@@ -936,43 +936,37 @@ export default function AppraisalTool() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {hasTires && (
+                  {(hasTires || hasBrakes) && (
                     <div>
-                      <div className="text-[10px] font-semibold text-muted-foreground uppercase mb-1">Tire Tread Depth</div>
-                      <div className="grid grid-cols-4 gap-2">
-                        <TireDepthDisplay label="LF" depth={sub.tire_lf} />
-                        <TireDepthDisplay label="RF" depth={sub.tire_rf} />
-                        <TireDepthDisplay label="LR" depth={sub.tire_lr} />
-                        <TireDepthDisplay label="RR" depth={sub.tire_rr} />
-                      </div>
+                      <BrakePadDepthWidget
+                        showTires={hasTires}
+                        showBrakes={hasBrakes}
+                        tireDepths={{
+                          leftFront: sub.tire_lf,
+                          rightFront: sub.tire_rf,
+                          leftRear: sub.tire_lr,
+                          rightRear: sub.tire_rr,
+                        }}
+                        brakeDepths={brakeDepths ? {
+                          leftFront: brakeDepths.lf,
+                          rightFront: brakeDepths.rf,
+                          leftRear: brakeDepths.lr,
+                          rightRear: brakeDepths.rr,
+                        } : undefined}
+                        readOnly
+                        compact
+                      />
                       <div className="flex items-center justify-between mt-1.5 px-1">
-                        <span className="text-[10px] text-muted-foreground">Avg: {avgTireDepth}/32"</span>
+                        {hasTires && <span className="text-[10px] text-muted-foreground">Tire Avg: {avgTireDepth}/32"</span>}
                         {sub.tire_adjustment != null && sub.tire_adjustment !== 0 && (
                           <span className={`text-[10px] font-bold ${Number(sub.tire_adjustment) >= 0 ? "text-green-600" : "text-destructive"}`}>
                             Tire Adj: {Number(sub.tire_adjustment) >= 0 ? "+" : ""}${Number(sub.tire_adjustment).toLocaleString()}
                           </span>
                         )}
+                        {hasBrakes && avgBrakeDepth != null && (
+                          <span className="text-[10px] text-muted-foreground">Brake Avg: {avgBrakeDepth.toFixed(1)}/32"</span>
+                        )}
                       </div>
-                    </div>
-                  )}
-                  {hasBrakes && brakeDepths && (
-                    <div>
-                      <div className="text-[10px] font-semibold text-muted-foreground uppercase mb-2">Brake Pad Depth</div>
-                      <BrakePadDepthWidget
-                        depths={{
-                          leftFront: brakeDepths.lf,
-                          rightFront: brakeDepths.rf,
-                          leftRear: brakeDepths.lr,
-                          rightRear: brakeDepths.rr,
-                        }}
-                        readOnly
-                        compact
-                      />
-                      {avgBrakeDepth != null && (
-                        <div className="mt-1.5 px-1">
-                          <span className="text-[10px] text-muted-foreground">Avg: {avgBrakeDepth.toFixed(1)}/32"</span>
-                        </div>
-                      )}
                     </div>
                   )}
                   {inspectionData && (

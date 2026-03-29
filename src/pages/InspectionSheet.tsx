@@ -967,24 +967,28 @@ const InspectionSheet = () => {
                     {openSections.tires && (
                       <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
                         <CardContent className="pt-2">
-                          {inspConfig.show_tire_tread_depth && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                              <TreadDepthPicker label="Left Front" value={tireDepth.lf} onChange={v => setTireDepth(p => ({ ...p, lf: v }))} />
-                              <TreadDepthPicker label="Right Front" value={tireDepth.rf} onChange={v => setTireDepth(p => ({ ...p, rf: v }))} />
-                              <TreadDepthPicker label="Left Rear" value={tireDepth.lr} onChange={v => setTireDepth(p => ({ ...p, lr: v }))} />
-                              <TreadDepthPicker label="Right Rear" value={tireDepth.rr} onChange={v => setTireDepth(p => ({ ...p, rr: v }))} />
-                            </div>
-                          )}
-                          {inspConfig.show_brake_pad_measurements && (
+                          {(inspConfig.show_tire_tread_depth || inspConfig.show_brake_pad_measurements) && (
                             <div className="mb-4">
                               <BrakePadDepthWidget
-                                depths={{
+                                showTires={inspConfig.show_tire_tread_depth}
+                                showBrakes={inspConfig.show_brake_pad_measurements}
+                                tireDepths={{
+                                  leftFront: tireDepth.lf,
+                                  rightFront: tireDepth.rf,
+                                  leftRear: tireDepth.lr,
+                                  rightRear: tireDepth.rr,
+                                }}
+                                brakeDepths={{
                                   leftFront: brakeDepth.lf,
                                   rightFront: brakeDepth.rf,
                                   leftRear: brakeDepth.lr,
                                   rightRear: brakeDepth.rr,
                                 }}
-                                onChange={(id, depth) => {
+                                onTireChange={(id, depth) => {
+                                  const map: Record<string, string> = { leftFront: "lf", rightFront: "rf", leftRear: "lr", rightRear: "rr" };
+                                  setTireDepth(p => ({ ...p, [map[id]]: depth }));
+                                }}
+                                onBrakeChange={(id, depth) => {
                                   const map: Record<string, string> = { leftFront: "lf", rightFront: "rf", leftRear: "lr", rightRear: "rr" };
                                   setBrakeDepth(p => ({ ...p, [map[id]]: depth }));
                                 }}
