@@ -472,6 +472,21 @@ export default function AppraisalTool() {
     return match ? match[0] : null;
   }, [sub]);
 
+  // Parse brake pad depths from inspection notes
+  const brakeDepths = useMemo(() => {
+    if (!inspectionData) return null;
+    const match = inspectionData.match(/Brakes\s*\(mm\):\s*LF:(\d+|—)\s*RF:(\d+|—)\s*LR:(\d+|—)\s*RR:(\d+|—)/);
+    if (!match) return null;
+    const parse = (v: string) => v === "—" ? null : parseInt(v, 10);
+    return { lf: parse(match[1]), rf: parse(match[2]), lr: parse(match[3]), rr: parse(match[4]) };
+  }, [inspectionData]);
+
+  const hasBrakes = !!(brakeDepths && (brakeDepths.lf != null || brakeDepths.rf != null || brakeDepths.lr != null || brakeDepths.rr != null));
+  const avgBrakeDepth = hasBrakes
+    ? ([brakeDepths!.lf, brakeDepths!.rf, brakeDepths!.lr, brakeDepths!.rr].filter(v => v != null) as number[])
+        .reduce((a, b) => a + b, 0) / [brakeDepths!.lf, brakeDepths!.rf, brakeDepths!.lr, brakeDepths!.rr].filter(v => v != null).length
+    : null;
+
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen bg-background"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
   }
