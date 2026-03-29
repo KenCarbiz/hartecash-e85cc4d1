@@ -11,6 +11,7 @@ interface Props {
   selectedColor: string;
   compact?: boolean;
   uvc?: string;
+  hideColorLabel?: boolean;
 }
 
 // Preload an image and resolve when ready
