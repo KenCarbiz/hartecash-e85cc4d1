@@ -24,6 +24,7 @@ import RetailMarketPanel from "@/components/admin/RetailMarketPanel";
 import BrakePadDepthWidget from "@/components/inspection/BrakePadDepthWidget";
 import { calculateOffer, type OfferSettings, type OfferRule, type OfferEstimate } from "@/lib/offerCalculator";
 import type { FormData, BBVehicle, BBAddDeduct } from "@/components/sell-form/types";
+import { formatGrade } from "@/lib/formatGrade";
 
 // ── Types ──
 interface Submission {
@@ -699,16 +700,16 @@ export default function AppraisalTool() {
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className={`text-xl font-black capitalize ${
+                    <span className={`text-xl font-black ${
                       sub.inspector_grade
                         ? "text-primary"
                         : "text-card-foreground"
                     }`}>
-                      {sub.inspector_grade || sub.overall_condition || "—"}
+                      {formatGrade(sub.inspector_grade || sub.overall_condition) || "—"}
                     </span>
                     {sub.inspector_grade && sub.overall_condition && sub.inspector_grade !== sub.overall_condition && (
                       <span className="text-[10px] text-muted-foreground">
-                        Customer said: <span className="line-through capitalize">{sub.overall_condition}</span>
+                        Customer said: <span className="text-muted-foreground">{formatGrade(sub.overall_condition)}</span>
                       </span>
                     )}
                     {!sub.inspector_grade && sub.overall_condition && (
@@ -1077,7 +1078,7 @@ export default function AppraisalTool() {
                             : "bg-muted text-muted-foreground border border-border"
                         }`}>
                           <Shield className="w-3 h-3" />
-                          {sub.inspector_grade ? "Final: " : ""}{sub.inspector_grade || sub.overall_condition}
+                          {sub.inspector_grade ? "Final: " : ""}{formatGrade(sub.inspector_grade || sub.overall_condition)}
                         </div>
                       )}
                     </div>

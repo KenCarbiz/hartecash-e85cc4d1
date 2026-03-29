@@ -1,4 +1,5 @@
 import { Car, Gauge, Palette, Settings2, CheckCircle, Pencil, Disc3, Shield } from "lucide-react";
+import { formatGrade } from "@/lib/formatGrade";
 import { motion } from "framer-motion";
 import { InlineEdit } from "@/components/offer/InlineEdit";
 
@@ -180,8 +181,8 @@ const PortalVehicleSummary = ({
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
                   {isInspectorVerified ? "Final Grade" : "Condition"}
                 </p>
-                <p className={`text-sm font-bold capitalize ${isInspectorVerified ? "text-primary" : ""}`}>
-                  {displayGrade}
+                <p className={`text-sm font-bold ${isInspectorVerified ? "text-primary" : ""}`}>
+                  {formatGrade(displayGrade)}
                 </p>
                 {isInspectorVerified && (
                   <p className="text-[9px] text-muted-foreground">Verified by inspector</p>

@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { formatGrade } from "@/lib/formatGrade";
 import PortalSkeleton from "@/components/PortalSkeleton";
 import VehicleImage from "@/components/sell-form/VehicleImage";
 import { useToast } from "@/hooks/use-toast";
@@ -1566,14 +1567,14 @@ const InspectionSheet = () => {
               <div>
                 <label className="text-xs font-semibold text-muted-foreground mb-1 block">Customer Self-Assessment</label>
                 <div className="h-10 flex items-center">
-                  <Badge variant="outline" className={`capitalize text-sm px-3 py-1 ${
+                  <Badge variant="outline" className={`text-sm px-3 py-1 ${
                     customerGrade === "excellent" ? "border-emerald-400/50 text-emerald-600 bg-emerald-500/10" :
                     customerGrade === "good" ? "border-emerald-400/50 text-emerald-600 bg-emerald-500/10" :
                     customerGrade === "fair" ? "border-amber-400/50 text-amber-600 bg-amber-500/10" :
                     customerGrade === "rough" || customerGrade === "poor" ? "border-red-400/50 text-red-600 bg-red-500/10" :
                     ""
                   }`}>
-                    {customerGrade || "Not provided"}
+                    {formatGrade(customerGrade) || "Not provided"}
                   </Badge>
                 </div>
               </div>
@@ -1585,7 +1586,7 @@ const InspectionSheet = () => {
                 <select
                   value={inspectorGrade}
                   onChange={e => setInspectorGrade(e.target.value)}
-                  className={`w-full h-10 rounded-md border-2 bg-background px-3 text-sm font-bold capitalize transition-all ${
+                  className={`w-full h-10 rounded-md border-2 bg-background px-3 text-sm font-bold transition-all ${
                     inspectorGrade
                       ? "border-primary ring-2 ring-primary/20 text-primary"
                       : "border-input text-muted-foreground"
@@ -1606,12 +1607,12 @@ const InspectionSheet = () => {
                 <Shield className="w-5 h-5 text-primary" />
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-wider text-primary">Verified Final Grade</p>
-                  <p className="text-lg font-black capitalize text-primary">{inspectorGrade}</p>
+                  <p className="text-lg font-black text-primary">{formatGrade(inspectorGrade)}</p>
                 </div>
                 {customerGrade && customerGrade !== inspectorGrade && (
                   <div className="ml-auto text-right">
                     <p className="text-[9px] text-muted-foreground">Customer said</p>
-                    <p className="text-xs font-medium capitalize text-muted-foreground line-through">{customerGrade}</p>
+                    <p className="text-xs font-medium text-muted-foreground">{formatGrade(customerGrade)}</p>
                   </div>
                 )}
               </div>
