@@ -303,6 +303,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
       regional_adjustment_pct: settings.regional_adjustment_pct,
       retail_search_radius: settings.retail_search_radius ?? 100,
       dealer_pack: settings.dealer_pack ?? 0,
+      hide_pack_from_appraisal: settings.hide_pack_from_appraisal ?? false,
       updated_at: new Date().toISOString(),
     } as any).eq("id", settings.id);
 
