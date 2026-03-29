@@ -499,6 +499,24 @@ export default function AppraisalTool() {
       </div>
 
       <div className="max-w-7xl mx-auto p-6">
+        {/* ═══ HUD — Key Metrics Strip ═══ */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-5">
+          {[
+            { label: "Customer Offer", value: `$${Math.floor(currentOffer).toLocaleString()}`, color: "text-card-foreground", bg: "bg-muted/50 border-border" },
+            { label: "New Offer", value: `$${Math.floor(finalValue).toLocaleString()}`, color: "text-primary", bg: "bg-primary/10 border-primary/30" },
+            { label: "Avg Market Value", value: retailAvg > 0 ? `$${Math.floor(retailAvg).toLocaleString()}` : "—", color: "text-card-foreground", bg: "bg-muted/50 border-border" },
+            { label: "Recon Cost", value: `$${Math.floor(activeSettings?.recon_cost || 0).toLocaleString()}`, color: "text-destructive", bg: "bg-destructive/5 border-destructive/20" },
+            { label: "Dealer Pack", value: `$${Math.floor(effectivePack).toLocaleString()}`, color: "text-destructive", bg: "bg-destructive/5 border-destructive/20" },
+            { label: "Projected Profit", value: `${projectedProfit >= 0 ? "+" : ""}$${Math.floor(Math.abs(projectedProfit)).toLocaleString()}`, color: projectedProfit >= 0 ? "text-emerald-600" : "text-destructive", bg: projectedProfit >= 0 ? "bg-emerald-500/10 border-emerald-500/30" : "bg-destructive/10 border-destructive/30" },
+            { label: "Margin %", value: `${profitMargin.toFixed(1)}%`, color: profitMargin >= 0 ? "text-emerald-600" : "text-destructive", bg: profitMargin >= 0 ? "bg-emerald-500/10 border-emerald-500/30" : "bg-destructive/10 border-destructive/30" },
+          ].map(metric => (
+            <div key={metric.label} className={`rounded-xl border p-3 text-center ${metric.bg}`}>
+              <div className="text-[9px] uppercase tracking-wider font-bold text-muted-foreground">{metric.label}</div>
+              <div className={`text-lg font-bold ${metric.color}`}>{metric.value}</div>
+            </div>
+          ))}
+        </div>
+
         {/* Vehicle Summary Bar */}
         <div className="bg-muted/40 rounded-xl border border-border p-4 mb-5">
           <div className="flex items-center gap-2 mb-2">
