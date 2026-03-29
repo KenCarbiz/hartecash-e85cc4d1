@@ -542,7 +542,12 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
 
         <div className="flex gap-3">
           {step > 0 && (
-            <Button type="button" variant="outline" onClick={handleBack} className="flex-1 py-4 text-base font-bold">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleBack}
+              className="flex-1 py-4 text-base font-bold border-[hsl(var(--cta-offer))] text-[hsl(var(--cta-offer))] hover:bg-[hsl(var(--cta-offer))]/10"
+            >
               Back
             </Button>
           )}
