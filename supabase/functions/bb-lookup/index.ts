@@ -149,7 +149,11 @@ serve(async (req) => {
     const allGqlResults = await Promise.all(gqlFetches);
 
     // Transform each vehicle into a comprehensive response
-    const vehicles = vehicleList.map((v: Record<string, unknown>, i: number) => ({
+    const vehicles = vehicleList.map((v: Record<string, unknown>, i: number) => {
+      const gql = allGqlResults[i] || { colors: [], specs: {} };
+      // deno-lint-ignore no-explicit-any
+      const specs = gql.specs as any;
+      return {
       uvc: v.uvc,
       vin: v.vin,
       year: v.model_year,
@@ -161,14 +165,14 @@ serve(async (req) => {
       msrp: v.msrp || 0,
       price_includes: v.price_includes || "",
 
-      // Vehicle specs
-      drivetrain: v.drivetrain || "",
-      transmission: v.transmission || "",
-      engine: v.engine_description || "",
-      fuel_type: v.fuel_type || "",
+      // Vehicle specs from GraphQL drilldown
+      drivetrain: specs?.drivetrain || "",
+      transmission: specs?.transmission || "",
+      engine: specs?.engine || "",
+      fuel_type: specs?.fuel_type || "",
 
       // Exterior colors from BB
-      exterior_colors: allColors[i] || [],
+      exterior_colors: gql.colors || [],
 
       // Mileage & regional adjustments
       mileage_adj: v.mileage_category || 0,
