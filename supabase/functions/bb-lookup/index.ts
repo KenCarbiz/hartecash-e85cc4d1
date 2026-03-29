@@ -6,6 +6,7 @@ const corsHeaders = {
 };
 
 const BB_BASE = "https://service.blackbookcloud.com/UsedCarWS/UsedCarWS/UsedVehicle";
+const BB_COLOR_BASE = "https://service.blackbookcloud.com/UsedCarWS/UsedCarWS/UsedVehicle/Colors/uvc";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
