@@ -186,6 +186,7 @@ const InspectionConfiguration = () => {
         tire_credit_per_32: tireCreditPer32,
         tire_deduct_per_32: tireDeductPer32,
         tire_adjustment_mode: tireAdjustmentMode,
+        default_inspection_mode: defaultInspectionMode,
         updated_at: new Date().toISOString(),
       } as any)
       .eq("id", configId);
