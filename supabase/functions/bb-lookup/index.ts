@@ -6,12 +6,7 @@ const corsHeaders = {
 };
 
 const BB_BASE = "https://service.blackbookcloud.com/UsedCarWS/UsedCarWS/UsedVehicle";
-// Try multiple possible BB Colors API endpoints
-const BB_COLOR_URLS = [
-  (uvc: string) => `https://service.blackbookcloud.com/UsedCarWS/UsedCarWS/UsedVehicle/VehicleColor/UVC/${uvc}`,
-  (uvc: string) => `https://service.blackbookcloud.com/UsedCarWS/UsedCarWS/VehicleColors/UVC/${uvc}`,
-  (uvc: string) => `https://service.blackbookcloud.com/UsedCarWS/UsedCarWS/UsedVehicle/Color/UVC/${uvc}`,
-];
+const BB_GRAPHQL = "https://service.blackbookcloud.com/UsedCarWS/UsedCarWS/GraphQL";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
