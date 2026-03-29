@@ -49,6 +49,7 @@ interface Submission {
   drivetrain: string | null; internal_notes: string | null;
   tire_lf: number | null; tire_rf: number | null; tire_lr: number | null; tire_rr: number | null;
   tire_adjustment: number | null;
+  brake_lf: number | null; brake_rf: number | null; brake_lr: number | null; brake_rr: number | null;
   ai_condition_score: string | null; ai_damage_summary: string | null;
   appraised_by: string | null; zip: string | null;
 }
@@ -469,14 +470,17 @@ export default function AppraisalTool() {
     return sub.internal_notes;
   }, [sub]);
 
-  // Parse brake pad depths from inspection notes
+  // Read brake pad depths from dedicated columns (fallback to parsing notes for legacy data)
   const brakeDepths = useMemo(() => {
+    if (sub?.brake_lf != null || sub?.brake_rf != null || sub?.brake_lr != null || sub?.brake_rr != null) {
+      return { lf: sub.brake_lf, rf: sub.brake_rf, lr: sub.brake_lr, rr: sub.brake_rr };
+    }
     if (!inspectionData) return null;
     const match = inspectionData.match(/Brakes\s*\((?:mm|\/32)\):\s*LF:(\d+|—)\s*RF:(\d+|—)\s*LR:(\d+|—)\s*RR:(\d+|—)/);
     if (!match) return null;
     const parse = (v: string) => v === "—" ? null : parseInt(v, 10);
     return { lf: parse(match[1]), rf: parse(match[2]), lr: parse(match[3]), rr: parse(match[4]) };
-  }, [inspectionData]);
+  }, [sub, inspectionData]);
 
   const hasBrakes = !!(brakeDepths && (brakeDepths.lf != null || brakeDepths.rf != null || brakeDepths.lr != null || brakeDepths.rr != null));
   const avgBrakeDepth = hasBrakes

@@ -142,6 +142,10 @@ const MobileInspection = () => {
       _tire_rf: tireRF,
       _tire_lr: tireLR,
       _tire_rr: tireRR,
+      _brake_lf: brakeLF,
+      _brake_rf: brakeRF,
+      _brake_lr: brakeLR,
+      _brake_rr: brakeRR,
     } as any);
 
     setSaving(false);

@@ -1,6 +1,13 @@
-import { Car, Gauge, Palette, Settings2, CheckCircle, Pencil } from "lucide-react";
+import { Car, Gauge, Palette, Settings2, CheckCircle, Pencil, Disc3 } from "lucide-react";
 import { motion } from "framer-motion";
 import { InlineEdit } from "@/components/offer/InlineEdit";
+
+interface BrakeFindings {
+  lf: number | null;
+  rf: number | null;
+  lr: number | null;
+  rr: number | null;
+}
 
 interface PortalVehicleSummaryProps {
   vehicleStr: string;
@@ -10,8 +17,15 @@ interface PortalVehicleSummaryProps {
   overallCondition: string | null;
   drivetrain: string | null;
   canEdit: boolean;
+  brakeDepths?: BrakeFindings | null;
   onFieldUpdate?: (field: string, value: string) => void;
 }
+
+const getBrakeLabel = (depth: number) => {
+  if (depth <= 3) return { label: "Replace", cls: "text-destructive" };
+  if (depth <= 5) return { label: "Fair", cls: "text-amber-600" };
+  return { label: "Good", cls: "text-green-600" };
+};
 
 const PortalVehicleSummary = ({
   vehicleStr,
@@ -21,8 +35,11 @@ const PortalVehicleSummary = ({
   overallCondition,
   drivetrain,
   canEdit,
+  brakeDepths,
   onFieldUpdate,
 }: PortalVehicleSummaryProps) => {
+  const hasBrakes = brakeDepths && (brakeDepths.lf != null || brakeDepths.rf != null || brakeDepths.lr != null || brakeDepths.rr != null);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -113,6 +130,35 @@ const PortalVehicleSummary = ({
             </div>
           )}
         </div>
+
+        {/* Brake Pad Findings */}
+        {hasBrakes && (
+          <div className="mt-4 pt-3 border-t border-border/50">
+            <div className="flex items-center gap-2 mb-2">
+              <Disc3 className="w-4 h-4 text-primary" />
+              <p className="text-xs font-semibold text-card-foreground">Brake Pad Inspection</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {([
+                ["Left Front", brakeDepths!.lf],
+                ["Right Front", brakeDepths!.rf],
+                ["Left Rear", brakeDepths!.lr],
+                ["Right Rear", brakeDepths!.rr],
+              ] as [string, number | null][]).map(([label, depth]) => {
+                if (depth == null) return null;
+                const status = getBrakeLabel(depth);
+                return (
+                  <div key={label} className="rounded-lg bg-muted/50 px-3 py-2">
+                    <p className="text-[10px] text-muted-foreground">{label}</p>
+                    <p className={`text-sm font-bold ${status.cls}`}>
+                      {depth}/32" · {status.label}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </motion.div>
   );
