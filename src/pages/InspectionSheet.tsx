@@ -900,14 +900,14 @@ const InspectionSheet = () => {
             <CardContent className="pb-3">
               <div className="flex flex-wrap gap-1.5">
                 {[
-                  ...(submission.exterior_damage || []).map((d: string) => ({ label: d })),
-                  ...(submission.interior_damage || []).map((d: string) => ({ label: d })),
-                  ...(submission.mechanical_issues || []).map((d: string) => ({ label: d })),
-                  ...(submission.engine_issues || []).map((d: string) => ({ label: d })),
-                  ...(submission.tech_issues || []).map((d: string) => ({ label: d })),
+                  ...(submission.exterior_damage || []).map((d: string) => ({ label: d, category: "Exterior" })),
+                  ...(submission.interior_damage || []).map((d: string) => ({ label: d, category: "Interior" })),
+                  ...(submission.mechanical_issues || []).map((d: string) => ({ label: d, category: "Mechanical" })),
+                  ...(submission.engine_issues || []).map((d: string) => ({ label: d, category: "Engine" })),
+                  ...(submission.tech_issues || []).map((d: string) => ({ label: d, category: "Tech" })),
                 ].map((item, i) => (
                   <Badge key={i} variant="outline" className="text-[10px] capitalize border-amber-400/50 text-amber-600 dark:text-amber-400">
-                    {item.label.replace(/_/g, " ")}
+                    <span className="font-bold mr-1">{item.category}:</span> {item.label.replace(/_/g, " ")}
                   </Badge>
                 ))}
                 {submission.smoked_in === "yes" && <Badge variant="destructive" className="text-[10px]">Smoked In</Badge>}
