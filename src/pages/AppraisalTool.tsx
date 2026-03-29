@@ -414,7 +414,7 @@ export default function AppraisalTool() {
 
   const handleBlockValueChange = useCallback((editKey: string, value: number, editType: string) => {
     if (editKey === "condition_multiplier") {
-      updateLocalSetting("condition_multipliers", { ...(activeSettings?.condition_multipliers || {}), [condition]: value });
+      updateLocalSetting("condition_multipliers", { excellent: 1, good: 1, fair: 1, rough: 1, ...(activeSettings?.condition_multipliers || {}), [condition]: value });
     } else if (editKey === "recon_cost") {
       updateLocalSetting("recon_cost", value);
     } else if (editKey === "dealer_pack") {
