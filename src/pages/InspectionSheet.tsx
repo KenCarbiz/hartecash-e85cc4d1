@@ -438,7 +438,7 @@ const InspectionSheet = () => {
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [showMobileQR, setShowMobileQR] = useState(false);
-  const [inspectionMode, setInspectionMode] = useState<InspectionMode>("full");
+  const [inspectionMode, setInspectionMode] = useState<InspectionMode>("ucm");
 
   // Get section defs based on inspection mode
   const SECTION_DEFS = getSectionDefs(inspectionMode);
@@ -1001,17 +1001,6 @@ const InspectionSheet = () => {
         <div className="flex items-center justify-between flex-wrap gap-3 print:hidden">
           <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
             <button
-              onClick={() => setInspectionMode("full")}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                inspectionMode === "full"
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Wrench className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5" />
-              Full Inspection
-            </button>
-            <button
               onClick={() => setInspectionMode("ucm")}
               className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
                 inspectionMode === "ucm"
@@ -1020,11 +1009,22 @@ const InspectionSheet = () => {
               }`}
             >
               <ClipboardCheck className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5" />
-              Manager Walk-Around
+              Standard Checklist
+            </button>
+            <button
+              onClick={() => setInspectionMode("full")}
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                inspectionMode === "full"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Wrench className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5" />
+              Full Checklist
             </button>
           </div>
           <p className="text-[10px] text-muted-foreground">
-            {inspectionMode === "full" ? "Full tech-level deep inspection" : "Abbreviated check for used car managers"}
+            {inspectionMode === "ucm" ? "Standard checklist for managers & sales staff" : "Full mechanic-aided deep inspection"}
           </p>
         </div>
 
