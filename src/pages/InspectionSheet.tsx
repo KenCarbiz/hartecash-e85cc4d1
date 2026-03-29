@@ -579,6 +579,10 @@ const InspectionSheet = () => {
       _tire_rf: tireDepth.rf,
       _tire_lr: tireDepth.lr,
       _tire_rr: tireDepth.rr,
+      _brake_lf: brakeDepth.lf,
+      _brake_rf: brakeDepth.rf,
+      _brake_lr: brakeDepth.lr,
+      _brake_rr: brakeDepth.rr,
     } as any);
 
     setSaving(false);

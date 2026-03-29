@@ -2,7 +2,7 @@ import { Car, Gauge, Palette, Settings2, CheckCircle, Pencil, Disc3 } from "luci
 import { motion } from "framer-motion";
 import { InlineEdit } from "@/components/offer/InlineEdit";
 
-interface BrakeFindings {
+interface DepthFindings {
   lf: number | null;
   rf: number | null;
   lr: number | null;
@@ -17,14 +17,54 @@ interface PortalVehicleSummaryProps {
   overallCondition: string | null;
   drivetrain: string | null;
   canEdit: boolean;
-  brakeDepths?: BrakeFindings | null;
+  brakeDepths?: DepthFindings | null;
+  tireDepths?: DepthFindings | null;
   onFieldUpdate?: (field: string, value: string) => void;
 }
 
-const getBrakeLabel = (depth: number) => {
+const getStatusLabel = (depth: number, type: "brake" | "tire") => {
   if (depth <= 3) return { label: "Replace", cls: "text-destructive" };
   if (depth <= 5) return { label: "Fair", cls: "text-amber-600" };
   return { label: "Good", cls: "text-green-600" };
+};
+
+const DepthGrid = ({ depths, type, title }: { depths: DepthFindings; type: "brake" | "tire"; title: string }) => {
+  const hasData = depths.lf != null || depths.rf != null || depths.lr != null || depths.rr != null;
+  if (!hasData) return null;
+
+  const unit = type === "brake" ? '"' : '/32"';
+
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-2">
+        {type === "brake" ? (
+          <Disc3 className="w-4 h-4 text-primary" />
+        ) : (
+          <Gauge className="w-4 h-4 text-primary" />
+        )}
+        <p className="text-xs font-semibold text-card-foreground">{title}</p>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        {([
+          ["Left Front", depths.lf],
+          ["Right Front", depths.rf],
+          ["Left Rear", depths.lr],
+          ["Right Rear", depths.rr],
+        ] as [string, number | null][]).map(([label, depth]) => {
+          if (depth == null) return null;
+          const status = getStatusLabel(depth, type);
+          return (
+            <div key={label} className="rounded-lg bg-muted/50 px-3 py-2">
+              <p className="text-[10px] text-muted-foreground">{label}</p>
+              <p className={`text-sm font-bold ${status.cls}`}>
+                {depth}/32{unit === '"' ? '"' : ''} · {status.label}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 };
 
 const PortalVehicleSummary = ({
@@ -36,9 +76,11 @@ const PortalVehicleSummary = ({
   drivetrain,
   canEdit,
   brakeDepths,
+  tireDepths,
   onFieldUpdate,
 }: PortalVehicleSummaryProps) => {
   const hasBrakes = brakeDepths && (brakeDepths.lf != null || brakeDepths.rf != null || brakeDepths.lr != null || brakeDepths.rr != null);
+  const hasTires = tireDepths && (tireDepths.lf != null || tireDepths.rf != null || tireDepths.lr != null || tireDepths.rr != null);
 
   return (
     <motion.div
@@ -131,32 +173,15 @@ const PortalVehicleSummary = ({
           )}
         </div>
 
-        {/* Brake Pad Findings */}
-        {hasBrakes && (
-          <div className="mt-4 pt-3 border-t border-border/50">
-            <div className="flex items-center gap-2 mb-2">
-              <Disc3 className="w-4 h-4 text-primary" />
-              <p className="text-xs font-semibold text-card-foreground">Brake Pad Inspection</p>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              {([
-                ["Left Front", brakeDepths!.lf],
-                ["Right Front", brakeDepths!.rf],
-                ["Left Rear", brakeDepths!.lr],
-                ["Right Rear", brakeDepths!.rr],
-              ] as [string, number | null][]).map(([label, depth]) => {
-                if (depth == null) return null;
-                const status = getBrakeLabel(depth);
-                return (
-                  <div key={label} className="rounded-lg bg-muted/50 px-3 py-2">
-                    <p className="text-[10px] text-muted-foreground">{label}</p>
-                    <p className={`text-sm font-bold ${status.cls}`}>
-                      {depth}/32" · {status.label}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
+        {/* Tire & Brake Inspection Findings */}
+        {(hasTires || hasBrakes) && (
+          <div className="mt-4 pt-3 border-t border-border/50 space-y-3">
+            {hasTires && tireDepths && (
+              <DepthGrid depths={tireDepths} type="tire" title="Tire Tread Inspection" />
+            )}
+            {hasBrakes && brakeDepths && (
+              <DepthGrid depths={brakeDepths} type="brake" title="Brake Pad Inspection" />
+            )}
           </div>
         )}
       </div>
