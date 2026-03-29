@@ -847,6 +847,7 @@ export type Database = {
           offer_floor: number
           recon_cost: number
           regional_adjustment_pct: number
+          retail_search_radius: number
           updated_at: string
         }
         Insert: {
@@ -864,6 +865,7 @@ export type Database = {
           offer_floor?: number
           recon_cost?: number
           regional_adjustment_pct?: number
+          retail_search_radius?: number
           updated_at?: string
         }
         Update: {
@@ -881,6 +883,7 @@ export type Database = {
           offer_floor?: number
           recon_cost?: number
           regional_adjustment_pct?: number
+          retail_search_radius?: number
           updated_at?: string
         }
         Relationships: []

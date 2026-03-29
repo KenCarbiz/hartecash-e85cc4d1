@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Save, Plus, Trash2, Flame, SlidersHorizontal, Target, Zap, AlertTriangle, DollarSign, Shield, Gauge, Calendar, ChevronDown } from "lucide-react";
+import { Save, Plus, Trash2, Flame, SlidersHorizontal, Target, Zap, AlertTriangle, DollarSign, Shield, Gauge, Calendar, ChevronDown, MapPin } from "lucide-react";
 
 // ── Collapsible Section wrapper ──
 const Section = ({
@@ -121,6 +121,7 @@ interface OfferSettingsRow {
   age_tiers: AgeTier[];
   mileage_tiers: MileageTier[];
   regional_adjustment_pct: number;
+  retail_search_radius: number;
 }
 
 interface OfferRule {
@@ -258,6 +259,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
         age_tiers: Array.isArray(d.age_tiers) ? d.age_tiers : [],
         mileage_tiers: Array.isArray(d.mileage_tiers) ? d.mileage_tiers : [],
         regional_adjustment_pct: d.regional_adjustment_pct ?? 0,
+        retail_search_radius: d.retail_search_radius ?? 100,
       } as OfferSettingsRow);
       setSavedSettings({
         ...d,
@@ -269,6 +271,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
         age_tiers: Array.isArray(d.age_tiers) ? d.age_tiers : [],
         mileage_tiers: Array.isArray(d.mileage_tiers) ? d.mileage_tiers : [],
         regional_adjustment_pct: d.regional_adjustment_pct ?? 0,
+        retail_search_radius: d.retail_search_radius ?? 100,
       } as OfferSettingsRow);
     }
     if (rulesRes.data) {
@@ -292,6 +295,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
       age_tiers: settings.age_tiers as any,
       mileage_tiers: settings.mileage_tiers as any,
       regional_adjustment_pct: settings.regional_adjustment_pct,
+      retail_search_radius: settings.retail_search_radius ?? 100,
       updated_at: new Date().toISOString(),
     } as any).eq("id", settings.id);
 
@@ -438,6 +442,35 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
           />
         </div>
       </div>
+
+      {/* ── Market Search Radius ── */}
+      {settings && (
+        <Section
+          icon={<MapPin className="w-5 h-5 text-primary" />}
+          title="Market Data Settings"
+          defaultOpen={false}
+        >
+          <div className="space-y-3">
+            <div>
+              <Label className="text-sm font-semibold">Retail Listings Search Radius</Label>
+              <p className="text-xs text-muted-foreground mb-2">
+                How far to search for comparable retail listings when pulling live market data from Black Book.
+              </p>
+              <div className="flex items-center gap-4">
+                <Slider
+                  value={[settings.retail_search_radius ?? 100]}
+                  min={25}
+                  max={500}
+                  step={25}
+                  onValueChange={([v]) => setSettings({ ...settings, retail_search_radius: v })}
+                  className="flex-1"
+                />
+                <span className="text-sm font-bold text-card-foreground w-20 text-right">{settings.retail_search_radius ?? 100} mi</span>
+              </div>
+            </div>
+          </div>
+        </Section>
+      )}
 
       {/* All pricing adjustments now happen in the Workbench above. Only Rules remain below. */}
 

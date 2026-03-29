@@ -17,6 +17,7 @@ import type { FormData, BBVehicle, BBAddDeduct } from "@/components/sell-form/ty
 import { supabase } from "@/integrations/supabase/client";
 import ProfitSpreadGauge from "./ProfitSpreadGauge";
 import MarketContextPanel from "./MarketContextPanel";
+import RetailMarketPanel from "./RetailMarketPanel";
 import { useToast } from "@/hooks/use-toast";
 
 interface Props {
@@ -252,6 +253,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
   // Live VIN mode state
   const [liveVin, setLiveVin] = useState("");
   const [liveMileage, setLiveMileage] = useState("50000");
+  const [liveZip, setLiveZip] = useState("");
   const [liveCondition, setLiveCondition] = useState<string>("good");
   const [liveAccidents, setLiveAccidents] = useState("0");
   const [liveDrivable, setLiveDrivable] = useState("yes");
@@ -452,6 +454,10 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
         <div className="w-32">
           <Label className="text-xs font-semibold">Mileage</Label>
           <Input type="number" value={liveMileage} onChange={e => setLiveMileage(e.target.value)} step="5000" className="h-9" />
+        </div>
+        <div className="w-24">
+          <Label className="text-xs font-semibold">ZIP Code</Label>
+          <Input value={liveZip} onChange={e => setLiveZip(e.target.value.replace(/\D/g, "").slice(0, 5))} placeholder="06001" maxLength={5} className="h-9" />
         </div>
         <div className="flex items-end">
           <Button onClick={handleVinLookup} disabled={liveLoading || liveVin.trim().length !== 17} className="h-9 gap-1.5">
@@ -871,6 +877,17 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                   {/* Market Context */}
                   <div className="rounded-lg border border-border bg-muted/20 p-4">
                     <MarketContextPanel bbVehicle={liveBbVehicle} offerHigh={liveResult.high} />
+                  </div>
+
+                  {/* Live Retail Market Data */}
+                  <div className="rounded-lg border border-border bg-muted/20 p-4">
+                    <RetailMarketPanel
+                      vin={liveVin}
+                      uvc={liveBbVehicle.uvc}
+                      zipcode={liveZip}
+                      radiusMiles={(activeSettings as any).retail_search_radius || 100}
+                      offerHigh={liveResult.high}
+                    />
                   </div>
                 </>
               )}
