@@ -204,6 +204,7 @@ export default function AppraisalTool() {
   const [dealerPack, setDealerPack] = useState(0);
   const [hidePackFromAppraisal, setHidePackFromAppraisal] = useState(false);
   const [expandedBlock, setExpandedBlock] = useState<string | null>(null);
+  const [depthPolicies, setDepthPolicies] = useState<{ id: string; name: string; policy_type: string; oem_brands: string[]; all_brands: boolean; max_vehicle_age_years: number | null; max_mileage: number | null; min_tire_depth: number; min_brake_depth: number }[]>([]);
 
   // Editable overrides (mirror Offer Builder controls)
   const [localSettings, setLocalSettings] = useState<OfferSettings | null>(null);
@@ -256,6 +257,10 @@ export default function AppraisalTool() {
 
       const { data: rulesData } = await supabase.from("offer_rules").select("*").eq("dealership_id", "default").eq("is_active", true);
       if (rulesData) setRules(rulesData as any);
+
+      // Load depth policies
+      const { data: policiesData } = await supabase.from("depth_policies").select("*").eq("dealership_id", "default").eq("is_active", true).order("sort_order");
+      if (policiesData) setDepthPolicies(policiesData as any);
 
       // Do a live BB lookup to get full tier data
       if (s.vin) {
@@ -863,7 +868,80 @@ export default function AppraisalTool() {
                         {sub.tire_adjustment >= 0 ? "+" : ""}${Math.abs(sub.tire_adjustment).toLocaleString()}
                       </span>
                     </div>
-                  )}
+                   )}
+
+                  {/* Policy Compliance Check */}
+                  {depthPolicies.length > 0 && (() => {
+                    const vehicleYear = parseInt(sub.vehicle_year || "0");
+                    const vehicleMileage = parseInt(sub.mileage || "0");
+                    const vehicleMake = (sub.vehicle_make || "").trim();
+                    const currentYear = new Date().getFullYear();
+                    const vehicleAge = vehicleYear > 0 ? currentYear - vehicleYear : 999;
+                    const minTire = tires.filter(t => t.val != null).map(t => t.val!);
+                    const minBrake = brakes.filter(b => b.val != null).map(b => b.val!);
+                    const lowestTire = minTire.length > 0 ? Math.min(...minTire) : null;
+                    const lowestBrake = minBrake.length > 0 ? Math.min(...minBrake) : null;
+
+                    const applicable = depthPolicies.filter(p => {
+                      if (!p.all_brands && p.oem_brands.length > 0 && vehicleMake) {
+                        if (!p.oem_brands.some(b => vehicleMake.toLowerCase().includes(b.toLowerCase()))) return false;
+                      }
+                      if (p.max_vehicle_age_years != null && vehicleAge > p.max_vehicle_age_years) return false;
+                      if (p.max_mileage != null && vehicleMileage > p.max_mileage) return false;
+                      return true;
+                    });
+
+                    if (applicable.length === 0) return null;
+
+                    return (
+                      <div className="mt-3 pt-3 border-t border-border space-y-1.5">
+                        <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                          <Shield className="w-3 h-3" /> Certification Policy Check
+                        </p>
+                        {applicable.map(policy => {
+                          const tireFail = lowestTire !== null && lowestTire < policy.min_tire_depth;
+                          const brakeFail = lowestBrake !== null && lowestBrake < policy.min_brake_depth;
+                          const pass = !tireFail && !brakeFail;
+                          const typeLabel = policy.policy_type === "manufacturer_cpo" ? "MFR CPO"
+                            : policy.policy_type === "limited_cpo" ? "Limited CPO"
+                            : policy.policy_type === "internal_cert" ? "Internal Cert"
+                            : policy.policy_type === "custom" ? "Custom"
+                            : "Standard";
+                          return (
+                            <div key={policy.id} className={`rounded-md border px-2.5 py-1.5 flex items-center justify-between text-[10px] ${
+                              pass
+                                ? "bg-green-500/5 border-green-400/30"
+                                : "bg-red-500/5 border-red-400/30"
+                            }`}>
+                              <div className="flex items-center gap-2">
+                                {pass
+                                  ? <CheckCircle className="w-3.5 h-3.5 text-green-600 shrink-0" />
+                                  : <XCircle className="w-3.5 h-3.5 text-red-600 shrink-0" />}
+                                <span className="font-semibold text-card-foreground">{policy.name}</span>
+                                <Badge variant="outline" className="text-[8px] h-4">{typeLabel}</Badge>
+                                {!policy.all_brands && policy.oem_brands.length > 0 && (
+                                  <span className="text-muted-foreground">{policy.oem_brands.join(", ")}</span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-3 text-[9px]">
+                                {tireFail && (
+                                  <span className="text-red-600 font-bold">
+                                    Tires: {lowestTire}/32" &lt; {policy.min_tire_depth}/32" min
+                                  </span>
+                                )}
+                                {brakeFail && (
+                                  <span className="text-red-600 font-bold">
+                                    Brakes: {lowestBrake}/32" &lt; {policy.min_brake_depth}/32" min
+                                  </span>
+                                )}
+                                {pass && <span className="text-green-600 font-bold">Meets Requirements</span>}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
                 </div>
               );
             })()}

@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/sidebar";
 import {
   Inbox, CalendarDays, Users, ShieldCheck, SlidersHorizontal,
-  Settings, Bell, ListChecks, MessageSquareQuote, BarChart3, Send, UserCheck, MapPin, Car, ScrollText, Newspaper, Shield, Lock, Wrench, MessageCircle, Rocket
+  Settings, Bell, ListChecks, MessageSquareQuote, BarChart3, Send, UserCheck, MapPin, Car, ScrollText, Newspaper, Shield, Lock, Wrench, MessageCircle, Rocket, Gauge
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
@@ -77,6 +77,7 @@ const AdminSidebar = ({
         { key: "offer-settings", label: "Offer Builder", icon: SlidersHorizontal, badge: pricingAccessRequestCount > 0 ? String(pricingAccessRequestCount) : undefined, badgeVariant: "destructive" as const },
         ...(canManageAccess ? [{ key: "form-config", label: "Lead Form", icon: ListChecks }] : []),
         ...(canManageAccess ? [{ key: "inspection-config", label: "Inspection Sheet", icon: Shield }] : []),
+        ...(canManageAccess ? [{ key: "depth-policies", label: "Depth Policies", icon: Gauge }] : []),
         ...(canManageAccess ? [{ key: "notifications", label: "Notifications", icon: Bell }] : []),
       ].filter((item) => isAllowed(item.key))
     : [];
@@ -104,7 +105,7 @@ const AdminSidebar = ({
   ].filter((item) => isAllowed(item.key));
 
   // Collect locked sections for "Request Access" display
-  const allSectionKeys = ["submissions", "appraisals", "appointments", "executive", "staff", "offer-settings", "form-config", "inspection-config", "notifications", "site-config", "locations", "testimonials", "compliance", "image-inventory", "reports", "system-settings"];
+  const allSectionKeys = ["submissions", "appraisals", "appointments", "executive", "staff", "offer-settings", "form-config", "inspection-config", "depth-policies", "notifications", "site-config", "locations", "testimonials", "compliance", "image-inventory", "reports", "system-settings"];
   const lockedSections = showRequestAccess && allowedSections !== null
     ? allSectionKeys.filter((k) => !allowedSections.includes(k))
     : [];
