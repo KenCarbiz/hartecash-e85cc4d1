@@ -1,4 +1,4 @@
-import { Car, Gauge, Palette, Settings2, CheckCircle, Pencil, Disc3 } from "lucide-react";
+import { Car, Gauge, Palette, Settings2, CheckCircle, Pencil, Disc3, Shield } from "lucide-react";
 import { motion } from "framer-motion";
 import { InlineEdit } from "@/components/offer/InlineEdit";
 
@@ -17,6 +17,7 @@ interface PortalVehicleSummaryProps {
   overallCondition: string | null;
   drivetrain: string | null;
   canEdit: boolean;
+  inspectorGrade?: string | null;
   brakeDepths?: DepthFindings | null;
   tireDepths?: DepthFindings | null;
   onFieldUpdate?: (field: string, value: string) => void;
@@ -75,12 +76,16 @@ const PortalVehicleSummary = ({
   overallCondition,
   drivetrain,
   canEdit,
+  inspectorGrade,
   brakeDepths,
   tireDepths,
   onFieldUpdate,
 }: PortalVehicleSummaryProps) => {
   const hasBrakes = brakeDepths && (brakeDepths.lf != null || brakeDepths.rf != null || brakeDepths.lr != null || brakeDepths.rr != null);
   const hasTires = tireDepths && (tireDepths.lf != null || tireDepths.rf != null || tireDepths.lr != null || tireDepths.rr != null);
+
+  const displayGrade = inspectorGrade || overallCondition;
+  const isInspectorVerified = !!inspectorGrade;
 
   return (
     <motion.div
@@ -160,14 +165,27 @@ const PortalVehicleSummary = ({
               </div>
             </div>
           )}
-          {overallCondition && (
+          {displayGrade && (
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                <CheckCircle className="w-3.5 h-3.5 text-muted-foreground" />
+              <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                isInspectorVerified ? "bg-primary/10" : "bg-muted"
+              }`}>
+                {isInspectorVerified ? (
+                  <Shield className="w-3.5 h-3.5 text-primary" />
+                ) : (
+                  <CheckCircle className="w-3.5 h-3.5 text-muted-foreground" />
+                )}
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Condition</p>
-                <p className="text-sm font-medium capitalize">{overallCondition}</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                  {isInspectorVerified ? "Final Grade" : "Condition"}
+                </p>
+                <p className={`text-sm font-bold capitalize ${isInspectorVerified ? "text-primary" : ""}`}>
+                  {displayGrade}
+                </p>
+                {isInspectorVerified && (
+                  <p className="text-[9px] text-muted-foreground">Verified by inspector</p>
+                )}
               </div>
             </div>
           )}

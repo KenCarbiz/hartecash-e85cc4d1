@@ -497,6 +497,8 @@ const InspectionSheet = () => {
   const [oilLife, setOilLife] = useState("");
   const [batteryHealth, setBatteryHealth] = useState("");
   const [overallGrade, setOverallGrade] = useState("");
+  const [inspectorGrade, setInspectorGrade] = useState("");
+  const [customerGrade, setCustomerGrade] = useState("");
 
   // Clickable condition grades — single state object for all sections
   const [allGrades, setAllGrades] = useState<Record<string, ConditionGrade>>({});
@@ -667,7 +669,9 @@ const InspectionSheet = () => {
       ]);
       if (subRes.data) {
         setSubmission(subRes.data);
+        setCustomerGrade(subRes.data.overall_condition || "");
         setOverallGrade(subRes.data.overall_condition || "");
+        setInspectorGrade((subRes.data as any).inspector_grade || "");
         // Pre-populate tire/brake depths from saved mobile inspection data
         if (subRes.data.tire_lf != null) setTireDepth(prev => ({ ...prev, lf: subRes.data.tire_lf }));
         if (subRes.data.tire_rf != null) setTireDepth(prev => ({ ...prev, rf: subRes.data.tire_rf }));
@@ -716,14 +720,16 @@ const InspectionSheet = () => {
         batteryHealth && `Battery: ${batteryHealth}`,
       ].filter(Boolean) : []),
       ...ACTIVE_CHECKLIST_SECTIONS.map(s => gatherSection(s.label.toUpperCase(), s.items)),
-      overallGrade && `Grade: ${overallGrade}`,
+      overallGrade && `Customer Grade: ${customerGrade}`,
+      inspectorGrade && `Final Grade: ${inspectorGrade}`,
+      !inspectorGrade && overallGrade && `Grade: ${overallGrade}`,
       inspectorNotes && `Notes: ${inspectorNotes}`,
     ].filter(Boolean).join("\n\n");
 
     const { data, error } = await supabase.rpc("save_mobile_inspection", {
       _submission_id: id!,
       _internal_notes: sections,
-      _overall_condition: overallGrade || null,
+      _overall_condition: inspectorGrade || overallGrade || null,
       _tire_lf: tireDepth.lf,
       _tire_rf: tireDepth.rf,
       _tire_lr: tireDepth.lr,
@@ -732,6 +738,7 @@ const InspectionSheet = () => {
       _brake_rf: brakeDepth.rf,
       _brake_lr: brakeDepth.lr,
       _brake_rr: brakeDepth.rr,
+      _inspector_grade: inspectorGrade || null,
     } as any);
 
     setSaving(false);
@@ -1411,15 +1418,37 @@ const InspectionSheet = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            {/* Customer Grade vs Inspector Final Grade */}
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="text-xs font-semibold text-muted-foreground mb-1 block">Overall Grade</label>
+                <label className="text-xs font-semibold text-muted-foreground mb-1 block">Customer Self-Assessment</label>
+                <div className="h-10 flex items-center">
+                  <Badge variant="outline" className={`capitalize text-sm px-3 py-1 ${
+                    customerGrade === "excellent" ? "border-emerald-400/50 text-emerald-600 bg-emerald-500/10" :
+                    customerGrade === "good" ? "border-emerald-400/50 text-emerald-600 bg-emerald-500/10" :
+                    customerGrade === "fair" ? "border-amber-400/50 text-amber-600 bg-amber-500/10" :
+                    customerGrade === "rough" || customerGrade === "poor" ? "border-red-400/50 text-red-600 bg-red-500/10" :
+                    ""
+                  }`}>
+                    {customerGrade || "Not provided"}
+                  </Badge>
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-foreground mb-1 block flex items-center gap-1.5">
+                  <Shield className="w-3.5 h-3.5 text-primary" />
+                  {inspectorGrade ? "Final Grade" : "Inspector Final Grade"}
+                </label>
                 <select
-                  value={overallGrade}
-                  onChange={e => setOverallGrade(e.target.value)}
-                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                  value={inspectorGrade}
+                  onChange={e => setInspectorGrade(e.target.value)}
+                  className={`w-full h-10 rounded-md border-2 bg-background px-3 text-sm font-bold capitalize transition-all ${
+                    inspectorGrade
+                      ? "border-primary ring-2 ring-primary/20 text-primary"
+                      : "border-input text-muted-foreground"
+                  }`}
                 >
-                  <option value="">Select...</option>
+                  <option value="">Select final grade...</option>
                   <option value="excellent">Excellent</option>
                   <option value="good">Good</option>
                   <option value="fair">Fair</option>
@@ -1427,15 +1456,31 @@ const InspectionSheet = () => {
                   <option value="poor">Poor</option>
                 </select>
               </div>
-              {submission.ai_condition_score && (
-                <div>
-                  <label className="text-xs font-semibold text-muted-foreground mb-1 block">AI Suggested</label>
-                  <div className="h-10 flex items-center">
-                    <Badge variant="outline" className="capitalize text-sm">{submission.ai_condition_score}</Badge>
-                  </div>
-                </div>
-              )}
             </div>
+            {/* Show prominent final grade badge when set */}
+            {inspectorGrade && (
+              <div className="mb-4 p-3 rounded-lg bg-primary/10 border border-primary/30 flex items-center gap-3">
+                <Shield className="w-5 h-5 text-primary" />
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-primary">Verified Final Grade</p>
+                  <p className="text-lg font-black capitalize text-primary">{inspectorGrade}</p>
+                </div>
+                {customerGrade && customerGrade !== inspectorGrade && (
+                  <div className="ml-auto text-right">
+                    <p className="text-[9px] text-muted-foreground">Customer said</p>
+                    <p className="text-xs font-medium capitalize text-muted-foreground line-through">{customerGrade}</p>
+                  </div>
+                )}
+              </div>
+            )}
+            {submission.ai_condition_score && (
+              <div className="mb-4">
+                <label className="text-xs font-semibold text-muted-foreground mb-1 block">AI Suggested</label>
+                <div className="h-10 flex items-center">
+                  <Badge variant="outline" className="capitalize text-sm">{submission.ai_condition_score}</Badge>
+                </div>
+              </div>
+            )}
             <div>
               <label className="text-xs font-semibold text-muted-foreground mb-1 block">Inspector Notes</label>
               <Textarea value={inspectorNotes} onChange={e => setInspectorNotes(e.target.value)} placeholder="Additional notes, concerns, recommendations..." className="text-sm min-h-[100px]" />

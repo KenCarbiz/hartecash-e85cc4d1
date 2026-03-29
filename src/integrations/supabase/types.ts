@@ -1859,6 +1859,7 @@ export type Database = {
               _brake_lr?: number
               _brake_rf?: number
               _brake_rr?: number
+              _inspector_grade?: string
               _internal_notes: string
               _overall_condition?: string
               _submission_id: string
