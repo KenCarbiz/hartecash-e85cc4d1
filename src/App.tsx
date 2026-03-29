@@ -36,6 +36,7 @@ const AboutPage = lazy(() => import("./pages/AboutPage"));
 const ExecutiveDashboard = lazy(() => import("./pages/ExecutiveDashboard"));
 const InspectionSheet = lazy(() => import("./pages/InspectionSheet"));
 const MobileInspection = lazy(() => import("./pages/MobileInspection"));
+const AppraisalTool = lazy(() => import("./pages/AppraisalTool"));
 
 const queryClient = new QueryClient();
 
@@ -72,6 +73,7 @@ const AnimatedRoutes = () => {
             <Route path="/executive" element={<ExecutiveDashboard />} />
             <Route path="/inspection/:id" element={<InspectionSheet />} />
             <Route path="/inspect/:id" element={<MobileInspection />} />
+            <Route path="/appraisal/:token" element={<AppraisalTool />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

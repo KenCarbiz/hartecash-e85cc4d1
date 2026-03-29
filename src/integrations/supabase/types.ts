@@ -837,6 +837,7 @@ export type Database = {
           bb_value_basis: string
           condition_multipliers: Json
           created_at: string
+          dealer_pack: number
           dealership_id: string
           deduction_amounts: Json
           deductions_config: Json
@@ -855,6 +856,7 @@ export type Database = {
           bb_value_basis?: string
           condition_multipliers?: Json
           created_at?: string
+          dealer_pack?: number
           dealership_id?: string
           deduction_amounts?: Json
           deductions_config?: Json
@@ -873,6 +875,7 @@ export type Database = {
           bb_value_basis?: string
           condition_multipliers?: Json
           created_at?: string
+          dealer_pack?: number
           dealership_id?: string
           deduction_amounts?: Json
           deductions_config?: Json

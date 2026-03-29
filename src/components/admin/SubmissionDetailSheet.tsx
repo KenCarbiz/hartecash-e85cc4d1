@@ -337,6 +337,9 @@ const SubmissionDetailSheet = ({
                 {sub.vehicle_year} {sub.vehicle_make} {sub.vehicle_model || "Submission Details"}
               </SheetTitle>
               <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={() => window.open(`${window.location.origin}/appraisal/${sub.token}`, "_blank")} className="text-primary-foreground hover:bg-primary-foreground/20 print:hidden">
+                  <Gauge className="w-4 h-4 mr-1" /> Appraisal
+                </Button>
                 <Button variant="ghost" size="sm" onClick={() => window.open(`${window.location.origin}/inspection/${sub.id}`, "_blank")} className="text-primary-foreground hover:bg-primary-foreground/20 print:hidden">
                   <ClipboardList className="w-4 h-4 mr-1" /> Inspection
                 </Button>

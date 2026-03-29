@@ -1,0 +1,1 @@
+ALTER TABLE public.offer_settings ADD COLUMN IF NOT EXISTS dealer_pack numeric NOT NULL DEFAULT 0;
