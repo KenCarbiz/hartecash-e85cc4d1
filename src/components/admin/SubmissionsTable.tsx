@@ -283,7 +283,6 @@ const SubmissionsTable = ({
                         {sub.offered_price ? (
                           <span className="font-semibold text-card-foreground">
                             ${Math.floor(sub.offered_price).toLocaleString()}
-                            <span className="text-[10px] text-muted-foreground">.{String(Math.round((sub.offered_price % 1) * 100)).padStart(2, '0')}</span>
                           </span>
                         ) : sub.estimated_offer_high ? (
                           <span className="text-xs text-muted-foreground" title="Estimated range">
