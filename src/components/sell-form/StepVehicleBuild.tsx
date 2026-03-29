@@ -33,10 +33,11 @@ const FALLBACK_COLOR_OPTIONS = [
   { label: "Other", hex: "none" },
 ];
 
-/** Map a BB rgb string like "255,255,255" to a hex color */
-const rgbToHex = (rgb: string): string => {
-  if (!rgb) return "#888";
-  const parts = rgb.split(",").map((p) => parseInt(p.trim(), 10));
+/** Get hex color from BB color - prefer hex swatch, fall back to rgb conversion */
+const getColorHex = (c: BBColor): string => {
+  if (c.hex) return c.hex;
+  if (!c.rgb) return "#888";
+  const parts = c.rgb.split(",").map((p) => parseInt(p.trim(), 10));
   if (parts.length < 3 || parts.some(isNaN)) return "#888";
   return `#${parts.map((p) => p.toString(16).padStart(2, "0")).join("")}`;
 };
