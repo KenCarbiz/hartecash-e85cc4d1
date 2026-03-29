@@ -953,65 +953,240 @@ export default function AppraisalTool() {
               </div>
             )}
 
-            {/* Inspection Results */}
-            {hasInspection && (
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
-                    <Wrench className="w-3.5 h-3.5 text-primary" />
-                    Inspection Results
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {(hasTires || hasBrakes) && (
-                    <div>
-                      <BrakePadDepthWidget
-                        showTires={hasTires}
-                        showBrakes={hasBrakes}
-                        tireDepths={{
-                          leftFront: sub.tire_lf,
-                          rightFront: sub.tire_rf,
-                          leftRear: sub.tire_lr,
-                          rightRear: sub.tire_rr,
-                        }}
-                        brakeDepths={brakeDepths ? {
-                          leftFront: brakeDepths.lf,
-                          rightFront: brakeDepths.rf,
-                          leftRear: brakeDepths.lr,
-                          rightRear: brakeDepths.rr,
-                        } : undefined}
-                        readOnly
-                        compact
-                      />
-                      <div className="flex items-center justify-between mt-1.5 px-1">
-                        {hasTires && <span className="text-[10px] text-muted-foreground">Tire Avg: {avgTireDepth}/32"</span>}
-                        {sub.tire_adjustment != null && sub.tire_adjustment !== 0 && (
-                          <span className={`text-[10px] font-bold ${Number(sub.tire_adjustment) >= 0 ? "text-green-600" : "text-destructive"}`}>
-                            Tire Adj: {Number(sub.tire_adjustment) >= 0 ? "+" : ""}${Number(sub.tire_adjustment).toLocaleString()}
-                          </span>
+            {/* Inspection Results — At-a-Glance */}
+            {hasInspection && (() => {
+              // Parse inspection notes into structured sections
+              const parsedSections: { name: string; items: { label: string; status: string }[] }[] = [];
+              if (inspectionData) {
+                const lines = inspectionData.split("\n").filter(Boolean);
+                let currentSection: { name: string; items: { label: string; status: string }[] } | null = null;
+                for (const line of lines) {
+                  if (line.startsWith("【") || line.startsWith("[")) {
+                    if (currentSection) parsedSections.push(currentSection);
+                    currentSection = { name: line.replace(/[【】\[\]]/g, "").trim(), items: [] };
+                  } else if (currentSection && (line.includes(":") || line.includes("→"))) {
+                    const sep = line.includes("→") ? "→" : ":";
+                    const [label, ...rest] = line.split(sep);
+                    const status = rest.join(sep).trim();
+                    if (label.trim()) currentSection.items.push({ label: label.trim().replace(/^[-•]\s*/, ""), status });
+                  }
+                }
+                if (currentSection) parsedSections.push(currentSection);
+              }
+
+              const getStatusColor = (status: string) => {
+                const s = status.toLowerCase();
+                if (s.includes("fail") || s.includes("poor") || s.includes("replace") || s.includes("damage") || s.includes("issue")) return "bg-destructive/15 text-destructive border-destructive/30";
+                if (s.includes("fair") || s.includes("warn") || s.includes("wear") || s.includes("minor")) return "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30";
+                if (s.includes("pass") || s.includes("good") || s.includes("ok") || s.includes("excellent") || s.includes("normal") || s.includes("yes")) return "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30";
+                return "bg-muted text-muted-foreground border-border";
+              };
+
+              const failCount = parsedSections.reduce((acc, sec) => acc + sec.items.filter(i => {
+                const s = i.status.toLowerCase();
+                return s.includes("fail") || s.includes("poor") || s.includes("replace") || s.includes("damage") || s.includes("issue");
+              }).length, 0);
+              const warnCount = parsedSections.reduce((acc, sec) => acc + sec.items.filter(i => {
+                const s = i.status.toLowerCase();
+                return s.includes("fair") || s.includes("warn") || s.includes("wear") || s.includes("minor");
+              }).length, 0);
+              const passCount = parsedSections.reduce((acc, sec) => acc + sec.items.filter(i => {
+                const s = i.status.toLowerCase();
+                return s.includes("pass") || s.includes("good") || s.includes("ok") || s.includes("excellent") || s.includes("normal");
+              }).length, 0);
+              const totalChecks = parsedSections.reduce((acc, sec) => acc + sec.items.length, 0);
+
+              return (
+                <Card className="border-l-4 border-l-primary">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                        <Wrench className="w-3.5 h-3.5 text-primary" />
+                        Inspection At-a-Glance
+                      </CardTitle>
+                      {/* Final Grade badge */}
+                      {(sub.inspector_grade || sub.overall_condition) && (
+                        <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${
+                          sub.inspector_grade
+                            ? "bg-primary/15 text-primary border border-primary/30"
+                            : "bg-muted text-muted-foreground border border-border"
+                        }`}>
+                          <Shield className="w-3 h-3" />
+                          {sub.inspector_grade ? "Final: " : ""}{sub.inspector_grade || sub.overall_condition}
+                        </div>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {/* Status Summary Bar */}
+                    {totalChecks > 0 && (
+                      <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/30">
+                        {failCount > 0 && (
+                          <div className="flex items-center gap-1">
+                            <div className="w-2.5 h-2.5 rounded-full bg-destructive" />
+                            <span className="text-[10px] font-bold text-destructive">{failCount} Fail</span>
+                          </div>
+                        )}
+                        {warnCount > 0 && (
+                          <div className="flex items-center gap-1">
+                            <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                            <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400">{warnCount} Warn</span>
+                          </div>
+                        )}
+                        {passCount > 0 && (
+                          <div className="flex items-center gap-1">
+                            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">{passCount} Pass</span>
+                          </div>
+                        )}
+                        <span className="text-[9px] text-muted-foreground ml-auto">{totalChecks} checks</span>
+                      </div>
+                    )}
+
+                    {/* Tire & Brake Quick Stats */}
+                    {(hasTires || hasBrakes) && (
+                      <div className="grid grid-cols-2 gap-2">
+                        {hasTires && (
+                          <div className={`rounded-lg p-2.5 border ${
+                            avgTireDepth >= 6 ? "bg-emerald-500/10 border-emerald-500/30" :
+                            avgTireDepth >= 4 ? "bg-amber-500/10 border-amber-500/30" :
+                            "bg-destructive/10 border-destructive/30"
+                          }`}>
+                            <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Tires</p>
+                            <p className={`text-lg font-black ${
+                              avgTireDepth >= 6 ? "text-emerald-600 dark:text-emerald-400" :
+                              avgTireDepth >= 4 ? "text-amber-600 dark:text-amber-400" :
+                              "text-destructive"
+                            }`}>{avgTireDepth}/32"</p>
+                            <p className="text-[9px] text-muted-foreground">avg depth</p>
+                            {sub.tire_adjustment != null && sub.tire_adjustment !== 0 && (
+                              <p className={`text-[10px] font-bold mt-0.5 ${Number(sub.tire_adjustment) >= 0 ? "text-emerald-600" : "text-destructive"}`}>
+                                {Number(sub.tire_adjustment) >= 0 ? "+" : ""}${Number(sub.tire_adjustment).toLocaleString()}
+                              </p>
+                            )}
+                          </div>
                         )}
                         {hasBrakes && avgBrakeDepth != null && (
-                          <span className="text-[10px] text-muted-foreground">Brake Avg: {avgBrakeDepth.toFixed(1)}/32"</span>
+                          <div className={`rounded-lg p-2.5 border ${
+                            avgBrakeDepth >= 5 ? "bg-emerald-500/10 border-emerald-500/30" :
+                            avgBrakeDepth >= 3 ? "bg-amber-500/10 border-amber-500/30" :
+                            "bg-destructive/10 border-destructive/30"
+                          }`}>
+                            <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Brakes</p>
+                            <p className={`text-lg font-black ${
+                              avgBrakeDepth >= 5 ? "text-emerald-600 dark:text-emerald-400" :
+                              avgBrakeDepth >= 3 ? "text-amber-600 dark:text-amber-400" :
+                              "text-destructive"
+                            }`}>{avgBrakeDepth.toFixed(1)}/32"</p>
+                            <p className="text-[9px] text-muted-foreground">avg depth</p>
+                          </div>
                         )}
                       </div>
-                    </div>
-                  )}
-                  {inspectionData && (
-                    <Collapsible>
-                      <CollapsibleTrigger asChild>
-                        <button className="flex items-center justify-between w-full text-left text-xs text-muted-foreground hover:text-card-foreground">
-                          <span className="font-semibold">Inspection Notes</span>
-                          <ChevronDown className="w-3 h-3" />
-                        </button>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <pre className="text-[10px] text-muted-foreground whitespace-pre-wrap bg-muted/30 rounded p-2 mt-1 max-h-40 overflow-y-auto">{inspectionData}</pre>
-                      </CollapsibleContent>
-                    </Collapsible>
-                  )}
-                </CardContent>
-              </Card>
-            )}
+                    )}
+
+                    {/* Parsed Section Findings */}
+                    {parsedSections.length > 0 && (
+                      <div className="space-y-2">
+                        {parsedSections.map((sec, i) => {
+                          const secFails = sec.items.filter(it => {
+                            const s = it.status.toLowerCase();
+                            return s.includes("fail") || s.includes("poor") || s.includes("replace") || s.includes("damage");
+                          });
+                          const secWarns = sec.items.filter(it => {
+                            const s = it.status.toLowerCase();
+                            return s.includes("fair") || s.includes("warn") || s.includes("wear");
+                          });
+                          const allPass = secFails.length === 0 && secWarns.length === 0;
+
+                          return (
+                            <Collapsible key={i}>
+                              <CollapsibleTrigger asChild>
+                                <button className="flex items-center justify-between w-full text-left px-2 py-1.5 rounded-md hover:bg-muted/50 transition-colors">
+                                  <div className="flex items-center gap-2">
+                                    <div className={`w-2 h-2 rounded-full ${
+                                      secFails.length > 0 ? "bg-destructive" :
+                                      secWarns.length > 0 ? "bg-amber-500" :
+                                      "bg-emerald-500"
+                                    }`} />
+                                    <span className="text-[11px] font-semibold text-card-foreground">{sec.name}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1.5">
+                                    {secFails.length > 0 && <span className="text-[9px] font-bold text-destructive">{secFails.length}⚠</span>}
+                                    {allPass && <span className="text-[9px] text-emerald-600">✓</span>}
+                                    <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                                  </div>
+                                </button>
+                              </CollapsibleTrigger>
+                              <CollapsibleContent>
+                                <div className="grid grid-cols-1 gap-0.5 pl-4 pr-1 pb-1">
+                                  {sec.items.map((item, j) => (
+                                    <div key={j} className="flex items-center justify-between py-0.5">
+                                      <span className="text-[10px] text-muted-foreground truncate mr-2">{item.label}</span>
+                                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border shrink-0 ${getStatusColor(item.status)}`}>
+                                        {item.status}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </CollapsibleContent>
+                            </Collapsible>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Fallback: raw notes if no parsed sections */}
+                    {inspectionData && parsedSections.length === 0 && (
+                      <Collapsible>
+                        <CollapsibleTrigger asChild>
+                          <button className="flex items-center justify-between w-full text-left text-xs text-muted-foreground hover:text-card-foreground">
+                            <span className="font-semibold">Inspection Notes</span>
+                            <ChevronDown className="w-3 h-3" />
+                          </button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <pre className="text-[10px] text-muted-foreground whitespace-pre-wrap bg-muted/30 rounded p-2 mt-1 max-h-40 overflow-y-auto">{inspectionData}</pre>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    )}
+
+                    {/* Detailed tire/brake widget - collapsible */}
+                    {(hasTires || hasBrakes) && (
+                      <Collapsible>
+                        <CollapsibleTrigger asChild>
+                          <button className="flex items-center justify-between w-full text-left text-[10px] text-muted-foreground hover:text-card-foreground px-1">
+                            <span className="font-semibold">Detailed Tire & Brake Readings</span>
+                            <ChevronDown className="w-3 h-3" />
+                          </button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="mt-1">
+                            <BrakePadDepthWidget
+                              showTires={hasTires}
+                              showBrakes={hasBrakes}
+                              tireDepths={{
+                                leftFront: sub.tire_lf,
+                                rightFront: sub.tire_rf,
+                                leftRear: sub.tire_lr,
+                                rightRear: sub.tire_rr,
+                              }}
+                              brakeDepths={brakeDepths ? {
+                                leftFront: brakeDepths.lf,
+                                rightFront: brakeDepths.rf,
+                                leftRear: brakeDepths.lr,
+                                rightRear: brakeDepths.rr,
+                              } : undefined}
+                              readOnly
+                              compact
+                            />
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })()}
 
             {/* AI Damage */}
             {sub.ai_damage_summary && (
