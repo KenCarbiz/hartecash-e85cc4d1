@@ -15,6 +15,7 @@ import { QRCodeSVG } from "qrcode.react";
 import VehicleImage from "@/components/sell-form/VehicleImage";
 import StaffFileUpload from "@/components/admin/StaffFileUpload";
 import FollowUpPanel from "@/components/admin/FollowUpPanel";
+import RetailMarketPanel from "@/components/admin/RetailMarketPanel";
 import {
   X, Printer, Users, Car, Search, DollarSign, Info, FileText, Gauge, Palette,
   Settings2, Wrench, Key, Wind, Cigarette, CircleDot, Sparkles, TrendingUp,
@@ -632,7 +633,17 @@ const SubmissionDetailSheet = ({
               </SectionCard>
             )}
 
-            {/* Check Request */}
+            {/* Retail Market Context */}
+            {(sub.vin || sub.vehicle_year) && (
+              <SectionCard icon={TrendingUp} title="Retail Market">
+                <RetailMarketPanel
+                  vin={sub.vin || undefined}
+                  zipcode={sub.zip || undefined}
+                  offerHigh={sub.offered_price ?? sub.estimated_offer_high ?? 0}
+                />
+              </SectionCard>
+            )}
+
             <SectionCard icon={ClipboardCheck} title="Check Request">
               <div className="flex items-center gap-3 mb-3">
                 <Checkbox id="check-request-done" checked={sub.check_request_done} disabled={!isPriceAgreedOrBeyond} onCheckedChange={(checked) => updateField({ check_request_done: !!checked })} />

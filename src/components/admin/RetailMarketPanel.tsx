@@ -1,9 +1,10 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Store, TrendingUp, Clock, BarChart3, ChevronDown, Loader2, MapPin, ExternalLink, Car,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface RetailStats {
@@ -65,6 +66,9 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, radiusMiles = 100
   const [error, setError] = useState<string | null>(null);
   const [fetched, setFetched] = useState(false);
   const [showListings, setShowListings] = useState(false);
+  const [radius, setRadius] = useState(radiusMiles);
+
+  useEffect(() => { setRadius(radiusMiles); }, [radiusMiles]);
 
   const fetchStats = useCallback(async () => {
     if (!vin && !uvc) return;
@@ -73,7 +77,7 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, radiusMiles = 100
     setError(null);
     try {
       const { data, error: fnError } = await supabase.functions.invoke("bb-retail-listings", {
-        body: { vin, uvc, zipcode, radius_miles: radiusMiles, include_listings: false },
+        body: { vin, uvc, zipcode, radius_miles: radius, include_listings: false },
       });
       if (fnError) throw fnError;
       if (data?.error) { setError(data.error); return; }
@@ -84,7 +88,7 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, radiusMiles = 100
     } finally {
       setLoading(false);
     }
-  }, [vin, uvc, zipcode, radiusMiles]);
+  }, [vin, uvc, zipcode, radius]);
 
   const fetchListings = useCallback(async () => {
     if (!vin && !uvc) return;
@@ -92,7 +96,7 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, radiusMiles = 100
     setListingsLoading(true);
     try {
       const { data, error: fnError } = await supabase.functions.invoke("bb-retail-listings", {
-        body: { vin, uvc, zipcode, radius_miles: radiusMiles, include_listings: true },
+        body: { vin, uvc, zipcode, radius_miles: radius, include_listings: true },
       });
       if (fnError) throw fnError;
       setListings(data?.listings || []);
@@ -102,16 +106,23 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, radiusMiles = 100
     } finally {
       setListingsLoading(false);
     }
-  }, [vin, uvc, zipcode, radiusMiles]);
+  }, [vin, uvc, zipcode, radius]);
 
   if (!fetched) {
     return (
-      <div className="space-y-2">
+      <div className="space-y-3">
         <div className="flex items-center gap-1.5">
           <Store className="w-3.5 h-3.5 text-muted-foreground" />
           <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             Live Market Data
           </span>
+        </div>
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+            <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> Search Radius</span>
+            <span className="font-semibold text-card-foreground">{radius} mi</span>
+          </div>
+          <Slider min={25} max={500} step={25} value={[radius]} onValueChange={([v]) => setRadius(v)} className="w-full" />
         </div>
         <Button
           variant="outline"
@@ -121,7 +132,7 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, radiusMiles = 100
           disabled={loading || (!vin && !uvc) || !zipcode}
         >
           {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <BarChart3 className="w-3.5 h-3.5 mr-1.5" />}
-          {loading ? "Fetching market data…" : `Pull Retail Market (${radiusMiles}mi)`}
+          {loading ? "Fetching market data…" : `Pull Retail Market (${radius}mi)`}
         </Button>
         {error && <p className="text-[10px] text-destructive">{error}</p>}
         {!zipcode && <p className="text-[10px] text-muted-foreground">Customer ZIP code required for market lookup</p>}
@@ -144,17 +155,27 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, radiusMiles = 100
 
   return (
     <div className="space-y-3">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <Store className="w-3.5 h-3.5 text-muted-foreground" />
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Live Market Data
-          </span>
+      {/* Header with radius adjuster */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <Store className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Live Market Data
+            </span>
+          </div>
+          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+            <MapPin className="w-3 h-3" />
+            <span>{radius}mi</span>
+          </div>
         </div>
-        <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-          <MapPin className="w-3 h-3" />
-          <span>{radiusMiles}mi radius</span>
+        <div className="flex items-center gap-2">
+          <Slider min={25} max={500} step={25} value={[radius]} onValueChange={([v]) => setRadius(v)} className="flex-1" />
+          {radius !== radiusMiles || !fetched ? (
+            <Button variant="outline" size="sm" className="text-[10px] h-6 px-2 shrink-0" onClick={() => { setFetched(false); setListings([]); setShowListings(false); setTimeout(fetchStats, 50); }} disabled={loading}>
+              {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Refresh"}
+            </Button>
+          ) : null}
         </div>
       </div>
 
