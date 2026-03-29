@@ -74,6 +74,7 @@ interface PortalSubmission {
   tire_rf: number | null;
   tire_lr: number | null;
   tire_rr: number | null;
+  inspector_grade: string | null;
 }
 
 const STAGE_MAPPING: Record<string, string> = {
