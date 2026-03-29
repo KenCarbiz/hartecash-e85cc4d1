@@ -168,6 +168,24 @@ const TireDepthDisplay = ({ label, depth }: { label: string; depth: number | nul
   );
 };
 
+// ── Brake Pad Depth Visual ──
+const BrakePadDisplay = ({ label, depth }: { label: string; depth: number | null }) => {
+  if (depth == null) return null;
+  const color = depth >= 8 ? "text-green-600 bg-green-500/10"
+    : depth >= 6 ? "text-green-500 bg-green-400/10"
+    : depth >= 4 ? "text-amber-600 bg-amber-500/10"
+    : depth >= 2 ? "text-orange-600 bg-orange-500/10"
+    : "text-destructive bg-destructive/10";
+  const statusLabel = depth >= 8 ? "New" : depth >= 6 ? "Good" : depth >= 4 ? "Fair" : depth >= 2 ? "Low" : "Replace";
+  return (
+    <div className={`rounded-lg p-2 text-center ${color}`}>
+      <div className="text-[10px] font-medium opacity-70">{label}</div>
+      <div className="text-lg font-bold">{depth}<span className="text-[10px]">mm</span></div>
+      <div className="text-[9px] font-semibold">{statusLabel}</div>
+    </div>
+  );
+};
+
 // ═══════════════════════════════════════════
 // MAIN PAGE
 // ═══════════════════════════════════════════
@@ -454,6 +472,21 @@ export default function AppraisalTool() {
     return match ? match[0] : null;
   }, [sub]);
 
+  // Parse brake pad depths from inspection notes
+  const brakeDepths = useMemo(() => {
+    if (!inspectionData) return null;
+    const match = inspectionData.match(/Brakes\s*\(mm\):\s*LF:(\d+|—)\s*RF:(\d+|—)\s*LR:(\d+|—)\s*RR:(\d+|—)/);
+    if (!match) return null;
+    const parse = (v: string) => v === "—" ? null : parseInt(v, 10);
+    return { lf: parse(match[1]), rf: parse(match[2]), lr: parse(match[3]), rr: parse(match[4]) };
+  }, [inspectionData]);
+
+  const hasBrakes = !!(brakeDepths && (brakeDepths.lf != null || brakeDepths.rf != null || brakeDepths.lr != null || brakeDepths.rr != null));
+  const avgBrakeDepth = hasBrakes
+    ? ([brakeDepths!.lf, brakeDepths!.rf, brakeDepths!.lr, brakeDepths!.rr].filter(v => v != null) as number[])
+        .reduce((a, b) => a + b, 0) / [brakeDepths!.lf, brakeDepths!.rf, brakeDepths!.lr, brakeDepths!.rr].filter(v => v != null).length
+    : null;
+
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen bg-background"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
   }
@@ -469,7 +502,7 @@ export default function AppraisalTool() {
 
   const hasTires = !!(sub.tire_lf && sub.tire_rf && sub.tire_lr && sub.tire_rr);
   const avgTireDepth = hasTires ? ((sub.tire_lf! + sub.tire_rf! + sub.tire_lr! + sub.tire_rr!) / 4).toFixed(1) : null;
-  const hasInspection = !!(hasTires || inspectionData);
+  const hasInspection = !!(hasTires || hasBrakes || inspectionData);
 
   return (
     <div className="min-h-screen bg-background">
@@ -907,6 +940,22 @@ export default function AppraisalTool() {
                           </span>
                         )}
                       </div>
+                    </div>
+                  )}
+                  {hasBrakes && brakeDepths && (
+                    <div>
+                      <div className="text-[10px] font-semibold text-muted-foreground uppercase mb-1">Brake Pad Depth</div>
+                      <div className="grid grid-cols-4 gap-2">
+                        <BrakePadDisplay label="LF" depth={brakeDepths.lf} />
+                        <BrakePadDisplay label="RF" depth={brakeDepths.rf} />
+                        <BrakePadDisplay label="LR" depth={brakeDepths.lr} />
+                        <BrakePadDisplay label="RR" depth={brakeDepths.rr} />
+                      </div>
+                      {avgBrakeDepth != null && (
+                        <div className="mt-1.5 px-1">
+                          <span className="text-[10px] text-muted-foreground">Avg: {avgBrakeDepth.toFixed(1)}mm</span>
+                        </div>
+                      )}
                     </div>
                   )}
                   {inspectionData && (
