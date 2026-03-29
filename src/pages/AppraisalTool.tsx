@@ -463,11 +463,11 @@ export default function AppraisalTool() {
     setSaving(false);
   };
 
-  // Parse inspection data
+  // Parse inspection data — return the full internal_notes if it contains an inspection header
   const inspectionData = useMemo(() => {
     if (!sub?.internal_notes) return null;
-    const match = sub.internal_notes.match(/\[INSPECTION[^\]]*\]([\s\S]*?)(?=\[|$)/);
-    return match ? match[0] : null;
+    if (!sub.internal_notes.includes("[INSPECTION")) return null;
+    return sub.internal_notes;
   }, [sub]);
 
   // Parse brake pad depths from inspection notes
