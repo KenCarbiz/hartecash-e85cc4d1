@@ -668,10 +668,12 @@ const InspectionSheet = () => {
     };
 
     const loadSubmission = async () => {
-      const [subRes, dmgRes] = await Promise.all([
+      const [subRes, dmgRes, policiesRes] = await Promise.all([
         supabase.from("submissions").select("*").eq("id", id).maybeSingle(),
         supabase.from("damage_reports").select("*").eq("submission_id", id).order("created_at"),
+        supabase.from("depth_policies").select("*").eq("dealership_id", "default").eq("is_active", true).order("sort_order"),
       ]);
+      if (policiesRes.data) setDepthPolicies(policiesRes.data as DepthPolicy[]);
       if (subRes.data) {
         setSubmission(subRes.data);
         setCustomerGrade(subRes.data.overall_condition || "");
