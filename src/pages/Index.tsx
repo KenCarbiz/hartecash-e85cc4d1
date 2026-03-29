@@ -48,7 +48,7 @@ const Index = () => {
         <Testimonials />
         <FAQ />
         <CTABanner />
-        <AboutBlurb />
+        
       </main>
       <SiteFooter />
     </div>
