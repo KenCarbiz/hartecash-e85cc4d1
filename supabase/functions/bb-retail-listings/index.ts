@@ -94,31 +94,28 @@ serve(async (req) => {
       });
     }
 
-    // Extract statistics
+    const activeStats = sd.active_statistics;
+    const soldStats = sd.sold_statistics;
     const statistics = {
-      mean_days_to_turn: statsData.mean_days_to_turn ?? null,
-      market_days_supply: statsData.market_days_supply ?? null,
-      active: statsData.active_statistics ? {
-        vehicle_count: statsData.active_statistics.vehicle_count ?? 0,
-        minimum_price: statsData.active_statistics.minimum_price ?? 0,
-        maximum_price: statsData.active_statistics.maximum_price ?? 0,
-        mean_price: statsData.active_statistics.mean_price ?? 0,
-        median_price: statsData.active_statistics.median_price ?? 0,
-        minimum_mileage: statsData.active_statistics.minimum_mileage ?? 0,
-        maximum_mileage: statsData.active_statistics.maximum_mileage ?? 0,
-        mean_mileage: statsData.active_statistics.mean_mileage ?? 0,
-        median_mileage: statsData.active_statistics.median_mileage ?? 0,
+      mean_days_to_turn: sd.mean_days_to_turn ?? null,
+      market_days_supply: sd.market_days_supply ?? null,
+      active: activeStats ? {
+        vehicle_count: activeStats.vehicle_count ?? 0,
+        minimum_price: activeStats.minimum_price ?? 0,
+        maximum_price: activeStats.maximum_price ?? 0,
+        mean_price: activeStats.mean_price ?? 0,
+        median_price: activeStats.median_price ?? 0,
+        mean_mileage: activeStats.mean_mileage ?? 0,
+        median_mileage: activeStats.median_mileage ?? 0,
       } : null,
-      sold: statsData.sold_statistics ? {
-        vehicle_count: statsData.sold_statistics.vehicle_count ?? 0,
-        minimum_price: statsData.sold_statistics.minimum_price ?? 0,
-        maximum_price: statsData.sold_statistics.maximum_price ?? 0,
-        mean_price: statsData.sold_statistics.mean_price ?? 0,
-        median_price: statsData.sold_statistics.median_price ?? 0,
-        minimum_mileage: statsData.sold_statistics.minimum_mileage ?? 0,
-        maximum_mileage: statsData.sold_statistics.maximum_mileage ?? 0,
-        mean_mileage: statsData.sold_statistics.mean_mileage ?? 0,
-        median_mileage: statsData.sold_statistics.median_mileage ?? 0,
+      sold: soldStats ? {
+        vehicle_count: soldStats.vehicle_count ?? 0,
+        minimum_price: soldStats.minimum_price ?? 0,
+        maximum_price: soldStats.maximum_price ?? 0,
+        mean_price: soldStats.mean_price ?? 0,
+        median_price: soldStats.median_price ?? 0,
+        mean_mileage: soldStats.mean_mileage ?? 0,
+        median_mileage: soldStats.median_mileage ?? 0,
       } : null,
     };
 
