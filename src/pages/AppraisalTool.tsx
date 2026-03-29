@@ -435,8 +435,6 @@ export default function AppraisalTool() {
       updateLocalSetting("condition_multipliers", { excellent: 1, good: 1, fair: 1, rough: 1, ...(activeSettings?.condition_multipliers || {}), [condition]: value });
     } else if (editKey === "recon_cost") {
       updateLocalSetting("recon_cost", value);
-    } else if (editKey === "dealer_pack") {
-      setDealerPackOverride(value);
     } else if (editKey === "global_adjustment_pct") {
       updateLocalSetting("global_adjustment_pct", value);
     } else if (editKey === "regional_adjustment_pct") {
