@@ -1172,14 +1172,18 @@ export default function PitchDeck() {
             </motion.p>
             <motion.div variants={fadeUp} custom={2} className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
               {[
-                { icon: Camera, title: "Camera Overlays", desc: "Blueprint-style silhouette guides overlay the phone camera — ensuring consistent, professional vehicle photos every time. Front, rear, sides, interior, odometer." },
-                { icon: Cpu, title: "AI Damage Detection", desc: "Gemini Vision analyzes uploaded photos automatically — flagging dents, scratches, and paint damage with severity scoring and confidence levels." },
-                { icon: BarChart3, title: "Interactive Offer Builder", desc: "Waterfall visualization with real-time sliders, profit spread gauge, and what-if comparison mode. Managers see exactly how each lever affects the final number." },
-                { icon: MousePointerClick, title: "Slide-to-Accept", desc: "Apple Pay-style swipe gesture for customers to commit to offers on mobile. High-contrast button on desktop. Psychological commitment loop." },
-                { icon: FileText, title: "Driver's License OCR", desc: "AI parses uploaded ID photos to auto-fill customer name, address, and license number. Eliminates manual data entry errors." },
-                { icon: TrendingUp, title: "Executive KPI Hub", desc: "GM-level analytics dashboard with conversion funnels, pipeline value tracking, and trend analysis. Real-time visibility into the entire operation." },
-                { icon: Repeat, title: "Follow-Up Engine", desc: "Automated multi-touch SMS and email re-engagement sequences for cold leads. Configurable intervals and messaging per touch." },
-                { icon: MapPin, title: "Smart Store Assignment", desc: "Leads automatically route to the right location by ZIP code, OEM brand match, or buying center rules. Zero manual triage." },
+                { icon: Camera, title: "Camera Overlays", desc: "Blueprint-style silhouette guides overlay the phone camera — ensuring consistent, professional vehicle photos every time." },
+                { icon: Cpu, title: "AI Damage Detection", desc: "Gemini Vision analyzes uploaded photos — flagging dents, scratches, and paint damage with severity scoring and confidence levels." },
+                { icon: BarChart3, title: "Interactive Offer Builder", desc: "Waterfall visualization with real-time sliders, profit spread gauge, and what-if comparison mode." },
+                { icon: MousePointerClick, title: "Slide-to-Accept", desc: "Apple Pay-style swipe gesture for customers to commit to offers. Psychological commitment loop." },
+                { icon: ClipboardCheck, title: "Dual Inspection Modes", desc: "Standard Pass/Fail checklists for sales managers and comprehensive G/F/P/D grading for certified technicians — admin-configurable default." },
+                { icon: Printer, title: "Print-Ready Inspection Forms", desc: "Professional form-designer quality printouts with dealership logo, write-in boxes sized for handwriting, and dual signature blocks." },
+                { icon: Smartphone, title: "Mobile ↔ Desktop Sync", desc: "QR-code mobile inspections sync tire depths, brake measurements, and condition grades back to the desktop — zero duplicate entry." },
+                { icon: TrendingUp, title: "Inspection-to-Appraisal Pipeline", desc: "Completed inspection findings feed directly into the offer waterfall — tire adjustments, condition grades, and recon costs auto-applied." },
+                { icon: FileText, title: "Driver's License OCR", desc: "AI parses uploaded ID photos to auto-fill customer name, address, and license number." },
+                { icon: Target, title: "Executive KPI Hub", desc: "GM-level analytics dashboard with conversion funnels, pipeline value tracking, and trend analysis." },
+                { icon: Repeat, title: "Follow-Up Engine", desc: "Automated multi-touch SMS and email re-engagement sequences for cold leads. Configurable intervals per touch." },
+                { icon: MapPin, title: "Smart Store Assignment", desc: "Leads automatically route to the right location by ZIP code, OEM brand match, or buying center rules." },
               ].map((item, i) => (
                 <motion.div key={i} variants={scaleIn} custom={i * 0.5 + 3} className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/8 transition-colors">
                   <div className="w-11 h-11 rounded-xl bg-blue-500/20 flex items-center justify-center mb-4">
