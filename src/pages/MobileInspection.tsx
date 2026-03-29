@@ -283,13 +283,24 @@ const MobileInspection = () => {
             <CardTitle className="text-sm flex items-center gap-2">
               <Gauge className="h-4 w-4 text-primary" /> Brake Pad Depth (/32")
             </CardTitle>
-            <p className="text-[10px] text-muted-foreground mt-1">Tap the measured depth for each brake</p>
+            <p className="text-[10px] text-muted-foreground mt-1">Select the measured depth for each brake</p>
           </CardHeader>
-          <CardContent className="px-4 pb-4 space-y-4">
-            <BrakePadPicker label="Left Front" value={brakeLF} onChange={setBrakeLF} />
-            <BrakePadPicker label="Right Front" value={brakeRF} onChange={setBrakeRF} />
-            <BrakePadPicker label="Left Rear" value={brakeLR} onChange={setBrakeLR} />
-            <BrakePadPicker label="Right Rear" value={brakeRR} onChange={setBrakeRR} />
+          <CardContent className="px-4 pb-4">
+            <BrakePadDepthWidget
+              depths={{
+                leftFront: brakeLF,
+                rightFront: brakeRF,
+                leftRear: brakeLR,
+                rightRear: brakeRR,
+              }}
+              onChange={(id, depth) => {
+                if (id === "leftFront") setBrakeLF(depth);
+                else if (id === "rightFront") setBrakeRF(depth);
+                else if (id === "leftRear") setBrakeLR(depth);
+                else if (id === "rightRear") setBrakeRR(depth);
+              }}
+              compact
+            />
           </CardContent>
         </Card>
 
