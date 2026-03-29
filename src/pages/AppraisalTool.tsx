@@ -578,6 +578,56 @@ export default function AppraisalTool() {
             <div><span className="text-muted-foreground">Fuel:</span> <span className="font-medium text-card-foreground font-bold">{liveBbVehicle?.fuel_type || sub.bb_fuel_type || "—"}</span></div>
             <div><span className="text-muted-foreground">Color:</span> <span className="font-medium text-card-foreground">{sub.exterior_color || "—"}</span></div>
           </div>
+          {/* Equipment — toggle-able add/deducts with customer selections highlighted */}
+          {bbVehicle && bbVehicle.add_deduct_list?.length > 0 && (
+            <Collapsible>
+              <CollapsibleTrigger asChild>
+                <button className="flex items-center gap-2 mt-2 text-[10px] font-bold uppercase tracking-wider text-primary hover:underline">
+                  <Plus className="w-3 h-3" />
+                  Equipment &amp; Options ({liveSelectedAddDeducts.length} selected • {equipmentTotal >= 0 ? "+" : ""}${equipmentTotal.toLocaleString()})
+                  <ChevronDown className="w-3 h-3 ml-1" />
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 mt-2">
+                  {bbVehicle.add_deduct_list.map((ad: BBAddDeduct) => {
+                    const isSelected = liveSelectedAddDeducts.includes(ad.uoc);
+                    const wasCustomerSelected = ((sub as any).bb_selected_options || []).includes(ad.uoc);
+                    const isAuto = ad.auto !== "N";
+                    return (
+                      <button
+                        key={ad.uoc}
+                        onClick={() => toggleAddDeduct(ad.uoc)}
+                        className={`flex items-center gap-2 px-2 py-1.5 rounded text-[11px] border transition-all text-left ${
+                          isSelected
+                            ? "bg-primary/10 border-primary/30 text-card-foreground"
+                            : "bg-muted/30 border-border text-muted-foreground"
+                        }`}
+                      >
+                        <div className={`w-3.5 h-3.5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
+                          isSelected ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground"
+                        }`}>
+                          {isSelected && <span className="text-[8px]">✓</span>}
+                        </div>
+                        <span className="flex-1 truncate">{ad.name}</span>
+                        {wasCustomerSelected && !isAuto && (
+                          <Badge variant="outline" className="text-[8px] border-amber-400/50 text-amber-600 shrink-0 px-1 py-0">Customer</Badge>
+                        )}
+                        {isAuto && (
+                          <Badge variant="secondary" className="text-[8px] shrink-0 px-1 py-0">VIN</Badge>
+                        )}
+                        {ad.avg !== 0 && (
+                          <span className={`text-[10px] font-bold shrink-0 ${ad.avg > 0 ? "text-emerald-600" : "text-destructive"}`}>
+                            {ad.avg > 0 ? "+" : ""}${ad.avg.toLocaleString()}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
         </div>
 
         {/* ═══ TWO-COLUMN LAYOUT ═══ */}
