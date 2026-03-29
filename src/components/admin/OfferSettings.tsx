@@ -263,6 +263,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
         regional_adjustment_pct: d.regional_adjustment_pct ?? 0,
         retail_search_radius: d.retail_search_radius ?? 100,
         dealer_pack: d.dealer_pack ?? 0,
+        hide_pack_from_appraisal: d.hide_pack_from_appraisal ?? false,
       } as OfferSettingsRow);
       setSavedSettings({
         ...d,
