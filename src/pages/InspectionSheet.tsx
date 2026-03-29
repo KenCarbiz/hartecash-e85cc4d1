@@ -769,34 +769,34 @@ const InspectionSheet = () => {
       .grid-2 { display: grid; grid-template-columns: 1fr 1fr; }
       .grid-2 .item { border-bottom: 1px solid #e5e5e5; border-right: 1px solid #e5e5e5; }
       .grid-2 .item:nth-child(2n) { border-right: none; }
-      .item { display: flex; align-items: flex-start; gap: 6px; padding: 5px 8px; }
-      .cb { width: 13px; height: 13px; border: 1.5px solid #555; border-radius: 2px; flex-shrink: 0; margin-top: 1px; }
-      .pf-boxes { display: flex; gap: 6px; flex-shrink: 0; }
-      .pf-box { display: flex; align-items: center; gap: 2px; font-size: 8px; font-weight: 600; color: #666; }
-      .pf-box .cb-sm { width: 12px; height: 12px; border: 1.5px solid #555; border-radius: 2px; }
-      .item-label { font-size: 10.5px; font-weight: 500; flex: 1; }
-      .item-grade { display: flex; gap: 3px; flex-shrink: 0; }
-      .item-grade .g { width: 14px; height: 14px; border: 1px solid #bbb; border-radius: 2px; text-align: center; font-size: 7px; line-height: 14px; font-weight: 600; color: #888; }
-      .note-line { border-bottom: 1px dotted #bbb; height: 16px; flex: 1; min-width: 60px; }
+      .item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; min-height: 28px; }
+      .cb { width: 15px; height: 15px; border: 1.5px solid #555; border-radius: 2px; flex-shrink: 0; }
+      .pf-boxes { display: flex; gap: 8px; flex-shrink: 0; }
+      .pf-box { display: flex; align-items: center; gap: 3px; font-size: 9px; font-weight: 600; color: #555; }
+      .pf-box .cb-sm { width: 14px; height: 14px; border: 1.5px solid #555; border-radius: 2px; }
+      .item-label { font-size: 11.5px; font-weight: 500; flex-shrink: 0; }
+      .item-grade { display: flex; gap: 4px; flex-shrink: 0; }
+      .item-grade .g { width: 16px; height: 16px; border: 1.5px solid #999; border-radius: 2px; text-align: center; font-size: 8px; line-height: 16px; font-weight: 700; color: #777; }
+      .note-line { border-bottom: 1px dotted #bbb; height: 20px; flex: 1; min-width: 70px; }
       .tire-table { width: 100%; border-collapse: collapse; }
-      .tire-table th, .tire-table td { padding: 5px 8px; border-bottom: 1px solid #e5e5e5; text-align: center; font-size: 11px; }
-      .tire-table th { background: #fafafa; font-weight: 600; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: #666; }
+      .tire-table th, .tire-table td { padding: 8px 10px; border-bottom: 1px solid #e5e5e5; text-align: center; font-size: 12px; }
+      .tire-table th { background: #fafafa; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #666; }
       .tire-table td.label-cell { text-align: left; font-weight: 600; }
-      .tire-table .write-box { width: 40px; height: 18px; border: 1px solid #bbb; border-radius: 2px; display: inline-block; }
-      .measure-row { display: flex; align-items: center; gap: 8px; padding: 5px 10px; border-bottom: 1px solid #e5e5e5; }
-      .measure-label { font-weight: 600; font-size: 10.5px; width: 100px; flex-shrink: 0; }
-      .measure-line { flex: 1; border-bottom: 1px solid #bbb; height: 16px; }
+      .tire-table .write-box { width: 48px; height: 22px; border: 1.5px solid #999; border-radius: 3px; display: inline-block; }
+      .measure-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid #e5e5e5; min-height: 32px; }
+      .measure-label { font-weight: 600; font-size: 11.5px; width: 120px; flex-shrink: 0; }
+      .measure-line { flex: 1; border-bottom: 1px solid #bbb; height: 20px; }
       .notes-box { border: 1.5px solid #ccc; border-radius: 6px; overflow: hidden; break-inside: avoid; margin-bottom: 12px; }
-      .notes-header { background: #f5f5f5; padding: 6px 10px; border-bottom: 1.5px solid #aaa; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
-      .notes-lines { padding: 8px 10px; }
-      .notes-lines .line { border-bottom: 1px dotted #ccc; height: 22px; }
-      .grade-box { display: inline-flex; gap: 10px; margin: 4px 0; }
-      .grade-option { display: flex; align-items: center; gap: 4px; font-size: 10px; }
-      .grade-option .radio { width: 12px; height: 12px; border: 1.5px solid #555; border-radius: 50%; }
-      .signatures { margin-top: 24px; padding-top: 14px; border-top: 2px solid #ddd; display: flex; justify-content: space-between; gap: 40px; }
+      .notes-header { background: #f5f5f5; padding: 8px 12px; border-bottom: 1.5px solid #aaa; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+      .notes-lines { padding: 10px 12px; }
+      .notes-lines .line { border-bottom: 1px dotted #ccc; height: 28px; }
+      .grade-box { display: inline-flex; gap: 14px; margin: 6px 0; }
+      .grade-option { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+      .grade-option .radio { width: 14px; height: 14px; border: 1.5px solid #555; border-radius: 50%; }
+      .signatures { margin-top: 28px; padding-top: 16px; border-top: 2px solid #ddd; display: flex; justify-content: space-between; gap: 40px; }
       .sig-block { flex: 1; }
-      .sig-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: #888; font-weight: 600; margin-bottom: 4px; }
-      .sig-line { border-bottom: 1.5px solid #333; height: 28px; }
+      .sig-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #888; font-weight: 600; margin-bottom: 4px; }
+      .sig-line { border-bottom: 1.5px solid #333; height: 32px; }
       .sig-date { margin-top: 4px; font-size: 9px; color: #aaa; }
       .test-drive-section .item { padding: 4px 8px; }
       .footer { text-align: center; margin-top: 16px; font-size: 8px; color: #bbb; }
