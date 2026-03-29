@@ -443,6 +443,35 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
         </div>
       </div>
 
+      {/* ── Market Search Radius ── */}
+      {settings && (
+        <Section
+          icon={<MapPin className="w-5 h-5 text-primary" />}
+          title="Market Data Settings"
+          defaultOpen={false}
+        >
+          <div className="space-y-3">
+            <div>
+              <Label className="text-sm font-semibold">Retail Listings Search Radius</Label>
+              <p className="text-xs text-muted-foreground mb-2">
+                How far to search for comparable retail listings when pulling live market data from Black Book.
+              </p>
+              <div className="flex items-center gap-4">
+                <Slider
+                  value={[settings.retail_search_radius ?? 100]}
+                  min={25}
+                  max={500}
+                  step={25}
+                  onValueChange={([v]) => setSettings({ ...settings, retail_search_radius: v })}
+                  className="flex-1"
+                />
+                <span className="text-sm font-bold text-card-foreground w-20 text-right">{settings.retail_search_radius ?? 100} mi</span>
+              </div>
+            </div>
+          </div>
+        </Section>
+      )}
+
       {/* All pricing adjustments now happen in the Workbench above. Only Rules remain below. */}
 
       {/* ── Section 5: Criteria-Based Rules ── */}
