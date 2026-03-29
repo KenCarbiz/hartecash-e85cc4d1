@@ -242,27 +242,27 @@ const AdminDashboard = () => {
       />
       <div className="flex-1 flex flex-col min-w-0">
         <header className="sticky top-0 z-50 bg-gradient-to-r from-[hsl(210,100%,15%)] via-[hsl(210,100%,20%)] to-[hsl(220,80%,18%)] text-white shadow-lg">
-          <div className="px-4 py-1 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <SidebarTrigger className="text-white/80 hover:text-white hover:bg-white/10 -ml-1" />
-              <img src={harteLogoWhiteFallback} alt="Dashboard" className="h-20 w-auto" />
-              <div>
-                <span className="text-lg font-bold">Dashboard</span>
-                <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-white/20 text-white/90 font-medium">{ROLE_LABELS[userRole] || userRole}</span>
+          <div className="px-3 md:px-4 py-1 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 md:gap-3 min-w-0">
+              <SidebarTrigger className="text-white/80 hover:text-white hover:bg-white/10 -ml-1 shrink-0" />
+              <img src={harteLogoWhiteFallback} alt="Dashboard" className="h-12 md:h-20 w-auto shrink-0" />
+              <div className="min-w-0">
+                <span className="text-sm md:text-lg font-bold">Dashboard</span>
+                <span className="hidden sm:inline ml-2 text-xs px-2 py-0.5 rounded-full bg-white/20 text-white/90 font-medium">{ROLE_LABELS[userRole] || userRole}</span>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={() => setDarkMode(!darkMode)} className="text-white/80 hover:text-white hover:bg-white/10">
+            <div className="flex items-center gap-1 md:gap-2 shrink-0">
+              <Button variant="ghost" size="sm" onClick={() => setDarkMode(!darkMode)} className="text-white/80 hover:text-white hover:bg-white/10 px-2">
                 {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </Button>
-              <Button variant="ghost" size="sm" onClick={async () => { await supabase.auth.signOut(); navigate("/admin/login"); }} className="text-white/80 hover:text-white hover:bg-white/10">
-                <LogOut className="w-4 h-4 mr-1" /> Logout
+              <Button variant="ghost" size="sm" onClick={async () => { await supabase.auth.signOut(); navigate("/admin/login"); }} className="text-white/80 hover:text-white hover:bg-white/10 px-2">
+                <LogOut className="w-4 h-4" /> <span className="hidden md:inline ml-1">Logout</span>
               </Button>
             </div>
           </div>
         </header>
 
-        <div className="flex-1 px-4 py-6 overflow-auto">
+        <div className="flex-1 px-3 md:px-4 py-4 md:py-6 overflow-auto">
           <div className="max-w-[1400px] mx-auto">
             {activeSection === "submissions" && (
               <SubmissionsTable
@@ -328,8 +328,8 @@ const AdminDashboard = () => {
                       {pendingRequests.length === 0 ? (
                         <div className="text-center py-8 text-muted-foreground">No pending access requests.</div>
                       ) : (
-                        <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
-                          <table className="w-full text-sm">
+                        <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden overflow-x-auto">
+                          <table className="w-full text-sm min-w-[600px]">
                             <thead><tr className="border-b border-border bg-muted/50">
                               <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Email</th>
                               <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Requested</th>
