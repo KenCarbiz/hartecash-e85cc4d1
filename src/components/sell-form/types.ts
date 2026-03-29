@@ -19,6 +19,7 @@ export interface BBColor {
   code: string;
   name: string;
   rgb: string;
+  hex: string;
 }
 
 export interface BBVehicle {

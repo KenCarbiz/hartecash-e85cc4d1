@@ -73,7 +73,7 @@ const ColorDropdown = ({
           seen.add(key);
           return true;
         })
-        .map((c) => ({ label: c.name, hex: rgbToHex(c.rgb) }));
+        .map((c) => ({ label: c.name, hex: getColorHex(c) }));
       opts.push({ label: "Other", hex: "none" });
       return opts;
     }
