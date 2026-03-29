@@ -497,6 +497,8 @@ const InspectionSheet = () => {
   const [oilLife, setOilLife] = useState("");
   const [batteryHealth, setBatteryHealth] = useState("");
   const [overallGrade, setOverallGrade] = useState("");
+  const [inspectorGrade, setInspectorGrade] = useState("");
+  const [customerGrade, setCustomerGrade] = useState("");
 
   // Clickable condition grades — single state object for all sections
   const [allGrades, setAllGrades] = useState<Record<string, ConditionGrade>>({});
