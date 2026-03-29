@@ -77,7 +77,7 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, radiusMiles = 100
     setError(null);
     try {
       const { data, error: fnError } = await supabase.functions.invoke("bb-retail-listings", {
-        body: { vin, uvc, zipcode, radius_miles: radiusMiles, include_listings: false },
+        body: { vin, uvc, zipcode, radius_miles: radius, include_listings: false },
       });
       if (fnError) throw fnError;
       if (data?.error) { setError(data.error); return; }
@@ -88,7 +88,7 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, radiusMiles = 100
     } finally {
       setLoading(false);
     }
-  }, [vin, uvc, zipcode, radiusMiles]);
+  }, [vin, uvc, zipcode, radius]);
 
   const fetchListings = useCallback(async () => {
     if (!vin && !uvc) return;
@@ -96,7 +96,7 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, radiusMiles = 100
     setListingsLoading(true);
     try {
       const { data, error: fnError } = await supabase.functions.invoke("bb-retail-listings", {
-        body: { vin, uvc, zipcode, radius_miles: radiusMiles, include_listings: true },
+        body: { vin, uvc, zipcode, radius_miles: radius, include_listings: true },
       });
       if (fnError) throw fnError;
       setListings(data?.listings || []);
@@ -106,7 +106,7 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, radiusMiles = 100
     } finally {
       setListingsLoading(false);
     }
-  }, [vin, uvc, zipcode, radiusMiles]);
+  }, [vin, uvc, zipcode, radius]);
 
   if (!fetched) {
     return (
