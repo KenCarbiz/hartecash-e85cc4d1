@@ -963,7 +963,7 @@ export default function AppraisalTool() {
                       </div>
                       {avgBrakeDepth != null && (
                         <div className="mt-1.5 px-1">
-                          <span className="text-[10px] text-muted-foreground">Avg: {avgBrakeDepth.toFixed(1)}mm</span>
+                          <span className="text-[10px] text-muted-foreground">Avg: {avgBrakeDepth.toFixed(1)}/32"</span>
                         </div>
                       )}
                     </div>
