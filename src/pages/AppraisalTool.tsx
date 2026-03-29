@@ -49,6 +49,7 @@ interface Submission {
   drivetrain: string | null; internal_notes: string | null;
   tire_lf: number | null; tire_rf: number | null; tire_lr: number | null; tire_rr: number | null;
   tire_adjustment: number | null;
+  brake_lf: number | null; brake_rf: number | null; brake_lr: number | null; brake_rr: number | null;
   ai_condition_score: string | null; ai_damage_summary: string | null;
   appraised_by: string | null; zip: string | null;
 }
