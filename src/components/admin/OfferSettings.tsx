@@ -123,6 +123,7 @@ interface OfferSettingsRow {
   regional_adjustment_pct: number;
   retail_search_radius: number;
   dealer_pack: number;
+  hide_pack_from_appraisal: boolean;
 }
 
 interface OfferRule {
