@@ -10,8 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import TreadDepthPicker from "@/components/inspection/TreadDepthPicker";
-import BrakePadDepthWidget, { type BrakeDepths } from "@/components/inspection/BrakePadDepthWidget";
+import BrakePadDepthWidget from "@/components/inspection/BrakePadDepthWidget";
 
 interface DamageItem {
   type: string;

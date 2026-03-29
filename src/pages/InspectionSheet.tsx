@@ -10,7 +10,7 @@ import {
 import { QRCodeSVG } from "qrcode.react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import TreadDepthPicker from "@/components/inspection/TreadDepthPicker";
+
 import BrakePadDepthWidget from "@/components/inspection/BrakePadDepthWidget";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
