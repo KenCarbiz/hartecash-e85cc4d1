@@ -602,7 +602,7 @@ const SubmissionDetailSheet = ({
                 </Select>
               </div>
 
-              {sub.progress_status === "inspection_completed" && (
+              {sub.progress_status === "inspection_completed" && canSetPrice && (
                 <div className="mt-3 space-y-2">
                   <label className="text-xs font-medium text-muted-foreground mb-1 block">In-House ACV <span className="text-destructive">*</span></label>
                   <div className="relative">
@@ -611,6 +611,13 @@ const SubmissionDetailSheet = ({
                   </div>
                   {!sub.acv_value && <p className="text-xs text-destructive">ACV value is required before updating.</p>}
                   {sub.appraised_by && sub.acv_value && <p className="text-xs text-muted-foreground">Appraised by: {sub.appraised_by}</p>}
+                </div>
+              )}
+              {sub.progress_status === "inspection_completed" && !canSetPrice && sub.acv_value && (
+                <div className="mt-3">
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">In-House ACV</label>
+                  <p className="text-card-foreground font-medium">${Number(sub.acv_value).toLocaleString()}</p>
+                  {sub.appraised_by && <p className="text-xs text-muted-foreground">Appraised by: {sub.appraised_by}</p>}
                 </div>
               )}
             </SectionCard>
