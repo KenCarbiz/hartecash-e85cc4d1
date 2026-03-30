@@ -82,6 +82,7 @@ const AdminDashboard = () => {
   const [approveRole, setApproveRole] = useState<string>("sales_bdc");
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { tenant } = useTenant();
 
   const canSetPrice = ["admin", "used_car_manager", "gsm_gm"].includes(userRole);
   const canApprove = ["admin", "gsm_gm"].includes(userRole);
