@@ -42,32 +42,37 @@ interface DamageReport {
   suggested_condition: string | null;
 }
 
-type ConditionGrade = "" | "good" | "fair" | "poor" | "damaged";
+type ConditionGrade = "" | "pass" | "caution" | "fail";
 
-const GRADE_CYCLE: ConditionGrade[] = ["", "good", "fair", "poor", "damaged"];
+const GRADE_CYCLE: ConditionGrade[] = ["", "pass", "caution", "fail"];
 
 // #9 — Dark-mode-friendly grade colors using HSL tokens
 const gradeStyle = (g: ConditionGrade) => {
   switch (g) {
-    case "good": return "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-400/50 dark:border-emerald-500/40 ring-emerald-400/30";
-    case "fair": return "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-400/50 dark:border-amber-500/40 ring-amber-400/30";
-    case "poor": return "bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-400/50 dark:border-orange-500/40 ring-orange-400/30";
-    case "damaged": return "bg-red-500/15 text-red-600 dark:text-red-400 border-red-400/50 dark:border-red-500/40 ring-red-400/30";
+    case "pass": return "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-400/50 dark:border-emerald-500/40 ring-emerald-400/30";
+    case "caution": return "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-400/50 dark:border-amber-500/40 ring-amber-400/30";
+    case "fail": return "bg-red-500/15 text-red-600 dark:text-red-400 border-red-400/50 dark:border-red-500/40 ring-red-400/30";
     default: return "bg-muted/50 text-muted-foreground border-border";
   }
 };
 
 const gradeIcon = (g: ConditionGrade) => {
   switch (g) {
-    case "good": return "✓";
-    case "fair": return "~";
-    case "poor": return "✗";
-    case "damaged": return "⚠";
+    case "pass": return "✓";
+    case "caution": return "~";
+    case "fail": return "✗";
     default: return "○";
   }
 };
 
-const gradeLabel = (g: ConditionGrade) => g || "Not Checked";
+const gradeLabel = (g: ConditionGrade) => {
+  switch (g) {
+    case "pass": return "Pass";
+    case "caution": return "Caution";
+    case "fail": return "Fail";
+    default: return "Not Checked";
+  }
+};
 
 // ── Inspection Mode Types ──
 type InspectionMode = "full" | "ucm";
