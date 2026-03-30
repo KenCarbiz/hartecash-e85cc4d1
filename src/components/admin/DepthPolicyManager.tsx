@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Trash2, Shield, Car, Gauge, Save, GripVertical } from "lucide-react";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface DepthPolicy {
   id: string;
