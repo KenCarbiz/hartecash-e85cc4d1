@@ -147,7 +147,7 @@ export default function NotificationTemplateEditor({ open, onOpenChange, trigger
         .delete()
         .eq("trigger_key", triggerKey)
         .eq("channel", "sms")
-        .eq("dealership_id", "default");
+        .eq("dealership_id", dealershipId);
     }
 
     setSaving(false);

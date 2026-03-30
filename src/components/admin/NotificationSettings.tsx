@@ -185,13 +185,13 @@ export default function NotificationSettings() {
 
   const handleSave = async () => {
     setSaving(true);
-    const payload = { ...config, updated_at: new Date().toISOString() };
+    const payload = { ...config, dealership_id: dealershipId, updated_at: new Date().toISOString() };
     delete (payload as any).id;
 
     const { data: existing } = await supabase
       .from("notification_settings")
       .select("id")
-      .eq("dealership_id", "default")
+      .eq("dealership_id", dealershipId)
       .maybeSingle();
 
     let error;

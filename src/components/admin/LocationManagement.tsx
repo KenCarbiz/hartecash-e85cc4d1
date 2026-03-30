@@ -49,12 +49,13 @@ const LocationManagement = () => {
     const { data, error } = await supabase
       .from("dealership_locations" as any)
       .select("*")
+      .eq("dealership_id", dealershipId)
       .order("sort_order");
     if (!error && data) setLocations(data as unknown as Location[]);
     setLoading(false);
   };
 
-  useEffect(() => { fetchLocations(); }, []);
+  useEffect(() => { fetchLocations(); }, [dealershipId]);
 
   const toggleExpanded = (id: string) => {
     setExpandedIds(prev => {
