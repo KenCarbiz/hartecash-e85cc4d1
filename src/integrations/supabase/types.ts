@@ -111,6 +111,7 @@ export type Database = {
       changelog_entries: {
         Row: {
           created_at: string
+          dealership_id: string
           description: string
           entry_date: string
           icon: string
@@ -124,6 +125,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          dealership_id?: string
           description?: string
           entry_date?: string
           icon?: string
@@ -137,6 +139,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          dealership_id?: string
           description?: string
           entry_date?: string
           icon?: string
@@ -1775,6 +1778,7 @@ export type Database = {
         Row: {
           author_name: string
           created_at: string
+          dealership_id: string
           id: string
           is_active: boolean
           location: string
@@ -1787,6 +1791,7 @@ export type Database = {
         Insert: {
           author_name: string
           created_at?: string
+          dealership_id?: string
           id?: string
           is_active?: boolean
           location?: string
@@ -1799,6 +1804,7 @@ export type Database = {
         Update: {
           author_name?: string
           created_at?: string
+          dealership_id?: string
           id?: string
           is_active?: boolean
           location?: string
@@ -1875,7 +1881,7 @@ export type Database = {
       accept_offer: { Args: { _token: string }; Returns: undefined }
       cleanup_old_lookup_attempts: { Args: never; Returns: undefined }
       get_all_staff: {
-        Args: never
+        Args: { _dealership_id?: string }
         Returns: {
           display_name: string
           email: string
