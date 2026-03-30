@@ -49,6 +49,8 @@ const DEFAULTS: InspectionConfig = {
 };
 
 export const useInspectionConfig = () => {
+  const { tenant } = useTenant();
+  const dealershipId = tenant.dealership_id;
   const [config, setConfig] = useState<InspectionConfig>(DEFAULTS);
   const [loading, setLoading] = useState(true);
 
@@ -57,7 +59,7 @@ export const useInspectionConfig = () => {
       const { data } = await supabase
         .from("inspection_config")
         .select("*")
-        .eq("dealership_id", "default")
+        .eq("dealership_id", dealershipId)
         .maybeSingle();
       if (data) {
         setConfig({
