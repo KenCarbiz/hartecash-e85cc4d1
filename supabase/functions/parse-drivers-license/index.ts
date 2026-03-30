@@ -51,13 +51,6 @@ serve(async (req) => {
       });
     }
 
-    // Fetch submission to check which fields are empty
-    const { data: submission } = await supabase
-      .from("submissions")
-      .select("name, address_street, address_city, address_state, token")
-      .eq("token", submissionToken)
-      .maybeSingle();
-
     if (!submission) {
       return new Response(JSON.stringify({ error: "Submission not found" }), {
         status: 404,
