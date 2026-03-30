@@ -317,27 +317,12 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate }: DealerOnboardingProps
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Plan Tier */}
+            {/* Plan Info */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Plan Tier</Label>
-              <Select
-                disabled={readOnly}
-                value={account.plan_tier}
-                onValueChange={v => {
-                  const tier = PLAN_TIERS.find(t => t.value === v);
-                  updateField("plan_tier", v);
-                  if (tier && tier.cost > 0) updateField("plan_cost", tier.cost);
-                }}
-              >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {PLAN_TIERS.map(t => (
-                    <SelectItem key={t.value} value={t.value}>
-                      {t.label} {t.cost > 0 ? `— $${t.cost}/mo` : "— Custom"}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label className="text-xs font-semibold">Plan</Label>
+              <div className="flex items-center gap-2 h-10 px-3 rounded-md border border-border bg-muted/30">
+                <span className="text-sm font-medium text-card-foreground">Standard — $1,995/mo</span>
+              </div>
             </div>
 
             {/* Plan Cost */}
