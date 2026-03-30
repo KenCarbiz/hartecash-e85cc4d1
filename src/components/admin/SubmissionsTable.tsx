@@ -331,7 +331,9 @@ const SubmissionsTable = ({
                           </Select>
                           {sub.progress_status === "partial" && <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-600">⚠ Abandoned — needs follow-up</span>}
                           {sub.progress_status === "offer_accepted" && (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-success"><CheckCircle className="w-3 h-3" /> Offer Accepted</span>
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700/50 rounded-full px-2.5 py-0.5">
+                              <CheckCircle className="w-3 h-3" /> Offer Accepted
+                            </span>
                           )}
                         </div>
                       </td>
