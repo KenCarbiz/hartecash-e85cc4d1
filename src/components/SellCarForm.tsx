@@ -48,6 +48,7 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
   const { toast } = useToast();
   const { config } = useSiteConfig();
   const { formConfig } = useFormConfig();
+  const { tenant } = useTenant();
 
   // Black Book state
   const [bbVehicles, setBbVehicles] = useState<BBVehicle[]>([]);
