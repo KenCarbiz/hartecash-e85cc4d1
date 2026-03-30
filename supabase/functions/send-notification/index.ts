@@ -194,17 +194,6 @@ Deno.serve(async (req) => {
       (notifSettings as any)?.[fullChannelKey] ||
       ["email"];
 
-    // Fetch submission data if provided
-    let sub: any = null;
-    if (submission_id) {
-      const { data } = await supabase
-        .from("submissions")
-        .select("*")
-        .eq("id", submission_id)
-        .single();
-      sub = data;
-    }
-
     // Build template variables
     const vehicle = sub ? [sub.vehicle_year, sub.vehicle_make, sub.vehicle_model].filter(Boolean).join(" ") : "";
     const offerAmount = sub?.offered_price
