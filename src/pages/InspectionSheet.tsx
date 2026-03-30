@@ -350,16 +350,27 @@ const ChecklistSection = ({
 
   return (
     <Card className={`print:shadow-none print:border-foreground/30 break-inside-avoid border-l-4 ${borderAccent} overflow-hidden`}>
-      <button
-        type="button"
-        onClick={onToggle}
-        className={`w-full text-left bg-gradient-to-r ${gradient}`}
-      >
+      <div className={`w-full text-left bg-gradient-to-r ${gradient}`}>
         <CardHeader className="pb-2 pt-3">
           <CardTitle className="flex items-center gap-2 text-base">
-            <Icon className="h-5 w-5 text-primary" />
-            {label}
-            <div className="ml-auto flex items-center gap-1.5 text-xs">
+            {/* Mark All Pass circle toggle */}
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onMarkAllGood(); }}
+              className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${
+                allMarkedGood
+                  ? "bg-emerald-500 border-emerald-500 text-white"
+                  : "border-muted-foreground/30 bg-background hover:border-emerald-400"
+              }`}
+              title={allMarkedGood ? "Clear all" : "Mark all pass"}
+            >
+              {allMarkedGood && <CheckCheck className="h-3.5 w-3.5" />}
+            </button>
+            <button type="button" onClick={onToggle} className="flex items-center gap-2 flex-1 min-w-0">
+              <Icon className="h-5 w-5 text-primary" />
+              {label}
+            </button>
+            <button type="button" onClick={onToggle} className="ml-auto flex items-center gap-1.5 text-xs">
               {allGood && <Badge className="bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 text-[10px]">All Good ✓</Badge>}
               {!allGood && (
                 <Badge variant="secondary" className="text-[10px]">{checked}/{items.length}</Badge>
@@ -368,10 +379,10 @@ const ChecklistSection = ({
                 <Badge variant="destructive" className="text-[10px]">{issues} issue{issues > 1 ? "s" : ""}</Badge>
               )}
               {isOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
-            </div>
+            </button>
           </CardTitle>
         </CardHeader>
-      </button>
+      </div>
       <AnimatePresence>
         {isOpen && (
           <motion.div
