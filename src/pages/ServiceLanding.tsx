@@ -13,6 +13,7 @@ import { logConsent } from "@/lib/consent";
 import serviceLogo from "@/assets/harte-service-logo.png";
 import SEO from "@/components/SEO";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface VehicleInfo {
   year: string;
