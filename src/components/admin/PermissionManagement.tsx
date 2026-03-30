@@ -74,6 +74,8 @@ export const SECTION_GROUPS = ["Pipeline", "Team", "Compliance", "Configuration"
 
 const PermissionManagement = () => {
   const { toast } = useToast();
+  const { tenant } = useTenant();
+  const dealershipId = tenant.dealership_id;
   const [groups, setGroups] = useState<PermissionGroup[]>([]);
   const [requests, setRequests] = useState<AccessRequest[]>([]);
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);

@@ -430,6 +430,8 @@ const GradeLegend = () => (
 const InspectionSheet = () => {
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
+  const { tenant } = useTenant();
+  const dealershipId = tenant.dealership_id;
   const { config } = useSiteConfig();
   const { config: inspConfig, loading: inspConfigLoading } = useInspectionConfig();
   const printRef = useRef<HTMLDivElement>(null);

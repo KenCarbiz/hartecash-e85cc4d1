@@ -196,6 +196,8 @@ export default function AppraisalTool() {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { tenant } = useTenant();
+  const dealershipId = tenant.dealership_id;
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

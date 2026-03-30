@@ -67,6 +67,8 @@ interface ExecutiveKPIHubProps {
 }
 
 const ExecutiveKPIHub = ({ standalone = false }: ExecutiveKPIHubProps) => {
+  const { tenant } = useTenant();
+  const dealershipId = tenant.dealership_id;
   const [subs, setSubs] = useState<Sub[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
