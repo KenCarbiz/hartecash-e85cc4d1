@@ -123,7 +123,7 @@ export default function NotificationTemplateEditor({ open, onOpenChange, trigger
         .delete()
         .eq("trigger_key", triggerKey)
         .eq("channel", "email")
-        .eq("dealership_id", "default");
+        .eq("dealership_id", dealershipId);
     }
 
     // Save SMS template
