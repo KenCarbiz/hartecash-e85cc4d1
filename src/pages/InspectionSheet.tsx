@@ -42,32 +42,37 @@ interface DamageReport {
   suggested_condition: string | null;
 }
 
-type ConditionGrade = "" | "good" | "fair" | "poor" | "damaged";
+type ConditionGrade = "" | "pass" | "caution" | "fail";
 
-const GRADE_CYCLE: ConditionGrade[] = ["", "good", "fair", "poor", "damaged"];
+const GRADE_CYCLE: ConditionGrade[] = ["", "pass", "caution", "fail"];
 
 // #9 — Dark-mode-friendly grade colors using HSL tokens
 const gradeStyle = (g: ConditionGrade) => {
   switch (g) {
-    case "good": return "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-400/50 dark:border-emerald-500/40 ring-emerald-400/30";
-    case "fair": return "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-400/50 dark:border-amber-500/40 ring-amber-400/30";
-    case "poor": return "bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-400/50 dark:border-orange-500/40 ring-orange-400/30";
-    case "damaged": return "bg-red-500/15 text-red-600 dark:text-red-400 border-red-400/50 dark:border-red-500/40 ring-red-400/30";
+    case "pass": return "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-400/50 dark:border-emerald-500/40 ring-emerald-400/30";
+    case "caution": return "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-400/50 dark:border-amber-500/40 ring-amber-400/30";
+    case "fail": return "bg-red-500/15 text-red-600 dark:text-red-400 border-red-400/50 dark:border-red-500/40 ring-red-400/30";
     default: return "bg-muted/50 text-muted-foreground border-border";
   }
 };
 
 const gradeIcon = (g: ConditionGrade) => {
   switch (g) {
-    case "good": return "✓";
-    case "fair": return "~";
-    case "poor": return "✗";
-    case "damaged": return "⚠";
+    case "pass": return "✓";
+    case "caution": return "~";
+    case "fail": return "✗";
     default: return "○";
   }
 };
 
-const gradeLabel = (g: ConditionGrade) => g || "Not Checked";
+const gradeLabel = (g: ConditionGrade) => {
+  switch (g) {
+    case "pass": return "Pass";
+    case "caution": return "Caution";
+    case "fail": return "Fail";
+    default: return "Not Checked";
+  }
+};
 
 // ── Inspection Mode Types ──
 type InspectionMode = "full" | "ucm";
@@ -274,7 +279,7 @@ const ConditionItem = ({
     if (!didLongPress.current) {
       // Quick tap: toggle Good on/off, or cycle if already graded
       if (!grade) {
-        onSetGrade("good");
+        onSetGrade("pass");
       } else {
         onCycle();
       }
@@ -297,7 +302,7 @@ const ConditionItem = ({
         <span className="flex-1 text-left">{label}</span>
         {flaggedByAI && <Sparkles className="w-3 h-3 text-amber-500 flex-shrink-0" />}
         <span className="text-[10px] uppercase tracking-wider opacity-60">{gradeLabel(grade)}</span>
-        {(grade === "poor" || grade === "damaged") && (
+      {(grade === "caution" || grade === "fail") && (
           <button
             type="button"
             onClick={e => { e.stopPropagation(); setShowNote(!showNote); }}
@@ -307,7 +312,7 @@ const ConditionItem = ({
           </button>
         )}
       </button>
-      {showNote && (grade === "poor" || grade === "damaged") && (
+      {showNote && (grade === "caution" || grade === "fail") && (
         <Input
           value={note}
           onChange={e => onNoteChange(e.target.value)}
@@ -338,9 +343,10 @@ const ChecklistSection = ({
 }) => {
   const { items, icon: Icon, label, gradient, borderAccent } = sectionDef;
   const checked = items.filter(i => !!grades[i]).length;
-  const issues = items.filter(i => grades[i] === "poor" || grades[i] === "damaged").length;
-  const allGood = checked === items.length && issues === 0;
-  const allMarkedGood = items.every(i => grades[i] === "good");
+  const issues = items.filter(i => grades[i] === "fail").length;
+  const cautions = items.filter(i => grades[i] === "caution").length;
+  const allGood = checked === items.length && issues === 0 && cautions === 0;
+  const allMarkedGood = items.every(i => grades[i] === "pass");
 
   return (
     <Card className={`print:shadow-none print:border-foreground/30 break-inside-avoid border-l-4 ${borderAccent} overflow-hidden`}>
@@ -376,18 +382,7 @@ const ChecklistSection = ({
             className="overflow-hidden"
           >
             <CardContent className="pt-2 pb-4">
-              {/* #1 Mark All Good */}
-              <div className="flex items-center justify-end gap-2 mb-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className={`h-7 text-xs gap-1 ${allMarkedGood ? "border-red-400/50 text-red-600 dark:text-red-400 hover:bg-red-500/10" : "border-emerald-400/50 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10"}`}
-                  onClick={e => { e.stopPropagation(); onMarkAllGood(); }}
-                >
-                  <CheckCheck className="w-3.5 h-3.5" /> {allMarkedGood ? "Reset All" : "Mark All Good"}
-                </Button>
-              </div>
+              {/* #1 Mark All Pass — now handled by the circle in the header */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
                 {items.map(item => (
                   <ConditionItem
@@ -413,10 +408,10 @@ const ChecklistSection = ({
 // ── Grade Legend ──
 const GradeLegend = () => (
   <div className="flex flex-wrap gap-2 text-xs print:text-[10px]">
-    {(["good", "fair", "poor", "damaged"] as ConditionGrade[]).map(g => (
+    {(["pass", "caution", "fail"] as ConditionGrade[]).map(g => (
       <div key={g} className={`flex items-center gap-1.5 px-2 py-1 rounded-md border ${gradeStyle(g)}`}>
         <span className="font-bold">{gradeIcon(g)}</span>
-        <span className="capitalize font-medium">{g}</span>
+        <span className="font-medium">{gradeLabel(g)}</span>
       </div>
     ))}
     <div className="flex items-center gap-1.5 px-2 py-1 rounded-md border bg-muted/50 text-muted-foreground border-border">
@@ -532,12 +527,12 @@ const InspectionSheet = () => {
   // #1 — Mark All Good / Reset toggle for a section
   const markAllGood = useCallback((items: string[]) => {
     setAllGrades(prev => {
-      const allAlreadyGood = items.every(i => prev[i] === "good");
+      const allAlreadyGood = items.every(i => prev[i] === "pass");
       const updated = { ...prev };
       if (allAlreadyGood) {
         items.forEach(i => { updated[i] = ""; });
       } else {
-        items.forEach(i => { updated[i] = "good"; });
+        items.forEach(i => { updated[i] = "pass"; });
       }
       return updated;
     });
@@ -635,9 +630,9 @@ const InspectionSheet = () => {
     };
 
     const severityToGrade = (severity: string): ConditionGrade => {
-      if (severity === "severe") return "damaged";
-      if (severity === "moderate") return "poor";
-      return "fair";
+      if (severity === "severe") return "fail";
+      if (severity === "moderate") return "fail";
+      return "caution";
     };
 
     const prefillGradesFromAI = (reports: DamageReport[]) => {
@@ -646,7 +641,7 @@ const InspectionSheet = () => {
 
       const newGrades: Record<string, ConditionGrade> = {};
       const newNotes: Record<string, string> = {};
-      const gradeRank: Record<ConditionGrade, number> = { "": 0, good: 1, fair: 2, poor: 3, damaged: 4 };
+      const gradeRank: Record<ConditionGrade, number> = { "": 0, pass: 1, caution: 2, fail: 3 };
 
       for (const dmg of items) {
         const loc = dmg.location.toLowerCase().replace(/ /g, "_");
@@ -1161,7 +1156,7 @@ const InspectionSheet = () => {
 
   // Overall completion
   const totalChecked = ACTIVE_ALL_ITEMS.filter(i => !!allGrades[i]).length;
-  const totalIssues = ACTIVE_ALL_ITEMS.filter(i => allGrades[i] === "poor" || allGrades[i] === "damaged").length;
+  const totalIssues = ACTIVE_ALL_ITEMS.filter(i => allGrades[i] === "caution" || allGrades[i] === "fail").length;
   const progressPct = ACTIVE_ALL_ITEMS.length > 0 ? (totalChecked / ACTIVE_ALL_ITEMS.length) * 100 : 0;
 
   return (

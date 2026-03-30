@@ -109,44 +109,50 @@ const STANDARD_SECTIONS = [
   },
 ];
 
-// ── Tappable Check Item ──
+// ── 3-State Check: gray (unchecked) → green (pass) → yellow (caution) → red (fail) → gray ──
+type CheckState = "" | "pass" | "caution" | "fail";
+const CHECK_CYCLE: CheckState[] = ["", "pass", "caution", "fail"];
+
+const checkStyle = (state: CheckState) => {
+  switch (state) {
+    case "pass": return { bg: "bg-emerald-500", border: "border-emerald-500", text: "text-white", icon: "✓" };
+    case "caution": return { bg: "bg-amber-500", border: "border-amber-500", text: "text-white", icon: "~" };
+    case "fail": return { bg: "bg-red-500", border: "border-red-500", text: "text-white", icon: "✗" };
+    default: return { bg: "bg-background", border: "border-muted-foreground/30", text: "", icon: "" };
+  }
+};
+
 const CheckItem = ({
   label,
-  checked,
-  issue,
-  onToggle,
-  onIssueToggle,
+  state,
+  onCycle,
 }: {
   label: string;
-  checked: boolean;
-  issue: boolean;
-  onToggle: () => void;
-  onIssueToggle: () => void;
-}) => (
-  <div className="flex items-center gap-2 py-1.5 border-b border-border/50 last:border-0">
-    <button
-      onClick={onToggle}
-      className={`w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${
-        checked
-          ? "bg-emerald-500 border-emerald-500 text-white"
-          : "border-muted-foreground/30 bg-background"
-      }`}
-    >
-      {checked && <CheckCircle className="w-4 h-4" />}
-    </button>
-    <span className={`text-sm flex-1 ${checked ? "text-foreground" : "text-muted-foreground"}`}>{label}</span>
-    <button
-      onClick={onIssueToggle}
-      className={`text-[10px] px-2 py-0.5 rounded-full border transition-all ${
-        issue
-          ? "bg-red-500/10 text-red-600 border-red-300 font-semibold"
-          : "bg-muted text-muted-foreground border-transparent"
-      }`}
-    >
-      {issue ? "Issue" : "Flag"}
-    </button>
-  </div>
-);
+  state: CheckState;
+  onCycle: () => void;
+}) => {
+  const s = checkStyle(state);
+  return (
+    <div className="flex items-center gap-2 py-1.5 border-b border-border/50 last:border-0">
+      <button
+        onClick={onCycle}
+        className={`w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${s.bg} ${s.border} ${s.text}`}
+      >
+        {s.icon && <span className="text-xs font-bold">{s.icon}</span>}
+      </button>
+      <span className={`text-sm flex-1 ${state ? "text-foreground" : "text-muted-foreground"}`}>{label}</span>
+      {state && (
+        <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium capitalize ${
+          state === "pass" ? "bg-emerald-500/10 text-emerald-600 border-emerald-300" :
+          state === "caution" ? "bg-amber-500/10 text-amber-600 border-amber-300" :
+          "bg-red-500/10 text-red-600 border-red-300"
+        }`}>
+          {state === "pass" ? "Pass" : state === "caution" ? "Caution" : "Fail"}
+        </span>
+      )}
+    </div>
+  );
+};
 
 const MobileInspection = () => {
   const { id } = useParams<{ id: string }>();
@@ -191,12 +197,26 @@ const MobileInspection = () => {
   const [transmissionNotes, setTransmissionNotes] = useState("");
   const [suspensionNotes, setSuspensionNotes] = useState("");
 
-  // Standard mode checklist state
-  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
-  const [issueItems, setIssueItems] = useState<Record<string, boolean>>({});
+  // Standard mode checklist state — 3-state cycling
+  const [checkStates, setCheckStates] = useState<Record<string, CheckState>>({});
 
-  const toggleChecked = (key: string) => setCheckedItems(prev => ({ ...prev, [key]: !prev[key] }));
-  const toggleIssue = (key: string) => setIssueItems(prev => ({ ...prev, [key]: !prev[key] }));
+  const cycleCheck = (key: string) => setCheckStates(prev => {
+    const cur = prev[key] || "";
+    const idx = CHECK_CYCLE.indexOf(cur);
+    const next = CHECK_CYCLE[(idx + 1) % CHECK_CYCLE.length];
+    return { ...prev, [key]: next };
+  });
+
+  const markSectionAllPass = (sectionKey: string, items: string[]) => {
+    setCheckStates(prev => {
+      const allPass = items.every(item => prev[`${sectionKey}::${item}`] === "pass");
+      const updated = { ...prev };
+      items.forEach(item => {
+        updated[`${sectionKey}::${item}`] = allPass ? "" : "pass";
+      });
+      return updated;
+    });
+  };
 
   // Verify PIN
   const handleVerifyPin = async () => {
@@ -262,16 +282,20 @@ const MobileInspection = () => {
     if (!isFullMode) {
       // Standard checklist results
       const passed: string[] = [];
-      const flagged: string[] = [];
+      const cautions: string[] = [];
+      const failed: string[] = [];
       STANDARD_SECTIONS.forEach(section => {
         section.items.forEach(item => {
           const key = `${section.key}::${item}`;
-          if (issueItems[key]) flagged.push(`⚠ ${item}`);
-          else if (checkedItems[key]) passed.push(`✓ ${item}`);
+          const st = checkStates[key] || "";
+          if (st === "fail") failed.push(`✗ ${item}`);
+          else if (st === "caution") cautions.push(`~ ${item}`);
+          else if (st === "pass") passed.push(`✓ ${item}`);
         });
       });
       if (passed.length) parts.push(`PASSED:\n${passed.join("\n")}`);
-      if (flagged.length) parts.push(`ISSUES FOUND:\n${flagged.join("\n")}`);
+      if (cautions.length) parts.push(`CAUTION:\n${cautions.join("\n")}`);
+      if (failed.length) parts.push(`FAILED:\n${failed.join("\n")}`);
     } else {
       if (paintReading) parts.push(`Paint: ${paintReading}`);
       if (oilLife) parts.push(`Oil: ${oilLife}`);
@@ -355,8 +379,9 @@ const MobileInspection = () => {
 
   // Standard checklist stats
   const totalCheckItems = STANDARD_SECTIONS.reduce((sum, s) => sum + s.items.length, 0);
-  const checkedCount = Object.values(checkedItems).filter(Boolean).length;
-  const issueCount = Object.values(issueItems).filter(Boolean).length;
+  const checkedCount = Object.values(checkStates).filter(v => !!v).length;
+  const issueCount = Object.values(checkStates).filter(v => v === "fail").length;
+  const cautionCount = Object.values(checkStates).filter(v => v === "caution").length;
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -463,13 +488,17 @@ const MobileInspection = () => {
               </div>
               <span className="text-xs text-muted-foreground font-medium">{checkedCount}/{totalCheckItems}</span>
               {issueCount > 0 && (
-                <Badge variant="destructive" className="text-[10px]">{issueCount} issue{issueCount > 1 ? "s" : ""}</Badge>
+                <Badge variant="destructive" className="text-[10px]">{issueCount} fail{issueCount > 1 ? "s" : ""}</Badge>
+              )}
+              {cautionCount > 0 && (
+                <Badge className="bg-amber-500/20 text-amber-600 border-amber-500/30 text-[10px]">{cautionCount} caution{cautionCount > 1 ? "s" : ""}</Badge>
               )}
             </div>
 
             {STANDARD_SECTIONS.map(section => {
               const Icon = section.icon;
-              const sectionChecked = section.items.filter(item => checkedItems[`${section.key}::${item}`]).length;
+              const sectionChecked = section.items.filter(item => checkStates[`${section.key}::${item}`]).length;
+              const allPass = section.items.every(item => checkStates[`${section.key}::${item}`] === "pass");
               return (
                 <Card key={section.key}>
                   <CardHeader className="pb-2 pt-4 px-4">
@@ -477,8 +506,21 @@ const MobileInspection = () => {
                       <span className="flex items-center gap-2">
                         <Icon className="h-4 w-4 text-primary" /> {section.label}
                       </span>
-                      <span className="text-[10px] text-muted-foreground font-normal">
-                        {sectionChecked}/{section.items.length}
+                      <span className="flex items-center gap-2">
+                        {/* Section all-pass toggle circle */}
+                        <button
+                          onClick={() => markSectionAllPass(section.key, section.items)}
+                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${
+                            allPass
+                              ? "bg-emerald-500 border-emerald-500 text-white"
+                              : "border-muted-foreground/30 bg-background"
+                          }`}
+                        >
+                          {allPass && <span className="text-xs font-bold">✓</span>}
+                        </button>
+                        <span className="text-[10px] text-muted-foreground font-normal">
+                          {sectionChecked}/{section.items.length}
+                        </span>
                       </span>
                     </CardTitle>
                   </CardHeader>
@@ -489,10 +531,8 @@ const MobileInspection = () => {
                         <CheckItem
                           key={key}
                           label={item}
-                          checked={!!checkedItems[key]}
-                          issue={!!issueItems[key]}
-                          onToggle={() => toggleChecked(key)}
-                          onIssueToggle={() => toggleIssue(key)}
+                          state={checkStates[key] || ""}
+                          onCycle={() => cycleCheck(key)}
                         />
                       );
                     })}
