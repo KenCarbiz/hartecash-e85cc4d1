@@ -11,6 +11,7 @@ import { calculateOffer, type OfferEstimate, type OfferSettings, type OfferRule 
 import { resolveStoreAssignment } from "@/lib/storeAssignment";
 import { initialFormData } from "./sell-form/types";
 import { useFormConfig } from "@/hooks/useFormConfig";
+import { useTenant } from "@/contexts/TenantContext";
 import type { FormData, VehicleInfo, BBVehicle } from "./sell-form/types";
 import StepVehicleInfo from "./sell-form/StepVehicleInfo";
 import StepVehicleBuild from "./sell-form/StepVehicleBuild";
