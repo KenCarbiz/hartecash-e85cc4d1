@@ -291,7 +291,7 @@ const PermissionManagement = () => {
 
   const toggleShowRequestAccess = async (val: boolean) => {
     setShowRequestAccess(val);
-    await supabase.from("site_config").update({ show_request_access: val } as any).eq("dealership_id", "default");
+    await supabase.from("site_config").update({ show_request_access: val } as any).eq("dealership_id", dealershipId);
     toast({ title: val ? "Request Access enabled" : "Request Access hidden" });
   };
 
