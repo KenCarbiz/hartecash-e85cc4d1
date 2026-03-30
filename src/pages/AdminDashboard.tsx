@@ -242,6 +242,7 @@ const AdminDashboard = () => {
         permissionRequestCount={permissionRequestCount} pricingAccessRequestCount={pricingAccessRequestCount}
         allowedSections={allowedSections} showRequestAccess={showRequestAccessToggle && !canManageAccess}
         onRequestAccess={() => setShowRequestAccessDialog(true)} locationCount={dealerLocations.length} userRole={userRole}
+        dealershipId={tenant.dealership_id}
       />
       <div className="flex-1 flex flex-col min-w-0">
         <header className="sticky top-0 z-50 bg-gradient-to-r from-[hsl(210,100%,15%)] via-[hsl(210,100%,20%)] to-[hsl(220,80%,18%)] text-white shadow-lg">

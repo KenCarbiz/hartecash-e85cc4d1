@@ -32,6 +32,7 @@ interface AdminSidebarProps {
   onRequestAccess?: (sectionKey: string) => void;
   locationCount?: number;
   userRole?: string;
+  dealershipId?: string;
 }
 
 const AdminSidebar = ({
@@ -48,12 +49,14 @@ const AdminSidebar = ({
   onRequestAccess,
   locationCount = 0,
   userRole = "",
+  dealershipId = "default",
 }: AdminSidebarProps) => {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const navigate = useNavigate();
 
   const isAllowed = (key: string) => allowedSections === null || allowedSections.includes(key);
+  const isPlatformAdmin = canManageAccess && dealershipId === "default";
 
   // ── Pipeline (daily ops) ──
   const pipelineItems = [
@@ -105,7 +108,7 @@ const AdminSidebar = ({
   // ── Tools (utilities — consolidated) ──
   const toolsItems = [
     { key: "reports", label: "Reports & Export", icon: Send },
-    ...(canManageAccess ? [{ key: "tenants", label: "Dealer Tenants", icon: Network }] : []),
+    ...(isPlatformAdmin ? [{ key: "tenants", label: "Dealer Tenants", icon: Network }] : []),
     ...(canManageAccess ? [{ key: "image-inventory", label: "Vehicle Images", icon: Car }] : []),
     ...(canManageAccess ? [{ key: "system-settings", label: "System Settings", icon: Wrench }] : []),
     { key: "onboarding", label: "Dealer Setup Guide", icon: Rocket },
