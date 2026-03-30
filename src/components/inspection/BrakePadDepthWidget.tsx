@@ -25,8 +25,13 @@ function getStatus(depth: number) {
   return { key: "good", label: "Good", color: "#22C55E" };
 }
 
-function toMm(depth: number, min = 1) {
-  return Math.max(min, Math.ceil((depth / 32) * 25.4));
+// Industry-standard 32nds-to-mm lookup (rounded to nearest whole mm)
+const DEPTH_TO_MM: Record<number, number> = {
+  1: 1, 2: 2, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 6, 9: 7, 10: 8,
+};
+
+function toMm(depth: number) {
+  return DEPTH_TO_MM[depth] ?? Math.round((depth / 32) * 25.4);
 }
 
 /* ─── SVG visuals ─── */
