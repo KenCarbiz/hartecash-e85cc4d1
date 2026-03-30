@@ -25,10 +25,13 @@ function getStatus(depth: number) {
   return { key: "good", label: "Good", color: "#22C55E" };
 }
 
-// Direct 32nds-to-mm mapping: each 1/32" ≈ 0.794mm, rounded to nearest whole mm
+// 32nds-to-mm conversion: 1/32" = 0.794mm, rounded to nearest whole mm
 const DEPTH_TO_MM: Record<number, number> = {
-  1: 1, 2: 2, 3: 3, 4: 3, 5: 4, 6: 5, 7: 6, 8: 6, 9: 7, 10: 8,
+  1: 1, 2: 2, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 6, 9: 7, 10: 8,
 };
+
+// NOTE: The mm readout uses precise 32nds→mm conversion.
+// 3/32" = 2.38mm ≈ 2mm, 5/32" = 3.97mm ≈ 4mm, etc.
 
 function toMm(depth: number) {
   return DEPTH_TO_MM[depth] ?? Math.round((depth / 32) * 25.4);
