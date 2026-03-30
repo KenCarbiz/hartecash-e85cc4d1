@@ -58,6 +58,7 @@ export type Database = {
           customer_email: string
           customer_name: string
           customer_phone: string
+          dealership_id: string
           id: string
           notes: string | null
           preferred_date: string
@@ -72,6 +73,7 @@ export type Database = {
           customer_email: string
           customer_name: string
           customer_phone: string
+          dealership_id?: string
           id?: string
           notes?: string | null
           preferred_date: string
@@ -86,6 +88,7 @@ export type Database = {
           customer_email?: string
           customer_name?: string
           customer_phone?: string
+          dealership_id?: string
           id?: string
           notes?: string | null
           preferred_date?: string
@@ -155,6 +158,7 @@ export type Database = {
           customer_email: string | null
           customer_name: string | null
           customer_phone: string | null
+          dealership_id: string
           form_source: string
           id: string
           ip_address: string | null
@@ -168,6 +172,7 @@ export type Database = {
           customer_email?: string | null
           customer_name?: string | null
           customer_phone?: string | null
+          dealership_id?: string
           form_source: string
           id?: string
           ip_address?: string | null
@@ -181,6 +186,7 @@ export type Database = {
           customer_email?: string | null
           customer_name?: string | null
           customer_phone?: string | null
+          dealership_id?: string
           form_source?: string
           id?: string
           ip_address?: string | null
@@ -196,6 +202,7 @@ export type Database = {
           created_at: string
           damage_detected: boolean
           damage_items: Json
+          dealership_id: string
           id: string
           overall_severity: string
           photo_category: string
@@ -210,6 +217,7 @@ export type Database = {
           created_at?: string
           damage_detected?: boolean
           damage_items?: Json
+          dealership_id?: string
           id?: string
           overall_severity?: string
           photo_category: string
@@ -224,6 +232,7 @@ export type Database = {
           created_at?: string
           damage_detected?: boolean
           damage_items?: Json
+          dealership_id?: string
           id?: string
           overall_severity?: string
           photo_category?: string
@@ -408,6 +417,7 @@ export type Database = {
         Row: {
           channel: string
           created_at: string
+          dealership_id: string
           error_message: string | null
           id: string
           status: string
@@ -418,6 +428,7 @@ export type Database = {
         Insert: {
           channel: string
           created_at?: string
+          dealership_id?: string
           error_message?: string | null
           id?: string
           status?: string
@@ -428,6 +439,7 @@ export type Database = {
         Update: {
           channel?: string
           created_at?: string
+          dealership_id?: string
           error_message?: string | null
           id?: string
           status?: string
@@ -1474,6 +1486,7 @@ export type Database = {
           brake_rr: number | null
           check_request_done: boolean
           created_at: string
+          dealership_id: string
           docs_uploaded: boolean
           drivable: string | null
           drivetrain: string | null
@@ -1563,6 +1576,7 @@ export type Database = {
           brake_rr?: number | null
           check_request_done?: boolean
           created_at?: string
+          dealership_id?: string
           docs_uploaded?: boolean
           drivable?: string | null
           drivetrain?: string | null
@@ -1652,6 +1666,7 @@ export type Database = {
           brake_rr?: number | null
           check_request_done?: boolean
           created_at?: string
+          dealership_id?: string
           docs_uploaded?: boolean
           drivable?: string | null
           drivetrain?: string | null
