@@ -247,8 +247,8 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
   const fetchAll = async () => {
     setLoading(true);
     const [settingsRes, rulesRes] = await Promise.all([
-      supabase.from("offer_settings" as any).select("*").eq("dealership_id", "default").maybeSingle(),
-      supabase.from("offer_rules" as any).select("*").eq("dealership_id", "default").order("priority", { ascending: false }),
+      supabase.from("offer_settings" as any).select("*").eq("dealership_id", dealershipId).maybeSingle(),
+      supabase.from("offer_rules" as any).select("*").eq("dealership_id", dealershipId).order("priority", { ascending: false }),
     ]);
     if (settingsRes.data) {
       const d = settingsRes.data as any;
