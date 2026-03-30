@@ -91,6 +91,8 @@ interface Props {
 }
 
 const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, onModelNameChange }: Props) => {
+  const { tenant } = useTenant();
+  const dealershipId = tenant.dealership_id;
   const { toast } = useToast();
   const [models, setModels] = useState<PricingModel[]>([]);
   const [loading, setLoading] = useState(true);
