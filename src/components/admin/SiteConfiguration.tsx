@@ -134,9 +134,9 @@ const SiteConfiguration = () => {
 
   useEffect(() => {
     fetchConfig();
-    supabase.from("dealership_locations").select("id, name, city, state").eq("is_active", true).order("sort_order")
+    supabase.from("dealership_locations").select("id, name, city, state").eq("dealership_id", dealershipId).eq("is_active", true).order("sort_order")
       .then(({ data }) => { if (data) setDealerLocations(data); });
-  }, []);
+  }, [dealershipId]);
 
   const fetchConfig = async () => {
     setLoading(true);
