@@ -143,7 +143,7 @@ const SiteConfiguration = () => {
     const { data, error } = await supabase
       .from("site_config")
       .select("*")
-      .eq("dealership_id", "default")
+      .eq("dealership_id", dealershipId)
       .maybeSingle();
 
     if (data && !error) {
