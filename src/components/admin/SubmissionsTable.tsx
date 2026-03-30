@@ -9,7 +9,7 @@ import {
   AlertTriangle, TrendingUp, UserCheck, XCircle, Camera, FileText,
 } from "lucide-react";
 import type { Submission, DealerLocation } from "@/lib/adminConstants";
-import { ALL_STATUS_OPTIONS, getStatusLabel } from "@/lib/adminConstants";
+import { ALL_STATUS_OPTIONS, getStatusLabel, isAcceptedWithAppointment, isAcceptedWithoutAppointment, isOfferPendingSubmission } from "@/lib/adminConstants";
 import DashboardAnalytics from "@/components/admin/DashboardAnalytics";
 
 interface SubmissionsTableProps {
