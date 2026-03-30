@@ -40,7 +40,7 @@ const ComparisonConfig = () => {
     const { data } = await supabase
       .from("site_config")
       .select("competitor_columns, comparison_features")
-      .eq("dealership_id", "default")
+      .eq("dealership_id", dealershipId)
       .maybeSingle();
 
     if (data) {
