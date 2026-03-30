@@ -226,6 +226,7 @@ const ServiceLanding = () => {
         next_step: "service_trade",
         loan_status: "sell",
         lead_source: "service",
+        dealership_id: tenant.dealership_id,
         appointment_date: appointmentDate || null,
         appointment_set: hasScheduledAppointment,
         progress_status: hasScheduledAppointment ? "inspection_scheduled" : "new",
