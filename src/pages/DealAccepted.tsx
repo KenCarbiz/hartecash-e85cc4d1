@@ -59,7 +59,7 @@ const DealAccepted = () => {
     const fetchData = async () => {
       if (!token) { setLoading(false); return; }
       
-      // Mark the offer as accepted (updates status to 'contacted')
+      // Mark the offer as accepted (updates status to 'offer_accepted')
       await supabase.rpc("accept_offer", { _token: token });
       
       const { data } = await supabase.rpc("get_submission_portal", { _token: token });
