@@ -177,7 +177,7 @@ Deno.serve(async (req) => {
     // Fetch submission
     const { data: sub, error: subErr } = await supabase
       .from("submissions")
-      .select("id, name, email, phone, token, vehicle_year, vehicle_make, vehicle_model, offered_price, estimated_offer_low, estimated_offer_high, photos_uploaded, docs_uploaded, created_at, progress_status")
+      .select("id, name, email, phone, token, vehicle_year, vehicle_make, vehicle_model, offered_price, estimated_offer_low, estimated_offer_high, photos_uploaded, docs_uploaded, created_at, progress_status, dealership_id")
       .eq("id", submission_id)
       .single();
 
