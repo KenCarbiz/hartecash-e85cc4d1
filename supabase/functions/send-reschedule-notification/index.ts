@@ -73,10 +73,11 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
+    const appointmentDealershipId = appointment.dealership_id || "default";
     const { data: siteConfig } = await adminClient
       .from("site_config")
       .select("dealership_name")
-      .eq("dealership_id", "default")
+      .eq("dealership_id", appointmentDealershipId)
       .maybeSingle();
     const dealerName = siteConfig?.dealership_name || "Our Dealership";
 

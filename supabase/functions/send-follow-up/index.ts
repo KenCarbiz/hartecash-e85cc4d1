@@ -224,11 +224,12 @@ Deno.serve(async (req) => {
     const twilioToken = Deno.env.get("TWILIO_AUTH_TOKEN");
     const twilioPhone = Deno.env.get("TWILIO_PHONE_NUMBER");
 
-    // Fetch dealership name from site_config
+    // Fetch dealership name from site_config using submission's dealership_id
+    const subDealershipId = (sub as any).dealership_id || "default";
     const { data: siteConfig } = await supabase
       .from("site_config")
       .select("dealership_name")
-      .eq("dealership_id", "default")
+      .eq("dealership_id", subDealershipId)
       .maybeSingle();
     const dealerName = siteConfig?.dealership_name || "Our Dealership";
 

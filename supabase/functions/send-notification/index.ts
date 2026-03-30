@@ -223,7 +223,7 @@ Deno.serve(async (req) => {
       .from("notification_templates")
       .select("*")
       .eq("trigger_key", trigger_key)
-      .eq("dealership_id", "default");
+      .eq("dealership_id", dealershipId);
 
     const customEmail = customTemplates?.find((t: any) => t.channel === "email");
     const customSms = customTemplates?.find((t: any) => t.channel === "sms");

@@ -28,11 +28,20 @@ serve(async (req) => {
       });
     }
 
-    // Check if OCR is enabled
+    // Fetch submission to get dealership_id and check fields
+    const { data: submission } = await supabase
+      .from("submissions")
+      .select("name, address_street, address_city, address_state, token, dealership_id")
+      .eq("token", submissionToken)
+      .maybeSingle();
+
+    const subDealershipId = (submission as any)?.dealership_id || "default";
+
+    // Check if OCR is enabled for this tenant
     const { data: siteConfig } = await supabase
       .from("site_config")
       .select("enable_dl_ocr")
-      .eq("dealership_id", "default")
+      .eq("dealership_id", subDealershipId)
       .maybeSingle();
 
     if (!siteConfig?.enable_dl_ocr) {
