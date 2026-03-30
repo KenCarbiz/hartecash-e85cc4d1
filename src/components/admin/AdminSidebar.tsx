@@ -32,6 +32,7 @@ interface AdminSidebarProps {
   onRequestAccess?: (sectionKey: string) => void;
   locationCount?: number;
   userRole?: string;
+  dealershipId?: string;
 }
 
 const AdminSidebar = ({
