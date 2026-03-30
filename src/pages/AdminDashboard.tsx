@@ -288,7 +288,7 @@ const AdminDashboard = () => {
                 submissions={submissions.filter(s => {
                   // Has an offer (manual or estimated) but NOT accepted
                   const hasOffer = (s.offered_price != null && s.offered_price > 0) || (s.estimated_offer_high != null && s.estimated_offer_high > 0);
-                  const isAccepted = ["offer_accepted", "inspection_scheduled", "inspection_completed", "deal_finalized", "title_ownership_verified", "check_request_submitted", "purchase_complete"].includes(s.progress_status);
+                  const isAccepted = ["offer_accepted", "inspection_scheduled", "inspection_completed", "appraisal_completed", "price_agreed", "deal_finalized", "title_ownership_verified", "check_request_submitted", "purchase_complete"].includes(s.progress_status);
                   return hasOffer && !isAccepted;
                 })}
                 loading={loading} search={search} onSearchChange={setSearch}
