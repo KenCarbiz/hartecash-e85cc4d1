@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import AvatarCropDialog from "./AvatarCropDialog";
 import StaffSectionEditor from "./StaffSectionEditor";
 import { ALL_SECTIONS } from "./PermissionManagement";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface StaffMember {
   user_id: string;
