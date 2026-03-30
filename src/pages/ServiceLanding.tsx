@@ -13,6 +13,7 @@ import { logConsent } from "@/lib/consent";
 import serviceLogo from "@/assets/harte-service-logo.png";
 import SEO from "@/components/SEO";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface VehicleInfo {
   year: string;
@@ -102,6 +103,7 @@ const benefits = [
 
 const ServiceLanding = () => {
   const { config: siteConfig } = useSiteConfig();
+  const { tenant } = useTenant();
   const [searchParams] = useSearchParams();
   const vinParam = searchParams.get("vin") || "";
   const appointmentDate = searchParams.get("date") || "";
@@ -225,6 +227,7 @@ const ServiceLanding = () => {
         next_step: "service_trade",
         loan_status: "sell",
         lead_source: "service",
+        dealership_id: tenant.dealership_id,
         appointment_date: appointmentDate || null,
         appointment_set: hasScheduledAppointment,
         progress_status: hasScheduledAppointment ? "inspection_scheduled" : "new",

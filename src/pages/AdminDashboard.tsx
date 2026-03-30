@@ -32,6 +32,7 @@ import SubmissionDetailSheet from "@/components/admin/SubmissionDetailSheet";
 import AppointmentManager from "@/components/admin/AppointmentManager";
 
 import { useStaffPermissions } from "@/hooks/useStaffPermissions";
+import { useTenant } from "@/contexts/TenantContext";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UserCheck, UserX } from "lucide-react";
@@ -81,6 +82,7 @@ const AdminDashboard = () => {
   const [approveRole, setApproveRole] = useState<string>("sales_bdc");
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { tenant } = useTenant();
 
   const canSetPrice = ["admin", "used_car_manager", "gsm_gm"].includes(userRole);
   const canApprove = ["admin", "gsm_gm"].includes(userRole);
@@ -130,7 +132,7 @@ const AdminDashboard = () => {
   const fetchSubmissions = async () => {
     setLoading(true);
     const from = page * PAGE_SIZE;
-    const { data, error, count } = await supabase.from("submissions").select("*", { count: "exact" }).order("created_at", { ascending: false }).range(from, from + PAGE_SIZE - 1);
+    const { data, error, count } = await supabase.from("submissions").select("*", { count: "exact" }).eq("dealership_id", tenant.dealership_id).order("created_at", { ascending: false }).range(from, from + PAGE_SIZE - 1);
     if (!error && data) { setSubmissions(data as any); setTotal(count || 0); }
     setLoading(false);
   };
@@ -141,7 +143,7 @@ const AdminDashboard = () => {
   };
 
   const fetchAppointments = async () => {
-    const { data } = await supabase.from("appointments").select("*").order("preferred_date", { ascending: true });
+    const { data } = await supabase.from("appointments").select("*").eq("dealership_id", tenant.dealership_id).order("preferred_date", { ascending: true });
     if (data) setAppointments(data);
   };
 

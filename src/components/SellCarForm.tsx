@@ -11,6 +11,7 @@ import { calculateOffer, type OfferEstimate, type OfferSettings, type OfferRule 
 import { resolveStoreAssignment } from "@/lib/storeAssignment";
 import { initialFormData } from "./sell-form/types";
 import { useFormConfig } from "@/hooks/useFormConfig";
+import { useTenant } from "@/contexts/TenantContext";
 import type { FormData, VehicleInfo, BBVehicle } from "./sell-form/types";
 import StepVehicleInfo from "./sell-form/StepVehicleInfo";
 import StepVehicleBuild from "./sell-form/StepVehicleBuild";
@@ -47,6 +48,7 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
   const { toast } = useToast();
   const { config } = useSiteConfig();
   const { formConfig } = useFormConfig();
+  const { tenant } = useTenant();
 
   // Black Book state
   const [bbVehicles, setBbVehicles] = useState<BBVehicle[]>([]);
@@ -80,6 +82,7 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
       exterior_color: formData.exteriorColor || null,
       overall_condition: formData.overallCondition || null,
       lead_source: leadSource,
+      dealership_id: tenant.dealership_id,
     };
 
     if (partialIdRef.current) {
@@ -318,7 +321,7 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
       let offerRulesData: OfferRule[] = [];
       try {
         const { resolveEffectiveSettings } = await import("@/lib/resolvePricingModel");
-        const resolved = await resolveEffectiveSettings("default");
+        const resolved = await resolveEffectiveSettings(tenant.dealership_id);
         offerSettingsData = resolved.settings;
         offerRulesData = resolved.rules;
       } catch { /* use defaults */ }
@@ -372,6 +375,7 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
           loan_payment: formData.loanPayment || null,
           next_step: "photos",
           lead_source: leadSource,
+          dealership_id: tenant.dealership_id,
           bb_tradein_avg: bbSelectedVehicle?.tradein?.avg || null,
           bb_wholesale_avg: bbSelectedVehicle?.wholesale?.avg || null,
           estimated_offer_low: estimate?.low || null,
