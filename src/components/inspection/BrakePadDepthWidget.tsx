@@ -80,7 +80,7 @@ function Arrow({ side, color }: { side: "left" | "right"; color: string }) {
 }
 
 function Readout({ depth, status, minMm }: { depth: number; status: ReturnType<typeof getStatus>; minMm?: number }) {
-  const mm = toMm(depth, minMm);
+  const mm = toMm(depth);
   return (
     <div className="text-center">
       <div className="text-xl md:text-2xl font-bold" style={{ color: status.color }}>{mm} mm</div>
