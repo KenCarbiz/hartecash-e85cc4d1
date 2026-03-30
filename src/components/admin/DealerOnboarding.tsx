@@ -97,7 +97,7 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate }: DealerOnboardingProps
     const { data } = await supabase
       .from("dealer_accounts")
       .select("*")
-      .eq("dealership_id", "default")
+      .eq("dealership_id", dealershipId)
       .maybeSingle();
     if (data) {
       setExistingId(data.id);
