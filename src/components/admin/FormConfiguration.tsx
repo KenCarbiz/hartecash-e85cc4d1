@@ -129,7 +129,7 @@ export default function FormConfiguration() {
     const { data: existing } = await supabase
       .from("form_config" as any)
       .select("id")
-      .eq("dealership_id", "default")
+      .eq("dealership_id", dealershipId)
       .maybeSingle();
 
     let error;

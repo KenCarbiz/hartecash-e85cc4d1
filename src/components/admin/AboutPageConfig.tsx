@@ -85,7 +85,7 @@ const AboutPageConfig = () => {
         about_milestones: milestones,
         about_values: values,
       } as any)
-      .eq("dealership_id", "default");
+      .eq("dealership_id", dealershipId);
 
     if (error) {
       toast({ title: "Error saving", description: error.message, variant: "destructive" });

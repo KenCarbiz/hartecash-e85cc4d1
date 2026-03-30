@@ -59,7 +59,7 @@ const ComparisonConfig = () => {
         comparison_features: features as any,
         updated_at: new Date().toISOString(),
       })
-      .eq("dealership_id", "default");
+      .eq("dealership_id", dealershipId);
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });

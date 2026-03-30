@@ -173,7 +173,7 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate }: DealerOnboardingProps
     const { error } = await supabase
       .from("site_config")
       .update(updates)
-      .eq("dealership_id", "default");
+      .eq("dealership_id", dealershipId);
 
     setApplying(false);
     if (error) {
