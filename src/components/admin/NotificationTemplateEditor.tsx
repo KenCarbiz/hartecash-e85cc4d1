@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
 import { DEFAULT_TEMPLATES, PLACEHOLDER_VARS, type TemplateDefaults } from "@/lib/notificationDefaults";
 import {
