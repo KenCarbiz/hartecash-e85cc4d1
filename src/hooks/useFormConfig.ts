@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useTenant } from "@/contexts/TenantContext";
 
 export interface FormConfig {
   step_vehicle_build: boolean;
@@ -47,18 +48,24 @@ const DEFAULTS: FormConfig = {
   q_next_step: true,
 };
 
-let cachedFormConfig: FormConfig | null = null;
+let cachedFormConfig: Record<string, FormConfig> = {};
 
 export function useFormConfig() {
-  const [config, setConfig] = useState<FormConfig>(cachedFormConfig || DEFAULTS);
-  const [loading, setLoading] = useState(!cachedFormConfig);
+  const { tenant } = useTenant();
+  const dealershipId = tenant.dealership_id;
+  const [config, setConfig] = useState<FormConfig>(cachedFormConfig[dealershipId] || DEFAULTS);
+  const [loading, setLoading] = useState(!cachedFormConfig[dealershipId]);
 
   useEffect(() => {
-    if (cachedFormConfig) return;
+    if (cachedFormConfig[dealershipId]) {
+      setConfig(cachedFormConfig[dealershipId]);
+      setLoading(false);
+      return;
+    }
     supabase
       .from("form_config" as any)
       .select("*")
-      .eq("dealership_id", "default")
+      .eq("dealership_id", dealershipId)
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
@@ -69,16 +76,16 @@ export function useFormConfig() {
               (merged as any)[key] = d[key];
             }
           }
-          cachedFormConfig = merged;
+          cachedFormConfig[dealershipId] = merged;
           setConfig(merged);
         }
         setLoading(false);
       });
-  }, []);
+  }, [dealershipId]);
 
   return { formConfig: config, loading };
 }
 
 export function clearFormConfigCache() {
-  cachedFormConfig = null;
+  cachedFormConfig = {};
 }

@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/sidebar";
 import {
   Inbox, CalendarDays, Users, ShieldCheck, SlidersHorizontal,
-  Settings, Bell, ListChecks, MessageSquareQuote, BarChart3, Send, UserCheck, MapPin, Car, ScrollText, Newspaper, Shield, Lock, Wrench, MessageCircle, Rocket, Gauge
+  Settings, Bell, ListChecks, MessageSquareQuote, BarChart3, Send, UserCheck, MapPin, Car, ScrollText, Newspaper, Shield, Lock, Wrench, MessageCircle, Rocket, Gauge, Network
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
@@ -105,6 +105,7 @@ const AdminSidebar = ({
   // ── Tools (utilities — consolidated) ──
   const toolsItems = [
     { key: "reports", label: "Reports & Export", icon: Send },
+    ...(canManageAccess ? [{ key: "tenants", label: "Dealer Tenants", icon: Network }] : []),
     ...(canManageAccess ? [{ key: "image-inventory", label: "Vehicle Images", icon: Car }] : []),
     ...(canManageAccess ? [{ key: "system-settings", label: "System Settings", icon: Wrench }] : []),
     { key: "onboarding", label: "Dealer Setup Guide", icon: Rocket },

@@ -20,6 +20,7 @@ import VehicleImageInventory from "@/components/admin/VehicleImageInventory";
 import CommunicationLog from "@/components/admin/CommunicationLog";
 import ChangelogManagement from "@/components/admin/ChangelogManagement";
 import DealerOnboarding from "@/components/admin/DealerOnboarding";
+import TenantManagement from "@/components/admin/TenantManagement";
 import ReportsExport from "@/components/admin/ReportsExport";
 import PermissionManagement from "@/components/admin/PermissionManagement";
 import ExecutiveKPIHub from "@/components/admin/ExecutiveKPIHub";
@@ -399,6 +400,8 @@ const AdminDashboard = () => {
                 <ChangelogManagement />
               </div>
             )}
+
+            {activeSection === "tenants" && canManageAccess && <TenantManagement />}
 
             {activeSection === "onboarding" && <DealerOnboarding isAdmin={canManageAccess} onNavigate={setActiveSection} />}
             {activeSection === "reports" && <ReportsExport />}
