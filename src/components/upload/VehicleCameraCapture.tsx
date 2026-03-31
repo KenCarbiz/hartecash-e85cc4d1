@@ -34,7 +34,8 @@ const VehicleCameraCapture = ({
   const [error, setError] = useState("");
   const [facingMode, setFacingMode] = useState<"environment" | "user">("environment");
   const [showGuide, setShowGuide] = useState(true);
-  const [colorIdx, setColorIdx] = useState(0);
+  const defaultIdx = OVERLAY_COLORS.indexOf(defaultOverlayColor);
+  const [colorIdx, setColorIdx] = useState(defaultIdx >= 0 ? defaultIdx : 0);
   const [viewfinderSize, setViewfinderSize] = useState({ w: 480, h: 270 });
 
   const overlayColor = OVERLAY_COLORS[colorIdx];
