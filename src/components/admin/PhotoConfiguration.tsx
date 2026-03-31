@@ -25,7 +25,11 @@ interface PhotoConfigRow {
 }
 
 const PREVIEW_ARCHETYPE: VehicleArchetype = "sedan";
-const OVERLAY_COLOR = "#00FF88";
+const OVERLAY_COLOR_OPTIONS = [
+  { value: "#00FF88", label: "Green" },
+  { value: "#FF3B3B", label: "Red" },
+  { value: "#FFFFFF", label: "White" },
+];
 
 const PhotoConfiguration = () => {
   const { tenant } = useTenant();
