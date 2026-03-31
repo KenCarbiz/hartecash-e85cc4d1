@@ -22,6 +22,8 @@ const VehicleCameraCapture = ({
   categoryLabel,
   categoryDesc,
   vehicleArchetype = "sedan",
+  defaultOverlayColor = "#00FF88",
+  allowColorChange = true,
   onCapture,
   onClose,
 }: VehicleCameraCaptureProps) => {
