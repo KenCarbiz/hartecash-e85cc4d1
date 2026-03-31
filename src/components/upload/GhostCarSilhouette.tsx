@@ -179,7 +179,7 @@ const GhostCarSilhouette = ({ archetype, shotId, color, width: W, height: H }: G
   // Dashboard
   if (shotId === "dashboard") {
     return (
-      <svg width={W} height={H} className="absolute inset-0">
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="100%" className="absolute inset-0">
         <rect x={W * 0.08} y={H * 0.2} width={W * 0.84} height={H * 0.55}
           fill="none" stroke={color} strokeWidth={sw} opacity={0.5} rx={8} />
         {/* Odometer area */}
