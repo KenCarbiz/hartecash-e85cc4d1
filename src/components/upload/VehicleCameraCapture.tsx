@@ -163,7 +163,7 @@ const VehicleCameraCapture = ({
         <p className="text-white/70 text-xs flex-1">{categoryDesc}</p>
         <div className="flex items-center gap-2 ml-3">
           {/* Overlay color picker */}
-          {!captured && showGuide && (
+          {!captured && showGuide && allowColorChange && (
             <div className="flex gap-1.5">
               {OVERLAY_COLORS.map((c, i) => (
                 <button key={c} onClick={() => setColorIdx(i)}

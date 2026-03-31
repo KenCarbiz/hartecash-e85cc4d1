@@ -111,6 +111,8 @@ const DEFAULTS: SiteConfig = {
   google_review_url: "",
   tiktok_url: "",
   youtube_url: "",
+  photo_overlay_color: "#00FF88",
+  photo_allow_color_change: true,
 };
 
 let cachedConfig: Record<string, SiteConfig> = {};
