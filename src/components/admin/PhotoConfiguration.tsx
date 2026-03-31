@@ -39,6 +39,9 @@ const PhotoConfiguration = () => {
   const [saving, setSaving] = useState(false);
   const [previewShot, setPreviewShot] = useState<string | null>(null);
   const [previewArchetype, setPreviewArchetype] = useState<VehicleArchetype>("sedan");
+  const [overlayColor, setOverlayColor] = useState("#00FF88");
+  const [allowColorChange, setAllowColorChange] = useState(true);
+  const [siteConfigId, setSiteConfigId] = useState<string | null>(null);
 
   const dealershipId = tenant.dealership_id;
 

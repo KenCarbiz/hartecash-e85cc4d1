@@ -423,6 +423,8 @@ const UploadPhotos = () => {
             categoryLabel={shot.label}
             categoryDesc={shot.description}
             vehicleArchetype={vehicleArchetype}
+            defaultOverlayColor={config.photo_overlay_color}
+            allowColorChange={config.photo_allow_color_change}
             onCapture={handleCameraCapture}
             onClose={() => setCameraCategory(null)}
           />
