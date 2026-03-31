@@ -11,14 +11,11 @@ import screenshotDashboard from "@/assets/pitch/screenshot-dashboard.jpg";
 import {
   Car, Users, Shield, Zap, BarChart3, ChevronRight, ChevronLeft,
   Maximize2, Minimize2, CheckCircle2, XCircle, Clock, DollarSign,
-  Smartphone, FileText, Camera, CalendarDays, UserCheck, Lock,
-  TrendingUp, Award, ArrowRight, Globe, Layers, Eye, Star,
-  Target, Cpu, Database, ArrowUpRight, ChevronDown, Upload,
-  ClipboardCheck, Printer, MessageSquare, Search, Inbox,
-  BadgeDollarSign, Handshake, PartyPopper, CircleDot,
-  ShieldCheck, MousePointerClick, Send, Phone, Mail,
-  CreditCard, KeyRound, MapPin, AlertCircle, LayoutDashboard,
-  Link2, Repeat, ChevronUp
+  Smartphone, FileText, Camera, UserCheck, Lock,
+  TrendingUp, Award, ArrowRight, Globe, Layers, Eye,
+  Target, Cpu, Database, ArrowUpRight, ChevronDown,
+  Handshake, ShieldCheck,
+  ChevronUp, Repeat, MapPin
 } from "lucide-react";
 
 /* ─── Animated Counter ─── */
@@ -46,11 +43,8 @@ function AnimatedNumber({ value, prefix = "", suffix = "", className = "" }: { v
 
 /* ─── Slide IDs ─── */
 const SLIDES = [
-  "hero", "market", "problem", "competition", "cookie-cutter", "solution-intro",
-  "cust-walk-1", "cust-walk-2", "cust-walk-3",
-  "emp-walk-1", "emp-walk-2", "emp-walk-3",
-  "workflow", "mobile", "security", "innovations",
-  "comparison", "roi", "roi-dealer", "traction", "why-us", "cta",
+  "hero", "market", "problem", "solution", "platform",
+  "screenshots", "scale", "roi", "why-us", "cta",
 ] as const;
 type SlideId = typeof SLIDES[number];
 
@@ -131,71 +125,15 @@ function FeaturePill({ icon: Icon, title, desc, dark }: { icon: any; title: stri
   );
 }
 
-/* ─── Comparison Row ─── */
-function CompRow({ feature, us, them }: { feature: string; us: boolean; them: boolean }) {
-  return (
-    <div className="grid grid-cols-3 gap-4 py-3.5 border-b border-white/5 items-center">
-      <span className="text-sm text-white/80">{feature}</span>
-      <div className="flex justify-center">{us ? <CheckCircle2 className="w-5 h-5 text-emerald-400" /> : <XCircle className="w-5 h-5 text-white/15" />}</div>
-      <div className="flex justify-center">{them ? <CheckCircle2 className="w-5 h-5 text-emerald-400" /> : <XCircle className="w-5 h-5 text-white/15" />}</div>
-    </div>
-  );
-}
-
-/* ─── Walkthrough Step ─── */
-function WalkStep({ number, icon: Icon, title, desc, detail, dark }: {
-  number: number; icon: any; title: string; desc: string; detail?: string; dark?: boolean;
-}) {
-  return (
-    <div className={`flex gap-5 ${dark ? "" : ""}`}>
-      <div className="flex flex-col items-center shrink-0">
-        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg ${dark ? "bg-blue-500/20 text-blue-400" : "bg-primary/10 text-primary"}`}>
-          {number}
-        </div>
-        <div className={`w-0.5 flex-1 mt-2 ${dark ? "bg-white/10" : "bg-border"}`} />
-      </div>
-      <div className="pb-8">
-        <div className="flex items-center gap-2 mb-1.5">
-          <Icon className={`w-4 h-4 ${dark ? "text-blue-400" : "text-primary"}`} />
-          <h3 className={`font-bold text-lg ${dark ? "text-white" : "text-foreground"}`}>{title}</h3>
-        </div>
-        <p className={`text-sm leading-relaxed mb-2 ${dark ? "text-white/60" : "text-muted-foreground"}`}>{desc}</p>
-        {detail && (
-          <div className={`text-xs px-3 py-2 rounded-lg inline-block ${dark ? "bg-white/5 text-white/40 border border-white/10" : "bg-muted text-muted-foreground border border-border"}`}>
-            {detail}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/* ─── Mockup Frame ─── */
-function MockupFrame({ title, dark, children }: { title: string; dark?: boolean; children: React.ReactNode }) {
-  return (
-    <div className={`rounded-2xl overflow-hidden border ${dark ? "border-white/10 bg-white/5" : "border-border bg-card shadow-lg"}`}>
-      <div className={`flex items-center gap-2 px-4 py-2.5 border-b ${dark ? "border-white/10 bg-white/5" : "border-border bg-muted/50"}`}>
-        <div className="flex gap-1.5">
-          <span className="w-3 h-3 rounded-full bg-red-400/60" />
-          <span className="w-3 h-3 rounded-full bg-yellow-400/60" />
-          <span className="w-3 h-3 rounded-full bg-emerald-400/60" />
-        </div>
-        <span className={`text-xs font-mono ml-2 ${dark ? "text-white/30" : "text-muted-foreground"}`}>{title}</span>
-      </div>
-      <div className="p-5">{children}</div>
-    </div>
-  );
-}
-
 /* ─── Acquisition Channel Card ─── */
 function ChannelCard({ icon: Icon, title, desc, active, iconColor, onClick }: { icon: any; title: string; desc: string; active?: boolean; iconColor: string; onClick?: () => void }) {
-  const activeColor = iconColor.includes("blue") ? "border-blue-400/50 bg-blue-500/15 ring-2 ring-blue-400/30" 
+  const activeColor = iconColor.includes("blue") ? "border-blue-400/50 bg-blue-500/15 ring-2 ring-blue-400/30"
     : iconColor.includes("emerald") ? "border-emerald-400/50 bg-emerald-500/15 ring-2 ring-emerald-400/30"
     : "border-amber-400/50 bg-amber-500/15 ring-2 ring-amber-400/30";
-  const hoverColor = iconColor.includes("blue") ? "hover:border-blue-400/50 hover:bg-blue-500/10" 
+  const hoverColor = iconColor.includes("blue") ? "hover:border-blue-400/50 hover:bg-blue-500/10"
     : iconColor.includes("emerald") ? "hover:border-emerald-400/50 hover:bg-emerald-500/10"
     : "hover:border-amber-400/50 hover:bg-amber-500/10";
-  const dotColor = iconColor.includes("blue") ? "bg-blue-400" 
+  const dotColor = iconColor.includes("blue") ? "bg-blue-400"
     : iconColor.includes("emerald") ? "bg-emerald-400"
     : "bg-amber-400";
   return (
@@ -242,15 +180,14 @@ export default function PitchDeck() {
     }
   }, [isPresenting]);
 
-  // Set OG meta tags for pitch page
   useEffect(() => {
     const ogTags: Record<string, string> = {
-      "og:title": "The Future of Vehicle Acquisition | Harte Auto Group",
-      "og:description": "A full-stack, dealer-branded platform that captures, manages, and converts direct consumer vehicle purchases — end to end.",
+      "og:title": "End-to-End Inventory Acquisition | Harte Auto Group",
+      "og:description": "A dealer-branded platform that captures, manages, and converts direct consumer vehicle purchases — from submission to check request.",
       "og:image": `${window.location.origin}/og-pitch.jpg`,
       "og:url": `${window.location.origin}/pitch`,
-      "twitter:title": "The Future of Vehicle Acquisition | Harte Auto Group",
-      "twitter:description": "A full-stack, dealer-branded platform for direct consumer vehicle purchases.",
+      "twitter:title": "End-to-End Inventory Acquisition | Harte Auto Group",
+      "twitter:description": "A dealer-branded platform for direct consumer vehicle purchases that scales with your business.",
       "twitter:image": `${window.location.origin}/og-pitch.jpg`,
     };
     const originals: Record<string, string | null> = {};
@@ -267,7 +204,7 @@ export default function PitchDeck() {
       }
       el.setAttribute("content", content);
     });
-    document.title = "The Future of Vehicle Acquisition | Harte Auto Group";
+    document.title = "End-to-End Inventory Acquisition | Harte Auto Group";
     return () => {
       Object.entries(originals).forEach(([prop, original]) => {
         const isOg = prop.startsWith("og:");
@@ -341,23 +278,23 @@ export default function PitchDeck() {
               <img src={config.logo_white_url || config.logo_url || harteLogo} alt={config.dealership_name} className="h-40 md:h-60 mx-auto object-contain" />
             </motion.div>
             <motion.div variants={fadeUp} custom={0.5}>
-              <GlowBadge label="Introducing" />
+              <GlowBadge label="End-to-End Platform" />
             </motion.div>
             <motion.h1 variants={fadeUp} custom={1} className="text-5xl md:text-7xl lg:text-8xl font-black leading-[0.95] tracking-tight mb-8">
-              The Future of<br />
+              Acquire Inventory<br />
               <span className="bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-500 bg-clip-text text-transparent">
-                Vehicle Acquisition
+                Directly from Consumers
               </span>
             </motion.h1>
             <motion.p variants={fadeUp} custom={2} className="text-lg md:text-xl text-white/50 max-w-2xl mx-auto mb-14 leading-relaxed">
-              A full-stack, dealer-branded platform that captures, manages, and converts direct consumer vehicle purchases — end to end.
+              One dealer-branded platform — from the moment a consumer considers selling to the moment accounting cuts the check. Three acquisition channels. Zero auction dependency.
             </motion.p>
             <motion.div variants={fadeUp} custom={3} className="flex flex-wrap items-center justify-center gap-8 text-sm text-white/40 mb-16">
               {[
-                { icon: Zap, label: "Cash in 24 Hours" },
-                { icon: Shield, label: "Enterprise Security" },
+                { icon: Globe, label: "100% Your Brand" },
+                { icon: Zap, label: "Submission to Check Request" },
                 { icon: BarChart3, label: "Full Deal Pipeline" },
-                { icon: Smartphone, label: "Mobile-First Design" },
+                { icon: TrendingUp, label: "Scales With You" },
               ].map(({ icon: I, label }) => (
                 <span key={label} className="flex items-center gap-2">
                   <I className="w-4 h-4 text-blue-400" />{label}
@@ -375,8 +312,8 @@ export default function PitchDeck() {
                 iconColor="bg-blue-500/20 text-blue-400"
                 onClick={() => {
                   setActiveProng("off-street");
-                  const marketSection = document.getElementById("market");
-                  if (marketSection) marketSection.scrollIntoView({ behavior: "smooth" });
+                  const el = document.getElementById("market");
+                  if (el) el.scrollIntoView({ behavior: "smooth" });
                 }}
               />
               <ChannelCard
@@ -396,7 +333,7 @@ export default function PitchDeck() {
               <ChannelCard
                 icon={Handshake}
                 title="In-Store Trade"
-                desc="Shoppers at your lot — or heading in — submit their trade info before they arrive or after they leave."
+                desc="Shoppers at your lot submit their trade info before they arrive or after they leave."
                 active={activeProng === "trade"}
                 iconColor="bg-amber-500/20 text-amber-400"
                 onClick={() => {
@@ -421,25 +358,25 @@ export default function PitchDeck() {
           )}
         </div>
 
-        {/* ── Off Street Content (default) ── */}
+        {/* ── Off Street Content ── */}
         {activeProng === "off-street" && (
         <>
 
         {/* ═══ 2 — MARKET ═══ */}
         <Section id="market" dark isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "market"}>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
-            <GlowBadge label="Market Opportunity" />
+            <GlowBadge label="The Opportunity" />
             <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-6xl font-black mb-6 leading-tight">
-              A <span className="text-blue-400">$1.2 Trillion</span> Market<br />Waiting to Be Disrupted
+              <span className="text-blue-400">40 Million</span> Used Cars<br />Change Hands Every Year
             </motion.h2>
             <motion.p variants={fadeUp} custom={1} className="text-lg text-white/50 max-w-2xl mb-16">
-              40 million used cars change hands annually in the U.S. — that's 110,000 every single day. Dealers who can acquire inventory directly from consumers hold the ultimate competitive advantage.
+              CarMax and Carvana proved consumers will sell online. But they have zero relationship with your customer. You have trust, service history, and local presence — you just need the platform.
             </motion.p>
             <motion.div variants={fadeUp} custom={2} className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-              <MetricCard value={40} suffix="M" label="Used vehicles sold annually in the U.S." dark citation="Cox Automotive 2024 Used Car Market Report" />
-              <MetricCard value={29} prefix="$" suffix="K" label="Average used vehicle listing price (Dec 2025)" dark citation="Cox Automotive / Manheim Used Vehicle Value Index" />
-              <MetricCard value={73} suffix="%" label="of car shoppers prefer more steps online" dark citation="CarGurus 2025 Consumer Sentiment Study" />
-              <MetricCard value={1528} prefix="$" label="Avg. used gross PVR — pre-pandemic levels" dark citation="Haig Report Q3 2025 Dealership Profitability Data" />
+              <MetricCard value={40} suffix="M" label="Used vehicles sold annually" dark citation="Cox Automotive 2024" />
+              <MetricCard value={73} suffix="%" label="Prefer more steps online" dark citation="CarGurus 2025" />
+              <MetricCard value={2000} prefix="$" label="Saved per unit vs. auction" dark citation="Avg auction + transport fees" />
+              <MetricCard value={1528} prefix="$" label="Current avg used PVR" dark citation="Haig Report Q3 2025" />
             </motion.div>
           </motion.div>
         </Section>
@@ -449,16 +386,16 @@ export default function PitchDeck() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
             <LightBadge label="The Problem" />
             <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-6xl font-black mb-6 leading-tight">
-              Dealers Are <span className="text-destructive">Hemorrhaging</span><br />Acquisition Opportunities
+              You're Buying Inventory<br />the <span className="text-destructive">Expensive Way</span>
             </motion.h2>
             <motion.p variants={fadeUp} custom={1} className="text-lg text-muted-foreground max-w-2xl mb-14">
-              While dealers fight over auction inventory and pay inflated prices, millions of consumers are selling their vehicles to CarMax and Carvana — often vehicles that were serviced at YOUR dealership.
+              Every auction buy costs you $1,000–2,300 in fees and transport before you even recondition it. Meanwhile, your own service customers are selling to Carvana.
             </motion.p>
             <motion.div variants={fadeUp} custom={2} className="grid md:grid-cols-3 gap-8">
               {[
-                { icon: "💸", title: "Auction Dependency", desc: "Dealers pay $500–1,500 per unit in auction fees plus $300–800 in transport for inventory they could acquire directly from consumers." },
-                { icon: "🚪", title: "Customer Walkaway", desc: "Your service customers — the ones you already have a relationship with — are selling to CarMax and Carvana because you don't make it easy." },
-                { icon: "📉", title: "Margin Compression", desc: "Used gross PVR has dropped back to $1,528 — pre-pandemic levels (Haig Report Q3 2025). Direct acquisition is the only way to protect margins." },
+                { icon: "💸", title: "Auction Dependency", desc: "$500–1,500 in auction fees plus $300–800 transport per unit — eating into already-compressed margins." },
+                { icon: "🚪", title: "Losing Your Own Customers", desc: "Your service customers — people who trust you — are selling to CarMax because you don't make it easy." },
+                { icon: "🧩", title: "Duct-Taped Workflows", desc: "Generic vendor widgets dump leads into email. No pipeline. No tracking. No workflow. Leads die in inboxes." },
               ].map((item, i) => (
                 <motion.div key={i} variants={scaleIn} custom={i + 3} className="bg-card border border-border rounded-2xl p-8">
                   <span className="text-4xl mb-4 block">{item.icon}</span>
@@ -470,907 +407,266 @@ export default function PitchDeck() {
           </motion.div>
         </Section>
 
-        {/* ═══ 4 — COMPETITION ═══ */}
-        <Section id="competition" dark isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "competition"}>
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
-            <GlowBadge label="Competitive Landscape" />
-            <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-6xl font-black mb-6 leading-tight">
-              They Built <span className="text-blue-400">Empires</span> on<br />Your Missed Opportunities
-            </motion.h2>
-            <motion.p variants={fadeUp} custom={1} className="text-lg text-white/50 max-w-2xl mb-14">
-              CarMax comp sales are down 9%. Carvana is surging. Both proved the model works — but they have zero relationship with your customer. You have something they'll never have: trust, service history, and a local presence.
-            </motion.p>
-            <motion.div variants={fadeUp} custom={2} className="grid md:grid-cols-2 gap-8">
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
-                <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-                  <span className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center"><ArrowUpRight className="w-4 h-4 text-emerald-400" /></span>
-                  What They Got Right
-                </h3>
-                <ul className="space-y-4">
-                  {["Frictionless online experience", "Instant valuation & offer", "Speed to payment", "National brand awareness"].map((item, i) => (
-                    <li key={i} className="flex items-start gap-3 text-white/70 text-sm"><CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />{item}</li>
-                  ))}
-                </ul>
-              </div>
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
-                <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-                  <span className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center"><Target className="w-4 h-4 text-red-400" /></span>
-                  Their Fatal Weakness
-                </h3>
-                <ul className="space-y-4">
-                  {["No existing customer relationship", "Aggressive low-ball pricing strategy", "No service history leverage", "Zero local market presence", "Impersonal, commodity experience"].map((item, i) => (
-                    <li key={i} className="flex items-start gap-3 text-white/70 text-sm"><XCircle className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />{item}</li>
-                  ))}
-                </ul>
-              </div>
-            </motion.div>
-          </motion.div>
-        </Section>
-
-        {/* ═══ 5 — COOKIE CUTTER ═══ */}
-        <Section id="cookie-cutter" isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "cookie-cutter"}>
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
-            <LightBadge label="The Status Quo" />
-            <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-6xl font-black mb-6 leading-tight">
-              Every Dealer Has the<br /><span className="text-destructive">Same Broken Widget</span>
-            </motion.h2>
-            <motion.p variants={fadeUp} custom={1} className="text-lg text-muted-foreground max-w-2xl mb-14">
-              Plug-and-play vendor tools promise results but deliver a generic form that looks identical on 10,000 other dealer websites. No pipeline. No workflow. No differentiation.
-            </motion.p>
-            <motion.div variants={fadeUp} custom={2} className="grid md:grid-cols-2 gap-8">
-              <div className="bg-destructive/5 border border-destructive/20 rounded-2xl p-8">
-                <h3 className="text-2xl font-black text-destructive mb-8">Generic Tools</h3>
-                <div className="space-y-5">
-                  {[
-                    "Identical UI across every dealership",
-                    "Leads dump into email — no workflow",
-                    "No deal pipeline or stage management",
-                    "No role-based access for your team",
-                    "No document or photo collection",
-                    "No customer-facing status portal",
-                    "No appraisal tracking or attribution",
-                    "No print-ready office documents",
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-start gap-3 text-sm text-muted-foreground"><XCircle className="w-4 h-4 text-destructive mt-0.5 shrink-0" />{item}</div>
-                  ))}
-                </div>
-              </div>
-              <div className="bg-primary/5 border border-primary/20 rounded-2xl p-8">
-                <h3 className="text-2xl font-black text-primary mb-8">Our Platform</h3>
-                <div className="space-y-5">
-                  {[
-                    "100% branded to YOUR dealership",
-                    "10-stage managed deal pipeline",
-                    "4-tier role-based staff permissions",
-                    "Built-in appraisal & check requests",
-                    "Guided photo & document collection",
-                    "Real-time customer status portal",
-                    "Automatic appraiser attribution",
-                    "Professional print-ready records",
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-start gap-3 text-sm text-muted-foreground"><CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />{item}</div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        </Section>
-
-        {/* ═══ 6 — SOLUTION INTRO ═══ */}
-        <Section id="solution-intro" dark isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "solution-intro"}>
+        {/* ═══ 4 — SOLUTION ═══ */}
+        <Section id="solution" dark isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "solution"}>
           <div className="absolute top-1/3 right-0 w-[500px] h-[500px] rounded-full bg-blue-600/8 blur-[140px] pointer-events-none" />
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center relative">
-            <GlowBadge label="The Platform" />
-            <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-6xl lg:text-7xl font-black mb-8 leading-tight">
-              One Platform.<br />
-              <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">Every Touchpoint.</span>
-            </motion.h2>
-            <motion.p variants={fadeUp} custom={1} className="text-lg text-white/50 max-w-2xl mx-auto mb-16">
-              From the moment a consumer considers selling their car to the moment your accounting cuts the check — every step, managed, tracked, and optimized.
-            </motion.p>
-            <motion.div variants={fadeUp} custom={2} className="grid md:grid-cols-3 gap-6">
-              <FeaturePill dark icon={Globe} title="Consumer Experience" desc="Branded landing page, guided submission form, personalized portal with real-time status tracking, and mobile-optimized uploads." />
-              <FeaturePill dark icon={Cpu} title="Staff Command Center" desc="Role-based dashboard with full deal pipeline, appraisal workflows, document management, and one-click check requests." />
-              <FeaturePill dark icon={Database} title="Enterprise Backend" desc="Encrypted storage, server-side RBAC, rate limiting, audit trails, and automated notifications via SMS and email." />
-            </motion.div>
-            <motion.div variants={fadeUp} custom={3} className="mt-14 flex items-center justify-center gap-3 text-white/30 text-sm">
-              <ArrowRight className="w-4 h-4" />
-              <span>Let's walk through exactly what your <strong className="text-white/60">customers</strong> and <strong className="text-white/60">employees</strong> will see</span>
-              <ArrowRight className="w-4 h-4" />
-            </motion.div>
-          </motion.div>
-        </Section>
-
-        {/* ═══════════════════════════════════════════════════════════════
-            CUSTOMER WALKTHROUGH — 3 SLIDES
-        ═══════════════════════════════════════════════════════════════ */}
-
-        {/* ═══ 7 — CUSTOMER WALK 1: Landing & Form ═══ */}
-        <Section id="cust-walk-1" isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "cust-walk-1"}>
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
-            <div className="flex items-center gap-3 mb-3">
-              <LightBadge label="Customer Walkthrough" />
-              <span className="text-xs font-mono text-muted-foreground mb-8 inline-block">1 of 3</span>
-            </div>
-            <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-5xl font-black mb-4 leading-tight">
-              Step 1: <span className="text-primary">Discover & Submit</span>
-            </motion.h2>
-            <motion.p variants={fadeUp} custom={0.5} className="text-lg text-muted-foreground max-w-3xl mb-12">
-              A customer lands on your dealer-branded page. No third-party logos. No CarMax. Just YOUR dealership offering to buy their car — with a professional, guided experience.
-            </motion.p>
-
-            <motion.div variants={fadeUp} custom={1} className="grid lg:grid-cols-2 gap-10">
-              <div>
-                <WalkStep number={1} icon={Globe} title="Branded Landing Page"
-                  desc="Customer sees a hero section with your dealership logo, trust badges (BBB, Google Reviews), and a clear 'Get Your Cash Offer' call-to-action."
-                  detail="🎯 100% your brand — no competing logos, no third-party affiliations"
-                />
-                <WalkStep number={2} icon={Car} title="Step 1: Vehicle Info"
-                  desc="They enter Year, Make, Model — or paste a VIN for instant auto-decode. The form validates every field in real time."
-                  detail="🔎 VIN decoder auto-fills Year, Make, Model instantly"
-                />
-                <WalkStep number={3} icon={Layers} title="Steps 2–3: Build & Condition"
-                  desc="Drivetrain, color, moonroof, keys, tire condition, accident history, mechanical/cosmetic issues — all guided checkboxes. No free-text guessing."
-                  detail="✅ Every question is mandatory — no half-complete submissions"
-                />
-                <WalkStep number={4} icon={Send} title="Steps 4–5: Details & Submit"
-                  desc="Contact info, loan status (Paid Off / Has Loan / Lease), and a final review. One tap to submit. They immediately receive a confirmation with a link to their personal portal."
-                  detail="📧 Instant email confirmation with unique portal link"
-                />
-              </div>
-
-              <motion.div variants={scaleIn} custom={2}>
-                <div className="rounded-2xl overflow-hidden border border-border shadow-2xl">
-                  <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border bg-muted/50">
-                    <div className="flex gap-1.5">
-                      <span className="w-3 h-3 rounded-full bg-red-400/60" />
-                      <span className="w-3 h-3 rounded-full bg-yellow-400/60" />
-                      <span className="w-3 h-3 rounded-full bg-emerald-400/60" />
-                    </div>
-                    <span className="text-xs font-mono ml-2 text-muted-foreground">hartecash.com</span>
-                  </div>
-                  <a href="/" target="_blank" rel="noopener noreferrer">
-                    <img src={screenshotLanding} alt="Landing page with vehicle submission form" className="w-full" />
-                  </a>
-                </div>
-                <p className="text-xs text-muted-foreground text-center mt-3 italic">Live screenshot — this is what your customers see</p>
-              </motion.div>
-            </motion.div>
-          </motion.div>
-        </Section>
-
-        {/* ═══ 8 — CUSTOMER WALK 2: Portal & Tracking ═══ */}
-        <Section id="cust-walk-2" dark isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "cust-walk-2"}>
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
-            <div className="flex items-center gap-3 mb-3">
-              <GlowBadge label="Customer Walkthrough" />
-              <span className="text-xs font-mono text-white/30 mb-8 inline-block">2 of 3</span>
-            </div>
-            <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-5xl font-black mb-4 leading-tight">
-              Step 2: <span className="text-blue-400">Their Personal Portal</span>
-            </motion.h2>
-            <motion.p variants={fadeUp} custom={0.5} className="text-lg text-white/50 max-w-3xl mb-12">
-              After submitting, every customer gets a dedicated portal — a branded dashboard they can return to anytime. No login required. Just their unique link.
-            </motion.p>
-
-            <motion.div variants={fadeUp} custom={1} className="grid lg:grid-cols-2 gap-10">
-              <motion.div variants={scaleIn} custom={1.5}>
-                <div className="rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
-                  <div className="flex items-center gap-2 px-4 py-2.5 border-b border-white/10 bg-white/5">
-                    <div className="flex gap-1.5">
-                      <span className="w-3 h-3 rounded-full bg-red-400/60" />
-                      <span className="w-3 h-3 rounded-full bg-yellow-400/60" />
-                      <span className="w-3 h-3 rounded-full bg-emerald-400/60" />
-                    </div>
-                    <span className="text-xs font-mono ml-2 text-white/30">hartecash.com/my-submission/...</span>
-                  </div>
-                  <img src={screenshotPortal} alt="Customer portal with offer and progress tracker" className="w-full" />
-                </div>
-                <p className="text-xs text-white/30 text-center mt-3 italic">Live screenshot — personalized customer portal</p>
-              </motion.div>
-
-              <div>
-                <WalkStep number={1} icon={Eye} title="Personalized Dashboard" dark
-                  desc="The customer is greeted by name — 'Welcome back, Sarah!' — with their vehicle prominently displayed. It feels personal, not transactional."
-                  detail="👤 Name, vehicle, and progress all personalized"
-                />
-                <WalkStep number={2} icon={BadgeDollarSign} title="Cash Offer Front & Center" dark
-                  desc="Once your team enters an offer, it appears as a bold card: '$24,500.00'. The customer can print it. It updates in real-time as negotiations progress."
-                  detail="🖨️ One-click print of the offer for their records"
-                />
-                <WalkStep number={3} icon={CircleDot} title="5-Stage Progress Tracker" dark
-                  desc="Animated progress bar shows exactly where they stand: Offer Accepted → Inspection Scheduled → Deal Finalized → Paperwork Complete → Check Received. No guessing, no phone calls asking 'what's the status?'"
-                  detail="📊 Each stage has custom icons, animations, and helper text"
-                />
-                <WalkStep number={4} icon={ClipboardCheck} title="Smart 'What's Next' Card" dark
-                  desc="Dynamically guides the customer: 'Upload photos' → 'Upload documents' → 'Schedule your visit'. Priorities shift automatically as they complete each step."
-                  detail="🧠 Intelligent — always shows the most important next action"
-                />
-              </div>
-            </motion.div>
-          </motion.div>
-        </Section>
-
-        {/* ═══ 9 — CUSTOMER WALK 3: Photos, Docs, Schedule ═══ */}
-        <Section id="cust-walk-3" isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "cust-walk-3"}>
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
-            <div className="flex items-center gap-3 mb-3">
-              <LightBadge label="Customer Walkthrough" />
-              <span className="text-xs font-mono text-muted-foreground mb-8 inline-block">3 of 3</span>
-            </div>
-            <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-5xl font-black mb-4 leading-tight">
-              Step 3: <span className="text-primary">Upload, Schedule & Close</span>
-            </motion.h2>
-            <motion.p variants={fadeUp} custom={0.5} className="text-lg text-muted-foreground max-w-3xl mb-12">
-              The customer completes everything from their phone — photos, documents, and scheduling — without ever calling the dealership.
-            </motion.p>
-
-            <motion.div variants={fadeUp} custom={1} className="grid lg:grid-cols-3 gap-8">
-              {/* Photos */}
-              <motion.div variants={scaleIn} custom={1}>
-                <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-foreground">
-                  <span className="text-xl">📸</span> Vehicle Photos
-                </h3>
-                <div className="rounded-2xl overflow-hidden border border-border shadow-xl">
-                  <img src={screenshotUploadMobile} alt="Mobile photo upload interface with 6 guided categories" className="w-full" />
-                </div>
-                <p className="text-xs text-muted-foreground text-center mt-3 italic">Live mobile screenshot</p>
-              </motion.div>
-
-              {/* Documents */}
-              <motion.div variants={scaleIn} custom={2}>
-                <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-foreground">
-                  <span className="text-xl">📄</span> Documents
-                </h3>
-                <MockupFrame title="Required documents with guided slots:">
-                  <div className="space-y-3">
-                    {["Driver's License", "Registration", "Title (Front)", "Title (Back)"].map(doc => (
-                      <div key={doc} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/50 border border-border">
-                        <Upload className="w-4 h-4 text-primary shrink-0" />
-                        <span className="text-sm text-foreground">{doc}</span>
-                      </div>
-                    ))}
-                    <div className="text-[10px] text-muted-foreground text-center mt-2">
-                      📱 QR code on desktop → opens phone camera instantly
-                    </div>
-                  </div>
-                </MockupFrame>
-              </motion.div>
-
-              {/* Schedule */}
-              <motion.div variants={scaleIn} custom={3}>
-                <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-foreground">
-                  <span className="text-xl">📅</span> Schedule Visit
-                </h3>
-                <MockupFrame title="Pre-filled appointment booking:">
-                  <div className="space-y-3 text-xs">
-                    {[
-                      { label: "Vehicle", value: "2021 Honda Accord" },
-                      { label: "Name", value: "Sarah Johnson" },
-                      { label: "Email", value: "sarah@email.com" },
-                      { label: "Phone", value: "(860) 555-1234" },
-                    ].map(f => (
-                      <div key={f.label} className="flex items-center justify-between p-2 rounded bg-muted/50 border border-border">
-                        <span className="text-muted-foreground">{f.label}</span>
-                        <span className="font-medium text-foreground">{f.value}</span>
-                      </div>
-                    ))}
-                    <button className="w-full mt-2 bg-primary text-primary-foreground rounded-lg py-2.5 text-xs font-bold">
-                      Confirm Appointment →
-                    </button>
-                    <div className="text-[10px] text-muted-foreground text-center mt-1">
-                      📧 + 📱 Auto-sends email & SMS confirmation
-                    </div>
-                  </div>
-                </MockupFrame>
-              </motion.div>
-            </motion.div>
-
-            {/* Bottom callouts */}
-            <motion.div variants={fadeUp} custom={4} className="mt-12 grid md:grid-cols-3 gap-6">
-              {[
-                { icon: Phone, title: "Zero Phone Calls", desc: "Everything the customer needs is in the portal. No 'call us for status.' No phone tag." },
-                { icon: KeyRound, title: "No Login Required", desc: "Customers access their portal via unique token link. No password, no account, no friction." },
-                { icon: ClipboardCheck, title: "What to Bring Card", desc: "Portal shows exactly what to bring: ID, registration, title, all keys. No surprises at the dealership." },
-              ].map((item, i) => (
-                <motion.div key={i} variants={scaleIn} custom={i + 5} className="flex gap-4 bg-card border border-border rounded-xl p-5">
-                  <item.icon className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="font-bold text-sm text-foreground mb-1">{item.title}</h4>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-          </motion.div>
-        </Section>
-
-        {/* ═══════════════════════════════════════════════════════════════
-            EMPLOYEE WALKTHROUGH — 3 SLIDES
-        ═══════════════════════════════════════════════════════════════ */}
-
-        {/* ═══ 10 — EMPLOYEE WALK 1: Dashboard & Pipeline ═══ */}
-        <Section id="emp-walk-1" dark isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "emp-walk-1"}>
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
-            <div className="flex items-center gap-3 mb-3">
-              <GlowBadge label="Employee Walkthrough" />
-              <span className="text-xs font-mono text-white/30 mb-8 inline-block">1 of 3</span>
-            </div>
-            <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-5xl font-black mb-4 leading-tight">
-              What Your <span className="text-blue-400">Team Sees</span>: Command Center
-            </motion.h2>
-            <motion.p variants={fadeUp} custom={0.5} className="text-lg text-white/50 max-w-3xl mb-12">
-              Your employees log in and see a purpose-built dashboard — not a repurposed CRM. Every lead, every stage, every action in one view.
-            </motion.p>
-
-            <motion.div variants={fadeUp} custom={1} className="grid lg:grid-cols-2 gap-10">
-              <motion.div variants={scaleIn} custom={1.5}>
-                <div className="rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
-                  <div className="flex items-center gap-2 px-4 py-2.5 border-b border-white/10 bg-white/5">
-                    <div className="flex gap-1.5">
-                      <span className="w-3 h-3 rounded-full bg-red-400/60" />
-                      <span className="w-3 h-3 rounded-full bg-yellow-400/60" />
-                      <span className="w-3 h-3 rounded-full bg-emerald-400/60" />
-                    </div>
-                    <span className="text-xs font-mono ml-2 text-white/30">hartecash.com/admin</span>
-                  </div>
-                  <a href="/admin" target="_blank" rel="noopener noreferrer">
-                    <img src={screenshotDashboard} alt="Admin dashboard with leads table and analytics" className="w-full" />
-                  </a>
-                </div>
-                <p className="text-xs text-white/30 text-center mt-3 italic">Live screenshot — admin command center</p>
-              </motion.div>
-
-              <div>
-                <WalkStep number={1} icon={LayoutDashboard} title="Real-Time Analytics Bar" dark
-                  desc="Total leads, weekly intake, offers made, deals closed — live numbers updated with every status change. Your team knows the pulse of the operation instantly."
-                  detail="📊 Sortable, filterable, and searchable by any field"
-                />
-                <WalkStep number={2} icon={Search} title="Lead Table with Smart Filters" dark
-                  desc="Every submission in a sortable table. Filter by status, search by name/phone/vehicle, and click any row to open the full detail modal."
-                  detail="🔍 Instant search across name, email, phone, vehicle, and VIN"
-                />
-                <WalkStep number={3} icon={TrendingUp} title="10-Stage Deal Pipeline" dark
-                  desc="New Lead → Contacted → Offer Made → Inspection Scheduled → Inspection Complete → Title Verified → Ownership Verified → Appraisal → Approval → Purchase Complete. Each stage enforced server-side."
-                  detail="🔒 Pipeline gates prevent unauthorized status transitions"
-                />
-                <WalkStep number={4} icon={AlertCircle} title="Dead Lead Tracking" dark
-                  desc="Leads that go cold are marked 'Dead Lead' with red visual styling — keeping your pipeline clean while preserving the data for future re-engagement."
-                  detail="💀 Red-flagged with distinct styling so they don't clutter active deals"
-                />
-              </div>
-            </motion.div>
-          </motion.div>
-        </Section>
-
-        {/* ═══ 11 — EMPLOYEE WALK 2: Appraisal & Check Request ═══ */}
-        <Section id="emp-walk-2" isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "emp-walk-2"}>
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
-            <div className="flex items-center gap-3 mb-3">
-              <LightBadge label="Employee Walkthrough" />
-              <span className="text-xs font-mono text-muted-foreground mb-8 inline-block">2 of 3</span>
-            </div>
-            <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-5xl font-black mb-4 leading-tight">
-              The Money Moves: <span className="text-primary">Appraisal & Checkout</span>
-            </motion.h2>
-            <motion.p variants={fadeUp} custom={0.5} className="text-lg text-muted-foreground max-w-3xl mb-12">
-              This is where deals get done. Your managers appraise, approve, and generate check requests — all within the same interface.
-            </motion.p>
-
-            <motion.div variants={fadeUp} custom={1} className="grid lg:grid-cols-2 gap-10">
-              <div>
-                <WalkStep number={1} icon={DollarSign} title="Cash Offer Entry"
-                  desc="Sales or Used Car Manager enters the initial cash offer. It instantly appears on the customer's portal. The customer gets notified and can view/print it immediately."
-                  detail="💰 Offer visible to customer in real-time, no phone call needed"
-                />
-                <WalkStep number={2} icon={ClipboardCheck} title="In-House ACV (Actual Cash Value)"
-                  desc="Only managers (Used Car Manager, GSM/GM, Admin) can enter the ACV. Every change is audit-logged with old value, new value, and the staff member who made it — 'John S. — Used Car Manager'. Full accountability, full paper trail."
-                  detail="🔐 Role-restricted + automatic audit log capturing every ACV change with timestamps"
-                />
-                <WalkStep number={3} icon={ShieldCheck} title="Manager Approval Gate"
-                  desc="The pipeline can't advance to 'Manager Approval' or 'Purchase Complete' without a GSM/GM or Admin signing off. Server-side triggers enforce this — no workarounds."
-                  detail="⛔ Server-side trigger rejects unauthorized transitions"
-                />
-                <WalkStep number={4} icon={Printer} title="One-Click Check Request"
-                  desc="Generates a professional printout: customer name, address, agreed price, ACV, description ('Customer Direct Inventory Purchase'), GSM and Accounting signature lines, and appended appraisal documents."
-                  detail="🖨️ Formatted for immediate accounting processing"
-                />
-              </div>
-
-              <motion.div variants={scaleIn} custom={2} className="space-y-6">
-                <MockupFrame title="Check Request — Print Preview">
-                  <div className="space-y-4 text-foreground">
-                    <div className="text-center border-b border-border pb-3">
-                      <div className="font-black text-lg">CHECK REQUEST</div>
-                      <div className="text-xs text-muted-foreground">Harte Auto Group</div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 text-xs">
-                      <div>
-                        <span className="text-muted-foreground">Customer:</span>
-                        <div className="font-bold">Sarah Johnson</div>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-muted-foreground">Date:</span>
-                        <div className="font-bold">02/16/2026</div>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Vehicle:</span>
-                        <div className="font-bold">2021 Honda Accord</div>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-muted-foreground">Hartford, CT 06120</span>
-                      </div>
-                    </div>
-                    <div className="border border-border rounded-lg p-3 text-xs">
-                      <span className="text-muted-foreground">Description:</span>
-                      <div className="font-medium mt-1">Customer Direct Inventory Purchase</div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-emerald-500/10 border border-emerald-400/20 rounded-lg p-3 text-center">
-                        <span className="text-[10px] text-muted-foreground block">Check Amount</span>
-                        <span className="text-xl font-black text-emerald-600">$24,500.00</span>
-                      </div>
-                      <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 text-center">
-                        <span className="text-[10px] text-muted-foreground block">In-House ACV</span>
-                        <span className="text-xl font-black text-primary">$26,200.00</span>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 pt-3 border-t border-border">
-                      <div className="text-center">
-                        <div className="border-b border-foreground/30 w-full mb-1 h-6" />
-                        <span className="text-[10px] text-muted-foreground">GSM / GM Signature</span>
-                      </div>
-                      <div className="text-center">
-                        <div className="border-b border-foreground/30 w-full mb-1 h-6" />
-                        <span className="text-[10px] text-muted-foreground">Accounting Signature</span>
-                      </div>
-                    </div>
-                    <div className="text-[9px] text-muted-foreground text-center">
-                      Appraised by: John S. — Used Car Manager
-                    </div>
-                  </div>
-                </MockupFrame>
-              </motion.div>
-            </motion.div>
-          </motion.div>
-        </Section>
-
-        {/* ═══ 12 — EMPLOYEE WALK 3: Docs, Staff, Roles ═══ */}
-        <Section id="emp-walk-3" dark isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "emp-walk-3"}>
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
-            <div className="flex items-center gap-3 mb-3">
-              <GlowBadge label="Employee Walkthrough" />
-              <span className="text-xs font-mono text-white/30 mb-8 inline-block">3 of 3</span>
-            </div>
-            <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-5xl font-black mb-4 leading-tight">
-              Full Control: <span className="text-blue-400">Docs, Roles & Oversight</span>
-            </motion.h2>
-            <motion.p variants={fadeUp} custom={0.5} className="text-lg text-white/50 max-w-3xl mb-12">
-              Internal document management, staff permissions, complete audit trails, and a dedicated Executive KPI Hub — everything a GM needs to run the operation with confidence.
-            </motion.p>
-
-            <motion.div variants={fadeUp} custom={1} className="grid lg:grid-cols-4 gap-6">
-              <motion.div variants={scaleIn} custom={1}>
-                <MockupFrame title="📁 Internal Documents" dark>
-                  <div className="space-y-3">
-                    <p className="text-[10px] text-white/40 mb-2">Staff-only document types:</p>
-                    <div className="space-y-2">
-                      {[
-                        { name: "Appraisal Report", tag: "Staff Only", color: "text-purple-400 bg-purple-500/10 border-purple-500/20" },
-                        { name: "Carfax Report", tag: "Staff Only", color: "text-purple-400 bg-purple-500/10 border-purple-500/20" },
-                        { name: "Window Sticker", tag: "If Available", color: "text-orange-400 bg-orange-500/10 border-orange-500/20" },
-                        { name: "Customer Title", tag: "Customer", color: "text-blue-400 bg-blue-500/10 border-blue-500/20" },
-                        { name: "Registration", tag: "Customer", color: "text-blue-400 bg-blue-500/10 border-blue-500/20" },
-                      ].map((doc) => (
-                        <div key={doc.name} className="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/10">
-                          <span className="text-xs text-white/70">{doc.name}</span>
-                          <span className={`text-[9px] px-2 py-0.5 rounded-full border ${doc.color}`}>{doc.tag}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="text-[10px] text-white/30 text-center mt-2">
-                      Appraisal auto-appends to Check Request printout
-                    </div>
-                  </div>
-                </MockupFrame>
-              </motion.div>
-
-              <motion.div variants={scaleIn} custom={2}>
-                <MockupFrame title="👥 Staff Management" dark>
-                  <div className="space-y-3">
-                    <p className="text-[10px] text-white/40 mb-2">4-tier role hierarchy:</p>
-                    <div className="space-y-2">
-                      {[
-                        { role: "Admin", desc: "Full access, staff management", icon: "🔑" },
-                        { role: "GSM / GM", desc: "Approve deals, set prices", icon: "👔" },
-                        { role: "Used Car Manager", desc: "Appraisals, ACV entry", icon: "🚗" },
-                        { role: "Sales / BDC", desc: "Contact leads, update status", icon: "📞" },
-                      ].map((r) => (
-                        <div key={r.role} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-white/5 border border-white/10">
-                          <span className="text-sm">{r.icon}</span>
-                          <div>
-                            <div className="text-xs font-bold text-white/80">{r.role}</div>
-                            <div className="text-[10px] text-white/40">{r.desc}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="text-[10px] text-white/30 text-center">
-                      🔒 All enforced at the database level
-                    </div>
-                  </div>
-                </MockupFrame>
-              </motion.div>
-
-              <motion.div variants={scaleIn} custom={3}>
-                <MockupFrame title="📋 Activity Log" dark>
-                  <div className="space-y-3">
-                    <p className="text-[10px] text-white/40 mb-2">Every action, logged:</p>
-                    <div className="space-y-2">
-                      {[
-                        { time: "2:34 PM", action: "Status → Offer Made", by: "Mike R." },
-                        { time: "2:35 PM", action: "Offer: $24,500", by: "Mike R." },
-                        { time: "3:12 PM", action: "ACV: $26,200", by: "John S." },
-                        { time: "3:15 PM", action: "Status → Approved", by: "Karen T." },
-                        { time: "3:18 PM", action: "Check Request Done", by: "Karen T." },
-                      ].map((log, i) => (
-                        <div key={i} className="flex gap-2 text-[10px] p-2 rounded bg-white/5 border border-white/5">
-                          <span className="text-white/30 font-mono shrink-0">{log.time}</span>
-                          <span className="text-white/60 flex-1">{log.action}</span>
-                          <span className="text-blue-400 shrink-0">{log.by}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="text-[10px] text-white/30 text-center">
-                      Full timestamp, user, and before/after values
-                    </div>
-                  </div>
-                </MockupFrame>
-              </motion.div>
-
-              <motion.div variants={scaleIn} custom={4}>
-                <MockupFrame title="📊 Executive KPI Hub" dark>
-                  <div className="space-y-3">
-                    <p className="text-[10px] text-white/40 mb-2">GM-level analytics at a glance:</p>
-                    <div className="space-y-2">
-                      {[
-                        { label: "Conversion Rate", value: "34.2%", trend: "↑ 8%", color: "text-emerald-400" },
-                        { label: "Avg Offer", value: "$22,450", trend: "↑ $1.2k", color: "text-emerald-400" },
-                        { label: "Pipeline Value", value: "$487k", trend: "12 active", color: "text-blue-400" },
-                        { label: "Abandoned Drop-off", value: "18%", trend: "↓ 3%", color: "text-emerald-400" },
-                      ].map((kpi) => (
-                        <div key={kpi.label} className="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/10">
-                          <span className="text-[10px] text-white/60">{kpi.label}</span>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-white/90 font-mono">{kpi.value}</span>
-                            <span className={`text-[9px] ${kpi.color}`}>{kpi.trend}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-2 p-2 rounded-lg bg-white/5 border border-white/10">
-                      <div className="text-[9px] text-white/40 mb-1.5">Conversion Funnel</div>
-                      <div className="flex gap-1 items-end h-6">
-                        {[100, 72, 45, 34].map((h, i) => (
-                          <div key={i} className="flex-1 rounded-sm bg-blue-500/60" style={{ height: `${h}%` }} />
-                        ))}
-                      </div>
-                      <div className="flex justify-between text-[8px] text-white/30 mt-1">
-                        <span>New</span><span>Contacted</span><span>Inspected</span><span>Purchased</span>
-                      </div>
-                    </div>
-                    <div className="text-[10px] text-white/30 text-center">
-                      Dedicated /executive route for GMs
-                    </div>
-                  </div>
-                </MockupFrame>
-              </motion.div>
-            </motion.div>
-
-            <motion.div variants={fadeUp} custom={4} className="mt-12 grid md:grid-cols-3 gap-6">
-              {[
-                { icon: MessageSquare, title: "Appointment Management", desc: "View scheduled dates, reschedule, and see appointment status — all within the lead detail modal." },
-                { icon: Users, title: "Staff Onboarding", desc: "Add new team members, assign roles, and remove access. The admin sees everyone, controls everything." },
-                { icon: Mail, title: "Auto-Notifications", desc: "SMS and email confirmations fire automatically for appointments. Staff gets notified. Customer gets notified. No manual follow-up." },
-              ].map((item, i) => (
-                <motion.div key={i} variants={scaleIn} custom={i + 5} className="flex gap-4 bg-white/5 border border-white/10 rounded-xl p-5">
-                  <item.icon className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="font-bold text-sm text-white mb-1">{item.title}</h4>
-                    <p className="text-xs text-white/50 leading-relaxed">{item.desc}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-          </motion.div>
-        </Section>
-
-        {/* ═══ 13 — WORKFLOW ═══ */}
-        <Section id="workflow" isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "workflow"}>
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
-            <LightBadge label="Automation" />
-            <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-6xl font-black mb-14 leading-tight">
-              Intelligent Automation<br />at <span className="text-primary">Every Step</span>
-            </motion.h2>
-            <motion.div variants={fadeUp} custom={1} className="grid md:grid-cols-2 gap-6">
-              {[
-                { icon: "📱", title: "SMS & Email Alerts", desc: "Automatic appointment confirmations to customers and staff. No manual follow-up required." },
-                { icon: "🔍", title: "Duplicate Detection", desc: "Phone and email matching instantly flags repeat submissions. No wasted effort on duplicates." },
-                { icon: "🖨️", title: "Print-Ready Documents", desc: "Professional printouts of submissions, check requests, and appended appraisal files — one click." },
-                { icon: "📎", title: "Secure Document Vault", desc: "Cloud storage for titles, registrations, Carfax, window stickers — all linked and accessible." },
-                { icon: "⚡", title: "Pipeline Enforcement", desc: "Server-side triggers prevent unauthorized stage transitions. Only the right people make the right moves." },
-                { icon: "📲", title: "QR Code Bridge", desc: "Every submission generates a unique QR for mobile uploads. Desktop to phone in one scan." },
-              ].map((item, i) => (
-                <motion.div key={i} variants={fadeUp} custom={i + 2} className="flex gap-5 bg-card border border-border rounded-2xl p-6 hover:shadow-md transition-shadow">
-                  <span className="text-3xl shrink-0">{item.icon}</span>
-                  <div>
-                    <h3 className="font-bold text-foreground mb-1">{item.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-          </motion.div>
-        </Section>
-
-        {/* ═══ 14 — MOBILE ═══ */}
-        <Section id="mobile" dark isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "mobile"}>
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center">
-            <GlowBadge label="Mobile-First" />
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} className="relative">
+            <GlowBadge label="The Solution" />
             <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-6xl font-black mb-6 leading-tight">
-              Designed for <span className="text-blue-400">Thumbs</span>,<br />Not Just Screens
+              One Platform.<br />
+              <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">Submission to Check Request.</span>
             </motion.h2>
-            <motion.p variants={fadeUp} custom={1} className="text-lg text-white/50 max-w-2xl mx-auto mb-14">
-              80% of car sellers start on their phone. Every pixel of this platform is optimized for mobile interaction — not retrofitted.
+            <motion.p variants={fadeUp} custom={1} className="text-lg text-white/50 max-w-3xl mb-16">
+              Not a widget. Not a form that dumps into email. A complete inventory acquisition system — branded to your dealership, managed by your team, scaled to your volume.
             </motion.p>
-            <motion.div variants={fadeUp} custom={2} className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <FeaturePill dark icon={Camera} title="Guided Photo Capture" desc="6-slot grid with category labels. Customers know exactly what to photograph — no guessing, no back-and-forth calls." />
-              <FeaturePill dark icon={Eye} title="AI Damage Detection" desc="Every uploaded photo is analyzed by AI vision to flag dents, scratches, and rust — auto-adjusting the condition score." />
-              <FeaturePill dark icon={FileText} title="Document Scanning" desc="Title, registration, ID — upload directly from the phone camera into categorized slots. Automatically tracks completion." />
-              <FeaturePill dark icon={Smartphone} title="Desktop ↔ Mobile Bridge" desc="QR codes on the desktop experience let customers seamlessly switch to their phone for photos and documents." />
+
+            {/* End-to-end flow */}
+            <motion.div variants={fadeUp} custom={2} className="mb-16">
+              <div className="flex flex-col md:flex-row items-stretch gap-3">
+                {[
+                  { icon: Globe, label: "Customer Lands", sub: "Dealer-branded page" },
+                  { icon: Car, label: "Submits Vehicle", sub: "VIN decode + condition" },
+                  { icon: DollarSign, label: "Gets Offer", sub: "Instant cash valuation" },
+                  { icon: Camera, label: "Uploads Photos", sub: "Guided mobile capture" },
+                  { icon: FileText, label: "Uploads Docs", sub: "Title, registration, ID" },
+                  { icon: UserCheck, label: "Staff Appraises", sub: "Inspection + ACV" },
+                  { icon: ShieldCheck, label: "Manager Approves", sub: "Pipeline-enforced gates" },
+                  { icon: CheckCircle2, label: "Check Request", sub: "Print-ready, signed off" },
+                ].map((step, i) => (
+                  <div key={i} className="flex-1 flex flex-col items-center text-center">
+                    <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center mb-3">
+                      <step.icon className="w-5 h-5 text-blue-400" />
+                    </div>
+                    <span className="text-xs font-bold text-white/80 mb-0.5">{step.label}</span>
+                    <span className="text-[10px] text-white/40">{step.sub}</span>
+                    {i < 7 && <ArrowRight className="w-3 h-3 text-white/15 mt-2 hidden md:block rotate-0" />}
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Key differentiators grid */}
+            <motion.div variants={fadeUp} custom={3} className="grid md:grid-cols-2 gap-6">
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
+                <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                  <span className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center"><XCircle className="w-4 h-4 text-red-400" /></span>
+                  Generic Vendor Widgets
+                </h3>
+                <ul className="space-y-3">
+                  {["Same form on 10,000 dealer sites", "Leads dump into email inbox", "No deal pipeline or stages", "No staff roles or permissions", "No customer portal or tracking", "No document collection flow"].map((item, i) => (
+                    <li key={i} className="flex items-start gap-3 text-white/60 text-sm"><XCircle className="w-4 h-4 text-red-400/60 mt-0.5 shrink-0" />{item}</li>
+                  ))}
+                </ul>
+              </div>
+              <div className="bg-blue-500/5 border border-blue-400/20 rounded-2xl p-8">
+                <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                  <span className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center"><CheckCircle2 className="w-4 h-4 text-blue-400" /></span>
+                  This Platform
+                </h3>
+                <ul className="space-y-3">
+                  {["100% branded to YOUR dealership", "Managed deal pipeline with 10+ stages", "Role-based permissions for every team member", "Customer portal with real-time status", "Guided photo & document collection", "Print-ready check requests & appraisals"].map((item, i) => (
+                    <li key={i} className="flex items-start gap-3 text-white/70 text-sm"><CheckCircle2 className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />{item}</li>
+                  ))}
+                </ul>
+              </div>
             </motion.div>
           </motion.div>
         </Section>
 
-        {/* ═══ 15 — SECURITY ═══ */}
-        <Section id="security" isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "security"}>
+        {/* ═══ 5 — PLATFORM CAPABILITIES ═══ */}
+        <Section id="platform" isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "platform"}>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
-            <LightBadge label="Enterprise Security" />
-            <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-6xl font-black mb-14 leading-tight">
-              Built Secure.<br /><span className="text-primary">Not Patched Later.</span>
+            <LightBadge label="Built to Run Your Operation" />
+            <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-6xl font-black mb-6 leading-tight">
+              Everything You Need.<br /><span className="text-primary">Nothing You Don't.</span>
             </motion.h2>
-            <motion.div variants={fadeUp} custom={1} className="grid md:grid-cols-2 gap-6">
+            <motion.p variants={fadeUp} custom={1} className="text-lg text-muted-foreground max-w-3xl mb-14">
+              Every feature exists to move inventory from consumer to your lot faster, cheaper, and more profitably.
+            </motion.p>
+
+            <motion.div variants={fadeUp} custom={2} className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
-                { icon: Lock, title: "Role-Based Access Control", desc: "4-tier permission system enforced at the database level. Every action validated server-side. No client-side shortcuts." },
-                { icon: Shield, title: "Anti-Spam & Rate Limiting", desc: "Honeypot fields, submission cooldowns, and database-level rate limits. 3 requests per email per hour. Bot-proof." },
-                { icon: Database, title: "Encrypted Cloud Storage", desc: "All photos and documents in private buckets with time-limited signed URLs. No public access. No data leaks." },
-                { icon: UserCheck, title: "Server-Side Validation", desc: "Email format, ZIP codes, mileage, VIN — all validated at the database level with constraints and triggers." },
+                { icon: Eye, title: "AI Damage Detection", desc: "Every uploaded photo analyzed for dents, scratches, and paint damage — condition scores auto-adjust before your team even looks." },
+                { icon: Camera, title: "Guided Photo & Doc Capture", desc: "Camera overlays show customers exactly what to photograph. Mobile-optimized upload flows with category slots and completion tracking." },
+                { icon: Cpu, title: "Interactive Offer Builder", desc: "Waterfall visualization with real-time sliders, profit spread gauge, and what-if scenarios — so your managers make faster, smarter offers." },
+                { icon: BarChart3, title: "Executive KPI Dashboard", desc: "Conversion funnels, pipeline value, trend analysis, and per-appraiser performance — the numbers a GM actually needs." },
+                { icon: Repeat, title: "Automated Follow-Up Engine", desc: "Multi-touch SMS and email sequences for cold leads. Configurable intervals per touch. Leads don't die in inboxes anymore." },
+                { icon: MapPin, title: "Smart Store Assignment", desc: "Leads auto-route to the right location by ZIP code, OEM brand match, or buying center rules. Multi-rooftop ready from day one." },
+                { icon: Lock, title: "Enterprise-Grade Security", desc: "Role-based access enforced at the database level. Encrypted storage, audit trails, rate limiting. Built secure — not patched later." },
+                { icon: Smartphone, title: "Mobile Inspection Sync", desc: "Technicians complete inspections on mobile — tire depths, brake measurements, and condition grades sync back to desktop instantly." },
+                { icon: Target, title: "Inspection-to-Appraisal Pipeline", desc: "Completed inspection findings feed directly into the offer calculation — tire adjustments, recon costs, and condition grades auto-applied." },
               ].map((item, i) => (
-                <motion.div key={i} variants={scaleIn} custom={i + 2} className="bg-card border border-border rounded-2xl p-8 hover:shadow-md transition-shadow">
-                  <h3 className="font-bold text-lg text-foreground mb-3 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <item.icon className="w-5 h-5 text-primary" />
-                    </div>
-                    {item.title}
-                  </h3>
+                <motion.div key={i} variants={scaleIn} custom={i * 0.3 + 3} className="bg-card border border-border rounded-2xl p-6 hover:shadow-md transition-shadow">
+                  <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                    <item.icon className="w-5 h-5 text-primary" />
+                  </div>
+                  <h3 className="font-bold text-base text-foreground mb-2">{item.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
                 </motion.div>
               ))}
             </motion.div>
+
+            <motion.div variants={fadeUp} custom={6} className="mt-10 flex items-center justify-center">
+              <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-emerald-500/10 border border-emerald-400/20 text-emerald-600 text-sm font-semibold">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                All features live in production — not a roadmap
+              </div>
+            </motion.div>
           </motion.div>
         </Section>
 
-        {/* ═══ INNOVATIONS ═══ */}
-        <Section id="innovations" dark isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "innovations"}>
+        {/* ═══ 6 — SCREENSHOTS ═══ */}
+        <Section id="screenshots" dark isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "screenshots"}>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
-            <GlowBadge label="Recent Innovations" />
-            <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-6xl font-black mb-6 leading-tight">
-              Built This Month.<br /><span className="text-blue-400">Already Live.</span>
+            <GlowBadge label="See It Live" />
+            <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-6xl font-black mb-6 leading-tight text-center">
+              Your Brand.<br /><span className="text-blue-400">Their Experience.</span>
             </motion.h2>
-            <motion.p variants={fadeUp} custom={1} className="text-lg text-white/50 max-w-3xl mb-14">
-              We ship fast. These features were designed, built, and deployed recently — and they're already running in production.
+            <motion.p variants={fadeUp} custom={1} className="text-lg text-white/50 max-w-2xl mx-auto mb-14 text-center">
+              From consumer-facing landing page to staff command center — every screen, fully branded.
             </motion.p>
-            <motion.div variants={fadeUp} custom={2} className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
-              {[
-                { icon: Camera, title: "Camera Overlays", desc: "Blueprint-style silhouette guides overlay the phone camera — ensuring consistent, professional vehicle photos every time." },
-                { icon: Cpu, title: "AI Damage Detection", desc: "Gemini Vision analyzes uploaded photos — flagging dents, scratches, and paint damage with severity scoring and confidence levels." },
-                { icon: BarChart3, title: "Interactive Offer Builder", desc: "Waterfall visualization with real-time sliders, profit spread gauge, and what-if comparison mode." },
-                { icon: MousePointerClick, title: "Slide-to-Accept", desc: "Apple Pay-style swipe gesture for customers to commit to offers. Psychological commitment loop." },
-                { icon: ClipboardCheck, title: "Dual Inspection Modes", desc: "Standard Pass/Fail checklists for sales managers and comprehensive G/F/P/D grading for certified technicians — admin-configurable default." },
-                { icon: Printer, title: "Print-Ready Inspection Forms", desc: "Professional form-designer quality printouts with dealership logo, write-in boxes sized for handwriting, and dual signature blocks." },
-                { icon: Smartphone, title: "Mobile ↔ Desktop Sync", desc: "QR-code mobile inspections sync tire depths, brake measurements, and condition grades back to the desktop — zero duplicate entry." },
-                { icon: TrendingUp, title: "Inspection-to-Appraisal Pipeline", desc: "Completed inspection findings feed directly into the offer waterfall — tire adjustments, condition grades, and recon costs auto-applied." },
-                { icon: FileText, title: "Driver's License OCR", desc: "AI parses uploaded ID photos to auto-fill customer name, address, and license number." },
-                { icon: Target, title: "Executive KPI Hub", desc: "GM-level analytics dashboard with conversion funnels, pipeline value tracking, and trend analysis." },
-                { icon: Repeat, title: "Follow-Up Engine", desc: "Automated multi-touch SMS and email re-engagement sequences for cold leads. Configurable intervals per touch." },
-                { icon: MapPin, title: "Smart Store Assignment", desc: "Leads automatically route to the right location by ZIP code, OEM brand match, or buying center rules." },
-              ].map((item, i) => (
-                <motion.div key={i} variants={scaleIn} custom={i * 0.5 + 3} className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/8 transition-colors">
-                  <div className="w-11 h-11 rounded-xl bg-blue-500/20 flex items-center justify-center mb-4">
-                    <item.icon className="w-5 h-5 text-blue-400" />
+
+            <motion.div variants={fadeUp} custom={2} className="grid md:grid-cols-2 gap-8 mb-8">
+              <div>
+                <div className="rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-blue-500/10 mb-3">
+                  <div className="flex items-center gap-2 px-4 py-2.5 border-b border-white/10 bg-white/5">
+                    <div className="flex gap-1.5">
+                      <span className="w-3 h-3 rounded-full bg-red-400/60" />
+                      <span className="w-3 h-3 rounded-full bg-yellow-400/60" />
+                      <span className="w-3 h-3 rounded-full bg-emerald-400/60" />
+                    </div>
+                    <span className="text-xs font-mono ml-2 text-white/30">Customer Landing Page</span>
                   </div>
-                  <h3 className="font-bold text-base text-white mb-2">{item.title}</h3>
-                  <p className="text-xs text-white/50 leading-relaxed">{item.desc}</p>
-                </motion.div>
-              ))}
+                  <img src={screenshotLanding} alt="Dealer-branded customer landing page" className="w-full" />
+                </div>
+                <p className="text-xs text-white/30 text-center italic">Consumer experience — your brand, your trust signals</p>
+              </div>
+              <div>
+                <div className="rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-blue-500/10 mb-3">
+                  <div className="flex items-center gap-2 px-4 py-2.5 border-b border-white/10 bg-white/5">
+                    <div className="flex gap-1.5">
+                      <span className="w-3 h-3 rounded-full bg-red-400/60" />
+                      <span className="w-3 h-3 rounded-full bg-yellow-400/60" />
+                      <span className="w-3 h-3 rounded-full bg-emerald-400/60" />
+                    </div>
+                    <span className="text-xs font-mono ml-2 text-white/30">Staff Command Center</span>
+                  </div>
+                  <a href="/admin" target="_blank" rel="noopener noreferrer">
+                    <img src={screenshotDashboard} alt="Admin dashboard with deal pipeline" className="w-full hover:opacity-90 transition-opacity" />
+                  </a>
+                </div>
+                <p className="text-xs text-white/30 text-center italic">Staff dashboard — every lead, every stage, one view</p>
+              </div>
             </motion.div>
-            <motion.div variants={fadeUp} custom={8} className="mt-10 flex items-center justify-center gap-3">
-              <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-semibold">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                All features live in production
+
+            <motion.div variants={fadeUp} custom={3} className="grid md:grid-cols-2 gap-8">
+              <div>
+                <div className="rounded-2xl overflow-hidden border border-white/10 shadow-2xl mb-3">
+                  <div className="flex items-center gap-2 px-4 py-2.5 border-b border-white/10 bg-white/5">
+                    <div className="flex gap-1.5">
+                      <span className="w-3 h-3 rounded-full bg-red-400/60" />
+                      <span className="w-3 h-3 rounded-full bg-yellow-400/60" />
+                      <span className="w-3 h-3 rounded-full bg-emerald-400/60" />
+                    </div>
+                    <span className="text-xs font-mono ml-2 text-white/30">Customer Portal</span>
+                  </div>
+                  <img src={screenshotPortal} alt="Customer status portal showing offer and next steps" className="w-full" />
+                </div>
+                <p className="text-xs text-white/30 text-center italic">Customer portal — real-time status, offer details, next steps</p>
+              </div>
+              <div>
+                <div className="rounded-2xl overflow-hidden border border-white/10 shadow-2xl mb-3">
+                  <div className="flex items-center gap-2 px-4 py-2.5 border-b border-white/10 bg-white/5">
+                    <div className="flex gap-1.5">
+                      <span className="w-3 h-3 rounded-full bg-red-400/60" />
+                      <span className="w-3 h-3 rounded-full bg-yellow-400/60" />
+                      <span className="w-3 h-3 rounded-full bg-emerald-400/60" />
+                    </div>
+                    <span className="text-xs font-mono ml-2 text-white/30">Mobile Photo Upload</span>
+                  </div>
+                  <img src={screenshotUploadMobile} alt="Mobile-optimized photo upload with camera overlays" className="w-full" />
+                </div>
+                <p className="text-xs text-white/30 text-center italic">Mobile capture — camera overlays guide consistent photos</p>
               </div>
             </motion.div>
           </motion.div>
         </Section>
 
-
-        <Section id="comparison" dark isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "comparison"}>
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
-            <GlowBadge label="Feature Comparison" />
-            <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-6xl font-black mb-12 leading-tight">
-              The <span className="text-blue-400">Definitive</span> Comparison
-            </motion.h2>
-            <motion.div variants={fadeUp} custom={1} className="bg-white/5 border border-white/10 rounded-3xl p-8 md:p-10 backdrop-blur-sm">
-              <div className="grid grid-cols-3 gap-4 pb-4 border-b-2 border-white/10 mb-4">
-                <span className="text-xs font-bold text-white/40 uppercase tracking-wider">Capability</span>
-                <span className="text-xs font-bold text-blue-400 text-center uppercase tracking-wider">Our Platform</span>
-                <span className="text-xs font-bold text-white/40 text-center uppercase tracking-wider">Vendor Widgets</span>
-              </div>
-              {[
-                ["100% dealer-branded experience", true, false],
-                ["10-stage managed deal pipeline", true, false],
-                ["Role-based staff permissions (4-tier)", true, false],
-                ["Dual inspection modes (Standard + Full)", true, false],
-                ["Print-ready inspection forms with logo", true, false],
-                ["Mobile ↔ desktop inspection sync", true, false],
-                ["Inspection-to-appraisal data pipeline", true, false],
-                ["In-house appraisal tracking & attribution", true, false],
-                ["Check request document generation", true, false],
-                ["Guided camera overlays for photo capture", true, false],
-                ["AI-powered photo damage detection", true, false],
-                ["Interactive offer builder with profit gauge", true, false],
-                ["Slide-to-accept offer commitment", true, false],
-                ["Driver's license OCR auto-fill", true, false],
-                ["Executive KPI analytics dashboard", true, false],
-                ["Automated multi-touch follow-up engine", true, false],
-                ["Smart store assignment by ZIP/brand", true, false],
-                ["Customer-facing status portal", true, false],
-                ["Integrated appointment scheduling", true, false],
-                ["SMS & email automated notifications", true, false],
-                ["Per-trigger notification routing", true, false],
-                ["Full activity audit trail", true, false],
-                ["Service drive seed-planting SMS", true, false],
-                ["In-store trade link generation", true, false],
-                ["Basic lead capture form", true, true],
-              ].map(([feature, us, them], i) => (
-                <CompRow key={i} feature={feature as string} us={us as boolean} them={them as boolean} />
-              ))}
-            </motion.div>
-          </motion.div>
-        </Section>
-
-        {/* ═══ 17 — ROI ═══ */}
-        <Section id="roi" isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "roi"}>
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
-            <LightBadge label="Return on Investment" />
+        {/* ═══ 7 — SCALE ═══ */}
+        <Section id="scale" isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "scale"}>
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center">
+            <LightBadge label="Built to Scale" />
             <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-6xl font-black mb-6 leading-tight">
-              What If 20% of Your Inventory<br /><span className="text-primary">Came Direct?</span>
+              One Rooftop or Twenty.<br /><span className="text-primary">Same Platform.</span>
             </motion.h2>
-            <motion.p variants={fadeUp} custom={1} className="text-lg text-muted-foreground max-w-3xl mb-6 leading-relaxed">
-              CarMax and Carvana retail under 3% of used cars — but they acquire <strong>13% of all consumer-to-dealer acquisitions</strong>. They proved the model works. Your platform lets <em>you</em> do the same thing — locally, with your brand, at a fraction of the cost.
-            </motion.p>
-            <motion.p variants={fadeUp} custom={1.5} className="text-lg text-muted-foreground max-w-3xl mb-14 leading-relaxed">
-              Every vehicle you acquire direct from a consumer instead of an auction saves you an average of <strong className="text-foreground">$2,000 per unit</strong> in eliminated fees, transport, and lower recon — and that goes straight to your bottom line.
+            <motion.p variants={fadeUp} custom={1} className="text-lg text-muted-foreground max-w-3xl mx-auto mb-14">
+              Whether you're a single-point dealer doing 50 units a month or a multi-rooftop group doing 400 — this platform grows with you. Add locations, add staff, add channels. The system handles the complexity.
             </motion.p>
 
-            {/* Savings breakdown */}
-            <motion.div variants={fadeUp} custom={2} className="grid md:grid-cols-3 gap-6 mb-14">
+            <motion.div variants={fadeUp} custom={2} className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-14">
               {[
-                { amount: "$500–1,500", label: "Auction Fee Eliminated", desc: "Buyer fees, gate fees, listing fees" },
-                { amount: "$300–800", label: "Transport Eliminated", desc: "No cross-country shipping needed" },
-                { amount: "$200–500", label: "Lower Recon Costs", desc: "Consumer-maintained vs. auction-worn" },
+                { icon: MapPin, title: "Multi-Location", desc: "Smart lead routing by ZIP, brand, or buying center. Each location sees their leads — GMs see everything." },
+                { icon: Users, title: "Unlimited Staff", desc: "Add team members with role-based permissions. BDC, Sales, Managers, Admin — each tier sees what they need." },
+                { icon: Layers, title: "3 Acquisition Channels", desc: "Off-street, service drive, and in-store trade — all feeding the same pipeline. One dashboard to manage it all." },
+                { icon: Database, title: "Enterprise Infrastructure", desc: "Encrypted storage, server-side RBAC, audit trails, rate limiting. Built for real dealership volume." },
               ].map((item, i) => (
-                <motion.div key={i} variants={scaleIn} custom={i + 3} className="bg-card border border-border rounded-2xl p-6 text-center">
-                  <span className="text-3xl font-black text-primary block mb-2">{item.amount}</span>
-                  <h4 className="font-bold text-foreground text-sm mb-1">{item.label}</h4>
-                  <p className="text-xs text-muted-foreground">{item.desc}</p>
+                <motion.div key={i} variants={scaleIn} custom={i + 3}>
+                  <FeaturePill icon={item.icon} title={item.title} desc={item.desc} />
                 </motion.div>
               ))}
             </motion.div>
 
-            {/* Auction vs Direct comparison */}
-            <motion.div variants={fadeUp} custom={4} className="grid md:grid-cols-2 gap-8">
-              <div className="bg-destructive/5 border border-destructive/20 rounded-2xl p-8">
-                <h3 className="text-xl font-black text-destructive mb-6">Auction Buy</h3>
-                <div className="space-y-4">
-                  {[
-                    { label: "Auction Fee", sub: "(avg buy fee)", value: "–$1,000" },
-                    { label: "Transport", sub: "(avg shipping)", value: "–$550" },
-                    { label: "Extra Recon", sub: "(auction-sourced avg)", value: "–$450" },
-                  ].map((row, i) => (
-                    <div key={i} className="flex items-center justify-between text-sm">
-                      <div>
-                        <span className="text-foreground font-medium">{row.label}</span>
-                        <span className="text-muted-foreground text-xs ml-1">{row.sub}</span>
-                      </div>
-                      <span className="font-bold text-destructive">{row.value}</span>
-                    </div>
-                  ))}
-                  <div className="border-t border-destructive/20 pt-4 flex justify-between items-center">
-                    <span className="font-bold text-foreground">Total Hidden Costs</span>
-                    <span className="text-2xl font-black text-destructive">–$2,000</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground italic">Eating into your PVR every unit</p>
-                  <div className="bg-destructive/10 rounded-lg p-3 text-center mt-2">
-                    <span className="text-xs text-muted-foreground block">Effective PVR</span>
-                    <span className="text-xl font-black text-destructive">$1,528</span>
-                    <span className="text-xs text-muted-foreground block">Before you even sell it</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-emerald-500/5 border border-emerald-400/20 rounded-2xl p-8">
-                <h3 className="text-xl font-black text-emerald-600 mb-6">Direct Acquire</h3>
-                <div className="space-y-4">
-                  {[
-                    { label: "Auction Fee", sub: "(no auction needed)", value: "$0" },
-                    { label: "Transport", sub: "(local consumer)", value: "$0" },
-                    { label: "Extra Recon", sub: "(consumer-maintained)", value: "$0" },
-                  ].map((row, i) => (
-                    <div key={i} className="flex items-center justify-between text-sm">
-                      <div>
-                        <span className="text-foreground font-medium">{row.label}</span>
-                        <span className="text-muted-foreground text-xs ml-1">{row.sub}</span>
-                      </div>
-                      <span className="font-bold text-emerald-600">{row.value}</span>
-                    </div>
-                  ))}
-                  <div className="border-t border-emerald-400/20 pt-4 flex justify-between items-center">
-                    <span className="font-bold text-foreground">Total Saved</span>
-                    <span className="text-2xl font-black text-emerald-600">+$2,000</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground italic">Added straight to your PVR</p>
-                  <div className="bg-emerald-500/10 rounded-lg p-3 text-center mt-2">
-                    <span className="text-xs text-muted-foreground block">Effective PVR</span>
-                    <span className="text-xl font-black text-emerald-600">$3,528</span>
-                    <span className="text-xs text-muted-foreground block">$1,528 + $2,000 advantage</span>
-                  </div>
-                </div>
-              </div>
+            <motion.div variants={fadeUp} custom={5} className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+              <MetricCard value={3} label="Acquisition channels" />
+              <MetricCard value={10} suffix="+" label="Pipeline stages" />
+              <MetricCard value={100} suffix="%" label="Dealer-branded" />
+              <MetricCard value={0} label="Manual steps to capture a lead" />
             </motion.div>
           </motion.div>
         </Section>
 
-        {/* ═══ 18 — ROI BY DEALER SIZE ═══ */}
-        <Section id="roi-dealer" dark isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "roi-dealer"}>
+        {/* ═══ 8 — ROI ═══ */}
+        <Section id="roi" dark isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "roi"}>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
-            <GlowBadge label="ROI by Dealer Size" />
+            <GlowBadge label="The Math" />
             <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-6xl font-black mb-6 leading-tight">
-              Shift 31% of Inventory to Direct —<br /><span className="text-blue-400">Here's Your Upside</span>
+              Shift 31% to Direct —<br /><span className="text-blue-400">Here's Your Upside</span>
             </motion.h2>
             <motion.p variants={fadeUp} custom={1} className="text-lg text-white/50 max-w-3xl mb-16 leading-relaxed">
-              Carvana proved that <strong className="text-white/80">31% of retail inventory</strong> can be sourced directly from consumers (Q3 2019). CarMax acquires <strong className="text-white/80">87%</strong> from consumers. A dealership advertising locally can match Carvana's 31% direct-from-consumer ratio — here's what that means for your bottom line.
+              Carvana sources 31% of inventory directly from consumers. CarMax sources 87%. Every unit you acquire direct saves ~$2,000 in auction fees, transport, and recon.
             </motion.p>
 
-            <motion.div variants={fadeUp} custom={2} className="grid md:grid-cols-3 gap-8">
+            {/* Savings per unit */}
+            <motion.div variants={fadeUp} custom={2} className="grid md:grid-cols-3 gap-6 mb-14">
               {[
-                { size: "Small Dealer", units: "~50 used units/mo", direct: "~16 units", monthly: "$32K/mo", annual: "$384K", highlight: false },
-                { size: "Mid-Size Dealer", units: "~150 used units/mo", direct: "~47 units", monthly: "$94K/mo", annual: "$1.13M", highlight: true },
-                { size: "High-Volume Dealer", units: "~400 used units/mo", direct: "~124 units", monthly: "$248K/mo", annual: "$2.98M", highlight: false },
+                { amount: "$500–1,500", label: "Auction Fee Eliminated" },
+                { amount: "$300–800", label: "Transport Eliminated" },
+                { amount: "$200–500", label: "Lower Recon Costs" },
+              ].map((item, i) => (
+                <div key={i} className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center">
+                  <span className="text-2xl font-black text-blue-400 block mb-2">{item.amount}</span>
+                  <span className="text-sm text-white/50">{item.label}</span>
+                </div>
+              ))}
+            </motion.div>
+
+            {/* ROI by dealer size */}
+            <motion.div variants={fadeUp} custom={3} className="grid md:grid-cols-3 gap-8">
+              {[
+                { size: "Small Dealer", units: "~50 used/mo", direct: "~16 direct", monthly: "$32K/mo", annual: "$384K", highlight: false },
+                { size: "Mid-Size Dealer", units: "~150 used/mo", direct: "~47 direct", monthly: "$94K/mo", annual: "$1.13M", highlight: true },
+                { size: "High-Volume Group", units: "~400 used/mo", direct: "~124 direct", monthly: "$248K/mo", annual: "$2.98M", highlight: false },
               ].map((tier, i) => (
-                <motion.div key={i} variants={scaleIn} custom={i + 3} className={`rounded-2xl p-8 ${tier.highlight ? "bg-blue-500/10 border-2 border-blue-500/30 relative" : "bg-white/5 border border-white/10"}`}>
+                <motion.div key={i} variants={scaleIn} custom={i + 4} className={`rounded-2xl p-8 text-center ${tier.highlight ? "bg-blue-500/10 border-2 border-blue-500/30 relative" : "bg-white/5 border border-white/10"}`}>
                   {tier.highlight && <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-blue-500 text-white text-[10px] font-bold rounded-full tracking-wider uppercase">Most Common</span>}
                   <h3 className="text-xl font-black text-white mb-1">{tier.size}</h3>
-                  <p className="text-sm text-white/40 mb-6">{tier.units}</p>
-                  <div className="space-y-2 text-sm text-white/60 mb-6">
-                    <p>31% = <strong className="text-white/80">{tier.direct}</strong>/mo direct</p>
-                    <p>× $2,000 saved per unit</p>
-                  </div>
+                  <p className="text-sm text-white/40 mb-4">{tier.units}</p>
+                  <p className="text-sm text-white/50 mb-6">31% = <strong className="text-white/80">{tier.direct}</strong>/mo × $2K saved</p>
                   <div className="border-t border-white/10 pt-4">
                     <span className="text-xs text-white/40 block mb-1">Monthly savings</span>
-                    <span className="text-2xl font-black text-blue-400 block mb-4">{tier.monthly}</span>
-                    <div className="bg-white/5 rounded-xl p-4 text-center">
-                      <span className="text-3xl md:text-4xl font-black text-emerald-400 block">{tier.annual}</span>
+                    <span className="text-xl font-black text-blue-400 block mb-3">{tier.monthly}</span>
+                    <div className="bg-white/5 rounded-xl p-4">
+                      <span className="text-3xl font-black text-emerald-400 block">{tier.annual}</span>
                       <span className="text-xs text-white/40">Additional annual profit</span>
                     </div>
                   </div>
@@ -1378,67 +674,47 @@ export default function PitchDeck() {
               ))}
             </motion.div>
 
-            <motion.p variants={fadeUp} custom={6} className="text-xs text-white/30 text-center mt-8 max-w-3xl mx-auto leading-relaxed">
-              Based on Carvana's proven 31% consumer-sourced ratio (Q3 2019 earnings call · CEO Ernie Garcia · Carvana 10-Q) · $2,000 avg savings per unit · CarMax acquires 87% from consumers (FY26: 208,226 of 238,161 vehicles · CarMax FY-26 Form 10-Q, Nov 2025)
+            <motion.p variants={fadeUp} custom={7} className="text-[10px] text-white/25 text-center mt-8 max-w-3xl mx-auto">
+              Based on Carvana's 31% consumer-sourced ratio (Q3 2019) · $2,000 avg savings/unit · CarMax acquires 87% from consumers (FY26 10-Q)
             </motion.p>
           </motion.div>
         </Section>
 
-        {/* ═══ 19 — TRACTION ═══ */}
-        <Section id="traction" isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "traction"}>
+        {/* ═══ 9 — WHY US ═══ */}
+        <Section id="why-us" isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "why-us"}>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center">
-            <LightBadge label="Built & Proven" />
-            <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-6xl font-black mb-6 leading-tight">
-              Not a Mockup.<br /><span className="text-primary">It's Live.</span>
-            </motion.h2>
-            <motion.p variants={fadeUp} custom={1} className="text-lg text-muted-foreground max-w-2xl mx-auto mb-16">
-              This isn't a pitch for something we're going to build. It's running in production today — processing real leads, real appraisals, and real purchases.
-            </motion.p>
-            <motion.div variants={fadeUp} custom={2} className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-              <MetricCard value={3} label="Acquisition channels (off-street, service, trade)" />
-              <MetricCard value={10} suffix="+" label="Deal pipeline stages, fully managed" />
-              <MetricCard value={100} suffix="%" label="Dealer-branded — zero third-party logos" />
-              <MetricCard value={0} label="Manual steps to capture a lead" />
-            </motion.div>
-          </motion.div>
-        </Section>
-
-        {/* ═══ 20 — WHY US ═══ */}
-        <Section id="why-us" dark isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "why-us"}>
-          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full bg-blue-600/8 blur-[140px] pointer-events-none" />
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center relative">
-            <GlowBadge label="Why Us" />
+            <LightBadge label="Why This Platform" />
             <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-6xl font-black mb-14 leading-tight">
-              The <span className="text-blue-400">Unfair Advantage</span>
+              Your <span className="text-primary">Unfair Advantage</span>
             </motion.h2>
             <motion.div variants={fadeUp} custom={1} className="grid grid-cols-2 lg:grid-cols-4 gap-6">
               {[
-                { icon: DollarSign, title: "Higher Margins", desc: "Acquire inventory at wholesale directly from consumers. Skip the auction. Skip the transportation. Keep the profit." },
-                { icon: Zap, title: "Speed to Deal", desc: "From submission to check in hand — every step optimized. Less time per deal means more deals per month." },
-                { icon: Award, title: "Your Brand", desc: "Not CarMax. Not a white-label vendor. YOUR dealership, YOUR relationship, YOUR customer experience. Full stop." },
-                { icon: TrendingUp, title: "Market Moat", desc: "Be the only dealer in your market with a professional direct-buy platform. First-mover advantage that compounds." },
+                { icon: DollarSign, title: "Higher Margins", desc: "Skip the auction. Skip the transport. Acquire at wholesale directly from consumers and keep the spread." },
+                { icon: Zap, title: "Faster Deals", desc: "Submission to check request — every step managed. Less time per deal means more deals per month." },
+                { icon: Award, title: "Your Brand", desc: "Not CarMax. Not a white-label widget. YOUR dealership, YOUR customer, YOUR relationship. Full stop." },
+                { icon: TrendingUp, title: "First-Mover Moat", desc: "Be the only dealer in your market with a professional direct-buy platform. The advantage compounds." },
               ].map((item, i) => (
-                <motion.div key={i} variants={scaleIn} custom={i + 2} className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center hover:bg-white/8 transition-colors">
-                  <div className="w-16 h-16 rounded-2xl bg-blue-500/15 flex items-center justify-center mx-auto mb-6">
-                    <item.icon className="w-8 h-8 text-blue-400" />
+                <motion.div key={i} variants={scaleIn} custom={i + 2} className="bg-card border border-border rounded-2xl p-8 text-center hover:shadow-md transition-shadow">
+                  <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-6">
+                    <item.icon className="w-8 h-8 text-primary" />
                   </div>
-                  <h3 className="font-bold text-lg text-white mb-3">{item.title}</h3>
-                  <p className="text-sm text-white/50 leading-relaxed">{item.desc}</p>
+                  <h3 className="font-bold text-lg text-foreground mb-3">{item.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
                 </motion.div>
               ))}
             </motion.div>
           </motion.div>
         </Section>
 
-        {/* ═══ 21 — CTA ═══ */}
+        {/* ═══ 10 — CTA ═══ */}
         <Section id="cta" dark isPresenting={isPresenting} currentSlide={current} key={isPresenting ? current : "cta"}>
           <div className="absolute inset-0 bg-gradient-to-b from-blue-600/5 via-transparent to-transparent pointer-events-none" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-blue-600/5 blur-[200px] pointer-events-none" />
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center relative">
             <motion.div variants={fadeUp} custom={0} className="mb-10" />
             <motion.h2 variants={fadeUp} custom={1} className="text-4xl md:text-6xl lg:text-7xl font-black mb-8 leading-tight">
-              Let's <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">Transform</span><br />
-              Your Dealership
+              Ready to <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">Own</span><br />
+              Your Acquisition?
             </motion.h2>
             <motion.p variants={fadeUp} custom={2} className="text-xl text-white/50 max-w-2xl mx-auto mb-12 leading-relaxed">
               Custom-branded. Fully configured. See it live on your brand in 48 hours. No obligation.
