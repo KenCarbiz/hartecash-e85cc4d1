@@ -198,7 +198,7 @@ const GhostCarSilhouette = ({ archetype, shotId, color, width: W, height: H }: G
     const cy = H / 2;
     const r = Math.min(W, H) * 0.38;
     return (
-      <svg width={W} height={H} className="absolute inset-0">
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="100%" className="absolute inset-0">
         <circle cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth={sw} opacity={0.5} />
         {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map(deg => {
           const rad = deg * Math.PI / 180;
