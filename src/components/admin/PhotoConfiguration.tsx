@@ -187,7 +187,7 @@ const PhotoConfiguration = () => {
                 <div key={i} className="absolute w-5 h-5" style={{
                   [r ? "right" : "left"]: 8,
                   [b ? "bottom" : "top"]: 8,
-                  borderColor: OVERLAY_COLOR,
+                  borderColor: overlayColor,
                   borderWidth: 2,
                   [r ? "borderLeft" : "borderRight"]: "none",
                   [b ? "borderTop" : "borderBottom"]: "none",
