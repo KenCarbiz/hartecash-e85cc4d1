@@ -9,7 +9,7 @@ import {
   AlertTriangle, TrendingUp, UserCheck, XCircle, Camera, FileText,
 } from "lucide-react";
 import type { Submission, DealerLocation } from "@/lib/adminConstants";
-import { ALL_STATUS_OPTIONS, getStatusLabel, isAcceptedWithAppointment, isAcceptedWithoutAppointment, isOfferPendingSubmission } from "@/lib/adminConstants";
+import { ALL_STATUS_OPTIONS, getStatusLabel, isAcceptedWithAppointment, isAcceptedWithoutAppointment, isOfferPendingSubmission, isOfferUpdatedByStaff } from "@/lib/adminConstants";
 import DashboardAnalytics from "@/components/admin/DashboardAnalytics";
 
 interface SubmissionsTableProps {
@@ -284,9 +284,12 @@ const SubmissionsTable = ({
                           const isAcceptedAppt = isAcceptedWithAppointment(sub);
                           const isAcceptedNoAppt = isAcceptedWithoutAppointment(sub);
                           const isPending = isOfferPendingSubmission(sub);
+                          const isUpdated = isOfferUpdatedByStaff(sub);
 
                           const bubbleClass = isAcceptedAppt
                             ? "bg-primary/15 text-primary border-primary/30"
+                            : isAcceptedNoAppt && isUpdated
+                            ? "bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30"
                             : isAcceptedNoAppt
                             ? "bg-success/15 text-success border-success/30"
                             : isPending

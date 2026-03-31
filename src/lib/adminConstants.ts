@@ -162,19 +162,26 @@ export type SubmissionPipelineState = Pick<Submission, "progress_status" | "appo
 export const submissionHasOffer = (sub: Pick<Submission, "offered_price" | "estimated_offer_high">) =>
   (sub.offered_price != null && sub.offered_price > 0) || (sub.estimated_offer_high != null && sub.estimated_offer_high > 0);
 
+/** Accepted + downstream status or appointment set */
 export const isAcceptedWithAppointment = (sub: SubmissionPipelineState) =>
-  (submissionHasOffer(sub) && Boolean(sub.appointment_set)) ||
+  (!!sub.offered_price && sub.offered_price > 0 && Boolean(sub.appointment_set)) ||
   ACCEPTED_WITH_APPOINTMENT_STATUSES.includes(sub.progress_status as any);
 
+/** Has offered_price (accepted) but no appointment yet */
 export const isAcceptedWithoutAppointment = (sub: SubmissionPipelineState) =>
-  submissionHasOffer(sub) &&
-  !isAcceptedWithAppointment(sub) &&
-  ACCEPTED_NO_APPOINTMENT_STATUSES.includes(sub.progress_status as any);
-
-export const isOfferPendingSubmission = (sub: SubmissionPipelineState) =>
-  submissionHasOffer(sub) &&
-  !isAcceptedWithoutAppointment(sub) &&
+  !!sub.offered_price && sub.offered_price > 0 &&
   !isAcceptedWithAppointment(sub);
+
+/** Has an estimate but customer hasn't accepted yet (no offered_price) */
+export const isOfferPendingSubmission = (sub: SubmissionPipelineState) =>
+  !sub.offered_price &&
+  sub.estimated_offer_high != null && sub.estimated_offer_high > 0;
+
+/** Staff manually adjusted the offered_price to differ from the system estimate */
+export const isOfferUpdatedByStaff = (sub: Pick<Submission, "offered_price" | "estimated_offer_high">) =>
+  !!sub.offered_price && sub.offered_price > 0 &&
+  !!sub.estimated_offer_high && sub.estimated_offer_high > 0 &&
+  sub.offered_price !== sub.estimated_offer_high;
 
 export interface DealerLocation {
   id: string;
