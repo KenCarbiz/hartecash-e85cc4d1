@@ -177,6 +177,34 @@ const PhotoConfiguration = () => {
         <Badge variant="outline">{enabledCount - requiredCount} optional</Badge>
       </div>
 
+      {/* Overlay Color Settings */}
+      <Card>
+        <CardContent className="py-4 px-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Palette className="w-4 h-4 text-primary" />
+            <span className="text-sm font-semibold text-foreground">Overlay Color</span>
+          </div>
+          <div className="flex items-center gap-6 flex-wrap">
+            <div className="flex items-center gap-3">
+              <Label className="text-sm text-muted-foreground">Default color:</Label>
+              <div className="flex gap-2">
+                {OVERLAY_COLOR_OPTIONS.map(opt => (
+                  <button key={opt.value} onClick={() => setOverlayColor(opt.value)}
+                    className={`w-7 h-7 rounded-full border-2 transition-all flex items-center justify-center ${overlayColor === opt.value ? "border-primary ring-2 ring-primary/30 scale-110" : "border-border"}`}
+                    style={{ background: opt.value }}
+                    title={opt.label}
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Label className="text-sm text-muted-foreground">Customer can change color:</Label>
+              <Switch checked={allowColorChange} onCheckedChange={setAllowColorChange} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Overlay preview */}
       {previewShot && (
         <Card className="border-primary/20">
