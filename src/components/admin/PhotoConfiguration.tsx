@@ -6,8 +6,9 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Camera, GripVertical, Loader2, Eye, EyeOff } from "lucide-react";
+import { Save, Camera, GripVertical, Loader2, Eye, EyeOff, Palette } from "lucide-react";
 import GhostCarSilhouette from "@/components/upload/GhostCarSilhouette";
 import type { VehicleArchetype } from "@/lib/vehicleArchetypes";
 
