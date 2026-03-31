@@ -11,6 +11,8 @@ interface VehicleCameraCaptureProps {
   categoryLabel: string;
   categoryDesc: string;
   vehicleArchetype?: VehicleArchetype;
+  defaultOverlayColor?: string;
+  allowColorChange?: boolean;
   onCapture: (file: File, preview: string) => void;
   onClose: () => void;
 }
@@ -20,6 +22,8 @@ const VehicleCameraCapture = ({
   categoryLabel,
   categoryDesc,
   vehicleArchetype = "sedan",
+  defaultOverlayColor = "#00FF88",
+  allowColorChange = true,
   onCapture,
   onClose,
 }: VehicleCameraCaptureProps) => {
@@ -30,7 +34,8 @@ const VehicleCameraCapture = ({
   const [error, setError] = useState("");
   const [facingMode, setFacingMode] = useState<"environment" | "user">("environment");
   const [showGuide, setShowGuide] = useState(true);
-  const [colorIdx, setColorIdx] = useState(0);
+  const defaultIdx = OVERLAY_COLORS.indexOf(defaultOverlayColor);
+  const [colorIdx, setColorIdx] = useState(defaultIdx >= 0 ? defaultIdx : 0);
   const [viewfinderSize, setViewfinderSize] = useState({ w: 480, h: 270 });
 
   const overlayColor = OVERLAY_COLORS[colorIdx];
@@ -158,7 +163,7 @@ const VehicleCameraCapture = ({
         <p className="text-white/70 text-xs flex-1">{categoryDesc}</p>
         <div className="flex items-center gap-2 ml-3">
           {/* Overlay color picker */}
-          {!captured && showGuide && (
+          {!captured && showGuide && allowColorChange && (
             <div className="flex gap-1.5">
               {OVERLAY_COLORS.map((c, i) => (
                 <button key={c} onClick={() => setColorIdx(i)}

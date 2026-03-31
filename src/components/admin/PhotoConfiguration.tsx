@@ -6,8 +6,9 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Camera, GripVertical, Loader2, Eye, EyeOff } from "lucide-react";
+import { Save, Camera, GripVertical, Loader2, Eye, EyeOff, Palette } from "lucide-react";
 import GhostCarSilhouette from "@/components/upload/GhostCarSilhouette";
 import type { VehicleArchetype } from "@/lib/vehicleArchetypes";
 
@@ -24,7 +25,11 @@ interface PhotoConfigRow {
 }
 
 const PREVIEW_ARCHETYPE: VehicleArchetype = "sedan";
-const OVERLAY_COLOR = "#00FF88";
+const OVERLAY_COLOR_OPTIONS = [
+  { value: "#00FF88", label: "Green" },
+  { value: "#FF3B3B", label: "Red" },
+  { value: "#FFFFFF", label: "White" },
+];
 
 const PhotoConfiguration = () => {
   const { tenant } = useTenant();
@@ -34,6 +39,9 @@ const PhotoConfiguration = () => {
   const [saving, setSaving] = useState(false);
   const [previewShot, setPreviewShot] = useState<string | null>(null);
   const [previewArchetype, setPreviewArchetype] = useState<VehicleArchetype>("sedan");
+  const [overlayColor, setOverlayColor] = useState("#00FF88");
+  const [allowColorChange, setAllowColorChange] = useState(true);
+  const [siteConfigId, setSiteConfigId] = useState<string | null>(null);
 
   const dealershipId = tenant.dealership_id;
 
@@ -86,6 +94,19 @@ const PhotoConfiguration = () => {
         sort_order: d.sort_order,
       })));
     }
+
+    // Fetch overlay color settings from site_config
+    const { data: siteData } = await supabase
+      .from("site_config")
+      .select("id, photo_overlay_color, photo_allow_color_change")
+      .eq("dealership_id", dealershipId)
+      .maybeSingle();
+    if (siteData) {
+      setSiteConfigId(siteData.id);
+      setOverlayColor(siteData.photo_overlay_color || "#00FF88");
+      setAllowColorChange(siteData.photo_allow_color_change ?? true);
+    }
+
     setLoading(false);
   }, [dealershipId]);
 
@@ -106,6 +127,13 @@ const PhotoConfiguration = () => {
           is_required: row.is_required,
           sort_order: row.sort_order,
         }).eq("id", row.id);
+      }
+      // Save overlay color settings to site_config
+      if (siteConfigId) {
+        await supabase.from("site_config").update({
+          photo_overlay_color: overlayColor,
+          photo_allow_color_change: allowColorChange,
+        }).eq("id", siteConfigId);
       }
       toast({ title: "Photo config saved" });
     } catch {
@@ -149,6 +177,34 @@ const PhotoConfiguration = () => {
         <Badge variant="outline">{enabledCount - requiredCount} optional</Badge>
       </div>
 
+      {/* Overlay Color Settings */}
+      <Card>
+        <CardContent className="py-4 px-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Palette className="w-4 h-4 text-primary" />
+            <span className="text-sm font-semibold text-foreground">Overlay Color</span>
+          </div>
+          <div className="flex items-center gap-6 flex-wrap">
+            <div className="flex items-center gap-3">
+              <Label className="text-sm text-muted-foreground">Default color:</Label>
+              <div className="flex gap-2">
+                {OVERLAY_COLOR_OPTIONS.map(opt => (
+                  <button key={opt.value} onClick={() => setOverlayColor(opt.value)}
+                    className={`w-7 h-7 rounded-full border-2 transition-all flex items-center justify-center ${overlayColor === opt.value ? "border-primary ring-2 ring-primary/30 scale-110" : "border-border"}`}
+                    style={{ background: opt.value }}
+                    title={opt.label}
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Label className="text-sm text-muted-foreground">Customer can change color:</Label>
+              <Switch checked={allowColorChange} onCheckedChange={setAllowColorChange} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Overlay preview */}
       {previewShot && (
         <Card className="border-primary/20">
@@ -170,7 +226,7 @@ const PhotoConfiguration = () => {
               <GhostCarSilhouette
                 archetype={previewArchetype}
                 shotId={previewShot}
-                color={OVERLAY_COLOR}
+                color={overlayColor}
                 width={480}
                 height={270}
               />
@@ -179,7 +235,7 @@ const PhotoConfiguration = () => {
                 <div key={i} className="absolute w-5 h-5" style={{
                   [r ? "right" : "left"]: 8,
                   [b ? "bottom" : "top"]: 8,
-                  borderColor: OVERLAY_COLOR,
+                  borderColor: overlayColor,
                   borderWidth: 2,
                   [r ? "borderLeft" : "borderRight"]: "none",
                   [b ? "borderTop" : "borderBottom"]: "none",

@@ -1321,6 +1321,8 @@ export type Database = {
           logo_url: string | null
           logo_white_url: string | null
           phone: string | null
+          photo_allow_color_change: boolean
+          photo_overlay_color: string
           price_guarantee_days: number
           primary_color: string
           review_request_message: string
@@ -1378,6 +1380,8 @@ export type Database = {
           logo_url?: string | null
           logo_white_url?: string | null
           phone?: string | null
+          photo_allow_color_change?: boolean
+          photo_overlay_color?: string
           price_guarantee_days?: number
           primary_color?: string
           review_request_message?: string
@@ -1435,6 +1439,8 @@ export type Database = {
           logo_url?: string | null
           logo_white_url?: string | null
           phone?: string | null
+          photo_allow_color_change?: boolean
+          photo_overlay_color?: string
           price_guarantee_days?: number
           primary_color?: string
           review_request_message?: string
