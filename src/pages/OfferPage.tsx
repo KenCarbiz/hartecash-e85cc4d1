@@ -98,6 +98,7 @@ const OfferPage = () => {
   const [calculatingDone, setCalculatingDone] = useState(false);
   const [offerSettings, setOfferSettings] = useState<OfferSettings | null>(null);
   const [offerRules, setOfferRules] = useState<OfferRule[]>([]);
+  const [stickyCompact, setStickyCompact] = useState(false);
   const [saving, setSaving] = useState(false);
   const [appointment, setAppointment] = useState<{ preferred_date: string; preferred_time: string; store_location: string | null } | null>(null);
   const [dealerLocations, setDealerLocations] = useState<{ id: string; name: string; city: string; state: string; address: string | null }[]>([]);
