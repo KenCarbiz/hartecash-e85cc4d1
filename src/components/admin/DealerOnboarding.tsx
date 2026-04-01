@@ -73,11 +73,14 @@ const DEFAULT_ACCOUNT: Omit<DealerAccount, "id"> = {
 interface DealerOnboardingProps {
   isAdmin?: boolean;
   onNavigate?: (section: string) => void;
+  targetDealershipId?: string | null;
+  onDealershipChange?: (id: string | null) => void;
 }
 
-const DealerOnboarding = ({ isAdmin = false, onNavigate }: DealerOnboardingProps) => {
+const DealerOnboarding = ({ isAdmin = false, onNavigate, targetDealershipId, onDealershipChange }: DealerOnboardingProps) => {
   const { tenant } = useTenant();
-  const dealershipId = tenant.dealership_id;
+  const [tenants, setTenants] = useState<{ dealership_id: string; display_name: string }[]>([]);
+  const dealershipId = targetDealershipId || tenant.dealership_id;
   const [account, setAccount] = useState<Omit<DealerAccount, "id">>({ ...DEFAULT_ACCOUNT, dealership_id: dealershipId });
   const [existingId, setExistingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
