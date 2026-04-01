@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Loader2, Globe, Store, Pencil, Trash2, Copy, ExternalLink } from "lucide-react";
+import { Plus, Loader2, Globe, Store, Pencil, Trash2, Copy, ExternalLink, Rocket } from "lucide-react";
 
 interface Tenant {
   id: string;
@@ -29,7 +29,11 @@ const EMPTY_TENANT: Omit<Tenant, "id" | "created_at"> = {
   is_active: true,
 };
 
-const TenantManagement = () => {
+interface TenantManagementProps {
+  onSetupDealer?: (dealershipId: string) => void;
+}
+
+const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -235,6 +239,11 @@ const TenantManagement = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
+                      {onSetupDealer && (
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => onSetupDealer(t.dealership_id)} title="Setup">
+                          <Rocket className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(t)}>
                         <Pencil className="w-3.5 h-3.5" />
                       </Button>

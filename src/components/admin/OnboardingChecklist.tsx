@@ -19,11 +19,12 @@ interface CheckItem {
 
 interface OnboardingChecklistProps {
   onNavigate?: (section: string) => void;
+  dealershipId?: string;
 }
 
-const OnboardingChecklist = ({ onNavigate }: OnboardingChecklistProps) => {
+const OnboardingChecklist = ({ onNavigate, dealershipId: propDealershipId }: OnboardingChecklistProps) => {
   const { tenant } = useTenant();
-  const dealershipId = tenant.dealership_id;
+  const dealershipId = propDealershipId || tenant.dealership_id;
   const [items, setItems] = useState<CheckItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [sigDealer, setSigDealer] = useState<string | null>(null);
@@ -32,7 +33,7 @@ const OnboardingChecklist = ({ onNavigate }: OnboardingChecklistProps) => {
 
   useEffect(() => {
     checkAll();
-  }, []);
+  }, [dealershipId]);
 
   const checkAll = async () => {
     // Fetch all data in parallel

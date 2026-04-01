@@ -217,7 +217,11 @@ const SECTIONS: Section[] = [
 
 type Answers = Record<string, string>;
 
-export default function OnboardingScript() {
+interface OnboardingScriptProps {
+  targetDealershipId?: string | null;
+}
+
+export default function OnboardingScript({ targetDealershipId }: OnboardingScriptProps) {
   const printRef = useRef<HTMLDivElement>(null);
   const { config } = useSiteConfig();
   const [answers, setAnswers] = useState<Answers>({});
@@ -236,10 +240,11 @@ export default function OnboardingScript() {
   // Load existing data
   useEffect(() => {
     const load = async () => {
+      const activeDealershipId = targetDealershipId || "default";
       const { data } = await supabase
         .from("dealer_accounts")
         .select("onboarding_answers, onboarding_signature_dealer, onboarding_signature_staff, onboarding_signed_at")
-        .eq("dealership_id", "default")
+        .eq("dealership_id", activeDealershipId)
         .maybeSingle();
       if (data) {
         if (data.onboarding_answers && typeof data.onboarding_answers === "object") {
@@ -254,7 +259,7 @@ export default function OnboardingScript() {
       setLoading(false);
     };
     load();
-  }, []);
+  }, [targetDealershipId]);
 
   const updateAnswer = useCallback((id: string, value: string) => {
     setAnswers((prev) => ({ ...prev, [id]: value }));
@@ -271,6 +276,7 @@ export default function OnboardingScript() {
 
   const handleSave = async () => {
     setSaving(true);
+    const activeDealershipId = targetDealershipId || "default";
     const { error } = await supabase
       .from("dealer_accounts")
       .update({
@@ -279,7 +285,7 @@ export default function OnboardingScript() {
         onboarding_signature_staff: staffSig,
         onboarding_signed_at: dealerSig || staffSig ? new Date().toISOString() : null,
       } as any)
-      .eq("dealership_id", "default");
+      .eq("dealership_id", activeDealershipId);
 
     if (error) {
       toast.error("Failed to save — " + error.message);
@@ -294,7 +300,7 @@ export default function OnboardingScript() {
   const handlePrint = () => window.print();
 
   const [showQR, setShowQR] = useState(false);
-  const mobileUrl = `${window.location.origin}/onboard/default`;
+  const mobileUrl = `${window.location.origin}/onboard/${targetDealershipId || "default"}`;
 
   const copyLink = () => {
     navigator.clipboard.writeText(mobileUrl);

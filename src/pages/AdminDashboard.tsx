@@ -75,6 +75,7 @@ const AdminDashboard = () => {
   const [selectedApptLocation, setSelectedApptLocation] = useState<string | null>(null);
   const [optOutStatus, setOptOutStatus] = useState<{ email: boolean; sms: boolean }>({ email: false, sms: false });
   const [activeSection, setActiveSection] = useState("submissions");
+  const [onboardingDealershipId, setOnboardingDealershipId] = useState<string | null>(null);
   const [dealerLocations, setDealerLocations] = useState<DealerLocation[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [permissionRequestCount, setPermissionRequestCount] = useState(0);
@@ -432,10 +433,10 @@ const AdminDashboard = () => {
               </div>
             )}
 
-            {activeSection === "tenants" && canManageAccess && <TenantManagement />}
+            {activeSection === "tenants" && canManageAccess && <TenantManagement onSetupDealer={(dealerId) => { setOnboardingDealershipId(dealerId); setActiveSection("onboarding"); }} />}
 
-            {activeSection === "onboarding" && <DealerOnboarding isAdmin={canManageAccess} onNavigate={setActiveSection} />}
-            {activeSection === "onboarding-script" && <OnboardingScript />}
+            {activeSection === "onboarding" && <DealerOnboarding isAdmin={canManageAccess} onNavigate={setActiveSection} targetDealershipId={onboardingDealershipId} onDealershipChange={setOnboardingDealershipId} />}
+            {activeSection === "onboarding-script" && <OnboardingScript targetDealershipId={onboardingDealershipId} />}
             {activeSection === "reports" && <ReportsExport />}
           </div>
         </div>
