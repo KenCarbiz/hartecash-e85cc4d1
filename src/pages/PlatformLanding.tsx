@@ -103,7 +103,7 @@ export default function PlatformLanding() {
   }, []);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[hsl(220,25%,6%)]">
 
       {/* ── Sticky Nav ── */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[hsl(220,25%,6%)]/80 backdrop-blur-xl border-b border-white/5">
