@@ -12,6 +12,7 @@ interface Props {
   compact?: boolean;
   uvc?: string;
   hideColorLabel?: boolean;
+  imageAngle?: string;
 }
 
 // Preload an image and resolve when ready
