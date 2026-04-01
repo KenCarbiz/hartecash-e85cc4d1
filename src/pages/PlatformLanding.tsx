@@ -125,7 +125,7 @@ export default function PlatformLanding() {
       <Section dark>
         <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full bg-blue-600/10 blur-[150px] pointer-events-none" />
         <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-indigo-600/10 blur-[120px] pointer-events-none" />
-        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center relative pt-16">
+        <motion.div initial="hidden" animate="visible" className="text-center relative pt-16">
           <motion.div variants={fadeUp} custom={0.5}>
             <GlowBadge label="Dealer Inventory Acquisition Platform" />
           </motion.div>
