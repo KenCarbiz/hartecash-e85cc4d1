@@ -118,7 +118,7 @@ const AdminLogin = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="bg-card rounded-2xl shadow-xl p-8 w-full max-w-sm">
         <div className="flex justify-center mb-6">
-          <img src={harteLogo} alt="Harte Auto Group" className="h-20 w-auto" />
+          <h2 className="text-2xl font-black tracking-tight text-primary font-display">AutoCurb<span className="text-accent">.io</span></h2>
         </div>
 
         <div className="flex items-center justify-center gap-2 mb-6">
