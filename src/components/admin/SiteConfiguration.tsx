@@ -50,6 +50,7 @@ interface SiteConfig {
   assign_oem_brand_match: boolean;
   assign_buying_center: boolean;
   buying_center_location_id: string | null;
+  vehicle_image_angle: string;
 }
 
 const DEFAULT_CONFIG: SiteConfig = {
