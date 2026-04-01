@@ -694,16 +694,8 @@ const OfferPage = () => {
   );
 
 
-  // Print layout values
-  const isLeaseBuyout = s.loan_status === "Lease Buyout";
-  const printIsTrade = activeTab === "trade";
-  const printDisplayValue = printIsTrade ? tradeInValue : cashOffer;
-  const printDisplayValueLow = printIsTrade ? tradeInValueLow : estimateLow;
-  const printDisplayLabel = printIsTrade
-    ? "Trade-In Total Value"
-    : isLeaseBuyout
-    ? "Lease Buyout Cash Offer"
-    : "Cash Offer";
+
+
 
   const portalUrl = `${window.location.origin}/my-submission/${token}`;
 
