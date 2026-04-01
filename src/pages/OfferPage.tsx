@@ -1389,14 +1389,6 @@ const OfferPage = () => {
                     Print Offer
                   </Button>
                 </div>
-                <div className="print:hidden">
-                  <Link to={`/my-submission/${token}`}>
-                    <Button variant="default" className="w-full gap-2">
-                      <ArrowLeft className="w-4 h-4" />
-                      Back to Portal
-                    </Button>
-                  </Link>
-                </div>
               </div>
             </div>
 
