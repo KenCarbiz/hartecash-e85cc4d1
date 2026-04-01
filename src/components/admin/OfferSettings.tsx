@@ -122,6 +122,7 @@ interface ConditionEquipmentMap {
   fair: boolean;
 }
 
+interface OfferSettingsRow {
   id: string;
   dealership_id: string;
   bb_value_basis: string;
