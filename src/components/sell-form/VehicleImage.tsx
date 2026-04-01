@@ -34,8 +34,9 @@ const VehicleImage = ({ year, make, model, style, selectedColor, compact = false
 
   const buildCacheKey = useCallback((color: string) => {
     const colorKey = (color || "white").toLowerCase().replace(/\s+/g, "_");
-    return `vehicle-img-${year}-${make}-${model}-${colorKey}`.toLowerCase().replace(/\s+/g, "_");
-  }, [year, make, model]);
+    const angleKey = imageAngle === "side" ? "side" : "3q";
+    return `vehicle-img-${year}-${make}-${model}-${colorKey}-${angleKey}`.toLowerCase().replace(/\s+/g, "_");
+  }, [year, make, model, imageAngle]);
 
   const fetchImage = useCallback(async (color: string, isPrefetch = false) => {
     if (!year || !make || !model) return;
