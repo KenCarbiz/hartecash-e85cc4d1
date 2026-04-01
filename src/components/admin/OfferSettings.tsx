@@ -204,7 +204,7 @@ const DEFAULT_DEDUCTION_AMOUNTS: DeductionAmounts = {
 };
 
 const DEFAULT_CONDITION_MULTIPLIERS: ConditionMultipliers = {
-  excellent: 1.05, good: 1.0, fair: 0.90, rough: 0.78,
+  excellent: 1.0, very_good: 1.0, good: 1.0, fair: 1.0,
 };
 
 const emptyRule: Omit<OfferRule, "id" | "dealership_id"> = {
