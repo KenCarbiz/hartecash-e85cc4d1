@@ -351,7 +351,7 @@ export default function OnboardingScript() {
           </p>
 
           {savedAt && (
-            <div className="flex items-center gap-2 text-xs text-emerald-600 mb-4 print:hidden">
+            <div className="flex items-center gap-2 text-xs text-success mb-4 print:hidden">
               <CheckCircle2 className="w-4 h-4" />
               Last signed: {savedAt}
             </div>
