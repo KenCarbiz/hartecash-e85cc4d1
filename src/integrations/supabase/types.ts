@@ -263,6 +263,7 @@ export type Database = {
           dealership_id: string
           id: string
           onboarded_by: string | null
+          onboarding_answers: Json | null
           onboarding_signature_dealer: string | null
           onboarding_signature_staff: string | null
           onboarding_signed_at: string | null
@@ -281,6 +282,7 @@ export type Database = {
           dealership_id?: string
           id?: string
           onboarded_by?: string | null
+          onboarding_answers?: Json | null
           onboarding_signature_dealer?: string | null
           onboarding_signature_staff?: string | null
           onboarding_signed_at?: string | null
@@ -299,6 +301,7 @@ export type Database = {
           dealership_id?: string
           id?: string
           onboarded_by?: string | null
+          onboarding_answers?: Json | null
           onboarding_signature_dealer?: string | null
           onboarding_signature_staff?: string | null
           onboarding_signed_at?: string | null
