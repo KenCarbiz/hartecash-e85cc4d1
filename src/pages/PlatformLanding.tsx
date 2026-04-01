@@ -493,11 +493,9 @@ export default function PlatformLanding() {
               </BrowserFrame>
               <p className="text-xs text-white/30 text-center italic">Real-time status, offer details, next steps</p>
             </div>
-            <div>
-              <BrowserFrame label="Mobile Photo Upload">
-                <img src={screenshotUploadMobile} alt="Mobile upload" className="w-full" loading="lazy" />
-              </BrowserFrame>
-              <p className="text-xs text-white/30 text-center italic">Camera overlays guide consistent photos</p>
+            <div className="flex flex-col items-center">
+              <img src={screenshotUploadMobile} alt="Mobile upload" className="w-full max-w-[280px] drop-shadow-2xl" loading="lazy" />
+              <p className="text-xs text-white/30 text-center italic mt-3">Camera overlays guide consistent photos</p>
             </div>
           </motion.div>
         </motion.div>
