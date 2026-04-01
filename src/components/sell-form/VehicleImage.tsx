@@ -25,7 +25,9 @@ const preloadImage = (url: string): Promise<string> =>
     img.src = url;
   });
 
-const VehicleImage = ({ year, make, model, style, selectedColor, compact = false, uvc, hideColorLabel = false, imageAngle = "three_quarter" }: Props) => {
+const VehicleImage = ({ year, make, model, style, selectedColor, compact = false, uvc, hideColorLabel = false, imageAngle: imageAngleProp }: Props) => {
+  const { config } = useSiteConfig();
+  const imageAngle = imageAngleProp || config.vehicle_image_angle || "three_quarter";
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
