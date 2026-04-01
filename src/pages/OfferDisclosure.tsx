@@ -146,7 +146,7 @@ const sections: Section[] = [
     title: "How We Determine Your Vehicle's Value",
     render: () => (
       <>
-        <p>HarteCash determines your vehicle's value exclusively through our <strong>proprietary valuation methodology</strong> — an independent system developed and maintained by Harte Auto Group. Our valuations are not derived from, affiliated with, or endorsed by any third-party pricing service including Kelley Blue Book, Edmunds, Black Book, NADA Guides, or any other external platform.</p>
+        <p>We determine your vehicle's value exclusively through our <strong>proprietary valuation methodology</strong>. Our valuations are not derived from, affiliated with, or endorsed by any third-party pricing service including Kelley Blue Book, Edmunds, Black Book, NADA Guides, or any other external platform.</p>
         <p>Our system analyzes thousands of data points from wholesale market transactions, regional and national retail sales, current inventory demand, internal acquisition data, and continuously evolving market conditions — all interpreted through our own proprietary pricing intelligence.</p>
         <p className="mb-4">
           The factors below are assessed at in-person inspection and may result in an upward or downward adjustment to your Final Offer.{" "}
