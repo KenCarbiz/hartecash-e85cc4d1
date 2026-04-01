@@ -312,9 +312,9 @@ const OfferDisclosure = () => {
       <div className="bg-gradient-to-br from-[hsl(210,100%,15%)] via-primary to-[hsl(220,80%,18%)] text-primary-foreground px-6 py-16 md:py-20 text-center relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_-10%,rgba(220,40,40,0.18)_0%,transparent_65%)] pointer-events-none" />
         <div className="relative z-10 max-w-2xl mx-auto">
-          <p className="text-[11px] font-semibold tracking-[0.14em] uppercase text-primary-foreground/45 mb-3">HarteCash.com &nbsp;·&nbsp; Official Program Disclosure</p>
+          <p className="text-[11px] font-semibold tracking-[0.14em] uppercase text-primary-foreground/45 mb-3">{name} &nbsp;·&nbsp; Official Program Disclosure</p>
           <h1 className="text-3xl md:text-5xl font-extrabold mb-4 leading-tight tracking-tight">Vehicle Purchase &amp;<br />Trade-In Offer Disclosure</h1>
-          <p className="text-[15px] text-primary-foreground/60 max-w-lg mx-auto mb-8 leading-relaxed">Everything you need to know about how your HarteCash Offer is calculated, what conditions apply, and how your offer can increase when your vehicle exceeds expectations.</p>
+          <p className="text-[15px] text-primary-foreground/60 max-w-lg mx-auto mb-8 leading-relaxed">Everything you need to know about how your offer is calculated, what conditions apply, and how your offer can increase when your vehicle exceeds expectations.</p>
           <div className="flex justify-center items-center gap-3 flex-wrap">
             <div className="inline-flex items-center gap-2 bg-success/15 border border-success/40 rounded-full px-5 py-2.5 text-[13px] font-medium text-success">
               <span className="w-2 h-2 rounded-full bg-success inline-block shadow-[0_0_0_3px_rgba(16,183,127,0.28)]" />
