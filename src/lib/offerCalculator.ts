@@ -44,9 +44,16 @@ export interface DeductionAmounts {
 
 export interface ConditionMultipliers {
   excellent: number;
+  very_good: number;
   good: number;
   fair: number;
-  rough: number;
+}
+
+export interface ConditionBasisMap {
+  excellent: string;
+  very_good: string;
+  good: string;
+  fair: string;
 }
 
 export interface AgeTier {
@@ -67,6 +74,7 @@ export interface OfferSettings {
   deductions_config: DeductionsConfig;
   deduction_amounts: DeductionAmounts;
   condition_multipliers: ConditionMultipliers;
+  condition_basis_map: ConditionBasisMap;
   recon_cost: number;
   offer_floor: number;
   offer_ceiling: number | null;
