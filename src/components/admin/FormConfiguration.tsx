@@ -14,6 +14,7 @@ interface FormConfigData {
   dealership_id: string;
   step_vehicle_build: boolean;
   step_condition_history: boolean;
+  offer_before_details: boolean;
   q_overall_condition: boolean;
   q_exterior_damage: boolean;
   q_windshield_damage: boolean;
@@ -38,6 +39,7 @@ const DEFAULTS: FormConfigData = {
   dealership_id: "default",
   step_vehicle_build: true,
   step_condition_history: true,
+  offer_before_details: false,
   q_overall_condition: true,
   q_exterior_damage: true,
   q_windshield_damage: true,
@@ -255,12 +257,35 @@ export default function FormConfiguration() {
             </Badge>
           </div>
 
+          {/* Offer-First Toggle */}
+          <div className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-accent/10 border border-accent/30">
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={config.offer_before_details}
+                onCheckedChange={v => set("offer_before_details", v)}
+              />
+              <div>
+                <p className="text-sm font-medium">Offer-First Flow</p>
+                <p className="text-xs text-muted-foreground">
+                  {config.offer_before_details
+                    ? "Customer sees their offer BEFORE providing contact info (like CarMax/Peddle)"
+                    : "Customer provides contact info first, then sees offer (traditional flow)"}
+                </p>
+              </div>
+            </div>
+            <Badge variant={config.offer_before_details ? "default" : "secondary"} className="text-xs">
+              {config.offer_before_details ? "Offer First" : "Details First"}
+            </Badge>
+          </div>
+
           <div className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-muted/20">
             <div className="flex items-center gap-3">
               <Lock className="w-4 h-4 text-muted-foreground" />
               <div>
-                <p className="text-sm font-medium">Step 4 — Your Details</p>
-                <p className="text-xs text-muted-foreground">Name, phone, email, ZIP — always required</p>
+                <p className="text-sm font-medium">{config.offer_before_details ? "Step 4 — Get Your Offer" : "Step 4 — Your Details"}</p>
+                <p className="text-xs text-muted-foreground">
+                  {config.offer_before_details ? "Offer shown instantly — no contact needed yet" : "Name, phone, email, ZIP — always required"}
+                </p>
               </div>
             </div>
             <Badge variant="outline" className="text-xs">Required</Badge>
@@ -270,8 +295,10 @@ export default function FormConfiguration() {
             <div className="flex items-center gap-3">
               <Lock className="w-4 h-4 text-muted-foreground" />
               <div>
-                <p className="text-sm font-medium">Step 5 — Get Your Offer</p>
-                <p className="text-xs text-muted-foreground">Review and submit — always required</p>
+                <p className="text-sm font-medium">{config.offer_before_details ? "Step 5 — Save Your Offer" : "Step 5 — Get Your Offer"}</p>
+                <p className="text-xs text-muted-foreground">
+                  {config.offer_before_details ? "Contact info collected to save & send the offer" : "Review and submit — always required"}
+                </p>
               </div>
             </div>
             <Badge variant="outline" className="text-xs">Required</Badge>
