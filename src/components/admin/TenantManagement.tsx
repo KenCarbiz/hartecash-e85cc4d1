@@ -29,7 +29,11 @@ const EMPTY_TENANT: Omit<Tenant, "id" | "created_at"> = {
   is_active: true,
 };
 
-const TenantManagement = () => {
+interface TenantManagementProps {
+  onSetupDealer?: (dealershipId: string) => void;
+}
+
+const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
