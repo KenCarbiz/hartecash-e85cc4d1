@@ -300,7 +300,7 @@ export default function OnboardingScript({ targetDealershipId }: OnboardingScrip
   const handlePrint = () => window.print();
 
   const [showQR, setShowQR] = useState(false);
-  const mobileUrl = `${window.location.origin}/onboard/default`;
+  const mobileUrl = `${window.location.origin}/onboard/${targetDealershipId || "default"}`;
 
   const copyLink = () => {
     navigator.clipboard.writeText(mobileUrl);
