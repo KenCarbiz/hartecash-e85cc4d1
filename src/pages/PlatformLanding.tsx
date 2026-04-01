@@ -62,7 +62,7 @@ function LightBadge({ label }: { label: string }) {
   );
 }
 
-function Section({ dark, children, className = "" }: { dark?: boolean; children: React.ReactNode; className?: string }) {
+function Section({ dark, children, className = "", id }: { dark?: boolean; children: React.ReactNode; className?: string; id?: string }) {
   const bg = dark ? "bg-[hsl(220,25%,6%)] text-white" : "bg-white text-gray-900";
   return (
     <section className={`min-h-screen flex items-center justify-center ${bg} ${className} relative overflow-hidden`}>
