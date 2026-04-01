@@ -114,6 +114,7 @@ const AdminSidebar = ({
     ...(canManageAccess ? [{ key: "image-inventory", label: "Vehicle Images", icon: Car }] : []),
     ...(canManageAccess ? [{ key: "system-settings", label: "System Settings", icon: Wrench }] : []),
     { key: "onboarding", label: "Dealer Setup Guide", icon: Rocket },
+    { key: "onboarding-script", label: "Onboarding Script", icon: ScrollText },
   ].filter((item) => isAllowed(item.key));
 
   // Collect locked sections for "Request Access" display
