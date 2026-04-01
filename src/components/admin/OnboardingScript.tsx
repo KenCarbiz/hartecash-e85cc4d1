@@ -1,12 +1,15 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Printer, Save, CheckCircle2, Square } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Printer, Save, CheckCircle2, Loader2 } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import SignaturePad from "./SignaturePad";
 
 interface QuestionItem {
+  id: string; // unique key for saving
   label: string;
   type: "text" | "check" | "choice" | "multiline";
   choices?: string[];
@@ -24,262 +27,320 @@ const SECTIONS: Section[] = [
     title: "1. Dealership Identity",
     icon: "🏢",
     questions: [
-      { label: "Dealership Name", type: "text" },
-      { label: "Tagline / Slogan", type: "text" },
-      { label: "Main Phone Number", type: "text" },
-      { label: "Main Email Address", type: "text" },
-      { label: "Physical Address", type: "text" },
-      { label: "Website URL", type: "text" },
-      { label: "Google Review Link", type: "text" },
-      { label: "Facebook URL", type: "text" },
-      { label: "Instagram URL", type: "text" },
-      { label: "TikTok URL", type: "text" },
-      { label: "YouTube URL", type: "text" },
+      { id: "dealership_name", label: "Dealership Name", type: "text" },
+      { id: "tagline", label: "Tagline / Slogan", type: "text" },
+      { id: "phone", label: "Main Phone Number", type: "text" },
+      { id: "email", label: "Main Email Address", type: "text" },
+      { id: "address", label: "Physical Address", type: "text" },
+      { id: "website", label: "Website URL", type: "text" },
+      { id: "google_review", label: "Google Review Link", type: "text" },
+      { id: "facebook", label: "Facebook URL", type: "text" },
+      { id: "instagram", label: "Instagram URL", type: "text" },
+      { id: "tiktok", label: "TikTok URL", type: "text" },
+      { id: "youtube", label: "YouTube URL", type: "text" },
     ],
   },
   {
     title: "2. Architecture & BDC",
     icon: "🏗️",
     questions: [
-      { label: "Store Architecture", type: "choice", choices: ["Single Store", "Multi-Location", "Dealer Group"] },
-      { label: "BDC Model", type: "choice", choices: ["No BDC", "Single BDC", "Multi-Location BDC", "AI BDC"] },
-      { label: "Number of Locations", type: "text" },
-      { label: "Billing Start Date", type: "text" },
-      { label: "Billing Day of Month (1–31)", type: "text" },
-      { label: "Special Instructions / Notes", type: "multiline" },
+      { id: "architecture", label: "Store Architecture", type: "choice", choices: ["Single Store", "Multi-Location", "Dealer Group"] },
+      { id: "bdc_model", label: "BDC Model", type: "choice", choices: ["No BDC", "Single BDC", "Multi-Location BDC", "AI BDC"] },
+      { id: "num_locations", label: "Number of Locations", type: "text" },
+      { id: "billing_start", label: "Billing Start Date", type: "text" },
+      { id: "billing_day", label: "Billing Day of Month (1–31)", type: "text" },
+      { id: "special_instructions", label: "Special Instructions / Notes", type: "multiline" },
     ],
   },
   {
     title: "3. Branding & Colors",
     icon: "🎨",
     questions: [
-      { label: "Primary Brand Color (hex)", type: "text", hint: "e.g. #1e3a5f" },
-      { label: "Accent Color (hex)", type: "text" },
-      { label: "Success / CTA Color (hex)", type: "text" },
-      { label: "Offer Button Color (hex)", type: "text" },
-      { label: "Accept Button Color (hex)", type: "text" },
-      { label: "Logo file provided?", type: "check" },
-      { label: "White logo file provided?", type: "check" },
-      { label: "Favicon provided?", type: "check" },
+      { id: "primary_color", label: "Primary Brand Color (hex)", type: "text", hint: "e.g. #1e3a5f" },
+      { id: "accent_color", label: "Accent Color (hex)", type: "text" },
+      { id: "success_color", label: "Success / CTA Color (hex)", type: "text" },
+      { id: "offer_btn_color", label: "Offer Button Color (hex)", type: "text" },
+      { id: "accept_btn_color", label: "Accept Button Color (hex)", type: "text" },
+      { id: "logo_provided", label: "Logo file provided?", type: "check" },
+      { id: "white_logo_provided", label: "White logo file provided?", type: "check" },
+      { id: "favicon_provided", label: "Favicon provided?", type: "check" },
     ],
   },
   {
     title: "4. Hero & Landing Page",
     icon: "📢",
     questions: [
-      { label: "Hero Headline", type: "text", hint: 'e.g. "Sell Your Car in 2 Minutes"' },
-      { label: "Hero Sub-text", type: "text" },
-      { label: "Hero Layout", type: "choice", choices: ["Offset Right (form beside hero)", "Offset Left", "Stacked (hero then form)"] },
-      { label: "Enable page animations?", type: "choice", choices: ["Yes", "No"] },
-      { label: "Show animated offer calculation?", type: "choice", choices: ["Yes", "No"] },
+      { id: "hero_headline", label: "Hero Headline", type: "text", hint: 'e.g. "Sell Your Car in 2 Minutes"' },
+      { id: "hero_subtext", label: "Hero Sub-text", type: "text" },
+      { id: "hero_layout", label: "Hero Layout", type: "choice", choices: ["Offset Right", "Offset Left", "Stacked"] },
+      { id: "enable_animations", label: "Enable page animations?", type: "choice", choices: ["Yes", "No"] },
+      { id: "animated_calc", label: "Show animated offer calculation?", type: "choice", choices: ["Yes", "No"] },
     ],
   },
   {
     title: "5. Lead Form Flow",
     icon: "📝",
     questions: [
-      { label: "Flow style", type: "choice", choices: ["Details First (traditional — contact then offer)", "Offer First (CarMax/Peddle style — offer then contact)"], hint: "When should customer see their offer?" },
-      { label: "Include Vehicle Build step?", type: "choice", choices: ["Yes", "No"] },
-      { label: "Include Condition & History step?", type: "choice", choices: ["Yes", "No"] },
-      { label: "Price Guarantee Days", type: "text", hint: "Default: 8" },
+      { id: "flow_style", label: "Flow style", type: "choice", choices: ["Details First", "Offer First"], hint: "When should customer see their offer?" },
+      { id: "step_vehicle_build", label: "Include Vehicle Build step?", type: "choice", choices: ["Yes", "No"] },
+      { id: "step_condition", label: "Include Condition & History step?", type: "choice", choices: ["Yes", "No"] },
+      { id: "guarantee_days", label: "Price Guarantee Days", type: "text", hint: "Default: 8" },
     ],
   },
   {
-    title: "6. Vehicle Build Questions (toggle each)",
+    title: "6. Vehicle Build Questions",
     icon: "🚗",
     questions: [
-      { label: "Exterior Color", type: "choice", choices: ["Show", "Hide"] },
-      { label: "Drivetrain", type: "choice", choices: ["Show", "Hide"] },
-      { label: "Modifications", type: "choice", choices: ["Show", "Hide"] },
+      { id: "q_ext_color", label: "Exterior Color", type: "choice", choices: ["Show", "Hide"] },
+      { id: "q_drivetrain", label: "Drivetrain", type: "choice", choices: ["Show", "Hide"] },
+      { id: "q_modifications", label: "Modifications", type: "choice", choices: ["Show", "Hide"] },
     ],
   },
   {
-    title: "7. Condition & History Questions (toggle each)",
+    title: "7. Condition & History Questions",
     icon: "🔧",
     questions: [
-      { label: "Overall Condition Rating", type: "choice", choices: ["Show", "Hide"] },
-      { label: "Exterior Damage", type: "choice", choices: ["Show", "Hide"] },
-      { label: "Windshield Damage", type: "choice", choices: ["Show", "Hide"] },
-      { label: "Moonroof / Sunroof", type: "choice", choices: ["Show", "Hide"] },
-      { label: "Interior Damage", type: "choice", choices: ["Show", "Hide"] },
-      { label: "Technology Issues", type: "choice", choices: ["Show", "Hide"] },
-      { label: "Engine Issues", type: "choice", choices: ["Show", "Hide"] },
-      { label: "Mechanical Issues", type: "choice", choices: ["Show", "Hide"] },
-      { label: "Drivable?", type: "choice", choices: ["Show", "Hide"] },
-      { label: "Accidents", type: "choice", choices: ["Show", "Hide"] },
-      { label: "Smoked In?", type: "choice", choices: ["Show", "Hide"] },
-      { label: "Tires Replaced?", type: "choice", choices: ["Show", "Hide"] },
-      { label: "Number of Keys", type: "choice", choices: ["Show", "Hide"] },
+      { id: "q_condition", label: "Overall Condition Rating", type: "choice", choices: ["Show", "Hide"] },
+      { id: "q_ext_damage", label: "Exterior Damage", type: "choice", choices: ["Show", "Hide"] },
+      { id: "q_windshield", label: "Windshield Damage", type: "choice", choices: ["Show", "Hide"] },
+      { id: "q_moonroof", label: "Moonroof / Sunroof", type: "choice", choices: ["Show", "Hide"] },
+      { id: "q_int_damage", label: "Interior Damage", type: "choice", choices: ["Show", "Hide"] },
+      { id: "q_tech", label: "Technology Issues", type: "choice", choices: ["Show", "Hide"] },
+      { id: "q_engine", label: "Engine Issues", type: "choice", choices: ["Show", "Hide"] },
+      { id: "q_mechanical", label: "Mechanical Issues", type: "choice", choices: ["Show", "Hide"] },
+      { id: "q_drivable", label: "Drivable?", type: "choice", choices: ["Show", "Hide"] },
+      { id: "q_accidents", label: "Accidents", type: "choice", choices: ["Show", "Hide"] },
+      { id: "q_smoked", label: "Smoked In?", type: "choice", choices: ["Show", "Hide"] },
+      { id: "q_tires", label: "Tires Replaced?", type: "choice", choices: ["Show", "Hide"] },
+      { id: "q_keys", label: "Number of Keys", type: "choice", choices: ["Show", "Hide"] },
     ],
   },
   {
     title: "8. Finalize & Offer Questions",
     icon: "💰",
     questions: [
-      { label: "Loan / Payoff Details", type: "choice", choices: ["Show", "Hide"] },
-      { label: "Next Step Preference", type: "choice", choices: ["Show", "Hide"] },
+      { id: "q_loan", label: "Loan / Payoff Details", type: "choice", choices: ["Show", "Hide"] },
+      { id: "q_next_step", label: "Next Step Preference", type: "choice", choices: ["Show", "Hide"] },
     ],
   },
   {
     title: "9. Photo Requirements",
     icon: "📷",
     questions: [
-      { label: "Ghost overlay color", type: "choice", choices: ["Green", "Red", "White"] },
-      { label: "Allow customer to change overlay color?", type: "choice", choices: ["Yes", "No"] },
-      { label: "Vehicle image angle", type: "choice", choices: ["3/4 Front Angle", "Side Profile"] },
-      { label: "Required photo shots (list / check all):", type: "multiline", hint: "e.g. Front, Rear, Driver Side, Passenger Side, Dashboard, Odometer, VIN Plate, Engine Bay" },
+      { id: "overlay_color", label: "Ghost overlay color", type: "choice", choices: ["Green", "Red", "White"] },
+      { id: "allow_color_change", label: "Allow customer to change overlay color?", type: "choice", choices: ["Yes", "No"] },
+      { id: "image_angle", label: "Vehicle image angle", type: "choice", choices: ["3/4 Front Angle", "Side Profile"] },
+      { id: "required_shots", label: "Required photo shots", type: "multiline", hint: "e.g. Front, Rear, Driver Side, Passenger Side, Dashboard, Odometer, VIN Plate, Engine Bay" },
     ],
   },
   {
     title: "10. Offer & Pricing",
     icon: "💵",
     questions: [
-      { label: "Value Basis", type: "choice", choices: ["Wholesale Average", "Trade-In Average", "Wholesale Clean"] },
-      { label: "Used Car Pack ($)", type: "text" },
-      { label: "Default Recon Cost ($)", type: "text" },
-      { label: "Hide pack from appraisal tool?", type: "choice", choices: ["Yes — combine into recon", "No — show separately"] },
-      { label: "Global Adjustment %", type: "text", hint: "e.g. -5" },
-      { label: "Regional Adjustment %", type: "text" },
-      { label: "Offer Floor ($)", type: "text", hint: "Minimum offer amount" },
-      { label: "Offer Ceiling ($)", type: "text", hint: "Leave blank for no cap" },
+      { id: "value_basis", label: "Value Basis", type: "choice", choices: ["Wholesale Average", "Trade-In Average", "Wholesale Clean"] },
+      { id: "dealer_pack", label: "Used Car Pack ($)", type: "text" },
+      { id: "recon_cost", label: "Default Recon Cost ($)", type: "text" },
+      { id: "hide_pack", label: "Hide pack from appraisal tool?", type: "choice", choices: ["Yes", "No"] },
+      { id: "global_adj", label: "Global Adjustment %", type: "text", hint: "e.g. -5" },
+      { id: "regional_adj", label: "Regional Adjustment %", type: "text" },
+      { id: "offer_floor", label: "Offer Floor ($)", type: "text", hint: "Minimum offer amount" },
+      { id: "offer_ceiling", label: "Offer Ceiling ($)", type: "text", hint: "Leave blank for no cap" },
     ],
   },
   {
     title: "11. Notifications",
     icon: "🔔",
     questions: [
-      { label: "Staff Email Recipients", type: "multiline", hint: "One per line" },
-      { label: "Staff SMS Recipients", type: "multiline", hint: "One per line" },
-      { label: "Enable New Submission alerts?", type: "choice", choices: ["Email", "SMS", "Both", "Off"] },
-      { label: "Enable Hot Lead alerts?", type: "choice", choices: ["Email", "SMS", "Both", "Off"] },
-      { label: "Enable Abandoned Lead alerts?", type: "choice", choices: ["Email", "SMS", "Both", "Off"] },
-      { label: "Enable Customer Offer Ready?", type: "choice", choices: ["Email", "SMS", "Both", "Off"] },
-      { label: "Quiet Hours?", type: "text", hint: "e.g. 9pm – 7am" },
+      { id: "staff_emails", label: "Staff Email Recipients", type: "multiline", hint: "One per line" },
+      { id: "staff_sms", label: "Staff SMS Recipients", type: "multiline", hint: "One per line" },
+      { id: "notify_submission", label: "New Submission alerts", type: "choice", choices: ["Email", "SMS", "Both", "Off"] },
+      { id: "notify_hot_lead", label: "Hot Lead alerts", type: "choice", choices: ["Email", "SMS", "Both", "Off"] },
+      { id: "notify_abandoned", label: "Abandoned Lead alerts", type: "choice", choices: ["Email", "SMS", "Both", "Off"] },
+      { id: "notify_offer_ready", label: "Customer Offer Ready", type: "choice", choices: ["Email", "SMS", "Both", "Off"] },
+      { id: "quiet_hours", label: "Quiet Hours", type: "text", hint: "e.g. 9pm – 7am" },
     ],
   },
   {
     title: "12. Inspection Sheet",
     icon: "📋",
     questions: [
-      { label: "Show tire tread depth?", type: "choice", choices: ["Yes", "No"] },
-      { label: "Show brake pad measurements?", type: "choice", choices: ["Yes", "No"] },
-      { label: "Show paint readings?", type: "choice", choices: ["Yes", "No"] },
-      { label: "Show oil life?", type: "choice", choices: ["Yes", "No"] },
-      { label: "Show battery health?", type: "choice", choices: ["Yes", "No"] },
-      { label: "Enable tire adjustments?", type: "choice", choices: ["Yes", "No"] },
-      { label: "Tire adjustment mode", type: "choice", choices: ["Whole (average)", "Per Tire"] },
+      { id: "show_tire_depth", label: "Show tire tread depth?", type: "choice", choices: ["Yes", "No"] },
+      { id: "show_brake_pads", label: "Show brake pad measurements?", type: "choice", choices: ["Yes", "No"] },
+      { id: "show_paint", label: "Show paint readings?", type: "choice", choices: ["Yes", "No"] },
+      { id: "show_oil", label: "Show oil life?", type: "choice", choices: ["Yes", "No"] },
+      { id: "show_battery", label: "Show battery health?", type: "choice", choices: ["Yes", "No"] },
+      { id: "tire_adjustments", label: "Enable tire adjustments?", type: "choice", choices: ["Yes", "No"] },
+      { id: "tire_mode", label: "Tire adjustment mode", type: "choice", choices: ["Whole (average)", "Per Tire"] },
     ],
   },
   {
     title: "13. Locations",
     icon: "📍",
     questions: [
-      { label: "Location 1 — Name", type: "text" },
-      { label: "Location 1 — Address", type: "text" },
-      { label: "Location 1 — City, State, ZIP", type: "text" },
-      { label: "Location 1 — OEM Brands", type: "text", hint: "e.g. Toyota, Honda" },
-      { label: "Location 2 — Name", type: "text" },
-      { label: "Location 2 — Address", type: "text" },
-      { label: "Location 2 — City, State, ZIP", type: "text" },
-      { label: "Location 2 — OEM Brands", type: "text" },
-      { label: "Location 3 — Name", type: "text" },
-      { label: "Location 3 — Address", type: "text" },
-      { label: "Location 3 — City, State, ZIP", type: "text" },
-      { label: "Location 3 — OEM Brands", type: "text" },
+      { id: "loc1_name", label: "Location 1 — Name", type: "text" },
+      { id: "loc1_address", label: "Location 1 — Address", type: "text" },
+      { id: "loc1_csz", label: "Location 1 — City, State, ZIP", type: "text" },
+      { id: "loc1_brands", label: "Location 1 — OEM Brands", type: "text", hint: "e.g. Toyota, Honda" },
+      { id: "loc2_name", label: "Location 2 — Name", type: "text" },
+      { id: "loc2_address", label: "Location 2 — Address", type: "text" },
+      { id: "loc2_csz", label: "Location 2 — City, State, ZIP", type: "text" },
+      { id: "loc2_brands", label: "Location 2 — OEM Brands", type: "text" },
+      { id: "loc3_name", label: "Location 3 — Name", type: "text" },
+      { id: "loc3_address", label: "Location 3 — Address", type: "text" },
+      { id: "loc3_csz", label: "Location 3 — City, State, ZIP", type: "text" },
+      { id: "loc3_brands", label: "Location 3 — OEM Brands", type: "text" },
     ],
   },
   {
     title: "14. Lead Routing",
     icon: "🔀",
     questions: [
-      { label: "Auto-assign by ZIP?", type: "choice", choices: ["Yes", "No"] },
-      { label: "Auto-assign by OEM brand?", type: "choice", choices: ["Yes", "No"] },
-      { label: "Let customer pick location?", type: "choice", choices: ["Yes", "No"] },
-      { label: "Use dedicated buying center?", type: "choice", choices: ["Yes", "No"] },
-      { label: "Buying Center Location", type: "text" },
+      { id: "assign_zip", label: "Auto-assign by ZIP?", type: "choice", choices: ["Yes", "No"] },
+      { id: "assign_oem", label: "Auto-assign by OEM brand?", type: "choice", choices: ["Yes", "No"] },
+      { id: "customer_picks", label: "Let customer pick location?", type: "choice", choices: ["Yes", "No"] },
+      { id: "buying_center", label: "Use dedicated buying center?", type: "choice", choices: ["Yes", "No"] },
+      { id: "buying_center_loc", label: "Buying Center Location", type: "text" },
     ],
   },
   {
     title: "15. Staff & Roles",
     icon: "👥",
     questions: [
-      { label: "Admin Users (email)", type: "multiline" },
-      { label: "GSM/GM Users (email)", type: "multiline" },
-      { label: "Used Car Managers (email)", type: "multiline" },
-      { label: "Sales / BDC Users (email)", type: "multiline" },
+      { id: "admin_users", label: "Admin Users (email)", type: "multiline" },
+      { id: "gsm_users", label: "GSM/GM Users (email)", type: "multiline" },
+      { id: "ucm_users", label: "Used Car Managers (email)", type: "multiline" },
+      { id: "bdc_users", label: "Sales / BDC Users (email)", type: "multiline" },
     ],
   },
 ];
 
+type Answers = Record<string, string>;
+
 export default function OnboardingScript() {
   const printRef = useRef<HTMLDivElement>(null);
   const { config } = useSiteConfig();
+  const [answers, setAnswers] = useState<Answers>({});
   const [dealerSig, setDealerSig] = useState<string | null>(null);
   const [staffSig, setStaffSig] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [savedAt, setSavedAt] = useState<string | null>(null);
+  const [dirty, setDirty] = useState(false);
 
-  // Load existing signatures
+  // Count filled answers
+  const totalQuestions = SECTIONS.reduce((sum, s) => sum + s.questions.length, 0);
+  const filledCount = Object.values(answers).filter((v) => v && v.trim() !== "").length;
+  const progressPct = Math.round((filledCount / totalQuestions) * 100);
+
+  // Load existing data
   useEffect(() => {
     const load = async () => {
       const { data } = await supabase
         .from("dealer_accounts")
-        .select("onboarding_signature_dealer, onboarding_signature_staff, onboarding_signed_at")
+        .select("onboarding_answers, onboarding_signature_dealer, onboarding_signature_staff, onboarding_signed_at")
         .eq("dealership_id", "default")
         .maybeSingle();
       if (data) {
+        if (data.onboarding_answers && typeof data.onboarding_answers === "object") {
+          setAnswers(data.onboarding_answers as Answers);
+        }
         setDealerSig(data.onboarding_signature_dealer);
         setStaffSig(data.onboarding_signature_staff);
         if (data.onboarding_signed_at) {
           setSavedAt(new Date(data.onboarding_signed_at).toLocaleString());
         }
       }
+      setLoading(false);
     };
     load();
   }, []);
 
+  const updateAnswer = useCallback((id: string, value: string) => {
+    setAnswers((prev) => ({ ...prev, [id]: value }));
+    setDirty(true);
+  }, []);
+
+  const toggleChoice = useCallback((id: string, choice: string) => {
+    setAnswers((prev) => {
+      const current = prev[id] || "";
+      return { ...prev, [id]: current === choice ? "" : choice };
+    });
+    setDirty(true);
+  }, []);
+
   const handleSave = async () => {
-    if (!dealerSig && !staffSig) {
-      toast.error("At least one signature is required");
-      return;
-    }
     setSaving(true);
     const { error } = await supabase
       .from("dealer_accounts")
       .update({
+        onboarding_answers: answers,
         onboarding_signature_dealer: dealerSig,
         onboarding_signature_staff: staffSig,
-        onboarding_signed_at: new Date().toISOString(),
+        onboarding_signed_at: dealerSig || staffSig ? new Date().toISOString() : null,
       } as any)
       .eq("dealership_id", "default");
 
     if (error) {
-      toast.error("Failed to save signatures");
+      toast.error("Failed to save — " + error.message);
     } else {
       setSavedAt(new Date().toLocaleString());
-      toast.success("Signatures saved successfully");
+      setDirty(false);
+      toast.success("Onboarding questionnaire saved");
     }
     setSaving(false);
   };
 
   const handlePrint = () => window.print();
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl">
       {/* Screen-only header */}
-      <div className="flex items-center justify-between mb-6 print:hidden">
+      <div className="flex items-center justify-between mb-4 print:hidden">
         <div>
           <h2 className="text-xl font-semibold">Onboarding Questionnaire</h2>
           <p className="text-sm text-muted-foreground">
-            Walk through every customization option with the dealer. Print or use on a tablet.
+            Complete on screen or print. All answers auto-save to the dealer account.
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button onClick={handlePrint} size="sm" variant="outline" className="gap-2">
             <Printer className="w-4 h-4" />
-            Print / PDF
+            Print
+          </Button>
+          <Button onClick={handleSave} size="sm" disabled={saving} className="gap-2">
+            <Save className="w-4 h-4" />
+            {saving ? "Saving…" : "Save All"}
           </Button>
         </div>
+      </div>
+
+      {/* Progress bar */}
+      <div className="mb-6 print:hidden">
+        <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+          <span>{filledCount} of {totalQuestions} questions answered</span>
+          <span>{progressPct}%</span>
+        </div>
+        <div className="h-2 bg-muted rounded-full overflow-hidden">
+          <div
+            className="h-full bg-primary rounded-full transition-all duration-300"
+            style={{ width: `${progressPct}%` }}
+          />
+        </div>
+        {savedAt && (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-2">
+            <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
+            Last saved: {savedAt}
+            {dirty && <span className="text-destructive ml-2">• Unsaved changes</span>}
+          </div>
+        )}
       </div>
 
       {/* Printable content */}
@@ -287,7 +348,9 @@ export default function OnboardingScript() {
         {/* Print header */}
         <div className="hidden print:block text-center mb-8">
           <h1 className="text-2xl font-bold">{config.dealership_name || "Dealer"} — Onboarding Script</h1>
-          <p className="text-sm text-muted-foreground">Date: ____________ &nbsp;&nbsp; Completed by: ____________</p>
+          <p className="text-sm text-muted-foreground">
+            Date: {new Date().toLocaleDateString()} &nbsp;&nbsp; Progress: {filledCount}/{totalQuestions}
+          </p>
         </div>
 
         {SECTIONS.map((section) => (
@@ -299,40 +362,104 @@ export default function OnboardingScript() {
               </h3>
             </div>
             <div className="divide-y">
-              {section.questions.map((q, idx) => (
-                <div key={idx} className="px-4 py-3 flex items-start gap-3">
+              {section.questions.map((q) => (
+                <div key={q.id} className="px-4 py-3 flex items-start gap-3">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium">{q.label}</p>
                     {q.hint && (
                       <p className="text-xs text-muted-foreground mt-0.5">{q.hint}</p>
                     )}
                   </div>
-                  <div className="shrink-0 w-56 print:w-64">
+                  <div className="shrink-0 w-64">
                     {q.type === "text" && (
-                      <div className="border-b-2 border-dashed border-muted-foreground/30 h-7 print:h-6" />
+                      <>
+                        {/* Screen: real input */}
+                        <Input
+                          className="h-8 text-sm print:hidden"
+                          placeholder="—"
+                          value={answers[q.id] || ""}
+                          onChange={(e) => updateAnswer(q.id, e.target.value)}
+                          maxLength={500}
+                        />
+                        {/* Print: show value or line */}
+                        <div className="hidden print:block">
+                          {answers[q.id] ? (
+                            <p className="text-sm border-b border-muted-foreground/30 pb-1 min-h-[1.5rem]">
+                              {answers[q.id]}
+                            </p>
+                          ) : (
+                            <div className="border-b-2 border-dashed border-muted-foreground/30 h-6" />
+                          )}
+                        </div>
+                      </>
                     )}
+
                     {q.type === "multiline" && (
-                      <div className="space-y-2">
-                        <div className="border-b-2 border-dashed border-muted-foreground/30 h-7 print:h-5" />
-                        <div className="border-b-2 border-dashed border-muted-foreground/30 h-7 print:h-5" />
-                        <div className="border-b-2 border-dashed border-muted-foreground/30 h-7 print:h-5" />
-                      </div>
+                      <>
+                        <Textarea
+                          className="text-sm min-h-[60px] print:hidden"
+                          placeholder="—"
+                          value={answers[q.id] || ""}
+                          onChange={(e) => updateAnswer(q.id, e.target.value)}
+                          maxLength={2000}
+                        />
+                        <div className="hidden print:block">
+                          {answers[q.id] ? (
+                            <p className="text-sm whitespace-pre-line border-b border-muted-foreground/30 pb-1">
+                              {answers[q.id]}
+                            </p>
+                          ) : (
+                            <div className="space-y-2">
+                              <div className="border-b-2 border-dashed border-muted-foreground/30 h-5" />
+                              <div className="border-b-2 border-dashed border-muted-foreground/30 h-5" />
+                            </div>
+                          )}
+                        </div>
+                      </>
                     )}
+
                     {q.type === "check" && (
-                      <div className="flex items-center gap-2 h-7">
-                        <Square className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">Yes</span>
-                        <Square className="w-4 h-4 text-muted-foreground ml-2" />
-                        <span className="text-xs text-muted-foreground">No</span>
+                      <div className="flex items-center gap-3 h-8">
+                        <button
+                          type="button"
+                          onClick={() => toggleChoice(q.id, "yes")}
+                          className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                            answers[q.id] === "yes"
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "border-border hover:bg-muted"
+                          }`}
+                        >
+                          Yes
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => toggleChoice(q.id, "no")}
+                          className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                            answers[q.id] === "no"
+                              ? "bg-destructive text-destructive-foreground border-destructive"
+                              : "border-border hover:bg-muted"
+                          }`}
+                        >
+                          No
+                        </button>
                       </div>
                     )}
+
                     {q.type === "choice" && q.choices && (
-                      <div className="flex flex-wrap gap-x-3 gap-y-1">
+                      <div className="flex flex-wrap gap-1.5">
                         {q.choices.map((c) => (
-                          <label key={c} className="flex items-center gap-1.5 text-xs">
-                            <Square className="w-3.5 h-3.5 text-muted-foreground print:w-3 print:h-3" />
+                          <button
+                            key={c}
+                            type="button"
+                            onClick={() => toggleChoice(q.id, c)}
+                            className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                              answers[q.id] === c
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "border-border hover:bg-muted"
+                            }`}
+                          >
                             {c}
-                          </label>
+                          </button>
                         ))}
                       </div>
                     )}
@@ -350,15 +477,8 @@ export default function OnboardingScript() {
             Both parties sign below to confirm the onboarding configuration is agreed upon.
           </p>
 
-          {savedAt && (
-            <div className="flex items-center gap-2 text-xs text-success mb-4 print:hidden">
-              <CheckCircle2 className="w-4 h-4" />
-              Last signed: {savedAt}
-            </div>
-          )}
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Print fallback lines */}
+            {/* Print fallback */}
             <div className="hidden print:block">
               <p className="text-xs text-muted-foreground mb-16">Dealer Representative</p>
               <div className="border-b-2 border-muted-foreground/30 mb-1" />
@@ -370,27 +490,19 @@ export default function OnboardingScript() {
               <p className="text-xs text-muted-foreground">Signature & Date</p>
             </div>
 
-            {/* Digital signature pads — screen only */}
+            {/* Digital signature pads */}
             <div className="print:hidden">
-              <SignaturePad
-                label="Dealer Representative"
-                value={dealerSig}
-                onChange={setDealerSig}
-              />
+              <SignaturePad label="Dealer Representative" value={dealerSig} onChange={(v) => { setDealerSig(v); setDirty(true); }} />
             </div>
             <div className="print:hidden">
-              <SignaturePad
-                label="Onboarding Specialist"
-                value={staffSig}
-                onChange={setStaffSig}
-              />
+              <SignaturePad label="Onboarding Specialist" value={staffSig} onChange={(v) => { setStaffSig(v); setDirty(true); }} />
             </div>
           </div>
 
           <div className="mt-4 print:hidden">
             <Button onClick={handleSave} disabled={saving} className="gap-2">
               <Save className="w-4 h-4" />
-              {saving ? "Saving…" : "Save Signatures"}
+              {saving ? "Saving…" : "Save All"}
             </Button>
           </div>
         </div>
