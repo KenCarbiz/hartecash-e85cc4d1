@@ -591,7 +591,7 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
                   Calculating your offer…
                 </span>
               ) : (
-                "Get My Offer →"
+                offerFirst ? "See My Offer →" : "Get My Offer →"
               )}
             </Button>
           )}
