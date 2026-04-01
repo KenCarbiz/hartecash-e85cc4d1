@@ -468,6 +468,7 @@ export type Database = {
           created_at: string
           dealership_id: string
           id: string
+          offer_before_details: boolean
           q_accidents: boolean
           q_drivable: boolean
           q_drivetrain: boolean
@@ -494,6 +495,7 @@ export type Database = {
           created_at?: string
           dealership_id?: string
           id?: string
+          offer_before_details?: boolean
           q_accidents?: boolean
           q_drivable?: boolean
           q_drivetrain?: boolean
@@ -520,6 +522,7 @@ export type Database = {
           created_at?: string
           dealership_id?: string
           id?: string
+          offer_before_details?: boolean
           q_accidents?: boolean
           q_drivable?: boolean
           q_drivetrain?: boolean
