@@ -19,7 +19,7 @@ const AboutBlurb = () => {
           About {name}
         </h2>
         <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-          Founded in <strong>1951</strong> in Connecticut, {name} has purchased
+          {name} has purchased
           over <strong>{config.stats_cars_purchased || "14,721+"}</strong>{" "}
           vehicles directly from consumers. We provide firm cash offers in under
           2 minutes, backed by an{" "}

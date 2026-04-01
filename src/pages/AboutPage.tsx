@@ -44,8 +44,8 @@ const AboutPage = () => {
 
   const milestones = config.about_milestones?.length ? config.about_milestones : DEFAULT_MILESTONES;
   const values = config.about_values?.length ? config.about_values : DEFAULT_VALUES;
-  const heroHeadline = config.about_hero_headline || "Four Generations. One Promise.";
-  const heroSubtext = config.about_hero_subtext || "Since 1951, the Harte family has been helping Connecticut drivers — not just sell and buy cars, but feel good about the experience. That's the only way we know how to do it.";
+  const heroHeadline = config.about_hero_headline || "About Us";
+  const heroSubtext = config.about_hero_subtext || "Learn more about our dealership and our commitment to providing the best vehicle selling experience.";
   const customStory = config.about_story || DEFAULT_STORY;
 
   useEffect(() => {
