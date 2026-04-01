@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Lock } from "lucide-react";
-import harteLogo from "@/assets/harte-logo.png";
 
 const getSafeAuthError = (message: string, isSignup: boolean): string => {
   const map: Record<string, string> = {
