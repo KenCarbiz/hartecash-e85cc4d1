@@ -1494,7 +1494,6 @@ const OfferPage = () => {
           )}
 
           {VehicleSummary}
-          {VerifiedSpecsBlock}
           {TradeInExplanation}
           {NoTaxBlock}
           {ConditionBlock}

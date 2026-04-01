@@ -335,6 +335,7 @@ const CustomerPortal = () => {
             <div className="col-span-3 space-y-5">
               <WhatsNextCard {...whatsNextProps} />
               <CompletionChecklist {...checklistProps} />
+              <EquipmentValueImpact submissionId={s.id} />
               <VehiclePhotos token={s.token} photosUploaded={s.photos_uploaded} />
               <PaymentInfoCard />
               {s.loan_status && ["has_loan", "lease"].includes(s.loan_status) && <LoanPayoffCard />}
