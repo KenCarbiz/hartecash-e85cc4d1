@@ -10,7 +10,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import PageTransition from "@/components/PageTransition";
 import Index from "./pages/Index";
-import PlatformLanding from "./pages/PlatformLanding";
+const PlatformLanding = lazy(() => import("./pages/PlatformLanding"));
 
 const UploadPhotos = lazy(() => import("./pages/UploadPhotos"));
 const UploadDocs = lazy(() => import("./pages/UploadDocs"));
