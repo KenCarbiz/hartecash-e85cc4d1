@@ -52,6 +52,7 @@ const AnimatedRoutes = () => {
         <Suspense fallback={null}>
           <Routes location={location}>
             <Route path="/" element={<Index />} />
+            <Route path="/platform" element={<Suspense fallback={null}><PlatformLanding /></Suspense>} />
             <Route path="/upload/:token" element={<UploadPhotos />} />
             <Route path="/docs/:token" element={<UploadDocs />} />
             <Route path="/my-submission" element={<CustomerLookup />} />
