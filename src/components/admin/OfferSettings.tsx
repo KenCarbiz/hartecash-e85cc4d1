@@ -281,6 +281,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
         ...d,
         deduction_amounts: d.deduction_amounts || DEFAULT_DEDUCTION_AMOUNTS,
         condition_multipliers: d.condition_multipliers || DEFAULT_CONDITION_MULTIPLIERS,
+        condition_basis_map: d.condition_basis_map || { excellent: "retail_xclean", very_good: "tradein_clean", good: "tradein_avg", fair: "wholesale_rough" },
         recon_cost: d.recon_cost ?? 0,
         offer_floor: d.offer_floor ?? 500,
         offer_ceiling: d.offer_ceiling ?? null,
