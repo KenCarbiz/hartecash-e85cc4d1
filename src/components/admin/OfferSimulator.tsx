@@ -547,9 +547,13 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                                 <button
                                   key={`${cond}-${tier.key}`}
                                   onClick={() => updateLocalSetting("condition_basis_map", {
+                                    excellent: "retail_xclean",
+                                    very_good: "tradein_clean",
+                                    good: "tradein_avg",
+                                    fair: "wholesale_rough",
                                     ...(localSettings.condition_basis_map || {}),
                                     [cond]: tier.key,
-                                  })}
+                                  } as any)}
                                   className={`rounded-md px-1 py-1 text-center transition-all border text-[10px] ${
                                     isSelected
                                       ? "bg-primary text-primary-foreground border-primary ring-1 ring-primary/30 shadow-sm font-bold"
