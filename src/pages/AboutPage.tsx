@@ -26,26 +26,32 @@ const ICON_MAP: Record<string, LucideIcon> = {
   HandshakeIcon, Shield, Clock, Award, Heart, Star, CheckCircle, Users, Zap, Target, Smile, ThumbsUp,
 };
 
-const DEFAULT_MILESTONES: AboutMilestone[] = [];
+const DEFAULT_MILESTONES: AboutMilestone[] = [
+  { year: "1951", label: "George Harte Sr. opens his first Chevrolet dealership in Connecticut" },
+  { year: "1970s", label: "The Harte family expands into West Haven, Wallingford & beyond" },
+  { year: "2014", label: "New state-of-the-art Infiniti facility built in Wallingford" },
+  { year: "2020s", label: "Tom & Greg Harte launch Harte Cash — a digital-first vehicle buying platform" },
+  { year: "Today", label: "Four generations, five locations, and 14,000+ vehicles purchased from neighbors across CT" },
+];
 
 const DEFAULT_VALUES: AboutValue[] = [
-  { icon: "HandshakeIcon", title: "Customer First", text: "Every customer deserves to be treated like family. No pressure, no games — just honest conversations." },
-  { icon: "Shield", title: "Full Transparency", text: "Every offer includes a full breakdown. We show you exactly how we valued your vehicle, what we factored in, and what you'll walk away with." },
-  { icon: "Clock", title: "Your Time Matters", text: "Get a real offer in under 2 minutes — not 2 hours at a dealership. We handle the loan payoffs, the paperwork, and we'll even come pick up your car." },
-  { icon: "Award", title: "Earned Trust", text: "Our reputation is built on decades of keeping our word and treating people right." },
+  { icon: "HandshakeIcon", title: "You're Family Here", text: "George Harte Sr. believed every customer deserves to be treated like family. Four generations later, that's still the standard. No pressure, no games — just honest conversations." },
+  { icon: "Shield", title: "Nothing Hidden, Ever", text: "Every offer includes a full breakdown. We show you exactly how we valued your vehicle, what we factored in, and what you'll walk away with. Transparency isn't a buzzword here — it's how we were raised." },
+  { icon: "Clock", title: "Your Time Matters", text: "We built Harte Cash so you can get a real offer in under 2 minutes — not 2 hours at a dealership. We handle the loan payoffs, the paperwork, and we'll even come pick up your car." },
+  { icon: "Award", title: "Earned Trust, Not Bought", text: "A 4.9-star rating across 2,400+ reviews doesn't happen by accident. It comes from decades of keeping our word and treating people right. Ask your neighbor — chances are they've worked with us." },
 ];
 
 const DEFAULT_STORY = "";
 
 const AboutPage = () => {
   const { config } = useSiteConfig();
-  const name = config.dealership_name || "Our Dealership";
+  const name = config.dealership_name || "Harte Auto Group";
   const [locations, setLocations] = useState<DealerLocation[]>([]);
 
   const milestones = config.about_milestones?.length ? config.about_milestones : DEFAULT_MILESTONES;
   const values = config.about_values?.length ? config.about_values : DEFAULT_VALUES;
-  const heroHeadline = config.about_hero_headline || "About Us";
-  const heroSubtext = config.about_hero_subtext || "Learn more about our dealership and our commitment to providing the best vehicle selling experience.";
+  const heroHeadline = config.about_hero_headline || "Four Generations. One Promise.";
+  const heroSubtext = config.about_hero_subtext || "Since 1951, the Harte family has been helping Connecticut drivers — not just sell and buy cars, but feel good about the experience. That's the only way we know how to do it.";
   const customStory = config.about_story || DEFAULT_STORY;
 
   useEffect(() => {
@@ -63,8 +69,8 @@ const AboutPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title={`About ${name} — Trusted Car Buyer`}
-        description={`${name} has purchased ${config.stats_cars_purchased || "thousands of"} vehicles. ${config.stats_rating || "4.9"}-star rating, ${config.stats_reviews_count || "hundreds of"} reviews. Learn our story.`}
+        title={`About ${name} — CT's Trusted Car Buyer Since 1951`}
+        description={`Four generations of the ${name} family have purchased ${config.stats_cars_purchased || "14,700+"} vehicles across Connecticut. ${config.stats_rating || "4.9"}-star rating, ${config.stats_reviews_count || "2,400+"} reviews. Learn our story.`}
         path="/about"
       />
       <LocalBusinessJsonLd />

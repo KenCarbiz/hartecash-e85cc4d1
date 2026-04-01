@@ -73,14 +73,11 @@ const DEFAULT_ACCOUNT: Omit<DealerAccount, "id"> = {
 interface DealerOnboardingProps {
   isAdmin?: boolean;
   onNavigate?: (section: string) => void;
-  targetDealershipId?: string | null;
-  onDealershipChange?: (id: string | null) => void;
 }
 
-const DealerOnboarding = ({ isAdmin = false, onNavigate, targetDealershipId, onDealershipChange }: DealerOnboardingProps) => {
+const DealerOnboarding = ({ isAdmin = false, onNavigate }: DealerOnboardingProps) => {
   const { tenant } = useTenant();
-  const [tenants, setTenants] = useState<{ dealership_id: string; display_name: string }[]>([]);
-  const dealershipId = targetDealershipId || tenant.dealership_id;
+  const dealershipId = tenant.dealership_id;
   const [account, setAccount] = useState<Omit<DealerAccount, "id">>({ ...DEFAULT_ACCOUNT, dealership_id: dealershipId });
   const [existingId, setExistingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -94,14 +91,6 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate, targetDealershipId, onD
   useEffect(() => {
     fetchAccount();
   }, [dealershipId]);
-
-  useEffect(() => {
-    const loadTenants = async () => {
-      const { data } = await supabase.from("tenants").select("dealership_id, display_name").eq("is_active", true).order("display_name");
-      if (data) setTenants(data);
-    };
-    if (isAdmin) loadTenants();
-  }, [isAdmin]);
 
   const fetchAccount = async () => {
     setLoading(true);
@@ -214,21 +203,6 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate, targetDealershipId, onD
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      {/* Dealer Picker */}
-      {isAdmin && tenants.length > 1 && (
-        <div className="flex items-center gap-3">
-          <Label className="text-sm font-medium shrink-0">Dealership:</Label>
-          <Select value={dealershipId} onValueChange={(v) => onDealershipChange?.(v)}>
-            <SelectTrigger className="w-72"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {tenants.map(t => (
-                <SelectItem key={t.dealership_id} value={t.dealership_id}>{t.display_name} ({t.dealership_id})</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
-
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -246,7 +220,7 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate, targetDealershipId, onD
       </div>
 
       {/* Onboarding Checklist */}
-      <OnboardingChecklist onNavigate={onNavigate} dealershipId={dealershipId} />
+      <OnboardingChecklist onNavigate={onNavigate} />
 
       {/* Architecture */}
       <Card>

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { logConsent } from "@/lib/consent";
+import serviceLogo from "@/assets/harte-service-logo.png";
 import SEO from "@/components/SEO";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useTenant } from "@/contexts/TenantContext";
@@ -303,15 +304,15 @@ const ServiceLanding = () => {
   return (
     <div className="min-h-screen bg-[hsl(222,47%,5%)] text-[hsl(210,40%,98%)]">
       <SEO
-        title={`Service Customer Trade-In Value | ${siteConfig.dealership_name}`}
-        description={`Already here for service? Find out what your car is worth in 60 seconds. Get a guaranteed cash offer or trade-in value from ${siteConfig.dealership_name}.`}
+        title="Service Customer Trade-In Value | Harte Auto Group"
+        description="Already here for service? Find out what your car is worth in 60 seconds. Get a guaranteed cash offer or trade-in value from Harte Auto Group."
         path="/service"
         noindex
       />
       {/* Header */}
       <header className="sticky top-0 z-50 bg-[hsl(222,47%,5%)]/90 backdrop-blur-md border-b border-[hsl(217,33%,17%)] overflow-visible">
         <div className="max-w-5xl mx-auto px-5 py-3 flex items-center justify-between">
-          {siteConfig.logo_white_url ? <img src={siteConfig.logo_white_url} alt={siteConfig.dealership_name} className="h-32 -my-8" /> : <span className="text-xl font-bold">{siteConfig.dealership_name}</span>}
+          <img src={serviceLogo} alt="Harte Auto Group" className="h-32 -my-8" />
           <span className="text-sm font-semibold text-[hsl(215,20%,65%)] tracking-wider uppercase">Service Customer Exclusive</span>
         </div>
       </header>
@@ -358,8 +359,8 @@ const ServiceLanding = () => {
             {[...Array(5)].map((_, i) => (
               <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
             ))}
-            <span className="ml-2 text-sm font-semibold">{siteConfig.stats_rating || "4.9"}</span>
-            <span className="text-sm text-[hsl(215,20%,65%)]">• {siteConfig.stats_reviews_count || "2,400+"} happy sellers</span>
+            <span className="ml-2 text-sm font-semibold">4.9</span>
+            <span className="text-sm text-[hsl(215,20%,65%)]">• 2,400+ happy sellers</span>
           </motion.div>
         </motion.div>
       </section>
@@ -785,9 +786,9 @@ const ServiceLanding = () => {
 
       {/* Footer */}
       <footer className="border-t border-[hsl(217,33%,17%)] py-8 px-5 text-center">
-        {siteConfig.logo_white_url && <img src={siteConfig.logo_white_url} alt={siteConfig.dealership_name} className="h-20 mx-auto mb-3 opacity-60" />}
+        <img src={serviceLogo} alt="Harte Auto Group" className="h-20 mx-auto mb-3 opacity-60" />
         <p className="text-xs text-[hsl(215,20%,45%)]">
-          {siteConfig.dealership_name}{siteConfig.address ? ` • ${siteConfig.address}` : ""}{siteConfig.phone ? ` • ${siteConfig.phone}` : ""}
+          Family-owned since 1952 • 150 Weston Street, Hartford, CT 06120 • (866) 851-7390
         </p>
         <div className="flex justify-center gap-4 mt-3">
           <a href="/privacy" className="text-xs text-[hsl(215,20%,45%)] hover:text-[hsl(215,20%,65%)] underline transition-colors">Privacy Policy</a>

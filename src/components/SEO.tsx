@@ -9,7 +9,7 @@ interface SEOProps {
   noindex?: boolean;
 }
 
-const BASE_URL = "https://autocurb.io";
+const BASE_URL = "https://hartecash.lovable.app";
 
 const SEO = ({
   title,

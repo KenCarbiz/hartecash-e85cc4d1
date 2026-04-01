@@ -1,1 +1,0 @@
-ALTER TABLE public.form_config ADD COLUMN offer_before_details boolean NOT NULL DEFAULT false;

@@ -64,7 +64,7 @@ export interface SiteConfig {
 }
 
 const DEFAULTS: SiteConfig = {
-  dealership_name: "Our Dealership",
+  dealership_name: "Harte Auto Group",
   tagline: "Sell Your Car The Easy Way",
   phone: "",
   email: "",
@@ -88,8 +88,8 @@ const DEFAULTS: SiteConfig = {
   use_animated_calculating: false,
   enable_dl_ocr: false,
   track_abandoned_leads: true,
-  about_hero_headline: "About Us",
-  about_hero_subtext: "Learn more about our dealership and our commitment to providing the best vehicle selling experience.",
+  about_hero_headline: "Four Generations. One Promise.",
+  about_hero_subtext: "Since 1951, the Harte family has been helping Connecticut drivers — not just sell and buy cars, but feel good about the experience.",
   about_story: "",
   about_milestones: [],
   about_values: [],

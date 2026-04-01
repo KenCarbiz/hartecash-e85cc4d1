@@ -1,5 +1,4 @@
 import { Helmet } from "react-helmet-async";
-import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 interface JsonLdProps {
   data: Record<string, unknown>;
@@ -12,122 +11,112 @@ const JsonLd = ({ data }: JsonLdProps) => (
 );
 
 // ── Organization + AutoDealer ──
-export const LocalBusinessJsonLd = () => {
-  const { config } = useSiteConfig();
-  const name = config.dealership_name || "Our Dealership";
-
-  return (
-    <JsonLd
-      data={{
-        "@context": "https://schema.org",
-        "@type": ["AutoDealer", "Organization"],
-        name,
-        url: config.website_url || "https://autocurb.io",
-        foundingDate: "1952",
-        description: `${name} purchases vehicles directly from consumers. Sellers receive a firm cash offer within 2 minutes, backed by a ${config.price_guarantee_days || 8}-day price guarantee. Free vehicle pickup included.`,
-        slogan: config.tagline || "Sell Your Car The Easy Way",
-        telephone: config.phone || "",
-        areaServed: {
-          "@type": "Place",
-          name: "Service Area",
-        },
-        address: config.address
-          ? {
-              "@type": "PostalAddress",
-              streetAddress: config.address,
-              addressCountry: "US",
-            }
-          : undefined,
-        aggregateRating: config.stats_rating
-          ? {
-              "@type": "AggregateRating",
-              ratingValue: config.stats_rating,
-              reviewCount: (config.stats_reviews_count || "100").replace(/\D/g, ""),
-              bestRating: "5",
-            }
-          : undefined,
-        knowsAbout: [
-          "car buying",
-          "vehicle appraisal",
-          "trade-in valuation",
-          "used car purchasing",
-          "instant cash offers for cars",
+export const LocalBusinessJsonLd = () => (
+  <JsonLd
+    data={{
+      "@context": "https://schema.org",
+      "@type": ["AutoDealer", "Organization"],
+      name: "Harte Auto Group",
+      alternateName: "Harte Cash",
+      url: "https://hartecash.lovable.app",
+      logo: "https://hartecash.lovable.app/og-service.jpg",
+      foundingDate: "1952",
+      description:
+        "Harte Auto Group is a Connecticut-based auto dealer group, founded in 1952, that purchases vehicles directly from consumers. Sellers receive a firm cash offer within 2 minutes, backed by an 8-day price guarantee. Free vehicle pickup included. Over 14,700 cars purchased with a 4.9-star rating across 2,400+ reviews.",
+      slogan: "Sell Your Car The Easy Way",
+      telephone: "(860) 506-3092",
+      areaServed: {
+        "@type": "State",
+        name: "Connecticut",
+      },
+      address: {
+        "@type": "PostalAddress",
+        addressRegion: "CT",
+        addressCountry: "US",
+      },
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: "4.9",
+        reviewCount: "2400",
+        bestRating: "5",
+      },
+      knowsAbout: [
+        "car buying",
+        "vehicle appraisal",
+        "trade-in valuation",
+        "used car purchasing",
+        "instant cash offers for cars",
+      ],
+      hasOfferCatalog: {
+        "@type": "OfferCatalog",
+        name: "Vehicle Purchase Services",
+        itemListElement: [
+          {
+            "@type": "Offer",
+            itemOffered: {
+              "@type": "Service",
+              name: "Instant Cash Offer",
+              description:
+                "Receive a competitive, no-obligation cash offer for your vehicle in under 2 minutes. Based on real-time market data.",
+            },
+          },
+          {
+            "@type": "Offer",
+            itemOffered: {
+              "@type": "Service",
+              name: "Free Vehicle Pickup",
+              description:
+                "Complimentary vehicle pickup from your home, office, or any convenient location after accepting your offer.",
+            },
+          },
+          {
+            "@type": "Offer",
+            itemOffered: {
+              "@type": "Service",
+              name: "Loan Payoff Handling",
+              description:
+                "We handle payoffs directly with your lender and pay you the difference — even for leased vehicles.",
+            },
+          },
         ],
-        hasOfferCatalog: {
-          "@type": "OfferCatalog",
-          name: "Vehicle Purchase Services",
-          itemListElement: [
-            {
-              "@type": "Offer",
-              itemOffered: {
-                "@type": "Service",
-                name: "Instant Cash Offer",
-                description:
-                  "Receive a competitive, no-obligation cash offer for your vehicle in under 2 minutes. Based on real-time market data.",
-              },
-            },
-            {
-              "@type": "Offer",
-              itemOffered: {
-                "@type": "Service",
-                name: "Free Vehicle Pickup",
-                description:
-                  "Complimentary vehicle pickup from your home, office, or any convenient location after accepting your offer.",
-              },
-            },
-            {
-              "@type": "Offer",
-              itemOffered: {
-                "@type": "Service",
-                name: "Loan Payoff Handling",
-                description:
-                  "We handle payoffs directly with your lender and pay you the difference — even for leased vehicles.",
-              },
-            },
-          ],
-        },
-      }}
-    />
-  );
-};
+      },
+    }}
+  />
+);
 
 // ── HowTo (for AI step-by-step extraction) ──
-export const HowToJsonLd = () => {
-  const { config } = useSiteConfig();
-  const name = config.dealership_name || "Our Dealership";
-
-  return (
-    <JsonLd
-      data={{
-        "@context": "https://schema.org",
-        "@type": "HowTo",
-        name: `How to Sell Your Car to ${name}`,
-        description: `A simple 3-step process to sell your car for cash to ${name}.`,
-        totalTime: "PT2M",
-        step: [
-          {
-            "@type": "HowToStep",
-            position: 1,
-            name: "Tell Us About Your Car",
-            text: "Enter your license plate or VIN and basic details about your vehicle. Takes less than 2 minutes.",
-          },
-          {
-            "@type": "HowToStep",
-            position: 2,
-            name: "Get Your Cash Offer",
-            text: `Receive a competitive, no-obligation offer based on real market data. Guaranteed for ${config.price_guarantee_days || 8} days.`,
-          },
-          {
-            "@type": "HowToStep",
-            position: 3,
-            name: "Get Paid & We Pick Up",
-            text: "Accept your offer, get paid on the spot, and we pick up your car for free at your convenience.",
-          },
-        ],
-      }}
-    />
-  );
-};
+export const HowToJsonLd = () => (
+  <JsonLd
+    data={{
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      name: "How to Sell Your Car to Harte Auto Group",
+      description:
+        "A simple 3-step process to sell your car for cash to Harte Auto Group in Connecticut.",
+      totalTime: "PT2M",
+      step: [
+        {
+          "@type": "HowToStep",
+          position: 1,
+          name: "Tell Us About Your Car",
+          text: "Enter your license plate or VIN and basic details about your vehicle. Takes less than 2 minutes.",
+        },
+        {
+          "@type": "HowToStep",
+          position: 2,
+          name: "Get Your Cash Offer",
+          text: "Receive a competitive, no-obligation offer based on real market data. Guaranteed for 8 days.",
+        },
+        {
+          "@type": "HowToStep",
+          position: 3,
+          name: "Get Paid & We Pick Up",
+          text: "Accept your offer, get paid on the spot, and we pick up your car for free at your convenience.",
+        },
+      ],
+    }}
+  />
+);
 
 // ── FAQPage ──
 const FAQ_ITEMS = [

@@ -264,12 +264,3 @@
   color: hsl(var(--foreground));
   font-weight: 600;
 }
-
-/* ── Print styles for Onboarding Script ── */
-@media print {
-  body { background: white !important; }
-  .print\:hidden, nav, header, [data-sidebar], .sidebar, footer { display: none !important; }
-  .print\:block { display: block !important; }
-  .print\:break-inside-avoid { break-inside: avoid; }
-  @page { margin: 0.5in; size: letter; }
-}

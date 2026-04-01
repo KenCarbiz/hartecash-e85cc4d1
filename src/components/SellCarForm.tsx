@@ -139,16 +139,13 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
     );
   };
 
-  // Build step order — when offer_before_details is on, contact info moves to offer page
-  const offerFirst = formConfig.offer_before_details;
-
+  // New Carvana-style step order
   const getDisplaySteps = () => {
     const steps: string[] = ["Vehicle Info"];
     if (showTrimStep) steps.push("Select Your Vehicle");
     if (formConfig.step_vehicle_build) steps.push("Vehicle Build");
     if (formConfig.step_condition_history) steps.push("Condition");
-    steps.push("History");
-    if (!offerFirst) steps.push("Finalize");
+    steps.push("History", "Finalize");
     return steps;
   };
 
@@ -268,8 +265,6 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
       if (!formData.zip.trim()) missing.push("ZIP Code");
       if (!formData.loanStatus) missing.push("Sell or Trade-In");
     }
-
-    // In offer-first mode, the last step is History — no contact validation needed
 
     if (missing.length > 0) {
       toast({
@@ -591,7 +586,7 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
                   Calculating your offer…
                 </span>
               ) : (
-                offerFirst ? "See My Offer →" : "Get My Offer →"
+                "Get My Offer →"
               )}
             </Button>
           )}
@@ -599,9 +594,7 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
       </form>
 
       <p className="text-center mt-4 text-[13px] text-muted-foreground">
-        {offerFirst
-          ? "🔒 No contact info needed — see your offer instantly."
-          : "🔒 Your information is 100% secure and never shared."}
+        🔒 Your information is 100% secure and never shared.
       </p>
 
       <div className="bg-gradient-to-br from-success to-[hsl(160,84%,30%)] text-success-foreground p-5 rounded-xl mt-6 text-center shadow-lg shadow-success/30">

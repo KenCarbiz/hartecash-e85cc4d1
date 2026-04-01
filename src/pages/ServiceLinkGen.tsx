@@ -5,7 +5,7 @@ import { toast } from "@/hooks/use-toast";
 import { Upload, Copy, FileSpreadsheet, Link2, CheckCircle2, Trash2, Sun, Moon } from "lucide-react";
 // @ts-ignore - read-excel-file browser entry
 import readXlsxFile from "read-excel-file/browser";
-import { useSiteConfig } from "@/hooks/useSiteConfig";
+import serviceLogo from "@/assets/harte-service-logo.png";
 
 interface CustomerRow {
   name: string;
@@ -15,7 +15,7 @@ interface CustomerRow {
   link: string;
 }
 
-const BASE_DOMAIN = "https://autocurb.io";
+const BASE_DOMAIN = "https://hartecash.com";
 
 function buildLink(vin: string, date: string, time: string): string {
   const parts: string[] = [];
@@ -206,7 +206,7 @@ const ServiceLinkGen = () => {
       {/* Header */}
       <header className={t.header}>
         <div className="max-w-5xl mx-auto px-5 py-3 flex items-center justify-between">
-          <span className="text-xl font-bold">AutoCurb</span>
+          <img src={serviceLogo} alt="Harte Auto Group" className="h-32 -my-8" />
           <div className="flex items-center gap-4">
             <span className={`text-sm font-semibold tracking-wider uppercase ${t.headerLabel}`}>Link Generator</span>
             <button

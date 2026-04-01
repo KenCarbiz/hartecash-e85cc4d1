@@ -14,8 +14,8 @@ interface TenantContextValue {
 
 const DEFAULT_TENANT: TenantInfo = {
   dealership_id: "default",
-  slug: "default",
-  display_name: "AutoCurb Platform",
+  slug: "harte",
+  display_name: "Harte Auto Group",
 };
 
 const TenantContext = createContext<TenantContextValue>({
@@ -45,8 +45,7 @@ async function resolveTenant(): Promise<TenantInfo> {
     hostname === "localhost" ||
     hostname === "127.0.0.1" ||
     hostname.includes("lovable.app") ||
-    hostname.includes("lovable.dev") ||
-    hostname.includes("lovableproject.com")
+    hostname.includes("lovable.dev")
   ) {
     cachedTenant = DEFAULT_TENANT;
     return DEFAULT_TENANT;

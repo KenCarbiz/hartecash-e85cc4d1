@@ -1,20 +1,14 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import harteLogo from "@/assets/harte-logo-white.png";
 import SEO from "@/components/SEO";
-import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 const PrivacyPolicy = () => {
-  const { config } = useSiteConfig();
-  const name = config.dealership_name || "Our Dealership";
-  const phone = config.phone || "";
-  const address = config.address || "";
-  const logoSrc = config.logo_white_url;
-
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
-        title={`Privacy Policy | ${name}`}
-        description={`Learn how ${name} collects, uses, and protects your personal information. Includes SMS consent details and your data rights.`}
+        title="Privacy Policy | Harte Auto Group"
+        description="Learn how Harte Auto Group collects, uses, and protects your personal information. Includes SMS consent details and your data rights."
         path="/privacy"
       />
       <div className="bg-primary text-primary-foreground px-6 py-4">
@@ -22,7 +16,7 @@ const PrivacyPolicy = () => {
           <Link to="/" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          {logoSrc && <img src={logoSrc} alt={name} className="h-20 w-auto" />}
+          <img src={harteLogo} alt="Harte Auto Group" className="h-20 w-auto" />
           <h1 className="font-bold text-lg">Privacy Policy</h1>
         </div>
       </div>
@@ -35,8 +29,10 @@ const PrivacyPolicy = () => {
           <section>
             <h2 className="text-xl font-bold text-foreground">1. Who We Are</h2>
             <p>
-              {name} ("we," "us," or "our") operates this website and related services.
-              {address && <> Our principal office is located at {address}.</>}
+              Harte Auto Group ("we," "us," or "our") operates the website{" "}
+              <strong>hartecash.com</strong> and related services. We are a family-owned automobile
+              dealership group serving Connecticut since 1952. Our principal office is located at
+              150 Weston Street, Hartford, CT 06120.
             </p>
           </section>
 
@@ -66,10 +62,10 @@ const PrivacyPolicy = () => {
           <section id="sms-consent">
             <h2 className="text-xl font-bold text-foreground">4. Text Message (SMS/MMS) Consent & Communication</h2>
             <p>
-              By providing your phone number on any form on this website — including but not limited to
+              By providing your phone number on any form on hartecash.com — including but not limited to
               the vehicle appraisal form, appointment scheduling form, and service customer form — you
               expressly consent to receive autodialed and/or pre-recorded text messages (SMS and MMS)
-              and phone calls from {name} at the phone number you provided. These communications
+              and phone calls from Harte Auto Group at the phone number you provided. These communications
               may include:
             </p>
             <ul className="list-disc pl-5 space-y-1">
@@ -85,8 +81,8 @@ const PrivacyPolicy = () => {
                 <li><strong>Consent is not a condition of purchase.</strong> You are not required to consent to receive text messages as a condition of purchasing any goods or services.</li>
                 <li><strong>Message frequency varies.</strong> You may receive up to 10 messages per month depending on your interaction with our services.</li>
                 <li><strong>Message and data rates may apply.</strong> Standard messaging rates from your wireless carrier apply.</li>
-                <li><strong>Opt-out at any time.</strong> Reply <strong>STOP</strong> to any text message to unsubscribe. You will receive a one-time confirmation message.{phone && <> You may also contact us at {phone} to opt out.</>}</li>
-                <li><strong>Help.</strong> Reply <strong>HELP</strong> for assistance{phone && <> or contact us at {phone}</>}.</li>
+                <li><strong>Opt-out at any time.</strong> Reply <strong>STOP</strong> to any text message to unsubscribe. You will receive a one-time confirmation message. You may also contact us at (866) 851-7390 to opt out.</li>
+                <li><strong>Help.</strong> Reply <strong>HELP</strong> for assistance or contact us at (866) 851-7390.</li>
                 <li><strong>Supported carriers:</strong> AT&T, Verizon, T-Mobile, Sprint, and most major U.S. carriers. Carriers are not liable for delayed or undelivered messages.</li>
               </ul>
             </div>
@@ -94,7 +90,8 @@ const PrivacyPolicy = () => {
             <p>
               Your consent to receive text messages is documented at the time of form submission and
               retained in our records. We do not sell, rent, or share your phone number with third
-              parties for their marketing purposes. Your phone number will only be used by {name} and its authorized service providers for the purposes described above.
+              parties for their marketing purposes. Your phone number will only be used by Harte Auto
+              Group and its authorized service providers for the purposes described above.
             </p>
           </section>
 
@@ -137,7 +134,8 @@ const PrivacyPolicy = () => {
               <li>Request a copy of the data we hold about you.</li>
             </ul>
             <p>
-              To exercise any of these rights, contact us{phone && <> at <strong>{phone}</strong> or</>} at the address listed below.
+              To exercise any of these rights, contact us at{" "}
+              <strong>(866) 851-7390</strong> or email us at the address listed below.
             </p>
           </section>
 
@@ -162,9 +160,9 @@ const PrivacyPolicy = () => {
             <h2 className="text-xl font-bold text-foreground">11. Contact Us</h2>
             <p>If you have questions about this Privacy Policy or our data practices, contact us:</p>
             <div className="bg-muted/50 border border-border rounded-lg p-4">
-              <p className="font-bold">{name}</p>
-              {address && <p>{address}</p>}
-              {phone && <p>Phone: {phone}</p>}
+              <p className="font-bold">Harte Auto Group</p>
+              <p>150 Weston Street, Hartford, CT 06120</p>
+              <p>Phone: (866) 851-7390</p>
             </div>
           </section>
         </div>
@@ -172,7 +170,7 @@ const PrivacyPolicy = () => {
 
       <footer className="border-t border-border py-6 px-5 text-center">
         <p className="text-xs text-muted-foreground">
-          © {new Date().getFullYear()} {name}. All rights reserved.
+          © {new Date().getFullYear()} Harte Auto Group. All rights reserved.
         </p>
       </footer>
     </div>

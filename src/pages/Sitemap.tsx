@@ -1,10 +1,8 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
-import { useSiteConfig } from "@/hooks/useSiteConfig";
+import harteLogo from "@/assets/harte-logo-white.png";
 
 const Sitemap = () => {
-  const { config } = useSiteConfig();
-  const logoSrc = config.logo_white_url;
   const sections = [
     {
       title: "Main Pages",
@@ -51,7 +49,7 @@ const Sitemap = () => {
           <Link to="/" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          {logoSrc && <img src={logoSrc} alt={config.dealership_name} className="h-20 w-auto" />}
+          <img src={harteLogo} alt="Harte Auto Group" className="h-20 w-auto" />
           <h1 className="font-bold text-lg">Sitemap</h1>
         </div>
       </div>

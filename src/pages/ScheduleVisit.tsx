@@ -287,8 +287,8 @@ const ScheduleVisit = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
-        title={`Schedule Your Visit | ${config.dealership_name}`}
-        description={`Book an appointment to sell or trade in your vehicle at ${config.dealership_name}. Pick a time and location that works for you.`}
+        title="Schedule Your Visit | Harte Auto Group"
+        description="Book an appointment to sell or trade in your vehicle at Harte Auto Group. Pick a time and location that works for you."
         path="/schedule"
       />
       <div className="bg-primary text-primary-foreground px-6 py-4">
@@ -434,7 +434,7 @@ const ScheduleVisit = () => {
 
               <div className="p-3.5 bg-muted/30 border border-border rounded-xl">
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  By submitting, you consent to receive autodialed calls, texts (SMS/MMS), and emails from {config.dealership_name} at the number and email provided regarding your appointment and vehicle. Consent is not a condition of purchase. Msg & data rates may apply. Msg frequency varies. Reply STOP to opt out. See our{" "}
+                  By submitting, you consent to receive autodialed calls, texts (SMS/MMS), and emails from {config.dealership_name || "Harte Auto Group"} at the number and email provided regarding your appointment and vehicle. Consent is not a condition of purchase. Msg & data rates may apply. Msg frequency varies. Reply STOP to opt out. See our{" "}
                   <a href="/privacy#sms-consent" target="_blank" rel="noopener noreferrer" className="underline text-primary hover:no-underline">Privacy Policy</a>{" "}
                   and{" "}
                   <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline text-primary hover:no-underline">Terms of Service</a>.

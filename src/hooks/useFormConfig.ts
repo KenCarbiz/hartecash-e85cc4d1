@@ -5,7 +5,6 @@ import { useTenant } from "@/contexts/TenantContext";
 export interface FormConfig {
   step_vehicle_build: boolean;
   step_condition_history: boolean;
-  offer_before_details: boolean;
   q_overall_condition: boolean;
   q_exterior_damage: boolean;
   q_windshield_damage: boolean;
@@ -29,7 +28,6 @@ export interface FormConfig {
 const DEFAULTS: FormConfig = {
   step_vehicle_build: true,
   step_condition_history: true,
-  offer_before_details: false,
   q_overall_condition: true,
   q_exterior_damage: true,
   q_windshield_damage: true,

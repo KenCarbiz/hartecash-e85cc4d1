@@ -1,4 +1,3 @@
-import { lazy, Suspense } from "react";
 import SEO from "@/components/SEO";
 import { LocalBusinessJsonLd, FAQPageJsonLd, HowToJsonLd } from "@/components/JsonLd";
 import SiteHeader from "@/components/SiteHeader";
@@ -14,40 +13,17 @@ import CTABanner from "@/components/CTABanner";
 import SiteFooter from "@/components/SiteFooter";
 import AboutBlurb from "@/components/AboutBlurb";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
-import { useTenant } from "@/contexts/TenantContext";
 import HeroOffset from "@/components/HeroOffset";
 
-const PlatformLanding = lazy(() => import("./PlatformLanding"));
-
-/**
- * Returns true when we're on the platform domain (autocurb.io)
- * rather than a tenant's branded domain.
- */
-function isPlatformDomain(): boolean {
-  const h = window.location.hostname;
-  return h === "autocurb.io" || h === "www.autocurb.io";
-}
-
 const Index = () => {
-  const { tenant } = useTenant();
   const { config } = useSiteConfig();
   const layout = config.hero_layout || "offset_right";
-
-  // If we're on autocurb.io (platform domain) and the tenant is the fallback default,
-  // show the SaaS platform landing page instead of a dealer page.
-  if (isPlatformDomain() && tenant.dealership_id === "default") {
-    return (
-      <Suspense fallback={null}>
-        <PlatformLanding />
-      </Suspense>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title={`Sell Your Car - Get Cash Offer in 2 Minutes | ${config.dealership_name}`}
-        description={`Get a top-dollar cash offer for your car in 2 minutes. Free pickup, no obligation. ${config.dealership_name}.`}
+        title="Sell Your Car - Get Cash Offer in 2 Minutes | Harte Auto Group"
+        description="Get a top-dollar cash offer for your car in 2 minutes. Free pickup, no obligation. Harte Auto Group — trusted since 1952."
         path="/"
       />
       <LocalBusinessJsonLd />

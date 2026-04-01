@@ -24,7 +24,7 @@ const HERO_IMAGES = [kenNissan, kenHyundai, kenInfiniti, kenLexus, kenMercedes, 
 
 /* ─── Slide IDs ─── */
 const SLIDES = ["hero", "stats", "process", "turnarounds", "journey", "leadership", "philosophy", "recognition", "platform", "cta"] as const;
-const SLIDE_LABELS = ["Intro", "Numbers", "Process", "Track Record", "Journey", "Leadership", "Philosophy", "Recognition", "Platform", "Connect"];
+const SLIDE_LABELS = ["Intro", "Numbers", "Process", "Track Record", "Journey", "Leadership", "Philosophy", "Recognition", "HarteCash", "Connect"];
 type SlideId = typeof SLIDES[number];
 
 /* ─── Variants ─── */

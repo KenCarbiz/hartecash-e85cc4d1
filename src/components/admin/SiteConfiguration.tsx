@@ -55,7 +55,7 @@ interface SiteConfig {
 
 const DEFAULT_CONFIG: SiteConfig = {
   id: "",
-  dealership_name: "Our Dealership",
+  dealership_name: "Harte Auto Group",
   tagline: "Sell Your Car The Easy Way",
   phone: "",
   email: "",
