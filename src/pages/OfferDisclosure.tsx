@@ -297,6 +297,8 @@ const sections: Section[] = [
 // ─── Page ────────────────────────────────────────────────────────────────────
 const OfferDisclosure = () => {
   const [open, setOpen] = useState<number | null>(null);
+  const { config } = useSiteConfig();
+  const name = config.dealership_name || "Our Dealership";
   const toggle = (i: number) => setOpen(open === i ? null : i);
 
   return (
