@@ -6,7 +6,7 @@ import autocurbLogoMain from "@/assets/autocurb-logo-main.png";
 import screenshotLanding from "@/assets/pitch/screenshot-landing.png";
 import screenshotPortal from "@/assets/pitch/screenshot-portal.jpg";
 import screenshotDashboard from "@/assets/pitch/screenshot-dashboard.jpg";
-import screenshotUploadMobile from "@/assets/pitch/screenshot-upload-mobile.jpg";
+import screenshotUploadMobile from "@/assets/pitch/screenshot-upload-mobile-phone.png";
 import {
   Car, Users, Shield, Zap, BarChart3, CheckCircle2, DollarSign,
   Smartphone, Camera, Globe, Layers, Eye, Target, Cpu, Lock,
