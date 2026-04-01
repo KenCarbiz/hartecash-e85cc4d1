@@ -76,6 +76,7 @@ const AdminDashboard = () => {
   const [optOutStatus, setOptOutStatus] = useState<{ email: boolean; sms: boolean }>({ email: false, sms: false });
   const [activeSection, setActiveSection] = useState("submissions");
   const [onboardingDealershipId, setOnboardingDealershipId] = useState<string | null>(null);
+  const [onboardingDealerName, setOnboardingDealerName] = useState<string>("");
   const [dealerLocations, setDealerLocations] = useState<DealerLocation[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [permissionRequestCount, setPermissionRequestCount] = useState(0);
