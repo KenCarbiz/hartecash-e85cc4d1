@@ -1,0 +1,1 @@
+ALTER TABLE public.site_config ADD COLUMN vehicle_image_angle text NOT NULL DEFAULT 'three_quarter';
