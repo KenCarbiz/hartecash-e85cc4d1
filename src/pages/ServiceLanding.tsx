@@ -785,9 +785,9 @@ const ServiceLanding = () => {
 
       {/* Footer */}
       <footer className="border-t border-[hsl(217,33%,17%)] py-8 px-5 text-center">
-        <img src={serviceLogo} alt="Harte Auto Group" className="h-20 mx-auto mb-3 opacity-60" />
+        {siteConfig.logo_white_url && <img src={siteConfig.logo_white_url} alt={siteConfig.dealership_name} className="h-20 mx-auto mb-3 opacity-60" />}
         <p className="text-xs text-[hsl(215,20%,45%)]">
-          Family-owned since 1952 • 150 Weston Street, Hartford, CT 06120 • (866) 851-7390
+          {siteConfig.dealership_name}{siteConfig.address ? ` • ${siteConfig.address}` : ""}{siteConfig.phone ? ` • ${siteConfig.phone}` : ""}
         </p>
         <div className="flex justify-center gap-4 mt-3">
           <a href="/privacy" className="text-xs text-[hsl(215,20%,45%)] hover:text-[hsl(215,20%,65%)] underline transition-colors">Privacy Policy</a>
