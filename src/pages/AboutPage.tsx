@@ -63,8 +63,8 @@ const AboutPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title={`About ${name} — CT's Trusted Car Buyer Since 1951`}
-        description={`Four generations of the ${name} family have purchased ${config.stats_cars_purchased || "14,700+"} vehicles across Connecticut. ${config.stats_rating || "4.9"}-star rating, ${config.stats_reviews_count || "2,400+"} reviews. Learn our story.`}
+        title={`About ${name} — Trusted Car Buyer`}
+        description={`${name} has purchased ${config.stats_cars_purchased || "thousands of"} vehicles. ${config.stats_rating || "4.9"}-star rating, ${config.stats_reviews_count || "hundreds of"} reviews. Learn our story.`}
         path="/about"
       />
       <LocalBusinessJsonLd />
