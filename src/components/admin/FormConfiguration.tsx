@@ -39,6 +39,7 @@ const DEFAULTS: FormConfigData = {
   dealership_id: "default",
   step_vehicle_build: true,
   step_condition_history: true,
+  offer_before_details: false,
   q_overall_condition: true,
   q_exterior_damage: true,
   q_windshield_damage: true,
