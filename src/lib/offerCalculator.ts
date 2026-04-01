@@ -120,10 +120,17 @@ const DEFAULT_DEDUCTION_AMOUNTS: DeductionAmounts = {
 };
 
 const DEFAULT_CONDITION_MULTIPLIERS: ConditionMultipliers = {
-  excellent: 1.05,
+  excellent: 1.0,
+  very_good: 1.0,
   good: 1.0,
-  fair: 0.90,
-  rough: 0.78,
+  fair: 1.0,
+};
+
+const DEFAULT_CONDITION_BASIS_MAP: ConditionBasisMap = {
+  excellent: "retail_xclean",
+  very_good: "tradein_clean",
+  good: "tradein_avg",
+  fair: "wholesale_rough",
 };
 
 const DEFAULT_DEDUCTIONS: DeductionsConfig = {
