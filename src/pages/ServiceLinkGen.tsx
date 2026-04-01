@@ -15,7 +15,7 @@ interface CustomerRow {
   link: string;
 }
 
-const BASE_DOMAIN = "https://hartecash.com";
+const BASE_DOMAIN = "https://autocurb.io";
 
 function buildLink(vin: string, date: string, time: string): string {
   const parts: string[] = [];
