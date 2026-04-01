@@ -760,45 +760,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
               {/* Detailed Controls — Collapsible panels for fine-tuning */}
               {inlineControls && liveResult && (
                 <div className="space-y-2">
-                  {/* Condition Multipliers Detail */}
-                  <Collapsible>
-                    <CollapsibleTrigger asChild>
-                      <button className="flex items-center justify-between w-full px-3 py-2 text-left hover:bg-muted/30 transition-colors rounded-lg border border-border">
-                        <div className="flex items-center gap-1.5">
-                          <Gauge className="w-3.5 h-3.5 text-primary" />
-                          <span className="font-semibold text-[11px] text-card-foreground">Condition Multipliers</span>
-                        </div>
-                        <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
-                      </button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2">
-                        {(["excellent", "very_good", "good", "fair"] as const).map(grade => {
-                          const mult = localSettings.condition_multipliers?.[grade] ?? 1.0;
-                          const isActive = grade === liveCondition;
-                          return (
-                            <div key={grade} className={`space-y-1 rounded-md p-1.5 ${isActive ? "bg-primary/10 ring-1 ring-primary/20" : ""}`}>
-                              <div className="flex items-center justify-between">
-                                <Label className="text-[10px] font-semibold">{CONDITION_LABELS[grade]}</Label>
-                                {isActive && <span className="text-[7px] bg-primary text-primary-foreground px-1 rounded">ACTIVE</span>}
-                              </div>
-                              <Input
-                                type="number" step="0.01" min="0" max="2"
-                                value={mult}
-                                onChange={e => updateLocalSetting("condition_multipliers", { ...localSettings.condition_multipliers, [grade]: Number(e.target.value) })}
-                                className="w-full h-6 text-[10px]"
-                              />
-                              <Slider
-                                value={[mult * 100]}
-                                min={50} max={130} step={1}
-                                onValueChange={([v]) => updateLocalSetting("condition_multipliers", { ...localSettings.condition_multipliers, [grade]: Math.round(v) / 100 })}
-                              />
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
+                  {/* Condition Multipliers are now inline in the per-tier cards above */}
 
                   {/* Age Tiers */}
                   <Collapsible>
