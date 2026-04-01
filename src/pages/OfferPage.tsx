@@ -1,11 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, DollarSign, ArrowDown, TrendingUp, ShieldCheck, Info, Printer, CheckCircle, AlertTriangle, Search, ArrowRight, QrCode, Sparkles, ExternalLink, Car, Gauge, Palette, Wrench, Key, Wind, Cigarette, CircleDot, Settings2, Pencil, CalendarCheck, MapPin, Clock } from "lucide-react";
-import { QRCodeSVG } from "qrcode.react";
+import { ArrowLeft, DollarSign, ArrowDown, TrendingUp, ShieldCheck, Info, Printer, CheckCircle, ArrowRight, Car, Gauge, Palette, Settings2, Pencil } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import InspectionDisclosure from "@/components/portal/InspectionDisclosure";
 import harteLogoFallback from "@/assets/harte-logo-white.png";
 import PortalSkeleton from "@/components/PortalSkeleton";
@@ -14,6 +12,8 @@ import { getTaxRateFromZip, calcTradeInValue, STATE_NAMES } from "@/lib/salesTax
 import VehicleImage from "@/components/sell-form/VehicleImage";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { InlineEdit } from "@/components/offer/InlineEdit";
+import OfferConditionBlock, { buildConditionItems } from "@/components/offer/OfferConditionBlock";
+import OfferPrintLayout from "@/components/offer/OfferPrintLayout";
 import { recalculateFromSubmission, type SubmissionCondition } from "@/lib/recalculateOffer";
 import type { OfferSettings, OfferRule } from "@/lib/offerCalculator";
 import { resolveEffectiveSettings } from "@/lib/resolvePricingModel";
@@ -81,86 +81,11 @@ interface ConditionDetails {
   bb_retail_avg: number | null;
 }
 
-/* ─── Edit option lists ─── */
 const CONDITION_OPTIONS = [
   { value: "excellent", label: "Excellent" },
   { value: "good", label: "Good" },
   { value: "fair", label: "Fair" },
   { value: "rough", label: "Rough" },
-];
-
-const YES_NO = [
-  { value: "yes", label: "Yes" },
-  { value: "no", label: "No" },
-];
-
-const ACCIDENT_OPTIONS = [
-  { value: "0", label: "None" },
-  { value: "1", label: "1 Accident" },
-  { value: "2", label: "2 Accidents" },
-  { value: "3+", label: "3+ Accidents" },
-];
-
-const WINDSHIELD_OPTIONS = [
-  { value: "none", label: "None" },
-  { value: "chipped", label: "Chipped" },
-  { value: "cracked", label: "Cracked" },
-  { value: "chipped_and_cracked", label: "Chipped & Cracked" },
-];
-
-const KEY_OPTIONS = [
-  { value: "2+", label: "2+ Keys" },
-  { value: "1", label: "1 Key" },
-  { value: "0", label: "No Keys" },
-];
-
-const TIRE_OPTIONS = [
-  { value: "None", label: "None" },
-  { value: "1", label: "1 Tire" },
-  { value: "2", label: "2 Tires" },
-  { value: "3", label: "3 Tires" },
-  { value: "4", label: "4 Tires" },
-];
-
-const EXTERIOR_DAMAGE_OPTIONS = [
-  { value: "none", label: "None" },
-  { value: "dents", label: "Dents" },
-  { value: "scratches", label: "Scratches" },
-  { value: "rust", label: "Rust" },
-  { value: "paint_damage", label: "Paint Damage" },
-  { value: "body_panel", label: "Body Panel" },
-];
-
-const INTERIOR_DAMAGE_OPTIONS = [
-  { value: "none", label: "None" },
-  { value: "stains", label: "Stains" },
-  { value: "tears", label: "Tears" },
-  { value: "burns", label: "Burns" },
-  { value: "odor", label: "Odor" },
-];
-
-const MECHANICAL_OPTIONS = [
-  { value: "none", label: "None" },
-  { value: "transmission", label: "Transmission" },
-  { value: "brakes", label: "Brakes" },
-  { value: "suspension", label: "Suspension" },
-  { value: "exhaust", label: "Exhaust" },
-];
-
-const ENGINE_OPTIONS = [
-  { value: "none", label: "None" },
-  { value: "check_engine", label: "Check Engine Light" },
-  { value: "oil_leak", label: "Oil Leak" },
-  { value: "overheating", label: "Overheating" },
-  { value: "noise", label: "Unusual Noise" },
-];
-
-const TECH_OPTIONS = [
-  { value: "none", label: "None" },
-  { value: "radio", label: "Radio/Speakers" },
-  { value: "ac", label: "A/C or Heat" },
-  { value: "navigation", label: "Navigation" },
-  { value: "cameras", label: "Cameras" },
 ];
 
 const OfferPage = () => {
@@ -173,6 +98,7 @@ const OfferPage = () => {
   const [calculatingDone, setCalculatingDone] = useState(false);
   const [offerSettings, setOfferSettings] = useState<OfferSettings | null>(null);
   const [offerRules, setOfferRules] = useState<OfferRule[]>([]);
+  const [stickyCompact, setStickyCompact] = useState(false);
   const [saving, setSaving] = useState(false);
   const [appointment, setAppointment] = useState<{ preferred_date: string; preferred_time: string; store_location: string | null } | null>(null);
   const [dealerLocations, setDealerLocations] = useState<{ id: string; name: string; city: string; state: string; address: string | null }[]>([]);
@@ -184,6 +110,13 @@ const OfferPage = () => {
 
   const handleCalculatingComplete = useCallback(() => {
     setCalculatingDone(true);
+  }, []);
+
+  // Collapse sticky bar on scroll
+  useEffect(() => {
+    const onScroll = () => setStickyCompact(window.scrollY > 200);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   useEffect(() => {
@@ -673,384 +606,19 @@ const OfferPage = () => {
     </motion.div>
   );
 
-  /* ─── Verified Vehicle Specs (from Black Book) ─── */
-  const bbSpecs = condition ? [
-    { label: "Vehicle Class", value: condition.bb_class_name, verified: !!condition.bb_class_name },
-    { label: "Drivetrain", value: condition.bb_drivetrain, verified: !!condition.bb_drivetrain },
-    { label: "Transmission", value: condition.bb_transmission, verified: !!condition.bb_transmission },
-    { label: "Engine", value: condition.bb_engine, verified: !!condition.bb_engine },
-    { label: "Fuel Type", value: condition.bb_fuel_type, verified: !!condition.bb_fuel_type },
-    { label: "Original MSRP", value: condition.bb_msrp ? `$${condition.bb_msrp.toLocaleString()}` : null, verified: !!condition.bb_msrp },
-    { label: "Mileage Adj.", value: condition.bb_mileage_adj != null && condition.bb_mileage_adj !== 0 ? `${condition.bb_mileage_adj >= 0 ? "+" : ""}$${condition.bb_mileage_adj.toLocaleString()}` : null, verified: true },
-    { label: "Regional Adj.", value: condition.bb_regional_adj != null && condition.bb_regional_adj !== 0 ? `${condition.bb_regional_adj >= 0 ? "+" : ""}$${condition.bb_regional_adj.toLocaleString()}` : null, verified: true },
-  ].filter(s => s.value) : [];
 
-  const VerifiedSpecsBlock = bbSpecs.length > 0 ? (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.4 }}
-      className="bg-card rounded-xl shadow-lg overflow-hidden"
-    >
-      <div className="bg-gradient-to-r from-primary/5 via-primary/8 to-primary/5 px-5 py-3.5 border-b border-border/50">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-            <ShieldCheck className="w-4.5 h-4.5 text-primary" />
-          </div>
-          <div>
-            <h3 className="font-bold text-card-foreground">Verified Vehicle Data</h3>
-            <p className="text-[11px] text-muted-foreground">Cross-referenced with industry databases</p>
-          </div>
-        </div>
-      </div>
-      <div className="p-5">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {bbSpecs.map((spec) => (
-            <div
-              key={spec.label}
-              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm border transition-colors ${
-                spec.verified
-                  ? "bg-success/5 border-success/15 hover:bg-success/8"
-                  : "bg-destructive/5 border-destructive/15"
-              }`}
-            >
-              {spec.verified ? (
-                <CheckCircle className="w-4 h-4 text-success shrink-0" />
-              ) : (
-                <AlertTriangle className="w-4 h-4 text-destructive shrink-0" />
-              )}
-              <span className="font-medium text-card-foreground">{spec.label}:</span>
-              <span className="text-muted-foreground truncate">{spec.value}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </motion.div>
-  ) : null;
 
-  /* ─── Condition / "What's Behind Your Offer" block (with inline edit) ─── */
-  interface ConditionItem {
-    label: string;
-    status: "good" | "warn";
-    icon: React.ReactNode;
-    field?: string;
-    editType?: "select" | "multi-select";
-    editOptions?: { value: string; label: string }[];
-    editValue?: string;
-    multiEditValue?: string[];
-  }
 
-  const conditionItems: ConditionItem[] = [];
-
-  // BB-Verified specs with green check / red X
-  if (condition?.bb_class_name) {
-    conditionItems.push({ label: `Vehicle Class: ${condition.bb_class_name}`, status: "good", icon: <Car className="w-3.5 h-3.5" /> });
-  }
-  if (condition?.bb_drivetrain) {
-    conditionItems.push({ label: `Drivetrain: ${condition.bb_drivetrain}`, status: "good", icon: <Settings2 className="w-3.5 h-3.5" /> });
-  }
-  if (condition?.bb_transmission) {
-    conditionItems.push({ label: `Transmission: ${condition.bb_transmission}`, status: "good", icon: <Settings2 className="w-3.5 h-3.5" /> });
-  }
-  if (condition?.bb_engine) {
-    conditionItems.push({ label: `Engine: ${condition.bb_engine}`, status: "good", icon: <Gauge className="w-3.5 h-3.5" /> });
-  }
-
-  // Accidents
-  const accidentsVal = (condition?.accidents || "").toLowerCase();
-  const noAccidents = !condition?.accidents || accidentsVal.includes("no") || accidentsVal === "none" || accidentsVal === "0";
-  const accidentDisplay = noAccidents ? "None" : accidentsVal === "1" ? "1" : accidentsVal === "2" ? "2" : accidentsVal === "3+" ? "3+" : condition!.accidents;
-  conditionItems.push({
-    label: `Accidents: ${accidentDisplay}`,
-    status: noAccidents ? "good" : "warn",
-    icon: <Car className="w-3.5 h-3.5" />,
-    field: "accidents",
-    editType: "select",
-    editOptions: ACCIDENT_OPTIONS,
-    editValue: condition?.accidents || "0",
-  });
-
-  // Exterior damage
-  const extItems = condition?.exterior_damage?.filter(v => v !== "none") || [];
-  const noExteriorDmg = extItems.length === 0;
-  conditionItems.push({
-    label: noExteriorDmg ? "Exterior Damage: None" : `Exterior Damage: ${extItems.length} issue${extItems.length > 1 ? "s" : ""}`,
-    status: noExteriorDmg ? "good" : "warn",
-    icon: <Palette className="w-3.5 h-3.5" />,
-    field: "exterior_damage",
-    editType: "multi-select",
-    editOptions: EXTERIOR_DAMAGE_OPTIONS,
-    multiEditValue: condition?.exterior_damage || [],
-  });
-
-  // Interior damage
-  const intItems = condition?.interior_damage?.filter(v => v !== "none") || [];
-  const noInteriorDmg = intItems.length === 0;
-  conditionItems.push({
-    label: noInteriorDmg ? "Interior Damage: None" : `Interior Damage: ${intItems.length} issue${intItems.length > 1 ? "s" : ""}`,
-    status: noInteriorDmg ? "good" : "warn",
-    icon: <CircleDot className="w-3.5 h-3.5" />,
-    field: "interior_damage",
-    editType: "multi-select",
-    editOptions: INTERIOR_DAMAGE_OPTIONS,
-    multiEditValue: condition?.interior_damage || [],
-  });
-
-  // Mechanical issues
-  const mechItems = condition?.mechanical_issues?.filter(v => v !== "none") || [];
-  const noMechanical = mechItems.length === 0;
-  conditionItems.push({
-    label: noMechanical ? "Mechanical Issues: None" : `Mechanical Issues: ${mechItems.length} issue${mechItems.length > 1 ? "s" : ""}`,
-    status: noMechanical ? "good" : "warn",
-    icon: <Wrench className="w-3.5 h-3.5" />,
-    field: "mechanical_issues",
-    editType: "multi-select",
-    editOptions: MECHANICAL_OPTIONS,
-    multiEditValue: condition?.mechanical_issues || [],
-  });
-
-  // Engine issues
-  const engItems = condition?.engine_issues?.filter(v => v !== "none") || [];
-  const noEngine = engItems.length === 0;
-  conditionItems.push({
-    label: noEngine ? "Engine Issues: None" : `Engine Issues: ${engItems.length} issue${engItems.length > 1 ? "s" : ""}`,
-    status: noEngine ? "good" : "warn",
-    icon: <Settings2 className="w-3.5 h-3.5" />,
-    field: "engine_issues",
-    editType: "multi-select",
-    editOptions: ENGINE_OPTIONS,
-    multiEditValue: condition?.engine_issues || [],
-  });
-
-  // Tech issues
-  const techItems = condition?.tech_issues?.filter(v => v !== "none") || [];
-  const noTech = techItems.length === 0;
-  conditionItems.push({
-    label: noTech ? "Technology Issues: None" : `Technology Issues: ${techItems.length} issue${techItems.length > 1 ? "s" : ""}`,
-    status: noTech ? "good" : "warn",
-    icon: <Search className="w-3.5 h-3.5" />,
-    field: "tech_issues",
-    editType: "multi-select",
-    editOptions: TECH_OPTIONS,
-    multiEditValue: condition?.tech_issues || [],
-  });
-
-  // Windshield
-  const windshieldVal = (condition?.windshield_damage || "").toLowerCase().trim();
-  const hasCrack = windshieldVal.includes("crack") || windshieldVal.includes("major");
-  const hasChip = windshieldVal.includes("chip") || windshieldVal.includes("pitting") || windshieldVal.includes("minor");
-  const noWindshield = !windshieldVal || windshieldVal === "none" || windshieldVal === "no" || windshieldVal.includes("no damage") || windshieldVal.includes("no windshield") || (!hasCrack && !hasChip);
-  const windshieldLabel = noWindshield
-    ? "None"
-    : (hasCrack && hasChip) ? "Chipped & Cracked"
-    : hasCrack ? "Cracked"
-    : hasChip ? "Chipped"
-    : "None";
-  if (condition?.windshield_damage !== undefined) {
-    conditionItems.push({
-      label: `Windshield Issue: ${windshieldLabel}`,
-      status: noWindshield ? "good" : "warn",
-      icon: <Wind className="w-3.5 h-3.5" />,
-      field: "windshield_damage",
-      editType: "select",
-      editOptions: WINDSHIELD_OPTIONS,
-      editValue: condition?.windshield_damage || "none",
-    });
-  }
-
-  // Smoked in
-  const smokedVal = (condition?.smoked_in || "").toLowerCase();
-  const notSmokedIn = !condition?.smoked_in || smokedVal === "no" || smokedVal === "not smoked in";
-  if (condition?.smoked_in !== undefined) {
-    conditionItems.push({
-      label: notSmokedIn ? "Smoked In: No" : "Smoked In: Yes",
-      status: notSmokedIn ? "good" : "warn",
-      icon: <Cigarette className="w-3.5 h-3.5" />,
-      field: "smoked_in",
-      editType: "select",
-      editOptions: YES_NO,
-      editValue: condition?.smoked_in || "no",
-    });
-  }
-
-  // Drivable
-  if (condition?.drivable !== undefined) {
-    const drivableVal = (condition.drivable || "").toLowerCase();
-    const isDrivable = !condition.drivable || drivableVal === "yes" || drivableVal === "drivable";
-    conditionItems.push({
-      label: isDrivable ? "Drivable: Yes" : "Drivable: No",
-      status: isDrivable ? "good" : "warn",
-      icon: <Car className="w-3.5 h-3.5" />,
-      field: "drivable",
-      editType: "select",
-      editOptions: YES_NO,
-      editValue: condition?.drivable || "yes",
-    });
-  }
-
-  // Tires
-  if (condition?.tires_replaced !== undefined) {
-    const tiresVal = (condition.tires_replaced || "").toLowerCase();
-    const tiresCount = parseInt(tiresVal) || 0;
-    const tiresGood = tiresCount > 0;
-    conditionItems.push({
-      label: tiresGood ? `Tires Replaced: ${condition.tires_replaced}` : "Tires Replaced: None",
-      status: tiresGood ? "good" : "warn",
-      icon: <CircleDot className="w-3.5 h-3.5" />,
-      field: "tires_replaced",
-      editType: "select",
-      editOptions: TIRE_OPTIONS,
-      editValue: condition?.tires_replaced || "None",
-    });
-  }
-
-  // Keys
-  if (condition?.num_keys) {
-    const oneKeyOrNone = condition.num_keys === "1" || condition.num_keys === "0";
-    conditionItems.push({
-      label: `Keys: ${condition.num_keys} key${condition.num_keys === "1" ? "" : "s"} available`,
-      status: oneKeyOrNone ? "warn" : "good",
-      icon: <Key className="w-3.5 h-3.5" />,
-      field: "num_keys",
-      editType: "select",
-      editOptions: KEY_OPTIONS,
-      editValue: condition.num_keys,
-    });
-  }
-
-  // Modifications
-  const noMods = !condition?.modifications || condition.modifications.toLowerCase() === "none" || condition.modifications.toLowerCase() === "no";
-  if (condition?.modifications !== undefined) {
-    conditionItems.push({
-      label: noMods ? "Modifications: None" : `Modifications: ${condition!.modifications}`,
-      status: noMods ? "good" : "warn",
-      icon: <Settings2 className="w-3.5 h-3.5" />,
-    });
-  }
-
-  const goodCount = conditionItems.filter(c => c.status === "good").length;
-  const totalCount = conditionItems.length;
+  const conditionItems = buildConditionItems(condition);
 
   const ConditionBlock = (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5 }}
-      className="bg-card rounded-xl shadow-lg overflow-hidden"
-    >
-      {/* Header with score bar */}
-      <div className="bg-gradient-to-r from-primary/5 to-primary/10 px-5 py-4 border-b border-border/50">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-              <Search className="w-4 h-4 text-primary" />
-            </div>
-            <h3 className="font-bold text-card-foreground">What's Behind Your Offer</h3>
-          </div>
-          <span className="text-xs font-semibold text-success bg-success/10 px-2.5 py-1 rounded-full">
-            {goodCount}/{totalCount} clear
-          </span>
-        </div>
-        <p className="text-sm text-muted-foreground leading-relaxed">
-          We evaluated your {vehicleStr || "vehicle"} using market data, service records, and the condition details you provided.
-          {canEdit && <span className="text-primary font-medium"> Click any item to correct it — your offer updates instantly.</span>}
-        </p>
-      </div>
-
-      {/* Condition items grid */}
-      <div className="p-5">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {conditionItems.map((item, i) => (
-            <div
-              key={i}
-              className={`rounded-lg px-3 py-2.5 text-sm transition-colors ${
-                item.status === "good"
-                  ? "bg-success/5 border border-success/15"
-                  : "bg-amber-500/5 border border-amber-500/15"
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
-                  item.status === "good" ? "bg-success/10 text-success" : "bg-amber-500/10 text-amber-600"
-                }`}>
-                  {item.status === "good" ? <CheckCircle className="w-3.5 h-3.5" /> : <AlertTriangle className="w-3.5 h-3.5" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  {(() => {
-                    const categoryLabel = item.label.includes(":") ? item.label.split(":")[0] + ":" : "";
-                    const answerPart = item.label.includes(":") ? item.label.split(":").slice(1).join(":").trim() : item.label;
-                    
-                    if (canEdit && item.field && item.editType === "select") {
-                      return (
-                        <div className="flex items-center gap-1.5 text-sm">
-                          <span className={`shrink-0 ${item.status === "good" ? "text-muted-foreground" : "text-amber-600 dark:text-amber-400"}`}>
-                            {item.icon}
-                          </span>
-                          <span className="font-medium text-card-foreground whitespace-nowrap">{categoryLabel}</span>
-                          <InlineEdit
-                            value={answerPart}
-                            onSave={(val) => handleFieldUpdate(item.field!, val)}
-                            type="select"
-                            options={item.editOptions!}
-                            label={item.field}
-                            className="text-sm"
-                          />
-                        </div>
-                      );
-                    }
-                    if (canEdit && item.field && item.editType === "multi-select") {
-                      return (
-                        <div className="flex items-center gap-1.5 text-sm">
-                          <span className={`shrink-0 ${item.status === "good" ? "text-muted-foreground" : "text-amber-600 dark:text-amber-400"}`}>
-                            {item.icon}
-                          </span>
-                          <span className="font-medium text-card-foreground whitespace-nowrap">{categoryLabel}</span>
-                          <InlineEdit
-                            value=""
-                            onSave={() => {}}
-                            type="multi-select"
-                            options={item.editOptions!}
-                            multiValue={item.multiEditValue}
-                            onMultiSave={(vals) => handleFieldUpdate(item.field!, vals)}
-                            label={item.field}
-                            className="text-sm"
-                          />
-                        </div>
-                      );
-                    }
-                    return (
-                      <div className="flex items-center gap-1.5">
-                        <span className={`shrink-0 ${item.status === "good" ? "text-muted-foreground" : "text-amber-600 dark:text-amber-400"}`}>
-                          {item.icon}
-                        </span>
-                        <span className="text-sm">
-                          <span className="font-medium text-card-foreground">{categoryLabel}</span>{" "}
-                          <span className="text-muted-foreground">{answerPart}</span>
-                        </span>
-                      </div>
-                    );
-                  })()}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {saving && (
-          <div className="mt-3 flex items-center justify-center gap-2 text-xs text-primary">
-            <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            Updating your offer…
-          </div>
-        )}
-
-        <div className="mt-4 pt-3 border-t border-border flex items-start gap-2 text-xs text-muted-foreground">
-          <Info className="w-4 h-4 shrink-0 mt-0.5 text-primary" />
-          <p>Your offer is based on these factors combined with real-time market analytics. Final price confirmed at in-person inspection.</p>
-        </div>
-      </div>
-    </motion.div>
+    <OfferConditionBlock
+      conditionItems={conditionItems}
+      vehicleStr={vehicleStr}
+      canEdit={canEdit}
+      saving={saving}
+      onFieldUpdate={handleFieldUpdate}
+    />
   );
 
   /* Trade-in explanation */
@@ -1133,85 +701,12 @@ const OfferPage = () => {
     </div>
   );
 
-  /* Accept CTA */
-  const AcceptCTA = (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5 }}
-      className={`rounded-xl p-6 print:hidden ${
-        hasOfferedPrice
-          ? "bg-gradient-to-br from-success/10 via-success/5 to-transparent border-2 border-success/30"
-          : "bg-gradient-to-br from-accent/10 via-accent/5 to-transparent border-2 border-accent/30"
-      }`}
-    >
-      <div className="text-center mb-4">
-        <h3 className="font-bold text-xl text-card-foreground mb-1">
-          {hasOfferedPrice ? "Your Offer Has Been Accepted!" : "Ready to Lock In Your Price?"}
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          {hasOfferedPrice
-            ? "Your price is locked in. Complete your checklist to finalize the deal."
-            : "Accept your offer and we'll reach out to get everything set up."}
-        </p>
-      </div>
 
-      {daysRemaining > 0 && (
-        <div className="flex items-center justify-center gap-2 mb-4 text-xs text-muted-foreground">
-          <ShieldCheck className="w-3.5 h-3.5 text-success" />
-          <span>Price guaranteed for {daysRemaining} {daysRemaining === 1 ? "day" : "days"}</span>
-        </div>
-      )}
 
-      {hasOfferedPrice ? (
-        <div className="w-full py-3 flex items-center justify-center gap-2 rounded-xl bg-success text-white font-bold text-base">
-          <CheckCircle className="w-5 h-5" />
-          Offer Accepted
-        </div>
-      ) : (
-        <>
-          <div className="lg:hidden">
-            <SlideToAccept
-              onAccept={() => { window.location.href = acceptUrl; }}
-              label="Slide to Accept Your Price"
-            />
-          </div>
-          <div className="hidden lg:block">
-            <Link to={acceptUrl}>
-              <Button className="w-full py-5 text-base font-bold text-white shadow-lg gap-2 rounded-xl" style={{ backgroundColor: "hsl(var(--cta-accept))", boxShadow: "0 10px 15px -3px hsl(var(--cta-accept) / 0.2)" }}>
-                <CheckCircle className="w-5 h-5" />
-                Accept & Lock In Your Price
-                <ArrowRight className="w-5 h-5" />
-              </Button>
-            </Link>
-          </div>
-        </>
-      )}
 
-      <div className="flex items-start gap-2 mt-4 pt-3 border-t border-border/50">
-        <Sparkles className="w-4 h-4 text-success shrink-0 mt-0.5" />
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          Vehicles that arrive in better-than-reported condition at final inspection may qualify for a higher offer.
-        </p>
-      </div>
-    </motion.div>
-  );
-
-  // Print layout values
-  const isLeaseBuyout = s.loan_status === "Lease Buyout";
-  const printIsTrade = activeTab === "trade";
-  const printDisplayValue = printIsTrade ? tradeInValue : cashOffer;
-  const printDisplayValueLow = printIsTrade ? tradeInValueLow : estimateLow;
-  const printDisplayLabel = printIsTrade
-    ? "Trade-In Total Value"
-    : isLeaseBuyout
-    ? "Lease Buyout Cash Offer"
-    : "Cash Offer";
 
   const portalUrl = `${window.location.origin}/my-submission/${token}`;
 
-  // Resolve location UUID to human-readable label
   const getLocationLabel = (loc: string | null): string | null => {
     if (!loc) return null;
     const found = dealerLocations.find(l => l.id === loc || l.name.toLowerCase().replace(/\s+/g, "_") === loc);
@@ -1227,235 +722,35 @@ const OfferPage = () => {
     return null;
   };
 
-  const PrintLayout = (
-    <div className="hidden print:block print-offer-layout">
-      {/* Premium Header */}
-      <div className="flex items-center justify-between pb-4 mb-5 border-b-[3px] border-primary">
-        <div className="flex items-center gap-4">
-          <img src={config.logo_url || config.logo_white_url || harteLogoFallback} alt={config.dealership_name || "Dealership"} className="h-11 w-auto brightness-0" />
-          <div className="border-l-2 border-border pl-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">Vehicle Purchase Program</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">
-              {createdDate?.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
-            </p>
-          </div>
-        </div>
-        <div className="text-right">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Prepared for</p>
-          <p className="text-base font-bold text-foreground">{s.name || "Customer"}</p>
-        </div>
-      </div>
-
-      {/* Hero: Vehicle Image + Summary side by side */}
-      <div className="grid grid-cols-2 gap-6 mb-5">
-        <div>
-          {s.vehicle_year && s.vehicle_make && s.vehicle_model && (
-                    <div className="overflow-hidden -mx-2">
-                      <VehicleImage
-                        year={s.vehicle_year}
-                        make={s.vehicle_make}
-                        model={s.vehicle_model}
-                        selectedColor={s.exterior_color || ""}
-                      />
-                    </div>
-                  )}
-        </div>
-
-        <div className="space-y-3">
-          <div>
-            <p className="text-lg font-bold text-foreground">{vehicleStr}</p>
-            {s.vin && (
-              <p className="text-[10px] font-mono text-muted-foreground">VIN: {s.vin.toUpperCase()}</p>
-            )}
-          </div>
-          <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
-            {s.mileage && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Mileage</span>
-                <span className="font-semibold">{Number(s.mileage).toLocaleString()} mi</span>
-              </div>
-            )}
-            {s.exterior_color && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Color</span>
-                <span className="font-semibold">{s.exterior_color}</span>
-              </div>
-            )}
-            {condition?.drivetrain && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Powertrain</span>
-                <span className="font-semibold capitalize">{condition.drivetrain}</span>
-              </div>
-            )}
-            {s.overall_condition && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Condition</span>
-                <span className="font-semibold capitalize">{s.overall_condition}</span>
-              </div>
-            )}
-          </div>
-
-          {/* Offer Card inline */}
-          <div className="border-2 border-primary rounded-xl p-4 mt-2">
-            <div className="flex justify-center mb-1">
-              <span className="text-[9px] font-bold uppercase tracking-[0.2em] bg-primary/10 text-primary px-3 py-1 rounded-full">
-                {printIsTrade ? "Trade-In Offer" : "Cash Offer"}
-              </span>
-            </div>
-            <p className="text-xs text-muted-foreground text-center mb-1">
-              {isEstimate ? `Estimated ${printDisplayLabel}` : printDisplayLabel}
-            </p>
-            {isEstimate ? (
-              <p className="text-2xl font-extrabold text-foreground tracking-tight text-center">
-                ${printDisplayValueLow.toLocaleString("en-US", { maximumFractionDigits: 0 })} – ${printDisplayValue.toLocaleString("en-US", { maximumFractionDigits: 0 })}
-              </p>
-            ) : (
-              <p className="text-2xl font-extrabold text-foreground tracking-tight text-center">
-                ${printDisplayValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </p>
-            )}
-            <p className="text-[10px] text-muted-foreground mt-1 text-center">
-              {isEstimate ? "Preliminary estimate · Final offer after review" : "Subject to in-person inspection"}
-            </p>
-            {createdDate && !isExpired && (
-              <p className="text-[10px] text-muted-foreground flex items-center justify-center gap-1 mt-2 pt-2 border-t border-border">
-                <ShieldCheck className="w-3 h-3" />
-                Price guaranteed for {daysRemaining} {daysRemaining === 1 ? "day" : "days"}
-                {expiresDate && <span> · expires {expiresDate.toLocaleDateString()}</span>}
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Trade-in breakdown (if applicable) */}
-      {printIsTrade && taxRate > 0 && (
-        <div className="border border-border rounded-lg p-4 mb-4">
-          <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-2 pb-1.5 border-b border-border">Trade-In Tax Credit Breakdown</p>
-          <div className="space-y-1.5 text-xs">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Cash offer value</span>
-              <span className="font-medium">${cashOffer.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">{stateName} tax credit ({taxPercent}%)</span>
-              <span className="font-medium text-success">+${taxSavings.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
-            </div>
-            <div className="flex justify-between pt-1.5 border-t border-border font-bold">
-              <span>Total Trade-In Value</span>
-              <span>${tradeInValue.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Condition Report */}
-      <div className="border border-border rounded-lg p-4 mb-4">
-        <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-2 pb-1.5 border-b border-border">Condition Report</p>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-          {conditionItems.map((item, i) => (
-            <div key={i} className="flex items-center gap-1.5 py-0.5">
-              {item.status === "good" ? (
-                <CheckCircle className="w-3 h-3 text-success shrink-0" />
-              ) : (
-                <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0" />
-              )}
-              <span className="capitalize">{item.label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Appointment Details (if scheduled) */}
-      {appointment && (
-        <div className="border-2 border-primary/30 bg-primary/5 rounded-lg p-4 mb-4">
-          <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-primary/20">
-            <CalendarCheck className="w-4 h-4 text-primary" />
-            <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-primary">Scheduled Inspection</p>
-          </div>
-          <div className="grid grid-cols-3 gap-4 text-xs">
-            <div className="flex items-start gap-2">
-              <CalendarCheck className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
-              <div>
-                <p className="text-[9px] text-muted-foreground uppercase tracking-wide">Date</p>
-                <p className="font-semibold text-foreground">
-                  {new Date(appointment.preferred_date + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <Clock className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
-              <div>
-                <p className="text-[9px] text-muted-foreground uppercase tracking-wide">Time</p>
-                <p className="font-semibold text-foreground">{appointment.preferred_time}</p>
-              </div>
-            </div>
-            {appointment.store_location && (
-              <div className="flex items-start gap-2">
-                <MapPin className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-[9px] text-muted-foreground uppercase tracking-wide">Location</p>
-                  <p className="font-semibold text-foreground">{getLocationLabel(appointment.store_location)}</p>
-                  {getLocationAddress(appointment.store_location) && (
-                    <p className="text-[9px] text-muted-foreground">{getLocationAddress(appointment.store_location)}</p>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* What to Bring + QR */}
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <div className="border border-border rounded-lg p-3">
-          <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-2 pb-1.5 border-b border-border">Bring to Your Visit</p>
-          <div className="space-y-1.5 text-xs">
-            <div className="flex items-center gap-1.5">
-              <CheckCircle className="w-3 h-3 text-primary shrink-0" />
-              <span>Valid driver's license</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <CheckCircle className="w-3 h-3 text-primary shrink-0" />
-              <span>Vehicle title</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <CheckCircle className="w-3 h-3 text-primary shrink-0" />
-              <span>Current registration</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <CheckCircle className="w-3 h-3 text-primary shrink-0" />
-              <span>All vehicle keys</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="border border-border rounded-lg p-3 flex items-center gap-3 relative">
-          <div className="relative shrink-0">
-            <QRCodeSVG value={portalUrl} size={60} level="H" />
-            <img src={harteLogoFallback} alt="" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-sm bg-white p-0.5" />
-          </div>
-          <div className="flex-1">
-            <p className="text-[10px] font-bold text-foreground">Upload Photos</p>
-            <p className="text-[9px] text-muted-foreground leading-relaxed">
-              Scan to upload photos & documents to fast-track your deal.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div className="border-t-2 border-primary/20 pt-2 flex items-center justify-between text-[9px] text-muted-foreground">
-        <p className="font-medium">Offer valid subject to in-person inspection · {config.dealership_name || "Our Dealership"}</p>
-        <p>{config.phone}{config.phone && config.address ? " · " : ""}{config.dealership_name}{config.address ? `, ${config.address}` : ""}</p>
-      </div>
-    </div>
-  );
-
   return (
     <div className="print-native min-h-screen bg-background print:bg-white">
       {/* ─── PRINT-ONLY: Custom one-page layout ─── */}
-      {PrintLayout}
+      <OfferPrintLayout
+        config={config}
+        logoFallback={harteLogoFallback}
+        submission={s}
+        condition={condition}
+        vehicleStr={vehicleStr}
+        createdDate={createdDate}
+        isEstimate={isEstimate}
+        isExpired={isExpired}
+        daysRemaining={daysRemaining}
+        expiresDate={expiresDate}
+        activeTab={activeTab}
+        cashOffer={cashOffer}
+        estimateLow={estimateLow}
+        tradeInValue={tradeInValue}
+        tradeInValueLow={tradeInValueLow}
+        taxRate={taxRate}
+        taxSavings={taxSavings}
+        taxPercent={taxPercent}
+        stateName={stateName}
+        conditionItems={conditionItems}
+        appointment={appointment}
+        portalUrl={portalUrl}
+        getLocationLabel={getLocationLabel}
+        getLocationAddress={getLocationAddress}
+      />
 
       {/* Header */}
       <div className="print:hidden bg-gradient-to-r from-primary via-[hsl(210,100%,30%)] to-primary text-primary-foreground px-6 py-1">
@@ -1506,21 +801,12 @@ const OfferPage = () => {
                     Print Offer
                   </Button>
                 </div>
-                <div className="print:hidden">
-                  <Link to={`/my-submission/${token}`}>
-                    <Button variant="default" className="w-full gap-2">
-                      <ArrowLeft className="w-4 h-4" />
-                      Back to Portal
-                    </Button>
-                  </Link>
-                </div>
               </div>
             </div>
 
             {/* Right column — vehicle summary → trade-in → condition */}
             <div className="col-span-3 space-y-5">
               {VehicleSummary}
-              {VerifiedSpecsBlock}
               {TradeInExplanation}
               {NoTaxBlock}
               {ConditionBlock}
@@ -1535,13 +821,13 @@ const OfferPage = () => {
 
       {/* ─── MOBILE: Single-column layout ─── */}
       <div className="lg:hidden print:hidden">
-        {/* Floating Sticky Value Box */}
-        <div className="sticky top-0 z-30 bg-card/95 backdrop-blur-md border-b border-border shadow-lg print:static print:shadow-none">
-          <div className="max-w-lg mx-auto px-6 py-4 space-y-3">
-            {TabSwitcher}
+        {/* Floating Sticky Value Box — collapses on scroll */}
+        <div className="sticky top-0 z-30 bg-card/95 backdrop-blur-md border-b border-border shadow-lg print:static print:shadow-none transition-all duration-300">
+          <div className="max-w-lg mx-auto px-6 py-3 space-y-2">
+            {!stickyCompact && TabSwitcher}
             {OfferDisplay}
-            {TradeInBounce}
-            {GuaranteeBadge}
+            {!stickyCompact && TradeInBounce}
+            {!stickyCompact && GuaranteeBadge}
             {AcceptButton}
           </div>
         </div>
@@ -1559,7 +845,6 @@ const OfferPage = () => {
           )}
 
           {VehicleSummary}
-          {VerifiedSpecsBlock}
           {TradeInExplanation}
           {NoTaxBlock}
           {ConditionBlock}
