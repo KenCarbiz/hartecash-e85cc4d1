@@ -293,6 +293,14 @@ export default function OnboardingScript() {
 
   const handlePrint = () => window.print();
 
+  const [showQR, setShowQR] = useState(false);
+  const mobileUrl = `${window.location.origin}/onboard/default`;
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(mobileUrl);
+    toast.success("Link copied to clipboard");
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -308,10 +316,18 @@ export default function OnboardingScript() {
         <div>
           <h2 className="text-xl font-semibold">Onboarding Questionnaire</h2>
           <p className="text-sm text-muted-foreground">
-            Complete on screen or print. All answers auto-save to the dealer account.
+            Complete on screen, go mobile, or send a link to the dealer.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button onClick={() => setShowQR(!showQR)} size="sm" variant="outline" className="gap-2">
+            {showQR ? <X className="w-4 h-4" /> : <Smartphone className="w-4 h-4" />}
+            {showQR ? "Close" : "Mobile"}
+          </Button>
+          <Button onClick={copyLink} size="sm" variant="outline" className="gap-2">
+            <Link2 className="w-4 h-4" />
+            Copy Link
+          </Button>
           <Button onClick={handlePrint} size="sm" variant="outline" className="gap-2">
             <Printer className="w-4 h-4" />
             Print
@@ -322,6 +338,41 @@ export default function OnboardingScript() {
           </Button>
         </div>
       </div>
+
+      {/* QR Code + Link Panel */}
+      {showQR && (
+        <div className="mb-6 border rounded-lg p-6 bg-card print:hidden">
+          <div className="flex flex-col md:flex-row items-center gap-6">
+            <div className="bg-background p-4 rounded-lg border">
+              <QRCodeSVG value={mobileUrl} size={160} />
+            </div>
+            <div className="flex-1 space-y-3 text-center md:text-left">
+              <h3 className="font-semibold flex items-center gap-2 justify-center md:justify-start">
+                <QrCode className="w-4 h-4" />
+                Go Mobile or Send to Dealer
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                <strong>In-person:</strong> Scan this QR code with your phone or tablet to fill out and sign on the spot.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                <strong>Remote:</strong> Copy the link and send it to the dealer via email or text — they complete it on their own device.
+              </p>
+              <div className="flex items-center gap-2">
+                <Input
+                  readOnly
+                  value={mobileUrl}
+                  className="text-xs h-8 bg-muted font-mono"
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                />
+                <Button onClick={copyLink} size="sm" variant="secondary" className="shrink-0 gap-1.5">
+                  <Link2 className="w-3.5 h-3.5" />
+                  Copy
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Progress bar */}
       <div className="mb-6 print:hidden">
