@@ -3,6 +3,7 @@ import { motion, useInView } from "framer-motion";
 import autocurbLogo from "@/assets/autocurb-logo.png";
 import autocurbLogoWhite from "@/assets/autocurb-logo-white.png";
 import autocurbLogoMain from "@/assets/autocurb-logo-main.png";
+import autocurbLogoDark from "@/assets/autocurb-logo-dark.png";
 import screenshotLanding from "@/assets/pitch/screenshot-landing.png";
 import screenshotPortal from "@/assets/pitch/screenshot-portal.jpg";
 import screenshotDashboard from "@/assets/pitch/screenshot-dashboard.jpg";
