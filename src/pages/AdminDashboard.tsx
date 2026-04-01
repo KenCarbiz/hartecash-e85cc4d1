@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { LogOut, Moon, Sun, Newspaper } from "lucide-react";
+import { LogOut, Moon, Sun, Newspaper, Store } from "lucide-react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { useToast } from "@/hooks/use-toast";
@@ -34,7 +34,7 @@ import SubmissionDetailSheet from "@/components/admin/SubmissionDetailSheet";
 import AppointmentManager from "@/components/admin/AppointmentManager";
 
 import { useStaffPermissions } from "@/hooks/useStaffPermissions";
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenant, TenantOverrideProvider } from "@/contexts/TenantContext";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UserCheck, UserX } from "lucide-react";
@@ -76,6 +76,7 @@ const AdminDashboard = () => {
   const [optOutStatus, setOptOutStatus] = useState<{ email: boolean; sms: boolean }>({ email: false, sms: false });
   const [activeSection, setActiveSection] = useState("submissions");
   const [onboardingDealershipId, setOnboardingDealershipId] = useState<string | null>(null);
+  const [onboardingDealerName, setOnboardingDealerName] = useState<string>("");
   const [dealerLocations, setDealerLocations] = useState<DealerLocation[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [permissionRequestCount, setPermissionRequestCount] = useState(0);
@@ -414,30 +415,57 @@ const AdminDashboard = () => {
               </div>
             )}
 
-            {activeSection === "executive" && <ExecutiveKPIHub />}
-            {activeSection === "offer-settings" && (canManageAccess || userRole === "gsm_gm") && <OfferSettings userId={userId || undefined} userRole={userRole} />}
-            {activeSection === "site-config" && canManageAccess && <SiteConfiguration />}
-            {activeSection === "notifications" && canManageAccess && <NotificationSettings />}
-            {activeSection === "form-config" && canManageAccess && <FormConfiguration />}
-            {activeSection === "inspection-config" && canManageAccess && <InspectionConfiguration />}
-            {activeSection === "photo-config" && canManageAccess && <PhotoConfiguration />}
-            {activeSection === "depth-policies" && canManageAccess && <DepthPolicyManager />}
-            {activeSection === "testimonials" && canManageAccess && <TestimonialManagement />}
-            {activeSection === "locations" && canManageAccess && <LocationManagement />}
-            {activeSection === "image-inventory" && canManageAccess && <VehicleImageInventory />}
+            {/* Config sections wrapped with tenant override when configuring a different dealer */}
+            {(() => {
+              const configSections = (
+                <>
+                  {activeSection === "executive" && <ExecutiveKPIHub />}
+                  {activeSection === "offer-settings" && (canManageAccess || userRole === "gsm_gm") && <OfferSettings userId={userId || undefined} userRole={userRole} />}
+                  {activeSection === "site-config" && canManageAccess && <SiteConfiguration />}
+                  {activeSection === "notifications" && canManageAccess && <NotificationSettings />}
+                  {activeSection === "form-config" && canManageAccess && <FormConfiguration />}
+                  {activeSection === "inspection-config" && canManageAccess && <InspectionConfiguration />}
+                  {activeSection === "photo-config" && canManageAccess && <PhotoConfiguration />}
+                  {activeSection === "depth-policies" && canManageAccess && <DepthPolicyManager />}
+                  {activeSection === "testimonials" && canManageAccess && <TestimonialManagement />}
+                  {activeSection === "locations" && canManageAccess && <LocationManagement />}
+                  {activeSection === "image-inventory" && canManageAccess && <VehicleImageInventory />}
 
-            {activeSection === "system-settings" && canManageAccess && (
-              <div className="space-y-6">
-                <h2 className="text-lg font-semibold text-card-foreground">System Settings</h2>
-                <ChangelogManagement />
-              </div>
-            )}
+                  {activeSection === "system-settings" && canManageAccess && (
+                    <div className="space-y-6">
+                      <h2 className="text-lg font-semibold text-card-foreground">System Settings</h2>
+                      <ChangelogManagement />
+                    </div>
+                  )}
 
-            {activeSection === "tenants" && canManageAccess && <TenantManagement onSetupDealer={(dealerId) => { setOnboardingDealershipId(dealerId); setActiveSection("onboarding"); }} />}
+                  {activeSection === "tenants" && canManageAccess && <TenantManagement onSetupDealer={(dealerId) => { setOnboardingDealershipId(dealerId); supabase.from("tenants").select("display_name").eq("dealership_id", dealerId).maybeSingle().then(({ data }) => setOnboardingDealerName((data as any)?.display_name || dealerId)); setActiveSection("onboarding"); }} />}
 
-            {activeSection === "onboarding" && <DealerOnboarding isAdmin={canManageAccess} onNavigate={setActiveSection} targetDealershipId={onboardingDealershipId} onDealershipChange={setOnboardingDealershipId} />}
-            {activeSection === "onboarding-script" && <OnboardingScript targetDealershipId={onboardingDealershipId} />}
-            {activeSection === "reports" && <ReportsExport />}
+                  {activeSection === "onboarding" && <DealerOnboarding isAdmin={canManageAccess} onNavigate={setActiveSection} targetDealershipId={onboardingDealershipId} onDealershipChange={(id) => { setOnboardingDealershipId(id); if (id) { supabase.from("tenants").select("display_name").eq("dealership_id", id).maybeSingle().then(({ data }) => setOnboardingDealerName((data as any)?.display_name || id)); } else { setOnboardingDealerName(""); } }} />}
+                  {activeSection === "onboarding-script" && <OnboardingScript targetDealershipId={onboardingDealershipId} />}
+                  {activeSection === "reports" && <ReportsExport />}
+                </>
+              );
+
+              if (onboardingDealershipId && onboardingDealershipId !== "default") {
+                return (
+                  <TenantOverrideProvider dealershipId={onboardingDealershipId} displayName={onboardingDealerName}>
+                    {/* Tenant override banner */}
+                    <div className="mb-4 flex items-center gap-3 rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-700 px-4 py-2.5">
+                      <Store className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                      <span className="text-sm font-medium text-amber-800 dark:text-amber-200 flex-1">
+                        Configuring: <strong>{onboardingDealerName || onboardingDealershipId}</strong>
+                      </span>
+                      <Button variant="ghost" size="sm" className="h-7 text-xs text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50" onClick={() => { setOnboardingDealershipId(null); setOnboardingDealerName(""); }}>
+                        ✕ Back to {tenant.display_name}
+                      </Button>
+                    </div>
+                    {configSections}
+                  </TenantOverrideProvider>
+                );
+              }
+
+              return configSections;
+            })()}
           </div>
         </div>
       </div>

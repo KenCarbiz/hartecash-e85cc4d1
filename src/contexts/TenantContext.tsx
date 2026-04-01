@@ -107,3 +107,36 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
     </TenantContext.Provider>
   );
 };
+
+/**
+ * Overrides the tenant context for admin workflows.
+ * When an admin is configuring a different dealership, wrap the content
+ * in this provider so all useTenant() calls return the target dealer.
+ */
+export const TenantOverrideProvider = ({
+  dealershipId,
+  displayName,
+  children,
+}: {
+  dealershipId: string;
+  displayName?: string;
+  children: ReactNode;
+}) => {
+  const parent = useTenant();
+  const overriddenTenant: TenantInfo = {
+    dealership_id: dealershipId,
+    slug: dealershipId,
+    display_name: displayName || dealershipId,
+  };
+
+  return (
+    <TenantContext.Provider
+      value={{
+        tenant: overriddenTenant,
+        loading: parent.loading,
+      }}
+    >
+      {children}
+    </TenantContext.Provider>
+  );
+};
