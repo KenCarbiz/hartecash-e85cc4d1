@@ -3,6 +3,8 @@ import { ArrowLeft } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 const Sitemap = () => {
+  const { config } = useSiteConfig();
+  const logoSrc = config.logo_white_url;
   const sections = [
     {
       title: "Main Pages",
