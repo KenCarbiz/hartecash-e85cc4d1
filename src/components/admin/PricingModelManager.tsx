@@ -28,6 +28,7 @@ interface PricingModel {
   global_adjustment_pct: number;
   regional_adjustment_pct: number;
   condition_multipliers: Record<string, number>;
+  condition_basis_map: Record<string, string>;
   deductions_config: Record<string, boolean>;
   deduction_amounts: Record<string, number>;
   recon_cost: number;

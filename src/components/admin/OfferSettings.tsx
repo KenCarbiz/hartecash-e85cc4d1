@@ -108,6 +108,13 @@ interface ConditionMultipliers {
   fair: number;
 }
 
+interface ConditionBasisMap {
+  excellent: string;
+  very_good: string;
+  good: string;
+  fair: string;
+}
+
 interface OfferSettingsRow {
   id: string;
   dealership_id: string;
@@ -116,6 +123,7 @@ interface OfferSettingsRow {
   deductions_config: DeductionsConfig;
   deduction_amounts: DeductionAmounts;
   condition_multipliers: ConditionMultipliers;
+  condition_basis_map: ConditionBasisMap;
   recon_cost: number;
   offer_floor: number;
   offer_ceiling: number | null;
