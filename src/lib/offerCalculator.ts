@@ -122,6 +122,7 @@ export interface OfferSettings {
   age_tiers: AgeTier[];
   mileage_tiers: MileageTier[];
   regional_adjustment_pct: number;
+  low_mileage_bonus: LowMileageBonus;
 }
 
 export interface OfferRule {
