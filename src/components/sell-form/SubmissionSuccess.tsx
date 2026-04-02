@@ -46,7 +46,7 @@ const SubmissionSuccess = ({ uploadUrl, vehicleInfo, nextStep, offerEstimate }: 
         </div>
         <div className="text-center">
           <span className="text-3xl md:text-4xl font-extrabold text-card-foreground">
-            {formatCurrency(offerEstimate.low)} – {formatCurrency(offerEstimate.high)}
+            {formatCurrency(offerEstimate.high)}
           </span>
         </div>
         <p className="text-xs text-muted-foreground text-center mt-3 leading-relaxed">

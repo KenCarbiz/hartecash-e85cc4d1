@@ -196,7 +196,7 @@ const PortalOfferCard = ({
                   <span className="font-extrabold text-success">
                     {isAccepted
                       ? `$${tradeInValue.toLocaleString("en-US", { minimumFractionDigits: 2 })}`
-                      : `$${tradeInValueLow.toLocaleString("en-US", { maximumFractionDigits: 0 })} – $${tradeInValue.toLocaleString("en-US", { maximumFractionDigits: 0 })}`
+                      : `$${tradeInValue.toLocaleString("en-US", { maximumFractionDigits: 0 })}`
                     }
                   </span>
                 </div>

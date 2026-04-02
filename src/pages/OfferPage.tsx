@@ -471,7 +471,7 @@ const OfferPage = () => {
           </p>
           {isEstimate ? (
             <p className="text-4xl lg:text-5xl font-extrabold text-success tracking-tight">
-              ${tradeInValueLow.toLocaleString("en-US", { maximumFractionDigits: 0 })} – ${tradeInValue.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+              ${tradeInValue.toLocaleString("en-US", { maximumFractionDigits: 0 })}
             </p>
           ) : (
             <p className="text-4xl lg:text-5xl font-extrabold text-success tracking-tight">
