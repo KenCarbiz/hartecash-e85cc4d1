@@ -19,6 +19,7 @@ import type { OfferSettings, OfferRule } from "@/lib/offerCalculator";
 import { resolveEffectiveSettings } from "@/lib/resolvePricingModel";
 import { useToast } from "@/hooks/use-toast";
 import SlideToAccept from "@/components/SlideToAccept";
+import SaveOfferButton from "@/components/offer/SaveOfferButton";
 
 
 interface OfferSubmission {
@@ -28,6 +29,7 @@ interface OfferSubmission {
   vehicle_model: string | null;
   name: string | null;
   email: string | null;
+  phone: string | null;
   mileage: string | null;
   exterior_color: string | null;
   overall_condition: string | null;
@@ -426,6 +428,16 @@ const OfferPage = () => {
           <p className="text-[11px] text-muted-foreground text-center">
             No obligation until inspection
           </p>
+          {/* Save Offer — reduces bounce */}
+          <SaveOfferButton
+            token={token!}
+            vehicleStr={vehicleStr}
+            customerName={firstName}
+            customerEmail={s.email || undefined}
+            customerPhone={s.phone || undefined}
+            guaranteeDays={guaranteeDays}
+            dealershipName={config.dealership_name || "Our Dealership"}
+          />
         </>
       )}
     </div>
