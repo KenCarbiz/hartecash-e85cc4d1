@@ -177,7 +177,7 @@ const PortalOfferCard = ({
                   <span className="font-semibold">
                     {isAccepted
                       ? `$${cashOffer.toLocaleString("en-US", { minimumFractionDigits: 2 })}`
-                      : `$${estimateLow.toLocaleString("en-US", { maximumFractionDigits: 0 })} – $${cashOffer.toLocaleString("en-US", { maximumFractionDigits: 0 })}`
+                      : `$${cashOffer.toLocaleString("en-US", { maximumFractionDigits: 0 })}`
                     }
                   </span>
                 </div>
