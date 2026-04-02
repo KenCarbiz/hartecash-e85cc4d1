@@ -414,7 +414,8 @@ export function calculateOffer(
     high = Math.min(high, cfg.offer_ceiling);
   }
 
-  const low = Math.max(Math.round(high * 0.90), floor);
+  // Firm offer — no range
+  const low = high;
 
   return {
     low,

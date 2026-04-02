@@ -235,7 +235,8 @@ export function recalculateFromSubmission(
     high = Math.min(high, cfg.offer_ceiling);
   }
 
-  const low = Math.max(Math.round(high * 0.90), floor);
+  // Firm offer — no range
+  const low = high;
 
   return { low, high, baseValue: Math.round(baseValue), totalDeductions: Math.round(deductions), reconCost: Math.round(reconCost), matchedRuleIds, isHotLead };
 }
