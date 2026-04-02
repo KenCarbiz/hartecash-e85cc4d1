@@ -195,12 +195,17 @@ const OfferPage = () => {
         drivable: field === "drivable" ? (value as string) : newCondition.drivable,
       };
 
+      const bbVals = {
+        bb_tradein_avg: newCondition.bb_tradein_avg ?? submission.bb_tradein_avg,
+        bb_wholesale_avg: newCondition.bb_wholesale_avg ?? submission.bb_wholesale_avg,
+        bb_retail_avg: newCondition.bb_retail_avg ?? submission.bb_retail_avg,
+      };
       const newEstimate = recalculateFromSubmission(
-        submission.bb_tradein_avg,
+        bbVals.bb_tradein_avg || 0,
         subCond,
         offerSettings,
         offerRules,
-        { bb_tradein_avg: submission.bb_tradein_avg, bb_wholesale_avg: submission.bb_wholesale_avg, bb_retail_avg: submission.bb_retail_avg }
+        bbVals
       );
 
       if (newEstimate) {
