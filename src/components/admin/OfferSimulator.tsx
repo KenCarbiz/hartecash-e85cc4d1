@@ -382,6 +382,23 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
       blocks.push({ id: "mileage", label: `Mileage (${mileageNum.toLocaleString()}mi)`, value: matchedMileage.adjustment_flat, runningTotal: running, type: matchedMileage.adjustment_flat >= 0 ? "add" : "subtract", editable: false });
     }
 
+    // 9b. Low-Mileage Bonus
+    const lmb = (activeSettings as any).low_mileage_bonus;
+    if (lmb?.enabled && liveBbVehicle.year) {
+      const age = Math.max(currentYear - Number(liveBbVehicle.year), 1);
+      const milesPerYear = mileageNum / age;
+      if (milesPerYear < lmb.avg_miles_per_year && milesPerYear >= (lmb.min_miles_per_year || 4000)) {
+        const pctBelow = ((lmb.avg_miles_per_year - milesPerYear) / lmb.avg_miles_per_year) * 100;
+        const steps = Math.floor(pctBelow / (lmb.step_size_pct || 20));
+        const bonusPct = Math.min(steps * (lmb.bonus_pct_per_step || 2), lmb.max_bonus_pct || 8);
+        if (bonusPct > 0) {
+          const adj = Math.round(running * (bonusPct / 100));
+          running += adj;
+          blocks.push({ id: "low_mileage", label: `Low Mileage Bonus (+${bonusPct}%)`, value: adj, runningTotal: running, type: "add", editable: false });
+        }
+      }
+    }
+
     // 10. Floor/Ceiling
     const clamped = Math.max(running, activeSettings.offer_floor || 500);
     if (clamped !== running) {
