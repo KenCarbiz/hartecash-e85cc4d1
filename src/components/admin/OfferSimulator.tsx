@@ -937,6 +937,200 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                     </CollapsibleContent>
                   </Collapsible>
 
+                  {/* High-Mileage Penalty */}
+                  <Collapsible>
+                    <CollapsibleTrigger asChild>
+                      <button className="flex items-center justify-between w-full px-3 py-2 text-left hover:bg-muted/30 transition-colors rounded-lg border border-border">
+                        <div className="flex items-center gap-1.5">
+                          <TrendingDown className="w-3.5 h-3.5 text-destructive" />
+                          <span className="font-semibold text-[11px] text-card-foreground">High-Mileage Penalty</span>
+                          {(localSettings as any).high_mileage_penalty?.enabled && (
+                            <Badge variant="secondary" className="text-[8px] px-1 py-0">ON</Badge>
+                          )}
+                        </div>
+                        <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                      </button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="space-y-2 p-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] text-muted-foreground">Enable high-mileage penalty</span>
+                          <Switch
+                            checked={(localSettings as any).high_mileage_penalty?.enabled ?? false}
+                            onCheckedChange={(checked) => updateLocalSetting("high_mileage_penalty" as any, { ...(localSettings as any).high_mileage_penalty || DEFAULT_HIGH_MILEAGE_PENALTY, enabled: checked })}
+                            className="scale-75"
+                          />
+                        </div>
+                        {(localSettings as any).high_mileage_penalty?.enabled && (
+                          <div className="space-y-1.5 border-t border-border pt-2">
+                            <div className="flex items-center gap-1 text-[10px]">
+                              <span className="text-muted-foreground w-28">Avg mi/year:</span>
+                              <Input type="number" value={(localSettings as any).high_mileage_penalty?.avg_miles_per_year ?? 12000}
+                                onChange={e => updateLocalSetting("high_mileage_penalty" as any, { ...(localSettings as any).high_mileage_penalty, avg_miles_per_year: Number(e.target.value) })}
+                                className="w-20 h-5 text-[10px]" step="1000" />
+                            </div>
+                            <div className="flex items-center gap-1 text-[10px]">
+                              <span className="text-muted-foreground w-28">Penalty % per step:</span>
+                              <Input type="number" value={(localSettings as any).high_mileage_penalty?.penalty_pct_per_step ?? 2}
+                                onChange={e => updateLocalSetting("high_mileage_penalty" as any, { ...(localSettings as any).high_mileage_penalty, penalty_pct_per_step: Number(e.target.value) })}
+                                className="w-14 h-5 text-[10px]" step="0.5" />
+                            </div>
+                            <div className="flex items-center gap-1 text-[10px]">
+                              <span className="text-muted-foreground w-28">Step size (% above):</span>
+                              <Input type="number" value={(localSettings as any).high_mileage_penalty?.step_size_pct ?? 20}
+                                onChange={e => updateLocalSetting("high_mileage_penalty" as any, { ...(localSettings as any).high_mileage_penalty, step_size_pct: Number(e.target.value) })}
+                                className="w-14 h-5 text-[10px]" step="5" />
+                            </div>
+                            <div className="flex items-center gap-1 text-[10px]">
+                              <span className="text-muted-foreground w-28">Max penalty %:</span>
+                              <Input type="number" value={(localSettings as any).high_mileage_penalty?.max_penalty_pct ?? 10}
+                                onChange={e => updateLocalSetting("high_mileage_penalty" as any, { ...(localSettings as any).high_mileage_penalty, max_penalty_pct: Number(e.target.value) })}
+                                className="w-14 h-5 text-[10px]" step="1" />
+                            </div>
+                            <div className="flex items-center gap-1 text-[10px]">
+                              <span className="text-muted-foreground w-28">Max mi/year cap:</span>
+                              <Input type="number" value={(localSettings as any).high_mileage_penalty?.max_miles_per_year ?? 25000}
+                                onChange={e => updateLocalSetting("high_mileage_penalty" as any, { ...(localSettings as any).high_mileage_penalty, max_miles_per_year: Number(e.target.value) })}
+                                className="w-20 h-5 text-[10px]" step="1000" />
+                            </div>
+                            <p className="text-[8px] text-muted-foreground leading-tight mt-1">
+                              Vehicles averaging above the benchmark get a penalty. E.g., 40% above avg → 2 steps × 2% = -4% penalty. Cap prevents penalizing commercial/fleet vehicles.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+
+                  {/* Color Desirability */}
+                  <Collapsible>
+                    <CollapsibleTrigger asChild>
+                      <button className="flex items-center justify-between w-full px-3 py-2 text-left hover:bg-muted/30 transition-colors rounded-lg border border-border">
+                        <div className="flex items-center gap-1.5">
+                          <Zap className="w-3.5 h-3.5 text-primary" />
+                          <span className="font-semibold text-[11px] text-card-foreground">Color Desirability</span>
+                          {(localSettings as any).color_desirability?.enabled && (
+                            <Badge variant="secondary" className="text-[8px] px-1 py-0">ON</Badge>
+                          )}
+                        </div>
+                        <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                      </button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="space-y-2 p-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] text-muted-foreground">Enable color adjustments</span>
+                          <Switch
+                            checked={(localSettings as any).color_desirability?.enabled ?? false}
+                            onCheckedChange={(checked) => updateLocalSetting("color_desirability" as any, { ...(localSettings as any).color_desirability || DEFAULT_COLOR_DESIRABILITY, enabled: checked })}
+                            className="scale-75"
+                          />
+                        </div>
+                        {(localSettings as any).color_desirability?.enabled && (
+                          <div className="grid grid-cols-2 gap-1 border-t border-border pt-2">
+                            {Object.entries(((localSettings as any).color_desirability?.adjustments || DEFAULT_COLOR_DESIRABILITY.adjustments) as Record<string, number>).map(([color, pct]) => (
+                              <div key={color} className="flex items-center gap-1 text-[10px]">
+                                <span className="text-muted-foreground w-14 capitalize">{color}:</span>
+                                <Input type="number" value={pct}
+                                  onChange={e => {
+                                    const adj = { ...((localSettings as any).color_desirability?.adjustments || DEFAULT_COLOR_DESIRABILITY.adjustments), [color]: Number(e.target.value) };
+                                    updateLocalSetting("color_desirability" as any, { ...(localSettings as any).color_desirability, adjustments: adj });
+                                  }}
+                                  className="w-14 h-5 text-[9px]" step="0.5" />
+                                <span className="text-[8px] text-muted-foreground">%</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        <p className="text-[8px] text-muted-foreground leading-tight">
+                          Adjust offer % based on exterior color demand. Positive = premium, negative = penalty.
+                        </p>
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+
+                  {/* Seasonal / Market Timing */}
+                  <Collapsible>
+                    <CollapsibleTrigger asChild>
+                      <button className="flex items-center justify-between w-full px-3 py-2 text-left hover:bg-muted/30 transition-colors rounded-lg border border-border">
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5 text-primary" />
+                          <span className="font-semibold text-[11px] text-card-foreground">Seasonal / Market Timing</span>
+                          {(localSettings as any).seasonal_adjustment?.enabled && (
+                            <Badge variant="secondary" className="text-[8px] px-1 py-0">ON</Badge>
+                          )}
+                        </div>
+                        <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                      </button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="space-y-2 p-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] text-muted-foreground">Enable seasonal adjustment</span>
+                          <Switch
+                            checked={(localSettings as any).seasonal_adjustment?.enabled ?? false}
+                            onCheckedChange={(checked) => updateLocalSetting("seasonal_adjustment" as any, { ...(localSettings as any).seasonal_adjustment || DEFAULT_SEASONAL_ADJUSTMENT, enabled: checked })}
+                            className="scale-75"
+                          />
+                        </div>
+                        {(localSettings as any).seasonal_adjustment?.enabled && (
+                          <div className="space-y-1.5 border-t border-border pt-2">
+                            <div className="flex items-center gap-1 text-[10px]">
+                              <span className="text-muted-foreground w-28">Adjustment %:</span>
+                              <Input type="number" value={(localSettings as any).seasonal_adjustment?.adjustment_pct ?? 0}
+                                onChange={e => updateLocalSetting("seasonal_adjustment" as any, { ...(localSettings as any).seasonal_adjustment, adjustment_pct: Number(e.target.value) })}
+                                className="w-16 h-5 text-[10px]" step="0.5" />
+                            </div>
+                            <p className="text-[8px] text-muted-foreground leading-tight">
+                              Apply a temporary market timing adjustment. Use positive % in high-demand seasons, negative in slow periods.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+
+                  {/* Deduction Modes (Flat vs %) */}
+                  <Collapsible>
+                    <CollapsibleTrigger asChild>
+                      <button className="flex items-center justify-between w-full px-3 py-2 text-left hover:bg-muted/30 transition-colors rounded-lg border border-border">
+                        <div className="flex items-center gap-1.5">
+                          <DollarSign className="w-3.5 h-3.5 text-primary" />
+                          <span className="font-semibold text-[11px] text-card-foreground">Deduction Modes</span>
+                        </div>
+                        <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                      </button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="space-y-2 p-2">
+                        <p className="text-[8px] text-muted-foreground leading-tight mb-2">
+                          Choose whether accident and non-drivable deductions use flat dollar amounts or a percentage of the base value.
+                          When set to %, the deduction amount fields represent percentages instead of dollars.
+                        </p>
+                        <div className="flex items-center gap-2 text-[10px]">
+                          <span className="text-muted-foreground w-24">Accidents:</span>
+                          <Select value={((localSettings as any).deduction_modes?.accidents) || "flat"} onValueChange={(v) => updateLocalSetting("deduction_modes" as any, { ...((localSettings as any).deduction_modes || DEFAULT_DEDUCTION_MODES), accidents: v })}>
+                            <SelectTrigger className="h-5 w-24 text-[9px]"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="flat" className="text-[10px]">Flat ($)</SelectItem>
+                              <SelectItem value="pct" className="text-[10px]">Percent (%)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px]">
+                          <span className="text-muted-foreground w-24">Not Drivable:</span>
+                          <Select value={((localSettings as any).deduction_modes?.not_drivable) || "flat"} onValueChange={(v) => updateLocalSetting("deduction_modes" as any, { ...((localSettings as any).deduction_modes || DEFAULT_DEDUCTION_MODES), not_drivable: v })}>
+                            <SelectTrigger className="h-5 w-24 text-[9px]"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="flat" className="text-[10px]">Flat ($)</SelectItem>
+                              <SelectItem value="pct" className="text-[10px]">Percent (%)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+
                   <Collapsible>
                     <CollapsibleTrigger asChild>
                       <button className="flex items-center justify-between w-full px-3 py-2 text-left hover:bg-muted/30 transition-colors rounded-lg border border-border">
@@ -951,10 +1145,15 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                       <div className="space-y-1 p-2">
                         {Object.entries(DEDUCTION_LABELS).map(([key, config]) => {
                           const enabled = (localSettings.deductions_config as any)?.[key] ?? true;
+                          const modes = (localSettings as any).deduction_modes || DEFAULT_DEDUCTION_MODES;
+                          const isPctMode = (key === "accidents" && modes.accidents === "pct") || (key === "not_drivable" && modes.not_drivable === "pct");
                           return (
                             <div key={key} className={`rounded border px-2 py-1 ${enabled ? "bg-muted/30 border-border" : "bg-muted/10 border-border/50 opacity-50"}`}>
                               <div className="flex items-center justify-between">
-                                <span className="text-[10px] font-semibold text-card-foreground">{config.label}</span>
+                                <div className="flex items-center gap-1">
+                                  <span className="text-[10px] font-semibold text-card-foreground">{config.label}</span>
+                                  {isPctMode && <Badge variant="outline" className="text-[7px] px-1 py-0">% mode</Badge>}
+                                </div>
                                 <Switch
                                   checked={enabled}
                                   onCheckedChange={() => updateLocalSetting("deductions_config", { ...localSettings.deductions_config, [key]: !enabled })}
@@ -970,8 +1169,9 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                                         type="number"
                                         value={(localSettings.deduction_amounts as any)?.[amtKey] ?? 0}
                                         onChange={e => updateLocalSetting("deduction_amounts", { ...localSettings.deduction_amounts, [amtKey]: Number(e.target.value) })}
-                                        className="w-14 h-5 text-[9px]" step="25"
+                                        className="w-14 h-5 text-[9px]" step={isPctMode ? "0.5" : "25"}
                                       />
+                                      <span className="text-[7px] text-muted-foreground">{isPctMode ? "%" : "$"}</span>
                                     </div>
                                   ))}
                                 </div>
