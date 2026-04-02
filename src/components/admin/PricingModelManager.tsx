@@ -220,7 +220,7 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
 
   const handleSave = async () => {
     if (!editModel?.name?.trim()) {
-      toast({ title: "Name required", description: "Give your pricing model a name before saving.", variant: "destructive" });
+      toast({ title: "Name required", description: "Give your offer logic a name before saving.", variant: "destructive" });
       return;
     }
     setSaving(true);
