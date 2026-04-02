@@ -874,9 +874,9 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                 <>
                   {/* Final Offer Card */}
                   <div className="rounded-xl border-2 border-primary/40 bg-gradient-to-br from-primary/5 to-primary/10 p-5">
-                    <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-1">Final Offer Range</div>
+                    <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-1">Customer Offer</div>
                     <div className="text-3xl font-bold text-primary">
-                      ${liveResult.low.toLocaleString()} – ${liveResult.high.toLocaleString()}
+                      ${liveResult.high.toLocaleString()}
                     </div>
                     {compareMode && liveSavedResult && whatIfDelta !== 0 && (
                       <div className="mt-2 flex items-center gap-2">
