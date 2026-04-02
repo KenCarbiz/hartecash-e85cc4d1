@@ -158,6 +158,10 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
       mileage_tiers: editModel.mileage_tiers || [],
       regional_adjustment_pct: editModel.regional_adjustment_pct || 0,
       low_mileage_bonus: (editModel as any).low_mileage_bonus || { enabled: false, avg_miles_per_year: 12000, bonus_pct_per_step: 2, step_size_pct: 20, max_bonus_pct: 8, min_miles_per_year: 4000 },
+      high_mileage_penalty: (editModel as any).high_mileage_penalty || { enabled: false, avg_miles_per_year: 12000, penalty_pct_per_step: 2, step_size_pct: 20, max_penalty_pct: 10, max_miles_per_year: 25000 },
+      color_desirability: (editModel as any).color_desirability || { enabled: false, adjustments: {} },
+      seasonal_adjustment: (editModel as any).seasonal_adjustment || { enabled: false, adjustment_pct: 0 },
+      deduction_modes: (editModel as any).deduction_modes || { accidents: "flat", not_drivable: "flat" },
     };
   }, [editModel]);
 
@@ -195,6 +199,10 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
           age_tiers: incoming.age_tiers as any,
           mileage_tiers: incoming.mileage_tiers as any,
           low_mileage_bonus: (incoming as any).low_mileage_bonus,
+          high_mileage_penalty: (incoming as any).high_mileage_penalty,
+          color_desirability: (incoming as any).color_desirability,
+          seasonal_adjustment: (incoming as any).seasonal_adjustment,
+          deduction_modes: (incoming as any).deduction_modes,
         } : prev);
       });
     }
@@ -249,6 +257,10 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
       age_tiers: editModel.age_tiers as any || [],
       mileage_tiers: editModel.mileage_tiers as any || [],
       low_mileage_bonus: (editModel as any).low_mileage_bonus || { enabled: false, avg_miles_per_year: 12000, bonus_pct_per_step: 2, step_size_pct: 20, max_bonus_pct: 8, min_miles_per_year: 4000 },
+      high_mileage_penalty: (editModel as any).high_mileage_penalty || { enabled: false, avg_miles_per_year: 12000, penalty_pct_per_step: 2, step_size_pct: 20, max_penalty_pct: 10, max_miles_per_year: 25000 },
+      color_desirability: (editModel as any).color_desirability || { enabled: false, adjustments: {} },
+      seasonal_adjustment: (editModel as any).seasonal_adjustment || { enabled: false, adjustment_pct: 0 },
+      deduction_modes: (editModel as any).deduction_modes || { accidents: "flat", not_drivable: "flat" },
       updated_at: new Date().toISOString(),
     };
 
@@ -294,6 +306,10 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
       age_tiers: editModel.age_tiers as any || [],
       mileage_tiers: editModel.mileage_tiers as any || [],
       low_mileage_bonus: (editModel as any).low_mileage_bonus || { enabled: false, avg_miles_per_year: 12000, bonus_pct_per_step: 2, step_size_pct: 20, max_bonus_pct: 8, min_miles_per_year: 4000 },
+      high_mileage_penalty: (editModel as any).high_mileage_penalty || { enabled: false, avg_miles_per_year: 12000, penalty_pct_per_step: 2, step_size_pct: 20, max_penalty_pct: 10, max_miles_per_year: 25000 },
+      color_desirability: (editModel as any).color_desirability || { enabled: false, adjustments: {} },
+      seasonal_adjustment: (editModel as any).seasonal_adjustment || { enabled: false, adjustment_pct: 0 },
+      deduction_modes: (editModel as any).deduction_modes || { accidents: "flat", not_drivable: "flat" },
     };
     const { data, error } = await supabase.from("pricing_models" as any).insert(payload as any).select().single();
     if (error) {
