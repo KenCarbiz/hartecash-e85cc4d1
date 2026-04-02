@@ -42,6 +42,7 @@ interface ConditionData {
   drivable: string | null;
   bb_wholesale_avg: number | null;
   bb_retail_avg: number | null;
+  bb_value_tiers: Record<string, Record<string, number>> | null;
 }
 
 interface PortalSubmission {
