@@ -29,6 +29,7 @@ interface OfferSubmission {
   vehicle_model: string | null;
   name: string | null;
   email: string | null;
+  phone: string | null;
   mileage: string | null;
   exterior_color: string | null;
   overall_condition: string | null;
