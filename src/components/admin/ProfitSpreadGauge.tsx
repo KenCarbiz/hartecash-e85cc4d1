@@ -301,7 +301,7 @@ export default function ProfitSpreadGauge({
         )}
         {msrp > 0 && (
           <span className="flex items-center gap-1">
-            <DollarSign className="w-2.5 h-2.5" /> MSRP
+            <div className="w-2 h-2 rounded-full bg-muted-foreground" /> MSRP
           </span>
         )}
         <span className="flex items-center gap-1">
