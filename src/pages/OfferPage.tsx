@@ -52,6 +52,7 @@ interface OfferSubmission {
   bb_regional_adj: number | null;
   bb_base_whole_avg: number | null;
   bb_retail_avg: number | null;
+  bb_wholesale_avg: number | null;
 }
 
 interface ConditionDetails {

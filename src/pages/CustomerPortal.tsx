@@ -64,6 +64,8 @@ interface PortalSubmission {
   estimated_offer_low: number | null;
   estimated_offer_high: number | null;
   bb_tradein_avg: number | null;
+  bb_wholesale_avg: number | null;
+  bb_retail_avg: number | null;
   appointment_set: boolean;
   zip: string | null;
   vin: string | null;
