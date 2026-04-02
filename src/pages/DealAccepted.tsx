@@ -217,7 +217,7 @@ const DealAccepted = () => {
                 </div>
                 <p className="text-3xl md:text-4xl font-extrabold text-success tracking-tight">
                   {isEstimate
-                    ? `$${tradeInValueLow.toLocaleString("en-US", { maximumFractionDigits: 0 })} – $${tradeInValue.toLocaleString("en-US", { maximumFractionDigits: 0 })}`
+                    ? `$${tradeInValue.toLocaleString("en-US", { maximumFractionDigits: 0 })}`
                     : `$${tradeInValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                   }
                 </p>
