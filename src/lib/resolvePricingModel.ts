@@ -97,5 +97,6 @@ function modelToSettings(model: any): OfferSettings {
     age_tiers: model.age_tiers || [],
     mileage_tiers: model.mileage_tiers || [],
     regional_adjustment_pct: model.regional_adjustment_pct || 0,
+    low_mileage_bonus: model.low_mileage_bonus || DEFAULT_LOW_MILEAGE_BONUS,
   };
 }
