@@ -128,7 +128,7 @@ const PortalOfferCard = ({
               <p className={`text-3xl md:text-4xl font-extrabold tracking-tight ${isAccepted ? "text-success" : "text-accent"}`}>
                 {isAccepted
                   ? `$${cashOffer.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                  : `$${estimateLow.toLocaleString("en-US", { maximumFractionDigits: 0 })} – $${cashOffer.toLocaleString("en-US", { maximumFractionDigits: 0 })}`
+                  : `$${cashOffer.toLocaleString("en-US", { maximumFractionDigits: 0 })}`
                 }
               </p>
               {!isAccepted && (
