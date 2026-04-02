@@ -95,6 +95,7 @@ export function recalculateFromSubmission(
     age_tiers: [],
     mileage_tiers: [],
     regional_adjustment_pct: 0,
+    low_mileage_bonus: DEFAULT_LOW_MILEAGE_BONUS,
   };
 
   const ded = cfg.deductions_config;
