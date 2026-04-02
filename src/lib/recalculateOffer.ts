@@ -83,13 +83,14 @@ export function recalculateFromSubmission(
   const condMult = condMults[(condition.overall_condition || "good") as keyof ConditionMultipliers] ?? 1.0;
   let adjusted = bbTradeinAvg * condMult;
 
-  // 2. Deductions
+  // 2. Deductions (normalize form labels for matching)
   let deductions = 0;
 
+  const accidentsLower = (condition.accidents || "").toLowerCase();
   if (ded.accidents) {
-    if (condition.accidents === "1") deductions += amt.accidents_1;
-    else if (condition.accidents === "2") deductions += amt.accidents_2;
-    else if (condition.accidents === "3+") deductions += amt.accidents_3plus;
+    if (accidentsLower === "1" || accidentsLower === "1 accident") deductions += amt.accidents_1;
+    else if (accidentsLower === "2" || accidentsLower === "2 accidents" || accidentsLower === "2+ accidents") deductions += amt.accidents_2;
+    else if (accidentsLower === "3+" || accidentsLower === "3+ accidents") deductions += amt.accidents_3plus;
   }
   if (ded.exterior_damage) {
     deductions += (condition.exterior_damage || []).filter(d => d !== "none").length * amt.exterior_damage_per_item;
@@ -97,9 +98,10 @@ export function recalculateFromSubmission(
   if (ded.interior_damage) {
     deductions += (condition.interior_damage || []).filter(d => d !== "none").length * amt.interior_damage_per_item;
   }
+  const windshieldLower = (condition.windshield_damage || "").toLowerCase();
   if (ded.windshield_damage) {
-    if (condition.windshield_damage === "cracked") deductions += amt.windshield_cracked;
-    else if (condition.windshield_damage === "chipped") deductions += amt.windshield_chipped;
+    if (windshieldLower === "cracked" || windshieldLower.includes("major crack")) deductions += amt.windshield_cracked;
+    else if (windshieldLower === "chipped" || windshieldLower.includes("minor chip")) deductions += amt.windshield_chipped;
   }
   if (ded.engine_issues) {
     deductions += (condition.engine_issues || []).filter(d => d !== "none").length * amt.engine_issue_per_item;
@@ -110,9 +112,12 @@ export function recalculateFromSubmission(
   if (ded.tech_issues) {
     deductions += (condition.tech_issues || []).filter(d => d !== "none").length * amt.tech_issue_per_item;
   }
-  if (ded.not_drivable && condition.drivable === "no") deductions += amt.not_drivable;
-  if (ded.smoked_in && condition.smoked_in === "yes") deductions += amt.smoked_in;
-  if (ded.tires_not_replaced && (!condition.tires_replaced || condition.tires_replaced.toLowerCase() === "no" || condition.tires_replaced.toLowerCase() === "none" || condition.tires_replaced === "0")) deductions += amt.tires_not_replaced;
+  const drivableLower = (condition.drivable || "").toLowerCase();
+  if (ded.not_drivable && (drivableLower === "no" || drivableLower === "not drivable")) deductions += amt.not_drivable;
+  const smokedLower = (condition.smoked_in || "").toLowerCase();
+  if (ded.smoked_in && (smokedLower === "yes" || smokedLower === "smoked in")) deductions += amt.smoked_in;
+  const tiresLower = (condition.tires_replaced || "").toLowerCase();
+  if (ded.tires_not_replaced && (!condition.tires_replaced || tiresLower === "no" || tiresLower === "none" || tiresLower === "0")) deductions += amt.tires_not_replaced;
   if (ded.missing_keys) {
     if (condition.num_keys === "1") deductions += amt.missing_keys_1;
     else if (condition.num_keys === "0") deductions += amt.missing_keys_0;

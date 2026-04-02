@@ -259,10 +259,12 @@ export function calculateOffer(
   // 4. Condition-based deductions (configurable amounts)
   let deductions = 0;
 
+  // Normalize form values for comparison (form uses labels like "1 accident", calculator needs to match)
+  const accidentsLower = (formData.accidents || "").toLowerCase();
   if (ded.accidents) {
-    if (formData.accidents === "1") deductions += amt.accidents_1;
-    else if (formData.accidents === "2") deductions += amt.accidents_2;
-    else if (formData.accidents === "3+") deductions += amt.accidents_3plus;
+    if (accidentsLower === "1" || accidentsLower === "1 accident") deductions += amt.accidents_1;
+    else if (accidentsLower === "2" || accidentsLower === "2 accidents" || accidentsLower === "2+ accidents") deductions += amt.accidents_2;
+    else if (accidentsLower === "3+" || accidentsLower === "3+ accidents") deductions += amt.accidents_3plus;
   }
   if (ded.exterior_damage) {
     deductions += formData.exteriorDamage.filter((d) => d !== "none").length * amt.exterior_damage_per_item;
@@ -270,9 +272,10 @@ export function calculateOffer(
   if (ded.interior_damage) {
     deductions += formData.interiorDamage.filter((d) => d !== "none").length * amt.interior_damage_per_item;
   }
+  const windshieldLower = (formData.windshieldDamage || "").toLowerCase();
   if (ded.windshield_damage) {
-    if (formData.windshieldDamage === "cracked") deductions += amt.windshield_cracked;
-    else if (formData.windshieldDamage === "chipped") deductions += amt.windshield_chipped;
+    if (windshieldLower === "cracked" || windshieldLower.includes("major crack")) deductions += amt.windshield_cracked;
+    else if (windshieldLower === "chipped" || windshieldLower.includes("minor chip")) deductions += amt.windshield_chipped;
   }
   if (ded.engine_issues) {
     deductions += formData.engineIssues.filter((d) => d !== "none").length * amt.engine_issue_per_item;
@@ -283,9 +286,12 @@ export function calculateOffer(
   if (ded.tech_issues) {
     deductions += formData.techIssues.filter((d) => d !== "none").length * amt.tech_issue_per_item;
   }
-  if (ded.not_drivable && formData.drivable === "no") deductions += amt.not_drivable;
-  if (ded.smoked_in && formData.smokedIn === "yes") deductions += amt.smoked_in;
-  if (ded.tires_not_replaced && (!formData.tiresReplaced || formData.tiresReplaced.toLowerCase() === "no" || formData.tiresReplaced.toLowerCase() === "none" || formData.tiresReplaced === "0")) deductions += amt.tires_not_replaced;
+  const drivableLower = (formData.drivable || "").toLowerCase();
+  if (ded.not_drivable && (drivableLower === "no" || drivableLower === "not drivable")) deductions += amt.not_drivable;
+  const smokedLower = (formData.smokedIn || "").toLowerCase();
+  if (ded.smoked_in && (smokedLower === "yes" || smokedLower === "smoked in")) deductions += amt.smoked_in;
+  const tiresLower = (formData.tiresReplaced || "").toLowerCase();
+  if (ded.tires_not_replaced && (!formData.tiresReplaced || tiresLower === "no" || tiresLower === "none" || tiresLower === "0")) deductions += amt.tires_not_replaced;
   if (ded.missing_keys) {
     if (formData.numKeys === "1") deductions += amt.missing_keys_1;
     else if (formData.numKeys === "0") deductions += amt.missing_keys_0;
