@@ -922,6 +922,7 @@ export type Database = {
         Row: {
           age_tiers: Json
           bb_value_basis: string
+          color_desirability: Json
           condition_basis_map: Json
           condition_equipment_map: Json
           condition_multipliers: Json
@@ -929,9 +930,11 @@ export type Database = {
           dealer_pack: number
           dealership_id: string
           deduction_amounts: Json
+          deduction_modes: Json
           deductions_config: Json
           global_adjustment_pct: number
           hide_pack_from_appraisal: boolean
+          high_mileage_penalty: Json
           id: string
           low_mileage_bonus: Json
           mileage_tiers: Json
@@ -940,11 +943,13 @@ export type Database = {
           recon_cost: number
           regional_adjustment_pct: number
           retail_search_radius: number
+          seasonal_adjustment: Json
           updated_at: string
         }
         Insert: {
           age_tiers?: Json
           bb_value_basis?: string
+          color_desirability?: Json
           condition_basis_map?: Json
           condition_equipment_map?: Json
           condition_multipliers?: Json
@@ -952,9 +957,11 @@ export type Database = {
           dealer_pack?: number
           dealership_id?: string
           deduction_amounts?: Json
+          deduction_modes?: Json
           deductions_config?: Json
           global_adjustment_pct?: number
           hide_pack_from_appraisal?: boolean
+          high_mileage_penalty?: Json
           id?: string
           low_mileage_bonus?: Json
           mileage_tiers?: Json
@@ -963,11 +970,13 @@ export type Database = {
           recon_cost?: number
           regional_adjustment_pct?: number
           retail_search_radius?: number
+          seasonal_adjustment?: Json
           updated_at?: string
         }
         Update: {
           age_tiers?: Json
           bb_value_basis?: string
+          color_desirability?: Json
           condition_basis_map?: Json
           condition_equipment_map?: Json
           condition_multipliers?: Json
@@ -975,9 +984,11 @@ export type Database = {
           dealer_pack?: number
           dealership_id?: string
           deduction_amounts?: Json
+          deduction_modes?: Json
           deductions_config?: Json
           global_adjustment_pct?: number
           hide_pack_from_appraisal?: boolean
+          high_mileage_penalty?: Json
           id?: string
           low_mileage_bonus?: Json
           mileage_tiers?: Json
@@ -986,6 +997,7 @@ export type Database = {
           recon_cost?: number
           regional_adjustment_pct?: number
           retail_search_radius?: number
+          seasonal_adjustment?: Json
           updated_at?: string
         }
         Relationships: []
@@ -1205,6 +1217,7 @@ export type Database = {
         Row: {
           age_tiers: Json
           bb_value_basis: string
+          color_desirability: Json
           condition_basis_map: Json
           condition_equipment_map: Json
           condition_multipliers: Json
@@ -1212,9 +1225,11 @@ export type Database = {
           created_by: string | null
           dealership_id: string
           deduction_amounts: Json
+          deduction_modes: Json
           deductions_config: Json
           description: string
           global_adjustment_pct: number
+          high_mileage_penalty: Json
           id: string
           is_active: boolean
           is_default: boolean
@@ -1228,11 +1243,13 @@ export type Database = {
           regional_adjustment_pct: number
           schedule_end: string | null
           schedule_start: string | null
+          seasonal_adjustment: Json
           updated_at: string
         }
         Insert: {
           age_tiers?: Json
           bb_value_basis?: string
+          color_desirability?: Json
           condition_basis_map?: Json
           condition_equipment_map?: Json
           condition_multipliers?: Json
@@ -1240,9 +1257,11 @@ export type Database = {
           created_by?: string | null
           dealership_id?: string
           deduction_amounts?: Json
+          deduction_modes?: Json
           deductions_config?: Json
           description?: string
           global_adjustment_pct?: number
+          high_mileage_penalty?: Json
           id?: string
           is_active?: boolean
           is_default?: boolean
@@ -1256,11 +1275,13 @@ export type Database = {
           regional_adjustment_pct?: number
           schedule_end?: string | null
           schedule_start?: string | null
+          seasonal_adjustment?: Json
           updated_at?: string
         }
         Update: {
           age_tiers?: Json
           bb_value_basis?: string
+          color_desirability?: Json
           condition_basis_map?: Json
           condition_equipment_map?: Json
           condition_multipliers?: Json
@@ -1268,9 +1289,11 @@ export type Database = {
           created_by?: string | null
           dealership_id?: string
           deduction_amounts?: Json
+          deduction_modes?: Json
           deductions_config?: Json
           description?: string
           global_adjustment_pct?: number
+          high_mileage_penalty?: Json
           id?: string
           is_active?: boolean
           is_default?: boolean
@@ -1284,6 +1307,7 @@ export type Database = {
           regional_adjustment_pct?: number
           schedule_end?: string | null
           schedule_start?: string | null
+          seasonal_adjustment?: Json
           updated_at?: string
         }
         Relationships: []
