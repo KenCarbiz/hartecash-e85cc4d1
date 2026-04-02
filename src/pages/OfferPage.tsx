@@ -310,7 +310,7 @@ const OfferPage = () => {
   const taxPercent = (taxRate * 100).toFixed(2);
   const taxSavings = cashOffer * taxRate;
   const tradeInValue = calcTradeInValue(cashOffer, taxRate);
-  const tradeInValueLow = isEstimate ? calcTradeInValue(estimateLow, taxRate) : tradeInValue;
+  const tradeInValueLow = tradeInValue;
 
   // Can edit only if no manual offered_price has been set by dealer
   const canEdit = !hasOfferedPrice && !!s.bb_tradein_avg;
