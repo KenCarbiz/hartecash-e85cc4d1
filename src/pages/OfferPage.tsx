@@ -84,6 +84,7 @@ interface ConditionDetails {
   bb_retail_avg: number | null;
   bb_wholesale_avg: number | null;
   bb_tradein_avg: number | null;
+  bb_value_tiers: Record<string, Record<string, number>> | null;
 }
 
 const CONDITION_OPTIONS = [
