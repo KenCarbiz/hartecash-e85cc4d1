@@ -88,9 +88,9 @@ interface ConditionDetails {
 
 const CONDITION_OPTIONS = [
   { value: "excellent", label: "Excellent" },
+  { value: "very_good", label: "Very Good" },
   { value: "good", label: "Good" },
   { value: "fair", label: "Fair" },
-  { value: "rough", label: "Rough" },
 ];
 
 const OfferPage = () => {
