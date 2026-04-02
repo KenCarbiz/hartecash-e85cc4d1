@@ -199,6 +199,10 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
           age_tiers: incoming.age_tiers as any,
           mileage_tiers: incoming.mileage_tiers as any,
           low_mileage_bonus: (incoming as any).low_mileage_bonus,
+          high_mileage_penalty: (incoming as any).high_mileage_penalty,
+          color_desirability: (incoming as any).color_desirability,
+          seasonal_adjustment: (incoming as any).seasonal_adjustment,
+          deduction_modes: (incoming as any).deduction_modes,
         } : prev);
       });
     }
