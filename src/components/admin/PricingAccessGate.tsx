@@ -125,7 +125,7 @@ const PricingAccessGate = ({ userId, userRole, children }: PricingAccessGateProp
           <Lock className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="font-bold text-lg text-card-foreground mb-2">Restricted Access</h3>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            Pricing model configuration is restricted to Admin and GM roles. Contact your administrator for access.
+            Offer logic configuration is restricted to Admin and GM roles. Contact your administrator for access.
           </p>
         </CardContent>
       </Card>
@@ -139,11 +139,11 @@ const PricingAccessGate = ({ userId, userRole, children }: PricingAccessGateProp
         <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-3">
           <Shield className="w-8 h-8 text-primary" />
         </div>
-        <CardTitle className="text-lg">Pricing Model Access Required</CardTitle>
+        <CardTitle className="text-lg">Offer Logic Access Required</CardTitle>
       </CardHeader>
       <CardContent className="text-center space-y-4">
         <p className="text-sm text-muted-foreground max-w-md mx-auto">
-          Pricing model configuration is a sensitive area. As a GSM, you can request temporary 24-hour access 
+          Offer logic configuration is a sensitive area. As a GSM, you can request temporary 24-hour access 
           that must be approved by an Admin or GM.
         </p>
 

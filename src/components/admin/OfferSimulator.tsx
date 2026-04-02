@@ -476,7 +476,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
       {!liveBbVehicle && !liveLoading && (
         <div className="bg-muted/40 rounded-lg p-8 text-sm text-muted-foreground text-center">
           <Car className="w-8 h-8 mx-auto mb-2 opacity-40" />
-          Enter a VIN and mileage, then click <strong>Look Up</strong> to start building your pricing model.
+          Enter a VIN and mileage, then click <strong>Look Up</strong> to start building your offer logic.
         </div>
       )}
 
@@ -874,9 +874,9 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                 <>
                   {/* Final Offer Card */}
                   <div className="rounded-xl border-2 border-primary/40 bg-gradient-to-br from-primary/5 to-primary/10 p-5">
-                    <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-1">Final Offer Range</div>
+                    <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-1">Customer Offer</div>
                     <div className="text-3xl font-bold text-primary">
-                      ${liveResult.low.toLocaleString()} – ${liveResult.high.toLocaleString()}
+                      ${liveResult.high.toLocaleString()}
                     </div>
                     {compareMode && liveSavedResult && whatIfDelta !== 0 && (
                       <div className="mt-2 flex items-center gap-2">
@@ -907,9 +907,9 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
 
                   {compareMode && liveSavedResult && (
                     <div className="rounded-lg border border-border bg-muted/20 p-3">
-                      <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-1">Saved Model Offer</div>
+                      <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-1">Saved Logic Offer</div>
                       <div className="text-lg font-bold text-muted-foreground">
-                        ${liveSavedResult.low.toLocaleString()} – ${liveSavedResult.high.toLocaleString()}
+                        ${liveSavedResult.high.toLocaleString()}
                       </div>
                     </div>
                   )}

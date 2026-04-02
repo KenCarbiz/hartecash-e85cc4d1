@@ -452,7 +452,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
           <h2 className="text-lg font-bold text-card-foreground">Price Builder Workbench</h2>
         </div>
         <p className="text-sm text-muted-foreground mb-4">
-          Look up any VIN to see real-time valuations. Adjust every pricing lever inline and watch the offer, profit gauge, and market context update instantly. Save your formula as a named pricing model.
+          Look up any VIN to see real-time valuations. Adjust every pricing lever inline and watch the offer, profit gauge, and market context update instantly. Save your formula as a named offer logic.
         </p>
 
         {/* Pricing Model Manager — model save/load/schedule */}

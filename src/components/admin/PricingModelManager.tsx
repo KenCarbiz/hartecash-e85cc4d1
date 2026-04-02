@@ -220,7 +220,7 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
 
   const handleSave = async () => {
     if (!editModel?.name?.trim()) {
-      toast({ title: "Name required", description: "Give your pricing model a name before saving.", variant: "destructive" });
+      toast({ title: "Name required", description: "Give your offer logic a name before saving.", variant: "destructive" });
       return;
     }
     setSaving(true);
@@ -324,7 +324,7 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this pricing model?")) return;
+    if (!confirm("Delete this offer logic?")) return;
     await supabase.from("pricing_models" as any).delete().eq("id", id);
     if (selectedModelId === id) {
       setSelectedModelId(null);
@@ -350,7 +350,7 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
     if (editModel) setEditModel({ ...editModel, name });
   };
 
-  if (loading) return <div className="text-sm text-muted-foreground py-4">Loading pricing models…</div>;
+  if (loading) return <div className="text-sm text-muted-foreground py-4">Loading offer logic…</div>;
 
   const selectedModel = models.find(m => m.id === selectedModelId);
   const activeModels = models.filter(m => m.is_active);
