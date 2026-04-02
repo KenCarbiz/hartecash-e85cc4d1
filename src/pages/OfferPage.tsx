@@ -14,7 +14,7 @@ import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { InlineEdit } from "@/components/offer/InlineEdit";
 import OfferConditionBlock, { buildConditionItems } from "@/components/offer/OfferConditionBlock";
 import OfferPrintLayout from "@/components/offer/OfferPrintLayout";
-import { recalculateFromSubmission, type SubmissionCondition } from "@/lib/recalculateOffer";
+import { recalculateFromSubmission, type SubmissionCondition, type SubmissionBBValues } from "@/lib/recalculateOffer";
 import type { OfferSettings, OfferRule } from "@/lib/offerCalculator";
 import { resolveEffectiveSettings } from "@/lib/resolvePricingModel";
 import { useToast } from "@/hooks/use-toast";
