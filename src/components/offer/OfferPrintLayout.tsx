@@ -106,7 +106,7 @@ const OfferPrintLayout = ({
       </div>
 
       {/* Hero: Vehicle Image + Summary side by side */}
-      <div className="grid grid-cols-2 gap-6 mb-5">
+      <div className="grid grid-cols-2 gap-4 mb-3">
         <div>
           {s.vehicle_year && s.vehicle_make && s.vehicle_model && (
             <div className="overflow-hidden -mx-2">
