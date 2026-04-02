@@ -427,6 +427,16 @@ const OfferPage = () => {
           <p className="text-[11px] text-muted-foreground text-center">
             No obligation until inspection
           </p>
+          {/* Save Offer — reduces bounce */}
+          <SaveOfferButton
+            token={token!}
+            vehicleStr={vehicleStr}
+            customerName={firstName}
+            customerEmail={s.email || undefined}
+            customerPhone={s.phone || undefined}
+            guaranteeDays={guaranteeDays}
+            dealershipName={config.dealership_name || "Our Dealership"}
+          />
         </>
       )}
     </div>
