@@ -324,7 +324,7 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this pricing model?")) return;
+    if (!confirm("Delete this offer logic?")) return;
     await supabase.from("pricing_models" as any).delete().eq("id", id);
     if (selectedModelId === id) {
       setSelectedModelId(null);
