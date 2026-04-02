@@ -291,8 +291,6 @@ const OfferPage = () => {
   const isAccepted = hasOfferedPrice || (!!s.progress_status && ACCEPTED_STATUSES.includes(s.progress_status));
   const hasEstimate = !!s.estimated_offer_high;
   const cashOffer = s.offered_price || s.estimated_offer_high || 0;
-  const estimateLow = s.estimated_offer_low || 0;
-  const isEstimate = !hasOfferedPrice && hasEstimate;
 
   if (cashOffer <= 0) return (
     <div className="min-h-screen flex items-center justify-center bg-background p-6">
