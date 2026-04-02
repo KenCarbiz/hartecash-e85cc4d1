@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { OfferSettings, OfferRule } from "@/lib/offerCalculator";
-import { DEFAULT_LOW_MILEAGE_BONUS } from "@/lib/offerCalculator";
+import { DEFAULT_LOW_MILEAGE_BONUS, DEFAULT_HIGH_MILEAGE_PENALTY, DEFAULT_COLOR_DESIRABILITY, DEFAULT_SEASONAL_ADJUSTMENT, DEFAULT_DEDUCTION_MODES } from "@/lib/offerCalculator";
 
 /**
  * Resolves the effective pricing settings by checking active pricing models first,
