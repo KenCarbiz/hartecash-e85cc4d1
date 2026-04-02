@@ -3,6 +3,7 @@
  * Uses condition_basis_map to resolve the correct BB base value per condition tier.
  */
 import type { OfferSettings, OfferRule, ConditionMultipliers, ConditionBasisMap, OfferEstimate } from "./offerCalculator";
+import { DEFAULT_LOW_MILEAGE_BONUS, calcLowMileageBonusPct } from "./offerCalculator";
 
 export interface SubmissionCondition {
   overall_condition: string | null;

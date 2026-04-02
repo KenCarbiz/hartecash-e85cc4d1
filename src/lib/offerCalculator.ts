@@ -372,6 +372,13 @@ export function calculateOffer(
     }
   }
 
+  // 7c. Apply low-mileage bonus
+  const lmb = cfg.low_mileage_bonus || DEFAULT_LOW_MILEAGE_BONUS;
+  const lmBonusPct = calcLowMileageBonusPct(bbVehicle.year, mileage, lmb);
+  if (lmBonusPct > 0) {
+    high = Math.round(high * (1 + lmBonusPct / 100));
+  }
+
   // 8. Apply matching rules
   const vehicleYear = bbVehicle.year;
   const vehicleMake = bbVehicle.make;
