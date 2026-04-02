@@ -125,7 +125,7 @@ const CustomerPortal = () => {
       const [condRes, pricingRes] = await Promise.all([
         supabase
           .from("submissions")
-          .select("drivetrain, accidents, drivable, exterior_damage, interior_damage, mechanical_issues, engine_issues, tech_issues, smoked_in, tires_replaced, num_keys, windshield_damage")
+          .select("drivetrain, accidents, drivable, exterior_damage, interior_damage, mechanical_issues, engine_issues, tech_issues, smoked_in, tires_replaced, num_keys, windshield_damage, bb_wholesale_avg, bb_retail_avg")
           .eq("token", token)
           .maybeSingle(),
         resolveEffectiveSettings("default"),
