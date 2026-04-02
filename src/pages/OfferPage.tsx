@@ -673,8 +673,7 @@ const OfferPage = () => {
         <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/30 rounded-lg p-3">
           <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5 text-primary" />
           <p>
-            The tax credit is based on {stateName ? `${stateName}'s` : "your state's"} {taxPercent}% sales tax rate, 
-            determined by your zip code ({s.zip}). The formula is: 
+            The tax credit is based on {stateName}'s {taxPercent}% sales tax rate{zipResult.state ? `, determined by your zip code (${s.zip})` : ""}. The formula is:
             <span className="font-mono text-card-foreground"> ${cashOffer.toLocaleString()} × {(1 + taxRate).toFixed(4)} = ${tradeInValue.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>. 
             Actual tax credit may vary and is subject to qualifications.
           </p>
