@@ -189,7 +189,7 @@ const OfferPrintLayout = ({
 
       {/* Trade-in breakdown (if applicable) */}
       {printIsTrade && taxRate > 0 && (
-        <div className="border border-border rounded-lg p-4 mb-4">
+        <div className="border border-border rounded-lg p-3 mb-3">
           <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-2 pb-1.5 border-b border-border">Trade-In Tax Credit Breakdown</p>
           <div className="space-y-1.5 text-xs">
             <div className="flex justify-between">
