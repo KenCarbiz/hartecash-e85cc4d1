@@ -232,7 +232,7 @@ const DealAccepted = () => {
                 </p>
                 <p className="text-3xl md:text-4xl font-extrabold text-accent tracking-tight">
                   {isEstimate
-                    ? `$${estimateLow.toLocaleString("en-US", { maximumFractionDigits: 0 })} – $${cashOffer.toLocaleString("en-US", { maximumFractionDigits: 0 })}`
+                    ? `$${cashOffer.toLocaleString("en-US", { maximumFractionDigits: 0 })}`
                     : `$${cashOffer.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                   }
                 </p>
