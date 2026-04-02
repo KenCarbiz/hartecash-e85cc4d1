@@ -485,6 +485,13 @@ const AdminDashboard = () => {
 
       {userId && <RequestAccessDialog open={showRequestAccessDialog} onOpenChange={setShowRequestAccessDialog} userId={userId} />}
 
+      <AdminCommandPalette
+        onNavigate={(s) => setActiveSection(s)}
+        onViewSubmission={handleView}
+        submissions={submissions}
+        allowedSections={allowedSections}
+      />
+
       <SubmissionDetailSheet
         selected={selected}
         onClose={() => { setSelected(null); setPhotos([]); setDocs([]); }}
