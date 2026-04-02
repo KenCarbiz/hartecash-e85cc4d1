@@ -57,7 +57,7 @@ const PortalOfferCard = ({
   const taxPercent = (taxRate * 100).toFixed(2);
   const taxSavings = cashOffer * taxRate;
   const tradeInValue = calcTradeInValue(cashOffer, taxRate);
-  const tradeInValueLow = isEstimate ? calcTradeInValue(estimateLow, taxRate) : tradeInValue;
+  const tradeInValueLow = tradeInValue;
 
   const expiresDate = createdAt
     ? new Date(new Date(createdAt).getTime() + guaranteeDays * 86_400_000)
