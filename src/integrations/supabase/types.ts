@@ -933,6 +933,7 @@ export type Database = {
           global_adjustment_pct: number
           hide_pack_from_appraisal: boolean
           id: string
+          low_mileage_bonus: Json
           mileage_tiers: Json
           offer_ceiling: number | null
           offer_floor: number
@@ -955,6 +956,7 @@ export type Database = {
           global_adjustment_pct?: number
           hide_pack_from_appraisal?: boolean
           id?: string
+          low_mileage_bonus?: Json
           mileage_tiers?: Json
           offer_ceiling?: number | null
           offer_floor?: number
@@ -977,6 +979,7 @@ export type Database = {
           global_adjustment_pct?: number
           hide_pack_from_appraisal?: boolean
           id?: string
+          low_mileage_bonus?: Json
           mileage_tiers?: Json
           offer_ceiling?: number | null
           offer_floor?: number
@@ -1215,6 +1218,7 @@ export type Database = {
           id: string
           is_active: boolean
           is_default: boolean
+          low_mileage_bonus: Json
           mileage_tiers: Json
           name: string
           offer_ceiling: number | null
@@ -1242,6 +1246,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_default?: boolean
+          low_mileage_bonus?: Json
           mileage_tiers?: Json
           name: string
           offer_ceiling?: number | null
@@ -1269,6 +1274,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_default?: boolean
+          low_mileage_bonus?: Json
           mileage_tiers?: Json
           name?: string
           offer_ceiling?: number | null
