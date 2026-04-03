@@ -57,6 +57,9 @@ interface Submission {
   appraised_by: string | null; zip: string | null;
   inspector_grade: string | null;
   bb_selected_options: string[] | null;
+  appraisal_finalized: boolean;
+  appraisal_finalized_at: string | null;
+  appraisal_finalized_by: string | null;
 }
 
 const CONDITIONS = ["excellent", "very_good", "good", "fair"] as const;
