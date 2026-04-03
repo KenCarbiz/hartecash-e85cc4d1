@@ -478,6 +478,58 @@ const OfferPage = () => {
 
   const acceptUrl = `/deal/${token}${activeTab === "trade" ? "?mode=trade" : ""}`;
 
+  // Check if contact info is missing (offer-first flow)
+  const isMissingContactInfo = !s.name || !s.email || !s.phone;
+
+  const handleAcceptAttempt = useCallback(() => {
+    if (isMissingContactInfo) {
+      // Pre-fill with any existing data
+      setContactForm({
+        name: s.name || "",
+        email: s.email || "",
+        phone: s.phone || "",
+        zip: s.zip || "",
+      });
+      setContactErrors({});
+      setShowContactGate(true);
+    } else {
+      window.location.href = acceptUrl;
+    }
+  }, [isMissingContactInfo, s, acceptUrl]);
+
+  const handleContactSubmit = useCallback(async () => {
+    const errors: Record<string, string> = {};
+    if (!contactForm.name.trim()) errors.name = "Name is required";
+    if (!contactForm.email.trim() || !/\S+@\S+\.\S+/.test(contactForm.email)) errors.email = "Valid email is required";
+    const phoneDigits = contactForm.phone.replace(/\D/g, "");
+    if (phoneDigits.length < 10) errors.phone = "Valid phone number is required (10+ digits)";
+    if (!contactForm.zip.trim() || contactForm.zip.replace(/\D/g, "").length < 5) errors.zip = "Valid zip code is required";
+    
+    if (Object.keys(errors).length > 0) {
+      setContactErrors(errors);
+      return;
+    }
+
+    setContactSaving(true);
+    try {
+      await supabase
+        .from("submissions")
+        .update({
+          name: contactForm.name.trim(),
+          email: contactForm.email.trim(),
+          phone: contactForm.phone.trim(),
+          zip: contactForm.zip.trim(),
+        } as any)
+        .eq("token", token!);
+      
+      setShowContactGate(false);
+      window.location.href = acceptUrl;
+    } catch {
+      toast({ title: "Error", description: "Failed to save your info. Please try again.", variant: "destructive" });
+    }
+    setContactSaving(false);
+  }, [contactForm, token, acceptUrl, toast]);
+
   const AcceptButton = (
     <div className="print:hidden space-y-2">
       {isAccepted ? (
@@ -490,19 +542,21 @@ const OfferPage = () => {
           {/* Mobile: slide gesture */}
           <div className="lg:hidden">
             <SlideToAccept
-              onAccept={() => { window.location.href = acceptUrl; }}
+              onAccept={handleAcceptAttempt}
               label="Slide to Accept Your Price"
             />
           </div>
           {/* Desktop: click button */}
           <div className="hidden lg:block">
-            <Link to={acceptUrl}>
-              <Button className="w-full py-5 text-base font-bold text-white shadow-lg gap-2 rounded-xl" style={{ backgroundColor: "hsl(var(--cta-accept))", boxShadow: "0 10px 15px -3px hsl(var(--cta-accept) / 0.2)" }}>
-                <CheckCircle className="w-5 h-5" />
-                Accept & Lock In Your Price
-                <ArrowRight className="w-5 h-5" />
-              </Button>
-            </Link>
+            <Button
+              onClick={handleAcceptAttempt}
+              className="w-full py-5 text-base font-bold text-white shadow-lg gap-2 rounded-xl"
+              style={{ backgroundColor: "hsl(var(--cta-accept))", boxShadow: "0 10px 15px -3px hsl(var(--cta-accept) / 0.2)" }}
+            >
+              <CheckCircle className="w-5 h-5" />
+              Accept & Lock In Your Price
+              <ArrowRight className="w-5 h-5" />
+            </Button>
           </div>
           <p className="text-[11px] text-muted-foreground text-center">
             No obligation until inspection
