@@ -547,7 +547,8 @@ export default function AppraisalTool() {
 
   const maxVal = Math.max(...waterfallBlocks.map(s => Math.max(Math.abs(s.runningTotal), Math.abs(s.value), s.type === "base" ? s.value : 0)), 1);
 
-  const finalValue = waterfallBlocks.find(b => b.id === "final")?.runningTotal ?? 0;
+  const waterfallFinal = waterfallBlocks.find(b => b.id === "final")?.runningTotal ?? 0;
+  const finalValue = acvOverride != null && acvOverride > 0 ? acvOverride : waterfallFinal;
   const projectedProfit = retailAvg > 0 ? retailAvg - finalValue - effectivePack : 0;
   const profitMargin = retailAvg > 0 ? (projectedProfit / retailAvg) * 100 : 0;
 
@@ -569,17 +570,18 @@ export default function AppraisalTool() {
     setLiveSelectedAddDeducts(prev => prev.includes(uoc) ? prev.filter(u => u !== uoc) : [...prev, uoc]);
   };
 
-  // Save ACV
+  // Save Final Appraised Value
   const handleSave = async () => {
     if (!sub) return;
+    const saveVal = acvOverride != null && acvOverride > 0 ? acvOverride : finalValue;
     setSaving(true);
-    const { error } = await supabase.from("submissions").update({ acv_value: finalValue }).eq("id", sub.id);
+    const { error } = await supabase.from("submissions").update({ acv_value: saveVal }).eq("id", sub.id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      setSub(prev => prev ? { ...prev, acv_value: finalValue } : prev);
-      setAcvOverride(finalValue);
-      toast({ title: "ACV Saved", description: `Appraised value set to $${finalValue.toLocaleString()}` });
+      setSub(prev => prev ? { ...prev, acv_value: saveVal } : prev);
+      setAcvOverride(saveVal);
+      toast({ title: "Saved", description: `Final appraised value set to $${saveVal.toLocaleString()}` });
     }
     setSaving(false);
   };
@@ -689,7 +691,7 @@ export default function AppraisalTool() {
           </div>
           <Button onClick={handleSave} disabled={saving} className="bg-primary-foreground/15 hover:bg-primary-foreground/25 text-primary-foreground rounded-xl border border-primary-foreground/10 shadow-lg">
             {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <Save className="w-4 h-4 mr-1.5" />}
-            Save ACV
+            Save Appraisal
           </Button>
         </div>
       </div>
@@ -699,7 +701,7 @@ export default function AppraisalTool() {
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 mb-5">
           {[
             { label: "Customer Offer", value: `$${Math.floor(currentOffer).toLocaleString()}`, color: "text-card-foreground", bg: "bg-card border-border/60 shadow-sm" },
-            { label: "Appraisal Value", value: `$${Math.floor(finalValue).toLocaleString()}`, color: "text-primary", bg: "bg-primary/5 border-primary/25 shadow-sm shadow-primary/5" },
+            { label: "Final Appraised Value", value: `$${Math.floor(finalValue).toLocaleString()}`, color: "text-primary", bg: "bg-primary/5 border-primary/25 shadow-sm shadow-primary/5" },
             { label: "Retail Avg", value: retailAvg > 0 ? `$${Math.floor(retailAvg).toLocaleString()}` : "—", color: "text-card-foreground", bg: "bg-card border-border/60 shadow-sm" },
             { label: "Recon Cost", value: `$${Math.floor(activeSettings?.recon_cost || 0).toLocaleString()}`, color: "text-destructive", bg: "bg-card border-destructive/20 shadow-sm" },
             { label: "Dealer Pack", value: `$${Math.floor(effectivePack).toLocaleString()}`, color: "text-destructive", bg: "bg-card border-destructive/20 shadow-sm" },
@@ -1411,7 +1413,7 @@ export default function AppraisalTool() {
             <div className="rounded-xl border border-primary/30 bg-primary/5 p-4">
               <div className="flex items-center gap-1.5 mb-3">
                 <DollarSign className="w-4 h-4 text-primary" />
-                <span className="text-[11px] font-bold text-card-foreground uppercase tracking-wider">Manual ACV Override</span>
+                <span className="text-[11px] font-bold text-card-foreground uppercase tracking-wider">Final Appraised Value</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="relative flex-1">
@@ -1420,7 +1422,7 @@ export default function AppraisalTool() {
                     type="text" inputMode="numeric"
                     value={acvOverride != null ? acvOverride.toLocaleString("en-US") : ""}
                     onChange={e => { const raw = e.target.value.replace(/[^0-9]/g, ""); setAcvOverride(raw ? Number(raw) : null); }}
-                    placeholder="Enter final ACV" className="h-10 text-lg font-bold pl-8"
+                    placeholder="Enter final appraised value" className="h-10 text-lg font-bold pl-8"
                   />
                 </div>
                 <Button onClick={handleSave} disabled={saving} size="lg">
@@ -1437,7 +1439,7 @@ export default function AppraisalTool() {
             {/* Final Offer Card */}
             {offerResult && (
               <div className="rounded-xl border-2 border-primary/40 bg-gradient-to-br from-primary/5 to-primary/10 p-5">
-                <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-1">Appraisal Value</div>
+                <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-1">Final Appraised Value</div>
                 <div className="text-3xl font-bold text-primary">
                   ${finalValue.toLocaleString()}
                 </div>
