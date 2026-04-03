@@ -387,11 +387,6 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
       blocks.push({ id: "age", label: `Age (${vehicleAge}yr)`, value: adj, runningTotal: running, type: adj >= 0 ? "add" : "subtract", editable: false });
     }
 
-    // 9. Mileage
-    if (matchedMileage) {
-      running += matchedMileage.adjustment_flat;
-      blocks.push({ id: "mileage", label: `Mileage (${mileageNum.toLocaleString()}mi)`, value: matchedMileage.adjustment_flat, runningTotal: running, type: matchedMileage.adjustment_flat >= 0 ? "add" : "subtract", editable: false });
-    }
 
     // 9b. Low-Mileage Bonus
     const lmb = (activeSettings as any).low_mileage_bonus;
