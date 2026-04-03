@@ -103,9 +103,6 @@ export default function ProfitSpreadGauge({
     { label: "Trade-In Avg", shortLabel: "TRD", pos: tradeinPos, value: tradeinAvg, color: "text-primary", dotColor: "bg-primary" },
     { label: "Retail Avg", shortLabel: "RTL", pos: retailPos, value: retailAvg, color: "text-green-500", dotColor: "bg-green-500" },
   ];
-  if (retailCleanPos !== null) {
-    markers.push({ label: "Retail Clean", shortLabel: "R-CLN", pos: retailCleanPos, value: retailClean, color: "text-emerald-500", dotColor: "bg-emerald-500" });
-  }
   if (liveMarketPos !== null && retailListings?.avgPrice) {
     markers.push({ label: "Live Market", shortLabel: "MKT", pos: liveMarketPos, value: retailListings.avgPrice, color: "text-violet-500", dotColor: "bg-violet-500", isPrimary: true });
   }
