@@ -277,10 +277,6 @@ const OfferPage = () => {
         updateData.estimated_offer_low = newSubmission.estimated_offer_low;
         updateData.estimated_offer_high = newSubmission.estimated_offer_high;
       }
-      if (bbPayload) {
-        Object.assign(updateData, bbPayload);
-      }
-
       await supabase
         .from("submissions")
         .update(updateData as any)
@@ -288,9 +284,7 @@ const OfferPage = () => {
 
       toast({
         title: "Updated",
-        description: field === "mileage" && bbPayload
-          ? "Mileage updated — offer recalculated with fresh market data."
-          : "Your answer has been updated and your offer recalculated.",
+        description: "Your answer has been updated and your offer recalculated.",
       });
     } catch {
       toast({ title: "Update failed", description: "Please try again.", variant: "destructive" });
