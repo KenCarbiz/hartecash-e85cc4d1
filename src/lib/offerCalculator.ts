@@ -464,6 +464,11 @@ export function calculateOffer(
     else if (windshieldLower === "chipped" || windshieldLower.includes("minor chip")) deductions += amt.windshield_chipped;
     else if (windshieldLower === "chipped_and_cracked" || windshieldLower.includes("chipped & cracked")) deductions += amt.windshield_cracked + amt.windshield_chipped;
   }
+  // Moonroof deduction: if customer says it doesn't work
+  const moonroofLower = (formData.moonroof || "").toLowerCase();
+  if (moonroofLower === "doesn't work" || moonroofLower === "doesnt work" || moonroofLower === "broken") {
+    deductions += amt.moonroof_broken || 0;
+  }
   if (ded.engine_issues) {
     deductions += formData.engineIssues.filter((d) => d !== "none").length * amt.engine_issue_per_item;
   }
