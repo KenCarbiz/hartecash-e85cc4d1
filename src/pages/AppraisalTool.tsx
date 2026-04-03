@@ -17,13 +17,13 @@ import {
   ArrowLeft, Car, DollarSign, TrendingUp, TrendingDown, Minus, Target,
   Gauge, Wrench, ChevronDown, Save, AlertTriangle, CheckCircle, XCircle,
   Pencil, ArrowDown, Loader2, ClipboardCheck, BarChart3, ArrowRight,
-  Calendar, Plus, Trash2, Shield,
+  Calendar, Plus, Trash2, Shield, SlidersHorizontal, CheckSquare, Zap,
 } from "lucide-react";
 import ProfitSpreadGauge from "@/components/admin/ProfitSpreadGauge";
 import MarketContextPanel from "@/components/admin/MarketContextPanel";
 import RetailMarketPanel from "@/components/admin/RetailMarketPanel";
 import BrakePadDepthWidget from "@/components/inspection/BrakePadDepthWidget";
-import { calculateOffer, type OfferSettings, type OfferRule, type OfferEstimate } from "@/lib/offerCalculator";
+import { calculateOffer, type OfferSettings, type OfferRule, type OfferEstimate, calcHighMileagePenaltyPct, calcColorAdjustmentPct, DEFAULT_HIGH_MILEAGE_PENALTY, DEFAULT_COLOR_DESIRABILITY, DEFAULT_SEASONAL_ADJUSTMENT } from "@/lib/offerCalculator";
 import type { FormData, BBVehicle, BBAddDeduct } from "@/components/sell-form/types";
 import { formatGrade } from "@/lib/formatGrade";
 
@@ -40,6 +40,7 @@ interface Submission {
   bb_base_whole_avg: number | null; bb_add_deducts: any;
   bb_class_name: string | null; bb_drivetrain: string | null;
   bb_transmission: string | null; bb_fuel_type: string | null; bb_engine: string | null;
+  bb_value_tiers: any;
   name: string | null; phone: string | null; email: string | null;
   progress_status: string;
   accidents: string | null; drivable: string | null; smoked_in: string | null;
@@ -55,9 +56,30 @@ interface Submission {
   ai_condition_score: string | null; ai_damage_summary: string | null;
   appraised_by: string | null; zip: string | null;
   inspector_grade: string | null;
+  bb_selected_options: string[] | null;
 }
 
-const CONDITIONS = ["excellent", "good", "fair", "rough"] as const;
+const CONDITIONS = ["excellent", "very_good", "good", "fair"] as const;
+const CONDITION_LABELS: Record<string, string> = {
+  excellent: "Excellent",
+  very_good: "Very Good",
+  good: "Good",
+  fair: "Fair",
+};
+
+const BB_VALUE_OPTIONS = [
+  { value: "wholesale_xclean", label: "Wholesale – Extra Clean" },
+  { value: "wholesale_clean", label: "Wholesale – Clean" },
+  { value: "wholesale_avg", label: "Wholesale – Average" },
+  { value: "wholesale_rough", label: "Wholesale – Rough" },
+  { value: "tradein_clean", label: "Trade-In – Clean" },
+  { value: "tradein_avg", label: "Trade-In – Average" },
+  { value: "tradein_rough", label: "Trade-In – Rough" },
+  { value: "retail_xclean", label: "Retail – Extra Clean" },
+  { value: "retail_clean", label: "Retail – Clean" },
+  { value: "retail_avg", label: "Retail – Average" },
+  { value: "retail_rough", label: "Retail – Rough" },
+];
 
 const BB_CATEGORIES = [
   {
@@ -161,33 +183,12 @@ const WaterfallBlockRow = ({
   );
 };
 
-// ── Tire Depth Visual ──
-const TireDepthDisplay = ({ label, depth }: { label: string; depth: number | null }) => {
-  if (depth == null) return null;
-  const color = depth >= 6 ? "text-green-600 bg-green-500/10" : depth >= 4 ? "text-amber-600 bg-amber-500/10" : "text-destructive bg-destructive/10";
-  return (
-    <div className={`rounded-lg p-2 text-center ${color}`}>
-      <div className="text-[10px] font-medium opacity-70">{label}</div>
-      <div className="text-lg font-bold">{depth}<span className="text-[10px]">/32"</span></div>
-    </div>
-  );
-};
-
-// ── Brake Pad Depth Visual ──
-const BrakePadDisplay = ({ label, depth }: { label: string; depth: number | null }) => {
-  if (depth == null) return null;
-  const color = depth >= 6 ? "text-green-600 bg-green-500/10"
-    : depth >= 4 ? "text-amber-600 bg-amber-500/10"
-    : "text-destructive bg-destructive/10";
-  const statusLabel = depth >= 6 ? "Good" : depth >= 4 ? "Fair" : "Replace";
-  return (
-    <div className={`rounded-lg p-2 text-center ${color}`}>
-      <div className="text-[10px] font-medium opacity-70">{label}</div>
-      <div className="text-lg font-bold">{depth}<span className="text-[10px]">/32"</span></div>
-      <div className="text-[9px] font-semibold">{statusLabel}</div>
-    </div>
-  );
-};
+// Helper to calc equipment total
+function calcEquipmentTotal(bbVehicle: BBVehicle, selectedAddDeducts: string[]): number {
+  return (bbVehicle.add_deduct_list || [])
+    .filter((ad: BBAddDeduct) => selectedAddDeducts.includes(ad.uoc))
+    .reduce((sum: number, ad: BBAddDeduct) => sum + (ad.avg || 0), 0);
+}
 
 // ═══════════════════════════════════════════
 // MAIN PAGE
@@ -209,11 +210,10 @@ export default function AppraisalTool() {
   const [expandedBlock, setExpandedBlock] = useState<string | null>(null);
   const [depthPolicies, setDepthPolicies] = useState<{ id: string; name: string; policy_type: string; oem_brands: string[]; all_brands: boolean; max_vehicle_age_years: number | null; max_mileage: number | null; min_tire_depth: number; min_brake_depth: number }[]>([]);
 
-  // Editable overrides (mirror Offer Builder controls)
+  // Editable overrides
   const [localSettings, setLocalSettings] = useState<OfferSettings | null>(null);
   const [acvOverride, setAcvOverride] = useState<number | null>(null);
   const [bbValueBasis, setBbValueBasis] = useState("tradein_avg");
-  
 
   // Editable condition fields (pre-filled from customer, overridable by appraiser)
   const [condition, setCondition] = useState("good");
@@ -221,7 +221,15 @@ export default function AppraisalTool() {
   const [drivable, setDrivable] = useState("yes");
   const [smokedIn, setSmokedIn] = useState("no");
   const [exteriorItems, setExteriorItems] = useState(0);
+  const [interiorItems, setInteriorItems] = useState(0);
   const [mechItems, setMechItems] = useState(0);
+  const [engineItems, setEngineItems] = useState(0);
+  const [techItems, setTechItems] = useState(0);
+  const [windshield, setWindshield] = useState("none");
+  const [moonroof, setMoonroof] = useState("No moonroof");
+  const [tiresReplaced, setTiresReplaced] = useState("4");
+  const [numKeys, setNumKeys] = useState("2+");
+  const [modifications, setModifications] = useState("none");
 
   // Live BB vehicle for full calc
   const [liveBbVehicle, setLiveBbVehicle] = useState<BBVehicle | null>(null);
@@ -242,12 +250,48 @@ export default function AppraisalTool() {
       const s = subData as any as Submission;
       setSub(s);
       setAcvOverride(s.acv_value ?? null);
-      setCondition(s.overall_condition || "good");
-      setAccidents(s.accidents || "0");
-      setDrivable(s.drivable || "yes");
-      setSmokedIn(s.smoked_in || "no");
-      setExteriorItems((s.exterior_damage || []).filter(d => d !== "none").length);
-      setMechItems((s.mechanical_issues || []).filter(d => d !== "none").length);
+      // Map customer condition to our 4-tier system
+      const custCondition = s.inspector_grade || s.overall_condition || "good";
+      setCondition(custCondition);
+      // Map customer answers to local state
+      const custAccidents = s.accidents || "No accidents";
+      if (custAccidents.includes("1")) setAccidents("1");
+      else if (custAccidents.includes("2") || custAccidents.includes("3")) setAccidents("2+");
+      else setAccidents("0");
+
+      const custDrivable = s.drivable || "Drivable";
+      setDrivable(custDrivable.toLowerCase().includes("not") ? "no" : "yes");
+
+      setSmokedIn((s.smoked_in || "No").toLowerCase().includes("yes") ? "yes" : "no");
+
+      setExteriorItems((s.exterior_damage || []).filter(d => d !== "none" && d !== "No exterior damage").length);
+      setInteriorItems((s.interior_damage || []).filter(d => d !== "none" && d !== "No interior damage").length);
+      setMechItems((s.mechanical_issues || []).filter(d => d !== "none" && d !== "No mechanical issues").length);
+      setEngineItems((s.engine_issues || []).filter(d => d !== "none" && d !== "No engine issues").length);
+      setTechItems((s.tech_issues || []).filter(d => d !== "none" && d !== "No tech issues").length);
+
+      // Windshield
+      const wd = (s.windshield_damage || "").toLowerCase();
+      if (wd.includes("major") || wd.includes("crack")) setWindshield("major_cracks");
+      else if (wd.includes("minor") || wd.includes("chip") || wd.includes("pitting")) setWindshield("minor_chips");
+      else setWindshield("none");
+
+      // Moonroof
+      const mr = (s.moonroof || "").toLowerCase();
+      if (mr.includes("doesn't") || mr.includes("not working") || mr.includes("broken")) setMoonroof("Doesn't work");
+      else if (mr.includes("works") || mr.includes("great")) setMoonroof("Works great");
+      else setMoonroof("No moonroof");
+
+      // Tires
+      const tr = s.tires_replaced || "4";
+      setTiresReplaced(tr);
+
+      // Keys
+      const nk = s.num_keys || "2+";
+      setNumKeys(nk);
+
+      // Modifications
+      setModifications((s.modifications || "").trim() ? "yes" : "none");
 
       const { data: settingsData } = await supabase.from("offer_settings").select("*").eq("dealership_id", dealershipId).maybeSingle();
       if (settingsData) {
@@ -261,11 +305,10 @@ export default function AppraisalTool() {
       const { data: rulesData } = await supabase.from("offer_rules").select("*").eq("dealership_id", dealershipId).eq("is_active", true);
       if (rulesData) setRules(rulesData as any);
 
-      // Load depth policies
       const { data: policiesData } = await supabase.from("depth_policies").select("*").eq("dealership_id", dealershipId).eq("is_active", true).order("sort_order");
       if (policiesData) setDepthPolicies(policiesData as any);
 
-      // Do a live BB lookup to get full tier data
+      // BB lookup
       if (s.vin) {
         setBbLoading(true);
         try {
@@ -275,8 +318,7 @@ export default function AppraisalTool() {
           if (!error && data?.vehicles?.length > 0) {
             const vehicle = data.vehicles[0] as BBVehicle;
             setLiveBbVehicle(vehicle);
-            // Initialize from customer selections if saved, else default to auto-detected
-            const customerSelections: string[] = (s as any).bb_selected_options || [];
+            const customerSelections: string[] = s.bb_selected_options || [];
             if (customerSelections.length > 0) {
               setLiveSelectedAddDeducts(customerSelections);
             } else {
@@ -295,30 +337,40 @@ export default function AppraisalTool() {
 
   const activeSettings = localSettings;
 
+  // Map simulator values to match customer form values for offerCalculator
+  const mappedWindshield = windshield === "minor_chips" ? "Minor chips or pitting" : windshield === "major_cracks" ? "Major cracks or chips" : "No windshield damage";
+  const mappedDrivable = drivable === "no" ? "Not drivable" : "Drivable";
+  const mappedAccidents = accidents === "0" ? "No accidents" : accidents === "1" ? "1 accident" : "2+ accidents";
+  const mappedSmokedIn = smokedIn === "yes" ? "Yes" : "No";
+  const mappedTires = tiresReplaced;
+  const mappedKeys = numKeys === "2+" ? "2+" : numKeys;
+
   // Build form data from editable condition fields
   const formData: FormData = useMemo(() => ({
     plate: "", state: sub?.zip || "", vin: sub?.vin || "", mileage: sub?.mileage || "0",
     bbUvc: "", bbSelectedAddDeducts: liveSelectedAddDeducts,
     exteriorColor: sub?.exterior_color || "", drivetrain: sub?.drivetrain || "",
-    modifications: sub?.modifications || "",
+    modifications: modifications === "none" ? "" : modifications,
     overallCondition: condition,
     exteriorDamage: Array.from({ length: exteriorItems }, (_, i) => `item_${i}`),
-    windshieldDamage: sub?.windshield_damage || "", moonroof: sub?.moonroof || "",
-    interiorDamage: (sub?.interior_damage || []).filter(d => d !== "none"),
-    techIssues: (sub?.tech_issues || []).filter(d => d !== "none"),
-    engineIssues: (sub?.engine_issues || []).filter(d => d !== "none"),
+    windshieldDamage: mappedWindshield, moonroof,
+    interiorDamage: Array.from({ length: interiorItems }, (_, i) => `item_${i}`),
+    techIssues: Array.from({ length: techItems }, (_, i) => `item_${i}`),
+    engineIssues: Array.from({ length: engineItems }, (_, i) => `item_${i}`),
     mechanicalIssues: Array.from({ length: mechItems }, (_, i) => `item_${i}`),
-    drivable, accidents, smokedIn,
-    tiresReplaced: sub?.tires_replaced || "yes", numKeys: sub?.num_keys || "2",
+    drivable: mappedDrivable, accidents: mappedAccidents, smokedIn: mappedSmokedIn,
+    tiresReplaced: mappedTires, numKeys: mappedKeys,
     name: sub?.name || "", phone: sub?.phone || "", email: sub?.email || "", zip: sub?.zip || "",
     loanStatus: "", loanCompany: "", loanBalance: "", loanPayment: "",
     nextStep: "", preferredLocationId: "", salespersonName: "",
-  }), [sub, condition, accidents, drivable, smokedIn, exteriorItems, mechItems, liveSelectedAddDeducts]);
+  }), [sub, condition, accidents, drivable, smokedIn, exteriorItems, interiorItems, mechItems, engineItems, techItems, windshield, moonroof, tiresReplaced, numKeys, modifications, liveSelectedAddDeducts, mappedWindshield, mappedDrivable, mappedAccidents, mappedSmokedIn, mappedTires, mappedKeys]);
 
   // Use live BB vehicle if available, else reconstruct from stored data
   const bbVehicle: BBVehicle | null = useMemo(() => {
     if (liveBbVehicle) return liveBbVehicle;
     if (!sub || !sub.bb_tradein_avg) return null;
+    // Try to reconstruct from bb_value_tiers if available
+    const tiers = sub.bb_value_tiers as any;
     return {
       year: sub.vehicle_year || "", make: sub.vehicle_make || "", model: sub.vehicle_model || "",
       series: "", style: "", uvc: "", vin: sub.vin || "", price_includes: "",
@@ -326,9 +378,9 @@ export default function AppraisalTool() {
       drivetrain: sub.bb_drivetrain || "", engine: sub.bb_engine || "",
       transmission: sub.bb_transmission || "", fuel_type: sub.bb_fuel_type || "",
       msrp: Number(sub.bb_msrp || 0),
-      wholesale: { avg: sub.bb_wholesale_avg || 0, clean: 0, rough: 0, xclean: 0 },
-      tradein: { avg: sub.bb_tradein_avg || 0, clean: 0, rough: 0 },
-      retail: { avg: sub.bb_retail_avg || 0, clean: 0, rough: 0, xclean: 0 },
+      wholesale: tiers?.wholesale || { avg: sub.bb_wholesale_avg || 0, clean: 0, rough: 0, xclean: 0 },
+      tradein: tiers?.tradein || { avg: sub.bb_tradein_avg || 0, clean: 0, rough: 0 },
+      retail: tiers?.retail || { avg: sub.bb_retail_avg || 0, clean: 0, rough: 0, xclean: 0 },
       mileage_adj: sub.bb_mileage_adj || 0, regional_adj: sub.bb_regional_adj || 0,
       base_whole_avg: sub.bb_base_whole_avg || 0,
       add_deduct_list: Array.isArray(sub.bb_add_deducts) ? sub.bb_add_deducts : [],
@@ -337,9 +389,7 @@ export default function AppraisalTool() {
 
   const equipmentTotal = useMemo(() => {
     if (!bbVehicle) return 0;
-    return (bbVehicle.add_deduct_list || [])
-      .filter((ad: BBAddDeduct) => liveSelectedAddDeducts.includes(ad.uoc))
-      .reduce((sum: number, ad: BBAddDeduct) => sum + (ad.avg || 0), 0);
+    return calcEquipmentTotal(bbVehicle, liveSelectedAddDeducts);
   }, [bbVehicle, liveSelectedAddDeducts]);
 
   const offerResult = useMemo(() => {
@@ -354,7 +404,7 @@ export default function AppraisalTool() {
   const wholesaleAvg = Number(bbVehicle?.wholesale?.avg || sub?.bb_wholesale_avg || 0);
   const tradeinAvg = Number(bbVehicle?.tradein?.avg || sub?.bb_tradein_avg || 0);
 
-  // Build waterfall blocks (matching Offer Builder)
+  // Build waterfall blocks — matching OfferSimulator with all adjustments
   const waterfallBlocks: WaterfallBlock[] = useMemo(() => {
     if (!offerResult || !activeSettings || !bbVehicle) return [];
     const blocks: WaterfallBlock[] = [];
@@ -364,74 +414,121 @@ export default function AppraisalTool() {
     const vehicleAge = currentYear - Number(bbVehicle.year);
     const mileageNum = parseInt((sub?.mileage || "0").replace(/[^0-9]/g, "")) || 0;
     const matchedAge = (activeSettings.age_tiers || []).find((t: any) => vehicleAge >= t.min_years && vehicleAge <= t.max_years);
-    const matchedMileage = (activeSettings.mileage_tiers || []).find((t: any) => mileageNum >= t.min_miles && mileageNum <= t.max_miles);
 
-    // Base
+    // 1. Base
     blocks.push({ id: "base", label: "Base Value", value: running, runningTotal: running, type: "base", editable: true, editKey: "bb_value_basis", editType: "flat" });
 
-    // Condition
+    // 2. Condition
     const condAdj = Math.round(offerResult.baseValue * condMult) - offerResult.baseValue;
     running += condAdj;
-    blocks.push({ id: "condition", label: `Condition (${condition})`, value: condAdj, runningTotal: running, type: condAdj >= 0 ? "add" : "subtract", editable: true, editKey: "condition_multiplier", editType: "multiplier", currentEditValue: condMult });
+    blocks.push({ id: "condition", label: `Condition (${CONDITION_LABELS[condition] || condition})`, value: condAdj, runningTotal: running, type: condAdj >= 0 ? "add" : "subtract", editable: true, editKey: "condition_multiplier", editType: "multiplier", currentEditValue: condMult });
 
-    // Equipment
-    if (equipmentTotal !== 0) {
-      running += equipmentTotal;
-      blocks.push({ id: "equipment", label: "Equipment", value: equipmentTotal, runningTotal: running, type: equipmentTotal >= 0 ? "add" : "subtract", editable: false });
+    // 3. Equipment
+    const condEquipMap = (activeSettings as any).condition_equipment_map || { excellent: true, very_good: true, good: true, fair: true };
+    const equipEnabled = condEquipMap[condition] ?? true;
+    const effectiveEquip = equipEnabled ? equipmentTotal : 0;
+    if (effectiveEquip !== 0) {
+      running += effectiveEquip;
+      blocks.push({ id: "equipment", label: "Equipment", value: effectiveEquip, runningTotal: running, type: effectiveEquip >= 0 ? "add" : "subtract", editable: false });
     }
 
-    // Deductions
+    // 4. Deductions
     if (offerResult.totalDeductions > 0) {
       running -= offerResult.totalDeductions;
       blocks.push({ id: "deductions", label: "Deductions", value: -offerResult.totalDeductions, runningTotal: running, type: "subtract", editable: false });
     }
 
-    // Recon (+ hidden pack if configured)
+    // 5. Recon (+ hidden pack if configured)
     const reconVal = activeSettings.recon_cost || 0;
     if (hidePackFromAppraisal) {
-      // Combine recon + pack into single "Reconditioning" line
       const combinedRecon = reconVal + effectivePack;
       running -= combinedRecon;
       blocks.push({ id: "recon", label: "Reconditioning", value: -combinedRecon, runningTotal: running, type: combinedRecon > 0 ? "subtract" : "base", editable: true, editKey: "recon_cost", editType: "flat", currentEditValue: reconVal });
     } else {
       running -= reconVal;
       blocks.push({ id: "recon", label: "Recon Cost", value: -reconVal, runningTotal: running, type: reconVal > 0 ? "subtract" : "base", editable: true, editKey: "recon_cost", editType: "flat", currentEditValue: reconVal });
-
-      // Dealer Pack (separate line)
       if (effectivePack > 0) {
         running -= effectivePack;
-        blocks.push({ id: "dealer_pack", label: "Dealer Pack", value: -effectivePack, runningTotal: running, type: "subtract", editable: false, editKey: "dealer_pack", editType: "flat", currentEditValue: effectivePack });
+        blocks.push({ id: "dealer_pack", label: "Dealer Pack", value: -effectivePack, runningTotal: running, type: "subtract", editable: false });
       }
     }
 
-    // Global %
+    // 6. Global %
     if (activeSettings.global_adjustment_pct !== 0) {
       const adj = Math.round(running * (activeSettings.global_adjustment_pct / 100));
       running += adj;
       blocks.push({ id: "global", label: `Global (${activeSettings.global_adjustment_pct > 0 ? "+" : ""}${activeSettings.global_adjustment_pct}%)`, value: adj, runningTotal: running, type: adj >= 0 ? "add" : "subtract", editable: true, editKey: "global_adjustment_pct", editType: "pct", currentEditValue: activeSettings.global_adjustment_pct });
     }
 
-    // Regional
+    // 7. Regional
     if (activeSettings.regional_adjustment_pct !== 0) {
       const adj = Math.round(running * (activeSettings.regional_adjustment_pct / 100));
       running += adj;
       blocks.push({ id: "regional", label: `Regional (${activeSettings.regional_adjustment_pct > 0 ? "+" : ""}${activeSettings.regional_adjustment_pct}%)`, value: adj, runningTotal: running, type: adj >= 0 ? "add" : "subtract", editable: true, editKey: "regional_adjustment_pct", editType: "pct", currentEditValue: activeSettings.regional_adjustment_pct });
     }
 
-    // Age
+    // 8. Age
     if (matchedAge) {
       const adj = Math.round(running * (matchedAge.adjustment_pct / 100));
       running += adj;
       blocks.push({ id: "age", label: `Age (${vehicleAge}yr)`, value: adj, runningTotal: running, type: adj >= 0 ? "add" : "subtract", editable: false });
     }
 
-    // Mileage
-    if (matchedMileage) {
-      running += matchedMileage.adjustment_flat;
-      blocks.push({ id: "mileage", label: `Mileage (${mileageNum.toLocaleString()}mi)`, value: matchedMileage.adjustment_flat, runningTotal: running, type: matchedMileage.adjustment_flat >= 0 ? "add" : "subtract", editable: false });
+    // 9. Low-Mileage Bonus
+    const lmb = (activeSettings as any).low_mileage_bonus;
+    if (lmb?.enabled && bbVehicle.year) {
+      const age = Math.max(currentYear - Number(bbVehicle.year), 1);
+      const milesPerYear = mileageNum / age;
+      if (milesPerYear < lmb.avg_miles_per_year && milesPerYear >= (lmb.min_miles_per_year || 4000)) {
+        const pctBelow = ((lmb.avg_miles_per_year - milesPerYear) / lmb.avg_miles_per_year) * 100;
+        const steps = Math.floor(pctBelow / (lmb.step_size_pct || 20));
+        const bonusPct = Math.min(steps * (lmb.bonus_pct_per_step || 2), lmb.max_bonus_pct || 8);
+        if (bonusPct > 0) {
+          const adj = Math.round(running * (bonusPct / 100));
+          running += adj;
+          blocks.push({ id: "low_mileage", label: `Low Mileage Bonus (+${bonusPct}%)`, value: adj, runningTotal: running, type: "add", editable: false });
+        }
+      }
     }
 
-    // Tire adjustment
+    // 10. High-Mileage Penalty
+    const hmp = (activeSettings as any).high_mileage_penalty || DEFAULT_HIGH_MILEAGE_PENALTY;
+    if (hmp?.enabled && bbVehicle.year) {
+      const age = Math.max(currentYear - Number(bbVehicle.year), 1);
+      const milesPerYear = mileageNum / age;
+      if (milesPerYear > hmp.avg_miles_per_year && milesPerYear <= (hmp.max_miles_per_year || 25000)) {
+        const pctAbove = ((milesPerYear - hmp.avg_miles_per_year) / hmp.avg_miles_per_year) * 100;
+        const steps = Math.floor(pctAbove / (hmp.step_size_pct || 20));
+        const penaltyPct = Math.min(steps * (hmp.penalty_pct_per_step || 2), hmp.max_penalty_pct || 10);
+        if (penaltyPct > 0) {
+          const adj = -Math.round(running * (penaltyPct / 100));
+          running += adj;
+          blocks.push({ id: "high_mileage", label: `High Mileage Penalty (-${penaltyPct}%)`, value: adj, runningTotal: running, type: "subtract", editable: false });
+        }
+      }
+    }
+
+    // 11. Seasonal
+    const seasonal = (activeSettings as any).seasonal_adjustment || DEFAULT_SEASONAL_ADJUSTMENT;
+    if (seasonal?.enabled && seasonal.adjustment_pct !== 0) {
+      const adj = Math.round(running * (seasonal.adjustment_pct / 100));
+      running += adj;
+      blocks.push({ id: "seasonal", label: `Seasonal (${seasonal.adjustment_pct > 0 ? "+" : ""}${seasonal.adjustment_pct}%)`, value: adj, runningTotal: running, type: adj >= 0 ? "add" : "subtract", editable: false });
+    }
+
+    // 12. Color Desirability
+    const colorConfig = (activeSettings as any).color_desirability || DEFAULT_COLOR_DESIRABILITY;
+    if (colorConfig?.enabled) {
+      const sampleColor = sub?.exterior_color || bbVehicle.exterior_colors?.[0]?.name || "";
+      const colorPct = calcColorAdjustmentPct(sampleColor, colorConfig);
+      if (colorPct !== 0) {
+        const adj = Math.round(running * (colorPct / 100));
+        running += adj;
+        blocks.push({ id: "color", label: `Color (${sampleColor || "—"}) ${colorPct > 0 ? "+" : ""}${colorPct}%`, value: adj, runningTotal: running, type: adj >= 0 ? "add" : "subtract", editable: false });
+      }
+    }
+
+    // 13. Tire adjustment
     if (sub?.tire_adjustment && sub.tire_adjustment !== 0) {
       running += Number(sub.tire_adjustment);
       blocks.push({ id: "tire_adj", label: "Tire Adjustment", value: Number(sub.tire_adjustment), runningTotal: running, type: Number(sub.tire_adjustment) >= 0 ? "add" : "subtract", editable: false });
@@ -487,30 +584,21 @@ export default function AppraisalTool() {
     setSaving(false);
   };
 
-  // Parse inspection data — return the full internal_notes if it contains an inspection header
+  // Parse inspection data
   const inspectionData = useMemo(() => {
     if (!sub?.internal_notes) return null;
     if (!sub.internal_notes.includes("[INSPECTION")) return null;
     return sub.internal_notes;
   }, [sub]);
 
-  // Read brake pad depths from dedicated columns (fallback to parsing notes for legacy data)
   const brakeDepths = useMemo(() => {
     if (sub?.brake_lf != null || sub?.brake_rf != null || sub?.brake_lr != null || sub?.brake_rr != null) {
       return { lf: sub.brake_lf, rf: sub.brake_rf, lr: sub.brake_lr, rr: sub.brake_rr };
     }
-    if (!inspectionData) return null;
-    const match = inspectionData.match(/Brakes\s*\((?:mm|\/32)\):\s*LF:(\d+|—)\s*RF:(\d+|—)\s*LR:(\d+|—)\s*RR:(\d+|—)/);
-    if (!match) return null;
-    const parse = (v: string) => v === "—" ? null : parseInt(v, 10);
-    return { lf: parse(match[1]), rf: parse(match[2]), lr: parse(match[3]), rr: parse(match[4]) };
-  }, [sub, inspectionData]);
+    return null;
+  }, [sub]);
 
   const hasBrakes = !!(brakeDepths && (brakeDepths.lf != null || brakeDepths.rf != null || brakeDepths.lr != null || brakeDepths.rr != null));
-  const avgBrakeDepth = hasBrakes
-    ? ([brakeDepths!.lf, brakeDepths!.rf, brakeDepths!.lr, brakeDepths!.rr].filter(v => v != null) as number[])
-        .reduce((a, b) => a + b, 0) / [brakeDepths!.lf, brakeDepths!.rf, brakeDepths!.lr, brakeDepths!.rr].filter(v => v != null).length
-    : null;
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen bg-background"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
@@ -528,6 +616,58 @@ export default function AppraisalTool() {
   const hasTires = !!(sub.tire_lf && sub.tire_rf && sub.tire_lr && sub.tire_rr);
   const avgTireDepth = hasTires ? ((sub.tire_lf! + sub.tire_rf! + sub.tire_lr! + sub.tire_rr!) / 4).toFixed(1) : null;
   const hasInspection = !!(hasTires || hasBrakes || inspectionData);
+
+  // Customer's original answers for comparison
+  const customerAnswers = {
+    condition: sub.overall_condition,
+    accidents: sub.accidents,
+    drivable: sub.drivable,
+    smokedIn: sub.smoked_in,
+    exteriorDamage: sub.exterior_damage,
+    interiorDamage: sub.interior_damage,
+    windshield: sub.windshield_damage,
+    moonroof: sub.moonroof,
+    tires: sub.tires_replaced,
+    keys: sub.num_keys,
+    modifications: sub.modifications,
+    mechIssues: sub.mechanical_issues,
+    engineIssues: sub.engine_issues,
+    techIssues: sub.tech_issues,
+  };
+
+  // Deduction helpers
+  const da = activeSettings?.deduction_amounts || {} as Record<string, number>;
+  const dc = activeSettings?.deductions_config || {} as Record<string, boolean>;
+  const getAmt = (key: string) => (da as any)[key] || 0;
+  const isOn = (key: string) => (dc as any)[key] !== false;
+  const accidentDeduct = accidents === "1" ? getAmt("accidents_1") : accidents === "2+" ? getAmt("accidents_2") : 0;
+  const extDeduct = exteriorItems * getAmt("exterior_damage_per_item");
+  const intDeduct = interiorItems * getAmt("interior_damage_per_item");
+  const windDeduct = windshield === "major_cracks" ? getAmt("windshield_cracked") : windshield === "minor_chips" ? getAmt("windshield_chipped") : 0;
+  const moonroofDeduct = moonroof === "Doesn't work" ? getAmt("moonroof_broken") : 0;
+  const engDeduct = engineItems * getAmt("engine_issue_per_item");
+  const mechDeduct = mechItems * getAmt("mechanical_issue_per_item");
+  const techDeduct = techItems * getAmt("tech_issue_per_item");
+  const drivDeduct = drivable === "no" ? getAmt("not_drivable") : 0;
+  const smokeDeduct = smokedIn === "yes" ? getAmt("smoked_in") : 0;
+  const tiresDeduct = (tiresReplaced === "None" || tiresReplaced === "1") ? getAmt("tires_not_replaced") : 0;
+  const keyDeduct = numKeys === "1" ? getAmt("missing_keys_1") : numKeys === "0" ? getAmt("missing_keys_0") : 0;
+
+  const DeductBadge = ({ amount }: { amount: number }) => amount > 0 ? (
+    <span className="text-[9px] font-bold text-destructive bg-destructive/10 px-1.5 py-0.5 rounded-full ml-auto shrink-0">
+      -${amount.toLocaleString()}
+    </span>
+  ) : (
+    <span className="text-[9px] font-bold text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded-full ml-auto shrink-0">
+      No deduction
+    </span>
+  );
+
+  const SourceTag = ({ customer, inspector }: { customer?: string | null; inspector?: boolean }) => {
+    if (inspector) return <Badge variant="outline" className="text-[7px] px-1 py-0 border-primary/40 text-primary shrink-0">Inspector</Badge>;
+    if (customer) return <Badge variant="outline" className="text-[7px] px-1 py-0 border-amber-400/50 text-amber-600 shrink-0">Customer</Badge>;
+    return null;
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -559,12 +699,12 @@ export default function AppraisalTool() {
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 mb-5">
           {[
             { label: "Customer Offer", value: `$${Math.floor(currentOffer).toLocaleString()}`, color: "text-card-foreground", bg: "bg-card border-border/60 shadow-sm" },
-            { label: "New Offer", value: `$${Math.floor(finalValue).toLocaleString()}`, color: "text-primary", bg: "bg-primary/5 border-primary/25 shadow-sm shadow-primary/5" },
-            { label: "Avg Market Value", value: retailAvg > 0 ? `$${Math.floor(retailAvg).toLocaleString()}` : "—", color: "text-card-foreground", bg: "bg-card border-border/60 shadow-sm" },
+            { label: "Appraisal Value", value: `$${Math.floor(finalValue).toLocaleString()}`, color: "text-primary", bg: "bg-primary/5 border-primary/25 shadow-sm shadow-primary/5" },
+            { label: "Retail Avg", value: retailAvg > 0 ? `$${Math.floor(retailAvg).toLocaleString()}` : "—", color: "text-card-foreground", bg: "bg-card border-border/60 shadow-sm" },
             { label: "Recon Cost", value: `$${Math.floor(activeSettings?.recon_cost || 0).toLocaleString()}`, color: "text-destructive", bg: "bg-card border-destructive/20 shadow-sm" },
             { label: "Dealer Pack", value: `$${Math.floor(effectivePack).toLocaleString()}`, color: "text-destructive", bg: "bg-card border-destructive/20 shadow-sm" },
-            { label: "Projected Profit", value: `${projectedProfit >= 0 ? "+" : ""}$${Math.floor(Math.abs(projectedProfit)).toLocaleString()}`, color: projectedProfit >= 0 ? "text-emerald-600" : "text-destructive", bg: projectedProfit >= 0 ? "bg-emerald-500/5 border-emerald-500/25 shadow-sm shadow-emerald-500/5" : "bg-destructive/5 border-destructive/25 shadow-sm" },
-            { label: "Margin %", value: `${profitMargin.toFixed(1)}%`, color: profitMargin >= 0 ? "text-emerald-600" : "text-destructive", bg: profitMargin >= 0 ? "bg-emerald-500/5 border-emerald-500/25 shadow-sm shadow-emerald-500/5" : "bg-destructive/5 border-destructive/25 shadow-sm" },
+            { label: "Projected Profit", value: `${projectedProfit >= 0 ? "+" : ""}$${Math.floor(Math.abs(projectedProfit)).toLocaleString()}`, color: projectedProfit >= 0 ? "text-emerald-600" : "text-destructive", bg: projectedProfit >= 0 ? "bg-emerald-500/5 border-emerald-500/25 shadow-sm" : "bg-destructive/5 border-destructive/25 shadow-sm" },
+            { label: "Margin %", value: `${profitMargin.toFixed(1)}%`, color: profitMargin >= 0 ? "text-emerald-600" : "text-destructive", bg: profitMargin >= 0 ? "bg-emerald-500/5 border-emerald-500/25 shadow-sm" : "bg-destructive/5 border-destructive/25 shadow-sm" },
           ].map(metric => (
             <div key={metric.label} className={`rounded-xl border p-3 text-center transition-all hover:shadow-md ${metric.bg}`}>
               <div className="text-[9px] uppercase tracking-[0.08em] font-bold text-muted-foreground mb-0.5">{metric.label}</div>
@@ -584,6 +724,19 @@ export default function AppraisalTool() {
               <span className="text-[10px] font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded-full">{liveBbVehicle?.class_name || sub.bb_class_name}</span>
             )}
             {bbLoading && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />}
+            {/* Final Grade Callout */}
+            <div className="ml-auto flex items-center gap-2">
+              {sub.inspector_grade && (
+                <Badge className="bg-primary/15 text-primary border border-primary/30 text-[10px]">
+                  <Shield className="w-3 h-3 mr-1" /> Inspector: {formatGrade(sub.inspector_grade)}
+                </Badge>
+              )}
+              {sub.overall_condition && (
+                <Badge variant="outline" className="text-[10px] border-amber-400/50 text-amber-600">
+                  Customer: {formatGrade(sub.overall_condition)}
+                </Badge>
+              )}
+            </div>
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-7 gap-2 text-xs">
             <div><span className="text-muted-foreground">Style:</span> <span className="font-medium text-card-foreground">{liveBbVehicle?.style || "—"}</span></div>
@@ -594,188 +747,451 @@ export default function AppraisalTool() {
             <div><span className="text-muted-foreground">Fuel:</span> <span className="font-bold text-card-foreground">{liveBbVehicle?.fuel_type || sub.bb_fuel_type || "—"}</span></div>
             <div><span className="text-muted-foreground">Color:</span> <span className="font-medium text-card-foreground">{sub.exterior_color || "—"}</span></div>
           </div>
-          {/* Equipment — toggle-able add/deducts with customer selections highlighted */}
-          {bbVehicle && bbVehicle.add_deduct_list?.length > 0 && (
-            <Collapsible>
-              <CollapsibleTrigger asChild>
-                <button className="flex items-center gap-2 mt-2 text-[10px] font-bold uppercase tracking-wider text-primary hover:underline">
-                  <Plus className="w-3 h-3" />
-                  Equipment &amp; Options ({liveSelectedAddDeducts.length} selected • {equipmentTotal >= 0 ? "+" : ""}${equipmentTotal.toLocaleString()})
-                  <ChevronDown className="w-3 h-3 ml-1" />
-                </button>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 mt-2">
-                  {bbVehicle.add_deduct_list.map((ad: BBAddDeduct) => {
-                    const isSelected = liveSelectedAddDeducts.includes(ad.uoc);
-                    const wasCustomerSelected = ((sub as any).bb_selected_options || []).includes(ad.uoc);
-                    const isAuto = ad.auto !== "N";
-                    return (
-                      <button
-                        key={ad.uoc}
-                        onClick={() => toggleAddDeduct(ad.uoc)}
-                        className={`flex items-center gap-2 px-2 py-1.5 rounded text-[11px] border transition-all text-left ${
-                          isSelected
-                            ? "bg-primary/10 border-primary/30 text-card-foreground"
-                            : "bg-muted/30 border-border text-muted-foreground"
-                        }`}
-                      >
-                        <div className={`w-3.5 h-3.5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
-                          isSelected ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground"
-                        }`}>
-                          {isSelected && <span className="text-[8px]">✓</span>}
-                        </div>
-                        <span className="flex-1 truncate">{ad.name}</span>
-                        {wasCustomerSelected && !isAuto && (
-                          <Badge variant="outline" className="text-[8px] border-amber-400/50 text-amber-600 shrink-0 px-1 py-0">Customer</Badge>
-                        )}
-                        {isAuto && (
-                          <Badge variant="secondary" className="text-[8px] shrink-0 px-1 py-0">VIN</Badge>
-                        )}
-                        {ad.avg !== 0 && (
-                          <span className={`text-[10px] font-bold shrink-0 ${ad.avg > 0 ? "text-emerald-600" : "text-destructive"}`}>
-                            {ad.avg > 0 ? "+" : ""}${ad.avg.toLocaleString()}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
-          )}
         </div>
 
-        {/* ═══ TWO-COLUMN LAYOUT ═══ */}
+        {/* ══ CONDITION TIER BUBBLES ══ */}
+        {bbVehicle && activeSettings && (
+          <div className="bg-gradient-to-r from-primary/5 to-transparent rounded-lg border border-primary/20 p-3 mb-5">
+            <div className="flex items-center gap-1.5 mb-3">
+              <DollarSign className="w-3.5 h-3.5 text-primary" />
+              <span className="text-[11px] font-bold text-card-foreground uppercase tracking-wider">① Select Condition Tier</span>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {CONDITIONS.map(cond => {
+                const basisMap = activeSettings.condition_basis_map || {};
+                const selectedBasis = (basisMap as Record<string, string>)[cond] || "tradein_avg";
+                const mult = activeSettings.condition_multipliers?.[cond] ?? 1.0;
+                const isActive = cond === condition;
+                const selectedValue = (() => {
+                  const [cat, tier] = selectedBasis.split("_");
+                  const tierKey = tier === "xclean" ? "xclean" : tier;
+                  const data = bbVehicle[cat as "wholesale" | "tradein" | "retail"] as Record<string, number> | undefined;
+                  return data?.[tierKey] || 0;
+                })();
+                const bubbleFormData = { ...formData, overallCondition: cond };
+                const bubbleResult = calculateOffer(bbVehicle, bubbleFormData, liveSelectedAddDeducts, activeSettings, rules);
+
+                return (
+                  <button
+                    key={cond}
+                    onClick={() => setCondition(cond)}
+                    className={`rounded-xl border-2 p-3 text-center transition-all ${
+                      isActive
+                        ? "border-primary bg-primary/10 ring-2 ring-primary/30 shadow-md scale-[1.02]"
+                        : "border-border bg-card hover:border-primary/40 hover:shadow-sm"
+                    }`}
+                  >
+                    <div className={`text-xs font-bold uppercase tracking-wider mb-1 ${isActive ? "text-primary" : "text-muted-foreground"}`}>
+                      {CONDITION_LABELS[cond]}
+                    </div>
+                    <div className={`text-lg font-bold ${isActive ? "text-primary" : "text-card-foreground"}`}>
+                      ${bubbleResult.high.toLocaleString()}
+                    </div>
+                    <div className="text-[9px] text-muted-foreground mt-0.5">
+                      Base: ${selectedValue.toLocaleString()} × {mult.toFixed(2)}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ══ TWO-COLUMN LAYOUT ══ */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
-          {/* ── LEFT: BB Tiles, Condition, Waterfall, Fine-Tune ── */}
+          {/* ── LEFT: Config + Waterfall ── */}
           <div className="space-y-4">
-            {/* ① SELECT STARTING VALUE — BB Value Tiles */}
-            {bbVehicle && (
-              <div className="bg-gradient-to-r from-primary/5 to-transparent rounded-lg border border-primary/20 p-3">
-                <div className="flex items-center gap-1.5 mb-2">
-                  <DollarSign className="w-3.5 h-3.5 text-primary" />
-                  <span className="text-[11px] font-bold text-card-foreground uppercase tracking-wider">① Select Starting Value</span>
-                </div>
-                {BB_CATEGORIES.map(cat => {
-                  const data = bbVehicle[cat.dataKey] as Record<string, number> | undefined;
-                  if (!data) return null;
-                  return (
-                    <div key={cat.label} className="mb-1.5">
-                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block mb-0.5">{cat.label}</span>
-                      <div className="grid grid-cols-4 gap-1">
-                        {cat.tiers.map(tier => {
-                          const value = data[tier.tierKey] || 0;
-                          const isSelected = bbValueBasis === tier.key;
-                          if (value <= 0) return null;
-                          return (
-                            <button key={tier.key}
-                              onClick={() => { setBbValueBasis(tier.key); updateLocalSetting("bb_value_basis", tier.key); }}
-                              className={`rounded-md px-2 py-1.5 text-center transition-all border ${
-                                isSelected
-                                  ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30 shadow-sm"
-                                  : "bg-muted/40 border-border hover:border-primary/40 hover:bg-primary/5 text-card-foreground"
-                              }`}>
-                              <div className="text-[9px] font-medium opacity-80">{tier.short}</div>
-                              <div className={`text-sm font-bold ${isSelected ? "" : "text-card-foreground"}`}>${value.toLocaleString()}</div>
-                            </button>
-                          );
-                        })}
+            {/* Active Tier Configuration */}
+            {activeSettings && bbVehicle && (() => {
+              const cond = condition;
+              const basisMap = activeSettings.condition_basis_map || {};
+              const selectedBasis = (basisMap as Record<string, string>)[cond] || "tradein_avg";
+              const condEquipMap = (activeSettings as any).condition_equipment_map || { excellent: true, very_good: true, good: true, fair: true };
+              const equipEnabled = condEquipMap[cond] ?? true;
+              const mult = activeSettings.condition_multipliers?.[cond] ?? 1.0;
+
+              return (
+                <div className="rounded-lg border-2 border-primary/30 bg-primary/5 p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <SlidersHorizontal className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-bold text-card-foreground">
+                        Configuring: <span className="text-primary">{CONDITION_LABELS[cond]}</span>
+                      </span>
+                    </div>
+                    <span className="text-[9px] bg-primary/20 text-primary px-2 py-0.5 rounded-full font-semibold uppercase">Active Tier</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <Label className="text-[10px] font-semibold text-muted-foreground">Base Value Source</Label>
+                      <Select
+                        value={selectedBasis}
+                        onValueChange={(val) => updateLocalSetting("condition_basis_map", {
+                          excellent: "retail_xclean", very_good: "tradein_clean", good: "tradein_avg", fair: "wholesale_rough",
+                          ...(activeSettings.condition_basis_map || {}),
+                          [cond]: val,
+                        } as any)}
+                      >
+                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {BB_VALUE_OPTIONS.map(opt => {
+                            let dollarStr = "";
+                            if (bbVehicle) {
+                              const [cat, tier] = opt.value.split("_");
+                              const tierKey = tier === "xclean" ? "xclean" : tier;
+                              const data = bbVehicle[cat as "wholesale" | "tradein" | "retail"] as Record<string, number> | undefined;
+                              const val = data?.[tierKey] || 0;
+                              if (val > 0) dollarStr = ` — $${val.toLocaleString()}`;
+                            }
+                            return <SelectItem key={opt.value} value={opt.value} className="text-xs">{opt.label}{dollarStr}</SelectItem>;
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex flex-col justify-between">
+                      <Label className="text-[10px] font-semibold text-muted-foreground">Include Equipment</Label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Switch
+                          checked={equipEnabled}
+                          onCheckedChange={(checked) => {
+                            const newMap = { ...(activeSettings as any).condition_equipment_map || { excellent: true, very_good: true, good: true, fair: true }, [cond]: checked };
+                            updateLocalSetting("condition_equipment_map" as any, newMap);
+                          }}
+                        />
+                        <span className="text-[10px] text-muted-foreground">{equipEnabled ? "Yes" : "No"}</span>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <Label className="text-[10px] font-semibold text-muted-foreground">Value Multiplier</Label>
+                        <span className="text-xs font-bold text-primary">{mult.toFixed(2)}×</span>
+                      </div>
+                      <Slider
+                        value={[mult * 100]}
+                        min={70} max={110} step={1}
+                        onValueChange={([v]) => updateLocalSetting("condition_multipliers", {
+                          ...activeSettings.condition_multipliers,
+                          [cond]: Math.round(v) / 100,
+                        })}
+                      />
+                      <div className="flex justify-between text-[8px] text-muted-foreground mt-0.5">
+                        <span>0.70×</span><span>1.00×</span><span>1.10×</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
-            {/* ② VEHICLE CONDITION — Editable dropdowns pre-filled from customer */}
+            {/* ② CUSTOMER CONDITION INPUTS — with inspector override indicators */}
             <div className="rounded-lg border border-border p-3">
-              <div className="flex items-center gap-1.5 mb-2">
+              <div className="flex items-center gap-1.5 mb-3">
                 <Car className="w-3.5 h-3.5 text-primary" />
                 <span className="text-[11px] font-bold text-card-foreground uppercase tracking-wider">② Vehicle Condition</span>
                 {hasInspection && (
-                  <Badge variant="secondary" className="text-[8px] ml-auto">Inspection Data Applied</Badge>
+                  <Badge variant="secondary" className="text-[8px] ml-auto">Inspector Data Applied</Badge>
                 )}
               </div>
-              {/* Final Grade Callout */}
-              <div className="mb-3 p-2.5 rounded-lg border-2 border-primary/30 bg-primary/5 flex items-center gap-3">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
-                      {sub.inspector_grade ? "Final Grade (Inspector Verified)" : "Customer Self-Assessment"}
-                    </span>
+
+              <div className="space-y-2">
+                {/* Condition */}
+                <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
+                  <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Condition</span>
+                  <span className="text-xs font-bold text-primary">{CONDITION_LABELS[condition]}</span>
+                  {sub.inspector_grade && sub.inspector_grade !== sub.overall_condition && (
+                    <span className="text-[8px] text-muted-foreground">Customer: {formatGrade(sub.overall_condition)}</span>
+                  )}
+                  <SourceTag inspector={!!sub.inspector_grade} customer={sub.inspector_grade ? undefined : sub.overall_condition} />
+                  <span className="text-[9px] text-muted-foreground ml-auto">Set above ①</span>
+                </div>
+
+                {/* Modifications */}
+                <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
+                  <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Modifications</span>
+                  <Select value={modifications} onValueChange={setModifications}>
+                    <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No Modifications</SelectItem>
+                      <SelectItem value="yes">Has Modifications</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <SourceTag customer={customerAnswers.modifications} />
+                  <span className="text-[9px] text-muted-foreground ml-auto">Info only</span>
+                </div>
+
+                {/* Drivable */}
+                {isOn("not_drivable") && (
+                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
+                    <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Drivable?</span>
+                    <Select value={drivable} onValueChange={setDrivable}>
+                      <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="yes">Drivable</SelectItem>
+                        <SelectItem value="no">Not Drivable</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <SourceTag customer={customerAnswers.drivable} />
+                    <DeductBadge amount={drivDeduct} />
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className={`text-xl font-black ${
-                      sub.inspector_grade
-                        ? "text-primary"
-                        : "text-card-foreground"
-                    }`}>
-                      {formatGrade(sub.inspector_grade || sub.overall_condition) || "—"}
-                    </span>
-                    {sub.inspector_grade && sub.overall_condition && sub.inspector_grade !== sub.overall_condition && (
-                      <span className="text-[10px] text-muted-foreground">
-                        Customer said: <span className="text-muted-foreground">{formatGrade(sub.overall_condition)}</span>
-                      </span>
-                    )}
-                    {!sub.inspector_grade && sub.overall_condition && (
-                      <Badge variant="outline" className="text-[9px] border-amber-400/50 text-amber-600">Pending inspector verification</Badge>
-                    )}
+                )}
+
+                {/* Exterior Damage */}
+                {isOn("exterior_damage") && (
+                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
+                    <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Exterior Damage</span>
+                    <Select value={String(exteriorItems)} onValueChange={v => setExteriorItems(Number(v))}>
+                      <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">None</SelectItem>
+                        <SelectItem value="1">1 issue</SelectItem>
+                        <SelectItem value="2">2 issues</SelectItem>
+                        <SelectItem value="3">3 issues</SelectItem>
+                        <SelectItem value="4">4 issues</SelectItem>
+                        <SelectItem value="5">5 issues</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {exteriorItems > 0 && <span className="text-[9px] text-muted-foreground">{exteriorItems} × ${getAmt("exterior_damage_per_item").toLocaleString()}</span>}
+                    <SourceTag customer={customerAnswers.exteriorDamage?.join(",")} />
+                    <DeductBadge amount={extDeduct} />
                   </div>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                <div>
-                  <Label className="text-[10px] font-semibold">Condition</Label>
-                  <Select value={condition} onValueChange={setCondition}>
-                    <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                )}
+
+                {/* Windshield */}
+                {isOn("windshield_damage") && (
+                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
+                    <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Windshield</span>
+                    <Select value={windshield} onValueChange={setWindshield}>
+                      <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No damage</SelectItem>
+                        <SelectItem value="minor_chips">Minor chips (-${getAmt("windshield_chipped").toLocaleString()})</SelectItem>
+                        <SelectItem value="major_cracks">Major cracks (-${getAmt("windshield_cracked").toLocaleString()})</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <SourceTag customer={customerAnswers.windshield} />
+                    <DeductBadge amount={windDeduct} />
+                  </div>
+                )}
+
+                {/* Moonroof */}
+                <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
+                  <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Moonroof</span>
+                  <Select value={moonroof} onValueChange={setMoonroof}>
+                    <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {CONDITIONS.map(c => <SelectItem key={c} value={c} className="capitalize text-xs">{c}</SelectItem>)}
+                      <SelectItem value="Works great">Works great</SelectItem>
+                      <SelectItem value="Doesn't work">Doesn't work (-${getAmt("moonroof_broken").toLocaleString()})</SelectItem>
+                      <SelectItem value="No moonroof">No moonroof</SelectItem>
                     </SelectContent>
                   </Select>
+                  <SourceTag customer={customerAnswers.moonroof} />
+                  <DeductBadge amount={moonroofDeduct} />
                 </div>
-                <div>
-                  <Label className="text-[10px] font-semibold">Accidents</Label>
-                  <Select value={accidents} onValueChange={setAccidents}>
-                    <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">None</SelectItem>
-                      <SelectItem value="1">1</SelectItem>
-                      <SelectItem value="2">2</SelectItem>
-                      <SelectItem value="3+">3+</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-[10px] font-semibold">Drivable?</Label>
-                  <Select value={drivable} onValueChange={setDrivable}>
-                    <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="yes">Yes</SelectItem>
-                      <SelectItem value="no">No</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-[10px] font-semibold">Smoked?</Label>
-                  <Select value={smokedIn} onValueChange={setSmokedIn}>
-                    <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="no">No</SelectItem>
-                      <SelectItem value="yes">Yes</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-[10px] font-semibold">Ext. Damage</Label>
-                  <Input type="number" min={0} max={10} value={exteriorItems} onChange={e => setExteriorItems(Number(e.target.value))} className="h-7 text-xs" />
-                </div>
-                <div>
-                  <Label className="text-[10px] font-semibold">Mech. Issues</Label>
-                  <Input type="number" min={0} max={10} value={mechItems} onChange={e => setMechItems(Number(e.target.value))} className="h-7 text-xs" />
-                </div>
+
+                {/* Interior Damage */}
+                {isOn("interior_damage") && (
+                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
+                    <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Interior Damage</span>
+                    <Select value={String(interiorItems)} onValueChange={v => setInteriorItems(Number(v))}>
+                      <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">None</SelectItem>
+                        <SelectItem value="1">1 issue</SelectItem>
+                        <SelectItem value="2">2 issues</SelectItem>
+                        <SelectItem value="3">3 issues</SelectItem>
+                        <SelectItem value="4">4 issues</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {interiorItems > 0 && <span className="text-[9px] text-muted-foreground">{interiorItems} × ${getAmt("interior_damage_per_item").toLocaleString()}</span>}
+                    <SourceTag customer={customerAnswers.interiorDamage?.join(",")} />
+                    <DeductBadge amount={intDeduct} />
+                  </div>
+                )}
+
+                {/* Tech Issues */}
+                {isOn("tech_issues") && (
+                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
+                    <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Tech Issues</span>
+                    <Select value={String(techItems)} onValueChange={v => setTechItems(Number(v))}>
+                      <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">None</SelectItem>
+                        <SelectItem value="1">1 issue</SelectItem>
+                        <SelectItem value="2">2 issues</SelectItem>
+                        <SelectItem value="3">3 issues</SelectItem>
+                        <SelectItem value="4">4 issues</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {techItems > 0 && <span className="text-[9px] text-muted-foreground">{techItems} × ${getAmt("tech_issue_per_item").toLocaleString()}</span>}
+                    <SourceTag customer={customerAnswers.techIssues?.join(",")} />
+                    <DeductBadge amount={techDeduct} />
+                  </div>
+                )}
+
+                {/* Engine Issues */}
+                {isOn("engine_issues") && (
+                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
+                    <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Engine Issues</span>
+                    <Select value={String(engineItems)} onValueChange={v => setEngineItems(Number(v))}>
+                      <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">None</SelectItem>
+                        <SelectItem value="1">1 issue</SelectItem>
+                        <SelectItem value="2">2 issues</SelectItem>
+                        <SelectItem value="3">3 issues</SelectItem>
+                        <SelectItem value="4">4 issues</SelectItem>
+                        <SelectItem value="5">5 issues</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {engineItems > 0 && <span className="text-[9px] text-muted-foreground">{engineItems} × ${getAmt("engine_issue_per_item").toLocaleString()}</span>}
+                    <SourceTag customer={customerAnswers.engineIssues?.join(",")} />
+                    <DeductBadge amount={engDeduct} />
+                  </div>
+                )}
+
+                {/* Mechanical Issues */}
+                {isOn("mechanical_issues") && (
+                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
+                    <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Mechanical Issues</span>
+                    <Select value={String(mechItems)} onValueChange={v => setMechItems(Number(v))}>
+                      <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">None</SelectItem>
+                        <SelectItem value="1">1 issue</SelectItem>
+                        <SelectItem value="2">2 issues</SelectItem>
+                        <SelectItem value="3">3 issues</SelectItem>
+                        <SelectItem value="4">4 issues</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {mechItems > 0 && <span className="text-[9px] text-muted-foreground">{mechItems} × ${getAmt("mechanical_issue_per_item").toLocaleString()}</span>}
+                    <SourceTag customer={customerAnswers.mechIssues?.join(",")} />
+                    <DeductBadge amount={mechDeduct} />
+                  </div>
+                )}
+
+                {/* Accidents */}
+                {isOn("accidents") && (
+                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
+                    <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Accidents</span>
+                    <Select value={accidents} onValueChange={setAccidents}>
+                      <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">No accidents</SelectItem>
+                        <SelectItem value="1">1 accident (-${getAmt("accidents_1").toLocaleString()})</SelectItem>
+                        <SelectItem value="2+">2+ accidents (-${getAmt("accidents_2").toLocaleString()})</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <SourceTag customer={customerAnswers.accidents} />
+                    <DeductBadge amount={accidentDeduct} />
+                  </div>
+                )}
+
+                {/* Smoked In */}
+                {isOn("smoked_in") && (
+                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
+                    <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Smoked In?</span>
+                    <Select value={smokedIn} onValueChange={setSmokedIn}>
+                      <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="no">Not Smoked In</SelectItem>
+                        <SelectItem value="yes">Smoked In (-${getAmt("smoked_in").toLocaleString()})</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <SourceTag customer={customerAnswers.smokedIn} />
+                    <DeductBadge amount={smokeDeduct} />
+                  </div>
+                )}
+
+                {/* Tires */}
+                {isOn("tires_not_replaced") && (
+                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
+                    <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Tires Replaced</span>
+                    <Select value={tiresReplaced} onValueChange={setTiresReplaced}>
+                      <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="4">4 tires (no deduction)</SelectItem>
+                        <SelectItem value="3">3 tires</SelectItem>
+                        <SelectItem value="2">2 tires</SelectItem>
+                        <SelectItem value="1">1 tire</SelectItem>
+                        <SelectItem value="None">None (-${getAmt("tires_not_replaced").toLocaleString()})</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <SourceTag customer={customerAnswers.tires} />
+                    <DeductBadge amount={tiresDeduct} />
+                  </div>
+                )}
+
+                {/* Keys */}
+                {isOn("missing_keys") && (
+                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
+                    <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Keys</span>
+                    <Select value={numKeys} onValueChange={setNumKeys}>
+                      <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="2+">2+ keys (no deduction)</SelectItem>
+                        <SelectItem value="1">1 key (-${getAmt("missing_keys_1").toLocaleString()})</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <SourceTag customer={customerAnswers.keys} />
+                    <DeductBadge amount={keyDeduct} />
+                  </div>
+                )}
               </div>
             </div>
+
+            {/* ③ EQUIPMENT — Factory Options with Customer ✓ and VIN detected tags */}
+            {bbVehicle && bbVehicle.add_deduct_list?.length > 0 && (
+              <Collapsible defaultOpen>
+                <CollapsibleTrigger asChild>
+                  <button className="flex items-center justify-between w-full px-3 py-2 text-left hover:bg-muted/30 transition-colors rounded-lg border border-border">
+                    <div className="flex items-center gap-1.5">
+                      <CheckSquare className="w-3.5 h-3.5 text-primary" />
+                      <span className="font-semibold text-[11px] text-card-foreground">③ Factory Equipment ({liveSelectedAddDeducts.length}/{bbVehicle.add_deduct_list.length})</span>
+                      {equipmentTotal !== 0 && (
+                        <Badge variant="secondary" className={`text-[9px] ${equipmentTotal > 0 ? "text-emerald-600" : "text-destructive"}`}>
+                          {equipmentTotal > 0 ? "+" : ""}${equipmentTotal.toLocaleString()}
+                        </Badge>
+                      )}
+                    </div>
+                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                  </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  {/* Inspector verification reminder */}
+                  <div className="mx-1 mt-2 mb-1 px-2.5 py-1.5 rounded-md bg-amber-500/10 border border-amber-500/20 flex items-center gap-2">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-400">
+                      Inspector: Verify all customer-selected equipment is present on the vehicle during in-person inspection.
+                    </span>
+                  </div>
+                  <div className="space-y-0.5 max-h-48 overflow-y-auto px-1 py-2">
+                    {bbVehicle.add_deduct_list.map((ad: BBAddDeduct) => {
+                      const isSelected = liveSelectedAddDeducts.includes(ad.uoc);
+                      const wasCustomerSelected = (sub.bb_selected_options || []).includes(ad.uoc);
+                      const isAutoDetected = ad.auto !== "N";
+                      const dollarStr = ad.avg !== 0 ? ` (${ad.avg > 0 ? "+" : ""}$${Math.abs(ad.avg)})` : "";
+                      return (
+                        <label key={ad.uoc} className={`flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer text-[10px] ${isSelected ? "bg-primary/10 text-card-foreground" : "text-muted-foreground hover:bg-muted"}`}>
+                          <input type="checkbox" checked={isSelected} onChange={() => toggleAddDeduct(ad.uoc)} className="rounded border-border w-3 h-3" />
+                          <span className="truncate">{ad.name}{dollarStr}</span>
+                          {wasCustomerSelected && (
+                            <span className="text-[8px] bg-primary/15 text-primary px-1 rounded shrink-0">Customer ✓</span>
+                          )}
+                          {isAutoDetected && !wasCustomerSelected && (
+                            <span className="text-[8px] bg-muted text-muted-foreground px-1 rounded shrink-0">VIN detected</span>
+                          )}
+                        </label>
+                      );
+                    })}
+                  </div>
+                  {liveSelectedAddDeducts.length > 0 && (
+                    <div className="mx-1 mb-1 px-2.5 py-1 text-[9px] text-muted-foreground border-t border-border">
+                      <strong>{liveSelectedAddDeducts.length}</strong> option{liveSelectedAddDeducts.length !== 1 ? "s" : ""} selected → value impact: <strong className={equipmentTotal >= 0 ? "text-emerald-600" : "text-destructive"}>{equipmentTotal >= 0 ? "+" : ""}${equipmentTotal.toLocaleString()}</strong>
+                    </div>
+                  )}
+                </CollapsibleContent>
+              </Collapsible>
+            )}
 
             {/* ② b — TIRE & BRAKE HEALTH AT-A-GLANCE */}
             {(sub.tire_lf != null || sub.brake_lf != null) && (() => {
@@ -791,9 +1207,9 @@ export default function AppraisalTool() {
                 { label: "LR", val: sub.brake_lr },
                 { label: "RR", val: sub.brake_rr },
               ];
-              const hasTires = tires.some(t => t.val != null);
-              const hasBrakes = brakes.some(b => b.val != null);
-              if (!hasTires && !hasBrakes) return null;
+              const hasTiresLocal = tires.some(t => t.val != null);
+              const hasBrakesLocal = brakes.some(b => b.val != null);
+              if (!hasTiresLocal && !hasBrakesLocal) return null;
 
               const getStatus = (val: number | null) => {
                 if (val == null) return { color: "text-muted-foreground", bg: "bg-muted", label: "—" };
@@ -802,20 +1218,14 @@ export default function AppraisalTool() {
                 return { color: "text-green-600", bg: "bg-green-500/10 border-green-400/40", label: "Good" };
               };
 
-              const needsTires = hasTires && tires.some(t => t.val != null && t.val <= 3);
-              const needsBrakes = hasBrakes && brakes.some(b => b.val != null && b.val <= 3);
+              const needsTires = hasTiresLocal && tires.some(t => t.val != null && t.val <= 3);
+              const needsBrakes = hasBrakesLocal && brakes.some(b => b.val != null && b.val <= 3);
 
               return (
-                <div className={`rounded-lg border-2 p-3 ${
-                  needsTires || needsBrakes
-                    ? "border-red-400/60 bg-red-500/5"
-                    : "border-border bg-card"
-                }`}>
+                <div className={`rounded-lg border-2 p-3 ${needsTires || needsBrakes ? "border-red-400/60 bg-red-500/5" : "border-border bg-card"}`}>
                   <div className="flex items-center gap-2 mb-3">
                     <Gauge className="w-4 h-4 text-primary" />
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-card-foreground">
-                      Tire & Brake Health
-                    </span>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-card-foreground">Tire & Brake Health</span>
                     {(needsTires || needsBrakes) && (
                       <Badge variant="destructive" className="text-[9px] ml-auto animate-pulse">
                         <AlertTriangle className="w-3 h-3 mr-1" />
@@ -829,7 +1239,7 @@ export default function AppraisalTool() {
                     )}
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    {hasTires && (
+                    {hasTiresLocal && (
                       <div>
                         <p className="text-[9px] font-bold uppercase text-muted-foreground mb-1.5">Tire Tread (/32")</p>
                         <div className="grid grid-cols-2 gap-1.5">
@@ -846,7 +1256,7 @@ export default function AppraisalTool() {
                         </div>
                       </div>
                     )}
-                    {hasBrakes && (
+                    {hasBrakesLocal && (
                       <div>
                         <p className="text-[9px] font-bold uppercase text-muted-foreground mb-1.5">Brake Pads (/32")</p>
                         <div className="grid grid-cols-2 gap-1.5">
@@ -871,9 +1281,9 @@ export default function AppraisalTool() {
                         {sub.tire_adjustment >= 0 ? "+" : ""}${Math.abs(sub.tire_adjustment).toLocaleString()}
                       </span>
                     </div>
-                   )}
+                  )}
 
-                  {/* Policy Compliance Check */}
+                  {/* Depth Policy Compliance */}
                   {depthPolicies.length > 0 && (() => {
                     const vehicleYear = parseInt(sub.vehicle_year || "0");
                     const vehicleMileage = parseInt(sub.mileage || "0");
@@ -893,7 +1303,6 @@ export default function AppraisalTool() {
                       if (p.max_mileage != null && vehicleMileage > p.max_mileage) return false;
                       return true;
                     });
-
                     if (applicable.length === 0) return null;
 
                     return (
@@ -905,38 +1314,17 @@ export default function AppraisalTool() {
                           const tireFail = lowestTire !== null && lowestTire < policy.min_tire_depth;
                           const brakeFail = lowestBrake !== null && lowestBrake < policy.min_brake_depth;
                           const pass = !tireFail && !brakeFail;
-                          const typeLabel = policy.policy_type === "manufacturer_cpo" ? "MFR CPO"
-                            : policy.policy_type === "limited_cpo" ? "Limited CPO"
-                            : policy.policy_type === "internal_cert" ? "Internal Cert"
-                            : policy.policy_type === "custom" ? "Custom"
-                            : "Standard";
+                          const typeLabel = policy.policy_type === "manufacturer_cpo" ? "MFR CPO" : policy.policy_type === "limited_cpo" ? "Limited CPO" : policy.policy_type === "internal_cert" ? "Internal Cert" : "Standard";
                           return (
-                            <div key={policy.id} className={`rounded-md border px-2.5 py-1.5 flex items-center justify-between text-[10px] ${
-                              pass
-                                ? "bg-green-500/5 border-green-400/30"
-                                : "bg-red-500/5 border-red-400/30"
-                            }`}>
+                            <div key={policy.id} className={`rounded-md border px-2.5 py-1.5 flex items-center justify-between text-[10px] ${pass ? "bg-green-500/5 border-green-400/30" : "bg-red-500/5 border-red-400/30"}`}>
                               <div className="flex items-center gap-2">
-                                {pass
-                                  ? <CheckCircle className="w-3.5 h-3.5 text-green-600 shrink-0" />
-                                  : <XCircle className="w-3.5 h-3.5 text-red-600 shrink-0" />}
+                                {pass ? <CheckCircle className="w-3.5 h-3.5 text-green-600 shrink-0" /> : <XCircle className="w-3.5 h-3.5 text-red-600 shrink-0" />}
                                 <span className="font-semibold text-card-foreground">{policy.name}</span>
                                 <Badge variant="outline" className="text-[8px] h-4">{typeLabel}</Badge>
-                                {!policy.all_brands && policy.oem_brands.length > 0 && (
-                                  <span className="text-muted-foreground">{policy.oem_brands.join(", ")}</span>
-                                )}
                               </div>
                               <div className="flex items-center gap-3 text-[9px]">
-                                {tireFail && (
-                                  <span className="text-red-600 font-bold">
-                                    Tires: {lowestTire}/32" &lt; {policy.min_tire_depth}/32" min
-                                  </span>
-                                )}
-                                {brakeFail && (
-                                  <span className="text-red-600 font-bold">
-                                    Brakes: {lowestBrake}/32" &lt; {policy.min_brake_depth}/32" min
-                                  </span>
-                                )}
+                                {tireFail && <span className="text-red-600 font-bold">Tires: {lowestTire}/32" &lt; {policy.min_tire_depth}/32"</span>}
+                                {brakeFail && <span className="text-red-600 font-bold">Brakes: {lowestBrake}/32" &lt; {policy.min_brake_depth}/32"</span>}
                                 {pass && <span className="text-green-600 font-bold">Meets Requirements</span>}
                               </div>
                             </div>
@@ -949,46 +1337,17 @@ export default function AppraisalTool() {
               );
             })()}
 
-            {bbVehicle && bbVehicle.add_deduct_list?.length > 0 && (
-              <Collapsible>
-                <CollapsibleTrigger asChild>
-                  <button className="flex items-center justify-between w-full px-3 py-2 text-left hover:bg-muted/30 transition-colors rounded-lg border border-border">
-                    <div className="flex items-center gap-1.5">
-                      <CheckCircle className="w-3.5 h-3.5 text-primary" />
-                      <span className="font-semibold text-[11px] text-card-foreground">Equipment ({liveSelectedAddDeducts.length}/{bbVehicle.add_deduct_list.length})</span>
-                      {equipmentTotal !== 0 && (
-                        <Badge variant="secondary" className={`text-[9px] ${equipmentTotal > 0 ? "text-emerald-600" : "text-destructive"}`}>
-                          {equipmentTotal > 0 ? "+" : ""}${equipmentTotal.toLocaleString()}
-                        </Badge>
-                      )}
-                    </div>
-                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
-                  </button>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="space-y-0.5 max-h-36 overflow-y-auto px-1 py-2">
-                    {bbVehicle.add_deduct_list.map((ad: BBAddDeduct) => {
-                      const isSelected = liveSelectedAddDeducts.includes(ad.uoc);
-                      const dollarStr = ad.avg !== 0 ? ` (${ad.avg > 0 ? "+" : ""}$${Math.abs(ad.avg)})` : "";
-                      return (
-                        <label key={ad.uoc} className={`flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer text-[10px] ${isSelected ? "bg-primary/10 text-card-foreground" : "text-muted-foreground hover:bg-muted"}`}>
-                          <input type="checkbox" checked={isSelected} onChange={() => toggleAddDeduct(ad.uoc)} className="rounded border-border w-3 h-3" />
-                          <span className="truncate">{ad.name}{dollarStr}</span>
-                          {ad.auto !== "N" && <span className="text-[8px] bg-emerald-500/10 text-emerald-600 px-1 rounded shrink-0">auto</span>}
-                        </label>
-                      );
-                    })}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-            )}
-
-            {/* ③ PRICE WATERFALL */}
+            {/* ④ PRICE WATERFALL */}
             {offerResult && (
-              <div className="rounded-lg border border-border p-3 bg-gradient-to-b from-muted/20 to-transparent">
+              <div className="rounded-lg border-2 border-primary/20 p-3 bg-gradient-to-b from-muted/20 to-transparent">
                 <div className="flex items-center gap-1.5 mb-3">
                   <ArrowDown className="w-3.5 h-3.5 text-primary" />
-                  <span className="text-[11px] font-bold text-card-foreground uppercase tracking-wider">③ Price Waterfall — Click any bar to adjust</span>
+                  <span className="text-[11px] font-bold text-card-foreground uppercase tracking-wider">
+                    ④ Price Waterfall — {CONDITION_LABELS[condition]}
+                  </span>
+                  <span className="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-semibold ml-auto">
+                    Click bars to adjust
+                  </span>
                 </div>
                 <div className="space-y-0.5">
                   {waterfallBlocks.map(block => (
@@ -1001,114 +1360,48 @@ export default function AppraisalTool() {
               </div>
             )}
 
-            {/* Condition Multipliers Detail */}
-            {offerResult && activeSettings && (
+            {/* BB Value Tiles */}
+            {bbVehicle && (
               <Collapsible>
                 <CollapsibleTrigger asChild>
                   <button className="flex items-center justify-between w-full px-3 py-2 text-left hover:bg-muted/30 transition-colors rounded-lg border border-border">
                     <div className="flex items-center gap-1.5">
-                      <Gauge className="w-3.5 h-3.5 text-primary" />
-                      <span className="font-semibold text-[11px] text-card-foreground">Condition Multipliers</span>
+                      <DollarSign className="w-3.5 h-3.5 text-primary" />
+                      <span className="font-semibold text-[11px] text-card-foreground">Black Book Market Values</span>
                     </div>
                     <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                   </button>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2">
-                    {(["excellent", "good", "fair", "rough"] as const).map(grade => {
-                      const mult = activeSettings.condition_multipliers[grade];
-                      const isActive = grade === condition;
+                  <div className="p-2">
+                    {BB_CATEGORIES.map(cat => {
+                      const data = bbVehicle[cat.dataKey] as Record<string, number> | undefined;
+                      if (!data) return null;
                       return (
-                        <div key={grade} className={`space-y-1 rounded-md p-1.5 ${isActive ? "bg-primary/10 ring-1 ring-primary/20" : ""}`}>
-                          <div className="flex items-center justify-between">
-                            <Label className="capitalize text-[10px] font-semibold">{grade}</Label>
-                            {isActive && <span className="text-[7px] bg-primary text-primary-foreground px-1 rounded">ACTIVE</span>}
+                        <div key={cat.label} className="mb-1.5">
+                          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block mb-0.5">{cat.label}</span>
+                          <div className="grid grid-cols-4 gap-1">
+                            {cat.tiers.map(tier => {
+                              const value = data[tier.tierKey] || 0;
+                              const isSelected = bbValueBasis === tier.key;
+                              if (value <= 0) return null;
+                              return (
+                                <button key={tier.key}
+                                  onClick={() => { setBbValueBasis(tier.key); updateLocalSetting("bb_value_basis", tier.key); }}
+                                  className={`rounded-md px-2 py-1.5 text-center transition-all border ${
+                                    isSelected
+                                      ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30 shadow-sm"
+                                      : "bg-muted/40 border-border hover:border-primary/40 hover:bg-primary/5 text-card-foreground"
+                                  }`}>
+                                  <div className="text-[9px] font-medium opacity-80">{tier.short}</div>
+                                  <div className={`text-sm font-bold ${isSelected ? "" : "text-card-foreground"}`}>${value.toLocaleString()}</div>
+                                </button>
+                              );
+                            })}
                           </div>
-                          <Input type="number" step="0.01" min="0" max="2" value={mult}
-                            onChange={e => updateLocalSetting("condition_multipliers", { ...activeSettings.condition_multipliers, [grade]: Number(e.target.value) })}
-                            className="w-full h-6 text-[10px]" />
-                          <Slider value={[mult * 100]} min={50} max={130} step={1}
-                            onValueChange={([v]) => updateLocalSetting("condition_multipliers", { ...activeSettings.condition_multipliers, [grade]: Math.round(v) / 100 })} />
                         </div>
                       );
                     })}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-            )}
-
-            {/* Age Tiers */}
-            {offerResult && activeSettings && (
-              <Collapsible>
-                <CollapsibleTrigger asChild>
-                  <button className="flex items-center justify-between w-full px-3 py-2 text-left hover:bg-muted/30 transition-colors rounded-lg border border-border">
-                    <div className="flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5 text-primary" />
-                      <span className="font-semibold text-[11px] text-card-foreground">Age Tiers ({(activeSettings.age_tiers || []).length})</span>
-                    </div>
-                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
-                  </button>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="space-y-1 p-2">
-                    {(activeSettings.age_tiers || []).map((tier: any, idx: number) => (
-                      <div key={idx} className="flex items-center gap-1 text-[10px]">
-                        <Input type="number" value={tier.min_years} onChange={e => { const u = [...(activeSettings.age_tiers || [])]; u[idx] = { ...u[idx], min_years: Number(e.target.value) }; updateLocalSetting("age_tiers", u); }} className="w-12 h-5 text-[10px]" />
-                        <span>–</span>
-                        <Input type="number" value={tier.max_years} onChange={e => { const u = [...(activeSettings.age_tiers || [])]; u[idx] = { ...u[idx], max_years: Number(e.target.value) }; updateLocalSetting("age_tiers", u); }} className="w-12 h-5 text-[10px]" />
-                        <span>yr →</span>
-                        <Input type="number" value={tier.adjustment_pct} onChange={e => { const u = [...(activeSettings.age_tiers || [])]; u[idx] = { ...u[idx], adjustment_pct: Number(e.target.value) }; updateLocalSetting("age_tiers", u); }} className="w-14 h-5 text-[10px]" step="0.5" />
-                        <span>%</span>
-                      </div>
-                    ))}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-            )}
-
-            {/* Mileage Tiers */}
-            {offerResult && activeSettings && (
-              <Collapsible>
-                <CollapsibleTrigger asChild>
-                  <button className="flex items-center justify-between w-full px-3 py-2 text-left hover:bg-muted/30 transition-colors rounded-lg border border-border">
-                    <div className="flex items-center gap-1.5">
-                      <Gauge className="w-3.5 h-3.5 text-primary" />
-                      <span className="font-semibold text-[11px] text-card-foreground">Mileage Tiers ({(activeSettings.mileage_tiers || []).length})</span>
-                    </div>
-                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
-                  </button>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="space-y-1 p-2">
-                    {(activeSettings.mileage_tiers || []).map((tier: any, idx: number) => (
-                      <div key={idx} className="flex items-center gap-1 text-[10px]">
-                        <Input type="number" value={tier.min_miles} onChange={e => { const u = [...(activeSettings.mileage_tiers || [])]; u[idx] = { ...u[idx], min_miles: Number(e.target.value) }; updateLocalSetting("mileage_tiers", u); }} className="w-16 h-5 text-[10px]" step="5000" />
-                        <span>–</span>
-                        <Input type="number" value={tier.max_miles} onChange={e => { const u = [...(activeSettings.mileage_tiers || [])]; u[idx] = { ...u[idx], max_miles: Number(e.target.value) }; updateLocalSetting("mileage_tiers", u); }} className="w-16 h-5 text-[10px]" step="5000" />
-                        <span>mi →$</span>
-                        <Input type="number" value={tier.adjustment_flat} onChange={e => { const u = [...(activeSettings.mileage_tiers || [])]; u[idx] = { ...u[idx], adjustment_flat: Number(e.target.value) }; updateLocalSetting("mileage_tiers", u); }} className="w-16 h-5 text-[10px]" step="100" />
-                      </div>
-                    ))}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-            )}
-
-            {/* Deduction Amounts */}
-            {offerResult && activeSettings && (
-              <Collapsible>
-                <CollapsibleTrigger asChild>
-                  <button className="flex items-center justify-between w-full px-3 py-2 text-left hover:bg-muted/30 transition-colors rounded-lg border border-border">
-                    <div className="flex items-center gap-1.5">
-                      <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
-                      <span className="font-semibold text-[11px] text-card-foreground">Deduction Amounts</span>
-                    </div>
-                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
-                  </button>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="p-2 text-[10px] text-muted-foreground">
-                    Total deductions: <span className="font-bold text-destructive">−${(offerResult.totalDeductions || 0).toLocaleString()}</span>
                   </div>
                 </CollapsibleContent>
               </Collapsible>
@@ -1124,15 +1417,10 @@ export default function AppraisalTool() {
                 <div className="relative flex-1">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg font-bold text-muted-foreground">$</span>
                   <Input
-                    type="text"
-                    inputMode="numeric"
+                    type="text" inputMode="numeric"
                     value={acvOverride != null ? acvOverride.toLocaleString("en-US") : ""}
-                    onChange={e => {
-                      const raw = e.target.value.replace(/[^0-9]/g, "");
-                      setAcvOverride(raw ? Number(raw) : null);
-                    }}
-                    placeholder="Enter final ACV"
-                    className="h-10 text-lg font-bold pl-8"
+                    onChange={e => { const raw = e.target.value.replace(/[^0-9]/g, ""); setAcvOverride(raw ? Number(raw) : null); }}
+                    placeholder="Enter final ACV" className="h-10 text-lg font-bold pl-8"
                   />
                 </div>
                 <Button onClick={handleSave} disabled={saving} size="lg">
@@ -1149,9 +1437,12 @@ export default function AppraisalTool() {
             {/* Final Offer Card */}
             {offerResult && (
               <div className="rounded-xl border-2 border-primary/40 bg-gradient-to-br from-primary/5 to-primary/10 p-5">
-                <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-1">Final Offer Range</div>
+                <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-1">Appraisal Value</div>
                 <div className="text-3xl font-bold text-primary">
-                  ${offerResult.low.toLocaleString()} – ${offerResult.high.toLocaleString()}
+                  ${finalValue.toLocaleString()}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Customer was offered: ${currentOffer.toLocaleString()}
                 </div>
                 {offerResult.matchedRuleIds.length > 0 && (
                   <div className="flex items-center gap-1 mt-2">
@@ -1175,10 +1466,50 @@ export default function AppraisalTool() {
               </div>
             )}
 
+            {/* TAC Summary */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                  <BarChart3 className="w-3.5 h-3.5 text-primary" />
+                  Total Acquisition Cost
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-1.5">
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Appraisal Value</span>
+                  <span className="font-bold">${finalValue.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">+ Recon Cost</span>
+                  <span className="font-bold text-destructive">${(activeSettings?.recon_cost || 0).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">+ Dealer Pack</span>
+                  <span className="font-bold text-destructive">${effectivePack.toLocaleString()}</span>
+                </div>
+                <Separator className="my-2" />
+                <div className="flex justify-between text-xs">
+                  <span className="font-semibold text-card-foreground">TAC</span>
+                  <span className="font-bold text-card-foreground">${(finalValue + (activeSettings?.recon_cost || 0) + effectivePack).toLocaleString()}</span>
+                </div>
+                <Separator className="my-2" />
+                <div className="flex justify-between text-xs">
+                  <span className="font-semibold text-card-foreground">Projected Profit</span>
+                  <span className={`font-bold ${projectedProfit >= 0 ? "text-green-600" : "text-destructive"}`}>
+                    {projectedProfit >= 0 ? "+" : ""}${projectedProfit.toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Margin %</span>
+                  <span className={`font-bold ${profitMargin >= 0 ? "text-green-600" : "text-destructive"}`}>{profitMargin.toFixed(1)}%</span>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Market Context */}
             {bbVehicle && offerResult && (
               <div className="rounded-lg border border-border bg-muted/20 p-4">
-                <MarketContextPanel bbVehicle={bbVehicle} offerHigh={offerResult.high} />
+                <MarketContextPanel bbVehicle={bbVehicle} offerHigh={finalValue} />
               </div>
             )}
 
@@ -1195,9 +1526,8 @@ export default function AppraisalTool() {
               </div>
             )}
 
-            {/* Inspection Results — At-a-Glance */}
+            {/* Inspection At-a-Glance */}
             {hasInspection && (() => {
-              // Parse inspection notes into structured sections
               const parsedSections: { name: string; items: { label: string; status: string }[] }[] = [];
               if (inspectionData) {
                 const lines = inspectionData.split("\n").filter(Boolean);
@@ -1224,175 +1554,48 @@ export default function AppraisalTool() {
                 return "bg-muted text-muted-foreground border-border";
               };
 
-              const failCount = parsedSections.reduce((acc, sec) => acc + sec.items.filter(i => {
-                const s = i.status.toLowerCase();
-                return s.includes("fail") || s.includes("poor") || s.includes("replace") || s.includes("damage") || s.includes("issue");
-              }).length, 0);
-              const warnCount = parsedSections.reduce((acc, sec) => acc + sec.items.filter(i => {
-                const s = i.status.toLowerCase();
-                return s.includes("fair") || s.includes("warn") || s.includes("wear") || s.includes("minor");
-              }).length, 0);
-              const passCount = parsedSections.reduce((acc, sec) => acc + sec.items.filter(i => {
-                const s = i.status.toLowerCase();
-                return s.includes("pass") || s.includes("good") || s.includes("ok") || s.includes("excellent") || s.includes("normal");
-              }).length, 0);
+              const failCount = parsedSections.reduce((acc, sec) => acc + sec.items.filter(i => getStatusColor(i.status).includes("destructive")).length, 0);
+              const passCount = parsedSections.reduce((acc, sec) => acc + sec.items.filter(i => getStatusColor(i.status).includes("emerald")).length, 0);
               const totalChecks = parsedSections.reduce((acc, sec) => acc + sec.items.length, 0);
 
               return (
                 <Card className="border-l-4 border-l-primary">
                   <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
-                        <Wrench className="w-3.5 h-3.5 text-primary" />
-                        Inspection At-a-Glance
-                      </CardTitle>
-                      {/* Final Grade badge */}
-                      {(sub.inspector_grade || sub.overall_condition) && (
-                        <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${
-                          sub.inspector_grade
-                            ? "bg-primary/15 text-primary border border-primary/30"
-                            : "bg-muted text-muted-foreground border border-border"
-                        }`}>
-                          <Shield className="w-3 h-3" />
-                          {sub.inspector_grade ? "Final: " : ""}{formatGrade(sub.inspector_grade || sub.overall_condition)}
-                        </div>
-                      )}
-                    </div>
+                    <CardTitle className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                      <Wrench className="w-3.5 h-3.5 text-primary" />
+                      Inspection At-a-Glance
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {/* Status Summary Bar */}
                     {totalChecks > 0 && (
                       <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/30">
-                        {failCount > 0 && (
-                          <div className="flex items-center gap-1">
-                            <div className="w-2.5 h-2.5 rounded-full bg-destructive" />
-                            <span className="text-[10px] font-bold text-destructive">{failCount} Fail</span>
-                          </div>
-                        )}
-                        {warnCount > 0 && (
-                          <div className="flex items-center gap-1">
-                            <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-                            <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400">{warnCount} Warn</span>
-                          </div>
-                        )}
-                        {passCount > 0 && (
-                          <div className="flex items-center gap-1">
-                            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">{passCount} Pass</span>
-                          </div>
-                        )}
+                        {failCount > 0 && <div className="flex items-center gap-1"><div className="w-2.5 h-2.5 rounded-full bg-destructive" /><span className="text-[10px] font-bold text-destructive">{failCount} Fail</span></div>}
+                        {passCount > 0 && <div className="flex items-center gap-1"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500" /><span className="text-[10px] font-bold text-emerald-600">{passCount} Pass</span></div>}
                         <span className="text-[9px] text-muted-foreground ml-auto">{totalChecks} checks</span>
                       </div>
                     )}
-
-                    {/* Tire & Brake Quick Stats */}
-                    {(hasTires || hasBrakes) && (
-                      <div className="grid grid-cols-2 gap-2">
-                        {hasTires && (
-                          <div className={`rounded-lg p-2.5 border ${
-                            Number(avgTireDepth) >= 6 ? "bg-emerald-500/10 border-emerald-500/30" :
-                            Number(avgTireDepth) >= 4 ? "bg-amber-500/10 border-amber-500/30" :
-                            "bg-destructive/10 border-destructive/30"
-                          }`}>
-                            <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Tires</p>
-                            <p className={`text-lg font-black ${
-                              Number(avgTireDepth) >= 6 ? "text-emerald-600 dark:text-emerald-400" :
-                              Number(avgTireDepth) >= 4 ? "text-amber-600 dark:text-amber-400" :
-                              "text-destructive"
-                            }`}>{avgTireDepth}/32"</p>
-                            <p className="text-[9px] text-muted-foreground">avg depth</p>
-                            {sub.tire_adjustment != null && sub.tire_adjustment !== 0 && (
-                              <p className={`text-[10px] font-bold mt-0.5 ${Number(sub.tire_adjustment) >= 0 ? "text-emerald-600" : "text-destructive"}`}>
-                                {Number(sub.tire_adjustment) >= 0 ? "+" : ""}${Number(sub.tire_adjustment).toLocaleString()}
-                              </p>
-                            )}
-                          </div>
-                        )}
-                        {hasBrakes && avgBrakeDepth != null && (
-                          <div className={`rounded-lg p-2.5 border ${
-                            avgBrakeDepth >= 5 ? "bg-emerald-500/10 border-emerald-500/30" :
-                            avgBrakeDepth >= 3 ? "bg-amber-500/10 border-amber-500/30" :
-                            "bg-destructive/10 border-destructive/30"
-                          }`}>
-                            <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Brakes</p>
-                            <p className={`text-lg font-black ${
-                              avgBrakeDepth >= 5 ? "text-emerald-600 dark:text-emerald-400" :
-                              avgBrakeDepth >= 3 ? "text-amber-600 dark:text-amber-400" :
-                              "text-destructive"
-                            }`}>{avgBrakeDepth.toFixed(1)}/32"</p>
-                            <p className="text-[9px] text-muted-foreground">avg depth</p>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Parsed Section Findings */}
-                    {parsedSections.length > 0 && (
-                      <div className="space-y-2">
-                        {parsedSections.map((sec, i) => {
-                          const secFails = sec.items.filter(it => {
-                            const s = it.status.toLowerCase();
-                            return s.includes("fail") || s.includes("poor") || s.includes("replace") || s.includes("damage");
-                          });
-                          const secWarns = sec.items.filter(it => {
-                            const s = it.status.toLowerCase();
-                            return s.includes("fair") || s.includes("warn") || s.includes("wear");
-                          });
-                          const allPass = secFails.length === 0 && secWarns.length === 0;
-
-                          return (
-                            <Collapsible key={i}>
-                              <CollapsibleTrigger asChild>
-                                <button className="flex items-center justify-between w-full text-left px-2 py-1.5 rounded-md hover:bg-muted/50 transition-colors">
-                                  <div className="flex items-center gap-2">
-                                    <div className={`w-2 h-2 rounded-full ${
-                                      secFails.length > 0 ? "bg-destructive" :
-                                      secWarns.length > 0 ? "bg-amber-500" :
-                                      "bg-emerald-500"
-                                    }`} />
-                                    <span className="text-[11px] font-semibold text-card-foreground">{sec.name}</span>
-                                  </div>
-                                  <div className="flex items-center gap-1.5">
-                                    {secFails.length > 0 && <span className="text-[9px] font-bold text-destructive">{secFails.length}⚠</span>}
-                                    {allPass && <span className="text-[9px] text-emerald-600">✓</span>}
-                                    <ChevronDown className="w-3 h-3 text-muted-foreground" />
-                                  </div>
-                                </button>
-                              </CollapsibleTrigger>
-                              <CollapsibleContent>
-                                <div className="grid grid-cols-1 gap-0.5 pl-4 pr-1 pb-1">
-                                  {sec.items.map((item, j) => (
-                                    <div key={j} className="flex items-center justify-between py-0.5">
-                                      <span className="text-[10px] text-muted-foreground truncate mr-2">{item.label}</span>
-                                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border shrink-0 ${getStatusColor(item.status)}`}>
-                                        {item.status}
-                                      </span>
-                                    </div>
-                                  ))}
-                                </div>
-                              </CollapsibleContent>
-                            </Collapsible>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    {/* Fallback: raw notes if no parsed sections */}
-                    {inspectionData && parsedSections.length === 0 && (
-                      <Collapsible>
+                    {parsedSections.map((sec, i) => (
+                      <Collapsible key={i}>
                         <CollapsibleTrigger asChild>
-                          <button className="flex items-center justify-between w-full text-left text-xs text-muted-foreground hover:text-card-foreground">
-                            <span className="font-semibold">Inspection Notes</span>
-                            <ChevronDown className="w-3 h-3" />
+                          <button className="flex items-center justify-between w-full text-left px-2 py-1.5 rounded-md hover:bg-muted/50 transition-colors">
+                            <span className="text-[11px] font-semibold text-card-foreground">{sec.name}</span>
+                            <ChevronDown className="w-3 h-3 text-muted-foreground" />
                           </button>
                         </CollapsibleTrigger>
                         <CollapsibleContent>
-                          <pre className="text-[10px] text-muted-foreground whitespace-pre-wrap bg-muted/30 rounded p-2 mt-1 max-h-40 overflow-y-auto">{inspectionData}</pre>
+                          <div className="grid grid-cols-1 gap-0.5 pl-4 pr-1 pb-1">
+                            {sec.items.map((item, j) => (
+                              <div key={j} className="flex items-center justify-between py-0.5">
+                                <span className="text-[10px] text-muted-foreground truncate mr-2">{item.label}</span>
+                                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border shrink-0 ${getStatusColor(item.status)}`}>{item.status}</span>
+                              </div>
+                            ))}
+                          </div>
                         </CollapsibleContent>
                       </Collapsible>
-                    )}
+                    ))}
 
-                    {/* Detailed tire/brake widget - collapsible */}
+                    {/* Detailed tire/brake widget */}
                     {(hasTires || hasBrakes) && (
                       <Collapsible>
                         <CollapsibleTrigger asChild>
@@ -1406,20 +1609,9 @@ export default function AppraisalTool() {
                             <BrakePadDepthWidget
                               showTires={hasTires}
                               showBrakes={hasBrakes}
-                              tireDepths={{
-                                leftFront: sub.tire_lf,
-                                rightFront: sub.tire_rf,
-                                leftRear: sub.tire_lr,
-                                rightRear: sub.tire_rr,
-                              }}
-                              brakeDepths={brakeDepths ? {
-                                leftFront: brakeDepths.lf,
-                                rightFront: brakeDepths.rf,
-                                leftRear: brakeDepths.lr,
-                                rightRear: brakeDepths.rr,
-                              } : undefined}
-                              readOnly
-                              compact
+                              tireDepths={{ leftFront: sub.tire_lf, rightFront: sub.tire_rf, leftRear: sub.tire_lr, rightRear: sub.tire_rr }}
+                              brakeDepths={brakeDepths ? { leftFront: brakeDepths.lf, rightFront: brakeDepths.rf, leftRear: brakeDepths.lr, rightRear: brakeDepths.rr } : undefined}
+                              readOnly compact
                             />
                           </div>
                         </CollapsibleContent>
@@ -1447,52 +1639,6 @@ export default function AppraisalTool() {
                 </CardContent>
               </Card>
             )}
-
-            {/* Cost Summary */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
-                  <DollarSign className="w-3.5 h-3.5 text-primary" />
-                  Cost Summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-1.5">
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Recon Cost</span>
-                  <span className="font-bold text-destructive">−${(activeSettings?.recon_cost || 0).toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Dealer Pack</span>
-                  <span className="font-bold text-destructive">−${effectivePack.toLocaleString()}</span>
-                </div>
-                {offerResult && (
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">Condition Deductions</span>
-                    <span className="font-bold text-destructive">−${offerResult.totalDeductions.toLocaleString()}</span>
-                  </div>
-                )}
-                <Separator className="my-2" />
-                <div className="flex justify-between text-xs">
-                  <span className="font-semibold text-card-foreground">Projected Profit</span>
-                  <span className={`font-bold ${projectedProfit >= 0 ? "text-green-600" : "text-destructive"}`}>
-                    {projectedProfit >= 0 ? "+" : ""}${projectedProfit.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Margin %</span>
-                  <span className={`font-bold ${profitMargin >= 0 ? "text-green-600" : "text-destructive"}`}>{profitMargin.toFixed(1)}%</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">vs Retail Avg</span>
-                  <span className="font-bold text-primary">${retailAvg > 0 ? `↕ ${(retailAvg - finalValue).toLocaleString()}` : "—"}</span>
-                </div>
-                <Separator className="my-2" />
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Customer Offer</span>
-                  <span className="font-bold">${currentOffer.toLocaleString()}</span>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>
