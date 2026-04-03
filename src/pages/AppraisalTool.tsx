@@ -1170,7 +1170,6 @@ export default function AppraisalTool() {
                   wholesaleAvg={wholesaleAvg}
                   tradeinAvg={tradeinAvg}
                   retailAvg={retailAvg}
-                  retailClean={Number(bbVehicle.retail?.clean || 0)}
                   msrp={Number(bbVehicle.msrp || 0)}
                 />
               </div>
