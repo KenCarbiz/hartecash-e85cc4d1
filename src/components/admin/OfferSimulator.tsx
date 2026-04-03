@@ -781,84 +781,143 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                         </div>
                       )}
 
-                      {/* Row: Exterior Damage */}
+                      {/* Row: Exterior Damage (up to 5 issues) */}
                       {isOn("exterior_damage") && (
                         <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
                           <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Exterior Damage</span>
-                          <Input type="number" min={0} max={10} value={liveExteriorItems} onChange={e => setLiveExteriorItems(Number(e.target.value))} className="h-6 text-[10px] w-16" />
-                          <span className="text-[9px] text-muted-foreground">× ${getAmt("exterior_damage_per_item").toLocaleString()}/ea</span>
+                          <Select value={String(liveExteriorItems)} onValueChange={v => setLiveExteriorItems(Number(v))}>
+                            <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="0">None</SelectItem>
+                              <SelectItem value="1">1 issue</SelectItem>
+                              <SelectItem value="2">2 issues</SelectItem>
+                              <SelectItem value="3">3 issues</SelectItem>
+                              <SelectItem value="4">4 issues</SelectItem>
+                              <SelectItem value="5">5 issues</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {liveExteriorItems > 0 && <span className="text-[9px] text-muted-foreground">{liveExteriorItems} × ${getAmt("exterior_damage_per_item").toLocaleString()}</span>}
                           <DeductBadge amount={extDeduct} />
                         </div>
                       )}
 
-                      {/* Row: Windshield */}
+                      {/* Row: Windshield — matches customer form exactly */}
                       {isOn("windshield_damage") && (
                         <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
                           <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Windshield</span>
                           <Select value={liveWindshield} onValueChange={setLiveWindshield}>
                             <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="none">No Damage</SelectItem>
-                              <SelectItem value="chipped">Chipped (${getAmt("windshield_chipped")})</SelectItem>
-                              <SelectItem value="cracked">Cracked (${getAmt("windshield_cracked")})</SelectItem>
-                              <SelectItem value="chipped_and_cracked">Chipped & Cracked (${getAmt("windshield_chipped") + getAmt("windshield_cracked")})</SelectItem>
+                              <SelectItem value="none">No damage</SelectItem>
+                              <SelectItem value="minor_chips">Minor chips or pitting (-${getAmt("windshield_chipped").toLocaleString()})</SelectItem>
+                              <SelectItem value="major_cracks">Major cracks or chips (-${getAmt("windshield_cracked").toLocaleString()})</SelectItem>
                             </SelectContent>
                           </Select>
                           <DeductBadge amount={windDeduct} />
                         </div>
                       )}
 
-                      {/* Row: Interior Damage */}
+                      {/* Row: Moonroof — customer input: Works great / Doesn't work / No moonroof */}
+                      <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
+                        <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Moonroof</span>
+                        <Select value={liveMoonroof} onValueChange={setLiveMoonroof}>
+                          <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Works great">Works great</SelectItem>
+                            <SelectItem value="Doesn't work">Doesn't work</SelectItem>
+                            <SelectItem value="No moonroof">No moonroof</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <DeductBadge amount={moonroofDeduct} />
+                      </div>
+
+                      {/* Row: Interior Damage (up to 4 issues) */}
                       {isOn("interior_damage") && (
                         <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
                           <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Interior Damage</span>
-                          <Input type="number" min={0} max={10} value={liveInteriorItems} onChange={e => setLiveInteriorItems(Number(e.target.value))} className="h-6 text-[10px] w-16" />
-                          <span className="text-[9px] text-muted-foreground">× ${getAmt("interior_damage_per_item").toLocaleString()}/ea</span>
+                          <Select value={String(liveInteriorItems)} onValueChange={v => setLiveInteriorItems(Number(v))}>
+                            <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="0">None</SelectItem>
+                              <SelectItem value="1">1 issue</SelectItem>
+                              <SelectItem value="2">2 issues</SelectItem>
+                              <SelectItem value="3">3 issues</SelectItem>
+                              <SelectItem value="4">4 issues</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {liveInteriorItems > 0 && <span className="text-[9px] text-muted-foreground">{liveInteriorItems} × ${getAmt("interior_damage_per_item").toLocaleString()}</span>}
                           <DeductBadge amount={intDeduct} />
                         </div>
                       )}
 
-                      {/* Row: Tech Issues */}
+                      {/* Row: Tech Issues (up to 4 issues) */}
                       {isOn("tech_issues") && (
                         <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
                           <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Tech Issues</span>
-                          <Input type="number" min={0} max={10} value={liveTechItems} onChange={e => setLiveTechItems(Number(e.target.value))} className="h-6 text-[10px] w-16" />
-                          <span className="text-[9px] text-muted-foreground">× ${getAmt("tech_issue_per_item").toLocaleString()}/ea</span>
+                          <Select value={String(liveTechItems)} onValueChange={v => setLiveTechItems(Number(v))}>
+                            <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="0">None</SelectItem>
+                              <SelectItem value="1">1 issue</SelectItem>
+                              <SelectItem value="2">2 issues</SelectItem>
+                              <SelectItem value="3">3 issues</SelectItem>
+                              <SelectItem value="4">4 issues</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {liveTechItems > 0 && <span className="text-[9px] text-muted-foreground">{liveTechItems} × ${getAmt("tech_issue_per_item").toLocaleString()}</span>}
                           <DeductBadge amount={techDeduct} />
                         </div>
                       )}
 
-                      {/* Row: Engine Issues */}
+                      {/* Row: Engine Issues (up to 5 issues) */}
                       {isOn("engine_issues") && (
                         <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
                           <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Engine Issues</span>
-                          <Input type="number" min={0} max={10} value={liveEngineItems} onChange={e => setLiveEngineItems(Number(e.target.value))} className="h-6 text-[10px] w-16" />
-                          <span className="text-[9px] text-muted-foreground">× ${getAmt("engine_issue_per_item").toLocaleString()}/ea</span>
+                          <Select value={String(liveEngineItems)} onValueChange={v => setLiveEngineItems(Number(v))}>
+                            <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="0">None</SelectItem>
+                              <SelectItem value="1">1 issue</SelectItem>
+                              <SelectItem value="2">2 issues</SelectItem>
+                              <SelectItem value="3">3 issues</SelectItem>
+                              <SelectItem value="4">4 issues</SelectItem>
+                              <SelectItem value="5">5 issues</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {liveEngineItems > 0 && <span className="text-[9px] text-muted-foreground">{liveEngineItems} × ${getAmt("engine_issue_per_item").toLocaleString()}</span>}
                           <DeductBadge amount={engDeduct} />
                         </div>
                       )}
 
-                      {/* Row: Mechanical Issues */}
+                      {/* Row: Mechanical & Electrical Issues (up to 4 issues) */}
                       {isOn("mechanical_issues") && (
                         <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
                           <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Mechanical Issues</span>
-                          <Input type="number" min={0} max={10} value={liveMechanicalItems} onChange={e => setLiveMechanicalItems(Number(e.target.value))} className="h-6 text-[10px] w-16" />
-                          <span className="text-[9px] text-muted-foreground">× ${getAmt("mechanical_issue_per_item").toLocaleString()}/ea</span>
+                          <Select value={String(liveMechanicalItems)} onValueChange={v => setLiveMechanicalItems(Number(v))}>
+                            <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="0">None</SelectItem>
+                              <SelectItem value="1">1 issue</SelectItem>
+                              <SelectItem value="2">2 issues</SelectItem>
+                              <SelectItem value="3">3 issues</SelectItem>
+                              <SelectItem value="4">4 issues</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {liveMechanicalItems > 0 && <span className="text-[9px] text-muted-foreground">{liveMechanicalItems} × ${getAmt("mechanical_issue_per_item").toLocaleString()}</span>}
                           <DeductBadge amount={mechDeduct} />
                         </div>
                       )}
 
-                      {/* Row: Accidents */}
+                      {/* Row: Accidents — matches customer form: No accidents / 1 accident / 2+ accidents */}
                       {isOn("accidents") && (
                         <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
                           <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Accidents</span>
                           <Select value={liveAccidents} onValueChange={setLiveAccidents}>
                             <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="0">None</SelectItem>
-                              <SelectItem value="1">1 Accident (${getAmt("accidents_1")})</SelectItem>
-                              <SelectItem value="2">2 Accidents (${getAmt("accidents_2")})</SelectItem>
-                              <SelectItem value="3+">3+ Accidents (${getAmt("accidents_3plus")})</SelectItem>
+                              <SelectItem value="0">No accidents</SelectItem>
+                              <SelectItem value="1">1 accident (-${getAmt("accidents_1").toLocaleString()})</SelectItem>
+                              <SelectItem value="2+">2+ accidents (-${getAmt("accidents_2").toLocaleString()})</SelectItem>
                             </SelectContent>
                           </Select>
                           <DeductBadge amount={accidentDeduct} />
@@ -873,41 +932,40 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                             <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="no">Not Smoked In</SelectItem>
-                              <SelectItem value="yes">Smoked In (${getAmt("smoked_in")})</SelectItem>
+                              <SelectItem value="yes">Smoked In (-${getAmt("smoked_in").toLocaleString()})</SelectItem>
                             </SelectContent>
                           </Select>
                           <DeductBadge amount={smokeDeduct} />
                         </div>
                       )}
 
-                      {/* Row: Tires */}
+                      {/* Row: Tires — matches customer form: None / 1 / 2 / 3 / 4 */}
                       {isOn("tires_not_replaced") && (
                         <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
                           <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Tires Replaced</span>
                           <Select value={liveTiresReplaced} onValueChange={setLiveTiresReplaced}>
                             <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="4">4 Tires (all)</SelectItem>
-                              <SelectItem value="3">3 Tires</SelectItem>
-                              <SelectItem value="2">2 Tires</SelectItem>
-                              <SelectItem value="1">1 Tire</SelectItem>
-                              <SelectItem value="0">None</SelectItem>
+                              <SelectItem value="4">4 tires (no deduction)</SelectItem>
+                              <SelectItem value="3">3 tires</SelectItem>
+                              <SelectItem value="2">2 tires</SelectItem>
+                              <SelectItem value="1">1 tire</SelectItem>
+                              <SelectItem value="None">None (-${getAmt("tires_not_replaced").toLocaleString()})</SelectItem>
                             </SelectContent>
                           </Select>
                           <DeductBadge amount={tiresDeduct} />
                         </div>
                       )}
 
-                      {/* Row: Keys */}
+                      {/* Row: Keys — 2+ no deduction, 1 key deduction */}
                       {isOn("missing_keys") && (
                         <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
                           <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Keys</span>
                           <Select value={liveNumKeys} onValueChange={setLiveNumKeys}>
                             <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="2+">2+ Keys (no deduction)</SelectItem>
-                              <SelectItem value="1">1 Key (${getAmt("missing_keys_1")})</SelectItem>
-                              <SelectItem value="0">No Keys (${getAmt("missing_keys_0")})</SelectItem>
+                              <SelectItem value="2+">2+ keys (no deduction)</SelectItem>
+                              <SelectItem value="1">1 key (-${getAmt("missing_keys_1").toLocaleString()})</SelectItem>
                             </SelectContent>
                           </Select>
                           <DeductBadge amount={keyDeduct} />
