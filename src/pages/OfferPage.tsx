@@ -246,38 +246,9 @@ const OfferPage = () => {
     if (field === "mileage") newSubmission.mileage = value as string;
     if (field === "exterior_color") newSubmission.exterior_color = value as string;
 
-    let bbPayload: ReturnType<typeof buildSubmissionBBPayload> | null = null;
-    let resolvedBBVehicle = buildStoredBBVehicle({ ...newSubmission, ...newCondition });
-
-    if (field === "mileage" && submission.vin && !submission.offered_price) {
-      try {
-        const freshVehicle = await fetchMileageAdjustedBBVehicle({
-          vin: submission.vin,
-          mileage: parseInt((value as string).replace(/[^0-9]/g, "")) || 0,
-        });
-        if (freshVehicle) {
-          resolvedBBVehicle = freshVehicle;
-          bbPayload = buildSubmissionBBPayload(freshVehicle);
-
-          newCondition.bb_tradein_avg = bbPayload.bb_tradein_avg;
-          newCondition.bb_wholesale_avg = bbPayload.bb_wholesale_avg;
-          newCondition.bb_retail_avg = bbPayload.bb_retail_avg;
-          newCondition.bb_mileage_adj = bbPayload.bb_mileage_adj;
-          newCondition.bb_base_whole_avg = bbPayload.bb_base_whole_avg;
-          newCondition.bb_value_tiers = bbPayload.bb_value_tiers;
-          newCondition.bb_add_deducts = bbPayload.bb_add_deducts;
-          setCondition({ ...newCondition });
-
-          newSubmission.bb_tradein_avg = bbPayload.bb_tradein_avg;
-          newSubmission.bb_wholesale_avg = bbPayload.bb_wholesale_avg;
-          newSubmission.bb_retail_avg = bbPayload.bb_retail_avg;
-          newSubmission.bb_mileage_adj = bbPayload.bb_mileage_adj;
-          newSubmission.bb_base_whole_avg = bbPayload.bb_base_whole_avg;
-        }
-      } catch (e) {
-        console.warn("BB re-lookup failed, using cached values:", e);
-      }
-    }
+    // Always use stored BB data — never make a new Black Book call on edit.
+    // The offer logic engine recalculates using the already-persisted market data.
+    const resolvedBBVehicle = buildStoredBBVehicle({ ...newSubmission, ...newCondition });
 
     if (resolvedBBVehicle && !submission.offered_price) {
       const newEstimate = calculateOffer(
@@ -306,10 +277,6 @@ const OfferPage = () => {
         updateData.estimated_offer_low = newSubmission.estimated_offer_low;
         updateData.estimated_offer_high = newSubmission.estimated_offer_high;
       }
-      if (bbPayload) {
-        Object.assign(updateData, bbPayload);
-      }
-
       await supabase
         .from("submissions")
         .update(updateData as any)
@@ -317,9 +284,7 @@ const OfferPage = () => {
 
       toast({
         title: "Updated",
-        description: field === "mileage" && bbPayload
-          ? "Mileage updated — offer recalculated with fresh market data."
-          : "Your answer has been updated and your offer recalculated.",
+        description: "Your answer has been updated and your offer recalculated.",
       });
     } catch {
       toast({ title: "Update failed", description: "Please try again.", variant: "destructive" });
