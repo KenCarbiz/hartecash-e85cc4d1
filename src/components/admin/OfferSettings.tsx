@@ -142,6 +142,7 @@ interface OfferSettingsRow {
   retail_search_radius: number;
   dealer_pack: number;
   hide_pack_from_appraisal: boolean;
+  retail_profit_basis: string;
   low_mileage_bonus: { enabled: boolean; avg_miles_per_year: number; bonus_pct_per_step: number; step_size_pct: number; max_bonus_pct: number; min_miles_per_year: number };
 }
 
