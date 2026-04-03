@@ -79,6 +79,7 @@ interface DeductionAmounts {
   interior_damage_per_item: number;
   windshield_cracked: number;
   windshield_chipped: number;
+  moonroof_broken: number;
   engine_issue_per_item: number;
   mechanical_issue_per_item: number;
   tech_issue_per_item: number;
@@ -184,6 +185,7 @@ const DEDUCTION_LABELS: Record<string, { label: string; amountKey: string | stri
   exterior_damage: { label: "Exterior Damage", amountKey: "exterior_damage_per_item" },
   interior_damage: { label: "Interior Damage", amountKey: "interior_damage_per_item" },
   windshield_damage: { label: "Windshield Damage", amountKey: ["windshield_cracked", "windshield_chipped"] },
+  moonroof_broken: { label: "Moonroof Not Working", amountKey: "moonroof_broken" },
   engine_issues: { label: "Engine Issues", amountKey: "engine_issue_per_item" },
   mechanical_issues: { label: "Mechanical Issues", amountKey: "mechanical_issue_per_item" },
   tech_issues: { label: "Technology Issues", amountKey: "tech_issue_per_item" },
@@ -201,6 +203,7 @@ const AMOUNT_LABELS: Record<string, string> = {
   interior_damage_per_item: "Per Item",
   windshield_cracked: "Cracked",
   windshield_chipped: "Chipped",
+  moonroof_broken: "Not Working",
   engine_issue_per_item: "Per Issue",
   mechanical_issue_per_item: "Per Issue",
   tech_issue_per_item: "Per Issue",
@@ -214,7 +217,7 @@ const AMOUNT_LABELS: Record<string, string> = {
 const DEFAULT_DEDUCTION_AMOUNTS: DeductionAmounts = {
   accidents_1: 800, accidents_2: 1800, accidents_3plus: 3000,
   exterior_damage_per_item: 300, interior_damage_per_item: 200,
-  windshield_cracked: 400, windshield_chipped: 150,
+  windshield_cracked: 400, windshield_chipped: 150, moonroof_broken: 300,
   engine_issue_per_item: 500, mechanical_issue_per_item: 350, tech_issue_per_item: 150,
   not_drivable: 1500, smoked_in: 500, tires_not_replaced: 400,
   missing_keys_1: 200, missing_keys_0: 400,

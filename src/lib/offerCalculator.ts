@@ -32,6 +32,7 @@ export interface DeductionAmounts {
   interior_damage_per_item: number;
   windshield_cracked: number;
   windshield_chipped: number;
+  moonroof_broken: number;
   engine_issue_per_item: number;
   mechanical_issue_per_item: number;
   tech_issue_per_item: number;
@@ -231,6 +232,7 @@ const DEFAULT_DEDUCTION_AMOUNTS: DeductionAmounts = {
   interior_damage_per_item: 200,
   windshield_cracked: 400,
   windshield_chipped: 150,
+  moonroof_broken: 300,
   engine_issue_per_item: 500,
   mechanical_issue_per_item: 350,
   tech_issue_per_item: 150,
@@ -462,6 +464,11 @@ export function calculateOffer(
     if (windshieldLower === "cracked" || windshieldLower.includes("major crack")) deductions += amt.windshield_cracked;
     else if (windshieldLower === "chipped" || windshieldLower.includes("minor chip")) deductions += amt.windshield_chipped;
     else if (windshieldLower === "chipped_and_cracked" || windshieldLower.includes("chipped & cracked")) deductions += amt.windshield_cracked + amt.windshield_chipped;
+  }
+  // Moonroof deduction: if customer says it doesn't work
+  const moonroofLower = (formData.moonroof || "").toLowerCase();
+  if (moonroofLower === "doesn't work" || moonroofLower === "doesnt work" || moonroofLower === "broken") {
+    deductions += amt.moonroof_broken || 0;
   }
   if (ded.engine_issues) {
     deductions += formData.engineIssues.filter((d) => d !== "none").length * amt.engine_issue_per_item;
