@@ -481,9 +481,8 @@ const OfferPage = () => {
   // Check if contact info is missing (offer-first flow)
   const isMissingContactInfo = !s.name || !s.email || !s.phone;
 
-  const handleAcceptAttempt = useCallback(() => {
+  const handleAcceptAttempt = () => {
     if (isMissingContactInfo) {
-      // Pre-fill with any existing data
       setContactForm({
         name: s.name || "",
         email: s.email || "",
@@ -495,9 +494,9 @@ const OfferPage = () => {
     } else {
       window.location.href = acceptUrl;
     }
-  }, [isMissingContactInfo, s, acceptUrl]);
+  };
 
-  const handleContactSubmit = useCallback(async () => {
+  const handleContactSubmit = async () => {
     const errors: Record<string, string> = {};
     if (!contactForm.name.trim()) errors.name = "Name is required";
     if (!contactForm.email.trim() || !/\S+@\S+\.\S+/.test(contactForm.email)) errors.email = "Valid email is required";
@@ -528,7 +527,7 @@ const OfferPage = () => {
       toast({ title: "Error", description: "Failed to save your info. Please try again.", variant: "destructive" });
     }
     setContactSaving(false);
-  }, [contactForm, token, acceptUrl, toast]);
+  };
 
   const AcceptButton = (
     <div className="print:hidden space-y-2">
