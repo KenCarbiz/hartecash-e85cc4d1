@@ -216,6 +216,7 @@ export default function AppraisalTool() {
   // Editable overrides
   const [localSettings, setLocalSettings] = useState<OfferSettings | null>(null);
   const [acvOverride, setAcvOverride] = useState<number | null>(null);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [bbValueBasis, setBbValueBasis] = useState("tradein_avg");
 
   // Editable condition fields (pre-filled from customer, overridable by appraiser)
@@ -576,6 +577,7 @@ export default function AppraisalTool() {
     } else {
       setSub(prev => prev ? { ...prev, acv_value: saveVal } : prev);
       setAcvOverride(saveVal);
+      setLastSavedAt(new Date());
       toast({ title: "Saved", description: `Appraisal value set to $${saveVal.toLocaleString()}` });
     }
     setSaving(false);
@@ -732,17 +734,18 @@ export default function AppraisalTool() {
         {/* ═══ HUD — Key Metrics Strip ═══ */}
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 mb-5">
           {[
-            { label: "Customer Offer", value: `$${Math.floor(currentOffer).toLocaleString()}`, color: "text-card-foreground", bg: "bg-card border-border/60 shadow-sm" },
-            { label: "Appraisal Value", value: `$${Math.floor(finalValue).toLocaleString()}`, color: "text-primary", bg: "bg-primary/5 border-primary/25 shadow-sm shadow-primary/5" },
-            { label: "Retail Avg", value: retailAvg > 0 ? `$${Math.floor(retailAvg).toLocaleString()}` : "—", color: "text-card-foreground", bg: "bg-card border-border/60 shadow-sm" },
-            { label: "Recon Cost", value: `$${Math.floor(reconCost).toLocaleString()}`, color: "text-destructive", bg: "bg-card border-border/60 shadow-sm" },
-            { label: "Dealer Pack", value: `$${Math.floor(effectivePack).toLocaleString()}`, color: "text-destructive", bg: "bg-card border-border/60 shadow-sm" },
-            { label: "Projected Profit", value: `${projectedProfit >= 0 ? "+" : ""}$${Math.floor(Math.abs(projectedProfit)).toLocaleString()}`, color: projectedProfit >= 0 ? "text-emerald-600" : "text-destructive", bg: projectedProfit >= 0 ? "bg-emerald-500/5 border-emerald-500/25 shadow-sm" : "bg-destructive/5 border-destructive/25 shadow-sm" },
-            { label: "Margin %", value: `${profitMargin.toFixed(1)}%`, color: profitMargin >= 0 ? "text-emerald-600" : "text-destructive", bg: profitMargin >= 0 ? "bg-emerald-500/5 border-emerald-500/25 shadow-sm" : "bg-destructive/5 border-destructive/25 shadow-sm" },
+            { label: "Customer Offer", value: `$${Math.floor(currentOffer).toLocaleString()}`, color: "text-card-foreground", bg: "bg-card border-border/60 shadow-sm", sub: null },
+            { label: "Appraisal Value", value: `$${Math.floor(finalValue).toLocaleString()}`, color: "text-primary", bg: "bg-primary/5 border-primary/25 shadow-sm shadow-primary/5", sub: sub?.appraisal_finalized ? `Finalized ${sub.appraisal_finalized_at ? new Date(sub.appraisal_finalized_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : ""}` : lastSavedAt ? `Updated ${lastSavedAt.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}` : null },
+            { label: "Retail Avg", value: retailAvg > 0 ? `$${Math.floor(retailAvg).toLocaleString()}` : "—", color: "text-card-foreground", bg: "bg-card border-border/60 shadow-sm", sub: null },
+            { label: "Recon Cost", value: `$${Math.floor(reconCost).toLocaleString()}`, color: "text-destructive", bg: "bg-card border-border/60 shadow-sm", sub: null },
+            { label: "Dealer Pack", value: `$${Math.floor(effectivePack).toLocaleString()}`, color: "text-destructive", bg: "bg-card border-border/60 shadow-sm", sub: null },
+            { label: "Projected Profit", value: `${projectedProfit >= 0 ? "+" : ""}$${Math.floor(Math.abs(projectedProfit)).toLocaleString()}`, color: projectedProfit >= 0 ? "text-emerald-600" : "text-destructive", bg: projectedProfit >= 0 ? "bg-emerald-500/5 border-emerald-500/25 shadow-sm" : "bg-destructive/5 border-destructive/25 shadow-sm", sub: null },
+            { label: "Margin %", value: `${profitMargin.toFixed(1)}%`, color: profitMargin >= 0 ? "text-emerald-600" : "text-destructive", bg: profitMargin >= 0 ? "bg-emerald-500/5 border-emerald-500/25 shadow-sm" : "bg-destructive/5 border-destructive/25 shadow-sm", sub: null },
           ].map(metric => (
             <div key={metric.label} className={`rounded-xl border p-3 text-center transition-all hover:shadow-md ${metric.bg}`}>
               <div className="text-[9px] uppercase tracking-[0.08em] font-bold text-muted-foreground mb-0.5">{metric.label}</div>
               <div className={`text-lg font-black tracking-tight ${metric.color}`}>{metric.value}</div>
+              {metric.sub && <div className="text-[8px] text-muted-foreground mt-0.5">{metric.sub}</div>}
             </div>
           ))}
         </div>
