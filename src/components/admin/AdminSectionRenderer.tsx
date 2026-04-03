@@ -32,7 +32,7 @@ import OnboardingScript from "./OnboardingScript";
 import ReportsExport from "./ReportsExport";
 import AdminLoadingSkeleton from "./AdminLoadingSkeleton";
 import AdminEmptyState from "./AdminEmptyState";
-import { UserCheck } from "lucide-react";
+import { UserCheck as UserCheckIcon } from "lucide-react";
 
 interface AdminSectionRendererProps {
   activeSection: string;
