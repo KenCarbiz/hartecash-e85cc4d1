@@ -32,6 +32,7 @@ export interface DeductionAmounts {
   interior_damage_per_item: number;
   windshield_cracked: number;
   windshield_chipped: number;
+  moonroof_broken: number;
   engine_issue_per_item: number;
   mechanical_issue_per_item: number;
   tech_issue_per_item: number;
