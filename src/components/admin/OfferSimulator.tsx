@@ -332,7 +332,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
     const vehicleAge = currentYear - Number(liveBbVehicle.year);
     const mileageNum = parseInt(liveMileage.replace(/[^0-9]/g, "")) || 0;
     const matchedAge = (activeSettings.age_tiers || []).find(t => vehicleAge >= t.min_years && vehicleAge <= t.max_years);
-    const matchedMileage = (activeSettings.mileage_tiers || []).find(t => mileageNum >= t.min_miles && mileageNum <= t.max_miles);
+    
 
     // 1. Base
     blocks.push({ id: "base", label: "Base Value", value: running, runningTotal: running, type: "base", editable: true, editKey: "bb_value_basis", editType: "flat" });
@@ -387,11 +387,6 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
       blocks.push({ id: "age", label: `Age (${vehicleAge}yr)`, value: adj, runningTotal: running, type: adj >= 0 ? "add" : "subtract", editable: false });
     }
 
-    // 9. Mileage
-    if (matchedMileage) {
-      running += matchedMileage.adjustment_flat;
-      blocks.push({ id: "mileage", label: `Mileage (${mileageNum.toLocaleString()}mi)`, value: matchedMileage.adjustment_flat, runningTotal: running, type: matchedMileage.adjustment_flat >= 0 ? "add" : "subtract", editable: false });
-    }
 
     // 9b. Low-Mileage Bonus
     const lmb = (activeSettings as any).low_mileage_bonus;
@@ -1029,36 +1024,6 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                     </CollapsibleContent>
                   </Collapsible>
 
-                  <Collapsible>
-                    <CollapsibleTrigger asChild>
-                      <button className="flex items-center justify-between w-full px-3 py-2 text-left hover:bg-muted/30 transition-colors rounded-lg border border-border">
-                        <div className="flex items-center gap-1.5">
-                          <Gauge className="w-3.5 h-3.5 text-primary" />
-                          <span className="font-semibold text-[11px] text-card-foreground">Mileage Tiers ({(localSettings.mileage_tiers || []).length})</span>
-                        </div>
-                        <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
-                      </button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <div className="space-y-1 p-2">
-                        {(localSettings.mileage_tiers || []).map((tier, idx) => (
-                          <div key={idx} className="flex items-center gap-1 text-[10px]">
-                            <Input type="number" value={tier.min_miles} onChange={e => { const u = [...(localSettings.mileage_tiers || [])]; u[idx] = { ...u[idx], min_miles: Number(e.target.value) }; updateLocalSetting("mileage_tiers", u); }} className="w-16 h-5 text-[10px]" step="5000" />
-                            <span>–</span>
-                            <Input type="number" value={tier.max_miles} onChange={e => { const u = [...(localSettings.mileage_tiers || [])]; u[idx] = { ...u[idx], max_miles: Number(e.target.value) }; updateLocalSetting("mileage_tiers", u); }} className="w-16 h-5 text-[10px]" step="5000" />
-                            <span>mi →$</span>
-                            <Input type="number" value={tier.adjustment_flat} onChange={e => { const u = [...(localSettings.mileage_tiers || [])]; u[idx] = { ...u[idx], adjustment_flat: Number(e.target.value) }; updateLocalSetting("mileage_tiers", u); }} className="w-16 h-5 text-[10px]" step="100" />
-                            <Button variant="ghost" size="sm" className="h-5 w-5 p-0 text-destructive" onClick={() => updateLocalSetting("mileage_tiers", (localSettings.mileage_tiers || []).filter((_, i) => i !== idx))}><Trash2 className="w-2.5 h-2.5" /></Button>
-                          </div>
-                        ))}
-                        <Button variant="outline" size="sm" className="h-5 text-[9px] gap-0.5 px-2" onClick={() => {
-                          const tiers = localSettings.mileage_tiers || [];
-                          const last = tiers.length > 0 ? tiers[tiers.length - 1].max_miles + 1 : 80000;
-                          updateLocalSetting("mileage_tiers", [...tiers, { min_miles: last, max_miles: last + 20000, adjustment_flat: -500 }]);
-                        }}><Plus className="w-2.5 h-2.5" /> Add</Button>
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
 
                   {/* Low-Mileage Bonus */}
                   <Collapsible>
