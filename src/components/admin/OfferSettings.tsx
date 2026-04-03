@@ -142,6 +142,7 @@ interface OfferSettingsRow {
   retail_search_radius: number;
   dealer_pack: number;
   hide_pack_from_appraisal: boolean;
+  retail_profit_basis: string;
   low_mileage_bonus: { enabled: boolean; avg_miles_per_year: number; bonus_pct_per_step: number; step_size_pct: number; max_bonus_pct: number; min_miles_per_year: number };
 }
 
@@ -288,6 +289,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
         retail_search_radius: d.retail_search_radius ?? 100,
         dealer_pack: d.dealer_pack ?? 0,
         hide_pack_from_appraisal: d.hide_pack_from_appraisal ?? false,
+        retail_profit_basis: d.retail_profit_basis || "retail_avg",
         low_mileage_bonus: d.low_mileage_bonus || { enabled: false, avg_miles_per_year: 12000, bonus_pct_per_step: 2, step_size_pct: 20, max_bonus_pct: 8, min_miles_per_year: 4000 },
       } as OfferSettingsRow);
       setSavedSettings({
@@ -304,6 +306,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
         retail_search_radius: d.retail_search_radius ?? 100,
         dealer_pack: d.dealer_pack ?? 0,
         hide_pack_from_appraisal: d.hide_pack_from_appraisal ?? false,
+        retail_profit_basis: d.retail_profit_basis || "retail_avg",
         low_mileage_bonus: d.low_mileage_bonus || { enabled: false, avg_miles_per_year: 12000, bonus_pct_per_step: 2, step_size_pct: 20, max_bonus_pct: 8, min_miles_per_year: 4000 },
       } as OfferSettingsRow);
     }
@@ -333,6 +336,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
       retail_search_radius: settings.retail_search_radius ?? 100,
       dealer_pack: settings.dealer_pack ?? 0,
       hide_pack_from_appraisal: settings.hide_pack_from_appraisal ?? false,
+      retail_profit_basis: settings.retail_profit_basis || "retail_avg",
       updated_at: new Date().toISOString(),
     } as any).eq("id", settings.id);
 
@@ -566,6 +570,26 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
                 When enabled, the appraisal tool will show a single "Reconditioning" line (recon + pack combined) instead of separate entries. This hides the dealer pack amount from staff.
               </p>
             </div>
+          </div>
+          <div className="mt-4 p-3 rounded-lg border border-border bg-muted/30">
+            <Label className="text-sm font-semibold">Retail Basis for Profit Calculations</Label>
+            <p className="text-[10px] text-muted-foreground mb-2">
+              Choose which retail tier to use when calculating projected profit and margin in the appraisal HUD and offer logic.
+            </p>
+            <Select
+              value={settings.retail_profit_basis || "retail_avg"}
+              onValueChange={(v) => setSettings({ ...settings, retail_profit_basis: v })}
+            >
+              <SelectTrigger className="w-full max-w-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="retail_xclean">Extra Clean Retail</SelectItem>
+                <SelectItem value="retail_clean">Clean Retail</SelectItem>
+                <SelectItem value="retail_avg">Average Retail</SelectItem>
+                <SelectItem value="retail_rough">Rough Retail</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex justify-end mt-4">
             <Button size="sm" onClick={handleSaveSettings} disabled={saving}>

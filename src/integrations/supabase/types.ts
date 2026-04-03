@@ -942,6 +942,7 @@ export type Database = {
           offer_floor: number
           recon_cost: number
           regional_adjustment_pct: number
+          retail_profit_basis: string
           retail_search_radius: number
           seasonal_adjustment: Json
           updated_at: string
@@ -969,6 +970,7 @@ export type Database = {
           offer_floor?: number
           recon_cost?: number
           regional_adjustment_pct?: number
+          retail_profit_basis?: string
           retail_search_radius?: number
           seasonal_adjustment?: Json
           updated_at?: string
@@ -996,6 +998,7 @@ export type Database = {
           offer_floor?: number
           recon_cost?: number
           regional_adjustment_pct?: number
+          retail_profit_basis?: string
           retail_search_radius?: number
           seasonal_adjustment?: Json
           updated_at?: string

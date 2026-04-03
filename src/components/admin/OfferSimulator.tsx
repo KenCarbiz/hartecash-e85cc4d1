@@ -1470,7 +1470,16 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                       offerHigh={liveResult.high}
                       wholesaleAvg={Number(liveBbVehicle.wholesale?.avg || 0)}
                       tradeinAvg={Number(liveBbVehicle.tradein?.avg || 0)}
-                      retailAvg={Number(liveBbVehicle.retail?.avg || 0)}
+                      retailAvg={(() => {
+                        const basis = (settings as any).retail_profit_basis || "retail_avg";
+                        const tierMap: Record<string, number> = {
+                          retail_xclean: Number(liveBbVehicle.retail?.xclean || 0),
+                          retail_clean: Number(liveBbVehicle.retail?.clean || 0),
+                          retail_avg: Number(liveBbVehicle.retail?.avg || 0),
+                          retail_rough: Number(liveBbVehicle.retail?.rough || 0),
+                        };
+                        return tierMap[basis] || Number(liveBbVehicle.retail?.avg || 0);
+                      })()}
                       msrp={Number(liveBbVehicle.msrp || 0)}
                     />
                   </div>

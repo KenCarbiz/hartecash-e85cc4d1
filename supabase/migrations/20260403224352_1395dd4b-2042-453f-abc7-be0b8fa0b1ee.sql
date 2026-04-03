@@ -1,0 +1,1 @@
+ALTER TABLE public.offer_settings ADD COLUMN retail_profit_basis text NOT NULL DEFAULT 'retail_avg';
