@@ -602,15 +602,21 @@ const SubmissionDetailSheet = ({
                 </Select>
               </div>
 
-              {sub.progress_status === "inspection_completed" && canSetPrice && (
-                <div className="mt-3 space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">In-House ACV <span className="text-destructive">*</span></label>
-                  <div className="relative">
-                    <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input type="number" placeholder="Enter ACV amount" className="pl-7" value={sub.acv_value?.toString() || ""} onChange={(e) => updateField({ acv_value: e.target.value ? Number(e.target.value) : null })} />
-                  </div>
-                  {!sub.acv_value && <p className="text-xs text-destructive">ACV value is required before updating.</p>}
-                  {sub.appraised_by && sub.acv_value && <p className="text-xs text-muted-foreground">Appraised by: {sub.appraised_by}</p>}
+              {sub.acv_value && (
+                <div className="mt-3">
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Appraisal Value (ACV)</label>
+                  <p className="text-card-foreground font-bold text-lg">${Number(sub.acv_value).toLocaleString()}</p>
+                  {sub.appraised_by && <p className="text-xs text-muted-foreground">Appraised by: {sub.appraised_by}</p>}
+                  <Button variant="outline" size="sm" className="mt-2 text-xs" onClick={() => window.open(`${window.location.origin}/appraisal/${sub.token}`, "_blank")}>
+                    <Gauge className="w-3.5 h-3.5 mr-1" /> Open Appraisal Tool
+                  </Button>
+                </div>
+              )}
+              {!sub.acv_value && canSetPrice && (
+                <div className="mt-3">
+                  <Button variant="outline" size="sm" className="text-xs" onClick={() => window.open(`${window.location.origin}/appraisal/${sub.token}`, "_blank")}>
+                    <Gauge className="w-3.5 h-3.5 mr-1" /> Open Appraisal Tool to set ACV
+                  </Button>
                 </div>
               )}
               {sub.progress_status === "inspection_completed" && !canSetPrice && sub.acv_value && (
