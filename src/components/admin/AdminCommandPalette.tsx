@@ -9,8 +9,8 @@ import {
 } from "@/components/ui/command";
 import {
   Inbox, CalendarDays, Users, SlidersHorizontal, Settings, Bell,
-  ListChecks, MessageSquareQuote, BarChart3, Send, UserCheck, ShieldCheck,
-  Car, Wrench, Rocket, ScrollText, Gauge, Camera, Network, MapPin, Search,
+  ListChecks, MessageSquareQuote, BarChart3, Send, ShieldCheck,
+  Car, Wrench, Rocket, ScrollText, Gauge, Camera, Network, MapPin, Search, Shield,
 } from "lucide-react";
 import type { Submission } from "@/lib/adminConstants";
 
@@ -23,27 +23,24 @@ interface AdminCommandPaletteProps {
 
 const SECTION_MAP: { key: string; label: string; icon: React.ElementType; group: string }[] = [
   { key: "submissions", label: "All Leads", icon: Inbox, group: "Pipeline" },
-  { key: "offer-pending", label: "Offer Pending", icon: Send, group: "Pipeline" },
-  { key: "offer-accepted", label: "Offer Accepted", icon: UserCheck, group: "Pipeline" },
-  { key: "accepted-appts", label: "Accepted / Appts", icon: CalendarDays, group: "Pipeline" },
+  { key: "accepted-appts", label: "Appointments", icon: CalendarDays, group: "Pipeline" },
   { key: "executive", label: "Performance", icon: BarChart3, group: "Pipeline" },
-  { key: "staff", label: "Staff & Permissions", icon: Users, group: "Team" },
-  { key: "offer-settings", label: "Offer Logic", icon: SlidersHorizontal, group: "Lead Flow" },
-  { key: "form-config", label: "Lead Form", icon: ListChecks, group: "Lead Flow" },
-  { key: "notifications", label: "Notifications", icon: Bell, group: "Lead Flow" },
-  { key: "inspection-config", label: "Inspection Sheet", icon: ShieldCheck, group: "Standards" },
-  { key: "photo-config", label: "Photo Requirements", icon: Camera, group: "Standards" },
-  { key: "depth-policies", label: "Depth Policies", icon: Gauge, group: "Standards" },
+  { key: "offer-settings", label: "Offer Logic", icon: SlidersHorizontal, group: "Configuration" },
+  { key: "form-config", label: "Lead Form", icon: ListChecks, group: "Configuration" },
+  { key: "notifications", label: "Notifications", icon: Bell, group: "Configuration" },
+  { key: "inspection-config", label: "Inspection Sheet", icon: Shield, group: "Configuration" },
+  { key: "photo-config", label: "Photo Requirements", icon: Camera, group: "Configuration" },
+  { key: "depth-policies", label: "Depth Policies", icon: Gauge, group: "Configuration" },
   { key: "site-config", label: "Branding", icon: Settings, group: "Storefront" },
   { key: "locations", label: "Locations", icon: MapPin, group: "Storefront" },
   { key: "testimonials", label: "Testimonials", icon: MessageSquareQuote, group: "Storefront" },
-  { key: "compliance", label: "Compliance", icon: ShieldCheck, group: "Compliance" },
-  { key: "reports", label: "Reports & Export", icon: Send, group: "Tools" },
-  { key: "tenants", label: "Dealer Tenants", icon: Network, group: "Tools" },
-  { key: "image-inventory", label: "Vehicle Images", icon: Car, group: "Tools" },
-  { key: "system-settings", label: "System Settings", icon: Wrench, group: "Tools" },
-  { key: "onboarding", label: "Dealer Setup Guide", icon: Rocket, group: "Tools" },
-  { key: "onboarding-script", label: "Onboarding Script", icon: ScrollText, group: "Tools" },
+  { key: "staff", label: "Staff & Permissions", icon: Users, group: "System" },
+  { key: "compliance", label: "Compliance", icon: ShieldCheck, group: "System" },
+  { key: "reports", label: "Reports & Export", icon: Send, group: "System" },
+  { key: "tenants", label: "Dealer Tenants", icon: Network, group: "System" },
+  { key: "image-inventory", label: "Vehicle Images", icon: Car, group: "System" },
+  { key: "system-settings", label: "System Settings", icon: Wrench, group: "System" },
+  { key: "onboarding", label: "Dealer Setup", icon: Rocket, group: "System" },
 ];
 
 const AdminCommandPalette = ({ onNavigate, onViewSubmission, submissions, allowedSections }: AdminCommandPaletteProps) => {
