@@ -406,9 +406,27 @@ export default function AppraisalTool() {
   // Effective values
   const currentOffer = sub?.offered_price || sub?.estimated_offer_high || 0;
   const effectivePack = dealerPack;
-  const retailAvg = Number(bbVehicle?.retail?.avg || sub?.bb_retail_avg || 0);
+  // Resolve retail value based on dealer's chosen retail_profit_basis
+  const RETAIL_TIERS = ["retail_xclean", "retail_clean", "retail_avg", "retail_rough"] as const;
+  const RETAIL_TIER_LABELS: Record<string, string> = { retail_xclean: "Retail X-Clean", retail_clean: "Retail Clean", retail_avg: "Retail Avg", retail_rough: "Retail Rough" };
+  const resolveRetailValue = (basis: string) => {
+    if (!bbVehicle) return sub?.bb_retail_avg ? Number(sub.bb_retail_avg) : 0;
+    const tierMap: Record<string, number> = {
+      retail_xclean: Number(bbVehicle.retail?.xclean || 0),
+      retail_clean: Number(bbVehicle.retail?.clean || 0),
+      retail_avg: Number(bbVehicle.retail?.avg || 0),
+      retail_rough: Number(bbVehicle.retail?.rough || 0),
+    };
+    return tierMap[basis] || Number(bbVehicle.retail?.avg || sub?.bb_retail_avg || 0);
+  };
+  const retailAvg = resolveRetailValue(retailProfitBasis);
   const wholesaleAvg = Number(bbVehicle?.wholesale?.avg || sub?.bb_wholesale_avg || 0);
   const tradeinAvg = Number(bbVehicle?.tradein?.avg || sub?.bb_tradein_avg || 0);
+  const cycleRetailBasis = () => {
+    const idx = RETAIL_TIERS.indexOf(retailProfitBasis as any);
+    const next = RETAIL_TIERS[(idx + 1) % RETAIL_TIERS.length];
+    setRetailProfitBasis(next);
+  };
 
   // Build waterfall blocks — matching OfferSimulator with all adjustments
   const waterfallBlocks: WaterfallBlock[] = useMemo(() => {
