@@ -691,8 +691,7 @@ export default function AppraisalTool() {
             { label: "Customer Offer", value: `$${Math.floor(currentOffer).toLocaleString()}`, color: "text-card-foreground", bg: "bg-card border-border/60 shadow-sm" },
             { label: "Final Appraised Value", value: `$${Math.floor(finalValue).toLocaleString()}`, color: "text-primary", bg: "bg-primary/5 border-primary/25 shadow-sm shadow-primary/5" },
             { label: "Retail Avg", value: retailAvg > 0 ? `$${Math.floor(retailAvg).toLocaleString()}` : "—", color: "text-card-foreground", bg: "bg-card border-border/60 shadow-sm" },
-            { label: "Recon Cost", value: `$${Math.floor(activeSettings?.recon_cost || 0).toLocaleString()}`, color: "text-destructive", bg: "bg-card border-destructive/20 shadow-sm" },
-            { label: "Dealer Pack", value: `$${Math.floor(effectivePack).toLocaleString()}`, color: "text-destructive", bg: "bg-card border-destructive/20 shadow-sm" },
+            { label: "TAC (Own For)", value: `$${Math.floor(finalValue + reconCost + effectivePack).toLocaleString()}`, color: "text-amber-600", bg: "bg-amber-500/5 border-amber-500/25 shadow-sm" },
             { label: "Projected Profit", value: `${projectedProfit >= 0 ? "+" : ""}$${Math.floor(Math.abs(projectedProfit)).toLocaleString()}`, color: projectedProfit >= 0 ? "text-emerald-600" : "text-destructive", bg: projectedProfit >= 0 ? "bg-emerald-500/5 border-emerald-500/25 shadow-sm" : "bg-destructive/5 border-destructive/25 shadow-sm" },
             { label: "Margin %", value: `${profitMargin.toFixed(1)}%`, color: profitMargin >= 0 ? "text-emerald-600" : "text-destructive", bg: profitMargin >= 0 ? "bg-emerald-500/5 border-emerald-500/25 shadow-sm" : "bg-destructive/5 border-destructive/25 shadow-sm" },
           ].map(metric => (
