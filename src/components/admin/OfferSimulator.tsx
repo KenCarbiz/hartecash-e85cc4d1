@@ -914,14 +914,14 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                 );
               })()}
 
-              {/* Equipment */}
+              {/* Equipment — Factory Options (Customer-Selected) */}
               {liveBbVehicle.add_deduct_list?.length > 0 && (
-                <Collapsible>
+                <Collapsible defaultOpen>
                   <CollapsibleTrigger asChild>
                     <button className="flex items-center justify-between w-full px-3 py-2 text-left hover:bg-muted/30 transition-colors rounded-lg border border-border">
                       <div className="flex items-center gap-1.5">
                         <CheckSquare className="w-3.5 h-3.5 text-primary" />
-                        <span className="font-semibold text-[11px] text-card-foreground">Equipment ({liveSelectedAddDeducts.length}/{liveBbVehicle.add_deduct_list.length})</span>
+                        <span className="font-semibold text-[11px] text-card-foreground">③ Factory Equipment — Customer Selected ({liveSelectedAddDeducts.length}/{liveBbVehicle.add_deduct_list.length})</span>
                         {equipmentTotal !== 0 && (
                           <Badge variant="secondary" className={`text-[9px] ${equipmentTotal > 0 ? "text-emerald-600" : "text-destructive"}`}>
                             {equipmentTotal > 0 ? "+" : ""}${equipmentTotal.toLocaleString()}
@@ -932,19 +932,37 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                     </button>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
-                    <div className="space-y-0.5 max-h-36 overflow-y-auto px-1 py-2">
+                    {/* Inspector verification reminder */}
+                    <div className="mx-1 mt-2 mb-1 px-2.5 py-1.5 rounded-md bg-amber-500/10 border border-amber-500/20 flex items-center gap-2">
+                      <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                      <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-400">
+                        Inspector: Verify all customer-selected equipment is present on the vehicle during in-person inspection.
+                      </span>
+                    </div>
+                    <div className="space-y-0.5 max-h-48 overflow-y-auto px-1 py-2">
                       {liveBbVehicle.add_deduct_list.map((ad: BBAddDeduct) => {
                         const isSelected = liveSelectedAddDeducts.includes(ad.uoc);
+                        const isAutoDetected = ad.auto !== "N";
                         const dollarStr = ad.avg !== 0 ? ` (${ad.avg > 0 ? "+" : ""}$${Math.abs(ad.avg)})` : "";
                         return (
                           <label key={ad.uoc} className={`flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer text-[10px] ${isSelected ? "bg-primary/10 text-card-foreground" : "text-muted-foreground hover:bg-muted"}`}>
                             <input type="checkbox" checked={isSelected} onChange={() => toggleLiveAddDeduct(ad.uoc)} className="rounded border-border w-3 h-3" />
                             <span className="truncate">{ad.name}{dollarStr}</span>
-                            {ad.auto !== "N" && <span className="text-[8px] bg-emerald-500/10 text-emerald-600 px-1 rounded shrink-0">auto</span>}
+                            {isSelected && (
+                              <span className="text-[8px] bg-primary/15 text-primary px-1 rounded shrink-0">Customer ✓</span>
+                            )}
+                            {isAutoDetected && !isSelected && (
+                              <span className="text-[8px] bg-muted text-muted-foreground px-1 rounded shrink-0">VIN detected</span>
+                            )}
                           </label>
                         );
                       })}
                     </div>
+                    {liveSelectedAddDeducts.length > 0 && (
+                      <div className="mx-1 mb-1 px-2.5 py-1 text-[9px] text-muted-foreground border-t border-border">
+                        <strong>{liveSelectedAddDeducts.length}</strong> option{liveSelectedAddDeducts.length !== 1 ? "s" : ""} selected by customer → value impact: <strong className={equipmentTotal >= 0 ? "text-emerald-600" : "text-destructive"}>{equipmentTotal >= 0 ? "+" : ""}${equipmentTotal.toLocaleString()}</strong>
+                      </div>
+                    )}
                   </CollapsibleContent>
                 </Collapsible>
               )}
