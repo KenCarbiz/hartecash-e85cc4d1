@@ -232,6 +232,7 @@ const DEFAULT_DEDUCTION_AMOUNTS: DeductionAmounts = {
   interior_damage_per_item: 200,
   windshield_cracked: 400,
   windshield_chipped: 150,
+  moonroof_broken: 300,
   engine_issue_per_item: 500,
   mechanical_issue_per_item: 350,
   tech_issue_per_item: 150,
