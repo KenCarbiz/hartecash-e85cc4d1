@@ -26,7 +26,6 @@ export default function ProfitSpreadGauge({
 
     // Build all value points for the gauge
     const allValues = [wholesaleAvg, tradeinAvg, retailAvg, offerHigh];
-    if (retailClean > 0) allValues.push(retailClean);
     if (msrp > 0) allValues.push(msrp);
     if (retailListings?.avgPrice) allValues.push(retailListings.avgPrice);
 
