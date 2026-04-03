@@ -53,9 +53,21 @@ export interface SubmissionBBValues {
   bb_value_tiers?: BBValueTiers | null;
 }
 
+function normalizeBBValueTiers(value: BBValueTiers | string | null | undefined): BBValueTiers | null {
+  if (!value) return null;
+  if (typeof value === "string") {
+    try {
+      return JSON.parse(value) as BBValueTiers;
+    } catch {
+      return null;
+    }
+  }
+  return value;
+}
+
 /** Resolve base value from stored BB data using condition_basis_map */
 function resolveBaseValue(bbValues: SubmissionBBValues, basis: string): number {
-  const tiers = bbValues.bb_value_tiers;
+  const tiers = normalizeBBValueTiers(bbValues.bb_value_tiers as BBValueTiers | string | null | undefined);
   if (tiers) {
     const [category, tier] = basis.split("_");
     if (category === "wholesale" && tiers.wholesale) {

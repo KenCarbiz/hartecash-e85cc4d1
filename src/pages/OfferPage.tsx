@@ -14,8 +14,8 @@ import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { InlineEdit } from "@/components/offer/InlineEdit";
 import OfferConditionBlock, { buildConditionItems } from "@/components/offer/OfferConditionBlock";
 import OfferPrintLayout from "@/components/offer/OfferPrintLayout";
-import { recalculateFromSubmission, type SubmissionCondition, type SubmissionBBValues } from "@/lib/recalculateOffer";
-import type { OfferSettings, OfferRule } from "@/lib/offerCalculator";
+import { buildOfferFormData, buildStoredBBVehicle, buildSubmissionBBPayload, fetchMileageAdjustedBBVehicle, parseStoredJson } from "@/lib/submissionOffer";
+import { calculateOffer, type OfferSettings, type OfferRule } from "@/lib/offerCalculator";
 import { resolveEffectiveSettings } from "@/lib/resolvePricingModel";
 import { useToast } from "@/hooks/use-toast";
 import SlideToAccept from "@/components/SlideToAccept";
@@ -58,6 +58,7 @@ interface OfferSubmission {
 }
 
 interface ConditionDetails {
+  dealership_id: string;
   accidents: string | null;
   drivable: string | null;
   exterior_damage: string[] | null;
@@ -84,7 +85,9 @@ interface ConditionDetails {
   bb_retail_avg: number | null;
   bb_wholesale_avg: number | null;
   bb_tradein_avg: number | null;
-  bb_value_tiers: Record<string, Record<string, number>> | null;
+  bb_value_tiers: Record<string, Record<string, number>> | string | null;
+  bb_add_deducts: unknown;
+  bb_selected_options: string[] | string | null;
 }
 
 const CONDITION_OPTIONS = [
@@ -131,17 +134,13 @@ const OfferPage = () => {
       const { data, error: err } = await supabase.rpc("get_submission_portal", { _token: token });
       if (err || !data || data.length === 0) { setError("Offer not found."); setLoading(false); return; }
       const sub = data[0] as unknown as OfferSubmission;
-      setSubmission(sub);
-      setLoading(false);
 
-      // Fetch condition details + offer config + appointment + locations in parallel
-      const [condRes, pricingRes, apptRes, locRes] = await Promise.all([
+      const [condRes, apptRes, locRes] = await Promise.all([
         supabase
           .from("submissions")
-          .select("accidents, drivable, exterior_damage, interior_damage, mechanical_issues, engine_issues, tech_issues, smoked_in, tires_replaced, num_keys, windshield_damage, modifications, drivetrain, bb_msrp, bb_class_name, bb_drivetrain, bb_transmission, bb_fuel_type, bb_engine, bb_mileage_adj, bb_regional_adj, bb_base_whole_avg, bb_retail_avg, bb_wholesale_avg, bb_tradein_avg, bb_value_tiers")
+          .select("dealership_id, accidents, drivable, exterior_damage, interior_damage, mechanical_issues, engine_issues, tech_issues, smoked_in, tires_replaced, num_keys, windshield_damage, modifications, drivetrain, bb_msrp, bb_class_name, bb_drivetrain, bb_transmission, bb_fuel_type, bb_engine, bb_mileage_adj, bb_regional_adj, bb_base_whole_avg, bb_retail_avg, bb_wholesale_avg, bb_tradein_avg, bb_value_tiers, bb_add_deducts, bb_selected_options")
           .eq("token", token)
           .maybeSingle(),
-        resolveEffectiveSettings("default"),
         supabase
           .from("appointments")
           .select("preferred_date, preferred_time, store_location")
@@ -154,11 +153,81 @@ const OfferPage = () => {
           .select("id, name, city, state, address")
           .eq("is_active", true),
       ]);
-      if (condRes.data) setCondition(condRes.data as ConditionDetails);
+
+      const conditionData = condRes.data as ConditionDetails | null;
+      const pricingRes = await resolveEffectiveSettings(conditionData?.dealership_id || "default");
+
+      let nextSubmission = sub;
+      let nextCondition = conditionData;
+
+      if (conditionData) {
+        const selectedOptions = parseStoredJson<string[]>(conditionData.bb_selected_options, []);
+        let resolvedBBVehicle = buildStoredBBVehicle({ ...sub, ...conditionData });
+
+        if (!sub.offered_price && sub.vin && sub.mileage) {
+          const freshVehicle = await fetchMileageAdjustedBBVehicle({
+            vin: sub.vin,
+            mileage: parseInt(sub.mileage.replace(/[^0-9]/g, "")) || 0,
+          });
+          if (freshVehicle) {
+            resolvedBBVehicle = freshVehicle;
+          }
+        }
+
+        if (!sub.offered_price && resolvedBBVehicle) {
+          const estimate = calculateOffer(
+            resolvedBBVehicle,
+            buildOfferFormData({ ...sub, ...conditionData }),
+            selectedOptions,
+            pricingRes.settings,
+            pricingRes.rules,
+          );
+
+          if (estimate) {
+            const bbPayload = buildSubmissionBBPayload(resolvedBBVehicle);
+            const needsRefresh =
+              estimate.high !== sub.estimated_offer_high ||
+              estimate.low !== sub.estimated_offer_low ||
+              bbPayload.bb_tradein_avg !== sub.bb_tradein_avg ||
+              typeof conditionData.bb_value_tiers === "string" ||
+              typeof conditionData.bb_add_deducts === "string";
+
+            if (needsRefresh) {
+              await supabase
+                .from("submissions")
+                .update({
+                  estimated_offer_low: estimate.low,
+                  estimated_offer_high: estimate.high,
+                  ...bbPayload,
+                } as any)
+                .eq("token", token);
+
+              nextSubmission = {
+                ...sub,
+                estimated_offer_low: estimate.low,
+                estimated_offer_high: estimate.high,
+                bb_tradein_avg: bbPayload.bb_tradein_avg,
+                bb_wholesale_avg: bbPayload.bb_wholesale_avg,
+                bb_retail_avg: bbPayload.bb_retail_avg,
+                bb_mileage_adj: bbPayload.bb_mileage_adj,
+                bb_base_whole_avg: bbPayload.bb_base_whole_avg,
+              };
+              nextCondition = {
+                ...conditionData,
+                ...bbPayload,
+              };
+            }
+          }
+        }
+      }
+
+      setSubmission(nextSubmission);
+      if (nextCondition) setCondition(nextCondition);
       if (pricingRes.settings) setOfferSettings(pricingRes.settings);
       if (pricingRes.rules) setOfferRules(pricingRes.rules);
       if (apptRes.data) setAppointment(apptRes.data as { preferred_date: string; preferred_time: string; store_location: string | null });
       if (locRes.data) setDealerLocations(locRes.data as any);
+      setLoading(false);
     };
     fetchData();
   }, [token]);
@@ -177,82 +246,46 @@ const OfferPage = () => {
     if (field === "mileage") newSubmission.mileage = value as string;
     if (field === "exterior_color") newSubmission.exterior_color = value as string;
 
-    // If mileage changed and we have a VIN, re-fetch BB data with new mileage
-    let freshBBValues: SubmissionBBValues | null = null;
+    let bbPayload: ReturnType<typeof buildSubmissionBBPayload> | null = null;
+    let resolvedBBVehicle = buildStoredBBVehicle({ ...newSubmission, ...newCondition });
+
     if (field === "mileage" && submission.vin && !submission.offered_price) {
       try {
-        const { data: bbData } = await supabase.functions.invoke("bb-lookup", {
-          body: {
-            lookup_type: "vin",
-            vin: submission.vin,
-            mileage: parseInt((value as string).replace(/[^0-9]/g, "")) || 0,
-          },
+        const freshVehicle = await fetchMileageAdjustedBBVehicle({
+          vin: submission.vin,
+          mileage: parseInt((value as string).replace(/[^0-9]/g, "")) || 0,
         });
-        if (bbData?.vehicles?.[0]) {
-          const v = bbData.vehicles[0];
-          freshBBValues = {
-            bb_tradein_avg: v.tradein?.avg ?? null,
-            bb_wholesale_avg: v.wholesale?.avg ?? null,
-            bb_retail_avg: v.retail?.avg ?? null,
-            bb_value_tiers: {
-              wholesale: v.wholesale,
-              tradein: v.tradein,
-              retail: v.retail,
-            },
-          };
-          // Update condition + submission with fresh BB data
-          newCondition.bb_tradein_avg = v.tradein?.avg ?? null;
-          newCondition.bb_wholesale_avg = v.wholesale?.avg ?? null;
-          newCondition.bb_retail_avg = v.retail?.avg ?? null;
-          newCondition.bb_mileage_adj = v.mileage_adj ?? null;
-          newCondition.bb_base_whole_avg = v.base_whole_avg ?? null;
-          (newCondition as any).bb_value_tiers = freshBBValues.bb_value_tiers;
+        if (freshVehicle) {
+          resolvedBBVehicle = freshVehicle;
+          bbPayload = buildSubmissionBBPayload(freshVehicle);
+
+          newCondition.bb_tradein_avg = bbPayload.bb_tradein_avg;
+          newCondition.bb_wholesale_avg = bbPayload.bb_wholesale_avg;
+          newCondition.bb_retail_avg = bbPayload.bb_retail_avg;
+          newCondition.bb_mileage_adj = bbPayload.bb_mileage_adj;
+          newCondition.bb_base_whole_avg = bbPayload.bb_base_whole_avg;
+          newCondition.bb_value_tiers = bbPayload.bb_value_tiers;
+          newCondition.bb_add_deducts = bbPayload.bb_add_deducts;
           setCondition({ ...newCondition });
 
-          newSubmission.bb_tradein_avg = v.tradein?.avg ?? null;
-          newSubmission.bb_wholesale_avg = v.wholesale?.avg ?? null;
-          newSubmission.bb_retail_avg = v.retail?.avg ?? null;
-          newSubmission.bb_mileage_adj = v.mileage_adj ?? null;
-          newSubmission.bb_base_whole_avg = v.base_whole_avg ?? null;
+          newSubmission.bb_tradein_avg = bbPayload.bb_tradein_avg;
+          newSubmission.bb_wholesale_avg = bbPayload.bb_wholesale_avg;
+          newSubmission.bb_retail_avg = bbPayload.bb_retail_avg;
+          newSubmission.bb_mileage_adj = bbPayload.bb_mileage_adj;
+          newSubmission.bb_base_whole_avg = bbPayload.bb_base_whole_avg;
         }
       } catch (e) {
         console.warn("BB re-lookup failed, using cached values:", e);
       }
     }
 
-    // Recalculate offer if we have bb data and no manual offered_price
-    if ((submission.bb_tradein_avg || freshBBValues) && !submission.offered_price) {
-      const subCond: SubmissionCondition = {
-        overall_condition: field === "overall_condition" ? (value as string) : newSubmission.overall_condition,
-        mileage: field === "mileage" ? (value as string) : newSubmission.mileage,
-        vehicle_year: newSubmission.vehicle_year,
-        vehicle_make: newSubmission.vehicle_make,
-        vehicle_model: newSubmission.vehicle_model,
-        accidents: field === "accidents" ? (value as string) : newCondition.accidents,
-        exterior_damage: field === "exterior_damage" ? (value as string[]) : newCondition.exterior_damage,
-        interior_damage: field === "interior_damage" ? (value as string[]) : newCondition.interior_damage,
-        mechanical_issues: field === "mechanical_issues" ? (value as string[]) : newCondition.mechanical_issues,
-        engine_issues: field === "engine_issues" ? (value as string[]) : newCondition.engine_issues,
-        tech_issues: field === "tech_issues" ? (value as string[]) : newCondition.tech_issues,
-        windshield_damage: field === "windshield_damage" ? (value as string) : newCondition.windshield_damage,
-        smoked_in: field === "smoked_in" ? (value as string) : newCondition.smoked_in,
-        tires_replaced: field === "tires_replaced" ? (value as string) : newCondition.tires_replaced,
-        num_keys: field === "num_keys" ? (value as string) : newCondition.num_keys,
-        drivable: field === "drivable" ? (value as string) : newCondition.drivable,
-      };
-
-      const bbVals = freshBBValues || {
-        bb_tradein_avg: newCondition.bb_tradein_avg ?? submission.bb_tradein_avg,
-        bb_wholesale_avg: newCondition.bb_wholesale_avg ?? submission.bb_wholesale_avg,
-        bb_retail_avg: newCondition.bb_retail_avg ?? submission.bb_retail_avg,
-        bb_value_tiers: newCondition.bb_value_tiers ?? (condition as any)?.bb_value_tiers ?? null,
-      };
-      const newEstimate = recalculateFromSubmission(
-        bbVals.bb_tradein_avg || 0,
-        subCond,
+    if (resolvedBBVehicle && !submission.offered_price) {
+      const newEstimate = calculateOffer(
+        resolvedBBVehicle,
+        buildOfferFormData({ ...newSubmission, ...newCondition }),
+        parseStoredJson<string[]>(newCondition.bb_selected_options, []),
         offerSettings,
         offerRules,
-        bbVals
       );
 
       if (newEstimate) {
@@ -273,14 +306,8 @@ const OfferPage = () => {
         updateData.estimated_offer_low = newSubmission.estimated_offer_low;
         updateData.estimated_offer_high = newSubmission.estimated_offer_high;
       }
-      // Save fresh BB values if mileage changed
-      if (freshBBValues) {
-        updateData.bb_tradein_avg = freshBBValues.bb_tradein_avg;
-        updateData.bb_wholesale_avg = freshBBValues.bb_wholesale_avg;
-        updateData.bb_retail_avg = freshBBValues.bb_retail_avg;
-        if (freshBBValues.bb_value_tiers) updateData.bb_value_tiers = freshBBValues.bb_value_tiers;
-        if (newSubmission.bb_mileage_adj !== undefined) updateData.bb_mileage_adj = newSubmission.bb_mileage_adj;
-        if (newSubmission.bb_base_whole_avg !== undefined) updateData.bb_base_whole_avg = newSubmission.bb_base_whole_avg;
+      if (bbPayload) {
+        Object.assign(updateData, bbPayload);
       }
 
       await supabase
@@ -290,7 +317,7 @@ const OfferPage = () => {
 
       toast({
         title: "Updated",
-        description: field === "mileage" && freshBBValues
+        description: field === "mileage" && bbPayload
           ? "Mileage updated — offer recalculated with fresh market data."
           : "Your answer has been updated and your offer recalculated.",
       });

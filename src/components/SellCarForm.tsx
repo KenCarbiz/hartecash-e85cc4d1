@@ -10,6 +10,7 @@ import { logConsent } from "@/lib/consent";
 import { calculateOffer, type OfferEstimate, type OfferSettings, type OfferRule } from "@/lib/offerCalculator";
 import { resolveEffectiveSettings } from "@/lib/resolvePricingModel";
 import { resolveStoreAssignment } from "@/lib/storeAssignment";
+import { buildSubmissionBBPayload, fetchMileageAdjustedBBVehicle } from "@/lib/submissionOffer";
 import { initialFormData } from "./sell-form/types";
 import { useFormConfig } from "@/hooks/useFormConfig";
 import { useTenant } from "@/contexts/TenantContext";
@@ -360,8 +361,25 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
         } catch { /* use defaults */ }
       }
 
-      // Calculate offer estimate
-      const estimate = calculateOffer(bbSelectedVehicle, formData, selectedAddDeducts, offerSettingsData, offerRulesData);
+      let finalBBVehicle = bbSelectedVehicle;
+      const cleanMileage = parseInt(formData.mileage.replace(/[^0-9]/g, "")) || 0;
+      const lookupVin = formData.vin.trim() || bbSelectedVehicle?.vin || "";
+
+      if (finalBBVehicle && lookupVin && cleanMileage > 0) {
+        const refreshedVehicle = await fetchMileageAdjustedBBVehicle({
+          vin: lookupVin,
+          mileage: cleanMileage,
+          state: formData.state || "CT",
+          uvc: formData.bbUvc || bbSelectedVehicle?.uvc,
+        });
+
+        if (refreshedVehicle) {
+          finalBBVehicle = refreshedVehicle;
+        }
+      }
+
+      const estimate = calculateOffer(finalBBVehicle, formData, selectedAddDeducts, offerSettingsData, offerRulesData);
+      const bbPayload = buildSubmissionBBPayload(finalBBVehicle);
 
       // Resolve store assignment based on admin config
       const storeLocationId = formData.preferredLocationId
@@ -410,31 +428,13 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
           next_step: "photos",
           lead_source: leadSource,
           dealership_id: tenant.dealership_id,
-          bb_tradein_avg: bbSelectedVehicle?.tradein?.avg || null,
-          bb_wholesale_avg: bbSelectedVehicle?.wholesale?.avg || null,
+          ...bbPayload,
           estimated_offer_low: estimate?.low || null,
           estimated_offer_high: estimate?.high || null,
           is_hot_lead: estimate?.isHotLead || false,
           matched_rule_ids: estimate?.matchedRuleIds?.length ? estimate.matchedRuleIds : null,
           store_location_id: storeLocationId || null,
           salesperson_name: formData.salespersonName || null,
-          // New BB data fields
-          bb_msrp: bbSelectedVehicle?.msrp || null,
-          bb_class_name: bbSelectedVehicle?.class_name || null,
-          bb_drivetrain: bbSelectedVehicle?.drivetrain || null,
-          bb_transmission: bbSelectedVehicle?.transmission || null,
-          bb_fuel_type: bbSelectedVehicle?.fuel_type || null,
-          bb_engine: bbSelectedVehicle?.engine || null,
-          bb_mileage_adj: bbSelectedVehicle?.mileage_adj || null,
-          bb_regional_adj: bbSelectedVehicle?.regional_adj || null,
-          bb_base_whole_avg: bbSelectedVehicle?.base_whole_avg || null,
-          bb_retail_avg: bbSelectedVehicle?.retail?.avg || null,
-          bb_value_tiers: bbSelectedVehicle ? JSON.stringify({
-            wholesale: bbSelectedVehicle.wholesale,
-            tradein: bbSelectedVehicle.tradein,
-            retail: bbSelectedVehicle.retail,
-          }) : null,
-          bb_add_deducts: bbSelectedVehicle?.add_deduct_list ? JSON.stringify(bbSelectedVehicle.add_deduct_list) : null,
           bb_selected_options: selectedAddDeducts.length > 0 ? selectedAddDeducts : [],
         } as any);
 

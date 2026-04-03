@@ -22,12 +22,13 @@ import EquipmentValueImpact from "@/components/portal/EquipmentValueImpact";
 import ProgressSteps, { mapStatusToStepIndex } from "@/components/portal/ProgressSteps";
 import PortalOfferCard from "@/components/portal/PortalOfferCard";
 import PortalVehicleSummary from "@/components/portal/PortalVehicleSummary";
-import { recalculateFromSubmission, type SubmissionCondition } from "@/lib/recalculateOffer";
-import type { OfferSettings, OfferRule } from "@/lib/offerCalculator";
+import { buildOfferFormData, buildStoredBBVehicle, buildSubmissionBBPayload, fetchMileageAdjustedBBVehicle, parseStoredJson } from "@/lib/submissionOffer";
+import { calculateOffer, type OfferSettings, type OfferRule } from "@/lib/offerCalculator";
 import { resolveEffectiveSettings } from "@/lib/resolvePricingModel";
 import { useToast } from "@/hooks/use-toast";
 
 interface ConditionData {
+  dealership_id: string;
   drivetrain: string | null;
   accidents: string | null;
   exterior_damage: string[] | null;
@@ -42,7 +43,9 @@ interface ConditionData {
   drivable: string | null;
   bb_wholesale_avg: number | null;
   bb_retail_avg: number | null;
-  bb_value_tiers: Record<string, Record<string, number>> | null;
+  bb_value_tiers: Record<string, Record<string, number>> | string | null;
+  bb_add_deducts: unknown;
+  bb_selected_options: string[] | string | null;
 }
 
 interface PortalSubmission {
@@ -124,16 +127,18 @@ const CustomerPortal = () => {
       setSubmission(data[0] as unknown as PortalSubmission);
       setLoading(false);
 
-      // Fetch condition + offer config for mileage recalculation
-      const [condRes, pricingRes] = await Promise.all([
+      const [condRes] = await Promise.all([
         supabase
           .from("submissions")
-          .select("drivetrain, accidents, drivable, exterior_damage, interior_damage, mechanical_issues, engine_issues, tech_issues, smoked_in, tires_replaced, num_keys, windshield_damage, bb_wholesale_avg, bb_retail_avg, bb_value_tiers")
+          .select("dealership_id, drivetrain, accidents, drivable, exterior_damage, interior_damage, mechanical_issues, engine_issues, tech_issues, smoked_in, tires_replaced, num_keys, windshield_damage, bb_wholesale_avg, bb_retail_avg, bb_value_tiers, bb_add_deducts, bb_selected_options")
           .eq("token", token)
           .maybeSingle(),
-        resolveEffectiveSettings("default"),
       ]);
-      if (condRes.data) setCondition(condRes.data as ConditionData);
+
+      const conditionData = condRes.data as ConditionData | null;
+      const pricingRes = await resolveEffectiveSettings(conditionData?.dealership_id || "default");
+
+      if (conditionData) setCondition(conditionData);
       if (pricingRes.settings) setOfferSettings(pricingRes.settings);
       if (pricingRes.rules) setOfferRules(pricingRes.rules);
     };
@@ -145,34 +150,32 @@ const CustomerPortal = () => {
     if (!submission || !condition) return;
 
     const newSubmission = { ...submission, mileage: newMileage };
+    let bbPayload: ReturnType<typeof buildSubmissionBBPayload> | null = null;
+    let resolvedBBVehicle = buildStoredBBVehicle({ ...submission, ...condition, mileage: newMileage });
 
-    // Recalculate offer if we have bb data and no manual offered_price
-    if (submission.bb_tradein_avg && !submission.offered_price) {
-      const subCond: SubmissionCondition = {
-        overall_condition: submission.overall_condition,
-        mileage: newMileage,
-        vehicle_year: submission.vehicle_year,
-        vehicle_make: submission.vehicle_make,
-        vehicle_model: submission.vehicle_model,
-        accidents: condition.accidents,
-        exterior_damage: condition.exterior_damage,
-        interior_damage: condition.interior_damage,
-        mechanical_issues: condition.mechanical_issues,
-        engine_issues: condition.engine_issues,
-        tech_issues: condition.tech_issues,
-        windshield_damage: condition.windshield_damage,
-        smoked_in: condition.smoked_in,
-        tires_replaced: condition.tires_replaced,
-        num_keys: condition.num_keys,
-        drivable: condition.drivable,
-      };
+    if (submission.vin && !submission.offered_price) {
+      const freshVehicle = await fetchMileageAdjustedBBVehicle({
+        vin: submission.vin,
+        mileage: parseInt(newMileage.replace(/[^0-9]/g, "")) || 0,
+      });
 
-      const newEstimate = recalculateFromSubmission(
-        submission.bb_tradein_avg,
-        subCond,
+      if (freshVehicle) {
+        resolvedBBVehicle = freshVehicle;
+        bbPayload = buildSubmissionBBPayload(freshVehicle);
+        setCondition((prev) => prev ? { ...prev, ...bbPayload } : prev);
+        newSubmission.bb_tradein_avg = bbPayload.bb_tradein_avg;
+        newSubmission.bb_wholesale_avg = bbPayload.bb_wholesale_avg;
+        newSubmission.bb_retail_avg = bbPayload.bb_retail_avg;
+      }
+    }
+
+    if (resolvedBBVehicle && !submission.offered_price) {
+      const newEstimate = calculateOffer(
+        resolvedBBVehicle,
+        buildOfferFormData({ ...submission, ...condition, mileage: newMileage }),
+        parseStoredJson<string[]>(condition.bb_selected_options, []),
         offerSettings,
         offerRules,
-        { bb_tradein_avg: submission.bb_tradein_avg, bb_wholesale_avg: condition?.bb_wholesale_avg, bb_retail_avg: condition?.bb_retail_avg, bb_value_tiers: condition?.bb_value_tiers }
       );
 
       if (newEstimate) {
@@ -191,6 +194,7 @@ const CustomerPortal = () => {
         updateData.estimated_offer_low = newSubmission.estimated_offer_low;
         updateData.estimated_offer_high = newSubmission.estimated_offer_high;
       }
+      if (bbPayload) Object.assign(updateData, bbPayload);
 
       await supabase
         .from("submissions")
