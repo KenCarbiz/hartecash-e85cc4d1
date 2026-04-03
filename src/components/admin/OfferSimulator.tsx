@@ -270,7 +270,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
   const [liveEngineItems, setLiveEngineItems] = useState(0);
   const [liveTechItems, setLiveTechItems] = useState(0);
   const [liveWindshield, setLiveWindshield] = useState("none");
-  const [liveMoonroof, setLiveMoonroof] = useState("no");
+  const [liveMoonroof, setLiveMoonroof] = useState("No moonroof");
   const [liveTiresReplaced, setLiveTiresReplaced] = useState("4");
   const [liveNumKeys, setLiveNumKeys] = useState("2+");
   const [liveModifications, setLiveModifications] = useState("none");
