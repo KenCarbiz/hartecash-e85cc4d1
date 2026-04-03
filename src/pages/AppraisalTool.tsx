@@ -701,7 +701,7 @@ export default function AppraisalTool() {
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 mb-5">
           {[
             { label: "Customer Offer", value: `$${Math.floor(currentOffer).toLocaleString()}`, color: "text-card-foreground", bg: "bg-card border-border/60 shadow-sm" },
-            { label: "Appraisal Value", value: `$${Math.floor(finalValue).toLocaleString()}`, color: "text-primary", bg: "bg-primary/5 border-primary/25 shadow-sm shadow-primary/5" },
+            { label: "Final Appraised Value", value: `$${Math.floor(finalValue).toLocaleString()}`, color: "text-primary", bg: "bg-primary/5 border-primary/25 shadow-sm shadow-primary/5" },
             { label: "Retail Avg", value: retailAvg > 0 ? `$${Math.floor(retailAvg).toLocaleString()}` : "—", color: "text-card-foreground", bg: "bg-card border-border/60 shadow-sm" },
             { label: "Recon Cost", value: `$${Math.floor(activeSettings?.recon_cost || 0).toLocaleString()}`, color: "text-destructive", bg: "bg-card border-destructive/20 shadow-sm" },
             { label: "Dealer Pack", value: `$${Math.floor(effectivePack).toLocaleString()}`, color: "text-destructive", bg: "bg-card border-destructive/20 shadow-sm" },
