@@ -99,6 +99,7 @@ function Corner({
   type,
   onChange,
   readOnly,
+  compact,
 }: {
   label: string;
   depth: number | null;
@@ -106,12 +107,49 @@ function Corner({
   type: "brake" | "tire";
   onChange?: (depth: number) => void;
   readOnly?: boolean;
+  compact?: boolean;
 }) {
   const isLeft = side === "left";
   const status = depth != null ? getStatus(depth) : null;
   const fallbackColor = "hsl(var(--muted-foreground) / 0.3)";
   const color = status?.color ?? fallbackColor;
   const options = type === "brake" ? BRAKE_DEPTH_OPTIONS : TIRE_DEPTH_OPTIONS;
+
+  // Compact + readOnly: simple stacked layout without arrows/readout
+  if (compact && readOnly) {
+    return (
+      <div className={cn("flex flex-col gap-1", isLeft ? "items-start" : "items-end")}>
+        <div className="text-[10px] font-semibold text-muted-foreground">{label}</div>
+        <div className={cn("flex items-center gap-2", isLeft ? "flex-row" : "flex-row-reverse")}>
+          {type === "brake" ? (
+            <svg viewBox="0 0 160 160" className="h-12 w-12 shrink-0">
+              <circle cx="80" cy="80" r="58" fill="hsl(var(--muted))" stroke="hsl(var(--border))" strokeWidth="2" />
+              <circle cx="80" cy="80" r="34" fill="hsl(var(--muted-foreground) / 0.3)" stroke="hsl(var(--foreground))" strokeWidth="3" />
+              <circle cx="80" cy="80" r="12" fill="hsl(var(--foreground))" />
+              <path
+                d={isLeft ? "M90 22 Q124 22 132 52 L132 67 Q112 60 98 64 Z" : "M70 22 Q36 22 28 52 L28 67 Q48 60 62 64 Z"}
+                fill={color}
+              />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 120 120" className="h-10 w-10 shrink-0" aria-hidden="true">
+              <rect x="25" y="10" width="70" height="100" rx="18" fill="hsl(var(--foreground))" />
+              <rect x="35" y="18" width="50" height="84" rx="12" fill="hsl(var(--muted-foreground) / 0.4)" />
+              <line x1="60" y1="20" x2="60" y2="100" stroke={color} strokeWidth="4" strokeLinecap="round" />
+            </svg>
+          )}
+          {depth != null && status ? (
+            <div className="text-center">
+              <div className="text-sm font-bold leading-tight" style={{ color: status.color }}>{depth}/32</div>
+              <div className="text-[9px] uppercase font-semibold text-muted-foreground">{status.label}</div>
+            </div>
+          ) : (
+            <div className="text-sm text-muted-foreground">—</div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={cn("flex flex-col gap-1.5", isLeft ? "items-start" : "items-end")}>
@@ -171,7 +209,7 @@ function AxleRow({
 }) {
   return (
     <div className={cn("grid items-center gap-4", compact ? "grid-cols-2" : "grid-cols-[1fr_auto_1fr]")}>
-      <Corner label={left.label} depth={left.depth} side="left" type={type} onChange={onChangeLeft} readOnly={readOnly} />
+      <Corner label={left.label} depth={left.depth} side="left" type={type} onChange={onChangeLeft} readOnly={readOnly} compact={compact} />
       {!compact && (
         <div className="hidden md:flex items-center justify-center">
           <div className="rounded-full border border-border bg-background px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground shadow-sm">
@@ -179,7 +217,7 @@ function AxleRow({
           </div>
         </div>
       )}
-      <Corner label={right.label} depth={right.depth} side="right" type={type} onChange={onChangeRight} readOnly={readOnly} />
+      <Corner label={right.label} depth={right.depth} side="right" type={type} onChange={onChangeRight} readOnly={readOnly} compact={compact} />
     </div>
   );
 }
