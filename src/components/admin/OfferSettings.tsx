@@ -203,6 +203,7 @@ const AMOUNT_LABELS: Record<string, string> = {
   interior_damage_per_item: "Per Item",
   windshield_cracked: "Cracked",
   windshield_chipped: "Chipped",
+  moonroof_broken: "Not Working",
   engine_issue_per_item: "Per Issue",
   mechanical_issue_per_item: "Per Issue",
   tech_issue_per_item: "Per Issue",
