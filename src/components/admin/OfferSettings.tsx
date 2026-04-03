@@ -323,6 +323,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
       deduction_amounts: settings.deduction_amounts as any,
       condition_multipliers: settings.condition_multipliers as any,
       condition_basis_map: settings.condition_basis_map as any,
+      condition_equipment_map: settings.condition_equipment_map as any,
       recon_cost: settings.recon_cost,
       offer_floor: settings.offer_floor,
       offer_ceiling: settings.offer_ceiling,

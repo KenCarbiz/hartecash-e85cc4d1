@@ -293,10 +293,12 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
 
   // Sync when parent settings change
   const prevSettingsRef = useRef(settings);
-  if (settings !== prevSettingsRef.current) {
-    prevSettingsRef.current = settings;
-    setLocalSettings(settings);
-  }
+  useEffect(() => {
+    if (settings !== prevSettingsRef.current) {
+      prevSettingsRef.current = settings;
+      setLocalSettings(settings);
+    }
+  }, [settings]);
 
   // Live form data
   // Map simulator values to match exact customer form values for offerCalculator
