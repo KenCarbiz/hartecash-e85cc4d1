@@ -982,7 +982,7 @@ export default function AppraisalTool() {
 
                 {/* Modifications */}
                 <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-                  <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Modifications</span>
+                  <span className="text-[10px] font-semibold text-muted-foreground w-24 sm:w-32 shrink-0">Modifications</span>
                   <Select value={modifications} onValueChange={setModifications}>
                     <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
                     <SelectContent>
