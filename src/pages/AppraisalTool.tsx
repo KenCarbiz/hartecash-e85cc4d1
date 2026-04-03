@@ -971,7 +971,7 @@ export default function AppraisalTool() {
               <div className="space-y-2">
                 {/* Condition */}
                 <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-                  <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Condition</span>
+                  <span className="text-[10px] font-semibold text-muted-foreground w-24 sm:w-32 shrink-0">Condition</span>
                   <span className="text-xs font-bold text-primary">{CONDITION_LABELS[condition]}</span>
                   {sub.inspector_grade && sub.inspector_grade !== sub.overall_condition && (
                     <span className="text-[8px] text-muted-foreground">Customer: {formatGrade(sub.overall_condition)}</span>
