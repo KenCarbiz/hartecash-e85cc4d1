@@ -534,6 +534,8 @@ export default function AppraisalTool() {
 
   const maxVal = Math.max(...waterfallBlocks.map(s => Math.max(Math.abs(s.runningTotal), Math.abs(s.value), s.type === "base" ? s.value : 0)), 1);
 
+  const waterfallFinal = waterfallBlocks.find(b => b.id === "final")?.runningTotal ?? 0;
+  const finalValue = acvOverride != null && acvOverride > 0 ? acvOverride : waterfallFinal;
   const reconCost = activeSettings?.recon_cost || 0;
   const projectedProfit = retailAvg > 0 ? retailAvg - finalValue - effectivePack - reconCost : 0;
   const profitMargin = retailAvg > 0 ? (projectedProfit / retailAvg) * 100 : 0;
