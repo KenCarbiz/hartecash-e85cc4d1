@@ -571,6 +571,26 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
               </p>
             </div>
           </div>
+          <div className="mt-4 p-3 rounded-lg border border-border bg-muted/30">
+            <Label className="text-sm font-semibold">Retail Basis for Profit Calculations</Label>
+            <p className="text-[10px] text-muted-foreground mb-2">
+              Choose which retail tier to use when calculating projected profit and margin in the appraisal HUD and offer logic.
+            </p>
+            <Select
+              value={settings.retail_profit_basis || "retail_avg"}
+              onValueChange={(v) => setSettings({ ...settings, retail_profit_basis: v })}
+            >
+              <SelectTrigger className="w-full max-w-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="retail_xclean">Extra Clean Retail</SelectItem>
+                <SelectItem value="retail_clean">Clean Retail</SelectItem>
+                <SelectItem value="retail_avg">Average Retail</SelectItem>
+                <SelectItem value="retail_rough">Rough Retail</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex justify-end mt-4">
             <Button size="sm" onClick={handleSaveSettings} disabled={saving}>
               {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Save className="w-4 h-4 mr-1" />}
