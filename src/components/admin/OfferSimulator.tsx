@@ -265,7 +265,15 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
   const [liveDrivable, setLiveDrivable] = useState("yes");
   const [liveSmokedIn, setLiveSmokedIn] = useState("no");
   const [liveExteriorItems, setLiveExteriorItems] = useState(0);
+  const [liveInteriorItems, setLiveInteriorItems] = useState(0);
   const [liveMechanicalItems, setLiveMechanicalItems] = useState(0);
+  const [liveEngineItems, setLiveEngineItems] = useState(0);
+  const [liveTechItems, setLiveTechItems] = useState(0);
+  const [liveWindshield, setLiveWindshield] = useState("none");
+  const [liveMoonroof, setLiveMoonroof] = useState("no");
+  const [liveTiresReplaced, setLiveTiresReplaced] = useState("4");
+  const [liveNumKeys, setLiveNumKeys] = useState("2+");
+  const [liveModifications, setLiveModifications] = useState("none");
   const [liveLoading, setLiveLoading] = useState(false);
   const [liveBbVehicle, setLiveBbVehicle] = useState<BBVehicle | null>(null);
   const [liveSelectedAddDeducts, setLiveSelectedAddDeducts] = useState<string[]>([]);
@@ -284,18 +292,21 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
   const liveFormData: FormData = useMemo(() => ({
     plate: "", state: "", vin: liveVin, mileage: liveMileage,
     bbUvc: "", bbSelectedAddDeducts: liveSelectedAddDeducts,
-    exteriorColor: "", drivetrain: "", modifications: "",
+    exteriorColor: "", drivetrain: "", modifications: liveModifications === "none" ? "" : liveModifications,
     overallCondition: liveCondition,
     exteriorDamage: Array.from({ length: liveExteriorItems }, (_, i) => `item_${i}`),
-    windshieldDamage: "", moonroof: "",
-    interiorDamage: [], techIssues: [], engineIssues: [],
+    windshieldDamage: liveWindshield, moonroof: liveMoonroof,
+    interiorDamage: Array.from({ length: liveInteriorItems }, (_, i) => `item_${i}`),
+    techIssues: Array.from({ length: liveTechItems }, (_, i) => `item_${i}`),
+    engineIssues: Array.from({ length: liveEngineItems }, (_, i) => `item_${i}`),
     mechanicalIssues: Array.from({ length: liveMechanicalItems }, (_, i) => `item_${i}`),
     drivable: liveDrivable, accidents: liveAccidents, smokedIn: liveSmokedIn,
-    tiresReplaced: "yes", numKeys: "2",
+    tiresReplaced: liveTiresReplaced === "4" ? "yes" : liveTiresReplaced === "0" ? "no" : liveTiresReplaced,
+    numKeys: liveNumKeys === "2+" ? "2" : liveNumKeys,
     name: "", phone: "", email: "", zip: "",
     loanStatus: "", loanCompany: "", loanBalance: "", loanPayment: "",
     nextStep: "", preferredLocationId: "", salespersonName: "",
-  }), [liveVin, liveMileage, liveCondition, liveAccidents, liveDrivable, liveSmokedIn, liveExteriorItems, liveMechanicalItems, liveSelectedAddDeducts]);
+  }), [liveVin, liveMileage, liveCondition, liveAccidents, liveDrivable, liveSmokedIn, liveExteriorItems, liveInteriorItems, liveMechanicalItems, liveEngineItems, liveTechItems, liveWindshield, liveMoonroof, liveTiresReplaced, liveNumKeys, liveModifications, liveSelectedAddDeducts]);
 
   const liveResult = useMemo(
     () => liveBbVehicle ? calculateOffer(liveBbVehicle, liveFormData, liveSelectedAddDeducts, activeSettings, rules) : null,
@@ -694,55 +705,214 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                 );
               })()}
 
-              {/* Vehicle Condition Inputs */}
-              <div className="rounded-lg border border-border p-3">
-                <div className="flex items-center gap-1.5 mb-2">
-                  <Car className="w-3.5 h-3.5 text-primary" />
-                  <span className="text-[11px] font-bold text-card-foreground uppercase tracking-wider">② Vehicle Condition</span>
-                </div>
-                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                  <div>
-                    <Label className="text-[10px] font-semibold">Accidents</Label>
-                    <Select value={liveAccidents} onValueChange={setLiveAccidents}>
-                      <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="0">None</SelectItem>
-                        <SelectItem value="1">1</SelectItem>
-                        <SelectItem value="2">2</SelectItem>
-                        <SelectItem value="3+">3+</SelectItem>
-                      </SelectContent>
-                    </Select>
+              {/* Vehicle Condition Inputs — Customer Answers */}
+              {(() => {
+                const da = activeSettings.deduction_amounts || {} as Record<string, number>;
+                const dc = activeSettings.deductions_config || {} as Record<string, boolean>;
+                const getAmt = (key: string) => (da as any)[key] || 0;
+                const isOn = (key: string) => (dc as any)[key] !== false;
+
+                // Calculate live deduction for each row
+                const accidentDeduct = liveAccidents === "1" ? getAmt("accidents_1") : liveAccidents === "2" ? getAmt("accidents_2") : liveAccidents === "3+" ? getAmt("accidents_3plus") : 0;
+                const extDeduct = liveExteriorItems * getAmt("exterior_damage_per_item");
+                const intDeduct = liveInteriorItems * getAmt("interior_damage_per_item");
+                const windDeduct = liveWindshield === "cracked" ? getAmt("windshield_cracked") : liveWindshield === "chipped" ? getAmt("windshield_chipped") : liveWindshield === "chipped_and_cracked" ? getAmt("windshield_cracked") + getAmt("windshield_chipped") : 0;
+                const engDeduct = liveEngineItems * getAmt("engine_issue_per_item");
+                const mechDeduct = liveMechanicalItems * getAmt("mechanical_issue_per_item");
+                const techDeduct = liveTechItems * getAmt("tech_issue_per_item");
+                const drivDeduct = liveDrivable === "no" ? getAmt("not_drivable") : 0;
+                const smokeDeduct = liveSmokedIn === "yes" ? getAmt("smoked_in") : 0;
+                const tiresDeduct = (liveTiresReplaced === "2" || liveTiresReplaced === "3") ? getAmt("tires_not_replaced") : liveTiresReplaced === "0" || liveTiresReplaced === "1" ? getAmt("tires_not_replaced") : 0;
+                const keyDeduct = liveNumKeys === "1" ? getAmt("missing_keys_1") : liveNumKeys === "0" ? getAmt("missing_keys_0") : 0;
+
+                const DeductBadge = ({ amount }: { amount: number }) => amount > 0 ? (
+                  <span className="text-[9px] font-bold text-destructive bg-destructive/10 px-1.5 py-0.5 rounded-full ml-auto shrink-0">
+                    -${amount.toLocaleString()}
+                  </span>
+                ) : (
+                  <span className="text-[9px] font-bold text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded-full ml-auto shrink-0">
+                    No deduction
+                  </span>
+                );
+
+                return (
+                  <div className="rounded-lg border border-border p-3">
+                    <div className="flex items-center gap-1.5 mb-3">
+                      <Car className="w-3.5 h-3.5 text-primary" />
+                      <span className="text-[11px] font-bold text-card-foreground uppercase tracking-wider">② Customer Condition Inputs</span>
+                    </div>
+                    <div className="space-y-2">
+                      {/* Row: Condition Tier */}
+                      <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
+                        <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Condition</span>
+                        <span className="text-xs font-bold text-primary">{CONDITION_LABELS[liveCondition]}</span>
+                        <span className="text-[9px] text-muted-foreground ml-auto">Set above ①</span>
+                      </div>
+
+                      {/* Row: Modifications */}
+                      <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
+                        <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Modifications</span>
+                        <Select value={liveModifications} onValueChange={setLiveModifications}>
+                          <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">No Modifications</SelectItem>
+                            <SelectItem value="yes">Has Modifications</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <span className="text-[9px] text-muted-foreground ml-auto">Info only</span>
+                      </div>
+
+                      {/* Row: Drivable */}
+                      {isOn("not_drivable") && (
+                        <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
+                          <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Drivable?</span>
+                          <Select value={liveDrivable} onValueChange={setLiveDrivable}>
+                            <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="yes">Drivable</SelectItem>
+                              <SelectItem value="no">Not Drivable</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <DeductBadge amount={drivDeduct} />
+                        </div>
+                      )}
+
+                      {/* Row: Exterior Damage */}
+                      {isOn("exterior_damage") && (
+                        <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
+                          <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Exterior Damage</span>
+                          <Input type="number" min={0} max={10} value={liveExteriorItems} onChange={e => setLiveExteriorItems(Number(e.target.value))} className="h-6 text-[10px] w-16" />
+                          <span className="text-[9px] text-muted-foreground">× ${getAmt("exterior_damage_per_item").toLocaleString()}/ea</span>
+                          <DeductBadge amount={extDeduct} />
+                        </div>
+                      )}
+
+                      {/* Row: Windshield */}
+                      {isOn("windshield_damage") && (
+                        <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
+                          <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Windshield</span>
+                          <Select value={liveWindshield} onValueChange={setLiveWindshield}>
+                            <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">No Damage</SelectItem>
+                              <SelectItem value="chipped">Chipped (${getAmt("windshield_chipped")})</SelectItem>
+                              <SelectItem value="cracked">Cracked (${getAmt("windshield_cracked")})</SelectItem>
+                              <SelectItem value="chipped_and_cracked">Chipped & Cracked (${getAmt("windshield_chipped") + getAmt("windshield_cracked")})</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <DeductBadge amount={windDeduct} />
+                        </div>
+                      )}
+
+                      {/* Row: Interior Damage */}
+                      {isOn("interior_damage") && (
+                        <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
+                          <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Interior Damage</span>
+                          <Input type="number" min={0} max={10} value={liveInteriorItems} onChange={e => setLiveInteriorItems(Number(e.target.value))} className="h-6 text-[10px] w-16" />
+                          <span className="text-[9px] text-muted-foreground">× ${getAmt("interior_damage_per_item").toLocaleString()}/ea</span>
+                          <DeductBadge amount={intDeduct} />
+                        </div>
+                      )}
+
+                      {/* Row: Tech Issues */}
+                      {isOn("tech_issues") && (
+                        <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
+                          <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Tech Issues</span>
+                          <Input type="number" min={0} max={10} value={liveTechItems} onChange={e => setLiveTechItems(Number(e.target.value))} className="h-6 text-[10px] w-16" />
+                          <span className="text-[9px] text-muted-foreground">× ${getAmt("tech_issue_per_item").toLocaleString()}/ea</span>
+                          <DeductBadge amount={techDeduct} />
+                        </div>
+                      )}
+
+                      {/* Row: Engine Issues */}
+                      {isOn("engine_issues") && (
+                        <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
+                          <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Engine Issues</span>
+                          <Input type="number" min={0} max={10} value={liveEngineItems} onChange={e => setLiveEngineItems(Number(e.target.value))} className="h-6 text-[10px] w-16" />
+                          <span className="text-[9px] text-muted-foreground">× ${getAmt("engine_issue_per_item").toLocaleString()}/ea</span>
+                          <DeductBadge amount={engDeduct} />
+                        </div>
+                      )}
+
+                      {/* Row: Mechanical Issues */}
+                      {isOn("mechanical_issues") && (
+                        <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
+                          <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Mechanical Issues</span>
+                          <Input type="number" min={0} max={10} value={liveMechanicalItems} onChange={e => setLiveMechanicalItems(Number(e.target.value))} className="h-6 text-[10px] w-16" />
+                          <span className="text-[9px] text-muted-foreground">× ${getAmt("mechanical_issue_per_item").toLocaleString()}/ea</span>
+                          <DeductBadge amount={mechDeduct} />
+                        </div>
+                      )}
+
+                      {/* Row: Accidents */}
+                      {isOn("accidents") && (
+                        <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
+                          <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Accidents</span>
+                          <Select value={liveAccidents} onValueChange={setLiveAccidents}>
+                            <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="0">None</SelectItem>
+                              <SelectItem value="1">1 Accident (${getAmt("accidents_1")})</SelectItem>
+                              <SelectItem value="2">2 Accidents (${getAmt("accidents_2")})</SelectItem>
+                              <SelectItem value="3+">3+ Accidents (${getAmt("accidents_3plus")})</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <DeductBadge amount={accidentDeduct} />
+                        </div>
+                      )}
+
+                      {/* Row: Smoked In */}
+                      {isOn("smoked_in") && (
+                        <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
+                          <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Smoked In?</span>
+                          <Select value={liveSmokedIn} onValueChange={setLiveSmokedIn}>
+                            <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="no">Not Smoked In</SelectItem>
+                              <SelectItem value="yes">Smoked In (${getAmt("smoked_in")})</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <DeductBadge amount={smokeDeduct} />
+                        </div>
+                      )}
+
+                      {/* Row: Tires */}
+                      {isOn("tires_not_replaced") && (
+                        <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
+                          <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Tires Replaced</span>
+                          <Select value={liveTiresReplaced} onValueChange={setLiveTiresReplaced}>
+                            <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="4">4 Tires (all)</SelectItem>
+                              <SelectItem value="3">3 Tires</SelectItem>
+                              <SelectItem value="2">2 Tires</SelectItem>
+                              <SelectItem value="1">1 Tire</SelectItem>
+                              <SelectItem value="0">None</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <DeductBadge amount={tiresDeduct} />
+                        </div>
+                      )}
+
+                      {/* Row: Keys */}
+                      {isOn("missing_keys") && (
+                        <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
+                          <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Keys</span>
+                          <Select value={liveNumKeys} onValueChange={setLiveNumKeys}>
+                            <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="2+">2+ Keys (no deduction)</SelectItem>
+                              <SelectItem value="1">1 Key (${getAmt("missing_keys_1")})</SelectItem>
+                              <SelectItem value="0">No Keys (${getAmt("missing_keys_0")})</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <DeductBadge amount={keyDeduct} />
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <Label className="text-[10px] font-semibold">Drivable?</Label>
-                    <Select value={liveDrivable} onValueChange={setLiveDrivable}>
-                      <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="yes">Yes</SelectItem>
-                        <SelectItem value="no">No</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label className="text-[10px] font-semibold">Smoked?</Label>
-                    <Select value={liveSmokedIn} onValueChange={setLiveSmokedIn}>
-                      <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="no">No</SelectItem>
-                        <SelectItem value="yes">Yes</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label className="text-[10px] font-semibold">Ext. Damage</Label>
-                    <Input type="number" min={0} max={10} value={liveExteriorItems} onChange={e => setLiveExteriorItems(Number(e.target.value))} className="h-7 text-xs" />
-                  </div>
-                  <div>
-                    <Label className="text-[10px] font-semibold">Mech. Issues</Label>
-                    <Input type="number" min={0} max={10} value={liveMechanicalItems} onChange={e => setLiveMechanicalItems(Number(e.target.value))} className="h-7 text-xs" />
-                  </div>
-                </div>
-              </div>
+                );
+              })()}
 
               {/* Equipment */}
               {liveBbVehicle.add_deduct_list?.length > 0 && (
