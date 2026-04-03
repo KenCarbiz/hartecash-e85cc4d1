@@ -1413,7 +1413,7 @@ export default function AppraisalTool() {
             <div className="rounded-xl border border-primary/30 bg-primary/5 p-4">
               <div className="flex items-center gap-1.5 mb-3">
                 <DollarSign className="w-4 h-4 text-primary" />
-                <span className="text-[11px] font-bold text-card-foreground uppercase tracking-wider">Manual ACV Override</span>
+                <span className="text-[11px] font-bold text-card-foreground uppercase tracking-wider">Final Appraised Value</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="relative flex-1">
