@@ -77,7 +77,7 @@ const SiteFooter = () => {
             <Link to="/privacy" className="text-sm opacity-60 hover:opacity-90 transition-opacity">Privacy Policy</Link>
             <Link to="/terms" className="text-sm opacity-60 hover:opacity-90 transition-opacity">Terms of Service</Link>
             <Link to="/disclosure" className="text-sm opacity-60 hover:opacity-90 transition-opacity">Offer Disclosure</Link>
-            <Link to="/admin/login" className="text-xs opacity-40 hover:opacity-70 transition-opacity mt-2">Admin</Link>
+            <Link to="/admin/login" className="text-[10px] opacity-20 hover:opacity-50 transition-opacity mt-3" aria-label="Staff portal">•</Link>
             <Link to="/sitemap" className="text-xs opacity-40 hover:opacity-70 transition-opacity">.</Link>
           </div>
           {(config.facebook_url || config.instagram_url || config.youtube_url || config.tiktok_url) && (
