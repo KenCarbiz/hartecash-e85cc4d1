@@ -831,7 +831,7 @@ export default function AppraisalTool() {
               <DollarSign className="w-3.5 h-3.5 text-primary" />
               <span className="text-[11px] font-bold text-card-foreground uppercase tracking-wider">① Select Condition Tier</span>
             </div>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {CONDITIONS.map(cond => {
                 const basisMap = activeSettings.condition_basis_map || {};
                 const selectedBasis = (basisMap as Record<string, string>)[cond] || "tradein_avg";
