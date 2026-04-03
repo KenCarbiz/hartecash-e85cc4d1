@@ -862,7 +862,7 @@ export default function AppraisalTool() {
                     <div className={`text-lg font-bold ${isActive ? "text-primary" : "text-card-foreground"}`}>
                       ${bubbleResult.high.toLocaleString()}
                     </div>
-                    <div className="text-[9px] text-muted-foreground mt-0.5">
+                    <div className="text-[10px] font-bold text-muted-foreground mt-0.5">
                       Base: ${selectedValue.toLocaleString()} × {mult.toFixed(2)}
                     </div>
                   </button>
