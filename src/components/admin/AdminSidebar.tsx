@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/sidebar";
 import {
   Inbox, CalendarDays, Users, ShieldCheck, SlidersHorizontal,
-  Settings, Bell, ListChecks, MessageSquareQuote, BarChart3, Send, UserCheck, MapPin, Car, ScrollText, Newspaper, Shield, Lock, Wrench, MessageCircle, Rocket, Gauge, Network, Camera
+  Settings, Bell, ListChecks, MessageSquareQuote, BarChart3, Send, MapPin, Car, ScrollText, Shield, Lock, Wrench, Rocket, Gauge, Network, Camera
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
@@ -27,7 +27,7 @@ interface AdminSidebarProps {
   pendingRequestCount: number;
   permissionRequestCount?: number;
   pricingAccessRequestCount?: number;
-  allowedSections?: string[] | null; // null = unrestricted (admin)
+  allowedSections?: string[] | null;
   showRequestAccess?: boolean;
   onRequestAccess?: (sectionKey: string) => void;
   locationCount?: number;
@@ -58,42 +58,24 @@ const AdminSidebar = ({
   const isAllowed = (key: string) => allowedSections === null || allowedSections.includes(key);
   const isPlatformAdmin = canManageAccess && dealershipId === "default";
 
-  // ── Pipeline (daily ops) ──
+  // ── PIPELINE ──
   const pipelineItems = [
     { key: "submissions", label: "All Leads", icon: Inbox, badge: submissionCount > 0 ? String(submissionCount) : undefined },
-    { key: "offer-pending", label: "Offer Pending", icon: Send, badge: undefined },
-    { key: "offer-accepted", label: "Offer Accepted", icon: UserCheck, badge: undefined },
-    { key: "accepted-appts", label: "Accepted / Appts", icon: CalendarDays, badge: appointmentCount > 0 ? String(appointmentCount) : undefined },
+    { key: "accepted-appts", label: "Appointments", icon: CalendarDays, badge: appointmentCount > 0 ? String(appointmentCount) : undefined },
     { key: "executive", label: "Performance", icon: BarChart3 },
   ].filter((item) => isAllowed(item.key));
 
-  // ── Team (people & access) — Permissions & Access Requests merged into Staff ──
-  const teamBadgeCount = (canManageAccess ? pendingRequestCount + permissionRequestCount : 0);
-  const teamItems = canManageAccess
-    ? [
-        { key: "staff", label: "Staff & Permissions", icon: Users, badge: teamBadgeCount > 0 ? String(teamBadgeCount) : undefined, badgeVariant: "destructive" as const },
-      ].filter((item) => isAllowed(item.key))
-    : [];
+  // ── CONFIGURATION ──
+  const configItems = [
+    ...((canManageAccess || userRole === "gsm_gm") ? [{ key: "offer-settings", label: "Offer Logic", icon: SlidersHorizontal, badge: pricingAccessRequestCount > 0 ? String(pricingAccessRequestCount) : undefined, badgeVariant: "destructive" as const }] : []),
+    ...(canManageAccess ? [{ key: "form-config", label: "Lead Form", icon: ListChecks }] : []),
+    ...(canManageAccess ? [{ key: "inspection-config", label: "Inspection Sheet", icon: Shield }] : []),
+    ...(canManageAccess ? [{ key: "photo-config", label: "Photo Requirements", icon: Camera }] : []),
+    ...(canManageAccess ? [{ key: "depth-policies", label: "Depth Policies", icon: Gauge }] : []),
+    ...(canManageAccess ? [{ key: "notifications", label: "Notifications", icon: Bell }] : []),
+  ].filter((item) => isAllowed(item.key));
 
-  // ── Lead Flow (acquisition engine) ──
-  const leadFlowItems = (canManageAccess || userRole === "gsm_gm")
-    ? [
-        { key: "offer-settings", label: "Offer Logic", icon: SlidersHorizontal, badge: pricingAccessRequestCount > 0 ? String(pricingAccessRequestCount) : undefined, badgeVariant: "destructive" as const },
-        ...(canManageAccess ? [{ key: "form-config", label: "Lead Form", icon: ListChecks }] : []),
-        ...(canManageAccess ? [{ key: "notifications", label: "Notifications", icon: Bell }] : []),
-      ].filter((item) => isAllowed(item.key))
-    : [];
-
-  // ── Standards (vehicle quality & compliance thresholds) ──
-  const standardsItems = canManageAccess
-    ? [
-        { key: "inspection-config", label: "Inspection Sheet", icon: Shield },
-        { key: "photo-config", label: "Photo Requirements", icon: Camera },
-        { key: "depth-policies", label: "Depth Policies", icon: Gauge },
-      ].filter((item) => isAllowed(item.key))
-    : [];
-
-  // ── Storefront (brand & presence) ──
+  // ── STOREFRONT ──
   const storefrontItems = canManageAccess
     ? [
         { key: "site-config", label: "Branding", icon: Settings },
@@ -102,23 +84,20 @@ const AdminSidebar = ({
       ].filter((item) => isAllowed(item.key))
     : [];
 
-  // ── Compliance (merged into single tabbed page) ──
-  const complianceItems = [
+  // ── SYSTEM ──
+  const teamBadgeCount = canManageAccess ? pendingRequestCount + permissionRequestCount : 0;
+  const systemItems = [
+    ...(canManageAccess ? [{ key: "staff", label: "Staff & Permissions", icon: Users, badge: teamBadgeCount > 0 ? String(teamBadgeCount) : undefined, badgeVariant: "destructive" as const }] : []),
     { key: "compliance", label: "Compliance", icon: ShieldCheck },
-  ].filter((item) => isAllowed(item.key) || isAllowed("consent") || isAllowed("comm-log"));
-
-  // ── Tools (utilities — consolidated) ──
-  const toolsItems = [
     { key: "reports", label: "Reports & Export", icon: Send },
     ...(isPlatformAdmin ? [{ key: "tenants", label: "Dealer Tenants", icon: Network }] : []),
     ...(canManageAccess ? [{ key: "image-inventory", label: "Vehicle Images", icon: Car }] : []),
     ...(canManageAccess ? [{ key: "system-settings", label: "System Settings", icon: Wrench }] : []),
-    { key: "onboarding", label: "Dealer Setup Guide", icon: Rocket },
-    { key: "onboarding-script", label: "Onboarding Script", icon: ScrollText },
-  ].filter((item) => isAllowed(item.key));
+    { key: "onboarding", label: "Dealer Setup", icon: Rocket },
+  ].filter((item) => isAllowed(item.key) || (item.key === "compliance" && (isAllowed("consent") || isAllowed("comm-log"))));
 
-  // Collect locked sections for "Request Access" display
-  const allSectionKeys = ["submissions", "offer-pending", "offer-accepted", "accepted-appts", "executive", "staff", "offer-settings", "form-config", "inspection-config", "depth-policies", "notifications", "site-config", "locations", "testimonials", "compliance", "image-inventory", "reports", "system-settings"];
+  // Locked sections for "Request Access"
+  const allSectionKeys = ["submissions", "accepted-appts", "executive", "staff", "offer-settings", "form-config", "inspection-config", "depth-policies", "notifications", "site-config", "locations", "testimonials", "compliance", "image-inventory", "reports", "system-settings"];
   const lockedSections = showRequestAccess && allowedSections !== null
     ? allSectionKeys.filter((k) => !allowedSections.includes(k))
     : [];
@@ -169,14 +148,10 @@ const AdminSidebar = ({
     <Sidebar collapsible="icon" className="border-r border-border">
       <SidebarContent className="pt-2">
         {renderGroup("Pipeline", pipelineItems)}
-        {renderGroup("Team", teamItems)}
-        {renderGroup("Lead Flow", leadFlowItems)}
-        {renderGroup("Standards", standardsItems)}
+        {renderGroup("Configuration", configItems)}
         {renderGroup("Storefront", storefrontItems)}
-        {renderGroup("Compliance", complianceItems)}
-        {renderGroup("Tools", toolsItems)}
+        {renderGroup("System", systemItems)}
 
-        {/* Request Access section for non-admins */}
         {lockedSections.length > 0 && !collapsed && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-[10px] uppercase tracking-widest font-bold text-sidebar-foreground/50">
