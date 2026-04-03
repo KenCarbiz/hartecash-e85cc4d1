@@ -1579,6 +1579,9 @@ export type Database = {
           ai_damage_summary: string | null
           appointment_date: string | null
           appointment_set: boolean
+          appraisal_finalized: boolean
+          appraisal_finalized_at: string | null
+          appraisal_finalized_by: string | null
           appraised_by: string | null
           bb_add_deducts: Json | null
           bb_base_whole_avg: number | null
@@ -1671,6 +1674,9 @@ export type Database = {
           ai_damage_summary?: string | null
           appointment_date?: string | null
           appointment_set?: boolean
+          appraisal_finalized?: boolean
+          appraisal_finalized_at?: string | null
+          appraisal_finalized_by?: string | null
           appraised_by?: string | null
           bb_add_deducts?: Json | null
           bb_base_whole_avg?: number | null
@@ -1763,6 +1769,9 @@ export type Database = {
           ai_damage_summary?: string | null
           appointment_date?: string | null
           appointment_set?: boolean
+          appraisal_finalized?: boolean
+          appraisal_finalized_at?: string | null
+          appraisal_finalized_by?: string | null
           appraised_by?: string | null
           bb_add_deducts?: Json | null
           bb_base_whole_avg?: number | null
