@@ -126,6 +126,7 @@ const AdminSectionRenderer = (props: AdminSectionRendererProps) => {
 
   // ── Pipeline sections ──
   if (activeSection === "submissions") {
+    if (props.loading) return <AdminLoadingSkeleton />;
     return (
       <>
         <TodayActionSummary submissions={submissions} appointments={appointments} onNavigate={setActiveSection} />
