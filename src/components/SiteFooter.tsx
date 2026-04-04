@@ -53,13 +53,13 @@ const SiteFooter = () => {
               </a>
             )}
           </div>
-          {locations.length > 0 && (
+          {locations.filter(l => l.show_in_footer).length > 0 && (
             <div className="mt-4 pt-3 border-t border-white/10">
               <h5 className="text-xs font-bold uppercase tracking-wider opacity-50 mb-2">Our Locations</h5>
               <div className="text-xs opacity-50 leading-relaxed space-y-1">
-                 {locations.map((loc) => (
+                 {locations.filter(l => l.show_in_footer).map((loc) => (
                    <div key={loc.id}>
-                     {loc.show_in_footer && loc.address ? (
+                     {loc.address ? (
                        <a
                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${loc.name} ${loc.address} ${loc.city} ${loc.state}`)}`}
                          target="_blank"

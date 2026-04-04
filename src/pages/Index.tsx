@@ -11,7 +11,7 @@ import Testimonials from "@/components/Testimonials";
 import FAQ from "@/components/FAQ";
 import CTABanner from "@/components/CTABanner";
 import SiteFooter from "@/components/SiteFooter";
-import AboutBlurb from "@/components/AboutBlurb";
+
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import HeroOffset from "@/components/HeroOffset";
 import BackToTop from "@/components/BackToTop";
