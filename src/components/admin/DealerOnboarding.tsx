@@ -15,7 +15,8 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import {
   Save, Loader2, CalendarIcon, Building2, Phone as PhoneIcon, Bot,
-  Store, Network, Building, Rocket, CheckCircle, Clock, Pause, XCircle
+  Store, Network, Building, Rocket, CheckCircle, Clock, Pause, XCircle,
+  Sparkles, Globe, ArrowRight
 } from "lucide-react";
 import OnboardingChecklist from "./OnboardingChecklist";
 
