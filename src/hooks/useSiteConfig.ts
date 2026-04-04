@@ -64,7 +64,7 @@ export interface SiteConfig {
 }
 
 const DEFAULTS: SiteConfig = {
-  dealership_name: "Harte Auto Group",
+  dealership_name: "Our Dealership",
   tagline: "Sell Your Car The Easy Way",
   phone: "",
   email: "",
