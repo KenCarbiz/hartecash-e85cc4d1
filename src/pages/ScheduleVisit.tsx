@@ -142,7 +142,7 @@ const ScheduleVisit = () => {
     });
   };
 
-  const availableSlots = getTimeSlotsForDate(form.preferred_date);
+  const availableSlots = getTimeSlotsFromConfig(form.preferred_date, config.business_hours || []);
   const selectedDateIsSunday = isSunday(form.preferred_date);
 
   const today = new Date().toISOString().split("T")[0];
