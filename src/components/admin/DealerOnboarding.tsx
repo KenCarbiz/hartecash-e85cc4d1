@@ -254,6 +254,7 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate, targetDealershipId, onD
           setChecklistVersion((prev) => prev + 1);
         }}
         onOpenQuestionnaire={onNavigate ? () => onNavigate("onboarding-script") : undefined}
+        onNavigate={onNavigate}
       />
 
       {/* Onboarding Checklist */}
