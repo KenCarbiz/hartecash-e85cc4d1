@@ -76,12 +76,7 @@ Deno.serve(async (req) => {
     const formattedOldDate = old_date ? formatDate(old_date) : "";
     const firstName = sanitize(customer_name?.split(" ")[0]) || "friend";
 
-    // Fetch dealership name
-    const adminClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
-    const appointmentDealershipId = appointment.dealership_id || "default";
+    // Fetch dealership name (reuse adminClient from above)
     const { data: siteConfig } = await adminClient
       .from("site_config")
       .select("dealership_name")
