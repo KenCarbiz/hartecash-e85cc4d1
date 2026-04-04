@@ -22,14 +22,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    const STORE_LOCATIONS: Record<string, string> = {
-      hartford_nissan: "Harte Nissan — Hartford, CT",
-      hartford_infiniti: "Harte Infiniti — Hartford, CT",
-      west_haven: "George Harte Nissan — West Haven, CT",
-      wallingford: "George Harte Infiniti — Wallingford, CT",
-      old_saybrook: "Harte Hyundai — Old Saybrook, CT",
-    };
-
     const customer_name = typeof appointment.customer_name === "string" ? appointment.customer_name.trim().slice(0, 200) : "";
     const customer_email = typeof appointment.customer_email === "string" ? appointment.customer_email.trim().slice(0, 255) : "";
     const customer_phone = typeof appointment.customer_phone === "string" ? appointment.customer_phone.trim().slice(0, 30) : "";
@@ -39,7 +31,23 @@ Deno.serve(async (req) => {
     const old_time = typeof appointment.old_time === "string" ? appointment.old_time.trim().slice(0, 50) : "";
     const vehicle_info = typeof appointment.vehicle_info === "string" ? appointment.vehicle_info.trim().slice(0, 500) : "";
     const store_location_key = typeof appointment.store_location === "string" ? appointment.store_location.trim() : "";
-    const store_location_label = STORE_LOCATIONS[store_location_key] || store_location_key || "";
+
+    // Look up store location name from DB
+    const adminClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+    let store_location_label = store_location_key;
+    if (store_location_key) {
+      const { data: locData } = await adminClient
+        .from("dealership_locations")
+        .select("name, city, state")
+        .eq("id", store_location_key)
+        .maybeSingle();
+      if (locData) {
+        store_location_label = `${locData.name} — ${locData.city}, ${locData.state}`;
+      }
+    }
 
     if (!customer_email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer_email)) {
       return new Response(JSON.stringify({ error: "Invalid or missing customer email" }), {
