@@ -231,6 +231,8 @@ export default function OnboardingScript({ targetDealershipId }: OnboardingScrip
   const [loading, setLoading] = useState(true);
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
+  const [scrapeUrl, setScrapeUrl] = useState("");
+  const [scraping, setScraping] = useState(false);
 
   // Count filled answers
   const totalQuestions = SECTIONS.reduce((sum, s) => sum + s.questions.length, 0);
