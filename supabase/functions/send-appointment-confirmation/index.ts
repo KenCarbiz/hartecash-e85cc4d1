@@ -62,13 +62,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    const STORE_LOCATIONS: Record<string, string> = {
-      hartford_nissan: "Harte Nissan — Hartford, CT",
-      hartford_infiniti: "Harte Infiniti — Hartford, CT",
-      west_haven: "George Harte Nissan — West Haven, CT",
-      wallingford: "George Harte Infiniti — Wallingford, CT",
-      old_saybrook: "Harte Hyundai — Old Saybrook, CT",
-    };
+    // Look up store location from DB
+    const adminClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
 
     const customer_name = typeof appointment.customer_name === "string" ? appointment.customer_name.trim().slice(0, 200) : "";
     const customer_email = typeof appointment.customer_email === "string" ? appointment.customer_email.trim().slice(0, 255) : "";
@@ -78,7 +76,18 @@ Deno.serve(async (req) => {
     const vehicle_info = typeof appointment.vehicle_info === "string" ? appointment.vehicle_info.trim().slice(0, 500) : "";
     const notes = typeof appointment.notes === "string" ? appointment.notes.trim().slice(0, 1000) : "";
     const store_location_key = typeof appointment.store_location === "string" ? appointment.store_location.trim() : "";
-    const store_location_label = STORE_LOCATIONS[store_location_key] || store_location_key || "";
+
+    let store_location_label = store_location_key;
+    if (store_location_key) {
+      const { data: locData } = await adminClient
+        .from("dealership_locations")
+        .select("name, city, state")
+        .eq("id", store_location_key)
+        .maybeSingle();
+      if (locData) {
+        store_location_label = `${locData.name} — ${locData.city}, ${locData.state}`;
+      }
+    }
 
     const resendKey = Deno.env.get("RESEND_API_KEY");
 
