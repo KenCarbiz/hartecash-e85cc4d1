@@ -1183,5 +1183,8 @@ export default function AppraisalTool() {
             profitMargin={profitMargin}
             activeSettings={activeSettings}
           />
+        </div>
+      </div>
+    </div>
   );
 }
