@@ -372,6 +372,7 @@ export default function DealerWebsiteAutofillCard({
         configFillCount += 1;
       }
 
+      const businessHours = Array.isArray(scraped.business_hours)
         ? scraped.business_hours
             .filter((item) => isFilledText(item?.days) && isFilledText(item?.hours))
             .map((item) => ({ days: item.days!.trim(), hours: item.hours!.trim() }))
