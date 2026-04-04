@@ -30,7 +30,7 @@ const stepTimeEstimates: Record<string, string> = {
   "Vehicle Build": "30 sec",
   "Condition": "1 min",
   "History": "30 sec",
-  "Finalize": "45 sec",
+  "Finalize": "15 sec",
 };
 
 const stepCtaLabels: Record<string, string> = {
