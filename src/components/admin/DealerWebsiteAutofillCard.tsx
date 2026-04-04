@@ -17,11 +17,21 @@ interface ScrapedLocation {
   address?: string;
   city_state_zip?: string;
   brands?: string;
+  phone?: string;
+  email?: string;
 }
 
 interface ScrapedBusinessHour {
+  department?: string;
   days?: string;
   hours?: string;
+}
+
+interface ScrapedStaffMember {
+  name?: string;
+  title?: string;
+  email?: string;
+  phone?: string;
 }
 
 interface ScrapedDealerInfo {
@@ -38,10 +48,24 @@ interface ScrapedDealerInfo {
   youtube?: string;
   primary_color?: string;
   accent_color?: string;
+  success_color?: string;
   logo_url?: string;
   architecture?: "Single Store" | "Multi-Location" | "Dealer Group";
+  num_locations?: string;
+  hero_headline?: string;
+  hero_subtext?: string;
+  oem_brands?: string[];
+  staff_emails?: string[];
+  staff_phones?: string[];
   locations?: ScrapedLocation[];
   business_hours?: ScrapedBusinessHour[];
+  staff_members?: ScrapedStaffMember[];
+  dealer_group_name?: string;
+  dms_provider?: string;
+  stats_years_in_business?: string;
+  stats_rating?: string;
+  stats_reviews_count?: string;
+  stats_cars_purchased?: string;
 }
 
 type OnboardingAnswers = Record<string, string>;
