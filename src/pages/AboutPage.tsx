@@ -44,7 +44,7 @@ const DEFAULT_STORY = "";
 
 const AboutPage = () => {
   const { config } = useSiteConfig();
-  const name = config.dealership_name || "Harte Auto Group";
+  const name = config.dealership_name || "Our Dealership";
   const [locations, setLocations] = useState<DealerLocation[]>([]);
 
   const milestones = config.about_milestones?.length ? config.about_milestones : DEFAULT_MILESTONES;
