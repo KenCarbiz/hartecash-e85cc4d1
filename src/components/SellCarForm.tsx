@@ -263,8 +263,9 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
     const currentStepName = displaySteps[step];
 
     if (currentStepName === "Vehicle Info") {
-      if (!formData.vin.trim() && !formData.plate.trim()) missing.push("VIN or License Plate");
-      if (formData.plate.trim() && !formData.state.trim()) missing.push("State");
+      const hasManualYmm = formData.manualYear.length === 4 && formData.manualMake.trim() && formData.manualModel.trim();
+      if (!hasManualYmm && !formData.vin.trim() && !formData.plate.trim()) missing.push("VIN, License Plate, or Year/Make/Model");
+      if (!hasManualYmm && formData.plate.trim() && !formData.state.trim()) missing.push("State");
     } else if (currentStepName === "Select Your Vehicle") {
       if (!formData.bbUvc) missing.push("Please select your vehicle");
     } else if (currentStepName === "Vehicle Build") {
