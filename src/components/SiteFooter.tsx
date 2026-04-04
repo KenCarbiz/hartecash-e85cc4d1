@@ -54,7 +54,7 @@ const SiteFooter = () => {
             )}
           </div>
           {locations.filter(l => l.show_in_footer).length > 0 && (
-            <div className="mt-4 pt-3 border-t border-white/10">
+            <div className="mt-4 pt-3 border-t border-border">
               <h5 className="text-xs font-bold uppercase tracking-wider opacity-50 mb-2">Our Locations</h5>
               <div className="text-xs opacity-50 leading-relaxed space-y-1">
                  {locations.filter(l => l.show_in_footer).map((loc) => (
