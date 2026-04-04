@@ -218,18 +218,17 @@ const AboutPage = () => {
                   </div>
                 </article>
               ))}
-              {locations.length === 0 &&
-                ["Harte Nissan — Hartford", "Harte Infiniti — Hartford", "George Harte Nissan — West Haven", "George Harte Infiniti — Wallingford", "Harte Hyundai — Old Saybrook"].map((l) => (
-                  <div key={l} className="bg-card border border-border rounded-xl p-5 flex items-start gap-3">
-                    <div className="shrink-0 w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center mt-0.5">
-                      <Building2 className="w-4 h-4 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-foreground text-sm">{l.split(" — ")[0]}</h3>
-                      <p className="text-xs text-muted-foreground mt-0.5">{l.split(" — ")[1]}, CT</p>
-                    </div>
+              {locations.length === 0 && (
+                <div className="bg-card border border-border rounded-xl p-5 flex items-start gap-3">
+                  <div className="shrink-0 w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center mt-0.5">
+                    <Building2 className="w-4 h-4 text-primary" />
                   </div>
-                ))}
+                  <div>
+                    <h3 className="font-bold text-foreground text-sm">{name}</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">{config.address || "Contact us for location details"}</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </section>
