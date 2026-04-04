@@ -87,6 +87,7 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate, targetDealershipId, onD
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [applying, setApplying] = useState(false);
+  const [checklistVersion, setChecklistVersion] = useState(0);
   const { toast } = useToast();
 
   // Read-only for non-admins when account is active/finalized
