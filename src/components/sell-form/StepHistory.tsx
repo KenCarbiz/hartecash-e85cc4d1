@@ -1,9 +1,20 @@
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import FormField from "./FormField";
 import RadioOption from "./RadioOption";
 import VehicleSummaryBar from "./VehicleSummaryBar";
 import type { FormData, BBVehicle, VehicleInfo } from "./types";
 import type { FormConfig } from "@/hooks/useFormConfig";
+import { supabase } from "@/integrations/supabase/client";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
+
+interface DealerLocation {
+  id: string;
+  name: string;
+  city: string;
+  state: string;
+}
 
 interface Props {
   formData: FormData;
@@ -11,9 +22,29 @@ interface Props {
   formConfig?: FormConfig;
   bbVehicle?: BBVehicle | null;
   vehicleInfo?: VehicleInfo | null;
+  leadSource?: string;
 }
 
-const StepHistory = ({ formData, update, formConfig, bbVehicle, vehicleInfo }: Props) => {
+const StepHistory = ({ formData, update, formConfig, bbVehicle, vehicleInfo, leadSource }: Props) => {
+  const { config } = useSiteConfig();
+  const isTrade = leadSource === "trade";
+  const showLocationPicker = isTrade || (config as any).assign_customer_picks === true;
+  const showLoanSection = !formConfig || formConfig.q_loan_details;
+
+  const [locations, setLocations] = useState<DealerLocation[]>([]);
+
+  useEffect(() => {
+    if (showLocationPicker) {
+      supabase
+        .from("dealership_locations")
+        .select("id, name, city, state")
+        .eq("is_active", true)
+        .eq("show_in_scheduling", true)
+        .order("sort_order")
+        .then(({ data }) => { if (data) setLocations(data); });
+    }
+  }, [showLocationPicker]);
+
   return (
     <>
       <VehicleSummaryBar vehicleInfo={vehicleInfo} bbVehicle={bbVehicle} />
@@ -64,6 +95,57 @@ const StepHistory = ({ formData, update, formConfig, bbVehicle, vehicleInfo }: P
           </div>
         </FormField>
       )}
+
+      {/* ZIP + Intent section — moved here from Finalize */}
+      <div className="border-t-2 border-muted pt-5 mt-3">
+        <FormField label="Where is your vehicle located?">
+          <Input
+            placeholder="ZIP code"
+            value={formData.zip}
+            onChange={(e) => update("zip", e.target.value)}
+            className="py-3.5 px-4 text-base border-2 border-input focus:border-accent focus:ring-accent/10"
+          />
+        </FormField>
+
+        {showLocationPicker && locations.length > 0 && (
+          <FormField label={isTrade ? "Which location are you working with?" : "Preferred dealership location"}>
+            <Select
+              value={formData.preferredLocationId || ""}
+              onValueChange={v => update("preferredLocationId", v)}
+            >
+              <SelectTrigger className="py-3.5 px-4 text-base border-2 border-input focus:border-accent focus:ring-accent/10">
+                <SelectValue placeholder="Select a location..." />
+              </SelectTrigger>
+              <SelectContent>
+                {locations.map(loc => (
+                  <SelectItem key={loc.id} value={loc.id}>{loc.name} — {loc.city}, {loc.state}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FormField>
+        )}
+
+        {isTrade && (
+          <FormField label="Salesperson or contact you're working with" hint="Enter the name of the person at the dealership (optional).">
+            <Input
+              placeholder="e.g. Mike S."
+              value={formData.salespersonName}
+              onChange={(e) => update("salespersonName", e.target.value)}
+              className="py-3.5 px-4 text-base border-2 border-input focus:border-accent focus:ring-accent/10"
+            />
+          </FormField>
+        )}
+
+        {showLoanSection && (
+          <FormField label="What would you like to do?" hint="Sell outright, trade in, or buy out your lease.">
+            <div className="grid grid-cols-2 gap-2">
+              {["Sell", "Trade-In", "Lease Buyout", "Not Sure"].map((opt) => (
+                <RadioOption key={opt} label={opt} selected={formData.loanStatus === opt} onClick={() => update("loanStatus", opt)} />
+              ))}
+            </div>
+          </FormField>
+        )}
+      </div>
     </>
   );
 };

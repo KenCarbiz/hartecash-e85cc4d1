@@ -154,6 +154,9 @@ export function buildOfferFormData(input: StoredOfferInputs): FormData {
     nextStep: "",
     preferredLocationId: "",
     salespersonName: "",
+    manualYear: "",
+    manualMake: "",
+    manualModel: "",
   };
 }
 

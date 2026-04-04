@@ -368,7 +368,7 @@ export default function AppraisalTool() {
     tiresReplaced: mappedTires, numKeys: mappedKeys,
     name: sub?.name || "", phone: sub?.phone || "", email: sub?.email || "", zip: sub?.zip || "",
     loanStatus: "", loanCompany: "", loanBalance: "", loanPayment: "",
-    nextStep: "", preferredLocationId: "", salespersonName: "",
+    nextStep: "", preferredLocationId: "", salespersonName: "", manualYear: "", manualMake: "", manualModel: "",
   }), [sub, condition, accidents, drivable, smokedIn, exteriorItems, interiorItems, mechItems, engineItems, techItems, windshield, moonroof, tiresReplaced, numKeys, modifications, liveSelectedAddDeducts, mappedWindshield, mappedDrivable, mappedAccidents, mappedSmokedIn, mappedTires, mappedKeys]);
 
   // Use live BB vehicle if available, else reconstruct from stored data

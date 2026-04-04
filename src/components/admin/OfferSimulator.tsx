@@ -325,7 +325,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
     numKeys: mappedKeys,
     name: "", phone: "", email: "", zip: "",
     loanStatus: "", loanCompany: "", loanBalance: "", loanPayment: "",
-    nextStep: "", preferredLocationId: "", salespersonName: "",
+    nextStep: "", preferredLocationId: "", salespersonName: "", manualYear: "", manualMake: "", manualModel: "",
   }), [liveVin, liveMileage, liveCondition, liveExteriorItems, liveInteriorItems, liveMechanicalItems, liveEngineItems, liveTechItems, liveWindshield, liveMoonroof, liveTiresReplaced, liveNumKeys, liveModifications, liveSelectedAddDeducts, mappedWindshield, mappedDrivable, mappedAccidents, mappedSmokedIn, mappedTires, mappedKeys]);
 
   const liveResult = useMemo(

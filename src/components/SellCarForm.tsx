@@ -29,8 +29,8 @@ const stepTimeEstimates: Record<string, string> = {
   "Select Your Vehicle": "15 sec",
   "Vehicle Build": "30 sec",
   "Condition": "1 min",
-  "History": "30 sec",
-  "Finalize": "45 sec",
+  "History": "1 min",
+  "Finalize": "15 sec",
 };
 
 const stepCtaLabels: Record<string, string> = {
@@ -38,7 +38,7 @@ const stepCtaLabels: Record<string, string> = {
   "Select Your Vehicle": "That's My Car",
   "Vehicle Build": "Next: Condition →",
   "Condition": "Almost Done →",
-  "History": "Next →",
+  "History": "Next: Your Details →",
 };
 
 const stepVariants = {
@@ -263,8 +263,9 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
     const currentStepName = displaySteps[step];
 
     if (currentStepName === "Vehicle Info") {
-      if (!formData.vin.trim() && !formData.plate.trim()) missing.push("VIN or License Plate");
-      if (formData.plate.trim() && !formData.state.trim()) missing.push("State");
+      const hasManualYmm = formData.manualYear.length === 4 && formData.manualMake.trim() && formData.manualModel.trim();
+      if (!hasManualYmm && !formData.vin.trim() && !formData.plate.trim()) missing.push("VIN, License Plate, or Year/Make/Model");
+      if (!hasManualYmm && formData.plate.trim() && !formData.state.trim()) missing.push("State");
     } else if (currentStepName === "Select Your Vehicle") {
       if (!formData.bbUvc) missing.push("Please select your vehicle");
     } else if (currentStepName === "Vehicle Build") {
@@ -290,12 +291,11 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
       if (formConfig.q_smoked_in && !formData.smokedIn) missing.push("Smoked In");
       if (formConfig.q_tires_replaced && !formData.tiresReplaced) missing.push("Tires Replaced");
       if (formConfig.q_num_keys && !formData.numKeys) missing.push("Number of Keys");
+      if (!formData.zip.trim()) missing.push("ZIP Code");
     } else if (currentStepName === "Finalize") {
       if (!formData.name.trim()) missing.push("Full Name");
       if (!formData.phone.trim() || formData.phone.replace(/\D/g, "").length < 10) missing.push("Phone Number");
       if (!formData.email.trim()) missing.push("Email Address");
-      if (!formData.zip.trim()) missing.push("ZIP Code");
-      if (!formData.loanStatus) missing.push("Sell or Trade-In");
     }
 
     // In offer-first mode, the last step is History — no contact validation needed
@@ -524,9 +524,9 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
           </>
         );
       case "History":
-        return <StepHistory formData={formData} update={update} formConfig={formConfig} bbVehicle={bbSelectedVehicle} vehicleInfo={vehicleInfo} />;
+        return <StepHistory formData={formData} update={update} formConfig={formConfig} bbVehicle={bbSelectedVehicle} vehicleInfo={vehicleInfo} leadSource={leadSource} />;
       case "Finalize":
-        return <StepFinalize formData={formData} update={update} formConfig={formConfig} leadSource={leadSource} />;
+        return <StepFinalize formData={formData} update={update} />;
       default:
         return null;
     }
