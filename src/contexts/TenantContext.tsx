@@ -14,8 +14,8 @@ interface TenantContextValue {
 
 const DEFAULT_TENANT: TenantInfo = {
   dealership_id: "default",
-  slug: "harte",
-  display_name: "Harte Auto Group",
+  slug: "default",
+  display_name: "AutoCurb",
 };
 
 const TenantContext = createContext<TenantContextValue>({

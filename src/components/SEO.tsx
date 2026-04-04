@@ -9,7 +9,7 @@ interface SEOProps {
   noindex?: boolean;
 }
 
-const BASE_URL = "https://hartecash.lovable.app";
+const BASE_URL = typeof window !== "undefined" ? window.location.origin : "https://hartecash.lovable.app";
 
 const SEO = ({
   title,

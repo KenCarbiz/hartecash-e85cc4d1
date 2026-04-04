@@ -279,7 +279,7 @@ export function printCheckRequest(
   ].join("\n");
 
   const html = `<!DOCTYPE html><html><head><title>Check Request</title><style>${css}</style></head><body>
-    <div class="header">${logoBase64 ? `<img src="${logoBase64}" alt="Logo" />` : `<h1 style="font-size:22px;font-weight:700;">Harte Auto Group</h1>`}<p>Check Request Form</p></div>
+    <div class="header">${logoBase64 ? `<img src="${logoBase64}" alt="Logo" />` : `<h1 style="font-size:22px;font-weight:700;">Check Request</h1>`}<p>Check Request Form</p></div>
     <div class="content">
       <p class="title">Check Request</p>
       <table>
