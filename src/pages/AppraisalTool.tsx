@@ -957,261 +957,28 @@ export default function AppraisalTool() {
               );
             })()}
 
-            {/* ② CUSTOMER CONDITION INPUTS — with inspector override indicators */}
-            <div className="rounded-lg border border-border p-3">
-              <div className="flex items-center gap-1.5 mb-3">
-                <Car className="w-3.5 h-3.5 text-primary" />
-                <span className="text-[11px] font-bold text-card-foreground uppercase tracking-wider">② Vehicle Condition</span>
-                {hasInspection && (
-                  <Badge variant="secondary" className="text-[8px] ml-auto">Inspector Data Applied</Badge>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                {/* Condition */}
-                <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-                  <span className="text-[10px] font-semibold text-muted-foreground w-24 sm:w-32 shrink-0">Condition</span>
-                  <span className="text-xs font-bold text-primary">{CONDITION_LABELS[condition]}</span>
-                  {sub.inspector_grade && sub.inspector_grade !== sub.overall_condition && (
-                    <span className="text-[8px] text-muted-foreground">Customer: {formatGrade(sub.overall_condition)}</span>
-                  )}
-                  <SourceTag inspector={!!sub.inspector_grade} customer={sub.inspector_grade ? undefined : sub.overall_condition} />
-                  <span className="text-[9px] text-muted-foreground ml-auto">Set above ①</span>
-                </div>
-
-                {/* Modifications */}
-                <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-                  <span className="text-[10px] font-semibold text-muted-foreground w-24 sm:w-32 shrink-0">Modifications</span>
-                  <Select value={modifications} onValueChange={setModifications}>
-                    <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No Modifications</SelectItem>
-                      <SelectItem value="yes">Has Modifications</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <SourceTag customer={customerAnswers.modifications} />
-                  <span className="text-[9px] text-muted-foreground ml-auto">Info only</span>
-                </div>
-
-                {/* Drivable */}
-                {isOn("not_drivable") && (
-                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-                    <span className="text-[10px] font-semibold text-muted-foreground w-24 sm:w-32 shrink-0">Drivable?</span>
-                    <Select value={drivable} onValueChange={setDrivable}>
-                      <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="yes">Drivable</SelectItem>
-                        <SelectItem value="no">Not Drivable</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <SourceTag customer={customerAnswers.drivable} />
-                    <DeductBadge amount={drivDeduct} />
-                  </div>
-                )}
-
-                {/* Exterior Damage */}
-                {isOn("exterior_damage") && (
-                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-                    <span className="text-[10px] font-semibold text-muted-foreground w-24 sm:w-32 shrink-0">Exterior Damage</span>
-                    <Select value={String(exteriorItems)} onValueChange={v => setExteriorItems(Number(v))}>
-                      <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="0">None</SelectItem>
-                        <SelectItem value="1">1 issue</SelectItem>
-                        <SelectItem value="2">2 issues</SelectItem>
-                        <SelectItem value="3">3 issues</SelectItem>
-                        <SelectItem value="4">4 issues</SelectItem>
-                        <SelectItem value="5">5 issues</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {exteriorItems > 0 && <span className="text-[9px] text-muted-foreground">{exteriorItems} × ${getAmt("exterior_damage_per_item").toLocaleString()}</span>}
-                    <SourceTag customer={customerAnswers.exteriorDamage?.join(",")} />
-                    <DeductBadge amount={extDeduct} />
-                  </div>
-                )}
-
-                {/* Windshield */}
-                {isOn("windshield_damage") && (
-                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-                    <span className="text-[10px] font-semibold text-muted-foreground w-24 sm:w-32 shrink-0">Windshield</span>
-                    <Select value={windshield} onValueChange={setWindshield}>
-                      <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">No damage</SelectItem>
-                        <SelectItem value="minor_chips">Minor chips (-${getAmt("windshield_chipped").toLocaleString()})</SelectItem>
-                        <SelectItem value="major_cracks">Major cracks (-${getAmt("windshield_cracked").toLocaleString()})</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <SourceTag customer={customerAnswers.windshield} />
-                    <DeductBadge amount={windDeduct} />
-                  </div>
-                )}
-
-                {/* Moonroof */}
-                <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-                  <span className="text-[10px] font-semibold text-muted-foreground w-24 sm:w-32 shrink-0">Moonroof</span>
-                  <Select value={moonroof} onValueChange={setMoonroof}>
-                    <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Works great">Works great</SelectItem>
-                      <SelectItem value="Doesn't work">Doesn't work (-${getAmt("moonroof_broken").toLocaleString()})</SelectItem>
-                      <SelectItem value="No moonroof">No moonroof</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <SourceTag customer={customerAnswers.moonroof} />
-                  <DeductBadge amount={moonroofDeduct} />
-                </div>
-
-                {/* Interior Damage */}
-                {isOn("interior_damage") && (
-                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-                    <span className="text-[10px] font-semibold text-muted-foreground w-24 sm:w-32 shrink-0">Interior Damage</span>
-                    <Select value={String(interiorItems)} onValueChange={v => setInteriorItems(Number(v))}>
-                      <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="0">None</SelectItem>
-                        <SelectItem value="1">1 issue</SelectItem>
-                        <SelectItem value="2">2 issues</SelectItem>
-                        <SelectItem value="3">3 issues</SelectItem>
-                        <SelectItem value="4">4 issues</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {interiorItems > 0 && <span className="text-[9px] text-muted-foreground">{interiorItems} × ${getAmt("interior_damage_per_item").toLocaleString()}</span>}
-                    <SourceTag customer={customerAnswers.interiorDamage?.join(",")} />
-                    <DeductBadge amount={intDeduct} />
-                  </div>
-                )}
-
-                {/* Tech Issues */}
-                {isOn("tech_issues") && (
-                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-                    <span className="text-[10px] font-semibold text-muted-foreground w-24 sm:w-32 shrink-0">Tech Issues</span>
-                    <Select value={String(techItems)} onValueChange={v => setTechItems(Number(v))}>
-                      <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="0">None</SelectItem>
-                        <SelectItem value="1">1 issue</SelectItem>
-                        <SelectItem value="2">2 issues</SelectItem>
-                        <SelectItem value="3">3 issues</SelectItem>
-                        <SelectItem value="4">4 issues</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {techItems > 0 && <span className="text-[9px] text-muted-foreground">{techItems} × ${getAmt("tech_issue_per_item").toLocaleString()}</span>}
-                    <SourceTag customer={customerAnswers.techIssues?.join(",")} />
-                    <DeductBadge amount={techDeduct} />
-                  </div>
-                )}
-
-                {/* Engine Issues */}
-                {isOn("engine_issues") && (
-                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-                    <span className="text-[10px] font-semibold text-muted-foreground w-24 sm:w-32 shrink-0">Engine Issues</span>
-                    <Select value={String(engineItems)} onValueChange={v => setEngineItems(Number(v))}>
-                      <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="0">None</SelectItem>
-                        <SelectItem value="1">1 issue</SelectItem>
-                        <SelectItem value="2">2 issues</SelectItem>
-                        <SelectItem value="3">3 issues</SelectItem>
-                        <SelectItem value="4">4 issues</SelectItem>
-                        <SelectItem value="5">5 issues</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {engineItems > 0 && <span className="text-[9px] text-muted-foreground">{engineItems} × ${getAmt("engine_issue_per_item").toLocaleString()}</span>}
-                    <SourceTag customer={customerAnswers.engineIssues?.join(",")} />
-                    <DeductBadge amount={engDeduct} />
-                  </div>
-                )}
-
-                {/* Mechanical Issues */}
-                {isOn("mechanical_issues") && (
-                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-                    <span className="text-[10px] font-semibold text-muted-foreground w-24 sm:w-32 shrink-0">Mechanical Issues</span>
-                    <Select value={String(mechItems)} onValueChange={v => setMechItems(Number(v))}>
-                      <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="0">None</SelectItem>
-                        <SelectItem value="1">1 issue</SelectItem>
-                        <SelectItem value="2">2 issues</SelectItem>
-                        <SelectItem value="3">3 issues</SelectItem>
-                        <SelectItem value="4">4 issues</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {mechItems > 0 && <span className="text-[9px] text-muted-foreground">{mechItems} × ${getAmt("mechanical_issue_per_item").toLocaleString()}</span>}
-                    <SourceTag customer={customerAnswers.mechIssues?.join(",")} />
-                    <DeductBadge amount={mechDeduct} />
-                  </div>
-                )}
-
-                {/* Accidents */}
-                {isOn("accidents") && (
-                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-                    <span className="text-[10px] font-semibold text-muted-foreground w-24 sm:w-32 shrink-0">Accidents</span>
-                    <Select value={accidents} onValueChange={setAccidents}>
-                      <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="0">No accidents</SelectItem>
-                        <SelectItem value="1">1 accident (-${getAmt("accidents_1").toLocaleString()})</SelectItem>
-                        <SelectItem value="2+">2+ accidents (-${getAmt("accidents_2").toLocaleString()})</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <SourceTag customer={customerAnswers.accidents} />
-                    <DeductBadge amount={accidentDeduct} />
-                  </div>
-                )}
-
-                {/* Smoked In */}
-                {isOn("smoked_in") && (
-                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-                    <span className="text-[10px] font-semibold text-muted-foreground w-24 sm:w-32 shrink-0">Smoked In?</span>
-                    <Select value={smokedIn} onValueChange={setSmokedIn}>
-                      <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="no">Not Smoked In</SelectItem>
-                        <SelectItem value="yes">Smoked In (-${getAmt("smoked_in").toLocaleString()})</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <SourceTag customer={customerAnswers.smokedIn} />
-                    <DeductBadge amount={smokeDeduct} />
-                  </div>
-                )}
-
-                {/* Tires */}
-                {isOn("tires_not_replaced") && (
-                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-                    <span className="text-[10px] font-semibold text-muted-foreground w-24 sm:w-32 shrink-0">Tires Replaced</span>
-                    <Select value={tiresReplaced} onValueChange={setTiresReplaced}>
-                      <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="4">4 tires (no deduction)</SelectItem>
-                        <SelectItem value="3">3 tires</SelectItem>
-                        <SelectItem value="2">2 tires</SelectItem>
-                        <SelectItem value="1">1 tire</SelectItem>
-                        <SelectItem value="None">None (-${getAmt("tires_not_replaced").toLocaleString()})</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <SourceTag customer={customerAnswers.tires} />
-                    <DeductBadge amount={tiresDeduct} />
-                  </div>
-                )}
-
-                {/* Keys */}
-                {isOn("missing_keys") && (
-                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-                    <span className="text-[10px] font-semibold text-muted-foreground w-24 sm:w-32 shrink-0">Keys</span>
-                    <Select value={numKeys} onValueChange={setNumKeys}>
-                      <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="2+">2+ keys (no deduction)</SelectItem>
-                        <SelectItem value="1">1 key (-${getAmt("missing_keys_1").toLocaleString()})</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <SourceTag customer={customerAnswers.keys} />
-                    <DeductBadge amount={keyDeduct} />
-                  </div>
-                )}
-              </div>
-            </div>
+            {/* ② CUSTOMER CONDITION INPUTS */}
+            <AppraisalConditionInputs
+              state={{
+                condition, modifications, drivable, exteriorItems, windshield, moonroof,
+                interiorItems, techItems, engineItems, mechItems, accidents, smokedIn, tiresReplaced, numKeys,
+              }}
+              setters={{
+                setModifications, setDrivable, setExteriorItems: (v) => setExteriorItems(v), setWindshield,
+                setMoonroof, setInteriorItems: (v) => setInteriorItems(v), setTechItems: (v) => setTechItems(v),
+                setEngineItems: (v) => setEngineItems(v), setMechItems: (v) => setMechItems(v),
+                setAccidents, setSmokedIn, setTiresReplaced, setNumKeys,
+              }}
+              customerAnswers={customerAnswers}
+              deductions={{ getAmt, isOn }}
+              deductAmounts={{
+                accidentDeduct, extDeduct, intDeduct, windDeduct, moonroofDeduct,
+                engDeduct, mechDeduct, techDeduct, drivDeduct, smokeDeduct, tiresDeduct, keyDeduct,
+              }}
+              hasInspection={hasInspection}
+              inspectorGrade={sub.inspector_grade}
+              overallCondition={sub.overall_condition}
+            />
 
             {/* ③ EQUIPMENT — Factory Options with Customer ✓ and VIN detected tags */}
             {bbVehicle && bbVehicle.add_deduct_list?.length > 0 && (
