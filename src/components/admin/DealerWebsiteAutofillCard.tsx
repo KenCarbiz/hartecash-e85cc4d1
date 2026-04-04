@@ -143,6 +143,7 @@ const buildAnswerMap = (data: ScrapedDealerInfo, url: string): OnboardingAnswers
     if (isFilledText(value)) fieldMap[key] = value.trim();
   };
 
+  // Section 1: Identity
   setField("dealership_name", data.dealership_name);
   setField("tagline", data.tagline);
   setField("phone", data.phone);
@@ -154,10 +155,29 @@ const buildAnswerMap = (data: ScrapedDealerInfo, url: string): OnboardingAnswers
   setField("instagram", data.instagram);
   setField("tiktok", data.tiktok);
   setField("youtube", data.youtube);
+
+  // Section 2: Architecture
+  setField("architecture", data.architecture);
+  setField("num_locations", data.num_locations);
+
+  // Section 3: Branding
   setField("primary_color", data.primary_color);
   setField("accent_color", data.accent_color);
-  setField("architecture", data.architecture);
+  setField("success_color", data.success_color);
 
+  // Section 4: Hero
+  setField("hero_headline", data.hero_headline);
+  setField("hero_subtext", data.hero_subtext);
+
+  // Section 11: Notifications — staff emails & phones
+  if (Array.isArray(data.staff_emails) && data.staff_emails.length > 0) {
+    fieldMap.staff_emails = data.staff_emails.join("\n");
+  }
+  if (Array.isArray(data.staff_phones) && data.staff_phones.length > 0) {
+    fieldMap.staff_sms = data.staff_phones.join("\n");
+  }
+
+  // Section 13: Locations
   if (Array.isArray(data.locations)) {
     data.locations.slice(0, 5).forEach((location, index) => {
       const item = index + 1;
@@ -168,16 +188,52 @@ const buildAnswerMap = (data: ScrapedDealerInfo, url: string): OnboardingAnswers
     });
   }
 
+  // Section 15: Staff members
+  if (Array.isArray(data.staff_members) && data.staff_members.length > 0) {
+    const adminEmails: string[] = [];
+    const gsmEmails: string[] = [];
+    const ucmEmails: string[] = [];
+    const bdcEmails: string[] = [];
+
+    data.staff_members.forEach((member) => {
+      if (!isFilledText(member.email)) return;
+      const title = (member.title || "").toLowerCase();
+      if (title.includes("general manager") || title.includes("gm") || title.includes("gsm")) {
+        gsmEmails.push(member.email!);
+      } else if (title.includes("used car") || title.includes("pre-owned") || title.includes("ucm")) {
+        ucmEmails.push(member.email!);
+      } else if (title.includes("bdc") || title.includes("internet") || title.includes("sales")) {
+        bdcEmails.push(member.email!);
+      } else if (title.includes("owner") || title.includes("dealer principal") || title.includes("admin")) {
+        adminEmails.push(member.email!);
+      } else {
+        bdcEmails.push(member.email!);
+      }
+    });
+
+    if (adminEmails.length) fieldMap.admin_users = adminEmails.join("\n");
+    if (gsmEmails.length) fieldMap.gsm_users = gsmEmails.join("\n");
+    if (ucmEmails.length) fieldMap.ucm_users = ucmEmails.join("\n");
+    if (bdcEmails.length) fieldMap.bdc_users = bdcEmails.join("\n");
+  }
+
+  // Business hours
   if (Array.isArray(data.business_hours)) {
     const summary = data.business_hours
       .filter((item) => isFilledText(item?.days) && isFilledText(item?.hours))
-      .map((item) => `${item.days!.trim()}: ${item.hours!.trim()}`)
+      .map((item) => {
+        const prefix = isFilledText(item.department) ? `${item.department} — ` : "";
+        return `${prefix}${item.days!.trim()}: ${item.hours!.trim()}`;
+      })
       .join("\n");
 
     if (summary) {
       fieldMap.business_hours_summary = summary;
     }
   }
+
+  // Additional misc
+  setField("special_instructions", data.dealer_group_name ? `Part of ${data.dealer_group_name}` : undefined);
 
   return fieldMap;
 };
