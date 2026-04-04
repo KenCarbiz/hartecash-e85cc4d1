@@ -319,8 +319,8 @@ const ScheduleVisit = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
-        title="Schedule Your Visit | Our Dealership"
-        description="Book an appointment to sell or trade in your vehicle at Our Dealership. Pick a time and location that works for you."
+        title={`Schedule Your Visit | ${config.dealership_name}`}
+        description={`Book an appointment to sell or trade in your vehicle at ${config.dealership_name}. Pick a time and location that works for you.`}
         path="/schedule"
       />
       <div className="bg-primary text-primary-foreground px-6 py-4">

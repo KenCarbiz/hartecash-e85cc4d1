@@ -21,8 +21,8 @@ const TradeLanding = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Submit Your Trade-In Info | Our Dealership"
-        description="Already shopping with us? Submit your trade-in details from home and get your vehicle value ready before you arrive."
+        title={`Submit Your Trade-In Info | ${config.dealership_name}`}
+        description={`Already shopping with us? Submit your trade-in details from home and get your vehicle value ready before you arrive at ${config.dealership_name}.`}
         path="/trade"
       />
       <SiteHeader />
