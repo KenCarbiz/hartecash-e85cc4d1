@@ -457,6 +457,7 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
           salesperson_name: formData.salespersonName || null,
           bb_selected_options: selectedAddDeducts.length > 0 ? selectedAddDeducts : [],
           referral_code: referralCode || null,
+          assigned_rep_email: repCode || null,
         } as any);
 
       if (error) throw error;
