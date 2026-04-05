@@ -125,7 +125,7 @@ export default function TradePitchInlineContent({ onBackToTop }: { onBackToTop: 
             <motion.div variants={fadeUp} custom={0} className="grid md:grid-cols-2 gap-8">
               <div className="space-y-1">
                 {[
-                  { num: 1, icon: Send, title: "Customer Gets a Branded Link", desc: "The salesperson sends a quick text: 'Here's where you can submit your trade info.' The customer lands on a clean, branded page — Harte's logo, Harte's trust." },
+                  { num: 1, icon: Send, title: "Customer Gets a Branded Link", desc: "The salesperson sends a quick text: 'Here's where you can submit your trade info.' The customer lands on a clean, branded page — your logo, your trust." },
                   { num: 2, icon: Car, title: "Guided Vehicle Details", desc: "The same best-in-class multi-step form you know from the main platform. VIN decode, condition assessment, damage checkboxes — everything your managers need." },
                   { num: 3, icon: UserCheck, title: "Tagged to Their Salesperson", desc: "The customer enters the name of the salesperson they're working with. BDC knows not to cold-call this lead." },
                   { num: 4, icon: Camera, title: "Photos & Instant Confirmation", desc: "After submitting, the customer gets a QR code to upload photos of their trade from their phone. Submission instantly in your dashboard." },

@@ -221,7 +221,7 @@ Deno.serve(async (req) => {
     const offerAmount = sub?.offered_price
       ? `$${Number(sub.offered_price).toLocaleString("en-US", { maximumFractionDigits: 0 })}`
       : "";
-    const siteUrl = Deno.env.get("SITE_URL") || "https://hartecash.lovable.app";
+    const siteUrl = Deno.env.get("SITE_URL") || "https://app.autocurb.io";
     const portalLink = sub ? `${siteUrl}/offer/${sub.token}` : siteUrl;
 
     const templateVars: Record<string, string> = {

@@ -218,7 +218,7 @@ Deno.serve(async (req) => {
       ? !!(await supabase.from("opt_outs").select("id").eq("phone", sub.phone).eq("channel", "sms").maybeSingle()).data
       : false;
 
-    const siteUrl = Deno.env.get("SITE_URL") || "https://hartecash.lovable.app";
+    const siteUrl = Deno.env.get("SITE_URL") || "https://app.autocurb.io";
     const resendKey = Deno.env.get("RESEND_API_KEY");
     const twilioSid = Deno.env.get("TWILIO_ACCOUNT_SID");
     const twilioToken = Deno.env.get("TWILIO_AUTH_TOKEN");
