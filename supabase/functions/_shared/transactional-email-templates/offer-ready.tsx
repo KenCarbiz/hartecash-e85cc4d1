@@ -17,7 +17,7 @@ import {
 
 import type { TemplateEntry } from './registry.ts'
 
-const SITE_NAME = 'Harte Auto Group'
+const SITE_NAME = 'Our Dealership'
 
 interface OfferReadyProps {
   customerName?: string
@@ -80,9 +80,9 @@ export const template = {
   previewData: {
     customerName: 'Jane Smith',
     vehicle: '2022 Honda Accord',
-    portalLink: 'https://hartecash.lovable.app/offer/abc123',
+    portalLink: 'https://example.com/offer/abc123',
     guaranteeDays: '7',
-    dealershipName: 'Harte Nissan',
+    dealershipName: 'Example Motors',
   },
 } satisfies TemplateEntry
 

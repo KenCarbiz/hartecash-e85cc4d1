@@ -5,7 +5,7 @@ import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
 
 // Configuration baked in at scaffold time — do NOT change these manually.
 // To update, re-run the email domain setup flow.
-const SITE_NAME = "hartecash"
+const DEFAULT_SITE_NAME = "AutoCurb"
 // SENDER_DOMAIN is the verified sender subdomain FQDN (e.g., "notify.example.com").
 // It MUST match the subdomain delegated to Lovable's nameservers — never the root domain.
 // The email API looks up this exact domain; a mismatch causes "No email domain record found".
@@ -124,6 +124,20 @@ Deno.serve(async (req) => {
 
   // Create Supabase client with service role (bypasses RLS)
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+  // ── Resolve tenant branding from site_config ──
+  const dealershipId = templateData.dealershipId || templateData.dealership_id || 'default'
+  let tenantName = templateData.dealershipName || ''
+  if (!tenantName) {
+    const { data: siteRow } = await supabase
+      .from('site_config')
+      .select('dealership_name')
+      .eq('dealership_id', dealershipId)
+      .maybeSingle()
+    tenantName = siteRow?.dealership_name || DEFAULT_SITE_NAME
+  }
+  // Inject into template data so every template gets the branded name
+  templateData.dealershipName = tenantName
 
   // 2. Check suppression list (fail-closed: if we can't verify, don't send)
   const { data: suppressed, error: suppressionError } = await supabase
@@ -313,7 +327,7 @@ Deno.serve(async (req) => {
     payload: {
       message_id: messageId,
       to: effectiveRecipient,
-      from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+      from: `${tenantName} <noreply@${FROM_DOMAIN}>`,
       sender_domain: SENDER_DOMAIN,
       subject: resolvedSubject,
       html,

@@ -5,7 +5,7 @@ import {
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 
-const SITE_NAME = 'Harte Auto Group'
+const SITE_NAME = 'Our Dealership'
 
 interface Props {
   customerName?: string
@@ -55,8 +55,8 @@ export const template = {
     vehicle: '2022 Honda Accord',
     appointmentDate: 'January 20, 2026',
     appointmentTime: '2:00 PM',
-    location: 'Harte Nissan — Hartford',
-    dealershipName: 'Harte Nissan',
+    location: 'Example Motors — Main St',
+    dealershipName: 'Example Motors',
   },
 } satisfies TemplateEntry
 

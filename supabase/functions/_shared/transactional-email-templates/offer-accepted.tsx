@@ -5,7 +5,7 @@ import {
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 
-const SITE_NAME = 'Harte Auto Group'
+const SITE_NAME = 'Our Dealership'
 
 interface Props {
   customerName?: string
@@ -119,12 +119,12 @@ export const template = {
     customerName: 'Jane Smith',
     vehicle: '2022 Honda Accord',
     offerAmount: '$18,500',
-    portalLink: 'https://hartecash.lovable.app/offer/abc123',
-    photosLink: 'https://hartecash.lovable.app/upload-photos/abc123',
-    docsLink: 'https://hartecash.lovable.app/upload-docs/abc123',
+    portalLink: 'https://example.com/offer/abc123',
+    photosLink: 'https://example.com/upload-photos/abc123',
+    docsLink: 'https://example.com/upload-docs/abc123',
     hasPhotos: false,
     hasDocs: false,
-    dealershipName: 'Harte Nissan',
+    dealershipName: 'Example Motors',
   },
 } satisfies TemplateEntry
 
