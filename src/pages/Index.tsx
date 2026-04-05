@@ -23,6 +23,7 @@ const ReferralBanner = lazy(() => import("@/components/ReferralBanner"));
 
 const Index = () => {
   const { config } = useSiteConfig();
+  const embed = useEmbedMode();
   const layout = config.hero_layout || "offset_right";
 
   return (
