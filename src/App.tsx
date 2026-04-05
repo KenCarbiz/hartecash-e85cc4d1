@@ -80,6 +80,7 @@ const AnimatedRoutes = () => {
             <Route path="/appraisal/:token" element={<AppraisalTool />} />
             <Route path="/super-admin" element={<SuperAdminDashboard />} />
             <Route path="/onboard/:dealershipId" element={<OnboardingMobile />} />
+            <Route path="/email-unsubscribe" element={<EmailUnsubscribe />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
