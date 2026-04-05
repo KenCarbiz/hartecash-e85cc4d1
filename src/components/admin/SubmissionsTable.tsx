@@ -322,7 +322,7 @@ const SubmissionsTable = ({
                           </p>
                         )}
                       </td>
-                      <td className="px-3 py-3 text-right whitespace-nowrap">
+                      <td className={`${cellPad} text-right whitespace-nowrap`}>
                         {(() => {
                           const isAcceptedAppt = isAcceptedWithAppointment(sub);
                           const isAcceptedNoAppt = isAcceptedWithoutAppointment(sub);
