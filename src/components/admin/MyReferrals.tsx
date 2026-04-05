@@ -30,6 +30,7 @@ const MyReferrals = ({ staffName }: { staffName: string }) => {
   const { toast } = useToast();
   const [referrals, setReferrals] = useState<MyReferral[]>([]);
   const [loading, setLoading] = useState(true);
+  const [staffEmail, setStaffEmail] = useState("");
   const [showQR, setShowQR] = useState(false);
 
   // Invite form
