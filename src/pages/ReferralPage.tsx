@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Gift, DollarSign, Users, CheckCircle, ArrowRight, Star, TrendingUp, Handshake } from "lucide-react";
+import { Gift, DollarSign, Users, CheckCircle, ArrowRight, Star, TrendingUp, Handshake, MessageSquare, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -41,6 +41,9 @@ const ReferralPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [referralLink, setReferralLink] = useState("");
+  const [smsPhone, setSmsPhone] = useState("");
+  const [smsSending, setSmsSending] = useState(false);
+  const [smsSent, setSmsSent] = useState(false);
 
   const generateCode = () => {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -79,6 +82,15 @@ const ReferralPage = () => {
   const copyLink = () => {
     navigator.clipboard.writeText(referralLink);
     toast({ title: "Copied!", description: "Your referral link is on the clipboard." });
+  };
+
+  const sendSms = () => {
+    if (!smsPhone.trim()) return;
+    const message = `Hey! I just signed up with ${dealerName} to sell/trade cars and earn rewards. Check them out using my link: ${referralLink}`;
+    const smsUrl = `sms:${smsPhone.trim()}?body=${encodeURIComponent(message)}`;
+    window.open(smsUrl, "_self");
+    setSmsSent(true);
+    toast({ title: "Text ready!", description: "Your messaging app should open with the referral link pre-filled." });
   };
 
   return (
@@ -203,6 +215,37 @@ const ReferralPage = () => {
                 <Button onClick={copyLink} className="w-full">
                   Copy My Link
                 </Button>
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-muted px-2 text-muted-foreground">or text it directly</span>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    type="tel"
+                    value={smsPhone}
+                    onChange={e => setSmsPhone(e.target.value)}
+                    placeholder="Friend's phone number"
+                    className="flex-1"
+                  />
+                  <Button
+                    onClick={sendSms}
+                    disabled={!smsPhone.trim()}
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0"
+                  >
+                    <Send className="w-4 h-4" />
+                  </Button>
+                </div>
+                {smsSent && (
+                  <p className="text-xs text-success flex items-center justify-center gap-1">
+                    <CheckCircle className="w-3 h-3" /> Message opened — check your texts!
+                  </p>
+                )}
                 <p className="text-xs text-muted-foreground">
                   Share via text, email, or social media. When someone clicks your link and sells their car, you get paid!
                 </p>
