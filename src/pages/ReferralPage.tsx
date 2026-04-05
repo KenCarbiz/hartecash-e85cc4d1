@@ -11,7 +11,6 @@ import SEO from "@/components/SEO";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useTenant } from "@/contexts/TenantContext";
 import { supabase } from "@/integrations/supabase/client";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 const steps = [
