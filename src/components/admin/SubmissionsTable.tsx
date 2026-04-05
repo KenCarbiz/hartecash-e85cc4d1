@@ -296,9 +296,9 @@ const SubmissionsTable = ({
                     const sla = getSlaLevel(hours, sub.progress_status);
                     return (
                     <tr key={sub.id} className={`border-b border-border last:border-0 hover:bg-primary/5 transition-colors border-l-3 ${sla.borderClass} ${sla.bgClass} ${idx % 2 === 1 ? "bg-muted/20" : ""}`}>
-                      <td className="px-3 py-3 whitespace-nowrap">{new Date(sub.created_at).toLocaleDateString()}</td>
-                      <td className="px-3 py-3 font-medium text-card-foreground whitespace-nowrap">{sub.name || "—"}</td>
-                      <td className="px-3 py-3 whitespace-nowrap">
+                      <td className={`${cellPad} whitespace-nowrap`}>{new Date(sub.created_at).toLocaleDateString()}</td>
+                      <td className={`${cellPad} font-medium text-card-foreground whitespace-nowrap`}>{sub.name || "—"}</td>
+                      <td className={`${cellPad} whitespace-nowrap`}>
                         <span className="flex items-center gap-1">
                           {sub.is_hot_lead && <span title="Hot Lead">🔥</span>}
                           {sub.vehicle_year && sub.vehicle_make ? `${sub.vehicle_year} ${sub.vehicle_make} ${sub.vehicle_model || ""}` : sub.plate || "—"}
@@ -306,8 +306,8 @@ const SubmissionsTable = ({
                           {sub.docs_uploaded && <span title="Docs uploaded"><FileText className="w-3 h-3 text-primary ml-0.5 shrink-0" /></span>}
                         </span>
                       </td>
-                      <td className="px-3 py-3 text-xs font-mono text-muted-foreground whitespace-nowrap">{sub.vin || "—"}</td>
-                      <td className="px-3 py-3 whitespace-nowrap">
+                      {!isCompact && <td className={`${cellPad} text-xs font-mono text-muted-foreground whitespace-nowrap`}>{sub.vin || "—"}</td>}
+                      <td className={`${cellPad} whitespace-nowrap`}>
                         <div>{sub.email || "—"}</div>
                         <div className="text-muted-foreground text-xs">{formatPhone(sub.phone) || ""}</div>
                       </td>
