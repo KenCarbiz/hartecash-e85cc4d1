@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import ServiceDriveInlineContent from "@/components/pitch/ServiceDriveInlineContent";
 import TradePitchInlineContent from "@/components/pitch/TradePitchInlineContent";
+import OffStreetInlineContent from "@/components/pitch/OffStreetInlineContent";
 import { motion, useInView } from "framer-motion";
 import logoFallback from "@/assets/logo-placeholder.png";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
