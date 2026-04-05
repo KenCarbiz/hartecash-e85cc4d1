@@ -54,6 +54,22 @@
 
       btn.prepend(icon);
 
+      // Add promo badge if configured
+      if (promoText) {
+        var badge = document.createElement("span");
+        badge.textContent = promoText;
+        badge.style.cssText = [
+          "background:#f59e0b",
+          "color:#000",
+          "font-size:11px",
+          "font-weight:800",
+          "padding:2px 8px",
+          "border-radius:20px",
+          "margin-left:4px",
+          "white-space:nowrap",
+        ].join(";");
+        btn.appendChild(badge);
+      }
       btn.onmouseover = function () {
         btn.style.transform = "translateY(-2px)";
         btn.style.boxShadow = "0 6px 28px rgba(0,0,0,.3)";
