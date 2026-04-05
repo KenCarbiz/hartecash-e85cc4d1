@@ -713,7 +713,7 @@ export default function PitchDeck() {
                 </thead>
                 <tbody>
                   {[
-                    { feature: "Off-Street Direct Purchase", us: true, them: false, others: false },
+                    { feature: "Off-Street Direct Purchase Channel", us: true, them: false, others: false },
                     { feature: "Service Drive Acquisition", us: true, them: true, others: false },
                     { feature: "In-Store Trade Capture", us: true, them: false, others: false },
                     { feature: "Full Deal Pipeline (Submit → Check)", us: true, them: false, others: false },
@@ -721,13 +721,16 @@ export default function PitchDeck() {
                     { feature: "Photo Upload with Camera Guides", us: true, them: false, others: false },
                     { feature: "Document Upload (DL, Title, Reg)", us: true, them: false, others: false },
                     { feature: "AI Damage Detection", us: true, them: false, others: false },
-                    { feature: "Appointment Scheduling", us: true, them: false, others: false },
+                    { feature: "Appointment Scheduling & Reminders", us: true, them: false, others: false },
                     { feature: "Custom Domain & Full White-Label", us: true, them: "partial", others: false },
                     { feature: "Multi-Location Smart Routing", us: true, them: false, others: false },
                     { feature: "Configurable Pricing Engine", us: true, them: true, others: "partial" },
+                    { feature: "Dynamic Banners & Marketing Links", us: true, them: true, others: "partial" },
+                    { feature: "AI Copilot / Messaging System", us: false, them: true, others: false },
                     { feature: "Referral Program Built-In", us: true, them: false, others: false },
                     { feature: "Transactional Email Sequences", us: true, them: false, others: false },
                     { feature: "Condition & Inspection Tools", us: true, them: "partial", others: false },
+                    { feature: "DMS Integration", us: false, them: true, others: false },
                   ].map((row, i) => (
                     <tr key={i} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
                       <td className="py-3 px-4 text-white/70">{row.feature}</td>
