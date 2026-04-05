@@ -64,6 +64,11 @@ const DEFAULT_TEMPLATES: Record<string, { email_subject: string; email_body: str
     email_body: "A deal has been completed.\n\nCustomer: {{customer_name}}\nVehicle: {{vehicle}}\n\nThe purchase has been finalized.",
     sms_body: "✅ Deal completed: {{customer_name}} — {{vehicle}}.",
   },
+  customer_deal_completed: {
+    email_subject: "🎉 Your Deal Is Complete — {{dealership_name}}",
+    email_body: "Hi {{customer_name}},\n\nCongratulations! Your deal for your {{vehicle}} is officially complete.\n\nOffer Amount: {{offer_amount}}\n\nThank you for choosing {{dealership_name}}. We appreciate your business!\n\nIf you had a great experience, we'd love a review:\n{{portal_link}}\n\nBest regards,\n{{dealership_name}}",
+    sms_body: "🎉 Congrats {{customer_name}}! Your deal for your {{vehicle}} is complete. Thank you for choosing {{dealership_name}}!",
+  },
   new_submission: {
     email_subject: "🚗 New Submission — {{customer_name}}",
     email_body: "A new vehicle submission has come in.\n\nCustomer: {{customer_name}}\nVehicle: {{vehicle}}\nMileage: {{mileage}}\n\nView details in the admin dashboard.",
