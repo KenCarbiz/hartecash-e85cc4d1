@@ -18,6 +18,7 @@ import CommunicationPreferences from "@/components/portal/CommunicationPreferenc
 import InspectionDisclosure from "@/components/portal/InspectionDisclosure";
 import WhatToExpect from "@/components/portal/WhatToExpect";
 import EquipmentValueImpact from "@/components/portal/EquipmentValueImpact";
+import PromoBanner from "@/components/portal/PromoBanner";
 
 import ProgressSteps, { mapStatusToStepIndex } from "@/components/portal/ProgressSteps";
 import PortalOfferCard from "@/components/portal/PortalOfferCard";
@@ -334,6 +335,7 @@ const CustomerPortal = () => {
             {/* Left column — sticky */}
             <div className="col-span-2">
               <div className="sticky top-6 space-y-5">
+                {condition?.dealership_id && <PromoBanner dealershipId={condition.dealership_id} />}
                 <PortalOfferCard {...offerCardProps} />
                 <PortalVehicleSummary {...vehicleSummaryProps} />
                 <DealerContactCard />
@@ -365,6 +367,7 @@ const CustomerPortal = () => {
       <div className="lg:hidden">
         <div className="max-w-lg mx-auto p-6 space-y-5">
           <WhatsNextCard {...whatsNextProps} />
+          {condition?.dealership_id && <PromoBanner dealershipId={condition.dealership_id} />}
           <PortalOfferCard {...offerCardProps} />
           <CompletionChecklist {...checklistProps} />
           <VehiclePhotos token={s.token} photosUploaded={s.photos_uploaded} />
