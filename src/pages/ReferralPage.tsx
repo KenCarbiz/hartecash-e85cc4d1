@@ -30,6 +30,7 @@ const benefits = [
 
 const ReferralPage = () => {
   const { config } = useSiteConfig();
+  const { tenant } = useTenant();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const dealerName = config.dealership_name || "Our Dealership";
