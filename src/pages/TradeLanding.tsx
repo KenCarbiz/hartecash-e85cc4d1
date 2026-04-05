@@ -15,6 +15,7 @@ import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 const TradeLanding = () => {
   const { config } = useSiteConfig();
+  const embed = useEmbedMode();
   const layout = config.hero_layout || "offset_right";
 
   const tradeHeadline = config.trade_hero_headline || "Submit Your Trade-In Info";
