@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Shield, ArrowRight, CheckCircle, Loader2, Car, CalendarDays,
-  Wrench, DollarSign, Clock, Star, RefreshCw, ShieldCheck, TrendingUp
+  Wrench, DollarSign, Clock, Star, RefreshCw, ShieldCheck, TrendingUp, Gift
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
