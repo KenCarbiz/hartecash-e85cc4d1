@@ -24,7 +24,7 @@ const MyLeadLink = () => {
   const repCode = staffEmail
     ? staffEmail.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "")
     : "";
-  const leadLink = `${window.location.origin}/?rep=${repCode}`;
+  const leadLink = `${window.location.origin}/trade?rep=${repCode}`;
 
   useEffect(() => {
     if (!repCode) return;
