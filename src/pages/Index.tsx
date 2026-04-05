@@ -36,7 +36,7 @@ const Index = () => {
       <LocalBusinessJsonLd />
       <FAQPageJsonLd />
       <HowToJsonLd />
-      <SiteHeader />
+      {!embed && <SiteHeader />}
       <main>
         {layout === "offset_right" ? (
           <HeroOffset side="right" />
