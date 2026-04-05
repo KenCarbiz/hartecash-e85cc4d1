@@ -88,14 +88,15 @@ const AdminSidebar = ({
   const teamBadgeCount = canManageAccess ? pendingRequestCount + permissionRequestCount : 0;
   const systemItems = [
     ...(canManageAccess ? [{ key: "staff", label: "Staff & Permissions", icon: Users, badge: teamBadgeCount > 0 ? String(teamBadgeCount) : undefined, badgeVariant: "destructive" as const }] : []),
-    ...(canManageAccess ? [{ key: "referrals", label: "Referrals", icon: Gift }] : []),
+    { key: "my-referrals", label: "My Referrals", icon: Gift },
+    ...(canManageAccess ? [{ key: "referrals", label: "Referral Program", icon: Gift }] : []),
     { key: "compliance", label: "Compliance", icon: ShieldCheck },
     { key: "reports", label: "Reports & Export", icon: Send },
     ...(isPlatformAdmin ? [{ key: "tenants", label: "Dealer Tenants", icon: Network }] : []),
     ...(canManageAccess ? [{ key: "image-inventory", label: "Vehicle Images", icon: Car }] : []),
     ...(canManageAccess ? [{ key: "system-settings", label: "System Settings", icon: Wrench }] : []),
     { key: "onboarding", label: "Dealer Setup", icon: Rocket },
-  ].filter((item) => isAllowed(item.key) || (item.key === "compliance" && (isAllowed("consent") || isAllowed("comm-log"))));
+  ].filter((item) => isAllowed(item.key) || (item.key === "compliance" && (isAllowed("consent") || isAllowed("comm-log"))) || item.key === "my-referrals");
 
   // Locked sections for "Request Access"
   const allSectionKeys = ["submissions", "accepted-appts", "executive", "staff", "offer-settings", "form-config", "inspection-config", "depth-policies", "notifications", "site-config", "locations", "testimonials", "compliance", "image-inventory", "reports", "system-settings"];

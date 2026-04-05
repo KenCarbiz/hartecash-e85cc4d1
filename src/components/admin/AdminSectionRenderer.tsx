@@ -295,6 +295,12 @@ const AdminSectionRenderer = (props: AdminSectionRendererProps) => {
       {activeSection === "onboarding-script" && <OnboardingScript targetDealershipId={onboardingDealershipId} />}
       {activeSection === "reports" && <ReportsExport />}
       {activeSection === "referrals" && canManageAccess && <ReferralManagement />}
+      {activeSection === "my-referrals" && (
+        <MyReferrals
+          staffName={props.userName}
+          staffEmail={(() => { const u = supabase.auth.getUser(); return ""; })()}
+        />
+      )}
     </>
   );
 
