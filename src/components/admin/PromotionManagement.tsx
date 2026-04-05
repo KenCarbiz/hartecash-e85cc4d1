@@ -35,7 +35,8 @@ const emptyPromo: Omit<Promotion, "id"> = {
 };
 
 const PromotionManagement = () => {
-  const { dealershipId } = useTenant();
+  const { tenant } = useTenant();
+  const dealershipId = tenant.dealership_id;
   const [promos, setPromos] = useState<Promotion[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
