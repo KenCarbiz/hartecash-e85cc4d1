@@ -112,6 +112,7 @@ const AdminSidebar = ({
   const teamBadgeCount = canManageAccess ? pendingRequestCount + permissionRequestCount : 0;
   const systemItems = [
     ...(canManageAccess ? [{ key: "staff", label: "Staff & Permissions", icon: Users, badge: teamBadgeCount > 0 ? String(teamBadgeCount) : undefined, badgeVariant: "destructive" as const }] : []),
+    { key: "my-lead-link", label: "My Lead Link", icon: Link2 },
     { key: "my-referrals", label: "My Referrals", icon: Gift },
     ...(canManageAccess ? [{ key: "referrals", label: "Referral Program", icon: Gift }] : []),
     { key: "compliance", label: "Compliance", icon: ShieldCheck },
