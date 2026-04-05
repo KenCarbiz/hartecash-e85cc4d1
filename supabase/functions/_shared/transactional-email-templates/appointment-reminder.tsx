@@ -50,6 +50,16 @@ const AppointmentReminderEmail = ({ customerName, vehicle, appointmentDate, appo
               <Text style={checklistItem}>🔑  All keys &amp; remotes</Text>
               <Text style={checklistItem}>💳  Loan payoff info (if applicable)</Text>
             </Section>
+            {docsLink && (
+              <Text style={{ ...checklistSubtext, marginTop: '12px', marginBottom: '0' }}>
+                📲 <strong>Upload ahead of time?</strong> Skip the paperwork line by uploading your documents now:
+              </Text>
+            )}
+            {docsLink && (
+              <EmailButton href={docsLink} style={uploadBtn}>
+                Upload Documents Now →
+              </EmailButton>
+            )}
           </Section>
 
           <Section style={tipBox}>
