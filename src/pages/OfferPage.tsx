@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import InspectionDisclosure from "@/components/portal/InspectionDisclosure";
-import harteLogoFallback from "@/assets/harte-logo-white.png";
+import logoFallback from "@/assets/logo-placeholder-white.png";
 import PortalSkeleton from "@/components/PortalSkeleton";
 import CalculatingOffer from "@/components/CalculatingOffer";
 import { getTaxRateFromZip, calcTradeInValue, STATE_NAMES } from "@/lib/salesTax";

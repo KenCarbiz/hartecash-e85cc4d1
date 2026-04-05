@@ -13,7 +13,7 @@ import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePhotoConfig, type PhotoShot } from "@/hooks/usePhotoConfig";
 import { classToArchetype, type VehicleArchetype } from "@/lib/vehicleArchetypes";
-import harteLogoFallback from "@/assets/harte-logo-white.png";
+import logoFallback from "@/assets/logo-placeholder-white.png";
 
 interface SubmissionInfo {
   id: string;

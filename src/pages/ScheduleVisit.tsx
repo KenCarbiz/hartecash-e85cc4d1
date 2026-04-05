@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 
 import { CalendarDays, CheckCircle2, Loader2, ArrowLeft, MapPin, Car, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import harteLogo from "@/assets/harte-logo-white.png";
+import logoFallback from "@/assets/logo-placeholder-white.png";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import SEO from "@/components/SEO";
 

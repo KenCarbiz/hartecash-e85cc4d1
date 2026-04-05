@@ -30,7 +30,7 @@ import {
 } from "@/lib/adminConstants";
 import { printSubmissionDetail, printAllDocs, printCheckRequest } from "@/lib/printUtils";
 import { useToast } from "@/hooks/use-toast";
-import harteLogoFallback from "@/assets/harte-logo.png";
+import logoFallback from "@/assets/logo-placeholder.png";
 
 interface SubmissionDetailSheetProps {
   selected: Submission | null;

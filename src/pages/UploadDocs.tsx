@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import MobileQRBanner from "@/components/upload/MobileQRBanner";
 import DocumentCameraCapture from "@/components/upload/DocumentCameraCapture";
 import { getDocDimensions } from "@/lib/documentDimensions";
-import harteLogoFallback from "@/assets/harte-logo-white.png";
+import logoFallback from "@/assets/logo-placeholder-white.png";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 const DOC_TYPES = [

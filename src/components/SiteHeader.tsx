@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { UserRound, CalendarCheck, FileText, ArrowLeftRight, Phone, Info } from "lucide-react";
-import harteLogo from "@/assets/harte-logo.png";
+import logoFallback from "@/assets/logo-placeholder.png";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 const SiteHeader = () => {

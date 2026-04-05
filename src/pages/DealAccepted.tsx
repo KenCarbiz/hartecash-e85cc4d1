@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { logConsent } from "@/lib/consent";
-import harteLogoFallback from "@/assets/harte-logo-white.png";
+import logoFallback from "@/assets/logo-placeholder-white.png";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { getTaxRateFromZip, calcTradeInValue } from "@/lib/salesTax";
 
