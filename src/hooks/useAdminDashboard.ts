@@ -322,6 +322,11 @@ export function useAdminDashboard() {
         if (old !== "purchase_complete" && newStatus === "purchase_complete")
           supabase.functions.invoke("send-notification", { body: { trigger_key: "staff_deal_completed", submission_id: sub.id } }).catch(console.error);
         supabase.functions.invoke("send-notification", { body: { trigger_key: "status_change", submission_id: sub.id } }).catch(console.error);
+        // Fire customer status notifications for key milestones
+        if (newStatus === "offer_made" && old !== "offer_made")
+          supabase.functions.invoke("send-notification", { body: { trigger_key: "customer_offer_ready", submission_id: sub.id } }).catch(console.error);
+        if (newStatus === "purchase_complete" && old !== "purchase_complete")
+          supabase.functions.invoke("send-notification", { body: { trigger_key: "customer_deal_completed", submission_id: sub.id } }).catch(console.error);
         toast({ title: "Status updated" });
       }
     },
