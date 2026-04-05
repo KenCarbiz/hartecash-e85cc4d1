@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, FormEvent } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import ServiceDriveInlineContent from "@/components/pitch/ServiceDriveInlineContent";
 import TradePitchInlineContent from "@/components/pitch/TradePitchInlineContent";
 import OffStreetInlineContent from "@/components/pitch/OffStreetInlineContent";
