@@ -18,85 +18,83 @@ interface Props {
   isStaffInvite?: boolean
 }
 
-const ReferralEmail = ({
-  customerName, vehicle, referralLink, rewardAmount,
-  dealershipName, staffName, personalNote, isStaffInvite,
-}: Props) => {
+/* ── Staff-sent invite (personal recommendation) ── */
+const StaffReferralEmail = ({ customerName, referralLink, rewardAmount, dealershipName, staffName, personalNote }: Props) => {
   const dn = dealershipName || SITE_NAME
   const reward = rewardAmount || '200'
+  return (
+    <Html lang="en" dir="ltr">
+      <Head />
+      <Preview>{staffName || 'A friend'} thinks you should check this out — sell or trade your car the easy way!</Preview>
+      <Body style={main}>
+        <Container style={container}>
+          <Section style={header}>
+            <Text style={logoText}>{dn.toUpperCase()}</Text>
+          </Section>
+          <Section style={content}>
+            <Heading style={h1}>
+              {staffName ? `${staffName} Recommends Us!` : "You've Been Referred!"} 🚗✨
+            </Heading>
+            <Text style={text}>Hi {customerName || 'there'},</Text>
 
-  // Staff-sent invite: framed as a personal recommendation
-  if (isStaffInvite) {
-    return (
-      <Html lang="en" dir="ltr">
-        <Head />
-        <Preview>{staffName || 'A friend'} thinks you should check this out — sell or trade your car the easy way!</Preview>
-        <Body style={main}>
-          <Container style={container}>
-            <Section style={header}>
-              <Text style={logoText}>{dn.toUpperCase()}</Text>
-            </Section>
-            <Section style={content}>
-              <Heading style={h1}>
-                {staffName ? `${staffName} Recommends Us!` : 'You've Been Referred!'} 🚗✨
-              </Heading>
-              <Text style={text}>Hi {customerName || 'there'},</Text>
-
-              {personalNote ? (
-                <Section style={noteBox}>
-                  <Text style={noteQuote}>"{personalNote}"</Text>
-                  <Text style={noteAttrib}>— {staffName || 'Your friend'}</Text>
-                </Section>
-              ) : (
-                <Text style={text}>
-                  {staffName || 'Someone you know'} had a great experience with us and thought you'd love it too!
-                  Whether you're looking to <strong>sell your car</strong> or <strong>trade it in</strong> for something new,
-                  we make it fast, easy, and fair.
-                </Text>
-              )}
-
+            {personalNote ? (
+              <Section style={noteBox}>
+                <Text style={noteQuote}>"{personalNote}"</Text>
+                <Text style={noteAttrib}>— {staffName || 'Your friend'}</Text>
+              </Section>
+            ) : (
               <Text style={text}>
-                Here's how it works: click the link below, tell us about your car, and get an instant offer.
-                It takes less than 2 minutes — and <strong>you could earn up to ${reward}</strong> when both of you complete a deal!
+                {staffName || 'Someone you know'} had a great experience with us and thought you'd love it too!
+                Whether you're looking to <strong>sell your car</strong> or <strong>trade it in</strong> for something new,
+                we make it fast, easy, and fair.
               </Text>
+            )}
 
-              <Section style={benefitsBox}>
-                <Text style={benefitsTitle}>Why People Love Us</Text>
-                <Text style={benefitItem}>✅ Get an offer in minutes — no haggling</Text>
-                <Text style={benefitItem}>✅ Free inspection, no obligation</Text>
-                <Text style={benefitItem}>✅ Get paid on the spot or trade toward a new ride</Text>
-                <Text style={benefitItem}>✅ Thousands of happy customers</Text>
+            <Text style={text}>
+              Here's how it works: click the link below, tell us about your car, and get an instant offer.
+              It takes less than 2 minutes — and <strong>you could earn up to ${reward}</strong> when both of you complete a deal!
+            </Text>
+
+            <Section style={benefitsBox}>
+              <Text style={benefitsTitle}>Why People Love Us</Text>
+              <Text style={benefitItem}>✅ Get an offer in minutes — no haggling</Text>
+              <Text style={benefitItem}>✅ Free inspection, no obligation</Text>
+              <Text style={benefitItem}>✅ Get paid on the spot or trade toward a new ride</Text>
+              <Text style={benefitItem}>✅ Thousands of happy customers</Text>
+            </Section>
+
+            {referralLink && (
+              <Section style={ctaSection}>
+                <Button style={button} href={referralLink}>
+                  Get My Instant Offer →
+                </Button>
+                <Text style={subCtaText}>Takes less than 2 minutes. No commitment.</Text>
               </Section>
+            )}
 
-              {referralLink && (
-                <Section style={ctaSection}>
-                  <Button style={button} href={referralLink}>
-                    Get My Instant Offer →
-                  </Button>
-                  <Text style={subCtaText}>Takes less than 2 minutes. No commitment.</Text>
-                </Section>
-              )}
-
-              <Section style={rewardBox}>
-                <Text style={rewardText}>
-                  🎁 <strong>Bonus:</strong> When you sell or trade your car with us, {staffName || 'your referrer'} earns
-                  a reward — and you'll get the VIP treatment!
-                </Text>
-              </Section>
-
-              <Hr style={hr} />
-              <Text style={footer}>
-                {dn}{'\n'}
-                Questions? Just reply to this email.
+            <Section style={rewardBox}>
+              <Text style={rewardText}>
+                🎁 <strong>Bonus:</strong> When you sell or trade your car with us, {staffName || 'your referrer'} earns
+                a reward — and you'll get the VIP treatment!
               </Text>
             </Section>
-          </Container>
-        </Body>
-      </Html>
-    )
-  }
 
-  // Original customer-to-customer referral email
+            <Hr style={hr} />
+            <Text style={footer}>
+              {dn}{'\n'}
+              Questions? Just reply to this email.
+            </Text>
+          </Section>
+        </Container>
+      </Body>
+    </Html>
+  )
+}
+
+/* ── Customer-to-customer referral email ── */
+const CustomerReferralEmail = ({ customerName, vehicle, referralLink, rewardAmount, dealershipName }: Props) => {
+  const dn = dealershipName || SITE_NAME
+  const reward = rewardAmount || '200'
   return (
     <Html lang="en" dir="ltr">
       <Head />
@@ -121,7 +119,7 @@ const ReferralEmail = ({
             <Section style={howItWorksBox}>
               <Text style={howItWorksTitle}>How It Works</Text>
               <Text style={stepText}>1️⃣ <strong>Share your link</strong> — text it, email it, post it!</Text>
-              <Text style={stepText}>2️⃣ <strong>They click & sell</strong> — your friend starts their offer</Text>
+              <Text style={stepText}>2️⃣ <strong>They click &amp; sell</strong> — your friend starts their offer</Text>
               <Text style={stepText}>3️⃣ <strong>You get paid</strong> — up to ${reward} once they complete their sale!</Text>
             </Section>
 
@@ -153,6 +151,13 @@ const ReferralEmail = ({
   )
 }
 
+/* ── Wrapper that picks the right variant ── */
+const ReferralEmail = (props: Props) => (
+  props.isStaffInvite
+    ? React.createElement(StaffReferralEmail, props)
+    : React.createElement(CustomerReferralEmail, props)
+)
+
 export const template = {
   component: ReferralEmail,
   subject: (data: Record<string, any>) =>
@@ -180,7 +185,6 @@ const heroEmoji = { fontSize: '36px', textAlign: 'center' as const, margin: '0 0
 const h1 = { fontSize: '22px', fontWeight: 'bold' as const, color: 'hsl(210, 29%, 24%)', margin: '0 0 20px', textAlign: 'center' as const }
 const text = { fontSize: '14px', color: 'hsl(220, 9%, 46%)', lineHeight: '1.6', margin: '0 0 20px' }
 
-// Staff invite styles
 const noteBox = { backgroundColor: '#f8fafc', borderLeft: '4px solid hsl(210, 100%, 25%)', borderRadius: '0 12px 12px 0', padding: '16px 20px', margin: '0 0 20px' }
 const noteQuote = { fontSize: '15px', color: 'hsl(210, 29%, 24%)', fontStyle: 'italic' as const, lineHeight: '1.6', margin: '0 0 8px' }
 const noteAttrib = { fontSize: '13px', color: 'hsl(220, 9%, 46%)', fontWeight: '600' as const, margin: '0' }
@@ -193,7 +197,6 @@ const rewardBox = { backgroundColor: '#fefce8', borderRadius: '8px', padding: '1
 const rewardText = { fontSize: '13px', color: 'hsl(210, 29%, 24%)', margin: '0', lineHeight: '1.5' }
 const subCtaText = { fontSize: '12px', color: 'hsl(220, 9%, 46%)', margin: '8px 0 0', textAlign: 'center' as const }
 
-// Customer referral styles
 const howItWorksBox = { backgroundColor: '#f0f9ff', borderRadius: '12px', padding: '20px', margin: '0 0 24px', border: '1px solid #bae6fd' }
 const howItWorksTitle = { fontSize: '15px', fontWeight: 'bold' as const, color: 'hsl(210, 29%, 24%)', margin: '0 0 12px', textAlign: 'center' as const }
 const stepText = { fontSize: '14px', color: 'hsl(210, 29%, 24%)', margin: '0 0 8px', lineHeight: '1.5' }
