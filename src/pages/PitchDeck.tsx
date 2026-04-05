@@ -276,7 +276,7 @@ export default function PitchDeck() {
           <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-indigo-600/10 blur-[120px] pointer-events-none" />
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center relative">
             <motion.div variants={fadeUp} custom={0} className="mb-8">
-              <img src={config.logo_white_url || config.logo_url || harteLogo} alt={config.dealership_name} className="h-40 md:h-60 mx-auto object-contain" />
+              <img src={config.logo_white_url || config.logo_url || logoFallback} alt={config.dealership_name} className="h-40 md:h-60 mx-auto object-contain" />
             </motion.div>
             <motion.div variants={fadeUp} custom={0.5}>
               <GlowBadge label="End-to-End Platform" />
