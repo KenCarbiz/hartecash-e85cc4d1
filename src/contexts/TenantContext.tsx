@@ -32,7 +32,7 @@ let cachedTenant: TenantInfo | null = null;
  * 
  * Priority:
  * 1. Custom domain match (e.g. sellmycar.smithmotors.com)
- * 2. Slug match from subdomain (e.g. smith.hartecash.com → slug "smith")
+ * 2. Slug match from subdomain (e.g. smith.yourdomain.com → slug "smith")
  * 3. Falls back to 'default' tenant
  */
 async function resolveTenant(): Promise<TenantInfo> {
@@ -66,7 +66,7 @@ async function resolveTenant(): Promise<TenantInfo> {
     return t;
   }
 
-  // 2. Try subdomain slug (e.g. smith.hartecash.com → "smith")
+  // 2. Try subdomain slug (e.g. smith.yourdomain.com → "smith")
   const parts = hostname.split(".");
   if (parts.length >= 3) {
     const subdomain = parts[0];

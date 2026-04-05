@@ -215,7 +215,7 @@ function GhostCarSilhouette({ archetype, shot, color, W, H }) {
 }
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
-// Props passed in from Lovable / HarteCash parent:
+// Props passed in from Lovable / platform parent:
 //   vehicleType  — "sedan" | "compact_suv" | "midsize_suv" | "large_suv" | "truck" | "van"
 //   enabledShots — string[] of shot IDs configured per dealer in admin panel
 //   onComplete   — callback fired with captured photo map when all shots are done
