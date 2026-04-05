@@ -17,7 +17,7 @@ interface Props {
   docsLink?: string
 }
 
-const AppointmentReminderEmail = ({ customerName, vehicle, appointmentDate, appointmentTime, location, dealershipName }: Props) => (
+const AppointmentReminderEmail = ({ customerName, vehicle, appointmentDate, appointmentTime, location, dealershipName, docsLink }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Reminder: your appointment is tomorrow — here's what to bring!</Preview>
