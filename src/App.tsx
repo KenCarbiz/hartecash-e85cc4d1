@@ -82,6 +82,7 @@ const AnimatedRoutes = () => {
             <Route path="/super-admin" element={<SuperAdminDashboard />} />
             <Route path="/onboard/:dealershipId" element={<OnboardingMobile />} />
             <Route path="/email-unsubscribe" element={<EmailUnsubscribe />} />
+            <Route path="/referral" element={<ReferralPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
