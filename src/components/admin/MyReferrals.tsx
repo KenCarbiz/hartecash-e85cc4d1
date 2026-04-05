@@ -39,7 +39,13 @@ const MyReferrals = ({ staffName }: { staffName: string }) => {
   const [personalNote, setPersonalNote] = useState("");
   const [sending, setSending] = useState(false);
 
-  // Staff personal code — deterministic from email
+  // Fetch staff email from session
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setStaffEmail(data.session?.user?.email || "");
+    });
+  }, []);
+
   const staffCode = `STAFF-${(staffEmail || "unknown").split("@")[0].toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8)}`;
   const referralLink = `${window.location.origin}/?ref=${staffCode}`;
 
