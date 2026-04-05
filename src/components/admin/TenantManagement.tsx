@@ -40,6 +40,26 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Tenant | null>(null);
   const [form, setForm] = useState(EMPTY_TENANT);
+
+  const TRIGGER_KEYS = [
+    "customer_offer_ready", "customer_offer_increased", "customer_offer_accepted",
+    "customer_appointment_reminder", "customer_appointment_rescheduled",
+    "staff_customer_accepted", "staff_deal_completed", "new_submission",
+    "hot_lead", "appointment_booked", "photos_uploaded", "docs_uploaded",
+    "status_change", "abandoned_lead",
+  ];
+
+  const seedNotificationTemplates = async (dealershipId: string, displayName: string) => {
+    const templates: any[] = [];
+    for (const key of TRIGGER_KEYS) {
+      templates.push(
+        { dealership_id: dealershipId, trigger_key: key, channel: "email", subject: `{{dealership_name}} — ${key.replace(/_/g, " ")}`, body: `Hi {{customer_name}},\n\nThank you for choosing ${displayName}.\n\n{{dealership_name}}` },
+        { dealership_id: dealershipId, trigger_key: key, channel: "sms", subject: null, body: `${displayName}: Hi {{customer_name}}, {{vehicle}} update. {{portal_link}}` },
+      );
+    }
+    await supabase.from("notification_templates").insert(templates as any);
+  };
+
   const { toast } = useToast();
 
   const fetchTenants = async () => {
@@ -121,6 +141,8 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
         await supabase.from("dealer_accounts").insert({
           dealership_id: payload.dealership_id,
         } as any);
+        // Seed branded notification_templates for the new dealer
+        await seedNotificationTemplates(payload.dealership_id, payload.display_name);
       }
     }
 
