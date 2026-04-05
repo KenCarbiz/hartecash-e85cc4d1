@@ -527,7 +527,12 @@ export function calculateOffer(
     }
   }
 
-  // ── STEP 8: Floor & ceiling ──
+  // ── STEP 8: Promo bonus ──
+  if (promoBonus && promoBonus > 0) {
+    high += promoBonus;
+  }
+
+  // ── STEP 9: Floor & ceiling ──
   const floor = cfg.offer_floor || 500;
   high = Math.max(high, floor);
   if (cfg.offer_ceiling && cfg.offer_ceiling > 0) {
