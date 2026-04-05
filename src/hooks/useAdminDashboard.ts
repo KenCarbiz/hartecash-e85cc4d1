@@ -158,6 +158,7 @@ export function useAdminDashboard() {
       .eq("user_id", session.user.id)
       .maybeSingle();
     setUserName(profileData?.display_name || session.user.email || "");
+    setUserEmail(session.user.email || "");
     if (roleData.role === "admin") {
       const { count } = await supabase
         .from("permission_access_requests" as any)
