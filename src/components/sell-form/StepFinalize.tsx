@@ -6,9 +6,10 @@ import { useSiteConfig } from "@/hooks/useSiteConfig";
 interface Props {
   formData: FormData;
   update: (field: string, value: string) => void;
+  offerFirst?: boolean;
 }
 
-const StepFinalize = ({ formData, update }: Props) => {
+const StepFinalize = ({ formData, update, offerFirst }: Props) => {
   const { config } = useSiteConfig();
   const dealerName = config.dealership_name || "our dealership";
 
@@ -16,14 +17,16 @@ const StepFinalize = ({ formData, update }: Props) => {
     <>
       <div className="mb-5">
         <p className="text-sm font-semibold text-card-foreground mb-1">
-          You're almost there!
+          {offerFirst ? "One last step — where should we send your offer?" : "You're almost there!"}
         </p>
         <p className="text-sm text-muted-foreground">
-          Add your details and we'll show your offer right away. We'll also send you a copy.
+          {offerFirst
+            ? "Enter your details so we can deliver your personalized cash offer instantly."
+            : "Add your details and we'll show your offer right away. We'll also send you a copy."}
         </p>
       </div>
 
-      <FormField label="Full Name">
+      <FormField label="Full Name" required>
         <Input
           placeholder="John Smith"
           value={formData.name}
@@ -31,7 +34,7 @@ const StepFinalize = ({ formData, update }: Props) => {
           className="py-3.5 px-4 text-base border-2 border-input focus:border-accent focus:ring-accent/10"
         />
       </FormField>
-      <FormField label="Phone Number">
+      <FormField label="Phone Number" required>
         <Input
           type="tel"
           placeholder="(555) 123-4567"
@@ -47,7 +50,7 @@ const StepFinalize = ({ formData, update }: Props) => {
           className="py-3.5 px-4 text-base border-2 border-input focus:border-accent focus:ring-accent/10"
         />
       </FormField>
-      <FormField label="Email Address">
+      <FormField label="Email Address" required>
         <Input
           type="email"
           placeholder="john@example.com"

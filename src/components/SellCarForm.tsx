@@ -640,9 +640,7 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
       </form>
 
       <p className="text-center mt-4 text-[13px] text-muted-foreground">
-        {offerFirst
-          ? "🔒 No contact info needed — see your offer instantly."
-          : "🔒 Your information is 100% secure and never shared."}
+        🔒 Your information is 100% secure and never shared.
       </p>
 
       <div className="bg-gradient-to-br from-success to-[hsl(160,84%,30%)] text-success-foreground p-5 rounded-xl mt-6 text-center shadow-lg shadow-success/30">
