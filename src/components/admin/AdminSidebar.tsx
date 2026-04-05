@@ -81,6 +81,7 @@ const AdminSidebar = ({
         { key: "site-config", label: "Branding", icon: Settings },
         ...(locationCount > 1 ? [{ key: "locations", label: "Locations", icon: MapPin }] : []),
         { key: "testimonials", label: "Testimonials", icon: MessageSquareQuote },
+        { key: "embed-toolkit", label: "Website Embed", icon: Wrench },
       ].filter((item) => isAllowed(item.key))
     : [];
 

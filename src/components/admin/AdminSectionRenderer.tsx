@@ -32,6 +32,7 @@ import OnboardingScript from "./OnboardingScript";
 import ReportsExport from "./ReportsExport";
 import ReferralManagement from "./ReferralManagement";
 import MyReferrals from "./MyReferrals";
+import EmbedToolkit from "./EmbedToolkit";
 import AdminLoadingSkeleton from "./AdminLoadingSkeleton";
 import AdminEmptyState from "./AdminEmptyState";
 import { UserCheck as UserCheckIcon } from "lucide-react";
