@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { formatPhone } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Search, Eye, Trash2, ChevronLeft, ChevronRight, CheckCircle,
   AlertTriangle, TrendingUp, UserCheck, XCircle, Camera, FileText,
+  Rows3, Rows2,
 } from "lucide-react";
 import type { Submission, DealerLocation } from "@/lib/adminConstants";
 import { ALL_STATUS_OPTIONS, getStatusLabel, isAcceptedWithAppointment, isAcceptedWithoutAppointment, isOfferPendingSubmission, isOfferUpdatedByStaff } from "@/lib/adminConstants";
@@ -69,6 +71,20 @@ const SubmissionsTable = ({
   onDelete,
   onInlineStatusChange,
 }: SubmissionsTableProps) => {
+  const [density, setDensity] = useState<"compact" | "spacious">(() => {
+    try { return (localStorage.getItem("admin-table-density") as "compact" | "spacious") || "spacious"; }
+    catch { return "spacious"; }
+  });
+  const isCompact = density === "compact";
+  const toggleDensity = () => {
+    const next = isCompact ? "spacious" : "compact";
+    setDensity(next);
+    localStorage.setItem("admin-table-density", next);
+  };
+
+  const cellPad = isCompact ? "px-2 py-1.5" : "px-3 py-3";
+  const fontSize = isCompact ? "text-xs" : "text-sm";
+
   const getHoursSinceUpdate = (sub: Submission) => {
     const refDate = sub.status_updated_at || sub.created_at;
     return (Date.now() - new Date(refDate).getTime()) / (1000 * 60 * 60);
@@ -153,9 +169,20 @@ const SubmissionsTable = ({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input placeholder="Search leads..." value={search} onChange={(e) => onSearchChange(e.target.value)} className="pl-9" />
         </div>
-        <Button variant={showFilterPanel ? "default" : "outline"} size="sm" onClick={onToggleFilterPanel}>
-          Filter {(statusFilter || sourceFilter || storeFilter || dateRangeFilter.from || dateRangeFilter.to) && "*"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleDensity}
+            className="text-muted-foreground hover:text-foreground px-2"
+            title={isCompact ? "Spacious view" : "Compact view"}
+          >
+            {isCompact ? <Rows3 className="w-4 h-4" /> : <Rows2 className="w-4 h-4" />}
+          </Button>
+          <Button variant={showFilterPanel ? "default" : "outline"} size="sm" onClick={onToggleFilterPanel}>
+            Filter {(statusFilter || sourceFilter || storeFilter || dateRangeFilter.from || dateRangeFilter.to) && "*"}
+          </Button>
+        </div>
       </div>
 
       {/* Quick-filter chips */}
@@ -249,19 +276,19 @@ const SubmissionsTable = ({
         <>
           <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="min-w-[1100px] text-sm">
+              <table className={`min-w-[1100px] ${fontSize}`}>
                 <thead>
                   <tr className="border-b border-border bg-muted/50">
-                    <th className="text-left px-3 py-3 font-semibold text-muted-foreground whitespace-nowrap">Date</th>
-                    <th className="text-left px-3 py-3 font-semibold text-muted-foreground whitespace-nowrap">Name</th>
-                    <th className="text-left px-3 py-3 font-semibold text-muted-foreground whitespace-nowrap">Vehicle</th>
-                    <th className="text-left px-3 py-3 font-semibold text-muted-foreground whitespace-nowrap">VIN</th>
-                    <th className="text-left px-3 py-3 font-semibold text-muted-foreground whitespace-nowrap">Contact</th>
-                    <th className="text-left px-3 py-3 font-semibold text-muted-foreground whitespace-nowrap">Source</th>
-                    <th className="text-right px-3 py-3 font-semibold text-muted-foreground whitespace-nowrap">Offer</th>
-                    <th className="text-left px-3 py-3 font-semibold text-muted-foreground whitespace-nowrap min-w-[160px]">Status</th>
-                    <th className="text-center px-2 py-3 font-semibold text-muted-foreground whitespace-nowrap">Age</th>
-                    <th className="text-right px-3 py-3 font-semibold text-muted-foreground whitespace-nowrap">Actions</th>
+                    <th className={`text-left ${cellPad} font-semibold text-muted-foreground whitespace-nowrap`}>Date</th>
+                    <th className={`text-left ${cellPad} font-semibold text-muted-foreground whitespace-nowrap`}>Name</th>
+                    <th className={`text-left ${cellPad} font-semibold text-muted-foreground whitespace-nowrap`}>Vehicle</th>
+                    {!isCompact && <th className={`text-left ${cellPad} font-semibold text-muted-foreground whitespace-nowrap`}>VIN</th>}
+                    <th className={`text-left ${cellPad} font-semibold text-muted-foreground whitespace-nowrap`}>Contact</th>
+                    <th className={`text-left ${cellPad} font-semibold text-muted-foreground whitespace-nowrap`}>Source</th>
+                    <th className={`text-right ${cellPad} font-semibold text-muted-foreground whitespace-nowrap`}>Offer</th>
+                    <th className={`text-left ${cellPad} font-semibold text-muted-foreground whitespace-nowrap min-w-[160px]`}>Status</th>
+                    <th className={`text-center px-2 ${isCompact ? "py-1.5" : "py-3"} font-semibold text-muted-foreground whitespace-nowrap`}>Age</th>
+                    <th className={`text-right ${cellPad} font-semibold text-muted-foreground whitespace-nowrap`}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -270,9 +297,9 @@ const SubmissionsTable = ({
                     const sla = getSlaLevel(hours, sub.progress_status);
                     return (
                     <tr key={sub.id} className={`border-b border-border last:border-0 hover:bg-primary/5 transition-colors border-l-3 ${sla.borderClass} ${sla.bgClass} ${idx % 2 === 1 ? "bg-muted/20" : ""}`}>
-                      <td className="px-3 py-3 whitespace-nowrap">{new Date(sub.created_at).toLocaleDateString()}</td>
-                      <td className="px-3 py-3 font-medium text-card-foreground whitespace-nowrap">{sub.name || "—"}</td>
-                      <td className="px-3 py-3 whitespace-nowrap">
+                      <td className={`${cellPad} whitespace-nowrap`}>{new Date(sub.created_at).toLocaleDateString()}</td>
+                      <td className={`${cellPad} font-medium text-card-foreground whitespace-nowrap`}>{sub.name || "—"}</td>
+                      <td className={`${cellPad} whitespace-nowrap`}>
                         <span className="flex items-center gap-1">
                           {sub.is_hot_lead && <span title="Hot Lead">🔥</span>}
                           {sub.vehicle_year && sub.vehicle_make ? `${sub.vehicle_year} ${sub.vehicle_make} ${sub.vehicle_model || ""}` : sub.plate || "—"}
@@ -280,12 +307,12 @@ const SubmissionsTable = ({
                           {sub.docs_uploaded && <span title="Docs uploaded"><FileText className="w-3 h-3 text-primary ml-0.5 shrink-0" /></span>}
                         </span>
                       </td>
-                      <td className="px-3 py-3 text-xs font-mono text-muted-foreground whitespace-nowrap">{sub.vin || "—"}</td>
-                      <td className="px-3 py-3 whitespace-nowrap">
+                      {!isCompact && <td className={`${cellPad} text-xs font-mono text-muted-foreground whitespace-nowrap`}>{sub.vin || "—"}</td>}
+                      <td className={`${cellPad} whitespace-nowrap`}>
                         <div>{sub.email || "—"}</div>
                         <div className="text-muted-foreground text-xs">{formatPhone(sub.phone) || ""}</div>
                       </td>
-                      <td className="px-3 py-3">
+                      <td className={cellPad}>
                         <Badge variant={sub.lead_source === "service" ? "secondary" : sub.lead_source === "in_store_trade" || sub.lead_source === "trade" ? "default" : "outline"} className="text-xs">
                           {sub.lead_source === "service" ? "Service" : sub.lead_source === "in_store_trade" ? "In-Store" : sub.lead_source === "trade" ? "Trade-In" : "Off Street"}
                         </Badge>
@@ -295,7 +322,7 @@ const SubmissionsTable = ({
                           </p>
                         )}
                       </td>
-                      <td className="px-3 py-3 text-right whitespace-nowrap">
+                      <td className={`${cellPad} text-right whitespace-nowrap`}>
                         {(() => {
                           const isAcceptedAppt = isAcceptedWithAppointment(sub);
                           const isAcceptedNoAppt = isAcceptedWithoutAppointment(sub);
@@ -326,13 +353,13 @@ const SubmissionsTable = ({
                           );
                         })()}
                       </td>
-                      <td className="px-3 py-3">
+                      <td className={cellPad}>
                         <div className="flex flex-col gap-1">
                           <Select value={sub.progress_status} onValueChange={(val) => onInlineStatusChange(sub, val)}>
                             <SelectTrigger className={`w-44 h-7 text-xs font-medium ${
                               sub.progress_status === "purchase_complete" ? "border-success/50 text-success" :
                               sub.progress_status === "dead_lead" ? "border-destructive/50 text-destructive" :
-                              sub.progress_status === "partial" ? "border-amber-500/50 text-amber-600" :
+                              sub.progress_status === "partial" ? "border-amber-500/50 text-amber-600 dark:text-amber-400" :
                               sub.progress_status === "new" || sub.progress_status === "not_contacted" ? "border-muted text-muted-foreground" :
                               "border-accent/50 text-accent"
                             }`}>
@@ -345,7 +372,7 @@ const SubmissionsTable = ({
                               })}
                             </SelectContent>
                           </Select>
-                          {sub.progress_status === "partial" && <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-600">⚠ Abandoned — needs follow-up</span>}
+                          {sub.progress_status === "partial" && <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400">⚠ Abandoned — needs follow-up</span>}
                           {isAcceptedWithoutAppointment(sub) && (
                             <span className="inline-flex items-center gap-1 text-[11px] font-bold text-success bg-success/15 border border-success/30 rounded-full px-2.5 py-0.5">
                               <CheckCircle className="w-3 h-3" /> Offer Accepted
@@ -353,7 +380,7 @@ const SubmissionsTable = ({
                           )}
                         </div>
                       </td>
-                      <td className="px-2 py-3 text-center">
+                      <td className={`px-2 ${isCompact ? "py-1.5" : "py-3"} text-center`}>
                         <div className="flex flex-col items-center gap-0.5">
                           <span className={`text-xs font-bold ${sla.color}`} title={`${Math.round(hours)}h since last update`}>
                             {formatAge(hours)}
@@ -365,7 +392,7 @@ const SubmissionsTable = ({
                           )}
                         </div>
                       </td>
-                      <td className="px-3 py-3 text-right">
+                      <td className={`${cellPad} text-right`}>
                         <div className="flex justify-end gap-1">
                           <Button variant="ghost" size="sm" onClick={() => onView(sub)}><Eye className="w-4 h-4" /></Button>
                           {canDelete && <Button variant="ghost" size="sm" onClick={() => onDelete(sub.id)} className="text-destructive hover:text-destructive"><Trash2 className="w-4 h-4" /></Button>}

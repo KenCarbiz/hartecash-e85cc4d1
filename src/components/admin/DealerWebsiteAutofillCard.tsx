@@ -612,7 +612,7 @@ export default function DealerWebsiteAutofillCard({
           {previewData.missing.length > 0 && (
             <div className="border border-amber-200 bg-amber-50/50 rounded-lg p-3 dark:border-amber-800 dark:bg-amber-950/20">
               <div className="flex items-center gap-2 mb-2">
-                <AlertTriangle className="h-4 w-4 text-amber-600" />
+                <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                 <span className="text-xs font-semibold text-amber-800 dark:text-amber-400">Still needs attention</span>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -626,7 +626,7 @@ export default function DealerWebsiteAutofillCard({
                       }}
                       className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-amber-300 bg-background text-xs hover:bg-amber-100/50 transition-colors dark:border-amber-700 dark:hover:bg-amber-900/30"
                     >
-                      <MIcon className="h-3 w-3 text-amber-600" />
+                      <MIcon className="h-3 w-3 text-amber-600 dark:text-amber-400" />
                       <span className="text-card-foreground">{item.label}</span>
                       <XCircle className="h-3 w-3 text-amber-400" />
                     </button>

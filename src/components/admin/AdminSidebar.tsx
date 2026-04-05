@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -12,11 +13,12 @@ import {
 } from "@/components/ui/sidebar";
 import {
   Inbox, CalendarDays, Users, ShieldCheck, SlidersHorizontal,
-  Settings, Bell, ListChecks, MessageSquareQuote, BarChart3, Send, MapPin, Car, ScrollText, Shield, Lock, Wrench, Rocket, Gauge, Network, Camera, Gift, Megaphone
+  Settings, Bell, ListChecks, MessageSquareQuote, BarChart3, Send, MapPin, Car, ScrollText, Shield, Lock, Wrench, Rocket, Gauge, Network, Camera, Gift, Megaphone, ChevronDown
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface AdminSidebarProps {
   activeSection: string;
@@ -34,6 +36,8 @@ interface AdminSidebarProps {
   userRole?: string;
   dealershipId?: string;
 }
+
+const STORAGE_KEY = "admin-sidebar-collapsed";
 
 const AdminSidebar = ({
   activeSection,
@@ -54,6 +58,24 @@ const AdminSidebar = ({
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const navigate = useNavigate();
+
+  // Persisted collapsed groups
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      return stored ? JSON.parse(stored) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(collapsedGroups));
+  }, [collapsedGroups]);
+
+  const toggleGroup = (label: string) => {
+    setCollapsedGroups((prev) => ({ ...prev, [label]: !prev[label] }));
+  };
 
   const isAllowed = (key: string) => allowedSections === null || allowedSections.includes(key);
   const isPlatformAdmin = canManageAccess && dealershipId === "default";
@@ -106,45 +128,70 @@ const AdminSidebar = ({
     ? allSectionKeys.filter((k) => !allowedSections.includes(k))
     : [];
 
+  // Check if group contains active section
+  const groupContainsActive = (items: { key: string }[]) => items.some((item) => item.key === activeSection);
+
   const renderGroup = (label: string, items: { key: string; label: string; icon: React.ElementType; badge?: string; badgeVariant?: string }[]) => {
     if (items.length === 0) return null;
+
+    const isOpen = !collapsedGroups[label];
+    const hasActive = groupContainsActive(items);
+    const hasBadge = items.some((item) => item.badge);
+
     return (
-      <SidebarGroup>
-        <SidebarGroupLabel className="text-[10px] uppercase tracking-widest font-bold text-sidebar-foreground/50">
-          {label}
-        </SidebarGroupLabel>
-        <SidebarGroupContent>
-          <SidebarMenu>
-            {items.map((item) => {
-              const isActive = activeSection === item.key;
-              const Icon = item.icon;
-              return (
-                <SidebarMenuItem key={item.key}>
-                  <SidebarMenuButton
-                    onClick={() => onSectionChange(item.key)}
-                    isActive={isActive}
-                    tooltip={collapsed ? item.label : undefined}
-                    className="transition-all duration-200 dark:hover:bg-white/8 dark:hover:shadow-[0_0_12px_rgba(255,255,255,0.06)] dark:data-[active=true]:shadow-[0_0_16px_rgba(100,160,255,0.12)]"
-                  >
-                    <Icon className="w-4 h-4 shrink-0" />
-                    {!collapsed && (
-                      <span className="flex-1 truncate">{item.label}</span>
-                    )}
-                    {!collapsed && item.badge && (
-                      <Badge
-                        variant={(item as any).badgeVariant === "destructive" ? "destructive" : "secondary"}
-                        className="ml-auto text-[10px] h-5 min-w-5 flex items-center justify-center"
+      <Collapsible key={label} open={isOpen} onOpenChange={() => toggleGroup(label)}>
+        <SidebarGroup>
+          <CollapsibleTrigger asChild>
+            <SidebarGroupLabel className="text-[10px] uppercase tracking-widest font-bold text-sidebar-foreground/50 cursor-pointer hover:text-sidebar-foreground/70 transition-colors flex items-center justify-between pr-2 select-none">
+              <span className="flex items-center gap-1.5">
+                {label}
+                {!isOpen && hasActive && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                )}
+                {!isOpen && hasBadge && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-destructive" />
+                )}
+              </span>
+              {!collapsed && (
+                <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isOpen ? "" : "-rotate-90"}`} />
+              )}
+            </SidebarGroupLabel>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {items.map((item) => {
+                  const isActive = activeSection === item.key;
+                  const Icon = item.icon;
+                  return (
+                    <SidebarMenuItem key={item.key}>
+                      <SidebarMenuButton
+                        onClick={() => onSectionChange(item.key)}
+                        isActive={isActive}
+                        tooltip={collapsed ? item.label : undefined}
+                        className="transition-all duration-200 dark:hover:bg-white/8 dark:hover:shadow-[0_0_12px_rgba(255,255,255,0.06)] dark:data-[active=true]:shadow-[0_0_16px_rgba(100,160,255,0.12)]"
                       >
-                        {item.badge}
-                      </Badge>
-                    )}
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              );
-            })}
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
+                        <Icon className="w-4 h-4 shrink-0" />
+                        {!collapsed && (
+                          <span className="flex-1 truncate">{item.label}</span>
+                        )}
+                        {!collapsed && item.badge && (
+                          <Badge
+                            variant={(item as any).badgeVariant === "destructive" ? "destructive" : "secondary"}
+                            className="ml-auto text-[10px] h-5 min-w-5 flex items-center justify-center"
+                          >
+                            {item.badge}
+                          </Badge>
+                        )}
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </CollapsibleContent>
+        </SidebarGroup>
+      </Collapsible>
     );
   };
 

@@ -1008,7 +1008,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                   <CollapsibleContent>
                     {/* Inspector verification reminder */}
                     <div className="mx-1 mt-2 mb-1 px-2.5 py-1.5 rounded-md bg-amber-500/10 border border-amber-500/20 flex items-center gap-2">
-                      <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                      <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
                       <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-400">
                         Inspector: Verify all customer-selected equipment is present on the vehicle during in-person inspection.
                       </span>
