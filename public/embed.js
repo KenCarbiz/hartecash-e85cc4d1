@@ -10,6 +10,7 @@
       cfg = cfg || {};
       var url = cfg.url || "/";
       var text = cfg.text || "Get Your Trade-In Value";
+      var promoText = cfg.promoText || ""; // e.g. "+ $500 Bonus!"
       var color = cfg.color || "#1a365d";
       var position = cfg.position || "bottom-right";
 
