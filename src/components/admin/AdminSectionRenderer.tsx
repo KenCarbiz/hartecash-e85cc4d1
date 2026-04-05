@@ -299,6 +299,7 @@ const AdminSectionRenderer = (props: AdminSectionRendererProps) => {
       {activeSection === "my-referrals" && (
         <MyReferrals staffName={props.userName} />
       )}
+      {activeSection === "embed-toolkit" && canManageAccess && <EmbedToolkit />}
     </>
   );
 
