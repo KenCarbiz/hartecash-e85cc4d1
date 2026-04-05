@@ -30,6 +30,7 @@ import TenantManagement from "./TenantManagement";
 import DealerOnboarding from "./DealerOnboarding";
 import OnboardingScript from "./OnboardingScript";
 import ReportsExport from "./ReportsExport";
+import ReferralManagement from "./ReferralManagement";
 import AdminLoadingSkeleton from "./AdminLoadingSkeleton";
 import AdminEmptyState from "./AdminEmptyState";
 import { UserCheck as UserCheckIcon } from "lucide-react";
