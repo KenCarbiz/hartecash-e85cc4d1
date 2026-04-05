@@ -10,7 +10,17 @@ export interface TemplateEntry {
 }
 
 import { template as offerReady } from './offer-ready.tsx'
+import { template as offerAccepted } from './offer-accepted.tsx'
+import { template as offerIncreased } from './offer-increased.tsx'
+import { template as appointmentConfirmation } from './appointment-confirmation.tsx'
+import { template as appointmentReminder } from './appointment-reminder.tsx'
+import { template as appointmentRescheduled } from './appointment-rescheduled.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'offer-ready': offerReady,
+  'offer-accepted': offerAccepted,
+  'offer-increased': offerIncreased,
+  'appointment-confirmation': appointmentConfirmation,
+  'appointment-reminder': appointmentReminder,
+  'appointment-rescheduled': appointmentRescheduled,
 }
