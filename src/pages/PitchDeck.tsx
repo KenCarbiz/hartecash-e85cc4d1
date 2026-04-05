@@ -84,6 +84,7 @@ export default function PitchDeck() {
   const { config } = useSiteConfig();
   const [expandedChannel, setExpandedChannel] = useState<"off-street" | "service" | "trade" | null>(null);
   const channelRef = useRef<HTMLDivElement>(null);
+  const expandedRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const name = config.dealership_name || "AutoCurb";
@@ -91,8 +92,21 @@ export default function PitchDeck() {
     return () => { document.title = `Sell Your Car | ${name}`; };
   }, [config.dealership_name]);
 
+  const handleChannelClick = useCallback((key: "off-street" | "service" | "trade") => {
+    const isExpanding = expandedChannel !== key;
+    setExpandedChannel(isExpanding ? key : null);
+    if (isExpanding) {
+      setTimeout(() => {
+        expandedRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    }
+  }, [expandedChannel]);
+
   const scrollToChannels = useCallback(() => {
-    channelRef.current?.scrollIntoView({ behavior: "smooth" });
+    setExpandedChannel(null);
+    setTimeout(() => {
+      channelRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 50);
   }, []);
 
   return (
