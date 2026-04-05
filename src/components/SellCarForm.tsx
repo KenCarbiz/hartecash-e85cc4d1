@@ -527,7 +527,7 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
       case "History":
         return <StepHistory formData={formData} update={update} formConfig={formConfig} bbVehicle={bbSelectedVehicle} vehicleInfo={vehicleInfo} leadSource={leadSource} />;
       case "Finalize":
-        return <StepFinalize formData={formData} update={update} />;
+        return <StepFinalize formData={formData} update={update} offerFirst={offerFirst} />;
       default:
         return null;
     }
