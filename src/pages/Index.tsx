@@ -9,6 +9,7 @@ import SiteFooter from "@/components/SiteFooter";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import HeroOffset from "@/components/HeroOffset";
 import BackToTop from "@/components/BackToTop";
+import { useEmbedMode } from "@/hooks/useEmbedMode";
 
 // Lazy-load below-fold sections for faster LCP
 const HowItWorks = lazy(() => import("@/components/HowItWorks"));
@@ -22,6 +23,7 @@ const ReferralBanner = lazy(() => import("@/components/ReferralBanner"));
 
 const Index = () => {
   const { config } = useSiteConfig();
+  const embed = useEmbedMode();
   const layout = config.hero_layout || "offset_right";
 
   return (
@@ -34,7 +36,7 @@ const Index = () => {
       <LocalBusinessJsonLd />
       <FAQPageJsonLd />
       <HowToJsonLd />
-      <SiteHeader />
+      {!embed && <SiteHeader />}
       <main>
         {layout === "offset_right" ? (
           <HeroOffset side="right" />
@@ -57,8 +59,8 @@ const Index = () => {
           <CTABanner />
         </Suspense>
       </main>
-      <SiteFooter />
-      <BackToTop />
+      {!embed && <SiteFooter />}
+      {!embed && <BackToTop />}
     </div>
   );
 };
