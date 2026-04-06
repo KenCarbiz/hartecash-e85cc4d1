@@ -12,7 +12,11 @@ import { useRef, useEffect } from "react";
 
 const AdminDashboard = () => {
   const db = useAdminDashboard();
+  const contentRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    contentRef.current?.scrollTo({ top: 0, behavior: "instant" });
+  }, [db.activeSection]);
   return (
     <SidebarProvider>
         <div className="min-h-screen bg-background transition-colors duration-300 flex w-full relative">
