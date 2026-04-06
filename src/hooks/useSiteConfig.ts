@@ -116,6 +116,7 @@ const DEFAULTS: SiteConfig = {
   photo_overlay_color: "#00FF88",
   photo_allow_color_change: true,
   vehicle_image_angle: "three_quarter",
+  established_year: null,
 };
 
 let cachedConfig: Record<string, SiteConfig> = {};

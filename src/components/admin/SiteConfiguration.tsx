@@ -573,12 +573,40 @@ const SiteConfiguration = () => {
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Year Established</Label>
+            <Input
+              type="number"
+              min={1800}
+              max={new Date().getFullYear()}
+              value={config.established_year ?? ""}
+              onChange={e => {
+                const yr = e.target.value ? Number(e.target.value) : null;
+                setConfig(prev => {
+                  const yearsStr = yr ? `${new Date().getFullYear() - yr} yrs` : prev.stats_years_in_business;
+                  const next = { ...prev, established_year: yr, stats_years_in_business: yearsStr };
+                  setHasChanges(JSON.stringify(next) !== JSON.stringify(savedConfig));
+                  return next;
+                });
+              }}
+              placeholder="e.g. 1947"
+            />
+            <p className="text-[10px] text-muted-foreground">Auto-calculates "Years in Business"</p>
+          </div>
+          <div className="space-y-1.5">
             <Label className="text-xs font-semibold">Cars Purchased</Label>
             <Input value={config.stats_cars_purchased} onChange={e => update("stats_cars_purchased", e.target.value)} placeholder="14,721+" />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold">Years in Business</Label>
-            <Input value={config.stats_years_in_business} onChange={e => update("stats_years_in_business", e.target.value)} placeholder="78 yrs" />
+            <Input
+              value={config.stats_years_in_business}
+              onChange={e => update("stats_years_in_business", e.target.value)}
+              placeholder="78 yrs"
+              disabled={!!config.established_year}
+            />
+            {config.established_year && (
+              <p className="text-[10px] text-muted-foreground">Auto: {new Date().getFullYear() - config.established_year} yrs (from est. {config.established_year})</p>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold">Rating</Label>

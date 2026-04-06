@@ -48,6 +48,8 @@ interface Location {
   show_corporate_logo: boolean;
   show_corporate_on_landing_only: boolean;
   location_type: string;
+  established_year: number | null;
+  use_corporate_established_year: boolean;
 }
 
 const LocationManagement = () => {
