@@ -94,7 +94,7 @@ const LocationManagement = () => {
     const maxOrder = locations.length > 0 ? Math.max(...locations.map(l => l.sort_order)) : 0;
     const { error } = await supabase
       .from("dealership_locations" as any)
-      .insert({ name: newName.trim(), city: newCity.trim(), state: newState.trim() || "CT", sort_order: maxOrder + 1 });
+      .insert({ name: newName.trim(), city: newCity.trim(), state: newState.trim() || "CT", sort_order: maxOrder + 1, location_type: newLocationType } as any);
     if (error) {
       toast({ title: "Failed to add location", variant: "destructive" });
     } else {
