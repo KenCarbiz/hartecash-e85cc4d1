@@ -8,7 +8,9 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
+
 import { Plus, Trash2, GripVertical, Save, Loader2, MapPin, ChevronDown, ChevronRight, X, MapPinned, Car, Radar } from "lucide-react";
+import LocationLogoSection from "./LocationLogoSection";
 
 interface Location {
   id: string;
@@ -28,6 +30,11 @@ interface Location {
   coverage_radius_miles: number;
   all_brands: boolean;
   excluded_oem_brands: string[];
+  corporate_logo_url: string | null;
+  oem_logo_urls: string[];
+  logo_layout: string;
+  show_corporate_logo: boolean;
+  show_corporate_on_landing_only: boolean;
 }
 
 const LocationManagement = () => {
@@ -114,7 +121,7 @@ const LocationManagement = () => {
     for (const loc of locations) {
       const { error } = await supabase
         .from("dealership_locations" as any)
-        .update({ name: loc.name, city: loc.city, state: loc.state, address: loc.address, sort_order: loc.sort_order, zip_codes: loc.zip_codes || [], oem_brands: loc.oem_brands || [], center_zip: loc.center_zip || '', coverage_radius_miles: loc.coverage_radius_miles || 0, all_brands: loc.all_brands ?? true, excluded_oem_brands: loc.excluded_oem_brands || [], temporarily_offline: loc.temporarily_offline ?? false, use_bdc: loc.use_bdc ?? false })
+        .update({ name: loc.name, city: loc.city, state: loc.state, address: loc.address, sort_order: loc.sort_order, zip_codes: loc.zip_codes || [], oem_brands: loc.oem_brands || [], center_zip: loc.center_zip || '', coverage_radius_miles: loc.coverage_radius_miles || 0, all_brands: loc.all_brands ?? true, excluded_oem_brands: loc.excluded_oem_brands || [], temporarily_offline: loc.temporarily_offline ?? false, use_bdc: loc.use_bdc ?? false, corporate_logo_url: loc.corporate_logo_url || null, oem_logo_urls: loc.oem_logo_urls || [], logo_layout: loc.logo_layout || 'side_by_side', show_corporate_logo: loc.show_corporate_logo ?? false, show_corporate_on_landing_only: loc.show_corporate_on_landing_only ?? false } as any)
         .eq("id", loc.id);
       if (error) hasError = true;
     }
@@ -250,6 +257,15 @@ const LocationManagement = () => {
                       className="text-sm"
                     />
                   </div>
+
+                  {/* Logo Management */}
+                  <LocationLogoSection
+                    location={loc}
+                    dealershipId={dealershipId}
+                    onUpdate={(field, value) => {
+                      setLocations(prev => prev.map(l => l.id === loc.id ? { ...l, [field]: value } : l));
+                    }}
+                  />
 
                   {/* ZIP Codes */}
                   <div>

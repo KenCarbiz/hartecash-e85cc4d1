@@ -320,14 +320,19 @@ export type Database = {
           all_brands: boolean
           center_zip: string | null
           city: string
+          corporate_logo_url: string | null
           coverage_radius_miles: number | null
           created_at: string
           dealership_id: string
           excluded_oem_brands: string[]
           id: string
           is_active: boolean
+          logo_layout: string
           name: string
           oem_brands: string[]
+          oem_logo_urls: string[]
+          show_corporate_logo: boolean
+          show_corporate_on_landing_only: boolean
           show_in_footer: boolean
           show_in_scheduling: boolean
           sort_order: number
@@ -341,14 +346,19 @@ export type Database = {
           all_brands?: boolean
           center_zip?: string | null
           city: string
+          corporate_logo_url?: string | null
           coverage_radius_miles?: number | null
           created_at?: string
           dealership_id?: string
           excluded_oem_brands?: string[]
           id?: string
           is_active?: boolean
+          logo_layout?: string
           name: string
           oem_brands?: string[]
+          oem_logo_urls?: string[]
+          show_corporate_logo?: boolean
+          show_corporate_on_landing_only?: boolean
           show_in_footer?: boolean
           show_in_scheduling?: boolean
           sort_order?: number
@@ -362,14 +372,19 @@ export type Database = {
           all_brands?: boolean
           center_zip?: string | null
           city?: string
+          corporate_logo_url?: string | null
           coverage_radius_miles?: number | null
           created_at?: string
           dealership_id?: string
           excluded_oem_brands?: string[]
           id?: string
           is_active?: boolean
+          logo_layout?: string
           name?: string
           oem_brands?: string[]
+          oem_logo_urls?: string[]
+          show_corporate_logo?: boolean
+          show_corporate_on_landing_only?: boolean
           show_in_footer?: boolean
           show_in_scheduling?: boolean
           sort_order?: number
