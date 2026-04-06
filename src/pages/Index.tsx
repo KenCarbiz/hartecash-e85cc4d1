@@ -10,7 +10,6 @@ import { useSiteConfig } from "@/hooks/useSiteConfig";
 import HeroOffset from "@/components/HeroOffset";
 import BackToTop from "@/components/BackToTop";
 import { useEmbedMode } from "@/hooks/useEmbedMode";
-import StoreSelector from "@/components/StoreSelector";
 
 // Lazy-load below-fold sections for faster LCP
 const HowItWorks = lazy(() => import("@/components/HowItWorks"));
@@ -38,7 +37,6 @@ const Index = () => {
       <FAQPageJsonLd />
       <HowToJsonLd />
       {!embed && <SiteHeader />}
-      <StoreSelector>
         <main>
           {layout === "offset_right" ? (
             <HeroOffset side="right" />
@@ -61,7 +59,6 @@ const Index = () => {
             <CTABanner />
           </Suspense>
         </main>
-      </StoreSelector>
       {!embed && <SiteFooter />}
       {!embed && <BackToTop />}
     </div>
