@@ -10,7 +10,6 @@ import { useSiteConfig } from "@/hooks/useSiteConfig";
 import HeroOffset from "@/components/HeroOffset";
 import BackToTop from "@/components/BackToTop";
 import { useEmbedMode } from "@/hooks/useEmbedMode";
-import StoreSelector from "@/components/StoreSelector";
 
 // Lazy-load below-fold sections for faster LCP
 const HowItWorks = lazy(() => import("@/components/HowItWorks"));
