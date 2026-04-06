@@ -120,40 +120,53 @@ const AboutPage = () => {
 
         {/* ── Our Story ── */}
         <section className="py-14 md:py-20 px-5" aria-label="Our story">
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-5xl mx-auto">
             <h2 className="text-2xl md:text-3xl font-extrabold text-foreground mb-6 text-center">Our Story</h2>
-            {customStory ? (
-              <div
-                className="prose prose-sm max-w-none text-foreground/85 space-y-4"
-                dangerouslySetInnerHTML={{ __html: customStory }}
-              />
-            ) : (
-              <div className="prose prose-sm max-w-none text-foreground/85 space-y-4">
-                <p>
-                  We started with a simple belief:
-                  <em> treat every person who walks through your door like family</em>. No
-                  marketing gimmicks or corporate scripts — just a genuine desire
-                  to help our neighbors get a fair deal.
-                </p>
-                <p>
-                  That belief became the foundation for everything that followed. We grew from a single location into{" "}
-                  <strong>{locations.length || "multiple"} locations</strong>, and our team members
-                  have been with us for <strong>10, 15, even 20+ years</strong>.
-                  Customers come back generation after generation — not because we run the
-                  flashiest ads, but because when they work with us, they know they'll be
-                  treated honestly.
-                </p>
-                <p>
-                  That's why we built <strong>{name}</strong>. We wanted to bring
-                  that same philosophy to people who just want to sell their car
-                  — quickly, fairly, and without the runaround. You get a real offer in
-                  under 2 minutes, backed by a{" "}
-                  <strong>{config.price_guarantee_days || 8}-day price guarantee</strong>.
-                  We handle the loan payoffs, the paperwork, and we'll even pick up your
-                  vehicle for free. It's the kind of experience we'd want for our own family.
-                </p>
+            <div className={`${aboutImage ? "flex flex-col md:flex-row gap-8 items-start" : ""}`}>
+              <div className={`${aboutImage ? "md:flex-1" : "max-w-3xl mx-auto"}`}>
+                {customStory ? (
+                  <div
+                    className="prose prose-sm max-w-none text-foreground/85 space-y-4"
+                    dangerouslySetInnerHTML={{ __html: customStory }}
+                  />
+                ) : (
+                  <div className="prose prose-sm max-w-none text-foreground/85 space-y-4">
+                    <p>
+                      We started with a simple belief:
+                      <em> treat every person who walks through your door like family</em>. No
+                      marketing gimmicks or corporate scripts — just a genuine desire
+                      to help our neighbors get a fair deal.
+                    </p>
+                    <p>
+                      That belief became the foundation for everything that followed. We grew from a single location into{" "}
+                      <strong>{locations.length || "multiple"} locations</strong>, and our team members
+                      have been with us for <strong>10, 15, even 20+ years</strong>.
+                      Customers come back generation after generation — not because we run the
+                      flashiest ads, but because when they work with us, they know they'll be
+                      treated honestly.
+                    </p>
+                    <p>
+                      That's why we built <strong>{name}</strong>. We wanted to bring
+                      that same philosophy to people who just want to sell their car
+                      — quickly, fairly, and without the runaround. You get a real offer in
+                      under 2 minutes, backed by a{" "}
+                      <strong>{config.price_guarantee_days || 8}-day price guarantee</strong>.
+                      We handle the loan payoffs, the paperwork, and we'll even pick up your
+                      vehicle for free. It's the kind of experience we'd want for our own family.
+                    </p>
+                  </div>
+                )}
               </div>
-            )}
+              {aboutImage && (
+                <div className="md:w-[380px] shrink-0">
+                  <img
+                    src={aboutImage}
+                    alt={`${name} dealership`}
+                    className="rounded-xl shadow-lg w-full h-auto object-cover"
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </section>
 
