@@ -1639,10 +1639,15 @@ export type Database = {
           price_guarantee_days: number
           primary_color: string
           referral_program_enabled: boolean
+          referral_reward_buy_amount: number
+          referral_reward_buy_enabled: boolean
           referral_reward_sell_amount: number
+          referral_reward_sell_buy_amount: number
+          referral_reward_sell_buy_enabled: boolean
           referral_reward_sell_enabled: boolean
           referral_reward_trade_amount: number
           referral_reward_trade_enabled: boolean
+          referral_reward_type: string
           review_request_message: string
           review_request_subject: string
           service_hero_headline: string
@@ -1706,10 +1711,15 @@ export type Database = {
           price_guarantee_days?: number
           primary_color?: string
           referral_program_enabled?: boolean
+          referral_reward_buy_amount?: number
+          referral_reward_buy_enabled?: boolean
           referral_reward_sell_amount?: number
+          referral_reward_sell_buy_amount?: number
+          referral_reward_sell_buy_enabled?: boolean
           referral_reward_sell_enabled?: boolean
           referral_reward_trade_amount?: number
           referral_reward_trade_enabled?: boolean
+          referral_reward_type?: string
           review_request_message?: string
           review_request_subject?: string
           service_hero_headline?: string
@@ -1773,10 +1783,15 @@ export type Database = {
           price_guarantee_days?: number
           primary_color?: string
           referral_program_enabled?: boolean
+          referral_reward_buy_amount?: number
+          referral_reward_buy_enabled?: boolean
           referral_reward_sell_amount?: number
+          referral_reward_sell_buy_amount?: number
+          referral_reward_sell_buy_enabled?: boolean
           referral_reward_sell_enabled?: boolean
           referral_reward_trade_amount?: number
           referral_reward_trade_enabled?: boolean
+          referral_reward_type?: string
           review_request_message?: string
           review_request_subject?: string
           service_hero_headline?: string
