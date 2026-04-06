@@ -9,8 +9,16 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 
-import { Plus, Trash2, GripVertical, Save, Loader2, MapPin, ChevronDown, ChevronRight, X, MapPinned, Car, Radar } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Trash2, GripVertical, Save, Loader2, MapPin, ChevronDown, ChevronRight, X, MapPinned, Car, Radar, Store, Building2, ShoppingCart, Warehouse } from "lucide-react";
 import LocationLogoSection from "./LocationLogoSection";
+
+const LOCATION_TYPE_OPTIONS = [
+  { value: "primary", label: "Primary Store", icon: Store, color: "bg-primary/10 text-primary border-primary/20" },
+  { value: "sister_store", label: "Sister Store", icon: Building2, color: "bg-blue-500/10 text-blue-600 border-blue-200" },
+  { value: "used_car", label: "Used Car Center", icon: ShoppingCart, color: "bg-amber-500/10 text-amber-600 border-amber-200" },
+  { value: "buying_center", label: "Buying Center", icon: Warehouse, color: "bg-emerald-500/10 text-emerald-600 border-emerald-200" },
+] as const;
 
 interface Location {
   id: string;
