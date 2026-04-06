@@ -21,6 +21,7 @@ interface DealerLocation {
   state: string;
   address: string | null;
   show_in_scheduling: boolean;
+  show_in_inspection: boolean;
 }
 
 /**
