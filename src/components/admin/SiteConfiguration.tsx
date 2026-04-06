@@ -110,6 +110,7 @@ const DEFAULT_CONFIG: SiteConfig = {
   referral_reward_trade_enabled: false,
   referral_reward_trade_amount: 0,
   referral_reward_type: "cash",
+  established_year: null,
 };
 
 interface SectionProps {
