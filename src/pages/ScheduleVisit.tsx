@@ -93,6 +93,7 @@ const ScheduleVisit = () => {
   const { toast } = useToast();
   const { config } = useSiteConfig();
   const [locations, setLocations] = useState<DealerLocation[]>([]);
+  const [lockedStoreId, setLockedStoreId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -108,6 +109,21 @@ const ScheduleVisit = () => {
     fetchLocations();
   }, []);
 
+  // If the submission has a store_location_id, lock scheduling to that store
+  useEffect(() => {
+    if (!submissionToken) return;
+    supabase
+      .from("submissions")
+      .select("store_location_id")
+      .eq("token", submissionToken)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.store_location_id) {
+          setLockedStoreId(data.store_location_id);
+        }
+      });
+  }, [submissionToken]);
+
   const [form, setForm] = useState({
     customer_name: searchParams.get("name") || "",
     customer_email: searchParams.get("email") || "",
@@ -119,12 +135,14 @@ const ScheduleVisit = () => {
     notes: "",
   });
 
-  // Auto-select if only one scheduling location
+  // Auto-select locked store or single location
   useEffect(() => {
-    if (locations.length === 1 && !form.store_location) {
+    if (lockedStoreId) {
+      setForm(prev => ({ ...prev, store_location: lockedStoreId }));
+    } else if (locations.length === 1 && !form.store_location) {
       setForm(prev => ({ ...prev, store_location: locations[0].id }));
     }
-  }, [locations]);
+  }, [locations, lockedStoreId]);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
@@ -422,7 +440,18 @@ const ScheduleVisit = () => {
                 </div>
               </div>
 
-              {locations.length > 1 && (
+              {lockedStoreId ? (
+                <div className="space-y-2">
+                  <Label>Store Location</Label>
+                  <div className="flex h-10 w-full items-center rounded-md border border-input bg-muted/50 px-3 py-2 text-sm">
+                    {(() => {
+                      const loc = locations.find(l => l.id === lockedStoreId);
+                      return loc ? `${loc.name} — ${loc.city}, ${loc.state}` : "Assigned Location";
+                    })()}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">This location was set based on where your lead originated.</p>
+                </div>
+              ) : locations.length > 1 && (
                 <div className="space-y-2">
                   <Label htmlFor="store_location">Preferred Location *</Label>
                   <select
