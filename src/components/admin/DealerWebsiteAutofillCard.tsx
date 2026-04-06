@@ -259,7 +259,7 @@ export default function DealerWebsiteAutofillCard({
       // Fetch current config to determine what's new vs existing
       const [configRes] = await Promise.all([
         supabase.from("site_config")
-          .select("dealership_name, tagline, phone, email, address, website_url, google_review_url, facebook_url, instagram_url, tiktok_url, youtube_url, primary_color, accent_color, success_color, logo_url, business_hours, hero_headline, hero_subtext, stats_years_in_business, stats_rating, stats_reviews_count, stats_cars_purchased")
+          .select("dealership_name, tagline, phone, email, address, website_url, google_review_url, facebook_url, instagram_url, tiktok_url, youtube_url, primary_color, accent_color, success_color, logo_url, business_hours, hero_headline, hero_subtext, about_hero_headline, about_story, stats_years_in_business, stats_rating, stats_reviews_count, stats_cars_purchased")
           .eq("dealership_id", dealershipId)
           .maybeSingle(),
       ]);
