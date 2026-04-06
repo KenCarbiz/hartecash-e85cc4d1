@@ -164,6 +164,55 @@ export const ONBOARDING_SECTIONS: Section[] = [
     ],
   },
   {
+    title: "13. Operations & Trust",
+    icon: "🕐",
+    questions: [
+      { id: "established_year", label: "Year Established", type: "text", hint: "e.g. 1946 — used for 'XX years in business' trust badges" },
+      { id: "business_hours", label: "Business Hours", type: "multiline", hint: "One line per entry: Days | Hours\ne.g. Mon–Thu | 9 AM – 7 PM\nFri–Sat | 9 AM – 6 PM\nSun | Closed" },
+      { id: "stats_cars_purchased", label: "Cars Purchased (override)", type: "text", hint: "e.g. 14,721+ — leave blank to auto-calculate" },
+      { id: "stats_rating", label: "Google Rating (override)", type: "text", hint: "e.g. 4.9" },
+      { id: "stats_reviews_count", label: "Reviews Count (override)", type: "text", hint: "e.g. 2,400+" },
+    ],
+  },
+  {
+    title: "14. Service & Trade Landing Pages",
+    icon: "🚘",
+    questions: [
+      { id: "service_hero_headline", label: "Service Landing Headline", type: "text", hint: "e.g. There's Never Been a Better Time to Upgrade or Sell" },
+      { id: "service_hero_subtext", label: "Service Landing Subtext", type: "text" },
+      { id: "trade_hero_headline", label: "Trade-In Landing Headline", type: "text", hint: "e.g. Submit Your Trade-In Info" },
+      { id: "trade_hero_subtext", label: "Trade-In Landing Subtext", type: "text" },
+    ],
+  },
+  {
+    title: "15. About Page",
+    icon: "📖",
+    questions: [
+      { id: "about_hero_headline", label: "About Page Headline", type: "text", hint: "e.g. Our Story" },
+      { id: "about_hero_subtext", label: "About Page Subtext", type: "text" },
+      { id: "about_story", label: "Dealership Story", type: "multiline", hint: "Tell your dealership's story — history, mission, what makes you different" },
+    ],
+  },
+  {
+    title: "16. Feature Toggles",
+    icon: "⚙️",
+    questions: [
+      { id: "enable_dl_ocr", label: "Enable Driver's License scanning?", type: "choice", choices: ["Yes", "No"], hint: "Auto-fill customer info from DL photo" },
+      { id: "track_abandoned", label: "Track abandoned leads?", type: "choice", choices: ["Yes", "No"], hint: "Monitor and alert on form drop-offs" },
+      { id: "referral_enabled", label: "Enable Referral Program?", type: "choice", choices: ["Yes", "No"] },
+    ],
+  },
+  {
+    title: "17. Staff & Roles",
+    icon: "👥",
+    questions: [
+      { id: "admin_users", label: "Admin Users (email)", type: "multiline" },
+      { id: "gsm_users", label: "GSM/GM Users (email)", type: "multiline" },
+      { id: "ucm_users", label: "Used Car Managers (email)", type: "multiline" },
+      { id: "bdc_users", label: "Sales / BDC Users (email)", type: "multiline" },
+    ],
+  },
+  {
     title: "13. Staff & Roles",
     icon: "👥",
     questions: [

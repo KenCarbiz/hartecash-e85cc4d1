@@ -105,8 +105,38 @@ export async function applyOnboardingAnswers(
     if (answers.customer_picks) siteUpdates.assign_customer_picks = yn(answers.customer_picks);
     if (answers.buying_center) siteUpdates.assign_buying_center = yn(answers.buying_center);
 
+    // Operations & Trust
+    if (answers.established_year) {
+      const yr = parseInt(answers.established_year);
+      if (yr > 1800 && yr <= new Date().getFullYear()) siteUpdates.established_year = yr;
+    }
+    if (answers.business_hours?.trim()) {
+      const hours = answers.business_hours.split("\n").filter((l) => l.trim()).map((line) => {
+        const [days, hrs] = line.split("|").map((p) => p.trim());
+        return { days: days || line.trim(), hours: hrs || "" };
+      });
+      siteUpdates.business_hours = hours;
+    }
+    if (answers.stats_cars_purchased) siteUpdates.stats_cars_purchased = answers.stats_cars_purchased;
+    if (answers.stats_rating) siteUpdates.stats_rating = answers.stats_rating;
+    if (answers.stats_reviews_count) siteUpdates.stats_reviews_count = answers.stats_reviews_count;
+
+    // Service & Trade hero copy
+    if (answers.service_hero_headline) siteUpdates.service_hero_headline = answers.service_hero_headline;
+    if (answers.service_hero_subtext) siteUpdates.service_hero_subtext = answers.service_hero_subtext;
+    if (answers.trade_hero_headline) siteUpdates.trade_hero_headline = answers.trade_hero_headline;
+    if (answers.trade_hero_subtext) siteUpdates.trade_hero_subtext = answers.trade_hero_subtext;
+
+    // About page
+    if (answers.about_hero_headline) siteUpdates.about_hero_headline = answers.about_hero_headline;
+    if (answers.about_hero_subtext) siteUpdates.about_hero_subtext = answers.about_hero_subtext;
+    if (answers.about_story) siteUpdates.about_story = answers.about_story;
+
+    // Feature toggles
+    if (answers.enable_dl_ocr) siteUpdates.enable_dl_ocr = yn(answers.enable_dl_ocr);
+    if (answers.track_abandoned) siteUpdates.track_abandoned_leads = yn(answers.track_abandoned);
+
     if (Object.keys(siteUpdates).length > 0) {
-      // Upsert
       const { error } = await supabase
         .from("site_config")
         .upsert({ dealership_id: dealershipId, ...siteUpdates }, { onConflict: "dealership_id" });
