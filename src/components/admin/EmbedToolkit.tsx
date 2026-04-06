@@ -28,7 +28,7 @@ const EmbedToolkit = () => {
   const [targetPage, setTargetPage] = useState("/trade");
   const [widgetPosition, setWidgetPosition] = useState("bottom-right");
   const [locations, setLocations] = useState<DealerLocation[]>([]);
-  const [selectedLocationId, setSelectedLocationId] = useState<string>("");
+  const [selectedLocationId, setSelectedLocationId] = useState<string>("__all__");
 
   useEffect(() => {
     supabase
