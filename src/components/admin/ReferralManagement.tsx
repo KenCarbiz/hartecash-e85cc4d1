@@ -101,7 +101,7 @@ const ReferralManagement = () => {
       toast({ title: "No email", description: "This referrer has no email address.", variant: "destructive" });
       return;
     }
-    const referralLink = `${window.location.origin}/?ref=${referral.referral_code}`;
+    const referralLink = `${tenantBaseUrl}/?ref=${referral.referral_code}`;
     await supabase.functions.invoke("send-transactional-email", {
       body: {
         templateName: "referral-invite",
