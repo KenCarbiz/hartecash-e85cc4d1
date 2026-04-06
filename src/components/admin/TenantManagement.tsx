@@ -107,9 +107,10 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
       is_active: form.is_active,
     };
 
-    let error;
+    let error: any;
     if (editing) {
-      ({ error } = await supabase.from("tenants").update(payload).eq("id", editing.id));
+      const result = await supabase.from("tenants").update(payload).eq("id", editing.id);
+      error = result.error;
     } else {
       // Create tenant + seed config rows
       const { error: insertError } = await supabase.from("tenants").insert(payload);
