@@ -29,6 +29,11 @@ interface Location {
   coverage_radius_miles: number;
   all_brands: boolean;
   excluded_oem_brands: string[];
+  corporate_logo_url: string | null;
+  oem_logo_urls: string[];
+  logo_layout: string;
+  show_corporate_logo: boolean;
+  show_corporate_on_landing_only: boolean;
 }
 
 const LocationManagement = () => {
