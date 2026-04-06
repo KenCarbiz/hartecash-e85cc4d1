@@ -55,10 +55,10 @@ const PLAN_TIERS = [
 ];
 
 const STATUS_CONFIG: Record<string, { label: string; icon: React.ElementType; color: string }> = {
-  pending: { label: "Pending", icon: Clock, color: "bg-amber-500/10 text-amber-600 border-amber-200" },
-  active: { label: "Active", icon: CheckCircle, color: "bg-emerald-500/10 text-emerald-600 border-emerald-200" },
-  paused: { label: "Paused", icon: Pause, color: "bg-blue-500/10 text-blue-600 border-blue-200" },
-  cancelled: { label: "Cancelled", icon: XCircle, color: "bg-red-500/10 text-red-600 border-red-200" },
+  pending: { label: "Pending", icon: Clock, color: "bg-accent/10 text-accent-foreground border-accent/30" },
+  active: { label: "Active", icon: CheckCircle, color: "bg-primary/10 text-primary border-primary/30" },
+  paused: { label: "Paused", icon: Pause, color: "bg-muted text-muted-foreground border-border" },
+  cancelled: { label: "Cancelled", icon: XCircle, color: "bg-destructive/10 text-destructive border-destructive/30" },
 };
 
 const DEFAULT_ACCOUNT: Omit<DealerAccount, "id"> = {
