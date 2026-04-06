@@ -62,6 +62,8 @@ interface ScrapedDealerInfo {
   hero_subtext?: string;
   about_story?: string;
   about_hero_headline?: string;
+  about_mission?: string;
+  about_values_list?: string[];
   oem_brands?: string[];
   staff_emails?: string[];
   staff_phones?: string[];
@@ -74,6 +76,10 @@ interface ScrapedDealerInfo {
   stats_rating?: string;
   stats_reviews_count?: string;
   stats_cars_purchased?: string;
+  established_year?: string;
+  meta_description?: string;
+  favicon_url?: string;
+  certifications?: string[];
 }
 
 type OnboardingAnswers = Record<string, string>;
@@ -160,6 +166,21 @@ const buildAnswerMap = (data: ScrapedDealerInfo, url: string): OnboardingAnswers
   setField("success_color", data.success_color);
   setField("hero_headline", data.hero_headline);
   setField("hero_subtext", data.hero_subtext);
+  setField("about_story", data.about_story);
+  setField("about_hero_headline", data.about_hero_headline);
+  setField("about_mission", data.about_mission);
+  setField("established_year", data.established_year);
+  setField("favicon_url", data.favicon_url);
+  setField("meta_description", data.meta_description);
+  if (Array.isArray(data.oem_brands) && data.oem_brands.length > 0) {
+    fieldMap.oem_brands = data.oem_brands.join(", ");
+  }
+  if (Array.isArray(data.certifications) && data.certifications.length > 0) {
+    fieldMap.certifications = data.certifications.join(", ");
+  }
+  if (Array.isArray(data.about_values_list) && data.about_values_list.length > 0) {
+    fieldMap.about_values = data.about_values_list.join(", ");
+  }
 
   if (Array.isArray(data.staff_emails) && data.staff_emails.length > 0) {
     fieldMap.staff_emails = data.staff_emails.join("\n");
@@ -259,7 +280,7 @@ export default function DealerWebsiteAutofillCard({
       // Fetch current config to determine what's new vs existing
       const [configRes] = await Promise.all([
         supabase.from("site_config")
-          .select("dealership_name, tagline, phone, email, address, website_url, google_review_url, facebook_url, instagram_url, tiktok_url, youtube_url, primary_color, accent_color, success_color, logo_url, business_hours, hero_headline, hero_subtext, about_hero_headline, about_story, stats_years_in_business, stats_rating, stats_reviews_count, stats_cars_purchased")
+          .select("dealership_name, tagline, phone, email, address, website_url, google_review_url, facebook_url, instagram_url, tiktok_url, youtube_url, primary_color, accent_color, success_color, logo_url, logo_white_url, favicon_url, business_hours, hero_headline, hero_subtext, about_hero_headline, about_story, stats_years_in_business, stats_rating, stats_reviews_count, stats_cars_purchased, established_year")
           .eq("dealership_id", dealershipId)
           .maybeSingle(),
       ]);
@@ -304,6 +325,17 @@ export default function DealerWebsiteAutofillCard({
         categories.push({ label: "Hero Content", icon: FileText, items: heroItems, section: "site-config" });
       }
 
+      // About Us
+      const aboutItems: PreviewCategory["items"] = [];
+      if (isFilledText(scraped.about_story)) aboutItems.push({ label: "About Story", value: scraped.about_story.slice(0, 200) + (scraped.about_story.length > 200 ? "…" : ""), isNew: !isFilledText((cfg as any)?.about_story) });
+      if (isFilledText(scraped.about_hero_headline)) aboutItems.push({ label: "About Headline", value: scraped.about_hero_headline, isNew: !isFilledText((cfg as any)?.about_hero_headline) });
+      if (isFilledText(scraped.about_mission)) aboutItems.push({ label: "Mission", value: scraped.about_mission, isNew: true });
+      if (Array.isArray(scraped.about_values_list) && scraped.about_values_list.length > 0) aboutItems.push({ label: "Values", value: scraped.about_values_list.join(", "), isNew: true });
+      if (Array.isArray(scraped.certifications) && scraped.certifications.length > 0) aboutItems.push({ label: "Certifications", value: scraped.certifications.join(", "), isNew: true });
+      if (aboutItems.length > 0) {
+        categories.push({ label: "About Us", icon: FileText, items: aboutItems, section: "site-config" });
+      }
+
       // Social & Reviews
       const socialItems: PreviewCategory["items"] = [];
       if (isFilledText(scraped.google_review)) socialItems.push({ label: "Google Reviews", value: scraped.google_review, isNew: !isFilledText(cfg?.google_review_url) });
@@ -317,6 +349,7 @@ export default function DealerWebsiteAutofillCard({
 
       // Stats
       const statsItems: PreviewCategory["items"] = [];
+      if (isFilledText(scraped.established_year)) statsItems.push({ label: "Established", value: scraped.established_year, isNew: !(cfg as any)?.established_year });
       if (isFilledText(scraped.stats_rating)) statsItems.push({ label: "Rating", value: scraped.stats_rating, isNew: !isFilledText(cfg?.stats_rating) });
       if (isFilledText(scraped.stats_reviews_count)) statsItems.push({ label: "Reviews", value: scraped.stats_reviews_count, isNew: !isFilledText(cfg?.stats_reviews_count) });
       if (isFilledText(scraped.stats_years_in_business)) statsItems.push({ label: "Years in Business", value: scraped.stats_years_in_business, isNew: !isFilledText(cfg?.stats_years_in_business) });
@@ -389,7 +422,7 @@ export default function DealerWebsiteAutofillCard({
     try {
       const [configRes, accountRes, existingLocsRes] = await Promise.all([
         supabase.from("site_config")
-          .select("dealership_name, tagline, phone, email, address, website_url, google_review_url, facebook_url, instagram_url, tiktok_url, youtube_url, primary_color, accent_color, success_color, logo_url, business_hours, hero_headline, hero_subtext, about_hero_headline, about_story, stats_years_in_business, stats_rating, stats_reviews_count, stats_cars_purchased")
+          .select("dealership_name, tagline, phone, email, address, website_url, google_review_url, facebook_url, instagram_url, tiktok_url, youtube_url, primary_color, accent_color, success_color, logo_url, favicon_url, business_hours, hero_headline, hero_subtext, about_hero_headline, about_story, stats_years_in_business, stats_rating, stats_reviews_count, stats_cars_purchased, established_year")
           .eq("dealership_id", dealershipId).maybeSingle(),
         supabase.from("dealer_accounts")
           .select("id, architecture, bdc_model, onboarding_answers")
@@ -443,6 +476,18 @@ export default function DealerWebsiteAutofillCard({
       maybeSet("stats_rating", currentConfig?.stats_rating, scraped.stats_rating);
       maybeSet("stats_reviews_count", currentConfig?.stats_reviews_count, scraped.stats_reviews_count);
       maybeSet("stats_cars_purchased", currentConfig?.stats_cars_purchased, scraped.stats_cars_purchased);
+      maybeSet("favicon_url", (currentConfig as any)?.favicon_url, scraped.favicon_url);
+
+      // Established year
+      const estYear = scraped.established_year ? parseInt(scraped.established_year) : null;
+      if (estYear && estYear >= 1800 && estYear <= new Date().getFullYear() && !(currentConfig as any)?.established_year) {
+        configUpdates.established_year = estYear;
+        // Also auto-compute years in business string
+        if (!isFilledText(currentConfig?.stats_years_in_business)) {
+          configUpdates.stats_years_in_business = `${new Date().getFullYear() - estYear} yrs`;
+        }
+        configFillCount += 1;
+      }
 
       const primaryColor = normalizeBrandColor(scraped.primary_color);
       if (primaryColor && (!isFilledText(currentConfig?.primary_color) || currentConfig?.primary_color === DEFAULT_PRIMARY_COLOR)) {
@@ -516,7 +561,7 @@ export default function DealerWebsiteAutofillCard({
       }
 
       // Execute mutations
-      const mutations = [];
+      const mutations: any[] = [];
       if (Object.keys(configUpdates).length > 0) {
         mutations.push(supabase.from("site_config").update(configUpdates).eq("dealership_id", dealershipId));
       }
@@ -525,6 +570,23 @@ export default function DealerWebsiteAutofillCard({
           mutations.push(supabase.from("dealer_accounts").update(accountUpdates).eq("id", currentAccount.id));
         } else {
           mutations.push(supabase.from("dealer_accounts").insert({ dealership_id: dealershipId, ...accountUpdates } as never));
+        }
+      }
+
+      // Auto-populate notification recipients from scraped staff emails
+      const allStaffEmails = new Set<string>();
+      if (Array.isArray(scraped.staff_emails)) scraped.staff_emails.forEach(e => allStaffEmails.add(e.trim()));
+      if (Array.isArray(scraped.staff_members)) scraped.staff_members.forEach(m => { if (isFilledText(m.email)) allStaffEmails.add(m.email!.trim()); });
+      if (isFilledText(scraped.email)) allStaffEmails.add(scraped.email.trim());
+
+      if (allStaffEmails.size > 0) {
+        const { data: notifData } = await supabase.from("notification_settings")
+          .select("id, email_recipients")
+          .eq("dealership_id", dealershipId).maybeSingle();
+        if (notifData && (!Array.isArray(notifData.email_recipients) || notifData.email_recipients.length === 0)) {
+          mutations.push(supabase.from("notification_settings").update({
+            email_recipients: Array.from(allStaffEmails),
+          }).eq("id", notifData.id));
         }
       }
 
