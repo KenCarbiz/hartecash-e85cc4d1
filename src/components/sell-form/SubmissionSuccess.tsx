@@ -132,6 +132,7 @@ const SubmissionSuccess = ({ uploadUrl, vehicleInfo, nextStep, offerEstimate }: 
           </a>
         </div>
       </div>
+      <PostOfferStorePicker onSelected={handleStoreSelected} />
     </motion.div>
   );
 };
