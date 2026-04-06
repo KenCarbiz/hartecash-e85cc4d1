@@ -59,6 +59,7 @@ function parseRows(text: string): CustomerRow[] {
 }
 
 const ServiceLinkGen = () => {
+  const { config } = useSiteConfig();
   const [pasteText, setPasteText] = useState("");
   const [rows, setRows] = useState<CustomerRow[]>([]);
   const [copied, setCopied] = useState<{ idx: number; field: "link" | "name" } | null>(null);
