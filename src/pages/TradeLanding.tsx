@@ -11,6 +11,7 @@ import FAQ from "@/components/FAQ";
 import CTABanner from "@/components/CTABanner";
 import ReferralBanner from "@/components/ReferralBanner";
 import SiteFooter from "@/components/SiteFooter";
+import StoreSelector from "@/components/StoreSelector";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 const TradeLanding = () => {
@@ -29,23 +30,25 @@ const TradeLanding = () => {
         path="/trade"
       />
       {!embed && <SiteHeader />}
-      <main>
-        {layout === "offset_right" ? (
-          <HeroOffset side="right" leadSource="trade" headlineOverride={tradeHeadline} subtextOverride={tradeSubtext} />
-        ) : layout === "offset_left" ? (
-          <HeroOffset side="left" leadSource="trade" headlineOverride={tradeHeadline} subtextOverride={tradeSubtext} />
-        ) : (
-          <HeroOffset side="right" leadSource="trade" headlineOverride={tradeHeadline} subtextOverride={tradeSubtext} />
-        )}
-        <HowItWorks />
-        <TrustBadges />
-        <CompetitorComparison />
-        <ValueProps />
-        <Testimonials />
-        <FAQ />
-        <ReferralBanner />
-        <CTABanner />
-      </main>
+      <StoreSelector>
+        <main>
+          {layout === "offset_right" ? (
+            <HeroOffset side="right" leadSource="trade" headlineOverride={tradeHeadline} subtextOverride={tradeSubtext} />
+          ) : layout === "offset_left" ? (
+            <HeroOffset side="left" leadSource="trade" headlineOverride={tradeHeadline} subtextOverride={tradeSubtext} />
+          ) : (
+            <HeroOffset side="right" leadSource="trade" headlineOverride={tradeHeadline} subtextOverride={tradeSubtext} />
+          )}
+          <HowItWorks />
+          <TrustBadges />
+          <CompetitorComparison />
+          <ValueProps />
+          <Testimonials />
+          <FAQ />
+          <ReferralBanner />
+          <CTABanner />
+        </main>
+      </StoreSelector>
       {!embed && <SiteFooter />}
     </div>
   );
