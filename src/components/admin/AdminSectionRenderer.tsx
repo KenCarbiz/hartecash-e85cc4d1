@@ -256,7 +256,18 @@ const AdminSectionRenderer = (props: AdminSectionRendererProps) => {
       )}
       {activeSection === "site-config" && canManageAccess && <SiteConfiguration />}
       {activeSection === "promotions" && canManageAccess && <PromotionManagement />}
-      {activeSection === "notifications" && canManageAccess && <NotificationSettings />}
+      {activeSection === "notifications" && canManageAccess && (
+        <div className="space-y-6">
+          <Tabs defaultValue="settings" className="w-full">
+            <TabsList>
+              <TabsTrigger value="settings">Settings</TabsTrigger>
+              <TabsTrigger value="log">Sent Messages</TabsTrigger>
+            </TabsList>
+            <TabsContent value="settings"><NotificationSettings /></TabsContent>
+            <TabsContent value="log"><NotificationLog /></TabsContent>
+          </Tabs>
+        </div>
+      )}
       {activeSection === "form-config" && canManageAccess && <FormConfiguration />}
       {activeSection === "inspection-config" && canManageAccess && <InspectionConfiguration />}
       {activeSection === "photo-config" && canManageAccess && <PhotoConfiguration />}
