@@ -461,6 +461,18 @@ export default function DealerWebsiteAutofillCard({
       maybeSet("stats_rating", currentConfig?.stats_rating, scraped.stats_rating);
       maybeSet("stats_reviews_count", currentConfig?.stats_reviews_count, scraped.stats_reviews_count);
       maybeSet("stats_cars_purchased", currentConfig?.stats_cars_purchased, scraped.stats_cars_purchased);
+      maybeSet("favicon_url", (currentConfig as any)?.favicon_url, scraped.favicon_url);
+
+      // Established year
+      const estYear = scraped.established_year ? parseInt(scraped.established_year) : null;
+      if (estYear && estYear >= 1800 && estYear <= new Date().getFullYear() && !(currentConfig as any)?.established_year) {
+        configUpdates.established_year = estYear;
+        // Also auto-compute years in business string
+        if (!isFilledText(currentConfig?.stats_years_in_business)) {
+          configUpdates.stats_years_in_business = `${new Date().getFullYear() - estYear} yrs`;
+        }
+        configFillCount += 1;
+      }
 
       const primaryColor = normalizeBrandColor(scraped.primary_color);
       if (primaryColor && (!isFilledText(currentConfig?.primary_color) || currentConfig?.primary_color === DEFAULT_PRIMARY_COLOR)) {
