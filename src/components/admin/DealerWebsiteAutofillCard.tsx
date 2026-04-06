@@ -545,8 +545,25 @@ export default function DealerWebsiteAutofillCard({
         }
       }
 
+      // Auto-populate notification recipients from scraped staff emails
+      const allStaffEmails = new Set<string>();
+      if (Array.isArray(scraped.staff_emails)) scraped.staff_emails.forEach(e => allStaffEmails.add(e.trim()));
+      if (Array.isArray(scraped.staff_members)) scraped.staff_members.forEach(m => { if (isFilledText(m.email)) allStaffEmails.add(m.email!.trim()); });
+      if (isFilledText(scraped.email)) allStaffEmails.add(scraped.email.trim());
+
+      if (allStaffEmails.size > 0) {
+        const { data: notifData } = await supabase.from("notification_settings")
+          .select("id, email_recipients")
+          .eq("dealership_id", dealershipId).maybeSingle();
+        if (notifData && (!Array.isArray(notifData.email_recipients) || notifData.email_recipients.length === 0)) {
+          mutations.push(supabase.from("notification_settings").update({
+            email_recipients: Array.from(allStaffEmails),
+          }).eq("id", notifData.id));
+        }
+      }
+
       // Execute mutations
-      const mutations = [];
+      const mutations: any[] = [];
       if (Object.keys(configUpdates).length > 0) {
         mutations.push(supabase.from("site_config").update(configUpdates).eq("dealership_id", dealershipId));
       }
