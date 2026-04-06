@@ -11,7 +11,7 @@ import FAQ from "@/components/FAQ";
 import CTABanner from "@/components/CTABanner";
 import ReferralBanner from "@/components/ReferralBanner";
 import SiteFooter from "@/components/SiteFooter";
-import StoreSelector from "@/components/StoreSelector";
+
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 const TradeLanding = () => {
