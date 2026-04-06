@@ -47,7 +47,7 @@ const EmbedToolkit = () => {
   // Build URL with optional store param
   const buildUrl = (path: string, extraParams: string[] = []) => {
     const params = [...extraParams];
-    if (selectedLocationId) params.push(`store=${selectedLocationId}`);
+    if (selectedLocationId && selectedLocationId !== "__all__") params.push(`store=${selectedLocationId}`);
     const qs = params.length > 0 ? `?${params.join("&")}` : "";
     return `${baseUrl}${path}${qs}`;
   };
