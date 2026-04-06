@@ -316,6 +316,9 @@ export type Database = {
       }
       dealership_locations: {
         Row: {
+          about_hero_headline: string | null
+          about_hero_subtext: string | null
+          about_story: string | null
           address: string | null
           all_brands: boolean
           center_zip: string | null
@@ -343,9 +346,13 @@ export type Database = {
           state: string
           temporarily_offline: boolean
           use_bdc: boolean
+          use_corporate_about: boolean
           zip_codes: string[]
         }
         Insert: {
+          about_hero_headline?: string | null
+          about_hero_subtext?: string | null
+          about_story?: string | null
           address?: string | null
           all_brands?: boolean
           center_zip?: string | null
@@ -373,9 +380,13 @@ export type Database = {
           state?: string
           temporarily_offline?: boolean
           use_bdc?: boolean
+          use_corporate_about?: boolean
           zip_codes?: string[]
         }
         Update: {
+          about_hero_headline?: string | null
+          about_hero_subtext?: string | null
+          about_story?: string | null
           address?: string | null
           all_brands?: boolean
           center_zip?: string | null
@@ -403,6 +414,7 @@ export type Database = {
           state?: string
           temporarily_offline?: boolean
           use_bdc?: boolean
+          use_corporate_about?: boolean
           zip_codes?: string[]
         }
         Relationships: []
