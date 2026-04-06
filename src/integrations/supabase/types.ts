@@ -330,6 +330,7 @@ export type Database = {
           coverage_radius_miles: number | null
           created_at: string
           dealership_id: string
+          established_year: number | null
           excluded_oem_brands: string[]
           id: string
           is_active: boolean
@@ -350,6 +351,7 @@ export type Database = {
           temporarily_offline: boolean
           use_bdc: boolean
           use_corporate_about: boolean
+          use_corporate_established_year: boolean
           zip_codes: string[]
         }
         Insert: {
@@ -367,6 +369,7 @@ export type Database = {
           coverage_radius_miles?: number | null
           created_at?: string
           dealership_id?: string
+          established_year?: number | null
           excluded_oem_brands?: string[]
           id?: string
           is_active?: boolean
@@ -387,6 +390,7 @@ export type Database = {
           temporarily_offline?: boolean
           use_bdc?: boolean
           use_corporate_about?: boolean
+          use_corporate_established_year?: boolean
           zip_codes?: string[]
         }
         Update: {
@@ -404,6 +408,7 @@ export type Database = {
           coverage_radius_miles?: number | null
           created_at?: string
           dealership_id?: string
+          established_year?: number | null
           excluded_oem_brands?: string[]
           id?: string
           is_active?: boolean
@@ -424,6 +429,7 @@ export type Database = {
           temporarily_offline?: boolean
           use_bdc?: boolean
           use_corporate_about?: boolean
+          use_corporate_established_year?: boolean
           zip_codes?: string[]
         }
         Relationships: []
@@ -1623,6 +1629,7 @@ export type Database = {
           email: string | null
           enable_animations: boolean
           enable_dl_ocr: boolean
+          established_year: number | null
           facebook_url: string | null
           favicon_url: string | null
           google_review_url: string | null
@@ -1695,6 +1702,7 @@ export type Database = {
           email?: string | null
           enable_animations?: boolean
           enable_dl_ocr?: boolean
+          established_year?: number | null
           facebook_url?: string | null
           favicon_url?: string | null
           google_review_url?: string | null
@@ -1767,6 +1775,7 @@ export type Database = {
           email?: string | null
           enable_animations?: boolean
           enable_dl_ocr?: boolean
+          established_year?: number | null
           facebook_url?: string | null
           favicon_url?: string | null
           google_review_url?: string | null
