@@ -181,6 +181,23 @@ const AboutPageConfig = () => {
     setValues(updated);
   };
 
+  const handleImageUpload = async (file: File, onUrl: (url: string) => void) => {
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "Too large", description: "Max 5 MB.", variant: "destructive" });
+      return;
+    }
+    const ext = file.name.split(".").pop();
+    const path = `about/${dealershipId}_${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("dealer-logos").upload(path, file, { upsert: true });
+    if (error) {
+      toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    const { data: urlData } = supabase.storage.from("dealer-logos").getPublicUrl(path);
+    onUrl(urlData.publicUrl);
+    toast({ title: "Uploaded", description: "Image uploaded — save to apply." });
+  };
+
   if (loading) {
     return (
       <div className="flex items-center gap-2 text-muted-foreground py-8">
