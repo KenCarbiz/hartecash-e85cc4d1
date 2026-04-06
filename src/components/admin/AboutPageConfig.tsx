@@ -78,7 +78,7 @@ const AboutPageConfig = () => {
       const [configRes, locsRes] = await Promise.all([
         supabase
           .from("site_config")
-          .select("about_hero_headline, about_hero_subtext, about_story, about_milestones, about_values, about_image_url")
+          .select("about_hero_headline, about_hero_subtext, about_story, about_milestones, about_values, about_image_url, about_image_urls")
           .eq("dealership_id", dealershipId)
           .maybeSingle(),
         supabase
