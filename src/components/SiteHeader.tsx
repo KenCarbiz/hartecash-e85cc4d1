@@ -1,13 +1,18 @@
 import { useState, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { UserRound, CalendarCheck, FileText, ArrowLeftRight, Phone, Info } from "lucide-react";
 import logoFallback from "@/assets/logo-placeholder.png";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useLocationLogos } from "@/hooks/useLocationLogos";
+
+const LANDING_ROUTES = ["/", "/trade", "/service", "/about", "/schedule"];
 
 const SiteHeader = () => {
   const [open, setOpen] = useState(false);
   const timeout = useRef<ReturnType<typeof setTimeout>>();
   const { config } = useSiteConfig();
+  const logos = useLocationLogos();
+  const location = useLocation();
 
   const show = () => { clearTimeout(timeout.current); setOpen(true); };
   const hide = () => { timeout.current = setTimeout(() => setOpen(false), 200); };
@@ -15,11 +20,42 @@ const SiteHeader = () => {
   const logoSrc = config.logo_url || logoFallback;
   const dealerName = config.dealership_name || "Our Dealership";
 
+  const isLandingPage = LANDING_ROUTES.includes(location.pathname);
+  const showCorporate = logos.show_corporate_logo && logos.corporate_logo_url &&
+    (!logos.show_corporate_on_landing_only || isLandingPage);
+  const hasOemLogos = logos.oem_logo_urls && logos.oem_logo_urls.length > 0;
+  const isStacked = logos.logo_layout === "stacked";
+
   return (
     <header className="bg-card sticky top-0 z-50 shadow-md">
       <div className="max-w-6xl mx-auto px-5 py-2">
         <div className="flex items-center justify-between">
-          <img src={logoSrc} alt={dealerName} className="h-[72px] md:h-[84px] w-auto" width={317} height={112} fetchPriority="high" />
+          {/* Logo cluster */}
+          <div className={`flex ${isStacked ? "flex-col" : "flex-row items-center"} gap-2`}>
+            {/* Corporate logo */}
+            {showCorporate && (
+              <img
+                src={logos.corporate_logo_url!}
+                alt="Corporate"
+                className="h-[40px] md:h-[48px] w-auto object-contain"
+              />
+            )}
+            {/* Main dealership logo */}
+            <img src={logoSrc} alt={dealerName} className="h-[72px] md:h-[84px] w-auto" width={317} height={112} fetchPriority="high" />
+            {/* OEM brand logos */}
+            {hasOemLogos && (
+              <div className="flex items-center gap-1.5">
+                {logos.oem_logo_urls.map((url, i) => (
+                  <img
+                    key={i}
+                    src={url}
+                    alt={`Brand ${i + 1}`}
+                    className="h-[28px] md:h-[36px] w-auto object-contain"
+                  />
+                ))}
+              </div>
+            )}
+          </div>
 
           <nav className="hidden lg:flex items-center gap-8 text-sm font-semibold text-card-foreground">
             <a href="#compare" className="hover:text-accent transition-colors">Why {dealerName.split(" ")[0]}</a>
