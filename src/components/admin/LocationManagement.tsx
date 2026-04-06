@@ -230,6 +230,32 @@ const LocationManagement = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                {/* Established Year */}
+                <div className="flex items-center gap-2">
+                  <Label className="text-[10px] text-muted-foreground whitespace-nowrap">Est.</Label>
+                  {loc.use_corporate_established_year && loc.location_type !== "primary" ? (
+                    <span className="text-xs text-muted-foreground italic">Using corporate year</span>
+                  ) : (
+                    <Input
+                      type="number"
+                      min={1800}
+                      max={new Date().getFullYear()}
+                      value={loc.established_year ?? ""}
+                      onChange={e => setLocations(prev => prev.map(l => l.id === loc.id ? { ...l, established_year: e.target.value ? Number(e.target.value) : null } : l))}
+                      placeholder="e.g. 1947"
+                      className="w-24 h-8 text-xs"
+                    />
+                  )}
+                  {loc.location_type !== "primary" && (
+                    <div className="flex items-center gap-1">
+                      <Label className="text-[10px] text-muted-foreground whitespace-nowrap">Use Corp</Label>
+                      <Switch
+                        checked={loc.use_corporate_established_year}
+                        onCheckedChange={v => setLocations(prev => prev.map(l => l.id === loc.id ? { ...l, use_corporate_established_year: v } : l))}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1.5" title="Active">
