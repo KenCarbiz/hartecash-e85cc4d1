@@ -5,7 +5,8 @@ import { toast } from "@/hooks/use-toast";
 import { Upload, Copy, FileSpreadsheet, Link2, CheckCircle2, Trash2, Sun, Moon } from "lucide-react";
 // @ts-ignore - read-excel-file browser entry
 import readXlsxFile from "read-excel-file/browser";
-import serviceLogo from "@/assets/logo-placeholder.png";
+import serviceLogoFallback from "@/assets/logo-placeholder.png";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 interface CustomerRow {
   name: string;
@@ -58,6 +59,7 @@ function parseRows(text: string): CustomerRow[] {
 }
 
 const ServiceLinkGen = () => {
+  const { config } = useSiteConfig();
   const [pasteText, setPasteText] = useState("");
   const [rows, setRows] = useState<CustomerRow[]>([]);
   const [copied, setCopied] = useState<{ idx: number; field: "link" | "name" } | null>(null);
@@ -206,7 +208,7 @@ const ServiceLinkGen = () => {
       {/* Header */}
       <header className={t.header}>
         <div className="max-w-5xl mx-auto px-5 py-3 flex items-center justify-between">
-          <img src={serviceLogo} alt="Service" className="h-32 -my-8" />
+          <img src={config.logo_url || serviceLogoFallback} alt={config.dealership_name || "Service"} className="h-32 -my-8" />
           <div className="flex items-center gap-4">
             <span className={`text-sm font-semibold tracking-wider uppercase ${t.headerLabel}`}>Link Generator</span>
             <button

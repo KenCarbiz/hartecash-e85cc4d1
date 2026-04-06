@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { logConsent } from "@/lib/consent";
-import serviceLogo from "@/assets/logo-placeholder.png";
+import serviceLogoFallback from "@/assets/logo-placeholder.png";
 import SEO from "@/components/SEO";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useTenant } from "@/contexts/TenantContext";
@@ -312,7 +312,7 @@ const ServiceLanding = () => {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-[hsl(222,47%,5%)]/90 backdrop-blur-md border-b border-[hsl(217,33%,17%)] overflow-visible">
         <div className="max-w-5xl mx-auto px-5 py-3 flex items-center justify-between">
-          <img src={serviceLogo} alt="Our Dealership" className="h-32 -my-8" />
+          <img src={siteConfig.logo_white_url || siteConfig.logo_url || serviceLogoFallback} alt={siteConfig.dealership_name || "Our Dealership"} className="h-32 -my-8" />
           <span className="text-sm font-semibold text-[hsl(215,20%,65%)] tracking-wider uppercase">Service Customer Exclusive</span>
         </div>
       </header>
@@ -809,7 +809,7 @@ const ServiceLanding = () => {
 
       {/* Footer */}
       <footer className="border-t border-[hsl(217,33%,17%)] py-8 px-5 text-center">
-        <img src={serviceLogo} alt="Our Dealership" className="h-20 mx-auto mb-3 opacity-60" />
+        <img src={siteConfig.logo_white_url || siteConfig.logo_url || serviceLogoFallback} alt={siteConfig.dealership_name || "Our Dealership"} className="h-20 mx-auto mb-3 opacity-60" />
         <p className="text-xs text-[hsl(215,20%,45%)]">
           Family-owned since 1952 • 150 Weston Street, Hartford, CT 06120 • (866) 851-7390
         </p>
