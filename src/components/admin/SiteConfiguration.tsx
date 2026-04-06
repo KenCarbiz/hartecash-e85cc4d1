@@ -61,6 +61,7 @@ interface SiteConfig {
   referral_reward_trade_enabled: boolean;
   referral_reward_trade_amount: number;
   referral_reward_type: string;
+  established_year: number | null;
 }
 
 const DEFAULT_CONFIG: SiteConfig = {
