@@ -92,6 +92,7 @@ const StaffManagement = () => {
   useEffect(() => {
     fetchStaff();
     fetchPermGroups();
+    fetchLocations();
   }, []);
 
   const { tenant } = useTenant();
