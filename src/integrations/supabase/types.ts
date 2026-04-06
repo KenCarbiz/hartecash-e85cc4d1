@@ -320,6 +320,7 @@ export type Database = {
           all_brands: boolean
           center_zip: string | null
           city: string
+          corporate_logo_dark_url: string | null
           corporate_logo_url: string | null
           coverage_radius_miles: number | null
           created_at: string
@@ -346,6 +347,7 @@ export type Database = {
           all_brands?: boolean
           center_zip?: string | null
           city: string
+          corporate_logo_dark_url?: string | null
           corporate_logo_url?: string | null
           coverage_radius_miles?: number | null
           created_at?: string
@@ -372,6 +374,7 @@ export type Database = {
           all_brands?: boolean
           center_zip?: string | null
           city?: string
+          corporate_logo_dark_url?: string | null
           corporate_logo_url?: string | null
           coverage_radius_miles?: number | null
           created_at?: string
