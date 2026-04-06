@@ -323,38 +323,39 @@ const AboutPageConfig = () => {
                         className="font-mono text-xs"
                       />
                     </div>
-                    {/* Location image upload */}
+                    {/* Location photos (multiple) */}
                     <div>
-                      <Label className="text-xs">Location Photo</Label>
-                      <p className="text-[10px] text-muted-foreground mb-2">Building exterior, team photo, or storefront image.</p>
-                      <div className="border border-border rounded-lg p-3 bg-muted/30 flex flex-col items-center gap-2 min-h-[80px]">
-                        {loc.about_image_url ? (
-                          <div className="relative">
-                            <img src={loc.about_image_url} alt="Location" className="max-h-24 rounded-md object-cover" />
-                            <button
-                              type="button"
-                              onClick={() => updateLocation(loc.id, "about_image_url", "")}
-                              className="absolute -top-2 -right-2 bg-destructive text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
-                            >×</button>
+                      <Label className="text-xs">Location Photos</Label>
+                      <p className="text-[10px] text-muted-foreground mb-2">Upload multiple images for a carousel.</p>
+                      <div className="border border-border rounded-lg p-3 bg-muted/30 space-y-2 min-h-[80px]">
+                        {loc.about_image_urls.length > 0 ? (
+                          <div className="flex flex-wrap gap-2">
+                            {loc.about_image_urls.map((url, idx) => (
+                              <div key={idx} className="relative group">
+                                <img src={url} alt={`Location ${idx + 1}`} className="h-20 w-auto rounded-md object-cover border border-border" />
+                                <button
+                                  type="button"
+                                  onClick={() => updateLocation(loc.id, "about_image_urls", loc.about_image_urls.filter((_: string, i: number) => i !== idx))}
+                                  className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                                >×</button>
+                              </div>
+                            ))}
                           </div>
                         ) : (
-                          <ImagePlus className="w-8 h-8 text-muted-foreground/40" />
+                          <div className="flex justify-center py-1">
+                            <ImagePlus className="w-8 h-8 text-muted-foreground/40" />
+                          </div>
                         )}
-                        <label className="cursor-pointer text-xs text-primary hover:underline">
-                          {loc.about_image_url ? "Replace" : "Upload"}
+                        <label className="cursor-pointer inline-flex items-center gap-1.5 text-xs text-primary hover:underline">
+                          <ImagePlus className="w-3.5 h-3.5" />
+                          {loc.about_image_urls.length > 0 ? "Add another" : "Upload"}
                           <input type="file" accept="image/*" className="hidden" onChange={e => {
                             const f = e.target.files?.[0];
-                            if (f) handleImageUpload(f, (url) => updateLocation(loc.id, "about_image_url", url));
+                            if (f) handleImageUpload(f, (url) => updateLocation(loc.id, "about_image_urls", [...loc.about_image_urls, url]));
                             e.target.value = "";
                           }} />
                         </label>
                       </div>
-                      <Input
-                        value={loc.about_image_url}
-                        onChange={(e) => updateLocation(loc.id, "about_image_url", e.target.value)}
-                        placeholder="Or paste URL"
-                        className="text-xs h-8 mt-1"
-                      />
                     </div>
                   </div>
                 )}
