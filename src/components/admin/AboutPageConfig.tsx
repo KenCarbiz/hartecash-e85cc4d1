@@ -124,6 +124,7 @@ const AboutPageConfig = () => {
         about_hero_headline: heroHeadline,
         about_hero_subtext: heroSubtext,
         about_story: story,
+        about_image_url: aboutImageUrl || null,
         about_milestones: milestones,
         about_values: values,
       } as any)
