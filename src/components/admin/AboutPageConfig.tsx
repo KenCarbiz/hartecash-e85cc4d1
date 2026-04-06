@@ -216,10 +216,8 @@ const AboutPageConfig = () => {
           <p className="text-xs text-muted-foreground">Customize the /about page content for your dealership.</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="gap-1.5" asChild>
-            <a href="/about" target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="w-3.5 h-3.5" /> Preview
-            </a>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => window.open("/about", "_blank")}>
+            <ExternalLink className="w-3.5 h-3.5" /> Preview
           </Button>
         </div>
       </div>
