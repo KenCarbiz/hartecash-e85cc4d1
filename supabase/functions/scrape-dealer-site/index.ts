@@ -6,6 +6,65 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+/** Scrape a single URL via Firecrawl */
+async function scrapePage(
+  url: string,
+  firecrawlKey: string,
+  formats: string[] = ["markdown"],
+  onlyMainContent = true
+): Promise<{ markdown: string; branding: any; links: string[]; metadata: any }> {
+  const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${firecrawlKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ url, formats, onlyMainContent }),
+  });
+  const data = await res.json();
+  return {
+    markdown: data.data?.markdown || data.markdown || "",
+    branding: data.data?.branding || data.branding || {},
+    links: data.data?.links || data.links || [],
+    metadata: data.data?.metadata || data.metadata || {},
+  };
+}
+
+/** Use Firecrawl map to discover site URLs */
+async function mapSite(url: string, firecrawlKey: string): Promise<string[]> {
+  try {
+    const res = await fetch("https://api.firecrawl.dev/v1/map", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${firecrawlKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ url, limit: 200, includeSubdomains: true }),
+    });
+    const data = await res.json();
+    return data.links || [];
+  } catch (e) {
+    console.error("Map failed:", e);
+    return [];
+  }
+}
+
+/** Find relevant sub-pages from the sitemap */
+function findRelevantPages(links: string[], baseUrl: string): { about: string | null; hours: string | null; staff: string | null; contact: string | null } {
+  const lower = (s: string) => s.toLowerCase();
+  const find = (patterns: string[]) => {
+    for (const p of patterns) {
+      const match = links.find((l) => {
+        const path = lower(l).replace(lower(baseUrl), "");
+        return path.includes(p) && !path.includes("blog") && !path.includes("news");
+      });
+      if (match) return match;
+    }
+    return null;
+  };
+
+  return {
+    about: find(["about-us", "about", "our-story", "our-history", "history", "who-we-are"]),
+    hours: find(["hours", "hours-directions", "hours-and-directions", "contact-us", "directions"]),
+    staff: find(["staff", "team", "our-team", "meet-our-team", "employees", "leadership"]),
+    contact: find(["contact", "contact-us", "get-in-touch"]),
+  };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -43,33 +102,50 @@ serve(async (req) => {
 
     console.log("Scraping dealer site:", formattedUrl);
 
-    const scrapeRes = await fetch("https://api.firecrawl.dev/v1/scrape", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${firecrawlKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        url: formattedUrl,
-        formats: ["markdown", "branding", "links"],
-        onlyMainContent: false,
-      }),
-    });
+    // Step 1: Map the site to discover pages + scrape homepage simultaneously
+    const [siteLinks, homepage] = await Promise.all([
+      mapSite(formattedUrl, firecrawlKey),
+      scrapePage(formattedUrl, firecrawlKey, ["markdown", "branding", "links"], false),
+    ]);
 
-    const scrapeData = await scrapeRes.json();
-    if (!scrapeRes.ok) {
-      console.error("Firecrawl error:", scrapeData);
-      return new Response(
-        JSON.stringify({ error: "Failed to scrape website", detail: scrapeData.error }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    // Merge links from map and homepage
+    const allLinks = [...new Set([...siteLinks, ...homepage.links])];
+    console.log(`Found ${allLinks.length} site URLs`);
+
+    // Step 2: Identify and scrape relevant sub-pages
+    const relevantPages = findRelevantPages(allLinks, formattedUrl);
+    console.log("Relevant pages:", JSON.stringify(relevantPages));
+
+    const subPageContent: string[] = [];
+    const pagesToScrape = Object.entries(relevantPages)
+      .filter(([, url]) => url !== null)
+      .map(([label, pageUrl]) => ({ label, url: pageUrl! }));
+
+    // Scrape up to 4 sub-pages in parallel
+    if (pagesToScrape.length > 0) {
+      const results = await Promise.all(
+        pagesToScrape.slice(0, 4).map(async ({ label, url: pageUrl }) => {
+          try {
+            console.log(`Scraping ${label} page: ${pageUrl}`);
+            const result = await scrapePage(pageUrl, firecrawlKey, ["markdown"], true);
+            return `\n\n--- ${label.toUpperCase()} PAGE (${pageUrl}) ---\n${result.markdown.slice(0, 6000)}`;
+          } catch (e) {
+            console.error(`Failed to scrape ${label}:`, e);
+            return "";
+          }
+        })
       );
+      subPageContent.push(...results.filter(Boolean));
     }
 
-    const markdown = scrapeData.data?.markdown || scrapeData.markdown || "";
-    const branding = scrapeData.data?.branding || scrapeData.branding || {};
-    const links = scrapeData.data?.links || scrapeData.links || [];
-    const metadata = scrapeData.data?.metadata || scrapeData.metadata || {};
+    const combinedContent = [
+      homepage.markdown.slice(0, 12000),
+      ...subPageContent,
+    ].join("\n");
 
+    console.log(`Total content length: ${combinedContent.length} chars`);
+
+    // Step 3: AI extraction with enriched content
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -81,23 +157,41 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are an expert at extracting dealership information from website content. Extract ALL available information and return it using the provided tool. Be thorough — look for every piece of data: contact info, social links, branding colors, OEM brands sold, business hours, staff/team members with emails, notification-relevant emails, number of locations, taglines, slogans, and any other dealership operational details. If the site mentions departments (service, sales, parts, BDC), extract those contact details too.`,
+            content: `You are an expert at extracting dealership information from website content. You are given the HOMEPAGE plus sub-pages (About, Hours, Staff, Contact) when available. Extract ALL available information using the provided tool. Be extremely thorough:
+
+- **Identity**: Dealership name, tagline/slogan, phone, email, address, website
+- **Social**: Google reviews link, Facebook, Instagram, TikTok, YouTube
+- **Branding**: Colors from the CSS/branding data, logo URL, favicon
+- **Architecture**: How many locations, whether it's a single store or group
+- **Hours**: Sales hours AND Service hours separately if available. Look for "Sales Hours", "Service Hours", "Parts Hours" sections. Also look for general business hours.
+- **About/Story**: Full narrative from the About page. Include founding story, mission, values. Look for "Since [year]", "Est. [year]", "Founded in [year]", "Family-owned since [year]", "[X] years of experience".
+- **Milestones/Timeline**: Any historical events, awards, expansions, acquisitions. e.g. "2005: Opened second location", "2018: Named Dealer of the Year"
+- **Established Year**: Critical — look everywhere for founding year. Check footer, about page, hero text, tagline.
+- **Trust Stats**: Google rating, review count, cars sold/purchased numbers, awards
+- **Staff**: Names, titles, emails, phones of team members
+- **Locations**: All store locations with addresses, brands, phones
+- **OEM Brands**: All car makes sold
+- **Community**: Any community involvement, sponsorships, charity work mentioned
+- **Certifications**: Awards, accreditations, recognitions
+- **Service offerings**: Whether they buy cars, trade-ins, sell cars, service, parts
+- **Meta**: Page description, favicon URL, DMS/CRM provider if mentioned`,
           },
           {
             role: "user",
-            content: `Extract ALL dealership information from this website content. Be as thorough as possible.
+            content: `Extract ALL dealership information from this website. Be as thorough as possible. Multiple pages are included below.
 
 WEBSITE URL: ${formattedUrl}
-PAGE TITLE: ${metadata.title || ""}
+PAGE TITLE: ${homepage.metadata.title || ""}
+META DESCRIPTION: ${homepage.metadata.description || ""}
 
 BRANDING DATA:
-${JSON.stringify(branding, null, 2)}
+${JSON.stringify(homepage.branding, null, 2)}
 
-LINKS FOUND:
-${links.slice(0, 80).join("\n")}
+LINKS FOUND ON SITE (${allLinks.length} total):
+${allLinks.slice(0, 100).join("\n")}
 
-PAGE CONTENT (first 12000 chars):
-${markdown.slice(0, 12000)}`,
+FULL WEBSITE CONTENT:
+${combinedContent}`,
           },
         ],
         tools: [
@@ -109,7 +203,6 @@ ${markdown.slice(0, 12000)}`,
               parameters: {
                 type: "object",
                 properties: {
-                  // Section 1: Identity
                   dealership_name: { type: "string", description: "Full dealership name" },
                   tagline: { type: "string", description: "Tagline or slogan if found" },
                   phone: { type: "string", description: "Main phone number" },
@@ -121,42 +214,52 @@ ${markdown.slice(0, 12000)}`,
                   instagram: { type: "string", description: "Instagram URL" },
                   tiktok: { type: "string", description: "TikTok URL" },
                   youtube: { type: "string", description: "YouTube channel URL" },
-                  // Section 2: Architecture
                   architecture: {
                     type: "string",
                     enum: ["Single Store", "Multi-Location", "Dealer Group"],
                     description: "Inferred store architecture based on number of locations/brands",
                   },
-                  num_locations: { type: "string", description: "Number of locations found (e.g. '3')" },
-                  // Section 3: Branding
+                  num_locations: { type: "string", description: "Number of locations found" },
                   primary_color: { type: "string", description: "Primary brand color as hex (e.g. #1e3a5f)" },
                   accent_color: { type: "string", description: "Accent/secondary color as hex" },
-                  success_color: { type: "string", description: "Success/CTA color as hex (green-ish button color)" },
+                  success_color: { type: "string", description: "Success/CTA color as hex" },
                   logo_url: { type: "string", description: "URL to the dealership logo image" },
-                  // Section 4: Hero content
-                   hero_headline: { type: "string", description: "Main hero headline text from the homepage" },
-                   hero_subtext: { type: "string", description: "Hero subtext/description from the homepage" },
-                   // About us content
-                   about_story: { type: "string", description: "The dealership's About Us / Our Story text if found on the page or linked about page. Include the full narrative." },
-                   about_hero_headline: { type: "string", description: "About page headline if different from main hero" },
-                   // Brands
+                  hero_headline: { type: "string", description: "Main hero headline text from the homepage" },
+                  hero_subtext: { type: "string", description: "Hero subtext/description from the homepage" },
+                  about_story: { type: "string", description: "Full About Us / Our Story narrative. Include the complete founding story, history, and narrative." },
+                  about_hero_headline: { type: "string", description: "About page headline" },
+                  about_mission: { type: "string", description: "Mission statement if found" },
+                  about_values_list: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "Core values or selling points (e.g. 'Family-owned', 'Award-winning service')",
+                  },
+                  about_milestones: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        year: { type: "string", description: "Year of the milestone (e.g. '1987')" },
+                        label: { type: "string", description: "Description of what happened (e.g. 'Founded by John Smith')" },
+                      },
+                    },
+                    description: "Timeline milestones — founding, expansions, awards, key events in chronological order",
+                  },
                   oem_brands: {
                     type: "array",
                     items: { type: "string" },
                     description: "Car brands/makes sold (e.g. Toyota, Honda, Ford)",
                   },
-                  // Section 11: Notifications — staff emails
                   staff_emails: {
                     type: "array",
                     items: { type: "string" },
-                    description: "Any staff/department email addresses found (sales, service, general, internet, etc.)",
+                    description: "All staff/department email addresses found",
                   },
                   staff_phones: {
                     type: "array",
                     items: { type: "string" },
-                    description: "Any staff/department phone numbers found",
+                    description: "All staff/department phone numbers found",
                   },
-                  // Section 13: Locations
                   locations: {
                     type: "array",
                     items: {
@@ -170,22 +273,20 @@ ${markdown.slice(0, 12000)}`,
                         email: { type: "string" },
                       },
                     },
-                    description: "Individual store locations if multi-location",
+                    description: "Individual store locations",
                   },
-                  // Business hours
                   business_hours: {
                     type: "array",
                     items: {
                       type: "object",
                       properties: {
-                        department: { type: "string", description: "e.g. Sales, Service, Parts — omit if only one set of hours" },
+                        department: { type: "string", description: "Sales, Service, Parts, or General" },
                         days: { type: "string", description: "e.g. Mon-Fri" },
                         hours: { type: "string", description: "e.g. 9:00 AM - 7:00 PM" },
                       },
                     },
-                    description: "Business hours by department",
+                    description: "Business hours by department — extract Sales AND Service hours separately when available",
                   },
-                  // Section 15: Staff
                   staff_members: {
                     type: "array",
                     items: {
@@ -197,28 +298,30 @@ ${markdown.slice(0, 12000)}`,
                         phone: { type: "string" },
                       },
                     },
-                    description: "Staff/team members found on the site with their roles",
+                    description: "Staff/team members found with their roles",
                   },
-                  // Additional useful info
                   dealer_group_name: { type: "string", description: "Parent dealer group name if part of a group" },
-                  dms_provider: { type: "string", description: "DMS/CRM provider if mentioned (e.g. DealerSocket, CDK, Reynolds)" },
+                  dms_provider: { type: "string", description: "DMS/CRM provider if mentioned" },
                   stats_years_in_business: { type: "string", description: "Years in business if mentioned" },
-                  stats_rating: { type: "string", description: "Google/review rating if mentioned (e.g. 4.8)" },
+                  stats_rating: { type: "string", description: "Google/review rating (e.g. 4.8)" },
                   stats_reviews_count: { type: "string", description: "Number of reviews if mentioned" },
                   stats_cars_purchased: { type: "string", description: "Number of cars purchased/sold if mentioned" },
-                  established_year: { type: "string", description: "Year the dealership was established/founded (e.g. '1987'). Look for phrases like 'Since 1987', 'Est. 1987', 'Founded in 1987', 'Serving since 1987'." },
-                  meta_description: { type: "string", description: "The page meta description from HTML metadata if available" },
-                  favicon_url: { type: "string", description: "URL to the site favicon or apple-touch-icon if found" },
-                  about_mission: { type: "string", description: "Mission statement if found on the page" },
-                  about_values_list: {
-                    type: "array",
-                    items: { type: "string" },
-                    description: "Core values or selling points (e.g. 'Family-owned', 'Award-winning service', 'No-hassle pricing')",
-                  },
+                  established_year: { type: "string", description: "Year the dealership was established/founded (e.g. '1987'). Check EVERYWHERE: footer, about page, hero, tagline, copyright text. Look for 'Since YYYY', 'Est. YYYY', 'Founded YYYY', 'Family-owned since YYYY', 'Serving X community since YYYY', 'Proudly serving since YYYY'." },
+                  meta_description: { type: "string", description: "The page meta description" },
+                  favicon_url: { type: "string", description: "URL to the site favicon" },
                   certifications: {
                     type: "array",
                     items: { type: "string" },
-                    description: "Any certifications, awards, or accreditations mentioned (e.g. 'BBB A+', 'Edmunds Five Star Dealer')",
+                    description: "Certifications, awards, accreditations (e.g. 'BBB A+', 'Edmunds Five Star', 'Dealer of the Year 2023')",
+                  },
+                  community_involvement: {
+                    type: "string",
+                    description: "Any community involvement, sponsorships, charity partnerships mentioned",
+                  },
+                  service_offerings: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "Services offered: e.g. 'New Cars', 'Used Cars', 'We Buy Cars', 'Trade-In', 'Service', 'Parts', 'Body Shop', 'Financing'",
                   },
                 },
                 required: ["dealership_name"],
@@ -242,7 +345,7 @@ ${markdown.slice(0, 12000)}`,
 
     const aiData = await aiRes.json();
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-    let extracted = {};
+    let extracted: Record<string, any> = {};
 
     if (toolCall?.function?.arguments) {
       try {
@@ -252,10 +355,16 @@ ${markdown.slice(0, 12000)}`,
       }
     }
 
-    console.log("Extracted dealer info:", JSON.stringify(extracted).slice(0, 500));
+    // Log extraction summary
+    const fieldCount = Object.keys(extracted).filter(k => {
+      const v = extracted[k];
+      return v && (typeof v === "string" ? v.trim() : Array.isArray(v) ? v.length > 0 : true);
+    }).length;
+    console.log(`Extracted ${fieldCount} fields from ${pagesToScrape.length + 1} pages`);
+    console.log("Extracted dealer info:", JSON.stringify(extracted).slice(0, 1000));
 
     return new Response(
-      JSON.stringify({ success: true, data: extracted }),
+      JSON.stringify({ success: true, data: extracted, pages_scraped: pagesToScrape.length + 1 }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {

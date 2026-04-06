@@ -64,6 +64,7 @@ interface ScrapedDealerInfo {
   about_hero_headline?: string;
   about_mission?: string;
   about_values_list?: string[];
+  about_milestones?: { year?: string; label?: string }[];
   oem_brands?: string[];
   staff_emails?: string[];
   staff_phones?: string[];
@@ -80,6 +81,8 @@ interface ScrapedDealerInfo {
   meta_description?: string;
   favicon_url?: string;
   certifications?: string[];
+  community_involvement?: string;
+  service_offerings?: string[];
 }
 
 type OnboardingAnswers = Record<string, string>;
@@ -181,6 +184,16 @@ const buildAnswerMap = (data: ScrapedDealerInfo, url: string): OnboardingAnswers
   if (Array.isArray(data.about_values_list) && data.about_values_list.length > 0) {
     fieldMap.about_values = data.about_values_list.join(", ");
   }
+  if (Array.isArray(data.about_milestones) && data.about_milestones.length > 0) {
+    fieldMap.about_milestones = data.about_milestones
+      .filter(m => m.year && m.label)
+      .map(m => `${m.year}: ${m.label}`)
+      .join("\n");
+  }
+  setField("community_involvement", data.community_involvement);
+  if (Array.isArray(data.service_offerings) && data.service_offerings.length > 0) {
+    fieldMap.service_offerings = data.service_offerings.join(", ");
+  }
 
   if (Array.isArray(data.staff_emails) && data.staff_emails.length > 0) {
     fieldMap.staff_emails = data.staff_emails.join("\n");
@@ -189,13 +202,11 @@ const buildAnswerMap = (data: ScrapedDealerInfo, url: string): OnboardingAnswers
     fieldMap.staff_sms = data.staff_phones.join("\n");
   }
   if (Array.isArray(data.locations)) {
-    data.locations.slice(0, 5).forEach((location, index) => {
-      const item = index + 1;
-      setField(`loc${item}_name`, location.name);
-      setField(`loc${item}_address`, location.address);
-      setField(`loc${item}_csz`, location.city_state_zip);
-      setField(`loc${item}_brands`, location.brands);
-    });
+    // Use dynamic format for locations
+    const locLines = data.locations.slice(0, 10).map(loc => {
+      return [loc.name, loc.address, loc.city_state_zip, loc.brands].filter(Boolean).join(" | ");
+    }).filter(Boolean);
+    if (locLines.length > 0) fieldMap.locations_dynamic = locLines.join("\n");
   }
   if (Array.isArray(data.staff_members) && data.staff_members.length > 0) {
     const adminEmails: string[] = [], gsmEmails: string[] = [], ucmEmails: string[] = [], bdcEmails: string[] = [];
@@ -214,14 +225,14 @@ const buildAnswerMap = (data: ScrapedDealerInfo, url: string): OnboardingAnswers
     if (bdcEmails.length) fieldMap.bdc_users = bdcEmails.join("\n");
   }
   if (Array.isArray(data.business_hours)) {
-    const summary = data.business_hours
+    // Map to the new onboarding format: Days | Hours per line
+    const salesHours = data.business_hours.filter(h => !h.department || h.department.toLowerCase() === "sales" || h.department.toLowerCase() === "general");
+    const relevantHours = salesHours.length > 0 ? salesHours : data.business_hours;
+    const summary = relevantHours
       .filter((item) => isFilledText(item?.days) && isFilledText(item?.hours))
-      .map((item) => {
-        const prefix = isFilledText(item.department) ? `${item.department} — ` : "";
-        return `${prefix}${item.days!.trim()}: ${item.hours!.trim()}`;
-      })
+      .map((item) => `${item.days!.trim()} | ${item.hours!.trim()}`)
       .join("\n");
-    if (summary) fieldMap.business_hours_summary = summary;
+    if (summary) fieldMap.business_hours = summary;
   }
   setField("special_instructions", data.dealer_group_name ? `Part of ${data.dealer_group_name}` : undefined);
   return fieldMap;
@@ -332,8 +343,29 @@ export default function DealerWebsiteAutofillCard({
       if (isFilledText(scraped.about_mission)) aboutItems.push({ label: "Mission", value: scraped.about_mission, isNew: true });
       if (Array.isArray(scraped.about_values_list) && scraped.about_values_list.length > 0) aboutItems.push({ label: "Values", value: scraped.about_values_list.join(", "), isNew: true });
       if (Array.isArray(scraped.certifications) && scraped.certifications.length > 0) aboutItems.push({ label: "Certifications", value: scraped.certifications.join(", "), isNew: true });
+      if (isFilledText(scraped.community_involvement)) aboutItems.push({ label: "Community", value: scraped.community_involvement.slice(0, 150) + (scraped.community_involvement.length > 150 ? "…" : ""), isNew: true });
       if (aboutItems.length > 0) {
         categories.push({ label: "About Us", icon: FileText, items: aboutItems, section: "site-config" });
+      }
+
+      // Milestones / Timeline
+      if (Array.isArray(scraped.about_milestones) && scraped.about_milestones.length > 0) {
+        const milestoneItems = scraped.about_milestones
+          .filter(m => m.year && m.label)
+          .map(m => ({ label: m.year!, value: m.label!, isNew: true }));
+        if (milestoneItems.length > 0) {
+          categories.push({ label: `Timeline (${milestoneItems.length} milestones)`, icon: Clock, items: milestoneItems, section: "site-config" });
+        }
+      }
+
+      // Service Offerings
+      if (Array.isArray(scraped.service_offerings) && scraped.service_offerings.length > 0) {
+        categories.push({
+          label: "Services Offered",
+          icon: Building2,
+          items: scraped.service_offerings.map(s => ({ label: s, value: "✓", isNew: true })),
+          section: "site-config",
+        });
       }
 
       // Social & Reviews
@@ -472,6 +504,25 @@ export default function DealerWebsiteAutofillCard({
       maybeSet("hero_subtext", currentConfig?.hero_subtext, scraped.hero_subtext);
       maybeSet("about_hero_headline", (currentConfig as any)?.about_hero_headline, scraped.about_hero_headline);
       maybeSet("about_story", (currentConfig as any)?.about_story, scraped.about_story);
+
+      // About milestones
+      if (Array.isArray(scraped.about_milestones) && scraped.about_milestones.length > 0) {
+        const milestones = scraped.about_milestones
+          .filter(m => m.year && m.label)
+          .map(m => ({ year: m.year!, label: m.label! }));
+        if (milestones.length > 0) {
+          configUpdates.about_milestones = milestones;
+          configFillCount += 1;
+        }
+      }
+
+      // About values
+      if (Array.isArray(scraped.about_values_list) && scraped.about_values_list.length > 0) {
+        const values = scraped.about_values_list.map(v => ({ icon: "Star", title: v, text: "" }));
+        configUpdates.about_values = values;
+        configFillCount += 1;
+      }
+
       maybeSet("stats_years_in_business", currentConfig?.stats_years_in_business, scraped.stats_years_in_business);
       maybeSet("stats_rating", currentConfig?.stats_rating, scraped.stats_rating);
       maybeSet("stats_reviews_count", currentConfig?.stats_reviews_count, scraped.stats_reviews_count);
