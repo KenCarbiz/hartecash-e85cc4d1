@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import {
   Shield, Clock, Award, HandshakeIcon, ChevronRight, Building2,
   Heart, Star, CheckCircle, Users, Zap, Target, Smile, ThumbsUp,
+  ChevronLeft,
   type LucideIcon,
 } from "lucide-react";
 import AnimatedCounter from "@/components/AnimatedCounter";
@@ -42,6 +43,60 @@ const DEFAULT_VALUES: AboutValue[] = [
 
 const DEFAULT_STORY = "";
 
+/** Simple auto-advancing image carousel */
+const ImageCarousel = ({ images, alt }: { images: string[]; alt: string }) => {
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    if (images.length <= 1) return;
+    const timer = setInterval(() => setCurrent(prev => (prev + 1) % images.length), 5000);
+    return () => clearInterval(timer);
+  }, [images.length]);
+
+  const prev = useCallback(() => setCurrent(c => (c - 1 + images.length) % images.length), [images.length]);
+  const next = useCallback(() => setCurrent(c => (c + 1) % images.length), [images.length]);
+
+  if (images.length === 0) return null;
+  if (images.length === 1) {
+    return <img src={images[0]} alt={alt} className="rounded-xl shadow-lg w-full h-auto object-cover" />;
+  }
+
+  return (
+    <div className="relative group">
+      <img
+        src={images[current]}
+        alt={`${alt} ${current + 1}`}
+        className="rounded-xl shadow-lg w-full h-auto object-cover transition-opacity duration-500"
+      />
+      <button
+        onClick={prev}
+        className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background text-foreground rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+        aria-label="Previous image"
+      >
+        <ChevronLeft className="w-4 h-4" />
+      </button>
+      <button
+        onClick={next}
+        className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background text-foreground rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+        aria-label="Next image"
+      >
+        <ChevronRight className="w-4 h-4" />
+      </button>
+      {/* Dots */}
+      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+        {images.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setCurrent(i)}
+            className={`w-2 h-2 rounded-full transition-colors ${i === current ? "bg-primary" : "bg-background/60"}`}
+            aria-label={`Go to image ${i + 1}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const AboutPage = () => {
   const { config } = useSiteConfig();
   const name = config.dealership_name || "Our Dealership";
@@ -52,7 +107,14 @@ const AboutPage = () => {
   const heroHeadline = config.about_hero_headline || "Our Story";
   const heroSubtext = config.about_hero_subtext || "We're passionate about helping drivers get the most value for their vehicles — no haggling, no stress.";
   const customStory = config.about_story || DEFAULT_STORY;
-  const aboutImage = (config as any).about_image_url || "";
+  
+  // Support both array and single image (backwards compat)
+  const aboutImageUrls: string[] = (() => {
+    const urls = (config as any).about_image_urls;
+    if (Array.isArray(urls) && urls.length > 0) return urls;
+    const single = (config as any).about_image_url;
+    return single ? [single] : [];
+  })();
 
   useEffect(() => {
     const fetchLocations = async () => {
