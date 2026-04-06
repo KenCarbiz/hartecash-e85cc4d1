@@ -451,6 +451,40 @@ const CorporateAboutFields = ({
       </CollapsibleContent>
     </Collapsible>
 
+    {/* About Photo */}
+    <div className="px-1">
+      <Label className="text-xs font-semibold">Dealership Photo</Label>
+      <p className="text-[10px] text-muted-foreground mb-2">Upload a building exterior, family photo, or team image for the About page.</p>
+      <div className="border border-border rounded-lg p-3 bg-muted/30 flex flex-col items-center gap-2 min-h-[100px]">
+        {imageUrl ? (
+          <div className="relative">
+            <img src={imageUrl} alt="About" className="max-h-32 rounded-md object-cover" />
+            <button
+              type="button"
+              onClick={() => setImageUrl("")}
+              className="absolute -top-2 -right-2 bg-destructive text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+            >×</button>
+          </div>
+        ) : (
+          <ImagePlus className="w-10 h-10 text-muted-foreground/40" />
+        )}
+        <label className="cursor-pointer text-xs text-primary hover:underline">
+          {imageUrl ? "Replace image" : "Upload image"}
+          <input type="file" accept="image/*" className="hidden" onChange={e => {
+            const f = e.target.files?.[0];
+            if (f) onImageUpload(f);
+            e.target.value = "";
+          }} />
+        </label>
+      </div>
+      <Input
+        value={imageUrl}
+        onChange={(e) => setImageUrl(e.target.value)}
+        placeholder="Or paste image URL"
+        className="text-xs h-8 mt-1"
+      />
+    </div>
+
     {/* Milestones */}
     <Collapsible open={milestonesOpen} onOpenChange={setMilestonesOpen}>
       <CollapsibleTrigger className="flex items-center gap-2 w-full text-left py-2 px-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
