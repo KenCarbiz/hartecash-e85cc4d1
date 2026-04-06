@@ -5,6 +5,8 @@ import { useTenant } from "@/contexts/TenantContext";
 export interface LocationLogos {
   corporate_logo_url: string | null;
   corporate_logo_dark_url: string | null;
+  secondary_logo_url: string | null;
+  secondary_logo_dark_url: string | null;
   oem_logo_urls: string[];
   logo_layout: string;
   show_corporate_logo: boolean;
@@ -14,6 +16,8 @@ export interface LocationLogos {
 const EMPTY: LocationLogos = {
   corporate_logo_url: null,
   corporate_logo_dark_url: null,
+  secondary_logo_url: null,
+  secondary_logo_dark_url: null,
   oem_logo_urls: [],
   logo_layout: "side_by_side",
   show_corporate_logo: false,
@@ -39,7 +43,7 @@ export function useLocationLogos() {
 
     supabase
       .from("dealership_locations")
-      .select("corporate_logo_url, corporate_logo_dark_url, oem_logo_urls, logo_layout, show_corporate_logo, show_corporate_on_landing_only")
+      .select("corporate_logo_url, corporate_logo_dark_url, secondary_logo_url, secondary_logo_dark_url, oem_logo_urls, logo_layout, show_corporate_logo, show_corporate_on_landing_only")
       .eq("dealership_id", did)
       .eq("is_active", true)
       .order("sort_order", { ascending: true })

@@ -332,6 +332,8 @@ export type Database = {
           name: string
           oem_brands: string[]
           oem_logo_urls: string[]
+          secondary_logo_dark_url: string | null
+          secondary_logo_url: string | null
           show_corporate_logo: boolean
           show_corporate_on_landing_only: boolean
           show_in_footer: boolean
@@ -360,6 +362,8 @@ export type Database = {
           name: string
           oem_brands?: string[]
           oem_logo_urls?: string[]
+          secondary_logo_dark_url?: string | null
+          secondary_logo_url?: string | null
           show_corporate_logo?: boolean
           show_corporate_on_landing_only?: boolean
           show_in_footer?: boolean
@@ -388,6 +392,8 @@ export type Database = {
           name?: string
           oem_brands?: string[]
           oem_logo_urls?: string[]
+          secondary_logo_dark_url?: string | null
+          secondary_logo_url?: string | null
           show_corporate_logo?: boolean
           show_corporate_on_landing_only?: boolean
           show_in_footer?: boolean
