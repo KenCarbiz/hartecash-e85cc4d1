@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import { CheckCircle, Smartphone, DollarSign } from "lucide-react";
 import confetti from "canvas-confetti";
@@ -6,6 +7,7 @@ import { motion } from "framer-motion";
 import type { VehicleInfo } from "./types";
 import type { OfferEstimate } from "@/lib/offerCalculator";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import PostOfferStorePicker from "./PostOfferStorePicker";
 
 interface Props {
   uploadUrl: string;
