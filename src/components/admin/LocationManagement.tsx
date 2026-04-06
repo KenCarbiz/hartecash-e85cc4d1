@@ -257,6 +257,15 @@ const LocationManagement = () => {
                     />
                   </div>
 
+                  {/* Logo Management */}
+                  <LocationLogoSection
+                    location={loc}
+                    dealershipId={dealershipId}
+                    onUpdate={(field, value) => {
+                      setLocations(prev => prev.map(l => l.id === loc.id ? { ...l, [field]: value } : l));
+                    }}
+                  />
+
                   {/* ZIP Codes */}
                   <div>
                     <Label className="text-xs font-medium text-muted-foreground mb-1.5 flex items-center gap-1.5">
