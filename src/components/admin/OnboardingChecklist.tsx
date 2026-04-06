@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import {
   CheckCircle, Circle, Image, MapPin, Bell, Building2, Palette, Phone,
-  Mail, Globe, FileText, Users, ScanLine, Clock, Facebook, Star, PenLine, AlertCircle
+  Mail, Globe, FileText, Users, ScanLine, Clock, Facebook, Star, PenLine, AlertCircle, DollarSign
 } from "lucide-react";
 
 interface CheckItem {
@@ -42,7 +42,7 @@ const OnboardingChecklist = ({ onNavigate, dealershipId: propDealershipId }: Onb
       supabase.from("dealership_locations").select("id").eq("dealership_id", dealershipId).eq("is_active", true),
       supabase.from("notification_settings").select("email_recipients, sms_recipients").eq("dealership_id", dealershipId).maybeSingle(),
       supabase.from("user_roles").select("id"),
-      supabase.from("dealer_accounts").select("architecture, bdc_model, plan_tier, start_date, onboarding_signature_dealer, onboarding_signature_staff, onboarding_signed_at").eq("dealership_id", dealershipId).maybeSingle(),
+      supabase.from("dealer_accounts").select("architecture, bdc_model, plan_tier, start_date, onboarding_signature_dealer, onboarding_signature_staff, onboarding_signed_at, onboarding_answers").eq("dealership_id", dealershipId).maybeSingle(),
     ]);
 
     const acct = accountRes.data;
@@ -56,6 +56,7 @@ const OnboardingChecklist = ({ onNavigate, dealershipId: propDealershipId }: Onb
     const locCount = locRes.data?.length || 0;
     const notif = notifRes.data;
     const staffCount = staffRes.data?.length || 0;
+    const onboardingAnswers = (acct as any)?.onboarding_answers as Record<string, string> | null;
 
     const checks: CheckItem[] = [
       {
@@ -64,6 +65,13 @@ const OnboardingChecklist = ({ onNavigate, dealershipId: propDealershipId }: Onb
         icon: Building2,
         done: !!(acct?.architecture && acct?.bdc_model && acct?.start_date),
         section: "onboarding",
+      },
+      {
+        key: "acquisition_strategy",
+        label: "Acquisition strategy selected",
+        icon: DollarSign,
+        done: !!(onboardingAnswers?.acquisition_intent?.trim()),
+        section: "onboarding-script",
       },
       {
         key: "branding",

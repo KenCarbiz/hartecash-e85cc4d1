@@ -4,109 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Save, CheckCircle2, Loader2 } from "lucide-react";
+import { Save, CheckCircle2, Loader2, ChevronDown, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import SignaturePad from "@/components/admin/SignaturePad";
-
-/**
- * Public-facing mobile onboarding page.
- * Dealers can fill in answers and sign from their phone/tablet
- * without needing admin access.
- */
-
-interface QuestionItem {
-  id: string;
-  label: string;
-  type: "text" | "check" | "choice" | "multiline";
-  choices?: string[];
-  hint?: string;
-}
-
-interface Section {
-  title: string;
-  icon: string;
-  questions: QuestionItem[];
-}
-
-const SECTIONS: Section[] = [
-  {
-    title: "1. Dealership Identity",
-    icon: "🏢",
-    questions: [
-      { id: "dealership_name", label: "Dealership Name", type: "text" },
-      { id: "tagline", label: "Tagline / Slogan", type: "text" },
-      { id: "phone", label: "Main Phone Number", type: "text" },
-      { id: "email", label: "Main Email Address", type: "text" },
-      { id: "address", label: "Physical Address", type: "text" },
-      { id: "website", label: "Website URL", type: "text" },
-    ],
-  },
-  {
-    title: "2. Architecture & BDC",
-    icon: "🏗️",
-    questions: [
-      { id: "architecture", label: "Store Architecture", type: "choice", choices: ["Single Store", "Multi-Location", "Dealer Group"] },
-      { id: "bdc_model", label: "BDC Model", type: "choice", choices: ["No BDC", "Single BDC", "Multi-Location BDC", "AI BDC"] },
-      { id: "num_locations", label: "Number of Locations", type: "text" },
-      { id: "special_instructions", label: "Special Instructions / Notes", type: "multiline" },
-    ],
-  },
-  {
-    title: "3. Branding & Colors",
-    icon: "🎨",
-    questions: [
-      { id: "primary_color", label: "Primary Brand Color (hex)", type: "text", hint: "e.g. #1e3a5f" },
-      { id: "accent_color", label: "Accent Color (hex)", type: "text" },
-      { id: "logo_provided", label: "Logo file provided?", type: "check" },
-    ],
-  },
-  {
-    title: "4. Hero & Landing Page",
-    icon: "📢",
-    questions: [
-      { id: "hero_headline", label: "Hero Headline", type: "text" },
-      { id: "hero_subtext", label: "Hero Sub-text", type: "text" },
-      { id: "hero_layout", label: "Hero Layout", type: "choice", choices: ["Offset Right", "Offset Left", "Stacked"] },
-    ],
-  },
-  {
-    title: "5. Lead Form Flow",
-    icon: "📝",
-    questions: [
-      { id: "flow_style", label: "Flow style", type: "choice", choices: ["Details First", "Offer First"] },
-      { id: "guarantee_days", label: "Price Guarantee Days", type: "text", hint: "Default: 8" },
-    ],
-  },
-  {
-    title: "6. Notifications",
-    icon: "🔔",
-    questions: [
-      { id: "staff_emails", label: "Staff Email Recipients", type: "multiline", hint: "One per line" },
-      { id: "staff_sms", label: "Staff SMS Recipients", type: "multiline", hint: "One per line" },
-    ],
-  },
-  {
-    title: "7. Locations",
-    icon: "📍",
-    questions: [
-      { id: "loc1_name", label: "Location 1 — Name", type: "text" },
-      { id: "loc1_address", label: "Location 1 — Address", type: "text" },
-      { id: "loc1_csz", label: "Location 1 — City, State, ZIP", type: "text" },
-      { id: "loc2_name", label: "Location 2 — Name", type: "text" },
-      { id: "loc2_address", label: "Location 2 — Address", type: "text" },
-      { id: "loc2_csz", label: "Location 2 — City, State, ZIP", type: "text" },
-    ],
-  },
-  {
-    title: "8. Staff & Roles",
-    icon: "👥",
-    questions: [
-      { id: "admin_users", label: "Admin Users (email)", type: "multiline" },
-      { id: "gsm_users", label: "GSM/GM Users (email)", type: "multiline" },
-      { id: "ucm_users", label: "Used Car Managers (email)", type: "multiline" },
-    ],
-  },
-];
+import { cn } from "@/lib/utils";
+import { getMobileSections, sectionProgress, getSmartDefaults } from "@/lib/onboardingSections";
+import type { QuestionItem } from "@/lib/onboardingSections";
 
 type Answers = Record<string, string>;
 
@@ -118,8 +21,14 @@ export default function OnboardingMobile() {
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
   const [dealerName, setDealerName] = useState("");
+  const [openSections, setOpenSections] = useState<Set<string>>(new Set());
 
   const did = dealershipId || "default";
+  const sections = getMobileSections();
+
+  const totalQuestions = sections.reduce((sum, s) => sum + s.questions.length, 0);
+  const filledCount = Object.values(answers).filter((v) => v?.trim()).length;
+  const progressPct = totalQuestions > 0 ? Math.round((filledCount / totalQuestions) * 100) : 0;
 
   useEffect(() => {
     const load = async () => {
@@ -144,20 +53,48 @@ export default function OnboardingMobile() {
       if (configRes.data) {
         setDealerName(configRes.data.dealership_name || "");
       }
+      // Open the first section by default
+      if (sections.length > 0) {
+        setOpenSections(new Set([sections[0].title]));
+      }
       setLoading(false);
     };
     load();
   }, [did]);
 
   const updateAnswer = (id: string, value: string) => {
-    setAnswers((prev) => ({ ...prev, [id]: value }));
+    setAnswers((prev) => {
+      const next = { ...prev, [id]: value };
+      if (id === "architecture") {
+        const defaults = getSmartDefaults(value);
+        for (const [k, v] of Object.entries(defaults)) {
+          if (!next[k]?.trim()) next[k] = v;
+        }
+      }
+      return next;
+    });
   };
 
   const toggleChoice = (id: string, choice: string) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [id]: prev[id] === choice ? "" : choice,
-    }));
+    setAnswers((prev) => {
+      const next = { ...prev, [id]: prev[id] === choice ? "" : choice };
+      if (id === "architecture" && prev[id] !== choice) {
+        const defaults = getSmartDefaults(choice);
+        for (const [k, v] of Object.entries(defaults)) {
+          if (!next[k]?.trim()) next[k] = v;
+        }
+      }
+      return next;
+    });
+  };
+
+  const toggleSection = (title: string) => {
+    setOpenSections(prev => {
+      const next = new Set(prev);
+      if (next.has(title)) next.delete(title);
+      else next.add(title);
+      return next;
+    });
   };
 
   const handleSave = async () => {
@@ -182,6 +119,106 @@ export default function OnboardingMobile() {
       toast.success("Saved! Your onboarding specialist will review.");
     }
     setSaving(false);
+  };
+
+  const renderQuestion = (q: QuestionItem) => {
+    if (q.type === "text") {
+      return (
+        <Input
+          className="h-9 text-sm"
+          placeholder="—"
+          value={answers[q.id] || ""}
+          onChange={(e) => updateAnswer(q.id, e.target.value)}
+          maxLength={500}
+        />
+      );
+    }
+
+    if (q.type === "multiline") {
+      return (
+        <Textarea
+          className="text-sm min-h-[60px]"
+          placeholder="—"
+          value={answers[q.id] || ""}
+          onChange={(e) => updateAnswer(q.id, e.target.value)}
+          maxLength={2000}
+        />
+      );
+    }
+
+    if (q.type === "check") {
+      return (
+        <div className="flex items-center gap-3">
+          {["yes", "no"].map((v) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => toggleChoice(q.id, v)}
+              className={`text-xs px-3 py-1.5 rounded-md border transition-colors ${
+                answers[q.id] === v
+                  ? v === "yes"
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-destructive text-destructive-foreground border-destructive"
+                  : "border-border hover:bg-muted"
+              }`}
+            >
+              {v === "yes" ? "Yes" : "No"}
+            </button>
+          ))}
+        </div>
+      );
+    }
+
+    if (q.type === "choice" && q.choices) {
+      // Acquisition intent slider on mobile too
+      if (q.id === "acquisition_intent") {
+        return (
+          <div className="w-full space-y-2">
+            <div className="flex justify-between text-[10px] text-muted-foreground px-1">
+              <span>🟢 Conservative</span>
+              <span>🔴 Predator</span>
+            </div>
+            <div className="relative h-3 rounded-full overflow-hidden" style={{ background: "linear-gradient(to right, #22c55e, #eab308, #ef4444)" }}>
+              {(() => {
+                const idx = q.choices!.indexOf(answers[q.id] || "");
+                if (idx < 0) return null;
+                const pct = (idx / (q.choices!.length - 1)) * 100;
+                return <div className="absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-background border-2 border-foreground shadow-md transition-all" style={{ left: `calc(${pct}% - 10px)` }} />;
+              })()}
+            </div>
+            <div className="flex justify-between gap-1">
+              {q.choices.map((c) => (
+                <button key={c} type="button" onClick={() => toggleChoice(q.id, c)}
+                  className={`flex-1 text-[10px] py-1.5 rounded-md border transition-colors text-center ${answers[q.id] === c ? "bg-primary text-primary-foreground border-primary font-bold" : "border-border hover:bg-muted"}`}>
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="flex flex-wrap gap-1.5">
+          {q.choices.map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => toggleChoice(q.id, c)}
+              className={`text-xs px-2.5 py-1.5 rounded-md border transition-colors ${
+                answers[q.id] === c
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "border-border hover:bg-muted"
+              }`}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+      );
+    }
+
+    return null;
   };
 
   if (loading) {
@@ -222,85 +259,63 @@ export default function OnboardingMobile() {
         </div>
       </div>
 
-      <div className="max-w-lg mx-auto p-4 space-y-5 pb-32">
-        {SECTIONS.map((section) => (
-          <div key={section.title} className="border rounded-lg overflow-hidden">
-            <div className="bg-muted/50 px-4 py-2.5 border-b">
-              <h3 className="text-sm font-bold flex items-center gap-2">
-                <span>{section.icon}</span>
-                {section.title}
-              </h3>
-            </div>
-            <div className="divide-y">
-              {section.questions.map((q) => (
-                <div key={q.id} className="px-4 py-3 space-y-1.5">
-                  <p className="text-sm font-medium">{q.label}</p>
-                  {q.hint && <p className="text-xs text-muted-foreground">{q.hint}</p>}
-
-                  {q.type === "text" && (
-                    <Input
-                      className="h-9 text-sm"
-                      placeholder="—"
-                      value={answers[q.id] || ""}
-                      onChange={(e) => updateAnswer(q.id, e.target.value)}
-                      maxLength={500}
-                    />
-                  )}
-
-                  {q.type === "multiline" && (
-                    <Textarea
-                      className="text-sm min-h-[60px]"
-                      placeholder="—"
-                      value={answers[q.id] || ""}
-                      onChange={(e) => updateAnswer(q.id, e.target.value)}
-                      maxLength={2000}
-                    />
-                  )}
-
-                  {q.type === "check" && (
-                    <div className="flex items-center gap-3">
-                      {["yes", "no"].map((v) => (
-                        <button
-                          key={v}
-                          type="button"
-                          onClick={() => toggleChoice(q.id, v)}
-                          className={`text-xs px-3 py-1.5 rounded-md border transition-colors ${
-                            answers[q.id] === v
-                              ? v === "yes"
-                                ? "bg-primary text-primary-foreground border-primary"
-                                : "bg-destructive text-destructive-foreground border-destructive"
-                              : "border-border hover:bg-muted"
-                          }`}
-                        >
-                          {v === "yes" ? "Yes" : "No"}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {q.type === "choice" && q.choices && (
-                    <div className="flex flex-wrap gap-1.5">
-                      {q.choices.map((c) => (
-                        <button
-                          key={c}
-                          type="button"
-                          onClick={() => toggleChoice(q.id, c)}
-                          className={`text-xs px-2.5 py-1.5 rounded-md border transition-colors ${
-                            answers[q.id] === c
-                              ? "bg-primary text-primary-foreground border-primary"
-                              : "border-border hover:bg-muted"
-                          }`}
-                        >
-                          {c}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+      <div className="max-w-lg mx-auto p-4 space-y-3 pb-32">
+        {/* Progress */}
+        <div className="space-y-1">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>{filledCount}/{totalQuestions} answered</span>
+            <span>{progressPct}%</span>
           </div>
-        ))}
+          <div className="h-2 bg-muted rounded-full overflow-hidden">
+            <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progressPct}%` }} />
+          </div>
+        </div>
+
+        {sections.map((section) => {
+          const { filled, total } = sectionProgress(section, answers);
+          const isComplete = filled === total && total > 0;
+          const isOpen = openSections.has(section.title);
+
+          return (
+            <div key={section.title} className="border rounded-lg overflow-hidden">
+              <button
+                type="button"
+                onClick={() => toggleSection(section.title)}
+                className={cn(
+                  "w-full flex items-center justify-between px-4 py-2.5 text-left transition-colors",
+                  isOpen ? "bg-muted/50 border-b" : "bg-muted/30"
+                )}
+              >
+                <h3 className="text-sm font-bold flex items-center gap-2">
+                  <span>{section.icon}</span>
+                  {section.title}
+                  {isComplete && <CheckCircle2 className="w-3.5 h-3.5 text-primary" />}
+                </h3>
+                <div className="flex items-center gap-2">
+                  <span className={cn(
+                    "text-[10px] font-medium px-1.5 py-0.5 rounded-full",
+                    isComplete ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                  )}>
+                    {filled}/{total}
+                  </span>
+                  {isOpen ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+                </div>
+              </button>
+
+              {isOpen && (
+                <div className="divide-y">
+                  {section.questions.map((q) => (
+                    <div key={q.id} className="px-4 py-3 space-y-1.5">
+                      <p className="text-sm font-medium">{q.label}</p>
+                      {q.hint && <p className="text-xs text-muted-foreground">{q.hint}</p>}
+                      {renderQuestion(q)}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
 
         {/* Signature */}
         <div className="border rounded-lg p-4 space-y-3">
