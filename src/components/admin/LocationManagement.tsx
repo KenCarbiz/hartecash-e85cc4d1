@@ -627,6 +627,21 @@ const LocationManagement = () => {
           <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Location name" className="flex-1" />
           <Input value={newCity} onChange={(e) => setNewCity(e.target.value)} placeholder="City" className="w-32" />
           <Input value={newState} onChange={(e) => setNewState(e.target.value)} placeholder="State" className="w-20" />
+          <Select value={newLocationType} onValueChange={setNewLocationType}>
+            <SelectTrigger className="w-40 text-xs h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {LOCATION_TYPE_OPTIONS.map(opt => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  <span className="flex items-center gap-1.5">
+                    <opt.icon className="w-3 h-3" />
+                    {opt.label}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button onClick={addLocation} size="sm" className="gap-1">
             <Plus className="w-4 h-4" /> Add
           </Button>
