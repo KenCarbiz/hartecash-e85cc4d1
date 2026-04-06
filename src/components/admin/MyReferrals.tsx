@@ -49,7 +49,7 @@ const MyReferrals = ({ staffName }: { staffName: string }) => {
   }, []);
 
   const staffCode = `STAFF-${(staffEmail || "unknown").split("@")[0].toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8)}`;
-  const referralLink = `${window.location.origin}/?ref=${staffCode}`;
+  const referralLink = `${tenantBaseUrl}/?ref=${staffCode}`;
 
   const fetchMyReferrals = async () => {
     setLoading(true);
