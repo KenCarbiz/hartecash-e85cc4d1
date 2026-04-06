@@ -93,6 +93,7 @@ const ScheduleVisit = () => {
   const { toast } = useToast();
   const { config } = useSiteConfig();
   const [locations, setLocations] = useState<DealerLocation[]>([]);
+  const [lockedStoreId, setLockedStoreId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -108,6 +109,21 @@ const ScheduleVisit = () => {
     fetchLocations();
   }, []);
 
+  // If the submission has a store_location_id, lock scheduling to that store
+  useEffect(() => {
+    if (!submissionToken) return;
+    supabase
+      .from("submissions")
+      .select("store_location_id")
+      .eq("token", submissionToken)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.store_location_id) {
+          setLockedStoreId(data.store_location_id);
+        }
+      });
+  }, [submissionToken]);
+
   const [form, setForm] = useState({
     customer_name: searchParams.get("name") || "",
     customer_email: searchParams.get("email") || "",
@@ -119,12 +135,14 @@ const ScheduleVisit = () => {
     notes: "",
   });
 
-  // Auto-select if only one scheduling location
+  // Auto-select locked store or single location
   useEffect(() => {
-    if (locations.length === 1 && !form.store_location) {
+    if (lockedStoreId) {
+      setForm(prev => ({ ...prev, store_location: lockedStoreId }));
+    } else if (locations.length === 1 && !form.store_location) {
       setForm(prev => ({ ...prev, store_location: locations[0].id }));
     }
-  }, [locations]);
+  }, [locations, lockedStoreId]);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
