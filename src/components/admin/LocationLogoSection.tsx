@@ -279,16 +279,25 @@ const LocationLogoSection = ({ location, dealershipId, onUpdate }: LocationLogoS
             </div>
           ))}
           {(location.oem_logo_urls || []).length < MAX_OEM_LOGOS && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => oemInputRef.current?.click()}
-              disabled={uploading === "oem"}
-              className="h-10 gap-1.5"
-            >
-              {uploading === "oem" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
-              Add Logo
-            </Button>
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => oemInputRef.current?.click()}
+                disabled={uploading === "oem"}
+                className="h-10 gap-1.5"
+              >
+                {uploading === "oem" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                Upload
+              </Button>
+              <OemLogoPicker
+                dealershipId={dealershipId}
+                locationId={location.id}
+                existingLogos={location.oem_logo_urls || []}
+                maxLogos={MAX_OEM_LOGOS}
+                onAdd={(url) => onUpdate("oem_logo_urls", [...(location.oem_logo_urls || []), url])}
+              />
+            </>
           )}
           <input ref={oemInputRef} type="file" accept="image/*" className="hidden" onChange={handleOemUpload} />
         </div>
