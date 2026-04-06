@@ -85,6 +85,7 @@ const SubmissionSuccess = ({ uploadUrl, vehicleInfo, nextStep, offerEstimate }: 
         <p className="text-muted-foreground">
           We'll contact you shortly to schedule your in-person visit.
         </p>
+        <PostOfferStorePicker onSelected={handleStoreSelected} />
       </motion.div>
     );
   }
