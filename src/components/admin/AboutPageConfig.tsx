@@ -254,8 +254,8 @@ const AboutPageConfig = () => {
                 heroHeadline={heroHeadline} setHeroHeadline={setHeroHeadline}
                 heroSubtext={heroSubtext} setHeroSubtext={setHeroSubtext}
                 story={story} setStory={setStory}
-                imageUrl={aboutImageUrl} setImageUrl={setAboutImageUrl}
-                onImageUpload={(file) => handleImageUpload(file, setAboutImageUrl)}
+                imageUrls={aboutImageUrls} setImageUrls={setAboutImageUrls}
+                onImageUpload={(file) => handleImageUpload(file, (url) => setAboutImageUrls(prev => [...prev, url]))}
                 milestones={milestones} setMilestones={setMilestones}
                 values={values} setValues={setValues}
                 heroOpen={heroOpen} setHeroOpen={setHeroOpen}
