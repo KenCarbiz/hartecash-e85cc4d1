@@ -335,6 +335,7 @@ export type Database = {
           show_corporate_logo: boolean
           show_corporate_on_landing_only: boolean
           show_in_footer: boolean
+          show_in_inspection: boolean
           show_in_scheduling: boolean
           sort_order: number
           state: string
@@ -362,6 +363,7 @@ export type Database = {
           show_corporate_logo?: boolean
           show_corporate_on_landing_only?: boolean
           show_in_footer?: boolean
+          show_in_inspection?: boolean
           show_in_scheduling?: boolean
           sort_order?: number
           state?: string
@@ -389,6 +391,7 @@ export type Database = {
           show_corporate_logo?: boolean
           show_corporate_on_landing_only?: boolean
           show_in_footer?: boolean
+          show_in_inspection?: boolean
           show_in_scheduling?: boolean
           sort_order?: number
           state?: string
