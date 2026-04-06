@@ -61,6 +61,7 @@ export interface SiteConfig {
   photo_overlay_color: string;
   photo_allow_color_change: boolean;
   vehicle_image_angle: string;
+  established_year: number | null;
 }
 
 const DEFAULTS: SiteConfig = {
