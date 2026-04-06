@@ -13,6 +13,8 @@ interface LocationLogoSectionProps {
     name: string;
     corporate_logo_url: string | null;
     corporate_logo_dark_url: string | null;
+    secondary_logo_url: string | null;
+    secondary_logo_dark_url: string | null;
     oem_logo_urls: string[];
     logo_layout: string;
     show_corporate_logo: boolean;
