@@ -237,14 +237,14 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate, targetDealershipId, onD
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-card-foreground">Dealer Onboarding</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <h2 className="text-2xl font-bold text-foreground tracking-tight">Dealer Onboarding</h2>
+          <p className="text-sm text-muted-foreground mt-1">
             {readOnly
               ? "Account configuration (read-only). Contact an admin to make changes."
               : "Configure the account architecture, BDC model, and billing for this dealership."}
           </p>
         </div>
-        <Badge variant="outline" className={cn("gap-1.5 px-3 py-1", statusCfg.color)}>
+        <Badge variant="outline" className={cn("gap-1.5 px-3.5 py-1.5 text-xs font-bold", statusCfg.color)}>
           <StatusIcon className="w-3.5 h-3.5" />
           {statusCfg.label}
         </Badge>
