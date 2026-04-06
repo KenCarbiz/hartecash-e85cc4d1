@@ -2212,22 +2212,33 @@ export type Database = {
         Row: {
           dealership_id: string
           id: string
+          location_id: string | null
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
           dealership_id?: string
           id?: string
+          location_id?: string | null
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
           dealership_id?: string
           id?: string
+          location_id?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "dealership_locations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       vehicle_image_cache: {
         Row: {
@@ -2271,6 +2282,14 @@ export type Database = {
     }
     Functions: {
       accept_offer: { Args: { _token: string }; Returns: undefined }
+      can_view_submission: {
+        Args: {
+          _submission_dealership_id: string
+          _submission_location_id: string
+          _user_id: string
+        }
+        Returns: boolean
+      }
       cleanup_old_lookup_attempts: { Args: never; Returns: undefined }
       delete_email: {
         Args: { message_id: number; queue_name: string }
@@ -2285,6 +2304,7 @@ export type Database = {
         Returns: {
           display_name: string
           email: string
+          location_id: string
           phone_number: string
           profile_image_url: string
           role: string

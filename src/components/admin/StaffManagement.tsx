@@ -22,6 +22,12 @@ interface StaffMember {
   role_id: string;
   phone_number?: string | null;
   profile_image_url?: string | null;
+  location_id?: string | null;
+}
+
+interface DealerLocation {
+  id: string;
+  name: string;
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -75,15 +81,18 @@ const StaffManagement = () => {
   const [addEmail, setAddEmail] = useState("");
   const [addRole, setAddRole] = useState("sales_bdc");
   const [addDisplayName, setAddDisplayName] = useState("");
+  const [addLocationId, setAddLocationId] = useState<string>("all");
   const [adding, setAdding] = useState(false);
   const [permGroups, setPermGroups] = useState<{ id: string; name: string; allowed_sections: string[] }[]>([]);
   const [editingSections, setEditingSections] = useState<StaffMember | null>(null);
+  const [locations, setLocations] = useState<DealerLocation[]>([]);
   const [staffSections, setStaffSections] = useState<Record<string, string[]>>({});
   const { toast } = useToast();
 
   useEffect(() => {
     fetchStaff();
     fetchPermGroups();
+    fetchLocations();
   }, []);
 
   const { tenant } = useTenant();
@@ -116,6 +125,30 @@ const StaffManagement = () => {
   const fetchPermGroups = async () => {
     const { data } = await supabase.from("permission_groups" as any).select("id, name, allowed_sections").order("name");
     setPermGroups((data as any[] || []).map((g: any) => ({ id: g.id, name: g.name, allowed_sections: g.allowed_sections })));
+  };
+
+  const fetchLocations = async () => {
+    const { data } = await supabase
+      .from("dealership_locations" as any)
+      .select("id, name")
+      .eq("dealership_id", dealershipId)
+      .eq("is_active", true)
+      .order("sort_order");
+    setLocations((data as any[] || []).map((l: any) => ({ id: l.id, name: l.name })));
+  };
+
+  const handleLocationChange = async (member: StaffMember, locationId: string) => {
+    const newVal = locationId === "all" ? null : locationId;
+    const { error } = await supabase
+      .from("user_roles")
+      .update({ location_id: newVal } as any)
+      .eq("id", member.role_id);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Store updated" });
+      setStaff(prev => prev.map(s => s.role_id === member.role_id ? { ...s, location_id: newVal } : s));
+    }
   };
 
   const handleSaveStaffSections = async (userId: string, sections: string[]) => {
@@ -215,7 +248,7 @@ const StaffManagement = () => {
     // Insert role via user_roles table (RLS requires admin)
     const { data: inserted, error: insertErr } = await supabase
       .from("user_roles")
-      .insert({ user_id: profile.user_id, role: addRole as any })
+      .insert({ user_id: profile.user_id, role: addRole as any, location_id: addLocationId === "all" ? null : addLocationId } as any)
       .select("id")
       .single();
 
@@ -297,6 +330,23 @@ const StaffManagement = () => {
                 </SelectContent>
               </Select>
             </div>
+            {locations.length > 0 && addRole !== "admin" && (
+              <div className="space-y-2">
+                <Label>Store Location</Label>
+                <Select value={addLocationId} onValueChange={setAddLocationId}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Stores</SelectItem>
+                    {locations.map(loc => (
+                      <SelectItem key={loc.id} value={loc.id}>{loc.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">Which store can this employee see leads for?</p>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddOpen(false)}>Cancel</Button>
@@ -351,6 +401,7 @@ const StaffManagement = () => {
               <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Phone</th>
               <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Current Role</th>
               <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Change Role</th>
+              {locations.length > 0 && <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Store</th>}
               <th className="text-right px-4 py-3 font-semibold text-muted-foreground">Actions</th>
             </tr>
           </thead>
@@ -432,6 +483,28 @@ const StaffManagement = () => {
                     </SelectContent>
                   </Select>
                 </td>
+                {locations.length > 0 && (
+                  <td className="px-4 py-3">
+                    {member.role === "admin" ? (
+                      <span className="text-xs text-muted-foreground italic">All Stores</span>
+                    ) : (
+                      <Select
+                        value={member.location_id || "all"}
+                        onValueChange={(v) => handleLocationChange(member, v)}
+                      >
+                        <SelectTrigger className="w-40 h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Stores</SelectItem>
+                          {locations.map(loc => (
+                            <SelectItem key={loc.id} value={loc.id}>{loc.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </td>
+                )}
                 <td className="px-4 py-3 text-right">
                   <div className="flex items-center justify-end gap-1">
                     {member.role !== "admin" && (
