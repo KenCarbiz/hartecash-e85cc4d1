@@ -37,7 +37,7 @@ const SiteHeader = () => {
             {/* Corporate logo */}
             {showCorporate && (
               <img
-                src={logos.corporate_logo_url!}
+                src={corporateUrl!}
                 alt="Corporate"
                 className="h-[40px] md:h-[48px] w-auto object-contain"
               />
