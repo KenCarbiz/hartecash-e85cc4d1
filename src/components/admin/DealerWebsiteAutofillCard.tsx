@@ -166,6 +166,21 @@ const buildAnswerMap = (data: ScrapedDealerInfo, url: string): OnboardingAnswers
   setField("success_color", data.success_color);
   setField("hero_headline", data.hero_headline);
   setField("hero_subtext", data.hero_subtext);
+  setField("about_story", data.about_story);
+  setField("about_hero_headline", data.about_hero_headline);
+  setField("about_mission", data.about_mission);
+  setField("established_year", data.established_year);
+  setField("favicon_url", data.favicon_url);
+  setField("meta_description", data.meta_description);
+  if (Array.isArray(data.oem_brands) && data.oem_brands.length > 0) {
+    fieldMap.oem_brands = data.oem_brands.join(", ");
+  }
+  if (Array.isArray(data.certifications) && data.certifications.length > 0) {
+    fieldMap.certifications = data.certifications.join(", ");
+  }
+  if (Array.isArray(data.about_values_list) && data.about_values_list.length > 0) {
+    fieldMap.about_values = data.about_values_list.join(", ");
+  }
 
   if (Array.isArray(data.staff_emails) && data.staff_emails.length > 0) {
     fieldMap.staff_emails = data.staff_emails.join("\n");
