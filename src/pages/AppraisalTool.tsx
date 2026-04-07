@@ -1302,7 +1302,7 @@ export default function AppraisalTool() {
             waterfallBlocks={waterfallBlocks.map(b => ({ label: b.label, value: b.value, runningTotal: b.runningTotal, type: b.type }))}
             deductionDetails={{
               accidents, drivable, smokedIn, tiresReplaced, numKeys, windshield, moonroof,
-              exteriorItems, interiorItems, mechItems, engItems, techItems,
+              exteriorItems, interiorItems, mechItems, engineItems, techItems,
               deductionAmounts: activeSettings?.deduction_amounts || {},
               deductionsConfig: activeSettings?.deductions_config || {},
             }}
