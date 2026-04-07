@@ -1178,6 +1178,7 @@ export type Database = {
           regional_adjustment_pct: number
           retail_profit_basis: string
           retail_search_radius: number
+          retail_search_zip: string | null
           seasonal_adjustment: Json
           updated_at: string
         }
@@ -1206,6 +1207,7 @@ export type Database = {
           regional_adjustment_pct?: number
           retail_profit_basis?: string
           retail_search_radius?: number
+          retail_search_zip?: string | null
           seasonal_adjustment?: Json
           updated_at?: string
         }
@@ -1234,6 +1236,7 @@ export type Database = {
           regional_adjustment_pct?: number
           retail_profit_basis?: string
           retail_search_radius?: number
+          retail_search_zip?: string | null
           seasonal_adjustment?: Json
           updated_at?: string
         }
@@ -1482,6 +1485,7 @@ export type Database = {
           recon_cost: number
           regional_adjustment_pct: number
           rejection_reason: string | null
+          retail_search_zip: string | null
           schedule_end: string | null
           schedule_start: string | null
           seasonal_adjustment: Json
@@ -1520,6 +1524,7 @@ export type Database = {
           recon_cost?: number
           regional_adjustment_pct?: number
           rejection_reason?: string | null
+          retail_search_zip?: string | null
           schedule_end?: string | null
           schedule_start?: string | null
           seasonal_adjustment?: Json
@@ -1558,6 +1563,7 @@ export type Database = {
           recon_cost?: number
           regional_adjustment_pct?: number
           rejection_reason?: string | null
+          retail_search_zip?: string | null
           schedule_end?: string | null
           schedule_start?: string | null
           seasonal_adjustment?: Json

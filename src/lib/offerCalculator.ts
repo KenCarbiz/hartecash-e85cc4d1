@@ -204,6 +204,8 @@ export interface OfferSettings {
   color_desirability?: ColorDesirability;
   seasonal_adjustment?: SeasonalAdjustment;
   deduction_modes?: DeductionModes;
+  retail_search_radius?: number;
+  retail_search_zip?: string;
 }
 
 export interface OfferRule {

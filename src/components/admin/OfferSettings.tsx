@@ -140,6 +140,7 @@ interface OfferSettingsRow {
   mileage_tiers: MileageTier[];
   regional_adjustment_pct: number;
   retail_search_radius: number;
+  retail_search_zip: string;
   dealer_pack: number;
   hide_pack_from_appraisal: boolean;
   retail_profit_basis: string;
@@ -287,6 +288,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
         mileage_tiers: Array.isArray(d.mileage_tiers) ? d.mileage_tiers : [],
         regional_adjustment_pct: d.regional_adjustment_pct ?? 0,
         retail_search_radius: d.retail_search_radius ?? 100,
+        retail_search_zip: d.retail_search_zip || "",
         dealer_pack: d.dealer_pack ?? 0,
         hide_pack_from_appraisal: d.hide_pack_from_appraisal ?? false,
         retail_profit_basis: d.retail_profit_basis || "retail_avg",
@@ -304,6 +306,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
         mileage_tiers: Array.isArray(d.mileage_tiers) ? d.mileage_tiers : [],
         regional_adjustment_pct: d.regional_adjustment_pct ?? 0,
         retail_search_radius: d.retail_search_radius ?? 100,
+        retail_search_zip: d.retail_search_zip || "",
         dealer_pack: d.dealer_pack ?? 0,
         hide_pack_from_appraisal: d.hide_pack_from_appraisal ?? false,
         retail_profit_basis: d.retail_profit_basis || "retail_avg",
@@ -334,6 +337,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
       mileage_tiers: settings.mileage_tiers as any,
       regional_adjustment_pct: settings.regional_adjustment_pct,
       retail_search_radius: settings.retail_search_radius ?? 100,
+      retail_search_zip: settings.retail_search_zip || null,
       dealer_pack: settings.dealer_pack ?? 0,
       hide_pack_from_appraisal: settings.hide_pack_from_appraisal ?? false,
       retail_profit_basis: settings.retail_profit_basis || "retail_avg",
@@ -492,7 +496,20 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
           title="Market Data Settings"
           defaultOpen={false}
         >
-          <div className="space-y-3">
+          <div className="space-y-4">
+            <div>
+              <Label className="text-sm font-semibold">Market Search ZIP Code</Label>
+              <p className="text-xs text-muted-foreground mb-2">
+                Default ZIP for live retail market lookups. Leave empty to use the dealer's primary location ZIP automatically.
+              </p>
+              <Input
+                value={settings.retail_search_zip || ""}
+                onChange={(e) => setSettings({ ...settings, retail_search_zip: e.target.value.replace(/\D/g, "").slice(0, 5) })}
+                placeholder="Auto (dealer location ZIP)"
+                maxLength={5}
+                className="max-w-xs font-mono"
+              />
+            </div>
             <div>
               <Label className="text-sm font-semibold">Retail Listings Search Radius</Label>
               <p className="text-xs text-muted-foreground mb-2">

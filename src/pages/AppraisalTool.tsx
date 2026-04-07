@@ -303,6 +303,10 @@ export default function AppraisalTool() {
         setHidePackFromAppraisal((settingsData as any).hide_pack_from_appraisal ?? false);
         setRetailProfitBasis((settingsData as any).retail_profit_basis || "retail_avg");
         setBbValueBasis(settingsData.bb_value_basis || "tradein_avg");
+        // If a custom retail search ZIP is configured in offer settings, use it
+        if ((settingsData as any).retail_search_zip) {
+          setDealerZip((settingsData as any).retail_search_zip);
+        }
       }
 
       const { data: rulesData } = await supabase.from("offer_rules").select("*").eq("dealership_id", dealershipId).eq("is_active", true);
