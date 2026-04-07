@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
 
@@ -50,44 +50,39 @@ const DEFAULTS: FormConfig = {
   q_next_step: true,
 };
 
-let cachedFormConfig: Record<string, FormConfig> = {};
+async function fetchFormConfig(dealershipId: string): Promise<FormConfig> {
+  const { data } = await supabase
+    .from("form_config" as any)
+    .select("*")
+    .eq("dealership_id", dealershipId)
+    .maybeSingle();
+  if (data) {
+    const d = data as any;
+    const merged: FormConfig = { ...DEFAULTS };
+    for (const key of Object.keys(DEFAULTS)) {
+      if (d[key] !== undefined && d[key] !== null) {
+        (merged as any)[key] = d[key];
+      }
+    }
+    return merged;
+  }
+  return DEFAULTS;
+}
 
 export function useFormConfig() {
   const { tenant } = useTenant();
   const dealershipId = tenant.dealership_id;
-  const [config, setConfig] = useState<FormConfig>(cachedFormConfig[dealershipId] || DEFAULTS);
-  const [loading, setLoading] = useState(!cachedFormConfig[dealershipId]);
 
-  useEffect(() => {
-    if (cachedFormConfig[dealershipId]) {
-      setConfig(cachedFormConfig[dealershipId]);
-      setLoading(false);
-      return;
-    }
-    supabase
-      .from("form_config" as any)
-      .select("*")
-      .eq("dealership_id", dealershipId)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) {
-          const d = data as any;
-          const merged: FormConfig = { ...DEFAULTS };
-          for (const key of Object.keys(DEFAULTS)) {
-            if (d[key] !== undefined && d[key] !== null) {
-              (merged as any)[key] = d[key];
-            }
-          }
-          cachedFormConfig[dealershipId] = merged;
-          setConfig(merged);
-        }
-        setLoading(false);
-      });
-  }, [dealershipId]);
+  const { data, isLoading } = useQuery({
+    queryKey: ["form_config", dealershipId],
+    queryFn: () => fetchFormConfig(dealershipId),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
 
-  return { formConfig: config, loading };
+  return { formConfig: data ?? DEFAULTS, loading: isLoading };
 }
 
 export function clearFormConfigCache() {
-  cachedFormConfig = {};
+  // No-op now — React Query handles cache invalidation
 }

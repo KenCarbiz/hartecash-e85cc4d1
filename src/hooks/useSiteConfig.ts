@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
 
@@ -62,6 +62,8 @@ export interface SiteConfig {
   photo_allow_color_change: boolean;
   vehicle_image_angle: string;
   established_year: number | null;
+  competitor_columns?: any;
+  comparison_features?: any;
 }
 
 const DEFAULTS: SiteConfig = {
@@ -119,35 +121,28 @@ const DEFAULTS: SiteConfig = {
   established_year: null,
 };
 
-let cachedConfig: Record<string, SiteConfig> = {};
+async function fetchSiteConfig(dealershipId: string): Promise<SiteConfig> {
+  const { data } = await supabase
+    .from("site_config")
+    .select("*")
+    .eq("dealership_id", dealershipId)
+    .maybeSingle();
+  if (data) {
+    return { ...DEFAULTS, ...data } as unknown as SiteConfig;
+  }
+  return DEFAULTS;
+}
 
 export function useSiteConfig() {
   const { tenant } = useTenant();
   const dealershipId = tenant.dealership_id;
-  const [config, setConfig] = useState<SiteConfig>(cachedConfig[dealershipId] || DEFAULTS);
-  const [loading, setLoading] = useState(!cachedConfig[dealershipId]);
 
-  useEffect(() => {
-    if (cachedConfig[dealershipId]) {
-      setConfig(cachedConfig[dealershipId]);
-      setLoading(false);
-      return;
-    }
-    
-    supabase
-      .from("site_config")
-      .select("*")
-      .eq("dealership_id", dealershipId)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) {
-          const merged = { ...DEFAULTS, ...data } as unknown as SiteConfig;
-          cachedConfig[dealershipId] = merged;
-          setConfig(merged);
-        }
-        setLoading(false);
-      });
-  }, [dealershipId]);
+  const { data, isLoading } = useQuery({
+    queryKey: ["site_config", dealershipId],
+    queryFn: () => fetchSiteConfig(dealershipId),
+    staleTime: 5 * 60 * 1000, // 5 min
+    gcTime: 10 * 60 * 1000,
+  });
 
-  return { config, loading };
+  return { config: data ?? DEFAULTS, loading: isLoading };
 }
