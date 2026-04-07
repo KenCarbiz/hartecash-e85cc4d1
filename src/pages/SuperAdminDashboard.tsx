@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+const AddTenantWizard = lazy(() => import("@/components/admin/AddTenantWizard"));
 
 /* ── types ───────────────────────────────────────── */
 
