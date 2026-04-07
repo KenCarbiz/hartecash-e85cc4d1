@@ -302,12 +302,12 @@ const LocationManagement = () => {
               className={`rounded-xl border transition-all ${loc.is_active ? "bg-card border-border shadow-sm" : "bg-muted/30 border-border/40 opacity-60"}`}
             >
               {/* Collapsed header row */}
-              <div className="flex items-center gap-3 p-3">
+              <div className="flex items-center gap-3 p-3 cursor-pointer" onClick={() => toggleExpanded(loc.id)}>
                 {/* Reorder */}
                 <div className="flex flex-col gap-0.5">
-                  <button onClick={() => moveUp(index)} disabled={index === 0} className="text-muted-foreground hover:text-foreground disabled:opacity-30 text-xs">▲</button>
+                  <button onClick={(e) => { e.stopPropagation(); moveUp(index); }} disabled={index === 0} className="text-muted-foreground hover:text-foreground disabled:opacity-30 text-xs">▲</button>
                   <GripVertical className="w-4 h-4 text-muted-foreground/40" />
-                  <button onClick={() => moveDown(index)} disabled={index === locations.length - 1} className="text-muted-foreground hover:text-foreground disabled:opacity-30 text-xs">▼</button>
+                  <button onClick={(e) => { e.stopPropagation(); moveDown(index); }} disabled={index === locations.length - 1} className="text-muted-foreground hover:text-foreground disabled:opacity-30 text-xs">▼</button>
                 </div>
 
                 {/* Identity summary */}
@@ -333,12 +333,12 @@ const LocationManagement = () => {
                 <div className="hidden lg:flex items-center gap-4">
                   <div className="flex items-center gap-1.5" title="Active">
                     <Label className="text-[10px] text-muted-foreground">Active</Label>
-                    <Switch checked={loc.is_active} onCheckedChange={() => toggleField(loc.id, "is_active", loc.is_active)} />
+                    <Switch checked={loc.is_active} onCheckedChange={() => toggleField(loc.id, "is_active", loc.is_active)} onClick={(e) => e.stopPropagation()} />
                   </div>
                 </div>
 
                 {/* Expand / Delete */}
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleExpanded(loc.id)}>
                     {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                   </Button>
