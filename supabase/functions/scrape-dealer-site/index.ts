@@ -44,7 +44,7 @@ async function mapSite(url: string, firecrawlKey: string): Promise<string[]> {
 }
 
 /** Find relevant sub-pages from the sitemap */
-function findRelevantPages(links: string[], baseUrl: string): { about: string | null; hours: string | null; staff: string | null; contact: string | null } {
+function findRelevantPages(links: string[], baseUrl: string): Record<string, string | null> {
   const lower = (s: string) => s.toLowerCase();
   const find = (patterns: string[]) => {
     for (const p of patterns) {
@@ -62,6 +62,10 @@ function findRelevantPages(links: string[], baseUrl: string): { about: string | 
     hours: find(["hours", "hours-directions", "hours-and-directions", "contact-us", "directions"]),
     staff: find(["staff", "team", "our-team", "meet-our-team", "employees", "leadership"]),
     contact: find(["contact", "contact-us", "get-in-touch"]),
+    service: find(["service", "service-department", "service-center", "auto-service"]),
+    tradein: find(["trade-in", "trade", "value-your-trade", "sell-your-car", "sell-my-car", "appraise", "instant-offer"]),
+    reviews: find(["reviews", "testimonials", "customer-reviews"]),
+    community: find(["community", "giving-back", "philanthropy", "sponsorship", "involvement"]),
   };
 }
 
@@ -112,7 +116,7 @@ serve(async (req) => {
     const allLinks = [...new Set([...siteLinks, ...homepage.links])];
     console.log(`Found ${allLinks.length} site URLs`);
 
-    // Step 2: Identify and scrape relevant sub-pages
+    // Step 2: Identify and scrape relevant sub-pages (expanded list)
     const relevantPages = findRelevantPages(allLinks, formattedUrl);
     console.log("Relevant pages:", JSON.stringify(relevantPages));
 
@@ -121,10 +125,10 @@ serve(async (req) => {
       .filter(([, url]) => url !== null)
       .map(([label, pageUrl]) => ({ label, url: pageUrl! }));
 
-    // Scrape up to 4 sub-pages in parallel
+    // Scrape up to 6 sub-pages in parallel
     if (pagesToScrape.length > 0) {
       const results = await Promise.all(
-        pagesToScrape.slice(0, 4).map(async ({ label, url: pageUrl }) => {
+        pagesToScrape.slice(0, 6).map(async ({ label, url: pageUrl }) => {
           try {
             console.log(`Scraping ${label} page: ${pageUrl}`);
             const result = await scrapePage(pageUrl, firecrawlKey, ["markdown"], true);
@@ -157,28 +161,35 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are an expert at extracting dealership information from website content. You are given the HOMEPAGE plus sub-pages (About, Hours, Staff, Contact) when available. Extract ALL available information using the provided tool. Be extremely thorough:
+            content: `You are an expert at extracting dealership information from website content. You are given the HOMEPAGE plus sub-pages (About, Hours, Staff, Contact, Service, Trade-In, Reviews, Community) when available. Extract ALL available information using the provided tool. Be extremely thorough — the more you extract, the less the dealer has to manually enter during onboarding.
 
+KEY EXTRACTION TARGETS:
 - **Identity**: Dealership name, tagline/slogan, phone, email, address, website
-- **Social**: Google reviews link, Facebook, Instagram, TikTok, YouTube
-- **Branding**: Colors from the CSS/branding data, logo URL, favicon
-- **Architecture**: How many locations, whether it's a single store or group
-- **Hours**: Sales hours AND Service hours separately if available. Look for "Sales Hours", "Service Hours", "Parts Hours" sections. Also look for general business hours.
-- **About/Story**: Full narrative from the About page. Include founding story, mission, values. Look for "Since [year]", "Est. [year]", "Founded in [year]", "Family-owned since [year]", "[X] years of experience".
-- **Milestones/Timeline**: Any historical events, awards, expansions, acquisitions. e.g. "2005: Opened second location", "2018: Named Dealer of the Year"
-- **Established Year**: Critical — look everywhere for founding year. Check footer, about page, hero text, tagline.
-- **Trust Stats**: Google rating, review count, cars sold/purchased numbers, awards
-- **Staff**: Names, titles, emails, phones of team members
-- **Locations**: All store locations with addresses, brands, phones
-- **OEM Brands**: All car makes sold
-- **Community**: Any community involvement, sponsorships, charity work mentioned
+- **Social**: Google reviews link, Facebook, Instagram, TikTok, YouTube, LinkedIn, X/Twitter
+- **Branding**: Primary, accent, success colors from CSS/branding. Logo URL, white/dark logo URL, favicon
+- **Architecture**: How many locations, whether it's a single store, multi-location, or dealer group
+- **Hours**: Sales hours AND Service hours separately. Look for "Sales Hours", "Service Hours", "Parts Hours" sections. Also general hours. Format as structured entries.
+- **About/Story**: Full narrative from the About page. Include founding story, mission, values, what makes them different.
+- **About Headline**: The main heading on the About page (e.g. "Our Story", "About Us", "Family-Owned Since 1952")
+- **About Subtext**: A subtitle or short paragraph under the About headline
+- **Milestones/Timeline**: Historical events, awards, expansions, acquisitions in chronological order
+- **Established Year**: CRITICAL — search EVERYWHERE: footer copyright, about page, hero, tagline, "Since YYYY", "Est. YYYY", "Founded YYYY", "Family-owned since YYYY", "[X] years of experience" → calculate year
+- **Trust Stats**: Google rating, review count, cars sold/purchased, awards won
+- **Staff**: Names, titles, emails, phones. Also department emails like internet@dealer.com, service@dealer.com
+- **Locations**: All store locations with full addresses, brands, phones, emails
+- **OEM Brands**: All car makes sold or serviced
+- **Community**: Any community involvement, sponsorships, charity work, local partnerships
 - **Certifications**: Awards, accreditations, recognitions
-- **Service offerings**: Whether they buy cars, trade-ins, sell cars, service, parts
-- **Meta**: Page description, favicon URL, DMS/CRM provider if mentioned`,
+- **Service Offerings**: Buy cars, trade-ins, sell cars, service, parts, body shop, financing
+- **Service Landing Copy**: Any "service drive" or "service customer" specific messaging
+- **Trade-In Copy**: Any "trade in your car" or "value your trade" specific messaging. Often found on trade-in or sell-your-car pages
+- **Testimonials/Reviews**: Customer quotes, star ratings, review snippets — up to 5
+- **Meta**: Page description, favicon URL, DMS/CRM provider if visible
+- **Referral Program**: Any mention of referral bonuses or programs`,
           },
           {
             role: "user",
-            content: `Extract ALL dealership information from this website. Be as thorough as possible. Multiple pages are included below.
+            content: `Extract ALL dealership information from this website. Be as thorough as possible. Multiple pages are included below. The goal is to pre-fill as much of the dealership onboarding as possible so they don't have to type anything.
 
 WEBSITE URL: ${formattedUrl}
 PAGE TITLE: ${homepage.metadata.title || ""}
@@ -222,17 +233,26 @@ ${combinedContent}`,
                   num_locations: { type: "string", description: "Number of locations found" },
                   primary_color: { type: "string", description: "Primary brand color as hex (e.g. #1e3a5f)" },
                   accent_color: { type: "string", description: "Accent/secondary color as hex" },
-                  success_color: { type: "string", description: "Success/CTA color as hex" },
-                  logo_url: { type: "string", description: "URL to the dealership logo image" },
+                  success_color: { type: "string", description: "Success/CTA button color as hex" },
+                  logo_url: { type: "string", description: "URL to the dealership logo image (light/standard version)" },
+                  logo_white_url: { type: "string", description: "URL to the white/dark-mode version of the logo if found" },
+                  favicon_url: { type: "string", description: "URL to the site favicon" },
                   hero_headline: { type: "string", description: "Main hero headline text from the homepage" },
                   hero_subtext: { type: "string", description: "Hero subtext/description from the homepage" },
-                  about_story: { type: "string", description: "Full About Us / Our Story narrative. Include the complete founding story, history, and narrative." },
-                  about_hero_headline: { type: "string", description: "About page headline" },
+                  // Service & Trade landing copy
+                  service_hero_headline: { type: "string", description: "Headline for service-drive customers, e.g. 'There's Never Been a Better Time to Upgrade'. Look on service pages or any service-customer messaging." },
+                  service_hero_subtext: { type: "string", description: "Subtext for service landing page" },
+                  trade_hero_headline: { type: "string", description: "Headline for trade-in page, e.g. 'Value Your Trade'. Look on trade-in, sell-your-car, or appraisal pages." },
+                  trade_hero_subtext: { type: "string", description: "Subtext for trade-in landing page" },
+                  // About page
+                  about_story: { type: "string", description: "Full About Us / Our Story narrative. Include the complete founding story, history, mission, and what makes them different." },
+                  about_hero_headline: { type: "string", description: "About page main headline (e.g. 'Our Story', 'About Us')" },
+                  about_hero_subtext: { type: "string", description: "About page subtitle or short intro paragraph" },
                   about_mission: { type: "string", description: "Mission statement if found" },
                   about_values_list: {
                     type: "array",
                     items: { type: "string" },
-                    description: "Core values or selling points (e.g. 'Family-owned', 'Award-winning service')",
+                    description: "Core values or selling points (e.g. 'Family-owned', 'Award-winning service', 'Transparent pricing')",
                   },
                   about_milestones: {
                     type: "array",
@@ -253,7 +273,7 @@ ${combinedContent}`,
                   staff_emails: {
                     type: "array",
                     items: { type: "string" },
-                    description: "All staff/department email addresses found",
+                    description: "All staff/department email addresses found (e.g. internet@dealer.com, service@dealer.com, gm@dealer.com)",
                   },
                   staff_phones: {
                     type: "array",
@@ -271,9 +291,10 @@ ${combinedContent}`,
                         brands: { type: "string" },
                         phone: { type: "string" },
                         email: { type: "string" },
+                        website_url: { type: "string", description: "Location-specific website URL if different from corporate" },
                       },
                     },
-                    description: "Individual store locations",
+                    description: "Individual store locations with full details",
                   },
                   business_hours: {
                     type: "array",
@@ -301,14 +322,13 @@ ${combinedContent}`,
                     description: "Staff/team members found with their roles",
                   },
                   dealer_group_name: { type: "string", description: "Parent dealer group name if part of a group" },
-                  dms_provider: { type: "string", description: "DMS/CRM provider if mentioned" },
-                  stats_years_in_business: { type: "string", description: "Years in business if mentioned" },
+                  dms_provider: { type: "string", description: "DMS/CRM provider if mentioned (e.g. DealerSocket, CDK, Reynolds)" },
+                  stats_years_in_business: { type: "string", description: "Years in business if explicitly stated" },
                   stats_rating: { type: "string", description: "Google/review rating (e.g. 4.8)" },
-                  stats_reviews_count: { type: "string", description: "Number of reviews if mentioned" },
-                  stats_cars_purchased: { type: "string", description: "Number of cars purchased/sold if mentioned" },
-                  established_year: { type: "string", description: "Year the dealership was established/founded (e.g. '1987'). Check EVERYWHERE: footer, about page, hero, tagline, copyright text. Look for 'Since YYYY', 'Est. YYYY', 'Founded YYYY', 'Family-owned since YYYY', 'Serving X community since YYYY', 'Proudly serving since YYYY'." },
+                  stats_reviews_count: { type: "string", description: "Number of reviews if mentioned (e.g. '2,400+')" },
+                  stats_cars_purchased: { type: "string", description: "Number of cars purchased/sold if mentioned (e.g. '14,721+')" },
+                  established_year: { type: "string", description: "Year the dealership was established/founded (e.g. '1987'). Check EVERYWHERE: footer copyright, about page, hero, tagline, copyright text. 'Since YYYY', 'Est. YYYY', 'Founded YYYY', 'Family-owned since YYYY', 'Serving since YYYY', 'Proudly serving since YYYY', '[X] years of experience' → compute year." },
                   meta_description: { type: "string", description: "The page meta description" },
-                  favicon_url: { type: "string", description: "URL to the site favicon" },
                   certifications: {
                     type: "array",
                     items: { type: "string" },
@@ -321,8 +341,22 @@ ${combinedContent}`,
                   service_offerings: {
                     type: "array",
                     items: { type: "string" },
-                    description: "Services offered: e.g. 'New Cars', 'Used Cars', 'We Buy Cars', 'Trade-In', 'Service', 'Parts', 'Body Shop', 'Financing'",
+                    description: "Services offered: 'New Cars', 'Used Cars', 'We Buy Cars', 'Trade-In', 'Service', 'Parts', 'Body Shop', 'Financing'",
                   },
+                  testimonials: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        name: { type: "string", description: "Customer name" },
+                        text: { type: "string", description: "Review/testimonial text" },
+                        rating: { type: "number", description: "Star rating 1-5" },
+                      },
+                    },
+                    description: "Up to 5 customer testimonials or review snippets found on the site",
+                  },
+                  referral_program: { type: "boolean", description: "Whether a referral or refer-a-friend program is mentioned" },
+                  price_guarantee_days: { type: "string", description: "If a price guarantee period is mentioned, e.g. '7 days', '10 days'" },
                 },
                 required: ["dealership_name"],
                 additionalProperties: false,

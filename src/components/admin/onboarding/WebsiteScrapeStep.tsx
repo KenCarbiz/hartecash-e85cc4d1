@@ -98,25 +98,38 @@ const WebsiteScrapeStep = ({ state, onChange }: Props) => {
             <span className="text-sm font-bold text-card-foreground">Data Extracted</span>
           </div>
 
-          <div className="grid grid-cols-2 gap-x-4 divide-y divide-border">
-            <div className="col-span-2 divide-y divide-border">
-              <ScrapedField label="Name" value={sd.dealership_name} />
-              <ScrapedField label="Phone" value={sd.phone} />
-              <ScrapedField label="Email" value={sd.email} />
-              <ScrapedField label="Address" value={sd.address} />
-              <ScrapedField label="Est." value={sd.established_year} />
-              <ScrapedField label="Rating" value={sd.stats_rating ? `${sd.stats_rating} ★` : ""} />
-              <ScrapedField label="OEM Brands" value={sd.oem_brands?.join(", ") || ""} />
-              <ScrapedField label="Locations" value={sd.locations?.length > 0 ? `${sd.locations.length} found` : ""} />
-              <ScrapedField label="Hours" value={sd.business_hours?.length > 0 ? `${sd.business_hours.length} entries` : ""} />
-              <ScrapedField label="Staff Emails" value={sd.staff_emails?.length > 0 ? `${sd.staff_emails.length} found` : ""} />
-            </div>
+          <div className="divide-y divide-border">
+            <ScrapedField label="Name" value={sd.dealership_name} />
+            <ScrapedField label="Tagline" value={sd.tagline} />
+            <ScrapedField label="Phone" value={sd.phone} />
+            <ScrapedField label="Email" value={sd.email} />
+            <ScrapedField label="Address" value={sd.address} />
+            <ScrapedField label="Est." value={sd.established_year} />
+            <ScrapedField label="Rating" value={sd.stats_rating ? `${sd.stats_rating} ★ (${sd.stats_reviews_count || ""}+ reviews)` : ""} />
+            <ScrapedField label="OEM Brands" value={sd.oem_brands?.join(", ") || ""} />
+            <ScrapedField label="Locations" value={sd.locations?.length > 0 ? `${sd.locations.length} found` : ""} />
+            <ScrapedField label="Hours" value={sd.business_hours?.length > 0 ? `${sd.business_hours.length} entries` : ""} />
+            <ScrapedField label="Staff Emails" value={sd.staff_emails?.length > 0 ? `${sd.staff_emails.length} found` : ""} />
+            <ScrapedField label="Staff Phones" value={sd.staff_phones?.length > 0 ? `${sd.staff_phones.length} found` : ""} />
+            <ScrapedField label="Colors" value={[sd.primary_color, sd.accent_color, sd.success_color].filter(Boolean).join(", ") || ""} />
+            <ScrapedField label="Social" value={[sd.facebook && "FB", sd.instagram && "IG", sd.youtube && "YT", sd.tiktok && "TT", sd.google_review && "Google"].filter(Boolean).join(", ") || ""} />
+            <ScrapedField label="Service Hero" value={sd.service_hero_headline || ""} />
+            <ScrapedField label="Trade Hero" value={sd.trade_hero_headline || ""} />
+            <ScrapedField label="Testimonials" value={sd.testimonials?.length > 0 ? `${sd.testimonials.length} found` : ""} />
+            <ScrapedField label="Certifications" value={sd.certifications?.length > 0 ? sd.certifications.join(", ") : ""} />
           </div>
 
           {sd.about_story && (
             <div>
               <p className="text-[10px] font-semibold text-muted-foreground uppercase mb-1">About Story</p>
               <p className="text-xs text-muted-foreground line-clamp-3">{sd.about_story}</p>
+            </div>
+          )}
+
+          {sd.community_involvement && (
+            <div>
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase mb-1">Community</p>
+              <p className="text-xs text-muted-foreground line-clamp-2">{sd.community_involvement}</p>
             </div>
           )}
         </div>

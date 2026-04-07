@@ -53,7 +53,6 @@ serve(async (req) => {
       architecture = "single_store",
       bdc_model = "no_bdc",
       offer_logic_approver_role = "gsm_gm",
-      // Optional AI-scraped data
       scraped_data,
     } = body;
 
@@ -64,6 +63,29 @@ serve(async (req) => {
     }
 
     const steps: string[] = [];
+
+    // Helper: hex to HSL string
+    function hexToHsl(hex: string): string {
+      if (!hex || !hex.startsWith("#")) return "";
+      const clean = hex.replace("#", "");
+      if (clean.length < 6) return "";
+      const r = parseInt(clean.slice(0, 2), 16) / 255;
+      const g = parseInt(clean.slice(2, 4), 16) / 255;
+      const b = parseInt(clean.slice(4, 6), 16) / 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h = 0, s = 0;
+      const l = (max + min) / 2;
+      if (max !== min) {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+        else if (max === g) h = ((b - r) / d + 2) / 6;
+        else h = ((r - g) / d + 4) / 6;
+      }
+      return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+    }
+
+    const sd = scraped_data || {};
 
     // 1. Create tenant
     const { error: tenantErr } = await admin.from("tenants").insert({
@@ -95,29 +117,7 @@ serve(async (req) => {
     });
     steps.push("dealer_account");
 
-    // Build site config from scraped data or defaults
-    const sd = scraped_data || {};
-
-    // Helper: hex to HSL string
-    function hexToHsl(hex: string): string {
-      if (!hex || !hex.startsWith("#")) return "";
-      const r = parseInt(hex.slice(1, 3), 16) / 255;
-      const g = parseInt(hex.slice(3, 5), 16) / 255;
-      const b = parseInt(hex.slice(5, 7), 16) / 255;
-      const max = Math.max(r, g, b), min = Math.min(r, g, b);
-      let h = 0, s = 0;
-      const l = (max + min) / 2;
-      if (max !== min) {
-        const d = max - min;
-        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-        if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
-        else if (max === g) h = ((b - r) / d + 2) / 6;
-        else h = ((r - g) / d + 4) / 6;
-      }
-      return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
-    }
-
-    // 3. Create site_config
+    // 3. Create site_config — map EVERY available scraped field
     const siteConfig: Record<string, any> = {
       dealership_id,
       dealership_name: sd.dealership_name || display_name,
@@ -127,22 +127,64 @@ serve(async (req) => {
       address: sd.address || "",
       website_url: sd.website || "",
       logo_url: sd.logo_url || "",
+      logo_white_url: sd.logo_white_url || "",
       hero_headline: sd.hero_headline || "Sell Your Car The Easy Way",
       hero_subtext: sd.hero_subtext || "Get a top-dollar cash offer in 2 minutes. No haggling, no stress.",
     };
 
-    if (sd.primary_color) siteConfig.primary_color = hexToHsl(sd.primary_color) || "213 80% 20%";
-    if (sd.accent_color) siteConfig.accent_color = hexToHsl(sd.accent_color) || "0 80% 50%";
+    // Colors (hex → HSL)
+    if (sd.primary_color) {
+      const hsl = hexToHsl(sd.primary_color);
+      if (hsl) siteConfig.primary_color = hsl;
+    }
+    if (sd.accent_color) {
+      const hsl = hexToHsl(sd.accent_color);
+      if (hsl) siteConfig.accent_color = hsl;
+    }
+    if (sd.success_color) {
+      const hsl = hexToHsl(sd.success_color);
+      if (hsl) siteConfig.success_color = hsl;
+    }
+
+    // Favicon
+    if (sd.favicon_url) siteConfig.favicon_url = sd.favicon_url;
+
+    // Social links
+    if (sd.google_review) siteConfig.google_review_url = sd.google_review;
+    if (sd.facebook) siteConfig.facebook_url = sd.facebook;
+    if (sd.instagram) siteConfig.instagram_url = sd.instagram;
+    if (sd.tiktok) siteConfig.tiktok_url = sd.tiktok;
+    if (sd.youtube) siteConfig.youtube_url = sd.youtube;
+
+    // About page
     if (sd.about_story) siteConfig.about_story = sd.about_story;
     if (sd.about_hero_headline) siteConfig.about_hero_headline = sd.about_hero_headline;
+    if (sd.about_hero_subtext) siteConfig.about_hero_subtext = sd.about_hero_subtext;
     if (sd.about_milestones?.length) siteConfig.about_milestones = sd.about_milestones;
+    if (sd.about_values_list?.length) {
+      siteConfig.about_values = sd.about_values_list.map((v: string) => ({
+        title: v,
+        description: "",
+      }));
+    }
+
+    // Service & Trade landing pages
+    if (sd.service_hero_headline) siteConfig.service_hero_headline = sd.service_hero_headline;
+    if (sd.service_hero_subtext) siteConfig.service_hero_subtext = sd.service_hero_subtext;
+    if (sd.trade_hero_headline) siteConfig.trade_hero_headline = sd.trade_hero_headline;
+    if (sd.trade_hero_subtext) siteConfig.trade_hero_subtext = sd.trade_hero_subtext;
+
+    // Trust stats
     if (sd.stats_rating) siteConfig.stats_rating = sd.stats_rating;
     if (sd.stats_reviews_count) siteConfig.stats_reviews_count = sd.stats_reviews_count;
     if (sd.stats_cars_purchased) siteConfig.stats_cars_purchased = sd.stats_cars_purchased;
+
+    // Established year → stats_years_in_business + established_year
     if (sd.established_year) {
       const year = parseInt(sd.established_year);
       if (year > 1800 && year <= new Date().getFullYear()) {
-        siteConfig.stats_years_in_business = `${new Date().getFullYear() - year} yrs`;
+        siteConfig.established_year = year;
+        siteConfig.stats_years_in_business = `${new Date().getFullYear() - year}+ yrs`;
       }
     }
 
@@ -154,13 +196,19 @@ serve(async (req) => {
       if (salesHours.length) siteConfig.business_hours = salesHours;
     }
 
-    // Social links
-    if (sd.google_review) siteConfig.google_review_url = sd.google_review;
-    if (sd.facebook) siteConfig.facebook_url = sd.facebook;
-    if (sd.instagram) siteConfig.instagram_url = sd.instagram;
+    // Price guarantee days
+    if (sd.price_guarantee_days) {
+      const match = sd.price_guarantee_days.match(/(\d+)/);
+      if (match) siteConfig.price_guarantee_days = parseInt(match[1]);
+    }
+
+    // Referral program
+    if (sd.referral_program === true) {
+      siteConfig.referral_program_enabled = true;
+    }
 
     await admin.from("site_config").insert(siteConfig);
-    steps.push("site_config");
+    steps.push(`site_config (${Object.keys(siteConfig).length} fields)`);
 
     // 4. Create form_config (defaults)
     await admin.from("form_config").insert({ dealership_id });
@@ -170,10 +218,13 @@ serve(async (req) => {
     await admin.from("offer_settings").insert({ dealership_id });
     steps.push("offer_settings");
 
-    // 6. Create notification_settings (defaults)
+    // 6. Create notification_settings — map scraped staff emails & phones
     const notifInsert: Record<string, any> = { dealership_id };
     if (sd.staff_emails?.length) {
-      notifInsert.email_recipients = sd.staff_emails.slice(0, 5);
+      notifInsert.email_recipients = sd.staff_emails.slice(0, 10);
+    }
+    if (sd.staff_phones?.length) {
+      notifInsert.sms_recipients = sd.staff_phones.slice(0, 10);
     }
     await admin.from("notification_settings").insert(notifInsert);
     steps.push("notification_settings");
@@ -202,8 +253,32 @@ serve(async (req) => {
     );
     steps.push("photo_config");
 
-    // 9. Seed dealership locations from scraped data
-    if (sd.locations?.length) {
+    // 9. Seed dealership locations — from wizard body or scraped data
+    const bodyLocations = body.locations;
+    if (bodyLocations?.length) {
+      const locs = bodyLocations.map((loc: any, i: number) => ({
+        dealership_id,
+        name: loc.name || display_name,
+        city: loc.city || "Unknown",
+        state: loc.state || "CT",
+        address: loc.address || "",
+        phone: loc.phone || sd.phone || "",
+        email: loc.email || "",
+        sort_order: i,
+        location_type: loc.location_type || (i === 0 ? "primary" : "sister_store"),
+        oem_brands: loc.oem_brands || [],
+        all_brands: !loc.oem_brands?.length,
+        corporate_logo_url: loc.corporate_logo_url || null,
+        corporate_logo_dark_url: loc.corporate_logo_dark_url || null,
+        logo_url: loc.logo_url || null,
+        logo_white_url: loc.logo_white_url || null,
+        oem_logo_urls: loc.oem_logo_urls || [],
+        established_year: sd.established_year ? parseInt(sd.established_year) : null,
+        website_url: loc.website_url || null,
+      }));
+      await admin.from("dealership_locations").insert(locs);
+      steps.push(`locations (${locs.length})`);
+    } else if (sd.locations?.length) {
       const locs = sd.locations.map((loc: any, i: number) => {
         const parts = (loc.city_state_zip || "").split(",").map((s: string) => s.trim());
         return {
@@ -212,14 +287,17 @@ serve(async (req) => {
           city: parts[0] || "Unknown",
           state: parts[1]?.split(" ")[0] || "CT",
           address: loc.address || "",
+          phone: loc.phone || "",
+          email: loc.email || "",
           sort_order: i,
           location_type: i === 0 ? "primary" : "sister_store",
           oem_brands: loc.brands ? loc.brands.split(",").map((b: string) => b.trim()) : [],
           established_year: sd.established_year ? parseInt(sd.established_year) : null,
+          website_url: loc.website_url || null,
         };
       });
       await admin.from("dealership_locations").insert(locs);
-      steps.push("locations");
+      steps.push(`locations (${locs.length} from scrape)`);
     } else {
       await admin.from("dealership_locations").insert({
         dealership_id,
@@ -227,13 +305,29 @@ serve(async (req) => {
         city: "Unknown",
         state: "CT",
         address: sd.address || "",
+        phone: sd.phone || "",
+        email: sd.email || "",
         location_type: "primary",
         established_year: sd.established_year ? parseInt(sd.established_year) : null,
       });
-      steps.push("locations");
+      steps.push("locations (1 default)");
     }
 
-    // 10. Seed notification templates (copy from default or create standard set)
+    // 10. Seed testimonials if scraped
+    if (sd.testimonials?.length) {
+      const testimonials = sd.testimonials.slice(0, 5).map((t: any, i: number) => ({
+        dealership_id,
+        customer_name: t.name || "Customer",
+        text: t.text || "",
+        rating: t.rating || 5,
+        sort_order: i,
+        is_active: true,
+      }));
+      // Only insert if testimonials table exists (ignore errors)
+      await admin.from("testimonials").insert(testimonials).catch(() => {});
+    }
+
+    // 11. Seed notification templates
     const triggerTemplates = [
       { trigger_key: "new_submission", channel: "email", subject: "New Vehicle Submission", body: "New submission from {{customer_name}} for their {{vehicle_year}} {{vehicle_make}} {{vehicle_model}}." },
       { trigger_key: "new_submission", channel: "sms", subject: null, body: "New lead: {{customer_name}} — {{vehicle_year}} {{vehicle_make}} {{vehicle_model}}" },
