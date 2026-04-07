@@ -68,7 +68,7 @@ const ArchitectureSelector = ({ selected, onSelect }: Props) => {
         </p>
       </div>
 
-      <div className="grid gap-3">
+      <div className="grid gap-2 sm:gap-3">
         {CARDS.map((card) => {
           const Icon = card.icon;
           const isSelected = selected === card.value;
