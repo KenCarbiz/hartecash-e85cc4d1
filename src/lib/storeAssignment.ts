@@ -121,10 +121,13 @@ export async function resolveStoreAssignment(
     buying_center_location_id?: string | null;
     assign_oem_brand_match?: boolean;
     assign_auto_zip?: boolean;
+    dealership_id?: string;
   },
   vehicleMake: string,
   customerZip: string,
 ): Promise<string | null> {
+  const dealershipId = config.dealership_id || "default";
+
   // 1. Buying center overrides everything (group-level)
   if (config.assign_buying_center && config.buying_center_location_id) {
     return config.buying_center_location_id;
@@ -132,14 +135,14 @@ export async function resolveStoreAssignment(
 
   // 2. OEM brand match
   if (config.assign_oem_brand_match) {
-    const brandMatch = await findStoreByBrand(vehicleMake);
-    if (brandMatch) return applyBdcRedirect(brandMatch, config.buying_center_location_id);
+    const brandMatch = await findStoreByBrand(vehicleMake, dealershipId);
+    if (brandMatch) return applyBdcRedirect(brandMatch, config.buying_center_location_id, dealershipId);
   }
 
   // 3. ZIP auto-assign
   if (config.assign_auto_zip !== false) {
-    const zipMatch = await findStoreByZip(customerZip);
-    if (zipMatch) return applyBdcRedirect(zipMatch, config.buying_center_location_id);
+    const zipMatch = await findStoreByZip(customerZip, dealershipId);
+    if (zipMatch) return applyBdcRedirect(zipMatch, config.buying_center_location_id, dealershipId);
   }
 
   return null;
