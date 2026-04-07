@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import ArchitectureSelector from "./onboarding/ArchitectureSelector";
+import BDCSelector from "./onboarding/BDCSelector";
 import TenantDetailsStep from "./onboarding/TenantDetailsStep";
 import WebsiteScrapeStep from "./onboarding/WebsiteScrapeStep";
 import LocationSetupStep from "./onboarding/LocationSetupStep";
@@ -17,17 +18,19 @@ import {
   createLocationEntry,
 } from "./onboarding/types";
 import type { ArchitectureType, WizardState } from "./onboarding/types";
+import type { BDCType } from "./onboarding/BDCSelector";
 
 interface Props {
   onClose: () => void;
   onCreated: () => void;
 }
 
-type Step = "architecture" | "details" | "scrape" | "locations" | "review" | "creating";
+type Step = "architecture" | "details" | "bdc" | "scrape" | "locations" | "review" | "creating";
 
 const STEP_LABELS: Record<Step, string> = {
   architecture: "Architecture",
   details: "Details",
+  bdc: "Lead Handling",
   scrape: "AI Scan & Branding",
   locations: "Locations",
   review: "Review & Launch",
@@ -36,10 +39,10 @@ const STEP_LABELS: Record<Step, string> = {
 
 function getSteps(arch: ArchitectureType | null): Step[] {
   if (!arch) return ["architecture"];
-  if (arch === "enterprise") return ["architecture", "details", "scrape", "review", "creating"];
-  if (arch === "single_store") return ["architecture", "details", "scrape", "locations", "review", "creating"];
-  // multi flows always show locations
-  return ["architecture", "details", "scrape", "locations", "review", "creating"];
+  if (arch === "enterprise") return ["architecture", "details", "bdc", "scrape", "review", "creating"];
+  if (arch === "single_store") return ["architecture", "details", "bdc", "scrape", "locations", "review", "creating"];
+  // multi + group + secondary all show locations
+  return ["architecture", "details", "bdc", "scrape", "locations", "review", "creating"];
 }
 
 function getDefaultLocationCount(arch: ArchitectureType): number {
@@ -73,12 +76,65 @@ const AddTenantWizard = ({ onClose, onCreated }: Props) => {
     update({ architecture: arch, planTier, locationCount: count, locations });
   };
 
+  // After scrape, auto-populate locations if scraped data contains them
+  const handleScrapeComplete = () => {
+    const sd = state.scrapedData;
+    if (!sd) return;
+
+    // Auto-populate first location from corporate data
+    if (state.locations.length > 0) {
+      const updatedLocations = [...state.locations];
+      const first = updatedLocations[0];
+      if (!first.name && sd.dealership_name) first.name = sd.dealership_name;
+      if (!first.phone && sd.phone) first.phone = sd.phone;
+      if (!first.email && sd.email) first.email = sd.email;
+      if (!first.address && sd.address) first.address = sd.address;
+      if (first.oem_brands.length === 0 && sd.oem_brands?.length) first.oem_brands = sd.oem_brands;
+      // Try to extract city/state from address
+      if (!first.city && sd.address) {
+        const parts = sd.address.split(",").map((s: string) => s.trim());
+        if (parts.length >= 2) {
+          first.city = parts[parts.length - 2] || first.city;
+          const stateZip = parts[parts.length - 1]?.split(" ");
+          if (stateZip?.[0]?.length === 2) first.state = stateZip[0];
+        }
+      }
+
+      // If scrape found multiple locations, add them
+      if (sd.locations?.length > 1 && updatedLocations.length < sd.locations.length) {
+        sd.locations.slice(1).forEach((loc: any, idx: number) => {
+          const entry = createLocationEntry(updatedLocations.length);
+          entry.name = loc.name || "";
+          entry.address = loc.address || "";
+          entry.phone = loc.phone || "";
+          entry.email = loc.email || "";
+          if (loc.brands) {
+            entry.oem_brands = loc.brands.split(",").map((b: string) => b.trim()).filter(Boolean);
+          }
+          if (loc.city_state_zip) {
+            const parts = loc.city_state_zip.split(",").map((s: string) => s.trim());
+            if (parts.length >= 1) entry.city = parts[0];
+            if (parts.length >= 2) {
+              const stateZip = parts[1].split(" ");
+              if (stateZip[0]?.length === 2) entry.state = stateZip[0];
+            }
+          }
+          updatedLocations.push(entry);
+        });
+      }
+
+      update({ locations: updatedLocations, locationCount: updatedLocations.length });
+    }
+  };
+
   const canProceed = (): boolean => {
     switch (step) {
       case "architecture":
         return !!state.architecture;
       case "details":
         return !!(state.displayName.trim() && state.slug.trim());
+      case "bdc":
+        return !!state.bdcModel;
       case "scrape":
         return true; // optional
       case "locations":
@@ -91,6 +147,10 @@ const AddTenantWizard = ({ onClose, onCreated }: Props) => {
   };
 
   const goNext = () => {
+    // When leaving scrape step, auto-populate locations
+    if (step === "scrape" && state.scrapedData) {
+      handleScrapeComplete();
+    }
     const nextIdx = currentIdx + 1;
     if (nextIdx < steps.length) {
       setStep(steps[nextIdx]);
@@ -153,6 +213,8 @@ const AddTenantWizard = ({ onClose, onCreated }: Props) => {
     }
   };
 
+  const visibleSteps = steps.filter((s) => s !== "creating");
+
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4">
       <div className="bg-card rounded-t-2xl sm:rounded-2xl border border-border shadow-2xl w-full sm:max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
@@ -165,7 +227,7 @@ const AddTenantWizard = ({ onClose, onCreated }: Props) => {
             <div>
               <h2 className="text-lg font-bold text-card-foreground">Add New Tenant</h2>
               <p className="text-xs text-muted-foreground">
-                {STEP_LABELS[step]}
+                {STEP_LABELS[step]} {step !== "creating" && `— Step ${currentIdx + 1} of ${visibleSteps.length}`}
               </p>
             </div>
           </div>
@@ -177,11 +239,11 @@ const AddTenantWizard = ({ onClose, onCreated }: Props) => {
         {/* Step progress */}
         <div className="px-6 pt-4">
           <div className="flex gap-1.5">
-            {steps.filter((s) => s !== "creating").map((s, i) => (
+            {visibleSteps.map((s, i) => (
               <div
                 key={s}
                 className={`h-1.5 flex-1 rounded-full transition-colors ${
-                  i <= steps.indexOf(step) ? "bg-primary" : "bg-muted"
+                  i <= visibleSteps.indexOf(step === "creating" ? "review" : step) ? "bg-primary" : "bg-muted"
                 }`}
               />
             ))}
@@ -195,10 +257,7 @@ const AddTenantWizard = ({ onClose, onCreated }: Props) => {
               selected={state.architecture}
               onSelect={(arch) => {
                 handleArchSelect(arch);
-                // Auto-advance after selection
-                setTimeout(() => {
-                  setStep("details");
-                }, 300);
+                setTimeout(() => setStep("details"), 300);
               }}
             />
           )}
@@ -206,6 +265,17 @@ const AddTenantWizard = ({ onClose, onCreated }: Props) => {
           {/* STEP: DETAILS */}
           {step === "details" && (
             <TenantDetailsStep state={state} onChange={update} />
+          )}
+
+          {/* STEP: BDC */}
+          {step === "bdc" && (
+            <BDCSelector
+              selected={state.bdcModel as BDCType}
+              onSelect={(bdc) => {
+                update({ bdcModel: bdc });
+                setTimeout(() => goNext(), 300);
+              }}
+            />
           )}
 
           {/* STEP: SCRAPE */}
@@ -291,6 +361,11 @@ const AddTenantWizard = ({ onClose, onCreated }: Props) => {
                   className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
                 >
                   <Rocket className="w-3.5 h-3.5" /> Launch Tenant
+                </Button>
+              ) : step === "bdc" ? (
+                // BDC auto-advances on click, but show Next as fallback
+                <Button onClick={goNext} disabled={!canProceed()} className="gap-1.5">
+                  Next <ArrowRight className="w-3.5 h-3.5" />
                 </Button>
               ) : (
                 <Button onClick={goNext} disabled={!canProceed()} className="gap-1.5">
