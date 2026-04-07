@@ -98,8 +98,9 @@ export function architectureToplanTier(arch: ArchitectureType): string {
 export function architectureToDbValue(arch: ArchitectureType): string {
   switch (arch) {
     case "single_store":
-    case "single_store_secondary":
       return "single_store";
+    case "single_store_secondary":
+      return "single_store_secondary";
     case "multi_location":
       return "multi_location";
     case "dealer_group":
