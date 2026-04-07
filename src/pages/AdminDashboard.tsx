@@ -56,7 +56,7 @@ const AdminDashboard = () => {
           <div ref={contentRef} className="flex-1 px-3 md:px-4 py-4 md:py-6 overflow-auto">
             <div className="max-w-[1400px] mx-auto space-y-4">
               <div className="flex items-center justify-between">
-                <AdminBreadcrumbNav activeSection={db.activeSection} onNavigate={db.setActiveSection} />
+                <AdminBreadcrumbNav activeSection={baseSectionId} onNavigate={db.setActiveSection} />
                 <kbd
                   className="hidden md:inline-flex items-center gap-1 rounded border border-border bg-muted px-2 py-0.5 text-[10px] text-muted-foreground cursor-pointer"
                   onClick={() => {
