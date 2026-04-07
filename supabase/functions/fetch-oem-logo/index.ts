@@ -1,5 +1,3 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -62,10 +60,12 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Action: resolve — return the direct logo URL (no storage upload needed)
+    // The client will handle uploading to storage using its own auth
     if (action === 'fetch') {
-      if (!brand || !dealershipId || !locationId) {
+      if (!brand) {
         return new Response(
-          JSON.stringify({ success: false, error: 'brand, dealershipId, and locationId are required' }),
+          JSON.stringify({ success: false, error: 'brand is required' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Download the image
+      // Download the image and return it as base64 so the client can upload
       const imgRes = await fetch(logoUrl);
       if (!imgRes.ok) {
         return new Response(
@@ -124,37 +124,20 @@ Deno.serve(async (req) => {
       const imgData = await imgRes.arrayBuffer();
       const contentType = imgRes.headers.get('content-type') || 'image/png';
       const ext = contentType.includes('svg') ? 'svg' : contentType.includes('webp') ? 'webp' : 'png';
-      const safeName = brandKey.replace(/[^a-z0-9]/g, '_');
-      const filePath = `${dealershipId}/${locationId}/oem_${safeName}.${ext}`;
 
-      // Use Supabase client SDK for upload
-      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-      const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-      const admin = createClient(supabaseUrl, serviceKey);
-
-      const { error: uploadError } = await admin.storage
-        .from('dealer-logos')
-        .upload(filePath, imgData, {
-          contentType,
-          upsert: true,
-        });
-
-      if (uploadError) {
-        console.error('Storage upload error:', uploadError);
-        return new Response(
-          JSON.stringify({ success: false, error: 'Failed to save logo to storage' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      const { data: urlData } = admin.storage
-        .from('dealer-logos')
-        .getPublicUrl(filePath);
-
-      const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+      // Convert to base64
+      const base64 = btoa(
+        new Uint8Array(imgData).reduce((data, byte) => data + String.fromCharCode(byte), '')
+      );
 
       return new Response(
-        JSON.stringify({ success: true, url: publicUrl, brand: brandKey }),
+        JSON.stringify({
+          success: true,
+          brand: brandKey,
+          base64,
+          contentType,
+          ext,
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
