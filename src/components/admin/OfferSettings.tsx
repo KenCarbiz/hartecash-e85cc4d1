@@ -470,6 +470,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
         <PricingModelManager
           onModelChange={setModelOverrideSettings}
           onRegisterSync={(fn) => { syncToModelRef.current = fn; }}
+          userRole={userRole}
         />
 
         {/* Unified Simulator — all controls inline alongside results */}

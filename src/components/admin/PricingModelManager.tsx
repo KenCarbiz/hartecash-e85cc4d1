@@ -7,8 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Save, Plus, Trash2, Copy, Star, Layers, Power, CalendarRange,
+  ShieldCheck, Clock, XCircle, SendHorizonal,
 } from "lucide-react";
 import type { OfferSettings } from "@/lib/offerCalculator";
 
@@ -39,6 +41,12 @@ interface PricingModel {
   created_by: string | null;
   created_at: string;
   updated_at: string;
+  approval_status: string;
+  approved_by: string | null;
+  approved_at: string | null;
+  submitted_by: string | null;
+  submitted_at: string | null;
+  rejection_reason: string | null;
 }
 
 const BB_VALUE_OPTIONS = [
@@ -91,13 +99,20 @@ const DEFAULT_MODEL_SETTINGS = {
 interface Props {
   onModelChange?: (settings: OfferSettings) => void;
   onRegisterSync?: (syncFn: (settings: OfferSettings) => void) => void;
-  /** Expose save trigger so the workbench can call save */
   onRegisterSave?: (saveFn: () => Promise<void>) => void;
-  /** Expose model name for workbench header */
   onModelNameChange?: (name: string, isNew: boolean) => void;
+  /** Current user's role — needed for approval workflow */
+  userRole?: string;
 }
 
-const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, onModelNameChange }: Props) => {
+const APPROVAL_BADGE: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: React.ElementType }> = {
+  draft: { label: "Draft", variant: "outline", icon: Clock },
+  pending: { label: "Pending Approval", variant: "secondary", icon: Clock },
+  approved: { label: "Approved", variant: "default", icon: ShieldCheck },
+  rejected: { label: "Rejected", variant: "destructive", icon: XCircle },
+};
+
+const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, onModelNameChange, userRole }: Props) => {
   const { tenant } = useTenant();
   const dealershipId = tenant.dealership_id;
   const { toast } = useToast();
@@ -113,6 +128,12 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
   const [scheduleModelId, setScheduleModelId] = useState<string | null>(null);
   const [scheduleStart, setScheduleStart] = useState("");
   const [scheduleEnd, setScheduleEnd] = useState("");
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [rejectModelId, setRejectModelId] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+
+  const isApprover = userRole === "gsm_gm" || userRole === "admin";
+  const isManager = userRole === "used_car_manager" || userRole === "gsm_gm" || userRole === "admin";
 
   useEffect(() => { fetchModels(); }, []);
 
@@ -326,6 +347,11 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
   };
 
   const handleSetDefault = async (id: string) => {
+    const model = models.find(m => m.id === id);
+    if (model && model.approval_status !== "approved") {
+      toast({ title: "Cannot set default", description: "Only approved models can be set as default.", variant: "destructive" });
+      return;
+    }
     await supabase.from("pricing_models" as any).update({ is_default: false } as any).eq("dealership_id", dealershipId);
     await supabase.from("pricing_models" as any).update({ is_default: true, is_active: true } as any).eq("id", id);
     toast({ title: "Default set" });
@@ -336,10 +362,56 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
   };
 
   const handleToggleActive = async (id: string, current: boolean) => {
-    await supabase.from("pricing_models" as any).update({ is_active: !current } as any).eq("id", id);
+    const model = models.find(m => m.id === id);
+    if (!current && model && model.approval_status !== "approved") {
+      toast({ title: "Approval required", description: "This model must be approved before it can be activated.", variant: "destructive" });
+      return;
+    }
+    const { error } = await supabase.from("pricing_models" as any).update({ is_active: !current } as any).eq("id", id);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
     fetchModels();
     if (editModel && selectedModelId === id) {
       setEditModel({ ...editModel, is_active: !current });
+    }
+  };
+
+  const handleSubmitForApproval = async (id: string) => {
+    const { error } = await supabase.from("pricing_models" as any).update({ approval_status: "pending" } as any).eq("id", id);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Submitted for approval", description: "A GM or admin will need to approve this model before it can go live." });
+      fetchModels();
+    }
+  };
+
+  const handleApprove = async (id: string) => {
+    const { error } = await supabase.from("pricing_models" as any).update({ approval_status: "approved" } as any).eq("id", id);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "✓ Model approved", description: "This model can now be activated." });
+      fetchModels();
+    }
+  };
+
+  const handleReject = async () => {
+    if (!rejectModelId) return;
+    const { error } = await supabase.from("pricing_models" as any).update({
+      approval_status: "rejected",
+      rejection_reason: rejectReason || null,
+    } as any).eq("id", rejectModelId);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Model rejected" });
+      setShowRejectDialog(false);
+      setRejectModelId(null);
+      setRejectReason("");
+      fetchModels();
     }
   };
 
@@ -356,6 +428,11 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
 
   const handleSchedule = async () => {
     if (!scheduleModelId) return;
+    const model = models.find(m => m.id === scheduleModelId);
+    if (model && model.approval_status !== "approved") {
+      toast({ title: "Approval required", description: "Model must be approved before scheduling.", variant: "destructive" });
+      return;
+    }
     await supabase.from("pricing_models" as any).update({
       schedule_start: scheduleStart || null,
       schedule_end: scheduleEnd || null,
@@ -384,22 +461,28 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
 
         {/* Horizontal scrollable model chips */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-          {models.map(m => (
-            <button
-              key={m.id}
-              onClick={() => selectModel(m.id)}
-              className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
-                selectedModelId === m.id
-                  ? "border-primary bg-primary/10 text-primary ring-1 ring-primary/20"
-                  : "border-border text-muted-foreground hover:border-primary/30 hover:text-card-foreground"
-              }`}
-            >
-              {m.is_default && <Star className="w-3 h-3 fill-amber-500 text-amber-500" />}
-              {m.is_active && !m.is_default && <Power className="w-3 h-3 text-green-500" />}
-              {m.schedule_start && <CalendarRange className="w-3 h-3 text-primary" />}
-              <span className="truncate max-w-[120px]">{m.name}</span>
-            </button>
-          ))}
+          {models.map(m => {
+            const approval = APPROVAL_BADGE[m.approval_status] || APPROVAL_BADGE.draft;
+            const ApprovalIcon = approval.icon;
+            return (
+              <button
+                key={m.id}
+                onClick={() => selectModel(m.id)}
+                className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                  selectedModelId === m.id
+                    ? "border-primary bg-primary/10 text-primary ring-1 ring-primary/20"
+                    : "border-border text-muted-foreground hover:border-primary/30 hover:text-card-foreground"
+                }`}
+              >
+                {m.is_default && <Star className="w-3 h-3 fill-amber-500 text-amber-500" />}
+                {m.is_active && !m.is_default && <Power className="w-3 h-3 text-success" />}
+                {m.schedule_start && <CalendarRange className="w-3 h-3 text-primary" />}
+                {m.approval_status === "pending" && <Clock className="w-3 h-3 text-amber-500" />}
+                {m.approval_status === "rejected" && <XCircle className="w-3 h-3 text-destructive" />}
+                <span className="truncate max-w-[120px]">{m.name}</span>
+              </button>
+            );
+          })}
 
           <button
             onClick={handleCreateNew}
@@ -418,64 +501,117 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
 
       {/* ── Inline model name + actions bar ── */}
       {editModel && (
-        <div className="flex items-center gap-2 flex-wrap bg-muted/30 rounded-lg px-3 py-2 border border-border">
-          <Input
-            value={editModel.name || ""}
-            onChange={e => updateModelName(e.target.value)}
-            className="h-8 text-sm font-semibold flex-1 min-w-[160px] max-w-[280px]"
-            placeholder="Model name…"
-          />
-          <Input
-            value={editModel.description || ""}
-            onChange={e => setEditModel({ ...editModel, description: e.target.value })}
-            className="h-8 text-xs flex-1 min-w-[120px] max-w-[240px]"
-            placeholder="Description (optional)"
-          />
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 flex-wrap bg-muted/30 rounded-lg px-3 py-2 border border-border">
+            <Input
+              value={editModel.name || ""}
+              onChange={e => updateModelName(e.target.value)}
+              className="h-8 text-sm font-semibold flex-1 min-w-[160px] max-w-[280px]"
+              placeholder="Model name…"
+            />
+            <Input
+              value={editModel.description || ""}
+              onChange={e => setEditModel({ ...editModel, description: e.target.value })}
+              className="h-8 text-xs flex-1 min-w-[120px] max-w-[240px]"
+              placeholder="Description (optional)"
+            />
 
-          <div className="flex items-center gap-1 shrink-0">
-            <Button onClick={handleSave} disabled={saving} size="sm" className="gap-1 bg-accent hover:bg-accent/90 text-accent-foreground h-8 text-xs">
-              <Save className="w-3.5 h-3.5" />
-              {saving ? "…" : selectedModelId ? "Save" : "Create"}
-            </Button>
-            <Button variant="outline" size="sm" className="h-8 text-xs gap-1" onClick={() => { setSaveAsName((editModel.name || "") + " (Copy)"); setShowSaveAsDialog(true); }}>
-              <Copy className="w-3 h-3" /> As
-            </Button>
-            {selectedModelId && (
-              <>
-                <Button
-                  variant={selectedModel?.is_default ? "secondary" : "outline"}
-                  size="sm"
-                  className="h-8 text-xs gap-1"
-                  onClick={() => handleSetDefault(selectedModelId)}
-                  disabled={selectedModel?.is_default}
-                >
-                  <Star className={`w-3 h-3 ${selectedModel?.is_default ? "fill-amber-500 text-amber-500" : ""}`} />
-                </Button>
-                <Button
-                  variant={selectedModel?.is_active ? "default" : "outline"}
-                  size="sm"
-                  className="h-8 text-xs gap-1"
-                  onClick={() => handleToggleActive(selectedModelId, !!selectedModel?.is_active)}
-                >
-                  <Power className="w-3 h-3" />
-                </Button>
-                <Button
-                  variant="outline" size="sm" className="h-8 text-xs gap-1"
-                  onClick={() => {
-                    setScheduleModelId(selectedModelId);
-                    setScheduleStart(selectedModel?.schedule_start || "");
-                    setScheduleEnd(selectedModel?.schedule_end || "");
-                    setShowScheduleDialog(true);
-                  }}
-                >
-                  <CalendarRange className="w-3 h-3" />
-                </Button>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive" onClick={() => handleDelete(selectedModelId)}>
-                  <Trash2 className="w-3.5 h-3.5" />
-                </Button>
-              </>
-            )}
+            {/* Approval badge */}
+            {selectedModelId && selectedModel && (() => {
+              const ab = APPROVAL_BADGE[selectedModel.approval_status] || APPROVAL_BADGE.draft;
+              const AbIcon = ab.icon;
+              return (
+                <Badge variant={ab.variant} className="gap-1 text-[10px] shrink-0">
+                  <AbIcon className="w-3 h-3" /> {ab.label}
+                </Badge>
+              );
+            })()}
+
+            <div className="flex items-center gap-1 shrink-0">
+              <Button onClick={handleSave} disabled={saving} size="sm" className="gap-1 bg-accent hover:bg-accent/90 text-accent-foreground h-8 text-xs">
+                <Save className="w-3.5 h-3.5" />
+                {saving ? "…" : selectedModelId ? "Save" : "Create"}
+              </Button>
+              <Button variant="outline" size="sm" className="h-8 text-xs gap-1" onClick={() => { setSaveAsName((editModel.name || "") + " (Copy)"); setShowSaveAsDialog(true); }}>
+                <Copy className="w-3 h-3" /> As
+              </Button>
+              {selectedModelId && (
+                <>
+                  {/* Submit for approval — managers who aren't approvers */}
+                  {isManager && !isApprover && selectedModel?.approval_status !== "pending" && selectedModel?.approval_status !== "approved" && (
+                    <Button
+                      variant="outline" size="sm" className="h-8 text-xs gap-1"
+                      onClick={() => handleSubmitForApproval(selectedModelId)}
+                    >
+                      <SendHorizonal className="w-3 h-3" /> Submit
+                    </Button>
+                  )}
+
+                  {/* Approve / Reject — approvers only */}
+                  {isApprover && selectedModel?.approval_status === "pending" && (
+                    <>
+                      <Button
+                        size="sm" className="h-8 text-xs gap-1 bg-success hover:bg-success/90 text-success-foreground"
+                        onClick={() => handleApprove(selectedModelId)}
+                      >
+                        <ShieldCheck className="w-3 h-3" /> Approve
+                      </Button>
+                      <Button
+                        variant="destructive" size="sm" className="h-8 text-xs gap-1"
+                        onClick={() => { setRejectModelId(selectedModelId); setRejectReason(""); setShowRejectDialog(true); }}
+                      >
+                        <XCircle className="w-3 h-3" /> Reject
+                      </Button>
+                    </>
+                  )}
+
+                  <Button
+                    variant={selectedModel?.is_default ? "secondary" : "outline"}
+                    size="sm"
+                    className="h-8 text-xs gap-1"
+                    onClick={() => handleSetDefault(selectedModelId)}
+                    disabled={selectedModel?.is_default}
+                  >
+                    <Star className={`w-3 h-3 ${selectedModel?.is_default ? "fill-amber-500 text-amber-500" : ""}`} />
+                  </Button>
+                  <Button
+                    variant={selectedModel?.is_active ? "default" : "outline"}
+                    size="sm"
+                    className="h-8 text-xs gap-1"
+                    onClick={() => handleToggleActive(selectedModelId, !!selectedModel?.is_active)}
+                    disabled={selectedModel?.approval_status !== "approved" && !selectedModel?.is_active}
+                  >
+                    <Power className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    variant="outline" size="sm" className="h-8 text-xs gap-1"
+                    onClick={() => {
+                      setScheduleModelId(selectedModelId);
+                      setScheduleStart(selectedModel?.schedule_start || "");
+                      setScheduleEnd(selectedModel?.schedule_end || "");
+                      setShowScheduleDialog(true);
+                    }}
+                  >
+                    <CalendarRange className="w-3 h-3" />
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive" onClick={() => handleDelete(selectedModelId)}>
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
+
+          {/* Rejection reason banner */}
+          {selectedModel?.approval_status === "rejected" && selectedModel.rejection_reason && (
+            <div className="flex items-start gap-2 bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2">
+              <XCircle className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
+              <div className="text-xs">
+                <span className="font-semibold text-destructive">Rejected:</span>{" "}
+                <span className="text-muted-foreground">{selectedModel.rejection_reason}</span>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -518,6 +654,30 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
           <DialogFooter>
             <Button onClick={handleSchedule} className="gap-1.5">
               <CalendarRange className="w-4 h-4" /> Set Schedule
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Reject Dialog ── */}
+      <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader><DialogTitle>Reject Pricing Model</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs font-semibold">Reason (optional)</Label>
+              <Textarea
+                value={rejectReason}
+                onChange={e => setRejectReason(e.target.value)}
+                placeholder="Explain why this model was rejected…"
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRejectDialog(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleReject} className="gap-1.5">
+              <XCircle className="w-4 h-4" /> Reject
             </Button>
           </DialogFooter>
         </DialogContent>

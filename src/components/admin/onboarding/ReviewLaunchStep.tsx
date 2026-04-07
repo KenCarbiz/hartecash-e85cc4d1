@@ -37,6 +37,7 @@ const ReviewLaunchStep = ({ state }: Props) => {
         <Field label="Plan" value={PLAN_LABELS[state.planTier] || state.planTier} />
         <Field label="Architecture" value={state.architecture?.replace(/_/g, " ") || ""} />
         <Field label="BDC Model" value={state.bdcModel.replace(/_/g, " ")} />
+        <Field label="Offer Logic Approver" value={state.offerLogicApproverRole === "admin" ? "Dealership Admin" : "GSM / General Manager"} />
         <Field label="Data Source" value={state.scrapedData ? `AI-scraped from ${state.websiteUrl}` : "Defaults only"} />
       </div>
 

@@ -112,7 +112,7 @@ const TenantDetailsStep = ({ state, onChange }: Props) => {
           </div>
         </div>
 
-        {/* BDC */}
+        {/* BDC + Location Count */}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">BDC Model</Label>
@@ -141,6 +141,26 @@ const TenantDetailsStep = ({ state, onChange }: Props) => {
               />
             </div>
           )}
+        </div>
+
+        {/* Offer Logic Approver */}
+        <div>
+          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            Who approves Offer Logic changes?
+          </Label>
+          <p className="text-[11px] text-muted-foreground mb-1.5">
+            When a manager builds or modifies offer logic, this role must approve before it goes live.
+          </p>
+          <Select
+            value={state.offerLogicApproverRole || "gsm_gm"}
+            onValueChange={(v) => onChange({ offerLogicApproverRole: v })}
+          >
+            <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="gsm_gm">GSM / General Manager</SelectItem>
+              <SelectItem value="admin">Dealership Admin</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* DNS info */}
