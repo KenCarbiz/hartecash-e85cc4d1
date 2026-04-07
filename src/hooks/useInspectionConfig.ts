@@ -47,6 +47,7 @@ const DEFAULTS: InspectionConfig = {
   require_notes: {},
   custom_items: [],
   default_inspection_mode: "standard",
+  tire_brake_input_mode: "measurement",
 };
 
 export const useInspectionConfig = () => {
