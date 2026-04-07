@@ -261,7 +261,7 @@ const AdminSectionRenderer = (props: AdminSectionRendererProps) => {
       {activeSection === "offer-settings" && (canManageAccess || userRole === "gsm_gm") && (
         <OfferSettings userId={userId || undefined} userRole={userRole} />
       )}
-      {activeSection === "site-config" && canManageAccess && <SiteConfiguration />}
+      {activeSection === "site-config" && canManageAccess && <SiteConfiguration focusField={focusField} />}
       {activeSection === "promotions" && canManageAccess && <PromotionManagement />}
       {activeSection === "notifications" && canManageAccess && (
         <div className="space-y-6">
