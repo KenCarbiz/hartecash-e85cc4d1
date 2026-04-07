@@ -4,6 +4,7 @@ import {
   Store, TrendingUp, Clock, BarChart3, ChevronDown, Loader2, MapPin, ExternalLink, Car,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
