@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Library, Loader2, Check } from "lucide-react";
+import { Search, Library, Loader2 } from "lucide-react";
 
 const COMMON_BRANDS = [
   "Acura", "Alfa Romeo", "Audi", "BMW", "Buick", "Cadillac",
@@ -22,6 +22,20 @@ interface OemLogoPickerProps {
   existingLogos: string[];
   maxLogos: number;
   onAdd: (url: string) => void;
+}
+
+function base64ToBlob(base64: string, contentType: string): Blob {
+  const byteChars = atob(base64);
+  const byteArrays: Uint8Array[] = [];
+  for (let offset = 0; offset < byteChars.length; offset += 512) {
+    const slice = byteChars.slice(offset, offset + 512);
+    const byteNumbers = new Array(slice.length);
+    for (let i = 0; i < slice.length; i++) {
+      byteNumbers[i] = slice.charCodeAt(i);
+    }
+    byteArrays.push(new Uint8Array(byteNumbers));
+  }
+  return new Blob(byteArrays, { type: contentType });
 }
 
 const OemLogoPicker = ({ dealershipId, locationId, existingLogos, maxLogos, onAdd }: OemLogoPickerProps) => {
@@ -43,6 +57,7 @@ const OemLogoPicker = ({ dealershipId, locationId, existingLogos, maxLogos, onAd
     }
     setFetching(brand);
     try {
+      // Step 1: Get the logo image from the edge function
       const { data, error } = await supabase.functions.invoke("fetch-oem-logo", {
         body: { action: "fetch", brand, dealershipId, locationId },
       });
@@ -56,7 +71,26 @@ const OemLogoPicker = ({ dealershipId, locationId, existingLogos, maxLogos, onAd
         return;
       }
 
-      onAdd(data.url);
+      // Step 2: Upload the base64 image to storage from the client
+      const safeName = data.brand.replace(/[^a-z0-9]/g, '_');
+      const filePath = `${dealershipId}/${locationId}/oem_${safeName}.${data.ext}`;
+      const blob = base64ToBlob(data.base64, data.contentType);
+
+      const { error: uploadError } = await supabase.storage
+        .from("dealer-logos")
+        .upload(filePath, blob, { contentType: data.contentType, upsert: true });
+
+      if (uploadError) {
+        toast({ title: "Upload failed", description: uploadError.message, variant: "destructive" });
+        return;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from("dealer-logos")
+        .getPublicUrl(filePath);
+
+      const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+      onAdd(publicUrl);
       toast({ title: `${brand} logo added` });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
