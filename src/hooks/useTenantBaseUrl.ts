@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Returns the correct base URL for the current tenant.
- * Uses custom_domain if configured, otherwise falls back to window.location.origin.
+ * If the tenant has a location_id, looks up that location's domain first.
+ * Falls back to the corporate custom_domain, then window.location.origin.
  */
 export function useTenantBaseUrl() {
   const { tenant } = useTenant();
@@ -18,18 +19,38 @@ export function useTenantBaseUrl() {
 
     supabase
       .from("tenants")
-      .select("custom_domain, slug")
+      .select("custom_domain, slug, location_id")
       .eq("dealership_id", tenant.dealership_id)
-      .maybeSingle()
+      .eq("is_active", true)
       .then(({ data }) => {
-        if (data?.custom_domain) {
-          setBaseUrl(`https://${data.custom_domain}`);
-        } else {
-          // Fallback to current origin
+        if (!data || data.length === 0) {
           setBaseUrl(window.location.origin);
+          return;
         }
+
+        // If tenant has a location_id, prefer the domain mapped to that location
+        if (tenant.location_id) {
+          const locationMatch = data.find(
+            (t) => t.location_id === tenant.location_id && t.custom_domain,
+          );
+          if (locationMatch?.custom_domain) {
+            setBaseUrl(`https://${locationMatch.custom_domain}`);
+            return;
+          }
+        }
+
+        // Fallback to the corporate domain (no location_id)
+        const corporate = data.find(
+          (t) => !t.location_id && t.custom_domain,
+        );
+        if (corporate?.custom_domain) {
+          setBaseUrl(`https://${corporate.custom_domain}`);
+          return;
+        }
+
+        setBaseUrl(window.location.origin);
       });
-  }, [tenant.dealership_id]);
+  }, [tenant.dealership_id, tenant.location_id]);
 
   return baseUrl;
 }
