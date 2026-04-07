@@ -1,10 +1,10 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Building2, Users, TrendingUp, TrendingDown, DollarSign, ArrowLeft,
   BarChart3, CheckCircle2, Clock, XCircle, Car, Target, AlertTriangle,
-  UserCheck, Moon, Sun,
+  UserCheck, Moon, Sun, Plus,
 } from "lucide-react";
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
