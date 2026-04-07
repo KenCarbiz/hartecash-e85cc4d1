@@ -1,25 +1,22 @@
-import { lazy, Suspense } from "react";
 import SEO from "@/components/SEO";
 import { LocalBusinessJsonLd, FAQPageJsonLd, HowToJsonLd } from "@/components/JsonLd";
 import SiteHeader from "@/components/SiteHeader";
 import Hero from "@/components/Hero";
 import SellCarForm from "@/components/SellCarForm";
 import SiteFooter from "@/components/SiteFooter";
+import HowItWorks from "@/components/HowItWorks";
+import TrustBadges from "@/components/TrustBadges";
+import CompetitorComparison from "@/components/CompetitorComparison";
+import ValueProps from "@/components/ValueProps";
+import Testimonials from "@/components/Testimonials";
+import FAQ from "@/components/FAQ";
+import CTABanner from "@/components/CTABanner";
+import ReferralBanner from "@/components/ReferralBanner";
 
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import HeroOffset from "@/components/HeroOffset";
 import BackToTop from "@/components/BackToTop";
 import { useEmbedMode } from "@/hooks/useEmbedMode";
-
-// Lazy-load below-fold sections for faster LCP
-const HowItWorks = lazy(() => import("@/components/HowItWorks"));
-const TrustBadges = lazy(() => import("@/components/TrustBadges"));
-const CompetitorComparison = lazy(() => import("@/components/CompetitorComparison"));
-const ValueProps = lazy(() => import("@/components/ValueProps"));
-const Testimonials = lazy(() => import("@/components/Testimonials"));
-const FAQ = lazy(() => import("@/components/FAQ"));
-const CTABanner = lazy(() => import("@/components/CTABanner"));
-const ReferralBanner = lazy(() => import("@/components/ReferralBanner"));
 
 const Index = () => {
   const { config } = useSiteConfig();
