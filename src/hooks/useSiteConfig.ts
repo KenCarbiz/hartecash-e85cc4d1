@@ -163,25 +163,26 @@ async function fetchSiteConfig(
   dealershipId: string,
   locationId: string | null,
 ): Promise<SiteConfig> {
-  // 1. Always start with the corporate site_config
-  const { data: corpData } = await supabase
+  // Fetch corporate config and location data in parallel
+  const corpPromise = supabase
     .from("site_config")
     .select("*")
     .eq("dealership_id", dealershipId)
     .maybeSingle();
 
+  const locPromise = locationId
+    ? supabase
+        .from("dealership_locations")
+        .select("*")
+        .eq("id", locationId)
+        .maybeSingle()
+    : Promise.resolve({ data: null });
+
+  const [{ data: corpData }, { data: locData }] = await Promise.all([corpPromise, locPromise]);
+
   const corporate: SiteConfig = { ...DEFAULTS, ...(corpData || {}) } as unknown as SiteConfig;
 
-  // 2. If a specific location_id is set, fetch its overrides
-  if (!locationId) return corporate;
-
-  const { data: locData } = await supabase
-    .from("dealership_locations")
-    .select("*")
-    .eq("id", locationId)
-    .maybeSingle();
-
-  if (!locData) return corporate;
+  if (!locationId || !locData) return corporate;
 
   // 3. Merge: location values override corporate where non-null
   const merged = { ...corporate };
