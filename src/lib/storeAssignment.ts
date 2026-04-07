@@ -105,8 +105,9 @@ export async function findStoreByBrand(vehicleMake: string, dealershipId: string
 async function applyBdcRedirect(
   locationId: string,
   buyingCenterLocationId?: string | null,
+  dealershipId: string = "default",
 ): Promise<string> {
-  const allLocations = await getLocations();
+  const allLocations = await getLocations(dealershipId);
   const loc = allLocations.find(l => l.id === locationId);
   if (loc?.use_bdc && buyingCenterLocationId) {
     return buyingCenterLocationId;
