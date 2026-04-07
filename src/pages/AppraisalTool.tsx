@@ -213,6 +213,7 @@ export default function AppraisalTool() {
   const [depthPolicies, setDepthPolicies] = useState<{ id: string; name: string; policy_type: string; oem_brands: string[]; all_brands: boolean; max_vehicle_age_years: number | null; max_mileage: number | null; min_tire_depth: number; min_brake_depth: number }[]>([]);
   const [dealerZip, setDealerZip] = useState<string>("");
   const [showACVSheet, setShowACVSheet] = useState(false);
+  const [retailMarketStats, setRetailMarketStats] = useState<RetailStats | null>(null);
   const acvSheetRef = useRef<HTMLDivElement>(null);
 
   // Editable overrides
