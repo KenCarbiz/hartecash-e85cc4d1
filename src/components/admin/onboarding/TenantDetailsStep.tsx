@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Globe, AlertTriangle, Store, Building2, Network, Crown } from "lucide-react";
+import { Globe, Crown, Store, Building2, Network } from "lucide-react";
 import type { ArchitectureType, WizardState } from "./types";
 import { architectureToplanTier } from "./types";
 
@@ -22,13 +22,6 @@ const ARCH_LABELS: Record<ArchitectureType, { label: string; icon: React.Element
   dealer_group: { label: "Dealer Group", icon: Network },
   enterprise: { label: "Enterprise", icon: Crown },
 };
-
-const BDC_OPTIONS = [
-  { value: "no_bdc", label: "No BDC" },
-  { value: "single_bdc", label: "Single BDC" },
-  { value: "multi_bdc", label: "Multi-Location BDC" },
-  { value: "ai_bdc", label: "AI BDC" },
-];
 
 interface Props {
   state: WizardState;
@@ -112,36 +105,22 @@ const TenantDetailsStep = ({ state, onChange }: Props) => {
           </div>
         </div>
 
-        {/* BDC + Location Count */}
-        <div className="grid grid-cols-2 gap-4">
+        {/* Location Count — only for multi */}
+        {needsLocationCount && (
           <div>
-            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">BDC Model</Label>
-            <Select value={state.bdcModel} onValueChange={(v) => onChange({ bdcModel: v })}>
-              <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {BDC_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              How many locations?
+            </Label>
+            <Input
+              type="number"
+              min={2}
+              max={50}
+              value={state.locationCount}
+              onChange={(e) => onChange({ locationCount: Math.max(2, Number(e.target.value)) })}
+              className="mt-1.5 max-w-32"
+            />
           </div>
-
-          {needsLocationCount && (
-            <div>
-              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                How many locations?
-              </Label>
-              <Input
-                type="number"
-                min={2}
-                max={50}
-                value={state.locationCount}
-                onChange={(e) => onChange({ locationCount: Math.max(2, Number(e.target.value)) })}
-                className="mt-1.5"
-              />
-            </div>
-          )}
-        </div>
+        )}
 
         {/* Offer Logic Approver */}
         <div>
@@ -155,7 +134,7 @@ const TenantDetailsStep = ({ state, onChange }: Props) => {
             value={state.offerLogicApproverRole || "gsm_gm"}
             onValueChange={(v) => onChange({ offerLogicApproverRole: v })}
           >
-            <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="mt-1 max-w-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="gsm_gm">GSM / General Manager</SelectItem>
               <SelectItem value="admin">Dealership Admin</SelectItem>
