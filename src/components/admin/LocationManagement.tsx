@@ -365,6 +365,9 @@ const LocationManagement = () => {
                       <TabsTrigger value="branding" className="gap-1.5 text-xs">
                         <Image className="w-3.5 h-3.5" /> Branding
                       </TabsTrigger>
+                      <TabsTrigger value="landing" className="gap-1.5 text-xs">
+                        <Megaphone className="w-3.5 h-3.5" /> Landing Page
+                      </TabsTrigger>
                     </TabsList>
 
                     {/* ── IDENTITY ── */}
