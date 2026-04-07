@@ -121,26 +121,109 @@ const DEFAULTS: SiteConfig = {
   established_year: null,
 };
 
-async function fetchSiteConfig(dealershipId: string): Promise<SiteConfig> {
-  const { data } = await supabase
+/**
+ * Fields on dealership_locations that can override the corporate site_config.
+ * Only non-null values from the location row will replace the corporate value.
+ */
+const LOCATION_OVERRIDE_KEYS: (keyof SiteConfig)[] = [
+  "dealership_name",
+  "tagline",
+  "phone",
+  "email",
+  "address",
+  "website_url",
+  "logo_url",
+  "logo_white_url",
+  "favicon_url",
+  "primary_color",
+  "accent_color",
+  "success_color",
+  "hero_headline",
+  "hero_subtext",
+  "hero_layout",
+  "service_hero_headline",
+  "service_hero_subtext",
+  "trade_hero_headline",
+  "trade_hero_subtext",
+  "business_hours",
+  "facebook_url",
+  "instagram_url",
+  "google_review_url",
+  "tiktok_url",
+  "youtube_url",
+  "stats_cars_purchased",
+  "stats_years_in_business",
+  "stats_rating",
+  "stats_reviews_count",
+  "price_guarantee_days",
+  "about_hero_headline",
+  "about_hero_subtext",
+  "about_story",
+];
+
+async function fetchSiteConfig(
+  dealershipId: string,
+  locationId: string | null,
+): Promise<SiteConfig> {
+  // 1. Always start with the corporate site_config
+  const { data: corpData } = await supabase
     .from("site_config")
     .select("*")
     .eq("dealership_id", dealershipId)
     .maybeSingle();
-  if (data) {
-    return { ...DEFAULTS, ...data } as unknown as SiteConfig;
+
+  const corporate: SiteConfig = { ...DEFAULTS, ...(corpData || {}) } as unknown as SiteConfig;
+
+  // 2. If a specific location_id is set, fetch its overrides
+  if (!locationId) return corporate;
+
+  const { data: locData } = await supabase
+    .from("dealership_locations")
+    .select("*")
+    .eq("id", locationId)
+    .maybeSingle();
+
+  if (!locData) return corporate;
+
+  // 3. Merge: location values override corporate where non-null
+  const merged = { ...corporate };
+  for (const key of LOCATION_OVERRIDE_KEYS) {
+    const locVal = (locData as any)[key];
+    if (locVal !== null && locVal !== undefined && locVal !== "") {
+      (merged as any)[key] = locVal;
+    }
   }
-  return DEFAULTS;
+
+  // Also merge about fields from the location if it has custom about content
+  if (!(locData as any).use_corporate_about) {
+    if ((locData as any).about_story) merged.about_story = (locData as any).about_story;
+    if ((locData as any).about_hero_headline) merged.about_hero_headline = (locData as any).about_hero_headline;
+    if ((locData as any).about_hero_subtext) merged.about_hero_subtext = (locData as any).about_hero_subtext;
+  }
+
+  // Use location address if available
+  if ((locData as any).address) {
+    merged.address = (locData as any).address;
+  }
+
+  // Compute established year from location if available
+  if ((locData as any).established_year) {
+    merged.established_year = (locData as any).established_year;
+    merged.stats_years_in_business = `${new Date().getFullYear() - (locData as any).established_year} yrs`;
+  }
+
+  return merged;
 }
 
 export function useSiteConfig() {
   const { tenant } = useTenant();
   const dealershipId = tenant.dealership_id;
+  const locationId = tenant.location_id;
 
   const { data, isLoading } = useQuery({
-    queryKey: ["site_config", dealershipId],
-    queryFn: () => fetchSiteConfig(dealershipId),
-    staleTime: 5 * 60 * 1000, // 5 min
+    queryKey: ["site_config", dealershipId, locationId],
+    queryFn: () => fetchSiteConfig(dealershipId, locationId),
+    staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
 

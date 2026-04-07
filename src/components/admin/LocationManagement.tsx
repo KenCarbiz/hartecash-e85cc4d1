@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, GripVertical, Save, Loader2, MapPin, ChevronDown, ChevronRight, X, MapPinned, Car, Radar, Store, Building2, ShoppingCart, Warehouse, Image, Eye, Globe } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Plus, Trash2, GripVertical, Save, Loader2, MapPin, ChevronDown, ChevronRight, X, MapPinned, Car, Radar, Store, Building2, ShoppingCart, Warehouse, Image, Eye, Globe, Megaphone } from "lucide-react";
 import LocationLogoSection from "./LocationLogoSection";
 
 const LOCATION_TYPE_OPTIONS = [
@@ -50,6 +51,36 @@ interface Location {
   location_type: string;
   established_year: number | null;
   use_corporate_established_year: boolean;
+  // Landing page overrides
+  dealership_name: string | null;
+  phone: string | null;
+  email: string | null;
+  website_url: string | null;
+  logo_url: string | null;
+  logo_white_url: string | null;
+  favicon_url: string | null;
+  primary_color: string | null;
+  accent_color: string | null;
+  success_color: string | null;
+  tagline: string | null;
+  hero_headline: string | null;
+  hero_subtext: string | null;
+  hero_layout: string | null;
+  service_hero_headline: string | null;
+  service_hero_subtext: string | null;
+  trade_hero_headline: string | null;
+  trade_hero_subtext: string | null;
+  business_hours: any;
+  facebook_url: string | null;
+  instagram_url: string | null;
+  google_review_url: string | null;
+  tiktok_url: string | null;
+  youtube_url: string | null;
+  stats_cars_purchased: string | null;
+  stats_years_in_business: string | null;
+  stats_rating: string | null;
+  stats_reviews_count: string | null;
+  price_guarantee_days: number | null;
 }
 
 const LocationManagement = () => {
@@ -156,6 +187,36 @@ const LocationManagement = () => {
           location_type: loc.location_type || 'primary',
           established_year: loc.established_year,
           use_corporate_established_year: loc.use_corporate_established_year ?? true,
+          // Landing page overrides
+          dealership_name: loc.dealership_name || null,
+          phone: loc.phone || null,
+          email: loc.email || null,
+          website_url: loc.website_url || null,
+          logo_url: loc.logo_url || null,
+          logo_white_url: loc.logo_white_url || null,
+          favicon_url: loc.favicon_url || null,
+          primary_color: loc.primary_color || null,
+          accent_color: loc.accent_color || null,
+          success_color: loc.success_color || null,
+          tagline: loc.tagline || null,
+          hero_headline: loc.hero_headline || null,
+          hero_subtext: loc.hero_subtext || null,
+          hero_layout: loc.hero_layout || null,
+          service_hero_headline: loc.service_hero_headline || null,
+          service_hero_subtext: loc.service_hero_subtext || null,
+          trade_hero_headline: loc.trade_hero_headline || null,
+          trade_hero_subtext: loc.trade_hero_subtext || null,
+          business_hours: loc.business_hours || null,
+          facebook_url: loc.facebook_url || null,
+          instagram_url: loc.instagram_url || null,
+          google_review_url: loc.google_review_url || null,
+          tiktok_url: loc.tiktok_url || null,
+          youtube_url: loc.youtube_url || null,
+          stats_cars_purchased: loc.stats_cars_purchased || null,
+          stats_years_in_business: loc.stats_years_in_business || null,
+          stats_rating: loc.stats_rating || null,
+          stats_reviews_count: loc.stats_reviews_count || null,
+          price_guarantee_days: loc.price_guarantee_days || null,
         } as any)
         .eq("id", loc.id);
       if (error) hasError = true;
@@ -303,6 +364,9 @@ const LocationManagement = () => {
                       </TabsTrigger>
                       <TabsTrigger value="branding" className="gap-1.5 text-xs">
                         <Image className="w-3.5 h-3.5" /> Branding
+                      </TabsTrigger>
+                      <TabsTrigger value="landing" className="gap-1.5 text-xs">
+                        <Megaphone className="w-3.5 h-3.5" /> Landing Page
                       </TabsTrigger>
                     </TabsList>
 
@@ -545,6 +609,91 @@ const LocationManagement = () => {
                         dealershipId={dealershipId}
                         onUpdate={(field, value) => updateLocation(loc.id, field as any, value)}
                       />
+                    </TabsContent>
+
+                    {/* ── LANDING PAGE OVERRIDES ── */}
+                    <TabsContent value="landing" className="mt-0 space-y-5">
+                      <p className="text-xs text-muted-foreground">
+                        Override corporate defaults for this store's landing page. Leave blank to inherit from corporate config.
+                      </p>
+
+                      {/* Store Identity */}
+                      <div className="space-y-3">
+                        <Label className="text-xs font-semibold">Store Identity</Label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-[10px] text-muted-foreground mb-1 block">Display Name</Label>
+                            <Input value={loc.dealership_name || ""} onChange={e => updateLocation(loc.id, "dealership_name", e.target.value || null)} placeholder="Inherit from corporate" />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] text-muted-foreground mb-1 block">Tagline</Label>
+                            <Input value={loc.tagline || ""} onChange={e => updateLocation(loc.id, "tagline", e.target.value || null)} placeholder="Inherit from corporate" />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] text-muted-foreground mb-1 block">Phone</Label>
+                            <Input value={loc.phone || ""} onChange={e => updateLocation(loc.id, "phone", e.target.value || null)} placeholder="Inherit from corporate" />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] text-muted-foreground mb-1 block">Email</Label>
+                            <Input value={loc.email || ""} onChange={e => updateLocation(loc.id, "email", e.target.value || null)} placeholder="Inherit from corporate" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Hero Content */}
+                      <div className="space-y-3 border-t border-border/30 pt-4">
+                        <Label className="text-xs font-semibold">Hero Section</Label>
+                        <div>
+                          <Label className="text-[10px] text-muted-foreground mb-1 block">Headline</Label>
+                          <Input value={loc.hero_headline || ""} onChange={e => updateLocation(loc.id, "hero_headline", e.target.value || null)} placeholder="Inherit from corporate" />
+                        </div>
+                        <div>
+                          <Label className="text-[10px] text-muted-foreground mb-1 block">Subtext</Label>
+                          <Textarea value={loc.hero_subtext || ""} onChange={e => updateLocation(loc.id, "hero_subtext", e.target.value || null)} placeholder="Inherit from corporate" rows={2} />
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-[10px] text-muted-foreground mb-1 block">Service Hero Headline</Label>
+                            <Input value={loc.service_hero_headline || ""} onChange={e => updateLocation(loc.id, "service_hero_headline", e.target.value || null)} placeholder="Inherit" />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] text-muted-foreground mb-1 block">Trade Hero Headline</Label>
+                            <Input value={loc.trade_hero_headline || ""} onChange={e => updateLocation(loc.id, "trade_hero_headline", e.target.value || null)} placeholder="Inherit" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Colors */}
+                      <div className="space-y-3 border-t border-border/30 pt-4">
+                        <Label className="text-xs font-semibold">Brand Colors (HSL)</Label>
+                        <div className="grid grid-cols-3 gap-3">
+                          <div>
+                            <Label className="text-[10px] text-muted-foreground mb-1 block">Primary</Label>
+                            <Input value={loc.primary_color || ""} onChange={e => updateLocation(loc.id, "primary_color", e.target.value || null)} placeholder="Inherit" className="font-mono text-xs" />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] text-muted-foreground mb-1 block">Accent</Label>
+                            <Input value={loc.accent_color || ""} onChange={e => updateLocation(loc.id, "accent_color", e.target.value || null)} placeholder="Inherit" className="font-mono text-xs" />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] text-muted-foreground mb-1 block">Success</Label>
+                            <Input value={loc.success_color || ""} onChange={e => updateLocation(loc.id, "success_color", e.target.value || null)} placeholder="Inherit" className="font-mono text-xs" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Social Links */}
+                      <div className="space-y-3 border-t border-border/30 pt-4">
+                        <Label className="text-xs font-semibold">Social & Review Links</Label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {(["facebook_url", "instagram_url", "google_review_url", "tiktok_url", "youtube_url"] as const).map(field => (
+                            <div key={field}>
+                              <Label className="text-[10px] text-muted-foreground mb-1 block capitalize">{field.replace(/_url$/, "").replace(/_/g, " ")}</Label>
+                              <Input value={(loc as any)[field] || ""} onChange={e => updateLocation(loc.id, field, e.target.value || null)} placeholder="Inherit" className="text-xs" />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </TabsContent>
                   </Tabs>
                 </div>

@@ -5,6 +5,7 @@ interface TenantInfo {
   dealership_id: string;
   slug: string;
   display_name: string;
+  location_id: string | null;
 }
 
 interface TenantContextValue {
@@ -16,6 +17,7 @@ const DEFAULT_TENANT: TenantInfo = {
   dealership_id: "default",
   slug: "default",
   display_name: "AutoCurb",
+  location_id: null,
 };
 
 const TenantContext = createContext<TenantContextValue>({
@@ -34,6 +36,9 @@ let cachedTenant: TenantInfo | null = null;
  * 1. Custom domain match (e.g. sellmycar.smithmotors.com)
  * 2. Slug match from subdomain (e.g. smith.yourdomain.com → slug "smith")
  * 3. Falls back to 'default' tenant
+ *
+ * When a tenant row has a location_id, the landing page will pull
+ * that specific store's branding overrides instead of corporate defaults.
  */
 async function resolveTenant(): Promise<TenantInfo> {
   if (cachedTenant) return cachedTenant;
@@ -61,6 +66,7 @@ async function resolveTenant(): Promise<TenantInfo> {
       dealership_id: domainMatch[0].dealership_id,
       slug: domainMatch[0].slug,
       display_name: domainMatch[0].display_name,
+      location_id: domainMatch[0].location_id ?? null,
     };
     cachedTenant = t;
     return t;
@@ -78,6 +84,7 @@ async function resolveTenant(): Promise<TenantInfo> {
         dealership_id: slugMatch[0].dealership_id,
         slug: slugMatch[0].slug,
         display_name: slugMatch[0].display_name,
+        location_id: slugMatch[0].location_id ?? null,
       };
       cachedTenant = t;
       return t;
@@ -116,10 +123,12 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
 export const TenantOverrideProvider = ({
   dealershipId,
   displayName,
+  locationId,
   children,
 }: {
   dealershipId: string;
   displayName?: string;
+  locationId?: string | null;
   children: ReactNode;
 }) => {
   const parent = useTenant();
@@ -127,6 +136,7 @@ export const TenantOverrideProvider = ({
     dealership_id: dealershipId,
     slug: dealershipId,
     display_name: displayName || dealershipId,
+    location_id: locationId ?? null,
   };
 
   return (

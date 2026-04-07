@@ -324,8 +324,10 @@ export type Database = {
           about_image_url: string | null
           about_image_urls: string[]
           about_story: string | null
+          accent_color: string | null
           address: string | null
           all_brands: boolean
+          business_hours: Json | null
           center_zip: string | null
           city: string
           corporate_logo_dark_url: string | null
@@ -333,17 +335,33 @@ export type Database = {
           coverage_radius_miles: number | null
           created_at: string
           dealership_id: string
+          dealership_name: string | null
+          email: string | null
           established_year: number | null
           excluded_oem_brands: string[]
+          facebook_url: string | null
+          favicon_url: string | null
+          google_review_url: string | null
+          hero_headline: string | null
+          hero_layout: string | null
+          hero_subtext: string | null
           id: string
+          instagram_url: string | null
           is_active: boolean
           location_type: string
           logo_layout: string
+          logo_url: string | null
+          logo_white_url: string | null
           name: string
           oem_brands: string[]
           oem_logo_urls: string[]
+          phone: string | null
+          price_guarantee_days: number | null
+          primary_color: string | null
           secondary_logo_dark_url: string | null
           secondary_logo_url: string | null
+          service_hero_headline: string | null
+          service_hero_subtext: string | null
           show_corporate_logo: boolean
           show_corporate_on_landing_only: boolean
           show_in_footer: boolean
@@ -351,10 +369,21 @@ export type Database = {
           show_in_scheduling: boolean
           sort_order: number
           state: string
+          stats_cars_purchased: string | null
+          stats_rating: string | null
+          stats_reviews_count: string | null
+          stats_years_in_business: string | null
+          success_color: string | null
+          tagline: string | null
           temporarily_offline: boolean
+          tiktok_url: string | null
+          trade_hero_headline: string | null
+          trade_hero_subtext: string | null
           use_bdc: boolean
           use_corporate_about: boolean
           use_corporate_established_year: boolean
+          website_url: string | null
+          youtube_url: string | null
           zip_codes: string[]
         }
         Insert: {
@@ -363,8 +392,10 @@ export type Database = {
           about_image_url?: string | null
           about_image_urls?: string[]
           about_story?: string | null
+          accent_color?: string | null
           address?: string | null
           all_brands?: boolean
+          business_hours?: Json | null
           center_zip?: string | null
           city: string
           corporate_logo_dark_url?: string | null
@@ -372,17 +403,33 @@ export type Database = {
           coverage_radius_miles?: number | null
           created_at?: string
           dealership_id?: string
+          dealership_name?: string | null
+          email?: string | null
           established_year?: number | null
           excluded_oem_brands?: string[]
+          facebook_url?: string | null
+          favicon_url?: string | null
+          google_review_url?: string | null
+          hero_headline?: string | null
+          hero_layout?: string | null
+          hero_subtext?: string | null
           id?: string
+          instagram_url?: string | null
           is_active?: boolean
           location_type?: string
           logo_layout?: string
+          logo_url?: string | null
+          logo_white_url?: string | null
           name: string
           oem_brands?: string[]
           oem_logo_urls?: string[]
+          phone?: string | null
+          price_guarantee_days?: number | null
+          primary_color?: string | null
           secondary_logo_dark_url?: string | null
           secondary_logo_url?: string | null
+          service_hero_headline?: string | null
+          service_hero_subtext?: string | null
           show_corporate_logo?: boolean
           show_corporate_on_landing_only?: boolean
           show_in_footer?: boolean
@@ -390,10 +437,21 @@ export type Database = {
           show_in_scheduling?: boolean
           sort_order?: number
           state?: string
+          stats_cars_purchased?: string | null
+          stats_rating?: string | null
+          stats_reviews_count?: string | null
+          stats_years_in_business?: string | null
+          success_color?: string | null
+          tagline?: string | null
           temporarily_offline?: boolean
+          tiktok_url?: string | null
+          trade_hero_headline?: string | null
+          trade_hero_subtext?: string | null
           use_bdc?: boolean
           use_corporate_about?: boolean
           use_corporate_established_year?: boolean
+          website_url?: string | null
+          youtube_url?: string | null
           zip_codes?: string[]
         }
         Update: {
@@ -402,8 +460,10 @@ export type Database = {
           about_image_url?: string | null
           about_image_urls?: string[]
           about_story?: string | null
+          accent_color?: string | null
           address?: string | null
           all_brands?: boolean
+          business_hours?: Json | null
           center_zip?: string | null
           city?: string
           corporate_logo_dark_url?: string | null
@@ -411,17 +471,33 @@ export type Database = {
           coverage_radius_miles?: number | null
           created_at?: string
           dealership_id?: string
+          dealership_name?: string | null
+          email?: string | null
           established_year?: number | null
           excluded_oem_brands?: string[]
+          facebook_url?: string | null
+          favicon_url?: string | null
+          google_review_url?: string | null
+          hero_headline?: string | null
+          hero_layout?: string | null
+          hero_subtext?: string | null
           id?: string
+          instagram_url?: string | null
           is_active?: boolean
           location_type?: string
           logo_layout?: string
+          logo_url?: string | null
+          logo_white_url?: string | null
           name?: string
           oem_brands?: string[]
           oem_logo_urls?: string[]
+          phone?: string | null
+          price_guarantee_days?: number | null
+          primary_color?: string | null
           secondary_logo_dark_url?: string | null
           secondary_logo_url?: string | null
+          service_hero_headline?: string | null
+          service_hero_subtext?: string | null
           show_corporate_logo?: boolean
           show_corporate_on_landing_only?: boolean
           show_in_footer?: boolean
@@ -429,10 +505,21 @@ export type Database = {
           show_in_scheduling?: boolean
           sort_order?: number
           state?: string
+          stats_cars_purchased?: string | null
+          stats_rating?: string | null
+          stats_reviews_count?: string | null
+          stats_years_in_business?: string | null
+          success_color?: string | null
+          tagline?: string | null
           temporarily_offline?: boolean
+          tiktok_url?: string | null
+          trade_hero_headline?: string | null
+          trade_hero_subtext?: string | null
           use_bdc?: boolean
           use_corporate_about?: boolean
           use_corporate_established_year?: boolean
+          website_url?: string | null
+          youtube_url?: string | null
           zip_codes?: string[]
         }
         Relationships: []
@@ -2204,6 +2291,7 @@ export type Database = {
           display_name: string
           id: string
           is_active: boolean
+          location_id: string | null
           slug: string
           updated_at: string
         }
@@ -2214,6 +2302,7 @@ export type Database = {
           display_name?: string
           id?: string
           is_active?: boolean
+          location_id?: string | null
           slug: string
           updated_at?: string
         }
@@ -2224,10 +2313,19 @@ export type Database = {
           display_name?: string
           id?: string
           is_active?: boolean
+          location_id?: string | null
           slug?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tenants_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "dealership_locations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       testimonials: {
         Row: {
@@ -2452,6 +2550,7 @@ export type Database = {
         Returns: {
           dealership_id: string
           display_name: string
+          location_id: string
           slug: string
         }[]
       }

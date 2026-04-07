@@ -24,7 +24,22 @@ const EMPTY: LocationLogos = {
   show_corporate_on_landing_only: false,
 };
 
-async function fetchLocationLogos(dealershipId: string): Promise<LocationLogos> {
+async function fetchLocationLogos(
+  dealershipId: string,
+  locationId: string | null,
+): Promise<LocationLogos> {
+  // If a specific location is set, fetch that one directly
+  if (locationId) {
+    const { data } = await supabase
+      .from("dealership_locations")
+      .select("corporate_logo_url, corporate_logo_dark_url, secondary_logo_url, secondary_logo_dark_url, oem_logo_urls, logo_layout, show_corporate_logo, show_corporate_on_landing_only")
+      .eq("id", locationId)
+      .maybeSingle();
+    if (data) return { ...EMPTY, ...data } as unknown as LocationLogos;
+    return EMPTY;
+  }
+
+  // Otherwise fall back to the first active location for the dealership
   const { data } = await supabase
     .from("dealership_locations")
     .select("corporate_logo_url, corporate_logo_dark_url, secondary_logo_url, secondary_logo_dark_url, oem_logo_urls, logo_layout, show_corporate_logo, show_corporate_on_landing_only")
@@ -42,10 +57,11 @@ async function fetchLocationLogos(dealershipId: string): Promise<LocationLogos> 
 export function useLocationLogos() {
   const { tenant } = useTenant();
   const did = tenant.dealership_id;
+  const lid = tenant.location_id;
 
   const { data } = useQuery({
-    queryKey: ["location_logos", did],
-    queryFn: () => fetchLocationLogos(did),
+    queryKey: ["location_logos", did, lid],
+    queryFn: () => fetchLocationLogos(did, lid),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
