@@ -1,4 +1,6 @@
-import { BarChart3, MapPin, ExternalLink } from "lucide-react";
+import { BarChart3, MapPin, AlertTriangle, Shield, DollarSign } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { BBVehicle } from "@/components/sell-form/types";
 
 interface Props {
@@ -10,6 +12,8 @@ export default function MarketContextPanel({ bbVehicle, offerHigh }: Props) {
   const retail = bbVehicle.retail;
   const wholesale = bbVehicle.wholesale;
   const tradein = bbVehicle.tradein;
+  const privateParty = bbVehicle.private_party;
+  const financeAdv = bbVehicle.finance_advance;
   const msrp = Number(bbVehicle.msrp || 0);
 
   if (!retail && !wholesale) return null;
@@ -19,6 +23,10 @@ export default function MarketContextPanel({ bbVehicle, offerHigh }: Props) {
     { label: "Retail – Clean", value: retail?.clean, type: "retail" as const },
     { label: "Retail – Average", value: retail?.avg, type: "retail" as const },
     { label: "Retail – Rough", value: retail?.rough, type: "retail" as const },
+    { label: "Private Party – X-Clean", value: privateParty?.xclean, type: "private" as const },
+    { label: "Private Party – Clean", value: privateParty?.clean, type: "private" as const },
+    { label: "Private Party – Average", value: privateParty?.avg, type: "private" as const },
+    { label: "Private Party – Rough", value: privateParty?.rough, type: "private" as const },
     { label: "Trade-In – Clean", value: tradein?.clean, type: "tradein" as const },
     { label: "Trade-In – Average", value: tradein?.avg, type: "tradein" as const },
     { label: "Trade-In – Rough", value: tradein?.rough, type: "tradein" as const },
@@ -30,11 +38,16 @@ export default function MarketContextPanel({ bbVehicle, offerHigh }: Props) {
 
   const maxVal = Math.max(...rows.map(r => Number(r.value)), offerHigh);
 
-  const typeColors = {
+  const typeColors: Record<string, string> = {
     retail: "bg-green-500/20 border-green-500/30 text-green-700 dark:text-green-400",
+    private: "bg-amber-500/20 border-amber-500/30 text-amber-700 dark:text-amber-400",
     tradein: "bg-primary/20 border-primary/30 text-primary",
     wholesale: "bg-blue-500/20 border-blue-500/30 text-blue-700 dark:text-blue-400",
   };
+
+  const hasFinanceAdv = financeAdv && (financeAdv.avg > 0 || financeAdv.clean > 0);
+  const hasResiduals = (bbVehicle.residual_12 || 0) > 0 || (bbVehicle.residual_24 || 0) > 0 || (bbVehicle.residual_36 || 0) > 0;
+  const hasRecalls = (bbVehicle.recall_count || 0) > 0 && bbVehicle.recalls?.length;
 
   return (
     <div className="space-y-2">
@@ -79,7 +92,6 @@ export default function MarketContextPanel({ bbVehicle, offerHigh }: Props) {
                     ${val.toLocaleString()}
                   </span>
                 </div>
-                {/* Offer line overlay */}
                 {offerHigh > 0 && (
                   <div
                     className="absolute top-0 bottom-0 w-px bg-primary/60 z-10"
@@ -117,13 +129,60 @@ export default function MarketContextPanel({ bbVehicle, offerHigh }: Props) {
         )}
       </div>
 
-      {/* Phase 2 hint */}
-      <div className="flex items-center gap-2 px-3 py-2 rounded border border-dashed border-border bg-muted/10 mt-2">
-        <ExternalLink className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-        <span className="text-[10px] text-muted-foreground">
-          <strong>Coming Soon:</strong> Live market listings — comparable vehicles for sale within 100 miles with real asking prices.
-        </span>
-      </div>
+      {/* Finance Advance / Equipped Retail */}
+      {hasFinanceAdv && (
+        <Collapsible>
+          <CollapsibleTrigger className="flex items-center gap-1.5 text-[10px] font-semibold text-muted-foreground hover:text-card-foreground w-full text-left py-1">
+            <DollarSign className="w-3 h-3" />
+            Equipped / Finance Advance Values
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs px-2 py-1.5">
+              {financeAdv!.xclean > 0 && <div className="flex justify-between"><span className="text-muted-foreground">X-Clean</span><span className="font-bold">${financeAdv!.xclean.toLocaleString()}</span></div>}
+              {financeAdv!.clean > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Clean</span><span className="font-bold">${financeAdv!.clean.toLocaleString()}</span></div>}
+              {financeAdv!.avg > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Average</span><span className="font-bold">${financeAdv!.avg.toLocaleString()}</span></div>}
+              {financeAdv!.rough > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Rough</span><span className="font-bold">${financeAdv!.rough.toLocaleString()}</span></div>}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      )}
+
+      {/* Residual Values */}
+      {hasResiduals && (
+        <Collapsible>
+          <CollapsibleTrigger className="flex items-center gap-1.5 text-[10px] font-semibold text-muted-foreground hover:text-card-foreground w-full text-left py-1">
+            <Shield className="w-3 h-3" />
+            Residual / Future Values
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs px-2 py-1.5">
+              {(bbVehicle.residual_12 || 0) > 0 && <div className="flex justify-between"><span className="text-muted-foreground">12-Month</span><span className="font-bold">${Number(bbVehicle.residual_12).toLocaleString()}</span></div>}
+              {(bbVehicle.residual_24 || 0) > 0 && <div className="flex justify-between"><span className="text-muted-foreground">24-Month</span><span className="font-bold">${Number(bbVehicle.residual_24).toLocaleString()}</span></div>}
+              {(bbVehicle.residual_36 || 0) > 0 && <div className="flex justify-between"><span className="text-muted-foreground">36-Month</span><span className="font-bold">${Number(bbVehicle.residual_36).toLocaleString()}</span></div>}
+              {(bbVehicle.residual_48 || 0) > 0 && <div className="flex justify-between"><span className="text-muted-foreground">48-Month</span><span className="font-bold">${Number(bbVehicle.residual_48).toLocaleString()}</span></div>}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      )}
+
+      {/* Recall Alerts */}
+      {hasRecalls && (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-2.5 space-y-1">
+          <div className="flex items-center gap-1.5">
+            <AlertTriangle className="w-3.5 h-3.5 text-destructive" />
+            <span className="text-[10px] font-bold text-destructive uppercase tracking-wider">
+              {bbVehicle.recall_count} Open Recall{(bbVehicle.recall_count || 0) > 1 ? "s" : ""}
+            </span>
+          </div>
+          {bbVehicle.recalls!.map((r, i) => (
+            <div key={i} className="text-[10px] text-muted-foreground pl-5">
+              <span className="font-semibold text-card-foreground">{r.component}</span>
+              {r.summary && <span className="ml-1">— {r.summary.substring(0, 100)}{r.summary.length > 100 ? "…" : ""}</span>}
+              {r.campaign_number && <Badge variant="outline" className="text-[7px] ml-1 px-1 py-0">{r.campaign_number}</Badge>}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
