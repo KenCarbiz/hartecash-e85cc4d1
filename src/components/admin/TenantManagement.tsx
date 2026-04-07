@@ -347,6 +347,19 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
               />
               <p className="text-[10px] text-muted-foreground">Dealer must point DNS to your server for this to work</p>
             </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Offer Logic Approver</Label>
+              <Select value={form.offerLogicApproverRole} onValueChange={v => setForm(prev => ({ ...prev, offerLogicApproverRole: v }))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="gsm_gm">GSM / General Manager</SelectItem>
+                  <SelectItem value="admin">Admin Only</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-[10px] text-muted-foreground">Who must approve new pricing model changes before activation</p>
+            </div>
             <div className="flex items-center gap-2">
               <Switch checked={form.is_active} onCheckedChange={v => setForm(prev => ({ ...prev, is_active: v }))} />
               <Label className="text-sm">Active</Label>
