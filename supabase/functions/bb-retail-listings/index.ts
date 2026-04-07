@@ -94,11 +94,16 @@ serve(async (req) => {
       });
     }
 
-    const activeStats = sd.active_statistics;
-    const soldStats = sd.sold_statistics;
+    // BB Retail API nests stats under listings_statistics array
+    const lsArr = sd.listings_statistics;
+    const ls = Array.isArray(lsArr) && lsArr.length > 0 ? lsArr[0] : (lsArr || {});
+    console.log("BB Retail ls keys:", Object.keys(ls));
+
+    const activeStats = ls.active_statistics || sd.active_statistics;
+    const soldStats = ls.sold_statistics || sd.sold_statistics;
     const statistics = {
-      mean_days_to_turn: sd.mean_days_to_turn ?? null,
-      market_days_supply: sd.market_days_supply ?? null,
+      mean_days_to_turn: ls.mean_days_to_turn ?? sd.mean_days_to_turn ?? null,
+      market_days_supply: ls.market_days_supply ?? sd.market_days_supply ?? null,
       active: activeStats ? {
         vehicle_count: activeStats.vehicle_count ?? 0,
         minimum_price: activeStats.minimum_price ?? 0,
