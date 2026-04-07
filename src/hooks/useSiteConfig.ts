@@ -156,9 +156,7 @@ const LOCATION_OVERRIDE_KEYS: (keyof SiteConfig)[] = [
   "stats_rating",
   "stats_reviews_count",
   "price_guarantee_days",
-  "about_hero_headline",
-  "about_hero_subtext",
-  "about_story",
+  "established_year",
 ];
 
 async function fetchSiteConfig(
