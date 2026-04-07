@@ -71,7 +71,7 @@ const ValueProps = () => {
                 <h3 className="text-base font-bold mb-1 text-card-foreground">
                   {item.title}
                 </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+                <p className="text-sm text-foreground/70 leading-relaxed">{item.desc}</p>
               </div>
             </div>
           );
