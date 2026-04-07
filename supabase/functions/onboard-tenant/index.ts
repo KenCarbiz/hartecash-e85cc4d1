@@ -89,6 +89,7 @@ serve(async (req) => {
       plan_tier,
       architecture,
       bdc_model,
+      offer_logic_approver_role,
       onboarding_status: "active",
       start_date: new Date().toISOString().split("T")[0],
     });

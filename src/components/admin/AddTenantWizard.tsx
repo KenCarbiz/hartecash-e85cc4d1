@@ -120,6 +120,7 @@ const AddTenantWizard = ({ onClose, onCreated }: Props) => {
           plan_tier: state.planTier,
           architecture: architectureToDbValue(state.architecture!),
           bdc_model: state.bdcModel,
+          offer_logic_approver_role: state.offerLogicApproverRole || "gsm_gm",
           scraped_data: state.scrapedData || null,
           locations: state.locations.map((loc) => ({
             name: loc.name,
