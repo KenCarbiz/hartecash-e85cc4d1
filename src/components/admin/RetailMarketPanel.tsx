@@ -182,7 +182,7 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, dealerZip, radius
 
   return (
     <div className="space-y-3">
-      {/* Header with radius adjuster */}
+      {/* Header with ZIP + radius */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
@@ -191,18 +191,22 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, dealerZip, radius
               Live Market Data
             </span>
           </div>
-          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
             <MapPin className="w-3 h-3" />
+            <Input
+              value={searchZip}
+              onChange={e => setSearchZip(e.target.value.replace(/\D/g, "").slice(0, 5))}
+              className="h-5 w-16 text-[10px] font-mono px-1 py-0"
+              maxLength={5}
+            />
             <span>{radius}mi</span>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Slider min={25} max={500} step={25} value={[radius]} onValueChange={([v]) => setRadius(v)} className="flex-1" />
-          {radius !== radiusMiles || !fetched ? (
-            <Button variant="outline" size="sm" className="text-[10px] h-6 px-2 shrink-0" onClick={() => { setFetched(false); setListings([]); setShowListings(false); setTimeout(fetchStats, 50); }} disabled={loading}>
-              {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Refresh"}
-            </Button>
-          ) : null}
+          <Button variant="outline" size="sm" className="text-[10px] h-6 px-2 shrink-0" onClick={() => { setFetched(false); setListings([]); setShowListings(false); setTimeout(fetchStats, 50); }} disabled={loading || searchZip.length < 5}>
+            {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Refresh"}
+          </Button>
         </div>
       </div>
 
