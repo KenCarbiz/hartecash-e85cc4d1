@@ -278,9 +278,10 @@ function PassFailCorner({
 
   const handleClick = () => {
     if (readOnly || !onChange) return;
-    // Toggle: null → pass → fail → pass
-    if (value === null || value === 0) onChange(1);
-    else onChange(0);
+    // Cycle: null (gray) → 1 (green/pass) → 0 (red/fail) → null (gray)
+    if (value === null) onChange(1);
+    else if (value === 1) onChange(0);
+    else onChange(-1); // -1 signals reset to null in parent
   };
 
   return (
