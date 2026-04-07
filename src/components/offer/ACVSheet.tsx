@@ -430,19 +430,130 @@ const ACVSheet = forwardRef<HTMLDivElement, ACVSheetProps>(({
             <div><span className="text-gray-500">Mechanical:</span> <span className="font-bold">{(sub.mechanical_issues || []).filter(d => d !== "none").length || "None"}</span></div>
             {sub.inspector_grade && <div><span className="text-gray-500">Grade:</span> <span className="font-bold">{sub.inspector_grade}</span></div>}
           </div>
-          {/* Tire/Brake measurements */}
-          {(hasTires || hasBrakes) && (
-            <div className="mt-1 pt-1 border-t border-gray-200">
-              {avgTireDepth && <div className="text-[10px]"><span className="text-gray-500">Avg Tire Depth:</span> <span className="font-bold">{avgTireDepth}/32"</span>
-                <span className="text-[9px] text-gray-400 ml-1">(LF:{sub.tire_lf} RF:{sub.tire_rf} LR:{sub.tire_lr} RR:{sub.tire_rr})</span>
-              </div>}
-              {hasBrakes && <div className="text-[10px]"><span className="text-gray-500">Brake Pads:</span>
-                <span className="text-[9px] text-gray-400 ml-1">(LF:{sub.brake_lf ?? "—"} RF:{sub.brake_rf ?? "—"} LR:{sub.brake_lr ?? "—"} RR:{sub.brake_rr ?? "—"})mm</span>
-              </div>}
+        </div>
+      </div>
+
+      {/* ═══ INSPECTION DETAIL ═══ */}
+      {(hasTires || hasBrakes || sub.tire_adjustment != null || sub.inspector_grade) && (
+        <div className="mb-3">
+          <h2 className="text-[10px] font-black uppercase tracking-wider border-b border-gray-400 pb-0.5 mb-1">Inspection Detail</h2>
+          <div className="grid grid-cols-2 gap-4">
+            {/* Tire Depths */}
+            {hasTires && (() => {
+              const MIN_TIRE = 4; // 4/32" pass threshold
+              const tires = [
+                { pos: "Left Front", depth: sub.tire_lf! },
+                { pos: "Right Front", depth: sub.tire_rf! },
+                { pos: "Left Rear", depth: sub.tire_lr! },
+                { pos: "Right Rear", depth: sub.tire_rr! },
+              ];
+              const avg = tires.reduce((s, t) => s + t.depth, 0) / 4;
+              const allPass = tires.every(t => t.depth >= MIN_TIRE);
+              return (
+                <div>
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className="text-[10px] font-bold">Tire Tread Depth</span>
+                    <span className={`text-[8px] font-black uppercase px-1 py-0.5 rounded ${allPass ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                      {allPass ? "PASS" : "FAIL"}
+                    </span>
+                  </div>
+                  <table className="w-full text-[10px]">
+                    <thead>
+                      <tr className="text-[8px] text-gray-500 uppercase">
+                        <th className="text-left py-0.5">Position</th>
+                        <th className="text-right py-0.5">Depth</th>
+                        <th className="text-right py-0.5">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tires.map((t, i) => (
+                        <tr key={i} className="border-t border-gray-200">
+                          <td className="py-0.5">{t.pos}</td>
+                          <td className="py-0.5 text-right font-bold">{t.depth}/32"</td>
+                          <td className={`py-0.5 text-right font-bold ${t.depth >= MIN_TIRE ? "text-green-700" : "text-red-700"}`}>
+                            {t.depth >= MIN_TIRE ? "✓ Pass" : "✗ Fail"}
+                          </td>
+                        </tr>
+                      ))}
+                      <tr className="border-t-2 border-gray-400 font-bold">
+                        <td className="py-0.5">Average</td>
+                        <td className="py-0.5 text-right">{avg.toFixed(1)}/32"</td>
+                        <td></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  {sub.tire_adjustment != null && sub.tire_adjustment !== 0 && (
+                    <div className={`text-[9px] mt-0.5 font-bold ${sub.tire_adjustment > 0 ? "text-green-700" : "text-red-700"}`}>
+                      Tire Adjustment: {sub.tire_adjustment > 0 ? "+" : ""}${sub.tire_adjustment.toLocaleString()}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Brake Pad Depths */}
+            {hasBrakes && (() => {
+              const MIN_BRAKE = 3; // 3mm pass threshold
+              const brakes = [
+                { pos: "Left Front", depth: sub.brake_lf },
+                { pos: "Right Front", depth: sub.brake_rf },
+                { pos: "Left Rear", depth: sub.brake_lr },
+                { pos: "Right Rear", depth: sub.brake_rr },
+              ].filter(b => b.depth != null) as { pos: string; depth: number }[];
+              const avg = brakes.length > 0 ? brakes.reduce((s, b) => s + b.depth, 0) / brakes.length : 0;
+              const allPass = brakes.every(b => b.depth >= MIN_BRAKE);
+              return (
+                <div>
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className="text-[10px] font-bold">Brake Pad Depth</span>
+                    <span className={`text-[8px] font-black uppercase px-1 py-0.5 rounded ${allPass ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                      {allPass ? "PASS" : "FAIL"}
+                    </span>
+                  </div>
+                  <table className="w-full text-[10px]">
+                    <thead>
+                      <tr className="text-[8px] text-gray-500 uppercase">
+                        <th className="text-left py-0.5">Position</th>
+                        <th className="text-right py-0.5">Depth</th>
+                        <th className="text-right py-0.5">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        { pos: "Left Front", depth: sub.brake_lf },
+                        { pos: "Right Front", depth: sub.brake_rf },
+                        { pos: "Left Rear", depth: sub.brake_lr },
+                        { pos: "Right Rear", depth: sub.brake_rr },
+                      ].map((b, i) => (
+                        <tr key={i} className="border-t border-gray-200">
+                          <td className="py-0.5">{b.pos}</td>
+                          <td className="py-0.5 text-right font-bold">{b.depth != null ? `${b.depth}mm` : "—"}</td>
+                          <td className={`py-0.5 text-right font-bold ${b.depth == null ? "text-gray-400" : b.depth >= MIN_BRAKE ? "text-green-700" : "text-red-700"}`}>
+                            {b.depth == null ? "N/A" : b.depth >= MIN_BRAKE ? "✓ Pass" : "✗ Fail"}
+                          </td>
+                        </tr>
+                      ))}
+                      {brakes.length > 0 && (
+                        <tr className="border-t-2 border-gray-400 font-bold">
+                          <td className="py-0.5">Average</td>
+                          <td className="py-0.5 text-right">{avg.toFixed(1)}mm</td>
+                          <td></td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()}
+          </div>
+          {sub.inspector_grade && (
+            <div className="mt-1 text-[10px]">
+              <span className="text-gray-500">Inspector Overall Grade:</span>{" "}
+              <span className="font-black text-sm">{sub.inspector_grade}</span>
             </div>
           )}
         </div>
-      </div>
+      )}
 
       {/* ═══ RESIDUAL VALUES ═══ */}
       {bbVehicle && ((bbVehicle.residual_12 || 0) > 0 || (bbVehicle.residual_24 || 0) > 0 || (bbVehicle.residual_36 || 0) > 0) && (
