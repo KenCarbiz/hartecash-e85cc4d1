@@ -37,7 +37,29 @@ interface AdminSidebarProps {
   dealershipId?: string;
 }
 
+type SidebarItem = {
+  key: string;
+  label: string;
+  icon: React.ElementType;
+  badge?: string;
+  badgeVariant?: "destructive" | "secondary";
+};
+
 const STORAGE_KEY = "admin-sidebar-collapsed";
+
+/**
+ * Role hierarchy (least → most access):
+ *   sales_bdc → used_car_manager → gsm_gm → admin
+ *
+ * Visibility rules:
+ *   - Pipeline: All staff see Leads & Appointments. Performance is manager+.
+ *   - Configuration: Offer Logic is manager+. Everything else is admin-only.
+ *   - Storefront: Admin-only.
+ *   - Team & Tools: Staff/Permissions is admin-only. Reports is manager+.
+ *     My Lead Link & My Referrals are visible to everyone.
+ *     Compliance (consent/comm logs) is visible to everyone.
+ *     Dealer Setup, Vehicle Images, System Settings, Tenants are admin-only.
+ */
 
 const AdminSidebar = ({
   activeSection,
@@ -77,29 +99,34 @@ const AdminSidebar = ({
     setCollapsedGroups((prev) => ({ ...prev, [label]: !prev[label] }));
   };
 
+  // Permission helpers
   const isAllowed = (key: string) => allowedSections === null || allowedSections.includes(key);
   const isPlatformAdmin = canManageAccess && dealershipId === "default";
+  const isManager = userRole === "used_car_manager" || userRole === "gsm_gm" || canManageAccess;
+  const isGMOrAdmin = userRole === "gsm_gm" || canManageAccess;
 
-  // ── PIPELINE ──
-  const pipelineItems = [
+  // ── PIPELINE ── (All staff see Leads & Appointments; Performance is manager+)
+  const pipelineItems: SidebarItem[] = [
     { key: "submissions", label: "All Leads", icon: Inbox, badge: submissionCount > 0 ? String(submissionCount) : undefined },
     { key: "accepted-appts", label: "Appointments", icon: CalendarDays, badge: appointmentCount > 0 ? String(appointmentCount) : undefined },
-    { key: "executive", label: "Performance", icon: BarChart3 },
+    ...(isManager ? [{ key: "executive", label: "Performance", icon: BarChart3 }] : []),
   ].filter((item) => isAllowed(item.key));
 
-  // ── CONFIGURATION ──
-  const configItems = [
-    ...((canManageAccess || userRole === "gsm_gm") ? [{ key: "offer-settings", label: "Offer Logic", icon: SlidersHorizontal, badge: pricingAccessRequestCount > 0 ? String(pricingAccessRequestCount) : undefined, badgeVariant: "destructive" as const }] : []),
-    ...(canManageAccess ? [{ key: "form-config", label: "Lead Form", icon: ListChecks }] : []),
-    ...(canManageAccess ? [{ key: "inspection-config", label: "Inspection Sheet", icon: Shield }] : []),
-    ...(canManageAccess ? [{ key: "photo-config", label: "Photo Requirements", icon: Camera }] : []),
-    ...(canManageAccess ? [{ key: "depth-policies", label: "Depth Policies", icon: Gauge }] : []),
-    ...(canManageAccess ? [{ key: "promotions", label: "Promotions", icon: Megaphone }] : []),
-    ...(canManageAccess ? [{ key: "notifications", label: "Notifications", icon: Bell }] : []),
+  // ── CONFIGURATION ── (Offer Logic is manager+; rest is admin-only)
+  const configItems: SidebarItem[] = [
+    ...(isManager ? [{ key: "offer-settings", label: "Offer Logic", icon: SlidersHorizontal, badge: pricingAccessRequestCount > 0 ? String(pricingAccessRequestCount) : undefined, badgeVariant: "destructive" as const }] : []),
+    ...(canManageAccess ? [
+      { key: "form-config", label: "Lead Form", icon: ListChecks },
+      { key: "inspection-config", label: "Inspection Sheet", icon: Shield },
+      { key: "photo-config", label: "Photo Requirements", icon: Camera },
+      { key: "depth-policies", label: "Depth Policies", icon: Gauge },
+      { key: "promotions", label: "Promotions", icon: Megaphone },
+      { key: "notifications", label: "Notifications", icon: Bell },
+    ] : []),
   ].filter((item) => isAllowed(item.key));
 
-  // ── STOREFRONT ──
-  const storefrontItems = canManageAccess
+  // ── STOREFRONT ── (Admin-only)
+  const storefrontItems: SidebarItem[] = canManageAccess
     ? [
         { key: "site-config", label: "Branding", icon: Settings },
         ...(locationCount > 1 ? [{ key: "locations", label: "Locations", icon: MapPin }] : []),
@@ -108,23 +135,32 @@ const AdminSidebar = ({
       ].filter((item) => isAllowed(item.key))
     : [];
 
-  // ── SYSTEM ──
-  const teamBadgeCount = canManageAccess ? pendingRequestCount + permissionRequestCount : 0;
-  const systemItems = [
-    ...(canManageAccess ? [{ key: "staff", label: "Staff & Permissions", icon: Users, badge: teamBadgeCount > 0 ? String(teamBadgeCount) : undefined, badgeVariant: "destructive" as const }] : []),
+  // ── MY TOOLS ── (Visible to all staff — personal items)
+  const myToolsItems: SidebarItem[] = [
     { key: "my-lead-link", label: "My Lead Link", icon: Link2 },
     { key: "my-referrals", label: "My Referrals", icon: Gift },
+  ];
+
+  // ── TEAM & ADMIN ── (Mixed access levels)
+  const teamBadgeCount = canManageAccess ? pendingRequestCount + permissionRequestCount : 0;
+  const teamItems: SidebarItem[] = [
+    ...(canManageAccess ? [{ key: "staff", label: "Staff & Permissions", icon: Users, badge: teamBadgeCount > 0 ? String(teamBadgeCount) : undefined, badgeVariant: "destructive" as const }] : []),
     ...(canManageAccess ? [{ key: "referrals", label: "Referral Program", icon: Gift }] : []),
     { key: "compliance", label: "Compliance", icon: ShieldCheck },
-    { key: "reports", label: "Reports & Export", icon: Send },
-    ...(isPlatformAdmin ? [{ key: "tenants", label: "Dealer Tenants", icon: Network }] : []),
+    ...(isManager ? [{ key: "reports", label: "Reports & Export", icon: Send }] : []),
     ...(canManageAccess ? [{ key: "image-inventory", label: "Vehicle Images", icon: Car }] : []),
+    ...(canManageAccess ? [{ key: "onboarding", label: "Dealer Setup", icon: Rocket }] : []),
     ...(canManageAccess ? [{ key: "system-settings", label: "System Settings", icon: Wrench }] : []),
-    { key: "onboarding", label: "Dealer Setup", icon: Rocket },
-  ].filter((item) => isAllowed(item.key) || (item.key === "compliance" && (isAllowed("consent") || isAllowed("comm-log"))) || item.key === "my-referrals" || item.key === "my-lead-link");
+    ...(isPlatformAdmin ? [{ key: "tenants", label: "Dealer Tenants", icon: Network }] : []),
+  ].filter((item) => isAllowed(item.key));
 
   // Locked sections for "Request Access"
-  const allSectionKeys = ["submissions", "accepted-appts", "executive", "staff", "offer-settings", "form-config", "inspection-config", "depth-policies", "notifications", "site-config", "locations", "testimonials", "compliance", "image-inventory", "reports", "system-settings"];
+  const allSectionKeys = [
+    "submissions", "accepted-appts", "executive", "staff", "offer-settings",
+    "form-config", "inspection-config", "depth-policies", "notifications",
+    "site-config", "locations", "testimonials", "compliance", "image-inventory",
+    "reports", "system-settings",
+  ];
   const lockedSections = showRequestAccess && allowedSections !== null
     ? allSectionKeys.filter((k) => !allowedSections.includes(k))
     : [];
@@ -132,7 +168,7 @@ const AdminSidebar = ({
   // Check if group contains active section
   const groupContainsActive = (items: { key: string }[]) => items.some((item) => item.key === activeSection);
 
-  const renderGroup = (label: string, items: { key: string; label: string; icon: React.ElementType; badge?: string; badgeVariant?: string }[]) => {
+  const renderGroup = (label: string, items: SidebarItem[]) => {
     if (items.length === 0) return null;
 
     const isOpen = !collapsedGroups[label];
@@ -178,7 +214,7 @@ const AdminSidebar = ({
                         )}
                         {!collapsed && item.badge && (
                           <Badge
-                            variant={(item as any).badgeVariant === "destructive" ? "destructive" : "secondary"}
+                            variant={item.badgeVariant === "destructive" ? "destructive" : "secondary"}
                             className="ml-auto text-[10px] h-5 min-w-5 flex items-center justify-center"
                           >
                             {item.badge}
@@ -202,7 +238,8 @@ const AdminSidebar = ({
         {renderGroup("Pipeline", pipelineItems)}
         {renderGroup("Configuration", configItems)}
         {renderGroup("Storefront", storefrontItems)}
-        {renderGroup("System", systemItems)}
+        {renderGroup("My Tools", myToolsItems)}
+        {renderGroup("Team & Admin", teamItems)}
 
         {lockedSections.length > 0 && !collapsed && (
           <SidebarGroup>
