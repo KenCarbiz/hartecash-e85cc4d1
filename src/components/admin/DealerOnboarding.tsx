@@ -19,33 +19,11 @@ import {
 } from "lucide-react";
 import OnboardingChecklist from "./OnboardingChecklist";
 import DealerWebsiteAutofillCard from "./DealerWebsiteAutofillCard";
-
-interface DealerAccount {
-  id: string;
-  dealership_id: string;
-  architecture: string;
-  bdc_model: string;
-  start_date: string | null;
-  billing_date: number | null;
-  plan_tier: string;
-  plan_cost: number;
-  special_instructions: string;
-  onboarding_status: string;
-  onboarded_by: string | null;
-}
-
-const ARCHITECTURE_OPTIONS = [
-  { value: "single_store", label: "Single Store", icon: Store, desc: "One rooftop, one location. Simplest setup — hides multi-location routing." },
-  { value: "multi_location", label: "Multi-Location", icon: Building2, desc: "Multiple stores under one brand. Enables ZIP/OEM routing and per-store settings." },
-  { value: "dealer_group", label: "Dealer Group", icon: Network, desc: "Multiple brands/franchises. Full routing engine, buying center, and brand matching." },
-];
-
-const BDC_OPTIONS = [
-  { value: "no_bdc", label: "No BDC", icon: Store, desc: "No dedicated BDC team. Leads go directly to sales staff or managers at each location." },
-  { value: "single_bdc", label: "Single BDC", icon: PhoneIcon, desc: "One centralized team handles all inbound leads across locations." },
-  { value: "multi_bdc", label: "Multi-Location BDC", icon: Building, desc: "Each location has its own BDC team. Leads route to the matched store's team." },
-  { value: "ai_bdc", label: "AI BDC", icon: Bot, desc: "AI-powered lead handling with automated follow-ups and intelligent routing." },
-];
+import ArchitectureSelector from "./onboarding/ArchitectureSelector";
+import BDCSelector from "./onboarding/BDCSelector";
+import { architectureToDbValue, architectureToplanTier } from "./onboarding/types";
+import type { ArchitectureType } from "./onboarding/types";
+import type { BDCType } from "./onboarding/BDCSelector";
 
 const PLAN_TIERS = [
   { value: "standard", label: "Standard (1–2 locations)", cost: 1995 },
