@@ -1266,6 +1266,7 @@ export default function AppraisalTool() {
             activeSettings={activeSettings}
             dealerZip={dealerZip}
             onRefreshInspection={handleRefreshInspection}
+            onRetailStatsLoaded={setRetailMarketStats}
           />
         </div>
       </div>
