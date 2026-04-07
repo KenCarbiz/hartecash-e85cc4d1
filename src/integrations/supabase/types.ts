@@ -263,6 +263,7 @@ export type Database = {
           dealership_id: string
           id: string
           max_locations: number
+          offer_logic_approver_role: string
           onboarded_by: string | null
           onboarding_answers: Json | null
           onboarding_signature_dealer: string | null
@@ -283,6 +284,7 @@ export type Database = {
           dealership_id?: string
           id?: string
           max_locations?: number
+          offer_logic_approver_role?: string
           onboarded_by?: string | null
           onboarding_answers?: Json | null
           onboarding_signature_dealer?: string | null
@@ -303,6 +305,7 @@ export type Database = {
           dealership_id?: string
           id?: string
           max_locations?: number
+          offer_logic_approver_role?: string
           onboarded_by?: string | null
           onboarding_answers?: Json | null
           onboarding_signature_dealer?: string | null
@@ -1450,6 +1453,9 @@ export type Database = {
       pricing_models: {
         Row: {
           age_tiers: Json
+          approval_status: string
+          approved_at: string | null
+          approved_by: string | null
           bb_value_basis: string
           color_desirability: Json
           condition_basis_map: Json
@@ -1475,13 +1481,19 @@ export type Database = {
           priority: number
           recon_cost: number
           regional_adjustment_pct: number
+          rejection_reason: string | null
           schedule_end: string | null
           schedule_start: string | null
           seasonal_adjustment: Json
+          submitted_at: string | null
+          submitted_by: string | null
           updated_at: string
         }
         Insert: {
           age_tiers?: Json
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
           bb_value_basis?: string
           color_desirability?: Json
           condition_basis_map?: Json
@@ -1507,13 +1519,19 @@ export type Database = {
           priority?: number
           recon_cost?: number
           regional_adjustment_pct?: number
+          rejection_reason?: string | null
           schedule_end?: string | null
           schedule_start?: string | null
           seasonal_adjustment?: Json
+          submitted_at?: string | null
+          submitted_by?: string | null
           updated_at?: string
         }
         Update: {
           age_tiers?: Json
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
           bb_value_basis?: string
           color_desirability?: Json
           condition_basis_map?: Json
@@ -1539,9 +1557,12 @@ export type Database = {
           priority?: number
           recon_cost?: number
           regional_adjustment_pct?: number
+          rejection_reason?: string | null
           schedule_end?: string | null
           schedule_start?: string | null
           seasonal_adjustment?: Json
+          submitted_at?: string | null
+          submitted_by?: string | null
           updated_at?: string
         }
         Relationships: []
