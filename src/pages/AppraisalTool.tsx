@@ -209,6 +209,7 @@ export default function AppraisalTool() {
   const [retailProfitBasis, setRetailProfitBasis] = useState("retail_avg");
   const [expandedBlock, setExpandedBlock] = useState<string | null>(null);
   const [depthPolicies, setDepthPolicies] = useState<{ id: string; name: string; policy_type: string; oem_brands: string[]; all_brands: boolean; max_vehicle_age_years: number | null; max_mileage: number | null; min_tire_depth: number; min_brake_depth: number }[]>([]);
+  const [dealerZip, setDealerZip] = useState<string>("");
 
   // Editable overrides
   const [localSettings, setLocalSettings] = useState<OfferSettings | null>(null);
