@@ -8,9 +8,9 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
-
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, GripVertical, Save, Loader2, MapPin, ChevronDown, ChevronRight, X, MapPinned, Car, Radar, Store, Building2, ShoppingCart, Warehouse } from "lucide-react";
+import { Plus, Trash2, GripVertical, Save, Loader2, MapPin, ChevronDown, ChevronRight, X, MapPinned, Car, Radar, Store, Building2, ShoppingCart, Warehouse, Image, Eye, Globe } from "lucide-react";
 import LocationLogoSection from "./LocationLogoSection";
 
 const LOCATION_TYPE_OPTIONS = [
@@ -127,7 +127,7 @@ const LocationManagement = () => {
     }
   };
 
-  const updateLocation = async (id: string, field: keyof Location, value: string) => {
+  const updateLocation = (id: string, field: keyof Location, value: any) => {
     setLocations(prev => prev.map(l => l.id === id ? { ...l, [field]: value } : l));
   };
 
@@ -137,7 +137,26 @@ const LocationManagement = () => {
     for (const loc of locations) {
       const { error } = await supabase
         .from("dealership_locations" as any)
-        .update({ name: loc.name, city: loc.city, state: loc.state, address: loc.address, sort_order: loc.sort_order, zip_codes: loc.zip_codes || [], oem_brands: loc.oem_brands || [], center_zip: loc.center_zip || '', coverage_radius_miles: loc.coverage_radius_miles || 0, all_brands: loc.all_brands ?? true, excluded_oem_brands: loc.excluded_oem_brands || [], temporarily_offline: loc.temporarily_offline ?? false, use_bdc: loc.use_bdc ?? false, show_in_inspection: loc.show_in_inspection ?? true, corporate_logo_url: loc.corporate_logo_url || null, corporate_logo_dark_url: loc.corporate_logo_dark_url || null, oem_logo_urls: loc.oem_logo_urls || [], logo_layout: loc.logo_layout || 'side_by_side', show_corporate_logo: loc.show_corporate_logo ?? false, show_corporate_on_landing_only: loc.show_corporate_on_landing_only ?? false, location_type: loc.location_type || 'primary', established_year: loc.established_year, use_corporate_established_year: loc.use_corporate_established_year ?? true } as any)
+        .update({
+          name: loc.name, city: loc.city, state: loc.state, address: loc.address,
+          sort_order: loc.sort_order, zip_codes: loc.zip_codes || [],
+          oem_brands: loc.oem_brands || [], center_zip: loc.center_zip || '',
+          coverage_radius_miles: loc.coverage_radius_miles || 0,
+          all_brands: loc.all_brands ?? true, excluded_oem_brands: loc.excluded_oem_brands || [],
+          temporarily_offline: loc.temporarily_offline ?? false,
+          use_bdc: loc.use_bdc ?? false, show_in_inspection: loc.show_in_inspection ?? true,
+          corporate_logo_url: loc.corporate_logo_url || null,
+          corporate_logo_dark_url: loc.corporate_logo_dark_url || null,
+          secondary_logo_url: loc.secondary_logo_url || null,
+          secondary_logo_dark_url: loc.secondary_logo_dark_url || null,
+          oem_logo_urls: loc.oem_logo_urls || [],
+          logo_layout: loc.logo_layout || 'side_by_side',
+          show_corporate_logo: loc.show_corporate_logo ?? false,
+          show_corporate_on_landing_only: loc.show_corporate_on_landing_only ?? false,
+          location_type: loc.location_type || 'primary',
+          established_year: loc.established_year,
+          use_corporate_established_year: loc.use_corporate_established_year ?? true,
+        } as any)
         .eq("id", loc.id);
       if (error) hasError = true;
     }
@@ -161,17 +180,48 @@ const LocationManagement = () => {
     setLocations(updated);
   };
 
+  const addZips = (locId: string) => {
+    const raw = zipInputs[locId] || "";
+    const newZips = raw.split(/[,\s]+/).map(z => z.trim()).filter(z => /^\d{5}$/.test(z));
+    if (newZips.length > 0) {
+      setLocations(prev => prev.map(l => l.id === locId
+        ? { ...l, zip_codes: [...new Set([...(l.zip_codes || []), ...newZips])] }
+        : l
+      ));
+      setZipInputs(prev => ({ ...prev, [locId]: "" }));
+    }
+  };
+
+  const addBrands = (locId: string, type: "include" | "exclude") => {
+    const inputs = type === "include" ? brandInputs : excludedBrandInputs;
+    const setInputs = type === "include" ? setBrandInputs : setExcludedBrandInputs;
+    const field = type === "include" ? "oem_brands" : "excluded_oem_brands";
+    const raw = inputs[locId] || "";
+    const newBrands = raw.split(",").map(b => b.trim()).filter(Boolean);
+    if (newBrands.length > 0) {
+      setLocations(prev => prev.map(l => l.id === locId
+        ? { ...l, [field]: [...new Set([...((l as any)[field] || []), ...newBrands])] }
+        : l
+      ));
+      setInputs(prev => ({ ...prev, [locId]: "" }));
+    }
+  };
+
   if (loading) return <div className="flex items-center justify-center p-8"><Loader2 className="animate-spin w-6 h-6" /></div>;
+
+  const isMulti = locations.length > 1;
+  const typeInfo = (type: string) => LOCATION_TYPE_OPTIONS.find(o => o.value === type) || LOCATION_TYPE_OPTIONS[0];
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold flex items-center gap-2">
             <MapPin className="w-5 h-5 text-primary" />
             Dealership Locations
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">Manage locations shown in the site footer and scheduling.</p>
+          <p className="text-sm text-muted-foreground mt-1">Configure store locations, coverage areas, and branding.</p>
         </div>
         <Button onClick={saveAll} disabled={saving} className="gap-2">
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
@@ -179,498 +229,364 @@ const LocationManagement = () => {
         </Button>
       </div>
 
-      {/* Existing locations */}
-      <div className="space-y-2">
-        {locations.map((loc, index) => (
-          <div
-            key={loc.id}
-            className={`rounded-lg border transition-colors ${loc.is_active ? "bg-card border-border" : "bg-muted/50 border-border/50 opacity-60"}`}
-          >
-            {/* Main row */}
-            <div className="flex items-center gap-3 p-3">
-              <div className="flex flex-col gap-0.5">
-                <button onClick={() => moveUp(index)} disabled={index === 0} className="text-muted-foreground hover:text-foreground disabled:opacity-30 text-xs">▲</button>
-                <GripVertical className="w-4 h-4 text-muted-foreground/40" />
-                <button onClick={() => moveDown(index)} disabled={index === locations.length - 1} className="text-muted-foreground hover:text-foreground disabled:opacity-30 text-xs">▼</button>
-              </div>
-              <div className="flex-1 grid grid-cols-4 gap-2">
-                <Input
-                  value={loc.name}
-                  onChange={(e) => updateLocation(loc.id, "name", e.target.value)}
-                  placeholder="Location name"
-                  className="text-sm"
-                />
-                <Input
-                  value={loc.city}
-                  onChange={(e) => updateLocation(loc.id, "city", e.target.value)}
-                  placeholder="City"
-                  className="text-sm"
-                />
-                <Input
-                  value={loc.state}
-                  onChange={(e) => updateLocation(loc.id, "state", e.target.value)}
-                  placeholder="State"
-                  className="text-sm w-20"
-                />
-                <Select
-                  value={loc.location_type || "primary"}
-                  onValueChange={(val) => setLocations(prev => prev.map(l => l.id === loc.id ? { ...l, location_type: val } : l))}
-                >
-                  <SelectTrigger className="text-xs h-9">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {LOCATION_TYPE_OPTIONS.map(opt => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        <span className="flex items-center gap-1.5">
-                          <opt.icon className="w-3 h-3" />
-                          {opt.label}
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {/* Established Year */}
-                <div className="flex items-center gap-2">
-                  <Label className="text-[10px] text-muted-foreground whitespace-nowrap">Est.</Label>
-                  {loc.use_corporate_established_year && loc.location_type !== "primary" ? (
-                    <span className="text-xs text-muted-foreground italic">Using corporate year</span>
-                  ) : (
-                    <Input
-                      type="number"
-                      min={1800}
-                      max={new Date().getFullYear()}
-                      value={loc.established_year ?? ""}
-                      onChange={e => setLocations(prev => prev.map(l => l.id === loc.id ? { ...l, established_year: e.target.value ? Number(e.target.value) : null } : l))}
-                      placeholder="e.g. 1947"
-                      className="w-24 h-8 text-xs"
-                    />
-                  )}
-                  {loc.location_type !== "primary" && (
-                    <div className="flex items-center gap-1">
-                      <Label className="text-[10px] text-muted-foreground whitespace-nowrap">Use Corp</Label>
-                      <Switch
-                        checked={loc.use_corporate_established_year}
-                        onCheckedChange={v => setLocations(prev => prev.map(l => l.id === loc.id ? { ...l, use_corporate_established_year: v } : l))}
-                      />
-                    </div>
-                  )}
+      {/* Location Cards */}
+      <div className="space-y-3">
+        {locations.map((loc, index) => {
+          const ti = typeInfo(loc.location_type);
+          const expanded = expandedIds.has(loc.id);
+
+          return (
+            <div
+              key={loc.id}
+              className={`rounded-xl border transition-all ${loc.is_active ? "bg-card border-border shadow-sm" : "bg-muted/30 border-border/40 opacity-60"}`}
+            >
+              {/* Collapsed header row */}
+              <div className="flex items-center gap-3 p-3">
+                {/* Reorder */}
+                <div className="flex flex-col gap-0.5">
+                  <button onClick={() => moveUp(index)} disabled={index === 0} className="text-muted-foreground hover:text-foreground disabled:opacity-30 text-xs">▲</button>
+                  <GripVertical className="w-4 h-4 text-muted-foreground/40" />
+                  <button onClick={() => moveDown(index)} disabled={index === locations.length - 1} className="text-muted-foreground hover:text-foreground disabled:opacity-30 text-xs">▼</button>
+                </div>
+
+                {/* Identity summary */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="font-semibold text-sm truncate">{loc.name || "Unnamed"}</span>
+                    <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${ti.color}`}>
+                      <ti.icon className="w-3 h-3 mr-1" />
+                      {ti.label}
+                    </Badge>
+                    {loc.temporarily_offline && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-amber-500/10 text-amber-600 border-amber-200">⚠ Offline</Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {[loc.address, loc.city, loc.state].filter(Boolean).join(", ") || "No address set"}
+                    {loc.zip_codes?.length > 0 && ` · ${loc.zip_codes.length} ZIPs`}
+                    {loc.coverage_radius_miles > 0 && ` · ${loc.coverage_radius_miles}mi radius`}
+                  </p>
+                </div>
+
+                {/* Quick toggles */}
+                <div className="hidden lg:flex items-center gap-4">
+                  <div className="flex items-center gap-1.5" title="Active">
+                    <Label className="text-[10px] text-muted-foreground">Active</Label>
+                    <Switch checked={loc.is_active} onCheckedChange={() => toggleField(loc.id, "is_active", loc.is_active)} />
+                  </div>
+                </div>
+
+                {/* Expand / Delete */}
+                <div className="flex items-center gap-1">
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleExpanded(loc.id)}>
+                    {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => deleteLocation(loc.id)} className="text-destructive hover:text-destructive/80 h-8 w-8">
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5" title="Active">
-                  <Label className="text-[10px] text-muted-foreground">Active</Label>
-                  <Switch checked={loc.is_active} onCheckedChange={() => toggleField(loc.id, "is_active", loc.is_active)} />
-                </div>
-                <div className="flex items-center gap-1.5" title="Show address in Footer">
-                  <Label className="text-[10px] text-muted-foreground">Addr Footer</Label>
-                  <Switch checked={loc.show_in_footer} onCheckedChange={() => toggleField(loc.id, "show_in_footer", loc.show_in_footer)} />
-                </div>
-                <div className="flex items-center gap-1.5" title="Show this location in the customer scheduling dropdown">
-                  <Label className="text-[10px] text-muted-foreground">Scheduling</Label>
-                  <Switch checked={loc.show_in_scheduling} onCheckedChange={() => toggleField(loc.id, "show_in_scheduling", loc.show_in_scheduling)} />
-                </div>
-                <div className="flex items-center gap-1.5" title="Allow inspections at this location">
-                  <Label className="text-[10px] text-muted-foreground">Inspection</Label>
-                  <Switch checked={loc.show_in_inspection} onCheckedChange={() => toggleField(loc.id, "show_in_inspection", loc.show_in_inspection)} />
-                </div>
-                <div className="flex items-center gap-1.5" title="Temporarily take this location offline — hides from scheduling and lead routing">
-                  <Label className={`text-[10px] ${loc.temporarily_offline ? 'text-amber-600 font-semibold' : 'text-muted-foreground'}`}>
-                    {loc.temporarily_offline ? '⚠ Offline' : 'Online'}
-                  </Label>
-                  <Switch
-                    checked={!loc.temporarily_offline}
-                    onCheckedChange={() => toggleField(loc.id, "temporarily_offline", loc.temporarily_offline)}
-                  />
-                </div>
-                {locations.length > 1 && (
-                  <div className="flex items-center gap-1.5" title="Route this location's leads to the central Buying Center / BDC">
-                    <Label className={`text-[10px] ${loc.use_bdc ? 'text-blue-600 font-semibold' : 'text-muted-foreground'}`}>
-                      {loc.use_bdc ? '📞 BDC' : 'BDC'}
-                    </Label>
-                    <Switch
-                      checked={loc.use_bdc}
-                      onCheckedChange={() => toggleField(loc.id, "use_bdc", loc.use_bdc)}
-                    />
-                  </div>
-                )}
-                <Button variant="ghost" size="icon" onClick={() => deleteLocation(loc.id)} className="text-destructive hover:text-destructive/80 h-8 w-8">
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
 
-            {/* Collapsible details */}
-            <div className="border-t border-border/50">
-              <button
-                onClick={() => toggleExpanded(loc.id)}
-                className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground hover:text-foreground w-full text-left transition-colors"
-              >
-                {expandedIds.has(loc.id) ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-                <span>Address, ZIP Codes ({loc.zip_codes?.length || 0}){loc.coverage_radius_miles > 0 ? ` + ${loc.coverage_radius_miles}mi radius` : ''}, Brands: {(loc.all_brands ?? true) ? `All${(loc.excluded_oem_brands?.length || 0) > 0 ? ` (−${loc.excluded_oem_brands.length})` : ''}` : `${loc.oem_brands?.length || 0} specific`}</span>
-              </button>
-              {expandedIds.has(loc.id) && (
-                <div className="px-3 pb-3 space-y-4">
-                  {/* Address */}
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground mb-1 block">Street Address</Label>
-                    <Input
-                      value={loc.address || ""}
-                      onChange={(e) => updateLocation(loc.id, "address", e.target.value)}
-                      placeholder="Full street address (e.g. 123 Main St, Hartford, CT 06103)"
-                      className="text-sm"
-                    />
-                  </div>
+              {/* Expanded tabbed panel */}
+              {expanded && (
+                <div className="border-t border-border/50 p-4">
+                  <Tabs defaultValue="identity" className="w-full">
+                    <TabsList className="w-full justify-start mb-4 bg-muted/50">
+                      <TabsTrigger value="identity" className="gap-1.5 text-xs">
+                        <Store className="w-3.5 h-3.5" /> Identity
+                      </TabsTrigger>
+                      <TabsTrigger value="visibility" className="gap-1.5 text-xs">
+                        <Eye className="w-3.5 h-3.5" /> Visibility
+                      </TabsTrigger>
+                      <TabsTrigger value="coverage" className="gap-1.5 text-xs">
+                        <Globe className="w-3.5 h-3.5" /> Coverage
+                      </TabsTrigger>
+                      <TabsTrigger value="branding" className="gap-1.5 text-xs">
+                        <Image className="w-3.5 h-3.5" /> Branding
+                      </TabsTrigger>
+                    </TabsList>
 
-                  {/* Logo Management */}
-                  <LocationLogoSection
-                    location={loc}
-                    dealershipId={dealershipId}
-                    onUpdate={(field, value) => {
-                      setLocations(prev => prev.map(l => l.id === loc.id ? { ...l, [field]: value } : l));
-                    }}
-                  />
-
-                  {/* ZIP Codes */}
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground mb-1.5 flex items-center gap-1.5">
-                      <MapPinned className="w-3.5 h-3.5" /> Coverage ZIP Codes
-                    </Label>
-                    <div className="flex flex-wrap gap-1.5 mb-2">
-                      {(loc.zip_codes || []).map((zip) => (
-                        <Badge key={zip} variant="secondary" className="gap-1 text-xs font-mono pl-2 pr-1 py-0.5">
-                          {zip}
-                          <button
-                            onClick={() => {
-                              setLocations(prev => prev.map(l => l.id === loc.id
-                                ? { ...l, zip_codes: l.zip_codes.filter(z => z !== zip) }
-                                : l
-                              ));
-                            }}
-                            className="hover:text-destructive ml-0.5"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </Badge>
-                      ))}
-                      {(!loc.zip_codes || loc.zip_codes.length === 0) && (
-                        <span className="text-xs text-muted-foreground italic">No ZIP codes assigned</span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        value={zipInputs[loc.id] || ""}
-                        onChange={(e) => setZipInputs(prev => ({ ...prev, [loc.id]: e.target.value }))}
-                        placeholder="Add ZIPs (comma-separated, e.g. 06101, 06102, 06103)"
-                        className="text-sm font-mono flex-1"
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            const raw = zipInputs[loc.id] || "";
-                            const newZips = raw.split(/[,\s]+/).map(z => z.trim()).filter(z => /^\d{5}$/.test(z));
-                            if (newZips.length > 0) {
-                              setLocations(prev => prev.map(l => l.id === loc.id
-                                ? { ...l, zip_codes: [...new Set([...(l.zip_codes || []), ...newZips])] }
-                                : l
-                              ));
-                              setZipInputs(prev => ({ ...prev, [loc.id]: "" }));
-                            }
-                          }
-                        }}
-                      />
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          const raw = zipInputs[loc.id] || "";
-                          const newZips = raw.split(/[,\s]+/).map(z => z.trim()).filter(z => /^\d{5}$/.test(z));
-                          if (newZips.length > 0) {
-                            setLocations(prev => prev.map(l => l.id === loc.id
-                              ? { ...l, zip_codes: [...new Set([...(l.zip_codes || []), ...newZips])] }
-                              : l
-                            ));
-                            setZipInputs(prev => ({ ...prev, [loc.id]: "" }));
-                          }
-                        }}
-                        className="gap-1"
-                      >
-                        <Plus className="w-3 h-3" /> Add
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setLocations(prev => prev.map(l => l.id === loc.id ? { ...l, zip_codes: [] } : l));
-                        }}
-                        className="text-destructive hover:text-destructive/80 text-xs"
-                      >
-                        Clear All
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Radius Coverage — only for multi-location groups */}
-                  {locations.length > 1 && (
-                    <div>
-                      <Label className="text-xs font-medium text-muted-foreground mb-1.5 flex items-center gap-1.5">
-                        <Radar className="w-3.5 h-3.5" /> Geographic Coverage Radius
-                      </Label>
-                      <p className="text-[11px] text-muted-foreground mb-2">
-                        Enable to steer leads to this store based on proximity. Useful when your group has multiple locations spread across a region.
-                      </p>
-                      <div className="flex items-center gap-2 mb-2">
-                        <Switch
-                          checked={(loc.coverage_radius_miles || 0) > 0}
-                          onCheckedChange={(on) => {
-                            setLocations(prev => prev.map(l => l.id === loc.id
-                              ? { ...l, coverage_radius_miles: on ? 15 : 0 }
-                              : l
-                            ));
-                          }}
-                        />
-                        <Label className="text-sm">
-                          {(loc.coverage_radius_miles || 0) > 0 ? "Radius routing enabled" : "Off — using ZIP list only"}
-                        </Label>
+                    {/* ── IDENTITY ── */}
+                    <TabsContent value="identity" className="space-y-4 mt-0">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-xs font-medium text-muted-foreground mb-1 block">Location Name</Label>
+                          <Input value={loc.name} onChange={e => updateLocation(loc.id, "name", e.target.value)} placeholder="e.g. Downtown Hartford" />
+                        </div>
+                        <div>
+                          <Label className="text-xs font-medium text-muted-foreground mb-1 block">Location Type</Label>
+                          <Select value={loc.location_type || "primary"} onValueChange={val => updateLocation(loc.id, "location_type", val)}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {LOCATION_TYPE_OPTIONS.map(opt => (
+                                <SelectItem key={opt.value} value={opt.value}>
+                                  <span className="flex items-center gap-1.5"><opt.icon className="w-3.5 h-3.5" />{opt.label}</span>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
-                      {(loc.coverage_radius_miles || 0) > 0 && (
-                        <div className="ml-1 border-l-2 border-border pl-3 space-y-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-28">
-                              <Label className="text-[10px] text-muted-foreground mb-0.5 block">Center ZIP</Label>
-                              <Input
-                                value={loc.center_zip || ""}
-                                onChange={(e) => updateLocation(loc.id, "center_zip" as any, e.target.value)}
-                                placeholder="e.g. 06103"
-                                className="text-sm font-mono"
-                                maxLength={5}
-                              />
+
+                      <div>
+                        <Label className="text-xs font-medium text-muted-foreground mb-1 block">Street Address</Label>
+                        <Input value={loc.address || ""} onChange={e => updateLocation(loc.id, "address", e.target.value)} placeholder="123 Main St, Hartford, CT 06103" />
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        <div>
+                          <Label className="text-xs font-medium text-muted-foreground mb-1 block">City</Label>
+                          <Input value={loc.city} onChange={e => updateLocation(loc.id, "city", e.target.value)} />
+                        </div>
+                        <div>
+                          <Label className="text-xs font-medium text-muted-foreground mb-1 block">State</Label>
+                          <Input value={loc.state} onChange={e => updateLocation(loc.id, "state", e.target.value)} className="w-20" />
+                        </div>
+                        <div>
+                          <Label className="text-xs font-medium text-muted-foreground mb-1 block">Year Established</Label>
+                          {loc.use_corporate_established_year && loc.location_type !== "primary" ? (
+                            <p className="text-xs text-muted-foreground italic pt-2">Using corporate year</p>
+                          ) : (
+                            <Input
+                              type="number" min={1800} max={new Date().getFullYear()}
+                              value={loc.established_year ?? ""}
+                              onChange={e => updateLocation(loc.id, "established_year", e.target.value ? Number(e.target.value) : null)}
+                              placeholder="e.g. 1947" className="w-28"
+                            />
+                          )}
+                          {loc.location_type !== "primary" && (
+                            <div className="flex items-center gap-1.5 mt-1.5">
+                              <Switch checked={loc.use_corporate_established_year} onCheckedChange={v => updateLocation(loc.id, "use_corporate_established_year", v)} />
+                              <Label className="text-[10px] text-muted-foreground">Inherit corporate year</Label>
                             </div>
-                            <div className="flex-1 space-y-1">
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-muted-foreground">Radius</span>
-                                <span className="text-xs font-semibold tabular-nums">
-                                  {loc.coverage_radius_miles} mi
-                                </span>
-                              </div>
-                              <Slider
-                                value={[loc.coverage_radius_miles || 0]}
-                                onValueChange={([val]) => {
-                                  setLocations(prev => prev.map(l => l.id === loc.id ? { ...l, coverage_radius_miles: val } : l));
-                                }}
-                                min={5}
-                                max={50}
-                                step={5}
-                                className="w-full"
-                              />
-                              <div className="flex justify-between text-[10px] text-muted-foreground/60">
-                                <span>5 mi</span>
-                                <span>25 mi</span>
-                                <span>50 mi</span>
-                              </div>
+                          )}
+                        </div>
+                      </div>
+                    </TabsContent>
+
+                    {/* ── VISIBILITY ── */}
+                    <TabsContent value="visibility" className="mt-0">
+                      <p className="text-xs text-muted-foreground mb-4">Control where this location appears across the platform.</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {[
+                          { field: "is_active" as const, label: "Active", desc: "Location is live and accepting leads" },
+                          { field: "show_in_footer" as const, label: "Show in Footer", desc: "Display address in the site footer" },
+                          { field: "show_in_scheduling" as const, label: "Customer Scheduling", desc: "Appear in the scheduling location picker" },
+                          { field: "show_in_inspection" as const, label: "Inspections", desc: "Allow vehicle inspections at this store" },
+                        ].map(item => (
+                          <div key={item.field} className="flex items-start gap-3 p-3 rounded-lg border border-border/50 bg-muted/20">
+                            <Switch checked={(loc as any)[item.field]} onCheckedChange={() => toggleField(loc.id, item.field, (loc as any)[item.field])} className="mt-0.5" />
+                            <div>
+                              <Label className="text-sm font-medium">{item.label}</Label>
+                              <p className="text-[11px] text-muted-foreground">{item.desc}</p>
                             </div>
                           </div>
-                          {loc.center_zip && loc.center_zip.length === 5 && (
-                            <p className="text-[11px] text-primary/80">
-                              ✓ Leads within {loc.coverage_radius_miles} miles of {loc.center_zip} will route to this store
-                            </p>
+                        ))}
+                        <div className={`flex items-start gap-3 p-3 rounded-lg border ${loc.temporarily_offline ? "border-amber-300 bg-amber-500/5" : "border-border/50 bg-muted/20"}`}>
+                          <Switch checked={!loc.temporarily_offline} onCheckedChange={() => toggleField(loc.id, "temporarily_offline", loc.temporarily_offline)} className="mt-0.5" />
+                          <div>
+                            <Label className={`text-sm font-medium ${loc.temporarily_offline ? "text-amber-600" : ""}`}>
+                              {loc.temporarily_offline ? "⚠ Currently Offline" : "Online"}
+                            </Label>
+                            <p className="text-[11px] text-muted-foreground">Temporarily hide from scheduling & lead routing</p>
+                          </div>
+                        </div>
+                        {isMulti && (
+                          <div className="flex items-start gap-3 p-3 rounded-lg border border-border/50 bg-muted/20">
+                            <Switch checked={loc.use_bdc} onCheckedChange={() => toggleField(loc.id, "use_bdc", loc.use_bdc)} className="mt-0.5" />
+                            <div>
+                              <Label className={`text-sm font-medium ${loc.use_bdc ? "text-blue-600" : ""}`}>
+                                {loc.use_bdc ? "📞 BDC Routing" : "BDC Routing"}
+                              </Label>
+                              <p className="text-[11px] text-muted-foreground">Route leads to the central Buying Center / BDC</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </TabsContent>
+
+                    {/* ── COVERAGE ── */}
+                    <TabsContent value="coverage" className="space-y-5 mt-0">
+                      {/* ZIP Codes */}
+                      <div>
+                        <Label className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1.5">
+                          <MapPinned className="w-3.5 h-3.5" /> Coverage ZIP Codes
+                        </Label>
+                        <div className="flex flex-wrap gap-1.5 mb-2 min-h-[28px]">
+                          {(loc.zip_codes || []).map(zip => (
+                            <Badge key={zip} variant="secondary" className="gap-1 text-xs font-mono pl-2 pr-1 py-0.5">
+                              {zip}
+                              <button onClick={() => updateLocation(loc.id, "zip_codes", loc.zip_codes.filter(z => z !== zip))} className="hover:text-destructive ml-0.5">
+                                <X className="w-3 h-3" />
+                              </button>
+                            </Badge>
+                          ))}
+                          {(!loc.zip_codes || loc.zip_codes.length === 0) && (
+                            <span className="text-xs text-muted-foreground italic">No ZIP codes assigned</span>
                           )}
-                          {(!loc.center_zip || loc.center_zip.length < 5) && (
-                            <p className="text-[11px] text-amber-600">
-                              ⚠ Enter a 5-digit center ZIP to activate radius routing
-                            </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={zipInputs[loc.id] || ""} onChange={e => setZipInputs(prev => ({ ...prev, [loc.id]: e.target.value }))}
+                            placeholder="Add ZIPs (comma-separated)" className="text-sm font-mono flex-1"
+                            onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addZips(loc.id); } }}
+                          />
+                          <Button size="sm" variant="outline" onClick={() => addZips(loc.id)} className="gap-1"><Plus className="w-3 h-3" /> Add</Button>
+                          {(loc.zip_codes?.length || 0) > 0 && (
+                            <Button size="sm" variant="ghost" onClick={() => updateLocation(loc.id, "zip_codes", [])} className="text-destructive text-xs">Clear</Button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Radius — multi-location only */}
+                      {isMulti && (
+                        <div className="border-t border-border/30 pt-4">
+                          <Label className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1.5">
+                            <Radar className="w-3.5 h-3.5" /> Geographic Radius
+                          </Label>
+                          <p className="text-[11px] text-muted-foreground mb-3">Steer leads to this store based on proximity.</p>
+                          <div className="flex items-center gap-2 mb-3">
+                            <Switch checked={(loc.coverage_radius_miles || 0) > 0} onCheckedChange={on => updateLocation(loc.id, "coverage_radius_miles", on ? 15 : 0)} />
+                            <Label className="text-sm">{(loc.coverage_radius_miles || 0) > 0 ? "Radius routing enabled" : "Off — using ZIP list only"}</Label>
+                          </div>
+                          {(loc.coverage_radius_miles || 0) > 0 && (
+                            <div className="ml-1 border-l-2 border-border pl-4 space-y-3">
+                              <div className="flex items-center gap-4">
+                                <div className="w-28">
+                                  <Label className="text-[10px] text-muted-foreground mb-0.5 block">Center ZIP</Label>
+                                  <Input value={loc.center_zip || ""} onChange={e => updateLocation(loc.id, "center_zip", e.target.value)} placeholder="06103" className="font-mono" maxLength={5} />
+                                </div>
+                                <div className="flex-1 space-y-1">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs text-muted-foreground">Radius</span>
+                                    <span className="text-xs font-semibold tabular-nums">{loc.coverage_radius_miles} mi</span>
+                                  </div>
+                                  <Slider value={[loc.coverage_radius_miles || 0]} onValueChange={([val]) => updateLocation(loc.id, "coverage_radius_miles", val)} min={5} max={50} step={5} />
+                                  <div className="flex justify-between text-[10px] text-muted-foreground/60"><span>5 mi</span><span>25 mi</span><span>50 mi</span></div>
+                                </div>
+                              </div>
+                              {loc.center_zip?.length === 5 && (
+                                <p className="text-[11px] text-primary/80">✓ Leads within {loc.coverage_radius_miles} miles of {loc.center_zip} will route here</p>
+                              )}
+                              {(!loc.center_zip || loc.center_zip.length < 5) && (
+                                <p className="text-[11px] text-amber-600">⚠ Enter a 5-digit center ZIP to activate</p>
+                              )}
+                            </div>
                           )}
                         </div>
                       )}
-                    </div>
-                  )}
 
-                  {locations.length > 1 && <div>
-                    <Label className="text-xs font-medium text-muted-foreground mb-1.5 flex items-center gap-1.5">
-                      <Car className="w-3.5 h-3.5" /> OEM Brand Mapping
-                    </Label>
+                      {/* OEM Brand Mapping — multi-location only */}
+                      {isMulti && (
+                        <div className="border-t border-border/30 pt-4">
+                          <Label className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1.5">
+                            <Car className="w-3.5 h-3.5" /> OEM Brand Mapping
+                          </Label>
+                          <div className="flex items-center gap-2 mb-3">
+                            <Switch checked={loc.all_brands ?? true} onCheckedChange={v => updateLocation(loc.id, "all_brands", v)} />
+                            <Label className="text-sm">{(loc.all_brands ?? true) ? "All Brands" : "Specific Brands Only"}</Label>
+                            {(loc.all_brands ?? true) && <Badge variant="secondary" className="text-[10px]">Accepts every make</Badge>}
+                          </div>
 
-                    {/* All Brands toggle */}
-                    <div className="flex items-center gap-2 mb-3">
-                      <Switch
-                        checked={loc.all_brands ?? true}
-                        onCheckedChange={(checked) => {
-                          setLocations(prev => prev.map(l => l.id === loc.id ? { ...l, all_brands: checked } : l));
-                        }}
+                          {/* All brands ON — exclusions */}
+                          {(loc.all_brands ?? true) && (
+                            <div className="ml-1 border-l-2 border-border pl-4 space-y-2">
+                              <p className="text-[11px] text-muted-foreground">Optionally exclude brands:</p>
+                              <div className="flex flex-wrap gap-1.5 min-h-[24px]">
+                                {(loc.excluded_oem_brands || []).map(brand => (
+                                  <Badge key={brand} variant="destructive" className="gap-1 text-xs pl-2 pr-1 py-0.5 bg-destructive/10 text-destructive border-destructive/20">
+                                    {brand}
+                                    <button onClick={() => updateLocation(loc.id, "excluded_oem_brands", loc.excluded_oem_brands.filter(b => b !== brand))} className="hover:text-destructive/80 ml-0.5"><X className="w-3 h-3" /></button>
+                                  </Badge>
+                                ))}
+                                {(!loc.excluded_oem_brands || loc.excluded_oem_brands.length === 0) && (
+                                  <span className="text-xs text-muted-foreground italic">No exclusions</span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Input value={excludedBrandInputs[loc.id] || ""} onChange={e => setExcludedBrandInputs(prev => ({ ...prev, [loc.id]: e.target.value }))}
+                                  placeholder="e.g. Porsche, Maserati" className="text-sm flex-1"
+                                  onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addBrands(loc.id, "exclude"); } }} />
+                                <Button size="sm" variant="outline" onClick={() => addBrands(loc.id, "exclude")} className="gap-1"><Plus className="w-3 h-3" /> Exclude</Button>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* All brands OFF — inclusions */}
+                          {!(loc.all_brands ?? true) && (
+                            <div className="space-y-2">
+                              <div className="flex flex-wrap gap-1.5 min-h-[24px]">
+                                {(loc.oem_brands || []).map(brand => (
+                                  <Badge key={brand} variant="outline" className="gap-1 text-xs pl-2 pr-1 py-0.5 border-primary/30 bg-primary/5">
+                                    {brand}
+                                    <button onClick={() => updateLocation(loc.id, "oem_brands", loc.oem_brands.filter(b => b !== brand))} className="hover:text-destructive ml-0.5"><X className="w-3 h-3" /></button>
+                                  </Badge>
+                                ))}
+                                {(!loc.oem_brands || loc.oem_brands.length === 0) && (
+                                  <span className="text-xs text-muted-foreground italic">No brands assigned</span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Input value={brandInputs[loc.id] || ""} onChange={e => setBrandInputs(prev => ({ ...prev, [loc.id]: e.target.value }))}
+                                  placeholder="e.g. Nissan, Infiniti" className="text-sm flex-1"
+                                  onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addBrands(loc.id, "include"); } }} />
+                                <Button size="sm" variant="outline" onClick={() => addBrands(loc.id, "include")} className="gap-1"><Plus className="w-3 h-3" /> Add</Button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </TabsContent>
+
+                    {/* ── BRANDING ── */}
+                    <TabsContent value="branding" className="mt-0">
+                      <LocationLogoSection
+                        location={loc}
+                        dealershipId={dealershipId}
+                        onUpdate={(field, value) => updateLocation(loc.id, field as any, value)}
                       />
-                      <Label className="text-sm">
-                        {(loc.all_brands ?? true) ? "All Brands" : "Specific Brands Only"}
-                      </Label>
-                      {(loc.all_brands ?? true) && (
-                        <Badge variant="secondary" className="text-[10px]">Accepts every make</Badge>
-                      )}
-                    </div>
-
-                    {/* When All Brands is ON — show excluded brands */}
-                    {(loc.all_brands ?? true) && (
-                      <div className="ml-1 border-l-2 border-border pl-3 space-y-2">
-                        <p className="text-[11px] text-muted-foreground">Optionally exclude specific brands from this location:</p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {(loc.excluded_oem_brands || []).map((brand) => (
-                            <Badge key={brand} variant="destructive" className="gap-1 text-xs pl-2 pr-1 py-0.5 bg-destructive/10 text-destructive border-destructive/20">
-                              {brand}
-                              <button
-                                onClick={() => {
-                                  setLocations(prev => prev.map(l => l.id === loc.id
-                                    ? { ...l, excluded_oem_brands: l.excluded_oem_brands.filter(b => b !== brand) }
-                                    : l
-                                  ));
-                                }}
-                                className="hover:text-destructive/80 ml-0.5"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </Badge>
-                          ))}
-                          {(!loc.excluded_oem_brands || loc.excluded_oem_brands.length === 0) && (
-                            <span className="text-xs text-muted-foreground italic">No exclusions — all brands accepted</span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Input
-                            value={excludedBrandInputs[loc.id] || ""}
-                            onChange={(e) => setExcludedBrandInputs(prev => ({ ...prev, [loc.id]: e.target.value }))}
-                            placeholder="Exclude brand (e.g. Porsche, Maserati)"
-                            className="text-sm flex-1"
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                e.preventDefault();
-                                const raw = excludedBrandInputs[loc.id] || "";
-                                const newBrands = raw.split(",").map(b => b.trim()).filter(Boolean);
-                                if (newBrands.length > 0) {
-                                  setLocations(prev => prev.map(l => l.id === loc.id
-                                    ? { ...l, excluded_oem_brands: [...new Set([...(l.excluded_oem_brands || []), ...newBrands])] }
-                                    : l
-                                  ));
-                                  setExcludedBrandInputs(prev => ({ ...prev, [loc.id]: "" }));
-                                }
-                              }
-                            }}
-                          />
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              const raw = excludedBrandInputs[loc.id] || "";
-                              const newBrands = raw.split(",").map(b => b.trim()).filter(Boolean);
-                              if (newBrands.length > 0) {
-                                setLocations(prev => prev.map(l => l.id === loc.id
-                                  ? { ...l, excluded_oem_brands: [...new Set([...(l.excluded_oem_brands || []), ...newBrands])] }
-                                  : l
-                                ));
-                                setExcludedBrandInputs(prev => ({ ...prev, [loc.id]: "" }));
-                              }
-                            }}
-                            className="gap-1"
-                          >
-                            <Plus className="w-3 h-3" /> Exclude
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* When All Brands is OFF — show specific included brands */}
-                    {!(loc.all_brands ?? true) && (
-                      <div className="space-y-2">
-                        <div className="flex flex-wrap gap-1.5">
-                          {(loc.oem_brands || []).map((brand) => (
-                            <Badge key={brand} variant="outline" className="gap-1 text-xs pl-2 pr-1 py-0.5 border-primary/30 bg-primary/5">
-                              {brand}
-                              <button
-                                onClick={() => {
-                                  setLocations(prev => prev.map(l => l.id === loc.id
-                                    ? { ...l, oem_brands: l.oem_brands.filter(b => b !== brand) }
-                                    : l
-                                  ));
-                                }}
-                                className="hover:text-destructive ml-0.5"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </Badge>
-                          ))}
-                          {(!loc.oem_brands || loc.oem_brands.length === 0) && (
-                            <span className="text-xs text-muted-foreground italic">No brands assigned — add specific brands this location handles</span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Input
-                            value={brandInputs[loc.id] || ""}
-                            onChange={(e) => setBrandInputs(prev => ({ ...prev, [loc.id]: e.target.value }))}
-                            placeholder="Add brand (e.g. Nissan, Infiniti, Hyundai)"
-                            className="text-sm flex-1"
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                e.preventDefault();
-                                const raw = brandInputs[loc.id] || "";
-                                const newBrands = raw.split(",").map(b => b.trim()).filter(Boolean);
-                                if (newBrands.length > 0) {
-                                  setLocations(prev => prev.map(l => l.id === loc.id
-                                    ? { ...l, oem_brands: [...new Set([...(l.oem_brands || []), ...newBrands])] }
-                                    : l
-                                  ));
-                                  setBrandInputs(prev => ({ ...prev, [loc.id]: "" }));
-                                }
-                              }
-                            }}
-                          />
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              const raw = brandInputs[loc.id] || "";
-                              const newBrands = raw.split(",").map(b => b.trim()).filter(Boolean);
-                              if (newBrands.length > 0) {
-                                setLocations(prev => prev.map(l => l.id === loc.id
-                                  ? { ...l, oem_brands: [...new Set([...(l.oem_brands || []), ...newBrands])] }
-                                  : l
-                                ));
-                                setBrandInputs(prev => ({ ...prev, [loc.id]: "" }));
-                              }
-                            }}
-                            className="gap-1"
-                          >
-                            <Plus className="w-3 h-3" /> Add
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>}
+                    </TabsContent>
+                  </Tabs>
                 </div>
               )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      {/* Add new */}
-      <div className="border-t pt-4">
-        <Label className="text-sm font-semibold mb-2 block">Add New Location</Label>
-        <div className="flex items-center gap-2">
-          <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Location name" className="flex-1" />
-          <Input value={newCity} onChange={(e) => setNewCity(e.target.value)} placeholder="City" className="w-32" />
-          <Input value={newState} onChange={(e) => setNewState(e.target.value)} placeholder="State" className="w-20" />
-          <Select value={newLocationType} onValueChange={setNewLocationType}>
-            <SelectTrigger className="w-40 text-xs h-9">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {LOCATION_TYPE_OPTIONS.map(opt => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  <span className="flex items-center gap-1.5">
-                    <opt.icon className="w-3 h-3" />
-                    {opt.label}
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button onClick={addLocation} size="sm" className="gap-1">
-            <Plus className="w-4 h-4" /> Add
+      {/* Add New Location */}
+      <div className="rounded-xl border border-dashed border-border/60 p-4 bg-muted/10">
+        <Label className="text-sm font-semibold mb-3 block flex items-center gap-2">
+          <Plus className="w-4 h-4 text-primary" /> Add New Location
+        </Label>
+        <div className="flex items-end gap-3 flex-wrap">
+          <div className="flex-1 min-w-[160px]">
+            <Label className="text-[10px] text-muted-foreground mb-1 block">Name</Label>
+            <Input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Location name" />
+          </div>
+          <div className="w-32">
+            <Label className="text-[10px] text-muted-foreground mb-1 block">City</Label>
+            <Input value={newCity} onChange={e => setNewCity(e.target.value)} placeholder="City" />
+          </div>
+          <div className="w-20">
+            <Label className="text-[10px] text-muted-foreground mb-1 block">State</Label>
+            <Input value={newState} onChange={e => setNewState(e.target.value)} placeholder="ST" />
+          </div>
+          <div className="w-44">
+            <Label className="text-[10px] text-muted-foreground mb-1 block">Type</Label>
+            <Select value={newLocationType} onValueChange={setNewLocationType}>
+              <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {LOCATION_TYPE_OPTIONS.map(opt => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    <span className="flex items-center gap-1.5"><opt.icon className="w-3 h-3" />{opt.label}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button onClick={addLocation} className="gap-1.5">
+            <Plus className="w-4 h-4" /> Add Location
           </Button>
         </div>
       </div>
