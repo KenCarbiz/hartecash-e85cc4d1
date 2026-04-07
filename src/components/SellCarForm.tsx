@@ -577,20 +577,32 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
 
   return (
     <div ref={formRef} className={`bg-card rounded-2xl shadow-xl p-6 md:p-8 relative z-10 ${variant === "split" ? "w-full" : "mx-auto -mt-10 mb-10 max-w-lg w-[calc(100%-40px)]"}`}>
-      {/* Progress */}
-      <div className="mb-6 pb-5 border-b-2 border-muted">
-        <div className="flex justify-center items-center gap-3 mb-3">
-          {displaySteps.map((_, i) => (
-            <div
-              key={i}
-              className={`w-3 h-3 rounded-full transition-all ${
-                i < step ? "bg-success" : i === step ? "bg-accent scale-125" : "bg-border"
-              }`}
-            />
+      {/* Progress - Premium numbered stepper */}
+      <div className="mb-6 pb-5 border-b border-border/50">
+        <div className="flex justify-center items-center gap-1 mb-3">
+          {displaySteps.map((s, i) => (
+            <div key={i} className="flex items-center">
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
+                  i < step
+                    ? "bg-success text-success-foreground shadow-md shadow-success/30"
+                    : i === step
+                    ? "bg-gradient-to-br from-accent to-[hsl(var(--accent)/0.8)] text-accent-foreground shadow-lg shadow-accent/30 scale-110 ring-2 ring-accent/20 ring-offset-2 ring-offset-card"
+                    : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {i < step ? "✓" : i + 1}
+              </div>
+              {i < displaySteps.length - 1 && (
+                <div className={`w-6 lg:w-10 h-0.5 mx-0.5 rounded-full transition-all duration-300 ${
+                  i < step ? "bg-success" : "bg-border"
+                }`} />
+              )}
+            </div>
           ))}
         </div>
         <p className="text-center text-sm text-muted-foreground font-medium">
-          Step {step + 1} of {totalSteps}: <strong className="text-card-foreground font-bold">{currentStepName}</strong>
+          <strong className="text-card-foreground font-bold">{currentStepName}</strong>
           <span className="text-xs opacity-70 ml-1.5">· ~{stepTimeEstimates[currentStepName] || "30 sec"}</span>
         </p>
       </div>
@@ -672,10 +684,17 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
         🔒 Your information is 100% secure and never shared.
       </p>
 
-      <div className="bg-gradient-to-br from-success to-[hsl(160,84%,30%)] text-success-foreground p-5 rounded-xl mt-6 text-center shadow-lg shadow-success/30">
-        <Shield className="w-8 h-8 mx-auto mb-2" />
-        <h2 className="text-lg font-extrabold tracking-wide mb-2">{config.price_guarantee_days}-DAY PRICE GUARANTEE</h2>
-        <p className="text-sm leading-relaxed opacity-95">Your offer is good for {config.price_guarantee_days} days. No games. No surprises.</p>
+      <div className="relative mt-6 p-5 rounded-xl text-center overflow-hidden bg-gradient-to-br from-success via-success to-[hsl(160,84%,28%)] text-success-foreground shadow-xl shadow-success/25">
+        {/* Glassmorphism shimmer */}
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,transparent_30%,hsl(0,0%,100%,0.1)_50%,transparent_70%)] pointer-events-none" />
+        <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full bg-success-foreground/5 blur-2xl pointer-events-none" />
+        <div className="relative">
+          <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-success-foreground/15 backdrop-blur-sm flex items-center justify-center">
+            <Shield className="w-6 h-6" />
+          </div>
+          <h2 className="text-lg font-extrabold tracking-wide mb-1.5">{config.price_guarantee_days}-DAY PRICE GUARANTEE</h2>
+          <p className="text-sm leading-relaxed opacity-90">Your offer is locked in. No games. No surprises.</p>
+        </div>
       </div>
     </div>
   );
