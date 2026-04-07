@@ -24,7 +24,25 @@
 </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Inline skeleton for fast FCP — replaced by React on mount -->
+      <style>
+        .ll-sk{display:flex;flex-direction:column;min-height:100vh;background:#fff;font-family:system-ui,sans-serif}
+        .ll-sk-h{height:88px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;padding:0 20px}
+        .ll-sk-logo{width:108px;height:72px;background:#f3f4f6;border-radius:8px}
+        .ll-sk-main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:40px 20px}
+        .ll-sk-pulse{animation:ll-p 1.5s ease-in-out infinite}
+        @keyframes ll-p{0%,100%{opacity:.4}50%{opacity:1}}
+        .ll-sk-bar{height:14px;background:#e5e7eb;border-radius:7px}
+      </style>
+      <div class="ll-sk">
+        <div class="ll-sk-h"><div class="ll-sk-logo ll-sk-pulse"></div></div>
+        <div class="ll-sk-main">
+          <div class="ll-sk-bar ll-sk-pulse" style="width:260px"></div>
+          <div class="ll-sk-bar ll-sk-pulse" style="width:200px"></div>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
