@@ -30,6 +30,7 @@ interface DealerAccount {
   dealership_id: string;
   architecture: string;
   bdc_model: string;
+  offer_logic_approver_role: string;
   start_date: string | null;
   billing_date: number | null;
   plan_tier: string;
