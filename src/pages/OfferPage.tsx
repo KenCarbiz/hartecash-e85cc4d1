@@ -1000,6 +1000,14 @@ const OfferPage = () => {
             </Link>
           </div>
 
+          {!s.vin && (
+            <div className="bg-warning/10 border border-warning/30 rounded-lg p-3 text-center">
+              <p className="text-xs font-semibold text-warning">⚠️ No VIN on File</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                This offer was generated without a VIN and is subject to vehicle verification. Final offer may change upon VIN confirmation and in-person inspection.
+              </p>
+            </div>
+          )}
           <p className="text-center text-xs text-muted-foreground">
             <InspectionDisclosure /> • 🔒 Your information is kept secure
           </p>

@@ -303,6 +303,16 @@ const OfferPrintLayout = ({
         </div>
       </div>
 
+      {/* No-VIN Disclaimer */}
+      {!submission.vin && (
+        <div className="border border-warning/40 bg-warning/5 rounded p-2 mb-2 text-center">
+          <p className="text-[9px] font-bold text-warning uppercase tracking-wider">⚠ No VIN on File</p>
+          <p className="text-[8px] text-muted-foreground mt-0.5">
+            This offer was generated without a VIN. All values are subject to vehicle verification. Final offer may change upon VIN confirmation and in-person inspection.
+          </p>
+        </div>
+      )}
+
       {/* Footer */}
       <div className="border-t-2 border-primary/20 pt-2 flex items-center justify-between text-[9px] text-muted-foreground">
         <p className="font-medium">Offer valid subject to in-person inspection · {config.dealership_name || "Our Dealership"}</p>
