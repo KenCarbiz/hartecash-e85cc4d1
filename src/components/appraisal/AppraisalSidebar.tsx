@@ -37,6 +37,7 @@ interface Props {
   profitMargin: number;
   activeSettings: any;
   dealerZip?: string;
+  onRefreshInspection?: () => Promise<void>;
 }
 
 export default function AppraisalSidebar({
