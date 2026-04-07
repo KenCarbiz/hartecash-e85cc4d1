@@ -610,6 +610,91 @@ const LocationManagement = () => {
                         onUpdate={(field, value) => updateLocation(loc.id, field as any, value)}
                       />
                     </TabsContent>
+
+                    {/* ── LANDING PAGE OVERRIDES ── */}
+                    <TabsContent value="landing" className="mt-0 space-y-5">
+                      <p className="text-xs text-muted-foreground">
+                        Override corporate defaults for this store's landing page. Leave blank to inherit from corporate config.
+                      </p>
+
+                      {/* Store Identity */}
+                      <div className="space-y-3">
+                        <Label className="text-xs font-semibold">Store Identity</Label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-[10px] text-muted-foreground mb-1 block">Display Name</Label>
+                            <Input value={loc.dealership_name || ""} onChange={e => updateLocation(loc.id, "dealership_name", e.target.value || null)} placeholder="Inherit from corporate" />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] text-muted-foreground mb-1 block">Tagline</Label>
+                            <Input value={loc.tagline || ""} onChange={e => updateLocation(loc.id, "tagline", e.target.value || null)} placeholder="Inherit from corporate" />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] text-muted-foreground mb-1 block">Phone</Label>
+                            <Input value={loc.phone || ""} onChange={e => updateLocation(loc.id, "phone", e.target.value || null)} placeholder="Inherit from corporate" />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] text-muted-foreground mb-1 block">Email</Label>
+                            <Input value={loc.email || ""} onChange={e => updateLocation(loc.id, "email", e.target.value || null)} placeholder="Inherit from corporate" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Hero Content */}
+                      <div className="space-y-3 border-t border-border/30 pt-4">
+                        <Label className="text-xs font-semibold">Hero Section</Label>
+                        <div>
+                          <Label className="text-[10px] text-muted-foreground mb-1 block">Headline</Label>
+                          <Input value={loc.hero_headline || ""} onChange={e => updateLocation(loc.id, "hero_headline", e.target.value || null)} placeholder="Inherit from corporate" />
+                        </div>
+                        <div>
+                          <Label className="text-[10px] text-muted-foreground mb-1 block">Subtext</Label>
+                          <Textarea value={loc.hero_subtext || ""} onChange={e => updateLocation(loc.id, "hero_subtext", e.target.value || null)} placeholder="Inherit from corporate" rows={2} />
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-[10px] text-muted-foreground mb-1 block">Service Hero Headline</Label>
+                            <Input value={loc.service_hero_headline || ""} onChange={e => updateLocation(loc.id, "service_hero_headline", e.target.value || null)} placeholder="Inherit" />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] text-muted-foreground mb-1 block">Trade Hero Headline</Label>
+                            <Input value={loc.trade_hero_headline || ""} onChange={e => updateLocation(loc.id, "trade_hero_headline", e.target.value || null)} placeholder="Inherit" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Colors */}
+                      <div className="space-y-3 border-t border-border/30 pt-4">
+                        <Label className="text-xs font-semibold">Brand Colors (HSL)</Label>
+                        <div className="grid grid-cols-3 gap-3">
+                          <div>
+                            <Label className="text-[10px] text-muted-foreground mb-1 block">Primary</Label>
+                            <Input value={loc.primary_color || ""} onChange={e => updateLocation(loc.id, "primary_color", e.target.value || null)} placeholder="Inherit" className="font-mono text-xs" />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] text-muted-foreground mb-1 block">Accent</Label>
+                            <Input value={loc.accent_color || ""} onChange={e => updateLocation(loc.id, "accent_color", e.target.value || null)} placeholder="Inherit" className="font-mono text-xs" />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] text-muted-foreground mb-1 block">Success</Label>
+                            <Input value={loc.success_color || ""} onChange={e => updateLocation(loc.id, "success_color", e.target.value || null)} placeholder="Inherit" className="font-mono text-xs" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Social Links */}
+                      <div className="space-y-3 border-t border-border/30 pt-4">
+                        <Label className="text-xs font-semibold">Social & Review Links</Label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {(["facebook_url", "instagram_url", "google_review_url", "tiktok_url", "youtube_url"] as const).map(field => (
+                            <div key={field}>
+                              <Label className="text-[10px] text-muted-foreground mb-1 block capitalize">{field.replace(/_url$/, "").replace(/_/g, " ")}</Label>
+                              <Input value={(loc as any)[field] || ""} onChange={e => updateLocation(loc.id, field, e.target.value || null)} placeholder="Inherit" className="text-xs" />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </TabsContent>
                   </Tabs>
                 </div>
               )}
