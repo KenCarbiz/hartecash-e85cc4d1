@@ -251,6 +251,96 @@ interface TireBrakeWidgetProps {
   compact?: boolean;
   showTires?: boolean;
   showBrakes?: boolean;
+  inputMode?: "measurement" | "pass_fail";
+}
+
+/* ─── Pass/Fail Corner ─── */
+function PassFailCorner({
+  label,
+  value,
+  side,
+  type,
+  onChange,
+  readOnly,
+}: {
+  label: string;
+  value: number | null; // 1 = pass, 0 = fail, null = not set
+  side: "left" | "right";
+  type: "brake" | "tire";
+  onChange?: (v: number) => void;
+  readOnly?: boolean;
+}) {
+  const isLeft = side === "left";
+  const isPass = value === 1;
+  const isFail = value === 0;
+  const color = isPass ? "#22C55E" : isFail ? "#EF4444" : "hsl(var(--muted-foreground) / 0.3)";
+  const statusLabel = isPass ? "Pass" : isFail ? "Fail" : "—";
+
+  const handleClick = () => {
+    if (readOnly || !onChange) return;
+    // Toggle: null → pass → fail → pass
+    if (value === null || value === 0) onChange(1);
+    else onChange(0);
+  };
+
+  return (
+    <div className={cn("flex flex-col gap-1", isLeft ? "items-start" : "items-end")}>
+      <div className="text-[10px] font-semibold text-muted-foreground">{label}</div>
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={readOnly}
+        className={cn(
+          "flex items-center gap-2 px-3 py-2 rounded-lg border-2 transition-all",
+          isPass ? "border-green-500 bg-green-500/10" : isFail ? "border-red-500 bg-red-500/10" : "border-border bg-muted/30",
+          !readOnly && "cursor-pointer hover:ring-2 hover:ring-primary/30 active:scale-95"
+        )}
+      >
+        {type === "brake" ? (
+          <svg viewBox="0 0 160 160" className="h-10 w-10 shrink-0">
+            <circle cx="80" cy="80" r="58" fill="hsl(var(--muted))" stroke="hsl(var(--border))" strokeWidth="2" />
+            <circle cx="80" cy="80" r="34" fill="hsl(var(--muted-foreground) / 0.3)" stroke="hsl(var(--foreground))" strokeWidth="3" />
+            <circle cx="80" cy="80" r="12" fill="hsl(var(--foreground))" />
+            <path
+              d={isLeft ? "M90 22 Q124 22 132 52 L132 67 Q112 60 98 64 Z" : "M70 22 Q36 22 28 52 L28 67 Q48 60 62 64 Z"}
+              fill={color}
+            />
+          </svg>
+        ) : (
+          <svg viewBox="0 0 120 120" className="h-8 w-8 shrink-0" aria-hidden="true">
+            <rect x="25" y="10" width="70" height="100" rx="18" fill="hsl(var(--foreground))" />
+            <rect x="35" y="18" width="50" height="84" rx="12" fill="hsl(var(--muted-foreground) / 0.4)" />
+            <line x1="60" y1="20" x2="60" y2="100" stroke={color} strokeWidth="4" strokeLinecap="round" />
+          </svg>
+        )}
+        <span className={cn(
+          "text-sm font-bold",
+          isPass ? "text-green-600" : isFail ? "text-red-600" : "text-muted-foreground"
+        )}>
+          {statusLabel}
+        </span>
+      </button>
+    </div>
+  );
+}
+
+/* ─── Pass/Fail Axle Row ─── */
+function PassFailAxleRow({
+  left, right, type, onChangeLeft, onChangeRight, readOnly,
+}: {
+  left: { label: string; value: number | null };
+  right: { label: string; value: number | null };
+  type: "brake" | "tire";
+  onChangeLeft?: (v: number) => void;
+  onChangeRight?: (v: number) => void;
+  readOnly?: boolean;
+}) {
+  return (
+    <div className="grid grid-cols-2 items-center gap-4">
+      <PassFailCorner label={left.label} value={left.value} side="left" type={type} onChange={onChangeLeft} readOnly={readOnly} />
+      <PassFailCorner label={right.label} value={right.value} side="right" type={type} onChange={onChangeRight} readOnly={readOnly} />
+    </div>
+  );
 }
 
 export default function BrakePadDepthWidget({
@@ -262,6 +352,7 @@ export default function BrakePadDepthWidget({
   compact = false,
   showTires = true,
   showBrakes = true,
+  inputMode = "measurement",
 }: TireBrakeWidgetProps) {
   // Backwards compat: accept old "depths" prop shape via rest
   const bd = brakeDepths ?? { leftFront: null, rightFront: null, leftRear: null, rightRear: null };
