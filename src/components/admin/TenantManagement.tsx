@@ -6,11 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Loader2, Globe, Store, Pencil, Trash2, Copy, ExternalLink, Rocket } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Plus, Loader2, Globe, Pencil, Trash2, Copy, Rocket, CalendarClock, ArrowUpCircle } from "lucide-react";
+import ArchitectureSelector from "./onboarding/ArchitectureSelector";
+import { architectureToplanTier, architectureToDbValue } from "./onboarding/types";
+import type { ArchitectureType } from "./onboarding/types";
 
 interface Tenant {
   id: string;
@@ -22,14 +26,49 @@ interface Tenant {
   created_at: string;
 }
 
-const EMPTY_TENANT: Omit<Tenant, "id" | "created_at"> & { offerLogicApproverRole: string } = {
+interface TenantForm {
+  dealership_id: string;
+  slug: string;
+  display_name: string;
+  custom_domain: string | null;
+  is_active: boolean;
+  offerLogicApproverRole: string;
+  architecture: ArchitectureType | null;
+  originalArchitecture: ArchitectureType | null;
+}
+
+const EMPTY_FORM: TenantForm = {
   dealership_id: "",
   slug: "",
   display_name: "",
   custom_domain: null,
   is_active: true,
   offerLogicApproverRole: "gsm_gm",
+  architecture: null,
+  originalArchitecture: null,
 };
+
+const PLAN_PRICES: Record<string, number> = {
+  standard: 1995,
+  multi_store: 3495,
+  group: 5995,
+  enterprise: 5995,
+};
+
+const PLAN_LABELS: Record<string, string> = {
+  standard: "Standard ($1,995/mo)",
+  multi_store: "Multi-Store ($3,495/mo)",
+  group: "Group ($5,995/mo)",
+  enterprise: "Enterprise (Custom)",
+};
+
+function dbArchToType(dbArch: string, planTier: string): ArchitectureType {
+  if (planTier === "enterprise") return "enterprise";
+  if (dbArch === "dealer_group") return "dealer_group";
+  if (dbArch === "multi_location") return "multi_location";
+  if (planTier === "standard") return "single_store";
+  return "single_store";
+}
 
 interface TenantManagementProps {
   onSetupDealer?: (dealershipId: string) => void;
@@ -41,7 +80,12 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
   const [saving, setSaving] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Tenant | null>(null);
-  const [form, setForm] = useState(EMPTY_TENANT);
+  const [form, setForm] = useState<TenantForm>({ ...EMPTY_FORM });
+
+  // Pricing upgrade prompt state
+  const [showPricingPrompt, setShowPricingPrompt] = useState(false);
+  const [pricingEffective, setPricingEffective] = useState<"next_cycle" | "custom">("next_cycle");
+  const [customEffectiveDate, setCustomEffectiveDate] = useState("");
 
   const TRIGGER_KEYS = [
     "customer_offer_ready", "customer_offer_increased", "customer_offer_accepted",
@@ -78,20 +122,24 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
 
   const openNew = () => {
     setEditing(null);
-    setForm(EMPTY_TENANT);
+    setForm({ ...EMPTY_FORM });
+    setShowPricingPrompt(false);
     setDialogOpen(true);
   };
 
   const openEdit = async (t: Tenant) => {
     setEditing(t);
-    // Fetch the approver role from dealer_accounts
     let approverRole = "gsm_gm";
+    let arch: ArchitectureType = "single_store";
     const { data: da } = await supabase
       .from("dealer_accounts")
-      .select("offer_logic_approver_role")
+      .select("offer_logic_approver_role, architecture, plan_tier")
       .eq("dealership_id", t.dealership_id)
       .maybeSingle();
-    if (da?.offer_logic_approver_role) approverRole = da.offer_logic_approver_role;
+    if (da) {
+      approverRole = da.offer_logic_approver_role || "gsm_gm";
+      arch = dbArchToType(da.architecture || "single_store", da.plan_tier || "standard");
+    }
     setForm({
       dealership_id: t.dealership_id,
       slug: t.slug,
@@ -99,8 +147,29 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
       custom_domain: t.custom_domain,
       is_active: t.is_active,
       offerLogicApproverRole: approverRole,
+      architecture: arch,
+      originalArchitecture: arch,
     });
+    setShowPricingPrompt(false);
     setDialogOpen(true);
+  };
+
+  const handleArchChange = (arch: ArchitectureType) => {
+    const newTier = architectureToplanTier(arch);
+    const oldTier = form.originalArchitecture ? architectureToplanTier(form.originalArchitecture) : "standard";
+    const newPrice = PLAN_PRICES[newTier] || 0;
+    const oldPrice = PLAN_PRICES[oldTier] || 0;
+
+    setForm(prev => ({ ...prev, architecture: arch }));
+
+    // Show pricing prompt if upgrading (higher price)
+    if (editing && newPrice > oldPrice) {
+      setShowPricingPrompt(true);
+      setPricingEffective("next_cycle");
+      setCustomEffectiveDate("");
+    } else {
+      setShowPricingPrompt(false);
+    }
   };
 
   const handleSave = async () => {
@@ -122,33 +191,54 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
     if (editing) {
       const result = await supabase.from("tenants").update(payload).eq("id", editing.id);
       error = result.error;
-      // Also update approver role on dealer_accounts
       if (!error) {
+        const newTier = form.architecture ? architectureToplanTier(form.architecture) : "standard";
+        const newDbArch = form.architecture ? architectureToDbValue(form.architecture) : "single_store";
+
+        const accountUpdate: Record<string, any> = {
+          offer_logic_approver_role: form.offerLogicApproverRole,
+          architecture: newDbArch,
+          plan_tier: newTier,
+        };
+
+        // If pricing changed and custom date selected, store start_date
+        if (showPricingPrompt) {
+          if (pricingEffective === "custom" && customEffectiveDate) {
+            accountUpdate.start_date = customEffectiveDate;
+          }
+          // next_cycle means no start_date override — billing system handles it
+        }
+
         await supabase
           .from("dealer_accounts")
-          .update({ offer_logic_approver_role: form.offerLogicApproverRole } as any)
+          .update(accountUpdate as any)
           .eq("dealership_id", payload.dealership_id);
       }
     } else {
-      // Create tenant + seed config rows
       const { error: insertError } = await supabase.from("tenants").insert(payload);
       error = insertError;
 
       if (!insertError) {
-        // Seed config rows for the new dealer — fire all in parallel
+        const newTier = form.architecture ? architectureToplanTier(form.architecture) : "standard";
+        const newDbArch = form.architecture ? architectureToDbValue(form.architecture) : "single_store";
+
         const seeds = await Promise.all([
           supabase.from("site_config").insert({ dealership_id: payload.dealership_id, dealership_name: payload.display_name } as any),
           supabase.from("form_config").insert({ dealership_id: payload.dealership_id } as any),
           supabase.from("offer_settings").insert({ dealership_id: payload.dealership_id } as any),
           supabase.from("inspection_config").insert({ dealership_id: payload.dealership_id } as any),
           supabase.from("notification_settings").insert({ dealership_id: payload.dealership_id } as any),
-          supabase.from("dealer_accounts").insert({ dealership_id: payload.dealership_id } as any),
+          supabase.from("dealer_accounts").insert({
+            dealership_id: payload.dealership_id,
+            architecture: newDbArch,
+            plan_tier: newTier,
+            offer_logic_approver_role: form.offerLogicApproverRole,
+          } as any),
         ]);
         const seedErrors = seeds.filter(s => s.error).map(s => s.error?.message);
         if (seedErrors.length) {
           console.warn("Seed errors:", seedErrors);
         }
-        // Seed notification templates
         await seedNotificationTemplates(payload.dealership_id, payload.display_name);
       }
     }
@@ -179,6 +269,12 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
     navigator.clipboard.writeText(`${slug}.${host}`);
     toast({ title: "Copied", description: `${slug}.${host} copied to clipboard.` });
   };
+
+  // Derived: is this an upgrade?
+  const newTier = form.architecture ? architectureToplanTier(form.architecture) : "standard";
+  const oldTier = form.originalArchitecture ? architectureToplanTier(form.originalArchitecture) : "standard";
+  const isUpgrade = editing && (PLAN_PRICES[newTier] || 0) > (PLAN_PRICES[oldTier] || 0);
+  const isDowngrade = editing && (PLAN_PRICES[newTier] || 0) < (PLAN_PRICES[oldTier] || 0);
 
   if (loading) {
     return (
@@ -212,7 +308,7 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
         </Card>
         <Card>
           <CardContent className="pt-4 text-center">
-            <p className="text-2xl font-bold text-emerald-600">{tenants.filter(t => t.is_active).length}</p>
+            <p className="text-2xl font-bold text-primary">{tenants.filter(t => t.is_active).length}</p>
             <p className="text-xs text-muted-foreground">Active</p>
           </CardContent>
         </Card>
@@ -291,13 +387,85 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
         </CardContent>
       </Card>
 
-      {/* Add/Edit Dialog */}
+      {/* Add/Edit Dialog — full width for architecture cards */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing ? "Edit Dealer" : "Add New Dealer"}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-2">
+          <div className="space-y-6 py-2">
+            {/* Architecture Selection */}
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold">Dealership Architecture</Label>
+              <ArchitectureSelector
+                selected={form.architecture}
+                onSelect={handleArchChange}
+              />
+              {/* Plan tier badge */}
+              {form.architecture && (
+                <div className="flex items-center gap-2 mt-2">
+                  <Badge variant="outline" className="text-xs">
+                    {PLAN_LABELS[newTier] || newTier}
+                  </Badge>
+                  {isUpgrade && (
+                    <Badge className="text-xs bg-amber-500/10 text-amber-600 border-amber-500/20">
+                      <ArrowUpCircle className="w-3 h-3 mr-1" /> Upgrade
+                    </Badge>
+                  )}
+                  {isDowngrade && (
+                    <Badge variant="secondary" className="text-xs">
+                      Downgrade
+                    </Badge>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Pricing Effective Date Prompt */}
+            {showPricingPrompt && isUpgrade && (
+              <Card className="border-amber-500/30 bg-amber-500/5">
+                <CardContent className="pt-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <CalendarClock className="w-4 h-4 text-amber-600" />
+                    <p className="text-sm font-semibold text-card-foreground">
+                      When should the price increase take effect?
+                    </p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Upgrading from {PLAN_LABELS[oldTier]} → {PLAN_LABELS[newTier]}
+                  </p>
+                  <RadioGroup
+                    value={pricingEffective}
+                    onValueChange={(v) => setPricingEffective(v as "next_cycle" | "custom")}
+                    className="space-y-2"
+                  >
+                    <div className="flex items-center gap-2">
+                      <RadioGroupItem value="next_cycle" id="next_cycle" />
+                      <Label htmlFor="next_cycle" className="text-sm cursor-pointer">
+                        Next billing cycle
+                      </Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <RadioGroupItem value="custom" id="custom_date" />
+                      <Label htmlFor="custom_date" className="text-sm cursor-pointer">
+                        Custom date
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                  {pricingEffective === "custom" && (
+                    <Input
+                      type="date"
+                      value={customEffectiveDate}
+                      onChange={(e) => setCustomEffectiveDate(e.target.value)}
+                      min={new Date().toISOString().split("T")[0]}
+                      className="max-w-xs"
+                    />
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Basic Details */}
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold">Display Name</Label>
               <Input
@@ -307,7 +475,6 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
                   setForm(prev => ({
                     ...prev,
                     display_name: name,
-                    // Auto-generate ID and slug from name if creating new
                     ...(!editing ? {
                       dealership_id: name.toLowerCase().replace(/[^a-z0-9]/g, "_").replace(/_+/g, "_").slice(0, 30),
                       slug: name.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-").slice(0, 30),
