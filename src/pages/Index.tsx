@@ -45,16 +45,14 @@ const Index = () => {
               <SellCarForm />
             </>
           )}
-          <Suspense fallback={null}>
-            <HowItWorks />
-            <TrustBadges />
-            <CompetitorComparison />
-            <ValueProps />
-            <Testimonials />
-            <FAQ />
-            <ReferralBanner />
-            <CTABanner />
-          </Suspense>
+          <HowItWorks />
+          <TrustBadges />
+          <CompetitorComparison />
+          <ValueProps />
+          <Testimonials />
+          <FAQ />
+          <ReferralBanner />
+          <CTABanner />
         </main>
       {!embed && <SiteFooter />}
       {!embed && <BackToTop />}
