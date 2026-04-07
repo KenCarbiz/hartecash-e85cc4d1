@@ -144,7 +144,6 @@ interface OfferSettingsRow {
   dealer_pack: number;
   hide_pack_from_appraisal: boolean;
   retail_profit_basis: string;
-  max_market_pct: number | null;
   low_mileage_bonus: { enabled: boolean; avg_miles_per_year: number; bonus_pct_per_step: number; step_size_pct: number; max_bonus_pct: number; min_miles_per_year: number };
 }
 
@@ -290,7 +289,6 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
         regional_adjustment_pct: d.regional_adjustment_pct ?? 0,
         retail_search_radius: d.retail_search_radius ?? 100,
         retail_search_zip: d.retail_search_zip || "",
-        max_market_pct: d.max_market_pct ?? null,
         dealer_pack: d.dealer_pack ?? 0,
         hide_pack_from_appraisal: d.hide_pack_from_appraisal ?? false,
         retail_profit_basis: d.retail_profit_basis || "retail_avg",
@@ -309,7 +307,6 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
         regional_adjustment_pct: d.regional_adjustment_pct ?? 0,
         retail_search_radius: d.retail_search_radius ?? 100,
         retail_search_zip: d.retail_search_zip || "",
-        max_market_pct: d.max_market_pct ?? null,
         dealer_pack: d.dealer_pack ?? 0,
         hide_pack_from_appraisal: d.hide_pack_from_appraisal ?? false,
         retail_profit_basis: d.retail_profit_basis || "retail_avg",
@@ -341,7 +338,6 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
       regional_adjustment_pct: settings.regional_adjustment_pct,
       retail_search_radius: settings.retail_search_radius ?? 100,
       retail_search_zip: settings.retail_search_zip || null,
-      max_market_pct: settings.max_market_pct || null,
       dealer_pack: settings.dealer_pack ?? 0,
       hide_pack_from_appraisal: settings.hide_pack_from_appraisal ?? false,
       retail_profit_basis: settings.retail_profit_basis || "retail_avg",
@@ -530,42 +526,6 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
                 />
                 <span className="text-sm font-bold text-card-foreground w-20 text-right">{settings.retail_search_radius ?? 100} mi</span>
               </div>
-            </div>
-
-            {/* Market Safety Cap */}
-            <div className="rounded-lg border-2 border-amber-500/30 bg-amber-500/5 p-4 space-y-3">
-              <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4 text-amber-600" />
-                <Label className="text-sm font-semibold">Market Safety Cap</Label>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Set a maximum percentage of the Black Book retail market average that any appraisal can reach. This prevents overpaying regardless of condition adjustments or bonuses.
-              </p>
-              <div className="flex items-center gap-3">
-                <Switch
-                  checked={settings.max_market_pct != null && settings.max_market_pct > 0}
-                  onCheckedChange={(checked) => setSettings({ ...settings, max_market_pct: checked ? 95 : null })}
-                />
-                <span className="text-xs text-muted-foreground">{settings.max_market_pct ? "Enabled" : "Disabled"}</span>
-              </div>
-              {settings.max_market_pct != null && settings.max_market_pct > 0 && (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-4">
-                    <Slider
-                      value={[settings.max_market_pct]}
-                      min={50}
-                      max={120}
-                      step={1}
-                      onValueChange={([v]) => setSettings({ ...settings, max_market_pct: v })}
-                      className="flex-1"
-                    />
-                    <span className="text-sm font-bold text-card-foreground w-16 text-right">{settings.max_market_pct}%</span>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground italic">
-                    Example: At {settings.max_market_pct}%, a vehicle with $30,000 retail avg will cap at ${Math.round(30000 * settings.max_market_pct / 100).toLocaleString()} max offer.
-                  </p>
-                </div>
-              )}
             </div>
           </div>
         </Section>

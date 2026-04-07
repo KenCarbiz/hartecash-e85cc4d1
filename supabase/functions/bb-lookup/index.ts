@@ -248,6 +248,36 @@ serve(async (req) => {
         avg: v.adjusted_retail_avg || v.final_retail_avg || 0,
         rough: v.adjusted_retail_rough || v.final_retail_rough || 0,
       },
+
+      // Private Party values
+      private_party: {
+        xclean: v.adjusted_private_party_xclean || v.private_party_xclean || 0,
+        clean: v.adjusted_private_party_clean || v.private_party_clean || 0,
+        avg: v.adjusted_private_party_avg || v.private_party_avg || 0,
+        rough: v.adjusted_private_party_rough || v.private_party_rough || 0,
+      },
+
+      // Equipped retail price (finance value / CVO)
+      finance_advance: {
+        xclean: v.adjusted_finance_advance_xclean || v.finance_advance_xclean || 0,
+        clean: v.adjusted_finance_advance_clean || v.finance_advance_clean || 0,
+        avg: v.adjusted_finance_advance_avg || v.finance_advance_avg || 0,
+        rough: v.adjusted_finance_advance_rough || v.finance_advance_rough || 0,
+      },
+
+      // Residual values
+      residual_12: v.residual_12 || 0,
+      residual_24: v.residual_24 || 0,
+      residual_36: v.residual_36 || 0,
+      residual_48: v.residual_48 || 0,
+
+      // Recall data
+      recall_count: v.recall_count || 0,
+      recalls: (v.recall_list as Array<Record<string, unknown>> || []).map((r) => ({
+        campaign_number: r.campaign_number || r.nhtsa_campaign_number || "",
+        component: r.component || "",
+        summary: r.summary || r.description || "",
+      })),
     };});
 
     return new Response(JSON.stringify({ error: null, vehicles }), {

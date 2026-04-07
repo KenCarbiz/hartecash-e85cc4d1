@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, Car, DollarSign, TrendingUp, TrendingDown, Minus,
   Gauge, ChevronDown, Save, AlertTriangle, CheckCircle, XCircle, Shield,
-  Pencil, ArrowDown, Loader2, SlidersHorizontal, CheckSquare, Lock, Unlock,
+  Pencil, ArrowDown, Loader2, SlidersHorizontal, CheckSquare, Lock, Unlock, Printer,
 } from "lucide-react";
 import AppraisalConditionInputs from "@/components/appraisal/AppraisalConditionInputs";
 import AppraisalTireBrakeHealth from "@/components/appraisal/AppraisalTireBrakeHealth";
@@ -22,6 +22,7 @@ import AppraisalSidebar from "@/components/appraisal/AppraisalSidebar";
 import { calculateOffer, type OfferSettings, type OfferRule, type OfferEstimate, calcHighMileagePenaltyPct, calcColorAdjustmentPct, DEFAULT_HIGH_MILEAGE_PENALTY, DEFAULT_COLOR_DESIRABILITY, DEFAULT_SEASONAL_ADJUSTMENT } from "@/lib/offerCalculator";
 import type { FormData, BBVehicle, BBAddDeduct } from "@/components/sell-form/types";
 import { formatGrade } from "@/lib/formatGrade";
+import ACVSheet from "@/components/offer/ACVSheet";
 
 // ── Types ──
 interface Submission {
@@ -210,6 +211,8 @@ export default function AppraisalTool() {
   const [expandedBlock, setExpandedBlock] = useState<string | null>(null);
   const [depthPolicies, setDepthPolicies] = useState<{ id: string; name: string; policy_type: string; oem_brands: string[]; all_brands: boolean; max_vehicle_age_years: number | null; max_mileage: number | null; min_tire_depth: number; min_brake_depth: number }[]>([]);
   const [dealerZip, setDealerZip] = useState<string>("");
+  const [showACVSheet, setShowACVSheet] = useState(false);
+  const acvSheetRef = useRef<HTMLDivElement>(null);
 
   // Editable overrides
   const [localSettings, setLocalSettings] = useState<OfferSettings | null>(null);
@@ -563,19 +566,6 @@ export default function AppraisalTool() {
       running = clamped;
     }
 
-    // Market safety cap
-    if (activeSettings.max_market_pct && activeSettings.max_market_pct > 0 && bbVehicle?.retail?.avg) {
-      const retailMkt = Number(bbVehicle.retail.avg);
-      if (retailMkt > 0) {
-        const cap = Math.round(retailMkt * (activeSettings.max_market_pct / 100));
-        if (running > cap) {
-          const diff = cap - running;
-          running = cap;
-          blocks.push({ id: "market_cap", label: `Market Cap (${activeSettings.max_market_pct}% of Retail Avg)`, value: diff, runningTotal: running, type: "subtract", editable: false });
-        }
-      }
-    }
-
     blocks.push({ id: "final", label: "FINAL OFFER", value: running, runningTotal: running, type: "total", editable: false });
     return blocks;
   }, [offerResult, activeSettings, bbVehicle, condition, sub, effectivePack, equipmentTotal, hidePackFromAppraisal]);
@@ -678,6 +668,29 @@ export default function AppraisalTool() {
     }
     setSaving(false);
   };
+  const handlePrintACVSheet = useCallback(() => {
+    setShowACVSheet(true);
+    setTimeout(() => {
+      if (acvSheetRef.current) {
+        const printWindow = window.open("", "_blank");
+        if (printWindow) {
+          printWindow.document.write(`
+            <html><head><title>ACV Worksheet</title>
+            <style>
+              body { margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; }
+              @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+            </style>
+            <script src="https://cdn.tailwindcss.com"><\/script>
+            </head><body>${acvSheetRef.current.innerHTML}</body></html>
+          `);
+          printWindow.document.close();
+          setTimeout(() => { printWindow.print(); }, 500);
+        }
+      }
+      setShowACVSheet(false);
+    }, 100);
+  }, []);
+
   const inspectionData = useMemo(() => {
     if (!sub?.internal_notes) return null;
     if (!sub.internal_notes.includes("[INSPECTION")) return null;
@@ -780,10 +793,18 @@ export default function AppraisalTool() {
               </p>
             </div>
           </div>
-          <Button onClick={handleSave} disabled={saving} className="bg-primary-foreground/15 hover:bg-primary-foreground/25 text-primary-foreground rounded-xl border border-primary-foreground/10 shadow-lg">
-            {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <Save className="w-4 h-4 mr-1.5" />}
-            Save Appraisal
-          </Button>
+          <div className="flex items-center gap-2">
+            {sub.appraisal_finalized && (
+              <Button onClick={handlePrintACVSheet} variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10 rounded-xl border border-primary-foreground/10">
+                <Printer className="w-4 h-4 mr-1.5" />
+                ACV Sheet
+              </Button>
+            )}
+            <Button onClick={handleSave} disabled={saving} className="bg-primary-foreground/15 hover:bg-primary-foreground/25 text-primary-foreground rounded-xl border border-primary-foreground/10 shadow-lg">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <Save className="w-4 h-4 mr-1.5" />}
+              Save Appraisal
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -1225,6 +1246,27 @@ export default function AppraisalTool() {
           />
         </div>
       </div>
+
+      {/* Hidden ACV Sheet for printing */}
+      {showACVSheet && (
+        <div className="fixed left-[-9999px] top-0">
+          <ACVSheet
+            ref={acvSheetRef}
+            sub={sub}
+            bbVehicle={bbVehicle}
+            offerResult={offerResult}
+            finalValue={finalValue}
+            wholesaleAvg={wholesaleAvg}
+            tradeinAvg={tradeinAvg}
+            retailAvg={retailAvg}
+            reconCost={reconCost}
+            dealerPack={effectivePack}
+            projectedProfit={projectedProfit}
+            profitMargin={profitMargin}
+            condition={condition}
+          />
+        </div>
+      )}
     </div>
   );
 }

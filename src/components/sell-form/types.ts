@@ -48,6 +48,15 @@ export interface BBVehicle {
   wholesale: { xclean: number; clean: number; avg: number; rough: number };
   tradein: { clean: number; avg: number; rough: number };
   retail: { xclean: number; clean: number; avg: number; rough: number };
+  // New data points
+  private_party?: { xclean: number; clean: number; avg: number; rough: number };
+  finance_advance?: { xclean: number; clean: number; avg: number; rough: number };
+  residual_12?: number;
+  residual_24?: number;
+  residual_36?: number;
+  residual_48?: number;
+  recall_count?: number;
+  recalls?: { campaign_number: string; component: string; summary: string }[];
 }
 
 export interface FormData {

@@ -535,19 +535,16 @@ export function calculateOffer(
     high += promoBonus;
   }
 
-  // ── STEP 9: Floor, ceiling & market cap ──
+  // ── STEP 9: Floor, ceiling, & market safety cap ──
   const floor = cfg.offer_floor || 500;
   high = Math.max(high, floor);
   if (cfg.offer_ceiling && cfg.offer_ceiling > 0) {
     high = Math.min(high, cfg.offer_ceiling);
   }
-  // Market safety cap: never exceed X% of retail market median
+  // Market safety cap: never exceed X% of retail avg
   if (cfg.max_market_pct && cfg.max_market_pct > 0 && bbVehicle.retail?.avg) {
-    const retailMedian = Number(bbVehicle.retail.avg);
-    if (retailMedian > 0) {
-      const cap = Math.round(retailMedian * (cfg.max_market_pct / 100));
-      high = Math.min(high, cap);
-    }
+    const cap = Math.round(Number(bbVehicle.retail.avg) * (cfg.max_market_pct / 100));
+    if (cap > 0) high = Math.min(high, cap);
   }
 
   // Firm offer — no range
