@@ -424,7 +424,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
       </Section>
 
       {/* Colors */}
-      <Section icon={Palette} title="Brand Colors">
+      <Section icon={Palette} title="Brand Colors" sectionId="colors" forceOpen={focusField === "colors"}>
         <p className="text-xs text-muted-foreground mb-3">
           Colors in HSL format (e.g. "213 80% 20%"). These will be used as CSS custom properties across the site.
         </p>
