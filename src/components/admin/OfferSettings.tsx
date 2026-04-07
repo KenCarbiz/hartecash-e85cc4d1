@@ -496,7 +496,20 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
           title="Market Data Settings"
           defaultOpen={false}
         >
-          <div className="space-y-3">
+          <div className="space-y-4">
+            <div>
+              <Label className="text-sm font-semibold">Market Search ZIP Code</Label>
+              <p className="text-xs text-muted-foreground mb-2">
+                Default ZIP for live retail market lookups. Leave empty to use the dealer's primary location ZIP automatically.
+              </p>
+              <Input
+                value={settings.retail_search_zip || ""}
+                onChange={(e) => setSettings({ ...settings, retail_search_zip: e.target.value.replace(/\D/g, "").slice(0, 5) })}
+                placeholder="Auto (dealer location ZIP)"
+                maxLength={5}
+                className="max-w-xs font-mono"
+              />
+            </div>
             <div>
               <Label className="text-sm font-semibold">Retail Listings Search Radius</Label>
               <p className="text-xs text-muted-foreground mb-2">
