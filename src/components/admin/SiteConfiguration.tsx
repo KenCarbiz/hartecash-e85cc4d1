@@ -306,7 +306,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
       </Section>
 
       {/* Business Hours */}
-      <Section icon={Clock} title="Business Hours">
+      <Section icon={Clock} title="Business Hours" sectionId="hours" forceOpen={focusField === "hours"}>
         <p className="text-xs text-muted-foreground mb-3">Set your dealership hours. These appear on the customer portal and contact cards.</p>
         <div className="space-y-2">
           {((config as any).business_hours || []).map((row: any, i: number) => (
