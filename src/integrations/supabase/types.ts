@@ -1171,6 +1171,7 @@ export type Database = {
           high_mileage_penalty: Json
           id: string
           low_mileage_bonus: Json
+          max_market_pct: number | null
           mileage_tiers: Json
           offer_ceiling: number | null
           offer_floor: number
@@ -1200,6 +1201,7 @@ export type Database = {
           high_mileage_penalty?: Json
           id?: string
           low_mileage_bonus?: Json
+          max_market_pct?: number | null
           mileage_tiers?: Json
           offer_ceiling?: number | null
           offer_floor?: number
@@ -1229,6 +1231,7 @@ export type Database = {
           high_mileage_penalty?: Json
           id?: string
           low_mileage_bonus?: Json
+          max_market_pct?: number | null
           mileage_tiers?: Json
           offer_ceiling?: number | null
           offer_floor?: number
@@ -1477,6 +1480,7 @@ export type Database = {
           is_active: boolean
           is_default: boolean
           low_mileage_bonus: Json
+          max_market_pct: number | null
           mileage_tiers: Json
           name: string
           offer_ceiling: number | null
@@ -1516,6 +1520,7 @@ export type Database = {
           is_active?: boolean
           is_default?: boolean
           low_mileage_bonus?: Json
+          max_market_pct?: number | null
           mileage_tiers?: Json
           name: string
           offer_ceiling?: number | null
@@ -1555,6 +1560,7 @@ export type Database = {
           is_active?: boolean
           is_default?: boolean
           low_mileage_bonus?: Json
+          max_market_pct?: number | null
           mileage_tiers?: Json
           name?: string
           offer_ceiling?: number | null
