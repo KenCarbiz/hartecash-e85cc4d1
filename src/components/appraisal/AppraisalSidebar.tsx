@@ -41,7 +41,7 @@ interface Props {
 export default function AppraisalSidebar({
   sub, bbVehicle, offerResult, finalValue, currentOffer,
   wholesaleAvg, tradeinAvg, retailAvg,
-  reconCost, effectivePack, projectedProfit, profitMargin, activeSettings,
+  reconCost, effectivePack, projectedProfit, profitMargin, activeSettings, dealerZip,
 }: Props) {
   const hasTires = !!(sub.tire_lf && sub.tire_rf && sub.tire_lr && sub.tire_rr);
   const hasBrakes = !!(sub.brake_lf != null || sub.brake_rf != null || sub.brake_lr != null || sub.brake_rr != null);
