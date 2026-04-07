@@ -535,11 +535,19 @@ export function calculateOffer(
     high += promoBonus;
   }
 
-  // ── STEP 9: Floor & ceiling ──
+  // ── STEP 9: Floor, ceiling & market cap ──
   const floor = cfg.offer_floor || 500;
   high = Math.max(high, floor);
   if (cfg.offer_ceiling && cfg.offer_ceiling > 0) {
     high = Math.min(high, cfg.offer_ceiling);
+  }
+  // Market safety cap: never exceed X% of retail market median
+  if (cfg.max_market_pct && cfg.max_market_pct > 0 && vehicle.retail?.avg) {
+    const retailMedian = Number(vehicle.retail.avg);
+    if (retailMedian > 0) {
+      const cap = Math.round(retailMedian * (cfg.max_market_pct / 100));
+      high = Math.min(high, cap);
+    }
   }
 
   // Firm offer — no range
