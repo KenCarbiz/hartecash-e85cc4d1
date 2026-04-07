@@ -15,18 +15,19 @@ interface LocationWithZips {
   use_bdc: boolean;
 }
 
-let cachedLocations: LocationWithZips[] | null = null;
+let cachedLocations: Record<string, LocationWithZips[]> = {};
 
-async function getLocations(): Promise<LocationWithZips[]> {
-  if (!cachedLocations) {
+async function getLocations(dealershipId: string = "default"): Promise<LocationWithZips[]> {
+  if (!cachedLocations[dealershipId]) {
     const { data } = await supabase
       .from("dealership_locations")
       .select("id, name, city, state, zip_codes, oem_brands, center_zip, coverage_radius_miles, all_brands, excluded_oem_brands, temporarily_offline, use_bdc")
+      .eq("dealership_id", dealershipId)
       .eq("is_active", true)
       .order("sort_order");
-    cachedLocations = (data as any) || [];
+    cachedLocations[dealershipId] = (data as any) || [];
   }
-  return cachedLocations!;
+  return cachedLocations[dealershipId];
 }
 
 /** Returns only locations that are not temporarily offline */
