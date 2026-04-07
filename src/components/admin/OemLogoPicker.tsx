@@ -26,16 +26,11 @@ interface OemLogoPickerProps {
 
 function base64ToBlob(base64: string, contentType: string): Blob {
   const byteChars = atob(base64);
-  const byteArrays: Uint8Array[] = [];
-  for (let offset = 0; offset < byteChars.length; offset += 512) {
-    const slice = byteChars.slice(offset, offset + 512);
-    const byteNumbers = new Array(slice.length);
-    for (let i = 0; i < slice.length; i++) {
-      byteNumbers[i] = slice.charCodeAt(i);
-    }
-    byteArrays.push(new Uint8Array(byteNumbers));
+  const bytes = new Uint8Array(byteChars.length);
+  for (let i = 0; i < byteChars.length; i++) {
+    bytes[i] = byteChars.charCodeAt(i);
   }
-  return new Blob(byteArrays, { type: contentType });
+  return new Blob([bytes.buffer as ArrayBuffer], { type: contentType });
 }
 
 const OemLogoPicker = ({ dealershipId, locationId, existingLogos, maxLogos, onAdd }: OemLogoPickerProps) => {
