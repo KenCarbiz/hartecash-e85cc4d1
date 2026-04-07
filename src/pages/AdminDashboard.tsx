@@ -13,6 +13,8 @@ import { useRef, useEffect } from "react";
 const AdminDashboard = () => {
   const db = useAdminDashboard();
   const contentRef = useRef<HTMLDivElement>(null);
+  // Strip ":fieldHint" for sidebar/breadcrumb matching
+  const baseSectionId = db.activeSection.includes(":") ? db.activeSection.split(":")[0] : db.activeSection;
 
   useEffect(() => {
     contentRef.current?.scrollTo({ top: 0, behavior: "instant" });
