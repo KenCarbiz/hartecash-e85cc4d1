@@ -46,10 +46,9 @@ const SiteHeader = () => {
               src={logoSrc}
               alt={dealerName}
               className="h-[72px] md:h-[84px] w-auto transition-transform duration-300 group-hover:scale-[1.02]"
-              width={317}
-              height={112}
+              width={189}
+              height={67}
               fetchPriority="high"
-              decoding="async"
             />
             {secondaryUrl && (
               <img

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
 
@@ -24,39 +24,31 @@ const EMPTY: LocationLogos = {
   show_corporate_on_landing_only: false,
 };
 
-let cache: Record<string, LocationLogos> = {};
+async function fetchLocationLogos(dealershipId: string): Promise<LocationLogos> {
+  const { data } = await supabase
+    .from("dealership_locations")
+    .select("corporate_logo_url, corporate_logo_dark_url, secondary_logo_url, secondary_logo_dark_url, oem_logo_urls, logo_layout, show_corporate_logo, show_corporate_on_landing_only")
+    .eq("dealership_id", dealershipId)
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (data) {
+    return { ...EMPTY, ...data } as unknown as LocationLogos;
+  }
+  return EMPTY;
+}
 
-/**
- * Fetches the first active location's logo config for the current tenant.
- * For multi-location setups, uses the first location by sort_order.
- */
 export function useLocationLogos() {
   const { tenant } = useTenant();
   const did = tenant.dealership_id;
-  const [logos, setLogos] = useState<LocationLogos>(cache[did] || EMPTY);
 
-  useEffect(() => {
-    if (cache[did]) {
-      setLogos(cache[did]);
-      return;
-    }
+  const { data } = useQuery({
+    queryKey: ["location_logos", did],
+    queryFn: () => fetchLocationLogos(did),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
 
-    supabase
-      .from("dealership_locations")
-      .select("corporate_logo_url, corporate_logo_dark_url, secondary_logo_url, secondary_logo_dark_url, oem_logo_urls, logo_layout, show_corporate_logo, show_corporate_on_landing_only")
-      .eq("dealership_id", did)
-      .eq("is_active", true)
-      .order("sort_order", { ascending: true })
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) {
-          const result = { ...EMPTY, ...data } as unknown as LocationLogos;
-          cache[did] = result;
-          setLogos(result);
-        }
-      });
-  }, [did]);
-
-  return logos;
+  return data ?? EMPTY;
 }
