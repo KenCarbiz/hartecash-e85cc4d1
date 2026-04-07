@@ -309,6 +309,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
         regional_adjustment_pct: d.regional_adjustment_pct ?? 0,
         retail_search_radius: d.retail_search_radius ?? 100,
         retail_search_zip: d.retail_search_zip || "",
+        max_market_pct: d.max_market_pct ?? null,
         dealer_pack: d.dealer_pack ?? 0,
         hide_pack_from_appraisal: d.hide_pack_from_appraisal ?? false,
         retail_profit_basis: d.retail_profit_basis || "retail_avg",
