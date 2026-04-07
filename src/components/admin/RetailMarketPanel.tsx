@@ -98,11 +98,11 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, dealerZip, radius
 
   const fetchListings = useCallback(async () => {
     if (!vin && !uvc) return;
-    if (!zipcode) return;
+    if (!searchZip) return;
     setListingsLoading(true);
     try {
       const { data, error: fnError } = await supabase.functions.invoke("bb-retail-listings", {
-        body: { vin, uvc, zipcode, radius_miles: radius, include_listings: true },
+        body: { vin, uvc, zipcode: searchZip, radius_miles: radius, include_listings: true },
       });
       if (fnError) throw fnError;
       setListings(data?.listings || []);
@@ -112,7 +112,7 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, dealerZip, radius
     } finally {
       setListingsLoading(false);
     }
-  }, [vin, uvc, zipcode, radius]);
+  }, [vin, uvc, searchZip, radius]);
 
   if (!fetched) {
     return (
