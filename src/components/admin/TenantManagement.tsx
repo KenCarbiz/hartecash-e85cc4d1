@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Loader2, Globe, Store, Pencil, Trash2, Copy, ExternalLink, Rocket } from "lucide-react";
 
 interface Tenant {
@@ -21,12 +22,13 @@ interface Tenant {
   created_at: string;
 }
 
-const EMPTY_TENANT: Omit<Tenant, "id" | "created_at"> = {
+const EMPTY_TENANT: Omit<Tenant, "id" | "created_at"> & { offerLogicApproverRole: string } = {
   dealership_id: "",
   slug: "",
   display_name: "",
   custom_domain: null,
   is_active: true,
+  offerLogicApproverRole: "gsm_gm",
 };
 
 interface TenantManagementProps {
@@ -80,14 +82,23 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
     setDialogOpen(true);
   };
 
-  const openEdit = (t: Tenant) => {
+  const openEdit = async (t: Tenant) => {
     setEditing(t);
+    // Fetch the approver role from dealer_accounts
+    let approverRole = "gsm_gm";
+    const { data: da } = await supabase
+      .from("dealer_accounts")
+      .select("offer_logic_approver_role")
+      .eq("dealership_id", t.dealership_id)
+      .maybeSingle();
+    if (da?.offer_logic_approver_role) approverRole = da.offer_logic_approver_role;
     setForm({
       dealership_id: t.dealership_id,
       slug: t.slug,
       display_name: t.display_name,
       custom_domain: t.custom_domain,
       is_active: t.is_active,
+      offerLogicApproverRole: approverRole,
     });
     setDialogOpen(true);
   };
@@ -111,6 +122,13 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
     if (editing) {
       const result = await supabase.from("tenants").update(payload).eq("id", editing.id);
       error = result.error;
+      // Also update approver role on dealer_accounts
+      if (!error) {
+        await supabase
+          .from("dealer_accounts")
+          .update({ offer_logic_approver_role: form.offerLogicApproverRole } as any)
+          .eq("dealership_id", payload.dealership_id);
+      }
     } else {
       // Create tenant + seed config rows
       const { error: insertError } = await supabase.from("tenants").insert(payload);
@@ -328,6 +346,19 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
                 placeholder="sellmycar.smithmotors.com"
               />
               <p className="text-[10px] text-muted-foreground">Dealer must point DNS to your server for this to work</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Offer Logic Approver</Label>
+              <Select value={form.offerLogicApproverRole} onValueChange={v => setForm(prev => ({ ...prev, offerLogicApproverRole: v }))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="gsm_gm">GSM / General Manager</SelectItem>
+                  <SelectItem value="admin">Admin Only</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-[10px] text-muted-foreground">Who must approve new pricing model changes before activation</p>
             </div>
             <div className="flex items-center gap-2">
               <Switch checked={form.is_active} onCheckedChange={v => setForm(prev => ({ ...prev, is_active: v }))} />
