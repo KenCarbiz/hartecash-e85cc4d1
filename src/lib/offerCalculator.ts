@@ -542,8 +542,8 @@ export function calculateOffer(
     high = Math.min(high, cfg.offer_ceiling);
   }
   // Market safety cap: never exceed X% of retail market median
-  if (cfg.max_market_pct && cfg.max_market_pct > 0 && vehicle.retail?.avg) {
-    const retailMedian = Number(vehicle.retail.avg);
+  if (cfg.max_market_pct && cfg.max_market_pct > 0 && bbVehicle.retail?.avg) {
+    const retailMedian = Number(bbVehicle.retail.avg);
     if (retailMedian > 0) {
       const cap = Math.round(retailMedian * (cfg.max_market_pct / 100));
       high = Math.min(high, cap);
