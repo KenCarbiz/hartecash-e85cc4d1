@@ -593,6 +593,19 @@ export default function AppraisalTool() {
     setLiveSelectedAddDeducts(prev => prev.includes(uoc) ? prev.filter(u => u !== uoc) : [...prev, uoc]);
   };
 
+  // Refresh inspection data from DB without leaving page
+  const handleRefreshInspection = useCallback(async () => {
+    if (!sub) return;
+    const { data } = await supabase.from("submissions").select("*").eq("id", sub.id).maybeSingle();
+    if (data) {
+      setSub(data as any);
+      // Re-map inspector grade if updated
+      const grade = (data as any).inspector_grade || data.overall_condition || condition;
+      setCondition(grade);
+      toast({ title: "Inspection Updated", description: "Latest inspection data has been loaded." });
+    }
+  }, [sub, condition, toast]);
+
    // Save Final Appraised Value
   const handleSave = async () => {
     if (!sub) return;
