@@ -23,6 +23,7 @@ export interface InspectionConfig {
   require_notes: Record<string, boolean>;
   custom_items: { section: string; label: string; sort_order: number }[];
   default_inspection_mode: "standard" | "full";
+  tire_brake_input_mode: "measurement" | "pass_fail";
 }
 
 const DEFAULTS: InspectionConfig = {
