@@ -603,7 +603,7 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
         </div>
         <p className="text-center text-sm text-muted-foreground font-medium">
           <strong className="text-card-foreground font-bold">{currentStepName}</strong>
-          <span className="text-xs opacity-70 ml-1.5">· ~{stepTimeEstimates[currentStepName] || "30 sec"}</span>
+          <span className="text-xs text-muted-foreground ml-1.5">· ~{stepTimeEstimates[currentStepName] || "30 sec"}</span>
         </p>
       </div>
 

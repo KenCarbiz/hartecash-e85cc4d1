@@ -185,9 +185,9 @@ const SiteFooter = () => {
           <p className="text-xs text-muted-foreground">
             © {new Date().getFullYear()} {dealerName}. All rights reserved.
           </p>
-          <div className="flex items-center gap-3">
-            <Link to="/admin/login" className="text-[10px] text-muted-foreground/20 hover:text-muted-foreground/50 transition-opacity" aria-label="Staff portal">•</Link>
-            <Link to="/sitemap" className="text-[10px] text-muted-foreground/30 hover:text-muted-foreground/60 transition-opacity">Sitemap</Link>
+          <div className="flex items-center gap-4 py-2">
+            <Link to="/admin/login" className="text-xs text-muted-foreground/20 hover:text-muted-foreground/50 transition-opacity min-h-[24px] flex items-center" aria-label="Staff portal">•</Link>
+            <Link to="/sitemap" className="text-xs text-muted-foreground/30 hover:text-muted-foreground/60 transition-opacity min-h-[24px] flex items-center">Sitemap</Link>
           </div>
         </div>
       </div>

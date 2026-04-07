@@ -47,7 +47,7 @@ const ValueProps = () => {
   return (
     <section id="value-props" className="py-16 lg:py-20 px-5 bg-background">
       <div className="text-center mb-12">
-        <span className="inline-block text-xs font-bold uppercase tracking-[0.2em] text-primary/70 mb-3">The {shortName} Advantage</span>
+        <span className="inline-block text-xs font-bold uppercase tracking-[0.2em] text-primary mb-3">The {shortName} Advantage</span>
         <h2 className="font-display text-2xl md:text-[28px] lg:text-[34px] font-extrabold text-foreground tracking-[0.04em]">
           Why Sell to {shortName}?
         </h2>
@@ -71,7 +71,7 @@ const ValueProps = () => {
                 <h3 className="text-base font-bold mb-1 text-card-foreground">
                   {item.title}
                 </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+                <p className="text-sm text-foreground/70 leading-relaxed">{item.desc}</p>
               </div>
             </div>
           );

@@ -118,7 +118,7 @@ const Testimonials = () => {
           </button>
           <div className="flex gap-2">
             {testimonials.map((_, i) => (
-              <button key={i} onClick={() => { setDirection(i > current ? 1 : -1); setCurrent(i); }} className={`w-2 h-2 rounded-full transition-all ${i === current ? "bg-accent w-5" : "bg-border"}`} aria-label={`Go to testimonial ${i + 1}`} />
+              <button key={i} onClick={() => { setDirection(i > current ? 1 : -1); setCurrent(i); }} className={`h-6 rounded-full transition-all flex items-center justify-center ${i === current ? "bg-accent w-7" : "bg-border w-6"}`} aria-label={`Go to testimonial ${i + 1}`}><span className={`block rounded-full ${i === current ? "w-5 h-2" : "w-2 h-2"} ${i === current ? "bg-accent-foreground/50" : "bg-muted-foreground/30"}`} /></button>
             ))}
           </div>
           <button onClick={() => go(1)} className="p-1.5 rounded-full bg-muted hover:bg-muted/80 transition-colors" aria-label="Next testimonial">
