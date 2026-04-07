@@ -254,6 +254,15 @@ const MobileInspection = () => {
         const sub = (subRes.data as any[])[0];
         setSubmission(sub);
         setOverallGrade(sub.overall_condition || "");
+        
+        // Fetch inspection config for this submission's dealership to get input mode
+        const { data: subFull } = await supabase.from("submissions").select("dealership_id").eq("id", id).maybeSingle();
+        if (subFull?.dealership_id) {
+          const { data: cfgData } = await supabase.from("inspection_config").select("tire_brake_input_mode").eq("dealership_id", subFull.dealership_id).maybeSingle();
+          if (cfgData && (cfgData as any).tire_brake_input_mode === "pass_fail") {
+            setTireBrakeInputMode("pass_fail");
+          }
+        }
       }
       if (dmgRes.data) {
         const items = (dmgRes.data as any[]).flatMap((r: any) => {
