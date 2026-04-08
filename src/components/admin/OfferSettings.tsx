@@ -5,6 +5,7 @@ import PricingAccessGate from "./PricingAccessGate";
 import PricingAccessRequests from "./PricingAccessRequests";
 import StrategyModeSelector from "./StrategyModeSelector";
 import MarketAdjustmentConfigPanel from "./MarketAdjustmentConfig";
+import ArchetypeOverrides, { type ArchetypeDeductionOverrides } from "./ArchetypeOverrides";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
