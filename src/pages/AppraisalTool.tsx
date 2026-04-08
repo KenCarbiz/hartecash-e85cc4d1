@@ -931,15 +931,15 @@ export default function AppraisalTool() {
           })()}
         </div>
 
-        {/* Vehicle Summary Bar */}
-        <div className="bg-card rounded-xl border border-border/60 p-4 mb-4 shadow-sm">
-          <div className="flex items-center gap-2.5 mb-2.5">
-            <Car className="w-4 h-4 text-primary" />
-            <span className="font-display text-sm text-card-foreground">
+        {/* Vehicle Summary Bar — Commanding identity */}
+        <div className="bg-card rounded-xl border-2 border-primary/20 p-5 mb-4 shadow-md">
+          <div className="flex items-center gap-3 mb-3">
+            <Car className="w-6 h-6 text-primary" />
+            <span className="font-display text-lg font-black text-card-foreground tracking-wide">
               {sub.vehicle_year} {(sub.vehicle_make || "").toUpperCase()} {(sub.vehicle_model || "").toUpperCase()} {liveBbVehicle?.series || ""}
             </span>
             {(liveBbVehicle?.class_name || sub.bb_class_name) && (
-              <span className="text-[10px] font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded-full">{liveBbVehicle?.class_name || sub.bb_class_name}</span>
+              <span className="text-[11px] font-bold bg-primary/15 text-primary px-2.5 py-1 rounded-full">{liveBbVehicle?.class_name || sub.bb_class_name}</span>
             )}
             {bbLoading && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />}
             <div className="ml-auto flex items-center gap-2">
@@ -955,14 +955,14 @@ export default function AppraisalTool() {
               )}
             </div>
           </div>
-          <div className="grid grid-cols-3 sm:grid-cols-7 gap-2 text-xs">
-            <div><span className="text-muted-foreground">Style:</span> <span className="font-medium text-card-foreground">{liveBbVehicle?.style || "—"}</span></div>
-            <div><span className="text-muted-foreground">Drivetrain:</span> <span className="font-bold text-card-foreground">{liveBbVehicle?.drivetrain || sub.bb_drivetrain || "—"}</span></div>
-            <div><span className="text-muted-foreground">Engine:</span> <span className="font-medium text-card-foreground">{liveBbVehicle?.engine || sub.bb_engine || "—"}</span></div>
-            <div><span className="text-muted-foreground">Trans:</span> <span className="font-medium text-card-foreground">{liveBbVehicle?.transmission || sub.bb_transmission || "—"}</span></div>
-            <div><span className="text-muted-foreground">MSRP:</span> <span className="font-bold text-card-foreground">${Number(liveBbVehicle?.msrp || sub.bb_msrp || 0).toLocaleString()}</span></div>
-            <div><span className="text-muted-foreground">Fuel:</span> <span className="font-bold text-card-foreground">{liveBbVehicle?.fuel_type || sub.bb_fuel_type || "—"}</span></div>
-            <div><span className="text-muted-foreground">Color:</span> <span className="font-medium text-card-foreground">{sub.exterior_color || "—"}</span></div>
+          <div className="grid grid-cols-3 sm:grid-cols-7 gap-3 text-sm">
+            <div><span className="text-muted-foreground text-xs">Style</span><div className="font-semibold text-card-foreground">{liveBbVehicle?.style || "—"}</div></div>
+            <div><span className="text-muted-foreground text-xs">Drivetrain</span><div className="font-bold text-card-foreground">{liveBbVehicle?.drivetrain || sub.bb_drivetrain || "—"}</div></div>
+            <div><span className="text-muted-foreground text-xs">Engine</span><div className="font-semibold text-card-foreground">{liveBbVehicle?.engine || sub.bb_engine || "—"}</div></div>
+            <div><span className="text-muted-foreground text-xs">Transmission</span><div className="font-semibold text-card-foreground">{liveBbVehicle?.transmission || sub.bb_transmission || "—"}</div></div>
+            <div><span className="text-muted-foreground text-xs">MSRP</span><div className="font-bold text-card-foreground">${Number(liveBbVehicle?.msrp || sub.bb_msrp || 0).toLocaleString()}</div></div>
+            <div><span className="text-muted-foreground text-xs">Fuel</span><div className="font-bold text-card-foreground">{liveBbVehicle?.fuel_type || sub.bb_fuel_type || "—"}</div></div>
+            <div><span className="text-muted-foreground text-xs">Color</span><div className="font-semibold text-card-foreground">{sub.exterior_color || "—"}</div></div>
           </div>
         </div>
 
