@@ -17,9 +17,12 @@ import {
   Gauge, ChevronDown, Save, AlertTriangle, CheckCircle, XCircle, Shield,
   Pencil, ArrowDown, Loader2, SlidersHorizontal, CheckSquare, Lock, Unlock, Printer,
 } from "lucide-react";
-import AppraisalConditionInputs from "@/components/appraisal/AppraisalConditionInputs";
+import CustomerVsInspectorComparison from "@/components/appraisal/CustomerVsInspectorComparison";
 import AppraisalTireBrakeHealth from "@/components/appraisal/AppraisalTireBrakeHealth";
 import AppraisalSidebar from "@/components/appraisal/AppraisalSidebar";
+import DealStatusBanner from "@/components/appraisal/DealStatusBanner";
+import DealMakerSection from "@/components/appraisal/DealMakerSection";
+import ManagementOverride from "@/components/appraisal/ManagementOverride";
 import { calculateOffer, type OfferSettings, type OfferRule, type OfferEstimate, type StrategyMode, calcHighMileagePenaltyPct, calcColorAdjustmentPct, DEFAULT_HIGH_MILEAGE_PENALTY, DEFAULT_COLOR_DESIRABILITY, DEFAULT_SEASONAL_ADJUSTMENT } from "@/lib/offerCalculator";
 import type { FormData, BBVehicle, BBAddDeduct } from "@/components/sell-form/types";
 import { formatGrade } from "@/lib/formatGrade";
