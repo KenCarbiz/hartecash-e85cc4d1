@@ -300,6 +300,16 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
         retail_profit_basis: d.retail_profit_basis || "retail_avg",
         low_mileage_bonus: d.low_mileage_bonus || { enabled: false, avg_miles_per_year: 12000, bonus_pct_per_step: 2, step_size_pct: 20, max_bonus_pct: 8, min_miles_per_year: 4000 },
       } as OfferSettingsRow);
+      // Detect strategy_mode from saved data
+      if (d.strategy_mode) {
+        setStrategyMode(d.strategy_mode as StrategyMode);
+      } else if (d.condition_basis_map) {
+        const basis = d.condition_basis_map;
+        if (basis?.excellent?.startsWith("wholesale")) setStrategyMode("conservative");
+        else if (basis?.very_good === "retail_clean") setStrategyMode("predator");
+        else if (basis?.good === "tradein_clean") setStrategyMode("aggressive");
+        else setStrategyMode("standard");
+      }
       setSavedSettings({
         ...d,
         deduction_amounts: d.deduction_amounts || DEFAULT_DEDUCTION_AMOUNTS,
