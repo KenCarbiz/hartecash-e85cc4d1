@@ -3,10 +3,13 @@ import OfferSimulator from "./OfferSimulator";
 import PricingModelManager from "./PricingModelManager";
 import PricingAccessGate from "./PricingAccessGate";
 import PricingAccessRequests from "./PricingAccessRequests";
+import StrategyModeSelector from "./StrategyModeSelector";
+import MarketAdjustmentConfigPanel from "./MarketAdjustmentConfig";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
-import type { OfferSettings as OfferSettingsType } from "@/lib/offerCalculator";
+import type { OfferSettings as OfferSettingsType, StrategyMode, MarketAdjustmentConfig } from "@/lib/offerCalculator";
+import { STRATEGY_MODE_PRESETS, DEFAULT_MARKET_ADJUSTMENT } from "@/lib/offerCalculator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Save, Plus, Trash2, Flame, SlidersHorizontal, Target, Zap, AlertTriangle, DollarSign, Shield, Gauge, Calendar, ChevronDown, MapPin, Loader2 } from "lucide-react";
+import { Save, Plus, Trash2, Flame, SlidersHorizontal, Target, Zap, AlertTriangle, DollarSign, Shield, Gauge, Calendar, ChevronDown, MapPin, Loader2, TrendingUp } from "lucide-react";
 
 // ── Collapsible Section wrapper ──
 const Section = ({
@@ -258,6 +261,8 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
   const [editingRule, setEditingRule] = useState<Partial<OfferRule> | null>(null);
   const [savingRule, setSavingRule] = useState(false);
   const [modelOverrideSettings, setModelOverrideSettings] = useState<OfferSettingsType | null>(null);
+  const [strategyMode, setStrategyMode] = useState<StrategyMode>("standard");
+  const [marketAdjustment, setMarketAdjustment] = useState<MarketAdjustmentConfig>(DEFAULT_MARKET_ADJUSTMENT);
   const syncToModelRef = useRef<((s: OfferSettingsType) => void) | null>(null);
 
   const handleWorkbenchChange = useCallback((newSettings: OfferSettingsType) => {
@@ -341,6 +346,11 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
       dealer_pack: settings.dealer_pack ?? 0,
       hide_pack_from_appraisal: settings.hide_pack_from_appraisal ?? false,
       retail_profit_basis: settings.retail_profit_basis || "retail_avg",
+      manager_pin: (settings as any).manager_pin || "0000",
+      target_gross_min: (settings as any).target_gross_min || 0,
+      wholesale_only_mileage: (settings as any).wholesale_only_mileage || 120000,
+      wholesale_only_age_years: (settings as any).wholesale_only_age_years || 10,
+      max_market_pct: (settings as any).max_market_pct ?? 90,
       updated_at: new Date().toISOString(),
     } as any).eq("id", settings.id);
 
@@ -489,6 +499,45 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
         </div>
       </div>
 
+      {/* ── Strategy Mode Selector ── */}
+      <Section
+        icon={<Shield className="w-5 h-5 text-primary" />}
+        title="Strategy Mode"
+        defaultOpen
+      >
+        <StrategyModeSelector
+          value={strategyMode}
+          onChange={(mode) => {
+            setStrategyMode(mode);
+            if (mode !== "custom" && settings) {
+              const preset = STRATEGY_MODE_PRESETS[mode];
+              setSettings({
+                ...settings,
+                condition_basis_map: preset.condition_basis_map as any,
+                global_adjustment_pct: preset.global_adjustment_pct,
+              });
+            }
+          }}
+        />
+      </Section>
+
+      {/* ── Live Market Adjustment ── */}
+      <Section
+        icon={<TrendingUp className="w-5 h-5 text-primary" />}
+        title="Live Market Adjustment"
+        defaultOpen={false}
+        headerRight={
+          <Badge variant={marketAdjustment.enabled ? "default" : "outline"} className="text-[9px]">
+            {marketAdjustment.enabled ? "Enabled" : "Disabled"}
+          </Badge>
+        }
+      >
+        <MarketAdjustmentConfigPanel
+          config={marketAdjustment}
+          onChange={setMarketAdjustment}
+        />
+      </Section>
+
       {/* ── Market Search Radius ── */}
       {settings && (
         <Section
@@ -531,28 +580,32 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
         </Section>
       )}
 
-      {/* ── Dealership Defaults: Recon Cost & Dealer Pack ── */}
+      {/* ── Dealer Costs (Internal Only) ── */}
       {settings && (
         <Section
           icon={<DollarSign className="w-5 h-5 text-primary" />}
-          title="Dealership Defaults"
+          title="Dealer Costs — Profit Analysis Only"
           defaultOpen={false}
+          headerRight={<Badge variant="outline" className="text-[9px] text-muted-foreground">Internal</Badge>}
         >
-          <p className="text-xs text-muted-foreground mb-4">
-            Set the default reconditioning cost and used car pack applied to every appraisal. Appraisers can adjust recon per vehicle, but the pack is fixed.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="rounded-lg bg-amber-500/5 border border-amber-500/20 p-3 mb-4">
+            <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+              ⚠ These are profit analysis inputs. They do NOT reduce the customer offer.
+            </p>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Recon cost and dealer pack are internal references that appear in the waterfall's profit section and ACV sheet, but never change the offer the customer sees.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <Label className="text-sm font-semibold">Default Recon Cost</Label>
+              <Label className="text-sm font-semibold">Recon Reserve</Label>
               <p className="text-[10px] text-muted-foreground mb-1.5">
-                Average reconditioning cost deducted from every offer. Appraisers can adjust this per vehicle in the appraisal tool.
+                Avg cost to recondition before retail.
               </p>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
                 <Input
-                  type="number"
-                  min={0}
-                  step={50}
+                  type="number" min={0} step={50}
                   value={settings.recon_cost}
                   onChange={(e) => setSettings({ ...settings, recon_cost: Number(e.target.value) || 0 })}
                   className="pl-7"
@@ -560,18 +613,31 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
               </div>
             </div>
             <div>
-              <Label className="text-sm font-semibold">Used Car Pack</Label>
+              <Label className="text-sm font-semibold">Dealer Pack</Label>
               <p className="text-[10px] text-muted-foreground mb-1.5">
-                Flat dollar acquisition cost applied to every deal. This is only adjustable here — not in the appraisal tool.
+                Standard acquisition pack per deal.
               </p>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
                 <Input
-                  type="number"
-                  min={0}
-                  step={50}
+                  type="number" min={0} step={50}
                   value={settings.dealer_pack}
                   onChange={(e) => setSettings({ ...settings, dealer_pack: Number(e.target.value) || 0 })}
+                  className="pl-7"
+                />
+              </div>
+            </div>
+            <div>
+              <Label className="text-sm font-semibold">Target Gross Minimum</Label>
+              <p className="text-[10px] text-muted-foreground mb-1.5">
+                Red warning if projected gross falls below this.
+              </p>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                <Input
+                  type="number" min={0} step={100}
+                  value={(settings as any).target_gross_min || 0}
+                  onChange={(e) => setSettings({ ...settings, target_gross_min: Number(e.target.value) || 0 } as any)}
                   className="pl-7"
                 />
               </div>
@@ -585,22 +651,20 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
             <div>
               <Label className="text-sm font-semibold">Combine Pack into Reconditioning</Label>
               <p className="text-[10px] text-muted-foreground">
-                When enabled, the appraisal tool will show a single "Reconditioning" line (recon + pack combined) instead of separate entries. This hides the dealer pack amount from staff.
+                Hides the dealer pack from appraisal staff by merging it into a single "Recon" line.
               </p>
             </div>
           </div>
           <div className="mt-4 p-3 rounded-lg border border-border bg-muted/30">
             <Label className="text-sm font-semibold">Retail Basis for Profit Calculations</Label>
             <p className="text-[10px] text-muted-foreground mb-2">
-              Choose which retail tier to use when calculating projected profit and margin in the appraisal HUD and offer logic.
+              Which retail tier to use when calculating projected profit and margin.
             </p>
             <Select
               value={settings.retail_profit_basis || "retail_avg"}
               onValueChange={(v) => setSettings({ ...settings, retail_profit_basis: v })}
             >
-              <SelectTrigger className="w-full max-w-xs">
-                <SelectValue />
-              </SelectTrigger>
+              <SelectTrigger className="w-full max-w-xs"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="retail_xclean">Extra Clean Retail</SelectItem>
                 <SelectItem value="retail_clean">Clean Retail</SelectItem>
@@ -609,10 +673,65 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
               </SelectContent>
             </Select>
           </div>
+        </Section>
+      )}
+
+      {/* ── Safety Caps ── */}
+      {settings && (
+        <Section
+          icon={<Shield className="w-5 h-5 text-destructive" />}
+          title="Safety Caps & Guardrails"
+          defaultOpen={false}
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-sm font-semibold">Offer Floor</Label>
+              <p className="text-[10px] text-muted-foreground mb-1">Minimum offer regardless of deductions.</p>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                <Input type="number" min={0} step={100} value={settings.offer_floor ?? 500} onChange={(e) => setSettings({ ...settings, offer_floor: Number(e.target.value) || 0 })} className="pl-7" />
+              </div>
+            </div>
+            <div>
+              <Label className="text-sm font-semibold">Offer Ceiling</Label>
+              <p className="text-[10px] text-muted-foreground mb-1">Max offer cap (blank = no ceiling).</p>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                <Input type="number" min={0} step={500} value={settings.offer_ceiling ?? ""} onChange={(e) => setSettings({ ...settings, offer_ceiling: e.target.value ? Number(e.target.value) : null })} placeholder="No ceiling" className="pl-7" />
+              </div>
+            </div>
+            <div>
+              <Label className="text-sm font-semibold">Max % of Retail</Label>
+              <p className="text-[10px] text-muted-foreground mb-1">Never offer more than this % of BB retail avg.</p>
+              <div className="flex items-center gap-2">
+                <Input type="number" min={50} max={100} step={1} value={(settings as any).max_market_pct ?? 90} onChange={(e) => setSettings({ ...settings, max_market_pct: Number(e.target.value) || 90 } as any)} className="w-24" />
+                <span className="text-sm text-muted-foreground">%</span>
+              </div>
+            </div>
+            <div>
+              <Label className="text-sm font-semibold">Manager PIN</Label>
+              <p className="text-[10px] text-muted-foreground mb-1">4-digit PIN for management override on appraisals.</p>
+              <Input type="password" maxLength={4} value={(settings as any).manager_pin || "0000"} onChange={(e) => setSettings({ ...settings, manager_pin: e.target.value.replace(/\D/g, "").slice(0, 4) } as any)} className="w-28 text-center font-mono tracking-widest" />
+            </div>
+          </div>
+          <div className="mt-4 pt-4 border-t border-border">
+            <Label className="text-sm font-semibold mb-3 block">Wholesale-Only Threshold</Label>
+            <p className="text-[10px] text-muted-foreground mb-3">If a vehicle exceeds these thresholds, flag it as "Wholesale Only" on the appraisal page.</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-xs text-muted-foreground">Max Mileage</Label>
+                <Input type="number" step={5000} value={(settings as any).wholesale_only_mileage || 120000} onChange={(e) => setSettings({ ...settings, wholesale_only_mileage: Number(e.target.value) } as any)} />
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">Max Vehicle Age (years)</Label>
+                <Input type="number" step={1} value={(settings as any).wholesale_only_age_years || 10} onChange={(e) => setSettings({ ...settings, wholesale_only_age_years: Number(e.target.value) } as any)} />
+              </div>
+            </div>
+          </div>
           <div className="flex justify-end mt-4">
             <Button size="sm" onClick={handleSaveSettings} disabled={saving}>
               {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Save className="w-4 h-4 mr-1" />}
-              Save Defaults
+              Save Settings
             </Button>
           </div>
         </Section>
