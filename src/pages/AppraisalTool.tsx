@@ -314,6 +314,8 @@ export default function AppraisalTool() {
         setHidePackFromAppraisal((settingsData as any).hide_pack_from_appraisal ?? false);
         setRetailProfitBasis((settingsData as any).retail_profit_basis || "retail_avg");
         setBbValueBasis(settingsData.bb_value_basis || "tradein_avg");
+        setManagerPin((settingsData as any).manager_pin || "0000");
+        setTargetGrossMin((settingsData as any).target_gross_min || 0);
         // If a custom retail search ZIP is configured in offer settings, use it
         if ((settingsData as any).retail_search_zip) {
           setDealerZip((settingsData as any).retail_search_zip);
