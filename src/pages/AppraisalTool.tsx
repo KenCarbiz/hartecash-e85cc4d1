@@ -20,7 +20,7 @@ import {
 import AppraisalConditionInputs from "@/components/appraisal/AppraisalConditionInputs";
 import AppraisalTireBrakeHealth from "@/components/appraisal/AppraisalTireBrakeHealth";
 import AppraisalSidebar from "@/components/appraisal/AppraisalSidebar";
-import { calculateOffer, type OfferSettings, type OfferRule, type OfferEstimate, calcHighMileagePenaltyPct, calcColorAdjustmentPct, DEFAULT_HIGH_MILEAGE_PENALTY, DEFAULT_COLOR_DESIRABILITY, DEFAULT_SEASONAL_ADJUSTMENT } from "@/lib/offerCalculator";
+import { calculateOffer, type OfferSettings, type OfferRule, type OfferEstimate, type StrategyMode, calcHighMileagePenaltyPct, calcColorAdjustmentPct, DEFAULT_HIGH_MILEAGE_PENALTY, DEFAULT_COLOR_DESIRABILITY, DEFAULT_SEASONAL_ADJUSTMENT } from "@/lib/offerCalculator";
 import type { FormData, BBVehicle, BBAddDeduct } from "@/components/sell-form/types";
 import { formatGrade } from "@/lib/formatGrade";
 import ACVSheet from "@/components/offer/ACVSheet";
@@ -416,8 +416,14 @@ export default function AppraisalTool() {
 
   const offerResult = useMemo(() => {
     if (!bbVehicle || !activeSettings) return null;
-    return calculateOffer(bbVehicle, formData, liveSelectedAddDeducts, activeSettings, rules);
-  }, [bbVehicle, formData, liveSelectedAddDeducts, activeSettings, rules]);
+    return calculateOffer(
+      bbVehicle, formData, liveSelectedAddDeducts, activeSettings, rules,
+      undefined, // promoBonus
+      retailMarketStats?.market_days_supply ?? undefined,
+      retailMarketStats?.sold?.mean_price ?? undefined,
+      retailMarketStats?.active?.mean_price ?? undefined,
+    );
+  }, [bbVehicle, formData, liveSelectedAddDeducts, activeSettings, rules, retailMarketStats]);
 
   // Effective values
   const currentOffer = sub?.offered_price || sub?.estimated_offer_high || 0;
@@ -555,7 +561,14 @@ export default function AppraisalTool() {
       }
     }
 
-    // 13. Tire adjustment
+    // 13. Market Adjustment (NEW — from live market data)
+    if (offerResult.marketAdjustment !== 0) {
+      running += offerResult.marketAdjustment;
+      const mdsLabel = offerResult.marketDaysSupply != null ? ` (MDS ${offerResult.marketDaysSupply}d)` : "";
+      blocks.push({ id: "market_adj", label: `Market Adj${mdsLabel}`, value: offerResult.marketAdjustment, runningTotal: running, type: offerResult.marketAdjustment >= 0 ? "add" : "subtract", editable: false });
+    }
+
+    // 14. Tire adjustment
     if (sub?.tire_adjustment && sub.tire_adjustment !== 0) {
       running += Number(sub.tire_adjustment);
       blocks.push({ id: "tire_adj", label: "Tire Adjustment", value: Number(sub.tire_adjustment), runningTotal: running, type: Number(sub.tire_adjustment) >= 0 ? "add" : "subtract", editable: false });
@@ -568,9 +581,18 @@ export default function AppraisalTool() {
       running = clamped;
     }
 
+    // Safety Cap
+    if (offerResult.isCapped) {
+      const capDiff = offerResult.high - running;
+      if (capDiff !== 0) {
+        running = offerResult.high;
+        blocks.push({ id: "safety_cap", label: "⚠ Safety Cap", value: capDiff, runningTotal: running, type: "subtract", editable: false });
+      }
+    }
+
     blocks.push({ id: "final", label: "FINAL OFFER", value: running, runningTotal: running, type: "total", editable: false });
     return blocks;
-  }, [offerResult, activeSettings, bbVehicle, condition, sub, effectivePack, equipmentTotal, hidePackFromAppraisal]);
+  }, [offerResult, activeSettings, bbVehicle, condition, sub, effectivePack, equipmentTotal, hidePackFromAppraisal, retailMarketStats]);
 
   const maxVal = Math.max(...waterfallBlocks.map(s => Math.max(Math.abs(s.runningTotal), Math.abs(s.value), s.type === "base" ? s.value : 0)), 1);
 

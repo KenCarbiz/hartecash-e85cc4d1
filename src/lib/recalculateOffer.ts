@@ -301,5 +301,5 @@ export function recalculateFromSubmission(
 
   const low = high;
 
-  return { low, high, baseValue: Math.round(baseValue), totalDeductions: Math.round(deductions), reconCost: Math.round(reconCost), matchedRuleIds, isHotLead };
+  return { low, high, baseValue: Math.round(baseValue), totalDeductions: Math.round(deductions), reconCost: Math.round(reconCost), matchedRuleIds, isHotLead, marketAdjustment: 0, marketDaysSupply: null, strategyMode: "standard" as const, isCapped: false, projectedGross: 0 };
 }
