@@ -261,6 +261,8 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
   const [editingRule, setEditingRule] = useState<Partial<OfferRule> | null>(null);
   const [savingRule, setSavingRule] = useState(false);
   const [modelOverrideSettings, setModelOverrideSettings] = useState<OfferSettingsType | null>(null);
+  const [strategyMode, setStrategyMode] = useState<StrategyMode>("standard");
+  const [marketAdjustment, setMarketAdjustment] = useState<MarketAdjustmentConfig>(DEFAULT_MARKET_ADJUSTMENT);
   const syncToModelRef = useRef<((s: OfferSettingsType) => void) | null>(null);
 
   const handleWorkbenchChange = useCallback((newSettings: OfferSettingsType) => {
