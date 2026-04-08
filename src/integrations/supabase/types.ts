@@ -1174,6 +1174,7 @@ export type Database = {
           high_mileage_penalty: Json
           id: string
           low_mileage_bonus: Json
+          manager_pin: string
           max_market_pct: number | null
           mileage_tiers: Json
           offer_ceiling: number | null
@@ -1184,7 +1185,10 @@ export type Database = {
           retail_search_radius: number
           retail_search_zip: string | null
           seasonal_adjustment: Json
+          target_gross_min: number
           updated_at: string
+          wholesale_only_age_years: number
+          wholesale_only_mileage: number
         }
         Insert: {
           age_tiers?: Json
@@ -1204,6 +1208,7 @@ export type Database = {
           high_mileage_penalty?: Json
           id?: string
           low_mileage_bonus?: Json
+          manager_pin?: string
           max_market_pct?: number | null
           mileage_tiers?: Json
           offer_ceiling?: number | null
@@ -1214,7 +1219,10 @@ export type Database = {
           retail_search_radius?: number
           retail_search_zip?: string | null
           seasonal_adjustment?: Json
+          target_gross_min?: number
           updated_at?: string
+          wholesale_only_age_years?: number
+          wholesale_only_mileage?: number
         }
         Update: {
           age_tiers?: Json
@@ -1234,6 +1242,7 @@ export type Database = {
           high_mileage_penalty?: Json
           id?: string
           low_mileage_bonus?: Json
+          manager_pin?: string
           max_market_pct?: number | null
           mileage_tiers?: Json
           offer_ceiling?: number | null
@@ -1244,7 +1253,10 @@ export type Database = {
           retail_search_radius?: number
           retail_search_zip?: string | null
           seasonal_adjustment?: Json
+          target_gross_min?: number
           updated_at?: string
+          wholesale_only_age_years?: number
+          wholesale_only_mileage?: number
         }
         Relationships: []
       }
@@ -1483,6 +1495,7 @@ export type Database = {
           is_active: boolean
           is_default: boolean
           low_mileage_bonus: Json
+          market_adjustment: Json | null
           max_market_pct: number | null
           mileage_tiers: Json
           name: string
@@ -1496,6 +1509,7 @@ export type Database = {
           schedule_end: string | null
           schedule_start: string | null
           seasonal_adjustment: Json
+          strategy_mode: string
           submitted_at: string | null
           submitted_by: string | null
           updated_at: string
@@ -1523,6 +1537,7 @@ export type Database = {
           is_active?: boolean
           is_default?: boolean
           low_mileage_bonus?: Json
+          market_adjustment?: Json | null
           max_market_pct?: number | null
           mileage_tiers?: Json
           name: string
@@ -1536,6 +1551,7 @@ export type Database = {
           schedule_end?: string | null
           schedule_start?: string | null
           seasonal_adjustment?: Json
+          strategy_mode?: string
           submitted_at?: string | null
           submitted_by?: string | null
           updated_at?: string
@@ -1563,6 +1579,7 @@ export type Database = {
           is_active?: boolean
           is_default?: boolean
           low_mileage_bonus?: Json
+          market_adjustment?: Json | null
           max_market_pct?: number | null
           mileage_tiers?: Json
           name?: string
@@ -1576,6 +1593,7 @@ export type Database = {
           schedule_end?: string | null
           schedule_start?: string | null
           seasonal_adjustment?: Json
+          strategy_mode?: string
           submitted_at?: string | null
           submitted_by?: string | null
           updated_at?: string
@@ -2052,6 +2070,9 @@ export type Database = {
           loan_company: string | null
           loan_payment: string | null
           loan_status: string | null
+          manager_override_amount: number | null
+          manager_override_by: string | null
+          manager_override_reason: string | null
           matched_rule_ids: string[] | null
           mechanical_issues: string[] | null
           mileage: string | null
@@ -2149,6 +2170,9 @@ export type Database = {
           loan_company?: string | null
           loan_payment?: string | null
           loan_status?: string | null
+          manager_override_amount?: number | null
+          manager_override_by?: string | null
+          manager_override_reason?: string | null
           matched_rule_ids?: string[] | null
           mechanical_issues?: string[] | null
           mileage?: string | null
@@ -2246,6 +2270,9 @@ export type Database = {
           loan_company?: string | null
           loan_payment?: string | null
           loan_status?: string | null
+          manager_override_amount?: number | null
+          manager_override_by?: string | null
+          manager_override_reason?: string | null
           matched_rule_ids?: string[] | null
           mechanical_issues?: string[] | null
           mileage?: string | null

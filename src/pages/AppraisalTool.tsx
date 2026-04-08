@@ -17,9 +17,12 @@ import {
   Gauge, ChevronDown, Save, AlertTriangle, CheckCircle, XCircle, Shield,
   Pencil, ArrowDown, Loader2, SlidersHorizontal, CheckSquare, Lock, Unlock, Printer,
 } from "lucide-react";
-import AppraisalConditionInputs from "@/components/appraisal/AppraisalConditionInputs";
+import CustomerVsInspectorComparison from "@/components/appraisal/CustomerVsInspectorComparison";
 import AppraisalTireBrakeHealth from "@/components/appraisal/AppraisalTireBrakeHealth";
 import AppraisalSidebar from "@/components/appraisal/AppraisalSidebar";
+import DealStatusBanner from "@/components/appraisal/DealStatusBanner";
+import DealMakerSection from "@/components/appraisal/DealMakerSection";
+import ManagementOverride from "@/components/appraisal/ManagementOverride";
 import { calculateOffer, type OfferSettings, type OfferRule, type OfferEstimate, type StrategyMode, calcHighMileagePenaltyPct, calcColorAdjustmentPct, DEFAULT_HIGH_MILEAGE_PENALTY, DEFAULT_COLOR_DESIRABILITY, DEFAULT_SEASONAL_ADJUSTMENT } from "@/lib/offerCalculator";
 import type { FormData, BBVehicle, BBAddDeduct } from "@/components/sell-form/types";
 import { formatGrade } from "@/lib/formatGrade";
@@ -221,6 +224,9 @@ export default function AppraisalTool() {
   const [acvOverride, setAcvOverride] = useState<number | null>(null);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [bbValueBasis, setBbValueBasis] = useState("tradein_avg");
+  const [managerOverride, setManagerOverride] = useState<{ amount: number | null; reason: string | null; by: string | null }>({ amount: null, reason: null, by: null });
+  const [managerPin, setManagerPin] = useState("0000");
+  const [targetGrossMin, setTargetGrossMin] = useState(0);
 
   // Editable condition fields (pre-filled from customer, overridable by appraiser)
   const [condition, setCondition] = useState("good");
@@ -308,6 +314,8 @@ export default function AppraisalTool() {
         setHidePackFromAppraisal((settingsData as any).hide_pack_from_appraisal ?? false);
         setRetailProfitBasis((settingsData as any).retail_profit_basis || "retail_avg");
         setBbValueBasis(settingsData.bb_value_basis || "tradein_avg");
+        setManagerPin((settingsData as any).manager_pin || "0000");
+        setTargetGrossMin((settingsData as any).target_gross_min || 0);
         // If a custom retail search ZIP is configured in offer settings, use it
         if ((settingsData as any).retail_search_zip) {
           setDealerZip((settingsData as any).retail_search_zip);
@@ -1061,8 +1069,8 @@ export default function AppraisalTool() {
               );
             })()}
 
-            {/* ② CUSTOMER CONDITION INPUTS */}
-            <AppraisalConditionInputs
+            {/* ② CUSTOMER vs INSPECTOR CONDITION COMPARISON */}
+            <CustomerVsInspectorComparison
               state={{
                 condition, modifications, drivable, exteriorItems, windshield, moonroof,
                 interiorItems, techItems, engineItems, mechItems, accidents, smokedIn, tiresReplaced, numKeys,
