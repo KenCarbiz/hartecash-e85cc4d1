@@ -3,10 +3,13 @@ import OfferSimulator from "./OfferSimulator";
 import PricingModelManager from "./PricingModelManager";
 import PricingAccessGate from "./PricingAccessGate";
 import PricingAccessRequests from "./PricingAccessRequests";
+import StrategyModeSelector from "./StrategyModeSelector";
+import MarketAdjustmentConfigPanel from "./MarketAdjustmentConfig";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
-import type { OfferSettings as OfferSettingsType } from "@/lib/offerCalculator";
+import type { OfferSettings as OfferSettingsType, StrategyMode, MarketAdjustmentConfig } from "@/lib/offerCalculator";
+import { STRATEGY_MODE_PRESETS, DEFAULT_MARKET_ADJUSTMENT } from "@/lib/offerCalculator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Save, Plus, Trash2, Flame, SlidersHorizontal, Target, Zap, AlertTriangle, DollarSign, Shield, Gauge, Calendar, ChevronDown, MapPin, Loader2 } from "lucide-react";
+import { Save, Plus, Trash2, Flame, SlidersHorizontal, Target, Zap, AlertTriangle, DollarSign, Shield, Gauge, Calendar, ChevronDown, MapPin, Loader2, TrendingUp } from "lucide-react";
 
 // ── Collapsible Section wrapper ──
 const Section = ({
