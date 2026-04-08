@@ -887,44 +887,48 @@ export default function AppraisalTool() {
           acvValue={sub.acv_value}
         />
 
-        {/* HUD — Key Metrics Strip — Appraisal Value is dominant */}
-        <div className={`grid grid-cols-2 sm:grid-cols-4 ${hidePackFromAppraisal ? "lg:grid-cols-7" : "lg:grid-cols-8"} gap-2.5 mb-5`}>
+        {/* HUD — Key Metrics Strip — Appraisal Value is DOMINANT scoreboard */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 mb-5">
+          {/* DOMINANT — Appraisal Value card spans 2 cols */}
+          <div className={`col-span-2 rounded-xl border-2 p-4 text-center transition-all shadow-lg ${
+            sub.appraisal_finalized
+              ? "bg-emerald-500/10 border-emerald-500/40 ring-2 ring-emerald-500/30"
+              : "bg-primary/10 border-primary/40 ring-2 ring-primary/30"
+          }`}>
+            <div className="text-[10px] uppercase tracking-[0.1em] font-bold text-muted-foreground mb-1">Appraisal Value</div>
+            <div className={`text-4xl font-black tracking-tight ${sub.appraisal_finalized ? "text-emerald-700 dark:text-emerald-400" : "text-primary"}`}>
+              ${Math.floor(finalValue + (managerOverride.amount || 0)).toLocaleString()}
+            </div>
+            {managerOverride.amount ? (
+              <div className="text-xs font-bold text-amber-500 mt-1">MGR ADJ active</div>
+            ) : sub.appraisal_finalized ? (
+              <div className="text-[10px] font-bold text-emerald-600 mt-1">
+                ✓ Finalized {sub.appraisal_finalized_at ? new Date(sub.appraisal_finalized_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : ""}
+              </div>
+            ) : lastSavedAt ? (
+              <div className="text-[10px] font-bold text-muted-foreground mt-1">
+                Updated {lastSavedAt.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+              </div>
+            ) : null}
+          </div>
+          {/* Secondary metric tiles */}
           {(() => {
             const inventoryCost = finalValue + reconCost + effectivePack;
-            const metrics = [
-              { label: "Customer Offer", value: `$${Math.floor(currentOffer).toLocaleString()}`, color: "text-card-foreground", bg: "bg-card border-border/60 shadow-sm", sub: null, dominant: false },
-              { label: "Appraisal Value", value: `$${Math.floor(finalValue + (managerOverride.amount || 0)).toLocaleString()}`, color: sub?.appraisal_finalized ? "text-emerald-700" : "text-primary", bg: sub?.appraisal_finalized ? "bg-emerald-500/10 border-emerald-500/40 shadow-md ring-2 ring-emerald-500/30" : "bg-primary/10 border-primary/40 shadow-md ring-2 ring-primary/30", sub: managerOverride.amount ? "MGR ADJ active" : sub?.appraisal_finalized ? `✓ Finalized ${sub.appraisal_finalized_at ? new Date(sub.appraisal_finalized_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : ""}` : lastSavedAt ? `Updated ${lastSavedAt.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}` : null, dominant: true },
-            ];
             const stratMode = activeSettings?.strategy_mode || offerResult?.strategyMode || "custom";
             const stratBadge = { conservative: "text-muted-foreground bg-card border-border/60", standard: "text-primary bg-primary/5 border-primary/25", aggressive: "text-amber-600 bg-amber-500/5 border-amber-500/25", predator: "text-destructive bg-destructive/5 border-destructive/25", custom: "text-muted-foreground bg-card border-border/60" }[stratMode] || "bg-card border-border/60";
-            metrics.push({ label: "Strategy", value: (stratMode || "custom").toUpperCase(), color: stratBadge.split(" ")[0], bg: stratBadge, sub: stratMode === "predator" ? "⚠ High risk" : null, dominant: false });
-            if (hidePackFromAppraisal) {
-              metrics.push({ label: "Recon Cost", value: `$${Math.floor(reconCost + effectivePack).toLocaleString()}`, color: "text-destructive", bg: "bg-card border-border/60 shadow-sm", sub: null, dominant: false });
-            } else {
-              metrics.push({ label: "Recon Cost", value: `$${Math.floor(reconCost).toLocaleString()}`, color: "text-destructive", bg: "bg-card border-border/60 shadow-sm", sub: null, dominant: false });
-              metrics.push({ label: "Dealer Pack", value: `$${Math.floor(effectivePack).toLocaleString()}`, color: "text-destructive", bg: "bg-card border-border/60 shadow-sm", sub: null, dominant: false });
-            }
-            metrics.push(
-              { label: "Inventory Cost", value: `$${Math.floor(inventoryCost).toLocaleString()}`, color: "text-amber-600", bg: "bg-amber-500/5 border-amber-500/25 shadow-sm", sub: null, dominant: false },
-              { label: "__RETAIL__", value: retailAvg > 0 ? `$${Math.floor(retailAvg).toLocaleString()}` : "—", color: "text-card-foreground", bg: "bg-card border-border/60 shadow-sm cursor-pointer hover:border-primary/50", sub: "Click to change tier", dominant: false },
-              { label: "Projected Profit", value: `${projectedProfit >= 0 ? "+" : ""}$${Math.floor(Math.abs(projectedProfit)).toLocaleString()}`, color: projectedProfit >= 0 ? "text-emerald-600" : "text-destructive", bg: projectedProfit >= 0 ? "bg-emerald-500/5 border-emerald-500/25 shadow-sm" : "bg-destructive/5 border-destructive/25 shadow-sm", sub: null, dominant: false },
-              { label: "Margin %", value: `${profitMargin.toFixed(1)}%`, color: profitMargin >= 0 ? "text-emerald-600" : "text-destructive", bg: profitMargin >= 0 ? "bg-emerald-500/5 border-emerald-500/25 shadow-sm" : "bg-destructive/5 border-destructive/25 shadow-sm", sub: null, dominant: false },
-            );
-            return metrics;
-          })().map(metric => (
-            <div
-              key={metric.label}
-              className={`rounded-xl border p-3 text-center transition-all hover:shadow-md ${metric.bg} ${metric.dominant ? "row-span-1 col-span-2 sm:col-span-1" : ""}`}
-              onClick={metric.label === "__RETAIL__" ? cycleRetailBasis : undefined}
-              role={metric.label === "__RETAIL__" ? "button" : undefined}
-            >
-              <div className="text-[9px] uppercase tracking-[0.08em] font-bold text-muted-foreground mb-0.5">
-                {metric.label === "__RETAIL__" ? (RETAIL_TIER_LABELS[retailProfitBasis] || "Retail Avg") : metric.label}
+            const secondaryMetrics = [
+              { label: "Customer Offer", value: `$${Math.floor(currentOffer).toLocaleString()}`, color: "text-card-foreground", bg: "bg-card border-border/60 shadow-sm" },
+              { label: "Strategy", value: (stratMode || "custom").toUpperCase(), color: stratBadge.split(" ")[0], bg: stratBadge },
+              { label: "Inventory Cost", value: `$${Math.floor(inventoryCost).toLocaleString()}`, color: "text-amber-600", bg: "bg-amber-500/5 border-amber-500/25 shadow-sm" },
+              { label: "Projected Profit", value: `${projectedProfit >= 0 ? "+" : ""}$${Math.floor(Math.abs(projectedProfit)).toLocaleString()}`, color: projectedProfit >= 0 ? "text-emerald-600" : "text-destructive", bg: projectedProfit >= 0 ? "bg-emerald-500/5 border-emerald-500/25 shadow-sm" : "bg-destructive/5 border-destructive/25 shadow-sm" },
+            ];
+            return secondaryMetrics.map(m => (
+              <div key={m.label} className={`rounded-xl border p-3 text-center transition-all hover:shadow-md ${m.bg}`}>
+                <div className="text-[9px] uppercase tracking-[0.08em] font-bold text-muted-foreground mb-0.5">{m.label}</div>
+                <div className={`text-lg font-black tracking-tight ${m.color}`}>{m.value}</div>
               </div>
-              <div className={`${metric.dominant ? "text-2xl" : "text-lg"} font-black tracking-tight ${metric.color}`}>{metric.value}</div>
-              {metric.sub && <div className={`mt-0.5 ${metric.label === "Appraisal Value" && sub?.appraisal_finalized ? "text-[10px] font-bold text-emerald-600" : "text-[10px] font-bold text-muted-foreground"}`}>{metric.sub}</div>}
-            </div>
-          ))}
+            ));
+          })()}
         </div>
 
         {/* Vehicle Summary Bar */}
