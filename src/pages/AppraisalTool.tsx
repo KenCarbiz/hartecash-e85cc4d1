@@ -1064,8 +1064,8 @@ export default function AppraisalTool() {
               );
             })()}
 
-            {/* ② CUSTOMER CONDITION INPUTS */}
-            <AppraisalConditionInputs
+            {/* ② CUSTOMER vs INSPECTOR CONDITION COMPARISON */}
+            <CustomerVsInspectorComparison
               state={{
                 condition, modifications, drivable, exteriorItems, windshield, moonroof,
                 interiorItems, techItems, engineItems, mechItems, accidents, smokedIn, tiresReplaced, numKeys,
