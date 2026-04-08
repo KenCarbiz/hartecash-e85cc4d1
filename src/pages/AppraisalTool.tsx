@@ -30,7 +30,7 @@ import ACVSheet from "@/components/offer/ACVSheet";
 import OutcomeEntryPanel from "@/components/appraisal/OutcomeEntryPanel";
 import HistoricalInsightPanel from "@/components/appraisal/HistoricalInsightPanel";
 import MarketSignalBadge from "@/components/appraisal/MarketSignalBadge";
-import CarryingCostPanel from "@/components/appraisal/CarryingCostPanel";
+
 
 // ── Types ──
 interface Submission {
@@ -1367,14 +1367,6 @@ export default function AppraisalTool() {
               onRetailStatsLoaded={setRetailMarketStats}
             />
 
-            {/* Carrying Cost Panel */}
-            <CarryingCostPanel
-              acv={finalValue}
-              avgDaysToTurn={retailMarketStats?.mean_days_to_turn ?? null}
-              floorPlanRatePct={(activeSettings as any)?.floor_plan_rate_pct ?? 6.5}
-              lotCostPerDay={(activeSettings as any)?.lot_cost_per_day ?? 8}
-              projectedProfit={projectedProfit}
-            />
 
             {/* Historical Intelligence Panel */}
             <HistoricalInsightPanel
