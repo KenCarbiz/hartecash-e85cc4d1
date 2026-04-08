@@ -346,6 +346,11 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
       dealer_pack: settings.dealer_pack ?? 0,
       hide_pack_from_appraisal: settings.hide_pack_from_appraisal ?? false,
       retail_profit_basis: settings.retail_profit_basis || "retail_avg",
+      manager_pin: (settings as any).manager_pin || "0000",
+      target_gross_min: (settings as any).target_gross_min || 0,
+      wholesale_only_mileage: (settings as any).wholesale_only_mileage || 120000,
+      wholesale_only_age_years: (settings as any).wholesale_only_age_years || 10,
+      max_market_pct: (settings as any).max_market_pct ?? 90,
       updated_at: new Date().toISOString(),
     } as any).eq("id", settings.id);
 
