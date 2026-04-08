@@ -318,10 +318,20 @@ export const DEFAULT_DEDUCTION_MODES: DeductionModes = {
 // OFFER SETTINGS — extended with strategy_mode + market_adjustment
 // ─────────────────────────────────────────────────────────────
 
+export type ArchetypeDeductionOverrides = Partial<Record<VehicleArchetype, {
+  tires_not_replaced?: number;
+  exterior_damage_per_item?: number;
+  smoked_in?: number;
+}>>;
+
 export interface OfferSettings {
   // NEW
   strategy_mode?: StrategyMode;
   market_adjustment?: MarketAdjustmentConfig;
+  archetype_deduction_overrides?: ArchetypeDeductionOverrides | null;
+  floor_plan_rate_pct?: number;
+  lot_cost_per_day?: number;
+  learning_threshold?: number;
 
   // EXISTING (all unchanged)
   bb_value_basis: string;
