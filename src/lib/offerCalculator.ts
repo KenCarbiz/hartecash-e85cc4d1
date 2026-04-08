@@ -1,5 +1,9 @@
 import type { FormData, BBVehicle } from "@/components/sell-form/types";
 
+// ─────────────────────────────────────────────────────────────
+// RETURN TYPES
+// ─────────────────────────────────────────────────────────────
+
 export interface OfferEstimate {
   low: number;
   high: number;
@@ -8,7 +12,167 @@ export interface OfferEstimate {
   reconCost: number;
   matchedRuleIds: string[];
   isHotLead: boolean;
+  // NEW — market intelligence breakdown
+  marketAdjustment: number;        // dollar amount added/removed by live market data
+  marketDaysSupply: number | null; // MDS at time of calculation (for display)
+  strategyMode: StrategyMode;      // which mode was active
+  isCapped: boolean;               // true if offer was reduced by safety cap
+  projectedGross: number;          // retail_clean - offer - recon (informational)
 }
+
+// ─────────────────────────────────────────────────────────────
+// STRATEGY MODES
+// ─────────────────────────────────────────────────────────────
+
+export type StrategyMode = "conservative" | "standard" | "aggressive" | "predator" | "custom";
+
+export interface StrategyModePreset {
+  label: string;
+  description: string;
+  condition_basis_map: ConditionBasisMap;
+  global_adjustment_pct: number;
+  market_adjustment_enabled: boolean;
+}
+
+export const STRATEGY_MODE_PRESETS: Record<StrategyMode, StrategyModePreset> = {
+  conservative: {
+    label: "Conservative",
+    description: "Protect margin. Anchor to wholesale. Market data caps upside.",
+    condition_basis_map: {
+      excellent: "wholesale_clean",
+      very_good: "wholesale_clean",
+      good: "wholesale_avg",
+      fair: "wholesale_rough",
+    },
+    global_adjustment_pct: -3,
+    market_adjustment_enabled: true,
+  },
+  standard: {
+    label: "Standard",
+    description: "Normal acquisition. Trade-in anchor with full market multiplier.",
+    condition_basis_map: {
+      excellent: "retail_xclean",
+      very_good: "tradein_clean",
+      good: "tradein_avg",
+      fair: "wholesale_rough",
+    },
+    global_adjustment_pct: 0,
+    market_adjustment_enabled: true,
+  },
+  aggressive: {
+    label: "Aggressive",
+    description: "Step up to win inventory. Trade-in clean floor across all tiers.",
+    condition_basis_map: {
+      excellent: "retail_clean",
+      very_good: "tradein_clean",
+      good: "tradein_clean",
+      fair: "tradein_avg",
+    },
+    global_adjustment_pct: 3,
+    market_adjustment_enabled: true,
+  },
+  predator: {
+    label: "Predator",
+    description:
+      "Show retail-anchored offer up front. Inspector deducts bring it to reality. High conversion, tight discipline required.",
+    condition_basis_map: {
+      excellent: "retail_xclean",
+      very_good: "retail_clean",
+      good: "retail_avg",
+      fair: "retail_rough",
+    },
+    global_adjustment_pct: 0,
+    market_adjustment_enabled: true,
+  },
+  custom: {
+    label: "Custom",
+    description: "Manually configured condition basis map and adjustments.",
+    condition_basis_map: {
+      excellent: "retail_xclean",
+      very_good: "tradein_clean",
+      good: "tradein_avg",
+      fair: "wholesale_rough",
+    },
+    global_adjustment_pct: 0,
+    market_adjustment_enabled: false,
+  },
+};
+
+// ─────────────────────────────────────────────────────────────
+// MARKET ADJUSTMENT
+// ─────────────────────────────────────────────────────────────
+
+export interface MarketDaysSupplyBracket {
+  max_days: number;        // upper bound (use 9999 for "over X days")
+  adjustment_pct: number;  // positive = step up offer, negative = step down
+}
+
+export interface MarketAdjustmentConfig {
+  enabled: boolean;
+  days_supply_brackets: MarketDaysSupplyBracket[];
+  // Soft market penalty: if avg sold is this % below avg asking, penalize
+  sold_vs_asking_threshold_pct: number;
+  soft_penalty_pct: number;
+  // Tight market bonus: if sold ≈ asking (within 2%), add bonus
+  soft_bonus_pct: number;
+}
+
+export const DEFAULT_MARKET_ADJUSTMENT: MarketAdjustmentConfig = {
+  enabled: false,
+  days_supply_brackets: [
+    { max_days: 20,   adjustment_pct: 10  }, // Critical scarcity — step up aggressively
+    { max_days: 35,   adjustment_pct: 5   }, // Low supply — step up
+    { max_days: 60,   adjustment_pct: 0   }, // Balanced — no adjustment
+    { max_days: 90,   adjustment_pct: -4  }, // Oversupply — hold firm
+    { max_days: 9999, adjustment_pct: -9  }, // High supply — discount or pass
+  ],
+  sold_vs_asking_threshold_pct: 5,
+  soft_penalty_pct: 2,
+  soft_bonus_pct: 2,
+};
+
+// Market adjustment presets per strategy mode
+export const MARKET_ADJUSTMENT_BY_STRATEGY: Record<StrategyMode, MarketDaysSupplyBracket[]> = {
+  conservative: [
+    { max_days: 20,   adjustment_pct: 5   },
+    { max_days: 35,   adjustment_pct: 2   },
+    { max_days: 60,   adjustment_pct: 0   },
+    { max_days: 90,   adjustment_pct: -5  },
+    { max_days: 9999, adjustment_pct: -12 },
+  ],
+  standard: [
+    { max_days: 20,   adjustment_pct: 10  },
+    { max_days: 35,   adjustment_pct: 5   },
+    { max_days: 60,   adjustment_pct: 0   },
+    { max_days: 90,   adjustment_pct: -4  },
+    { max_days: 9999, adjustment_pct: -9  },
+  ],
+  aggressive: [
+    { max_days: 20,   adjustment_pct: 14  },
+    { max_days: 35,   adjustment_pct: 8   },
+    { max_days: 60,   adjustment_pct: 2   },
+    { max_days: 90,   adjustment_pct: -2  },
+    { max_days: 9999, adjustment_pct: -6  },
+  ],
+  predator: [
+    { max_days: 20,   adjustment_pct: 10  },
+    { max_days: 35,   adjustment_pct: 5   },
+    { max_days: 60,   adjustment_pct: 0   },
+    { max_days: 90,   adjustment_pct: -4  },
+    { max_days: 9999, adjustment_pct: -9  },
+  ],
+  custom: [
+    { max_days: 20,   adjustment_pct: 10  },
+    { max_days: 35,   adjustment_pct: 5   },
+    { max_days: 60,   adjustment_pct: 0   },
+    { max_days: 90,   adjustment_pct: -4  },
+    { max_days: 9999, adjustment_pct: -9  },
+  ],
+};
+
+// ─────────────────────────────────────────────────────────────
+// EXISTING INTERFACES (unchanged)
+// ─────────────────────────────────────────────────────────────
 
 export interface DeductionsConfig {
   accidents: boolean;
@@ -96,7 +260,7 @@ export interface HighMileagePenalty {
 
 export interface ColorDesirability {
   enabled: boolean;
-  adjustments: Record<string, number>; // color name → pct adjustment
+  adjustments: Record<string, number>;
 }
 
 export interface SeasonalAdjustment {
@@ -108,6 +272,10 @@ export interface DeductionModes {
   accidents: "flat" | "pct";
   not_drivable: "flat" | "pct";
 }
+
+// ─────────────────────────────────────────────────────────────
+// DEFAULTS (unchanged from original)
+// ─────────────────────────────────────────────────────────────
 
 export const DEFAULT_LOW_MILEAGE_BONUS: LowMileageBonus = {
   enabled: false,
@@ -129,7 +297,10 @@ export const DEFAULT_HIGH_MILEAGE_PENALTY: HighMileagePenalty = {
 
 export const DEFAULT_COLOR_DESIRABILITY: ColorDesirability = {
   enabled: false,
-  adjustments: { white: 2, black: 2, silver: 1, gray: 1, red: 0, blue: 0, green: -1, yellow: -3, orange: -2, purple: -2, brown: -2, gold: -1, beige: -2 },
+  adjustments: {
+    white: 2, black: 2, silver: 1, gray: 1, red: 0, blue: 0,
+    green: -1, yellow: -3, orange: -2, purple: -2, brown: -2, gold: -1, beige: -2,
+  },
 };
 
 export const DEFAULT_SEASONAL_ADJUSTMENT: SeasonalAdjustment = {
@@ -142,50 +313,16 @@ export const DEFAULT_DEDUCTION_MODES: DeductionModes = {
   not_drivable: "flat",
 };
 
-/** Calculate low-mileage bonus percentage */
-export function calcLowMileageBonusPct(
-  vehicleYear: string | undefined,
-  mileage: number,
-  bonus: LowMileageBonus
-): number {
-  if (!bonus.enabled || !vehicleYear) return 0;
-  const age = Math.max(new Date().getFullYear() - Number(vehicleYear), 1);
-  const milesPerYear = mileage / age;
-  if (milesPerYear >= bonus.avg_miles_per_year || milesPerYear < bonus.min_miles_per_year) return 0;
-  const pctBelow = ((bonus.avg_miles_per_year - milesPerYear) / bonus.avg_miles_per_year) * 100;
-  const steps = Math.floor(pctBelow / bonus.step_size_pct);
-  return Math.min(steps * bonus.bonus_pct_per_step, bonus.max_bonus_pct);
-}
-
-/** Calculate high-mileage penalty percentage */
-export function calcHighMileagePenaltyPct(
-  vehicleYear: string | undefined,
-  mileage: number,
-  penalty: HighMileagePenalty
-): number {
-  if (!penalty.enabled || !vehicleYear) return 0;
-  const age = Math.max(new Date().getFullYear() - Number(vehicleYear), 1);
-  const milesPerYear = mileage / age;
-  if (milesPerYear <= penalty.avg_miles_per_year || milesPerYear > penalty.max_miles_per_year) return 0;
-  const pctAbove = ((milesPerYear - penalty.avg_miles_per_year) / penalty.avg_miles_per_year) * 100;
-  const steps = Math.floor(pctAbove / penalty.step_size_pct);
-  return Math.min(steps * penalty.penalty_pct_per_step, penalty.max_penalty_pct);
-}
-
-/** Calculate color desirability adjustment percentage */
-export function calcColorAdjustmentPct(
-  exteriorColor: string | undefined,
-  config: ColorDesirability
-): number {
-  if (!config.enabled || !exteriorColor) return 0;
-  const colorLower = exteriorColor.toLowerCase().trim();
-  for (const [color, pct] of Object.entries(config.adjustments)) {
-    if (colorLower.includes(color.toLowerCase())) return pct;
-  }
-  return 0;
-}
+// ─────────────────────────────────────────────────────────────
+// OFFER SETTINGS — extended with strategy_mode + market_adjustment
+// ─────────────────────────────────────────────────────────────
 
 export interface OfferSettings {
+  // NEW
+  strategy_mode?: StrategyMode;
+  market_adjustment?: MarketAdjustmentConfig;
+
+  // EXISTING (all unchanged)
   bb_value_basis: string;
   global_adjustment_pct: number;
   deductions_config: DeductionsConfig;
@@ -222,10 +359,14 @@ export interface OfferRule {
     conditions?: string[];
   };
   adjustment_pct: number;
-  adjustment_type: "pct" | "flat"; // "pct" = percentage, "flat" = dollar amount
+  adjustment_type: "pct" | "flat";
   is_active: boolean;
   flag_in_dashboard: boolean;
 }
+
+// ─────────────────────────────────────────────────────────────
+// INTERNAL DEFAULTS
+// ─────────────────────────────────────────────────────────────
 
 const DEFAULT_DEDUCTION_AMOUNTS: DeductionAmounts = {
   accidents_1: 800,
@@ -282,6 +423,8 @@ const DEFAULT_CONDITION_EQUIPMENT_MAP: ConditionEquipmentMap = {
 };
 
 const DEFAULT_SETTINGS: OfferSettings = {
+  strategy_mode: "standard",
+  market_adjustment: DEFAULT_MARKET_ADJUSTMENT,
   bb_value_basis: "tradein_avg",
   global_adjustment_pct: 0,
   deductions_config: DEFAULT_DEDUCTIONS,
@@ -298,13 +441,59 @@ const DEFAULT_SETTINGS: OfferSettings = {
   low_mileage_bonus: DEFAULT_LOW_MILEAGE_BONUS,
 };
 
+// ─────────────────────────────────────────────────────────────
+// HELPER FUNCTIONS (unchanged from original)
+// ─────────────────────────────────────────────────────────────
+
+export function calcLowMileageBonusPct(
+  vehicleYear: string | undefined,
+  mileage: number,
+  bonus: LowMileageBonus
+): number {
+  if (!bonus.enabled || !vehicleYear) return 0;
+  const age = Math.max(new Date().getFullYear() - Number(vehicleYear), 1);
+  const milesPerYear = mileage / age;
+  if (milesPerYear >= bonus.avg_miles_per_year || milesPerYear < bonus.min_miles_per_year) return 0;
+  const pctBelow = ((bonus.avg_miles_per_year - milesPerYear) / bonus.avg_miles_per_year) * 100;
+  const steps = Math.floor(pctBelow / bonus.step_size_pct);
+  return Math.min(steps * bonus.bonus_pct_per_step, bonus.max_bonus_pct);
+}
+
+export function calcHighMileagePenaltyPct(
+  vehicleYear: string | undefined,
+  mileage: number,
+  penalty: HighMileagePenalty
+): number {
+  if (!penalty.enabled || !vehicleYear) return 0;
+  const age = Math.max(new Date().getFullYear() - Number(vehicleYear), 1);
+  const milesPerYear = mileage / age;
+  if (milesPerYear <= penalty.avg_miles_per_year || milesPerYear > penalty.max_miles_per_year) return 0;
+  const pctAbove = ((milesPerYear - penalty.avg_miles_per_year) / penalty.avg_miles_per_year) * 100;
+  const steps = Math.floor(pctAbove / penalty.step_size_pct);
+  return Math.min(steps * penalty.penalty_pct_per_step, penalty.max_penalty_pct);
+}
+
+export function calcColorAdjustmentPct(
+  exteriorColor: string | undefined,
+  config: ColorDesirability
+): number {
+  if (!config.enabled || !exteriorColor) return 0;
+  const colorLower = exteriorColor.toLowerCase().trim();
+  for (const [color, pct] of Object.entries(config.adjustments)) {
+    if (colorLower.includes(color.toLowerCase())) return pct;
+  }
+  return 0;
+}
+
 /** Extract the correct BB value based on the configured basis */
 function getBBValue(bbVehicle: BBVehicle, basis: string): number {
-  const [category, tier] = basis.split("_");
+  const parts = basis.split("_");
+  const category = parts[0];
+  const tier = parts.slice(1).join("_"); // handles "xclean" correctly
   const tierKey = tier === "xclean" ? "xclean" : tier;
   if (category === "wholesale") return bbVehicle.wholesale?.[tierKey as keyof typeof bbVehicle.wholesale] || 0;
-  if (category === "tradein") return bbVehicle.tradein?.[tierKey as keyof typeof bbVehicle.tradein] || 0;
-  if (category === "retail") return bbVehicle.retail?.[tierKey as keyof typeof bbVehicle.retail] || 0;
+  if (category === "tradein")   return bbVehicle.tradein?.[tierKey as keyof typeof bbVehicle.tradein]     || 0;
+  if (category === "retail")    return bbVehicle.retail?.[tierKey as keyof typeof bbVehicle.retail]       || 0;
   return bbVehicle.tradein?.avg || 0;
 }
 
@@ -337,15 +526,65 @@ function matchesRule(
 }
 
 /**
- * Calculate an offer using admin-configured settings, rules, and BB data.
+ * NEW — Calculate the market multiplier adjustment in dollars
+ * Uses Black Book Live Market data: market_days_supply, avg_sold_price, avg_asking_price
  */
+function calcMarketAdjustment(
+  adjustedBeforeMarket: number,
+  mktConfig: MarketAdjustmentConfig,
+  strategyMode: StrategyMode,
+  marketDaysSupply?: number,
+  marketSoldAvg?: number,
+  marketAskingAvg?: number
+): number {
+  if (!mktConfig.enabled || marketDaysSupply == null) return 0;
+
+  // Use strategy-specific brackets if available, otherwise use config brackets
+  const brackets =
+    strategyMode !== "custom"
+      ? MARKET_ADJUSTMENT_BY_STRATEGY[strategyMode]
+      : mktConfig.days_supply_brackets;
+
+  // Find the matching bracket (sorted ascending by max_days)
+  const sorted = [...brackets].sort((a, b) => a.max_days - b.max_days);
+  const bracket = sorted.find((b) => marketDaysSupply <= b.max_days) ?? sorted[sorted.length - 1];
+
+  let mktPct = bracket?.adjustment_pct ?? 0;
+
+  // Sold vs asking spread refinement
+  if (marketSoldAvg && marketAskingAvg && marketAskingAvg > 0) {
+    const spreadPct = ((marketAskingAvg - marketSoldAvg) / marketAskingAvg) * 100;
+    if (spreadPct > mktConfig.sold_vs_asking_threshold_pct) {
+      // Soft market: sold well below asking — reduce further
+      mktPct -= mktConfig.soft_penalty_pct;
+    } else if (spreadPct < 2) {
+      // Tight market: sold nearly equals asking — step up
+      mktPct += mktConfig.soft_bonus_pct;
+    }
+  }
+
+  if (mktPct === 0) return 0;
+  const adjustment = Math.round(adjustedBeforeMarket * (mktPct / 100));
+  return adjustment;
+}
+
+// ─────────────────────────────────────────────────────────────
+// MAIN FUNCTION — calculateOffer
+// Extended with 3 new optional market params — all call sites
+// that don't pass them continue to work exactly as before.
+// ─────────────────────────────────────────────────────────────
+
 export function calculateOffer(
   bbVehicle: BBVehicle | null,
   formData: FormData,
   selectedAddDeducts: string[],
   settings?: OfferSettings | null,
   rules?: OfferRule[] | null,
-  promoBonus?: number
+  promoBonus?: number,
+  // NEW — live market data from Black Book ListingsStatistics API
+  marketDaysSupply?: number,
+  marketSoldAvg?: number,
+  marketAskingAvg?: number
 ): OfferEstimate | null {
   if (!bbVehicle) return null;
 
@@ -355,6 +594,8 @@ export function calculateOffer(
   const condMults = cfg.condition_multipliers || DEFAULT_CONDITION_MULTIPLIERS;
   const condBasisMap = cfg.condition_basis_map || DEFAULT_CONDITION_BASIS_MAP;
   const modes = cfg.deduction_modes || DEFAULT_DEDUCTION_MODES;
+  const strategyMode: StrategyMode = cfg.strategy_mode ?? "standard";
+  const mktConfig: MarketAdjustmentConfig = cfg.market_adjustment ?? DEFAULT_MARKET_ADJUSTMENT;
 
   // ── STEP 1: Base value from condition-mapped BB tier ──
   const conditionKey = formData.overallCondition as keyof ConditionBasisMap;
@@ -442,19 +683,40 @@ export function calculateOffer(
     adjusted = Math.round(adjusted * (1 - hmPenaltyPct / 100));
   }
 
+  // ── STEP 4i: Live Market Multiplier (NEW) ──
+  // Uses Black Book ListingsStatistics: market_days_supply, sold mean price, active mean price
+  // Completely additive — if no market data passed in, marketAdj = 0 and nothing changes
+  const marketAdj = calcMarketAdjustment(
+    adjusted,
+    mktConfig,
+    strategyMode,
+    marketDaysSupply,
+    marketSoldAvg,
+    marketAskingAvg
+  );
+  if (marketAdj !== 0) {
+    adjusted = Math.round(adjusted + marketAdj);
+  }
+
   // ── STEP 5: Customer condition deductions ──
   let deductions = 0;
 
   const accidentsLower = (formData.accidents || "").toLowerCase();
   if (ded.accidents) {
     if (modes.accidents === "pct") {
-      if (accidentsLower === "1" || accidentsLower === "1 accident") deductions += Math.round(baseValue * (amt.accidents_1 / 100));
-      else if (accidentsLower === "2" || accidentsLower === "2 accidents" || accidentsLower === "2+ accidents") deductions += Math.round(baseValue * (amt.accidents_2 / 100));
-      else if (accidentsLower === "3+" || accidentsLower === "3+ accidents") deductions += Math.round(baseValue * (amt.accidents_3plus / 100));
+      if (accidentsLower === "1" || accidentsLower === "1 accident")
+        deductions += Math.round(baseValue * (amt.accidents_1 / 100));
+      else if (accidentsLower === "2" || accidentsLower === "2 accidents" || accidentsLower === "2+ accidents")
+        deductions += Math.round(baseValue * (amt.accidents_2 / 100));
+      else if (accidentsLower === "3+" || accidentsLower === "3+ accidents")
+        deductions += Math.round(baseValue * (amt.accidents_3plus / 100));
     } else {
-      if (accidentsLower === "1" || accidentsLower === "1 accident") deductions += amt.accidents_1;
-      else if (accidentsLower === "2" || accidentsLower === "2 accidents" || accidentsLower === "2+ accidents") deductions += amt.accidents_2;
-      else if (accidentsLower === "3+" || accidentsLower === "3+ accidents") deductions += amt.accidents_3plus;
+      if (accidentsLower === "1" || accidentsLower === "1 accident")
+        deductions += amt.accidents_1;
+      else if (accidentsLower === "2" || accidentsLower === "2 accidents" || accidentsLower === "2+ accidents")
+        deductions += amt.accidents_2;
+      else if (accidentsLower === "3+" || accidentsLower === "3+ accidents")
+        deductions += amt.accidents_3plus;
     }
   }
   if (ded.exterior_damage) {
@@ -465,11 +727,13 @@ export function calculateOffer(
   }
   const windshieldLower = (formData.windshieldDamage || "").toLowerCase();
   if (ded.windshield_damage) {
-    if (windshieldLower === "cracked" || windshieldLower.includes("major crack")) deductions += amt.windshield_cracked;
-    else if (windshieldLower === "chipped" || windshieldLower.includes("minor chip")) deductions += amt.windshield_chipped;
-    else if (windshieldLower === "chipped_and_cracked" || windshieldLower.includes("chipped & cracked")) deductions += amt.windshield_cracked + amt.windshield_chipped;
+    if (windshieldLower === "cracked" || windshieldLower.includes("major crack"))
+      deductions += amt.windshield_cracked;
+    else if (windshieldLower === "chipped" || windshieldLower.includes("minor chip"))
+      deductions += amt.windshield_chipped;
+    else if (windshieldLower === "chipped_and_cracked" || windshieldLower.includes("chipped & cracked"))
+      deductions += amt.windshield_cracked + amt.windshield_chipped;
   }
-  // Moonroof deduction: if customer says it doesn't work
   const moonroofLower = (formData.moonroof || "").toLowerCase();
   if (moonroofLower === "doesn't work" || moonroofLower === "doesnt work" || moonroofLower === "broken") {
     deductions += amt.moonroof_broken || 0;
@@ -492,15 +756,17 @@ export function calculateOffer(
     }
   }
   const smokedLower = (formData.smokedIn || "").toLowerCase();
-  if (ded.smoked_in && (smokedLower === "yes" || smokedLower === "smoked in")) deductions += amt.smoked_in;
+  if (ded.smoked_in && (smokedLower === "yes" || smokedLower === "smoked in"))
+    deductions += amt.smoked_in;
   const tiresLower = (formData.tiresReplaced || "").toLowerCase();
-  if (ded.tires_not_replaced && (!formData.tiresReplaced || tiresLower === "no" || tiresLower === "none" || tiresLower === "0")) deductions += amt.tires_not_replaced;
+  if (ded.tires_not_replaced && (!formData.tiresReplaced || tiresLower === "no" || tiresLower === "none" || tiresLower === "0"))
+    deductions += amt.tires_not_replaced;
   if (ded.missing_keys) {
     if (formData.numKeys === "1") deductions += amt.missing_keys_1;
     else if (formData.numKeys === "0") deductions += amt.missing_keys_0;
   }
 
-  // ── STEP 6: Subtract customer deductions (recon/pack are internal cost refs, NOT subtracted from offer) ──
+  // ── STEP 6: Subtract deductions ──
   const reconCost = cfg.recon_cost || 0;
   let high = Math.round(adjusted - deductions);
 
@@ -538,16 +804,26 @@ export function calculateOffer(
   // ── STEP 9: Floor, ceiling, & market safety cap ──
   const floor = cfg.offer_floor || 500;
   high = Math.max(high, floor);
-  if (cfg.offer_ceiling && cfg.offer_ceiling > 0) {
-    high = Math.min(high, cfg.offer_ceiling);
+
+  let isCapped = false;
+  if (cfg.offer_ceiling && cfg.offer_ceiling > 0 && high > cfg.offer_ceiling) {
+    high = cfg.offer_ceiling;
+    isCapped = true;
   }
+
   // Market safety cap: never exceed X% of retail avg
   if (cfg.max_market_pct && cfg.max_market_pct > 0 && bbVehicle.retail?.avg) {
     const cap = Math.round(Number(bbVehicle.retail.avg) * (cfg.max_market_pct / 100));
-    if (cap > 0) high = Math.min(high, cap);
+    if (cap > 0 && high > cap) {
+      high = cap;
+      isCapped = true;
+    }
   }
 
-  // Firm offer — no range
+  // Projected gross (informational — for manager display)
+  const retailClean = bbVehicle.retail?.clean || bbVehicle.retail?.avg || 0;
+  const projectedGross = Math.round(retailClean - high - reconCost);
+
   const low = high;
 
   return {
@@ -558,5 +834,11 @@ export function calculateOffer(
     reconCost: Math.round(reconCost),
     matchedRuleIds,
     isHotLead,
+    // NEW fields
+    marketAdjustment: marketAdj,
+    marketDaysSupply: marketDaysSupply ?? null,
+    strategyMode,
+    isCapped,
+    projectedGross,
   };
 }
