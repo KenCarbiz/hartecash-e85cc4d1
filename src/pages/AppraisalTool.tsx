@@ -840,8 +840,10 @@ export default function AppraisalTool() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
+    <div className="min-h-screen bg-background pb-28">
+      {/* ═══════════════════════════════════════ */}
+      {/*  STICKY HEADER — unchanged              */}
+      {/* ═══════════════════════════════════════ */}
       <div className="sticky top-0 z-20 bg-gradient-to-br from-primary via-[hsl(210,100%,28%)] to-[hsl(215,90%,22%)] text-primary-foreground px-6 py-4 shadow-xl">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -864,16 +866,16 @@ export default function AppraisalTool() {
                 ACV Sheet
               </Button>
             )}
-            <Button onClick={handleSave} disabled={saving} className="bg-primary-foreground/15 hover:bg-primary-foreground/25 text-primary-foreground rounded-xl border border-primary-foreground/10 shadow-lg">
-              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <Save className="w-4 h-4 mr-1.5" />}
-              Save Appraisal
-            </Button>
           </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto p-6">
-        {/* ═══ Deal Status Banner ═══ */}
+        {/* ═══════════════════════════════════════ */}
+        {/*  ZONE 1 — ORIENT                       */}
+        {/* ═══════════════════════════════════════ */}
+
+        {/* Deal Status Banner */}
         <DealStatusBanner
           progressStatus={sub.progress_status}
           offeredPrice={sub.offered_price}
@@ -884,61 +886,48 @@ export default function AppraisalTool() {
           acvValue={sub.acv_value}
         />
 
-        {/* ═══ HUD — Key Metrics Strip ═══ */}
+        {/* HUD — Key Metrics Strip — Appraisal Value is dominant */}
         <div className={`grid grid-cols-2 sm:grid-cols-4 ${hidePackFromAppraisal ? "lg:grid-cols-7" : "lg:grid-cols-8"} gap-2.5 mb-5`}>
           {(() => {
             const inventoryCost = finalValue + reconCost + effectivePack;
             const metrics = [
-              { label: "Customer Offer", value: `$${Math.floor(currentOffer).toLocaleString()}`, color: "text-card-foreground", bg: "bg-card border-border/60 shadow-sm", sub: null },
-              { label: "Appraisal Value", value: `$${Math.floor(finalValue + (managerOverride.amount || 0)).toLocaleString()}`, color: sub?.appraisal_finalized ? "text-emerald-700" : "text-primary", bg: sub?.appraisal_finalized ? "bg-emerald-500/10 border-emerald-500/40 shadow-sm ring-1 ring-emerald-500/20" : "bg-primary/5 border-primary/25 shadow-sm shadow-primary/5", sub: managerOverride.amount ? "MGR ADJ active" : sub?.appraisal_finalized ? `✓ Finalized ${sub.appraisal_finalized_at ? new Date(sub.appraisal_finalized_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : ""}` : lastSavedAt ? `Updated ${lastSavedAt.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}` : null },
+              { label: "Customer Offer", value: `$${Math.floor(currentOffer).toLocaleString()}`, color: "text-card-foreground", bg: "bg-card border-border/60 shadow-sm", sub: null, dominant: false },
+              { label: "Appraisal Value", value: `$${Math.floor(finalValue + (managerOverride.amount || 0)).toLocaleString()}`, color: sub?.appraisal_finalized ? "text-emerald-700" : "text-primary", bg: sub?.appraisal_finalized ? "bg-emerald-500/10 border-emerald-500/40 shadow-md ring-2 ring-emerald-500/30" : "bg-primary/10 border-primary/40 shadow-md ring-2 ring-primary/30", sub: managerOverride.amount ? "MGR ADJ active" : sub?.appraisal_finalized ? `✓ Finalized ${sub.appraisal_finalized_at ? new Date(sub.appraisal_finalized_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : ""}` : lastSavedAt ? `Updated ${lastSavedAt.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}` : null, dominant: true },
             ];
-            // Strategy Mode badge
             const stratMode = activeSettings?.strategy_mode || offerResult?.strategyMode || "custom";
             const stratBadge = { conservative: "text-muted-foreground bg-card border-border/60", standard: "text-primary bg-primary/5 border-primary/25", aggressive: "text-amber-600 bg-amber-500/5 border-amber-500/25", predator: "text-destructive bg-destructive/5 border-destructive/25", custom: "text-muted-foreground bg-card border-border/60" }[stratMode] || "bg-card border-border/60";
-             metrics.push({ label: "Strategy", value: (stratMode || "custom").toUpperCase(), color: stratBadge.split(" ")[0], bg: stratBadge, sub: stratMode === "predator" ? "⚠ High risk" : null });
-            // Market Signal badge data is rendered separately
+            metrics.push({ label: "Strategy", value: (stratMode || "custom").toUpperCase(), color: stratBadge.split(" ")[0], bg: stratBadge, sub: stratMode === "predator" ? "⚠ High risk" : null, dominant: false });
             if (hidePackFromAppraisal) {
-              metrics.push({ label: "Recon Cost", value: `$${Math.floor(reconCost + effectivePack).toLocaleString()}`, color: "text-destructive", bg: "bg-card border-border/60 shadow-sm", sub: null });
+              metrics.push({ label: "Recon Cost", value: `$${Math.floor(reconCost + effectivePack).toLocaleString()}`, color: "text-destructive", bg: "bg-card border-border/60 shadow-sm", sub: null, dominant: false });
             } else {
-              metrics.push({ label: "Recon Cost", value: `$${Math.floor(reconCost).toLocaleString()}`, color: "text-destructive", bg: "bg-card border-border/60 shadow-sm", sub: null });
-              metrics.push({ label: "Dealer Pack", value: `$${Math.floor(effectivePack).toLocaleString()}`, color: "text-destructive", bg: "bg-card border-border/60 shadow-sm", sub: null });
+              metrics.push({ label: "Recon Cost", value: `$${Math.floor(reconCost).toLocaleString()}`, color: "text-destructive", bg: "bg-card border-border/60 shadow-sm", sub: null, dominant: false });
+              metrics.push({ label: "Dealer Pack", value: `$${Math.floor(effectivePack).toLocaleString()}`, color: "text-destructive", bg: "bg-card border-border/60 shadow-sm", sub: null, dominant: false });
             }
             metrics.push(
-              { label: "Inventory Cost", value: `$${Math.floor(inventoryCost).toLocaleString()}`, color: "text-amber-600", bg: "bg-amber-500/5 border-amber-500/25 shadow-sm", sub: null },
-              { label: "__RETAIL__", value: retailAvg > 0 ? `$${Math.floor(retailAvg).toLocaleString()}` : "—", color: "text-card-foreground", bg: "bg-card border-border/60 shadow-sm cursor-pointer hover:border-primary/50", sub: "Click to change tier" },
-              { label: "Projected Profit", value: `${projectedProfit >= 0 ? "+" : ""}$${Math.floor(Math.abs(projectedProfit)).toLocaleString()}`, color: projectedProfit >= 0 ? "text-emerald-600" : "text-destructive", bg: projectedProfit >= 0 ? "bg-emerald-500/5 border-emerald-500/25 shadow-sm" : "bg-destructive/5 border-destructive/25 shadow-sm", sub: null },
-              { label: "Margin %", value: `${profitMargin.toFixed(1)}%`, color: profitMargin >= 0 ? "text-emerald-600" : "text-destructive", bg: profitMargin >= 0 ? "bg-emerald-500/5 border-emerald-500/25 shadow-sm" : "bg-destructive/5 border-destructive/25 shadow-sm", sub: null },
+              { label: "Inventory Cost", value: `$${Math.floor(inventoryCost).toLocaleString()}`, color: "text-amber-600", bg: "bg-amber-500/5 border-amber-500/25 shadow-sm", sub: null, dominant: false },
+              { label: "__RETAIL__", value: retailAvg > 0 ? `$${Math.floor(retailAvg).toLocaleString()}` : "—", color: "text-card-foreground", bg: "bg-card border-border/60 shadow-sm cursor-pointer hover:border-primary/50", sub: "Click to change tier", dominant: false },
+              { label: "Projected Profit", value: `${projectedProfit >= 0 ? "+" : ""}$${Math.floor(Math.abs(projectedProfit)).toLocaleString()}`, color: projectedProfit >= 0 ? "text-emerald-600" : "text-destructive", bg: projectedProfit >= 0 ? "bg-emerald-500/5 border-emerald-500/25 shadow-sm" : "bg-destructive/5 border-destructive/25 shadow-sm", sub: null, dominant: false },
+              { label: "Margin %", value: `${profitMargin.toFixed(1)}%`, color: profitMargin >= 0 ? "text-emerald-600" : "text-destructive", bg: profitMargin >= 0 ? "bg-emerald-500/5 border-emerald-500/25 shadow-sm" : "bg-destructive/5 border-destructive/25 shadow-sm", sub: null, dominant: false },
             );
             return metrics;
           })().map(metric => (
             <div
               key={metric.label}
-              className={`rounded-xl border p-3 text-center transition-all hover:shadow-md ${metric.bg}`}
+              className={`rounded-xl border p-3 text-center transition-all hover:shadow-md ${metric.bg} ${metric.dominant ? "row-span-1 col-span-2 sm:col-span-1" : ""}`}
               onClick={metric.label === "__RETAIL__" ? cycleRetailBasis : undefined}
               role={metric.label === "__RETAIL__" ? "button" : undefined}
             >
               <div className="text-[9px] uppercase tracking-[0.08em] font-bold text-muted-foreground mb-0.5">
                 {metric.label === "__RETAIL__" ? (RETAIL_TIER_LABELS[retailProfitBasis] || "Retail Avg") : metric.label}
-        </div>
-        {/* Market Signal Badge */}
-        {retailMarketStats && (
-          <div className="mb-3 flex items-center gap-2">
-            <MarketSignalBadge
-              mds={retailMarketStats.market_days_supply}
-              soldAvg={retailMarketStats.sold?.mean_price}
-              askingAvg={retailMarketStats.active?.mean_price}
-              activeCount={retailMarketStats.active?.vehicle_count}
-            />
-          </div>
-        )}
-              <div className={`text-lg font-black tracking-tight ${metric.color}`}>{metric.value}</div>
+              </div>
+              <div className={`${metric.dominant ? "text-2xl" : "text-lg"} font-black tracking-tight ${metric.color}`}>{metric.value}</div>
               {metric.sub && <div className={`mt-0.5 ${metric.label === "Appraisal Value" && sub?.appraisal_finalized ? "text-[10px] font-bold text-emerald-600" : "text-[10px] font-bold text-muted-foreground"}`}>{metric.sub}</div>}
             </div>
           ))}
         </div>
 
         {/* Vehicle Summary Bar */}
-        <div className="bg-card rounded-xl border border-border/60 p-4 mb-5 shadow-sm">
+        <div className="bg-card rounded-xl border border-border/60 p-4 mb-4 shadow-sm">
           <div className="flex items-center gap-2.5 mb-2.5">
             <Car className="w-4 h-4 text-primary" />
             <span className="font-display text-sm text-card-foreground">
@@ -948,7 +937,6 @@ export default function AppraisalTool() {
               <span className="text-[10px] font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded-full">{liveBbVehicle?.class_name || sub.bb_class_name}</span>
             )}
             {bbLoading && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />}
-            {/* Final Grade Callout */}
             <div className="ml-auto flex items-center gap-2">
               {sub.inspector_grade && (
                 <Badge className="bg-primary/15 text-primary border border-primary/30 text-[10px]">
@@ -973,182 +961,153 @@ export default function AppraisalTool() {
           </div>
         </div>
 
-        {/* ══ CONDITION TIER BUBBLES ══ */}
-        {bbVehicle && activeSettings && (
-          <div className="bg-gradient-to-r from-primary/5 to-transparent rounded-lg border border-primary/20 p-3 mb-5">
-            <div className="flex items-center gap-1.5 mb-3">
-              <DollarSign className="w-3.5 h-3.5 text-primary" />
-              <span className="text-[11px] font-bold text-card-foreground uppercase tracking-wider">① Select Condition Tier</span>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {CONDITIONS.map(cond => {
-                const basisMap = activeSettings.condition_basis_map || {};
-                const selectedBasis = (basisMap as Record<string, string>)[cond] || "tradein_avg";
-                const mult = activeSettings.condition_multipliers?.[cond] ?? 1.0;
-                const isActive = cond === condition;
-                const selectedValue = (() => {
-                  const [cat, tier] = selectedBasis.split("_");
-                  const tierKey = tier === "xclean" ? "xclean" : tier;
-                  const data = bbVehicle[cat as "wholesale" | "tradein" | "retail"] as Record<string, number> | undefined;
-                  return data?.[tierKey] || 0;
-                })();
-                const bubbleFormData = { ...formData, overallCondition: cond };
-                const bubbleResult = calculateOffer(bbVehicle, bubbleFormData, liveSelectedAddDeducts, activeSettings, rules);
-
-                return (
-                  <button
-                    key={cond}
-                    onClick={() => setCondition(cond)}
-                    className={`rounded-xl border-2 p-3 text-center transition-all ${
-                      isActive
-                        ? "border-primary bg-primary/10 ring-2 ring-primary/30 shadow-md scale-[1.02]"
-                        : "border-border bg-card hover:border-primary/40 hover:shadow-sm"
-                    }`}
-                  >
-                    <div className={`text-xs font-bold uppercase tracking-wider mb-1 ${isActive ? "text-primary" : "text-muted-foreground"}`}>
-                      {CONDITION_LABELS[cond]}
-                    </div>
-                    <div className={`text-lg font-bold ${isActive ? "text-primary" : "text-card-foreground"}`}>
-                      ${bubbleResult.high.toLocaleString()}
-                    </div>
-                    <div className="text-[10px] font-bold text-muted-foreground mt-0.5">
-                      Base: ${selectedValue.toLocaleString()} × {mult.toFixed(2)}
-                    </div>
-                  </button>
-                );
-              })}
+        {/* Market Signal Badge — full-width banner */}
+        {retailMarketStats && (
+          <div className="mb-5 rounded-xl border border-border/60 bg-card p-3 shadow-sm">
+            <div className="flex flex-wrap items-center gap-3">
+              <MarketSignalBadge
+                mds={retailMarketStats.market_days_supply}
+                soldAvg={retailMarketStats.sold?.mean_price}
+                askingAvg={retailMarketStats.active?.mean_price}
+                activeCount={retailMarketStats.active?.vehicle_count}
+              />
+              <div className="flex flex-wrap items-center gap-4 text-xs ml-auto">
+                <div className="flex items-center gap-1">
+                  <span className="text-muted-foreground">Active Comps:</span>
+                  <span className="font-bold text-card-foreground">{retailMarketStats.active?.vehicle_count ?? "—"}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-muted-foreground">Sold (90d):</span>
+                  <span className="font-bold text-card-foreground">{retailMarketStats.sold?.vehicle_count ?? "—"}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-muted-foreground">MDS:</span>
+                  <span className="font-bold text-card-foreground">{retailMarketStats.market_days_supply ?? "—"}d</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-muted-foreground">Avg Asking:</span>
+                  <span className="font-bold text-card-foreground">${Math.round(retailMarketStats.active?.mean_price || 0).toLocaleString()}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-muted-foreground">Avg Sold:</span>
+                  <span className="font-bold text-card-foreground">${Math.round(retailMarketStats.sold?.mean_price || 0).toLocaleString()}</span>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
-        {/* ══ TWO-COLUMN LAYOUT ══ */}
+        {/* ═══════════════════════════════════════ */}
+        {/*  ZONE 2 (INSPECT) + ZONE 3 RIGHT COL  */}
+        {/* ═══════════════════════════════════════ */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
-          {/* ── LEFT: Config + Waterfall ── */}
+          {/* ── LEFT: Inspection Checklist ── */}
           <div className="space-y-4">
-            {/* Active Tier Configuration */}
-            {activeSettings && bbVehicle && (() => {
-              const cond = condition;
-              const basisMap = activeSettings.condition_basis_map || {};
-              const selectedBasis = (basisMap as Record<string, string>)[cond] || "tradein_avg";
-              const condEquipMap = (activeSettings as any).condition_equipment_map || { excellent: true, very_good: true, good: true, fair: true };
-              const equipEnabled = condEquipMap[cond] ?? true;
-              const mult = activeSettings.condition_multipliers?.[cond] ?? 1.0;
 
-              return (
-                <div className="rounded-lg border-2 border-primary/30 bg-primary/5 p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <SlidersHorizontal className="w-4 h-4 text-primary" />
-                      <span className="text-sm font-bold text-card-foreground">
-                        Configuring: <span className="text-primary">{CONDITION_LABELS[cond]}</span>
-                      </span>
-                    </div>
-                    <span className="text-[9px] bg-primary/20 text-primary px-2 py-0.5 rounded-full font-semibold uppercase">Active Tier</span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div>
-                      <Label className="text-[10px] font-semibold text-muted-foreground">Base Value Source</Label>
-                      <Select
-                        value={selectedBasis}
-                        onValueChange={(val) => updateLocalSetting("condition_basis_map", {
-                          excellent: "retail_xclean", very_good: "tradein_clean", good: "tradein_avg", fair: "wholesale_rough",
-                          ...(activeSettings.condition_basis_map || {}),
-                          [cond]: val,
-                        } as any)}
-                      >
-                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {BB_VALUE_OPTIONS.map(opt => {
-                            let dollarStr = "";
-                            if (bbVehicle) {
-                              const [cat, tier] = opt.value.split("_");
-                              const tierKey = tier === "xclean" ? "xclean" : tier;
-                              const data = bbVehicle[cat as "wholesale" | "tradein" | "retail"] as Record<string, number> | undefined;
-                              const val = data?.[tierKey] || 0;
-                              if (val > 0) dollarStr = ` — $${val.toLocaleString()}`;
-                            }
-                            return <SelectItem key={opt.value} value={opt.value} className="text-xs">{opt.label}{dollarStr}</SelectItem>;
-                          })}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex flex-col justify-between">
-                      <Label className="text-[10px] font-semibold text-muted-foreground">Include Equipment</Label>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Switch
-                          checked={equipEnabled}
-                          onCheckedChange={(checked) => {
-                            const newMap = { ...(activeSettings as any).condition_equipment_map || { excellent: true, very_good: true, good: true, fair: true }, [cond]: checked };
-                            updateLocalSetting("condition_equipment_map" as any, newMap);
-                          }}
-                        />
-                        <span className="text-[10px] text-muted-foreground">{equipEnabled ? "Yes" : "No"}</span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <Label className="text-[10px] font-semibold text-muted-foreground">Value Multiplier</Label>
-                        <span className="text-xs font-bold text-primary">{mult.toFixed(2)}×</span>
-                      </div>
-                      <Slider
-                        value={[mult * 100]}
-                        min={70} max={110} step={1}
-                        onValueChange={([v]) => updateLocalSetting("condition_multipliers", {
-                          ...activeSettings.condition_multipliers,
-                          [cond]: Math.round(v) / 100,
-                        })}
-                      />
-                      <div className="flex justify-between text-[8px] text-muted-foreground mt-0.5">
-                        <span>0.70×</span><span>1.00×</span><span>1.10×</span>
-                      </div>
-                    </div>
-                  </div>
+            {/* ① SET CONDITION */}
+            {bbVehicle && activeSettings && (
+              <div className="bg-gradient-to-r from-primary/5 to-transparent rounded-xl border border-primary/20 p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-black flex items-center justify-center">1</span>
+                  <span className="text-sm font-bold text-card-foreground uppercase tracking-wider">Set Condition</span>
                 </div>
-              );
-            })()}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {CONDITIONS.map(cond => {
+                    const basisMap = activeSettings.condition_basis_map || {};
+                    const selectedBasis = (basisMap as Record<string, string>)[cond] || "tradein_avg";
+                    const mult = activeSettings.condition_multipliers?.[cond] ?? 1.0;
+                    const isActive = cond === condition;
+                    const selectedValue = (() => {
+                      const [cat, tier] = selectedBasis.split("_");
+                      const tierKey = tier === "xclean" ? "xclean" : tier;
+                      const data = bbVehicle[cat as "wholesale" | "tradein" | "retail"] as Record<string, number> | undefined;
+                      return data?.[tierKey] || 0;
+                    })();
+                    const bubbleFormData = { ...formData, overallCondition: cond };
+                    const bubbleResult = calculateOffer(bbVehicle, bubbleFormData, liveSelectedAddDeducts, activeSettings, rules);
 
-            {/* ② CUSTOMER vs INSPECTOR CONDITION COMPARISON */}
-            <CustomerVsInspectorComparison
-              state={{
-                condition, modifications, drivable, exteriorItems, windshield, moonroof,
-                interiorItems, techItems, engineItems, mechItems, accidents, smokedIn, tiresReplaced, numKeys,
-              }}
-              setters={{
-                setModifications, setDrivable, setExteriorItems: (v) => setExteriorItems(v), setWindshield,
-                setMoonroof, setInteriorItems: (v) => setInteriorItems(v), setTechItems: (v) => setTechItems(v),
-                setEngineItems: (v) => setEngineItems(v), setMechItems: (v) => setMechItems(v),
-                setAccidents, setSmokedIn, setTiresReplaced, setNumKeys,
-              }}
-              customerAnswers={customerAnswers}
-              deductions={{ getAmt, isOn }}
-              deductAmounts={{
-                accidentDeduct, extDeduct, intDeduct, windDeduct, moonroofDeduct,
-                engDeduct, mechDeduct, techDeduct, drivDeduct, smokeDeduct, tiresDeduct, keyDeduct,
-              }}
-              hasInspection={hasInspection}
-              inspectorGrade={sub.inspector_grade}
-              overallCondition={sub.overall_condition}
-            />
+                    return (
+                      <button
+                        key={cond}
+                        onClick={() => setCondition(cond)}
+                        className={`rounded-xl border-2 p-3 text-center transition-all ${
+                          isActive
+                            ? "border-primary bg-primary/10 ring-2 ring-primary/30 shadow-md scale-[1.02]"
+                            : "border-border bg-card hover:border-primary/40 hover:shadow-sm"
+                        }`}
+                      >
+                        <div className={`text-xs font-bold uppercase tracking-wider mb-1 ${isActive ? "text-primary" : "text-muted-foreground"}`}>
+                          {CONDITION_LABELS[cond]}
+                        </div>
+                        <div className={`text-lg font-bold ${isActive ? "text-primary" : "text-card-foreground"}`}>
+                          ${bubbleResult.high.toLocaleString()}
+                        </div>
+                        <div className="text-[10px] font-bold text-muted-foreground mt-0.5">
+                          Base: ${selectedValue.toLocaleString()} × {mult.toFixed(2)}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
-            {/* ③ EQUIPMENT — Factory Options with Customer ✓ and VIN detected tags */}
+            {/* ② REVIEW FINDINGS — Customer vs Inspector */}
+            <Collapsible defaultOpen>
+              <CollapsibleTrigger asChild>
+                <button className="flex items-center justify-between w-full px-3 py-2.5 text-left hover:bg-muted/30 transition-colors rounded-xl border border-border">
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-black flex items-center justify-center">2</span>
+                    <span className="font-semibold text-sm text-card-foreground">Review Findings</span>
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="mt-2">
+                  <CustomerVsInspectorComparison
+                    state={{
+                      condition, modifications, drivable, exteriorItems, windshield, moonroof,
+                      interiorItems, techItems, engineItems, mechItems, accidents, smokedIn, tiresReplaced, numKeys,
+                    }}
+                    setters={{
+                      setModifications, setDrivable, setExteriorItems: (v) => setExteriorItems(v), setWindshield,
+                      setMoonroof, setInteriorItems: (v) => setInteriorItems(v), setTechItems: (v) => setTechItems(v),
+                      setEngineItems: (v) => setEngineItems(v), setMechItems: (v) => setMechItems(v),
+                      setAccidents, setSmokedIn, setTiresReplaced, setNumKeys,
+                    }}
+                    customerAnswers={customerAnswers}
+                    deductions={{ getAmt, isOn }}
+                    deductAmounts={{
+                      accidentDeduct, extDeduct, intDeduct, windDeduct, moonroofDeduct,
+                      engDeduct, mechDeduct, techDeduct, drivDeduct, smokeDeduct, tiresDeduct, keyDeduct,
+                    }}
+                    hasInspection={hasInspection}
+                    inspectorGrade={sub.inspector_grade}
+                    overallCondition={sub.overall_condition}
+                  />
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* ③ VERIFY EQUIPMENT */}
             {bbVehicle && bbVehicle.add_deduct_list?.length > 0 && (
-              <Collapsible defaultOpen>
+              <Collapsible>
                 <CollapsibleTrigger asChild>
-                  <button className="flex items-center justify-between w-full px-3 py-2 text-left hover:bg-muted/30 transition-colors rounded-lg border border-border">
-                    <div className="flex items-center gap-1.5">
-                      <CheckSquare className="w-3.5 h-3.5 text-primary" />
-                      <span className="font-semibold text-[11px] text-card-foreground">③ Factory Equipment ({liveSelectedAddDeducts.length}/{bbVehicle.add_deduct_list.length})</span>
+                  <button className="flex items-center justify-between w-full px-3 py-2.5 text-left hover:bg-muted/30 transition-colors rounded-xl border border-border">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-black flex items-center justify-center">3</span>
+                      <span className="font-semibold text-sm text-card-foreground">Verify Equipment ({liveSelectedAddDeducts.length}/{bbVehicle.add_deduct_list.length})</span>
                       {equipmentTotal !== 0 && (
                         <Badge variant="secondary" className={`text-[9px] ${equipmentTotal > 0 ? "text-emerald-600" : "text-destructive"}`}>
                           {equipmentTotal > 0 ? "+" : ""}${equipmentTotal.toLocaleString()}
                         </Badge>
                       )}
                     </div>
-                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
                   </button>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  {/* Inspector verification reminder */}
                   <div className="mx-1 mt-2 mb-1 px-2.5 py-1.5 rounded-md bg-amber-500/10 border border-amber-500/20 flex items-center gap-2">
                     <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                     <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-400">
@@ -1184,86 +1143,122 @@ export default function AppraisalTool() {
               </Collapsible>
             )}
 
-            {/* ② b — TIRE & BRAKE HEALTH */}
-            <AppraisalTireBrakeHealth
-              tireLF={sub.tire_lf} tireRF={sub.tire_rf} tireLR={sub.tire_lr} tireRR={sub.tire_rr}
-              brakeLF={sub.brake_lf} brakeRF={sub.brake_rf} brakeLR={sub.brake_lr} brakeRR={sub.brake_rr}
-              tireAdjustment={sub.tire_adjustment}
-              depthPolicies={depthPolicies}
-              vehicleYear={sub.vehicle_year} vehicleMake={sub.vehicle_make} mileage={sub.mileage}
-            />
+            {/* ④ TIRES & BRAKES */}
+            <Collapsible>
+              <CollapsibleTrigger asChild>
+                <button className="flex items-center justify-between w-full px-3 py-2.5 text-left hover:bg-muted/30 transition-colors rounded-xl border border-border">
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-black flex items-center justify-center">4</span>
+                    <span className="font-semibold text-sm text-card-foreground">Tires & Brakes</span>
+                    {hasTires && avgTireDepth && (
+                      <Badge variant="secondary" className="text-[9px]">Avg {avgTireDepth}/32″</Badge>
+                    )}
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="mt-2">
+                  <AppraisalTireBrakeHealth
+                    tireLF={sub.tire_lf} tireRF={sub.tire_rf} tireLR={sub.tire_lr} tireRR={sub.tire_rr}
+                    brakeLF={sub.brake_lf} brakeRF={sub.brake_rf} brakeLR={sub.brake_lr} brakeRR={sub.brake_rr}
+                    tireAdjustment={sub.tire_adjustment}
+                    depthPolicies={depthPolicies}
+                    vehicleYear={sub.vehicle_year} vehicleMake={sub.vehicle_make} mileage={sub.mileage}
+                  />
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
 
-            {/* ④ PRICE WATERFALL */}
+            {/* ⑤ HOW WE GOT HERE — Price Waterfall */}
             {offerResult && (
-              <div className="rounded-lg border-2 border-primary/20 p-3 bg-gradient-to-b from-muted/20 to-transparent">
-                <div className="flex items-center gap-1.5 mb-3">
-                  <ArrowDown className="w-3.5 h-3.5 text-primary" />
-                  <span className="text-[11px] font-bold text-card-foreground uppercase tracking-wider">
-                    ④ Price Waterfall — {CONDITION_LABELS[condition]}
-                  </span>
-                  <span className="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-semibold ml-auto">
-                    Click bars to adjust
-                  </span>
-                </div>
-                <div className="space-y-0.5">
-                  {waterfallBlocks.map(block => (
-                    <WaterfallBlockRow key={block.id} block={block} maxVal={maxVal}
-                      onValueChange={handleBlockValueChange}
-                      isExpanded={expandedBlock === block.id}
-                      onToggleExpand={() => setExpandedBlock(prev => prev === block.id ? null : block.id)} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* BB Value Tiles */}
-            {bbVehicle && (
               <Collapsible>
                 <CollapsibleTrigger asChild>
-                  <button className="flex items-center justify-between w-full px-3 py-2 text-left hover:bg-muted/30 transition-colors rounded-lg border border-border">
-                    <div className="flex items-center gap-1.5">
-                      <DollarSign className="w-3.5 h-3.5 text-primary" />
-                      <span className="font-semibold text-[11px] text-card-foreground">Black Book Market Values</span>
+                  <button className="flex items-center justify-between w-full px-3 py-2.5 text-left hover:bg-muted/30 transition-colors rounded-xl border border-border">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-black flex items-center justify-center">5</span>
+                      <span className="font-semibold text-sm text-card-foreground">How We Got Here</span>
+                      <Badge variant="outline" className="text-[9px]">${waterfallFinal.toLocaleString()}</Badge>
                     </div>
-                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
                   </button>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <div className="p-2">
-                    {BB_CATEGORIES.map(cat => {
-                      const data = bbVehicle[cat.dataKey] as Record<string, number> | undefined;
-                      if (!data) return null;
-                      return (
-                        <div key={cat.label} className="mb-1.5">
-                          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block mb-0.5">{cat.label}</span>
-                          <div className="grid grid-cols-4 gap-1">
-                            {cat.tiers.map(tier => {
-                              const value = data[tier.tierKey] || 0;
-                              const isSelected = bbValueBasis === tier.key;
-                              if (value <= 0) return null;
+                  <div className="mt-2 rounded-lg border border-primary/20 p-3 bg-gradient-to-b from-muted/20 to-transparent">
+                    <div className="space-y-0.5">
+                      {waterfallBlocks.map(block => (
+                        <WaterfallBlockRow key={block.id} block={block} maxVal={maxVal}
+                          onValueChange={handleBlockValueChange}
+                          isExpanded={expandedBlock === block.id}
+                          onToggleExpand={() => setExpandedBlock(prev => prev === block.id ? null : block.id)} />
+                      ))}
+                    </div>
+
+                    {/* BB Value Tiles — inside waterfall as reference sub-section */}
+                    {bbVehicle && (
+                      <Collapsible>
+                        <CollapsibleTrigger asChild>
+                          <button className="flex items-center justify-between w-full px-3 py-2 mt-3 text-left hover:bg-muted/30 transition-colors rounded-lg border border-border">
+                            <div className="flex items-center gap-1.5">
+                              <DollarSign className="w-3.5 h-3.5 text-primary" />
+                              <span className="font-semibold text-[11px] text-card-foreground">Black Book Market Values</span>
+                            </div>
+                            <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                          </button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="p-2">
+                            {BB_CATEGORIES.map(cat => {
+                              const data = bbVehicle[cat.dataKey] as Record<string, number> | undefined;
+                              if (!data) return null;
                               return (
-                                <button key={tier.key}
-                                  onClick={() => { setBbValueBasis(tier.key); updateLocalSetting("bb_value_basis", tier.key); }}
-                                  className={`rounded-md px-2 py-1.5 text-center transition-all border ${
-                                    isSelected
-                                      ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30 shadow-sm"
-                                      : "bg-muted/40 border-border hover:border-primary/40 hover:bg-primary/5 text-card-foreground"
-                                  }`}>
-                                  <div className="text-[9px] font-medium opacity-80">{tier.short}</div>
-                                  <div className={`text-sm font-bold ${isSelected ? "" : "text-card-foreground"}`}>${value.toLocaleString()}</div>
-                                </button>
+                                <div key={cat.label} className="mb-1.5">
+                                  <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block mb-0.5">{cat.label}</span>
+                                  <div className="grid grid-cols-4 gap-1">
+                                    {cat.tiers.map(tier => {
+                                      const value = data[tier.tierKey] || 0;
+                                      const isSelected = bbValueBasis === tier.key;
+                                      if (value <= 0) return null;
+                                      return (
+                                        <button key={tier.key}
+                                          onClick={() => { setBbValueBasis(tier.key); updateLocalSetting("bb_value_basis", tier.key); }}
+                                          className={`rounded-md px-2 py-1.5 text-center transition-all border ${
+                                            isSelected
+                                              ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30 shadow-sm"
+                                              : "bg-muted/40 border-border hover:border-primary/40 hover:bg-primary/5 text-card-foreground"
+                                          }`}>
+                                          <div className="text-[9px] font-medium opacity-80">{tier.short}</div>
+                                          <div className={`text-sm font-bold ${isSelected ? "" : "text-card-foreground"}`}>${value.toLocaleString()}</div>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
                               );
                             })}
                           </div>
-                        </div>
-                      );
-                    })}
+                        </CollapsibleContent>
+                      </Collapsible>
+                    )}
                   </div>
                 </CollapsibleContent>
               </Collapsible>
             )}
 
-            {/* Deal Maker Section — for declined offers or manual toggle */}
+            {/* Outcome Entry — appears after finalization */}
+            {sub.appraisal_finalized && (
+              <OutcomeEntryPanel
+                submissionId={sub.id}
+                appraisalFinalizedAt={sub.appraisal_finalized_at}
+                existingOutcome={sub as any}
+                onSaved={() => handleRefreshInspection()}
+              />
+            )}
+          </div>
+
+          {/* ── RIGHT COLUMN — Decide zone ── */}
+          <div className="space-y-4">
+            {/* Deal Maker Section */}
             <DealMakerSection
               customerExpected={sub.offered_price || sub.estimated_offer_high || 0}
               currentAppraisal={finalValue}
@@ -1283,71 +1278,7 @@ export default function AppraisalTool() {
               />
             )}
 
-            {/* Final Appraised Value + Finalize */}
-            <div className={`rounded-xl border-2 p-4 ${sub.appraisal_finalized ? "border-emerald-500/50 bg-emerald-500/5" : "border-primary/30 bg-primary/5"}`}>
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-1.5">
-                  <DollarSign className="w-4 h-4 text-primary" />
-                  <span className="text-[11px] font-bold text-card-foreground uppercase tracking-wider">Final Appraised Value</span>
-                </div>
-                {sub.appraisal_finalized && (
-                  <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30 text-[10px]">
-                    <Lock className="w-3 h-3 mr-1" /> Finalized
-                  </Badge>
-                )}
-              </div>
-              
-              {sub.appraisal_finalized ? (
-                <div>
-                  <div className="text-2xl font-black text-primary mb-2">${finalValue.toLocaleString()}</div>
-                  {sub.appraisal_finalized_by && (
-                    <p className="text-[10px] text-muted-foreground">
-                      Finalized by {sub.appraisal_finalized_by} on {sub.appraisal_finalized_at ? new Date(sub.appraisal_finalized_at).toLocaleDateString() : "—"}
-                    </p>
-                  )}
-                  <Button onClick={handleUnlockAppraisal} disabled={saving} variant="outline" size="sm" className="mt-3">
-                    <Unlock className="w-3.5 h-3.5 mr-1" /> Unlock Appraisal
-                  </Button>
-                </div>
-              ) : (
-                <>
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="relative flex-1">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg font-bold text-muted-foreground">$</span>
-                      <Input
-                        type="text" inputMode="numeric"
-                        value={acvOverride != null ? acvOverride.toLocaleString("en-US") : ""}
-                        onChange={e => { const raw = e.target.value.replace(/[^0-9]/g, ""); setAcvOverride(raw ? Number(raw) : null); }}
-                        placeholder="Enter final appraised value" className="h-10 text-lg font-bold pl-8"
-                      />
-                    </div>
-                    <Button onClick={handleSave} disabled={saving} size="lg">
-                      {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Save className="w-4 h-4 mr-1" />}
-                      Save
-                    </Button>
-                  </div>
-                  <Button onClick={handleFinalize} disabled={saving || (acvOverride == null && finalValue <= 0)} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white">
-                    {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <Lock className="w-4 h-4 mr-1.5" />}
-                    Finalize Appraisal
-                  </Button>
-                  <p className="text-[10px] text-muted-foreground mt-2">Finalizing locks the appraisal and enables check request generation.</p>
-                </>
-              )}
-              {!sub.appraisal_finalized && sub.appraised_by && <p className="text-[10px] text-muted-foreground mt-1">Last appraised by: {sub.appraised_by}</p>}
-            </div>
-            {/* Outcome Entry — appears after finalization */}
-            {sub.appraisal_finalized && (
-              <OutcomeEntryPanel
-                submissionId={sub.id}
-                appraisalFinalizedAt={sub.appraisal_finalized_at}
-                existingOutcome={sub as any}
-                onSaved={() => handleRefreshInspection()}
-              />
-            )}
-          </div>
-
-          {/* ── RIGHT: Final Offer, Profit, Inspection, Market ── */}
-          <div className="space-y-4">
+            {/* Appraisal Sidebar */}
             <AppraisalSidebar
               sub={sub}
               bbVehicle={bbVehicle}
@@ -1367,7 +1298,6 @@ export default function AppraisalTool() {
               onRetailStatsLoaded={setRetailMarketStats}
             />
 
-
             {/* Historical Intelligence Panel */}
             <HistoricalInsightPanel
               dealershipId={dealershipId}
@@ -1378,6 +1308,77 @@ export default function AppraisalTool() {
               learningThreshold={(activeSettings as any)?.learning_threshold ?? 250}
             />
           </div>
+        </div>
+      </div>
+
+      {/* ═══════════════════════════════════════ */}
+      {/*  ZONE 3 — STICKY BOTTOM DECIDE BAR     */}
+      {/* ═══════════════════════════════════════ */}
+      <div className="fixed bottom-0 left-0 right-0 z-30 bg-[hsl(var(--primary))] border-t border-primary-foreground/15 shadow-[0_-4px_20px_rgba(0,0,0,0.3)]">
+        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center gap-4">
+          {sub.appraisal_finalized ? (
+            <>
+              {/* Finalized state */}
+              <div className="flex-1 flex items-center gap-4">
+                <div>
+                  <div className="text-xs text-primary-foreground/60 font-semibold uppercase tracking-wider">Finalized ACV</div>
+                  <div className="text-2xl font-black text-emerald-400">${finalValue.toLocaleString()}</div>
+                </div>
+                {sub.appraisal_finalized_by && (
+                  <div className="text-xs text-primary-foreground/50">
+                    by {sub.appraisal_finalized_by} · {sub.appraisal_finalized_at ? new Date(sub.appraisal_finalized_at).toLocaleDateString() : ""}
+                  </div>
+                )}
+              </div>
+              <Button onClick={handlePrintACVSheet} variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10 border border-primary-foreground/20 rounded-xl">
+                <Printer className="w-4 h-4 mr-1.5" />
+                Print ACV Sheet
+              </Button>
+              <Button onClick={handleUnlockAppraisal} disabled={saving} variant="outline" className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 rounded-xl">
+                <Unlock className="w-4 h-4 mr-1.5" />
+                Unlock
+              </Button>
+            </>
+          ) : (
+            <>
+              {/* Active state */}
+              <div className="shrink-0">
+                <div className="text-[10px] text-primary-foreground/60 font-semibold uppercase tracking-wider">COMPASS™ Offer</div>
+                <div className="text-lg font-black text-primary-foreground">${waterfallFinal.toLocaleString()}</div>
+                {managerOverride.amount != null && managerOverride.amount !== 0 && (
+                  <span className="text-xs font-bold text-amber-300">+${managerOverride.amount.toLocaleString()} MGR ADJ</span>
+                )}
+              </div>
+
+              <div className="flex-1 flex items-center gap-2 max-w-md">
+                <div className="relative flex-1">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg font-bold text-primary-foreground/40">$</span>
+                  <Input
+                    type="text" inputMode="numeric"
+                    value={acvOverride != null ? acvOverride.toLocaleString("en-US") : ""}
+                    onChange={e => { const raw = e.target.value.replace(/[^0-9]/g, ""); setAcvOverride(raw ? Number(raw) : null); }}
+                    placeholder="Final Offer to Customer"
+                    className="h-11 text-lg font-bold pl-8 bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/30 focus:ring-primary-foreground/30"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <Button onClick={handleSave} disabled={saving} variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10 border border-primary-foreground/20 rounded-xl">
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Save className="w-4 h-4 mr-1" />}
+                  Save
+                </Button>
+                <Button
+                  onClick={handleFinalize}
+                  disabled={saving || (acvOverride == null && finalValue <= 0)}
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-base px-6 h-11 rounded-xl shadow-lg shadow-emerald-500/30"
+                >
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <Lock className="w-4 h-4 mr-1.5" />}
+                  Finalize Appraisal
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -1414,7 +1415,6 @@ export default function AppraisalTool() {
               accidents, drivable, smokedIn, tiresReplaced, numKeys, windshield, moonroof,
               exteriorItems, interiorItems, mechItems, engineItems, techItems,
               deductionAmounts: (activeSettings?.deduction_amounts || {}) as Record<string, number>,
-              deductionsConfig: (activeSettings?.deductions_config || {}) as Record<string, boolean>,
             }}
           />
         </div>
