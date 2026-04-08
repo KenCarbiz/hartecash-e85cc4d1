@@ -869,6 +869,17 @@ export default function AppraisalTool() {
       </div>
 
       <div className="max-w-7xl mx-auto p-6">
+        {/* ═══ Deal Status Banner ═══ */}
+        <DealStatusBanner
+          progressStatus={sub.progress_status}
+          offeredPrice={sub.offered_price}
+          estimatedOfferHigh={sub.estimated_offer_high}
+          appraisalFinalized={sub.appraisal_finalized}
+          appraisalFinalizedAt={sub.appraisal_finalized_at}
+          appraisalFinalizedBy={sub.appraisal_finalized_by}
+          acvValue={sub.acv_value}
+        />
+
         {/* ═══ HUD — Key Metrics Strip ═══ */}
         <div className={`grid grid-cols-2 sm:grid-cols-4 ${hidePackFromAppraisal ? "lg:grid-cols-7" : "lg:grid-cols-8"} gap-2.5 mb-5`}>
           {(() => {
