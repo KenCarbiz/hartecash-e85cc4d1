@@ -35,6 +35,27 @@ export interface StrategyModePreset {
   market_adjustment_enabled: boolean;
 }
 
+// Strategy presets: condition_multipliers + global_adjustment_pct overrides per mode
+export const STRATEGY_PRESETS: Record<string, Partial<OfferSettings>> = {
+  conservative: {
+    global_adjustment_pct: -8,
+    condition_multipliers: { excellent: 1.05, very_good: 0.95, good: 0.88, fair: 0.78 },
+  },
+  standard: {
+    global_adjustment_pct: 0,
+    condition_multipliers: { excellent: 1.10, very_good: 1.00, good: 0.92, fair: 0.82 },
+  },
+  aggressive: {
+    global_adjustment_pct: 5,
+    condition_multipliers: { excellent: 1.15, very_good: 1.05, good: 0.97, fair: 0.87 },
+  },
+  predator: {
+    global_adjustment_pct: 10,
+    condition_multipliers: { excellent: 1.20, very_good: 1.10, good: 1.02, fair: 0.93 },
+  },
+  custom: {},
+};
+
 export const STRATEGY_MODE_PRESETS: Record<StrategyMode, StrategyModePreset> = {
   conservative: {
     label: "Conservative",
@@ -599,13 +620,20 @@ export function calculateOffer(
 ): OfferEstimate | null {
   if (!bbVehicle) return null;
 
-  const cfg = settings || DEFAULT_SETTINGS;
+  const rawCfg = settings || DEFAULT_SETTINGS;
+  const strategyMode: StrategyMode = rawCfg.strategy_mode ?? "standard";
+
+  // Merge strategy preset into settings (without mutating original)
+  const preset = strategyMode !== "custom" ? STRATEGY_PRESETS[strategyMode] : undefined;
+  const cfg: OfferSettings = preset
+    ? { ...rawCfg, ...preset, condition_multipliers: { ...(rawCfg.condition_multipliers || DEFAULT_CONDITION_MULTIPLIERS), ...(preset.condition_multipliers as ConditionMultipliers) } }
+    : rawCfg;
+
   const ded = cfg.deductions_config || DEFAULT_DEDUCTIONS;
   const rawAmt = cfg.deduction_amounts || DEFAULT_DEDUCTION_AMOUNTS;
   const condMults = cfg.condition_multipliers || DEFAULT_CONDITION_MULTIPLIERS;
   const condBasisMap = cfg.condition_basis_map || DEFAULT_CONDITION_BASIS_MAP;
   const modes = cfg.deduction_modes || DEFAULT_DEDUCTION_MODES;
-  const strategyMode: StrategyMode = cfg.strategy_mode ?? "standard";
   const mktConfig: MarketAdjustmentConfig = cfg.market_adjustment ?? DEFAULT_MARKET_ADJUSTMENT;
 
   // Apply archetype-specific deduction overrides
