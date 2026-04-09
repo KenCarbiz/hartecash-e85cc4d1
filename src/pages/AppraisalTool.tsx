@@ -733,6 +733,30 @@ export default function AppraisalTool() {
     }
     setSaving(false);
   };
+
+  const handleUpdateAcv = async () => {
+    if (!sub) return;
+    const newVal = acvOverride != null && acvOverride > 0 ? acvOverride : finalValue;
+    if (!newVal || newVal <= 0) {
+      toast({ title: "Invalid", description: "Enter a valid ACV amount.", variant: "destructive" });
+      return;
+    }
+    setSaving(true);
+    const { error } = await supabase
+      .from("submissions")
+      .update({ acv_value: newVal } as any)
+      .eq("id", sub.id);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      setSub(prev => prev ? { ...prev, acv_value: newVal } : prev);
+      setAcvOverride(newVal);
+      setLastSavedAt(new Date());
+      toast({ title: "ACV Updated", description: `Appraisal value updated to $${newVal.toLocaleString()}. Still finalized.` });
+    }
+    setSaving(false);
+  };
+
   const handlePrintACVSheet = useCallback(() => {
     setShowACVSheet(true);
     setTimeout(() => {
