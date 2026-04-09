@@ -908,7 +908,31 @@ window.addEventListener("message", function(e) {
                 A styled HTML link that opens the trade-in page. Paste it anywhere — banners, sidebars, vehicle pages, homepage, service pages.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
+              {/* Button Preview */}
+              <div className="rounded-lg border border-border overflow-hidden">
+                <Label className="text-xs text-muted-foreground px-3 pt-2 block">Preview</Label>
+                <div className="p-4 bg-muted/20 flex justify-center">
+                  <a
+                    href="#"
+                    onClick={(e) => e.preventDefault()}
+                    style={{
+                      display: "inline-block",
+                      padding: "14px 28px",
+                      background: buttonColor,
+                      color: "#fff",
+                      fontFamily: "system-ui, sans-serif",
+                      fontSize: "16px",
+                      fontWeight: 700,
+                      borderRadius: "8px",
+                      textDecoration: "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {buttonText}
+                  </a>
+                </div>
+              </div>
               <CodeBlock code={buttonSnippet} id="button" />
               <p className="text-xs text-muted-foreground mt-3">
                 <strong>Best for:</strong> Quick CTA anywhere on the site. Zero JavaScript, works everywhere.
