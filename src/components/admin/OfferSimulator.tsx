@@ -291,6 +291,8 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
   const [expandedBlock, setExpandedBlock] = useState<string | null>(null);
   const [compareMode, setCompareMode] = useState(false);
   const [showDetailPanel, setShowDetailPanel] = useState<string | null>(null);
+  const [retailStats, setRetailStats] = useState<RetailStats | null>(null);
+  const [retailListings, setRetailListings] = useState<RetailListing[]>([]);
 
   // Sync when parent settings change
   const prevSettingsRef = useRef(settings);
