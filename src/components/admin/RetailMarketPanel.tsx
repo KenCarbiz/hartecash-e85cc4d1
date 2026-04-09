@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Store, TrendingUp, Clock, BarChart3, ChevronDown, Loader2, MapPin, ExternalLink, Car,
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import ClosestCompCard, { getClosestCompId } from "@/components/appraisal/ClosestCompCard";
 
 export interface RetailStats {
   mean_days_to_turn: number | null;
