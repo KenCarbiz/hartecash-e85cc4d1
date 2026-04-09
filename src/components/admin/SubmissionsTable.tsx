@@ -329,6 +329,10 @@ const SubmissionsTable = ({
                         </span>
                       </td>
                       <td className={`${cellPad} whitespace-nowrap`}>
+                        <div>{sub.email || "—"}</div>
+                        <div className="text-muted-foreground text-xs">{formatPhone(sub.phone) || ""}</div>
+                      </td>
+                      <td className={`${cellPad} whitespace-nowrap`}>
                         {(() => {
                           const loc = sub.store_location_id ? dealerLocations.find(l => l.id === sub.store_location_id) : null;
                           return loc ? (
