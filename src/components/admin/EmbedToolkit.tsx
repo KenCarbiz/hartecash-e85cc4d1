@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Copy, Check, Code2, ExternalLink, Monitor, MapPin, PanelRightOpen, LayoutList, Lightbulb, MousePointerClick } from "lucide-react";
+import { Copy, Check, Code2, ExternalLink, Monitor, MapPin, PanelRightOpen, LayoutList, Lightbulb, MousePointerClick, Award, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
@@ -60,6 +60,11 @@ const EmbedToolkit = () => {
   const [stickyText, setStickyText] = useState("Get your trade-in value");
   const [stickyCtaText, setStickyCtaText] = useState("See Value");
   const [stickyPosition, setStickyPosition] = useState("bottom");
+
+  // Push/Pull/Tow options
+  const pptEnabled = config.ppt_enabled;
+  const pptAmount = config.ppt_guarantee_amount || 3000;
+  const [pptButtonText, setPptButtonText] = useState(`Get Your $${pptAmount.toLocaleString()} Trade Certificate`);
 
   useEffect(() => {
     supabase
@@ -197,6 +202,49 @@ window.addEventListener("message", function(e) {
 })();
 </script>`;
 
+  // ── Snippet: Push/Pull/Tow Floating Widget ──
+  const pptWidgetSnippet = `<!-- ${config.dealership_name}${selectedLocLabel ? ` — ${selectedLocLabel.name}` : ''} - Push/Pull/Tow Certificate Widget -->
+<script>
+(function(){
+  var s = document.createElement("script");
+  s.src = "${baseUrl}/embed.js";
+  s.async = true;
+  s.onload = function(){
+    HarteCash.init({
+      baseUrl: "${baseUrl}",
+      text: "${pptButtonText}",
+      color: "#d97706",
+      position: "${widgetPosition}",
+      openMode: "drawer",
+      ppt: true,
+      amount: ${pptAmount},
+      ${storeParam}
+      drawerTitle: "${pptButtonText}"
+    });
+  };
+  document.body.appendChild(s);
+})();
+</script>`;
+
+  // ── Snippet: Push/Pull/Tow iFrame ──
+  const pptIframeSnippet = `<!-- ${config.dealership_name}${selectedLocLabel ? ` — ${selectedLocLabel.name}` : ''} - Push/Pull/Tow Certificate Form -->
+<iframe
+  id="hartecash-ppt"
+  src="${buildUrl("/push-pull-tow", [`amount=${pptAmount}`])}"
+  style="width:100%;min-height:700px;border:none;border-radius:12px"
+  title="$${pptAmount.toLocaleString()} Minimum Trade Guarantee - ${config.dealership_name}"
+  loading="lazy"
+  allow="camera"
+></iframe>
+<script>
+window.addEventListener("message", function(e) {
+  if (e.data && e.data.type === "hartecash-resize") {
+    var iframe = document.getElementById("hartecash-ppt");
+    if (iframe) iframe.style.height = e.data.height + "px";
+  }
+});
+</script>`;
+
   const CodeBlock = ({ code, id }: { code: string; id: string }) => (
     <div className="relative">
       <pre className="bg-muted/50 border border-border rounded-lg p-4 text-xs overflow-x-auto whitespace-pre-wrap font-mono text-foreground/80 max-h-64">
@@ -235,6 +283,9 @@ window.addEventListener("message", function(e) {
                 <li><strong>Site-Wide Floating Button:</strong> Add the <em>Floating Widget</em> to the site footer — it appears on every page and opens a slide-out panel.</li>
                 <li><strong>Ghost Link on VDP/SRP:</strong> The <em>Ghost Link</em> follows the customer as they scroll vehicle pages — a subtle, persistent CTA that opens the trade panel.</li>
                 <li><strong>VDP &amp; SRP Banners:</strong> Place the <em>Inventory Banner</em> on vehicle detail and search results pages for a more prominent inline CTA.</li>
+                {pptEnabled && (
+                  <li><strong>Push/Pull/Tow Certificate:</strong> If you offer a minimum trade guarantee, add the <em>PPT Certificate</em> page or widget. Customers enter their car and get a guaranteed minimum certificate.</li>
+                )}
               </ul>
             </div>
           </div>
@@ -370,9 +421,94 @@ window.addEventListener("message", function(e) {
         </CardContent>
       </Card>
 
+      {/* ── Iframe Content & Offer Flow ── */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Iframe Display Settings</CardTitle>
+          <CardDescription>
+            Customize the content shown on embedded iframe pages, and control when the offer is displayed relative to customer info capture.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Trade iframe content */}
+          <div className="space-y-3">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Trade-In iFrame Content</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Headline</Label>
+                <Input
+                  value={config.trade_iframe_headline || ""}
+                  placeholder="What's Your Trade Worth?"
+                  readOnly
+                  className="bg-muted/30"
+                />
+                <p className="text-[10px] text-muted-foreground">Edit in Branding → Hero Content section</p>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Subtext</Label>
+                <Input
+                  value={config.trade_iframe_subtext || ""}
+                  placeholder="Get your trade-in value in under 2 minutes..."
+                  readOnly
+                  className="bg-muted/30"
+                />
+                <p className="text-[10px] text-muted-foreground">Edit in Branding → Hero Content section</p>
+              </div>
+            </div>
+          </div>
+
+          {/* PPT content (if enabled) */}
+          {pptEnabled && (
+            <div className="space-y-3 pt-2 border-t border-border">
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Push/Pull/Tow Certificate Content</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Guarantee Amount</Label>
+                  <div className="flex items-center gap-1 text-sm font-bold text-amber-600">${pptAmount.toLocaleString()}</div>
+                  <p className="text-[10px] text-muted-foreground">Configured in Branding settings</p>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Headline</Label>
+                  <Input
+                    value={config.ppt_headline || ""}
+                    placeholder={`$${pptAmount.toLocaleString()} Minimum Trade Guarantee`}
+                    readOnly
+                    className="bg-muted/30"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Subtext</Label>
+                  <Input
+                    value={config.ppt_subtext || ""}
+                    placeholder="Push it, pull it, or tow it..."
+                    readOnly
+                    className="bg-muted/30"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Offer flow reference */}
+          <div className="pt-2 border-t border-border">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border">
+              <Info className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-xs font-semibold text-card-foreground">Offer Flow: Show Offer Before or After Contact Info?</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Control whether customers see their offer before or after entering their name/phone/email.
+                  This is configured in <strong>Configuration → Lead Form → Offer-First Flow</strong> toggle.
+                  The same setting applies to all iframe integrations including trade-in and Push/Pull/Tow.
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* ── Code Snippets ── */}
       <Tabs defaultValue="iframe" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className={`grid w-full ${pptEnabled ? "grid-cols-6" : "grid-cols-5"}`}>
           <TabsTrigger value="iframe" className="gap-1.5 text-xs">
             <Monitor className="w-3.5 h-3.5" /> Trade iFrame
           </TabsTrigger>
@@ -385,6 +521,11 @@ window.addEventListener("message", function(e) {
           <TabsTrigger value="vdp" className="gap-1.5 text-xs">
             <LayoutList className="w-3.5 h-3.5" /> Banner
           </TabsTrigger>
+          {pptEnabled && (
+            <TabsTrigger value="ppt" className="gap-1.5 text-xs">
+              <Award className="w-3.5 h-3.5" /> Push/Pull/Tow
+            </TabsTrigger>
+          )}
           <TabsTrigger value="button" className="gap-1.5 text-xs">
             <ExternalLink className="w-3.5 h-3.5" /> Button
           </TabsTrigger>
@@ -596,6 +737,85 @@ window.addEventListener("message", function(e) {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Push/Pull/Tow */}
+        {pptEnabled && (
+          <TabsContent value="ppt" className="mt-4 space-y-3">
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-base">Push/Pull/Tow Certificate</CardTitle>
+                  <Badge className="text-[10px] bg-amber-100 text-amber-800 border-amber-200">Guarantee</Badge>
+                </div>
+                <CardDescription>
+                  Offer customers a guaranteed ${pptAmount.toLocaleString()} minimum trade-in value. If the market offer is higher, they get the higher amount. Embed as an iframe page replacement or use the floating widget.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* PPT CTA customization */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Widget Button Text</Label>
+                    <Input value={pptButtonText} onChange={(e) => setPptButtonText(e.target.value)} />
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {[
+                        `Get Your $${pptAmount.toLocaleString()} Trade Certificate`,
+                        "Push Pull or Tow — Get Certificate",
+                        `$${pptAmount.toLocaleString()} Minimum Trade Guarantee`,
+                        "Get Your Guaranteed Trade Value",
+                      ].map((preset) => (
+                        <Badge
+                          key={preset}
+                          variant="outline"
+                          className="text-[10px] cursor-pointer hover:bg-amber-50 transition-colors"
+                          onClick={() => setPptButtonText(preset)}
+                        >
+                          {preset}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Guarantee Amount</Label>
+                    <div className="p-2 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
+                      <p className="text-lg font-extrabold text-amber-700 dark:text-amber-400">${pptAmount.toLocaleString()}</p>
+                      <p className="text-[10px] text-muted-foreground">Configured in Branding settings (ppt_guarantee_amount)</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Two options: iframe or widget */}
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-xs font-semibold text-card-foreground mb-2 block">Option 1: Full Page iFrame</Label>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Replace or create a "Push Pull Tow" page on the dealer site. The iframe shows the guarantee banner, vehicle form, and certificate.
+                    </p>
+                    <CodeBlock code={pptIframeSnippet} id="ppt-iframe" />
+                  </div>
+                  <div className="pt-3 border-t border-border">
+                    <Label className="text-xs font-semibold text-card-foreground mb-2 block">Option 2: Floating Widget</Label>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Add a floating button to every page. Clicking opens a slide-out panel with the Push/Pull/Tow certificate form.
+                    </p>
+                    <CodeBlock code={pptWidgetSnippet} id="ppt-widget" />
+                  </div>
+                </div>
+
+                <div className="bg-muted/30 rounded-lg border border-border p-3 space-y-2">
+                  <p className="text-xs font-semibold text-card-foreground">How it works for the customer:</p>
+                  <ol className="text-xs text-muted-foreground space-y-1 list-decimal pl-4">
+                    <li>Customer clicks "Get Your Push/Pull/Tow Certificate" on the dealer site.</li>
+                    <li>They enter their vehicle (VIN, license plate, or Year/Make/Model).</li>
+                    <li>If the market value is higher than ${pptAmount.toLocaleString()}, they get the higher offer.</li>
+                    <li>If the market value is lower, the ${pptAmount.toLocaleString()} guarantee applies toward their next vehicle purchase.</li>
+                    <li>Certificate is generated and emailed — drives the customer to the showroom.</li>
+                  </ol>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
 
         {/* Simple Link Button */}
         <TabsContent value="button" className="mt-4 space-y-3">

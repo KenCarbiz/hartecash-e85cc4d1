@@ -54,6 +54,10 @@ export interface SiteConfig {
   trade_hero_subtext: string;
   trade_iframe_headline: string;
   trade_iframe_subtext: string;
+  ppt_enabled: boolean;
+  ppt_guarantee_amount: number;
+  ppt_headline: string;
+  ppt_subtext: string;
   business_hours: { days: string; hours: string }[];
   facebook_url: string;
   instagram_url: string;
@@ -109,6 +113,10 @@ const DEFAULTS: SiteConfig = {
   trade_hero_subtext: "Already shopping with us? Send us your trade details from home — we'll have your value ready.",
   trade_iframe_headline: "What's Your Trade Worth?",
   trade_iframe_subtext: "Get your trade-in value in under 2 minutes — includes your tax savings.",
+  ppt_enabled: false,
+  ppt_guarantee_amount: 3000,
+  ppt_headline: "",
+  ppt_subtext: "",
   business_hours: [
     { days: "Mon–Thu", hours: "9 AM – 7 PM" },
     { days: "Fri–Sat", hours: "9 AM – 6 PM" },
@@ -151,6 +159,10 @@ const LOCATION_OVERRIDE_KEYS: (keyof SiteConfig)[] = [
   "trade_hero_subtext",
   "trade_iframe_headline",
   "trade_iframe_subtext",
+  "ppt_enabled",
+  "ppt_guarantee_amount",
+  "ppt_headline",
+  "ppt_subtext",
   "business_hours",
   "facebook_url",
   "instagram_url",

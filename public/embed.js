@@ -15,11 +15,19 @@
 
   function buildIframeUrl(baseUrl, opts) {
     var params = [];
-    params.push("mode=" + (opts.mode || "trade"));
+    var path = "/trade-in";
+
+    if (opts.ppt) {
+      path = "/push-pull-tow";
+      if (opts.amount) params.push("amount=" + opts.amount);
+    } else {
+      params.push("mode=" + (opts.mode || "trade"));
+    }
+
     if (opts.store) params.push("store=" + opts.store);
     if (opts.ref) params.push("ref=" + opts.ref);
     if (opts.rep) params.push("rep=" + opts.rep);
-    return baseUrl + "/trade-in?" + params.join("&");
+    return baseUrl + path + "?" + params.join("&");
   }
 
   function injectStyles(css) {
