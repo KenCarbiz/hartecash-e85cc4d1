@@ -1459,13 +1459,21 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                   )}
 
                   {compareMode && liveSavedResult && (
-                    <div className="rounded-lg border border-border bg-muted/20 p-3">
+                     <div className="rounded-lg border border-border bg-muted/20 p-3">
                       <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-1">Saved Logic Offer</div>
                       <div className="text-lg font-bold text-muted-foreground">
                         ${liveSavedResult.high.toLocaleString()}
                       </div>
                     </div>
                   )}
+
+                  {/* Market Calibration Strip */}
+                  <MarketCalibrationStrip
+                    listings={retailListings}
+                    stats={retailStats}
+                    vehicleMileage={liveMileage}
+                    currentOffer={liveResult.high}
+                  />
 
                   {/* Profit Gauge */}
                   <div className="rounded-lg border border-border bg-muted/20 p-4">
