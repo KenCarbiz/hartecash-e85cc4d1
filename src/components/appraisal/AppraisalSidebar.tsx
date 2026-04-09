@@ -40,6 +40,8 @@ interface Props {
   activeSettings: any;
   dealerZip?: string;
   closestCompPrice?: number | null;
+  wholesaleRough?: number;
+  soldAvg?: number | null;
   onRefreshInspection?: () => Promise<void>;
   onRetailStatsLoaded?: (stats: RetailStats | null) => void;
   onClosestCompPrice?: (price: number | null) => void;
