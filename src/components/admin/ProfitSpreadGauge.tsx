@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Target, TrendingUp, TrendingDown, DollarSign, ShieldCheck, AlertTriangle, BarChart3 } from "lucide-react";
+import { Target, TrendingUp, TrendingDown, ShieldCheck, AlertTriangle, BarChart3 } from "lucide-react";
 
 interface Props {
   offerHigh: number;
@@ -8,6 +8,8 @@ interface Props {
   retailAvg: number;
   msrp: number;
   retailClean?: number;
+  wholesaleRough?: number;
+  soldAvg?: number | null;
   closestCompPrice?: number | null;
   retailListings?: { avgPrice?: number; medianPrice?: number; count?: number } | null;
 }
@@ -19,6 +21,8 @@ export default function ProfitSpreadGauge({
   retailAvg,
   msrp,
   retailClean,
+  wholesaleRough,
+  soldAvg,
   closestCompPrice,
   retailListings,
 }: Props) {
@@ -30,8 +34,10 @@ export default function ProfitSpreadGauge({
 
     // Build all value points for the gauge — MSRP excluded from scale
     const allValues = [wholesaleAvg, tradeinAvg, retailAvg, offerHigh];
+    if (wholesaleRough && wholesaleRough > 0) allValues.push(wholesaleRough);
     if (retailClean && retailClean > 0) allValues.push(retailClean);
     if (closestCompPrice && closestCompPrice > 0) allValues.push(closestCompPrice);
+    if (soldAvg && soldAvg > 0) allValues.push(soldAvg);
     if (retailListings?.avgPrice) allValues.push(retailListings.avgPrice);
 
     const rangeMin = Math.min(...allValues) * 0.88;
@@ -87,7 +93,7 @@ export default function ProfitSpreadGauge({
       zoneBorder,
       zoneText,
     };
-  }, [offerHigh, wholesaleAvg, tradeinAvg, retailAvg, msrp, retailClean, closestCompPrice, retailListings]);
+  }, [offerHigh, wholesaleAvg, tradeinAvg, retailAvg, msrp, retailClean, wholesaleRough, soldAvg, closestCompPrice, retailListings]);
 
   if (!data) return null;
 
@@ -96,23 +102,33 @@ export default function ProfitSpreadGauge({
   const wholesalePos = pctPos(wholesaleAvg);
   const tradeinPos = pctPos(tradeinAvg);
   const retailPos = pctPos(retailAvg);
-  const liveMarketPos = retailListings?.avgPrice ? pctPos(retailListings.avgPrice) : null;
+  const wholesaleRoughPos = wholesaleRough && wholesaleRough > 0 ? pctPos(wholesaleRough) : null;
   const retailCleanPos = retailClean && retailClean > 0 ? pctPos(retailClean) : null;
+  const soldAvgPos = soldAvg && soldAvg > 0 ? pctPos(soldAvg) : null;
   const closestCompPos = closestCompPrice && closestCompPrice > 0 ? pctPos(closestCompPrice) : null;
+  const liveMarketPos = retailListings?.avgPrice ? pctPos(retailListings.avgPrice) : null;
 
   const ZoneIcon = data.zoneIcon;
 
-  // Build marker list for the spectrum — MSRP removed
-  const markers: { label: string; shortLabel: string; pos: number; value: number; color: string; dotColor: string; isPrimary?: boolean }[] = [
+  // Build marker list for the spectrum
+  const markers: { label: string; shortLabel: string; pos: number; value: number; color: string; dotColor: string; isPrimary?: boolean }[] = [];
+
+  if (wholesaleRoughPos !== null && wholesaleRough) {
+    markers.push({ label: "Wholesale Rough", shortLabel: "WHL RGH", pos: wholesaleRoughPos, value: wholesaleRough, color: "text-gray-500", dotColor: "bg-gray-400" });
+  }
+  markers.push(
     { label: "Wholesale Avg", shortLabel: "WHL", pos: wholesalePos, value: wholesaleAvg, color: "text-blue-500", dotColor: "bg-blue-500" },
     { label: "Trade-In Avg", shortLabel: "TRD", pos: tradeinPos, value: tradeinAvg, color: "text-primary", dotColor: "bg-primary" },
     { label: "Retail Avg", shortLabel: "RTL", pos: retailPos, value: retailAvg, color: "text-green-500", dotColor: "bg-green-500" },
-  ];
+  );
   if (retailCleanPos !== null && retailClean) {
     markers.push({ label: "Retail Clean", shortLabel: "RTL Clean", pos: retailCleanPos, value: retailClean, color: "text-emerald-600 dark:text-emerald-400", dotColor: "bg-emerald-500" });
   }
   if (closestCompPos !== null && closestCompPrice) {
     markers.push({ label: "Closest Comp", shortLabel: "Comp", pos: closestCompPos, value: closestCompPrice, color: "text-amber-600 dark:text-amber-400", dotColor: "bg-amber-500" });
+  }
+  if (soldAvgPos !== null && soldAvg) {
+    markers.push({ label: "90d Sold Avg", shortLabel: "Sold Avg", pos: soldAvgPos, value: soldAvg, color: "text-emerald-500", dotColor: "bg-emerald-600" });
   }
   if (liveMarketPos !== null && retailListings?.avgPrice) {
     markers.push({ label: "Live Market", shortLabel: "MKT", pos: liveMarketPos, value: retailListings.avgPrice, color: "text-violet-500", dotColor: "bg-violet-500", isPrimary: true });
@@ -120,6 +136,12 @@ export default function ProfitSpreadGauge({
 
   // Sort markers by position
   markers.sort((a, b) => a.pos - b.pos);
+
+  // Offer Zone band positions (WHL Avg → RTL Avg)
+  const offerZoneLeft = wholesalePos;
+  const offerZoneWidth = Math.max(retailPos - wholesalePos, 0);
+  const offerInZone = offerHigh >= wholesaleAvg && offerHigh <= retailAvg;
+  const offerAboveRetail = offerHigh > retailAvg;
 
   return (
     <div className="space-y-4">
@@ -143,22 +165,38 @@ export default function ProfitSpreadGauge({
       <div className="relative pt-6 pb-8">
         {/* Gradient track */}
         <div className="relative h-3 rounded-full overflow-hidden shadow-inner">
-          {/* Base gradient: blue → green → amber → red */}
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/30 via-green-500/30 via-60% to-destructive/30" />
+          {/* Base gradient: gray → blue → green */}
+          <div className="absolute inset-0 bg-gradient-to-r from-gray-400/20 via-blue-500/20 via-40% to-green-500/20" />
 
-          {/* Sweet spot overlay */}
+          {/* Offer Zone band */}
           <div
-            className="absolute top-0 bottom-0 bg-green-500/20 backdrop-blur-sm"
+            className={`absolute top-0 bottom-0 ${
+              offerAboveRetail ? "bg-destructive/15" : offerInZone ? "bg-primary/15" : "bg-primary/10"
+            }`}
             style={{
-              left: `${wholesalePos}%`,
-              width: `${Math.max(tradeinPos - wholesalePos, 0)}%`,
+              left: `${offerZoneLeft}%`,
+              width: `${offerZoneWidth}%`,
             }}
           />
         </div>
 
-        {/* Market markers (tick marks + labels above) */}
+        {/* Offer Zone label */}
+        {offerZoneWidth > 5 && (
+          <div
+            className="absolute top-[42px] pointer-events-none"
+            style={{
+              left: `${offerZoneLeft + offerZoneWidth / 2}%`,
+              transform: "translateX(-50%)",
+            }}
+          >
+            <span className="text-[8px] font-semibold text-primary/50 uppercase tracking-widest">
+              Offer Zone
+            </span>
+          </div>
+        )}
+
+        {/* Market markers (tick marks + labels) */}
         {markers.map((m, i) => {
-          // Stagger label positions to prevent overlap
           const isAbove = i % 2 === 0;
           return (
             <div
@@ -193,9 +231,9 @@ export default function ProfitSpreadGauge({
           style={{ left: `${offerPos}%`, top: '16px' }}
         >
           <div className="relative">
-            {/* Glow pulse — larger */}
+            {/* Glow pulse */}
             <div className="absolute -left-4 -top-4 w-8 h-8 rounded-full bg-primary/25 animate-pulse" />
-            {/* Diamond — larger and bolder */}
+            {/* Diamond */}
             <div
               className="absolute -left-[9px] -top-[9px] w-[18px] h-[18px] bg-primary rotate-45 rounded-[3px] shadow-lg shadow-primary/50 border-2 border-background"
             />
@@ -289,6 +327,11 @@ export default function ProfitSpreadGauge({
 
       {/* === LEGEND === */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] text-muted-foreground pt-1 border-t border-border/40">
+        {wholesaleRough && wholesaleRough > 0 && (
+          <span className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-gray-400" /> WHL Rough
+          </span>
+        )}
         <span className="flex items-center gap-1">
           <div className="w-2 h-2 rounded-full bg-blue-500" /> Wholesale
         </span>
@@ -306,6 +349,11 @@ export default function ProfitSpreadGauge({
         {closestCompPrice && closestCompPrice > 0 && (
           <span className="flex items-center gap-1">
             <div className="w-2 h-2 rounded-full bg-amber-500" /> Comp
+          </span>
+        )}
+        {soldAvg && soldAvg > 0 && (
+          <span className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-emerald-600" /> Sold Avg
           </span>
         )}
         {retailListings?.avgPrice && (
