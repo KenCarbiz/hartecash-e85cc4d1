@@ -687,7 +687,7 @@ window.addEventListener("message", function(e) {
               {/* Sticky Preview — shown in context of a fake dealer VDP */}
               <div className="rounded-xl border border-border overflow-hidden">
                 <Label className="text-xs text-muted-foreground px-3 pt-2 block">Preview — how it appears on a vehicle detail page</Label>
-                <div className="relative bg-gradient-to-b from-muted/20 to-muted/50 min-h-[200px]">
+                <div className="relative bg-gradient-to-b from-muted/20 to-muted/50" style={{ minHeight: 220 }}>
                   {/* Fake VDP content */}
                   <div className="p-4 space-y-2">
                     <div className="h-24 bg-muted/40 rounded-lg flex items-center justify-center text-xs text-muted-foreground/30">[ Vehicle Photo Gallery ]</div>
@@ -702,15 +702,21 @@ window.addEventListener("message", function(e) {
                   </div>
                   {/* Ghost link bar */}
                   <div
-                    className={`${stickyPosition === "bottom" ? "absolute bottom-0 left-0 right-0" : "absolute top-0 left-0 right-0"}`}
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      ...(stickyPosition === "bottom" ? { bottom: 0 } : { top: 0 }),
+                      background: buttonColor,
+                      opacity: 0.94,
+                    }}
                   >
                     <div
                       className="flex items-center justify-center gap-2.5 py-2.5 px-4 text-white"
-                      style={{ background: `${buttonColor}f0`, backdropFilter: "blur(8px)" }}
                     >
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></svg>
                       <span className="text-sm font-semibold">{stickyText}</span>
-                      <span className="bg-white/20 border border-white/30 text-white text-xs font-bold px-3 py-1 rounded-full">{stickyCtaText}</span>
+                      <span className="text-xs font-bold px-3 py-1 rounded-full" style={{ background: "rgba(255,255,255,0.2)", border: "1px solid rgba(255,255,255,0.3)" }}>{stickyCtaText}</span>
                     </div>
                   </div>
                 </div>
@@ -777,7 +783,7 @@ window.addEventListener("message", function(e) {
                 <div className="p-3">
                   <div
                     className="flex items-center gap-4 p-4 text-white rounded-xl flex-wrap"
-                    style={{ background: `linear-gradient(135deg, ${buttonColor}, ${buttonColor}dd)` }}
+                    style={{ background: buttonColor }}
                   >
                     <div className="flex-shrink-0 opacity-90">
                       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></svg>
