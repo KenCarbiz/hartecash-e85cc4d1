@@ -315,20 +315,15 @@ const SubmissionsTable = ({
                           {sub.docs_uploaded && <span title="Docs uploaded"><FileText className="w-3 h-3 text-primary ml-0.5 shrink-0" /></span>}
                         </span>
                       </td>
-                      {!isCompact && <td className={`${cellPad} text-xs font-mono text-muted-foreground whitespace-nowrap`}>{sub.vin || "—"}</td>}
                       <td className={`${cellPad} whitespace-nowrap`}>
-                        <div>{sub.email || "—"}</div>
-                        <div className="text-muted-foreground text-xs">{formatPhone(sub.phone) || ""}</div>
-                      </td>
-                      <td className={cellPad}>
-                        <Badge variant={sub.lead_source === "service" ? "secondary" : sub.lead_source === "in_store_trade" || sub.lead_source === "trade" ? "default" : "outline"} className="text-xs">
-                          {sub.lead_source === "service" ? "Service" : sub.lead_source === "in_store_trade" ? "In-Store" : sub.lead_source === "trade" ? "Trade-In" : "Off Street"}
-                        </Badge>
-                        {sub.store_location_id && (
-                          <p className="text-[10px] text-muted-foreground mt-0.5 truncate max-w-[120px]">
-                            {dealerLocations.find(l => l.id === sub.store_location_id)?.name || "—"}
-                          </p>
-                        )}
+                        {(() => {
+                          const loc = sub.store_location_id ? dealerLocations.find(l => l.id === sub.store_location_id) : null;
+                          return loc ? (
+                            <Badge variant="outline" className="text-[10px] font-medium truncate max-w-[120px]">{loc.name}</Badge>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          );
+                        })()}
                       </td>
                       <td className={`${cellPad} text-right whitespace-nowrap`}>
                         {(() => {
