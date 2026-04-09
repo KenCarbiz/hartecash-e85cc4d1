@@ -63,9 +63,12 @@ interface Props {
   currentAcv?: number;
   onStatsLoaded?: (stats: RetailStats | null) => void;
   onClosestCompPrice?: (price: number | null) => void;
+  onListingsLoaded?: (listings: RetailListing[]) => void;
 }
 
-export default function RetailMarketPanel({ vin, uvc, zipcode, dealerZip, radiusMiles = 100, offerHigh, vehicleMileage, currentAcv, onStatsLoaded, onClosestCompPrice }: Props) {
+export type { RetailListing };
+
+export default function RetailMarketPanel({ vin, uvc, zipcode, dealerZip, radiusMiles = 100, offerHigh, vehicleMileage, currentAcv, onStatsLoaded, onClosestCompPrice, onListingsLoaded }: Props) {
   const [stats, setStats] = useState<RetailStats | null>(null);
   const [listings, setListings] = useState<RetailListing[]>([]);
   const [loading, setLoading] = useState(false);
@@ -115,6 +118,7 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, dealerZip, radius
       const fetchedListings: RetailListing[] = data?.listings || [];
       setListings(fetchedListings);
       setShowListings(true);
+      onListingsLoaded?.(fetchedListings);
       // Bubble up closest comp price
       if (onClosestCompPrice && vehicleMileage) {
         const subMiles = typeof vehicleMileage === "number"

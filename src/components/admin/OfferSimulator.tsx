@@ -17,7 +17,8 @@ import type { FormData, BBVehicle, BBAddDeduct } from "@/components/sell-form/ty
 import { supabase } from "@/integrations/supabase/client";
 import ProfitSpreadGauge from "./ProfitSpreadGauge";
 import MarketContextPanel from "./MarketContextPanel";
-import RetailMarketPanel from "./RetailMarketPanel";
+import RetailMarketPanel, { type RetailStats, type RetailListing } from "./RetailMarketPanel";
+import MarketCalibrationStrip from "./MarketCalibrationStrip";
 import { useToast } from "@/hooks/use-toast";
 
 interface Props {
@@ -290,6 +291,8 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
   const [expandedBlock, setExpandedBlock] = useState<string | null>(null);
   const [compareMode, setCompareMode] = useState(false);
   const [showDetailPanel, setShowDetailPanel] = useState<string | null>(null);
+  const [retailStats, setRetailStats] = useState<RetailStats | null>(null);
+  const [retailListings, setRetailListings] = useState<RetailListing[]>([]);
 
   // Sync when parent settings change
   const prevSettingsRef = useRef(settings);
@@ -1456,13 +1459,21 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                   )}
 
                   {compareMode && liveSavedResult && (
-                    <div className="rounded-lg border border-border bg-muted/20 p-3">
+                     <div className="rounded-lg border border-border bg-muted/20 p-3">
                       <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-1">Saved Logic Offer</div>
                       <div className="text-lg font-bold text-muted-foreground">
                         ${liveSavedResult.high.toLocaleString()}
                       </div>
                     </div>
                   )}
+
+                  {/* Market Calibration Strip */}
+                  <MarketCalibrationStrip
+                    listings={retailListings}
+                    stats={retailStats}
+                    vehicleMileage={liveMileage}
+                    currentOffer={liveResult.high}
+                  />
 
                   {/* Profit Gauge */}
                   <div className="rounded-lg border border-border bg-muted/20 p-4">
@@ -1497,6 +1508,9 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                       zipcode={liveZip}
                       radiusMiles={(activeSettings as any).retail_search_radius || 100}
                       offerHigh={liveResult.high}
+                      vehicleMileage={liveMileage}
+                      onStatsLoaded={setRetailStats}
+                      onListingsLoaded={setRetailListings}
                     />
                   </div>
                 </>
