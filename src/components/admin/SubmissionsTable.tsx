@@ -327,33 +327,24 @@ const SubmissionsTable = ({
                       </td>
                       <td className={`${cellPad} text-right whitespace-nowrap`}>
                         {(() => {
-                          const isAcceptedAppt = isAcceptedWithAppointment(sub);
-                          const isAcceptedNoAppt = isAcceptedWithoutAppointment(sub);
-                          const isPending = isOfferPendingSubmission(sub);
-                          const isUpdated = isOfferUpdatedByStaff(sub);
-
-                          const bubbleClass = isAcceptedAppt
-                            ? "bg-primary/15 text-primary border-primary/30"
-                            : isAcceptedNoAppt && isUpdated
-                            ? "bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30"
-                            : isAcceptedNoAppt
-                            ? "bg-success/15 text-success border-success/30"
-                            : isPending
-                            ? "bg-warning/15 text-warning-foreground border-warning/30"
-                            : "";
-
+                          const isAccepted = isAcceptedWithAppointment(sub) || isAcceptedWithoutAppointment(sub);
                           const offerValue = sub.offered_price || sub.estimated_offer_high;
-                          if (!offerValue) return <span className="text-xs text-muted-foreground">—</span>;
+
+                          if (!offerValue || offerValue <= 0) return <span className="text-xs text-muted-foreground">—</span>;
 
                           const displayVal = sub.offered_price
                             ? `$${Math.floor(sub.offered_price).toLocaleString()}`
                             : `~$${Math.floor(sub.estimated_offer_high!).toLocaleString()}`;
 
-                          return (
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border ${bubbleClass || "bg-muted/50 text-muted-foreground border-border"}`}>
-                              {displayVal}
-                            </span>
-                          );
+                          if (isAccepted) {
+                            return (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border bg-success/15 text-success border-success/30">
+                                {displayVal}
+                              </span>
+                            );
+                          }
+
+                          return <span className="text-xs font-medium text-card-foreground">{displayVal}</span>;
                         })()}
                       </td>
                       <td className={cellPad}>
