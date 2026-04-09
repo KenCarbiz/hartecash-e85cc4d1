@@ -1280,8 +1280,10 @@ export default function AppraisalTool() {
               profitMargin={profitMargin}
               activeSettings={activeSettings}
               dealerZip={dealerZip}
+              closestCompPrice={closestCompPrice}
               onRefreshInspection={handleRefreshInspection}
               onRetailStatsLoaded={setRetailMarketStats}
+              onClosestCompPrice={setClosestCompPrice}
             />
 
             {/* Historical Intelligence Panel */}
