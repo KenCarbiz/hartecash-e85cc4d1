@@ -118,6 +118,7 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, dealerZip, radius
       const fetchedListings: RetailListing[] = data?.listings || [];
       setListings(fetchedListings);
       setShowListings(true);
+      onListingsLoaded?.(fetchedListings);
       // Bubble up closest comp price
       if (onClosestCompPrice && vehicleMileage) {
         const subMiles = typeof vehicleMileage === "number"
