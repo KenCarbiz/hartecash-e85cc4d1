@@ -7,6 +7,8 @@ interface Props {
   tradeinAvg: number;
   retailAvg: number;
   msrp: number;
+  retailClean?: number;
+  closestCompPrice?: number | null;
   retailListings?: { avgPrice?: number; medianPrice?: number; count?: number } | null;
 }
 
@@ -16,6 +18,8 @@ export default function ProfitSpreadGauge({
   tradeinAvg,
   retailAvg,
   msrp,
+  retailClean,
+  closestCompPrice,
   retailListings,
 }: Props) {
   const data = useMemo(() => {
@@ -24,9 +28,10 @@ export default function ProfitSpreadGauge({
     const projectedProfit = retailAvg - offerHigh;
     const profitPct = retailAvg > 0 ? (projectedProfit / retailAvg) * 100 : 0;
 
-    // Build all value points for the gauge
+    // Build all value points for the gauge — MSRP excluded from scale
     const allValues = [wholesaleAvg, tradeinAvg, retailAvg, offerHigh];
-    if (msrp > 0) allValues.push(msrp);
+    if (retailClean && retailClean > 0) allValues.push(retailClean);
+    if (closestCompPrice && closestCompPrice > 0) allValues.push(closestCompPrice);
     if (retailListings?.avgPrice) allValues.push(retailListings.avgPrice);
 
     const rangeMin = Math.min(...allValues) * 0.88;
@@ -82,7 +87,7 @@ export default function ProfitSpreadGauge({
       zoneBorder,
       zoneText,
     };
-  }, [offerHigh, wholesaleAvg, tradeinAvg, retailAvg, msrp, retailListings]);
+  }, [offerHigh, wholesaleAvg, tradeinAvg, retailAvg, msrp, retailClean, closestCompPrice, retailListings]);
 
   if (!data) return null;
 
@@ -92,21 +97,25 @@ export default function ProfitSpreadGauge({
   const tradeinPos = pctPos(tradeinAvg);
   const retailPos = pctPos(retailAvg);
   const liveMarketPos = retailListings?.avgPrice ? pctPos(retailListings.avgPrice) : null;
-  const msrpPos = msrp > 0 ? pctPos(msrp) : null;
+  const retailCleanPos = retailClean && retailClean > 0 ? pctPos(retailClean) : null;
+  const closestCompPos = closestCompPrice && closestCompPrice > 0 ? pctPos(closestCompPrice) : null;
 
   const ZoneIcon = data.zoneIcon;
 
-  // Build marker list for the spectrum
+  // Build marker list for the spectrum — MSRP removed
   const markers: { label: string; shortLabel: string; pos: number; value: number; color: string; dotColor: string; isPrimary?: boolean }[] = [
     { label: "Wholesale Avg", shortLabel: "WHL", pos: wholesalePos, value: wholesaleAvg, color: "text-blue-500", dotColor: "bg-blue-500" },
     { label: "Trade-In Avg", shortLabel: "TRD", pos: tradeinPos, value: tradeinAvg, color: "text-primary", dotColor: "bg-primary" },
     { label: "Retail Avg", shortLabel: "RTL", pos: retailPos, value: retailAvg, color: "text-green-500", dotColor: "bg-green-500" },
   ];
+  if (retailCleanPos !== null && retailClean) {
+    markers.push({ label: "Retail Clean", shortLabel: "RTL Clean", pos: retailCleanPos, value: retailClean, color: "text-emerald-600 dark:text-emerald-400", dotColor: "bg-emerald-500" });
+  }
+  if (closestCompPos !== null && closestCompPrice) {
+    markers.push({ label: "Closest Comp", shortLabel: "Comp", pos: closestCompPos, value: closestCompPrice, color: "text-amber-600 dark:text-amber-400", dotColor: "bg-amber-500" });
+  }
   if (liveMarketPos !== null && retailListings?.avgPrice) {
     markers.push({ label: "Live Market", shortLabel: "MKT", pos: liveMarketPos, value: retailListings.avgPrice, color: "text-violet-500", dotColor: "bg-violet-500", isPrimary: true });
-  }
-  if (msrpPos !== null) {
-    markers.push({ label: "MSRP", shortLabel: "MSRP", pos: msrpPos, value: msrp, color: "text-muted-foreground", dotColor: "bg-muted-foreground" });
   }
 
   // Sort markers by position
@@ -178,18 +187,25 @@ export default function ProfitSpreadGauge({
           );
         })}
 
-        {/* YOUR OFFER — blue triangle marker only */}
+        {/* YOUR OFFER — dominant marker: larger diamond + label */}
         <div
           className="absolute z-20"
-          style={{ left: `${offerPos}%`, top: '20px' }}
+          style={{ left: `${offerPos}%`, top: '16px' }}
         >
           <div className="relative">
-            {/* Glow pulse */}
-            <div className="absolute -left-3 -top-3 w-6 h-6 rounded-full bg-primary/20 animate-pulse" />
-            {/* Diamond */}
+            {/* Glow pulse — larger */}
+            <div className="absolute -left-4 -top-4 w-8 h-8 rounded-full bg-primary/25 animate-pulse" />
+            {/* Diamond — larger and bolder */}
             <div
-              className="absolute -left-[7px] -top-[7px] w-[14px] h-[14px] bg-primary rotate-45 rounded-[2px] shadow-lg shadow-primary/40 border-2 border-background"
+              className="absolute -left-[9px] -top-[9px] w-[18px] h-[18px] bg-primary rotate-45 rounded-[3px] shadow-lg shadow-primary/50 border-2 border-background"
             />
+            {/* Label above */}
+            <div className="absolute -top-[28px] left-1/2 -translate-x-1/2 whitespace-nowrap text-center">
+              <div className="text-[10px] font-black text-primary leading-none">YOUR OFFER</div>
+              <div className="text-[10px] font-bold text-primary leading-tight">
+                ${offerHigh.toLocaleString()}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -282,18 +298,23 @@ export default function ProfitSpreadGauge({
         <span className="flex items-center gap-1">
           <div className="w-2 h-2 rounded-full bg-green-500" /> Retail
         </span>
+        {retailClean && retailClean > 0 && (
+          <span className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-emerald-500" /> RTL Clean
+          </span>
+        )}
+        {closestCompPrice && closestCompPrice > 0 && (
+          <span className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-amber-500" /> Comp
+          </span>
+        )}
         {retailListings?.avgPrice && (
           <span className="flex items-center gap-1">
             <div className="w-2 h-2 rounded-full bg-violet-500" /> Live Market
           </span>
         )}
-        {msrp > 0 && (
-          <span className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-muted-foreground" /> MSRP
-          </span>
-        )}
         <span className="flex items-center gap-1">
-          <div className="w-2 h-2 rotate-45 rounded-[1px] bg-primary" /> Your Offer
+          <div className="w-3 h-3 rotate-45 rounded-[2px] bg-primary" /> Your Offer
         </span>
       </div>
     </div>

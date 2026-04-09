@@ -112,8 +112,18 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, dealerZip, radius
         body: { vin, uvc, zipcode: searchZip, radius_miles: radius, include_listings: true },
       });
       if (fnError) throw fnError;
-      setListings(data?.listings || []);
+      const fetchedListings: RetailListing[] = data?.listings || [];
+      setListings(fetchedListings);
       setShowListings(true);
+      // Bubble up closest comp price
+      if (onClosestCompPrice && vehicleMileage) {
+        const subMiles = typeof vehicleMileage === "number"
+          ? vehicleMileage
+          : parseInt(String(vehicleMileage || "0").replace(/[^0-9]/g, "")) || 0;
+        const closestId = getClosestCompId(fetchedListings, subMiles);
+        const closestListing = fetchedListings.find(l => l.listing_id === closestId);
+        onClosestCompPrice(closestListing?.price ?? null);
+      }
     } catch (e) {
       console.error("Failed to load listings:", e);
     } finally {
