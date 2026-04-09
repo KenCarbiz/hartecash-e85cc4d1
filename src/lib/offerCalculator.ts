@@ -620,13 +620,20 @@ export function calculateOffer(
 ): OfferEstimate | null {
   if (!bbVehicle) return null;
 
-  const cfg = settings || DEFAULT_SETTINGS;
+  const rawCfg = settings || DEFAULT_SETTINGS;
+  const strategyMode: StrategyMode = rawCfg.strategy_mode ?? "standard";
+
+  // Merge strategy preset into settings (without mutating original)
+  const preset = strategyMode !== "custom" ? STRATEGY_PRESETS[strategyMode] : undefined;
+  const cfg: OfferSettings = preset
+    ? { ...rawCfg, ...preset, condition_multipliers: { ...(rawCfg.condition_multipliers || DEFAULT_CONDITION_MULTIPLIERS), ...(preset.condition_multipliers as ConditionMultipliers) } }
+    : rawCfg;
+
   const ded = cfg.deductions_config || DEFAULT_DEDUCTIONS;
   const rawAmt = cfg.deduction_amounts || DEFAULT_DEDUCTION_AMOUNTS;
   const condMults = cfg.condition_multipliers || DEFAULT_CONDITION_MULTIPLIERS;
   const condBasisMap = cfg.condition_basis_map || DEFAULT_CONDITION_BASIS_MAP;
   const modes = cfg.deduction_modes || DEFAULT_DEDUCTION_MODES;
-  const strategyMode: StrategyMode = cfg.strategy_mode ?? "standard";
   const mktConfig: MarketAdjustmentConfig = cfg.market_adjustment ?? DEFAULT_MARKET_ADJUSTMENT;
 
   // Apply archetype-specific deduction overrides
