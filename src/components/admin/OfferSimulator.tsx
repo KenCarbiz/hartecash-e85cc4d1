@@ -1382,12 +1382,18 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                           const enabled = (localSettings.deductions_config as any)?.[key] ?? true;
                           const modes = (localSettings as any).deduction_modes || DEFAULT_DEDUCTION_MODES;
                           const isPctMode = (key === "accidents" && modes.accidents === "pct") || (key === "not_drivable" && modes.not_drivable === "pct");
+                          const isModified = config.amountKeys.some(amtKey => {
+                            const current = (localSettings.deduction_amounts as any)?.[amtKey] ?? (DEFAULT_DEDUCTION_AMOUNTS as any)[amtKey] ?? 0;
+                            const def = (DEFAULT_DEDUCTION_AMOUNTS as any)[amtKey] ?? 0;
+                            return current !== def;
+                          });
                           return (
                             <div key={key} className={`rounded border px-2 py-1 ${enabled ? "bg-muted/30 border-border" : "bg-muted/10 border-border/50 opacity-50"}`}>
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-1">
                                   <span className="text-[10px] font-semibold text-card-foreground">{config.label}</span>
                                   {isPctMode && <Badge variant="outline" className="text-[7px] px-1 py-0">% mode</Badge>}
+                                  {isModified && <Badge variant="outline" className="text-[7px] px-1 py-0 border-amber-500/50 text-amber-600 dark:text-amber-400 bg-amber-500/10">Modified</Badge>}
                                 </div>
                                 <Switch
                                   checked={enabled}
