@@ -103,7 +103,6 @@ const AdminSidebar = ({
   const isAllowed = (key: string) => allowedSections === null || allowedSections.includes(key);
   const isPlatformAdmin = canManageAccess && dealershipId === "default";
   const isManager = userRole === "used_car_manager" || userRole === "gsm_gm" || canManageAccess;
-  const isGMOrAdmin = userRole === "gsm_gm" || canManageAccess;
 
   // ── PIPELINE ── (All staff see Leads & Appointments; Performance is manager+)
   const pipelineItems: SidebarItem[] = [
@@ -156,10 +155,13 @@ const AdminSidebar = ({
 
   // Locked sections for "Request Access"
   const allSectionKeys = [
-    "submissions", "accepted-appts", "executive", "staff", "offer-settings",
-    "form-config", "inspection-config", "depth-policies", "notifications",
-    "site-config", "locations", "testimonials", "compliance", "image-inventory",
-    "reports", "system-settings",
+    "submissions", "accepted-appts", "executive",
+    "offer-settings", "form-config", "inspection-config", "photo-config",
+    "depth-policies", "promotions", "notifications",
+    "site-config", "locations", "testimonials", "embed-toolkit",
+    "my-lead-link", "my-referrals",
+    "staff", "referrals", "compliance", "reports", "image-inventory",
+    "onboarding", "system-settings",
   ];
   const lockedSections = showRequestAccess && allowedSections !== null
     ? allSectionKeys.filter((k) => !allowedSections.includes(k))
@@ -167,6 +169,24 @@ const AdminSidebar = ({
 
   // Check if group contains active section
   const groupContainsActive = (items: { key: string }[]) => items.some((item) => item.key === activeSection);
+
+  // Auto-expand the group containing the active section
+  const groupEntries: [string, SidebarItem[]][] = [
+    ["Pipeline", pipelineItems],
+    ["Configuration", configItems],
+    ["Storefront", storefrontItems],
+    ["My Tools", myToolsItems],
+    ["Team & Admin", teamItems],
+  ];
+  useEffect(() => {
+    const activeGroup = groupEntries.find(([, items]) =>
+      items.some((item) => item.key === activeSection)
+    );
+    if (activeGroup && collapsedGroups[activeGroup[0]]) {
+      setCollapsedGroups((prev) => ({ ...prev, [activeGroup[0]]: false }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSection]);
 
   const renderGroup = (label: string, items: SidebarItem[]) => {
     if (items.length === 0) return null;
