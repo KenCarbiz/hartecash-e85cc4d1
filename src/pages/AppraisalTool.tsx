@@ -222,6 +222,7 @@ export default function AppraisalTool() {
   const [dealerZip, setDealerZip] = useState<string>("");
   const [showACVSheet, setShowACVSheet] = useState(false);
   const [retailMarketStats, setRetailMarketStats] = useState<RetailStats | null>(null);
+  const [closestCompPrice, setClosestCompPrice] = useState<number | null>(null);
   const acvSheetRef = useRef<HTMLDivElement>(null);
 
   // Editable overrides
@@ -1279,8 +1280,10 @@ export default function AppraisalTool() {
               profitMargin={profitMargin}
               activeSettings={activeSettings}
               dealerZip={dealerZip}
+              closestCompPrice={closestCompPrice}
               onRefreshInspection={handleRefreshInspection}
               onRetailStatsLoaded={setRetailMarketStats}
+              onClosestCompPrice={setClosestCompPrice}
             />
 
             {/* Historical Intelligence Panel */}

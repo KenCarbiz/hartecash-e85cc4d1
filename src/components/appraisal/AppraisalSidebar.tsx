@@ -39,15 +39,17 @@ interface Props {
   profitMargin: number;
   activeSettings: any;
   dealerZip?: string;
+  closestCompPrice?: number | null;
   onRefreshInspection?: () => Promise<void>;
   onRetailStatsLoaded?: (stats: RetailStats | null) => void;
+  onClosestCompPrice?: (price: number | null) => void;
 }
 
 export default function AppraisalSidebar({
   sub, bbVehicle, offerResult, finalValue, currentOffer,
   wholesaleAvg, tradeinAvg, retailAvg,
   reconCost, effectivePack, projectedProfit, profitMargin, activeSettings, dealerZip,
-  onRefreshInspection, onRetailStatsLoaded,
+  closestCompPrice, onRefreshInspection, onRetailStatsLoaded, onClosestCompPrice,
 }: Props) {
   const [refreshingInspection, setRefreshingInspection] = useState(false);
   const hasTires = !!(sub.tire_lf && sub.tire_rf && sub.tire_lr && sub.tire_rr);
@@ -117,6 +119,8 @@ export default function AppraisalSidebar({
             tradeinAvg={tradeinAvg}
             retailAvg={retailAvg}
             msrp={Number(bbVehicle.msrp || 0)}
+            retailClean={Number(bbVehicle.retail?.clean || 0)}
+            closestCompPrice={closestCompPrice}
           />
         </div>
       )}
@@ -181,6 +185,7 @@ export default function AppraisalSidebar({
             vehicleMileage={sub.mileage}
             currentAcv={finalValue}
             onStatsLoaded={onRetailStatsLoaded}
+            onClosestCompPrice={onClosestCompPrice}
           />
         </div>
       )}

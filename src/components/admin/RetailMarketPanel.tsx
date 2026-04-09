@@ -62,9 +62,10 @@ interface Props {
   vehicleMileage?: string | number | null;
   currentAcv?: number;
   onStatsLoaded?: (stats: RetailStats | null) => void;
+  onClosestCompPrice?: (price: number | null) => void;
 }
 
-export default function RetailMarketPanel({ vin, uvc, zipcode, dealerZip, radiusMiles = 100, offerHigh, vehicleMileage, currentAcv, onStatsLoaded }: Props) {
+export default function RetailMarketPanel({ vin, uvc, zipcode, dealerZip, radiusMiles = 100, offerHigh, vehicleMileage, currentAcv, onStatsLoaded, onClosestCompPrice }: Props) {
   const [stats, setStats] = useState<RetailStats | null>(null);
   const [listings, setListings] = useState<RetailListing[]>([]);
   const [loading, setLoading] = useState(false);
@@ -111,8 +112,18 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, dealerZip, radius
         body: { vin, uvc, zipcode: searchZip, radius_miles: radius, include_listings: true },
       });
       if (fnError) throw fnError;
-      setListings(data?.listings || []);
+      const fetchedListings: RetailListing[] = data?.listings || [];
+      setListings(fetchedListings);
       setShowListings(true);
+      // Bubble up closest comp price
+      if (onClosestCompPrice && vehicleMileage) {
+        const subMiles = typeof vehicleMileage === "number"
+          ? vehicleMileage
+          : parseInt(String(vehicleMileage || "0").replace(/[^0-9]/g, "")) || 0;
+        const closestId = getClosestCompId(fetchedListings, subMiles);
+        const closestListing = fetchedListings.find(l => l.listing_id === closestId);
+        onClosestCompPrice(closestListing?.price ?? null);
+      }
     } catch (e) {
       console.error("Failed to load listings:", e);
     } finally {
