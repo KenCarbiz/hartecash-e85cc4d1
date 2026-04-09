@@ -28,6 +28,7 @@ const Sitemap = lazy(() => import("./pages/Sitemap"));
 const ReviewPage = lazy(() => import("./pages/ReviewPage"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const TradeLanding = lazy(() => import("./pages/TradeLanding"));
+const TradeIframe = lazy(() => import("./pages/TradeIframe"));
 const DealAccepted = lazy(() => import("./pages/DealAccepted"));
 const OfferDisclosure = lazy(() => import("./pages/OfferDisclosure"));
 const Updates = lazy(() => import("./pages/Updates"));
@@ -67,6 +68,7 @@ const AnimatedRoutes = () => {
         <Route path="/review/:token" element={<ReviewPage />} />
         <Route path="/unsubscribe" element={<Unsubscribe />} />
         <Route path="/trade" element={<TradeLanding />} />
+        <Route path="/trade-in" element={<TradeIframe />} />
         <Route path="/deal/:token" element={<DealAccepted />} />
         <Route path="/disclosure" element={<OfferDisclosure />} />
         <Route path="/updates" element={<Updates />} />
