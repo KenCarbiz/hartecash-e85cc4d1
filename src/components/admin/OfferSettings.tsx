@@ -548,6 +548,28 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
         />
       </Section>
 
+      {/* ── Hot List — Cars We Want (moved up for priority) ── */}
+      <Section
+        icon={<Flame className="w-5 h-5 text-destructive" />}
+        title="Hot List — Cars We Want"
+        defaultOpen
+        className="border-l-4 border-l-destructive/50"
+        headerRight={<Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); openNewRule("hot_list"); }} className="gap-1"><Plus className="w-4 h-4" /> Add Vehicle</Button>}
+      >
+        <p className="text-sm text-muted-foreground mb-4">
+          Add vehicles you're actively looking for. Matching submissions get an automatic offer boost and are flagged in the dashboard.
+        </p>
+        {hotListRules.length === 0 ? (
+          <p className="text-sm text-muted-foreground italic">No hot list entries yet.</p>
+        ) : (
+          <div className="space-y-2">
+            {hotListRules.map((rule) => (
+              <RuleRow key={rule.id} rule={rule} onEdit={openEditRule} onDelete={handleDeleteRule} onToggle={handleToggleRuleActive} />
+            ))}
+          </div>
+        )}
+      </Section>
+
       {/* ── Live Market Adjustment ── */}
       <Section
         icon={<TrendingUp className="w-5 h-5 text-primary" />}
@@ -878,28 +900,6 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
         ) : (
           <div className="space-y-2">
             {criteriaRules.map((rule) => (
-              <RuleRow key={rule.id} rule={rule} onEdit={openEditRule} onDelete={handleDeleteRule} onToggle={handleToggleRuleActive} />
-            ))}
-          </div>
-        )}
-      </Section>
-
-      {/* ── Section 6: Hot List ── */}
-      <Section
-        icon={<Flame className="w-5 h-5 text-destructive" />}
-        title="Hot List — Cars We Want"
-        defaultOpen
-        className="border-l-4 border-l-destructive/50"
-        headerRight={<Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); openNewRule("hot_list"); }} className="gap-1"><Plus className="w-4 h-4" /> Add Vehicle</Button>}
-      >
-        <p className="text-sm text-muted-foreground mb-4">
-          Add vehicles you're actively looking for. Matching submissions get an automatic offer boost and are flagged in the dashboard.
-        </p>
-        {hotListRules.length === 0 ? (
-          <p className="text-sm text-muted-foreground italic">No hot list entries yet.</p>
-        ) : (
-          <div className="space-y-2">
-            {hotListRules.map((rule) => (
               <RuleRow key={rule.id} rule={rule} onEdit={openEditRule} onDelete={handleDeleteRule} onToggle={handleToggleRuleActive} />
             ))}
           </div>
