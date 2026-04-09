@@ -559,6 +559,56 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
             <Textarea value={(config as any).trade_hero_subtext || ""} onChange={e => update("trade_hero_subtext" as any, e.target.value)} rows={2} />
           </div>
 
+          {/* Trade iFrame (/trade-in) */}
+          <div className="border-t border-border pt-4 mt-4">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3">Trade iFrame (/trade-in) — Dealer Website Embed</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">iFrame Headline</Label>
+            <Input value={(config as any).trade_iframe_headline || ""} onChange={e => update("trade_iframe_headline" as any, e.target.value)} placeholder="What's Your Trade Worth?" />
+            <p className="text-[10px] text-muted-foreground">Shown on the iframe page embedded on the dealer's website.</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">iFrame Subtext</Label>
+            <Textarea value={(config as any).trade_iframe_subtext || ""} onChange={e => update("trade_iframe_subtext" as any, e.target.value)} rows={2} placeholder="Get your trade-in value in under 2 minutes — includes your tax savings." />
+          </div>
+
+          {/* Push/Pull/Tow */}
+          <div className="border-t border-border pt-4 mt-4">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3">Push / Pull / Tow Guarantee</p>
+          </div>
+          <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={(config as any).ppt_enabled || false}
+                onCheckedChange={v => update("ppt_enabled" as any, v)}
+              />
+              <div>
+                <p className="text-sm font-medium">Enable Push/Pull/Tow Program</p>
+                <p className="text-xs text-muted-foreground">
+                  Offer a guaranteed minimum trade-in value. Activates the PPT tab in Website Embed.
+                </p>
+              </div>
+            </div>
+          </div>
+          {(config as any).ppt_enabled && (
+            <>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Guarantee Amount ($)</Label>
+                <Input type="number" min={500} step={500} value={(config as any).ppt_guarantee_amount || 3000} onChange={e => update("ppt_guarantee_amount" as any, parseInt(e.target.value) || 3000)} className="w-32" />
+                <p className="text-[10px] text-muted-foreground">Minimum trade-in value guaranteed to the customer (e.g. 3000 for $3,000).</p>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">PPT Headline (optional)</Label>
+                <Input value={(config as any).ppt_headline || ""} onChange={e => update("ppt_headline" as any, e.target.value)} placeholder="$3,000 Minimum Trade Guarantee" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">PPT Subtext (optional)</Label>
+                <Textarea value={(config as any).ppt_subtext || ""} onChange={e => update("ppt_subtext" as any, e.target.value)} rows={2} placeholder="Push it, pull it, or tow it — your trade is worth at least this much toward your next vehicle." />
+              </div>
+            </>
+          )}
+
           <div className="border-t border-border pt-4 mt-4">
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold">Price Guarantee (days)</Label>
