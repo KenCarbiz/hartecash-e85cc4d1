@@ -1508,6 +1508,9 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                       zipcode={liveZip}
                       radiusMiles={(activeSettings as any).retail_search_radius || 100}
                       offerHigh={liveResult.high}
+                      vehicleMileage={liveMileage}
+                      onStatsLoaded={setRetailStats}
+                      onListingsLoaded={setRetailListings}
                     />
                   </div>
                 </>
