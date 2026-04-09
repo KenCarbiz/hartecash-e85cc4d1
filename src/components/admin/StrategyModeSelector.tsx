@@ -41,13 +41,43 @@ const BB_SHORT: Record<string, string> = {
   retail_xclean: "Ret X-Clean", retail_clean: "Ret Clean", retail_avg: "Ret Avg", retail_rough: "Ret Rough",
 };
 
+// Approximate tier ratios relative to retail avg for a typical vehicle
+// These are industry-standard spreads used for illustration only
+const TIER_RATIO: Record<string, number> = {
+  wholesale_rough: 0.58,
+  wholesale_avg: 0.63,
+  wholesale_clean: 0.68,
+  wholesale_xclean: 0.73,
+  tradein_rough: 0.70,
+  tradein_avg: 0.75,
+  tradein_clean: 0.82,
+  retail_rough: 0.88,
+  retail_avg: 1.0,
+  retail_clean: 1.06,
+  retail_xclean: 1.12,
+};
+
+function estimateOffer(mode: StrategyMode, retailAvg: number): number {
+  if (mode === "custom") return 0;
+  const preset = STRATEGY_MODE_PRESETS[mode];
+  // Use "good" condition as the typical scenario
+  const basis = preset.condition_basis_map.good;
+  const ratio = TIER_RATIO[basis] ?? 0.75;
+  const base = Math.round(retailAvg * ratio);
+  const adjusted = Math.round(base * (1 + preset.global_adjustment_pct / 100));
+  return adjusted;
+}
+
 interface Props {
   value: StrategyMode;
   onChange: (mode: StrategyMode) => void;
+  avgVehicleValue?: number; // avg retail value from submissions, fallback $30k
 }
 
-export default function StrategyModeSelector({ value, onChange }: Props) {
+export default function StrategyModeSelector({ value, onChange, avgVehicleValue }: Props) {
   const modes: StrategyMode[] = ["conservative", "standard", "aggressive", "predator", "custom"];
+  const refValue = avgVehicleValue && avgVehicleValue > 0 ? avgVehicleValue : 30000;
+  const refLabel = `$${Math.round(refValue / 1000)}k`;
 
   return (
     <div className="space-y-3">
@@ -62,6 +92,7 @@ export default function StrategyModeSelector({ value, onChange }: Props) {
           const meta = MODE_META[mode];
           const preset = STRATEGY_MODE_PRESETS[mode];
           const isActive = value === mode;
+          const estOffer = estimateOffer(mode, refValue);
           return (
             <button
               key={mode}
@@ -92,6 +123,22 @@ export default function StrategyModeSelector({ value, onChange }: Props) {
                       Global: {preset.global_adjustment_pct > 0 ? "+" : ""}{preset.global_adjustment_pct}%
                     </div>
                   )}
+                </div>
+              )}
+              {/* Dollar example */}
+              {mode !== "custom" && estOffer > 0 && (
+                <div className="mt-2 pt-1.5 border-t border-border">
+                  <div className="text-[8px] text-muted-foreground leading-tight">
+                    Est. on {refLabel} vehicle (Good):
+                  </div>
+                  <div className="text-[11px] font-black text-card-foreground tabular-nums">
+                    ${estOffer.toLocaleString()}
+                  </div>
+                </div>
+              )}
+              {mode === "custom" && (
+                <div className="mt-2 pt-1.5 border-t border-border">
+                  <div className="text-[8px] text-muted-foreground italic">Configure manually below</div>
                 </div>
               )}
             </button>
