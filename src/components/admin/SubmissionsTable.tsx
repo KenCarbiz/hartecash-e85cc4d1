@@ -90,6 +90,18 @@ const SubmissionsTable = ({
     return (Date.now() - new Date(refDate).getTime()) / (1000 * 60 * 60);
   };
 
+  const getAgeBadge = (sub: Submission): { color: string; borderClass: string; label: string; bgClass: string } => {
+    const status = sub.progress_status;
+    if (["purchase_complete", "dead_lead"].includes(status))
+      return { color: "text-muted-foreground", borderClass: "border-l-border", label: "", bgClass: "" };
+    const days = (Date.now() - new Date(sub.created_at).getTime()) / (1000 * 60 * 60 * 24);
+    if (days < 3)
+      return { color: "text-muted-foreground", borderClass: "border-l-border", label: "", bgClass: "" };
+    if (days < 6)
+      return { color: "text-amber-500", borderClass: "border-l-amber-500", label: "Follow Up", bgClass: "bg-amber-500/5" };
+    return { color: "text-destructive", borderClass: "border-l-destructive", label: "Critical", bgClass: "bg-destructive/5" };
+  };
+
   const getSlaLevel = (hours: number, status: string): { color: string; borderClass: string; label: string; bgClass: string } => {
     if (["purchase_complete", "dead_lead"].includes(status))
       return { color: "text-muted-foreground", borderClass: "border-l-border", label: "", bgClass: "" };
@@ -98,10 +110,10 @@ const SubmissionsTable = ({
     if (hours < 12)
       return { color: "text-emerald-500", borderClass: "border-l-emerald-500", label: "", bgClass: "" };
     if (hours < 24)
-      return { color: "text-amber-500", borderClass: "border-l-amber-500", label: "Aging", bgClass: "bg-amber-500/5" };
+      return { color: "text-amber-500", borderClass: "border-l-amber-500", label: "", bgClass: "" };
     if (hours < 48)
-      return { color: "text-orange-500", borderClass: "border-l-orange-500", label: "Overdue", bgClass: "bg-orange-500/5" };
-    return { color: "text-destructive", borderClass: "border-l-destructive", label: "Critical", bgClass: "bg-destructive/5" };
+      return { color: "text-orange-500", borderClass: "border-l-orange-500", label: "", bgClass: "" };
+    return { color: "text-destructive", borderClass: "border-l-destructive", label: "", bgClass: "" };
   };
 
   const formatAge = (hours: number) => {
