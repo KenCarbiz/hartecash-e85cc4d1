@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 import {
   Inbox, CalendarDays, Users, ShieldCheck, SlidersHorizontal,
-  Settings, Bell, ListChecks, MessageSquareQuote, BarChart3, Send, MapPin, Car, ScrollText, Shield, Lock, Wrench, Rocket, Gauge, Network, Camera, Gift, Megaphone, ChevronDown, Link2, Code2, Paintbrush
+  Settings, Bell, ListChecks, MessageSquareQuote, BarChart3, Send, MapPin, Car, ScrollText, Shield, Lock, Wrench, Rocket, Gauge, Network, Camera, Gift, Megaphone, ChevronDown, Link2, Code2, Paintbrush, TrendingUp, Store
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
@@ -171,6 +171,14 @@ const AdminSidebar = ({
       ].filter((item) => isAllowed(item.key))
     : [];
 
+  // ── ACQUISITION ── (Manager+ — equity mining & wholesale)
+  const acquisitionItems: SidebarItem[] = isManager
+    ? [
+        { key: "equity-mining", label: "Equity Mining", icon: TrendingUp },
+        { key: "wholesale-marketplace", label: "Wholesale Exit", icon: Store },
+      ].filter((item) => isAllowed(item.key))
+    : [];
+
   // Locked sections for "Request Access"
   const allSectionKeys = [
     "submissions", "accepted-appts", "executive",
@@ -181,6 +189,7 @@ const AdminSidebar = ({
     "staff", "referrals", "compliance", "reports", "image-inventory",
     "onboarding", "system-settings",
     "api-access", "white-label",
+    "equity-mining", "wholesale-marketplace",
   ];
   const lockedSections = showRequestAccess && allowedSections !== null
     ? allSectionKeys.filter((k) => !allowedSections.includes(k))
@@ -192,6 +201,7 @@ const AdminSidebar = ({
   // Auto-expand the group containing the active section
   const groupEntries: [string, SidebarItem[]][] = [
     ["Pipeline", pipelineItems],
+    ["Acquisition", acquisitionItems],
     ["Configuration", configItems],
     ["Storefront", storefrontItems],
     ["My Tools", myToolsItems],
@@ -276,6 +286,7 @@ const AdminSidebar = ({
     <Sidebar collapsible="icon" className="border-r border-border">
       <SidebarContent className="pt-2">
         {renderGroup("Pipeline", pipelineItems)}
+        {renderGroup("Acquisition", acquisitionItems)}
         {renderGroup("Configuration", configItems)}
         {renderGroup("Storefront", storefrontItems)}
         {renderGroup("My Tools", myToolsItems)}

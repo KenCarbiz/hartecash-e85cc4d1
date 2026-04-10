@@ -44,6 +44,8 @@ import { UserCheck as UserCheckIcon } from "lucide-react";
 
 const ApiAccessPanel = React.lazy(() => import("./ApiAccessPanel"));
 const WhiteLabelSettings = React.lazy(() => import("./WhiteLabelSettings"));
+const EquityMining = React.lazy(() => import("./EquityMining"));
+const WholesaleMarketplace = React.lazy(() => import("./WholesaleMarketplace"));
 
 class AdminErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -364,6 +366,16 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
       )}
       {activeSection === "my-lead-link" && <MyLeadLink />}
       {activeSection === "embed-toolkit" && canManageAccess && <EmbedToolkit />}
+      {activeSection === "equity-mining" && (
+        <React.Suspense fallback={<AdminLoadingSkeleton />}>
+          <EquityMining />
+        </React.Suspense>
+      )}
+      {activeSection === "wholesale-marketplace" && (
+        <React.Suspense fallback={<AdminLoadingSkeleton />}>
+          <WholesaleMarketplace />
+        </React.Suspense>
+      )}
       {activeSection === "api-access" && canManageAccess && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <ApiAccessPanel />
