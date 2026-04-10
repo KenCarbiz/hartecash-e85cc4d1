@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, DollarSign, ArrowDown, TrendingUp, ShieldCheck, Info, Printer, CheckCircle, ArrowRight, Car, Gauge, Palette, Settings2, Pencil, User } from "lucide-react";
+import { ArrowLeft, DollarSign, ArrowDown, TrendingUp, ShieldCheck, Info, Printer, CheckCircle, ArrowRight, Car, Gauge, Palette, Settings2, Pencil, User, Clock, Star, Zap, Shield, BadgeCheck, Handshake } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -334,12 +334,14 @@ const OfferPage = () => {
 
   if (error || !submission) return (
     <div className="min-h-screen flex items-center justify-center bg-background p-6">
-      <div className="text-center">
-        <div className="text-5xl mb-4">😕</div>
-        <h1 className="text-xl font-bold text-foreground mb-2">Offer Not Available</h1>
-        <p className="text-muted-foreground">{error || "No offer has been made yet."}</p>
-        <Link to="/my-submission" className="text-accent underline mt-4 inline-block text-sm">
-          Check your submission
+      <div className="text-center max-w-sm">
+        <div className="w-16 h-16 rounded-2xl bg-muted/40 flex items-center justify-center mx-auto mb-4">
+          <Car className="w-8 h-8 text-muted-foreground/30" />
+        </div>
+        <h1 className="text-xl font-extrabold text-foreground mb-2 tracking-tight">Offer Not Available</h1>
+        <p className="text-sm text-muted-foreground">{error || "No offer has been made yet."}</p>
+        <Link to="/my-submission" className="inline-flex items-center gap-1.5 text-primary font-semibold mt-4 text-sm hover:underline">
+          Check your submission <ArrowRight className="w-3.5 h-3.5" />
         </Link>
       </div>
     </div>
@@ -375,12 +377,14 @@ const OfferPage = () => {
 
   if (cashOffer <= 0) return (
     <div className="min-h-screen flex items-center justify-center bg-background p-6">
-      <div className="text-center">
-        <div className="text-5xl mb-4">😕</div>
-        <h1 className="text-xl font-bold text-foreground mb-2">Offer Not Available</h1>
-        <p className="text-muted-foreground">No offer has been made yet.</p>
-        <Link to="/my-submission" className="text-accent underline mt-4 inline-block text-sm">
-          Check your submission
+      <div className="text-center max-w-sm">
+        <div className="w-16 h-16 rounded-2xl bg-muted/40 flex items-center justify-center mx-auto mb-4">
+          <DollarSign className="w-8 h-8 text-muted-foreground/30" />
+        </div>
+        <h1 className="text-xl font-extrabold text-foreground mb-2 tracking-tight">Offer Not Available</h1>
+        <p className="text-sm text-muted-foreground">No offer has been made yet.</p>
+        <Link to="/my-submission" className="inline-flex items-center gap-1.5 text-primary font-semibold mt-4 text-sm hover:underline">
+          Check your submission <ArrowRight className="w-3.5 h-3.5" />
         </Link>
       </div>
     </div>
@@ -414,21 +418,21 @@ const OfferPage = () => {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3, delay: 0.15 }}
-      className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold print:border print:border-border ${
+      className={`flex items-center justify-center gap-2.5 rounded-2xl px-4 py-2.5 text-xs font-bold print:border print:border-border border backdrop-blur-sm ${
         isExpired
-          ? "bg-destructive/10 text-destructive"
+          ? "bg-destructive/8 text-destructive border-destructive/15"
           : isUrgent
-          ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
-          : "bg-success/10 text-success"
+          ? "bg-amber-500/8 text-amber-600 dark:text-amber-400 border-amber-500/15 animate-pulse"
+          : "bg-success/8 text-success border-success/15"
       }`}
     >
-      <ShieldCheck className="w-4 h-4 shrink-0" />
+      <ShieldCheck className="w-4.5 h-4.5 shrink-0" />
       {isExpired ? (
         <span>Price guarantee expired — contact us for an updated offer</span>
       ) : (
         <span>
-          Price guaranteed for {daysRemaining} {daysRemaining === 1 ? "day" : "days"}
-          {expiresDate && <span className="opacity-70"> · expires {expiresDate.toLocaleDateString()}</span>}
+          Price locked for <span className="font-extrabold">{daysRemaining}</span> {daysRemaining === 1 ? "day" : "days"}
+          {expiresDate && <span className="opacity-60 font-medium"> · exp. {expiresDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>}
         </span>
       )}
     </motion.div>
@@ -441,22 +445,22 @@ const OfferPage = () => {
   /* ─── Shared sub-components rendered inline ─── */
 
   const TabSwitcher = (
-    <div className="relative flex bg-muted/60 rounded-2xl p-1 print:hidden border border-border/50">
+    <div className="relative flex bg-muted/40 rounded-2xl p-1.5 print:hidden border border-border/30 backdrop-blur-sm shadow-inner">
       <motion.div
-        className="absolute top-1 bottom-1 rounded-xl bg-gradient-to-r from-primary to-primary/80 shadow-lg shadow-primary/20"
+        className="absolute top-1.5 bottom-1.5 rounded-xl bg-gradient-to-r from-primary to-primary/85 shadow-[0_4px_16px_rgba(var(--primary),0.25)]"
         layout
         transition={{ type: "spring", stiffness: 400, damping: 30 }}
         style={{
-          width: "calc(50% - 4px)",
-          left: activeTab === "sell" ? "4px" : "calc(50% + 0px)",
+          width: "calc(50% - 6px)",
+          left: activeTab === "sell" ? "6px" : "calc(50% + 0px)",
         }}
       />
       <button
         onClick={() => setActiveTab("sell")}
-        className={`relative z-10 flex-1 flex items-center justify-center gap-2 text-sm font-bold py-3.5 px-4 rounded-xl transition-colors duration-200 ${
+        className={`relative z-10 flex-1 flex items-center justify-center gap-2 text-sm font-bold py-3 px-4 rounded-xl transition-all duration-200 ${
           activeTab === "sell"
             ? "text-primary-foreground"
-            : "text-muted-foreground hover:text-card-foreground"
+            : "text-muted-foreground hover:text-foreground"
         }`}
       >
         <DollarSign className="w-4 h-4" />
@@ -464,10 +468,10 @@ const OfferPage = () => {
       </button>
       <button
         onClick={scrollToExplanation}
-        className={`relative z-10 flex-1 flex items-center justify-center gap-2 text-sm font-bold py-3.5 px-4 rounded-xl transition-colors duration-200 ${
+        className={`relative z-10 flex-1 flex items-center justify-center gap-2 text-sm font-bold py-3 px-4 rounded-xl transition-all duration-200 ${
           activeTab === "trade"
             ? "text-primary-foreground"
-            : "text-muted-foreground hover:text-card-foreground"
+            : "text-muted-foreground hover:text-foreground"
         }`}
       >
         <TrendingUp className="w-4 h-4" />
@@ -530,9 +534,9 @@ const OfferPage = () => {
   };
 
   const AcceptButton = (
-    <div className="print:hidden space-y-2">
+    <div className="print:hidden space-y-3">
       {isAccepted ? (
-        <div className="w-full py-3 flex items-center justify-center gap-2 rounded-xl bg-success text-white font-bold text-base">
+        <div className="w-full py-4 flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-success to-success/90 text-white font-bold text-base shadow-[0_4px_20px_rgba(34,197,94,0.25)]">
           <CheckCircle className="w-5 h-5" />
           Offer Accepted
         </div>
@@ -545,20 +549,23 @@ const OfferPage = () => {
               label="Slide to Accept Your Price"
             />
           </div>
-          {/* Desktop: click button */}
+          {/* Desktop: premium accept button */}
           <div className="hidden lg:block">
             <Button
               onClick={handleAcceptAttempt}
-              className="w-full py-5 text-base font-bold text-white shadow-lg gap-2 rounded-xl"
-              style={{ backgroundColor: "hsl(var(--cta-accept))", boxShadow: "0 10px 15px -3px hsl(var(--cta-accept) / 0.2)" }}
+              className="relative w-full py-6 text-base font-extrabold text-white gap-2.5 rounded-2xl overflow-hidden group transition-all duration-300 hover:scale-[1.01] active:scale-[0.99]"
+              style={{ backgroundColor: "hsl(var(--cta-accept))", boxShadow: "0 8px 32px hsl(var(--cta-accept) / 0.3), 0 2px 8px hsl(var(--cta-accept) / 0.2)" }}
             >
-              <CheckCircle className="w-5 h-5" />
-              Accept & Lock In Your Price
-              <ArrowRight className="w-5 h-5" />
+              {/* Animated shine sweep */}
+              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out" />
+              <CheckCircle className="w-5 h-5 relative z-10" />
+              <span className="relative z-10">Accept & Lock In Your Price</span>
+              <ArrowRight className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" />
             </Button>
           </div>
-          <p className="text-[11px] text-muted-foreground text-center">
-            No obligation until inspection
+          <p className="text-[10px] text-muted-foreground/60 text-center flex items-center justify-center gap-1.5">
+            <Shield className="w-3 h-3" />
+            No obligation until inspection · Free to walk away
           </p>
           {/* Save Offer — reduces bounce */}
           <SaveOfferButton
@@ -580,40 +587,48 @@ const OfferPage = () => {
       {activeTab === "sell" ? (
         <motion.div
           key={`sell-${cashOffer}`}
-          initial={{ opacity: 0, y: 6 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -6 }}
-          transition={{ duration: 0.2 }}
-          className="text-center"
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.25 }}
+          className="text-center py-2"
         >
-          <p className="text-xs text-muted-foreground mb-1">
-            {isAccepted ? "Accepted Cash Offer" : "Your Cash Offer"} for Your {vehicleStr}
+          <p className="text-[11px] text-muted-foreground/70 uppercase tracking-widest font-semibold mb-2">
+            {isAccepted ? "Accepted Cash Offer" : "Your Cash Offer"}
           </p>
-          <p className="text-4xl lg:text-5xl font-extrabold text-accent tracking-tight">
-            ${cashOffer.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
+          <div className="relative inline-block">
+            {/* Subtle glow behind price */}
+            <div className="absolute inset-0 blur-2xl bg-accent/15 rounded-full scale-150 pointer-events-none" />
+            <p className="relative text-5xl lg:text-6xl font-black text-accent tracking-tighter font-display">
+              ${cashOffer.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+          </div>
+          <p className="text-[11px] text-muted-foreground/60 mt-2 flex items-center justify-center gap-1.5">
+            <Shield className="w-3 h-3" />
             Subject to in-person inspection
           </p>
         </motion.div>
       ) : (
         <motion.div
           key={`trade-${tradeInValue}`}
-          initial={{ opacity: 0, y: 6 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -6 }}
-          transition={{ duration: 0.2 }}
-          className="text-center"
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.25 }}
+          className="text-center py-2"
         >
-          <p className="text-xs text-muted-foreground mb-1">
-            {isAccepted ? "Accepted Trade-In Total Value" : "Your Trade-In Total Value"}
+          <p className="text-[11px] text-muted-foreground/70 uppercase tracking-widest font-semibold mb-2">
+            {isAccepted ? "Accepted Trade-In Value" : "Your Trade-In Total Value"}
           </p>
-          <p className="text-4xl lg:text-5xl font-extrabold text-success tracking-tight">
-            ${tradeInValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1 flex items-center justify-center gap-1">
-            <TrendingUp className="w-3 h-3" />
-            Includes ${taxSavings.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} sales tax credit
+          <div className="relative inline-block">
+            <div className="absolute inset-0 blur-2xl bg-success/15 rounded-full scale-150 pointer-events-none" />
+            <p className="relative text-5xl lg:text-6xl font-black text-success tracking-tighter font-display">
+              ${tradeInValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+          </div>
+          <p className="text-[11px] text-muted-foreground/60 mt-2 flex items-center justify-center gap-1.5">
+            <TrendingUp className="w-3 h-3 text-success" />
+            Includes <span className="font-bold text-success">${taxSavings.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span> tax credit
           </p>
         </motion.div>
       )}
@@ -626,29 +641,31 @@ const OfferPage = () => {
       animate={{ opacity: 1 }}
       transition={{ delay: 0.3 }}
       onClick={scrollToExplanation}
-      className="mt-2 mx-auto flex items-center gap-1.5 text-xs font-medium text-success hover:text-success/80 transition-colors print:hidden"
+      className="mt-1 mx-auto flex items-center gap-2 text-xs font-semibold text-success hover:text-success/80 transition-colors print:hidden bg-success/5 hover:bg-success/10 rounded-xl px-3 py-1.5 border border-success/10"
     >
       <ArrowDown className="w-3.5 h-3.5 animate-bounce" />
-      Worth ${tradeInValue.toLocaleString("en-US", { minimumFractionDigits: 2 })} as a trade-in
+      Worth <span className="font-extrabold">${tradeInValue.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span> as a trade-in
     </motion.button>
   );
 
-  /* ─── Vehicle Summary Card (with inline edit) ─── */
+  /* ─── Vehicle Summary Card — Premium ─── */
   const VehicleSummary = (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="bg-card rounded-xl shadow-lg overflow-hidden"
+      className="bg-card rounded-2xl shadow-[0_2px_16px_rgba(0,0,0,0.05)] overflow-hidden border border-border/30"
     >
-      <div className="bg-gradient-to-r from-primary/5 to-primary/10 px-5 py-3 border-b border-border/50">
+      <div className="bg-gradient-to-r from-muted/50 via-muted/30 to-transparent px-5 py-3.5 border-b border-border/30">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Car className="w-5 h-5 text-primary" />
-            <h3 className="font-bold text-card-foreground">Vehicle Summary</h3>
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Car className="w-4 h-4 text-primary" />
+            </div>
+            <h3 className="font-bold text-card-foreground text-sm">Vehicle Summary</h3>
           </div>
           {canEdit && (
-            <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+            <span className="text-[10px] text-muted-foreground/60 flex items-center gap-1 bg-muted/40 rounded-lg px-2 py-0.5">
               <Pencil className="w-3 h-3" /> Click to edit
             </span>
           )}
@@ -656,93 +673,35 @@ const OfferPage = () => {
       </div>
       <div className="p-5">
         {vehicleStr && (
-          <p className="text-lg font-bold text-card-foreground mb-3">{vehicleStr}</p>
+          <p className="text-lg font-extrabold text-card-foreground mb-4 tracking-tight">{vehicleStr}</p>
         )}
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
-          {s.vin && (
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                <span className="text-[10px] font-bold text-muted-foreground">VIN</span>
+        <div className="grid grid-cols-2 gap-x-5 gap-y-3.5">
+          {[
+            { show: !!s.vin, iconEl: <span className="text-[9px] font-black text-muted-foreground/70">VIN</span>, label: "VIN", content: <p className="text-sm font-semibold font-mono tracking-wide">{s.vin?.toUpperCase()}</p> },
+            { show: !!(s.mileage || canEdit), icon: Gauge, label: "Mileage", content: canEdit ? (
+                <InlineEdit value={s.mileage ? Number(s.mileage).toLocaleString() : "—"} onSave={(val) => handleFieldUpdate("mileage", val.replace(/[^0-9]/g, ""))} label="mileage" className="text-sm font-semibold" />
+              ) : <p className="text-sm font-semibold">{Number(s.mileage).toLocaleString()} mi</p>
+            },
+            { show: !!(s.exterior_color || canEdit), icon: Palette, label: "Color", content: canEdit ? (
+                <InlineEdit value={s.exterior_color || "—"} onSave={(val) => handleFieldUpdate("exterior_color", val)} label="color" className="text-sm font-semibold" />
+              ) : <p className="text-sm font-semibold">{s.exterior_color}</p>
+            },
+            { show: !!(condition?.drivetrain || canEdit), icon: Settings2, label: "Powertrain", content: <p className="text-sm font-semibold capitalize">{condition?.drivetrain || "—"}</p> },
+            { show: !!(s.overall_condition || canEdit), icon: CheckCircle, label: "Condition", content: canEdit ? (
+                <InlineEdit value={s.overall_condition || "good"} onSave={(val) => handleFieldUpdate("overall_condition", val)} type="select" options={CONDITION_OPTIONS} label="condition" className="text-sm font-semibold capitalize" />
+              ) : <p className="text-sm font-semibold capitalize">{CONDITION_OPTIONS.find(o => o.value === s.overall_condition)?.label || s.overall_condition?.replace(/_/g, " ")}</p>
+            },
+          ].filter(item => item.show).map((item, idx) => (
+            <div key={idx} className="flex items-center gap-3 group/item hover:bg-muted/20 -mx-2 px-2 py-1 rounded-xl transition-colors">
+              <div className="w-8 h-8 rounded-xl bg-muted/60 group-hover/item:bg-primary/8 flex items-center justify-center shrink-0 transition-colors">
+                {item.icon ? <item.icon className="w-3.5 h-3.5 text-muted-foreground/60 group-hover/item:text-primary/70 transition-colors" /> : item.iconEl}
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">VIN</p>
-                <p className="text-sm font-medium font-mono">{s.vin.toUpperCase()}</p>
+                <p className="text-[10px] text-muted-foreground/60 uppercase tracking-widest font-semibold">{item.label}</p>
+                {item.content}
               </div>
             </div>
-          )}
-          {(s.mileage || canEdit) && (
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                <Gauge className="w-3.5 h-3.5 text-muted-foreground" />
-              </div>
-              <div>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Mileage</p>
-                {canEdit ? (
-                  <InlineEdit
-                    value={s.mileage ? Number(s.mileage).toLocaleString() : "—"}
-                    onSave={(val) => handleFieldUpdate("mileage", val.replace(/[^0-9]/g, ""))}
-                    label="mileage"
-                    className="text-sm font-medium"
-                  />
-                ) : (
-                  <p className="text-sm font-medium">{Number(s.mileage).toLocaleString()} mi</p>
-                )}
-              </div>
-            </div>
-          )}
-          {(s.exterior_color || canEdit) && (
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                <Palette className="w-3.5 h-3.5 text-muted-foreground" />
-              </div>
-              <div>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Color</p>
-                {canEdit ? (
-                  <InlineEdit
-                    value={s.exterior_color || "—"}
-                    onSave={(val) => handleFieldUpdate("exterior_color", val)}
-                    label="color"
-                    className="text-sm font-medium"
-                  />
-                ) : (
-                  <p className="text-sm font-medium">{s.exterior_color}</p>
-                )}
-              </div>
-            </div>
-          )}
-          {(condition?.drivetrain || canEdit) && (
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                <Settings2 className="w-3.5 h-3.5 text-muted-foreground" />
-              </div>
-              <div>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Powertrain</p>
-                <p className="text-sm font-medium capitalize">{condition?.drivetrain || "—"}</p>
-              </div>
-            </div>
-          )}
-          {(s.overall_condition || canEdit) && (
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                <CheckCircle className="w-3.5 h-3.5 text-muted-foreground" />
-              </div>
-              <div>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Condition</p>
-                {canEdit ? (
-                  <InlineEdit
-                    value={s.overall_condition || "good"}
-                    onSave={(val) => handleFieldUpdate("overall_condition", val)}
-                    type="select"
-                    options={CONDITION_OPTIONS}
-                    label="condition"
-                    className="text-sm font-medium capitalize"
-                  />
-                ) : (
-                  <p className="text-sm font-medium capitalize">{CONDITION_OPTIONS.find(o => o.value === s.overall_condition)?.label || s.overall_condition?.replace(/_/g, " ")}</p>
-                )}
-              </div>
-            </div>
-          )}
+          ))}
         </div>
       </div>
     </motion.div>
@@ -763,7 +722,7 @@ const OfferPage = () => {
     />
   );
 
-  /* Trade-in explanation */
+  /* Trade-in explanation — Premium */
   const TradeInExplanation = (
     <div ref={explanationRef} className="scroll-mt-40">
       <motion.div
@@ -771,57 +730,61 @@ const OfferPage = () => {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.5 }}
-        className="bg-card rounded-xl shadow-lg overflow-hidden border-2 border-success/20"
+        className="bg-card rounded-2xl shadow-[0_2px_16px_rgba(0,0,0,0.05)] overflow-hidden border border-success/15"
       >
-        <div className="bg-gradient-to-r from-success/5 to-success/10 px-5 py-3 border-b border-border/50">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-success/10 flex items-center justify-center">
+        <div className="bg-gradient-to-r from-success/8 via-success/5 to-transparent px-5 py-3.5 border-b border-success/10">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-success/10 flex items-center justify-center">
               <TrendingUp className="w-4 h-4 text-success" />
             </div>
-            <h3 className="font-bold text-card-foreground">Trade-In Tax Credit Explained</h3>
+            <div>
+              <h3 className="font-bold text-card-foreground text-sm">Trade-In Tax Credit</h3>
+              <p className="text-[10px] text-muted-foreground/60">See how much more your vehicle is worth</p>
+            </div>
           </div>
         </div>
 
         <div className="p-5">
-
-        <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-          When you trade in your vehicle toward a new or pre-owned purchase at {config.dealership_name || "our dealership"}, 
-          you receive a <span className="font-semibold text-card-foreground">sales tax credit</span> on 
-          the value of your trade.
-        </p>
-
-        <div className="bg-muted/50 rounded-lg p-4 space-y-3 mb-4">
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-muted-foreground">Cash offer value</span>
-            <span className="font-semibold">${cashOffer.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
-          </div>
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-muted-foreground flex items-center gap-1">
-              <Info className="w-3 h-3" />
-              {stateName} sales tax rate
-            </span>
-            <span className="font-semibold">{taxPercent}%</span>
-          </div>
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-muted-foreground">Sales tax credit savings</span>
-            <span className="font-semibold text-success">+${taxSavings.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
-          </div>
-          <div className="border-t border-border pt-3 flex justify-between items-center">
-            <span className="font-bold text-card-foreground">Total trade-in value</span>
-            <span className="font-extrabold text-lg text-success">
-              ${tradeInValue.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/30 rounded-lg p-3">
-          <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5 text-primary" />
-          <p>
-            The tax credit is based on {stateName}'s {taxPercent}% sales tax rate{zipResult.state ? `, determined by your zip code (${s.zip})` : ""}. The formula is:
-            <span className="font-mono text-card-foreground"> ${cashOffer.toLocaleString()} × {(1 + taxRate).toFixed(4)} = ${tradeInValue.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>. 
-            Actual tax credit may vary and is subject to qualifications.
+          <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
+            When you trade in your vehicle toward a purchase at <span className="font-semibold text-card-foreground">{config.dealership_name || "our dealership"}</span>,
+            you receive a sales tax credit on the value of your trade.
           </p>
-        </div>
+
+          {/* Premium breakdown */}
+          <div className="bg-gradient-to-br from-muted/30 to-muted/10 rounded-2xl p-5 space-y-3 mb-5 border border-border/20">
+            <div className="flex justify-between items-center text-sm py-1">
+              <span className="text-muted-foreground">Cash offer value</span>
+              <span className="font-bold text-card-foreground">${cashOffer.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+            </div>
+            <div className="flex justify-between items-center text-sm py-1">
+              <span className="text-muted-foreground flex items-center gap-1.5">
+                <Info className="w-3 h-3 text-muted-foreground/40" />
+                {stateName} sales tax rate
+              </span>
+              <span className="font-bold text-card-foreground">{taxPercent}%</span>
+            </div>
+            <div className="flex justify-between items-center text-sm py-1">
+              <span className="text-muted-foreground">Sales tax credit savings</span>
+              <span className="font-bold text-success">+${taxSavings.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+            </div>
+            <div className="border-t border-border/30 pt-4 flex justify-between items-center">
+              <span className="font-bold text-card-foreground">Total trade-in value</span>
+              <div className="text-right">
+                <span className="text-2xl font-black text-success tracking-tight font-display">
+                  ${tradeInValue.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-2.5 text-[11px] text-muted-foreground/60 bg-muted/20 rounded-xl p-3.5 border border-border/10">
+            <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5 text-primary/50" />
+            <p className="leading-relaxed">
+              Based on {stateName}'s {taxPercent}% rate{zipResult.state ? ` (ZIP ${s.zip})` : ""}.
+              <span className="font-mono text-muted-foreground"> ${cashOffer.toLocaleString()} × {(1 + taxRate).toFixed(4)} = ${tradeInValue.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>.
+              Subject to qualifications.
+            </p>
+          </div>
         </div>
       </motion.div>
     </div>
@@ -880,18 +843,32 @@ const OfferPage = () => {
         getLocationAddress={getLocationAddress}
       />
 
-      {/* Header */}
-      <div className="print:hidden bg-gradient-to-r from-primary via-[hsl(210,100%,30%)] to-primary text-primary-foreground px-6 py-1">
-        <div className="max-w-5xl mx-auto">
-          <Link to={`/my-submission/${token}`} className="inline-flex items-center gap-1 text-xs text-primary-foreground/70 hover:text-primary-foreground transition-colors mb-1.5 print:hidden">
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Back to portal
-          </Link>
-          <div className="flex items-center gap-3">
-            <img src={config.logo_white_url || logoFallback} alt={config.dealership_name || "Dealership"} className="h-[70px] w-auto" />
-            <div className="flex-1">
-              <h1 className="font-bold text-lg lg:text-xl">Your Offer</h1>
-              {firstName && <p className="text-sm opacity-80">{firstName}, here's your personalized offer</p>}
+      {/* ── Premium Header ── */}
+      <div className="print:hidden relative overflow-hidden">
+        {/* Gradient mesh background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/95 to-primary/80" />
+        <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: "radial-gradient(circle at 25% 40%, white 1px, transparent 1px), radial-gradient(circle at 75% 60%, white 1px, transparent 1px)", backgroundSize: "60px 60px, 80px 80px" }} />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-primary-foreground/5 to-transparent rounded-full -translate-y-1/2 translate-x-1/3" />
+
+        <div className="relative text-primary-foreground px-6 py-4">
+          <div className="max-w-5xl mx-auto">
+            <Link to={`/my-submission/${token}`} className="inline-flex items-center gap-1.5 text-xs text-primary-foreground/50 hover:text-primary-foreground/80 transition-colors mb-3">
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Back to portal
+            </Link>
+            <div className="flex items-center gap-4">
+              <div className="shrink-0 bg-primary-foreground/10 backdrop-blur-sm rounded-2xl p-2 border border-primary-foreground/10">
+                <img src={config.logo_white_url || logoFallback} alt={config.dealership_name || "Dealership"} className="h-12 w-auto" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h1 className="font-extrabold text-xl lg:text-2xl tracking-tight font-display">
+                  {firstName ? `${firstName}, Your Offer is Ready` : "Your Offer is Ready"}
+                </h1>
+                <p className="text-sm text-primary-foreground/60 mt-0.5">
+                  {vehicleStr && <span className="font-medium text-primary-foreground/80">{vehicleStr}</span>}
+                  {vehicleStr && " · "}Personalized just for you
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -905,27 +882,63 @@ const OfferPage = () => {
             <div className="col-span-2">
               <div className="sticky top-6 space-y-5">
                 {s.vehicle_year && s.vehicle_make && s.vehicle_model && (
-                  <div className="overflow-hidden -mx-2 mb-2">
+                  <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="overflow-hidden -mx-2 mb-2"
+                  >
                     <VehicleImage
                       year={s.vehicle_year}
                       make={s.vehicle_make}
                       model={s.vehicle_model}
                       selectedColor={s.exterior_color || ""}
                     />
-                  </div>
+                  </motion.div>
                 )}
 
-                <div className="bg-card rounded-xl p-6 shadow-lg space-y-5">
+                {/* Premium Offer Card */}
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                  className="relative bg-card rounded-2xl p-6 shadow-[0_4px_24px_rgba(0,0,0,0.06),0_1px_4px_rgba(0,0,0,0.04)] space-y-5 border border-border/30 overflow-hidden"
+                >
+                  {/* Decorative corner accent */}
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-primary/5 to-transparent rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+
                   {TabSwitcher}
                   {OfferDisplay}
                   {TradeInBounce}
                   {GuaranteeBadge}
                   {AcceptButton}
-                </div>
+                </motion.div>
+
+                {/* Trust Signals */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="grid grid-cols-3 gap-2"
+                >
+                  {[
+                    { icon: Zap, label: "Fast Payment", sub: "Same-day available" },
+                    { icon: Handshake, label: "No Haggling", sub: "Price is final" },
+                    { icon: BadgeCheck, label: "Guaranteed", sub: "Locked price" },
+                  ].map(item => (
+                    <div key={item.label} className="flex flex-col items-center text-center bg-card/60 backdrop-blur-sm rounded-2xl p-3 border border-border/20 shadow-sm">
+                      <div className="w-8 h-8 rounded-xl bg-primary/8 flex items-center justify-center mb-1.5">
+                        <item.icon className="w-4 h-4 text-primary" />
+                      </div>
+                      <p className="text-[11px] font-bold text-card-foreground leading-tight">{item.label}</p>
+                      <p className="text-[9px] text-muted-foreground/60 mt-0.5">{item.sub}</p>
+                    </div>
+                  ))}
+                </motion.div>
 
                 <div className="flex gap-3 print:hidden">
-                  <Button variant="outline" className="flex-1 gap-2" onClick={handlePrint}>
-                    <Printer className="w-4 h-4" />
+                  <Button variant="outline" className="flex-1 gap-2 rounded-xl h-10 text-xs font-semibold" onClick={handlePrint}>
+                    <Printer className="w-3.5 h-3.5" />
                     Print Offer
                   </Button>
                 </div>
@@ -933,22 +946,22 @@ const OfferPage = () => {
             </div>
 
             {/* Right column — vehicle summary → trade-in → condition */}
-            <div className="col-span-3 space-y-5">
+            <div className="col-span-3 space-y-6">
               {VehicleSummary}
               {TradeInExplanation}
               {NoTaxBlock}
               {ConditionBlock}
-              
+
               {!s.vin && (
-                <div className="bg-warning/10 border border-warning/30 rounded-lg p-3 text-center">
-                  <p className="text-xs font-semibold text-warning">⚠️ No VIN on File</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                <div className="bg-warning/8 border border-warning/20 rounded-2xl p-4 text-center">
+                  <p className="text-xs font-bold text-warning">No VIN on File</p>
+                  <p className="text-[11px] text-muted-foreground mt-1">
                     This offer was generated without a VIN and is subject to vehicle verification. Final offer may change upon VIN confirmation and in-person inspection.
                   </p>
                 </div>
               )}
-              <p className="text-center text-xs text-muted-foreground">
-                <InspectionDisclosure /> • 🔒 Your information is kept secure
+              <p className="text-center text-[11px] text-muted-foreground/60 flex items-center justify-center gap-2">
+                <InspectionDisclosure /> <span className="text-muted-foreground/30">|</span> <Shield className="w-3 h-3" /> Your information is kept secure
               </p>
             </div>
           </div>
@@ -957,9 +970,11 @@ const OfferPage = () => {
 
       {/* ─── MOBILE: Single-column layout ─── */}
       <div className="lg:hidden print:hidden">
-        {/* Floating Sticky Value Box — collapses on scroll */}
-        <div className="sticky top-0 z-30 bg-card/95 backdrop-blur-md border-b border-border shadow-lg print:static print:shadow-none transition-all duration-300">
-          <div className="max-w-lg mx-auto px-6 py-3 space-y-2">
+        {/* Premium Floating Sticky Value Box — collapses on scroll */}
+        <div className={`sticky top-0 z-30 backdrop-blur-xl border-b shadow-[0_4px_24px_rgba(0,0,0,0.06)] print:static print:shadow-none transition-all duration-300 ${
+          stickyCompact ? "bg-card/98 border-border/30" : "bg-card/95 border-border/20"
+        }`}>
+          <div className="max-w-lg mx-auto px-5 py-3 space-y-2.5">
             {!stickyCompact && TabSwitcher}
             {OfferDisplay}
             {!stickyCompact && TradeInBounce}
@@ -968,17 +983,43 @@ const OfferPage = () => {
           </div>
         </div>
 
-        <div className="max-w-lg mx-auto p-6 space-y-5">
+        <div className="max-w-lg mx-auto px-5 py-6 space-y-6">
           {s.vehicle_year && s.vehicle_make && s.vehicle_model && (
-            <div className="overflow-hidden -mx-2 mb-2">
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="overflow-hidden -mx-2 mb-2"
+            >
               <VehicleImage
                 year={s.vehicle_year}
                 make={s.vehicle_make}
                 model={s.vehicle_model}
                 selectedColor={s.exterior_color || ""}
               />
-            </div>
+            </motion.div>
           )}
+
+          {/* Mobile Trust Signals */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="grid grid-cols-3 gap-2"
+          >
+            {[
+              { icon: Zap, label: "Fast Payment" },
+              { icon: Handshake, label: "No Haggling" },
+              { icon: BadgeCheck, label: "Guaranteed" },
+            ].map(item => (
+              <div key={item.label} className="flex flex-col items-center text-center bg-card/60 rounded-2xl p-2.5 border border-border/15 shadow-sm">
+                <div className="w-7 h-7 rounded-lg bg-primary/8 flex items-center justify-center mb-1">
+                  <item.icon className="w-3.5 h-3.5 text-primary" />
+                </div>
+                <p className="text-[10px] font-bold text-card-foreground leading-tight">{item.label}</p>
+              </div>
+            ))}
+          </motion.div>
 
           {VehicleSummary}
           {TradeInExplanation}
@@ -986,14 +1027,14 @@ const OfferPage = () => {
           {ConditionBlock}
 
           <div className="flex gap-3 print:hidden">
-            <Button variant="outline" className="flex-1 gap-2" onClick={handlePrint}>
-              <Printer className="w-4 h-4" />
+            <Button variant="outline" className="flex-1 gap-2 rounded-xl h-10 text-xs font-semibold" onClick={handlePrint}>
+              <Printer className="w-3.5 h-3.5" />
               Print Offer
             </Button>
           </div>
           <div className="print:hidden">
             <Link to={`/my-submission/${token}`}>
-              <Button variant="default" className="w-full gap-2">
+              <Button variant="default" className="w-full gap-2 rounded-xl h-11 font-semibold">
                 <ArrowLeft className="w-4 h-4" />
                 Back to Portal
               </Button>
@@ -1001,86 +1042,78 @@ const OfferPage = () => {
           </div>
 
           {!s.vin && (
-            <div className="bg-warning/10 border border-warning/30 rounded-lg p-3 text-center">
-              <p className="text-xs font-semibold text-warning">⚠️ No VIN on File</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
-                This offer was generated without a VIN and is subject to vehicle verification. Final offer may change upon VIN confirmation and in-person inspection.
+            <div className="bg-warning/8 border border-warning/20 rounded-2xl p-4 text-center">
+              <p className="text-xs font-bold text-warning">No VIN on File</p>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                This offer was generated without a VIN. Final offer may change upon VIN confirmation and in-person inspection.
               </p>
             </div>
           )}
-          <p className="text-center text-xs text-muted-foreground">
-            <InspectionDisclosure /> • 🔒 Your information is kept secure
+          <p className="text-center text-[11px] text-muted-foreground/60 flex items-center justify-center gap-2">
+            <InspectionDisclosure /> <span className="text-muted-foreground/30">|</span> <Shield className="w-3 h-3" /> Your info is kept secure
           </p>
         </div>
       </div>
-      {/* Contact Info Gate Dialog */}
+      {/* Contact Info Gate Dialog — Premium */}
       <Dialog open={showContactGate} onOpenChange={setShowContactGate}>
-        <DialogContent className="max-w-md">
-          <DialogTitle className="flex items-center gap-2 text-lg font-bold">
-            <User className="w-5 h-5 text-primary" />
-            Almost There!
-          </DialogTitle>
-          <p className="text-sm text-muted-foreground -mt-1">
-            Enter your contact details so we can finalize your offer and reach out to schedule your visit.
-          </p>
-          <div className="space-y-3 mt-2">
-            <div>
-              <Label className="text-sm font-semibold">Full Name *</Label>
-              <Input
-                placeholder="John Smith"
-                value={contactForm.name}
-                onChange={e => setContactForm(prev => ({ ...prev, name: e.target.value }))}
-                className={contactErrors.name ? "border-destructive" : ""}
-              />
-              {contactErrors.name && <p className="text-xs text-destructive mt-0.5">{contactErrors.name}</p>}
-            </div>
-            <div>
-              <Label className="text-sm font-semibold">Email Address *</Label>
-              <Input
-                type="email"
-                placeholder="john@example.com"
-                value={contactForm.email}
-                onChange={e => setContactForm(prev => ({ ...prev, email: e.target.value }))}
-                className={contactErrors.email ? "border-destructive" : ""}
-              />
-              {contactErrors.email && <p className="text-xs text-destructive mt-0.5">{contactErrors.email}</p>}
-            </div>
-            <div>
-              <Label className="text-sm font-semibold">Cell Phone *</Label>
-              <Input
-                type="tel"
-                placeholder="(203) 555-1234"
-                value={contactForm.phone}
-                onChange={e => setContactForm(prev => ({ ...prev, phone: e.target.value }))}
-                className={contactErrors.phone ? "border-destructive" : ""}
-              />
-              {contactErrors.phone && <p className="text-xs text-destructive mt-0.5">{contactErrors.phone}</p>}
-            </div>
-            <div>
-              <Label className="text-sm font-semibold">Zip Code *</Label>
-              <Input
-                placeholder="06516"
-                value={contactForm.zip}
-                onChange={e => setContactForm(prev => ({ ...prev, zip: e.target.value }))}
-                className={contactErrors.zip ? "border-destructive" : ""}
-                maxLength={10}
-              />
-              {contactErrors.zip && <p className="text-xs text-destructive mt-0.5">{contactErrors.zip}</p>}
-            </div>
-            <p className="text-[10px] text-muted-foreground leading-snug">
-              By submitting, you consent to receive calls, texts, and emails regarding your vehicle offer. Msg & data rates may apply.
+        <DialogContent className="max-w-md rounded-2xl border-border/30 shadow-[0_8px_48px_rgba(0,0,0,0.12)] p-0 overflow-hidden">
+          {/* Premium header */}
+          <div className="bg-gradient-to-r from-primary/8 via-primary/5 to-transparent px-6 pt-6 pb-4 border-b border-border/20">
+            <DialogTitle className="flex items-center gap-2.5 text-lg font-extrabold tracking-tight">
+              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                <User className="w-5 h-5 text-primary" />
+              </div>
+              Almost There!
+            </DialogTitle>
+            <p className="text-sm text-muted-foreground mt-1.5">
+              Enter your details to lock in your <span className="font-bold text-success">${cashOffer.toLocaleString()}</span> offer.
             </p>
+          </div>
+
+          <div className="px-6 pb-6 pt-4 space-y-3.5">
+            {[
+              { label: "Full Name", placeholder: "John Smith", field: "name" as const, type: "text" },
+              { label: "Email Address", placeholder: "john@example.com", field: "email" as const, type: "email" },
+              { label: "Cell Phone", placeholder: "(203) 555-1234", field: "phone" as const, type: "tel" },
+              { label: "Zip Code", placeholder: "06516", field: "zip" as const, type: "text" },
+            ].map(item => (
+              <div key={item.field}>
+                <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">{item.label} *</Label>
+                <Input
+                  type={item.type}
+                  placeholder={item.placeholder}
+                  value={contactForm[item.field]}
+                  onChange={e => setContactForm(prev => ({ ...prev, [item.field]: e.target.value }))}
+                  className={`mt-1.5 h-11 rounded-xl border-border/40 focus:border-primary/40 text-sm ${contactErrors[item.field] ? "border-destructive" : ""}`}
+                  maxLength={item.field === "zip" ? 10 : undefined}
+                />
+                {contactErrors[item.field] && <p className="text-[11px] text-destructive mt-1 font-medium">{contactErrors[item.field]}</p>}
+              </div>
+            ))}
+
+            {/* Trust signals inside dialog */}
+            <div className="flex items-center justify-center gap-4 py-2 text-[10px] text-muted-foreground/50">
+              <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> Secure</span>
+              <span className="flex items-center gap-1"><BadgeCheck className="w-3 h-3" /> No spam</span>
+              <span className="flex items-center gap-1"><Zap className="w-3 h-3" /> Instant</span>
+            </div>
+
+            <p className="text-[9px] text-muted-foreground/40 leading-relaxed text-center">
+              By submitting, you consent to receive calls, texts, and emails regarding your vehicle offer.
+            </p>
+
             <Button
               onClick={handleContactSubmit}
               disabled={contactSaving}
-              className="w-full py-5 text-base font-bold gap-2"
-              style={{ backgroundColor: "hsl(var(--cta-accept))" }}
+              className="relative w-full py-5 text-base font-extrabold gap-2.5 rounded-2xl overflow-hidden group"
+              style={{ backgroundColor: "hsl(var(--cta-accept))", boxShadow: "0 8px 24px hsl(var(--cta-accept) / 0.25)" }}
             >
+              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
               {contactSaving ? "Saving..." : (
                 <>
-                  <CheckCircle className="w-5 h-5" />
-                  Accept & Lock In My Price
-                  <ArrowRight className="w-5 h-5" />
+                  <CheckCircle className="w-5 h-5 relative z-10" />
+                  <span className="relative z-10">Accept & Lock In My Price</span>
+                  <ArrowRight className="w-5 h-5 relative z-10" />
                 </>
               )}
             </Button>
