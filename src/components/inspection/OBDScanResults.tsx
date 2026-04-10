@@ -140,6 +140,7 @@ export default function OBDScanResults({ submissionId, showHistory = false }: OB
   const [history, setHistory] = useState<VehicleScan[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [submissionMeta, setSubmissionMeta] = useState<{ token: string; vehicleStr: string } | null>(null);
 
   const fetchScan = useCallback(async () => {
     if (!submissionId) return;
@@ -168,6 +169,29 @@ export default function OBDScanResults({ submissionId, showHistory = false }: OB
     setLoading(true);
     fetchScan();
   }, [fetchScan]);
+
+  // Fetch minimal submission metadata (token + vehicle string) so the empty
+  // state can launch an OBD scan QR without additional props.
+  useEffect(() => {
+    if (!submissionId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await (supabase as any)
+          .from("submissions")
+          .select("token, vehicle_year, vehicle_make, vehicle_model")
+          .eq("id", submissionId)
+          .maybeSingle();
+        if (!cancelled && data) {
+          const vehicleStr = `${data.vehicle_year || ""} ${data.vehicle_make || ""} ${data.vehicle_model || ""}`.trim();
+          setSubmissionMeta({ token: data.token || submissionId, vehicleStr });
+        }
+      } catch {
+        /* noop */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [submissionId]);
 
   // Realtime subscription — auto-update on new scans
   useEffect(() => {
@@ -231,13 +255,12 @@ export default function OBDScanResults({ submissionId, showHistory = false }: OB
             </p>
           </div>
           <div className="shrink-0">
-            {/* Button lives in the consuming page via OBDScanButton import.
-                Here we also expose a trigger for convenience. */}
             <OBDScanButton
               submissionId={submissionId}
-              submissionToken={submissionId}
-              vehicleStr=""
+              submissionToken={submissionMeta?.token || submissionId}
+              vehicleStr={submissionMeta?.vehicleStr || ""}
               variant="compact"
+              label="Start OBD Scan"
             />
           </div>
         </div>
