@@ -975,6 +975,7 @@ const OfferPage = () => {
             {/* Right column — vehicle summary → trade-in → condition */}
             <div className="col-span-3 space-y-6">
               {VehicleSummary}
+              {PhotoUploadCallout}
               {TradeInExplanation}
               {NoTaxBlock}
               {ConditionBlock}
@@ -1049,6 +1050,7 @@ const OfferPage = () => {
           </motion.div>
 
           {VehicleSummary}
+          {PhotoUploadCallout}
           {TradeInExplanation}
           {NoTaxBlock}
           {ConditionBlock}

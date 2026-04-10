@@ -60,8 +60,8 @@ const DealAccepted = () => {
     const duration = 2500;
     const end = Date.now() + duration;
     const frame = () => {
-      confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 }, colors: ["#22c55e", "#3b82f6", "#f59e0b"] }); // green/blue/amber — bright enough for both light & dark
-      confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 }, colors: ["#22c55e", "#3b82f6", "#f59e0b"] }); // green/blue/amber — bright enough for both light & dark
+      confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 }, colors: ["#22c55e", "#3b82f6", "#f59e0b"] });
+      confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 }, colors: ["#22c55e", "#3b82f6", "#f59e0b"] });
       if (Date.now() < end) requestAnimationFrame(frame);
     };
     frame();

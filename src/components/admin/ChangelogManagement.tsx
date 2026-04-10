@@ -63,6 +63,7 @@ export default function ChangelogManagement() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<ChangelogEntry | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyEntry);
   const [itemsText, setItemsText] = useState("");
   const [saving, setSaving] = useState(false);
@@ -144,8 +145,14 @@ export default function ChangelogManagement() {
     fetchEntries();
   };
 
-  const deleteEntry = async (id: string) => {
-    if (!confirm("Delete this changelog entry permanently?")) return;
+  const deleteEntry = (id: string) => {
+    setConfirmDeleteId(id);
+  };
+
+  const executeDelete = async () => {
+    if (!confirmDeleteId) return;
+    const id = confirmDeleteId;
+    setConfirmDeleteId(null);
     await supabase.from("changelog_entries").delete().eq("id", id);
     fetchEntries();
     toast({ title: "Entry deleted" });
@@ -282,6 +289,21 @@ export default function ChangelogManagement() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!confirmDeleteId} onOpenChange={(open) => { if (!open) setConfirmDeleteId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Changelog Entry</AlertDialogTitle>
+            <AlertDialogDescription>
+              Delete this changelog entry permanently?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={executeDelete}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

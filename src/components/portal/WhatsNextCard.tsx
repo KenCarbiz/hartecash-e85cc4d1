@@ -79,10 +79,10 @@ function getNextAction(status: string, photosUploaded: boolean, docsUploaded: bo
   if (!photosUploaded) {
     return {
       emoji: "📸",
-      title: appointmentSet ? "Snap a Few Photos to Speed Things Up" : "Upload Vehicle Photos",
+      title: appointmentSet ? "Upload Photos to Maximize Your Offer" : "Upload Photos to Help Increase Your Offer",
       description: appointmentSet
-        ? "Uploading photos of your vehicle ahead of time lets our team prepare in advance — meaning a faster inspection and less time at the dealership."
-        : "Adding photos helps us verify your vehicle's condition and prepare a more accurate appraisal before you arrive.",
+        ? "Uploading photos ahead of time lets our AI and team assess your vehicle's real condition before you arrive — complete photos often result in a higher final offer and a faster inspection."
+        : "A complete set of vehicle photos allows our AI and inventory team to better assess your vehicle's condition — which often means a higher offer for you.",
       actionLabel: "Upload Photos",
       actionIcon: Camera,
       linkType: "upload",
@@ -344,7 +344,7 @@ const WhatsNextCard = ({ mappedStatus, photosUploaded, docsUploaded, appointment
             <div className="bg-white/15 backdrop-blur-sm rounded-xl p-4 flex items-center justify-between group-hover:bg-white/25 transition-colors">
               <div className="flex items-center gap-2 text-white">
                 <Camera className="w-4 h-4" />
-                <span className="text-sm font-semibold">Helps speed up your inspection</span>
+                <span className="text-sm font-semibold">Photos help increase your offer</span>
               </div>
               <div className="flex items-center gap-1.5 text-white font-bold text-sm bg-white/20 rounded-full px-3 py-1">
                 Add Photos
