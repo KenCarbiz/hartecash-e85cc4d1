@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 import {
   Inbox, CalendarDays, Users, ShieldCheck, SlidersHorizontal,
-  Settings, Bell, ListChecks, MessageSquareQuote, BarChart3, Send, MapPin, Car, ScrollText, Shield, Lock, Wrench, Rocket, Gauge, Network, Camera, Gift, Megaphone, ChevronDown, Link2, Code2, Paintbrush, TrendingUp, Store, Truck
+  Settings, Bell, ListChecks, MessageSquareQuote, BarChart3, Send, MapPin, Car, ScrollText, Shield, Lock, Wrench, Rocket, Gauge, Network, Camera, Gift, Megaphone, ChevronDown, Link2, Code2, Paintbrush, TrendingUp, Store, Truck, Zap
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
@@ -172,13 +172,21 @@ const AdminSidebar = ({
       ].filter((item) => isAllowed(item.key))
     : [];
 
-  // ── ACQUISITION ── (Manager+ — equity mining & wholesale)
-  const acquisitionItems: SidebarItem[] = isManager
-    ? [
-        { key: "equity-mining", label: "Equity Mining", icon: TrendingUp },
-        { key: "wholesale-marketplace", label: "Wholesale Exit", icon: Store },
-      ].filter((item) => isAllowed(item.key))
-    : [];
+  // ── ACQUISITION ── (Manager+ — equity mining & wholesale.
+  //    Service Quick Entry is visible to all staff roles including sales_bdc.)
+  const isAcquisitionStaff =
+    isManager || userRole === "sales_bdc" || canManageAccess;
+  const acquisitionItems: SidebarItem[] = [
+    ...(isAcquisitionStaff
+      ? [{ key: "service-quick-entry", label: "Service Quick Entry", icon: Zap }]
+      : []),
+    ...(isManager
+      ? [
+          { key: "equity-mining", label: "Equity Mining", icon: TrendingUp },
+          { key: "wholesale-marketplace", label: "Wholesale Exit", icon: Store },
+        ]
+      : []),
+  ].filter((item) => isAllowed(item.key));
 
   // Locked sections for "Request Access"
   const allSectionKeys = [
@@ -190,7 +198,7 @@ const AdminSidebar = ({
     "staff", "referrals", "compliance", "reports", "image-inventory",
     "onboarding", "system-settings",
     "api-access", "vauto-integration", "white-label",
-    "equity-mining", "wholesale-marketplace",
+    "equity-mining", "wholesale-marketplace", "service-quick-entry",
   ];
   const lockedSections = showRequestAccess && allowedSections !== null
     ? allSectionKeys.filter((k) => !allowedSections.includes(k))

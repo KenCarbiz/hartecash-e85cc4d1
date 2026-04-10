@@ -5,8 +5,9 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import {
   Store, Car, Clock, DollarSign, Package, CheckCircle,
-  Loader2, BarChart3,
+  Loader2, BarChart3, HardHat,
 } from "lucide-react";
+import { InDevelopmentBadge } from "./InDevelopmentBadge";
 
 /* ── types ──────────────────────────────────────────── */
 
@@ -124,16 +125,40 @@ const WholesaleMarketplace = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-500/20 flex items-center justify-center">
           <Store className="w-5 h-5 text-violet-600 dark:text-violet-400" />
         </div>
-        <div>
-          <h2 className="text-2xl font-black text-card-foreground tracking-tight">
-            Wholesale Marketplace
-          </h2>
+        <div className="flex-1 min-w-[220px]">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-2xl font-black text-card-foreground tracking-tight">
+              Wholesale Marketplace
+            </h2>
+            <InDevelopmentBadge
+              label="In Development"
+              reason="Inter-dealer marketplace requires network connectivity between dealer accounts"
+              size="md"
+            />
+          </div>
           <p className="text-sm text-muted-foreground mt-0.5">
             List vehicles to other dealers when you don't want to keep them
+          </p>
+        </div>
+      </div>
+
+      {/* In-development banner */}
+      <div className="rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent p-4 flex items-start gap-3">
+        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 shrink-0">
+          <HardHat className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+        </div>
+        <div className="text-xs leading-relaxed text-amber-900 dark:text-amber-100">
+          <p className="font-bold text-amber-700 dark:text-amber-300 text-[11px] uppercase tracking-wider mb-0.5">
+            Inter-dealer marketplace in development
+          </p>
+          <p>
+            Vehicles can be marked as listed, but the cross-dealer network
+            requires multiple dealers to be connected before listings become
+            discoverable. Reach out to enable your account for the beta.
           </p>
         </div>
       </div>

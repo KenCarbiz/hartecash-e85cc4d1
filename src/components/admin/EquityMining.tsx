@@ -9,7 +9,7 @@ import { Slider } from "@/components/ui/slider";
 import { calculateEquity } from "@/lib/equityCalculator";
 import {
   Users, DollarSign, Send, Mail, CheckCircle, Clock,
-  Filter, Loader2, Car, Pickaxe, RefreshCw, Flame,
+  Filter, Loader2, Car, Pickaxe, RefreshCw, Flame, Info,
 } from "lucide-react";
 
 /* ── types ──────────────────────────────────────────── */
@@ -300,6 +300,23 @@ const EquityMining = () => {
             )}
             Bulk Outreach
           </Button>
+        </div>
+      </div>
+
+      {/* DMS integration info note */}
+      <div className="rounded-2xl border border-blue-500/30 bg-gradient-to-r from-blue-500/8 via-blue-500/4 to-transparent p-4 flex items-start gap-3">
+        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-blue-500/15 border border-blue-500/30 shrink-0">
+          <Info className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+        </div>
+        <div className="text-xs leading-relaxed text-blue-900 dark:text-blue-100">
+          <p className="font-bold text-blue-700 dark:text-blue-300 text-[11px] uppercase tracking-wider mb-0.5">
+            DMS auto-import coming soon
+          </p>
+          <p>
+            Automatic service lead ingestion from your DMS (CDK, Reynolds &
+            Reynolds, Dealertrack) is on the roadmap. Currently, service leads
+            require manual entry via the Service Quick Entry tool.
+          </p>
         </div>
       </div>
 

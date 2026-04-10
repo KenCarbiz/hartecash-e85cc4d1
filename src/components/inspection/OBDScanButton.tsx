@@ -19,6 +19,7 @@ import {
   Loader2,
   ScanLine,
 } from "lucide-react";
+import { InDevelopmentBadge } from "@/components/admin/InDevelopmentBadge";
 
 interface OBDScanButtonProps {
   submissionId: string;
@@ -105,10 +106,15 @@ export default function OBDScanButton({
               <div className="flex items-center justify-center w-11 h-11 rounded-2xl bg-primary/15 border border-primary/20">
                 <Cpu className="w-5 h-5 text-primary" />
               </div>
-              <div>
+              <div className="flex-1 min-w-0">
                 <DialogHeader className="space-y-0">
-                  <DialogTitle className="text-base font-black tracking-tight text-card-foreground">
+                  <DialogTitle className="text-base font-black tracking-tight text-card-foreground flex items-center gap-2 flex-wrap">
                     OBD-II Diagnostic Scan
+                    <InDevelopmentBadge
+                      label="Beta"
+                      reason="Requires an OBDLink CX or compatible BLE adapter. Currently in beta."
+                      size="sm"
+                    />
                   </DialogTitle>
                   <DialogDescription className="text-[11px] text-muted-foreground mt-0.5">
                     {vehicleStr || "Capture live vehicle diagnostics"}

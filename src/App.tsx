@@ -46,6 +46,7 @@ const EmailUnsubscribe = lazy(() => import("./pages/EmailUnsubscribe"));
 const ReferralPage = lazy(() => import("./pages/ReferralPage"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const OBDScan = lazy(() => import("./pages/OBDScan"));
+const ServiceQuickEntry = lazy(() => import("./pages/ServiceQuickEntry"));
 
 const queryClient = new QueryClient();
 
@@ -126,6 +127,7 @@ const AnimatedRoutes = () => {
         <Route path="/referral" element={<ReferralPage />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/obd-scan/:token" element={<OBDScan />} />
+        <Route path="/service-quick-entry" element={<ProtectedRoute><ServiceQuickEntry /></ProtectedRoute>} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
