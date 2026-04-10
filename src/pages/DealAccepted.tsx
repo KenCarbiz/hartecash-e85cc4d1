@@ -34,6 +34,17 @@ interface DealSubmission {
   zip: string | null;
   token: string;
   created_at: string | null;
+  appointment_set: boolean;
+}
+
+interface AppointmentData {
+  preferred_date: string;
+  preferred_time: string;
+  store_location: string | null;
+  location_name: string | null;
+  location_address: string | null;
+  location_city: string | null;
+  location_state: string | null;
 }
 
 const DealAccepted = () => {
@@ -44,6 +55,9 @@ const DealAccepted = () => {
   const confettiKey = `confetti_shown_${token}`;
   const [isFirstVisit] = useState(() => !localStorage.getItem(confettiKey));
   const { config } = useSiteConfig();
+
+  // Appointment data for calendar integration
+  const [appointmentData, setAppointmentData] = useState<AppointmentData | null>(null);
 
   // Contact gate state
   const [contactGateOpen, setContactGateOpen] = useState(false);
@@ -104,6 +118,49 @@ const DealAccepted = () => {
     };
     fetchData();
   }, [token]);
+
+  // Fetch appointment details when submission has an appointment
+  useEffect(() => {
+    if (!token || !submission || !(submission as any).appointment_set) return;
+    const fetchAppointment = async () => {
+      const { data } = await supabase
+        .from("appointments")
+        .select("preferred_date, preferred_time, store_location")
+        .eq("submission_token", token)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data) {
+        let locName: string | null = null;
+        let locAddress: string | null = null;
+        let locCity: string | null = null;
+        let locState: string | null = null;
+        if (data.store_location) {
+          const { data: loc } = await supabase
+            .from("dealership_locations" as any)
+            .select("name, address, city, state")
+            .eq("id", data.store_location)
+            .maybeSingle();
+          if (loc) {
+            locName = (loc as any).name;
+            locAddress = (loc as any).address;
+            locCity = (loc as any).city;
+            locState = (loc as any).state;
+          }
+        }
+        setAppointmentData({
+          preferred_date: data.preferred_date,
+          preferred_time: data.preferred_time,
+          store_location: data.store_location,
+          location_name: locName,
+          location_address: locAddress,
+          location_city: locCity,
+          location_state: locState,
+        });
+      }
+    };
+    fetchAppointment();
+  }, [token, submission]);
 
   if (loading) {
     return (
@@ -316,6 +373,63 @@ const DealAccepted = () => {
   const daysRemaining = expiresDate ? Math.max(0, Math.ceil((expiresDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0;
 
   const scheduleLink = `/schedule?token=${token}&vehicle=${encodeURIComponent(vehicleStr)}&name=${encodeURIComponent(s.name || "")}&email=${encodeURIComponent(s.email || "")}&phone=${encodeURIComponent(s.phone || "")}`;
+
+  // Calendar invite helpers
+  const buildAppointmentDateForCalendar = (): Date | null => {
+    if (!appointmentData) return null;
+    const { preferred_date, preferred_time } = appointmentData;
+    if (!preferred_date || !preferred_time) return null;
+    const timeParts = preferred_time.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (!timeParts) return null;
+    let hours = parseInt(timeParts[1], 10);
+    const minutes = parseInt(timeParts[2], 10);
+    const period = timeParts[3].toUpperCase();
+    if (period === "PM" && hours !== 12) hours += 12;
+    if (period === "AM" && hours === 12) hours = 0;
+    const d = new Date(`${preferred_date}T00:00:00`);
+    d.setHours(hours, minutes, 0, 0);
+    return d;
+  };
+
+  const appointmentLocationName = appointmentData?.location_name || "";
+  const appointmentLocationFull = appointmentData?.location_address
+    ? `${appointmentData.location_name}, ${appointmentData.location_address}, ${appointmentData.location_city}, ${appointmentData.location_state}`
+    : appointmentLocationName;
+
+  const handleDownloadIcs = () => {
+    const start = buildAppointmentDateForCalendar();
+    if (!start) return;
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
+    const summary = vehicleStr
+      ? `Vehicle Inspection - ${vehicleStr}`
+      : "Vehicle Inspection";
+    const ics = generateICalEvent({
+      summary,
+      description: `Vehicle inspection appointment at ${appointmentLocationName}. Please bring your Driver's License, Vehicle Title/Registration, and all keys & remotes. Expected duration: 15-20 minutes.`,
+      location: appointmentLocationFull,
+      startDate: start,
+      endDate: end,
+      organizerName: config.dealership_name || "Dealership",
+      organizerEmail: config.contact_email || "info@example.com",
+    });
+    downloadCalendarInvite(ics, "vehicle-inspection-appointment.ics");
+  };
+
+  const getGoogleCalendarUrl = (): string | null => {
+    const start = buildAppointmentDateForCalendar();
+    if (!start) return null;
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
+    const title = vehicleStr
+      ? `Vehicle Inspection - ${vehicleStr}`
+      : "Vehicle Inspection";
+    return generateGoogleCalendarUrl({
+      title,
+      description: `Vehicle inspection appointment at ${appointmentLocationName}. Please bring your Driver's License, Vehicle Title/Registration, and all keys & remotes. Expected duration: 15-20 minutes.`,
+      location: appointmentLocationFull,
+      startDate: start,
+      endDate: end,
+    });
+  };
 
   // Animation variants: dramatic spring on first visit, subtle fade on revisit
   const stagger = isFirstVisit ? 0.15 : 0.05;
@@ -547,6 +661,63 @@ const DealAccepted = () => {
             </div>
           </motion.div>
         </div>
+
+        {/* Add to Calendar — shown when appointment is booked */}
+        {appointmentData && (
+          <motion.div
+            {...entrance(5)}
+            className="mb-8"
+          >
+            <div className="bg-card rounded-xl p-6 shadow-lg border border-border">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-9 h-9 rounded-full bg-primary/5 flex items-center justify-center flex-shrink-0">
+                  <CalendarDays className="h-4.5 w-4.5 text-primary/70" />
+                </div>
+                <div>
+                  <p className="font-semibold text-card-foreground">Your Inspection Appointment</p>
+                  <p className="text-sm text-muted-foreground">
+                    {new Date(appointmentData.preferred_date + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+                    {" "}at {appointmentData.preferred_time}
+                    {appointmentLocationName ? ` — ${appointmentLocationName}` : ""}
+                  </p>
+                </div>
+              </div>
+              <div className="border border-border rounded-xl p-4 space-y-3">
+                <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <CalendarDays className="w-4 h-4 text-primary" />
+                  Add to Calendar
+                </p>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 gap-2"
+                    onClick={handleDownloadIcs}
+                  >
+                    <Download className="w-4 h-4" />
+                    Download .ics
+                  </Button>
+                  {(() => {
+                    const url = getGoogleCalendarUrl();
+                    return url ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 gap-2"
+                        asChild
+                      >
+                        <a href={url} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="w-4 h-4" />
+                          Add to Google Calendar
+                        </a>
+                      </Button>
+                    ) : null;
+                  })()}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Footer */}
         <p className="text-center text-xs text-muted-foreground">
