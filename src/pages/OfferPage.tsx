@@ -23,6 +23,8 @@ import { resolveEffectiveSettings } from "@/lib/resolvePricingModel";
 import { useToast } from "@/hooks/use-toast";
 import SlideToAccept from "@/components/SlideToAccept";
 import SaveOfferButton from "@/components/offer/SaveOfferButton";
+import CompetitorComparison from "@/components/offer/CompetitorComparison";
+import OfferWatch from "@/components/offer/OfferWatch";
 import { track } from "@/lib/analytics";
 
 
@@ -136,6 +138,9 @@ const OfferPage = () => {
   const [appointment, setAppointment] = useState<{ preferred_date: string; preferred_time: string; store_location: string | null } | null>(null);
   const [dealerLocations, setDealerLocations] = useState<{ id: string; name: string; city: string; state: string; address: string | null }[]>([]);
   
+  // Offer Watch subscription tracking
+  const [offerWatchSubscribed, setOfferWatchSubscribed] = useState(false);
+
   // Contact info gate for offer-first flow
   const [showContactGate, setShowContactGate] = useState(false);
   const [contactForm, setContactForm] = useState({ name: "", email: "", phone: "", zip: "" });
@@ -1006,6 +1011,16 @@ const OfferPage = () => {
             {/* Right column — vehicle summary → trade-in → condition */}
             <div className="col-span-3 space-y-6">
               {VehicleSummary}
+
+              {/* Beat CarMax Comparison Widget — desktop */}
+              <CompetitorComparison
+                cashOffer={cashOffer}
+                wholesaleAvg={s.bb_wholesale_avg ?? condition?.bb_wholesale_avg ?? null}
+                tradeinAvg={s.bb_tradein_avg ?? condition?.bb_tradein_avg ?? null}
+                retailAvg={s.bb_retail_avg ?? condition?.bb_retail_avg ?? null}
+                vehicleStr={vehicleStr}
+              />
+
               {PhotoUploadCallout}
               {TradeInExplanation}
               {NoTaxBlock}
