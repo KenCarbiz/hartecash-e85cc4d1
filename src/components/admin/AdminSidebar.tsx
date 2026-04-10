@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 import {
   Inbox, CalendarDays, Users, ShieldCheck, SlidersHorizontal,
-  Settings, Bell, ListChecks, MessageSquareQuote, BarChart3, Send, MapPin, Car, ScrollText, Shield, Lock, Wrench, Rocket, Gauge, Network, Camera, Gift, Megaphone, ChevronDown, Link2, Code2, Paintbrush, TrendingUp, Store, Truck, Zap, Activity
+  Settings, Bell, ListChecks, MessageSquareQuote, BarChart3, Send, MapPin, Car, ScrollText, Shield, Lock, Wrench, Rocket, Gauge, Network, Camera, Gift, Megaphone, ChevronDown, Link2, Code2, Paintbrush, TrendingUp, Store, Truck, Zap, Activity, ScanLine
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
@@ -174,10 +174,16 @@ const AdminSidebar = ({
     : [];
 
   // ── ACQUISITION ── (Manager+ — equity mining & wholesale.
-  //    Service Quick Entry is visible to all staff roles including sales_bdc.)
+  //    Service Quick Entry is visible to all staff roles including sales_bdc.
+  //    Inspection Check-In is also visible to inspector role.)
   const isAcquisitionStaff =
     isManager || userRole === "sales_bdc" || canManageAccess;
+  const isCheckInStaff =
+    isAcquisitionStaff || userRole === "inspector";
   const acquisitionItems: SidebarItem[] = [
+    ...(isCheckInStaff
+      ? [{ key: "inspection-checkin", label: "Inspection Check-In", icon: ScanLine }]
+      : []),
     ...(isAcquisitionStaff
       ? [{ key: "service-quick-entry", label: "Service Quick Entry", icon: Zap }]
       : []),
@@ -199,7 +205,7 @@ const AdminSidebar = ({
     "staff", "referrals", "compliance", "reports", "image-inventory",
     "onboarding", "system-settings",
     "integrations-status", "api-access", "vauto-integration", "white-label",
-    "equity-mining", "wholesale-marketplace", "service-quick-entry",
+    "equity-mining", "wholesale-marketplace", "service-quick-entry", "inspection-checkin",
   ];
   const lockedSections = showRequestAccess && allowedSections !== null
     ? allSectionKeys.filter((k) => !allowedSections.includes(k))

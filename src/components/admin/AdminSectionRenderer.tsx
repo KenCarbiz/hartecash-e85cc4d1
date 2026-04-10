@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import NotificationLog from "./NotificationLog";
-import { Store, UserCheck, UserX, AlertTriangle, Zap, ArrowRight } from "lucide-react";
+import { Store, UserCheck, UserX, AlertTriangle, Zap, ArrowRight, ScanLine } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { TenantOverrideProvider } from "@/contexts/TenantContext";
@@ -327,6 +327,51 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
             <div className="rounded-xl bg-background/60 border border-border/40 p-3">
               <p className="text-xs font-semibold text-foreground">3. Hand Off</p>
               <p className="text-[11px] text-muted-foreground">QR code or SMS/email link</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Inspection Check-In launcher ──
+  if (activeSection === "inspection-checkin") {
+    return (
+      <div className="max-w-2xl mx-auto py-8">
+        <div className="bg-gradient-to-br from-primary/10 via-card to-card border border-border/50 rounded-3xl p-8 sm:p-10 shadow-xl text-center">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center mx-auto mb-5 shadow-md">
+            <ScanLine className="w-8 h-8 text-primary-foreground" />
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-card-foreground mb-3">
+            Inspection Check-In
+          </h2>
+          <p className="text-muted-foreground text-base mb-2 max-w-md mx-auto">
+            Walk out to the vehicle, scan the VIN on the door jamb, and either
+            open the existing submission or create a walk-in in seconds.
+          </p>
+          <p className="text-xs text-muted-foreground mb-8">
+            Optimized for tablets and phones in the field.
+          </p>
+          <Button
+            onClick={() => navigate("/inspection-checkin")}
+            size="lg"
+            className="h-14 px-8 text-base font-bold shadow-lg"
+          >
+            Open Check-In
+            <ArrowRight className="w-5 h-5 ml-2" />
+          </Button>
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 text-left">
+            <div className="rounded-xl bg-background/60 border border-border/40 p-3">
+              <p className="text-xs font-semibold text-foreground">1. Scan VIN</p>
+              <p className="text-[11px] text-muted-foreground">Camera or manual entry</p>
+            </div>
+            <div className="rounded-xl bg-background/60 border border-border/40 p-3">
+              <p className="text-xs font-semibold text-foreground">2. Match or Create</p>
+              <p className="text-[11px] text-muted-foreground">Existing lead or walk-in</p>
+            </div>
+            <div className="rounded-xl bg-background/60 border border-border/40 p-3">
+              <p className="text-xs font-semibold text-foreground">3. Inspect</p>
+              <p className="text-[11px] text-muted-foreground">Jumps straight to inspection</p>
             </div>
           </div>
         </div>

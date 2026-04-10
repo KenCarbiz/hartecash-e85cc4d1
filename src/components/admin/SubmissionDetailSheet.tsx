@@ -23,7 +23,7 @@ import StaffFileUpload from "@/components/admin/StaffFileUpload";
 import FollowUpPanel from "@/components/admin/FollowUpPanel";
 import RetailMarketPanel from "@/components/admin/RetailMarketPanel";
 import {
-  X, Printer, Users, Car, Search, DollarSign, Info, FileText, Gauge, Palette, BarChart3,
+  X, Printer, Users, Car, Search, DollarSign, Info, FileText, Gauge, Palette, BarChart3, ScanLine,
   Settings2, Wrench, Key, Wind, Cigarette, CircleDot, Sparkles, TrendingUp,
   AlertTriangle, Bell, Mail, Phone, StickyNote, CalendarDays, Camera,
   ExternalLink, Upload, Check, XCircle, MapPin, Star, History, Clock,
@@ -513,6 +513,7 @@ const SubmissionDetailSheet = ({
                     {[
                       { label: "Appraisal", icon: Gauge, onClick: () => { window.location.href = `/appraisal/${sub.token}`; } },
                       { label: "Inspection", icon: ClipboardList, onClick: () => { window.location.href = `/inspection/${sub.id}`; } },
+                      { label: "Check-In", icon: ScanLine, onClick: () => { window.location.href = `/inspection-checkin`; } },
                       { label: "Print", icon: Printer, onClick: handlePrint },
                     ].map(action => (
                       <div key={action.label} className="flex flex-col items-center">
