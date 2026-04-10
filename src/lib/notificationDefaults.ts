@@ -103,6 +103,27 @@ export const DEFAULT_TEMPLATES: Record<string, TemplateDefaults> = {
     sms_body:
       "Reminder: Your visit is tomorrow at {{appointment_time}} at {{location}}. Bring title, ID & keys. See you there! — {{dealership_name}}",
   },
+  customer_inspection_complete: {
+    email_subject: "Inspection Complete — {{vehicle}}",
+    email_body:
+      "Hi {{customer_name}},\n\nGreat news! The inspection on your {{vehicle}} has been completed.\n\nWe're finalizing the details and will be in touch shortly with next steps.\n\nView your status: {{portal_link}}\n\nBest regards,\n{{dealership_name}}",
+    sms_body:
+      "Hi {{customer_name}}, the inspection on your {{vehicle}} is complete! We'll follow up with next steps shortly. — {{dealership_name}}",
+  },
+  customer_check_ready: {
+    email_subject: "Your Check Is Being Processed — {{vehicle}}",
+    email_body:
+      "Hi {{customer_name}},\n\nYour check request for your {{vehicle}} has been submitted and is being processed.\n\nWe'll let you know as soon as it's ready for pickup.\n\nView your status: {{portal_link}}\n\nBest regards,\n{{dealership_name}}",
+    sms_body:
+      "Hi {{customer_name}}, your check for your {{vehicle}} is being processed. We'll notify you when it's ready! — {{dealership_name}}",
+  },
+  customer_purchase_complete: {
+    email_subject: "Purchase Complete — Thank You!",
+    email_body:
+      "Hi {{customer_name}},\n\nCongratulations! The purchase of your {{vehicle}} is now complete.\n\nThank you for choosing {{dealership_name}}. If you have any questions, don't hesitate to reach out.\n\nBest regards,\n{{dealership_name}}",
+    sms_body:
+      "Hi {{customer_name}}, your {{vehicle}} purchase is complete! Thank you for choosing {{dealership_name}}.",
+  },
   customer_appointment_rescheduled: {
     email_subject: "Your Appointment Has Been Rescheduled",
     email_body:

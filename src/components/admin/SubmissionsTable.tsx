@@ -395,7 +395,9 @@ const SubmissionsTable = ({
                       </td>
                       <td className={`${cellPad} whitespace-nowrap`}>
                         <div>{sub.email || "—"}</div>
-                        <div className="text-muted-foreground text-xs">{formatPhone(sub.phone) || ""}</div>
+                        {sub.phone ? (
+                          <a href={`tel:${sub.phone}`} className="text-muted-foreground text-xs text-primary/80 hover:text-primary hover:underline transition-colors cursor-pointer">{formatPhone(sub.phone)}</a>
+                        ) : null}
                       </td>
                       <td className={`${cellPad} whitespace-nowrap`}>
                         {(() => {
@@ -469,7 +471,19 @@ const SubmissionsTable = ({
                         </div>
                       </td>
                       <td className={`${cellPad} text-right`}>
-                        <div className="flex justify-end gap-1">
+                        <div className="flex justify-end items-center gap-1">
+                          {!sub.status_updated_by && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => onInlineStatusChange(sub, sub.progress_status)}
+                              title="Claim this lead"
+                              className="text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 gap-1 text-[10px] font-semibold px-1.5"
+                            >
+                              <UserCheck className="w-3.5 h-3.5" />
+                              <span className="hidden xl:inline">Claim</span>
+                            </Button>
+                          )}
                           <Button variant="ghost" size="sm" onClick={() => onView(sub)}><Eye className="w-4 h-4" /></Button>
                           {canDelete && <Button variant="ghost" size="sm" onClick={() => onDelete(sub.id)} className="text-destructive hover:text-destructive"><Trash2 className="w-4 h-4" /></Button>}
                         </div>

@@ -46,6 +46,7 @@ interface OfferSubmission {
   created_at: string | null;
   loan_status: string | null;
   progress_status: string | null;
+  photos_uploaded: boolean;
   // New BB fields
   bb_msrp: number | null;
   bb_class_name: string | null;

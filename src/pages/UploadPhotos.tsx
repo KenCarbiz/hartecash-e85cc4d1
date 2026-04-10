@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Camera, CheckCircle, X, Plus, ArrowLeft, Upload, CircleDot, Loader2,
+  Sun, Gauge, AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import UploadSkeleton from "@/components/UploadSkeleton";

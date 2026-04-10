@@ -217,7 +217,7 @@ const ScheduleVisit = () => {
         body: { appointment: form },
       });
 
-      // Fire appointment_booked staff notification
+      // Fire appointment_booked staff notification + customer confirmation
       if (submissionToken) {
         const { data: sub } = await supabase
           .from("submissions")
@@ -228,6 +228,15 @@ const ScheduleVisit = () => {
           supabase.functions.invoke("send-notification", {
             body: {
               trigger_key: "appointment_booked",
+              submission_id: sub.id,
+              appointment_date: form.preferred_date,
+              appointment_time: form.preferred_time,
+              location: form.store_location || "",
+            },
+          }).catch(console.error);
+          supabase.functions.invoke("send-notification", {
+            body: {
+              trigger_key: "customer_appointment_booked",
               submission_id: sub.id,
               appointment_date: form.preferred_date,
               appointment_time: form.preferred_time,

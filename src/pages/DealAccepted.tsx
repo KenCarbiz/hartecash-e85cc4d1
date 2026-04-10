@@ -60,8 +60,8 @@ const DealAccepted = () => {
     const duration = 2500;
     const end = Date.now() + duration;
     const frame = () => {
-      confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 }, colors: ["#10b981", "#0056a0", "#e63946"] });
-      confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 }, colors: ["#10b981", "#0056a0", "#e63946"] });
+      confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 }, colors: ["#22c55e", "#3b82f6", "#f59e0b"] }); // green/blue/amber — bright enough for both light & dark
+      confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 }, colors: ["#22c55e", "#3b82f6", "#f59e0b"] }); // green/blue/amber — bright enough for both light & dark
       if (Date.now() < end) requestAnimationFrame(frame);
     };
     frame();
@@ -117,7 +117,7 @@ const DealAccepted = () => {
       <div className="min-h-screen flex items-center justify-center bg-background p-6">
         <div className="text-center">
           <div className="text-5xl mb-4">😕</div>
-          <h1 className="text-xl font-bold text-foreground mb-2">Not Found</h1>
+          <h1 className="text-xl font-bold font-display text-foreground mb-2">Not Found</h1>
           <p className="text-muted-foreground">We couldn't find this submission.</p>
         </div>
       </div>
@@ -186,11 +186,11 @@ const DealAccepted = () => {
 
     return (
       <div className="min-h-screen bg-background">
-        <div className="bg-gradient-to-r from-primary via-[hsl(210,100%,30%)] to-primary text-primary-foreground px-6 py-4">
+        <div className="bg-gradient-to-r from-primary via-[hsl(var(--primary)/0.8)] to-primary text-primary-foreground px-6 py-4">
           <div className="max-w-lg mx-auto flex items-center gap-3">
             <img src={config.logo_white_url || logoFallback} alt={config.dealership_name || "Dealership"} className="h-[50px] w-auto" />
             <div>
-              <h1 className="font-bold text-lg">Almost There!</h1>
+              <h1 className="font-bold font-display text-lg">Almost There!</h1>
               <p className="text-sm opacity-80">Lock in your offer</p>
             </div>
           </div>
@@ -225,7 +225,7 @@ const DealAccepted = () => {
           >
             <div className="flex items-center gap-2 mb-4">
               <Lock className="w-5 h-5 text-primary" />
-              <h2 className="font-bold text-card-foreground text-lg">Lock In Your Price</h2>
+              <h2 className="font-bold font-display text-card-foreground text-lg">Lock In Your Price</h2>
             </div>
             <p className="text-sm text-muted-foreground mb-5">
               Enter your contact information to finalize your accepted offer. We'll reach out to schedule your inspection.
@@ -332,7 +332,7 @@ const DealAccepted = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <motion.div {...entrance(0)} className="bg-gradient-to-r from-primary via-[hsl(210,100%,30%)] to-primary text-primary-foreground px-6 py-1">
+      <motion.div {...entrance(0)} className="bg-gradient-to-r from-primary via-[hsl(var(--primary)/0.8)] to-primary text-primary-foreground px-6 py-1">
         <div className="max-w-5xl mx-auto">
           <Link to={`/offer/${token}`} className="inline-flex items-center gap-1 text-xs text-primary-foreground/70 hover:text-primary-foreground transition-colors mb-1.5">
             <ArrowLeft className="w-3.5 h-3.5" />
@@ -341,7 +341,7 @@ const DealAccepted = () => {
           <div className="flex items-center gap-3">
             <img src={config.logo_white_url || logoFallback} alt={config.dealership_name || "Dealership"} className="h-[70px] w-auto" />
             <div className="flex-1">
-              <h1 className="font-bold text-lg lg:text-xl">
+              <h1 className="font-bold font-display text-lg lg:text-xl">
                 {isFirstVisit ? "Deal Accepted!" : "Welcome Back!"}
               </h1>
               {firstName && (
@@ -449,7 +449,7 @@ const DealAccepted = () => {
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                   <CalendarCheck className="w-4 h-4 text-primary" />
                 </div>
-                <h3 className="font-bold text-card-foreground">Schedule Your Inspection</h3>
+                <h3 className="font-bold font-display text-card-foreground">Schedule Your Inspection</h3>
               </div>
               <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
                 Book a convenient time to bring your {vehicleStr || "vehicle"} in. The whole process takes about 15–20 minutes — drive in, get inspected, get paid.
@@ -490,9 +490,9 @@ const DealAccepted = () => {
                   Optional
                 </div>
               </div>
-              <h3 className="font-bold text-card-foreground text-lg mt-3">Fast-Track Your Deal</h3>
+              <h3 className="font-bold font-display text-card-foreground text-lg mt-3">Fast-Track Your Deal</h3>
               <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-                Upload photos and documents now to speed up your appointment. Less time at the dealership, faster payment.
+                Upload photos and documents now to speed up your appointment and help maximize your offer. Our AI and inventory team use your photos to accurately assess condition — which often results in a higher final price.
               </p>
 
               <div className="flex items-center gap-4 mt-4 text-xs text-muted-foreground">
@@ -515,8 +515,8 @@ const DealAccepted = () => {
                     <Camera className="w-5 h-5 text-accent" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-card-foreground">Upload Vehicle Photos</p>
-                    <p className="text-xs text-muted-foreground">Exterior, interior & odometer shots</p>
+                    <p className="text-sm font-semibold text-card-foreground">Upload Photos to Maximize Your Offer</p>
+                    <p className="text-xs text-muted-foreground">Our AI analyzes your photos to confirm condition — complete photos often mean a higher final offer.</p>
                   </div>
                   <ArrowRight className="w-4 h-4 text-muted-foreground" />
                 </Link>

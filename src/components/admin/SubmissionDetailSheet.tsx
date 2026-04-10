@@ -327,6 +327,13 @@ const SubmissionDetailSheet = ({
         }
         if (selected.progress_status !== "purchase_complete" && sub.progress_status === "purchase_complete") {
           supabase.functions.invoke("send-notification", { body: { trigger_key: "staff_deal_completed", submission_id: sub.id } }).catch(console.error);
+          supabase.functions.invoke("send-notification", { body: { trigger_key: "customer_purchase_complete", submission_id: sub.id } }).catch(console.error);
+        }
+        if (selected.progress_status !== "inspection_completed" && sub.progress_status === "inspection_completed") {
+          supabase.functions.invoke("send-notification", { body: { trigger_key: "customer_inspection_complete", submission_id: sub.id } }).catch(console.error);
+        }
+        if (selected.progress_status !== "check_request_submitted" && sub.progress_status === "check_request_submitted") {
+          supabase.functions.invoke("send-notification", { body: { trigger_key: "customer_check_ready", submission_id: sub.id } }).catch(console.error);
         }
         if (selected.progress_status !== sub.progress_status) {
           supabase.functions.invoke("send-notification", { body: { trigger_key: "status_change", submission_id: sub.id } }).catch(console.error);
@@ -880,11 +887,25 @@ const SubmissionDetailSheet = ({
                     <Input value={sub.name || ""} onChange={(e) => updateField({ name: e.target.value || null })} placeholder="Full name" className="h-9 text-sm rounded-xl border-border/60 focus:border-primary/40" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider">Phone</Label>
+                    <Label className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider flex items-center gap-1.5">
+                      Phone
+                      {sub.phone && (
+                        <a href={`tel:${sub.phone}`} title="Call this number" className="text-primary/60 hover:text-primary transition-colors">
+                          <Phone className="w-3 h-3" />
+                        </a>
+                      )}
+                    </Label>
                     <Input value={sub.phone || ""} onChange={(e) => updateField({ phone: e.target.value || null })} placeholder="(555) 123-4567" className="h-9 text-sm rounded-xl border-border/60 focus:border-primary/40" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider">Email</Label>
+                    <Label className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider flex items-center gap-1.5">
+                      Email
+                      {sub.email && (
+                        <a href={`mailto:${sub.email}`} title="Send email" className="text-primary/60 hover:text-primary transition-colors">
+                          <Mail className="w-3 h-3" />
+                        </a>
+                      )}
+                    </Label>
                     <Input type="email" value={sub.email || ""} onChange={(e) => updateField({ email: e.target.value || null })} placeholder="email@example.com" className="h-9 text-sm rounded-xl border-border/60 focus:border-primary/40" />
                   </div>
                   <div className="space-y-1.5">
