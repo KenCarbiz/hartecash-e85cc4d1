@@ -511,9 +511,8 @@ const SubmissionDetailSheet = ({
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-1.5">
                     {[
-                      { label: "Appraisal", icon: Gauge, onClick: () => { window.location.href = `/appraisal/${sub.token}`; } },
                       { label: "Inspection", icon: ClipboardList, onClick: () => { window.location.href = `/inspection/${sub.id}`; } },
-                      { label: "Check-In", icon: ScanLine, onClick: () => { window.location.href = `/inspection-checkin`; } },
+                      { label: "Appraisal", icon: Gauge, onClick: () => { window.location.href = `/appraisal/${sub.token}`; } },
                       { label: "Print", icon: Printer, onClick: handlePrint },
                     ].map(action => (
                       <div key={action.label} className="flex flex-col items-center">
