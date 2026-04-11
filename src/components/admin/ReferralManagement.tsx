@@ -6,8 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Gift, Copy, Search, Send, CheckCircle, Clock, Award, DollarSign, Users } from "lucide-react";
+import { Gift, Copy, Search, Send, CheckCircle, Clock, Award, DollarSign, Users, Undo2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 interface Referral {
   id: string;
@@ -26,6 +29,15 @@ interface Referral {
   referred_by_staff: string | null;
   notes: string | null;
   created_at: string;
+  // Payout reconciliation (#20)
+  payout_method?: string | null;
+  payout_reference?: string | null;
+  payout_notes?: string | null;
+  payout_at?: string | null;
+  paid_by?: string | null;
+  clawed_back_at?: string | null;
+  clawback_reason?: string | null;
+  clawback_by?: string | null;
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -43,6 +55,84 @@ const ReferralManagement = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+
+  // Payout dialog state (#20 — referral payout reconciliation)
+  const [payoutTarget, setPayoutTarget] = useState<Referral | null>(null);
+  const [payoutMethod, setPayoutMethod] = useState("check");
+  const [payoutReference, setPayoutReference] = useState("");
+  const [payoutNotes, setPayoutNotes] = useState("");
+  const [savingPayout, setSavingPayout] = useState(false);
+
+  // Clawback dialog state
+  const [clawbackTarget, setClawbackTarget] = useState<Referral | null>(null);
+  const [clawbackReason, setClawbackReason] = useState("");
+  const [savingClawback, setSavingClawback] = useState(false);
+
+  const openPayoutDialog = (ref: Referral) => {
+    setPayoutTarget(ref);
+    setPayoutMethod(ref.payout_method || "check");
+    setPayoutReference(ref.payout_reference || "");
+    setPayoutNotes(ref.payout_notes || "");
+  };
+
+  const handleRecordPayout = async () => {
+    if (!payoutTarget) return;
+    if (!payoutReference.trim()) {
+      toast({ title: "Reference required", description: "Enter the check #, gift card ID, or ACH trace before saving.", variant: "destructive" });
+      return;
+    }
+    setSavingPayout(true);
+    const { data: userData } = await supabase.auth.getUser();
+    const actorEmail = userData?.user?.email || "unknown";
+    const { error } = await (supabase as any).from("referrals").update({
+      status: "rewarded",
+      rewarded_at: payoutTarget.rewarded_at || new Date().toISOString(),
+      payout_method: payoutMethod,
+      payout_reference: payoutReference.trim(),
+      payout_notes: payoutNotes.trim() || null,
+      payout_at: new Date().toISOString(),
+      paid_by: actorEmail,
+      // Clear any previous clawback if this is a re-payout
+      clawed_back_at: null,
+      clawback_reason: null,
+      clawback_by: null,
+    }).eq("id", payoutTarget.id);
+    setSavingPayout(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Payout recorded", description: `${payoutMethod.toUpperCase()} #${payoutReference} logged.` });
+    setPayoutTarget(null);
+    setPayoutReference("");
+    setPayoutNotes("");
+    fetchReferrals();
+  };
+
+  const handleClawback = async () => {
+    if (!clawbackTarget || !clawbackReason.trim()) {
+      toast({ title: "Reason required", description: "Enter a reason for the clawback.", variant: "destructive" });
+      return;
+    }
+    setSavingClawback(true);
+    const { data: userData } = await supabase.auth.getUser();
+    const actorEmail = userData?.user?.email || "unknown";
+    const { error } = await (supabase as any).from("referrals").update({
+      status: "converted", // revert from rewarded to converted
+      clawed_back_at: new Date().toISOString(),
+      clawback_reason: clawbackReason.trim(),
+      clawback_by: actorEmail,
+    }).eq("id", clawbackTarget.id);
+    setSavingClawback(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Payout clawed back", description: "Referral has been reverted to converted status." });
+    setClawbackTarget(null);
+    setClawbackReason("");
+    fetchReferrals();
+  };
 
   // Stats
   const totalReferrals = referrals.length;
@@ -258,9 +348,26 @@ const ReferralManagement = () => {
                       </Button>
                     )}
                     {ref.status === "converted" && (
-                      <Button variant="outline" size="sm" className="text-xs bg-green-50 dark:bg-green-900/20" onClick={() => handleUpdateStatus(ref.id, "rewarded")}>
-                        Mark Rewarded
+                      <Button variant="outline" size="sm" className="text-xs bg-green-50 dark:bg-green-900/20" onClick={() => openPayoutDialog(ref)}>
+                        <DollarSign className="w-3 h-3 mr-1" /> Record Payout
                       </Button>
+                    )}
+                    {ref.status === "rewarded" && !ref.clawed_back_at && (
+                      <>
+                        {ref.payout_reference && (
+                          <Badge variant="outline" className="text-[10px] font-mono" title={`${ref.payout_method || "?"} — paid ${ref.payout_at ? new Date(ref.payout_at).toLocaleDateString() : ""} by ${ref.paid_by || "?"}`}>
+                            {(ref.payout_method || "").toUpperCase()} #{ref.payout_reference}
+                          </Badge>
+                        )}
+                        <Button variant="ghost" size="sm" className="text-xs text-destructive" onClick={() => setClawbackTarget(ref)} title="Reverse this payout">
+                          <Undo2 className="w-3 h-3 mr-1" /> Clawback
+                        </Button>
+                      </>
+                    )}
+                    {ref.clawed_back_at && (
+                      <Badge variant="destructive" className="text-[10px]" title={`Reversed: ${ref.clawback_reason || "no reason"}`}>
+                        Clawed Back
+                      </Badge>
                     )}
                   </div>
                 </td>
@@ -269,6 +376,99 @@ const ReferralManagement = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Payout Dialog (#20) */}
+      <Dialog open={!!payoutTarget} onOpenChange={(open) => !open && setPayoutTarget(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Record Referral Payout</DialogTitle>
+            <DialogDescription>
+              Log the payout method and reference so the audit trail shows exactly
+              how {payoutTarget?.referrer_name || "this referrer"} was paid.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="flex items-center justify-between p-3 bg-muted/40 rounded-md">
+              <span className="text-sm text-muted-foreground">Reward Amount</span>
+              <span className="text-lg font-bold text-card-foreground">
+                ${payoutTarget?.reward_amount?.toLocaleString() || "0"}
+              </span>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="payout-method" className="text-xs">Payout Method</Label>
+              <Select value={payoutMethod} onValueChange={setPayoutMethod}>
+                <SelectTrigger id="payout-method"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="check">Check</SelectItem>
+                  <SelectItem value="gift_card">Gift Card</SelectItem>
+                  <SelectItem value="ach">ACH / Bank Transfer</SelectItem>
+                  <SelectItem value="store_credit">Store Credit</SelectItem>
+                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="payout-ref" className="text-xs">
+                Reference {payoutMethod === "check" ? "(Check #)" : payoutMethod === "gift_card" ? "(Card ID)" : payoutMethod === "ach" ? "(Trace #)" : ""}
+              </Label>
+              <Input
+                id="payout-ref"
+                value={payoutReference}
+                onChange={(e) => setPayoutReference(e.target.value)}
+                placeholder={payoutMethod === "check" ? "e.g. 10432" : "Reference number"}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="payout-notes" className="text-xs">Notes (optional)</Label>
+              <Textarea
+                id="payout-notes"
+                value={payoutNotes}
+                onChange={(e) => setPayoutNotes(e.target.value)}
+                placeholder="Any additional context for the audit trail"
+                rows={2}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPayoutTarget(null)}>Cancel</Button>
+            <Button onClick={handleRecordPayout} disabled={savingPayout}>
+              {savingPayout ? "Saving…" : "Record Payout"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Clawback Dialog (#20) */}
+      <Dialog open={!!clawbackTarget} onOpenChange={(open) => !open && setClawbackTarget(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reverse Payout</DialogTitle>
+            <DialogDescription>
+              Reverses the reward and flips {clawbackTarget?.referrer_name || "this referrer"} back
+              to converted status. The original payout reference stays on the record for the audit trail.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="clawback-reason" className="text-xs">Reason</Label>
+              <Textarea
+                id="clawback-reason"
+                value={clawbackReason}
+                onChange={(e) => setClawbackReason(e.target.value)}
+                placeholder="e.g. Referred deal unwound, customer backed out, check stopped"
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setClawbackTarget(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleClawback} disabled={savingClawback}>
+              {savingClawback ? "Saving…" : "Confirm Clawback"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
