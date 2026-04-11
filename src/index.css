@@ -292,11 +292,76 @@
   font-weight: 600;
 }
 
-/* ── Print styles for Onboarding Script ── */
+/* ── Print styles ────────────────────────────────────────────────────
+ * Used by the Onboarding Script, Inspection Sheet, and Check Request
+ * workflows so a UCM can print a clean one-pager without CSS bleed
+ * from the admin chrome, sidebar, or marketing shell.
+ */
 @media print {
-  body { background: white !important; }
-  .print\:hidden, nav, header, [data-sidebar], .sidebar, footer { display: none !important; }
+  /* Global resets */
+  html, body {
+    background: white !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Kill anything that isn't part of the printable content */
+  .print\:hidden,
+  nav,
+  header:not([data-print-header]),
+  [data-sidebar],
+  .sidebar,
+  footer:not([data-print-footer]),
+  [data-radix-popper-content-wrapper],
+  [role="dialog"]:not([data-print-dialog]),
+  button:not([data-print-keep]),
+  .print-hide {
+    display: none !important;
+  }
+
   .print\:block { display: block !important; }
-  .print\:break-inside-avoid { break-inside: avoid; }
+  .print\:break-inside-avoid,
+  [data-print-section] { break-inside: avoid; }
+  .print-page-break { break-before: page; }
+
+  /* Expand content to full page, drop shadows and gradients */
+  main, .main, [data-admin-main] {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  [data-print-section],
+  .card,
+  .bg-card {
+    box-shadow: none !important;
+    border: 1px solid #bbb !important;
+    background: white !important;
+    page-break-inside: avoid;
+  }
+
+  /* Text: make sure it's readable on paper even if the screen theme is dark */
+  h1, h2, h3, h4, h5, h6, p, span, td, th, li { color: black !important; }
+  a { color: black !important; text-decoration: underline; }
+
+  /* Tables: force borders and keep rows together */
+  table { border-collapse: collapse !important; width: 100% !important; }
+  thead { display: table-header-group; }
+  tr, td, th { break-inside: avoid; page-break-inside: avoid; }
+  td, th { border: 1px solid #888 !important; padding: 4px 6px !important; }
+
+  /* Inspection sheet and check request dedicated containers */
+  [data-print-inspection],
+  [data-print-check-request] {
+    padding: 0.25in !important;
+    font-size: 11pt !important;
+  }
+  [data-print-inspection] [data-print-section],
+  [data-print-check-request] [data-print-section] {
+    margin-bottom: 0.15in !important;
+  }
+
   @page { margin: 0.5in; size: letter; }
 }

@@ -17,6 +17,7 @@ import AvatarCropDialog from "./AvatarCropDialog";
 import StaffSectionEditor from "./StaffSectionEditor";
 import { ALL_SECTIONS } from "./PermissionManagement";
 import { useTenant } from "@/contexts/TenantContext";
+import { ROLE_LABELS_LONG } from "@/lib/adminConstants";
 
 interface StaffMember {
   user_id: string;
@@ -34,11 +35,10 @@ interface DealerLocation {
   name: string;
 }
 
+// Local alias so this file keeps its existing ROLE_LABELS usage but reads
+// from the canonical source in adminConstants.ts (#16 standardization).
 const ROLE_LABELS: Record<string, string> = {
-  admin: "Admin",
-  sales_bdc: "Sales / BDC",
-  used_car_manager: "Used Car Manager",
-  gsm_gm: "GSM / GM",
+  ...ROLE_LABELS_LONG,
   user: "User",
 };
 

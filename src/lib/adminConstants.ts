@@ -239,3 +239,39 @@ export const getTimeSlotsForDate = (dateStr: string) => {
   if (day === 5 || day === 6) return APPT_TIME_SLOTS_FRISSAT;
   return APPT_TIME_SLOTS_WEEKDAY;
 };
+
+// ── Role Labels (canonical) ──
+// Single source of truth for how we display user roles across the admin.
+// Keys are the DB enum values; values are the short labels used in
+// dropdowns, badges, toasts, and the audit trail.
+//
+// Role hierarchy (least → most access):
+//   sales_bdc → used_car_manager → gsm_gm → admin → platform_admin
+export const ROLE_LABELS: Record<string, string> = {
+  sales_bdc: "BDC / Sales",
+  used_car_manager: "UCM",
+  gsm_gm: "GSM / GM",
+  admin: "Admin",
+  platform_admin: "Super Admin",
+  // Reserved for future use — already appears in some dropdowns.
+  inspector: "Inspector",
+  appraiser: "Appraiser",
+};
+
+// Longer, more descriptive labels used in onboarding and staff management
+// where there's room for the full title.
+export const ROLE_LABELS_LONG: Record<string, string> = {
+  sales_bdc: "Sales / BDC",
+  used_car_manager: "Used Car Manager",
+  gsm_gm: "GSM / GM",
+  admin: "Admin",
+  platform_admin: "Super Admin",
+  inspector: "Inspector",
+  appraiser: "Appraiser",
+};
+
+export const getRoleLabel = (role: string | null | undefined, variant: "short" | "long" = "short"): string => {
+  if (!role) return "Unknown";
+  const map = variant === "long" ? ROLE_LABELS_LONG : ROLE_LABELS;
+  return map[role] || role.replace(/_/g, " ");
+};
