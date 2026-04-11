@@ -358,8 +358,26 @@ const SubmissionDetailSheet = ({
         const fileName = `check-request-${new Date().toISOString().slice(0, 10)}.html`;
         await supabase.storage.from("customer-documents").upload(`${sub.token}/check_request/${fileName}`, blob, { contentType: "text/html", upsert: true });
         toast({ title: "Check Request Generated", description: "Printed and saved to documents." });
+        // #19 — Audit the generation event itself so a reviewer can see
+        // exactly when the check request was produced and who produced it.
+        supabase.from("activity_log").insert({
+          submission_id: sub.id,
+          action: "Check Request Generated",
+          old_value: null,
+          new_value: sub.offered_price ? `$${Number(sub.offered_price).toLocaleString()}` : null,
+          performed_by: auditLabel,
+        }).then(() => fetchActivityLog(sub.id));
       } catch {
         toast({ title: "Check request printed", description: "But failed to save a copy.", variant: "destructive" });
+        // #17 — Surface the error into activity_log so the dealer can see
+        // why without digging through Supabase logs.
+        supabase.from("activity_log").insert({
+          submission_id: sub.id,
+          action: "Check Request Save Failed",
+          old_value: null,
+          new_value: "Print succeeded but upload to customer-documents bucket failed",
+          performed_by: auditLabel,
+        });
       }
     }
   };
@@ -412,6 +430,37 @@ const SubmissionDetailSheet = ({
           performed_by: auditLabel,
         });
       }
+      // #19 — Check-request workflow audit trail. Every flip of the
+      // "Check Request Done" checkbox gets a signed timestamp entry so
+      // auditors can reconstruct the full approval chain.
+      if (selected && selected.check_request_done !== sub.check_request_done) {
+        await supabase.from("activity_log").insert({
+          submission_id: sub.id,
+          action: sub.check_request_done ? "Check Request Marked Done" : "Check Request Reopened",
+          old_value: selected.check_request_done ? "Done" : "Pending",
+          new_value: sub.check_request_done ? "Done" : "Pending",
+          performed_by: auditLabel,
+        });
+      }
+      if (selected && (selected.internal_notes || "") !== (sub.internal_notes || "")) {
+        await supabase.from("activity_log").insert({
+          submission_id: sub.id,
+          action: "Internal Notes Updated",
+          old_value: null,
+          new_value: null,
+          performed_by: auditLabel,
+        });
+      }
+      if (selected && (selected.store_location_id || null) !== (sub.store_location_id || null)) {
+        await supabase.from("activity_log").insert({
+          submission_id: sub.id,
+          action: "Store Assignment Changed",
+          old_value: selected.store_location_id || "Unassigned",
+          new_value: sub.store_location_id || "Unassigned",
+          performed_by: auditLabel,
+        });
+      }
+      // Notifications
       if (selected) {
         if (!selected.offered_price && sub.offered_price) {
           supabase.functions.invoke("send-notification", { body: { trigger_key: "customer_offer_ready", submission_id: sub.id } }).catch(console.error);

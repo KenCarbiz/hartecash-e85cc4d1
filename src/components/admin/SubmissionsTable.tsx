@@ -9,8 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Search, Eye, Trash2, ChevronLeft, ChevronRight, CheckCircle,
   AlertTriangle, TrendingUp, UserCheck, XCircle, Camera, FileText,
-  Rows3, Rows2, X,
+  Rows3, Rows2, X, Inbox, Sparkles,
 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Submission, DealerLocation } from "@/lib/adminConstants";
 import { ALL_STATUS_OPTIONS, getStatusLabel, isAcceptedWithAppointment, isAcceptedWithoutAppointment, isOfferPendingSubmission, isOfferUpdatedByStaff } from "@/lib/adminConstants";
@@ -334,18 +335,93 @@ const SubmissionsTable = ({
       )}
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-3 animate-in fade-in">
-          <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-          <span className="text-sm font-medium">Loading pipeline…</span>
+        <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden animate-in fade-in">
+          <div className="divide-y divide-border">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 px-4 py-3">
+                <Skeleton className="h-3.5 w-20 shrink-0" />
+                <Skeleton className="h-3.5 w-32 shrink-0" />
+                <Skeleton className="h-3.5 w-40 hidden md:block" />
+                <Skeleton className="h-3.5 w-36 hidden lg:block" />
+                <Skeleton className="h-3.5 w-24 hidden xl:block" />
+                <Skeleton className="h-5 w-20 rounded-full ml-auto" />
+                <Skeleton className="h-7 w-40 rounded" />
+                <Skeleton className="h-3.5 w-8 hidden md:block" />
+                <Skeleton className="h-8 w-8 rounded" />
+              </div>
+            ))}
+          </div>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-2 animate-in fade-in">
-          <div className="w-14 h-14 rounded-2xl bg-muted/60 flex items-center justify-center">
-            <Search className="w-6 h-6 text-muted-foreground/40" />
-          </div>
-          <span className="text-sm font-medium">No submissions found</span>
-          <span className="text-xs text-muted-foreground/70">Try adjusting your filters</span>
-        </div>
+        (() => {
+          const hasActiveFilters =
+            (search && search.trim() !== "") ||
+            (statusFilter && statusFilter !== "__all__") ||
+            (sourceFilter && sourceFilter !== "__all__") ||
+            (storeFilter && storeFilter !== "__all__") ||
+            (dateRangeFilter.from || dateRangeFilter.to);
+          const totalIsZero = total === 0 && !hasActiveFilters;
+
+          if (totalIsZero) {
+            // First-run empty state — no leads have ever been submitted.
+            return (
+              <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-4 animate-in fade-in bg-card rounded-xl border border-dashed border-border">
+                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <Inbox className="w-7 h-7 text-primary" />
+                </div>
+                <div className="text-center space-y-1 max-w-md">
+                  <p className="text-base font-semibold text-foreground">No leads yet</p>
+                  <p className="text-sm text-muted-foreground">
+                    As soon as a customer submits a trade-in through your website or
+                    service drive, they'll land here. To start generating leads:
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2 mt-1">
+                  <Button
+                    size="sm"
+                    variant="default"
+                    onClick={() => window.dispatchEvent(new CustomEvent("admin:navigate", { detail: "embed-toolkit" }))}
+                  >
+                    <Sparkles className="w-4 h-4 mr-1.5" />
+                    Open Embed Toolkit
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => window.open("/", "_blank")}
+                  >
+                    Preview Customer Form
+                  </Button>
+                </div>
+              </div>
+            );
+          }
+
+          // Filter-empty state — leads exist but none match the current filters.
+          return (
+            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-2 animate-in fade-in">
+              <div className="w-14 h-14 rounded-2xl bg-muted/60 flex items-center justify-center">
+                <Search className="w-6 h-6 text-muted-foreground/40" />
+              </div>
+              <span className="text-sm font-medium">No submissions match your filters</span>
+              <span className="text-xs text-muted-foreground/70">Try widening the date range or clearing a filter</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mt-2 text-xs"
+                onClick={() => {
+                  onSearchChange("");
+                  onStatusFilterChange("__all__");
+                  onSourceFilterChange("__all__");
+                  onStoreFilterChange("__all__");
+                  onDateRangeFilterChange({ from: "", to: "" });
+                }}
+              >
+                Clear all filters
+              </Button>
+            </div>
+          );
+        })()
       ) : (
         <>
           <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden backdrop-blur-sm">
