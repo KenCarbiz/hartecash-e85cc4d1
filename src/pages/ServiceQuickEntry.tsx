@@ -456,7 +456,7 @@ const ServiceQuickEntry = () => {
                 Service Quick Entry
               </h1>
               <p className="text-xs text-muted-foreground truncate">
-                {siteConfig?.site_title || tenant.display_name} · {userEmail}
+                {(siteConfig as any)?.site_title || tenant.display_name} · {userEmail}
               </p>
             </div>
           </div>

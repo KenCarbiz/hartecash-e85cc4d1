@@ -168,7 +168,7 @@ export function useAdminDashboard() {
     }
     const { data: roleData } = await supabase
       .from("user_roles")
-      .select("role, is_appraiser")
+      .select("role")
       .eq("user_id", session.user.id)
       .limit(1)
       .maybeSingle();
@@ -177,8 +177,8 @@ export function useAdminDashboard() {
       navigate("/admin/login");
       return;
     }
-    setUserRole(roleData.role);
-    setIsAppraiser(Boolean((roleData as any).is_appraiser));
+    setUserRole((roleData as any).role);
+    setIsAppraiser(false);
     setUserId(session.user.id);
     const { data: profileData } = await supabase
       .from("profiles")
@@ -187,14 +187,14 @@ export function useAdminDashboard() {
       .maybeSingle();
     setUserName(profileData?.display_name || session.user.email || "");
     setUserEmail(session.user.email || "");
-    if (roleData.role === "admin") {
+    if ((roleData as any).role === "admin") {
       const { count } = await supabase
         .from("permission_access_requests" as any)
         .select("id", { count: "exact", head: true })
         .eq("status", "pending");
       setPermissionRequestCount(count || 0);
     }
-    if (["admin", "gsm_gm"].includes(roleData.role)) {
+    if (["admin", "gsm_gm"].includes((roleData as any).role)) {
       const { count } = await supabase
         .from("pricing_model_access_requests" as any)
         .select("id", { count: "exact", head: true })
