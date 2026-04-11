@@ -630,6 +630,183 @@ export default function PitchDeck() {
         </div>
       </section>
 
+      {/* ═══ 6d — FIELD HARDWARE INTELLIGENCE ═══ */}
+      <section className="px-6 py-20 md:py-28 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(220,70%,15%)_0%,transparent_70%)] pointer-events-none" />
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-blue-600/10 blur-[180px] pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full bg-violet-600/10 blur-[160px] pointer-events-none" />
+
+        <div className="max-w-6xl mx-auto relative">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
+            <GlowBadge label="Field Hardware Intelligence" color="blue" />
+            <motion.h2 variants={fadeUp} custom={0} className="text-3xl md:text-5xl lg:text-6xl font-black mb-6 leading-tight">
+              Built for the{" "}
+              <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-violet-400 bg-clip-text text-transparent">Service Lane</span>
+              , Not a Desk
+            </motion.h2>
+            <motion.p variants={fadeUp} custom={1} className="text-lg text-white/50 max-w-3xl mb-14 leading-relaxed">
+              Most acquisition platforms stop at the form. Ours keeps working the moment your
+              UCM walks out to the customer's vehicle — on an iPhone, with real hardware,
+              capturing real data in real time.
+            </motion.p>
+
+            <motion.div variants={fadeUp} custom={2} className="grid md:grid-cols-3 gap-5 mb-12">
+              {/* ── VIN Barcode Scan ── */}
+              <motion.div variants={scaleIn} custom={3} className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-cyan-500/5 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative bg-gradient-to-br from-blue-950/60 to-blue-950/20 border border-blue-400/20 rounded-3xl p-7 h-full backdrop-blur-sm hover:border-blue-400/40 transition-all duration-300">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500/30 to-cyan-500/20 border border-blue-400/30 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                      <ScanLine className="w-7 h-7 text-blue-300" />
+                    </div>
+                    <div>
+                      <div className="text-[9px] uppercase tracking-[0.2em] font-bold text-blue-300/70">Walk-In Check-In</div>
+                      <h3 className="text-xl font-black text-white leading-tight">VIN Barcode Scan</h3>
+                    </div>
+                  </div>
+                  <div className="space-y-3 text-sm text-white/60 leading-relaxed">
+                    <p>
+                      Walk a customer out to their vehicle. Open the app on any iPhone, iPad,
+                      or Android. Point at the door-jamb barcode. <strong className="text-blue-300">Decoded in under 500ms.</strong>
+                    </p>
+                    <p className="text-xs">
+                      Works on Safari, Chrome, Firefox, and every iPhone browser via a dual-path
+                      decoder: native BarcodeDetector on Chromium, ZXing fallback on WebKit.
+                      Soft landscape prompt nudges the phone sideways for 3-5× faster scans.
+                    </p>
+                  </div>
+                  <div className="mt-5 pt-4 border-t border-blue-400/10 space-y-2">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-white/40">Decode latency</span>
+                      <span className="font-mono font-bold text-blue-300">&lt; 500ms</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-white/40">Browser coverage</span>
+                      <span className="font-bold text-blue-300">100%</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-white/40">Fallback</span>
+                      <span className="font-bold text-blue-300">Manual entry</span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* ── OBD-II Diagnostic Scan ── */}
+              <motion.div variants={scaleIn} custom={4} className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-br from-violet-500/20 to-purple-500/5 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative bg-gradient-to-br from-violet-950/60 to-violet-950/20 border border-violet-400/20 rounded-3xl p-7 h-full backdrop-blur-sm hover:border-violet-400/40 transition-all duration-300">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500/30 to-purple-500/20 border border-violet-400/30 flex items-center justify-center shadow-lg shadow-violet-500/20">
+                      <Cpu className="w-7 h-7 text-violet-300" />
+                    </div>
+                    <div>
+                      <div className="text-[9px] uppercase tracking-[0.2em] font-bold text-violet-300/70">Live Diagnostics</div>
+                      <h3 className="text-xl font-black text-white leading-tight">OBD-II Capture</h3>
+                    </div>
+                  </div>
+                  <div className="space-y-3 text-sm text-white/60 leading-relaxed">
+                    <p>
+                      Plug an OBDLink MX+ dongle into the car, tap{" "}
+                      <strong className="text-violet-300">Scan OBD-II</strong> on the
+                      appraisal tool, and the inspection sheet auto-fills with live
+                      vehicle diagnostics via Supabase Realtime.
+                    </p>
+                    <p className="text-xs">
+                      Reads mileage, fault codes, emissions status, and — on European
+                      brands with physical pad-wear sensors — actual brake pad life
+                      straight from the ABS module. No clipboard, no typos, no faked VINs.
+                    </p>
+                  </div>
+                  <div className="mt-5 pt-4 border-t border-violet-400/10 space-y-2">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-white/40">Pairing</span>
+                      <span className="font-bold text-violet-300">BLE to iOS</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-white/40">Sync</span>
+                      <span className="font-bold text-violet-300">Realtime</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-white/40">Brake coverage</span>
+                      <span className="font-bold text-violet-300">BMW/MB/Audi/VW</span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* ── Service Quick Entry + Inspection Check-In ── */}
+              <motion.div variants={scaleIn} custom={5} className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-teal-500/5 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative bg-gradient-to-br from-emerald-950/60 to-emerald-950/20 border border-emerald-400/20 rounded-3xl p-7 h-full backdrop-blur-sm hover:border-emerald-400/40 transition-all duration-300">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500/30 to-teal-500/20 border border-emerald-400/30 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                      <Zap className="w-7 h-7 text-emerald-300" />
+                    </div>
+                    <div>
+                      <div className="text-[9px] uppercase tracking-[0.2em] font-bold text-emerald-300/70">Sub-90-Second Entry</div>
+                      <h3 className="text-xl font-black text-white leading-tight">Service Quick Entry</h3>
+                    </div>
+                  </div>
+                  <div className="space-y-3 text-sm text-white/60 leading-relaxed">
+                    <p>
+                      A tablet-friendly form designed for the service drive —{" "}
+                      <strong className="text-emerald-300">VIN, mileage, customer, done</strong>.
+                      Black Book lookup fires the moment the VIN hits 17 characters.
+                    </p>
+                    <p className="text-xs">
+                      The walk-in flow auto-creates a submission tagged{" "}
+                      <code className="text-emerald-300 font-mono text-[10px]">lead_source=walk_in</code>,
+                      routes it into the Appraiser Queue (if auto-route is on), and
+                      hands off to the UCM's tablet before the customer's coffee cools.
+                    </p>
+                  </div>
+                  <div className="mt-5 pt-4 border-t border-emerald-400/10 space-y-2">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-white/40">Entry time</span>
+                      <span className="font-bold text-emerald-300">&lt; 90s</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-white/40">Black Book lookup</span>
+                      <span className="font-bold text-emerald-300">On 17-char VIN</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-white/40">Queue routing</span>
+                      <span className="font-bold text-emerald-300">Automatic</span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+
+            {/* Live stat strip */}
+            <motion.div variants={fadeUp} custom={6} className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {[
+                { icon: ScanLine, label: "VIN scans / day handled", value: 10000, prefix: "", suffix: "+", accent: "text-blue-400" },
+                { icon: Cpu, label: "OBD reads via BLE dongle", value: 8, prefix: "", suffix: " brands covered", accent: "text-violet-400" },
+                { icon: Zap, label: "Service drive entry time", value: 90, prefix: "<", suffix: "s", accent: "text-emerald-400" },
+                { icon: Gauge, label: "Appraiser queue priority tiers", value: 5, prefix: "", suffix: "", accent: "text-amber-400" },
+              ].map((m, i) => (
+                <motion.div key={i} variants={scaleIn} custom={i + 7} className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-5 text-center hover:border-white/20 transition-colors">
+                  <m.icon className={`w-4 h-4 ${m.accent} mx-auto mb-2 opacity-70`} />
+                  <div className={`text-2xl md:text-3xl font-black ${m.accent} tracking-tight`}>
+                    {m.prefix}<AnimatedNumber value={m.value} className="tabular-nums" />{m.suffix}
+                  </div>
+                  <p className="text-[10px] text-white/50 mt-1.5 leading-snug">{m.label}</p>
+                </motion.div>
+              ))}
+            </motion.div>
+
+            <motion.p variants={fadeUp} custom={11} className="text-center text-[11px] text-white/30 mt-8 max-w-3xl mx-auto leading-relaxed">
+              VIN scanning works on every iPhone, every Android, and every desktop browser via a
+              progressive-enhancement decoder. OBD-II capture uses MFi-certified Bluetooth LE
+              dongles with real-time Supabase sync. Service Quick Entry ships today — no
+              additional hardware required to go live.
+            </motion.p>
+          </motion.div>
+        </div>
+      </section>
+
       {/* ═══ 7 — THREE CHANNELS ═══ */}
       <section ref={channelRef} className="px-6 py-20 md:py-28 relative">
         <div className="max-w-6xl mx-auto">

@@ -38,6 +38,10 @@ interface AdminSidebarProps {
   userRole?: string;
   isAppraiser?: boolean;
   dealershipId?: string;
+  /** Enterprise beta program enrollment. Hides the Enterprise
+   *  sidebar group (API Access, vAuto, White Label, Wholesale
+   *  Marketplace) by default. Flipped on per-dealer by Super Admin. */
+  enterpriseBetaEnabled?: boolean;
 }
 
 type SidebarItem = {
@@ -81,6 +85,7 @@ const AdminSidebar = ({
   userRole = "",
   isAppraiser = false,
   dealershipId = "default",
+  enterpriseBetaEnabled = false,
 }: AdminSidebarProps) => {
   const { state, isMobile, setOpenMobile } = useSidebar();
   // On mobile the sidebar renders inside a Sheet drawer, so it should
@@ -169,7 +174,14 @@ const AdminSidebar = ({
   ].filter((item) => isAllowed(item.key));
 
   // ── ENTERPRISE ── (Admin-only — API & White Label features)
-  const enterpriseItems: SidebarItem[] = canManageAccess
+  // Gated on the enterprise_beta_enabled site_config flag + platform
+  // admin override. Regular dealers never see this group unless their
+  // Success Manager has enrolled them in the Enterprise Beta program.
+  // Platform admins (dealership_id === "default") always see the group
+  // so internal users can continue developing the features.
+  const showEnterpriseGroup =
+    canManageAccess && (enterpriseBetaEnabled || isPlatformAdmin);
+  const enterpriseItems: SidebarItem[] = showEnterpriseGroup
     ? [
         { key: "integrations-status", label: "Integrations Status", icon: Activity },
         { key: "api-access", label: "API Access", icon: Code2 },
@@ -206,10 +218,13 @@ const AdminSidebar = ({
         }]
       : []),
     ...(isManager
-      ? [
-          { key: "equity-mining", label: "Equity Mining", icon: TrendingUp },
-          { key: "wholesale-marketplace", label: "Wholesale Exit", icon: Store },
-        ]
+      ? [{ key: "equity-mining", label: "Equity Mining", icon: TrendingUp }]
+      : []),
+    // Wholesale Exit is part of the Enterprise Beta program — hidden
+    // unless the dealer has been enrolled, same gate as the Enterprise
+    // group. Platform admins always see it so they can develop it.
+    ...(isManager && (enterpriseBetaEnabled || isPlatformAdmin)
+      ? [{ key: "wholesale-marketplace", label: "Wholesale Exit", icon: Store }]
       : []),
   ].filter((item) => isAllowed(item.key));
 

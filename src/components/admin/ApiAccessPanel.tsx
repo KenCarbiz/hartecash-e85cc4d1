@@ -189,29 +189,29 @@ const ApiAccessPanel = () => {
             <Code2 className="w-5 h-5 text-primary" />
             API Access
           </h2>
-          <InDevelopmentBadge
-            label="In Development"
-            reason="API endpoints require backend deployment and rate limiting infrastructure"
-            size="md"
-          />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider border border-blue-500/40 bg-blue-500/10 text-blue-700 dark:text-blue-300">
+            <Code2 className="w-3.5 h-3.5" />
+            Enterprise Beta
+          </span>
         </div>
         <p className="text-sm text-muted-foreground mt-1">
           Manage your API key and webhook integrations for enterprise DMS/CRM connectivity.
         </p>
       </div>
 
-      {/* ── In-development banner ── */}
-      <div className="rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent p-4 flex items-start gap-3">
-        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 shrink-0">
-          <HardHat className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+      {/* ── Enterprise Beta banner ── */}
+      <div className="rounded-2xl border border-blue-500/30 bg-gradient-to-r from-blue-500/10 via-blue-500/5 to-transparent p-4 flex items-start gap-3">
+        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-blue-500/15 border border-blue-500/30 shrink-0">
+          <Code2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
         </div>
-        <div className="text-xs leading-relaxed text-amber-900 dark:text-amber-100">
-          <p className="font-bold text-amber-700 dark:text-amber-300 text-[11px] uppercase tracking-wider mb-0.5">
-            API Access in development
+        <div className="text-xs leading-relaxed text-blue-900 dark:text-blue-100">
+          <p className="font-bold text-blue-700 dark:text-blue-300 text-[11px] uppercase tracking-wider mb-0.5">
+            Enterprise Beta · Programmatic API Access
           </p>
           <p>
-            API access is in development. Keys can be generated but endpoints are
-            not yet live.
+            Generate API keys and configure webhooks for DMS / CRM / BI integrations.
+            Endpoint enablement is coordinated with your Autocurb Success Manager as part
+            of Enterprise Beta onboarding — contact support to activate live access.
           </p>
         </div>
       </div>

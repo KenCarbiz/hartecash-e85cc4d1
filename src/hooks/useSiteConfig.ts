@@ -45,6 +45,7 @@ export interface SiteConfig {
   ai_auto_bump_max_dollars: number;
   ai_auto_bump_daily_cap: number;
   ai_auto_bump_confidence_floor: number;
+  enterprise_beta_enabled: boolean;
   about_hero_headline: string;
   about_hero_subtext: string;
   about_story: string;
@@ -111,6 +112,7 @@ const DEFAULTS: SiteConfig = {
   ai_auto_bump_max_dollars: 2000,
   ai_auto_bump_daily_cap: 10000,
   ai_auto_bump_confidence_floor: 70,
+  enterprise_beta_enabled: false,
   about_hero_headline: "Our Story",
   about_hero_subtext: "We're passionate about helping drivers get the most value for their vehicles — no haggling, no stress.",
   about_story: "",

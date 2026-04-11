@@ -160,11 +160,9 @@ const WhiteLabelSettings = () => {
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <Label className="text-xs font-medium">Custom Domain</Label>
-            <InDevelopmentBadge
-              label="In Development"
-              reason="Custom domain verification requires DNS setup and SSL provisioning"
-              size="sm"
-            />
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border border-blue-500/40 bg-blue-500/10 text-blue-700 dark:text-blue-300">
+              Enterprise Beta
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground whitespace-nowrap">noreply@</span>
@@ -180,15 +178,16 @@ const WhiteLabelSettings = () => {
               Emails will be sent from: <span className="font-mono font-medium text-foreground/80">noreply@{state.custom_email_domain}</span>
             </p>
           )}
-          {/* In-development note for DNS/SSL */}
-          <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-3 flex items-start gap-2.5">
-            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-amber-500/15 border border-amber-500/30 shrink-0">
-              <HardHat className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+          {/* Enterprise Beta — DNS/SSL provisioning note */}
+          <div className="rounded-xl border border-blue-500/30 bg-blue-500/5 p-3 flex items-start gap-2.5">
+            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-blue-500/15 border border-blue-500/30 shrink-0">
+              <Mail className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
             </div>
-            <p className="text-[11px] leading-snug text-amber-900 dark:text-amber-100">
-              <span className="font-bold text-amber-700 dark:text-amber-300">In development:</span>{" "}
-              Custom domain verification requires DNS setup and SSL provisioning —
-              currently configuration is saved but not activated.
+            <p className="text-[11px] leading-snug text-blue-900 dark:text-blue-100">
+              <span className="font-bold text-blue-700 dark:text-blue-300">Enterprise Beta:</span>{" "}
+              Custom sending domain configuration is saved now. Your Autocurb
+              Success Manager handles DNS verification and SSL provisioning as
+              part of Enterprise Beta enablement — contact support to activate.
             </p>
           </div>
         </div>

@@ -8,6 +8,7 @@ import AdminSectionRenderer from "@/components/admin/AdminSectionRenderer";
 import RequestAccessDialog from "@/components/admin/RequestAccessDialog";
 import SubmissionDetailSheet from "@/components/admin/SubmissionDetailSheet";
 import { useAdminDashboard } from "@/hooks/useAdminDashboard";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useRef, useEffect, useState } from "react";
 import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
@@ -16,6 +17,7 @@ import {
 
 const AdminDashboard = () => {
   const db = useAdminDashboard();
+  const { config: siteConfig } = useSiteConfig();
   const contentRef = useRef<HTMLDivElement>(null);
   const [pendingPhotoDelete, setPendingPhotoDelete] = useState<string | null>(null);
   const [pendingDocDelete, setPendingDocDelete] = useState<{ docType: string; fileName: string } | null>(null);
@@ -47,6 +49,7 @@ const AdminDashboard = () => {
           userRole={db.userRole}
           isAppraiser={db.isAppraiser}
           dealershipId={db.tenant.dealership_id}
+          enterpriseBetaEnabled={Boolean((siteConfig as any).enterprise_beta_enabled)}
         />
         <div className="flex-1 flex flex-col min-w-0">
           <AdminHeader
