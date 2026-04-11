@@ -312,7 +312,7 @@ const ScheduleVisit = () => {
       startDate: start,
       endDate: end,
       organizerName: config.dealership_name || "Dealership",
-      organizerEmail: config.contact_email || "info@example.com",
+      organizerEmail: (config as any).contact_email || config.email || "info@example.com",
     });
     downloadCalendarInvite(ics, "vehicle-inspection-appointment.ics");
   };

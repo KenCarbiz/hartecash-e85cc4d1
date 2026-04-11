@@ -176,7 +176,7 @@ class ELM327Scanner {
   }
 
   private handleNotify = (e: Event) => {
-    const target = e.target as BTCharacteristic;
+    const target = e.target as unknown as BTCharacteristic;
     const dv = target.value;
     if (!dv) return;
     let chunk = "";

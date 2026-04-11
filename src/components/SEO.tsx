@@ -2,8 +2,8 @@ import { Helmet } from "react-helmet-async";
 
 interface SEOProps {
   title: string;
-  description: string;
-  path: string;
+  description?: string;
+  path?: string;
   ogImage?: string;
   type?: string;
   noindex?: boolean;
@@ -13,8 +13,8 @@ const BASE_URL = typeof window !== "undefined" ? window.location.origin : "https
 
 const SEO = ({
   title,
-  description,
-  path,
+  description = "",
+  path = "/",
   ogImage = "/og-service.jpg",
   type = "website",
   noindex = false,

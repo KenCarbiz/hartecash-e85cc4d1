@@ -247,13 +247,12 @@ export const getTimeSlotsForDate = (dateStr: string) => {
 //
 // Role hierarchy (least → most access):
 //   sales_bdc → used_car_manager → gsm_gm → admin → platform_admin
-export const ROLE_LABELS: Record<string, string> = {
+export const ROLE_LABELS_FULL: Record<string, string> = {
   sales_bdc: "BDC / Sales",
   used_car_manager: "UCM",
   gsm_gm: "GSM / GM",
   admin: "Admin",
   platform_admin: "Super Admin",
-  // Reserved for future use — already appears in some dropdowns.
   inspector: "Inspector",
   appraiser: "Appraiser",
 };
