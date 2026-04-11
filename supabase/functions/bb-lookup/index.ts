@@ -138,7 +138,8 @@ serve(async (req) => {
       });
     }
 
-    let bbData: Record<string, unknown>;
+    // deno-lint-ignore no-explicit-any
+    let bbData: any;
     try {
       bbData = JSON.parse(bbText);
     } catch (parseErr) {
