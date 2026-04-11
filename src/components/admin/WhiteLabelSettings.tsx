@@ -130,12 +130,12 @@ const WhiteLabelSettings = () => {
           White Label
         </h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Remove HarteCash branding and customise the customer-facing experience to match your dealership.
+          Remove Autocurb platform attribution and customise the customer-facing experience to match your dealership.
         </p>
       </div>
 
       {/* ── Branding toggle ── */}
-      <PremiumCard icon={Tag} title="Branding Visibility" description="Control whether HarteCash branding appears on your site">
+      <PremiumCard icon={Tag} title="Branding Visibility" description="Control whether the 'Powered by Autocurb.ai' credit appears on your site">
         <div className="flex items-center justify-between rounded-xl border border-border bg-muted/20 px-4 py-3">
           <div className="flex items-center gap-3">
             {state.hide_branding ? (
@@ -144,7 +144,7 @@ const WhiteLabelSettings = () => {
               <Eye className="w-4 h-4 text-muted-foreground" />
             )}
             <div>
-              <p className="text-sm font-medium">Hide "Powered by HarteCash" branding</p>
+              <p className="text-sm font-medium">Hide "Powered by Autocurb.ai" branding</p>
               <p className="text-xs text-muted-foreground">Remove all platform attribution from customer-facing pages</p>
             </div>
           </div>
@@ -285,7 +285,7 @@ const WhiteLabelSettings = () => {
               </p>
               {!state.hide_branding && (
                 <p className="text-[10px] text-muted-foreground/50">
-                  Powered by HarteCash
+                  Powered by Autocurb.ai
                 </p>
               )}
               {state.hide_branding && (

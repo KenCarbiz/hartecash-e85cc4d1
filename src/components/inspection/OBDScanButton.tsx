@@ -156,7 +156,7 @@ export default function OBDScanButton({
                     />
                     <InstructionRow
                       icon={Smartphone}
-                      text="Scan the QR code below with your phone's camera or the HarteCash Scanner app."
+                      text="Scan the QR code below with your phone's camera or the Autocurb Scanner app."
                     />
                   </ul>
                 </div>
@@ -172,7 +172,7 @@ export default function OBDScanButton({
                     />
                   </div>
                   <p className="text-[10px] text-muted-foreground text-center max-w-[260px] leading-snug">
-                    Scan this code with the HarteCash Scanner app on your phone, or open the URL directly on an Android device with Chrome.
+                    Scan this code with the Autocurb Scanner app on your phone, or open the URL directly on an Android device with Chrome.
                   </p>
                   <code className="text-[10px] font-mono text-muted-foreground bg-muted/40 px-2 py-1 rounded-md truncate max-w-full">
                     {scanUrl}

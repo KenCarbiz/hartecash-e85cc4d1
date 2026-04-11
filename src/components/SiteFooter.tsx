@@ -17,6 +17,13 @@ const SiteFooter = () => {
   const { config } = useSiteConfig();
   const dealerName = config.dealership_name || "Our Dealership";
   const [locations, setLocations] = useState<DealerLocation[]>([]);
+  // White Label "Hide Powered by Autocurb.ai" shut-off switch.
+  // Default: show the credit. Only hidden when the dealer has the
+  // Enterprise Beta white label feature enabled AND explicitly
+  // toggled the credit off.
+  const hidePoweredBy = Boolean(
+    (config.white_label_settings as { hide_branding?: boolean } | null)?.hide_branding,
+  );
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -186,6 +193,22 @@ const SiteFooter = () => {
             © {new Date().getFullYear()} {dealerName}. All rights reserved.
           </p>
           <div className="flex items-center gap-4 py-2">
+            {/* "Powered by Autocurb.ai" credit — respects the White Label
+                hide_branding shut-off switch when the dealer has
+                Enterprise Beta white label enabled. Defaults to showing. */}
+            {!hidePoweredBy && (
+              <span className="text-[10px] text-muted-foreground/40 tracking-wide">
+                Powered by{" "}
+                <a
+                  href="https://autocurb.io"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-muted-foreground/60 hover:text-primary transition-colors"
+                >
+                  Autocurb.ai
+                </a>
+              </span>
+            )}
             <Link to="/admin/login" className="text-xs text-muted-foreground/20 hover:text-muted-foreground/50 transition-opacity min-h-[24px] flex items-center" aria-label="Staff portal">•</Link>
             <Link to="/sitemap" className="text-xs text-muted-foreground/30 hover:text-muted-foreground/60 transition-opacity min-h-[24px] flex items-center">Sitemap</Link>
           </div>

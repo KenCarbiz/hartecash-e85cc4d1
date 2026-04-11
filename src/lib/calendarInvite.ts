@@ -44,7 +44,7 @@ export function generateICalEvent(params: ICalEventParams): string {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//HarteCash//Appointment//EN",
+    "PRODID:-//Autocurb.io//Appointment//EN",
     "BEGIN:VEVENT",
     `DTSTART:${formatICalDate(startDate)}`,
     `DTEND:${formatICalDate(endDate)}`,

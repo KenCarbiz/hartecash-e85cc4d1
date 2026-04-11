@@ -400,7 +400,7 @@ const AdminSidebar = ({
               Autocurb.io
             </p>
             <p className="text-[9px] text-sidebar-foreground/30">
-              Enterprise Platform
+              Powered by Autocurb.ai
             </p>
           </div>
         )}

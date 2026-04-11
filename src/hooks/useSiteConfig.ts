@@ -46,6 +46,9 @@ export interface SiteConfig {
   ai_auto_bump_daily_cap: number;
   ai_auto_bump_confidence_floor: number;
   enterprise_beta_enabled: boolean;
+  // White Label settings blob — includes hide_branding toggle that
+  // controls the "Powered by Autocurb.ai" credit in SiteFooter.
+  white_label_settings: { hide_branding?: boolean; [k: string]: unknown } | null;
   about_hero_headline: string;
   about_hero_subtext: string;
   about_story: string;
@@ -113,6 +116,7 @@ const DEFAULTS: SiteConfig = {
   ai_auto_bump_daily_cap: 10000,
   ai_auto_bump_confidence_floor: 70,
   enterprise_beta_enabled: false,
+  white_label_settings: null,
   about_hero_headline: "Our Story",
   about_hero_subtext: "We're passionate about helping drivers get the most value for their vehicles — no haggling, no stress.",
   about_story: "",
