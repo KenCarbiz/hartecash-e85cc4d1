@@ -39,6 +39,11 @@ interface TenantForm {
   offerLogicApproverRole: string;
   architecture: ArchitectureType | null;
   originalArchitecture: ArchitectureType | null;
+  /** Super-admin-only — forces "Powered by Autocurb.ai" attribution on
+   *  the dealer's customer-facing footer regardless of their own
+   *  white_label_settings.powered_by_mode. Used to enforce attribution
+   *  on tiers that do not include white-label rights. */
+  forceAutocurbAttribution: boolean;
 }
 
 const EMPTY_FORM: TenantForm = {
@@ -50,6 +55,7 @@ const EMPTY_FORM: TenantForm = {
   offerLogicApproverRole: "gsm_gm",
   architecture: null,
   originalArchitecture: null,
+  forceAutocurbAttribution: true,
 };
 
 const PLAN_PRICES: Record<string, number> = {
@@ -148,6 +154,15 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
       approverRole = da.offer_logic_approver_role || "gsm_gm";
       arch = dbArchToType(da.architecture || "single_store", da.plan_tier || "standard");
     }
+    // Pull the super-admin attribution override from site_config.
+    // Defaults to true so new tenants always show the credit unless a
+    // super admin explicitly releases them.
+    const { data: scData } = await supabase
+      .from("site_config")
+      .select("force_autocurb_attribution" as any)
+      .eq("dealership_id", t.dealership_id)
+      .maybeSingle();
+    const forceAttr = Boolean((scData as any)?.force_autocurb_attribution ?? true);
     setForm({
       dealership_id: t.dealership_id,
       slug: t.slug,
@@ -157,6 +172,7 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
       offerLogicApproverRole: approverRole,
       architecture: arch,
       originalArchitecture: arch,
+      forceAutocurbAttribution: forceAttr,
     });
     setShowPricingPrompt(false);
     setDialogOpen(true);
@@ -220,6 +236,14 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
         await supabase
           .from("dealer_accounts")
           .update(accountUpdate as any)
+          .eq("dealership_id", payload.dealership_id);
+
+        // Super-admin attribution force override — saved on site_config
+        // so SiteFooter can read it via useSiteConfig alongside the
+        // dealer's own powered_by_mode.
+        await supabase
+          .from("site_config")
+          .update({ force_autocurb_attribution: form.forceAutocurbAttribution } as any)
           .eq("dealership_id", payload.dealership_id);
       }
     } else {
@@ -544,6 +568,31 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
             <div className="flex items-center gap-2">
               <Switch checked={form.is_active} onCheckedChange={v => setForm(prev => ({ ...prev, is_active: v }))} />
               <Label className="text-sm">Active</Label>
+            </div>
+
+            {/* Super-admin attribution force override */}
+            <div className="col-span-2 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Label className="text-sm font-semibold">Force "Powered by Autocurb.ai" Attribution</Label>
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-500/15 border border-amber-500/30 rounded-md px-1.5 py-0.5">
+                      Super Admin
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    When <strong>on</strong>, the customer-facing site footer always shows
+                    "Powered by Autocurb.ai" regardless of the dealer's own white label settings.
+                    Use this to enforce attribution on tiers that don't include white-label
+                    rights. When <strong>off</strong>, the dealer can choose between Autocurb
+                    attribution, their own dealership name, or no attribution at all.
+                  </p>
+                </div>
+                <Switch
+                  checked={form.forceAutocurbAttribution}
+                  onCheckedChange={v => setForm(prev => ({ ...prev, forceAutocurbAttribution: v }))}
+                />
+              </div>
             </div>
           </div>
           <DialogFooter>

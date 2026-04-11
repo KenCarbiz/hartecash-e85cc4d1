@@ -17,13 +17,24 @@ const SiteFooter = () => {
   const { config } = useSiteConfig();
   const dealerName = config.dealership_name || "Our Dealership";
   const [locations, setLocations] = useState<DealerLocation[]>([]);
-  // White Label "Hide Powered by Autocurb.ai" shut-off switch.
-  // Default: show the credit. Only hidden when the dealer has the
-  // Enterprise Beta white label feature enabled AND explicitly
-  // toggled the credit off.
-  const hidePoweredBy = Boolean(
-    (config.white_label_settings as { hide_branding?: boolean } | null)?.hide_branding,
-  );
+
+  // Attribution resolution — four layers, priority top-to-bottom:
+  //   1. Super-admin force override (force_autocurb_attribution) →
+  //      ALWAYS show "Powered by Autocurb.ai" regardless of dealer
+  //      settings. Used for contract enforcement on tiers that don't
+  //      include white-label rights.
+  //   2. Dealer's powered_by_mode (three-way enum).
+  //   3. Legacy hide_branding boolean (fallback for pre-migration data).
+  //   4. Default when nothing is set → 'autocurb'.
+  const wl = config.white_label_settings as {
+    hide_branding?: boolean;
+    powered_by_mode?: "autocurb" | "dealer" | "hidden";
+  } | null;
+  const resolvedMode: "autocurb" | "dealer" | "hidden" =
+    config.force_autocurb_attribution
+      ? "autocurb"
+      : wl?.powered_by_mode
+        ?? (wl?.hide_branding ? "hidden" : "autocurb");
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -193,10 +204,10 @@ const SiteFooter = () => {
             © {new Date().getFullYear()} {dealerName}. All rights reserved.
           </p>
           <div className="flex items-center gap-4 py-2">
-            {/* "Powered by Autocurb.ai" credit — respects the White Label
-                hide_branding shut-off switch when the dealer has
-                Enterprise Beta white label enabled. Defaults to showing. */}
-            {!hidePoweredBy && (
+            {/* Attribution credit — three-way toggle per dealer, with a
+                super-admin force override that always wins. See
+                resolvedMode computation above. */}
+            {resolvedMode === "autocurb" && (
               <span className="text-[10px] text-muted-foreground/40 tracking-wide">
                 Powered by{" "}
                 <a
@@ -207,6 +218,14 @@ const SiteFooter = () => {
                 >
                   Autocurb.ai
                 </a>
+              </span>
+            )}
+            {resolvedMode === "dealer" && (
+              <span className="text-[10px] text-muted-foreground/40 tracking-wide">
+                Powered by{" "}
+                <span className="font-semibold text-muted-foreground/60">
+                  {dealerName}
+                </span>
               </span>
             )}
             <Link to="/admin/login" className="text-xs text-muted-foreground/20 hover:text-muted-foreground/50 transition-opacity min-h-[24px] flex items-center" aria-label="Staff portal">•</Link>

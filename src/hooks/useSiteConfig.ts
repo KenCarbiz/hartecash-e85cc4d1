@@ -46,9 +46,21 @@ export interface SiteConfig {
   ai_auto_bump_daily_cap: number;
   ai_auto_bump_confidence_floor: number;
   enterprise_beta_enabled: boolean;
-  // White Label settings blob — includes hide_branding toggle that
-  // controls the "Powered by Autocurb.ai" credit in SiteFooter.
-  white_label_settings: { hide_branding?: boolean; [k: string]: unknown } | null;
+  // White Label settings blob. powered_by_mode controls which
+  // attribution appears in the customer-facing SiteFooter:
+  //   'autocurb' — "Powered by Autocurb.ai" (default)
+  //   'dealer'   — "Powered by {dealership_name}"
+  //   'hidden'   — no attribution
+  // The legacy hide_branding boolean is preserved as a fallback for
+  // records that pre-date the three-way enum.
+  white_label_settings: {
+    hide_branding?: boolean;
+    powered_by_mode?: "autocurb" | "dealer" | "hidden";
+    [k: string]: unknown;
+  } | null;
+  // Super-admin-only override. When true, always show "Powered by
+  // Autocurb.ai" regardless of the dealer's own powered_by_mode.
+  force_autocurb_attribution: boolean;
   about_hero_headline: string;
   about_hero_subtext: string;
   about_story: string;
@@ -117,6 +129,7 @@ const DEFAULTS: SiteConfig = {
   ai_auto_bump_confidence_floor: 70,
   enterprise_beta_enabled: false,
   white_label_settings: null,
+  force_autocurb_attribution: false,
   about_hero_headline: "Our Story",
   about_hero_subtext: "We're passionate about helping drivers get the most value for their vehicles — no haggling, no stress.",
   about_story: "",

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import {
   Save, Loader2, Paintbrush, Eye, Globe, Mail, FileText, Image, Tag, EyeOff, HardHat,
@@ -43,7 +44,11 @@ const PremiumCard = ({
 /* ── Main component ────────────────────────────────────── */
 
 interface WhiteLabelState {
+  /** @deprecated Superseded by powered_by_mode. Still read for backward compat. */
   hide_branding: boolean;
+  /** Three-way attribution toggle. Dealer-controlled (unless super-admin
+   *  has set force_autocurb_attribution on site_config). */
+  powered_by_mode: "autocurb" | "dealer" | "hidden";
   custom_email_domain: string;
   custom_favicon_url: string;
   meta_title: string;
@@ -52,6 +57,7 @@ interface WhiteLabelState {
 
 const DEFAULTS: WhiteLabelState = {
   hide_branding: false,
+  powered_by_mode: "autocurb",
   custom_email_domain: "",
   custom_favicon_url: "",
   meta_title: "",
@@ -79,8 +85,13 @@ const WhiteLabelSettings = () => {
         .maybeSingle();
       if (data) {
         const wl = (data as any).white_label_settings as Partial<WhiteLabelState> | null;
+        // Legacy mapping: old hide_branding boolean maps to 'hidden'
+        // when no explicit powered_by_mode exists on the record.
+        const resolvedMode: "autocurb" | "dealer" | "hidden" =
+          wl?.powered_by_mode ?? (wl?.hide_branding ? "hidden" : "autocurb");
         setState({
           hide_branding: wl?.hide_branding ?? false,
+          powered_by_mode: resolvedMode,
           custom_email_domain: wl?.custom_email_domain ?? "",
           custom_favicon_url: wl?.custom_favicon_url ?? (data as any).favicon_url ?? "",
           meta_title: wl?.meta_title ?? "",
@@ -134,25 +145,80 @@ const WhiteLabelSettings = () => {
         </p>
       </div>
 
-      {/* ── Branding toggle ── */}
-      <PremiumCard icon={Tag} title="Branding Visibility" description="Control whether the 'Powered by Autocurb.ai' credit appears on your site">
-        <div className="flex items-center justify-between rounded-xl border border-border bg-muted/20 px-4 py-3">
-          <div className="flex items-center gap-3">
-            {state.hide_branding ? (
-              <EyeOff className="w-4 h-4 text-muted-foreground" />
-            ) : (
-              <Eye className="w-4 h-4 text-muted-foreground" />
-            )}
-            <div>
-              <p className="text-sm font-medium">Hide "Powered by Autocurb.ai" branding</p>
-              <p className="text-xs text-muted-foreground">Remove all platform attribution from customer-facing pages</p>
+      {/* ── Attribution mode (three-way) ── */}
+      <PremiumCard icon={Tag} title="Footer Attribution" description="Choose what appears in the customer-facing site footer">
+        {/* Locked state — super admin has forced Autocurb attribution */}
+        {siteConfig.force_autocurb_attribution && (
+          <div className="mb-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 flex items-start gap-2.5">
+            <Eye className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+            <div className="text-xs text-amber-900 dark:text-amber-100 leading-snug">
+              <strong className="text-amber-700 dark:text-amber-300">Attribution is locked by your Autocurb account.</strong>{" "}
+              Your contract requires the "Powered by Autocurb.ai" credit to remain
+              visible. Contact your Autocurb Success Manager to change this setting.
             </div>
           </div>
-          <Switch
-            checked={state.hide_branding}
-            onCheckedChange={(v) => update("hide_branding", v)}
-          />
-        </div>
+        )}
+
+        <RadioGroup
+          value={state.powered_by_mode}
+          onValueChange={(v) => update("powered_by_mode", v as WhiteLabelState["powered_by_mode"])}
+          disabled={siteConfig.force_autocurb_attribution}
+          className="space-y-2"
+        >
+          <label
+            htmlFor="pb-autocurb"
+            className={`flex items-start gap-3 rounded-xl border border-border bg-muted/20 px-4 py-3 cursor-pointer hover:bg-muted/30 transition-colors ${
+              siteConfig.force_autocurb_attribution ? "opacity-60 cursor-not-allowed" : ""
+            }`}
+          >
+            <RadioGroupItem value="autocurb" id="pb-autocurb" className="mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium">Powered by Autocurb.ai (default)</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Standard platform attribution. Subtle link to autocurb.io in the
+                site footer. The right choice for most dealerships.
+              </p>
+            </div>
+          </label>
+
+          <label
+            htmlFor="pb-dealer"
+            className={`flex items-start gap-3 rounded-xl border border-border bg-muted/20 px-4 py-3 cursor-pointer hover:bg-muted/30 transition-colors ${
+              siteConfig.force_autocurb_attribution ? "opacity-60 cursor-not-allowed" : ""
+            }`}
+          >
+            <RadioGroupItem value="dealer" id="pb-dealer" className="mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium">
+                Powered by {siteConfig.dealership_name || "your dealership"}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                White-label the attribution. The footer reads "Powered by {siteConfig.dealership_name || "your dealership name"}"
+                — no mention of Autocurb. Good for dealer groups with a strong
+                independent brand.
+              </p>
+            </div>
+          </label>
+
+          <label
+            htmlFor="pb-hidden"
+            className={`flex items-start gap-3 rounded-xl border border-border bg-muted/20 px-4 py-3 cursor-pointer hover:bg-muted/30 transition-colors ${
+              siteConfig.force_autocurb_attribution ? "opacity-60 cursor-not-allowed" : ""
+            }`}
+          >
+            <RadioGroupItem value="hidden" id="pb-hidden" className="mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium flex items-center gap-2">
+                Hide attribution entirely
+                <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                No "Powered by" line at all. Only your copyright remains in the
+                footer. Cleanest white-label look.
+              </p>
+            </div>
+          </label>
+        </RadioGroup>
       </PremiumCard>
 
       {/* ── Custom email domain ── */}
@@ -276,23 +342,38 @@ const WhiteLabelSettings = () => {
             </div>
           </div>
 
-          {/* Footer preview */}
+          {/* Footer preview — mirrors the resolved mode (including super-admin force) */}
           <div>
-            <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground/60 mb-2">Footer</p>
+            <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground/60 mb-2">Footer Preview</p>
             <div className="rounded-xl border border-border bg-muted/20 px-5 py-4 text-center space-y-1">
               <p className="text-xs text-muted-foreground">
                 &copy; {new Date().getFullYear()} {previewName}. All rights reserved.
               </p>
-              {!state.hide_branding && (
-                <p className="text-[10px] text-muted-foreground/50">
-                  Powered by Autocurb.ai
-                </p>
-              )}
-              {state.hide_branding && (
-                <Badge variant="outline" className="text-[9px] text-emerald-600 dark:text-emerald-400 border-emerald-500/30">
-                  Branding hidden
-                </Badge>
-              )}
+              {(() => {
+                // The super-admin force override always wins
+                const effectiveMode = siteConfig.force_autocurb_attribution
+                  ? "autocurb"
+                  : state.powered_by_mode;
+                if (effectiveMode === "autocurb") {
+                  return (
+                    <p className="text-[10px] text-muted-foreground/50">
+                      Powered by Autocurb.ai
+                    </p>
+                  );
+                }
+                if (effectiveMode === "dealer") {
+                  return (
+                    <p className="text-[10px] text-muted-foreground/50">
+                      Powered by {previewName}
+                    </p>
+                  );
+                }
+                return (
+                  <Badge variant="outline" className="text-[9px] text-emerald-600 dark:text-emerald-400 border-emerald-500/30">
+                    Attribution hidden
+                  </Badge>
+                );
+              })()}
             </div>
           </div>
         </div>
