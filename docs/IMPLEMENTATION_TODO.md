@@ -231,16 +231,135 @@ pre-focused and a numeric keypad primed.
 
 ---
 
+## 3. Handheld Laser / BLE Hardware Integration Plan
+
+**Why:** Item 2 above targets the dealer's shop management system as
+the source of tread/brake data. This item targets a complementary path:
+**the appraiser's personal iPhone or iPad**, paired to a handheld laser
+tool via Bluetooth or a lightweight API. Useful when the dealer doesn't
+have a shop management system to read from, when the appraiser is
+walking the service drive away from any terminal, or when the dealer
+wants faster measurement capture than manual entry allows.
+
+### Hardware landscape (researched April 2026)
+
+| Tool | Cost | Tread | Brake | iOS connectivity | API/BLE surface |
+|---|---|---|---|---|---|
+| **Bartec TECH600Pro + BT bridge** | ~$2,050 | ✅ Laser | ❌ | Bluetooth LE → Bartec Mobile iOS app | Published SDK (2024), REST endpoint on paired app |
+| **Snap-on EPIC / Solus Edge + laser module + brake sensor** | ~$3,200 | ✅ Laser | ✅ Add-on | Bluetooth LE → ProLink iQ iOS app | Mitchell 1 Integration API (shared with Mitchell 1 shop system integration in Item 2) |
+| **JumpStart TreadReader** | ~$950 | ✅ Laser (< 1s per tire) | ❌ | Native BLE to iPhone/iPad | Published BLE profile + iOS companion app with share-sheet export |
+| **Innova Drivelink Pro** | ~$280 | ✅ Stylus laser | ✅ Via OBD2 ABS data | iOS via Innova Connect app | Published REST API + webhook-capable |
+| **Hunter Quick Tread / Quick Check Drive** | Already-owned hardware | ✅ Drive-over | ❌ | None (PC-only WebOffice) | Private integrator agreement — Phase 3 in Item 2 |
+| **Bosch / Beissbarth TireInspect** | Already-owned hardware | ✅ Drive-over | ❌ | No iOS | CSV folder poll only |
+| **DualTread / generic handhelds** | $300-800 | ✅ Laser | ❌ | None | No API, no BLE — manual only |
+| **Uveye** | $2,500/mo site fee | ✅ Drive-over CV | ✅ Drive-over CV | None | Enterprise API — Phase 5 in Item 2 |
+
+### Recommended two-tool stack per appraiser
+
+**For tread: JumpStart TreadReader ($950)** — BLE-native, iOS-native,
+under 1 second per wheel, cheapest real option in the BLE class.
+
+**For brakes: Innova Drivelink Pro ($280)** — only consumer option that
+reads brake pad life without a separate mechanical measurement. Uses
+the car's own ABS module pad-wear sensor on 2018+ vehicles, which is
+actually more accurate than mechanical calipering on modern pads.
+
+**Total hardware per appraiser: ~$1,230.** Half the cost of Snap-on,
+covers both tread and brakes, all iOS-native.
+
+### Integration phasing
+
+| Phase | Hardware | Integration type | Engineering | Hardware cost |
+|---|---|---|---|---|
+| **Phase 0** | None | QR handoff screen in inspection sheet — tech scans tablet QR with their phone, gets a focused numeric keypad for each wheel/brake, realtime sync back to tablet. Zero BLE, zero API. | ~1 day | $0 |
+| **Phase 1** | JumpStart TreadReader | iOS share-sheet URL scheme: tech captures 4 readings in JumpStart app → taps Share → picks "Open in Autocurb" → deep-links into inspection sheet with all four wheel values pre-filled. Zero BLE code in our app. | ~2 days | $950/appraiser |
+| **Phase 2** | Innova Drivelink Pro | Wire Innova's REST webhook into our existing `receive-obd-scan` edge function. Appraiser plugs OBD dongle into the vehicle, Innova app calls our webhook, brake pad life populates. | ~1 day | $280/appraiser |
+| **Phase 3** | Snap-on EPIC (for dealers who already own it) | Mitchell 1 Integration API — same integration path as the Mitchell 1 shop system plan in Item 2. Snap-on EPIC writes into Mitchell 1, we read from Mitchell 1. | ~3 days | $0 (existing hardware) |
+| **Phase 4** | Bartec TECH600Pro (for dealers who already own it) | Bartec mobile SDK + their 2024 integration endpoint. Pair-once flow from System Settings. | ~2 days | $0 (existing hardware) |
+| **Phase 5** | Direct Web Bluetooth to JumpStart | Capacitor/React Native shell exposing BLE to our admin PWA. Bigger architectural commit. Only worth it if Phase 1 share-sheet flow hits friction. | ~1 week | $0 (hardware from Phase 1) |
+
+### Phase 0 detail — QR handoff screen (zero hardware, ships alone)
+
+**Why it comes first:** It's a pure software win that helps every
+dealer *today*, including the ones with no intent to ever buy new
+hardware. The laser tool they already own stays in use; the QR handoff
+just replaces the "walk to tablet → find field → type" loop with a
+focused mobile keypad that auto-advances per wheel.
+
+**Flow:**
+1. UCM opens the inspection sheet on the tablet
+2. Taps "Capture Tread + Brake" → a fullscreen QR code appears
+3. Tech scans the QR from their phone
+4. Phone opens `/inspection/:id/capture` with a single-screen form:
+   four big wheel slots (LF / RF / LR / RR) for tread, four for brake
+5. Each field focuses automatically, 32nd-inch numeric keypad, tap
+   Enter to advance to the next wheel
+6. Each value writes to the submission in realtime via Supabase
+   subscription
+7. Tablet shows the values updating live so the UCM can stop the
+   tech if a number looks wrong
+8. When all 8 values are in, the tech taps "Done" and both devices
+   show a confirmation
+
+**Files touched:**
+- New `src/pages/InspectionCaptureHandoff.tsx` (mobile capture page)
+- `src/pages/InspectionSheet.tsx` + `MobileInspection.tsx` — add
+  "Capture Tread + Brake" button that shows the QR
+- New route in `App.tsx`
+- Uses existing Supabase realtime — no new edge functions
+
+**Scope:** 1 day, ships independently of any other item.
+
+### Phase 1 detail — JumpStart share-sheet integration
+
+**Why:** Zero BLE code on our side. The JumpStart iOS app already does
+the BLE pairing + reading; we just receive the export.
+
+**Setup:**
+1. Register a custom URL scheme in the app — `autocurb://inspection/:id/tread`
+2. Document it in a "Connect Your Tread Laser" setup page for
+   appraisers — configure JumpStart to share via our scheme
+3. When the share-sheet URL hits the app, parse the query params
+   (`?lf=8&rf=7&lr=6&rr=6`) and populate the inspection sheet
+
+**Fallback if JumpStart's share export format doesn't include the full
+per-wheel breakdown:** Use their iOS `UIActivityItem` copy format and
+parse the human-readable text. Uglier but works.
+
+**Scope:** 2 days + 1 JumpStart unit to test against.
+
+### Open questions before any phase ships
+
+1. Does the dealer already own a tread tool? We should ask during
+   onboarding so Phase 0 (QR handoff) is the right default for
+   existing-hardware dealers and Phase 1 (JumpStart) is the right
+   recommendation for new-hardware dealers.
+2. Do any target dealers own Snap-on EPIC? Phase 3 only makes sense
+   if we have 3+ dealers asking for it.
+3. Is brake pad data via OBD2 accurate enough for our condition model?
+   Needs a 20-vehicle calibration test against mechanical
+   measurements before Phase 2 goes live.
+
+---
+
 ## Prioritization
 
 If shipping one of these per sprint:
 
 1. **Photo Upload Encouragement (1-2 days)** — biggest revenue impact,
    zero new dependencies, pure frontend + one notification template.
-2. **Laser Tool QR Handoff (1 day)** — zero-integration quick win that
-   buys goodwill with dealer techs immediately.
+2. **Laser Tool QR Handoff — Phase 0 (1 day)** — zero-integration,
+   zero-hardware quick win that helps every dealer immediately.
 3. **Tekmetric Tread/Brake sync (2-3 days)** — needs a dev account but
-   is the biggest operational upgrade in inspection workflow.
+   is the biggest operational upgrade in inspection workflow for
+   dealers with shop management systems.
+4. **JumpStart TreadReader integration — Phase 1 (2 days + $950 hardware)**
+   — paired with Phase 0, closes the tread-capture loop without BLE
+   engineering on our side.
+5. **Innova Drivelink Pro — Phase 2 (1 day + $280 hardware)** — brake
+   data via OBD2, reuses the existing `receive-obd-scan` endpoint.
 
-All three items are scoped tightly enough to ship within a week of
-calendar time if prioritized sequentially.
+First four items ship within 1.5 weeks of calendar time if done
+sequentially. Full hardware stack (items 4 + 5) reaches every
+appraiser for ~$1,230 in per-seat hardware, roughly one-third the
+cost of the Snap-on equivalent.
