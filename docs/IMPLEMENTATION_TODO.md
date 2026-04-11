@@ -441,24 +441,355 @@ parse the human-readable text. Uglier but works.
 
 ---
 
+## 4. DealerTrack Payoff Verification Integration
+
+**Why:** Every consumer-sourced car with an existing loan requires a
+**10-day payoff quote** from the lienholder before the dealer can cut
+a check. Today the workflow is:
+  1. Appraiser asks the customer for the lender name
+  2. Appraiser calls the lender directly (or faxes a POA)
+  3. Waits 10 minutes to 24 hours on hold
+  4. Manually types the payoff into `submissions.loan_payoff_amount`
+  5. Hopes the customer didn't make a payment between the quote and
+     the check-cut date (or the dealer ends up short)
+
+This manual loop is the single biggest bottleneck between "customer
+accepts the offer" and "dealer cuts the check." On service-drive
+acquisitions specifically, customers often walk because they can't
+wait around for 45 minutes while the dealer's BDC tries to get a
+payoff quote from Ally. **DealerTrack's Payoff Quotes service
+automates this entire path** — API-driven payoff requests that hit
+the major lienholder network and return a fresh 10-day quote in
+under 30 seconds.
+
+**Goal:** Integrate DealerTrack Payoff Quotes so the platform
+automatically fetches and continuously refreshes payoff amounts
+during the acquisition window. The UCM sees a live payoff number
+on the customer file, and when the check request is generated the
+payoff has been re-verified within the last 10 days.
+
+### Integration landscape (who can provide the data)
+
+| Provider | Network coverage | API-based? | Business model |
+|---|---|---|---|
+| **DealerTrack Payoff Quotes (Cox Automotive)** | Widest — Ally, Chase, Wells Fargo, Capital One, Bank of America, credit unions via Open Lending, most captives (Ford Credit, GM Financial, Toyota Financial, Honda Financial, Nissan Financial, etc.) | ✅ Yes — partner API, requires integrator agreement | Per-quote fee (~$3–5) or bundled in an existing DealerTrack subscription |
+| **RouteOne** | Similar to DealerTrack — slightly fewer credit unions but stronger captive finance coverage | ✅ Yes — partner API, requires integrator agreement | Per-quote fee or bundled subscription |
+| **Cox Automotive PayoffAssist** | Consumer-facing version of DealerTrack Payoff Quotes — customer enters credentials | ⚠️ Consumer-web-driven | Per-quote fee, friction from customer-credential requirement |
+| **Direct lender APIs** (Ally DealerServices, GM Financial dealer portal, Chase DealerCommercialServices, etc.) | Lender-specific — only the one brand | ✅ Yes per lender | Free for established dealer relationships, each lender is a separate integration |
+| **Carfax TitleHistory lien data** | Nationwide title records | ⚠️ Title lien presence only — NOT real-time payoff amount | Subscription fee |
+| **Manual fax/phone workflow** | Everything | ❌ | Dealer labor time |
+
+### Recommended approach — DealerTrack Payoff Quotes
+
+Cox Automotive is already in the dealer's life on multiple fronts
+(vAuto, Manheim, Autotrader, Dealer.com, DealerTrack, Xtime, KBB ICO).
+Most dealers targeted by this product already have an active
+DealerTrack subscription. Integrating to DealerTrack Payoff Quotes:
+
+- **Doesn't add a new vendor relationship** — dealer uses their
+  existing DealerTrack credentials
+- **Has the widest coverage** — the network covers effectively every
+  major US auto lender plus credit unions
+- **Is API-based** — a single edge function can hit the partner API
+- **Is bundled into most DealerTrack packages** — dealers already
+  paying for DealerTrack get the payoff quotes included OR at a
+  discounted per-quote rate
+
+**Phase 1 target: DealerTrack Payoff Quotes.**
+
+### Data model
+
+New columns on `submissions`:
+- `loan_payoff_amount` — already exists today (populated manually)
+- `loan_payoff_verified` — already exists today (boolean flag)
+- `loan_payoff_updated_at` — already exists today (timestamp)
+- `loan_payoff_expires_at` — **new** — when the 10-day quote goes
+  stale and must be re-fetched
+- `loan_payoff_source` — **new** — enum: `manual` | `dealertrack` |
+  `routeone` | `direct_lender` | `payoff_assist`
+- `loan_payoff_quote_id` — **new** — external reference returned
+  by DealerTrack so we can pull the PDF quote for the check-request
+  document packet
+- `loan_payoff_per_diem` — **new** — daily interest accrual so the
+  UI can show "payoff as of today + $X/day" if the check is cut
+  after the quote date
+
+New table `shop_system_connections` (already proposed for Tekmetric
+integration in Item 2) gets reused here with an additional
+`dealertrack_payoff` connection type so dealers only authorize Cox
+once per account and unlock multiple integrations.
+
+### New edge function: `dealertrack-payoff-fetch`
+
+**Input:** `{ submission_id, force_refresh? }`
+
+**Flow:**
+1. Load submission + `loan_company` + customer SSN/DOB + VIN
+2. Load dealer's DealerTrack credentials from `shop_system_connections`
+3. If `force_refresh = false` AND `loan_payoff_expires_at > now()`,
+   return the cached payoff — no new API call, no per-quote fee
+4. Otherwise call DealerTrack Payoff Quotes API with the customer's
+   PII + vehicle info
+5. Parse the response: 10-day payoff amount, per diem, lender
+   confirmation number, quote PDF URL
+6. Update `submissions.loan_payoff_*` fields atomically
+7. Write `activity_log` entry "Payoff Refreshed via DealerTrack"
+   with the delta from the previous amount
+8. If the new amount is materially different (>$500) from the
+   previous amount, fire a notification to the UCM so they know
+   the cost basis changed
+
+**Authorization:** A new SUPABASE secret `DEALERTRACK_API_KEY` for
+the platform + per-dealer OAuth tokens stored encrypted in
+`shop_system_connections`.
+
+**Trigger points:**
+1. **Automatic on offer acceptance:** When `progress_status` moves
+   to `offer_accepted`, the edge function fires. By the time the
+   customer arrives for inspection, the payoff is already verified.
+2. **Automatic on check-request generation:** Before the check
+   request PDF is generated, re-run the payoff fetch to ensure the
+   quote is fresh. This is the critical failure point today —
+   dealers cut checks against stale payoff quotes and end up short
+   because the customer made a payment in between.
+3. **Manual refresh button** on the customer file next to the
+   payoff amount — UCM can force a refresh if they suspect a stale
+   quote or the customer made a recent payment.
+4. **Daily background job** that refreshes any submission in
+   `progress_status = offer_accepted` with `loan_payoff_expires_at`
+   within 48 hours of expiring. Piggybacks on the existing
+   `revalue-service-leads` cron infrastructure.
+
+### UI changes
+
+**Customer file (SubmissionDetailSheet.tsx):**
+- New "Loan Payoff" panel in the existing finance section:
+  - Current quoted amount + quote date
+  - Per diem rate ("+$X/day after [date]")
+  - Source chip: **DealerTrack** / **Manual** / **RouteOne** / etc.
+  - "Refresh" button (UCM/GSM only — hits the edge function)
+  - "View Quote PDF" link when the source is DealerTrack
+  - Amber warning chip when the quote is within 3 days of expiring
+  - Red warning chip when the quote is expired
+
+**Check request generator (handleGenerateCheckRequest in
+SubmissionDetailSheet.tsx):**
+- Pre-flight check — if `loan_payoff_expires_at < now() + 24h`,
+  automatically trigger a refresh before generating the packet
+- Include the DealerTrack quote PDF as a page in the generated
+  check-request packet so the GSM approving the check has the
+  authoritative source document in hand
+
+**Appraiser Queue:**
+- New chip color/reason: **"Payoff Pending"** — surfaces any
+  offer-accepted submission whose payoff fetch failed or expired
+  without a refresh, so the UCM can step in manually
+
+### Scope
+
+- **Files touched:** `SubmissionDetailSheet.tsx`, `AppraiserQueue.tsx`,
+  `useAdminDashboard.ts`, new
+  `src/components/admin/DealerTrackConnectionCard.tsx`
+- **New edge function:** `dealertrack-payoff-fetch` + optional
+  `scheduled-payoff-refresh` (daily cron)
+- **Migration:** 4 new submission columns + `shop_system_connections`
+  enum extension
+- **Estimated budget:** 3-4 days **with DealerTrack partner API
+  credentials in hand**. Without them, ship the skeleton (UI + data
+  model + a mock edge function that returns hardcoded test data) and
+  wire real credentials when DealerTrack approves the integrator
+  agreement.
+- **Dependencies:**
+  1. DealerTrack Integrator Agreement — the real blocker. Cox takes
+     3-6 weeks to approve new partners. **Start the paperwork now
+     even if we're not ready to build yet.**
+  2. Dealer's existing DealerTrack subscription with Payoff Quotes
+     enabled. Most dealers targeted by this product already have it.
+
+### Open questions before shipping
+
+1. **Per-quote billing model.** Does DealerTrack charge per payoff
+   quote, per month, or is it bundled into their existing subscription?
+   This determines whether we need to expose a "payoff quote budget"
+   to the dealer or if it's free flowing.
+2. **PII handoff.** DealerTrack requires SSN + DOB to authenticate
+   a payoff request on most captive lenders. Do we collect these
+   fields from the customer on acceptance, or does the appraiser
+   type them in manually during the in-person walk-around? Consent
+   language + TCPA-style disclosure needs to be drafted.
+3. **RouteOne fallback.** Some dealers are RouteOne-only (competitor
+   to DealerTrack). Should we ship a pluggable interface from day
+   one so both networks work via a single `PayoffProvider`
+   abstraction, or start DealerTrack-only and add RouteOne in a
+   later phase once we see real demand?
+4. **Per-diem handling.** When a payoff quote is 7 days old and
+   the check is being cut today, do we auto-refresh OR just add
+   `per_diem × days_elapsed` to the quote and call it close enough?
+   DealerTrack's quotes explicitly authorize the per-diem math for
+   up to 10 days, so the manual adjustment is legal — the question
+   is whether we prefer automatic-refresh conservatism (extra API
+   costs) or mathematical addition (zero API cost).
+
+### Why this is high priority
+
+1. **Unblocks same-day acquisitions.** The customer who walks in,
+   accepts the offer, and wants to drive out with a check can't
+   today because payoff verification takes 30+ minutes. With
+   DealerTrack Payoff Quotes, it takes 30 seconds and the entire
+   "wait around while we call your bank" friction disappears.
+2. **Prevents losing money on stale quotes.** Manual workflows lead
+   to checks cut against quotes the customer has since made a
+   payment on. Dealer ends up short by $200–$800. Automating the
+   pre-check-request refresh eliminates this.
+3. **Fits the existing check-request packet flow.** The
+   `handleGenerateCheckRequest` function already bundles
+   appraisal + DL + title + payoff documentation into a printed
+   packet — adding the DealerTrack quote PDF as an extra page is
+   a one-line change inside that function.
+4. **Compounds with every other feature.** Every acquisition channel
+   (off-street, service drive, in-store trade, walk-in via
+   Inspection Check-In) ends at "generate check request," and
+   every one of those paths is currently limited by manual payoff
+   verification. Ship this once, everything speeds up.
+
+### 🔑 Critical extension — Service-Drive Equity Mining automation
+
+**This is the single biggest reason to ship the DealerTrack
+integration.** Equity mining already exists on the platform as a
+feature for stale service-drive leads — what it's missing is the
+verified-payoff signal that makes it actually convert customers.
+
+**The flow that DealerTrack Payoff Quotes unlocks:**
+
+1. **Service customer books an appointment** via the dealer's
+   standard scheduling system
+2. **Platform detects the booked appointment** for a customer with
+   a `lead_source = service` submission (or auto-creates one if the
+   service customer isn't yet in the acquisition pipeline)
+3. **Platform automatically queries DealerTrack Payoff Quotes**
+   using the VIN + customer identifiers already on file — no
+   customer interaction required, runs silently in the background
+4. **Platform computes real-time equity:**
+   `equity = bb_retail_avg - loan_payoff_amount`
+   (or `offered_price - loan_payoff_amount` if the customer has
+   already seen an offer)
+5. **When the customer arrives for service**, the service advisor
+   has a pre-loaded "equity opportunity" card on their tablet:
+   > "Your 2022 Accord is worth $23,400. You owe $18,800.
+   > **You have $4,600 in equity that most customers don't know
+   > they're sitting on.** Want to hear your options?"
+6. **The customer sees their own equity on the offer page** as a
+   dedicated section above the standard offer display:
+   ```
+   Your Car's Market Value:    $23,400
+   Your Loan Payoff:           $18,800 ✓ Verified via DealerTrack
+   ─────────────────────────────────────
+   Your Equity:                 $4,600
+   ```
+   This is dramatically more conversion-effective than showing the
+   offer alone. Most customers don't know what they owe vs. what
+   their car is worth — surfacing the gap makes the acquisition
+   story sell itself.
+7. **Offer-vs-equity comparison on the portal:** Alongside the
+   cash offer, show the equity breakdown and (when the offer
+   exceeds the payoff) the net check amount the customer walks
+   away with after the lender is paid off. This eliminates the
+   "wait how does this work" confusion that kills service-drive
+   deals.
+
+**Why this is the biggest acquisition lever in the platform:**
+
+- Service customers are already the **highest-quality channel**
+  (Executive Dashboard labels them as such). The trust is already
+  established because they chose to bring their car to the dealer
+  for service. All that's missing is the conversation starter.
+- **Equity is the conversation starter.** A customer who walks in
+  for an oil change and walks out being told "by the way, you
+  have $4,600 in equity locked in this car" is dramatically more
+  likely to engage with an acquisition offer than one who receives
+  a cold outreach about selling their car.
+- **DealerTrack Payoff Quotes automates the one data point that
+  makes equity math possible.** Manual payoff lookup scales to
+  maybe 10 customers a day per appraiser. Automated payoff
+  lookup scales to every service customer on the schedule —
+  hundreds per day per store.
+- **The Historical Insight Engine shipped last week gets
+  compounding value.** Combining verified payoff + AI condition
+  scoring + historical outcome data means the platform can
+  predict — before the customer even arrives for service —
+  exactly which customers are the hottest acquisition targets
+  and pre-brief the service advisor with equity amounts,
+  confidence scores, and recommended opening lines.
+
+**Additional data model for this flow:**
+
+- New column `submissions.verified_equity_amount` — the computed
+  equity at the time of payoff verification, stored so the UI can
+  display it without recomputing on every render
+- New column `submissions.equity_notified_at` — when we first
+  showed the customer their equity number (either via portal,
+  email, or service advisor handoff), so we can measure conversion
+  lift by time-from-notification
+- New notification trigger `customer_equity_opportunity` — fires
+  when verified equity crosses a dealer-configurable threshold
+  (default $2,500). Sends the customer an email + SMS inviting
+  them to learn more. Gated by TCPA opt-out + quiet hours like
+  every other customer-facing trigger.
+- New "Equity Opportunities" sidebar item in the Acquisition
+  group — a filtered view of service-drive submissions with
+  `verified_equity_amount > dealer_threshold` that haven't been
+  acted on yet. Priority-sorted by equity amount descending so
+  the UCM works the biggest fish first.
+
+**This turns DealerTrack integration from an "operational
+improvement" into a "core acquisition conversion engine."**
+The payoff verification isn't the product — the equity-mining
+loop it unlocks is the product. The integration should be
+planned and pitched with equity mining as the primary use case,
+not as a back-office workflow fix.
+
+---
+
 ## Prioritization
 
 If shipping one of these per sprint:
 
 1. **Photo Upload Encouragement (1-2 days)** — biggest revenue impact,
    zero new dependencies, pure frontend + one notification template.
-2. **Laser Tool QR Handoff — Phase 0 (1 day)** — zero-integration,
+2. **Start the DealerTrack Integrator Agreement paperwork (0 days
+   coding, ~3-6 weeks of Cox paperwork)** — this is on a parallel
+   track because Cox takes weeks to approve new partners, so the
+   paperwork has to start *now* even though no code ships until
+   credentials are issued. Do this the same day as item 1.
+3. **Laser Tool QR Handoff — Phase 0 (1 day)** — zero-integration,
    zero-hardware quick win that helps every dealer immediately.
-3. **Tekmetric Tread/Brake sync (2-3 days)** — needs a dev account but
-   is the biggest operational upgrade in inspection workflow for
-   dealers with shop management systems.
-4. **JumpStart TreadReader integration — Phase 1 (2 days + $950 hardware)**
-   — paired with Phase 0, closes the tread-capture loop without BLE
-   engineering on our side.
-5. **Innova Drivelink Pro — Phase 2 (1 day + $280 hardware)** — brake
-   data via OBD2, reuses the existing `receive-obd-scan` endpoint.
+4. **DealerTrack Payoff + Service-Drive Equity Mining (3-4 days
+   once credentials land)** — this is the highest-leverage
+   acquisition conversion feature in the entire queue. The
+   integration unlocks automated equity mining for every service
+   customer, which turns the existing service-drive channel from
+   "highest-quality leads" into "highest-converting leads." See
+   Item 4 for the full flow.
+5. **Tekmetric Tread/Brake sync (2-3 days)** — needs a dev account
+   but is the biggest operational upgrade in inspection workflow
+   for dealers with shop management systems.
+6. **JumpStart TreadReader integration — Phase 1 (2 days + $950
+   hardware)** — paired with Phase 0, closes the tread-capture loop
+   without BLE engineering on our side.
+7. **Innova Drivelink Pro — Phase 2 (1 day + $280 hardware)** —
+   brake data via OBD2, reuses the existing `receive-obd-scan`
+   endpoint.
 
-First four items ship within 1.5 weeks of calendar time if done
-sequentially. Full hardware stack (items 4 + 5) reaches every
-appraiser for ~$1,230 in per-seat hardware, roughly one-third the
-cost of the Snap-on equivalent.
+**Critical sequencing note:** DealerTrack paperwork should start the
+same day as the Photo Upload Encouragement build because Cox's
+integrator approval is the long-pole blocker. Everything else in the
+queue can ship immediately; DealerTrack is gated on a 3-6 week
+approval window that has nothing to do with engineering velocity.
+Start the paperwork, ship the other items in parallel, and have the
+integration ready to build the moment credentials arrive.
+
+The first three items ship within ~1 week of calendar time.
+Item 4 ships ~4-6 weeks out depending on DealerTrack approval.
+Full hardware stack (items 6 + 7) reaches every appraiser for
+~$1,230 in per-seat hardware, roughly one-third the cost of the
+Snap-on equivalent.
