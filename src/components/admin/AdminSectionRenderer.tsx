@@ -50,6 +50,7 @@ const WholesaleMarketplace = React.lazy(() => import("./WholesaleMarketplace"));
 const VautoIntegration = React.lazy(() => import("./VautoIntegration"));
 const IntegrationsStatus = React.lazy(() => import("./IntegrationsStatus"));
 const AppraiserQueue = React.lazy(() => import("./AppraiserQueue"));
+const PlatformSubscriptions = React.lazy(() => import("./PlatformSubscriptions"));
 
 class AdminErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -496,6 +497,11 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
       {activeSection === "integrations-status" && canManageAccess && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <IntegrationsStatus />
+        </React.Suspense>
+      )}
+      {activeSection === "platform-billing" && canManageAccess && (
+        <React.Suspense fallback={<AdminLoadingSkeleton />}>
+          <PlatformSubscriptions />
         </React.Suspense>
       )}
     </>
