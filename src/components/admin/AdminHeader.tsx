@@ -3,6 +3,9 @@ import { LogOut, Moon, Sun, Crown, Menu, PanelLeft } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { ROLE_LABELS } from "@/lib/adminConstants";
+import AppSwitcher from "@/components/platform/AppSwitcher";
+import { usePlatform } from "@/contexts/PlatformContext";
+import { Badge } from "@/components/ui/badge";
 
 interface AdminHeaderProps {
   darkMode: boolean;
@@ -11,11 +14,14 @@ interface AdminHeaderProps {
   onLogout: () => void;
   userName?: string;
   isPlatformAdmin?: boolean;
+  dealerName?: string;
 }
 
-const AdminHeader = ({ darkMode, setDarkMode, userRole, onLogout, userName, isPlatformAdmin }: AdminHeaderProps) => {
+const AdminHeader = ({ darkMode, setDarkMode, userRole, onLogout, userName, isPlatformAdmin, dealerName }: AdminHeaderProps) => {
   const { config } = useSiteConfig();
   const { toggleSidebar, isMobile } = useSidebar();
+  const { subscription, bundles } = usePlatform();
+  const currentBundle = bundles.find((b) => b.id === subscription?.bundle_id);
 
   const greeting = (() => {
     const h = new Date().getHours();
@@ -75,12 +81,37 @@ const AdminHeader = ({ darkMode, setDarkMode, userRole, onLogout, userName, isPl
           </div>
         </div>
         
-        <div className="flex items-center gap-1 md:gap-1.5 shrink-0">
+        <div className="flex items-center gap-1 md:gap-2 shrink-0">
+          {/* Dealer name + plan badge (desktop) */}
+          {(dealerName || currentBundle) && (
+            <div className="hidden md:flex items-center gap-2 pr-2 mr-1 border-r border-white/10">
+              {dealerName && (
+                <span className="text-[11px] text-white/60 font-medium truncate max-w-[160px]">
+                  {dealerName}
+                </span>
+              )}
+              {currentBundle && (
+                <Badge
+                  variant="outline"
+                  className="text-[9px] h-5 px-2 font-semibold border-white/20 text-white/80 bg-white/[0.08] uppercase tracking-wider"
+                >
+                  {currentBundle.name}
+                </Badge>
+              )}
+            </div>
+          )}
+
+          {/* App switcher — primary cross-product nav */}
+          <AppSwitcher currentApp="autocurb" />
+
+          <div className="hidden sm:block h-5 w-px bg-white/15 mx-0.5" />
+
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setDarkMode(!darkMode)}
             className="text-white/60 hover:text-white hover:bg-white/10 px-2 transition-all"
+            aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
           >
             {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </Button>
