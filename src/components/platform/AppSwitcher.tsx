@@ -27,19 +27,22 @@ const AppSwitcher = ({ currentApp = "autocurb" }: AppSwitcherProps) => {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-all duration-200 hover:bg-white/10 active:scale-[0.97] group">
-          <div className="w-6 h-6 rounded-md bg-white/15 flex items-center justify-center group-hover:bg-white/20 transition-colors">
-            <CurrentIcon className="w-3.5 h-3.5 text-white" />
+        <button
+          className="flex items-center gap-2 h-8 px-2.5 rounded-md transition-all duration-200 text-white/70 hover:text-white hover:bg-white/10 active:scale-[0.97] group"
+          aria-label="Switch product"
+        >
+          <div className="w-5 h-5 rounded-md bg-white/15 flex items-center justify-center group-hover:bg-white/25 transition-colors">
+            <CurrentIcon className="w-3 h-3 text-white" />
           </div>
-          <span className="text-xs font-semibold text-white/90 hidden sm:inline">
+          <span className="text-xs font-semibold hidden sm:inline">
             {currentProductData?.name || "Autocurb"}
           </span>
-          <ChevronDown className={`w-3 h-3 text-white/50 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+          <ChevronDown className={`w-3 h-3 text-white/60 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
         </button>
       </PopoverTrigger>
 
       <PopoverContent
-        align="start"
+        align="end"
         sideOffset={8}
         className="w-[360px] p-0 border-white/10 bg-card/95 backdrop-blur-xl shadow-2xl shadow-black/20 rounded-xl overflow-hidden"
       >

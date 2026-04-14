@@ -164,112 +164,137 @@ const OfferPage = () => {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     const fetchData = async () => {
-      if (!token) { setError("Invalid link."); setLoading(false); return; }
-      const { data, error: err } = await supabase.rpc("get_submission_portal", { _token: token });
-      if (err || !data || data.length === 0) { setError("Offer not found."); setLoading(false); return; }
-      const sub = data[0] as unknown as OfferSubmission;
+      if (!token) {
+        if (!cancelled) { setError("Invalid link."); setLoading(false); }
+        return;
+      }
+      try {
+        const { data, error: err } = await supabase.rpc("get_submission_portal", { _token: token });
+        if (cancelled) return;
+        if (err || !data || data.length === 0) {
+          setError("Offer not found.");
+          setLoading(false);
+          return;
+        }
+        const sub = data[0] as unknown as OfferSubmission;
 
-      const [condRes, apptRes, locRes] = await Promise.all([
-        supabase
-          .from("submissions")
-          .select("dealership_id, accidents, drivable, exterior_damage, interior_damage, mechanical_issues, engine_issues, tech_issues, smoked_in, tires_replaced, num_keys, windshield_damage, modifications, drivetrain, bb_msrp, bb_class_name, bb_drivetrain, bb_transmission, bb_fuel_type, bb_engine, bb_mileage_adj, bb_regional_adj, bb_base_whole_avg, bb_retail_avg, bb_wholesale_avg, bb_tradein_avg, bb_value_tiers, bb_add_deducts, bb_selected_options, ai_condition_score, ai_damage_summary")
-          .eq("token", token)
-          .maybeSingle(),
-        supabase
-          .from("appointments")
-          .select("preferred_date, preferred_time, store_location")
-          .eq("submission_token", token)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-        supabase
-          .from("dealership_locations")
-          .select("id, name, city, state, address")
-          .eq("is_active", true),
-      ]);
+        const [condRes, apptRes, locRes] = await Promise.all([
+          supabase
+            .from("submissions")
+            .select("dealership_id, accidents, drivable, exterior_damage, interior_damage, mechanical_issues, engine_issues, tech_issues, smoked_in, tires_replaced, num_keys, windshield_damage, modifications, drivetrain, bb_msrp, bb_class_name, bb_drivetrain, bb_transmission, bb_fuel_type, bb_engine, bb_mileage_adj, bb_regional_adj, bb_base_whole_avg, bb_retail_avg, bb_wholesale_avg, bb_tradein_avg, bb_value_tiers, bb_add_deducts, bb_selected_options, ai_condition_score, ai_damage_summary")
+            .eq("token", token)
+            .maybeSingle(),
+          supabase
+            .from("appointments")
+            .select("preferred_date, preferred_time, store_location")
+            .eq("submission_token", token)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+          supabase
+            .from("dealership_locations")
+            .select("id, name, city, state, address")
+            .eq("is_active", true),
+        ]);
+        if (cancelled) return;
 
-      const conditionData = condRes.data as ConditionDetails | null;
-      const pricingRes = await resolveEffectiveSettings(conditionData?.dealership_id || "default");
+        const conditionData = condRes.data as ConditionDetails | null;
+        const pricingRes = await resolveEffectiveSettings(conditionData?.dealership_id || "default");
+        if (cancelled) return;
 
-      let nextSubmission = sub;
-      let nextCondition = conditionData;
+        let nextSubmission = sub;
+        let nextCondition = conditionData;
 
-      if (conditionData) {
-        const selectedOptions = parseStoredJson<string[]>(conditionData.bb_selected_options, []);
-        const resolvedBBVehicle = buildStoredBBVehicle({ ...sub, ...conditionData });
+        if (conditionData) {
+          const selectedOptions = parseStoredJson<string[]>(conditionData.bb_selected_options, []);
+          const resolvedBBVehicle = buildStoredBBVehicle({ ...sub, ...conditionData });
 
-        if (resolvedBBVehicle) {
-          const estimate = calculateOffer(
-            resolvedBBVehicle,
-            buildOfferFormData({ ...sub, ...conditionData }),
-            selectedOptions,
-            pricingRes.settings,
-            pricingRes.rules,
-            undefined, // promoBonus
-            undefined, // marketDaysSupply
-            undefined, // marketSoldAvg
-            undefined, // marketAskingAvg
-            conditionData.ai_condition_score,
-            conditionData.ai_damage_summary,
-          );
+          if (resolvedBBVehicle) {
+            const estimate = calculateOffer(
+              resolvedBBVehicle,
+              buildOfferFormData({ ...sub, ...conditionData }),
+              selectedOptions,
+              pricingRes.settings,
+              pricingRes.rules,
+              undefined, // promoBonus
+              undefined, // marketDaysSupply
+              undefined, // marketSoldAvg
+              undefined, // marketAskingAvg
+              conditionData.ai_condition_score,
+              conditionData.ai_damage_summary,
+            );
 
-          if (estimate) {
-            const bbPayload = buildSubmissionBBPayload(resolvedBBVehicle);
-            const needsRefresh =
-              estimate.high !== sub.estimated_offer_high ||
-              estimate.low !== sub.estimated_offer_low ||
-              bbPayload.bb_tradein_avg !== sub.bb_tradein_avg ||
-              typeof conditionData.bb_value_tiers === "string" ||
-              typeof conditionData.bb_add_deducts === "string";
+            if (estimate) {
+              const bbPayload = buildSubmissionBBPayload(resolvedBBVehicle);
+              const needsRefresh =
+                estimate.high !== sub.estimated_offer_high ||
+                estimate.low !== sub.estimated_offer_low ||
+                bbPayload.bb_tradein_avg !== sub.bb_tradein_avg ||
+                typeof conditionData.bb_value_tiers === "string" ||
+                typeof conditionData.bb_add_deducts === "string";
 
-            if (needsRefresh) {
-              await supabase
-                .from("submissions")
-                .update({
+              if (needsRefresh) {
+                // Persist refreshed pricing but don't block rendering if it fails.
+                const { error: updateErr } = await supabase
+                  .from("submissions")
+                  .update({
+                    estimated_offer_low: estimate.low,
+                    estimated_offer_high: estimate.high,
+                    ...bbPayload,
+                  } as any)
+                  .eq("token", token);
+                if (updateErr) {
+                  console.error("[OfferPage] failed to persist refreshed pricing", updateErr);
+                }
+                if (cancelled) return;
+
+                nextSubmission = {
+                  ...sub,
                   estimated_offer_low: estimate.low,
                   estimated_offer_high: estimate.high,
+                  bb_tradein_avg: bbPayload.bb_tradein_avg,
+                  bb_wholesale_avg: bbPayload.bb_wholesale_avg,
+                  bb_retail_avg: bbPayload.bb_retail_avg,
+                  bb_mileage_adj: bbPayload.bb_mileage_adj,
+                  bb_base_whole_avg: bbPayload.bb_base_whole_avg,
+                };
+                nextCondition = {
+                  ...conditionData,
                   ...bbPayload,
-                } as any)
-                .eq("token", token);
-
-              nextSubmission = {
-                ...sub,
-                estimated_offer_low: estimate.low,
-                estimated_offer_high: estimate.high,
-                bb_tradein_avg: bbPayload.bb_tradein_avg,
-                bb_wholesale_avg: bbPayload.bb_wholesale_avg,
-                bb_retail_avg: bbPayload.bb_retail_avg,
-                bb_mileage_adj: bbPayload.bb_mileage_adj,
-                bb_base_whole_avg: bbPayload.bb_base_whole_avg,
-              };
-              nextCondition = {
-                ...conditionData,
-                ...bbPayload,
-              };
+                };
+              }
             }
           }
         }
-      }
 
-      setSubmission(nextSubmission);
-      if (nextCondition) setCondition(nextCondition);
-      if (pricingRes.settings) setOfferSettings(pricingRes.settings);
-      if (pricingRes.rules) setOfferRules(pricingRes.rules);
-      if (apptRes.data) setAppointment(apptRes.data as { preferred_date: string; preferred_time: string; store_location: string | null });
-      if (locRes.data) setDealerLocations(locRes.data as any);
-      setLoading(false);
+        if (cancelled) return;
+        setSubmission(nextSubmission);
+        if (nextCondition) setCondition(nextCondition);
+        if (pricingRes.settings) setOfferSettings(pricingRes.settings);
+        if (pricingRes.rules) setOfferRules(pricingRes.rules);
+        if (apptRes.data) setAppointment(apptRes.data as { preferred_date: string; preferred_time: string; store_location: string | null });
+        if (locRes.data) setDealerLocations(locRes.data as any);
+        setLoading(false);
 
-      // Track offer viewed
-      const finalOffer = (!nextSubmission.progress_status || !LOCKED_OFFER_STATUSES.has(nextSubmission.progress_status))
-        ? (nextSubmission.estimated_offer_high ?? nextSubmission.offered_price ?? 0)
-        : (nextSubmission.offered_price ?? 0);
-      const vStr = [nextSubmission.vehicle_year, nextSubmission.vehicle_make, nextSubmission.vehicle_model].filter(Boolean).join(" ");
-      if (finalOffer > 0) {
-        track('offer_viewed', { amount: finalOffer, vehicleStr: vStr });
+        // Track offer viewed
+        const finalOffer = (!nextSubmission.progress_status || !LOCKED_OFFER_STATUSES.has(nextSubmission.progress_status))
+          ? (nextSubmission.estimated_offer_high ?? nextSubmission.offered_price ?? 0)
+          : (nextSubmission.offered_price ?? 0);
+        const vStr = [nextSubmission.vehicle_year, nextSubmission.vehicle_make, nextSubmission.vehicle_model].filter(Boolean).join(" ");
+        if (finalOffer > 0) {
+          track('offer_viewed', { amount: finalOffer, vehicleStr: vStr });
+        }
+      } catch (e) {
+        if (cancelled) return;
+        console.error("[OfferPage] fetchData failed", e);
+        setError("We couldn't load your offer right now. Please try again in a moment.");
+        setLoading(false);
       }
     };
     fetchData();
+    return () => { cancelled = true; };
   }, [token]);
 
   /* ─── Inline edit handler: update condition + recalculate ─── */
@@ -370,9 +395,18 @@ const OfferPage = () => {
         </div>
         <h1 className="text-xl font-extrabold text-foreground mb-2 tracking-tight">Offer Not Available</h1>
         <p className="text-sm text-muted-foreground">{error || "No offer has been made yet."}</p>
-        <Link to="/my-submission" className="inline-flex items-center gap-1.5 text-primary font-semibold mt-4 text-sm hover:underline">
-          Check your submission <ArrowRight className="w-3.5 h-3.5" />
-        </Link>
+        <div className="mt-4 flex items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            Try again
+          </button>
+          <Link to="/my-submission" className="inline-flex items-center gap-1.5 text-primary font-semibold text-sm hover:underline">
+            Check your submission <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
       </div>
     </div>
   );

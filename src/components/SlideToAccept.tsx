@@ -19,6 +19,8 @@ const SlideToAccept = ({ onAccept, label = "Slide to Accept" }: SlideToAcceptPro
 
   const bgOpacity = useTransform(x, [0, 200], [0.3, 1]);
   const textOpacity = useTransform(x, [0, 100], [1, 0]);
+  // Hoisted out of JSX so all hooks run unconditionally (rules-of-hooks)
+  const fillScaleX = useTransform(x, [0, 300], [0.15, 1]);
 
   const handleDragEnd = () => {
     const maxX = getMaxX();
@@ -57,7 +59,7 @@ const SlideToAccept = ({ onAccept, label = "Slide to Accept" }: SlideToAcceptPro
           backgroundColor: "hsl(var(--cta-accept))",
           opacity: bgOpacity,
           originX: 0,
-          scaleX: useTransform(x, [0, 300], [0.15, 1]),
+          scaleX: fillScaleX,
         }}
       />
 

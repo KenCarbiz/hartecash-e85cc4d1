@@ -8,7 +8,6 @@ import AdminSectionRenderer from "@/components/admin/AdminSectionRenderer";
 import RequestAccessDialog from "@/components/admin/RequestAccessDialog";
 import SubmissionDetailSheet from "@/components/admin/SubmissionDetailSheet";
 import TenantViewBanner from "@/components/admin/TenantViewBanner";
-import PlatformHeader from "@/components/platform/PlatformHeader";
 import { PlatformProvider } from "@/contexts/PlatformContext";
 import { useAdminDashboard } from "@/hooks/useAdminDashboard";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
@@ -33,8 +32,6 @@ const AdminDashboard = () => {
   return (
     <PlatformProvider>
     <SidebarProvider>
-      {/* Platform-wide app-switching header bar */}
-      <PlatformHeader dealerName={db.tenant.display_name} />
       {/* Tenant View banner — non-dismissible red banner that shows whenever
           a Super Admin is viewing another tenant's data. Lives outside the
           flex container so it spans the full viewport width above the
@@ -68,6 +65,7 @@ const AdminDashboard = () => {
             setDarkMode={db.setDarkMode}
             userRole={db.userRole}
             userName={db.userName}
+            dealerName={db.tenant.display_name}
             isPlatformAdmin={db.userRole === "admin" && db.tenant.dealership_id === "default"}
             onLogout={async () => {
               await supabase.auth.signOut();

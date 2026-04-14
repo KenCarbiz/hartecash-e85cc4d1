@@ -6,6 +6,7 @@ import { useStaffPermissions } from "@/hooks/useStaffPermissions";
 import { useTenant } from "@/contexts/TenantContext";
 import type { Submission, DealerLocation, Appointment } from "@/lib/adminConstants";
 import { ROLE_LABELS, PAGE_SIZE, getStatusLabel, isPricingRole, isApprovalRole } from "@/lib/adminConstants";
+import { safeInvoke } from "@/lib/safeInvoke";
 
 export interface PendingRequest {
   id: string;
@@ -375,13 +376,13 @@ export function useAdminDashboard() {
           performed_by: auditLabel,
         });
         if (old !== "purchase_complete" && newStatus === "purchase_complete")
-          supabase.functions.invoke("send-notification", { body: { trigger_key: "staff_deal_completed", submission_id: sub.id } }).catch(console.error);
-        supabase.functions.invoke("send-notification", { body: { trigger_key: "status_change", submission_id: sub.id } }).catch(console.error);
+          safeInvoke("send-notification", { body: { trigger_key: "staff_deal_completed", submission_id: sub.id }, context: { from: "useAdminDashboard.updateStatus", old, newStatus } });
+        safeInvoke("send-notification", { body: { trigger_key: "status_change", submission_id: sub.id }, context: { from: "useAdminDashboard.updateStatus", old, newStatus } });
         // Fire customer status notifications for key milestones
         if (newStatus === "offer_made" && old !== "offer_made")
-          supabase.functions.invoke("send-notification", { body: { trigger_key: "customer_offer_ready", submission_id: sub.id } }).catch(console.error);
+          safeInvoke("send-notification", { body: { trigger_key: "customer_offer_ready", submission_id: sub.id }, context: { from: "useAdminDashboard.updateStatus" } });
         if (newStatus === "purchase_complete" && old !== "purchase_complete")
-          supabase.functions.invoke("send-notification", { body: { trigger_key: "customer_deal_completed", submission_id: sub.id } }).catch(console.error);
+          safeInvoke("send-notification", { body: { trigger_key: "customer_deal_completed", submission_id: sub.id }, context: { from: "useAdminDashboard.updateStatus" } });
         toast({ title: "Status updated" });
       }
     },
