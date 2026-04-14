@@ -1,8 +1,14 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { usePlatform } from "@/contexts/PlatformContext";
 import type { PlatformProductTier } from "@/contexts/PlatformContext";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import PricingPlanPicker, { type PlanSelection } from "@/components/platform/PricingPlanPicker";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -18,6 +24,8 @@ import {
   CreditCard,
   Zap,
   Gift,
+  ChevronDown,
+  Pencil,
 } from "lucide-react";
 
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -39,6 +47,9 @@ const PlatformSubscriptions = () => {
   const { products, tiers, subscription, hasProduct, getActiveTier, entitledTierIds } = usePlatform();
   const { tenant } = useTenant();
   const { toast } = useToast();
+  // "Change plan" is collapsed by default — admins arrive here to see
+  // current status, not reshop. Opens only when they explicitly ask.
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const activeProducts = products
     .filter((p) => p.is_active)
@@ -213,28 +224,59 @@ const PlatformSubscriptions = () => {
         </CardContent>
       </Card>
 
-      {/* Shared plan picker */}
-      <PricingPlanPicker
-        initialSelection={
-          subscription?.bundle_id
-            ? {
-                kind: "bundle",
-                bundleId: subscription.bundle_id,
-                cycle: (subscription.billing_cycle as "monthly" | "annual") ?? "monthly",
-                rooftopCount: subscription.rooftop_count ?? 1,
-              }
-            : subscription?.tier_ids && subscription.tier_ids.length > 0
-              ? {
-                  kind: "tiers",
-                  tierIds: subscription.tier_ids,
-                  cycle: (subscription.billing_cycle as "monthly" | "annual") ?? "monthly",
-                  rooftopCount: subscription.rooftop_count ?? 1,
-                }
-              : undefined
-        }
-        ctaLabel="Save plan"
-        onConfirm={saveSelection}
-      />
+      {/* Change plan — collapsed by default so admins see the current-plan
+          snapshot first, not a wall of pricing cards. */}
+      <Collapsible open={pickerOpen} onOpenChange={setPickerOpen}>
+        <div className="flex items-center justify-between rounded-xl border border-border/50 bg-gradient-to-br from-muted/30 to-muted/10 px-4 py-3">
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-card-foreground leading-tight">
+              {subscription ? "Change your plan" : "Pick a starting plan"}
+            </p>
+            <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+              {pickerOpen
+                ? "Browse bundles, pick one tier per app, or contact enterprise sales."
+                : "Open the picker to switch tiers, upgrade, or start a dealer-group conversation."}
+            </p>
+          </div>
+          <CollapsibleTrigger asChild>
+            <Button size="sm" variant={pickerOpen ? "outline" : "default"} className="shrink-0 ml-3">
+              <Pencil className="w-3.5 h-3.5 mr-1.5" />
+              {pickerOpen ? "Close" : subscription ? "Change plan" : "Choose plan"}
+              <ChevronDown
+                className={`w-3.5 h-3.5 ml-1.5 transition-transform ${pickerOpen ? "rotate-180" : ""}`}
+              />
+            </Button>
+          </CollapsibleTrigger>
+        </div>
+
+        <CollapsibleContent className="pt-6 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0">
+          <PricingPlanPicker
+            variant="full"
+            initialSelection={
+              subscription?.bundle_id
+                ? {
+                    kind: "bundle",
+                    bundleId: subscription.bundle_id,
+                    cycle: (subscription.billing_cycle as "monthly" | "annual") ?? "monthly",
+                    rooftopCount: subscription.rooftop_count ?? 1,
+                  }
+                : subscription?.tier_ids && subscription.tier_ids.length > 0
+                  ? {
+                      kind: "tiers",
+                      tierIds: subscription.tier_ids,
+                      cycle: (subscription.billing_cycle as "monthly" | "annual") ?? "monthly",
+                      rooftopCount: subscription.rooftop_count ?? 1,
+                    }
+                  : undefined
+            }
+            ctaLabel="Save plan"
+            onConfirm={async (s) => {
+              await saveSelection(s);
+              setPickerOpen(false);
+            }}
+          />
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 };
