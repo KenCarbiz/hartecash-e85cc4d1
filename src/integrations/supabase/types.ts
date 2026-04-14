@@ -320,6 +320,53 @@ export type Database = {
         }
         Relationships: []
       }
+      dealer_subscriptions: {
+        Row: {
+          billing_cycle: string
+          bundle_id: string | null
+          created_at: string
+          dealership_id: string
+          id: string
+          monthly_amount: number | null
+          product_ids: string[]
+          status: string
+          trial_ends_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          billing_cycle?: string
+          bundle_id?: string | null
+          created_at?: string
+          dealership_id?: string
+          id?: string
+          monthly_amount?: number | null
+          product_ids?: string[]
+          status?: string
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          billing_cycle?: string
+          bundle_id?: string | null
+          created_at?: string
+          dealership_id?: string
+          id?: string
+          monthly_amount?: number | null
+          product_ids?: string[]
+          status?: string
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dealer_subscriptions_bundle_id_fkey"
+            columns: ["bundle_id"]
+            isOneToOne: false
+            referencedRelation: "platform_bundles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dealership_locations: {
         Row: {
           about_hero_headline: string | null
@@ -1451,6 +1498,81 @@ export type Database = {
           label?: string
           orientation?: string
           shot_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      platform_bundles: {
+        Row: {
+          annual_price: number | null
+          created_at: string
+          description: string
+          id: string
+          is_featured: boolean
+          monthly_price: number
+          name: string
+          product_ids: string[]
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          annual_price?: number | null
+          created_at?: string
+          description?: string
+          id?: string
+          is_featured?: boolean
+          monthly_price?: number
+          name: string
+          product_ids?: string[]
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          annual_price?: number | null
+          created_at?: string
+          description?: string
+          id?: string
+          is_featured?: boolean
+          monthly_price?: number
+          name?: string
+          product_ids?: string[]
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      platform_products: {
+        Row: {
+          base_url: string
+          created_at: string
+          description: string
+          icon_name: string
+          id: string
+          is_active: boolean
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          base_url?: string
+          created_at?: string
+          description?: string
+          icon_name?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          base_url?: string
+          created_at?: string
+          description?: string
+          icon_name?: string
+          id?: string
+          is_active?: boolean
+          name?: string
           sort_order?: number
           updated_at?: string
         }
