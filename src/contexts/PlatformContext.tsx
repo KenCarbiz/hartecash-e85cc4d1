@@ -69,7 +69,7 @@ export const PlatformProvider = ({ children }: { children: ReactNode }) => {
             .order("sort_order"),
           supabase
             .from("platform_product_tiers" as unknown as "platform_bundles")
-            .select("id, product_id, name, description, monthly_price, annual_price, features, inventory_limit, included_with_product_ids, is_introductory, is_active, sort_order")
+            .select("id, product_id, name, description, monthly_price, annual_price, features, inventory_limit, included_with_product_ids, is_introductory, is_active, sort_order, allow_overage, overage_price_per_unit")
             .order("sort_order"),
           supabase
             .from("dealer_subscriptions")

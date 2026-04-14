@@ -49,10 +49,13 @@ const PlatformSubscriptions = () => {
   // row the account manager works from.
   const saveSelection = useCallback(
     async (selection: PlanSelection) => {
+      const cycle =
+        selection.kind !== "enterprise" && selection.cycle === "annual" ? "annual" : "monthly";
       const base = {
         dealership_id: tenant.dealership_id,
         status: "trial" as const,
-        billing_cycle: selection.cycle === "annual" ? "annual" : "monthly",
+        billing_cycle: cycle,
+        rooftop_count: Math.max(1, selection.rooftopCount ?? 1),
         updated_at: new Date().toISOString(),
       };
       const payload =
@@ -214,9 +217,19 @@ const PlatformSubscriptions = () => {
       <PricingPlanPicker
         initialSelection={
           subscription?.bundle_id
-            ? { kind: "bundle", bundleId: subscription.bundle_id, cycle: (subscription.billing_cycle as "monthly" | "annual") ?? "monthly" }
+            ? {
+                kind: "bundle",
+                bundleId: subscription.bundle_id,
+                cycle: (subscription.billing_cycle as "monthly" | "annual") ?? "monthly",
+                rooftopCount: subscription.rooftop_count ?? 1,
+              }
             : subscription?.tier_ids && subscription.tier_ids.length > 0
-              ? { kind: "tiers", tierIds: subscription.tier_ids, cycle: (subscription.billing_cycle as "monthly" | "annual") ?? "monthly" }
+              ? {
+                  kind: "tiers",
+                  tierIds: subscription.tier_ids,
+                  cycle: (subscription.billing_cycle as "monthly" | "annual") ?? "monthly",
+                  rooftopCount: subscription.rooftop_count ?? 1,
+                }
               : undefined
         }
         ctaLabel="Save plan"

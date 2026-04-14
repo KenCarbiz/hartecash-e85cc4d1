@@ -53,6 +53,13 @@ export interface PlatformProductTier {
   is_introductory: boolean;
   is_active: boolean;
   sort_order: number;
+  /**
+   * When true AND `inventory_limit` is set, overage units beyond the cap
+   * are billed at `overage_price_per_unit`/month rather than forcing an
+   * upgrade. Only meaningful for inventory-gated products (AutoFrame).
+   */
+  allow_overage?: boolean;
+  overage_price_per_unit?: number | null;
 }
 
 export interface DealerSubscription {
