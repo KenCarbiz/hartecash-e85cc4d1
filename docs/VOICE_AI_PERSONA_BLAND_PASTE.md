@@ -170,11 +170,50 @@ RULE 7 — If there is NO written competitor offer:
 
 # APPOINTMENT SCHEDULING
 - Offer morning or afternoon slots this week first.
-- Ask for a date + time window.
-- Confirm what they'll need to bring: driver's license, title (if owned
-  outright) or current loan payoff info, keys, registration.
+- Ask for a specific date AND a specific time (e.g. "Tuesday at 10
+  AM"). Do not accept vague answers like "sometime this week".
+- Ask which Harte Auto Group location works best. The options are:
+  Harte Nissan (Hartford), Harte Infiniti (Hartford), George Harte
+  Nissan (West Haven), George Harte Infiniti (Wallingford), or Harte
+  Hyundai (Old Saybrook). Pick whichever is closest to the customer.
+- Confirm what they'll need to bring: driver's license, title (if
+  owned outright) or current loan payoff info, all keys, registration.
 - Confirm the appointment phone number and email are correct.
-- Tell them a confirmation email/text is coming.
+
+# BOOKING THE APPOINTMENT — CALL THE `book_appointment` TOOL
+When, and ONLY when, you have confirmed all three of these from the
+customer:
+  (a) a specific calendar date,
+  (b) a specific time, AND
+  (c) a specific Harte Auto Group location,
+you MUST call the `book_appointment` tool to write the appointment
+into the dealership's system. Do not just verbally agree and move on
+— the appointment is not real until the tool call succeeds.
+
+Choose the `reason` value based on why they're coming in:
+- `initial_appointment` — customer accepted the online offer and is
+  coming in to finalize and get paid.
+- `finalize_deal` — customer agreed on this call (on the phone) and
+  is coming in to complete paperwork and collect the check.
+- `inspection_to_firm_offer` — customer is close but we need to see
+  the vehicle in person before committing to a final number (e.g.
+  their described condition is borderline, or they want a bump we
+  can't authorize over the phone).
+
+Before calling the tool, quickly read the details back to the
+customer to confirm: "Just to confirm — Tuesday, April 22nd at 10 AM
+at Harte Nissan in Hartford. Does that all sound right?"
+
+After the tool returns successfully, read back the confirmation
+number and the `message` field it returns. Example: "Perfect, you're
+all set. I've got you confirmed for Tuesday, April 22nd at 10 AM at
+Harte Nissan in Hartford. Your confirmation number is 7F3A9C1B. A
+text and email are on the way with what to bring."
+
+If the tool returns an error (any non-success response), do NOT
+pretend it worked. Say: "I'm having trouble locking that in from my
+end — let me connect you with our team so they can get this
+scheduled for you right now." Then TRANSFER to 203-509-5054.
 
 # HARD RULES — NEVER VIOLATE
 - If the customer says ANY of: "stop", "stop calling", "remove me",
@@ -431,12 +470,121 @@ Before transferring, Riley should always say:
 Never transfer silently. Never cold-drop the call.
 ```
 
-### Tools section
+### Tools section — add ONE tool: `book_appointment`
 
-Leave empty for v1. No custom tools are required for the MVP persona.
-When you're ready to add structured actions (book appointment, send
-SMS confirmation, update CRM), come back here and wire them to the
-existing Supabase edge functions.
+This is the tool Riley uses to actually **book the appointment into
+the customer file** when a customer agrees on date + time + location
+during the call. The endpoint lives in the repo at
+`supabase/functions/book-appointment/index.ts`.
+
+On the KNOWLEDGE tab → Tools → **Manage Tools** → **+ New Tool**:
+
+| Field in UI | Paste this |
+|---|---|
+| **Tool name** | `book_appointment` |
+| **Description** (what Riley reads to decide when to call it) | `Books a confirmed in-person appointment at a Harte Auto Group location after the customer has agreed on a specific date, specific time, and specific store location. Call this ONLY when all three are confirmed by the customer — do not call with placeholder values. Returns a confirmation number to read back to the customer.` |
+| **Method** | `POST` |
+| **URL** | `https://<YOUR-SUPABASE-PROJECT-REF>.supabase.co/functions/v1/book-appointment` |
+| **Headers** | Add one header: `x-webhook-secret` = `<BLAND_WEBHOOK_SECRET value>` (same secret you're using for the voice-call-webhook) |
+| **Timeout** | 15 seconds |
+| **Speak while waiting** | `Let me lock that in for you — one second…` |
+
+#### Request body schema — paste as JSON into the tool's "Body" / "Schema" field
+
+```json
+{
+  "type": "object",
+  "required": ["appointment_date", "appointment_time", "location_name"],
+  "properties": {
+    "submission_id": {
+      "type": "string",
+      "description": "The submission UUID if known — passed via Bland request_data when the call was launched. Leave empty if unknown; the tool will fall back to looking up by customer_phone."
+    },
+    "submission_token": {
+      "type": "string",
+      "description": "Alternative to submission_id — the short URL token for the offer page. Optional."
+    },
+    "customer_phone": {
+      "type": "string",
+      "description": "The phone number we are calling. Used as the fallback to find the submission if submission_id is not available. Format: E.164 like +18605063092."
+    },
+    "customer_name": {
+      "type": "string",
+      "description": "Customer's full name as they stated it on the call (optional — defaults to what's on file)."
+    },
+    "customer_email": {
+      "type": "string",
+      "description": "Customer's email if confirmed on the call (optional — defaults to what's on file)."
+    },
+    "appointment_date": {
+      "type": "string",
+      "description": "Date the customer is coming in. Prefer ISO YYYY-MM-DD. Natural language like 'April 22, 2026' is accepted. Must NOT be in the past."
+    },
+    "appointment_time": {
+      "type": "string",
+      "description": "Time the customer is coming in. Accepts '10am', '10:00 AM', '2:30 PM'. Will be normalized to 'H:MM AM/PM'."
+    },
+    "location_name": {
+      "type": "string",
+      "description": "Harte Auto Group location the customer chose. One of: 'Harte Nissan' (Hartford), 'Harte Infiniti' (Hartford), 'George Harte Nissan' (West Haven), 'George Harte Infiniti' (Wallingford), or 'Harte Hyundai' (Old Saybrook). Partial names are OK — the tool fuzzy-matches."
+    },
+    "reason": {
+      "type": "string",
+      "enum": ["initial_appointment", "finalize_deal", "inspection_to_firm_offer", "reappraisal"],
+      "description": "Why the customer is coming in. 'initial_appointment' = customer already accepted online offer, coming in to finalize. 'finalize_deal' = customer agreed on the Riley call, coming in to complete paperwork & get paid. 'inspection_to_firm_offer' = customer is close, needs in-person appraisal to firm up the final number."
+    },
+    "notes": {
+      "type": "string",
+      "description": "Any extra context from the call the sales team should see (e.g. 'customer said the AC is weak', 'has a loan payoff with Ally')."
+    },
+    "vehicle_info": {
+      "type": "string",
+      "description": "Short vehicle descriptor. Optional — defaults to submission's year/make/model."
+    },
+    "call_log_id": {
+      "type": "string",
+      "description": "The voice_call_log UUID from Bland's metadata, passed via request_data when the call was launched. Optional but recommended — links the appointment to the exact call recording."
+    }
+  }
+}
+```
+
+#### Response shape (what Riley gets back, to speak to the customer)
+
+```json
+{
+  "success": true,
+  "confirmation_number": "7F3A9C1B",
+  "appointment_id": "a1b2c3d4-...",
+  "appointment": {
+    "date": "2026-04-22",
+    "time": "10:00 AM",
+    "location": "Harte Nissan, Hartford, CT",
+    "reason": "initial_appointment"
+  },
+  "message": "You're all set. I've got you confirmed for Wednesday, April 22 at 10:00 AM at Harte Nissan, Hartford, CT. Your confirmation number is 7F3A9C1B. A text and email are on the way with what to bring. See you then!"
+}
+```
+
+On failure the response includes `{ "error": "...", "missing": [...] }`.
+Riley should NOT try to invent a success in that case — she should
+apologize and offer to transfer to a human.
+
+#### Credentials to give Bland.ai — checklist
+
+1. **Endpoint URL:** `https://<YOUR-SUPABASE-PROJECT-REF>.supabase.co/functions/v1/book-appointment`
+   (get `<YOUR-SUPABASE-PROJECT-REF>` from `.env` → `VITE_SUPABASE_URL`, it's the subdomain part)
+2. **Auth header:** `x-webhook-secret: <value of BLAND_WEBHOOK_SECRET>`
+   (same Supabase function secret you already use for `voice-call-webhook`)
+3. **Test payload:** the JSON example above with a real submission ID from your DB.
+
+To deploy the function:
+
+```sh
+# from repo root
+supabase functions deploy book-appointment
+supabase secrets set BLAND_WEBHOOK_SECRET=<your-long-random-secret>
+```
 
 ### Learning Opportunities (Beta)
 
@@ -686,6 +834,24 @@ your own cell phone. Each scenario should pass before production.
 10. **Webhook round-trip.** After a test call, verify a new row
     lands in `voice_call_log` with `summary`, `transcript`, and
     extracted `outcome` populated.
+10a. **book_appointment tool-call.** Run a test call where you agree
+    on "Tuesday 10 AM at Harte Nissan". Verify: (i) a row lands in
+    `appointments` with `preferred_date`/`preferred_time` correctly
+    normalized, (ii) the parent `submissions` row flips
+    `progress_status` to `appointment_scheduled`, (iii) an
+    `activity_log` row with action `appointment_scheduled_by_voice_ai`
+    exists, (iv) Riley reads the returned confirmation number back on
+    the call. Then immediately book the SAME slot again to confirm
+    idempotency — response should include `"idempotent": true` and
+    NO second row should be inserted.
+10b. **Fuzzy location match.** During a test call, say "the Nissan
+    store in Hartford" instead of "Harte Nissan". Tool should still
+    resolve it to the correct `dealership_locations` row.
+10c. **Booking failure fallback.** Temporarily misconfigure the
+    `x-webhook-secret` in the Bland.ai tool (use a wrong value). On a
+    test call, when Riley tries to book, the tool returns 401 and
+    Riley should say "I'm having trouble locking that in from my
+    end — let me connect you with our team" and transfer.
 11. **Voicemail.** Let the test go to voicemail — Riley should leave
     the voicemail script above, not the full opening.
 12. **Calling-hours block.** Manually call the `launch-voice-call`
