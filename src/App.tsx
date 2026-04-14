@@ -9,6 +9,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { pageView } from "@/lib/analytics";
+import AppErrorBoundary from "@/components/AppErrorBoundary";
 const Index = lazy(() => import("./pages/Index"));
 
 const UploadPhotos = lazy(() => import("./pages/UploadPhotos"));
@@ -138,22 +139,24 @@ const AnimatedRoutes = () => {
 };
 
 const App = () => (
-  <HelmetProvider>
-  <QueryClientProvider client={queryClient}>
-    <TenantProvider>
-      <ThemeProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <RouteTracker />
-            <AnimatedRoutes />
-          </BrowserRouter>
-        </TooltipProvider>
-      </ThemeProvider>
-    </TenantProvider>
-  </QueryClientProvider>
-  </HelmetProvider>
+  <AppErrorBoundary>
+    <HelmetProvider>
+    <QueryClientProvider client={queryClient}>
+      <TenantProvider>
+        <ThemeProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <RouteTracker />
+              <AnimatedRoutes />
+            </BrowserRouter>
+          </TooltipProvider>
+        </ThemeProvider>
+      </TenantProvider>
+    </QueryClientProvider>
+    </HelmetProvider>
+  </AppErrorBoundary>
 );
 
 export default App;
