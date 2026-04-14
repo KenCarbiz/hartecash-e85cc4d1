@@ -7,6 +7,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { safeInvoke } from "@/lib/safeInvoke";
 import { formatPhone } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -495,24 +496,25 @@ const SubmissionDetailSheet = ({
       }
       // Notifications
       if (selected) {
+        const ctx = { from: "SubmissionDetailSheet.save", submission_id: sub.id } as const;
         if (!selected.offered_price && sub.offered_price) {
-          supabase.functions.invoke("send-notification", { body: { trigger_key: "customer_offer_ready", submission_id: sub.id } }).catch(console.error);
+          safeInvoke("send-notification", { body: { trigger_key: "customer_offer_ready", submission_id: sub.id }, context: ctx });
         }
         if (selected.offered_price && sub.offered_price && sub.offered_price > selected.offered_price) {
-          supabase.functions.invoke("send-notification", { body: { trigger_key: "customer_offer_increased", submission_id: sub.id } }).catch(console.error);
+          safeInvoke("send-notification", { body: { trigger_key: "customer_offer_increased", submission_id: sub.id }, context: ctx });
         }
         if (selected.progress_status !== "purchase_complete" && sub.progress_status === "purchase_complete") {
-          supabase.functions.invoke("send-notification", { body: { trigger_key: "staff_deal_completed", submission_id: sub.id } }).catch(console.error);
-          supabase.functions.invoke("send-notification", { body: { trigger_key: "customer_purchase_complete", submission_id: sub.id } }).catch(console.error);
+          safeInvoke("send-notification", { body: { trigger_key: "staff_deal_completed", submission_id: sub.id }, context: ctx });
+          safeInvoke("send-notification", { body: { trigger_key: "customer_purchase_complete", submission_id: sub.id }, context: ctx });
         }
         if (selected.progress_status !== "inspection_completed" && sub.progress_status === "inspection_completed") {
-          supabase.functions.invoke("send-notification", { body: { trigger_key: "customer_inspection_complete", submission_id: sub.id } }).catch(console.error);
+          safeInvoke("send-notification", { body: { trigger_key: "customer_inspection_complete", submission_id: sub.id }, context: ctx });
         }
         if (selected.progress_status !== "check_request_submitted" && sub.progress_status === "check_request_submitted") {
-          supabase.functions.invoke("send-notification", { body: { trigger_key: "customer_check_ready", submission_id: sub.id } }).catch(console.error);
+          safeInvoke("send-notification", { body: { trigger_key: "customer_check_ready", submission_id: sub.id }, context: ctx });
         }
         if (selected.progress_status !== sub.progress_status) {
-          supabase.functions.invoke("send-notification", { body: { trigger_key: "status_change", submission_id: sub.id } }).catch(console.error);
+          safeInvoke("send-notification", { body: { trigger_key: "status_change", submission_id: sub.id }, context: ctx });
         }
       }
       const { data: refreshed } = await supabase.from("submissions").select("*").eq("id", sub.id).maybeSingle();

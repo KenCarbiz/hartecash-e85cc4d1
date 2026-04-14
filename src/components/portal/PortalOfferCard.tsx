@@ -46,11 +46,17 @@ const PortalOfferCard = ({
 }: PortalOfferCardProps) => {
   const [activeTab, setActiveTab] = useState<"sell" | "trade">("sell");
 
+  // All hooks must run before any early return (rules-of-hooks).
   const hasOffer = !!offeredPrice || !!estimatedOfferHigh;
-  if (!hasOffer) return null;
-
   const isAccepted = isAcceptedOverride || !!offeredPrice;
   const cashOffer = offeredPrice || estimatedOfferHigh || 0;
+
+  const expiresDate = createdAt
+    ? new Date(new Date(createdAt).getTime() + guaranteeDays * 86_400_000)
+    : null;
+  const { days, hours, isExpired } = useCountdown(isAccepted ? expiresDate : null);
+
+  if (!hasOffer) return null;
 
   const zipResult = getTaxRateFromZip(zip || "");
   // Default to Connecticut 6.35% if no state can be determined
@@ -61,11 +67,6 @@ const PortalOfferCard = ({
   const taxSavings = cashOffer * taxRate;
   const tradeInValue = calcTradeInValue(cashOffer, taxRate);
   const tradeInValueLow = tradeInValue;
-
-  const expiresDate = createdAt
-    ? new Date(new Date(createdAt).getTime() + guaranteeDays * 86_400_000)
-    : null;
-  const { days, hours, isExpired } = useCountdown(isAccepted ? expiresDate : null);
 
   return (
     <motion.div
