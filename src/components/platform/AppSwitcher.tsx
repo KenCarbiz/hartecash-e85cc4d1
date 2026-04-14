@@ -1,14 +1,16 @@
-import { Car, FileCheck, Camera, Video, Lock, ChevronDown, Sparkles } from "lucide-react";
+import { Car, FileCheck, Camera, Video, Tag, Lock, ChevronDown, Sparkles, CreditCard } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { usePlatform } from "@/contexts/PlatformContext";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const ICON_MAP: Record<string, React.ElementType> = {
   Car,
   FileCheck,
   Camera,
   Video,
+  Tag,
 };
 
 interface AppSwitcherProps {
@@ -125,7 +127,7 @@ const AppSwitcher = ({ currentApp = "autocurb" }: AppSwitcherProps) => {
             })}
         </div>
 
-        {/* Footer — Current Plan */}
+        {/* Footer — Current Plan + Change plan */}
         <div className="px-4 py-2.5 border-t border-border/50 flex items-center justify-between bg-muted/30">
           <div className="flex items-center gap-2">
             <span className="text-[10px] text-muted-foreground">Current plan:</span>
@@ -133,11 +135,14 @@ const AppSwitcher = ({ currentApp = "autocurb" }: AppSwitcherProps) => {
               {currentBundle?.name || "No Plan"}
             </Badge>
           </div>
-          {activeProducts.length < products.filter((p) => p.is_active).length && (
-            <span className="text-[10px] text-primary font-semibold cursor-pointer hover:underline">
-              Upgrade
-            </span>
-          )}
+          <Link
+            to="/plan"
+            onClick={() => setOpen(false)}
+            className="inline-flex items-center gap-1 text-[10px] text-primary font-semibold hover:underline"
+          >
+            <CreditCard className="w-2.5 h-2.5" />
+            {activeProducts.length < products.filter((p) => p.is_active).length ? "Upgrade" : "Change plan"}
+          </Link>
         </div>
       </PopoverContent>
     </Popover>
