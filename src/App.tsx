@@ -93,6 +93,15 @@ const RouteTracker = () => {
 const AnimatedRoutes = () => {
   return (
     <Suspense fallback={null}>
+      {/* Skip link for keyboard users — becomes visible on focus, lets
+          users jump past any persistent nav straight into page content. */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-3 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:shadow-lg"
+      >
+        Skip to main content
+      </a>
+      <main id="main-content" tabIndex={-1}>
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/upload/:token" element={<UploadPhotos />} />
@@ -134,6 +143,7 @@ const AnimatedRoutes = () => {
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </main>
     </Suspense>
   );
 };

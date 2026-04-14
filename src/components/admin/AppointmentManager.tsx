@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { safeInvoke } from "@/lib/safeInvoke";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -64,8 +65,8 @@ const AppointmentManager = ({
         }).eq("token", form.submission_token);
         fetchSubmissions();
       }
-      supabase.functions.invoke("notify-appointment", { body: { appointment: form } });
-      supabase.functions.invoke("send-appointment-confirmation", { body: { appointment: form } });
+      safeInvoke("notify-appointment", { body: { appointment: form }, context: { from: "AppointmentManager.create" } });
+      safeInvoke("send-appointment-confirmation", { body: { appointment: form }, context: { from: "AppointmentManager.create" } });
       toast({ title: "Appointment created", description: `Scheduled for ${form.preferred_date} at ${form.preferred_time}.` });
       setShowCreate(false);
       setForm({ customer_name: "", customer_email: "", customer_phone: "", preferred_date: "", preferred_time: "", store_location: "", vehicle_info: "", notes: "", submission_token: "" });
@@ -102,14 +103,16 @@ const AppointmentManager = ({
         const linkedSub = submissions.find(s => s.token === rescheduleAppt.submission_token);
         if (linkedSub) {
           const loc = dealerLocations.find(l => l.id === (rescheduleAppt.store_location || ""));
-          supabase.functions.invoke("send-notification", {
+          safeInvoke("send-notification", {
             body: { trigger_key: "customer_appointment_rescheduled", submission_id: linkedSub.id, appointment_date: rescheduleForm.preferred_date, appointment_time: rescheduleForm.preferred_time, location: loc?.name || "" },
-          }).catch(console.error);
+            context: { from: "AppointmentManager.reschedule" },
+          });
         }
       } else if (rescheduleAppt.customer_email) {
-        supabase.functions.invoke("send-reschedule-notification", {
+        safeInvoke("send-reschedule-notification", {
           body: { appointment: { ...rescheduleAppt, new_date: rescheduleForm.preferred_date, new_time: rescheduleForm.preferred_time, old_date: rescheduleAppt.preferred_date, old_time: rescheduleAppt.preferred_time } },
-        }).catch(console.error);
+          context: { from: "AppointmentManager.reschedule" },
+        });
       }
       setRescheduleAppt(null);
     } else {

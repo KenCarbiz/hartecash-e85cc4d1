@@ -11,37 +11,43 @@ import { PAGE_SIZE, isAcceptedWithAppointment, isAcceptedWithoutAppointment, isO
 import type { Submission, DealerLocation, Appointment } from "@/lib/adminConstants";
 import type { PendingRequest, ActivityLogEntry } from "@/hooks/useAdminDashboard";
 
+// Hot-path sections stay eager so the first paint of the admin home
+// (today summary + submissions) isn't blocked on chunk downloads.
 import TodayActionSummary from "./TodayActionSummary";
 import SubmissionsTable from "./SubmissionsTable";
-import AppointmentManager from "./AppointmentManager";
-import StaffManagement from "./StaffManagement";
-import PermissionManagement from "./PermissionManagement";
-import ConsentLog from "./ConsentLog";
-import CommunicationLog from "./CommunicationLog";
-import ExecutiveKPIHub from "./ExecutiveKPIHub";
-import OfferSettings from "./OfferSettings";
-import SiteConfiguration from "./SiteConfiguration";
-import NotificationSettings from "./NotificationSettings";
-import FormConfiguration from "./FormConfiguration";
-import InspectionConfiguration from "./InspectionConfiguration";
-import PhotoConfiguration from "./PhotoConfiguration";
-import DepthPolicyManager from "./DepthPolicyManager";
-import TestimonialManagement from "./TestimonialManagement";
-import LocationManagement from "./LocationManagement";
-import VehicleImageInventory from "./VehicleImageInventory";
-import ChangelogManagement from "./ChangelogManagement";
-import TenantManagement from "./TenantManagement";
-import DealerOnboarding from "./DealerOnboarding";
-import OnboardingScript from "./OnboardingScript";
-import ReportsExport from "./ReportsExport";
-import ReferralManagement from "./ReferralManagement";
-import MyReferrals from "./MyReferrals";
-import MyLeadLink from "./MyLeadLink";
-import EmbedToolkit from "./EmbedToolkit";
-import PromotionManagement from "./PromotionManagement";
 import AdminLoadingSkeleton from "./AdminLoadingSkeleton";
 import AdminEmptyState from "./AdminEmptyState";
 import { UserCheck as UserCheckIcon } from "lucide-react";
+
+// All other sections are lazy — most admins only ever touch a handful
+// of them, and lazy-loading shrinks the initial AdminDashboard chunk
+// considerably. Suspense boundaries below wrap every rendered section.
+const AppointmentManager = React.lazy(() => import("./AppointmentManager"));
+const StaffManagement = React.lazy(() => import("./StaffManagement"));
+const PermissionManagement = React.lazy(() => import("./PermissionManagement"));
+const ConsentLog = React.lazy(() => import("./ConsentLog"));
+const CommunicationLog = React.lazy(() => import("./CommunicationLog"));
+const ExecutiveKPIHub = React.lazy(() => import("./ExecutiveKPIHub"));
+const OfferSettings = React.lazy(() => import("./OfferSettings"));
+const SiteConfiguration = React.lazy(() => import("./SiteConfiguration"));
+const NotificationSettings = React.lazy(() => import("./NotificationSettings"));
+const FormConfiguration = React.lazy(() => import("./FormConfiguration"));
+const InspectionConfiguration = React.lazy(() => import("./InspectionConfiguration"));
+const PhotoConfiguration = React.lazy(() => import("./PhotoConfiguration"));
+const DepthPolicyManager = React.lazy(() => import("./DepthPolicyManager"));
+const TestimonialManagement = React.lazy(() => import("./TestimonialManagement"));
+const LocationManagement = React.lazy(() => import("./LocationManagement"));
+const VehicleImageInventory = React.lazy(() => import("./VehicleImageInventory"));
+const ChangelogManagement = React.lazy(() => import("./ChangelogManagement"));
+const TenantManagement = React.lazy(() => import("./TenantManagement"));
+const DealerOnboarding = React.lazy(() => import("./DealerOnboarding"));
+const OnboardingScript = React.lazy(() => import("./OnboardingScript"));
+const ReportsExport = React.lazy(() => import("./ReportsExport"));
+const ReferralManagement = React.lazy(() => import("./ReferralManagement"));
+const MyReferrals = React.lazy(() => import("./MyReferrals"));
+const MyLeadLink = React.lazy(() => import("./MyLeadLink"));
+const EmbedToolkit = React.lazy(() => import("./EmbedToolkit"));
+const PromotionManagement = React.lazy(() => import("./PromotionManagement"));
 
 const ApiAccessPanel = React.lazy(() => import("./ApiAccessPanel"));
 const WhiteLabelSettings = React.lazy(() => import("./WhiteLabelSettings"));
@@ -540,7 +546,9 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
 
 const AdminSectionRenderer = (props: AdminSectionRendererProps) => (
   <AdminErrorBoundary>
-    <AdminSectionRendererInner {...props} />
+    <React.Suspense fallback={<AdminLoadingSkeleton />}>
+      <AdminSectionRendererInner {...props} />
+    </React.Suspense>
   </AdminErrorBoundary>
 );
 

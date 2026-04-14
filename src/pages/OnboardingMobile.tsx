@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,9 @@ export default function OnboardingMobile() {
   const [openSections, setOpenSections] = useState<Set<string>>(new Set());
 
   const did = dealershipId || "default";
-  const sections = getMobileSections();
+  // Stable reference so effects that depend on `sections` don't re-run
+  // on every render (getMobileSections returns a fresh array each call).
+  const sections = useMemo(() => getMobileSections(), []);
 
   const totalQuestions = sections.reduce((sum, s) => sum + s.questions.length, 0);
   const filledCount = Object.values(answers).filter((v) => v?.trim()).length;
@@ -60,7 +62,7 @@ export default function OnboardingMobile() {
       setLoading(false);
     };
     load();
-  }, [did]);
+  }, [did, sections]);
 
   const updateAnswer = (id: string, value: string) => {
     setAnswers((prev) => {

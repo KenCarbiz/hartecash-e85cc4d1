@@ -239,6 +239,10 @@ const MobileInspection = () => {
 
   useEffect(() => {
     if (pinInput.length === 4 && !pinVerified) handleVerifyPin();
+    // handleVerifyPin / pinVerified are intentionally omitted — including
+    // handleVerifyPin would re-run on every render (new identity each
+    // time) and cause a verify loop. pinInput is the single trigger.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pinInput]);
 
   // Load data

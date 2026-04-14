@@ -9,7 +9,15 @@ interface SEOProps {
   noindex?: boolean;
 }
 
-const BASE_URL = typeof window !== "undefined" ? window.location.origin : "https://app.autocurb.io";
+// Canonical base URL:
+// 1. Prefer the live browser origin so tenant-specific domains resolve correctly.
+// 2. Fall back to VITE_APP_URL for SSR / prerender contexts.
+// 3. Last-resort fallback is intentionally left empty so links render as
+//    relative paths rather than baking a single tenant's domain into SEO.
+const BASE_URL =
+  typeof window !== "undefined"
+    ? window.location.origin
+    : (import.meta.env.VITE_APP_URL ?? "");
 
 const SEO = ({
   title,

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { safeInvoke } from "@/lib/safeInvoke";
 import {
   FileText, CheckCircle, Upload, X, Plus, ArrowLeft, CircleCheck,
   Camera, AlertTriangle, ShieldCheck, CreditCard, ClipboardList, ScrollText
@@ -116,9 +117,10 @@ const UploadDocs = () => {
       }
       await supabase.rpc("mark_docs_uploaded", { _token: token! });
       if (submission?.id) {
-        supabase.functions.invoke("send-notification", {
+        safeInvoke("send-notification", {
           body: { trigger_key: "docs_uploaded", submission_id: submission.id },
-        }).catch(console.error);
+          context: { from: "UploadDocs.submit" },
+        });
       }
 
       if (dlFrontPath) {
@@ -180,11 +182,12 @@ const UploadDocs = () => {
   const filesPerType = (type: string) => files.filter(f => f.docType === type);
 
   const isComplete = useMemo(() => {
-    const hasDLFront = filesPerType("drivers_license_front").length > 0;
-    const hasDLBack = filesPerType("drivers_license_back").length > 0;
-    const hasRegistration = filesPerType("registration").length > 0;
-    const hasTitleFront = filesPerType("title_front").length > 0;
-    const hasTitleBack = filesPerType("title_back").length > 0;
+    const has = (type: string) => files.some(f => f.docType === type);
+    const hasDLFront = has("drivers_license_front");
+    const hasDLBack = has("drivers_license_back");
+    const hasRegistration = has("registration");
+    const hasTitleFront = has("title_front");
+    const hasTitleBack = has("title_back");
     return hasDLFront && hasDLBack && (hasRegistration || (hasTitleFront && hasTitleBack));
   }, [files]);
 

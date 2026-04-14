@@ -1,10 +1,15 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { checkRateLimit, getClientIp, sha256Hex } from '../_shared/rateLimit.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':
     'authorization, x-client-info, apikey, content-type',
 }
+
+// Tokens are 32 bytes of random hex — reject anything that doesn't
+// match the shape before even hitting the DB. Blocks trivial fuzzing.
+const TOKEN_RE = /^[a-f0-9]{64}$/
 
 function jsonResponse(data: Record<string, unknown>, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -67,7 +72,25 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'Token is required' }, 400)
   }
 
+  if (!TOKEN_RE.test(token)) {
+    // Invalid format — don't waste a DB call or leak timing signal.
+    return jsonResponse({ error: 'Invalid or expired token' }, 404)
+  }
+
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+  // Rate-limit by client IP: 20 hits / minute is more than generous for
+  // a real user clicking "Unsubscribe" but shuts down any automated
+  // attempts to enumerate tokens.
+  const ipHash = await sha256Hex(getClientIp(req))
+  const ok = await checkRateLimit(supabase, {
+    key: `unsub:${ipHash}`,
+    windowSeconds: 60,
+    maxHits: 20,
+  })
+  if (!ok) {
+    return jsonResponse({ error: 'Too many requests' }, 429)
+  }
 
   // Look up the token
   const { data: tokenRecord, error: lookupError } = await supabase
