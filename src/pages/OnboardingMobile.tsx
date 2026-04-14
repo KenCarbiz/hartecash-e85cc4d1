@@ -19,7 +19,9 @@ function buildSubscriptionRow(dealershipId: string, selection: PlanSelection) {
   const base = {
     dealership_id: dealershipId,
     status: "trial",
-    billing_cycle: selection.kind !== "enterprise" && selection.cycle === "annual" ? "annual" : "monthly",
+    billing_cycle:
+      selection.kind !== "enterprise" && selection.cycle === "annual" ? "annual" : "monthly",
+    rooftop_count: Math.max(1, selection.rooftopCount ?? 1),
     updated_at: new Date().toISOString(),
   };
   if (selection.kind === "bundle") {

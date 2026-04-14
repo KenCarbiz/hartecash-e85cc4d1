@@ -5,10 +5,11 @@ import type {
   PlatformProduct,
   PlatformProductTier,
 } from "@/lib/entitlements";
-import { annualSavings, formatUSD } from "@/lib/entitlements";
+import { formatUSD } from "@/lib/entitlements";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   ArrowRight,
   Building2,
@@ -32,9 +33,14 @@ const ICON_MAP: Record<string, React.ElementType> = {
 };
 
 export type PlanSelection =
-  | { kind: "bundle"; bundleId: string; cycle: "monthly" | "annual" }
-  | { kind: "tiers"; tierIds: string[]; cycle: "monthly" | "annual" }
-  | { kind: "enterprise"; bundleId: string };
+  | { kind: "bundle"; bundleId: string; cycle: "monthly" | "annual"; rooftopCount: number }
+  | { kind: "tiers"; tierIds: string[]; cycle: "monthly" | "annual"; rooftopCount: number }
+  | { kind: "enterprise"; bundleId: string; rooftopCount: number };
+
+// Annual pricing infrastructure is live in the schema but not yet
+// exposed to dealers. Flip this to `true` when you're ready to offer
+// the annual discount.
+const ANNUAL_AVAILABLE = false;
 
 interface PricingPlanPickerProps {
   /**
@@ -74,8 +80,11 @@ const PricingPlanPicker = ({
 }: PricingPlanPickerProps) => {
   const { products, bundles, tiers } = usePlatform();
 
-  const [cycle, setCycle] = useState<"monthly" | "annual">(
-    initialSelection?.cycle ?? "monthly",
+  const [cycle] = useState<"monthly" | "annual">(
+    ANNUAL_AVAILABLE ? (initialSelection?.cycle ?? "monthly") : "monthly",
+  );
+  const [rooftopCount, setRooftopCount] = useState<number>(
+    Math.max(1, initialSelection?.rooftopCount ?? 1),
   );
   const [selectedBundle, setSelectedBundle] = useState<string | null>(
     initialSelection?.kind === "bundle" ? initialSelection.bundleId ?? null : null,
@@ -116,12 +125,14 @@ const PricingPlanPicker = ({
 
   const tierPrice = (tier: PlatformProductTier) =>
     cycle === "annual" && tier.annual_price ? tier.annual_price : tier.monthly_price;
+  // Keep `cycle` referenced so TypeScript doesn't flag it while annual UI is hidden.
+  void cycle;
 
   const currentSelection: PlanSelection | null =
     selectedBundle
-      ? { kind: "bundle", bundleId: selectedBundle, cycle }
+      ? { kind: "bundle", bundleId: selectedBundle, cycle, rooftopCount }
       : Object.keys(selectedTiers).length > 0
-        ? { kind: "tiers", tierIds: Object.values(selectedTiers), cycle }
+        ? { kind: "tiers", tierIds: Object.values(selectedTiers), cycle, rooftopCount }
         : null;
 
   const emit = (next: PlanSelection) => {
@@ -137,6 +148,7 @@ const PricingPlanPicker = ({
         kind: "tiers",
         tierIds: Object.values(n),
         cycle,
+        rooftopCount,
       });
       return n;
     });
@@ -145,12 +157,13 @@ const PricingPlanPicker = ({
   const handleSelectBundle = (bundleId: string) => {
     setSelectedTiers({});
     setSelectedBundle(bundleId);
-    emit({ kind: "bundle", bundleId, cycle });
+    emit({ kind: "bundle", bundleId, cycle, rooftopCount });
   };
 
-  const handleCycleChange = (next: "monthly" | "annual") => {
-    setCycle(next);
-    if (currentSelection) emit({ ...currentSelection, cycle: next } as PlanSelection);
+  const handleRooftopChange = (next: number) => {
+    const clamped = Math.max(1, Math.min(9999, Math.floor(next) || 1));
+    setRooftopCount(clamped);
+    if (currentSelection) emit({ ...currentSelection, rooftopCount: clamped } as PlanSelection);
   };
 
   const handleConfirm = () => {
@@ -158,33 +171,61 @@ const PricingPlanPicker = ({
     onConfirm?.(currentSelection);
   };
 
+  // Monthly total across the current selection, for the inline
+  // "× N rooftops = $X,XXX/mo" line.
+  const monthlyLineTotal = useMemo(() => {
+    let base = 0;
+    if (selectedBundle) {
+      const b = bundles.find((x) => x.id === selectedBundle);
+      if (b) base = b.monthly_price;
+    } else {
+      for (const tid of Object.values(selectedTiers)) {
+        const t = tiers.find((x) => x.id === tid);
+        if (t) base += t.monthly_price;
+      }
+    }
+    return base * rooftopCount;
+  }, [selectedBundle, selectedTiers, bundles, tiers, rooftopCount]);
+
   return (
     <div className={`space-y-${compact ? "5" : "8"}`}>
-      {/* Header + cycle toggle */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      {/* Header + rooftop count */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 className={`${compact ? "text-lg" : "text-xl"} font-bold text-card-foreground tracking-tight`}>
             Choose your plan
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Pricing is per rooftop. Billed monthly or annually — save ~17% annually.
+            Pricing is per rooftop. AutoLabels Base is included free with any AutoCurb plan.
           </p>
         </div>
-        <ToggleGroup
-          type="single"
-          value={cycle}
-          onValueChange={(v) => v && handleCycleChange(v as "monthly" | "annual")}
-          className="border border-border/60 rounded-lg p-0.5 bg-muted/40"
-          aria-label="Billing cycle"
-        >
-          <ToggleGroupItem value="monthly" className="text-xs px-3 data-[state=on]:bg-card data-[state=on]:shadow-sm">
-            Monthly
-          </ToggleGroupItem>
-          <ToggleGroupItem value="annual" className="text-xs px-3 data-[state=on]:bg-card data-[state=on]:shadow-sm">
-            Annual <span className="ml-1 text-[9px] font-semibold text-emerald-600">SAVE</span>
-          </ToggleGroupItem>
-        </ToggleGroup>
+        <div className="flex items-end gap-2">
+          <div className="space-y-1">
+            <Label htmlFor="rooftop-count" className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Rooftops
+            </Label>
+            <Input
+              id="rooftop-count"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={9999}
+              step={1}
+              value={rooftopCount}
+              onChange={(e) => handleRooftopChange(Number(e.target.value))}
+              disabled={readOnly}
+              className="w-20 h-9 text-sm font-semibold text-center"
+            />
+          </div>
+        </div>
       </div>
+
+      {rooftopCount > 1 && (
+        <div className="rounded-lg bg-primary/5 border border-primary/20 px-3 py-2 text-[11px] text-card-foreground">
+          Prices shown are <span className="font-semibold">per rooftop</span>. Your selection will be
+          multiplied by <span className="font-semibold">{rooftopCount}</span> rooftops at checkout.
+        </div>
+      )}
 
       {/* Apps & tiers */}
       <div className="space-y-4">
@@ -228,7 +269,7 @@ const PricingPlanPicker = ({
       {/* Enterprise */}
       {enterpriseBundle && <EnterpriseCard bundle={enterpriseBundle} />}
 
-      {/* Confirm CTA */}
+      {/* Confirm CTA + running total */}
       {!readOnly && currentSelection && onConfirm && (
         <Card className="border-primary/30 bg-primary/[0.03]">
           <CardContent className="py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -239,7 +280,16 @@ const PricingPlanPicker = ({
                   : `Selected: ${currentSelection.tierIds.length} app${currentSelection.tierIds.length === 1 ? "" : "s"}`}
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Billing {cycle}. Stripe checkout wires up shortly; your selection is stored immediately.
+                <span className="font-semibold text-card-foreground">{formatUSD(monthlyLineTotal)}/mo</span>
+                {rooftopCount > 1 ? (
+                  <>
+                    {" "}
+                    = {formatUSD(monthlyLineTotal / rooftopCount)}/rooftop × {rooftopCount} rooftops.{" "}
+                  </>
+                ) : (
+                  " per rooftop. "
+                )}
+                Stripe checkout wires up shortly; your selection is stored immediately.
               </p>
             </div>
             <Button size="sm" className="shrink-0 px-6" onClick={handleConfirm}>
@@ -334,15 +384,8 @@ function ProductTierBlock({
                 <div>
                   <p className="text-2xl font-bold text-card-foreground">
                     {formatUSD(price)}
-                    <span className="text-[11px] font-normal text-muted-foreground">
-                      /{cycle === "annual" ? "yr" : "mo"}
-                    </span>
+                    <span className="text-[11px] font-normal text-muted-foreground">/mo</span>
                   </p>
-                  {cycle === "annual" && tier.annual_price && (
-                    <p className="text-[10px] text-emerald-600 font-semibold">
-                      Save {formatUSD(annualSavings(tier.monthly_price, tier.annual_price))}/yr
-                    </p>
-                  )}
                   {tier.inventory_limit != null && (
                     <p className="text-[10px] text-muted-foreground mt-0.5">
                       Up to {tier.inventory_limit.toLocaleString()} active units
@@ -354,6 +397,11 @@ function ProductTierBlock({
                         Unlimited inventory
                       </p>
                     )}
+                  {tier.allow_overage && tier.overage_price_per_unit != null && (
+                    <p className="text-[10px] text-amber-600 font-semibold mt-0.5">
+                      + {formatUSD(tier.overage_price_per_unit)}/unit over cap
+                    </p>
+                  )}
                 </div>
 
                 <ul className="space-y-1.5 pt-2 border-t border-border/40 text-[11px]">
@@ -428,15 +476,9 @@ function AllAppsCard({
           <div className="text-right shrink-0">
             <p className="text-3xl font-bold text-card-foreground">
               {formatUSD(price)}
-              <span className="text-xs font-normal text-muted-foreground">
-                /{cycle === "annual" ? "yr" : "mo"}
-              </span>
+              <span className="text-xs font-normal text-muted-foreground">/mo</span>
             </p>
-            {cycle === "annual" && bundle.annual_price && (
-              <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">
-                Save {formatUSD(annualSavings(bundle.monthly_price, bundle.annual_price))}/yr
-              </p>
-            )}
+            <p className="text-[10px] text-muted-foreground mt-0.5">per rooftop</p>
           </div>
         </div>
       </CardHeader>
