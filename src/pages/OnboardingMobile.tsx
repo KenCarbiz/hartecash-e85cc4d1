@@ -10,10 +10,36 @@ import SignaturePad from "@/components/admin/SignaturePad";
 import { cn } from "@/lib/utils";
 import { getMobileSections, sectionProgress, getSmartDefaults } from "@/lib/onboardingSections";
 import type { QuestionItem } from "@/lib/onboardingSections";
+import { PlatformProvider } from "@/contexts/PlatformContext";
+import PricingPlanPicker, { type PlanSelection } from "@/components/platform/PricingPlanPicker";
 
 type Answers = Record<string, string>;
 
+function buildSubscriptionRow(dealershipId: string, selection: PlanSelection) {
+  const base = {
+    dealership_id: dealershipId,
+    status: "trial",
+    billing_cycle: selection.kind !== "enterprise" && selection.cycle === "annual" ? "annual" : "monthly",
+    updated_at: new Date().toISOString(),
+  };
+  if (selection.kind === "bundle") {
+    return { ...base, bundle_id: selection.bundleId, tier_ids: [], product_ids: [] };
+  }
+  if (selection.kind === "enterprise") {
+    return { ...base, bundle_id: selection.bundleId, tier_ids: [], product_ids: [] };
+  }
+  return { ...base, bundle_id: null, tier_ids: selection.tierIds, product_ids: [] };
+}
+
 export default function OnboardingMobile() {
+  return (
+    <PlatformProvider>
+      <OnboardingMobileInner />
+    </PlatformProvider>
+  );
+}
+
+function OnboardingMobileInner() {
   const { dealershipId } = useParams<{ dealershipId: string }>();
   const [answers, setAnswers] = useState<Answers>({});
   const [dealerSig, setDealerSig] = useState<string | null>(null);
@@ -22,6 +48,7 @@ export default function OnboardingMobile() {
   const [saved, setSaved] = useState(false);
   const [dealerName, setDealerName] = useState("");
   const [openSections, setOpenSections] = useState<Set<string>>(new Set());
+  const [planSelection, setPlanSelection] = useState<PlanSelection | null>(null);
 
   const did = dealershipId || "default";
   // Stable reference so effects that depend on `sections` don't re-run
@@ -104,18 +131,35 @@ export default function OnboardingMobile() {
       toast.error("Please sign before saving");
       return;
     }
+    if (!planSelection) {
+      toast.error("Please select a plan before saving");
+      return;
+    }
     setSaving(true);
-    const { error } = await supabase
-      .from("dealer_accounts")
-      .update({
-        onboarding_answers: answers,
-        onboarding_signature_dealer: dealerSig,
-        onboarding_signed_at: new Date().toISOString(),
-      } as any)
-      .eq("dealership_id", did);
+    // Persist onboarding answers + the plan the dealer chose. The plan
+    // goes to dealer_subscriptions (status=trial until billing kicks in)
+    // and a snapshot also lives alongside the onboarding answers so the
+    // onboarding specialist sees it in one place.
+    const answersWithPlan = { ...answers, __plan_selection: JSON.stringify(planSelection) };
+    const [acctRes, subRes] = await Promise.all([
+      supabase
+        .from("dealer_accounts")
+        .update({
+          onboarding_answers: answersWithPlan,
+          onboarding_signature_dealer: dealerSig,
+          onboarding_signed_at: new Date().toISOString(),
+        } as never)
+        .eq("dealership_id", did),
+      supabase
+        .from("dealer_subscriptions")
+        .upsert(
+          buildSubscriptionRow(did, planSelection),
+          { onConflict: "dealership_id" },
+        ),
+    ]);
 
-    if (error) {
-      toast.error("Failed to save");
+    if (acctRes.error || subRes.error) {
+      toast.error(acctRes.error?.message || subRes.error?.message || "Failed to save");
     } else {
       setSaved(true);
       toast.success("Saved! Your onboarding specialist will review.");
@@ -318,6 +362,28 @@ export default function OnboardingMobile() {
             </div>
           );
         })}
+
+        {/* Plan choice */}
+        <div className="border rounded-lg p-4 space-y-3">
+          <div>
+            <h3 className="text-sm font-bold">Choose your plan</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Pick a tier for each app or choose the All-Apps Unlimited bundle. AutoLabels Base is included free with any AutoCurb plan.
+            </p>
+          </div>
+          <PricingPlanPicker
+            compact
+            ctaLabel="Select plan"
+            onChange={setPlanSelection}
+          />
+          {planSelection && (
+            <div className="text-[11px] text-emerald-600 font-medium">
+              {planSelection.kind === "bundle"
+                ? "Bundle selected — great choice."
+                : `${planSelection.tierIds.length} tier${planSelection.tierIds.length === 1 ? "" : "s"} selected.`}
+            </div>
+          )}
+        </div>
 
         {/* Signature */}
         <div className="border rounded-lg p-4 space-y-3">
