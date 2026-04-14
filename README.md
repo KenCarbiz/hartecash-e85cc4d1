@@ -102,5 +102,6 @@ reflected in Lovable automatically. Edge functions are deployed from the
 `supabase/functions/` directory via `supabase functions deploy`.
 
 ## License
+<!-- pull test -->
 
 Proprietary — © Autocurb.io. All rights reserved.
