@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { logConsent } from "@/lib/consent";
+import { safeInvoke } from "@/lib/safeInvoke";
 import serviceLogoFallback from "@/assets/logo-placeholder.png";
 import SEO from "@/components/SEO";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
@@ -246,9 +247,10 @@ const ServiceLanding = () => {
         .maybeSingle();
 
       if (insertedSub) {
-        supabase.functions.invoke("send-notification", {
+        safeInvoke("send-notification", {
           body: { trigger_key: "new_submission", submission_id: insertedSub.id },
-        }).catch(console.error);
+          context: { from: "ServiceLanding.submit" },
+        });
       }
 
       // If the customer has a pre-populated service appointment, create an appointment record
@@ -271,14 +273,15 @@ const ServiceLanding = () => {
 
         // Fire appointment_booked staff notification
         if (insertedSub) {
-          supabase.functions.invoke("send-notification", {
+          safeInvoke("send-notification", {
             body: {
               trigger_key: "appointment_booked",
               submission_id: insertedSub.id,
               appointment_date: appointmentDate,
               appointment_time: decodeURIComponent(appointmentTime),
             },
-          }).catch(console.error);
+            context: { from: "ServiceLanding.scheduledAppointment" },
+          });
         }
       }
 

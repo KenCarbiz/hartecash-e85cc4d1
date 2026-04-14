@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { safeInvoke } from "@/lib/safeInvoke";
 import { useTenant } from "@/contexts/TenantContext";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { isManagerRole } from "@/lib/adminConstants";
@@ -268,9 +269,10 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
     });
 
     // Customer notification
-    supabase.functions.invoke("send-notification", {
+    safeInvoke("send-notification", {
       body: { trigger_key: "customer_offer_increased", submission_id: row.id },
-    }).catch(console.error);
+      context: { from: "AppraiserQueue.applyBump" },
+    });
 
     toast({
       title: "Bump applied",

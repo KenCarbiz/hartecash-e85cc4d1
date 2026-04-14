@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { safeInvoke } from "@/lib/safeInvoke";
 import {
   Camera, CheckCircle, X, Plus, ArrowLeft, Upload, CircleDot, Loader2,
   Sun, Gauge, AlertTriangle, Sparkles,
@@ -213,28 +214,30 @@ const UploadPhotos = () => {
       if (allRequiredPresent) {
         await supabase.rpc("mark_photos_uploaded", { _token: token });
         if (submission?.id) {
-          supabase.functions.invoke("send-notification", {
+          safeInvoke("send-notification", {
             body: { trigger_key: "photos_uploaded", submission_id: submission.id },
-          }).catch(console.error);
+            context: { from: "UploadPhotos.submit" },
+          });
         }
       }
 
       // Trigger AI damage analysis per photo
       if (submission?.id) {
-        const analysisPromises: Promise<unknown>[] = [];
+        const analysisPromises: Promise<void>[] = [];
         for (const [catId, val] of Object.entries(categoryUploads)) {
           if (!val.file) continue;
           const matchedFile = allFiles?.find((f) => f.name.startsWith(`${catId}-`));
           if (matchedFile) {
             analysisPromises.push(
-              supabase.functions.invoke("analyze-vehicle-damage", {
+              safeInvoke("analyze-vehicle-damage", {
                 body: {
                   submission_id: submission.id,
                   token,
                   photo_category: catId,
                   photo_path: `${token}/${matchedFile.name}`,
                 },
-              }).catch(console.error) as unknown as Promise<unknown>,
+                context: { from: "UploadPhotos.analyzeDamage", category: catId },
+              }),
             );
           }
         }
@@ -246,16 +249,15 @@ const UploadPhotos = () => {
         // sees the same confirmation page either way, and the bump (if
         // any) appears in the Appraiser Queue + potentially auto-applies
         // before the customer reaches DealAccepted.
-        Promise.all(analysisPromises)
-          .catch(() => null)
-          .then(() => {
-            supabase.functions.invoke("ai-photo-reappraisal", {
-              body: {
-                submission_id: submission.id,
-                source: "photo_upload",
-              },
-            }).catch(console.error);
+        Promise.all(analysisPromises).then(() => {
+          safeInvoke("ai-photo-reappraisal", {
+            body: {
+              submission_id: submission.id,
+              source: "photo_upload",
+            },
+            context: { from: "UploadPhotos.reappraisal" },
           });
+        });
       }
 
       const uploadedCount = Object.values(categoryUploads).filter(v => v.file).length + extraFiles.length;

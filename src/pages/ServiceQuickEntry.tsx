@@ -26,6 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
+import { safeInvoke } from "@/lib/safeInvoke";
 import { useToast } from "@/hooks/use-toast";
 import { useTenant } from "@/contexts/TenantContext";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
@@ -249,11 +250,10 @@ const ServiceQuickEntry = () => {
         .eq("token", generatedToken)
         .maybeSingle();
       if (insertedSub) {
-        supabase.functions
-          .invoke("send-notification", {
-            body: { trigger_key: "new_submission", submission_id: insertedSub.id },
-          })
-          .catch(console.error);
+        safeInvoke("send-notification", {
+          body: { trigger_key: "new_submission", submission_id: insertedSub.id },
+          context: { from: "ServiceQuickEntry.submit" },
+        });
       }
 
       setCreatedToken(generatedToken);

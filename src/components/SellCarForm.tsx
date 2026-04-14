@@ -13,6 +13,7 @@ import { calculateOffer, type OfferEstimate, type OfferSettings, type OfferRule 
 import { resolveEffectiveSettings } from "@/lib/resolvePricingModel";
 import { resolveStoreAssignment } from "@/lib/storeAssignment";
 import { buildSubmissionBBPayload, fetchMileageAdjustedBBVehicle } from "@/lib/submissionOffer";
+import { safeInvoke } from "@/lib/safeInvoke";
 import { initialFormData } from "./sell-form/types";
 import { useFormConfig } from "@/hooks/useFormConfig";
 import { useTenant } from "@/contexts/TenantContext";
@@ -531,15 +532,17 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
         .maybeSingle();
 
       if (insertedSub) {
-        supabase.functions.invoke("send-notification", {
+        safeInvoke("send-notification", {
           body: { trigger_key: "new_submission", submission_id: insertedSub.id },
-        }).catch(console.error);
+          context: { from: "SellCarForm.submit", submission_id: insertedSub.id },
+        });
 
         // If hot lead, fire hot_lead notification too
         if (insertedSub.is_hot_lead) {
-          supabase.functions.invoke("send-notification", {
+          safeInvoke("send-notification", {
             body: { trigger_key: "hot_lead", submission_id: insertedSub.id },
-          }).catch(console.error);
+            context: { from: "SellCarForm.submit.hot_lead", submission_id: insertedSub.id },
+          });
         }
       }
 

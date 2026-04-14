@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { captureException } from "@/lib/errorReporting";
 
 interface OfferWatchProps {
   token: string;
@@ -49,9 +50,15 @@ const OfferWatch = ({
       } as any);
 
       if (error) {
-        // If the table doesn't exist, still show success to the user
-        // (the data will be captured when the table is created)
-        console.warn("offer_watches insert error (table may not exist yet):", error);
+        // Duplicate signup is a success from the customer's POV — treat
+        // the unique-violation as idempotent.
+        const isDuplicate = error.code === "23505";
+        if (!isDuplicate) {
+          captureException(
+            new Error(`OfferWatch insert failed: ${error.message || "unknown"}`),
+            { code: error.code, token, email: trimmed },
+          );
+        }
       }
 
       setSubscribed(true);
@@ -60,8 +67,12 @@ const OfferWatch = ({
         description: "We'll notify you when your vehicle's market value changes.",
       });
     } catch (err) {
-      console.error("OfferWatch save error:", err);
-      // Still show success — graceful degradation
+      captureException(err instanceof Error ? err : new Error("OfferWatch save threw"), {
+        token,
+        email: trimmed,
+      });
+      // Still mark as subscribed so the user gets feedback; retry handled
+      // out-of-band by ops after the error surfaces in Sentry / error_log.
       setSubscribed(true);
     }
     setSaving(false);

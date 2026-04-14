@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useSearchParams, Link } from "react-router-dom";
 import confetti from "canvas-confetti";
 import { supabase } from "@/integrations/supabase/client";
+import { safeInvoke } from "@/lib/safeInvoke";
 import { Camera, FileText, CalendarCheck, ArrowRight, Zap, Clock, CheckCircle, Sparkles, ShieldCheck, ArrowLeft, TrendingUp, Lock, Download, ExternalLink, CalendarDays } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -106,12 +107,10 @@ const DealAccepted = () => {
         } else {
           // Fire notifications only when contact info is present
           if ((sub as any).id) {
-            supabase.functions.invoke("send-notification", {
-              body: { trigger_key: "staff_customer_accepted", submission_id: (sub as any).id },
-            }).catch(console.error);
-            supabase.functions.invoke("send-notification", {
-              body: { trigger_key: "customer_offer_accepted", submission_id: (sub as any).id },
-            }).catch(console.error);
+            const subId = (sub as any).id as string;
+            const ctx = { from: "DealAccepted.autoFire", submission_id: subId } as const;
+            safeInvoke("send-notification", { body: { trigger_key: "staff_customer_accepted", submission_id: subId }, context: ctx });
+            safeInvoke("send-notification", { body: { trigger_key: "customer_offer_accepted", submission_id: subId }, context: ctx });
           }
         }
       }
@@ -219,12 +218,9 @@ const DealAccepted = () => {
         });
 
         // Fire notifications now that we have contact info
-        supabase.functions.invoke("send-notification", {
-          body: { trigger_key: "staff_customer_accepted", submission_id: subId },
-        }).catch(console.error);
-        supabase.functions.invoke("send-notification", {
-          body: { trigger_key: "customer_offer_accepted", submission_id: subId },
-        }).catch(console.error);
+        const ctx = { from: "DealAccepted.contactGate", submission_id: subId } as const;
+        safeInvoke("send-notification", { body: { trigger_key: "staff_customer_accepted", submission_id: subId }, context: ctx });
+        safeInvoke("send-notification", { body: { trigger_key: "customer_offer_accepted", submission_id: subId }, context: ctx });
       }
       setSubmission(prev => prev ? { ...prev, name: contactName.trim(), email: contactEmail.trim(), phone: contactPhone.trim(), zip: contactZip.trim() || prev.zip } : prev);
       setContactGateOpen(false);

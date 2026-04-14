@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { logConsent } from "@/lib/consent";
+import { safeInvoke } from "@/lib/safeInvoke";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -148,7 +149,7 @@ const ScheduleVisit = () => {
     } else if (locations.length === 1 && !form.store_location) {
       setForm(prev => ({ ...prev, store_location: locations[0].id }));
     }
-  }, [locations, lockedStoreId]);
+  }, [locations, lockedStoreId, form.store_location]);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
@@ -227,7 +228,8 @@ const ScheduleVisit = () => {
           .eq("token", submissionToken)
           .maybeSingle();
         if (sub) {
-          supabase.functions.invoke("send-notification", {
+          const apptCtx = { from: "ScheduleVisit.submit", submission_id: sub.id } as const;
+          safeInvoke("send-notification", {
             body: {
               trigger_key: "appointment_booked",
               submission_id: sub.id,
@@ -235,8 +237,9 @@ const ScheduleVisit = () => {
               appointment_time: form.preferred_time,
               location: form.store_location || "",
             },
-          }).catch(console.error);
-          supabase.functions.invoke("send-notification", {
+            context: apptCtx,
+          });
+          safeInvoke("send-notification", {
             body: {
               trigger_key: "customer_appointment_booked",
               submission_id: sub.id,
@@ -244,7 +247,8 @@ const ScheduleVisit = () => {
               appointment_time: form.preferred_time,
               location: form.store_location || "",
             },
-          }).catch(console.error);
+            context: apptCtx,
+          });
         }
       }
 
