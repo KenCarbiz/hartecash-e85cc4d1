@@ -1,28 +1,23 @@
 import { useMemo, useState } from "react";
 import { usePlatform } from "@/contexts/PlatformContext";
-import type {
-  PlatformBundle,
-  PlatformProduct,
-  PlatformProductTier,
-} from "@/lib/entitlements";
+import type { PlatformBundle, PlatformProduct, PlatformProductTier } from "@/lib/entitlements";
 import { formatUSD } from "@/lib/entitlements";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  ArrowRight,
   Building2,
   Camera,
   Car,
   Check,
-  Crown,
   FileCheck,
   Phone,
-  Sparkles,
   Tag,
   Video,
 } from "lucide-react";
+import { PlanCard } from "./pricing/PlanCard";
+import { RooftopStepper } from "./pricing/RooftopStepper";
+import { SelectionSummary } from "./pricing/SelectionSummary";
 
 const ICON_MAP: Record<string, React.ElementType> = {
   Car,
@@ -37,38 +32,64 @@ export type PlanSelection =
   | { kind: "tiers"; tierIds: string[]; cycle: "monthly" | "annual"; rooftopCount: number }
   | { kind: "enterprise"; bundleId: string; rooftopCount: number };
 
-// Annual pricing infrastructure is live in the schema but not yet
-// exposed to dealers. Flip this to `true` when you're ready to offer
-// the annual discount.
+// Annual pricing schema is live; the UI toggle is parked until we're
+// ready to market the annual discount. Flip to `true` to enable.
 const ANNUAL_AVAILABLE = false;
 
+// Hero-bundle benefits — the `platform_bundles` schema has no
+// features column yet, so these ship here. When we add that column
+// we'll pull from data. Same treatment for EnterpriseCard below.
+const ALL_APPS_BENEFITS = [
+  "Dedicated Customer Success Manager",
+  "Priority 24/7 technical support",
+  "White-glove onboarding concierge",
+  "Quarterly business reviews",
+  "Unlimited inventory across all apps",
+  "Custom integration support",
+];
+
+const ENTERPRISE_BENEFITS = [
+  "Multi-rooftop consolidated billing",
+  "Cross-rooftop executive reporting",
+  "Group-wide SSO & identity",
+  "Named Enterprise Customer Success Manager",
+  "Dedicated onboarding engineering team",
+  "Custom integrations & data pipelines",
+  "Negotiated multi-rooftop pricing",
+  "Priority roadmap influence",
+];
+
 interface PricingPlanPickerProps {
-  /**
-   * Preselected state — passed in during onboarding so the picker can be
-   * resumed; passed in from admin to reflect the current plan.
-   */
+  /** Preselected state — onboarding resume, admin reflect-current-plan. */
   initialSelection?: Partial<PlanSelection>;
-  /** Hide the "Choose" / CTA buttons — useful for read-only previews. */
+  /** Read-only preview mode. */
   readOnly?: boolean;
-  /** Called whenever the dealer changes their selection. */
+  /** Fires on every selection change. */
   onChange?: (selection: PlanSelection) => void;
-  /** Text on the primary CTA (defaults to "Continue"). */
+  /** Confirm CTA label. */
   ctaLabel?: string;
-  /** Fires when the CTA button is clicked with a finalized selection. */
+  /** Fires when the confirm CTA is clicked. */
   onConfirm?: (selection: PlanSelection) => void;
-  /** Show a smaller, embedded variant used inside onboarding wizards. */
-  compact?: boolean;
+  /**
+   * Layout variant:
+   *   - "full"    → standalone /plan page: 2-col with sticky summary rail
+   *   - "compact" → onboarding / modals: single column, slim summary strip
+   */
+  variant?: "full" | "compact";
 }
 
 /**
- * Single source of truth for pricing UI. Renders:
- *  - a billing-cycle toggle (monthly / annual)
- *  - per-product tier cards (AutoCurb, AutoLabels, AutoFrame, AutoFilm)
- *  - the featured All-Apps Unlimited bundle
- *  - an Enterprise (dealer-groups) "Contact Sales" card
+ * Single source of truth for pricing UI. New (Apr 2026) layout:
+ *   1. Global controls bar — rooftop stepper (+ billing toggle once enabled)
+ *   2. Hero bundle card — "All-Apps Unlimited" promoted front-and-center
+ *   3. Per-app tabs — AutoCurb / AutoLabels / AutoFrame / AutoFilm, each
+ *      with 1–3 tier cards side-by-side (kills the mega-vertical-scroll
+ *      problem of the old stacked layout)
+ *   4. Peer Enterprise card — dark gradient, contact-sales CTA
+ *   5. Selection summary — sticky right-rail in "full", bottom strip
+ *      in "compact"
  *
- * Consumers: `PlatformSubscriptions` admin page, onboarding wizard,
- * standalone `/plan` route.
+ * The old `compact` boolean prop is still accepted via `variant="compact"`.
  */
 const PricingPlanPicker = ({
   initialSelection,
@@ -76,7 +97,7 @@ const PricingPlanPicker = ({
   onChange,
   ctaLabel = "Continue",
   onConfirm,
-  compact = false,
+  variant = "full",
 }: PricingPlanPickerProps) => {
   const { products, bundles, tiers } = usePlatform();
 
@@ -87,7 +108,7 @@ const PricingPlanPicker = ({
     Math.max(1, initialSelection?.rooftopCount ?? 1),
   );
   const [selectedBundle, setSelectedBundle] = useState<string | null>(
-    initialSelection?.kind === "bundle" ? initialSelection.bundleId ?? null : null,
+    initialSelection?.kind === "bundle" ? (initialSelection.bundleId ?? null) : null,
   );
   const [selectedTiers, setSelectedTiers] = useState<Record<string, string>>(
     initialSelection?.kind === "tiers"
@@ -125,31 +146,21 @@ const PricingPlanPicker = ({
 
   const tierPrice = (tier: PlatformProductTier) =>
     cycle === "annual" && tier.annual_price ? tier.annual_price : tier.monthly_price;
-  // Keep `cycle` referenced so TypeScript doesn't flag it while annual UI is hidden.
-  void cycle;
+  void cycle; // referenced for future annual toggle
 
-  const currentSelection: PlanSelection | null =
-    selectedBundle
-      ? { kind: "bundle", bundleId: selectedBundle, cycle, rooftopCount }
-      : Object.keys(selectedTiers).length > 0
-        ? { kind: "tiers", tierIds: Object.values(selectedTiers), cycle, rooftopCount }
-        : null;
+  const currentSelection: PlanSelection | null = selectedBundle
+    ? { kind: "bundle", bundleId: selectedBundle, cycle, rooftopCount }
+    : Object.keys(selectedTiers).length > 0
+      ? { kind: "tiers", tierIds: Object.values(selectedTiers), cycle, rooftopCount }
+      : null;
 
-  const emit = (next: PlanSelection) => {
-    onChange?.(next);
-  };
+  const emit = (next: PlanSelection) => onChange?.(next);
 
   const handleSelectTier = (productId: string, tierId: string) => {
-    // Picking any individual tier clears a bundle selection.
     setSelectedBundle(null);
     setSelectedTiers((prev) => {
       const n = { ...prev, [productId]: tierId };
-      emit({
-        kind: "tiers",
-        tierIds: Object.values(n),
-        cycle,
-        rooftopCount,
-      });
+      emit({ kind: "tiers", tierIds: Object.values(n), cycle, rooftopCount });
       return n;
     });
   };
@@ -171,134 +182,126 @@ const PricingPlanPicker = ({
     onConfirm?.(currentSelection);
   };
 
-  // Monthly total across the current selection, for the inline
-  // "× N rooftops = $X,XXX/mo" line.
-  const monthlyLineTotal = useMemo(() => {
-    let base = 0;
+  // Per-rooftop total for the running summary.
+  const perRooftopTotal = useMemo(() => {
     if (selectedBundle) {
       const b = bundles.find((x) => x.id === selectedBundle);
-      if (b) base = b.monthly_price;
-    } else {
-      for (const tid of Object.values(selectedTiers)) {
-        const t = tiers.find((x) => x.id === tid);
-        if (t) base += t.monthly_price;
-      }
+      return b?.monthly_price ?? 0;
     }
-    return base * rooftopCount;
-  }, [selectedBundle, selectedTiers, bundles, tiers, rooftopCount]);
+    let base = 0;
+    for (const tid of Object.values(selectedTiers)) {
+      const t = tiers.find((x) => x.id === tid);
+      if (t) base += t.monthly_price;
+    }
+    return base;
+  }, [selectedBundle, selectedTiers, bundles, tiers]);
 
-  return (
-    <div className={`space-y-${compact ? "5" : "8"}`}>
-      {/* Header + rooftop count */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className={`${compact ? "text-lg" : "text-xl"} font-bold text-card-foreground tracking-tight`}>
+  // Summary copy.
+  const summaryTitle = selectedBundle
+    ? (bundles.find((b) => b.id === selectedBundle)?.name ?? "Bundle selected")
+    : Object.keys(selectedTiers).length > 0
+      ? `${Object.keys(selectedTiers).length} app${Object.keys(selectedTiers).length === 1 ? "" : "s"} selected`
+      : "No plan selected yet";
+
+  const summarySubtitle = selectedBundle
+    ? "Everything unlocked, white-glove service included."
+    : Object.keys(selectedTiers).length > 0
+      ? Object.values(selectedTiers)
+          .map((tid) => {
+            const t = tiers.find((x) => x.id === tid);
+            const p = products.find((x) => x.id === t?.product_id);
+            return t && p ? `${p.name} · ${t.name}` : null;
+          })
+          .filter(Boolean)
+          .join(" · ")
+      : "Pick a bundle or choose one tier per app below.";
+
+  const isCompact = variant === "compact";
+
+  // ───── Render ─────
+  const mainContent = (
+    <div className={`space-y-${isCompact ? "5" : "6"}`}>
+      {/* Global controls bar */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-xl border border-border/50 bg-gradient-to-br from-muted/30 to-muted/10 p-3.5">
+        <div className="min-w-0">
+          <h2 className={`${isCompact ? "text-base" : "text-lg"} font-bold text-card-foreground tracking-tight leading-none`}>
             Choose your plan
           </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Pricing is per rooftop. AutoLabels Base is included free with any AutoCurb plan.
+          <p className="text-[11px] text-muted-foreground mt-1 leading-snug">
+            Per-rooftop pricing. AutoLabels Base is included free with any AutoCurb plan.
           </p>
         </div>
-        <div className="flex items-end gap-2">
-          <div className="space-y-1">
-            <Label htmlFor="rooftop-count" className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Rooftops
-            </Label>
-            <Input
-              id="rooftop-count"
-              type="number"
-              inputMode="numeric"
-              min={1}
-              max={9999}
-              step={1}
-              value={rooftopCount}
-              onChange={(e) => handleRooftopChange(Number(e.target.value))}
-              disabled={readOnly}
-              className="w-20 h-9 text-sm font-semibold text-center"
-            />
-          </div>
-        </div>
+        <RooftopStepper
+          value={rooftopCount}
+          onChange={handleRooftopChange}
+          disabled={readOnly}
+        />
       </div>
 
-      {rooftopCount > 1 && (
-        <div className="rounded-lg bg-primary/5 border border-primary/20 px-3 py-2 text-[11px] text-card-foreground">
-          Prices shown are <span className="font-semibold">per rooftop</span>. Your selection will be
-          multiplied by <span className="font-semibold">{rooftopCount}</span> rooftops at checkout.
-        </div>
-      )}
-
-      {/* Apps & tiers */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Crown className="w-4 h-4 text-primary" />
-          <h3 className="text-sm font-bold text-card-foreground">Apps</h3>
-        </div>
-
-        <div className="grid grid-cols-1 gap-5">
-          {activeProducts.map((product) => {
-            const productTiers = tiersByProduct.get(product.id) ?? [];
-            if (productTiers.length === 0) return null;
-            return (
-              <ProductTierBlock
-                key={product.id}
-                product={product}
-                tiers={productTiers}
-                cycle={cycle}
-                tierPrice={tierPrice}
-                selectedTierId={selectedTiers[product.id] ?? null}
-                readOnly={readOnly}
-                onSelectTier={(tid) => handleSelectTier(product.id, tid)}
-              />
-            );
-          })}
-        </div>
-      </div>
-
-      {/* All-Apps Unlimited */}
+      {/* Hero bundle */}
       {featuredBundle && (
-        <AllAppsCard
+        <HeroBundleCard
           bundle={featuredBundle}
           products={activeProducts}
-          cycle={cycle}
+          rooftopCount={rooftopCount}
           isSelected={selectedBundle === featuredBundle.id}
           readOnly={readOnly}
           onSelect={() => handleSelectBundle(featuredBundle.id)}
         />
       )}
 
-      {/* Enterprise */}
-      {enterpriseBundle && <EnterpriseCard bundle={enterpriseBundle} />}
+      {/* Per-app tabs */}
+      <AppTierTabs
+        products={activeProducts}
+        tiersByProduct={tiersByProduct}
+        tierPrice={tierPrice}
+        rooftopCount={rooftopCount}
+        selectedTiers={selectedTiers}
+        readOnly={readOnly}
+        onSelectTier={handleSelectTier}
+      />
 
-      {/* Confirm CTA + running total */}
-      {!readOnly && currentSelection && onConfirm && (
-        <Card className="border-primary/30 bg-primary/[0.03]">
-          <CardContent className="py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-semibold text-card-foreground">
-                {currentSelection.kind === "bundle"
-                  ? `Selected: ${bundles.find((b) => b.id === currentSelection.bundleId)?.name}`
-                  : `Selected: ${currentSelection.tierIds.length} app${currentSelection.tierIds.length === 1 ? "" : "s"}`}
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                <span className="font-semibold text-card-foreground">{formatUSD(monthlyLineTotal)}/mo</span>
-                {rooftopCount > 1 ? (
-                  <>
-                    {" "}
-                    = {formatUSD(monthlyLineTotal / rooftopCount)}/rooftop × {rooftopCount} rooftops.{" "}
-                  </>
-                ) : (
-                  " per rooftop. "
-                )}
-                Stripe checkout wires up shortly; your selection is stored immediately.
-              </p>
-            </div>
-            <Button size="sm" className="shrink-0 px-6" onClick={handleConfirm}>
-              {ctaLabel}
-              <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+      {/* Peer Enterprise */}
+      {enterpriseBundle && <EnterpriseCard bundle={enterpriseBundle} />}
+    </div>
+  );
+
+  // Layout: "full" gets a 2-col grid with sticky summary on desktop.
+  // "compact" stacks, summary at the bottom.
+  if (isCompact) {
+    return (
+      <div className="space-y-5">
+        {mainContent}
+        {currentSelection && (
+          <SelectionSummary
+            compact
+            title={summaryTitle}
+            subtitle={summarySubtitle}
+            perRooftopTotal={perRooftopTotal}
+            rooftopCount={rooftopCount}
+            readOnly={readOnly}
+            ctaLabel={ctaLabel}
+            onConfirm={onConfirm ? handleConfirm : undefined}
+          />
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
+      <div className="min-w-0">{mainContent}</div>
+      <aside className="lg:pt-1">
+        <SelectionSummary
+          title={summaryTitle}
+          subtitle={summarySubtitle}
+          perRooftopTotal={perRooftopTotal}
+          rooftopCount={rooftopCount}
+          readOnly={readOnly}
+          ctaLabel={ctaLabel}
+          onConfirm={onConfirm && currentSelection ? handleConfirm : undefined}
+        />
+      </aside>
     </div>
   );
 };
@@ -307,281 +310,289 @@ const PricingPlanPicker = ({
 // Sub-components
 // ──────────────────────────────────────────────────────────────────────────
 
-function ProductTierBlock({
-  product,
-  tiers,
-  cycle,
-  tierPrice,
-  selectedTierId,
-  readOnly,
-  onSelectTier,
-}: {
-  product: PlatformProduct;
-  tiers: PlatformProductTier[];
-  cycle: "monthly" | "annual";
-  tierPrice: (t: PlatformProductTier) => number;
-  selectedTierId: string | null;
-  readOnly: boolean;
-  onSelectTier: (id: string) => void;
-}) {
-  const Icon = ICON_MAP[product.icon_name] || Car;
-
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-          <Icon className="w-4 h-4 text-primary" />
-        </div>
-        <div>
-          <h4 className="text-sm font-bold text-card-foreground">{product.name}</h4>
-          <p className="text-[11px] text-muted-foreground">{product.description}</p>
-        </div>
-      </div>
-
-      <div
-        className={`grid gap-3 ${
-          tiers.length === 1
-            ? "grid-cols-1"
-            : tiers.length === 2
-              ? "grid-cols-1 sm:grid-cols-2"
-              : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-        }`}
-      >
-        {tiers.map((tier) => {
-          const isComplimentary = tier.included_with_product_ids.length > 0;
-          const isSelected = selectedTierId === tier.id;
-          const price = tierPrice(tier);
-          return (
-            <Card
-              key={tier.id}
-              className={`relative overflow-hidden transition-all ${
-                isSelected
-                  ? "border-primary/60 shadow-md ring-1 ring-primary/30"
-                  : "border-border/50 hover:border-border"
-              }`}
-            >
-              {tier.is_introductory && (
-                <div className="absolute top-0 right-0 bg-amber-500 text-white text-[9px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-bl-lg">
-                  Introductory
-                </div>
-              )}
-              {isComplimentary && (
-                <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[9px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-bl-lg">
-                  Included w/ AutoCurb
-                </div>
-              )}
-
-              <CardContent className="p-4 space-y-3">
-                <div>
-                  <p className="text-sm font-bold text-card-foreground">{tier.name}</p>
-                  {tier.description && (
-                    <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
-                      {tier.description}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <p className="text-2xl font-bold text-card-foreground">
-                    {formatUSD(price)}
-                    <span className="text-[11px] font-normal text-muted-foreground">/mo</span>
-                  </p>
-                  {tier.inventory_limit != null && (
-                    <p className="text-[10px] text-muted-foreground mt-0.5">
-                      Up to {tier.inventory_limit.toLocaleString()} active units
-                    </p>
-                  )}
-                  {tier.inventory_limit == null &&
-                    tiers.some((t) => t.inventory_limit != null) && (
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
-                        Unlimited inventory
-                      </p>
-                    )}
-                  {tier.allow_overage && tier.overage_price_per_unit != null && (
-                    <p className="text-[10px] text-amber-600 font-semibold mt-0.5">
-                      + {formatUSD(tier.overage_price_per_unit)}/unit over cap
-                    </p>
-                  )}
-                </div>
-
-                <ul className="space-y-1.5 pt-2 border-t border-border/40 text-[11px]">
-                  {tier.features.slice(0, 5).map((f) => (
-                    <li key={f} className="flex items-start gap-1.5">
-                      <Check className="w-3 h-3 text-emerald-500 shrink-0 mt-0.5" />
-                      <span className="text-card-foreground leading-snug">{f}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <Button
-                  variant={isSelected ? "default" : "outline"}
-                  size="sm"
-                  className="w-full"
-                  disabled={readOnly}
-                  onClick={() => onSelectTier(tier.id)}
-                >
-                  {isSelected ? (
-                    <>
-                      Selected <Check className="w-3.5 h-3.5 ml-1.5" />
-                    </>
-                  ) : (
-                    <>
-                      Select
-                      <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function AllAppsCard({
+function HeroBundleCard({
   bundle,
   products,
-  cycle,
+  rooftopCount,
   isSelected,
   readOnly,
   onSelect,
 }: {
   bundle: PlatformBundle;
   products: PlatformProduct[];
-  cycle: "monthly" | "annual";
+  rooftopCount: number;
   isSelected: boolean;
   readOnly: boolean;
   onSelect: () => void;
 }) {
-  const price =
-    cycle === "annual" && bundle.annual_price ? bundle.annual_price : bundle.monthly_price;
+  const price = bundle.monthly_price;
+  const multiplied = price * rooftopCount;
+
   return (
     <Card
-      className={`border-primary/40 shadow-lg overflow-hidden relative transition-all ${
-        isSelected ? "ring-2 ring-primary/60 shadow-primary/10" : ""
+      className={`relative overflow-hidden transition-all ${
+        isSelected
+          ? "border-primary/60 shadow-xl ring-2 ring-primary/40"
+          : "border-primary/30 shadow-lg"
       }`}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent pointer-events-none" />
-      <CardHeader className="relative">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <CardTitle className="text-xl flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary" />
-              {bundle.name}
-            </CardTitle>
-            <CardDescription className="mt-1 max-w-2xl">{bundle.description}</CardDescription>
-          </div>
-          <div className="text-right shrink-0">
-            <p className="text-3xl font-bold text-card-foreground">
-              {formatUSD(price)}
-              <span className="text-xs font-normal text-muted-foreground">/mo</span>
-            </p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">per rooftop</p>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="relative space-y-4">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {products.map((p) => {
-            const Icon = ICON_MAP[p.icon_name] || Car;
-            const included = bundle.product_ids.includes(p.id);
-            return (
-              <div
-                key={p.id}
-                className={`flex items-center gap-2 p-2.5 rounded-lg border text-xs ${
-                  included
-                    ? "bg-card/80 border-border/60"
-                    : "opacity-40 line-through border-transparent"
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5 text-primary shrink-0" />
-                <span className="font-medium truncate">{p.name}</span>
-                {included && <Check className="w-3 h-3 text-emerald-500 ml-auto shrink-0" />}
-              </div>
-            );
-          })}
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-3 border-t border-border/50 text-xs text-card-foreground">
-          {[
-            "Dedicated Customer Success Manager",
-            "Priority 24/7 technical support",
-            "White-glove onboarding concierge",
-            "Quarterly business reviews",
-            "Unlimited inventory across all apps",
-            "Custom integration support",
-          ].map((line) => (
-            <div key={line} className="flex items-center gap-2">
-              <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-              <span>{line}</span>
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-primary/[0.04] to-transparent pointer-events-none" />
+
+      {/* "Best value" ribbon */}
+      <div className="absolute top-0 right-0 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground text-[9px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-lg shadow-sm">
+        Best value
+      </div>
+
+      <CardContent className="relative p-5 sm:p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-5 items-start">
+          <div className="space-y-4 min-w-0">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-primary">Platform bundle</p>
+              <h3 className="text-xl sm:text-2xl font-bold text-card-foreground mt-1 leading-tight">
+                {bundle.name}
+              </h3>
+              <p className="text-xs text-muted-foreground mt-1.5 max-w-xl leading-snug">
+                {bundle.description}
+              </p>
             </div>
-          ))}
+
+            {/* Product chips — what's included */}
+            <div className="flex flex-wrap gap-1.5">
+              {products.map((p) => {
+                const Icon = ICON_MAP[p.icon_name] || Car;
+                const included = bundle.product_ids.includes(p.id);
+                return (
+                  <div
+                    key={p.id}
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium ${
+                      included
+                        ? "border-primary/30 bg-primary/5 text-card-foreground"
+                        : "border-border/40 bg-muted/40 text-muted-foreground line-through"
+                    }`}
+                  >
+                    <Icon className="w-3 h-3 shrink-0" />
+                    <span>{p.name}</span>
+                    {included && <Check className="w-2.5 h-2.5 text-emerald-500 ml-0.5" />}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Benefits */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-3 border-t border-border/40">
+              {ALL_APPS_BENEFITS.map((line) => (
+                <div key={line} className="flex items-start gap-1.5 text-[11px] text-card-foreground">
+                  <Check className="w-3 h-3 text-emerald-500 shrink-0 mt-0.5" />
+                  <span className="leading-snug">{line}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Price rail */}
+          <div className="lg:w-56 space-y-3 lg:border-l lg:border-border/40 lg:pl-5">
+            <div>
+              <p className="text-3xl sm:text-4xl font-bold text-card-foreground leading-none">
+                {formatUSD(price)}
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-1">per rooftop/mo</p>
+              {rooftopCount > 1 && (
+                <p className="text-xs text-primary font-semibold mt-1.5">
+                  {formatUSD(multiplied)}/mo total
+                </p>
+              )}
+            </div>
+            {!readOnly && (
+              <Button
+                size="sm"
+                className="w-full"
+                variant={isSelected ? "default" : "default"}
+                onClick={onSelect}
+              >
+                {isSelected ? (
+                  <>
+                    Selected <Check className="w-3.5 h-3.5 ml-1.5" />
+                  </>
+                ) : (
+                  "Select bundle"
+                )}
+              </Button>
+            )}
+          </div>
         </div>
-        <Button
-          size="sm"
-          className="w-full sm:w-auto px-6"
-          variant={isSelected ? "default" : "outline"}
-          disabled={readOnly}
-          onClick={onSelect}
-        >
-          {isSelected ? "Selected" : "Select All-Apps Unlimited"}
-          {!isSelected && <ArrowRight className="w-3.5 h-3.5 ml-1.5" />}
-        </Button>
       </CardContent>
     </Card>
+  );
+}
+
+function AppTierTabs({
+  products,
+  tiersByProduct,
+  tierPrice,
+  rooftopCount,
+  selectedTiers,
+  readOnly,
+  onSelectTier,
+}: {
+  products: PlatformProduct[];
+  tiersByProduct: Map<string, PlatformProductTier[]>;
+  tierPrice: (t: PlatformProductTier) => number;
+  rooftopCount: number;
+  selectedTiers: Record<string, string>;
+  readOnly: boolean;
+  onSelectTier: (productId: string, tierId: string) => void;
+}) {
+  const tabbable = products.filter((p) => (tiersByProduct.get(p.id) ?? []).length > 0);
+  const [active, setActive] = useState<string>(tabbable[0]?.id ?? "");
+
+  if (tabbable.length === 0) return null;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-baseline justify-between">
+        <h3 className="text-sm font-bold text-card-foreground">Or pick per app</h3>
+        <p className="text-[10px] text-muted-foreground">
+          Mix and match · one tier per product
+        </p>
+      </div>
+
+      <Tabs value={active} onValueChange={setActive} className="w-full">
+        <TabsList className="w-full h-auto flex-wrap justify-start gap-1 bg-muted/40 p-1">
+          {tabbable.map((p) => {
+            const Icon = ICON_MAP[p.icon_name] || Car;
+            const selected = Boolean(selectedTiers[p.id]);
+            return (
+              <TabsTrigger
+                key={p.id}
+                value={p.id}
+                className="data-[state=active]:bg-card data-[state=active]:shadow-sm text-xs gap-1.5 px-3 py-1.5 h-auto"
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span className="font-semibold">{p.name}</span>
+                {selected && <Check className="w-3 h-3 text-emerald-500" />}
+              </TabsTrigger>
+            );
+          })}
+        </TabsList>
+
+        {tabbable.map((p) => {
+          const list = tiersByProduct.get(p.id) ?? [];
+          const Icon = ICON_MAP[p.icon_name] || Car;
+          const hasInventoryTier = list.some((t) => t.inventory_limit != null);
+          return (
+            <TabsContent key={p.id} value={p.id} className="mt-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <Icon className="w-4 h-4 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-card-foreground">{p.name}</p>
+                  <p className="text-[11px] text-muted-foreground leading-snug">{p.description}</p>
+                </div>
+              </div>
+
+              <div
+                className={`grid gap-3 ${
+                  list.length === 1
+                    ? "grid-cols-1 max-w-md"
+                    : list.length === 2
+                      ? "grid-cols-1 sm:grid-cols-2"
+                      : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+                }`}
+              >
+                {list.map((tier) => {
+                  const isComplimentary = tier.included_with_product_ids.length > 0;
+                  const isSelected = selectedTiers[p.id] === tier.id;
+                  const price = tierPrice(tier);
+
+                  const footerLines: Array<{ label: string; tone?: "muted" | "amber" }> = [];
+                  if (tier.inventory_limit != null) {
+                    footerLines.push({
+                      label: `Up to ${tier.inventory_limit.toLocaleString()} active units`,
+                    });
+                  } else if (hasInventoryTier) {
+                    footerLines.push({ label: "Unlimited inventory" });
+                  }
+                  if (tier.allow_overage && tier.overage_price_per_unit != null) {
+                    footerLines.push({
+                      label: `+ ${formatUSD(tier.overage_price_per_unit)}/unit over cap`,
+                      tone: "amber",
+                    });
+                  }
+
+                  const badge = tier.is_introductory
+                    ? ({ label: "Introductory", tone: "amber" } as const)
+                    : isComplimentary
+                      ? ({ label: "Free w/ AutoCurb", tone: "emerald" } as const)
+                      : null;
+
+                  return (
+                    <PlanCard
+                      key={tier.id}
+                      name={tier.name}
+                      description={tier.description}
+                      monthlyPrice={price}
+                      rooftopCount={rooftopCount}
+                      features={tier.features}
+                      badge={badge}
+                      footerLines={footerLines}
+                      selected={isSelected}
+                      readOnly={readOnly}
+                      onSelect={() => onSelectTier(p.id, tier.id)}
+                    />
+                  );
+                })}
+              </div>
+            </TabsContent>
+          );
+        })}
+      </Tabs>
+    </div>
   );
 }
 
 function EnterpriseCard({ bundle }: { bundle: PlatformBundle }) {
   return (
     <Card className="border-border/60 bg-gradient-to-br from-slate-900 to-slate-800 text-slate-50 shadow-lg overflow-hidden relative">
-      <CardHeader className="relative">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <CardTitle className="text-xl flex items-center gap-2 text-slate-50">
-              <Building2 className="w-5 h-5 text-amber-400" />
-              {bundle.name}
-            </CardTitle>
-            <CardDescription className="mt-1 max-w-2xl text-slate-300">
-              {bundle.description}
-            </CardDescription>
-          </div>
-          <div className="text-right shrink-0">
-            <p className="text-2xl font-bold text-amber-400">Contact Sales</p>
-            <p className="text-[11px] text-slate-400 mt-0.5">Custom pricing per dealer group</p>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="relative space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-slate-200">
-          {[
-            "Multi-rooftop consolidated billing",
-            "Cross-rooftop executive reporting",
-            "Group-wide SSO & identity",
-            "Named Enterprise Customer Success Manager",
-            "Dedicated onboarding engineering team",
-            "Custom integrations & data pipelines",
-            "Negotiated multi-rooftop pricing",
-            "Priority roadmap influence",
-          ].map((line) => (
-            <div key={line} className="flex items-center gap-2">
-              <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              <span>{line}</span>
+      <CardContent className="relative p-5 sm:p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-5 items-start">
+          <div className="space-y-3 min-w-0">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-amber-400">Dealer groups</p>
+              <h3 className="text-lg sm:text-xl font-bold text-slate-50 mt-1 leading-tight flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-amber-400" />
+                {bundle.name}
+              </h3>
+              <p className="text-xs text-slate-300 mt-1.5 max-w-xl leading-snug">
+                {bundle.description}
+              </p>
             </div>
-          ))}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-3 border-t border-slate-700">
+              {ENTERPRISE_BENEFITS.map((line) => (
+                <div key={line} className="flex items-start gap-1.5 text-[11px] text-slate-200">
+                  <Check className="w-3 h-3 text-amber-400 shrink-0 mt-0.5" />
+                  <span className="leading-snug">{line}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="lg:w-52 space-y-2 lg:border-l lg:border-slate-700 lg:pl-5">
+            <div>
+              <p className="text-xl font-bold text-amber-400 leading-none">Contact Sales</p>
+              <p className="text-[11px] text-slate-400 mt-1">Custom multi-rooftop pricing</p>
+            </div>
+            <Button
+              size="sm"
+              className="w-full bg-amber-400 hover:bg-amber-300 text-slate-900 font-semibold"
+              asChild
+            >
+              <a href="mailto:sales@autocurb.io?subject=Enterprise%20Dealer%20Group%20Inquiry">
+                <Phone className="w-3.5 h-3.5 mr-1.5" />
+                Talk to sales
+              </a>
+            </Button>
+          </div>
         </div>
-        <Button
-          size="sm"
-          variant="secondary"
-          className="w-full sm:w-auto px-6 bg-amber-400 hover:bg-amber-300 text-slate-900 font-semibold"
-          asChild
-        >
-          <a href="mailto:sales@autocurb.io?subject=Enterprise%20Dealer%20Group%20Inquiry">
-            <Phone className="w-4 h-4 mr-2" />
-            Contact Enterprise Sales
-          </a>
-        </Button>
       </CardContent>
     </Card>
   );

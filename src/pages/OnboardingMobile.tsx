@@ -374,7 +374,7 @@ function OnboardingMobileInner() {
             </p>
           </div>
           <PricingPlanPicker
-            compact
+            variant="compact"
             ctaLabel="Select plan"
             onChange={setPlanSelection}
           />
