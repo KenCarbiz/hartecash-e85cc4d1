@@ -17,6 +17,11 @@ project_id = "ptiwdwfdckfqivoocyvp"
   # Supabase Auth webhook — authenticated via SEND_EMAIL_HOOK_SECRET.
   [functions.auth-email-hook]
     verify_jwt = false
+  # External webhook: Bland.AI voice agent books appointments.
+  # Authenticated via BLAND_WEBHOOK_SECRET (X-Webhook-Secret header or
+  # ?secret= query param). Same secret as voice-call-webhook.
+  [functions.bland-appointment-webhook]
+    verify_jwt = false
   # Customer-facing: called during public sell/appraisal flow.
   # Function validates request via submission token + origin.
   [functions.bb-lookup]
