@@ -62,6 +62,51 @@ serve(async (req) => {
       });
     }
 
+    // Input validation. Reject anything that could break URL routing, RLS
+    // predicates, or multi-tenant slug uniqueness.
+    const ID_RE = /^[a-z0-9][a-z0-9_-]{1,62}[a-z0-9]$/;
+    const SLUG_RE = /^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$/;
+    const RESERVED = new Set(["default", "admin", "api", "www", "app", "public", "auth", "supabase", "system", "root"]);
+    const validationError = (msg: string) => new Response(
+      JSON.stringify({ error: msg }),
+      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+    if (typeof dealership_id !== "string" || !ID_RE.test(dealership_id) || RESERVED.has(dealership_id)) {
+      return validationError("dealership_id must be 3–64 chars, [a-z0-9_-], and not reserved");
+    }
+    if (typeof slug !== "string" || !SLUG_RE.test(slug) || RESERVED.has(slug)) {
+      return validationError("slug must be 3–64 chars, [a-z0-9-], and not reserved");
+    }
+    if (typeof display_name !== "string" || display_name.trim().length < 2 || display_name.length > 120) {
+      return validationError("display_name must be 2–120 characters");
+    }
+    if (custom_domain && (typeof custom_domain !== "string" || custom_domain.length > 253 || !/^[a-z0-9.-]+$/i.test(custom_domain))) {
+      return validationError("custom_domain is not a valid hostname");
+    }
+
+    // Pre-flight check: reject if this dealership_id or slug already exists.
+    // Prevents the partial-insert state that occurs when tenants succeeds
+    // but a downstream table already has a row for the same dealership_id.
+    const { data: existing } = await admin.from("tenants")
+      .select("dealership_id")
+      .or(`dealership_id.eq.${dealership_id},slug.eq.${slug}`)
+      .maybeSingle();
+    if (existing) {
+      return new Response(JSON.stringify({ error: "Tenant with this ID or slug already exists" }), {
+        status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Audit trail: record who onboarded this tenant. Best-effort — the
+    // tenant_onboarding_audit table is optional; we swallow any missing-
+    // table error so the onboarding itself isn't blocked.
+    await admin.from("tenant_onboarding_audit").insert({
+      dealership_id,
+      actor_user_id: user.id,
+      actor_email: user.email ?? null,
+      action: "onboard_start",
+    }).catch((e: unknown) => { console.warn("audit log skipped:", e); });
+
     const steps: string[] = [];
 
     // Helper: hex to HSL string

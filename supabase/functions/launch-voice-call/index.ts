@@ -196,6 +196,54 @@ serve(async (req) => {
       );
     }
 
+    // ── TCPA express consent check ──
+    // Federal TCPA requires prior express written consent before placing
+    // autodialed/prerecorded calls to a cell phone for marketing purposes.
+    // Block the call unless we can find a matching consent_log entry that
+    // covers calls for this customer.
+    const consentQuery = supabase
+      .from("consent_log")
+      .select("id, consent_type, consent_text, created_at")
+      .in("consent_type", ["sms_calls_email", "calls", "voice", "tcpa"]);
+
+    if (customerPhone) {
+      consentQuery.eq("customer_phone", customerPhone);
+    } else if (customerEmail) {
+      consentQuery.eq("customer_email", customerEmail);
+    }
+
+    const { data: consentRows } = await consentQuery
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    const consentRecord = consentRows && consentRows.length > 0 ? consentRows[0] : null;
+    if (!consentRecord) {
+      // Log the blocked attempt so compliance has an audit trail of
+      // non-consented call attempts.
+      await supabase.from("voice_call_log").insert({
+        submission_id,
+        dealership_id: dealershipId,
+        phone_number: customerPhone,
+        customer_name: submission.name,
+        status: "blocked_no_consent",
+        consent_verified: false,
+        tcpa_disclosure_given: false,
+        scheduled_at: new Date().toISOString(),
+        metadata: { blocked_reason: "no_tcpa_consent_on_file" },
+      }).catch((e: unknown) => console.warn("failed to log blocked attempt", e));
+
+      return new Response(
+        JSON.stringify({
+          error: "No TCPA consent on file for this customer. Call blocked.",
+          code: "tcpa_consent_missing",
+        }),
+        {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
     // ── TCPA calling hours check ──
     const customerTz = getTimezoneFromZip(submission.zip);
     const currentLocalTime = getCurrentTimeInTz(customerTz);
@@ -364,11 +412,14 @@ serve(async (req) => {
           ? Number(submission.offered_price)
           : null,
         bump_offered: bump_amount ? maxBump : null,
-        consent_verified: false,
-        tcpa_disclosure_given: false,
+        consent_verified: true,
+        tcpa_disclosure_given: true,
         metadata: {
           customer_timezone: customerTz,
           template_vars: templateVars,
+          consent_log_id: consentRecord.id,
+          consent_type: consentRecord.consent_type,
+          consent_captured_at: consentRecord.created_at,
         },
       })
       .select()
@@ -394,7 +445,14 @@ serve(async (req) => {
       null;
     const voiceId = campaignData?.voice_id || "nat";
 
-    const webhookUrl = `${supabaseUrl}/functions/v1/voice-call-webhook`;
+    // Append the webhook shared secret so voice-call-webhook can verify
+    // the caller. The secret is a Supabase function secret and should
+    // match on both sides. Falls back to an unauthenticated URL only if
+    // the secret is missing (webhook will then reject the callback).
+    const webhookSecret = Deno.env.get("BLAND_WEBHOOK_SECRET") || "";
+    const webhookUrl = webhookSecret
+      ? `${supabaseUrl}/functions/v1/voice-call-webhook?secret=${encodeURIComponent(webhookSecret)}`
+      : `${supabaseUrl}/functions/v1/voice-call-webhook`;
 
     const blandPayload: Record<string, unknown> = {
       phone_number: customerPhone,

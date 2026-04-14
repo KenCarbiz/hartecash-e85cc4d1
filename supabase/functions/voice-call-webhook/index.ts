@@ -109,12 +109,50 @@ function determineOutcome(
   return "completed";
 }
 
+/**
+ * Constant-time compare to avoid timing-based secret discovery.
+ */
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // ── Webhook authentication ──
+    // Bland.ai does not natively sign webhooks, so we rely on a shared
+    // secret provisioned into the webhook URL (as a query param) or sent
+    // via the `X-Webhook-Secret` header. The secret is configured via
+    // the `BLAND_WEBHOOK_SECRET` Supabase function secret. Fail closed:
+    // if the secret is not configured on the server, the webhook is
+    // effectively disabled instead of silently accepting all traffic.
+    const expectedSecret = Deno.env.get("BLAND_WEBHOOK_SECRET");
+    if (!expectedSecret) {
+      console.error("BLAND_WEBHOOK_SECRET not configured — rejecting webhook");
+      return new Response(
+        JSON.stringify({ error: "Webhook not configured" }),
+        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    const url = new URL(req.url);
+    const providedSecret =
+      req.headers.get("x-webhook-secret") ||
+      url.searchParams.get("secret") ||
+      "";
+    if (!timingSafeEqual(providedSecret, expectedSecret)) {
+      console.warn("voice-call-webhook: invalid or missing secret");
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const payload = await req.json();
 
     console.log(
