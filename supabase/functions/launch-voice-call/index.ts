@@ -471,7 +471,12 @@ serve(async (req) => {
         vehicle_info: vehicleInfo,
         offer_amount: offerAmount,
         submission_id,
+        submission_token: submission.token,
         dealership_id: dealershipId,
+        // Exposed in request_data (in addition to metadata) so that
+        // in-call tools like `book_appointment` can pass it back to
+        // link the resulting appointment to this exact call recording.
+        call_log_id: callLog.id,
       },
       metadata: {
         submission_id,
