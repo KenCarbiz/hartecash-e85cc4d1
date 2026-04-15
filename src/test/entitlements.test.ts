@@ -44,13 +44,15 @@ const tiers: PlatformProductTier[] = [
   {
     id: "autolabels_base",
     product_id: "autolabels",
-    name: "Base",
+    name: "Basic",
     description: null,
     monthly_price: 299,
     annual_price: 2990,
     features: [],
     inventory_limit: null,
-    included_with_product_ids: ["autocurb"],
+    // Basic is free with AutoCurb OR with AutoLabels Premium (the
+    // product_id matches, so owning ANY autolabels tier cascades).
+    included_with_product_ids: ["autocurb", "autolabels"],
     is_introductory: false,
     is_active: true,
     sort_order: 0,
@@ -225,6 +227,21 @@ describe("entitlements — resolveEntitledTierIds", () => {
     expect(out.has("autocurb_standard")).toBe(true);
     expect(out.has("autoframe_120")).toBe(true);
     expect(out.has("autolabels_base")).toBe(true); // complimentary with autocurb
+  });
+
+  it("grants autolabels_base when the dealer only owns autolabels_pro (Premium)", () => {
+    // Premium-includes-Basic rule: buying AutoLabels Premium directly
+    // without AutoCurb still entitles the dealer to the Basic tier.
+    const out = resolveEntitledTierIds({
+      subscription: sub({ tier_ids: ["autolabels_pro"] }),
+      bundles,
+      tiers,
+    });
+    expect(out.has("autolabels_pro")).toBe(true);
+    expect(out.has("autolabels_base")).toBe(true);
+    // Shouldn't cascade into AutoCurb or other products.
+    expect(out.has("autocurb_starter")).toBe(false);
+    expect(out.has("autocurb_standard")).toBe(false);
   });
 });
 

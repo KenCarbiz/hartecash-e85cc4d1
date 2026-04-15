@@ -18,6 +18,7 @@ import {
 import { PlanCard } from "./pricing/PlanCard";
 import { RooftopStepper } from "./pricing/RooftopStepper";
 import { SelectionSummary } from "./pricing/SelectionSummary";
+import { BigButtonRows } from "./pricing/BigButtonRows";
 
 const ICON_MAP: Record<string, React.ElementType> = {
   Car,
@@ -74,8 +75,15 @@ interface PricingPlanPickerProps {
    * Layout variant:
    *   - "full"    → standalone /plan page: 2-col with sticky summary rail
    *   - "compact" → onboarding / modals: single column, slim summary strip
+   *   - "rows"    → admin Billing & Plan: horizontal rows with big tier
+   *                 buttons per product, monthly/annual toggle baked in
    */
-  variant?: "full" | "compact";
+  variant?: "full" | "compact" | "rows";
+  /**
+   * Hide the confirm CTA and auto-persist on every change (used by admin
+   * Billing & Plan which auto-saves into dealer_accounts).
+   */
+  autoSave?: boolean;
 }
 
 /**
@@ -98,11 +106,18 @@ const PricingPlanPicker = ({
   ctaLabel = "Continue",
   onConfirm,
   variant = "full",
+  autoSave = false,
 }: PricingPlanPickerProps) => {
   const { products, bundles, tiers } = usePlatform();
 
-  const [cycle] = useState<"monthly" | "annual">(
-    ANNUAL_AVAILABLE ? (initialSelection?.cycle ?? "monthly") : "monthly",
+  // `rows` variant exposes the monthly/annual toggle via per-product
+  // buttons (AutoCurb / All-Apps bundle show both options), so the
+  // cycle state needs to be writable here. Other variants keep cycle
+  // locked to monthly until ANNUAL_AVAILABLE flips on.
+  const [cycle, setCycle] = useState<"monthly" | "annual">(
+    variant === "rows" || ANNUAL_AVAILABLE
+      ? (initialSelection?.cycle ?? "monthly")
+      : "monthly",
   );
   const [rooftopCount, setRooftopCount] = useState<number>(
     Math.max(1, initialSelection?.rooftopCount ?? 1),
@@ -156,19 +171,35 @@ const PricingPlanPicker = ({
 
   const emit = (next: PlanSelection) => onChange?.(next);
 
-  const handleSelectTier = (productId: string, tierId: string) => {
+  const handleSelectTier = (
+    productId: string,
+    tierId: string,
+    nextCycle?: "monthly" | "annual",
+  ) => {
     setSelectedBundle(null);
+    const effectiveCycle = nextCycle ?? cycle;
+    if (nextCycle && nextCycle !== cycle) setCycle(nextCycle);
     setSelectedTiers((prev) => {
       const n = { ...prev, [productId]: tierId };
-      emit({ kind: "tiers", tierIds: Object.values(n), cycle, rooftopCount });
+      emit({
+        kind: "tiers",
+        tierIds: Object.values(n),
+        cycle: effectiveCycle,
+        rooftopCount,
+      });
       return n;
     });
   };
 
-  const handleSelectBundle = (bundleId: string) => {
+  const handleSelectBundle = (
+    bundleId: string,
+    nextCycle?: "monthly" | "annual",
+  ) => {
     setSelectedTiers({});
     setSelectedBundle(bundleId);
-    emit({ kind: "bundle", bundleId, cycle, rooftopCount });
+    const effectiveCycle = nextCycle ?? cycle;
+    if (nextCycle && nextCycle !== cycle) setCycle(nextCycle);
+    emit({ kind: "bundle", bundleId, cycle: effectiveCycle, rooftopCount });
   };
 
   const handleRooftopChange = (next: number) => {
@@ -265,6 +296,74 @@ const PricingPlanPicker = ({
       {enterpriseBundle && <EnterpriseCard bundle={enterpriseBundle} />}
     </div>
   );
+
+  // ─ "rows" variant — big horizontal buttons, one row per product ─
+  if (variant === "rows") {
+    // Derive which tiers are complimentary given the current selection.
+    // Reason string powers the "Free with AutoCurb" copy on the button.
+    const ownedProductIds = new Set<string>();
+    for (const tid of Object.values(selectedTiers)) {
+      const t = tiers.find((x) => x.id === tid);
+      if (t) ownedProductIds.add(t.product_id);
+    }
+    const complimentary: Record<string, string> = {};
+    for (const tier of tiers) {
+      if (!tier.is_active) continue;
+      if (tier.included_with_product_ids.length === 0) continue;
+      // Only mark as complimentary if the dealer has NOT explicitly picked
+      // this tier (if they did, it renders as "Selected" instead).
+      if (Object.values(selectedTiers).includes(tier.id)) continue;
+      const matchedProduct = tier.included_with_product_ids.find((pid) =>
+        ownedProductIds.has(pid),
+      );
+      if (matchedProduct) {
+        const p = products.find((x) => x.id === matchedProduct);
+        complimentary[tier.id] = p?.name ?? matchedProduct;
+      }
+    }
+
+    // Auto-save: whenever currentSelection changes, persist. Admins edit
+    // in-place on the Billing & Plan page without a confirm button.
+    return (
+      <RowsVariantLayout
+        products={activeProducts}
+        tiersByProduct={tiersByProduct}
+        featuredBundle={featuredBundle ?? null}
+        enterpriseBundle={enterpriseBundle ?? null}
+        productIconFor={(name) => ICON_MAP[name] || Car}
+        selectedTiers={selectedTiers}
+        selectedBundle={selectedBundle}
+        cycle={cycle}
+        complimentary={complimentary}
+        readOnly={readOnly}
+        onSelectTier={(productId, tierId, nextCycle) => {
+          handleSelectTier(productId, tierId, nextCycle);
+          if (autoSave && onConfirm) {
+            const newTierMap = { ...selectedTiers, [productId]: tierId };
+            onConfirm({
+              kind: "tiers",
+              tierIds: Object.values(newTierMap),
+              cycle: nextCycle ?? cycle,
+              rooftopCount,
+            });
+          }
+        }}
+        onSelectBundle={(bundleId, nextCycle) => {
+          handleSelectBundle(bundleId, nextCycle);
+          if (autoSave && onConfirm) {
+            onConfirm({ kind: "bundle", bundleId, cycle: nextCycle, rooftopCount });
+          }
+        }}
+        summaryTitle={summaryTitle}
+        summarySubtitle={summarySubtitle}
+        perRooftopTotal={perRooftopTotal}
+        rooftopCount={rooftopCount}
+        ctaLabel={ctaLabel}
+        onConfirm={!autoSave && onConfirm ? handleConfirm : undefined}
+        currentSelection={currentSelection}
+      />
+    );
+  }
 
   // Layout: "full" gets a 2-col grid with sticky summary on desktop.
   // "compact" stacks, summary at the bottom.
@@ -595,6 +694,94 @@ function EnterpriseCard({ bundle }: { bundle: PlatformBundle }) {
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// "rows" variant wrapper — used by admin Billing & Plan. Compact header
+// + rooftop stepper + BigButtonRows + optional confirm CTA. Reuses the
+// state + handlers from the main component above.
+// ──────────────────────────────────────────────────────────────────────
+
+function RowsVariantLayout(props: {
+  products: PlatformProduct[];
+  tiersByProduct: Map<string, PlatformProductTier[]>;
+  featuredBundle: PlatformBundle | null;
+  enterpriseBundle: PlatformBundle | null;
+  productIconFor: (iconName: string) => React.ElementType;
+  selectedTiers: Record<string, string>;
+  selectedBundle: string | null;
+  cycle: "monthly" | "annual";
+  complimentary: Record<string, string>;
+  readOnly: boolean;
+  onSelectTier: (
+    productId: string,
+    tierId: string,
+    cycle?: "monthly" | "annual",
+  ) => void;
+  onSelectBundle: (bundleId: string, cycle: "monthly" | "annual") => void;
+  summaryTitle: string;
+  summarySubtitle: string;
+  perRooftopTotal: number;
+  rooftopCount: number;
+  ctaLabel: string;
+  onConfirm?: () => void;
+  currentSelection: PlanSelection | null;
+}) {
+  const {
+    products,
+    tiersByProduct,
+    featuredBundle,
+    enterpriseBundle,
+    productIconFor,
+    selectedTiers,
+    selectedBundle,
+    cycle,
+    complimentary,
+    readOnly,
+    onSelectTier,
+    onSelectBundle,
+    summaryTitle,
+    summarySubtitle,
+    perRooftopTotal,
+    rooftopCount,
+    ctaLabel,
+    onConfirm,
+    currentSelection,
+  } = props;
+
+  return (
+    <div className="space-y-4">
+      <BigButtonRows
+        products={products}
+        tiersByProduct={tiersByProduct}
+        featuredBundle={featuredBundle}
+        enterpriseBundle={enterpriseBundle}
+        productIconFor={productIconFor}
+        selectedTiers={selectedTiers}
+        selectedBundle={selectedBundle}
+        cycle={cycle}
+        complimentary={complimentary}
+        readOnly={readOnly}
+        onSelectTier={onSelectTier}
+        onSelectBundle={onSelectBundle}
+      />
+
+      {/* Running total — slim strip, auto-saves so no confirm CTA unless
+          the parent explicitly wants one. */}
+      {currentSelection && (
+        <SelectionSummary
+          compact
+          title={summaryTitle}
+          subtitle={summarySubtitle}
+          perRooftopTotal={perRooftopTotal}
+          rooftopCount={rooftopCount}
+          readOnly={readOnly}
+          ctaLabel={ctaLabel}
+          onConfirm={onConfirm}
+        />
+      )}
+    </div>
   );
 }
 

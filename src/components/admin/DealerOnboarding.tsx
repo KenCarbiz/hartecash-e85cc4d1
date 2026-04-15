@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -21,9 +20,10 @@ import OnboardingChecklist from "./OnboardingChecklist";
 import DealerWebsiteAutofillCard from "./DealerWebsiteAutofillCard";
 import ArchitectureSelector from "./onboarding/ArchitectureSelector";
 import BDCSelector from "./onboarding/BDCSelector";
-import { architectureToDbValue, architectureToplanTier } from "./onboarding/types";
+import { architectureToDbValue } from "./onboarding/types";
 import type { ArchitectureType } from "./onboarding/types";
 import type { BDCType } from "./onboarding/BDCSelector";
+import PricingPlanPicker, { type PlanSelection } from "@/components/platform/PricingPlanPicker";
 
 interface DealerAccount {
   id: string;
@@ -62,13 +62,6 @@ const BDC_LABELS: Record<string, string> = {
   multi_bdc: "Multi-Location BDC",
   ai_bdc: "AI BDC",
 };
-
-const PLAN_TIERS = [
-  { value: "standard", label: "Standard (1–2 locations)", cost: 1995 },
-  { value: "multi_store", label: "Multi-Store (3–5 locations)", cost: 3495 },
-  { value: "group", label: "Group (6–10 locations)", cost: 5995 },
-  { value: "enterprise", label: "Enterprise (11+ — Custom Pricing)", cost: 0 },
-];
 
 const STATUS_CONFIG: Record<string, { label: string; icon: React.ElementType; color: string }> = {
   pending: { label: "Pending", icon: Clock, color: "bg-accent/10 text-accent-foreground border-accent/30" },
@@ -109,6 +102,17 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate, targetDealershipId, onD
   const [applying, setApplying] = useState(false);
   const [checklistVersion, setChecklistVersion] = useState(0);
   const { toast } = useToast();
+  // Loaded subscription (if any) seeds the BigButton picker so admins
+  // see the dealer's current plan when they open the screen.
+  const [currentSubscription, setCurrentSubscription] = useState<{
+    bundle_id: string | null;
+    tier_ids: string[];
+    billing_cycle: string;
+    rooftop_count: number;
+  } | null>(null);
+  // Ref on the Billing & Plan card so clicking an architecture option
+  // above can smoothly scroll the pricing rows into view.
+  const billingRef = useRef<HTMLDivElement | null>(null);
 
   // Read-only for non-admins when account is active/finalized
   const readOnly = !isAdmin && ["active", "paused", "cancelled"].includes(account.onboarding_status);
@@ -127,11 +131,18 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate, targetDealershipId, onD
 
   const fetchAccount = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("dealer_accounts")
-      .select("*")
-      .eq("dealership_id", dealershipId)
-      .maybeSingle();
+    const [{ data }, subRes] = await Promise.all([
+      supabase
+        .from("dealer_accounts")
+        .select("*")
+        .eq("dealership_id", dealershipId)
+        .maybeSingle(),
+      supabase
+        .from("dealer_subscriptions")
+        .select("bundle_id, tier_ids, billing_cycle, rooftop_count")
+        .eq("dealership_id", dealershipId)
+        .maybeSingle(),
+    ]);
     if (data) {
       setExistingId(data.id);
       setAccount({
@@ -148,7 +159,95 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate, targetDealershipId, onD
         onboarded_by: data.onboarded_by,
       });
     }
+    if (subRes.data) {
+      setCurrentSubscription({
+        bundle_id: subRes.data.bundle_id ?? null,
+        tier_ids: subRes.data.tier_ids ?? [],
+        billing_cycle: subRes.data.billing_cycle ?? "monthly",
+        rooftop_count: subRes.data.rooftop_count ?? 1,
+      });
+    }
     setLoading(false);
+  };
+
+  /**
+   * Persist a plan selection from the BigButton picker into
+   * dealer_subscriptions (new source of truth) AND mirror the monthly
+   * amount into dealer_accounts.plan_cost for backward compatibility
+   * with existing billing reports. Runs on every tier/bundle click.
+   */
+  const savePlanSelection = async (selection: PlanSelection) => {
+    if (selection.kind === "enterprise") return;
+
+    // Monthly total for this selection (pre-rooftop-multiplier). Used
+    // to back-fill the legacy dealer_accounts.plan_cost column.
+    // Intentionally permissive: if we can't resolve, leave untouched.
+    let monthlyTotal = 0;
+    if (selection.kind === "bundle") {
+      const { data: b } = await supabase
+        .from("platform_bundles")
+        .select("monthly_price, annual_price")
+        .eq("id", selection.bundleId)
+        .maybeSingle();
+      if (b)
+        monthlyTotal =
+          selection.cycle === "annual" && b.annual_price
+            ? Number(b.annual_price) / 12
+            : Number(b.monthly_price ?? 0);
+    } else if (selection.kind === "tiers" && selection.tierIds.length > 0) {
+      const { data: ts } = await supabase
+        .from("platform_product_tiers")
+        .select("id, monthly_price, annual_price")
+        .in("id", selection.tierIds);
+      for (const t of ts ?? []) {
+        monthlyTotal +=
+          selection.cycle === "annual" && t.annual_price
+            ? Number(t.annual_price) / 12
+            : Number(t.monthly_price ?? 0);
+      }
+    }
+    monthlyTotal = Math.round(monthlyTotal * selection.rooftopCount);
+
+    const subPayload = {
+      dealership_id: dealershipId,
+      status: "trial" as const,
+      billing_cycle: selection.cycle,
+      rooftop_count: selection.rooftopCount,
+      bundle_id: selection.kind === "bundle" ? selection.bundleId : null,
+      tier_ids: selection.kind === "tiers" ? selection.tierIds : [],
+      product_ids: [],
+      monthly_amount: monthlyTotal || null,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { error } = await supabase
+      .from("dealer_subscriptions")
+      .upsert(subPayload as never, { onConflict: "dealership_id" });
+
+    if (error) {
+      toast({
+        title: "Couldn't save plan",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Mirror for legacy reports.
+    if (existingId && monthlyTotal > 0) {
+      await supabase
+        .from("dealer_accounts")
+        .update({ plan_cost: monthlyTotal })
+        .eq("id", existingId);
+      updateField("plan_cost", monthlyTotal);
+    }
+
+    setCurrentSubscription({
+      bundle_id: subPayload.bundle_id,
+      tier_ids: subPayload.tier_ids,
+      billing_cycle: subPayload.billing_cycle,
+      rooftop_count: subPayload.rooftop_count,
+    });
   };
 
   const handleSave = async () => {
@@ -289,11 +388,20 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate, targetDealershipId, onD
             onSelect={(arch) => {
               if (readOnly) return;
               const dbArch = architectureToDbValue(arch);
-              const tier = architectureToplanTier(arch);
               updateField("architecture", dbArch);
-              updateField("plan_tier", tier);
-              const planTier = PLAN_TIERS.find(t => t.value === tier);
-              if (planTier && planTier.cost > 0) updateField("plan_cost", planTier.cost);
+              // Multi-rooftop structures imply >1 rooftop — seed the
+              // picker so admins don't have to fix the count manually.
+              if (arch === "enterprise") {
+                updateField("plan_tier", "enterprise");
+              }
+              // Smooth-scroll to the pricing section so the dealer
+              // sees their plan choices populate inline.
+              requestAnimationFrame(() => {
+                billingRef.current?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                });
+              });
             }}
           />
         </CardContent>
@@ -339,135 +447,126 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate, targetDealershipId, onD
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Rocket className="w-4 h-4 text-primary" />
-            Billing & Plan
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Plan display — dealers see simple read-only, super admins see full controls */}
-            {isAdmin ? (
-              <>
-                {/* Plan Tier — super admin only */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold">Plan Tier</Label>
-                  <Select
-                    value={account.plan_tier}
-                    onValueChange={(v) => {
-                      updateField("plan_tier", v);
-                      const tier = PLAN_TIERS.find(t => t.value === v);
-                      if (tier && tier.cost > 0) updateField("plan_cost", tier.cost);
-                    }}
-                    disabled={readOnly}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PLAN_TIERS.map(t => (
-                        <SelectItem key={t.value} value={t.value}>
-                          {t.label}{t.cost > 0 ? ` — $${t.cost.toLocaleString()}/mo` : " — Custom"}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+      <div ref={billingRef} className="scroll-mt-4 space-y-4">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Rocket className="w-4 h-4 text-primary" />
+              Billing & Plan
+            </CardTitle>
+            <CardDescription>
+              Pick a tier for each app or choose the All-Apps Unlimited bundle. Changes
+              save automatically. AutoLabels Basic is complimentary with AutoCurb or
+              AutoLabels Premium.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <PricingPlanPicker
+              variant="rows"
+              autoSave
+              readOnly={readOnly}
+              initialSelection={
+                currentSubscription?.bundle_id
+                  ? {
+                      kind: "bundle",
+                      bundleId: currentSubscription.bundle_id,
+                      cycle: (currentSubscription.billing_cycle as "monthly" | "annual") ?? "monthly",
+                      rooftopCount: currentSubscription.rooftop_count,
+                    }
+                  : currentSubscription && currentSubscription.tier_ids.length > 0
+                    ? {
+                        kind: "tiers",
+                        tierIds: currentSubscription.tier_ids,
+                        cycle: (currentSubscription.billing_cycle as "monthly" | "annual") ?? "monthly",
+                        rooftopCount: currentSubscription.rooftop_count,
+                      }
+                    : undefined
+              }
+              onConfirm={savePlanSelection}
+            />
 
-                {/* Plan Cost — super admin only */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold">Monthly Cost ($)</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    value={account.plan_cost}
-                    onChange={e => updateField("plan_cost", Number(e.target.value))}
-                    disabled={readOnly || account.plan_tier !== "enterprise"}
-                  />
-                  {account.plan_tier !== "enterprise" && (
-                    <p className="text-xs text-muted-foreground">Auto-set by plan tier</p>
-                  )}
-                </div>
-              </>
-            ) : (
-              /* Dealer admin view — simple read-only pricing */
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label className="text-xs font-semibold">Your Plan</Label>
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border border-border">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <Rocket className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-card-foreground">$1,995<span className="text-xs font-normal text-muted-foreground">/mo</span></p>
-                    <p className="text-xs text-muted-foreground">Active subscription</p>
-                  </div>
-                </div>
+            {/* Account-level billing dates stay here — they're separate
+                from tier selection. */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-border/40">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Start Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      disabled={readOnly}
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !account.start_date && "text-muted-foreground",
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {account.start_date
+                        ? format(new Date(account.start_date + "T00:00:00"), "PPP")
+                        : "Pick a date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={
+                        account.start_date
+                          ? new Date(account.start_date + "T00:00:00")
+                          : undefined
+                      }
+                      onSelect={(d) =>
+                        updateField("start_date", d ? format(d, "yyyy-MM-dd") : null)
+                      }
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
-            )}
 
-            {/* Start Date */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Start Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    disabled={readOnly}
-                    className={cn("w-full justify-start text-left font-normal", !account.start_date && "text-muted-foreground")}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {account.start_date ? format(new Date(account.start_date + "T00:00:00"), "PPP") : "Pick a date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={account.start_date ? new Date(account.start_date + "T00:00:00") : undefined}
-                    onSelect={d => updateField("start_date", d ? format(d, "yyyy-MM-dd") : null)}
-                    className={cn("p-3 pointer-events-auto")}
-                  />
-                </PopoverContent>
-              </Popover>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Billing Day of Month</Label>
+                <Select
+                  disabled={readOnly}
+                  value={account.billing_date?.toString() || ""}
+                  onValueChange={(v) => updateField("billing_date", v ? Number(v) : null)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select day..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 28 }, (_, i) => i + 1).map((d) => (
+                      <SelectItem key={d} value={String(d)}>
+                        {d}
+                        {d === 1 ? "st" : d === 2 ? "nd" : d === 3 ? "rd" : "th"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Account Status</Label>
+                <Select
+                  value={account.onboarding_status}
+                  onValueChange={(v) => updateField("onboarding_status", v)}
+                  disabled={readOnly}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(STATUS_CONFIG).map(([val, cfg]) => (
+                      <SelectItem key={val} value={val}>
+                        {cfg.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-
-            {/* Billing Date */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Billing Day of Month</Label>
-              <Select
-                disabled={readOnly}
-                value={account.billing_date?.toString() || ""}
-                onValueChange={v => updateField("billing_date", v ? Number(v) : null)}
-              >
-                <SelectTrigger><SelectValue placeholder="Select day..." /></SelectTrigger>
-                <SelectContent>
-                  {Array.from({ length: 28 }, (_, i) => i + 1).map(d => (
-                    <SelectItem key={d} value={String(d)}>{d}{d === 1 ? "st" : d === 2 ? "nd" : d === 3 ? "rd" : "th"}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Status */}
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold">Account Status</Label>
-            <Select
-              value={account.onboarding_status}
-              onValueChange={v => updateField("onboarding_status", v)}
-              disabled={readOnly}
-            >
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {Object.entries(STATUS_CONFIG).map(([val, cfg]) => (
-                  <SelectItem key={val} value={val}>{cfg.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Special Instructions */}
       <Card>
