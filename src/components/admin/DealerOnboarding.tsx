@@ -227,26 +227,64 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate, targetDealershipId, onD
       updated_at: new Date().toISOString(),
     };
 
-    // PostgREST schema cache sometimes hasn't picked up newly-added
-    // columns (rooftop_count, tier_ids, product_ids). If that happens,
-    // strip the missing column and retry — the save still lands with
-    // everything the DB knows about. The retry loop bails out after a
-    // few attempts to avoid infinite loops on genuine bugs.
+    // Resilient save — tolerates two kinds of Supabase drift we've
+    // seen on hartecash:
+    //   1. PostgREST schema cache missing a newly-added column
+    //      ("Could not find the 'X' column of 'Y' in the schema cache")
+    //   2. The UNIQUE(dealership_id) constraint missing, which breaks
+    //      onConflict-style upserts ("there is no unique or exclusion
+    //      constraint matching the ON CONFLICT specification")
+    // For (1) we strip the column and retry. For (2) we fall back to
+    // a manual select → update/insert so saves land even before the
+    // heal migration runs.
+    const manualUpsert = async (): Promise<{ error: { message: string } | null }> => {
+      const { data: existing } = await supabase
+        .from("dealer_subscriptions")
+        .select("id")
+        .eq("dealership_id", dealershipId)
+        .maybeSingle();
+      if (existing && (existing as { id?: string }).id) {
+        const { error } = await supabase
+          .from("dealer_subscriptions")
+          .update(subPayload as never)
+          .eq("dealership_id", dealershipId);
+        return { error: error ? { message: error.message } : null };
+      }
+      const { error } = await supabase
+        .from("dealer_subscriptions")
+        .insert(subPayload as never);
+      return { error: error ? { message: error.message } : null };
+    };
+
     const upsertWithFallback = async (): Promise<{ error: { message: string } | null }> => {
       for (let attempt = 0; attempt < 4; attempt++) {
         const { error } = await supabase
           .from("dealer_subscriptions")
           .upsert(subPayload as never, { onConflict: "dealership_id" });
         if (!error) return { error: null };
-        // Match Supabase error "Could not find the 'X' column of 'Y' in the schema cache"
-        const match = /Could not find the '([a-z_]+)' column/i.exec(error.message);
-        if (!match) return { error };
-        const missingCol = match[1];
-        // eslint-disable-next-line no-console
-        console.warn(
-          `[DealerOnboarding] dealer_subscriptions schema cache missing '${missingCol}', retrying without it`,
-        );
-        delete subPayload[missingCol];
+
+        // (1) Missing-column → strip and retry.
+        const colMatch = /Could not find the '([a-z_]+)' column/i.exec(error.message);
+        if (colMatch) {
+          const missingCol = colMatch[1];
+          // eslint-disable-next-line no-console
+          console.warn(
+            `[DealerOnboarding] dealer_subscriptions schema cache missing '${missingCol}', retrying without it`,
+          );
+          delete subPayload[missingCol];
+          continue;
+        }
+
+        // (2) Missing unique constraint → manual update-or-insert.
+        if (/ON CONFLICT/i.test(error.message) || /no unique or exclusion/i.test(error.message)) {
+          // eslint-disable-next-line no-console
+          console.warn(
+            "[DealerOnboarding] dealer_subscriptions.dealership_id has no UNIQUE constraint — falling back to manual upsert",
+          );
+          return await manualUpsert();
+        }
+
+        return { error };
       }
       return { error: { message: "schema cache drift — retried 4 times" } };
     };
