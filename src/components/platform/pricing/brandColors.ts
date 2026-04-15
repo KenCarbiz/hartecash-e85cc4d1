@@ -57,16 +57,6 @@ export const PRODUCT_BRAND: Record<string, ProductBrand> = {
     hex: "#10b981",
   },
   autolabels: {
-    iconBg: "bg-orange-500 text-white",
-    iconTint: "bg-orange-500/10 text-orange-600",
-    ring: "ring-orange-500/25",
-    border: "border-orange-500",
-    softBg: "bg-orange-500/[0.04]",
-    text: "text-orange-700",
-    badge: "bg-orange-500 text-white",
-    hex: "#f97316",
-  },
-  autofilm: {
     iconBg: "bg-blue-500 text-white",
     iconTint: "bg-blue-500/10 text-blue-600",
     ring: "ring-blue-500/25",
@@ -75,6 +65,16 @@ export const PRODUCT_BRAND: Record<string, ProductBrand> = {
     text: "text-blue-700",
     badge: "bg-blue-500 text-white",
     hex: "#3b82f6",
+  },
+  autofilm: {
+    iconBg: "bg-orange-500 text-white",
+    iconTint: "bg-orange-500/10 text-orange-600",
+    ring: "ring-orange-500/25",
+    border: "border-orange-500",
+    softBg: "bg-orange-500/[0.04]",
+    text: "text-orange-700",
+    badge: "bg-orange-500 text-white",
+    hex: "#f97316",
   },
   autoframe: {
     iconBg: "bg-violet-500 text-white",
@@ -95,10 +95,10 @@ export function brandFor(productId: string): ProductBrand {
 /**
  * The 4-color gradient used on the All-Apps Unlimited bundle row to
  * signal "everything in one." Order matches the row order:
- * AutoCurb → AutoLabels → AutoFrame → AutoFilm.
+ * AutoCurb (emerald) → AutoLabels (blue) → AutoFrame (violet) → AutoFilm (orange).
  */
 export const ALL_APPS_GRADIENT_BG =
-  "bg-[linear-gradient(135deg,rgba(16,185,129,0.06)_0%,rgba(249,115,22,0.05)_33%,rgba(139,92,246,0.05)_66%,rgba(59,130,246,0.06)_100%)]";
+  "bg-[linear-gradient(135deg,rgba(16,185,129,0.06)_0%,rgba(59,130,246,0.05)_33%,rgba(139,92,246,0.05)_66%,rgba(249,115,22,0.06)_100%)]";
 
 export const ALL_APPS_GRADIENT_BAR =
-  "bg-[linear-gradient(90deg,#10b981_0%,#f97316_33%,#8b5cf6_66%,#3b82f6_100%)]";
+  "bg-[linear-gradient(90deg,#10b981_0%,#3b82f6_33%,#8b5cf6_66%,#f97316_100%)]";
