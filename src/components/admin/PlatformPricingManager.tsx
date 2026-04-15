@@ -14,7 +14,6 @@ import {
   Factory,
   RotateCcw,
   Check,
-  Info,
 } from "lucide-react";
 import type { PlatformProduct, PlatformProductTier, PlatformBundle } from "@/lib/entitlements";
 
@@ -283,12 +282,12 @@ const PlatformPricingManager = () => {
           percentage off. The annual-equivalent monthly price and multiplier
           recompute live.
         </p>
-        <div className="mt-3 flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-amber-900 dark:text-amber-200 max-w-2xl">
-          <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+        <div className="mt-3 flex items-start gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/5 px-3 py-2 text-xs text-emerald-900 dark:text-emerald-200 max-w-2xl">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 mt-1 shrink-0 animate-pulse" />
           <p className="leading-snug">
-            Not yet wired to the dealer onboarding picker. Saves persist to the
-            pricing-model table; the picker will read from it once we flip the
-            switch.
+            <span className="font-semibold">Live —</span> wired into the dealer
+            onboarding picker and the billing plan card. Every save here pushes
+            to open pickers in real time via Supabase realtime.
           </p>
         </div>
       </div>

@@ -70,7 +70,22 @@ export function usePricingModel(): PricingModelLookup {
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+
+    const apply = (raw: unknown) => {
+      if (!raw) {
+        setRow(null);
+        return;
+      }
+      const r = raw as PricingModelRow;
+      setRow({
+        id: "global",
+        annual_discount_pct: Number(r.annual_discount_pct ?? 15),
+        tier_overrides: (r.tier_overrides ?? {}) as Record<string, ArchPricing>,
+        bundle_overrides: (r.bundle_overrides ?? {}) as Record<string, ArchPricing>,
+      });
+    };
+
+    const load = async () => {
       const { data, error } = await supabase
         .from("platform_pricing_model" as never)
         .select("*")
@@ -79,20 +94,38 @@ export function usePricingModel(): PricingModelLookup {
       if (cancelled) return;
       if (error || !data) {
         setRow(null);
-        setLoading(false);
-        return;
+      } else {
+        apply(data);
       }
-      const raw = data as unknown as PricingModelRow;
-      setRow({
-        id: "global",
-        annual_discount_pct: Number(raw.annual_discount_pct ?? 15),
-        tier_overrides: (raw.tier_overrides ?? {}) as Record<string, ArchPricing>,
-        bundle_overrides: (raw.bundle_overrides ?? {}) as Record<string, ArchPricing>,
-      });
       setLoading(false);
-    })();
+    };
+
+    load();
+
+    // Realtime subscription — when the super-admin saves in the
+    // Pricing Model page, every open picker (onboarding + billing) gets
+    // the new values pushed to it, no refresh needed.
+    const channel = supabase
+      .channel("platform_pricing_model")
+      .on(
+        // @ts-expect-error — supabase realtime types are loose here
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "platform_pricing_model",
+          filter: "id=eq.global",
+        },
+        (payload: { new?: unknown }) => {
+          if (cancelled) return;
+          apply(payload.new ?? null);
+        },
+      )
+      .subscribe();
+
     return () => {
       cancelled = true;
+      supabase.removeChannel(channel);
     };
   }, []);
 

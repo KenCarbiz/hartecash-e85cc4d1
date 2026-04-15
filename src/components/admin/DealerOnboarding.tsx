@@ -25,6 +25,7 @@ import type { ArchitectureType } from "./onboarding/types";
 import type { BDCType } from "./onboarding/BDCSelector";
 import PricingPlanPicker, { type PlanSelection } from "@/components/platform/PricingPlanPicker";
 import { rooftopCountForArchitecture } from "@/components/platform/pricing/architecturePricing";
+import { usePricingModel } from "@/hooks/usePricingModel";
 
 interface DealerAccount {
   id: string;
@@ -97,6 +98,11 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate, targetDealershipId, onD
   const [tenants, setTenants] = useState<{ dealership_id: string; display_name: string }[]>([]);
   const dealershipId = targetDealershipId || tenant.dealership_id;
   const [account, setAccount] = useState<Omit<DealerAccount, "id">>({ ...DEFAULT_ACCOUNT, dealership_id: dealershipId });
+  // Surface whether the picker is quoting from the super-admin's
+  // Pricing Model. When the row is present, the pill reads "Live" and
+  // the admin knows their edits in Admin → Pricing Model are what
+  // this picker is showing.
+  const pricingModel = usePricingModel();
   const [existingId, setExistingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -454,11 +460,26 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate, targetDealershipId, onD
             <CardTitle className="text-base flex items-center gap-2">
               <Rocket className="w-4 h-4 text-primary" />
               Billing & Plan
+              {pricingModel.row && (
+                <span
+                  className="ml-2 inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300"
+                  title="Prices are being sourced live from Admin → Pricing Model"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Live pricing
+                </span>
+              )}
             </CardTitle>
             <CardDescription>
               Pick a tier for each app or choose the All-Apps Unlimited bundle. Changes
               save automatically. AutoLabels Basic is complimentary with AutoCurb or
               AutoLabels Premium.
+              {pricingModel.row && (
+                <span className="block mt-1 text-[11px] text-muted-foreground">
+                  Prices are sourced from the super-admin Pricing Model — edits there
+                  propagate to this picker in real time.
+                </span>
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
