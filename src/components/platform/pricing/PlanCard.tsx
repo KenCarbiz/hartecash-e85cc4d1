@@ -54,6 +54,15 @@ export interface PlanCardProps {
   variant?: "tier" | "hero";
   /** Optional leading adornment, e.g. product icon */
   icon?: React.ReactNode;
+  /**
+   * When set, the tier is currently complimentary — included free
+   * because the dealer already owns another product (e.g. AutoLabels
+   * Basic is free when AutoCurb is selected). The card renders both
+   * price boxes with an overlay strip reading "Included free with X"
+   * and the prices strike through, signalling no charge. Upgrading to
+   * a paid tier (e.g. AutoLabels Premium) still works.
+   */
+  complimentaryReason?: string | null;
 }
 
 const BADGE_CLASSES: Record<"amber" | "emerald" | "primary", string> = {
@@ -80,6 +89,7 @@ export function PlanCard({
   selectLabel = "Select",
   variant = "tier",
   icon,
+  complimentaryReason = null,
 }: PlanCardProps) {
   const isHero = variant === "hero";
 

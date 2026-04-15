@@ -401,6 +401,10 @@ const PricingPlanPicker = ({
   // sums monthly_price regardless of the currently-selected cycle — the
   // Monthly bubble is fixed and only the separate Due-Now bubble
   // reflects the annual-prepaid choice.
+  //
+  // Complimentary tiers (AutoLabels Basic when the dealer owns AutoCurb)
+  // are EXCLUDED from the subtotal — they render as Selected/Included
+  // in the UI but cost $0.
   const perRooftopTotal = useMemo(() => {
     if (selectedBundle) {
       const b = bundles.find((x) => x.id === selectedBundle);
@@ -408,11 +412,12 @@ const PricingPlanPicker = ({
     }
     let base = 0;
     for (const tid of Object.values(selectedTiers)) {
+      if (complimentary[tid]) continue;
       const t = tiers.find((x) => x.id === tid);
       if (t) base += t.monthly_price;
     }
     return base;
-  }, [selectedBundle, selectedTiers, bundles, tiers]);
+  }, [selectedBundle, selectedTiers, bundles, tiers, complimentary]);
 
   // Per-rooftop annual-prepaid subtotal. Only populated when cycle is
   // "annual" AND the selected tiers/bundle actually expose an annual
@@ -463,6 +468,7 @@ const PricingPlanPicker = ({
     let sum = 0;
     let any = false;
     for (const tid of Object.values(selectedTiers)) {
+      if (complimentary[tid]) continue;
       const annual = annualPriceFor(tid);
       if (annual != null && annual > 0) {
         sum += annual;
@@ -471,7 +477,46 @@ const PricingPlanPicker = ({
     }
     return any ? sum : null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cycle, selectedBundle, selectedTiers, bundles, tiers]);
+  }, [cycle, selectedBundle, selectedTiers, bundles, tiers, complimentary]);
+
+  // Complimentary derivation — which tiers are auto-included free
+  // based on the current selection. Example rule from the catalog:
+  // `autolabels_base.included_with_product_ids = ["autocurb", "autolabels"]`
+  // → Basic AutoLabels is free whenever the dealer owns AutoCurb (any
+  // tier) or the Premium AutoLabels upgrade. The map stores
+  // `{ tier_id → reason }` so the UI can render "Free with AutoCurb"
+  // and the totals logic can skip it from the per-rooftop subtotal.
+  //
+  // Works for both the 'full' and 'rows' variants (was previously
+  // only derived inside the rows branch).
+  const complimentary = useMemo(() => {
+    const ownedProductIds = new Set<string>();
+    for (const tid of Object.values(selectedTiers)) {
+      const t = tiers.find((x) => x.id === tid);
+      if (t) ownedProductIds.add(t.product_id);
+    }
+    const map: Record<string, string> = {};
+    for (const tier of tiers) {
+      if (tier.is_active === false) continue;
+      if ((tier.included_with_product_ids ?? []).length === 0) continue;
+      // If the dealer already has a tier on this product_id, they've
+      // made an explicit choice (possibly Premium). Don't fight it —
+      // just don't mark the complimentary Basic tier as selected.
+      // UNLESS they explicitly selected THIS tier themselves, in
+      // which case it stays complimentary (free even when they picked
+      // it directly).
+      const explicitOnSameProduct = selectedTiers[tier.product_id];
+      if (explicitOnSameProduct && explicitOnSameProduct !== tier.id) continue;
+      const matchedProduct = tier.included_with_product_ids.find(
+        (pid) => ownedProductIds.has(pid) && pid !== tier.product_id,
+      );
+      if (matchedProduct) {
+        const p = products.find((x) => x.id === matchedProduct);
+        map[tier.id] = p?.name ?? matchedProduct;
+      }
+    }
+    return map;
+  }, [selectedTiers, tiers, products]);
 
   // Summary copy.
   const summaryTitle = selectedBundle
@@ -536,6 +581,7 @@ const PricingPlanPicker = ({
         rooftopCount={rooftopCount}
         selectedTiers={selectedTiers}
         cycle={cycle}
+        complimentary={complimentary}
         readOnly={readOnly}
         onSelectTier={handleSelectTier}
       />
@@ -547,29 +593,7 @@ const PricingPlanPicker = ({
 
   // ─ "rows" variant — big horizontal buttons, one row per product ─
   if (variant === "rows") {
-    // Derive which tiers are complimentary given the current selection.
-    // Reason string powers the "Free with AutoCurb" copy on the button.
-    const ownedProductIds = new Set<string>();
-    for (const tid of Object.values(selectedTiers)) {
-      const t = tiers.find((x) => x.id === tid);
-      if (t) ownedProductIds.add(t.product_id);
-    }
-    const complimentary: Record<string, string> = {};
-    for (const tier of tiers) {
-      if (!tier.is_active) continue;
-      if (tier.included_with_product_ids.length === 0) continue;
-      // Only mark as complimentary if the dealer has NOT explicitly picked
-      // this tier (if they did, it renders as "Selected" instead).
-      if (Object.values(selectedTiers).includes(tier.id)) continue;
-      const matchedProduct = tier.included_with_product_ids.find((pid) =>
-        ownedProductIds.has(pid),
-      );
-      if (matchedProduct) {
-        const p = products.find((x) => x.id === matchedProduct);
-        complimentary[tier.id] = p?.name ?? matchedProduct;
-      }
-    }
-
+    // `complimentary` is derived above and shared across variants.
     // Auto-save: whenever currentSelection changes, persist. Admins edit
     // in-place on the Billing & Plan page without a confirm button.
     return (
@@ -893,6 +917,7 @@ function AppTierTabs({
   rooftopCount,
   selectedTiers,
   cycle,
+  complimentary,
   readOnly,
   onSelectTier,
 }: {
@@ -902,6 +927,7 @@ function AppTierTabs({
   rooftopCount: number;
   selectedTiers: Record<string, string>;
   cycle: "monthly" | "annual";
+  complimentary: Record<string, string>;
   readOnly: boolean;
   onSelectTier: (productId: string, tierId: string, nextCycle?: "monthly" | "annual") => void;
 }) {
@@ -964,8 +990,14 @@ function AppTierTabs({
                 }`}
               >
                 {list.map((tier) => {
-                  const isComplimentary = tier.included_with_product_ids.length > 0;
-                  const isSelected = selectedTiers[p.id] === tier.id;
+                  // Is this tier free for the dealer right now, given
+                  // what else is selected? The complimentary map is the
+                  // authoritative check — derived from the catalog's
+                  // included_with_product_ids + the current selection.
+                  const complimentaryReason = complimentary[tier.id] ?? null;
+                  const isComplimentary = complimentaryReason != null;
+                  const isSelected =
+                    selectedTiers[p.id] === tier.id || isComplimentary;
                   const price = tierPrice(tier);
 
                   const footerLines: Array<{ label: string; tone?: "muted" | "amber" }> = [];
@@ -986,7 +1018,10 @@ function AppTierTabs({
                   const badge = tier.is_introductory
                     ? ({ label: "Introductory", tone: "amber" } as const)
                     : isComplimentary
-                      ? ({ label: "Free w/ AutoCurb", tone: "emerald" } as const)
+                      ? ({
+                          label: `Free w/ ${complimentaryReason}`,
+                          tone: "emerald",
+                        } as const)
                       : null;
 
                   return (
@@ -1012,6 +1047,7 @@ function AppTierTabs({
                       badge={badge}
                       footerLines={footerLines}
                       selected={isSelected}
+                      complimentaryReason={complimentaryReason}
                       readOnly={readOnly}
                       onSelect={(nextCycle) =>
                         onSelectTier(p.id, tier.id, nextCycle)
