@@ -53,30 +53,68 @@ const PlatformSubscriptions = () => {
   // current status, not reshop. Opens only when they explicitly ask.
   const [pickerOpen, setPickerOpen] = useState(false);
 
+  // In-flight selection — every click in the picker fires onChange
+  // and lands here, so the Current Plan area up top updates live.
+  // Cleared when the dealer saves (subscription refresh takes over)
+  // or closes the picker without saving.
+  const [inFlight, setInFlight] = useState<PlanSelection | null>(null);
+
   const activeProducts = products
     .filter((p) => p.is_active)
     .sort((a, b) => a.sort_order - b.sort_order);
 
-  // ── Totals maths for the lineup + bubbles ─────────────────────────
-  // Resolves the subscribed bundle (if any) and the tiers/prices
-  // currently entitled. `monthlyPerRooftop` is what the dealer pays
-  // per store per month after the first year — the headline bubble.
-  // `dueNow` is the full 12-month upfront cost across every rooftop
-  // when billing_cycle === "annual" — the secondary bubble.
-  const activeBundle = useMemo(
-    () => (subscription?.bundle_id ? bundles.find((b) => b.id === subscription.bundle_id) ?? null : null),
-    [subscription?.bundle_id, bundles],
+  // ── Resolve what to render in Current Plan ────────────────────────
+  // Priority: in-flight picker selection (live preview) > saved DB
+  // subscription. The "dirty" flag lets the UI show an Unsaved-changes
+  // pill and style the lineup card with an amber ring.
+  const hasInFlight = inFlight != null;
+  const dirty = hasInFlight;
+
+  const displayedBundleId = hasInFlight
+    ? inFlight?.kind === "bundle"
+      ? inFlight.bundleId
+      : null
+    : subscription?.bundle_id ?? null;
+
+  const displayedTierIds: string[] = hasInFlight
+    ? inFlight?.kind === "tiers"
+      ? inFlight.tierIds
+      : []
+    : subscription?.tier_ids ?? [];
+
+  const displayedCycle: "monthly" | "annual" =
+    (hasInFlight
+      ? inFlight?.kind !== "enterprise"
+        ? inFlight?.cycle
+        : "monthly"
+      : (subscription?.billing_cycle as "monthly" | "annual" | undefined)) === "annual"
+      ? "annual"
+      : "monthly";
+
+  const displayedRooftopCount = Math.max(
+    1,
+    hasInFlight
+      ? inFlight?.rooftopCount ?? 1
+      : subscription?.rooftop_count ?? 1,
   );
 
-  const rooftopCount = Math.max(1, subscription?.rooftop_count ?? 1);
-  const cycle = subscription?.billing_cycle === "annual" ? "annual" : "monthly";
+  const hasAnySelection = displayedBundleId != null || displayedTierIds.length > 0;
+
+  // ── Totals maths for the lineup + bubbles ─────────────────────────
+  const activeBundle = useMemo(
+    () => (displayedBundleId ? bundles.find((b) => b.id === displayedBundleId) ?? null : null),
+    [displayedBundleId, bundles],
+  );
+
+  const rooftopCount = displayedRooftopCount;
+  const cycle = displayedCycle;
 
   const subscribedTiers = useMemo<PlatformProductTier[]>(() => {
-    if (!subscription?.tier_ids || subscription.tier_ids.length === 0) return [];
-    return subscription.tier_ids
+    if (displayedTierIds.length === 0) return [];
+    return displayedTierIds
       .map((id) => tiers.find((t) => t.id === id))
       .filter(Boolean) as PlatformProductTier[];
-  }, [subscription?.tier_ids, tiers]);
+  }, [displayedTierIds, tiers]);
 
   const effectiveMonthly = (row: { monthly_price: number; annual_price: number | null }) =>
     cycle === "annual" && row.annual_price
@@ -198,6 +236,9 @@ const PlatformSubscriptions = () => {
             ? "Bundle selection saved. Your account manager will reach out for billing."
             : "Tier selections saved. Your account manager will reach out for billing.",
       });
+      // Clear the in-flight preview so the Current Plan falls back to
+      // the refreshed DB subscription (single source of truth after save).
+      setInFlight(null);
     },
     [tenant.dealership_id, tiers, toast],
   );
@@ -212,8 +253,16 @@ const PlatformSubscriptions = () => {
         </p>
       </div>
 
-      {/* Current subscription snapshot */}
-      <Card className="border-border/50 shadow-lg overflow-hidden relative">
+      {/* Current Plan snapshot — reflects the dealer's saved sub OR
+          the in-flight picker selection (live preview). The amber ring
+          + pill below signal when the render is a draft, not saved. */}
+      <Card
+        className={`shadow-lg overflow-hidden relative transition-[box-shadow,background] ${
+          dirty
+            ? "border-amber-400/60 ring-1 ring-amber-300/50 bg-amber-50/40 dark:bg-amber-500/5"
+            : "border-border/50"
+        }`}
+      >
         <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] to-transparent pointer-events-none" />
         <CardHeader className="relative pb-4">
           <div className="flex items-center justify-between">
@@ -222,15 +271,26 @@ const PlatformSubscriptions = () => {
                 <CreditCard className="w-5 h-5 text-primary-foreground" />
               </div>
               <div>
-                <CardTitle className="text-lg">Current Plan</CardTitle>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <CardTitle className="text-lg">Current Plan</CardTitle>
+                  {dirty && (
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] font-bold uppercase tracking-wider border-amber-400/60 bg-amber-500/10 text-amber-700 dark:text-amber-300 gap-1"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                      Unsaved changes
+                    </Badge>
+                  )}
+                </div>
                 <CardDescription>
-                  {subscription
-                    ? `${subscription.billing_cycle === "annual" ? "Annual" : "Monthly"} billing · ${subscription.rooftop_count ?? 1} rooftop${(subscription.rooftop_count ?? 1) > 1 ? "s" : ""}`
+                  {hasAnySelection
+                    ? `${cycle === "annual" ? "Annual" : "Monthly"} billing · ${rooftopCount} rooftop${rooftopCount > 1 ? "s" : ""}`
                     : "No active subscription"}
                 </CardDescription>
               </div>
             </div>
-            {subscription && (
+            {subscription && !dirty && (
               <Badge
                 variant="outline"
                 className={`text-xs font-semibold ${STATUS_COLORS[subscription.status] || ""}`}
@@ -241,7 +301,7 @@ const PlatformSubscriptions = () => {
           </div>
         </CardHeader>
         <CardContent className="relative space-y-4">
-          {subscription ? (
+          {hasAnySelection ? (
             <div className="flex flex-col lg:flex-row gap-4">
               {/* ── LEFT: horizontal lineup of subscribed products ───── */}
               <div className="flex-1 min-w-0">
@@ -289,16 +349,41 @@ const PlatformSubscriptions = () => {
                       </p>
                     </div>
                   ) : subscribedTiers.length > 0 ? (
+                    // Union of products with a selected tier (live or saved).
+                    // Uses displayedTierIds when dirty so the lineup reflects
+                    // the picker clicks before the dealer hits Save.
                     activeProducts
-                      .filter((p) => hasProduct(p.id))
+                      .filter((p) => {
+                        if (hasInFlight) {
+                          return displayedTierIds.some(
+                            (tid) => tiers.find((t) => t.id === tid)?.product_id === p.id,
+                          );
+                        }
+                        return hasProduct(p.id);
+                      })
                       .map((product) => {
                         const Icon = ICON_MAP[product.icon_name] || Car;
-                        const tier = getActiveTier(product.id);
+                        const tierByDisplayed = hasInFlight
+                          ? tiers.find(
+                              (t) =>
+                                displayedTierIds.includes(t.id) && t.product_id === product.id,
+                            ) ?? null
+                          : getActiveTier(product.id);
+                        const tier = tierByDisplayed;
+                        // Is this tier actually free given the current
+                        // lineup? Check the displayed tier IDs' product_ids
+                        // against the tier's `included_with_product_ids`.
+                        const displayedProductIds = new Set(
+                          displayedTierIds
+                            .map((tid) => tiers.find((t) => t.id === tid)?.product_id)
+                            .filter(Boolean) as string[],
+                        );
                         const complimentary =
                           tier &&
                           tier.included_with_product_ids.length > 0 &&
-                          tier.included_with_product_ids.some((pid) => hasProduct(pid)) &&
-                          !subscription.tier_ids?.includes(tier.id);
+                          tier.included_with_product_ids.some(
+                            (pid) => displayedProductIds.has(pid) && pid !== tier.product_id,
+                          );
                         const price = tier ? effectiveMonthly(tier) : 0;
                         return (
                           <div
@@ -404,7 +489,16 @@ const PlatformSubscriptions = () => {
 
       {/* Change plan — collapsed by default so admins see the current-plan
           snapshot first, not a wall of pricing cards. */}
-      <Collapsible open={pickerOpen} onOpenChange={setPickerOpen}>
+      <Collapsible
+        open={pickerOpen}
+        onOpenChange={(next) => {
+          setPickerOpen(next);
+          // Discard the in-flight preview when the picker closes
+          // without a Save. The Current Plan snaps back to the saved
+          // subscription so we never lie about what's billed.
+          if (!next) setInFlight(null);
+        }}
+      >
         <div className="flex items-center justify-between rounded-xl border border-border/50 bg-gradient-to-br from-muted/30 to-muted/10 px-4 py-3">
           <div className="min-w-0">
             <p className="text-sm font-bold text-card-foreground leading-tight">
@@ -448,6 +542,7 @@ const PlatformSubscriptions = () => {
                   : undefined
             }
             ctaLabel="Save plan"
+            onChange={(s) => setInFlight(s ?? null)}
             onConfirm={async (s) => {
               await saveSelection(s);
               setPickerOpen(false);
