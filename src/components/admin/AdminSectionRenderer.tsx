@@ -31,6 +31,7 @@ const ExecutiveKPIHub = React.lazy(() => import("./ExecutiveKPIHub"));
 const OfferSettings = React.lazy(() => import("./OfferSettings"));
 const SiteConfiguration = React.lazy(() => import("./SiteConfiguration"));
 const PlatformCatalogManager = React.lazy(() => import("./PlatformCatalogManager"));
+const PlatformPricingManager = React.lazy(() => import("./PlatformPricingManager"));
 const NotificationSettings = React.lazy(() => import("./NotificationSettings"));
 const FormConfiguration = React.lazy(() => import("./FormConfiguration"));
 const InspectionConfiguration = React.lazy(() => import("./InspectionConfiguration"));
@@ -445,6 +446,11 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
           </React.Suspense>
           <ChangelogManagement />
         </div>
+      )}
+      {activeSection === "pricing-model" && canManageAccess && tenant.dealership_id === "default" && (
+        <React.Suspense fallback={<AdminLoadingSkeleton />}>
+          <PlatformPricingManager />
+        </React.Suspense>
       )}
       {activeSection === "tenants" && canManageAccess && (
         <TenantManagement

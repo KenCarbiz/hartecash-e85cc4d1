@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 import {
   Inbox, CalendarDays, Users, ShieldCheck, SlidersHorizontal,
-  Settings, Bell, ListChecks, MessageSquareQuote, BarChart3, Send, MapPin, Car, ScrollText, Shield, Lock, Wrench, Rocket, Gauge, Network, Camera, Gift, Megaphone, ChevronDown, Link2, Code2, Paintbrush, TrendingUp, Store, Truck, Zap, Activity, ScanLine, CreditCard, Phone
+  Settings, Bell, ListChecks, MessageSquareQuote, BarChart3, Send, MapPin, Car, ScrollText, Shield, Lock, Wrench, Rocket, Gauge, Network, Camera, Gift, Megaphone, ChevronDown, Link2, Code2, Paintbrush, TrendingUp, Store, Truck, Zap, Activity, ScanLine, CreditCard, Phone, DollarSign
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
@@ -170,6 +170,7 @@ const AdminSidebar = ({
     ...(canManageAccess ? [{ key: "image-inventory", label: "Vehicle Images", icon: Car }] : []),
     ...(canManageAccess ? [{ key: "onboarding", label: "Dealer Setup", icon: Rocket }] : []),
     ...(canManageAccess ? [{ key: "system-settings", label: "System Settings", icon: Wrench }] : []),
+    ...(isPlatformAdmin ? [{ key: "pricing-model", label: "Pricing Model", icon: DollarSign }] : []),
     ...(isPlatformAdmin ? [{ key: "tenants", label: "Dealer Tenants", icon: Network }] : []),
   ].filter((item) => isAllowed(item.key));
 
@@ -240,7 +241,7 @@ const AdminSidebar = ({
     "site-config", "locations", "testimonials", "embed-toolkit",
     "my-lead-link", "my-referrals",
     "staff", "referrals", "compliance", "reports", "image-inventory",
-    "onboarding", "system-settings",
+    "onboarding", "system-settings", "pricing-model",
     "platform-billing", "integrations-status", "api-access", "vauto-integration", "white-label",
     "equity-mining", "voice-ai", "wholesale-marketplace", "service-quick-entry", "inspection-checkin",
   ];
