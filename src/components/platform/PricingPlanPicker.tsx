@@ -397,6 +397,39 @@ const PricingPlanPicker = ({
     onConfirm?.(currentSelection);
   };
 
+  // Complimentary derivation — which tiers are auto-included free
+  // based on the current selection. Example rule from the catalog:
+  // `autolabels_base.included_with_product_ids = ["autocurb", "autolabels"]`
+  // → Basic AutoLabels is free whenever the dealer owns AutoCurb.
+  // The map stores `{ tier_id → reason }` so the UI can render
+  // "Free with AutoCurb" and the totals logic can skip it.
+  //
+  // MUST be declared before any useMemo that reads from it (e.g.
+  // perRooftopTotal, annualPrepaidPerRooftop) — otherwise the closure
+  // hits a TDZ and the whole page crashes on mount.
+  const complimentary = useMemo(() => {
+    const ownedProductIds = new Set<string>();
+    for (const tid of Object.values(selectedTiers)) {
+      const t = tiers.find((x) => x.id === tid);
+      if (t) ownedProductIds.add(t.product_id);
+    }
+    const map: Record<string, string> = {};
+    for (const tier of tiers) {
+      if (tier.is_active === false) continue;
+      if ((tier.included_with_product_ids ?? []).length === 0) continue;
+      const explicitOnSameProduct = selectedTiers[tier.product_id];
+      if (explicitOnSameProduct && explicitOnSameProduct !== tier.id) continue;
+      const matchedProduct = tier.included_with_product_ids.find(
+        (pid) => ownedProductIds.has(pid) && pid !== tier.product_id,
+      );
+      if (matchedProduct) {
+        const p = products.find((x) => x.id === matchedProduct);
+        map[tier.id] = p?.name ?? matchedProduct;
+      }
+    }
+    return map;
+  }, [selectedTiers, tiers, products]);
+
   // Per-rooftop monthly subtotal for the Monthly Total bubble. Always
   // sums monthly_price regardless of the currently-selected cycle — the
   // Monthly bubble is fixed and only the separate Due-Now bubble
@@ -478,45 +511,6 @@ const PricingPlanPicker = ({
     return any ? sum : null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cycle, selectedBundle, selectedTiers, bundles, tiers, complimentary]);
-
-  // Complimentary derivation — which tiers are auto-included free
-  // based on the current selection. Example rule from the catalog:
-  // `autolabels_base.included_with_product_ids = ["autocurb", "autolabels"]`
-  // → Basic AutoLabels is free whenever the dealer owns AutoCurb (any
-  // tier) or the Premium AutoLabels upgrade. The map stores
-  // `{ tier_id → reason }` so the UI can render "Free with AutoCurb"
-  // and the totals logic can skip it from the per-rooftop subtotal.
-  //
-  // Works for both the 'full' and 'rows' variants (was previously
-  // only derived inside the rows branch).
-  const complimentary = useMemo(() => {
-    const ownedProductIds = new Set<string>();
-    for (const tid of Object.values(selectedTiers)) {
-      const t = tiers.find((x) => x.id === tid);
-      if (t) ownedProductIds.add(t.product_id);
-    }
-    const map: Record<string, string> = {};
-    for (const tier of tiers) {
-      if (tier.is_active === false) continue;
-      if ((tier.included_with_product_ids ?? []).length === 0) continue;
-      // If the dealer already has a tier on this product_id, they've
-      // made an explicit choice (possibly Premium). Don't fight it —
-      // just don't mark the complimentary Basic tier as selected.
-      // UNLESS they explicitly selected THIS tier themselves, in
-      // which case it stays complimentary (free even when they picked
-      // it directly).
-      const explicitOnSameProduct = selectedTiers[tier.product_id];
-      if (explicitOnSameProduct && explicitOnSameProduct !== tier.id) continue;
-      const matchedProduct = tier.included_with_product_ids.find(
-        (pid) => ownedProductIds.has(pid) && pid !== tier.product_id,
-      );
-      if (matchedProduct) {
-        const p = products.find((x) => x.id === matchedProduct);
-        map[tier.id] = p?.name ?? matchedProduct;
-      }
-    }
-    return map;
-  }, [selectedTiers, tiers, products]);
 
   // Summary copy.
   const summaryTitle = selectedBundle
