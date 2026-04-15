@@ -28,6 +28,7 @@ import {
   tierPriceOverride,
   bundlePriceOverride,
 } from "./pricing/architecturePricing";
+import { usePricingModel } from "@/hooks/usePricingModel";
 
 const ICON_MAP: Record<string, React.ElementType> = {
   Car,
@@ -135,6 +136,10 @@ const PricingPlanPicker = ({
   architecture,
 }: PricingPlanPickerProps) => {
   const platform = usePlatform();
+  // Super-admin-configured pricing (platform_pricing_model). Takes
+  // precedence over the static architecturePricing.ts table when an
+  // entry exists for this tier+architecture combination.
+  const pricingModel = usePricingModel();
   // Guaranteed-complete catalog with per-product fallback.
   //
   // The previous "replace the whole array when empty" approach had a
@@ -189,16 +194,48 @@ const PricingPlanPicker = ({
     // here swaps monthly/annual numbers so every downstream consumer
     // (totals, summary, tier buttons) sees the right figure without
     // any additional plumbing.
+    //
+    // Resolution order (first match wins):
+    //   1. Super-admin Pricing Model row (platform_pricing_model) —
+    //      edited live in the Admin → Pricing Model page.
+    //   2. Static architecturePricing.ts hard-coded override (legacy
+    //      safety net; kept so behaviour is identical when the DB
+    //      row is empty).
+    //   3. Catalog price on the tier/bundle itself.
+    //
+    // `annual_price` on a PlatformProductTier is the FULL 12-month
+    // prepaid amount. The DB stores the per-month-equivalent — we
+    // multiply by 12 on read to stay compatible with downstream
+    // consumers that do `annual_price / 12` for the label.
+    const toFullAnnual = (perMonthEquiv: number | undefined) =>
+      perMonthEquiv == null ? null : Math.round(perMonthEquiv * 12);
+
     const mergedTiers = mergedTiersAllRaw.map((t) => {
-      const override = tierPriceOverride(t.id, architecture);
-      return override
-        ? { ...t, monthly_price: override.monthly, annual_price: override.annual }
+      const db = pricingModel.getTierOverride(t.id, architecture);
+      if (db && db.monthly != null) {
+        return {
+          ...t,
+          monthly_price: db.monthly,
+          annual_price: toFullAnnual(db.annual) ?? t.annual_price,
+        };
+      }
+      const legacy = tierPriceOverride(t.id, architecture);
+      return legacy
+        ? { ...t, monthly_price: legacy.monthly, annual_price: legacy.annual }
         : t;
     });
     const mergedBundles = mergedBundlesBase.map((b) => {
-      const override = bundlePriceOverride(b.id, architecture);
-      return override
-        ? { ...b, monthly_price: override.monthly, annual_price: override.annual }
+      const db = pricingModel.getBundleOverride(b.id, architecture);
+      if (db && db.monthly != null) {
+        return {
+          ...b,
+          monthly_price: db.monthly,
+          annual_price: toFullAnnual(db.annual) ?? b.annual_price,
+        };
+      }
+      const legacy = bundlePriceOverride(b.id, architecture);
+      return legacy
+        ? { ...b, monthly_price: legacy.monthly, annual_price: legacy.annual }
         : b;
     });
 
@@ -207,7 +244,7 @@ const PricingPlanPicker = ({
       bundles: mergedBundles,
       tiers: mergedTiers,
     };
-  }, [platform.products, platform.bundles, platform.tiers, architecture]);
+  }, [platform.products, platform.bundles, platform.tiers, architecture, pricingModel.row]);
 
   // `rows` variant exposes the monthly/annual toggle via per-product
   // buttons (AutoCurb / All-Apps bundle show both options), so the
