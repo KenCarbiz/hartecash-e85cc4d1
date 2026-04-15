@@ -2,32 +2,33 @@ import type { PlatformBundle, PlatformProduct, PlatformProductTier } from "@/lib
 import { formatUSD } from "@/lib/entitlements";
 import { cn } from "@/lib/utils";
 import {
-  ArrowRight,
   Building2,
   CheckCircle2,
   Crown,
   Gift,
   Phone,
   Sparkles,
-  Calendar,
-  TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  ALL_APPS_GRADIENT_BAR,
+  ALL_APPS_GRADIENT_BG,
+  brandFor,
+  type ProductBrand,
+} from "./brandColors";
 
 /**
- * Premium horizontal "big button" pricing layout — matches the visual
- * language of the ArchitectureSelector cards above it (rounded-xl,
- * border-2, icon box on the left, hover-lift, CheckCircle2 when
- * selected). Each product is its own row of tier buttons, side-by-side.
- *
- * State of each tier button:
- *   1. Available     → subtle border, icon box neutral, ArrowRight
- *   2. Selected      → primary border + ring, icon box primary,
- *                       CheckCircle2
- *   3. Complimentary → emerald border/bg, Gift icon, "Included — Free
- *                       with X" copy, price struck-through
- *   4. Bundle-locked → dim + "Included in All-Apps" overlay when the
- *                       dealer picked the bundle
+ * Premium "big button" pricing layout. Audi/Ferrari design rules:
+ *   • Brand-color identity per product (green AutoCurb, orange
+ *     AutoLabels, blue AutoFilm, purple AutoFrame). Selection ring
+ *     and icon use the product's brand color, not generic primary.
+ *   • Borders whisper, never shout — 1px hairlines, never border-2.
+ *   • One identity per row (the product icon-box on the left).
+ *     Tier buttons themselves are pure typography — no inner icon
+ *     boxes, no trailing arrows. Just label, price, caption, and
+ *     a check-mark when chosen.
+ *   • Letter-spaced uppercase labels for the haute-couture feel.
+ *   • Generous interior padding — the menu of a Michelin restaurant.
  */
 
 export type ComplimentaryMap = Record<string /* tier_id */, string /* reason */>;
@@ -67,34 +68,35 @@ export function BigButtonRows({
   const bundleName = featuredBundle?.name ?? "bundle";
 
   return (
-    <div className="space-y-4">
-      {/* Single elegant banner when the bundle is active — replaces the
-          noisy per-row "Included" ribbons. Restraint over repetition. */}
+    <div className="space-y-3">
       {bundleActive && (
-        <div className="flex items-center gap-2.5 rounded-xl border border-primary/25 bg-primary/[0.04] px-4 py-2.5 text-xs">
-          <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
-          <p className="text-card-foreground leading-snug">
-            Your <span className="font-semibold">{bundleName}</span> plan
-            covers every app below at its top tier. Pick a single app to
-            switch to à la carte.
-          </p>
+        <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card px-4 py-3">
+          <div className={cn("absolute inset-x-0 top-0 h-0.5", ALL_APPS_GRADIENT_BAR)} />
+          <div className="flex items-center gap-2.5">
+            <CheckCircle2 className="w-4 h-4 text-foreground/70 shrink-0" />
+            <p className="text-xs text-muted-foreground leading-snug">
+              Your <span className="font-semibold text-foreground">{bundleName}</span> plan
+              covers every app below at its top tier. Pick a single app to switch to à la carte.
+            </p>
+          </div>
         </div>
       )}
 
       {products.map((product) => {
         const list = (tiersByProduct.get(product.id) ?? []).filter((t) => t.is_active);
         if (list.length === 0) return null;
+        const brand = brandFor(product.id);
         return (
           <ProductRow
             key={product.id}
             product={product}
             tiers={list}
             Icon={productIconFor(product.icon_name)}
+            brand={brand}
             selectedTierId={selectedTiers[product.id] ?? null}
             cycle={cycle}
             complimentary={complimentary}
             bundleActive={bundleActive}
-            bundleName={bundleName}
             readOnly={readOnly}
             onSelectTier={(tid, c) => onSelectTier(product.id, tid, c)}
           />
@@ -117,88 +119,80 @@ export function BigButtonRows({
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// Product row — premium card wrapper with product identity on the left
-// and 1-3 tier buttons on the right
+// Product row — identity on the left, tier buttons on the right
 // ─────────────────────────────────────────────────────────────────────
 
 function ProductRow({
   product,
   tiers,
   Icon,
+  brand,
   selectedTierId,
   cycle,
   complimentary,
   bundleActive,
-  bundleName,
   readOnly,
   onSelectTier,
 }: {
   product: PlatformProduct;
   tiers: PlatformProductTier[];
   Icon: React.ElementType;
+  brand: ProductBrand;
   selectedTierId: string | null;
   cycle: "monthly" | "annual";
   complimentary: ComplimentaryMap;
   bundleActive: boolean;
-  bundleName: string;
   readOnly: boolean;
   onSelectTier: (tierId: string, cycle?: "monthly" | "annual") => void;
 }) {
-  // AutoCurb special-case: one tier, shown as Monthly + Annual pair.
+  // AutoCurb / AutoFilm: one tier shown as a Monthly + Annual pair.
   const hasSingleAnnualDualTier =
-    tiers.length === 1 && tiers[0].annual_price != null && Number(tiers[0].annual_price) > 0;
+    tiers.length === 1 &&
+    tiers[0].annual_price != null &&
+    Number(tiers[0].annual_price) > 0;
 
   const anyTierSelected = selectedTierId != null;
   const rowHasComplimentary =
     !anyTierSelected && tiers.some((t) => complimentary[t.id]);
 
-  // Reference `bundleName` so TypeScript doesn't flag the prop as unused
-  // now that the per-row ribbon is gone (banner at the top covers it).
-  void bundleName;
-
   return (
     <div
       className={cn(
-        "relative rounded-xl border-2 p-4 sm:p-5 transition-all duration-200",
+        "relative rounded-2xl border bg-card transition-all duration-200",
         bundleActive
-          ? "border-border/60 bg-muted/20 opacity-60"
+          ? "border-border/40 opacity-60"
           : anyTierSelected
-            ? "border-primary/40 bg-primary/[0.02] shadow-sm"
+            ? cn(brand.border, brand.softBg, "shadow-sm")
             : rowHasComplimentary
-              ? "border-emerald-500/30 bg-emerald-500/[0.03]"
-              : "border-border bg-card",
+              ? "border-emerald-500/30 bg-emerald-500/[0.02]"
+              : "border-border/60 hover:border-border",
       )}
     >
-
-      <div className="flex flex-col md:flex-row md:items-stretch gap-4">
-        {/* Left: product identity (mirrors ArchitectureSelector spacing).
-            Narrower on desktop so 3-tier rows like AutoFrame have
-            breathing room. */}
-        <div className="flex items-start gap-3 md:w-52 md:shrink-0">
+      <div className="p-5 sm:p-6 flex flex-col md:flex-row md:items-center gap-5">
+        {/* Left: brand-tinted product identity */}
+        <div className="flex items-center gap-3.5 md:w-56 md:shrink-0">
           <div
             className={cn(
-              "flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl shrink-0 transition-colors",
-              bundleActive
-                ? "bg-muted text-muted-foreground"
-                : anyTierSelected
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "bg-muted text-muted-foreground",
+              "flex items-center justify-center w-12 h-12 rounded-xl shrink-0 transition-all duration-200",
+              anyTierSelected || rowHasComplimentary
+                ? brand.iconBg
+                : brand.iconTint,
             )}
           >
-            <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+            <Icon className="w-6 h-6" />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="font-bold text-[15px] sm:text-base text-card-foreground leading-tight tracking-tight">
+            <h3 className="font-semibold text-[15px] text-card-foreground leading-tight tracking-tight">
               {product.name}
+              <span className="text-muted-foreground/60 font-normal">.io</span>
             </h3>
-            <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 leading-snug line-clamp-2">
+            <p className="text-[11px] text-muted-foreground mt-1 leading-snug line-clamp-2">
               {product.description}
             </p>
           </div>
         </div>
 
-        {/* Right: tier buttons, horizontal, left-to-right. 3-tier rows
-            stay 3-col from sm+ so all three prices live on one line. */}
+        {/* Right: tier buttons */}
         <div
           className={cn(
             "flex-1 grid gap-2.5",
@@ -214,6 +208,7 @@ function ProductRow({
               <TierButton
                 tier={tiers[0]}
                 kind="monthly"
+                brand={brand}
                 selected={selectedTierId === tiers[0].id && cycle === "monthly"}
                 complimentaryReason={null}
                 disabled={readOnly || bundleActive}
@@ -223,6 +218,7 @@ function ProductRow({
               <TierButton
                 tier={tiers[0]}
                 kind="annual"
+                brand={brand}
                 selected={selectedTierId === tiers[0].id && cycle === "annual"}
                 complimentaryReason={null}
                 disabled={readOnly || bundleActive}
@@ -236,12 +232,11 @@ function ProductRow({
                 key={tier.id}
                 tier={tier}
                 kind="tier"
+                brand={brand}
                 selected={selectedTierId === tier.id}
                 complimentaryReason={complimentary[tier.id] ?? null}
                 disabled={
-                  readOnly ||
-                  bundleActive ||
-                  Boolean(complimentary[tier.id])
+                  readOnly || bundleActive || Boolean(complimentary[tier.id])
                 }
                 bundleCovered={bundleActive}
                 onClick={() => onSelectTier(tier.id)}
@@ -255,12 +250,13 @@ function ProductRow({
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// A premium tier button (wide pill, icon box, title, big price, check)
+// Tier button — pure typography, no inner icon box, no trailing arrow
 // ─────────────────────────────────────────────────────────────────────
 
 interface TierButtonProps {
   tier: PlatformProductTier;
   kind: "monthly" | "annual" | "tier";
+  brand: ProductBrand;
   selected: boolean;
   complimentaryReason: string | null;
   disabled: boolean;
@@ -271,39 +267,35 @@ interface TierButtonProps {
 function TierButton({
   tier,
   kind,
+  brand,
   selected,
   complimentaryReason,
   disabled,
   bundleCovered,
   onClick,
 }: TierButtonProps) {
-  // ── Complimentary state (emerald, Gift icon, crossed-out price) ────
+  // ── Complimentary state: subtle emerald, no big icon box ──────────
   if (complimentaryReason && !bundleCovered) {
     return (
-      <div className="group relative flex items-center gap-3 rounded-xl border-2 border-emerald-500/50 bg-emerald-500/[0.06] p-4 text-left transition-all">
-        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-emerald-500 text-white shrink-0 shadow-sm">
-          <Gift className="w-5 h-5" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">
-            {tier.name}
-          </p>
-          <p className="text-lg font-bold text-emerald-800 leading-none mt-0.5">
-            Included
-            <span className="ml-1.5 text-xs font-normal text-emerald-700 line-through">
-              {formatUSD(tier.monthly_price)}/mo
-            </span>
-          </p>
-          <p className="text-[10px] text-emerald-700/80 mt-1 leading-snug">
-            Free with {complimentaryReason}
-          </p>
-        </div>
-        <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+      <div className="relative rounded-xl border border-emerald-500/40 bg-emerald-500/[0.05] px-4 py-3.5">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-700">
+          {tier.name}
+        </p>
+        <p className="text-2xl font-bold text-emerald-800 leading-none mt-1.5 tabular-nums flex items-baseline gap-2">
+          Included
+          <span className="text-xs font-normal text-emerald-700/70 line-through">
+            {formatUSD(tier.monthly_price)}/mo
+          </span>
+        </p>
+        <p className="text-[10px] text-emerald-700/80 mt-1.5 leading-snug flex items-center gap-1">
+          <Gift className="w-3 h-3 shrink-0" />
+          Free with {complimentaryReason}
+        </p>
       </div>
     );
   }
 
-  // ── Header / price / caption derivation ────────────────────────────
+  // ── Header / price / caption derivation ──────────────────────────
   const monthlyPrice = tier.monthly_price;
   const annualPerMo =
     tier.annual_price != null ? Number(tier.annual_price) / 12 : null;
@@ -312,16 +304,13 @@ function TierButton({
   let bigPrice: string;
   let smallUnit: string;
   let caption: string;
-  let badge: { label: string; tone: "emerald" | "amber" | "primary" } | null =
-    null;
-  let headerIcon: React.ElementType = TrendingUp;
+  let badge: { label: string; tone: "emerald" | "amber" | "brand" } | null = null;
 
   if (kind === "monthly") {
     header = "Monthly";
     bigPrice = formatUSD(monthlyPrice);
     smallUnit = "/mo";
-    caption = "Billed monthly, cancel any time";
-    headerIcon = TrendingUp;
+    caption = "Billed monthly · cancel any time";
   } else if (kind === "annual" && annualPerMo != null) {
     const savePct =
       monthlyPrice * 12 > Number(tier.annual_price!)
@@ -332,19 +321,13 @@ function TierButton({
     smallUnit = "/mo";
     caption = `${formatUSD(Number(tier.annual_price!))} upfront · 12 months`;
     if (savePct > 0) badge = { label: `Save ${savePct}%`, tone: "emerald" };
-    headerIcon = Calendar;
   } else {
     header = tier.name;
     bigPrice = formatUSD(monthlyPrice);
     smallUnit = "/mo";
-    // Prefer the short marketing description (e.g. "Growing
-    // inventories") over the redundant "Up to N units" line, since
-    // the unit count is already in the header.
     caption = tier.description?.trim() || "";
     if (tier.is_introductory) badge = { label: "Intro", tone: "amber" };
   }
-
-  const HeaderIcon = headerIcon;
 
   return (
     <button
@@ -353,89 +336,65 @@ function TierButton({
       onClick={onClick}
       aria-pressed={selected}
       className={cn(
-        "group relative flex items-start gap-3 rounded-xl border-2 p-4 text-left transition-all duration-200",
+        "group relative rounded-xl border px-4 py-3.5 text-left transition-all duration-200",
         selected
-          ? "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-md"
+          ? cn(brand.border, brand.softBg, "ring-2", brand.ring, "shadow-sm")
           : bundleCovered
-            ? "border-border/40 bg-muted/10 opacity-70 cursor-not-allowed"
+            ? "border-border/40 opacity-70 cursor-not-allowed"
             : disabled
-              ? "border-border/40 bg-muted/20 cursor-not-allowed opacity-70"
-              : "border-border bg-card hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5",
+              ? "border-border/40 opacity-70 cursor-not-allowed"
+              : "border-border/60 hover:border-border hover:shadow-sm hover:-translate-y-0.5 cursor-pointer",
       )}
     >
-      {/* Icon box on the left, mirrors ArchitectureSelector */}
-      <div
-        className={cn(
-          "flex items-center justify-center w-10 h-10 rounded-lg shrink-0 transition-colors",
-          selected
-            ? "bg-primary text-primary-foreground shadow-sm"
-            : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary",
-        )}
-      >
-        <HeaderIcon className="w-5 h-5" />
-      </div>
+      {/* Selected check — top-right corner, brand-colored */}
+      {selected && (
+        <CheckCircle2
+          className={cn("absolute top-2.5 right-2.5 w-4 h-4", brand.text)}
+        />
+      )}
 
-      {/* Content */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <p
+      <div className="flex items-center gap-1.5 flex-wrap pr-5">
+        <p
+          className={cn(
+            "text-[10px] font-semibold uppercase tracking-[0.18em]",
+            selected ? brand.text : "text-muted-foreground",
+          )}
+        >
+          {header}
+        </p>
+        {badge && (
+          <span
             className={cn(
-              "text-[10px] font-bold uppercase tracking-wider",
-              selected ? "text-primary" : "text-muted-foreground",
+              "text-[9px] font-bold uppercase tracking-wider rounded-full px-2 py-0.5",
+              badge.tone === "emerald" && "bg-emerald-500 text-white",
+              badge.tone === "amber" &&
+                "bg-amber-500/10 text-amber-700 border border-amber-500/20",
+              badge.tone === "brand" && brand.badge,
             )}
           >
-            {header}
-          </p>
-          {badge && (
-            <span
-              className={cn(
-                "text-[9px] font-bold uppercase tracking-wider rounded-full px-2 py-0.5",
-                badge.tone === "emerald" && "bg-emerald-500 text-white",
-                badge.tone === "amber" &&
-                  "bg-amber-500/10 text-amber-600 border border-amber-500/20",
-                badge.tone === "primary" &&
-                  "bg-primary/10 text-primary border border-primary/20",
-              )}
-            >
-              {badge.label}
-            </span>
-          )}
-        </div>
-        <p className="text-2xl font-bold text-card-foreground leading-none mt-1 tabular-nums">
-          {bigPrice}
-          <span className="text-[11px] font-normal text-muted-foreground ml-0.5">
-            {smallUnit}
+            {badge.label}
           </span>
-        </p>
-        {caption && (
-          <p className="text-[10px] text-muted-foreground mt-1.5 leading-snug line-clamp-2">
-            {caption}
-          </p>
         )}
       </div>
 
-      {/* Trailing indicator */}
-      <div className="shrink-0 mt-0.5">
-        {selected ? (
-          <CheckCircle2 className="w-5 h-5 text-primary" />
-        ) : (
-          <ArrowRight
-            className={cn(
-              "w-4 h-4 transition-colors",
-              bundleCovered
-                ? "text-muted-foreground/20"
-                : "text-muted-foreground/30 group-hover:text-primary/50",
-            )}
-          />
-        )}
-      </div>
+      <p className="text-[28px] font-bold text-card-foreground leading-none mt-2 tabular-nums">
+        {bigPrice}
+        <span className="text-xs font-normal text-muted-foreground ml-0.5 tracking-tight">
+          {smallUnit}
+        </span>
+      </p>
+
+      {caption && (
+        <p className="text-[10.5px] text-muted-foreground mt-2 leading-snug line-clamp-1">
+          {caption}
+        </p>
+      )}
     </button>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// Bundle row — All-Apps Unlimited with Monthly/Annual pair, gradient
-// background and a "Best Value" ribbon
+// Bundle row — multi-color top bar (4 brand colors flowing) + Sparkles
 // ─────────────────────────────────────────────────────────────────────
 
 function BundleRow({
@@ -464,152 +423,56 @@ function BundleRow({
   return (
     <div
       className={cn(
-        "relative rounded-xl border-2 p-4 sm:p-5 transition-all duration-200 overflow-hidden",
+        "relative overflow-hidden rounded-2xl border transition-all duration-200",
         isSelected
-          ? "border-primary bg-primary/[0.04] ring-2 ring-primary/20 shadow-lg"
-          : "border-primary/30 bg-gradient-to-br from-primary/[0.06] via-primary/[0.02] to-transparent shadow-md",
+          ? "border-foreground/20 ring-2 ring-foreground/10 shadow-md"
+          : "border-border/60",
+        ALL_APPS_GRADIENT_BG,
       )}
     >
-      {/* Best Value ribbon */}
-      <div className="absolute top-0 right-0 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-xl shadow-sm">
-        Best Value · All-in-One
-      </div>
+      {/* 4-color brand gradient bar — visual signature for "all apps" */}
+      <div className={cn("absolute inset-x-0 top-0 h-0.5", ALL_APPS_GRADIENT_BAR)} />
 
-      <div className="flex flex-col md:flex-row md:items-stretch gap-4 mt-4 md:mt-0">
-        {/* Left: bundle identity — mirrors ArchitectureSelector */}
-        <div className="flex items-start gap-3 md:w-60 md:shrink-0">
-          <div className="flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-primary text-primary-foreground shrink-0 shadow-sm">
-            <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" />
+      <div className="p-5 sm:p-6 flex flex-col md:flex-row md:items-center gap-5">
+        {/* Left: bundle identity */}
+        <div className="flex items-center gap-3.5 md:w-56 md:shrink-0">
+          <div className="flex items-center justify-center w-12 h-12 rounded-xl shrink-0 bg-foreground text-background shadow-sm">
+            <Sparkles className="w-6 h-6" />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="font-bold text-[15px] sm:text-base text-card-foreground leading-tight">
-              {bundle.name}
-            </h3>
-            <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 leading-snug">
-              Everything unlocked · White-glove service · Priority 24/7 support
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <h3 className="font-semibold text-[15px] text-card-foreground leading-tight tracking-tight">
+                {bundle.name}
+              </h3>
+              <span className="text-[9px] font-bold uppercase tracking-[0.15em] rounded-full px-2 py-0.5 bg-foreground text-background">
+                Best Value
+              </span>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-1 leading-snug">
+              All four apps · White-glove service · Priority 24/7 support
             </p>
           </div>
         </div>
 
-        {/* Right: Monthly + Annual tier buttons */}
         <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          {/* Monthly */}
-          <button
-            type="button"
+          <BundleButton
+            label="Monthly"
+            price={formatUSD(bundle.monthly_price)}
+            caption="Billed monthly · cancel any time"
+            selected={isSelected && cycle === "monthly"}
             disabled={readOnly}
             onClick={() => onSelect("monthly")}
-            aria-pressed={isSelected && cycle === "monthly"}
-            className={cn(
-              "group relative flex items-start gap-3 rounded-xl border-2 p-4 text-left transition-all duration-200",
-              isSelected && cycle === "monthly"
-                ? "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-md"
-                : readOnly
-                  ? "border-border/40 bg-muted/20 cursor-not-allowed opacity-70"
-                  : "border-border bg-card hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5",
-            )}
-          >
-            <div
-              className={cn(
-                "flex items-center justify-center w-10 h-10 rounded-lg shrink-0 transition-colors",
-                isSelected && cycle === "monthly"
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary",
-              )}
-            >
-              <TrendingUp className="w-5 h-5" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p
-                className={cn(
-                  "text-[10px] font-bold uppercase tracking-wider",
-                  isSelected && cycle === "monthly"
-                    ? "text-primary"
-                    : "text-muted-foreground",
-                )}
-              >
-                Monthly
-              </p>
-              <p className="text-2xl font-bold text-card-foreground leading-none mt-1 tabular-nums">
-                {formatUSD(bundle.monthly_price)}
-                <span className="text-[11px] font-normal text-muted-foreground ml-0.5">
-                  /mo
-                </span>
-              </p>
-              <p className="text-[10px] text-muted-foreground mt-1.5 leading-snug">
-                Billed monthly, cancel any time
-              </p>
-            </div>
-            <div className="shrink-0 mt-0.5">
-              {isSelected && cycle === "monthly" ? (
-                <CheckCircle2 className="w-5 h-5 text-primary" />
-              ) : (
-                <ArrowRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary/50 transition-colors" />
-              )}
-            </div>
-          </button>
-
-          {/* Annual */}
+          />
           {annualPerMo != null && (
-            <button
-              type="button"
+            <BundleButton
+              label="Annual Prepaid"
+              price={formatUSD(Math.round(annualPerMo))}
+              caption={`${formatUSD(Number(bundle.annual_price!))} upfront · 12 months`}
+              badge={savePct > 0 ? `Save ${savePct}%` : null}
+              selected={isSelected && cycle === "annual"}
               disabled={readOnly}
               onClick={() => onSelect("annual")}
-              aria-pressed={isSelected && cycle === "annual"}
-              className={cn(
-                "group relative flex items-start gap-3 rounded-xl border-2 p-4 text-left transition-all duration-200",
-                isSelected && cycle === "annual"
-                  ? "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-md"
-                  : readOnly
-                    ? "border-border/40 bg-muted/20 cursor-not-allowed opacity-70"
-                    : "border-border bg-card hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5",
-              )}
-            >
-              <div
-                className={cn(
-                  "flex items-center justify-center w-10 h-10 rounded-lg shrink-0 transition-colors",
-                  isSelected && cycle === "annual"
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary",
-                )}
-              >
-                <Calendar className="w-5 h-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <p
-                    className={cn(
-                      "text-[10px] font-bold uppercase tracking-wider",
-                      isSelected && cycle === "annual"
-                        ? "text-primary"
-                        : "text-muted-foreground",
-                    )}
-                  >
-                    Annual Prepaid
-                  </p>
-                  {savePct > 0 && (
-                    <span className="text-[9px] font-bold uppercase tracking-wider rounded-full px-2 py-0.5 bg-emerald-500 text-white">
-                      Save {savePct}%
-                    </span>
-                  )}
-                </div>
-                <p className="text-2xl font-bold text-card-foreground leading-none mt-1 tabular-nums">
-                  {formatUSD(Math.round(annualPerMo))}
-                  <span className="text-[11px] font-normal text-muted-foreground ml-0.5">
-                    /mo
-                  </span>
-                </p>
-                <p className="text-[10px] text-muted-foreground mt-1.5 leading-snug">
-                  {formatUSD(Number(bundle.annual_price!))} upfront · 12 months
-                </p>
-              </div>
-              <div className="shrink-0 mt-0.5">
-                {isSelected && cycle === "annual" ? (
-                  <CheckCircle2 className="w-5 h-5 text-primary" />
-                ) : (
-                  <ArrowRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary/50 transition-colors" />
-                )}
-              </div>
-            </button>
+            />
           )}
         </div>
       </div>
@@ -617,39 +480,106 @@ function BundleRow({
   );
 }
 
+function BundleButton({
+  label,
+  price,
+  caption,
+  badge,
+  selected,
+  disabled,
+  onClick,
+}: {
+  label: string;
+  price: string;
+  caption: string;
+  badge?: string | null;
+  selected: boolean;
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      aria-pressed={selected}
+      className={cn(
+        "group relative rounded-xl border px-4 py-3.5 text-left transition-all duration-200 bg-card/70 backdrop-blur-sm",
+        selected
+          ? "border-foreground/30 ring-2 ring-foreground/15 shadow-sm bg-card"
+          : disabled
+            ? "border-border/40 opacity-70 cursor-not-allowed"
+            : "border-border/60 hover:border-foreground/30 hover:shadow-sm hover:-translate-y-0.5 cursor-pointer",
+      )}
+    >
+      {selected && (
+        <CheckCircle2 className="absolute top-2.5 right-2.5 w-4 h-4 text-foreground" />
+      )}
+
+      <div className="flex items-center gap-1.5 flex-wrap pr-5">
+        <p
+          className={cn(
+            "text-[10px] font-semibold uppercase tracking-[0.18em]",
+            selected ? "text-foreground" : "text-muted-foreground",
+          )}
+        >
+          {label}
+        </p>
+        {badge && (
+          <span className="text-[9px] font-bold uppercase tracking-wider rounded-full px-2 py-0.5 bg-emerald-500 text-white">
+            {badge}
+          </span>
+        )}
+      </div>
+
+      <p className="text-[28px] font-bold text-card-foreground leading-none mt-2 tabular-nums">
+        {price}
+        <span className="text-xs font-normal text-muted-foreground ml-0.5 tracking-tight">
+          /mo
+        </span>
+      </p>
+
+      <p className="text-[10.5px] text-muted-foreground mt-2 leading-snug line-clamp-1">
+        {caption}
+      </p>
+    </button>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────
-// Enterprise row — dark slate, Contact Sales
+// Enterprise — dark slate, amber accent
 // ─────────────────────────────────────────────────────────────────────
 
 function EnterpriseRow({ bundle }: { bundle: PlatformBundle }) {
   return (
-    <div className="relative rounded-xl border-2 border-slate-800 bg-gradient-to-br from-slate-900 to-slate-800 text-slate-50 p-4 sm:p-5 overflow-hidden">
-      <div className="flex flex-col md:flex-row md:items-center gap-4">
-        <div className="flex items-start gap-3 md:w-60 md:shrink-0">
-          <div className="flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-amber-400 text-slate-900 shrink-0 shadow-sm">
-            <Crown className="w-5 h-5 sm:w-6 sm:h-6" />
+    <div className="relative rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-800 text-slate-50 overflow-hidden">
+      <div className="absolute inset-x-0 top-0 h-0.5 bg-amber-400" />
+      <div className="p-5 sm:p-6 flex flex-col md:flex-row md:items-center gap-5">
+        <div className="flex items-center gap-3.5 md:w-56 md:shrink-0">
+          <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-amber-400 text-slate-900 shrink-0 shadow-sm">
+            <Crown className="w-6 h-6" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-bold text-[15px] sm:text-base text-slate-50 leading-tight">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <h3 className="font-semibold text-[15px] text-slate-50 leading-tight tracking-tight">
                 {bundle.name}
               </h3>
-              <span className="text-[9px] font-bold uppercase tracking-wider rounded-full px-2 py-0.5 bg-amber-400/20 text-amber-300 border border-amber-400/30">
+              <span className="text-[9px] font-bold uppercase tracking-[0.15em] rounded-full px-2 py-0.5 bg-amber-400/15 text-amber-300 border border-amber-400/30">
                 Custom Pricing
               </span>
             </div>
-            <p className="text-[11px] sm:text-xs text-slate-300 mt-0.5 leading-snug">
+            <p className="text-[11px] text-slate-400 mt-1 leading-snug">
               Dealer groups · Multi-rooftop · Named CSM · Consolidated billing
             </p>
           </div>
         </div>
         <div className="flex-1 flex items-center justify-end gap-3">
           <div className="text-right">
-            <p className="text-lg font-bold text-amber-400 leading-none flex items-center gap-1 justify-end">
+            <p className="text-base font-semibold text-amber-400 leading-none flex items-center gap-1.5 justify-end">
               <Building2 className="w-4 h-4" />
               Contact Sales
             </p>
-            <p className="text-[10px] text-slate-400 mt-1">
+            <p className="text-[10px] text-slate-500 mt-1.5">
               Custom multi-rooftop pricing
             </p>
           </div>
