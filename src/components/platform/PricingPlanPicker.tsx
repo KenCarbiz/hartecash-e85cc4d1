@@ -305,16 +305,51 @@ const PricingPlanPicker = ({
       ? { kind: "tiers", tierIds: Object.values(selectedTiers), cycle, rooftopCount }
       : null;
 
-  const emit = (next: PlanSelection) => onChange?.(next);
+  // `null` means the user deselected everything — onChange receivers
+  // (DealerOnboarding autosave) use this to clear the subscription.
+  const emit = (next: PlanSelection | null) => {
+    onChange?.(next as PlanSelection);
+    // In autoSave mode, every click commits — including deselects.
+    // `onConfirm` is called with the current selection (or a sentinel
+    // empty `tiers` payload when the user cleared everything).
+    if (autoSave && onConfirm) {
+      onConfirm(
+        (next ?? {
+          kind: "tiers",
+          tierIds: [],
+          cycle,
+          rooftopCount,
+        }) as PlanSelection,
+      );
+    }
+  };
 
   const handleSelectTier = (
     productId: string,
     tierId: string,
     nextCycle?: "monthly" | "annual",
   ) => {
-    setSelectedBundle(null);
     const effectiveCycle = nextCycle ?? cycle;
     if (nextCycle && nextCycle !== cycle) setCycle(nextCycle);
+    // Toggle: clicking the already-selected tier for this product
+    // clears the selection instead of flipping to a no-op. Same
+    // click-once-on / click-once-off grammar on every row.
+    const wasSelected = selectedTiers[productId] === tierId && !selectedBundle;
+    if (wasSelected) {
+      setSelectedTiers((prev) => {
+        const n = { ...prev };
+        delete n[productId];
+        const tierIds = Object.values(n);
+        emit(
+          tierIds.length > 0
+            ? { kind: "tiers", tierIds, cycle: effectiveCycle, rooftopCount }
+            : null,
+        );
+        return n;
+      });
+      return;
+    }
+    setSelectedBundle(null);
     setSelectedTiers((prev) => {
       const n = { ...prev, [productId]: tierId };
       emit({
@@ -331,10 +366,17 @@ const PricingPlanPicker = ({
     bundleId: string,
     nextCycle?: "monthly" | "annual",
   ) => {
-    setSelectedTiers({});
-    setSelectedBundle(bundleId);
     const effectiveCycle = nextCycle ?? cycle;
     if (nextCycle && nextCycle !== cycle) setCycle(nextCycle);
+    // Toggle: re-clicking the selected bundle clears it, same grammar
+    // as the tier rows.
+    if (selectedBundle === bundleId) {
+      setSelectedBundle(null);
+      emit(null);
+      return;
+    }
+    setSelectedTiers({});
+    setSelectedBundle(bundleId);
     emit({ kind: "bundle", bundleId, cycle: effectiveCycle, rooftopCount });
   };
 
@@ -474,22 +516,13 @@ const PricingPlanPicker = ({
         unavailableTiers={unavailableTiers}
         readOnly={readOnly}
         onSelectTier={(productId, tierId, nextCycle) => {
+          // handleSelectTier toggles on re-click; its emit() already
+          // fires onConfirm when autoSave is on, so no duplicate call
+          // here.
           handleSelectTier(productId, tierId, nextCycle);
-          if (autoSave && onConfirm) {
-            const newTierMap = { ...selectedTiers, [productId]: tierId };
-            onConfirm({
-              kind: "tiers",
-              tierIds: Object.values(newTierMap),
-              cycle: nextCycle ?? cycle,
-              rooftopCount,
-            });
-          }
         }}
         onSelectBundle={(bundleId, nextCycle) => {
           handleSelectBundle(bundleId, nextCycle);
-          if (autoSave && onConfirm) {
-            onConfirm({ kind: "bundle", bundleId, cycle: nextCycle, rooftopCount });
-          }
         }}
         summaryTitle={summaryTitle}
         summarySubtitle={summarySubtitle}
