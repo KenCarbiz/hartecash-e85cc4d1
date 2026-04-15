@@ -215,7 +215,7 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate, targetDealershipId, onD
     }
     monthlyTotal = Math.round(monthlyTotal * selection.rooftopCount);
 
-    const subPayload = {
+    const subPayload: Record<string, unknown> = {
       dealership_id: dealershipId,
       status: "trial" as const,
       billing_cycle: selection.cycle,
@@ -227,9 +227,31 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate, targetDealershipId, onD
       updated_at: new Date().toISOString(),
     };
 
-    const { error } = await supabase
-      .from("dealer_subscriptions")
-      .upsert(subPayload as never, { onConflict: "dealership_id" });
+    // PostgREST schema cache sometimes hasn't picked up newly-added
+    // columns (rooftop_count, tier_ids, product_ids). If that happens,
+    // strip the missing column and retry — the save still lands with
+    // everything the DB knows about. The retry loop bails out after a
+    // few attempts to avoid infinite loops on genuine bugs.
+    const upsertWithFallback = async (): Promise<{ error: { message: string } | null }> => {
+      for (let attempt = 0; attempt < 4; attempt++) {
+        const { error } = await supabase
+          .from("dealer_subscriptions")
+          .upsert(subPayload as never, { onConflict: "dealership_id" });
+        if (!error) return { error: null };
+        // Match Supabase error "Could not find the 'X' column of 'Y' in the schema cache"
+        const match = /Could not find the '([a-z_]+)' column/i.exec(error.message);
+        if (!match) return { error };
+        const missingCol = match[1];
+        // eslint-disable-next-line no-console
+        console.warn(
+          `[DealerOnboarding] dealer_subscriptions schema cache missing '${missingCol}', retrying without it`,
+        );
+        delete subPayload[missingCol];
+      }
+      return { error: { message: "schema cache drift — retried 4 times" } };
+    };
+
+    const { error } = await upsertWithFallback();
 
     if (error) {
       toast({
