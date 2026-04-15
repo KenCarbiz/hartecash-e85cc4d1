@@ -8,6 +8,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { usePlatform } from "@/contexts/PlatformContext";
 import {
+  FALLBACK_PRODUCTS,
+  FALLBACK_TIERS,
+  FALLBACK_BUNDLES,
+} from "@/components/platform/pricing/fallbackCatalog";
+import {
   Store,
   Building2,
   Building,
@@ -142,22 +147,48 @@ const PlatformPricingManager = () => {
     [saved, draft],
   );
 
+  // Merge DB catalog with the hardcoded fallback so the admin page
+  // always has something to render even if the `platform_products` /
+  // `platform_product_tiers` / `platform_bundles` tables are empty
+  // (e.g. before the v2 seed migration has run on this environment).
+  // DB rows win on matching id; fallbacks fill every gap.
+  const mergedProducts = useMemo(() => {
+    const map = new Map<string, PlatformProduct>();
+    for (const x of FALLBACK_PRODUCTS) map.set(x.id, x);
+    for (const x of products) map.set(x.id, x);
+    return Array.from(map.values());
+  }, [products]);
+
+  const mergedBundles = useMemo(() => {
+    const map = new Map<string, PlatformBundle>();
+    for (const x of FALLBACK_BUNDLES) map.set(x.id, x);
+    for (const x of bundles) map.set(x.id, x);
+    return Array.from(map.values());
+  }, [bundles]);
+
+  const mergedTiers = useMemo(() => {
+    const map = new Map<string, PlatformProductTier>();
+    for (const x of FALLBACK_TIERS) map.set(x.id, x);
+    for (const x of tiers) map.set(x.id, x);
+    return Array.from(map.values());
+  }, [tiers]);
+
   const sortedProducts = useMemo(
-    () => [...products].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
-    [products],
+    () => [...mergedProducts].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
+    [mergedProducts],
   );
 
   const sortedBundles = useMemo(
     () =>
-      [...bundles]
+      [...mergedBundles]
         .filter((b) => !b.is_enterprise)
         .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
-    [bundles],
+    [mergedBundles],
   );
 
   const tiersByProduct = useMemo(() => {
     const byProduct: Record<string, PlatformProductTier[]> = {};
-    for (const t of tiers) {
+    for (const t of mergedTiers) {
       if (t.is_active === false) continue;
       (byProduct[t.product_id] = byProduct[t.product_id] ?? []).push(t);
     }
@@ -165,7 +196,7 @@ const PlatformPricingManager = () => {
       list.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
     );
     return byProduct;
-  }, [tiers]);
+  }, [mergedTiers]);
 
   // ── Helpers ──
   const getTierPrice = (tierId: string, arch: Arch): PricePair =>
