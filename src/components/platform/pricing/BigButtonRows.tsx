@@ -1,17 +1,33 @@
 import type { PlatformBundle, PlatformProduct, PlatformProductTier } from "@/lib/entitlements";
 import { formatUSD } from "@/lib/entitlements";
-import { Card, CardContent } from "@/components/ui/card";
-import { Check, Gift, Sparkles, Building2, Phone } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  ArrowRight,
+  Building2,
+  CheckCircle2,
+  Crown,
+  Gift,
+  Phone,
+  Sparkles,
+  Calendar,
+  TrendingUp,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 /**
- * High-end "big button row" pricing layout used on the admin Billing &
- * Plan screen. Each product is a horizontal row with big tier buttons
- * side by side, left-to-right. Auto-greens any tier that is
- * complimentary based on the current selection (AutoLabels Basic
- * turns green when AutoCurb OR AutoLabels Premium is picked).
+ * Premium horizontal "big button" pricing layout — matches the visual
+ * language of the ArchitectureSelector cards above it (rounded-xl,
+ * border-2, icon box on the left, hover-lift, CheckCircle2 when
+ * selected). Each product is its own row of tier buttons, side-by-side.
  *
- * Pure presentation — state + data come from the parent PricingPlanPicker.
+ * State of each tier button:
+ *   1. Available     → subtle border, icon box neutral, ArrowRight
+ *   2. Selected      → primary border + ring, icon box primary,
+ *                       CheckCircle2
+ *   3. Complimentary → emerald border/bg, Gift icon, "Included — Free
+ *                       with X" copy, price struck-through
+ *   4. Bundle-locked → dim + "Included in All-Apps" overlay when the
+ *                       dealer picked the bundle
  */
 
 export type ComplimentaryMap = Record<string /* tier_id */, string /* reason */>;
@@ -23,7 +39,7 @@ interface BigButtonRowsProps {
   enterpriseBundle: PlatformBundle | null;
   productIconFor: (iconName: string) => React.ElementType;
 
-  selectedTiers: Record<string, string>; // product_id -> tier_id
+  selectedTiers: Record<string, string>;
   selectedBundle: string | null;
   cycle: "monthly" | "annual";
   complimentary: ComplimentaryMap;
@@ -47,6 +63,9 @@ export function BigButtonRows({
   onSelectTier,
   onSelectBundle,
 }: BigButtonRowsProps) {
+  const bundleActive = Boolean(selectedBundle);
+  const bundleName = featuredBundle?.name ?? "bundle";
+
   return (
     <div className="space-y-4">
       {products.map((product) => {
@@ -61,7 +80,8 @@ export function BigButtonRows({
             selectedTierId={selectedTiers[product.id] ?? null}
             cycle={cycle}
             complimentary={complimentary}
-            isBundleActive={Boolean(selectedBundle)}
+            bundleActive={bundleActive}
+            bundleName={bundleName}
             readOnly={readOnly}
             onSelectTier={(tid, c) => onSelectTier(product.id, tid, c)}
           />
@@ -84,7 +104,8 @@ export function BigButtonRows({
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// Rows
+// Product row — premium card wrapper with product identity on the left
+// and 1-3 tier buttons on the right
 // ─────────────────────────────────────────────────────────────────────
 
 function ProductRow({
@@ -94,7 +115,8 @@ function ProductRow({
   selectedTierId,
   cycle,
   complimentary,
-  isBundleActive,
+  bundleActive,
+  bundleName,
   readOnly,
   onSelectTier,
 }: {
@@ -104,94 +126,130 @@ function ProductRow({
   selectedTierId: string | null;
   cycle: "monthly" | "annual";
   complimentary: ComplimentaryMap;
-  isBundleActive: boolean;
+  bundleActive: boolean;
+  bundleName: string;
   readOnly: boolean;
   onSelectTier: (tierId: string, cycle?: "monthly" | "annual") => void;
 }) {
-  // Special-case AutoCurb: single tier but shows a Monthly + Annual pair.
-  // For products where ONE tier has a meaningful annual_price and only one
-  // tier exists, we split it into two pill buttons.
+  // AutoCurb special-case: one tier, shown as Monthly + Annual pair.
   const hasSingleAnnualDualTier =
-    tiers.length === 1 && tiers[0].annual_price != null && tiers[0].annual_price > 0;
+    tiers.length === 1 && tiers[0].annual_price != null && Number(tiers[0].annual_price) > 0;
 
-  const panelDisabled = readOnly || isBundleActive;
+  const anyTierSelected = selectedTierId != null;
+  const rowHasComplimentary =
+    !anyTierSelected && tiers.some((t) => complimentary[t.id]);
 
   return (
-    <Card
-      className={`overflow-hidden border-border/60 transition-opacity ${
-        isBundleActive ? "opacity-60" : ""
-      }`}
+    <div
+      className={cn(
+        "relative rounded-xl border-2 p-4 sm:p-5 transition-all duration-200",
+        bundleActive
+          ? "border-primary/20 bg-primary/[0.02] opacity-80"
+          : anyTierSelected
+            ? "border-primary/40 bg-primary/[0.02] shadow-sm"
+            : rowHasComplimentary
+              ? "border-emerald-500/30 bg-emerald-500/[0.03]"
+              : "border-border bg-card",
+      )}
     >
-      <CardContent className="p-4 sm:p-5">
-        <div className="flex flex-col md:flex-row md:items-center gap-4">
-          {/* Left: product identity */}
-          <div className="flex items-start gap-3 md:w-60 md:shrink-0">
-            <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-              <Icon className="w-5 h-5 text-primary" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[15px] font-bold text-card-foreground leading-tight">
-                {product.name}
-              </p>
-              <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
-                {product.description}
-              </p>
-            </div>
-          </div>
+      {/* Bundle-cascade overlay badge */}
+      {bundleActive && (
+        <div className="absolute top-3 right-3 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 border border-primary/20 rounded-full px-2.5 py-1">
+          <CheckCircle2 className="w-3 h-3" />
+          Included in {bundleName}
+        </div>
+      )}
 
-          {/* Right: tier buttons, horizontal */}
-          <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-            {hasSingleAnnualDualTier ? (
-              <>
-                <TierButton
-                  tier={tiers[0]}
-                  kind="monthly"
-                  selected={selectedTierId === tiers[0].id && cycle === "monthly"}
-                  complimentaryReason={null}
-                  disabled={panelDisabled}
-                  onClick={() => onSelectTier(tiers[0].id, "monthly")}
-                />
-                <TierButton
-                  tier={tiers[0]}
-                  kind="annual"
-                  selected={selectedTierId === tiers[0].id && cycle === "annual"}
-                  complimentaryReason={null}
-                  disabled={panelDisabled}
-                  onClick={() => onSelectTier(tiers[0].id, "annual")}
-                />
-              </>
-            ) : (
-              tiers.map((tier) => (
-                <TierButton
-                  key={tier.id}
-                  tier={tier}
-                  kind="tier"
-                  selected={selectedTierId === tier.id}
-                  complimentaryReason={complimentary[tier.id] ?? null}
-                  disabled={panelDisabled || Boolean(complimentary[tier.id])}
-                  onClick={() => onSelectTier(tier.id)}
-                />
-              ))
+      <div className="flex flex-col md:flex-row md:items-stretch gap-4">
+        {/* Left: product identity (matches ArchitectureSelector icon + title) */}
+        <div className="flex items-start gap-3 md:w-60 md:shrink-0">
+          <div
+            className={cn(
+              "flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl shrink-0 transition-colors",
+              bundleActive || anyTierSelected
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "bg-muted text-muted-foreground",
             )}
+          >
+            <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-bold text-[15px] sm:text-base text-card-foreground leading-tight">
+              {product.name}
+            </h3>
+            <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 leading-snug">
+              {product.description}
+            </p>
           </div>
         </div>
-      </CardContent>
-    </Card>
+
+        {/* Right: tier buttons, horizontal, left-to-right */}
+        <div
+          className={cn(
+            "flex-1 grid gap-2.5",
+            hasSingleAnnualDualTier || tiers.length === 2
+              ? "grid-cols-1 sm:grid-cols-2"
+              : tiers.length === 3
+                ? "grid-cols-1 sm:grid-cols-3"
+                : "grid-cols-1",
+          )}
+        >
+          {hasSingleAnnualDualTier ? (
+            <>
+              <TierButton
+                tier={tiers[0]}
+                kind="monthly"
+                selected={selectedTierId === tiers[0].id && cycle === "monthly"}
+                complimentaryReason={null}
+                disabled={readOnly || bundleActive}
+                bundleCovered={bundleActive}
+                onClick={() => onSelectTier(tiers[0].id, "monthly")}
+              />
+              <TierButton
+                tier={tiers[0]}
+                kind="annual"
+                selected={selectedTierId === tiers[0].id && cycle === "annual"}
+                complimentaryReason={null}
+                disabled={readOnly || bundleActive}
+                bundleCovered={bundleActive}
+                onClick={() => onSelectTier(tiers[0].id, "annual")}
+              />
+            </>
+          ) : (
+            tiers.map((tier) => (
+              <TierButton
+                key={tier.id}
+                tier={tier}
+                kind="tier"
+                selected={selectedTierId === tier.id}
+                complimentaryReason={complimentary[tier.id] ?? null}
+                disabled={
+                  readOnly ||
+                  bundleActive ||
+                  Boolean(complimentary[tier.id])
+                }
+                bundleCovered={bundleActive}
+                onClick={() => onSelectTier(tier.id)}
+              />
+            ))
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// A big pill-style tier button
+// A premium tier button (wide pill, icon box, title, big price, check)
 // ─────────────────────────────────────────────────────────────────────
 
 interface TierButtonProps {
   tier: PlatformProductTier;
-  /** "monthly" / "annual" render monthly-vs-annual split for a single
-   *  tier (AutoCurb); "tier" renders a normal tier pick. */
   kind: "monthly" | "annual" | "tier";
   selected: boolean;
   complimentaryReason: string | null;
   disabled: boolean;
+  bundleCovered: boolean;
   onClick: () => void;
 }
 
@@ -201,64 +259,78 @@ function TierButton({
   selected,
   complimentaryReason,
   disabled,
+  bundleCovered,
   onClick,
 }: TierButtonProps) {
-  // Complimentary tier? Green pill, disabled, "Included" copy.
-  if (complimentaryReason) {
+  // ── Complimentary state (emerald, Gift icon, crossed-out price) ────
+  if (complimentaryReason && !bundleCovered) {
     return (
-      <div className="relative rounded-xl border-2 border-emerald-500/50 bg-emerald-50 px-4 py-3 text-left shadow-sm">
-        <div className="absolute top-2 right-2">
-          <Gift className="w-3.5 h-3.5 text-emerald-600" />
+      <div className="group relative flex items-center gap-3 rounded-xl border-2 border-emerald-500/50 bg-emerald-500/[0.06] p-4 text-left transition-all">
+        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-emerald-500 text-white shrink-0 shadow-sm">
+          <Gift className="w-5 h-5" />
         </div>
-        <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">
-          {tier.name}
-        </p>
-        <p className="text-xl font-bold text-emerald-700 mt-0.5 leading-none">Included</p>
-        <p className="text-[10px] text-emerald-700/80 mt-1 leading-snug">
-          Free with {complimentaryReason}
-        </p>
+        <div className="flex-1 min-w-0">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">
+            {tier.name}
+          </p>
+          <p className="text-lg font-bold text-emerald-800 leading-none mt-0.5">
+            Included
+            <span className="ml-1.5 text-xs font-normal text-emerald-700 line-through">
+              {formatUSD(tier.monthly_price)}/mo
+            </span>
+          </p>
+          <p className="text-[10px] text-emerald-700/80 mt-1 leading-snug">
+            Free with {complimentaryReason}
+          </p>
+        </div>
+        <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
       </div>
     );
   }
 
-  const monthlyPerMo = tier.monthly_price;
-  const annualPerMoEquivalent =
+  // ── Header / price / caption derivation ────────────────────────────
+  const monthlyPrice = tier.monthly_price;
+  const annualPerMo =
     tier.annual_price != null ? Number(tier.annual_price) / 12 : null;
 
-  let header = "";
-  let bigPrice = "";
-  let smallPrice = "";
-  let caption = "";
-  let badge: string | null = null;
+  let header: string;
+  let bigPrice: string;
+  let smallUnit: string;
+  let caption: string;
+  let badge: { label: string; tone: "emerald" | "amber" | "primary" } | null =
+    null;
+  let headerIcon: React.ElementType = TrendingUp;
 
   if (kind === "monthly") {
     header = "Monthly";
-    bigPrice = formatUSD(monthlyPerMo);
-    smallPrice = "/mo";
-    caption = "Billed monthly";
-  } else if (kind === "annual" && annualPerMoEquivalent != null) {
-    const monthsSaved =
-      monthlyPerMo * 12 > Number(tier.annual_price!)
-        ? Math.round((1 - Number(tier.annual_price!) / (monthlyPerMo * 12)) * 100)
+    bigPrice = formatUSD(monthlyPrice);
+    smallUnit = "/mo";
+    caption = "Billed monthly, cancel any time";
+    headerIcon = TrendingUp;
+  } else if (kind === "annual" && annualPerMo != null) {
+    const savePct =
+      monthlyPrice * 12 > Number(tier.annual_price!)
+        ? Math.round((1 - Number(tier.annual_price!) / (monthlyPrice * 12)) * 100)
         : 0;
-    header = "Annual — Prepaid";
-    bigPrice = formatUSD(Math.round(annualPerMoEquivalent));
-    smallPrice = "/mo";
-    caption = `${formatUSD(Number(tier.annual_price!))} upfront, 12 months`;
-    if (monthsSaved > 0) badge = `Save ${monthsSaved}%`;
+    header = "Annual Prepaid";
+    bigPrice = formatUSD(Math.round(annualPerMo));
+    smallUnit = "/mo";
+    caption = `${formatUSD(Number(tier.annual_price!))} upfront · 12 months`;
+    if (savePct > 0) badge = { label: `Save ${savePct}%`, tone: "emerald" };
+    headerIcon = Calendar;
   } else {
     header = tier.name;
-    bigPrice = formatUSD(monthlyPerMo);
-    smallPrice = "/mo";
-    // Inventory limit / overage summary line
-    const inv = tier.inventory_limit != null ? `Up to ${tier.inventory_limit} units` : null;
-    const over =
-      tier.allow_overage && tier.overage_price_per_unit != null
-        ? `+ ${formatUSD(tier.overage_price_per_unit)}/unit over cap`
+    bigPrice = formatUSD(monthlyPrice);
+    smallUnit = "/mo";
+    const inv =
+      tier.inventory_limit != null
+        ? `Up to ${tier.inventory_limit.toLocaleString()} units`
         : null;
-    caption = inv && over ? `${inv} · ${over}` : (inv ?? over ?? (tier.description ?? ""));
-    if (tier.is_introductory) badge = "Intro";
+    caption = inv ?? tier.description ?? "";
+    if (tier.is_introductory) badge = { label: "Intro", tone: "amber" };
   }
+
+  const HeaderIcon = headerIcon;
 
   return (
     <button
@@ -266,52 +338,90 @@ function TierButton({
       disabled={disabled}
       onClick={onClick}
       aria-pressed={selected}
-      className={`group relative rounded-xl border-2 px-4 py-3 text-left transition-all ${
+      className={cn(
+        "group relative flex items-start gap-3 rounded-xl border-2 p-4 text-left transition-all duration-200",
         selected
-          ? "border-primary bg-primary/[0.06] shadow-md ring-2 ring-primary/20"
-          : disabled
-            ? "border-border/40 bg-muted/30 cursor-not-allowed"
-            : "border-border/60 bg-card hover:border-primary/40 hover:shadow-sm"
-      }`}
+          ? "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-md"
+          : bundleCovered
+            ? "border-border/40 bg-muted/10 opacity-70 cursor-not-allowed"
+            : disabled
+              ? "border-border/40 bg-muted/20 cursor-not-allowed opacity-70"
+              : "border-border bg-card hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5",
+      )}
     >
-      {badge && (
-        <span
-          className={`absolute top-2 right-2 text-[9px] font-bold uppercase tracking-wider rounded-full px-2 py-0.5 ${
-            kind === "annual" ? "bg-emerald-500 text-white" : "bg-amber-500 text-white"
-          }`}
-        >
-          {badge}
-        </span>
-      )}
-      <p
-        className={`text-[10px] font-bold uppercase tracking-wider ${
-          selected ? "text-primary" : "text-muted-foreground"
-        }`}
+      {/* Icon box on the left, mirrors ArchitectureSelector */}
+      <div
+        className={cn(
+          "flex items-center justify-center w-10 h-10 rounded-lg shrink-0 transition-colors",
+          selected
+            ? "bg-primary text-primary-foreground shadow-sm"
+            : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary",
+        )}
       >
-        {header}
-      </p>
-      <p className="text-2xl font-bold text-card-foreground mt-0.5 leading-none">
-        {bigPrice}
-        <span className="text-[11px] font-normal text-muted-foreground ml-0.5">
-          {smallPrice}
-        </span>
-      </p>
-      {caption && (
-        <p className="text-[10px] text-muted-foreground mt-1.5 leading-snug line-clamp-2">
-          {caption}
-        </p>
-      )}
-      {selected && (
-        <div className="absolute bottom-2 right-2">
-          <Check className="w-3.5 h-3.5 text-primary" />
+        <HeaderIcon className="w-5 h-5" />
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <p
+            className={cn(
+              "text-[10px] font-bold uppercase tracking-wider",
+              selected ? "text-primary" : "text-muted-foreground",
+            )}
+          >
+            {header}
+          </p>
+          {badge && (
+            <span
+              className={cn(
+                "text-[9px] font-bold uppercase tracking-wider rounded-full px-2 py-0.5",
+                badge.tone === "emerald" && "bg-emerald-500 text-white",
+                badge.tone === "amber" &&
+                  "bg-amber-500/10 text-amber-600 border border-amber-500/20",
+                badge.tone === "primary" &&
+                  "bg-primary/10 text-primary border border-primary/20",
+              )}
+            >
+              {badge.label}
+            </span>
+          )}
         </div>
-      )}
+        <p className="text-2xl font-bold text-card-foreground leading-none mt-1">
+          {bigPrice}
+          <span className="text-[11px] font-normal text-muted-foreground ml-0.5">
+            {smallUnit}
+          </span>
+        </p>
+        {caption && (
+          <p className="text-[10px] text-muted-foreground mt-1.5 leading-snug line-clamp-2">
+            {caption}
+          </p>
+        )}
+      </div>
+
+      {/* Trailing indicator */}
+      <div className="shrink-0 mt-0.5">
+        {selected ? (
+          <CheckCircle2 className="w-5 h-5 text-primary" />
+        ) : (
+          <ArrowRight
+            className={cn(
+              "w-4 h-4 transition-colors",
+              bundleCovered
+                ? "text-muted-foreground/20"
+                : "text-muted-foreground/30 group-hover:text-primary/50",
+            )}
+          />
+        )}
+      </div>
     </button>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// Bundle row (All-Apps Unlimited) — featured gradient, monthly + annual
+// Bundle row — All-Apps Unlimited with Monthly/Annual pair, gradient
+// background and a "Best Value" ribbon
 // ─────────────────────────────────────────────────────────────────────
 
 function BundleRow({
@@ -330,155 +440,217 @@ function BundleRow({
   const annualPerMo =
     bundle.annual_price != null ? Number(bundle.annual_price) / 12 : null;
   const savePct =
-    bundle.annual_price != null && bundle.monthly_price * 12 > Number(bundle.annual_price)
+    bundle.annual_price != null &&
+    bundle.monthly_price * 12 > Number(bundle.annual_price)
       ? Math.round(
           (1 - Number(bundle.annual_price) / (bundle.monthly_price * 12)) * 100,
         )
       : 0;
 
   return (
-    <Card
-      className={`relative overflow-hidden border-2 transition-all ${
+    <div
+      className={cn(
+        "relative rounded-xl border-2 p-4 sm:p-5 transition-all duration-200 overflow-hidden",
         isSelected
-          ? "border-primary shadow-xl ring-2 ring-primary/30"
-          : "border-primary/30 shadow-lg"
-      }`}
+          ? "border-primary bg-primary/[0.04] ring-2 ring-primary/20 shadow-lg"
+          : "border-primary/30 bg-gradient-to-br from-primary/[0.06] via-primary/[0.02] to-transparent shadow-md",
+      )}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-primary/[0.04] to-transparent pointer-events-none" />
-      <div className="absolute top-0 right-0 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-lg shadow-sm">
-        Best Value
+      {/* Best Value ribbon */}
+      <div className="absolute top-0 right-0 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-xl shadow-sm">
+        Best Value · All-in-One
       </div>
 
-      <CardContent className="relative p-4 sm:p-5">
-        <div className="flex flex-col md:flex-row md:items-center gap-4">
-          <div className="flex items-start gap-3 md:w-60 md:shrink-0">
-            <div className="w-11 h-11 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
-              <Sparkles className="w-5 h-5 text-primary" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[15px] font-bold text-card-foreground leading-tight">
-                {bundle.name}
-              </p>
-              <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
-                Everything unlocked · White-glove service · Priority 24/7 support
-              </p>
-            </div>
+      <div className="flex flex-col md:flex-row md:items-stretch gap-4 mt-4 md:mt-0">
+        {/* Left: bundle identity — mirrors ArchitectureSelector */}
+        <div className="flex items-start gap-3 md:w-60 md:shrink-0">
+          <div className="flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-primary text-primary-foreground shrink-0 shadow-sm">
+            <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-bold text-[15px] sm:text-base text-card-foreground leading-tight">
+              {bundle.name}
+            </h3>
+            <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 leading-snug">
+              Everything unlocked · White-glove service · Priority 24/7 support
+            </p>
+          </div>
+        </div>
 
-          <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {/* Monthly */}
-            <button
-              type="button"
-              disabled={readOnly}
-              onClick={() => onSelect("monthly")}
-              aria-pressed={isSelected && cycle === "monthly"}
-              className={`relative rounded-xl border-2 px-4 py-3 text-left transition-all ${
+        {/* Right: Monthly + Annual tier buttons */}
+        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          {/* Monthly */}
+          <button
+            type="button"
+            disabled={readOnly}
+            onClick={() => onSelect("monthly")}
+            aria-pressed={isSelected && cycle === "monthly"}
+            className={cn(
+              "group relative flex items-start gap-3 rounded-xl border-2 p-4 text-left transition-all duration-200",
+              isSelected && cycle === "monthly"
+                ? "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-md"
+                : readOnly
+                  ? "border-border/40 bg-muted/20 cursor-not-allowed opacity-70"
+                  : "border-border bg-card hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5",
+            )}
+          >
+            <div
+              className={cn(
+                "flex items-center justify-center w-10 h-10 rounded-lg shrink-0 transition-colors",
                 isSelected && cycle === "monthly"
-                  ? "border-primary bg-primary/[0.08] shadow-md ring-2 ring-primary/20"
-                  : readOnly
-                    ? "border-border/40 bg-muted/30 cursor-not-allowed"
-                    : "border-border/60 bg-card hover:border-primary/40 hover:shadow-sm"
-              }`}
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary",
+              )}
             >
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              <TrendingUp className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p
+                className={cn(
+                  "text-[10px] font-bold uppercase tracking-wider",
+                  isSelected && cycle === "monthly"
+                    ? "text-primary"
+                    : "text-muted-foreground",
+                )}
+              >
                 Monthly
               </p>
-              <p className="text-2xl font-bold text-card-foreground mt-0.5 leading-none">
+              <p className="text-2xl font-bold text-card-foreground leading-none mt-1">
                 {formatUSD(bundle.monthly_price)}
                 <span className="text-[11px] font-normal text-muted-foreground ml-0.5">
                   /mo
                 </span>
               </p>
-              <p className="text-[10px] text-muted-foreground mt-1.5">Billed monthly</p>
-              {isSelected && cycle === "monthly" && (
-                <Check className="w-3.5 h-3.5 text-primary absolute bottom-2 right-2" />
+              <p className="text-[10px] text-muted-foreground mt-1.5 leading-snug">
+                Billed monthly, cancel any time
+              </p>
+            </div>
+            <div className="shrink-0 mt-0.5">
+              {isSelected && cycle === "monthly" ? (
+                <CheckCircle2 className="w-5 h-5 text-primary" />
+              ) : (
+                <ArrowRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary/50 transition-colors" />
               )}
-            </button>
+            </div>
+          </button>
 
-            {/* Annual */}
-            {annualPerMo != null ? (
-              <button
-                type="button"
-                disabled={readOnly}
-                onClick={() => onSelect("annual")}
-                aria-pressed={isSelected && cycle === "annual"}
-                className={`relative rounded-xl border-2 px-4 py-3 text-left transition-all ${
+          {/* Annual */}
+          {annualPerMo != null && (
+            <button
+              type="button"
+              disabled={readOnly}
+              onClick={() => onSelect("annual")}
+              aria-pressed={isSelected && cycle === "annual"}
+              className={cn(
+                "group relative flex items-start gap-3 rounded-xl border-2 p-4 text-left transition-all duration-200",
+                isSelected && cycle === "annual"
+                  ? "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-md"
+                  : readOnly
+                    ? "border-border/40 bg-muted/20 cursor-not-allowed opacity-70"
+                    : "border-border bg-card hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5",
+              )}
+            >
+              <div
+                className={cn(
+                  "flex items-center justify-center w-10 h-10 rounded-lg shrink-0 transition-colors",
                   isSelected && cycle === "annual"
-                    ? "border-primary bg-primary/[0.08] shadow-md ring-2 ring-primary/20"
-                    : readOnly
-                      ? "border-border/40 bg-muted/30 cursor-not-allowed"
-                      : "border-border/60 bg-card hover:border-primary/40 hover:shadow-sm"
-                }`}
-              >
-                {savePct > 0 && (
-                  <span className="absolute top-2 right-2 text-[9px] font-bold uppercase tracking-wider rounded-full px-2 py-0.5 bg-emerald-500 text-white">
-                    Save {savePct}%
-                  </span>
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary",
                 )}
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Annual — Prepaid
-                </p>
-                <p className="text-2xl font-bold text-card-foreground mt-0.5 leading-none">
+              >
+                <Calendar className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <p
+                    className={cn(
+                      "text-[10px] font-bold uppercase tracking-wider",
+                      isSelected && cycle === "annual"
+                        ? "text-primary"
+                        : "text-muted-foreground",
+                    )}
+                  >
+                    Annual Prepaid
+                  </p>
+                  {savePct > 0 && (
+                    <span className="text-[9px] font-bold uppercase tracking-wider rounded-full px-2 py-0.5 bg-emerald-500 text-white">
+                      Save {savePct}%
+                    </span>
+                  )}
+                </div>
+                <p className="text-2xl font-bold text-card-foreground leading-none mt-1">
                   {formatUSD(Math.round(annualPerMo))}
                   <span className="text-[11px] font-normal text-muted-foreground ml-0.5">
                     /mo
                   </span>
                 </p>
-                <p className="text-[10px] text-muted-foreground mt-1.5">
-                  {formatUSD(Number(bundle.annual_price!))} upfront, 12 months
+                <p className="text-[10px] text-muted-foreground mt-1.5 leading-snug">
+                  {formatUSD(Number(bundle.annual_price!))} upfront · 12 months
                 </p>
-                {isSelected && cycle === "annual" && (
-                  <Check className="w-3.5 h-3.5 text-primary absolute bottom-2 right-2" />
+              </div>
+              <div className="shrink-0 mt-0.5">
+                {isSelected && cycle === "annual" ? (
+                  <CheckCircle2 className="w-5 h-5 text-primary" />
+                ) : (
+                  <ArrowRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary/50 transition-colors" />
                 )}
-              </button>
-            ) : null}
-          </div>
+              </div>
+            </button>
+          )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// Enterprise — contact-sales row (dark)
+// Enterprise row — dark slate, Contact Sales
 // ─────────────────────────────────────────────────────────────────────
 
 function EnterpriseRow({ bundle }: { bundle: PlatformBundle }) {
   return (
-    <Card className="border-border/60 bg-gradient-to-br from-slate-900 to-slate-800 text-slate-50 overflow-hidden">
-      <CardContent className="p-4 sm:p-5">
-        <div className="flex flex-col md:flex-row md:items-center gap-4">
-          <div className="flex items-start gap-3 md:w-60 md:shrink-0">
-            <div className="w-11 h-11 rounded-xl bg-amber-400/15 flex items-center justify-center shrink-0">
-              <Building2 className="w-5 h-5 text-amber-400" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[15px] font-bold text-slate-50 leading-tight">
-                {bundle.name}
-              </p>
-              <p className="text-[11px] text-slate-300 mt-0.5 leading-snug">
-                Dealer groups · Multi-rooftop pricing · Named CSM
-              </p>
-            </div>
+    <div className="relative rounded-xl border-2 border-slate-800 bg-gradient-to-br from-slate-900 to-slate-800 text-slate-50 p-4 sm:p-5 overflow-hidden">
+      <div className="flex flex-col md:flex-row md:items-center gap-4">
+        <div className="flex items-start gap-3 md:w-60 md:shrink-0">
+          <div className="flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-amber-400 text-slate-900 shrink-0 shadow-sm">
+            <Crown className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
-          <div className="flex-1 flex items-center justify-end gap-3">
-            <div className="text-right">
-              <p className="text-lg font-bold text-amber-400 leading-none">Contact Sales</p>
-              <p className="text-[10px] text-slate-400 mt-1">Custom multi-rooftop pricing</p>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="font-bold text-[15px] sm:text-base text-slate-50 leading-tight">
+                {bundle.name}
+              </h3>
+              <span className="text-[9px] font-bold uppercase tracking-wider rounded-full px-2 py-0.5 bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                Custom Pricing
+              </span>
             </div>
-            <Button
-              size="sm"
-              className="bg-amber-400 hover:bg-amber-300 text-slate-900 font-semibold"
-              asChild
-            >
-              <a href="mailto:sales@autocurb.io?subject=Enterprise%20Dealer%20Group%20Inquiry">
-                <Phone className="w-3.5 h-3.5 mr-1.5" />
-                Talk to sales
-              </a>
-            </Button>
+            <p className="text-[11px] sm:text-xs text-slate-300 mt-0.5 leading-snug">
+              Dealer groups · Multi-rooftop · Named CSM · Consolidated billing
+            </p>
           </div>
         </div>
-      </CardContent>
-    </Card>
+        <div className="flex-1 flex items-center justify-end gap-3">
+          <div className="text-right">
+            <p className="text-lg font-bold text-amber-400 leading-none flex items-center gap-1 justify-end">
+              <Building2 className="w-4 h-4" />
+              Contact Sales
+            </p>
+            <p className="text-[10px] text-slate-400 mt-1">
+              Custom multi-rooftop pricing
+            </p>
+          </div>
+          <Button
+            size="sm"
+            className="bg-amber-400 hover:bg-amber-300 text-slate-900 font-semibold shadow-sm"
+            asChild
+          >
+            <a href="mailto:sales@autocurb.io?subject=Enterprise%20Dealer%20Group%20Inquiry">
+              <Phone className="w-3.5 h-3.5 mr-1.5" />
+              Talk to sales
+            </a>
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }

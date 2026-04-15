@@ -19,6 +19,11 @@ import { PlanCard } from "./pricing/PlanCard";
 import { RooftopStepper } from "./pricing/RooftopStepper";
 import { SelectionSummary } from "./pricing/SelectionSummary";
 import { BigButtonRows } from "./pricing/BigButtonRows";
+import {
+  FALLBACK_PRODUCTS,
+  FALLBACK_TIERS,
+  FALLBACK_BUNDLES,
+} from "./pricing/fallbackCatalog";
 
 const ICON_MAP: Record<string, React.ElementType> = {
   Car,
@@ -108,7 +113,15 @@ const PricingPlanPicker = ({
   variant = "full",
   autoSave = false,
 }: PricingPlanPickerProps) => {
-  const { products, bundles, tiers } = usePlatform();
+  const platform = usePlatform();
+  // Guaranteed-non-empty catalog. If PlatformContext hasn't populated
+  // yet (DB migration not run in this environment, first render before
+  // fetch resolves, etc.), we fall back to the hardcoded authoritative
+  // catalog so the UI never renders blank buttons. The context data
+  // wins whenever it's present.
+  const products = platform.products.length > 0 ? platform.products : FALLBACK_PRODUCTS;
+  const bundles = platform.bundles.length > 0 ? platform.bundles : FALLBACK_BUNDLES;
+  const tiers = platform.tiers.length > 0 ? platform.tiers : FALLBACK_TIERS;
 
   // `rows` variant exposes the monthly/annual toggle via per-product
   // buttons (AutoCurb / All-Apps bundle show both options), so the
