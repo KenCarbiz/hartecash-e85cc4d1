@@ -1,4 +1,4 @@
-import { ArrowRight, Receipt } from "lucide-react";
+import { ArrowRight, Receipt, TrendingDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { formatUSD } from "@/lib/entitlements";
@@ -14,6 +14,14 @@ interface SelectionSummaryProps {
   subtitle?: string;
   perRooftopTotal: number;
   rooftopCount: number;
+  /**
+   * Full 12-month upfront amount per rooftop when the current selection
+   * is on the annual-prepaid cycle. Renders an extra emerald "Due now"
+   * bubble underneath the monthly total. Omit for monthly-only
+   * selections — the bubble stays hidden and the monthly figure in the
+   * bubble above is unaffected.
+   */
+  annualPrepaidPerRooftop?: number | null;
   readOnly?: boolean;
   ctaLabel?: string;
   onConfirm?: () => void;
@@ -25,12 +33,17 @@ export function SelectionSummary({
   subtitle,
   perRooftopTotal,
   rooftopCount,
+  annualPrepaidPerRooftop = null,
   readOnly = false,
   ctaLabel = "Continue",
   onConfirm,
   compact = false,
 }: SelectionSummaryProps) {
   const multiplied = perRooftopTotal * rooftopCount;
+  const dueNow =
+    annualPrepaidPerRooftop != null && annualPrepaidPerRooftop > 0
+      ? annualPrepaidPerRooftop * rooftopCount
+      : 0;
 
   return (
     <Card
@@ -58,20 +71,55 @@ export function SelectionSummary({
             <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               Monthly total
             </span>
-            <span className="text-lg font-bold text-card-foreground">
+            <span
+              className="text-lg font-bold text-card-foreground"
+              style={{ fontVariantNumeric: "tabular-nums" }}
+            >
               {formatUSD(multiplied)}
               <span className="text-[11px] font-normal text-muted-foreground">/mo</span>
             </span>
           </div>
           {rooftopCount > 1 && (
-            <div className="text-[10px] text-muted-foreground">
+            <div
+              className="text-[10px] text-muted-foreground"
+              style={{ fontVariantNumeric: "tabular-nums" }}
+            >
               {formatUSD(perRooftopTotal)}/rooftop × {rooftopCount} rooftops
             </div>
           )}
           {rooftopCount === 1 && (
-            <div className="text-[10px] text-muted-foreground">Per rooftop, billed monthly</div>
+            <div className="text-[10px] text-muted-foreground">
+              Per rooftop, billed {dueNow > 0 ? "annually" : "monthly"}
+            </div>
           )}
         </div>
+
+        {/* Annual-prepaid "Due now" bubble — renders directly beneath
+            the monthly total when the user has picked a tier/bundle on
+            the annual cycle. Leaves all other numbers untouched. */}
+        {dueNow > 0 && (
+          <div className="rounded-lg border border-emerald-500/40 bg-gradient-to-br from-emerald-500/10 to-emerald-500/[0.04] px-3 py-2.5 space-y-1">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
+                <TrendingDown className="w-3 h-3" />
+                Due now · 12 mo upfront
+              </span>
+              <span
+                className="text-base font-bold text-card-foreground"
+                style={{ fontVariantNumeric: "tabular-nums" }}
+              >
+                {formatUSD(dueNow)}
+              </span>
+            </div>
+            <div
+              className="text-[10px] text-emerald-700 dark:text-emerald-400"
+              style={{ fontVariantNumeric: "tabular-nums" }}
+            >
+              Then {formatUSD(multiplied)}/mo at renewal
+              {rooftopCount > 1 && ` · ${rooftopCount} rooftops`}
+            </div>
+          </div>
+        )}
 
         {!readOnly && onConfirm && (
           <Button size="sm" className="w-full" onClick={onConfirm}>

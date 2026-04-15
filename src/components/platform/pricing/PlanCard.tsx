@@ -81,18 +81,32 @@ export function PlanCard({
   variant = "tier",
   icon,
 }: PlanCardProps) {
-  const multiplied = monthlyPrice * rooftopCount;
   const isHero = variant === "hero";
+
+  // Defensive correction: if the caller accidentally passed the full
+  // 12-month annual amount as `monthlyPrice` (a real regression we hit
+  // on AutoCurb / AutoLabels / AutoFrame / AutoFilm where tierPrice()
+  // swapped to annual_price), the monthly figure ends up 10-12× the
+  // annual-per-month and renders as "$3,990/mo · save 92%". Detect the
+  // ratio and divide by 12 so the render is always sane.
+  const rawMonthly = monthlyPrice;
+  const looksLikeAnnualTotal =
+    annualPricePerMonth != null &&
+    annualPricePerMonth > 0 &&
+    rawMonthly >= annualPricePerMonth * 5;
+  const safeMonthly = looksLikeAnnualTotal ? Math.round(rawMonthly / 12) : rawMonthly;
+
+  const multiplied = safeMonthly * rooftopCount;
 
   // Tiers with a set annual price get the two-box monthly/annual
   // layout. Without one we keep the original single-price + Select
   // CTA shape.
   const hasAnnual = annualPricePerMonth != null && annualPricePerMonth > 0;
   const monthlySelected = selected && !annualSelected;
-  const annualSavings = hasAnnual ? monthlyPrice - (annualPricePerMonth as number) : 0;
+  const annualSavings = hasAnnual ? safeMonthly - (annualPricePerMonth as number) : 0;
   const annualDiscountPct =
-    hasAnnual && monthlyPrice > 0
-      ? Math.round(((monthlyPrice - (annualPricePerMonth as number)) / monthlyPrice) * 100)
+    hasAnnual && safeMonthly > 0
+      ? Math.round(((safeMonthly - (annualPricePerMonth as number)) / safeMonthly) * 100)
       : 0;
 
   return (
@@ -166,7 +180,7 @@ export function PlanCard({
                 className="text-xl font-bold text-card-foreground leading-none mt-1.5"
                 style={{ fontVariantNumeric: "tabular-nums" }}
               >
-                {formatUSD(monthlyPrice)}
+                {formatUSD(safeMonthly)}
                 <span className="text-[10px] font-normal text-muted-foreground ml-0.5">
                   /mo
                 </span>
@@ -240,7 +254,7 @@ export function PlanCard({
             <p
               className={`${isHero ? "text-3xl" : "text-2xl"} font-bold text-card-foreground leading-none`}
             >
-              {formatUSD(monthlyPrice)}
+              {formatUSD(safeMonthly)}
               <span className="text-[11px] font-normal text-muted-foreground ml-0.5">
                 /rooftop/mo
               </span>

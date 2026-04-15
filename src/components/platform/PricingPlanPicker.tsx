@@ -391,7 +391,10 @@ const PricingPlanPicker = ({
     onConfirm?.(currentSelection);
   };
 
-  // Per-rooftop total for the running summary.
+  // Per-rooftop monthly subtotal for the Monthly Total bubble. Always
+  // sums monthly_price regardless of the currently-selected cycle — the
+  // Monthly bubble is fixed and only the separate Due-Now bubble
+  // reflects the annual-prepaid choice.
   const perRooftopTotal = useMemo(() => {
     if (selectedBundle) {
       const b = bundles.find((x) => x.id === selectedBundle);
@@ -404,6 +407,33 @@ const PricingPlanPicker = ({
     }
     return base;
   }, [selectedBundle, selectedTiers, bundles, tiers]);
+
+  // Per-rooftop annual-prepaid subtotal. Only populated when cycle is
+  // "annual" AND the selected tiers/bundle actually expose an annual
+  // plan. Drives the emerald "Due now" bubble under the monthly total.
+  const annualPrepaidPerRooftop = useMemo(() => {
+    if (cycle !== "annual") return null;
+    if (selectedBundle) {
+      const b = bundles.find((x) => x.id === selectedBundle);
+      return b?.annual_price ?? null;
+    }
+    if (Object.keys(selectedTiers).length === 0) return null;
+    let sum = 0;
+    let any = false;
+    for (const tid of Object.values(selectedTiers)) {
+      const t = tiers.find((x) => x.id === tid);
+      if (!t) continue;
+      if (t.annual_price != null && t.annual_price > 0) {
+        sum += t.annual_price;
+        any = true;
+      } else {
+        // Tier has no annual plan — the monthly-billed portion
+        // collapses to zero upfront (keeps the total honest).
+        sum += 0;
+      }
+    }
+    return any ? sum : null;
+  }, [cycle, selectedBundle, selectedTiers, bundles, tiers]);
 
   // Summary copy.
   const summaryTitle = selectedBundle
@@ -549,6 +579,7 @@ const PricingPlanPicker = ({
             title={summaryTitle}
             subtitle={summarySubtitle}
             perRooftopTotal={perRooftopTotal}
+            annualPrepaidPerRooftop={annualPrepaidPerRooftop}
             rooftopCount={rooftopCount}
             readOnly={readOnly}
             ctaLabel={ctaLabel}
@@ -567,6 +598,7 @@ const PricingPlanPicker = ({
           title={summaryTitle}
           subtitle={summarySubtitle}
           perRooftopTotal={perRooftopTotal}
+          annualPrepaidPerRooftop={annualPrepaidPerRooftop}
           rooftopCount={rooftopCount}
           readOnly={readOnly}
           ctaLabel={ctaLabel}
@@ -1086,6 +1118,7 @@ function RowsVariantLayout(props: {
           title={summaryTitle}
           subtitle={summarySubtitle}
           perRooftopTotal={perRooftopTotal}
+          annualPrepaidPerRooftop={annualPrepaidPerRooftop}
           rooftopCount={rooftopCount}
           readOnly={readOnly}
           ctaLabel={ctaLabel}
