@@ -701,6 +701,7 @@ function AppTierTabs({
   tierPrice,
   rooftopCount,
   selectedTiers,
+  cycle,
   readOnly,
   onSelectTier,
 }: {

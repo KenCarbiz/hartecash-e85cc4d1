@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { usePlatform } from "@/contexts/PlatformContext";
 import type { PlatformProductTier } from "@/contexts/PlatformContext";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,7 @@ import PricingPlanPicker, { type PlanSelection } from "@/components/platform/Pri
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTenant } from "@/contexts/TenantContext";
+import { formatUSD } from "@/lib/entitlements";
 import {
   Car,
   FileCheck,
@@ -26,6 +27,7 @@ import {
   Gift,
   ChevronDown,
   Pencil,
+  Sparkles,
 } from "lucide-react";
 
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -44,7 +46,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const PlatformSubscriptions = () => {
-  const { products, tiers, subscription, hasProduct, getActiveTier, entitledTierIds } = usePlatform();
+  const { products, bundles, tiers, subscription, hasProduct, getActiveTier, entitledTierIds } = usePlatform();
   const { tenant } = useTenant();
   const { toast } = useToast();
   // "Change plan" is collapsed by default — admins arrive here to see
@@ -54,6 +56,52 @@ const PlatformSubscriptions = () => {
   const activeProducts = products
     .filter((p) => p.is_active)
     .sort((a, b) => a.sort_order - b.sort_order);
+
+  // ── Totals maths for the lineup + bubbles ─────────────────────────
+  // Resolves the subscribed bundle (if any) and the tiers/prices
+  // currently entitled. `monthlyPerRooftop` is what the dealer pays
+  // per store per month after the first year — the headline bubble.
+  // `dueNow` is the full 12-month upfront cost across every rooftop
+  // when billing_cycle === "annual" — the secondary bubble.
+  const activeBundle = useMemo(
+    () => (subscription?.bundle_id ? bundles.find((b) => b.id === subscription.bundle_id) ?? null : null),
+    [subscription?.bundle_id, bundles],
+  );
+
+  const rooftopCount = Math.max(1, subscription?.rooftop_count ?? 1);
+  const cycle = subscription?.billing_cycle === "annual" ? "annual" : "monthly";
+
+  const subscribedTiers = useMemo<PlatformProductTier[]>(() => {
+    if (!subscription?.tier_ids || subscription.tier_ids.length === 0) return [];
+    return subscription.tier_ids
+      .map((id) => tiers.find((t) => t.id === id))
+      .filter(Boolean) as PlatformProductTier[];
+  }, [subscription?.tier_ids, tiers]);
+
+  const effectiveMonthly = (row: { monthly_price: number; annual_price: number | null }) =>
+    cycle === "annual" && row.annual_price
+      ? Math.round(row.annual_price / 12)
+      : row.monthly_price;
+
+  const monthlyPerRooftop = useMemo(() => {
+    if (activeBundle) return effectiveMonthly(activeBundle);
+    return subscribedTiers.reduce((acc, t) => acc + effectiveMonthly(t), 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeBundle, subscribedTiers, cycle]);
+
+  const monthlyTotal = monthlyPerRooftop * rooftopCount;
+
+  const dueNow = useMemo(() => {
+    if (cycle !== "annual") return 0;
+    if (activeBundle?.annual_price && Number.isFinite(activeBundle.annual_price)) {
+      return activeBundle.annual_price * rooftopCount;
+    }
+    const sum = subscribedTiers.reduce((acc, t) => {
+      const annual = t.annual_price ?? (t.monthly_price ?? 0) * 12;
+      return acc + (Number.isFinite(annual) ? annual : 0);
+    }, 0);
+    return sum * rooftopCount;
+  }, [cycle, activeBundle, subscribedTiers, rooftopCount]);
 
   // Persist the dealer's plan selection. Records immediately — Stripe
   // checkout will swap in later; until then this is a "declared intent"
@@ -69,7 +117,7 @@ const PlatformSubscriptions = () => {
         rooftop_count: Math.max(1, selection.rooftopCount ?? 1),
         updated_at: new Date().toISOString(),
       };
-      const payload =
+      const payload: Record<string, unknown> =
         selection.kind === "bundle"
           ? { ...base, bundle_id: selection.bundleId, tier_ids: [], product_ids: [] }
           : selection.kind === "tiers"
@@ -85,9 +133,55 @@ const PlatformSubscriptions = () => {
               })()
             : { ...base, bundle_id: selection.bundleId, tier_ids: [], product_ids: [] };
 
-      const { error } = await supabase
-        .from("dealer_subscriptions")
-        .upsert(payload as never, { onConflict: "dealership_id" });
+      // Resilient save — identical pattern to DealerOnboarding. Tolerates
+      //   (1) PostgREST schema-cache missing a column (strip + retry)
+      //   (2) Missing UNIQUE constraint on dealership_id (manual upsert)
+      const dealershipId = tenant.dealership_id;
+      const manualUpsert = async (): Promise<{ error: { message: string } | null }> => {
+        const { data: existing } = await supabase
+          .from("dealer_subscriptions")
+          .select("id")
+          .eq("dealership_id", dealershipId)
+          .maybeSingle();
+        if (existing && (existing as { id?: string }).id) {
+          const { error } = await supabase
+            .from("dealer_subscriptions")
+            .update(payload as never)
+            .eq("dealership_id", dealershipId);
+          return { error: error ? { message: error.message } : null };
+        }
+        const { error } = await supabase
+          .from("dealer_subscriptions")
+          .insert(payload as never);
+        return { error: error ? { message: error.message } : null };
+      };
+
+      let error: { message: string } | null = null;
+      for (let attempt = 0; attempt < 4; attempt++) {
+        const res = await supabase
+          .from("dealer_subscriptions")
+          .upsert(payload as never, { onConflict: "dealership_id" });
+        error = res.error ? { message: res.error.message } : null;
+        if (!error) break;
+        const colMatch = /Could not find the '([a-z_]+)' column/i.exec(error.message);
+        if (colMatch) {
+          // eslint-disable-next-line no-console
+          console.warn(
+            `[PlatformSubscriptions] schema cache missing '${colMatch[1]}', retrying without it`,
+          );
+          delete payload[colMatch[1]];
+          continue;
+        }
+        if (/ON CONFLICT/i.test(error.message) || /no unique or exclusion/i.test(error.message)) {
+          // eslint-disable-next-line no-console
+          console.warn(
+            "[PlatformSubscriptions] UNIQUE(dealership_id) missing — falling back to manual upsert",
+          );
+          const r = await manualUpsert();
+          error = r.error;
+        }
+        break;
+      }
 
       if (error) {
         toast({
@@ -148,69 +242,153 @@ const PlatformSubscriptions = () => {
         </CardHeader>
         <CardContent className="relative space-y-4">
           {subscription ? (
-            <div className="space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Active Products
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {activeProducts.map((product) => {
-                  const Icon = ICON_MAP[product.icon_name] || Car;
-                  const active = hasProduct(product.id);
-                  const tier: PlatformProductTier | null = getActiveTier(product.id);
-                  const complimentary =
-                    tier &&
-                    tier.included_with_product_ids.length > 0 &&
-                    tier.included_with_product_ids.some((pid) => hasProduct(pid)) &&
-                    !subscription.tier_ids?.includes(tier.id);
-                  return (
-                    <div
-                      key={product.id}
-                      className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
-                        active
-                          ? "bg-card border-border/50 shadow-sm"
-                          : "bg-muted/30 border-transparent opacity-60"
-                      }`}
-                    >
-                      <div
-                        className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                          active ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                        }`}
+            <div className="flex flex-col lg:flex-row gap-4">
+              {/* ── LEFT: horizontal lineup of subscribed products ───── */}
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
+                  Your Platform Choices
+                </p>
+                <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1">
+                  {activeBundle ? (
+                    // Bundle takes the whole lineup — one hero card
+                    // that reads the four included apps inline.
+                    <div className="shrink-0 min-w-[280px] rounded-xl border border-primary/50 bg-gradient-to-br from-primary/10 to-primary/[0.04] p-3 shadow-sm">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                          Bundle · All-Apps
+                        </p>
+                      </div>
+                      <p className="text-sm font-bold text-card-foreground leading-tight">
+                        {activeBundle.name}
+                      </p>
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {(activeBundle.product_ids ?? []).map((pid) => {
+                          const p = products.find((x) => x.id === pid);
+                          if (!p) return null;
+                          const Icon = ICON_MAP[p.icon_name] || Car;
+                          return (
+                            <span
+                              key={pid}
+                              className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-card px-2 py-0.5 text-[10px] text-card-foreground"
+                            >
+                              <Icon className="w-2.5 h-2.5" />
+                              {p.name}
+                            </span>
+                          );
+                        })}
+                      </div>
+                      <p
+                        className="text-lg font-bold text-card-foreground mt-2"
+                        style={{ fontVariantNumeric: "tabular-nums" }}
                       >
-                        <Icon className="w-4 h-4" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-card-foreground truncate">
-                          {product.name}
-                          {tier && active && (
-                            <span className="ml-1.5 text-[10px] font-normal text-muted-foreground">
-                              · {tier.name}
-                            </span>
-                          )}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground truncate">
-                          {complimentary ? (
-                            <span className="inline-flex items-center gap-0.5 text-emerald-600 font-medium">
-                              <Gift className="w-2.5 h-2.5" /> Included with your plan
-                            </span>
-                          ) : (
-                            product.description
-                          )}
-                        </p>
-                      </div>
-                      {active ? (
-                        <Check className="w-4 h-4 text-emerald-500 shrink-0" />
-                      ) : (
-                        <Lock className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
-                      )}
+                        {formatUSD(effectiveMonthly(activeBundle))}
+                        <span className="text-[10px] font-normal text-muted-foreground ml-0.5">
+                          /rooftop/mo
+                        </span>
+                      </p>
                     </div>
-                  );
-                })}
-              </div>
-              {entitledTierIds.size === 0 && (
-                <div className="p-3 rounded-lg bg-muted/50 border border-border text-[11px] text-muted-foreground">
-                  No tiers assigned yet — pick one per app below.
+                  ) : subscribedTiers.length > 0 ? (
+                    activeProducts
+                      .filter((p) => hasProduct(p.id))
+                      .map((product) => {
+                        const Icon = ICON_MAP[product.icon_name] || Car;
+                        const tier = getActiveTier(product.id);
+                        const complimentary =
+                          tier &&
+                          tier.included_with_product_ids.length > 0 &&
+                          tier.included_with_product_ids.some((pid) => hasProduct(pid)) &&
+                          !subscription.tier_ids?.includes(tier.id);
+                        const price = tier ? effectiveMonthly(tier) : 0;
+                        return (
+                          <div
+                            key={product.id}
+                            className="shrink-0 w-48 rounded-xl border border-border/60 bg-card p-3 shadow-sm flex flex-col"
+                          >
+                            <div className="flex items-center gap-2 mb-1">
+                              <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                                <Icon className="w-3.5 h-3.5" />
+                              </div>
+                              <p className="text-xs font-bold text-card-foreground truncate">
+                                {product.name}
+                              </p>
+                            </div>
+                            {tier && (
+                              <p className="text-[10px] text-muted-foreground mb-1.5 truncate">
+                                {tier.name}
+                              </p>
+                            )}
+                            {complimentary ? (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600">
+                                <Gift className="w-2.5 h-2.5" /> Included
+                              </span>
+                            ) : (
+                              <p
+                                className="text-base font-bold text-card-foreground"
+                                style={{ fontVariantNumeric: "tabular-nums" }}
+                              >
+                                {formatUSD(price)}
+                                <span className="text-[10px] font-normal text-muted-foreground ml-0.5">
+                                  /mo
+                                </span>
+                              </p>
+                            )}
+                            {cycle === "annual" && tier?.annual_price && (
+                              <p className="text-[9px] text-emerald-600 font-semibold mt-0.5">
+                                Annual prepaid
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })
+                  ) : (
+                    <div className="w-full p-3 rounded-lg bg-muted/50 border border-border text-[11px] text-muted-foreground">
+                      No tiers assigned yet — pick one per app below.
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
+
+              {/* ── RIGHT: totals bubbles ──────────────────────────── */}
+              <div className="lg:w-64 shrink-0 flex flex-col gap-2.5">
+                <div className="rounded-xl border border-primary/50 bg-gradient-to-br from-primary/10 to-primary/[0.04] p-4 shadow-sm">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                    Monthly Total
+                  </p>
+                  <p
+                    className="text-3xl font-bold text-card-foreground leading-none mt-1.5"
+                    style={{ fontVariantNumeric: "tabular-nums" }}
+                  >
+                    {formatUSD(monthlyTotal)}
+                    <span className="text-[11px] font-normal text-muted-foreground ml-1">/mo</span>
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    {rooftopCount} rooftop{rooftopCount > 1 ? "s" : ""}
+                    {rooftopCount > 1 && (
+                      <span className="ml-1">
+                        · {formatUSD(monthlyPerRooftop)}/ea
+                      </span>
+                    )}
+                  </p>
+                </div>
+
+                {cycle === "annual" && dueNow > 0 && (
+                  <div className="rounded-xl border border-emerald-500/50 bg-gradient-to-br from-emerald-500/10 to-emerald-500/[0.05] p-4 shadow-sm">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
+                      Due now · 12 months upfront
+                    </p>
+                    <p
+                      className="text-2xl font-bold text-card-foreground leading-none mt-1.5"
+                      style={{ fontVariantNumeric: "tabular-nums" }}
+                    >
+                      {formatUSD(dueNow)}
+                    </p>
+                    <p className="text-[10px] text-emerald-700 dark:text-emerald-300 mt-1">
+                      Then {formatUSD(monthlyTotal)}/mo at renewal
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             <div className="text-center py-8">
