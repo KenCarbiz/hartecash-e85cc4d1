@@ -24,6 +24,7 @@ import { architectureToDbValue } from "./onboarding/types";
 import type { ArchitectureType } from "./onboarding/types";
 import type { BDCType } from "./onboarding/BDCSelector";
 import PricingPlanPicker, { type PlanSelection } from "@/components/platform/PricingPlanPicker";
+import { rooftopCountForArchitecture } from "@/components/platform/pricing/architecturePricing";
 
 interface DealerAccount {
   id: string;
@@ -462,37 +463,53 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate, targetDealershipId, onD
           </CardHeader>
           <CardContent className="space-y-5">
             <PricingPlanPicker
+              // Remount when architecture changes so the new rooftop
+              // count + volume pricing re-apply cleanly to initialSelection.
+              key={account.architecture}
               variant="rows"
               autoSave
               readOnly={readOnly}
-              // Architecture-gated tiers: multi-rooftop structures don't
-              // get the smallest AutoFrame tier (it caps at 75 units,
-              // which is too small for two-location and up).
+              architecture={account.architecture}
+              // Single + Secondary is a two-rooftop business with one
+              // small primary lot + a satellite — 75 units doesn't fit.
+              // Multi-location / dealer group / enterprise all have
+              // access to the 75-unit tier (just at discounted pricing).
               unavailableTiers={
-                account.architecture === "single_store_secondary" ||
-                account.architecture === "multi_location" ||
-                account.architecture === "dealer_group" ||
-                account.architecture === "enterprise"
+                account.architecture === "single_store_secondary"
                   ? { autoframe_70: "Multi-location — 125 units minimum" }
                   : undefined
               }
-              initialSelection={
-                currentSubscription?.bundle_id
-                  ? {
-                      kind: "bundle",
-                      bundleId: currentSubscription.bundle_id,
-                      cycle: (currentSubscription.billing_cycle as "monthly" | "annual") ?? "monthly",
-                      rooftopCount: currentSubscription.rooftop_count,
-                    }
-                  : currentSubscription && currentSubscription.tier_ids.length > 0
-                    ? {
-                        kind: "tiers",
-                        tierIds: currentSubscription.tier_ids,
-                        cycle: (currentSubscription.billing_cycle as "monthly" | "annual") ?? "monthly",
-                        rooftopCount: currentSubscription.rooftop_count,
-                      }
-                    : undefined
-              }
+              initialSelection={(() => {
+                const archRooftops = rooftopCountForArchitecture(account.architecture);
+                // Honor an explicitly set subscription rooftop_count if
+                // it's higher than the architecture default; otherwise
+                // default to the architecture-implied count so totals
+                // multiply out correctly without manual input.
+                const rooftopCount = Math.max(
+                  currentSubscription?.rooftop_count ?? 1,
+                  archRooftops,
+                );
+                if (currentSubscription?.bundle_id) {
+                  return {
+                    kind: "bundle",
+                    bundleId: currentSubscription.bundle_id,
+                    cycle: (currentSubscription.billing_cycle as "monthly" | "annual") ?? "monthly",
+                    rooftopCount,
+                  };
+                }
+                if (currentSubscription && currentSubscription.tier_ids.length > 0) {
+                  return {
+                    kind: "tiers",
+                    tierIds: currentSubscription.tier_ids,
+                    cycle: (currentSubscription.billing_cycle as "monthly" | "annual") ?? "monthly",
+                    rooftopCount,
+                  };
+                }
+                // No saved subscription yet — seed rooftop count from
+                // architecture so the Total multiplier is sane out of
+                // the box.
+                return { rooftopCount };
+              })()}
               onConfirm={savePlanSelection}
             />
 
