@@ -89,6 +89,14 @@ interface PricingPlanPickerProps {
    * Billing & Plan which auto-saves into dealer_accounts).
    */
   autoSave?: boolean;
+  /**
+   * Business-rule gate: map of tier_id → human-readable reason this
+   * tier is unavailable in the caller's context. Those buttons render
+   * greyed-out with the reason shown in the micro-text slot. Example:
+   * `{ autoframe_70: "Multi-location — 125+ units" }` when the dealer
+   * picked Single Store + Secondary.
+   */
+  unavailableTiers?: Record<string, string>;
 }
 
 /**
@@ -112,6 +120,7 @@ const PricingPlanPicker = ({
   onConfirm,
   variant = "full",
   autoSave = false,
+  unavailableTiers,
 }: PricingPlanPickerProps) => {
   const platform = usePlatform();
   // Guaranteed-complete catalog with per-product fallback.
@@ -395,6 +404,7 @@ const PricingPlanPicker = ({
         selectedBundle={selectedBundle}
         cycle={cycle}
         complimentary={complimentary}
+        unavailableTiers={unavailableTiers}
         readOnly={readOnly}
         onSelectTier={(productId, tierId, nextCycle) => {
           handleSelectTier(productId, tierId, nextCycle);
@@ -773,6 +783,7 @@ function RowsVariantLayout(props: {
   selectedBundle: string | null;
   cycle: "monthly" | "annual";
   complimentary: Record<string, string>;
+  unavailableTiers?: Record<string, string>;
   readOnly: boolean;
   onSelectTier: (
     productId: string,
@@ -798,6 +809,7 @@ function RowsVariantLayout(props: {
     selectedBundle,
     cycle,
     complimentary,
+    unavailableTiers,
     readOnly,
     onSelectTier,
     onSelectBundle,
@@ -822,6 +834,7 @@ function RowsVariantLayout(props: {
         selectedBundle={selectedBundle}
         cycle={cycle}
         complimentary={complimentary}
+        unavailableTiers={unavailableTiers}
         readOnly={readOnly}
         onSelectTier={onSelectTier}
         onSelectBundle={onSelectBundle}

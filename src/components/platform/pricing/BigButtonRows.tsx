@@ -44,6 +44,10 @@ interface BigButtonRowsProps {
   selectedBundle: string | null;
   cycle: "monthly" | "annual";
   complimentary: ComplimentaryMap;
+  /** tier_id → human-readable reason this tier is gated in the
+   *  caller's context (e.g. architecture-specific). Buttons render
+   *  greyed-out and un-clickable with the reason in micro-text. */
+  unavailableTiers?: Record<string, string>;
 
   readOnly?: boolean;
   onSelectTier: (productId: string, tierId: string, cycle?: "monthly" | "annual") => void;
@@ -60,6 +64,7 @@ export function BigButtonRows({
   selectedBundle,
   cycle,
   complimentary,
+  unavailableTiers,
   readOnly = false,
   onSelectTier,
   onSelectBundle,
@@ -96,6 +101,7 @@ export function BigButtonRows({
             selectedTierId={selectedTiers[product.id] ?? null}
             cycle={cycle}
             complimentary={complimentary}
+            unavailableTiers={unavailableTiers}
             bundleActive={bundleActive}
             readOnly={readOnly}
             onSelectTier={(tid, c) => onSelectTier(product.id, tid, c)}
@@ -130,6 +136,7 @@ function ProductRow({
   selectedTierId,
   cycle,
   complimentary,
+  unavailableTiers,
   bundleActive,
   readOnly,
   onSelectTier,
@@ -141,6 +148,7 @@ function ProductRow({
   selectedTierId: string | null;
   cycle: "monthly" | "annual";
   complimentary: ComplimentaryMap;
+  unavailableTiers?: Record<string, string>;
   bundleActive: boolean;
   readOnly: boolean;
   onSelectTier: (tierId: string, cycle?: "monthly" | "annual") => void;
@@ -227,21 +235,28 @@ function ProductRow({
               />
             </>
           ) : (
-            tiers.map((tier) => (
-              <TierButton
-                key={tier.id}
-                tier={tier}
-                kind="tier"
-                brand={brand}
-                selected={selectedTierId === tier.id}
-                complimentaryReason={complimentary[tier.id] ?? null}
-                disabled={
-                  readOnly || bundleActive || Boolean(complimentary[tier.id])
-                }
-                bundleCovered={bundleActive}
-                onClick={() => onSelectTier(tier.id)}
-              />
-            ))
+            tiers.map((tier) => {
+              const unavailableReason = unavailableTiers?.[tier.id] ?? null;
+              return (
+                <TierButton
+                  key={tier.id}
+                  tier={tier}
+                  kind="tier"
+                  brand={brand}
+                  selected={selectedTierId === tier.id && !unavailableReason}
+                  complimentaryReason={complimentary[tier.id] ?? null}
+                  unavailableReason={unavailableReason}
+                  disabled={
+                    readOnly ||
+                    bundleActive ||
+                    Boolean(complimentary[tier.id]) ||
+                    Boolean(unavailableReason)
+                  }
+                  bundleCovered={bundleActive}
+                  onClick={() => onSelectTier(tier.id)}
+                />
+              );
+            })
           )}
         </div>
       </div>
@@ -259,6 +274,9 @@ interface TierButtonProps {
   brand: ProductBrand;
   selected: boolean;
   complimentaryReason: string | null;
+  /** Architecture / business-rule gate. When set, the button renders
+   *  greyed-out and un-clickable with this text in the micro-slot. */
+  unavailableReason?: string | null;
   disabled: boolean;
   bundleCovered: boolean;
   onClick: () => void;
@@ -270,10 +288,37 @@ function TierButton({
   brand,
   selected,
   complimentaryReason,
+  unavailableReason,
   disabled,
   bundleCovered,
   onClick,
 }: TierButtonProps) {
+  // ── Unavailable state: greyed, crossed-out price, reason caption ──
+  //    Shown when a business rule (e.g. dealership architecture)
+  //    excludes this tier. Distinct from `disabled` because the visual
+  //    carries a "why" — not just "you can't click."
+  if (unavailableReason && !bundleCovered && !complimentaryReason) {
+    return (
+      <div
+        className="relative rounded-xl border border-border/40 bg-muted/30 px-4 py-3.5 cursor-not-allowed opacity-70"
+        aria-disabled="true"
+      >
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground pr-5 truncate">
+          {tier.name}
+        </p>
+        <p className="text-[28px] font-bold text-muted-foreground/80 leading-none mt-2 tabular-nums line-through decoration-muted-foreground/40">
+          {formatUSD(tier.monthly_price)}
+          <span className="text-xs font-normal text-muted-foreground/60 ml-0.5 tracking-tight no-underline">
+            /mo
+          </span>
+        </p>
+        <p className="text-[11px] font-medium mt-2 leading-snug line-clamp-1 text-muted-foreground">
+          {unavailableReason}
+        </p>
+      </div>
+    );
+  }
+
   // ── Complimentary state: subtle emerald, no big icon box ──────────
   if (complimentaryReason && !bundleCovered) {
     return (
