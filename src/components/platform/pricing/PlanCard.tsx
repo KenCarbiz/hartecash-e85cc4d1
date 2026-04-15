@@ -1,4 +1,4 @@
-import { ArrowRight, Check, Sparkles } from "lucide-react";
+import { ArrowRight, Check, Sparkles, TrendingDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatUSD } from "@/lib/entitlements";
@@ -16,11 +16,23 @@ import { formatUSD } from "@/lib/entitlements";
  *   5. Features list (<= maxFeatures, checkmark bullets)
  *   6. Muted footer divider with inventory cap + overage
  *   7. Full-width CTA
+ *   8. (optional) Annual-prepaid savings box — rendered when
+ *      `annualPricePerMonth` is provided. Gives AutoCurb + AutoFilm
+ *      the "pay 12 months upfront, save $X" affordance that the rows
+ *      variant has via the side-by-side monthly/annual buttons.
  */
 export interface PlanCardProps {
   name: string;
   description?: string | null;
   monthlyPrice: number;
+  /**
+   * Per-month-equivalent rate when billed annually prepaid. When
+   * supplied, the card renders a selectable annual savings box under
+   * the primary CTA. Omit for tiers that don't expose an annual plan.
+   */
+  annualPricePerMonth?: number;
+  /** True when the currently-selected cycle on this tier is "annual". */
+  annualSelected?: boolean;
   rooftopCount: number;
   features: string[];
   maxFeatures?: number;
@@ -32,7 +44,12 @@ export interface PlanCardProps {
   selected: boolean;
   disabled?: boolean;
   readOnly?: boolean;
-  onSelect?: () => void;
+  /**
+   * Called on CTA click. Receives the cycle the user chose — "monthly"
+   * for the primary CTA, "annual" for the annual-prepaid savings box.
+   * Omit or ignore when the tier has no annual plan.
+   */
+  onSelect?: (cycle?: "monthly" | "annual") => void;
   selectLabel?: string;
   variant?: "tier" | "hero";
   /** Optional leading adornment, e.g. product icon */
@@ -49,6 +66,8 @@ export function PlanCard({
   name,
   description,
   monthlyPrice,
+  annualPricePerMonth,
+  annualSelected = false,
   rooftopCount,
   features,
   maxFeatures = 5,
@@ -64,6 +83,16 @@ export function PlanCard({
 }: PlanCardProps) {
   const multiplied = monthlyPrice * rooftopCount;
   const isHero = variant === "hero";
+
+  // The monthly CTA is "selected" only when the tier itself is selected
+  // AND the user picked the monthly cycle. Annual CTA uses annualSelected.
+  const monthlySelected = selected && !annualSelected;
+  const annualSavings =
+    annualPricePerMonth != null ? monthlyPrice - annualPricePerMonth : 0;
+  const annualDiscountPct =
+    annualPricePerMonth != null && monthlyPrice > 0
+      ? Math.round(((monthlyPrice - annualPricePerMonth) / monthlyPrice) * 100)
+      : 0;
 
   return (
     <Card
@@ -164,16 +193,16 @@ export function PlanCard({
           </div>
         )}
 
-        {/* CTA */}
+        {/* Monthly CTA */}
         {!readOnly && (
           <Button
-            variant={selected ? "default" : "outline"}
+            variant={monthlySelected ? "default" : "outline"}
             size="sm"
             className="w-full mt-auto"
             disabled={disabled}
-            onClick={onSelect}
+            onClick={() => onSelect?.("monthly")}
           >
-            {selected ? (
+            {monthlySelected ? (
               <>
                 Selected <Check className="w-3.5 h-3.5 ml-1.5" />
               </>
@@ -184,6 +213,60 @@ export function PlanCard({
               </>
             )}
           </Button>
+        )}
+
+        {/* Annual-prepaid savings box — only when tier exposes annual */}
+        {!readOnly && annualPricePerMonth != null && annualSavings > 0 && (
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => onSelect?.("annual")}
+            aria-pressed={annualSelected}
+            className={`group w-full rounded-xl border p-3 text-left transition-all ${
+              annualSelected
+                ? "border-emerald-500/70 bg-emerald-500/10 ring-1 ring-emerald-500/40 shadow-sm"
+                : "border-emerald-500/30 bg-emerald-500/[0.04] hover:border-emerald-500/60 hover:bg-emerald-500/[0.08]"
+            } ${disabled ? "opacity-60" : ""}`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <TrendingDown className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
+                    Pay 12 months upfront
+                  </p>
+                </div>
+                <p
+                  className="text-base font-bold text-card-foreground leading-none mt-1.5"
+                  style={{ fontVariantNumeric: "tabular-nums" }}
+                >
+                  {formatUSD(annualPricePerMonth)}
+                  <span className="text-[10px] font-normal text-muted-foreground ml-0.5">
+                    /rooftop/mo
+                  </span>
+                </p>
+                <p
+                  className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold mt-1"
+                  style={{ fontVariantNumeric: "tabular-nums" }}
+                >
+                  Save {formatUSD(annualSavings)}/mo · {annualDiscountPct}% off
+                </p>
+              </div>
+              <div className="shrink-0">
+                {annualSelected ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600 text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5">
+                    <Check className="w-3 h-3" />
+                    On
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 group-hover:bg-emerald-500 group-hover:text-white group-hover:border-emerald-500 transition-colors">
+                    Switch
+                    <ArrowRight className="w-3 h-3" />
+                  </span>
+                )}
+              </div>
+            </div>
+          </button>
         )}
       </CardContent>
     </Card>

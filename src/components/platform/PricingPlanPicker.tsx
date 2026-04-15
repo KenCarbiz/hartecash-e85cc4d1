@@ -466,6 +466,7 @@ const PricingPlanPicker = ({
         tierPrice={tierPrice}
         rooftopCount={rooftopCount}
         selectedTiers={selectedTiers}
+        cycle={cycle}
         readOnly={readOnly}
         onSelectTier={handleSelectTier}
       />
@@ -708,8 +709,9 @@ function AppTierTabs({
   tierPrice: (t: PlatformProductTier) => number;
   rooftopCount: number;
   selectedTiers: Record<string, string>;
+  cycle: "monthly" | "annual";
   readOnly: boolean;
-  onSelectTier: (productId: string, tierId: string) => void;
+  onSelectTier: (productId: string, tierId: string, nextCycle?: "monthly" | "annual") => void;
 }) {
   const tabbable = products.filter((p) => (tiersByProduct.get(p.id) ?? []).length > 0);
   const [active, setActive] = useState<string>(tabbable[0]?.id ?? "");
@@ -801,13 +803,21 @@ function AppTierTabs({
                       name={tier.name}
                       description={tier.description}
                       monthlyPrice={price}
+                      annualPricePerMonth={
+                        tier.annual_price != null
+                          ? Math.round(tier.annual_price / 12)
+                          : undefined
+                      }
+                      annualSelected={isSelected && cycle === "annual"}
                       rooftopCount={rooftopCount}
                       features={tier.features}
                       badge={badge}
                       footerLines={footerLines}
                       selected={isSelected}
                       readOnly={readOnly}
-                      onSelect={() => onSelectTier(p.id, tier.id)}
+                      onSelect={(nextCycle) =>
+                        onSelectTier(p.id, tier.id, nextCycle)
+                      }
                     />
                   );
                 })}
