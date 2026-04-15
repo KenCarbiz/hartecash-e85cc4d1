@@ -273,6 +273,26 @@ const PricingPlanPicker = ({
         )
       : {},
   );
+  // Per-tier cycle tracking so each product can be independently on
+  // monthly or annual-prepaid. Falls back to the top-level `cycle`
+  // when the dealer hasn't explicitly picked a cycle for that product.
+  //
+  // This is what powers the "Due Today" math — first month of every
+  // monthly-billed tier + full 12-month upfront for every annual tier,
+  // all on the same cart.
+  const [tierCycles, setTierCycles] = useState<Record<string, "monthly" | "annual">>(
+    initialSelection?.kind === "tiers"
+      ? Object.fromEntries(
+          (initialSelection.tierIds ?? [])
+            .map((tid) => {
+              const tier = tiers.find((t) => t.id === tid);
+              if (!tier) return null;
+              return [tier.product_id, initialSelection.cycle] as [string, "monthly" | "annual"];
+            })
+            .filter(Boolean) as Array<[string, "monthly" | "annual"]>,
+        )
+      : {},
+  );
 
   const featuredBundle =
     bundles.find((b) => b.is_featured && !b.is_enterprise) ??
@@ -329,14 +349,15 @@ const PricingPlanPicker = ({
     tierId: string,
     nextCycle?: "monthly" | "annual",
   ) => {
-    const effectiveCycle = nextCycle ?? cycle;
+    const effectiveCycle = nextCycle ?? tierCycles[productId] ?? cycle;
     // Toggle semantics: only clear when the user clicks the EXACT same
     // tier AND cycle they already have on. Clicking the other cycle box
     // for the same tier is a cycle switch (Monthly → Annual Prepaid or
     // back), not a deselect — otherwise the user can never cross from
     // one cycle to the other on a tier they're on.
     const sameTier = selectedTiers[productId] === tierId && !selectedBundle;
-    const sameCycle = nextCycle == null || nextCycle === cycle;
+    const sameCycle =
+      nextCycle == null || nextCycle === (tierCycles[productId] ?? cycle);
     if (sameTier && sameCycle) {
       setSelectedTiers((prev) => {
         const n = { ...prev };
@@ -349,8 +370,24 @@ const PricingPlanPicker = ({
         );
         return n;
       });
+      setTierCycles((prev) => {
+        const n = { ...prev };
+        delete n[productId];
+        return n;
+      });
       return;
     }
+    // Per-tier cycle: record the cycle the user just picked for this
+    // product. If nextCycle is omitted (legacy single-arg path), fall
+    // back to the top-level `cycle` for backwards compatibility.
+    if (nextCycle) {
+      setTierCycles((prev) => ({ ...prev, [productId]: nextCycle }));
+    } else if (!(productId in tierCycles)) {
+      setTierCycles((prev) => ({ ...prev, [productId]: cycle }));
+    }
+    // Keep the top-level `cycle` in sync when a switch happens so the
+    // bundle card + back-compat summary copy stays aligned with the
+    // most recent user intent.
     if (nextCycle && nextCycle !== cycle) setCycle(nextCycle);
     setSelectedBundle(null);
     setSelectedTiers((prev) => {
@@ -430,27 +467,99 @@ const PricingPlanPicker = ({
     return map;
   }, [selectedTiers, tiers, products]);
 
-  // Per-rooftop monthly subtotal for the Monthly Total bubble. Always
-  // sums monthly_price regardless of the currently-selected cycle — the
-  // Monthly bubble is fixed and only the separate Due-Now bubble
-  // reflects the annual-prepaid choice.
+  // Per-tier-cycle resolution helper.
+  const cycleFor = (productId: string): "monthly" | "annual" =>
+    tierCycles[productId] ?? cycle;
+
+  // Per-rooftop MONTHLY COMMITMENT — the /mo equivalent across EVERY
+  // selected item, regardless of whether each is billed monthly or
+  // annually prepaid. For annual-prepaid tiers we use annual_price/12.
   //
   // Complimentary tiers (AutoLabels Basic when the dealer owns AutoCurb)
-  // are EXCLUDED from the subtotal — they render as Selected/Included
-  // in the UI but cost $0.
+  // are EXCLUDED — they render as Included but cost $0.
+  //
+  // Bundle path: when a bundle is selected, use the bundle's monthly
+  // (or annual/12) rate directly.
   const perRooftopTotal = useMemo(() => {
     if (selectedBundle) {
       const b = bundles.find((x) => x.id === selectedBundle);
-      return b?.monthly_price ?? 0;
+      if (!b) return 0;
+      if (cycle === "annual" && b.annual_price) {
+        return Math.round(b.annual_price / 12);
+      }
+      return b.monthly_price;
     }
     let base = 0;
-    for (const tid of Object.values(selectedTiers)) {
+    for (const [productId, tid] of Object.entries(selectedTiers)) {
       if (complimentary[tid]) continue;
       const t = tiers.find((x) => x.id === tid);
-      if (t) base += t.monthly_price;
+      if (!t) continue;
+      const tc = cycleFor(productId);
+      if (tc === "annual" && t.annual_price && t.annual_price > 0) {
+        base += Math.round(t.annual_price / 12);
+      } else {
+        base += t.monthly_price;
+      }
     }
     return base;
-  }, [selectedBundle, selectedTiers, bundles, tiers, complimentary]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedBundle, selectedTiers, tierCycles, cycle, bundles, tiers, complimentary]);
+
+  // Per-rooftop ANNUAL TOTAL DUE — sum of 12-month upfront for every
+  // tier currently on the annual cycle. Zero when nothing is annual.
+  // When a bundle is selected on annual, this is the bundle's full
+  // 12-month amount.
+  const annualTotalDuePerRooftop = useMemo(() => {
+    if (selectedBundle) {
+      if (cycle !== "annual") return 0;
+      const b = bundles.find((x) => x.id === selectedBundle);
+      return b?.annual_price ?? 0;
+    }
+    let upfront = 0;
+    for (const [productId, tid] of Object.entries(selectedTiers)) {
+      if (complimentary[tid]) continue;
+      if (cycleFor(productId) !== "annual") continue;
+      const t = tiers.find((x) => x.id === tid);
+      if (!t) continue;
+      if (t.annual_price != null && t.annual_price > 0) {
+        upfront += t.annual_price;
+      } else if (t.monthly_price > 0) {
+        // Fallback: if annual_price is missing from the DB row, derive
+        // it from monthly × 12 so the Due-Today math stays sane.
+        upfront += t.monthly_price * 12;
+      }
+    }
+    return upfront;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedBundle, selectedTiers, tierCycles, cycle, bundles, tiers, complimentary]);
+
+  // Per-rooftop DUE TODAY = first month of monthly tiers + full
+  // 12-month upfront of annual tiers. This is what actually hits
+  // the dealer's card on day one.
+  const dueTodayPerRooftop = useMemo(() => {
+    if (selectedBundle) {
+      const b = bundles.find((x) => x.id === selectedBundle);
+      if (!b) return 0;
+      if (cycle === "annual") return b.annual_price ?? b.monthly_price * 12;
+      return b.monthly_price;
+    }
+    let total = 0;
+    for (const [productId, tid] of Object.entries(selectedTiers)) {
+      if (complimentary[tid]) continue;
+      const t = tiers.find((x) => x.id === tid);
+      if (!t) continue;
+      const tc = cycleFor(productId);
+      if (tc === "annual") {
+        total += t.annual_price ?? t.monthly_price * 12;
+      } else {
+        total += t.monthly_price;
+      }
+    }
+    return total;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedBundle, selectedTiers, tierCycles, cycle, bundles, tiers, complimentary]);
+
+  const hasAnyAnnual = annualTotalDuePerRooftop > 0;
 
   // Per-rooftop annual-prepaid subtotal. Only populated when cycle is
   // "annual" AND the selected tiers/bundle actually expose an annual

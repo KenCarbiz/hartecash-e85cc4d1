@@ -10,10 +10,16 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import PricingPlanPicker, { type PlanSelection } from "@/components/platform/PricingPlanPicker";
+import {
+  FALLBACK_PRODUCTS,
+  FALLBACK_TIERS,
+  FALLBACK_BUNDLES,
+} from "@/components/platform/pricing/fallbackCatalog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTenant } from "@/contexts/TenantContext";
 import { formatUSD } from "@/lib/entitlements";
+import type { PlatformProduct, PlatformBundle } from "@/lib/entitlements";
 import {
   Car,
   FileCheck,
@@ -46,7 +52,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const PlatformSubscriptions = () => {
-  const { products, bundles, tiers, subscription, hasProduct, getActiveTier, entitledTierIds } = usePlatform();
+  const { products: dbProducts, bundles: dbBundles, tiers: dbTiers, subscription, hasProduct, getActiveTier, entitledTierIds } = usePlatform();
   const { tenant } = useTenant();
   const { toast } = useToast();
   // "Change plan" is collapsed by default — admins arrive here to see
@@ -58,6 +64,31 @@ const PlatformSubscriptions = () => {
   // Cleared when the dealer saves (subscription refresh takes over)
   // or closes the picker without saving.
   const [inFlight, setInFlight] = useState<PlanSelection | null>(null);
+
+  // Merge DB catalog with the fallback so the Current Plan lineup up
+  // top can always resolve a bundle / tier / product by id, even when
+  // the platform_* tables haven't been seeded yet. Same merge strategy
+  // as PricingPlanPicker — DB rows win on matching ids.
+  const products = useMemo(() => {
+    const map = new Map<string, PlatformProduct>();
+    for (const p of FALLBACK_PRODUCTS) map.set(p.id, p);
+    for (const p of dbProducts) map.set(p.id, p);
+    return Array.from(map.values());
+  }, [dbProducts]);
+
+  const bundles = useMemo(() => {
+    const map = new Map<string, PlatformBundle>();
+    for (const b of FALLBACK_BUNDLES) map.set(b.id, b);
+    for (const b of dbBundles) map.set(b.id, b);
+    return Array.from(map.values());
+  }, [dbBundles]);
+
+  const tiers = useMemo(() => {
+    const map = new Map<string, PlatformProductTier>();
+    for (const t of FALLBACK_TIERS) map.set(t.id, t);
+    for (const t of dbTiers) map.set(t.id, t);
+    return Array.from(map.values());
+  }, [dbTiers]);
 
   const activeProducts = products
     .filter((p) => p.is_active)
