@@ -24,6 +24,10 @@ import {
   FALLBACK_TIERS,
   FALLBACK_BUNDLES,
 } from "./pricing/fallbackCatalog";
+import {
+  tierPriceOverride,
+  bundlePriceOverride,
+} from "./pricing/architecturePricing";
 
 const ICON_MAP: Record<string, React.ElementType> = {
   Car,
@@ -97,6 +101,13 @@ interface PricingPlanPickerProps {
    * picked Single Store + Secondary.
    */
   unavailableTiers?: Record<string, string>;
+  /**
+   * Dealership architecture (single_store / single_store_secondary /
+   * multi_location / dealer_group / enterprise). When set, per-store
+   * pricing overrides for that architecture are applied — multi-rooftop
+   * dealers get volume discounts on top of the catalog base prices.
+   */
+  architecture?: string;
 }
 
 /**
@@ -121,6 +132,7 @@ const PricingPlanPicker = ({
   variant = "full",
   autoSave = false,
   unavailableTiers,
+  architecture,
 }: PricingPlanPickerProps) => {
   const platform = usePlatform();
   // Guaranteed-complete catalog with per-product fallback.
@@ -151,7 +163,7 @@ const PricingPlanPicker = ({
       x.is_available_for_new_subs !== false;
 
     const mergedProducts = mergeById(FALLBACK_PRODUCTS, platform.products).filter(visible);
-    const mergedBundles = mergeById(FALLBACK_BUNDLES, platform.bundles).filter(visible);
+    const mergedBundlesBase = mergeById(FALLBACK_BUNDLES, platform.bundles).filter(visible);
     const mergedTiersBase = mergeById(FALLBACK_TIERS, platform.tiers);
 
     // Per-product fill: if ANY active fallback product lacks an active
@@ -170,14 +182,32 @@ const PricingPlanPicker = ({
     const supplementalTiers = FALLBACK_TIERS.filter(
       (t) => needsFallbackFor.has(t.product_id) && t.is_active,
     );
-    const mergedTiers = [...mergedTiersBase, ...supplementalTiers];
+    const mergedTiersAllRaw = [...mergedTiersBase, ...supplementalTiers];
+
+    // ── Apply architecture-aware volume pricing ──────────────────────
+    // Multi-rooftop dealers get discounted per-store prices. The merge
+    // here swaps monthly/annual numbers so every downstream consumer
+    // (totals, summary, tier buttons) sees the right figure without
+    // any additional plumbing.
+    const mergedTiers = mergedTiersAllRaw.map((t) => {
+      const override = tierPriceOverride(t.id, architecture);
+      return override
+        ? { ...t, monthly_price: override.monthly, annual_price: override.annual }
+        : t;
+    });
+    const mergedBundles = mergedBundlesBase.map((b) => {
+      const override = bundlePriceOverride(b.id, architecture);
+      return override
+        ? { ...b, monthly_price: override.monthly, annual_price: override.annual }
+        : b;
+    });
 
     return {
       products: mergedProducts,
       bundles: mergedBundles,
       tiers: mergedTiers,
     };
-  }, [platform.products, platform.bundles, platform.tiers]);
+  }, [platform.products, platform.bundles, platform.tiers, architecture]);
 
   // `rows` variant exposes the monthly/annual toggle via per-product
   // buttons (AutoCurb / All-Apps bundle show both options), so the
