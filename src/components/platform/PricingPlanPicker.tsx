@@ -135,8 +135,14 @@ const PricingPlanPicker = ({
       return Array.from(map.values());
     };
 
-    const mergedProducts = mergeById(FALLBACK_PRODUCTS, platform.products);
-    const mergedBundles = mergeById(FALLBACK_BUNDLES, platform.bundles);
+    // `is_available_for_new_subs !== false` — absent (undefined) is
+    // treated as visible so older schemas pre-visibility-gate keep
+    // working. Only an explicit `false` hides a product/bundle.
+    const visible = <T extends { is_available_for_new_subs?: boolean }>(x: T) =>
+      x.is_available_for_new_subs !== false;
+
+    const mergedProducts = mergeById(FALLBACK_PRODUCTS, platform.products).filter(visible);
+    const mergedBundles = mergeById(FALLBACK_BUNDLES, platform.bundles).filter(visible);
     const mergedTiersBase = mergeById(FALLBACK_TIERS, platform.tiers);
 
     // Per-product fill: if ANY active fallback product lacks an active
