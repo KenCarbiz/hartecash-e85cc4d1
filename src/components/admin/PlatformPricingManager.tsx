@@ -259,21 +259,29 @@ const PlatformPricingManager = () => {
 
   const save = async () => {
     setSaving(true);
+    const payload = {
+      id: "global",
+      annual_discount_pct: draft.annual_discount_pct,
+      tier_overrides: draft.tier_overrides,
+      bundle_overrides: draft.bundle_overrides,
+      // `multi_location_overrides` is a NOT NULL column on the table
+      // (legacy from v1); include an empty object so upserts into a
+      // freshly healed row never trip the constraint.
+      multi_location_overrides: {},
+      updated_at: new Date().toISOString(),
+    };
+
     const { error } = await supabase
       .from("platform_pricing_model" as never)
-      .upsert({
-        id: "global",
-        annual_discount_pct: draft.annual_discount_pct,
-        tier_overrides: draft.tier_overrides,
-        bundle_overrides: draft.bundle_overrides,
-        updated_at: new Date().toISOString(),
-      } as never);
+      .upsert(payload as never, { onConflict: "id" });
     setSaving(false);
 
     if (error) {
+      // eslint-disable-next-line no-console
+      console.error("[PlatformPricingManager] save failed", { error, payload });
       toast({
         title: "Couldn't save pricing model",
-        description: error.message,
+        description: `${error.message}${error.hint ? ` — ${error.hint}` : ""}`,
         variant: "destructive",
       });
       return;
@@ -282,7 +290,7 @@ const PlatformPricingManager = () => {
     toast({
       title: "Pricing model saved",
       description:
-        "Changes stored. The dealer-facing picker isn't reading from this yet.",
+        "Prices pushed to the dealer picker via Supabase realtime.",
     });
   };
 
