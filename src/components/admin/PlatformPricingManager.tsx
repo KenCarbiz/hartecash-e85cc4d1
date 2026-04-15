@@ -259,21 +259,36 @@ const PlatformPricingManager = () => {
 
   const save = async () => {
     setSaving(true);
-    const payload = {
+    const payload: Record<string, unknown> = {
       id: "global",
       annual_discount_pct: draft.annual_discount_pct,
       tier_overrides: draft.tier_overrides,
       bundle_overrides: draft.bundle_overrides,
-      // `multi_location_overrides` is a NOT NULL column on the table
-      // (legacy from v1); include an empty object so upserts into a
-      // freshly healed row never trip the constraint.
+      // `multi_location_overrides` is a NOT NULL column on the v1
+      // table; include an empty object so upserts into a freshly
+      // healed row never trip the constraint.
       multi_location_overrides: {},
       updated_at: new Date().toISOString(),
     };
 
-    const { error } = await supabase
-      .from("platform_pricing_model" as never)
-      .upsert(payload as never, { onConflict: "id" });
+    // PostgREST schema cache can lag behind recent DDL — if it does,
+    // strip the unknown column and retry so saves land on whatever
+    // the schema cache currently knows about.
+    let error: { message: string; hint?: string } | null = null;
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const res = await supabase
+        .from("platform_pricing_model" as never)
+        .upsert(payload as never, { onConflict: "id" });
+      error = res.error as typeof error;
+      if (!error) break;
+      const match = /Could not find the '([a-z_]+)' column/i.exec(error.message);
+      if (!match) break;
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[PlatformPricingManager] schema cache missing '${match[1]}', retrying without it`,
+      );
+      delete payload[match[1]];
+    }
     setSaving(false);
 
     if (error) {
