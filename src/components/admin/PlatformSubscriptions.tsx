@@ -573,7 +573,14 @@ const PlatformSubscriptions = () => {
                   : undefined
             }
             ctaLabel="Save plan"
-            onChange={(s) => setInFlight(s ?? null)}
+            onChange={(s) => {
+              // Debug log — remove after hartecash confirms cards
+              // accumulate as expected. Helps diagnose a "cards
+              // disappear on subsequent clicks" bug report.
+              // eslint-disable-next-line no-console
+              console.debug("[PlatformSubscriptions] picker onChange", s);
+              setInFlight(s ?? null);
+            }}
             onConfirm={async (s) => {
               await saveSelection(s);
               setPickerOpen(false);
