@@ -454,8 +454,9 @@ const PricingPlanPicker = ({
           products={activeProducts}
           rooftopCount={rooftopCount}
           isSelected={selectedBundle === featuredBundle.id}
+          cycle={cycle}
           readOnly={readOnly}
-          onSelect={() => handleSelectBundle(featuredBundle.id)}
+          onSelect={(nextCycle) => handleSelectBundle(featuredBundle.id, nextCycle)}
         />
       )}
 
@@ -585,6 +586,7 @@ function HeroBundleCard({
   products,
   rooftopCount,
   isSelected,
+  cycle,
   readOnly,
   onSelect,
 }: {
@@ -592,11 +594,27 @@ function HeroBundleCard({
   products: PlatformProduct[];
   rooftopCount: number;
   isSelected: boolean;
+  cycle: "monthly" | "annual";
   readOnly: boolean;
-  onSelect: () => void;
+  onSelect: (nextCycle?: "monthly" | "annual") => void;
 }) {
   const price = bundle.monthly_price;
   const multiplied = price * rooftopCount;
+
+  // Annual prepaid affordance — mirrors the 2-box PlanCard grammar.
+  // annual_price on the bundle is the FULL 12-month prepaid amount;
+  // divide by 12 for the per-rooftop/mo equivalent shown in the box.
+  const annualPerMo =
+    bundle.annual_price != null && bundle.annual_price > 0
+      ? Math.round(bundle.annual_price / 12)
+      : null;
+  const annualMultiplied = annualPerMo != null ? annualPerMo * rooftopCount : 0;
+  const annualDiscountPct =
+    annualPerMo != null && price > 0
+      ? Math.round(((price - annualPerMo) / price) * 100)
+      : 0;
+  const monthlySelected = isSelected && cycle === "monthly";
+  const annualSelected = isSelected && cycle === "annual";
 
   return (
     <Card
@@ -659,34 +677,137 @@ function HeroBundleCard({
             </div>
           </div>
 
-          {/* Price rail */}
-          <div className="lg:w-56 space-y-3 lg:border-l lg:border-border/40 lg:pl-5">
-            <div>
-              <p className="text-3xl sm:text-4xl font-bold text-card-foreground leading-none">
-                {formatUSD(price)}
-              </p>
-              <p className="text-[11px] text-muted-foreground mt-1">per rooftop/mo</p>
-              {rooftopCount > 1 && (
-                <p className="text-xs text-primary font-semibold mt-1.5">
-                  {formatUSD(multiplied)}/mo total
-                </p>
-              )}
-            </div>
-            {!readOnly && (
-              <Button
-                size="sm"
-                className="w-full"
-                variant={isSelected ? "default" : "default"}
-                onClick={onSelect}
-              >
-                {isSelected ? (
-                  <>
-                    Selected <Check className="w-3.5 h-3.5 ml-1.5" />
-                  </>
-                ) : (
-                  "Select bundle"
+          {/* Price rail — monthly + optional annual prepaid box */}
+          <div className="lg:w-64 space-y-2.5 lg:border-l lg:border-border/40 lg:pl-5">
+            {annualPerMo != null ? (
+              <>
+                {/* Monthly box */}
+                <button
+                  type="button"
+                  disabled={readOnly}
+                  onClick={() => onSelect("monthly")}
+                  aria-pressed={monthlySelected}
+                  className={`group w-full rounded-xl border px-3.5 py-3 text-left transition-all ${
+                    monthlySelected
+                      ? "border-primary/70 bg-primary/15 ring-1 ring-primary/40 shadow-sm"
+                      : "border-border/60 bg-card hover:border-primary/50 hover:bg-primary/[0.05]"
+                  } ${readOnly ? "opacity-60 cursor-not-allowed" : ""}`}
+                >
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Monthly
+                  </p>
+                  <p
+                    className="text-2xl font-bold text-card-foreground leading-none mt-1.5"
+                    style={{ fontVariantNumeric: "tabular-nums" }}
+                  >
+                    {formatUSD(price)}
+                    <span className="text-[10px] font-normal text-muted-foreground ml-0.5">
+                      /rooftop/mo
+                    </span>
+                  </p>
+                  {rooftopCount > 1 && (
+                    <p
+                      className="text-[10px] text-primary font-semibold mt-1"
+                      style={{ fontVariantNumeric: "tabular-nums" }}
+                    >
+                      {formatUSD(multiplied)}/mo total
+                    </p>
+                  )}
+                  <div className="mt-2">
+                    {monthlySelected ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-primary text-primary-foreground text-[9px] font-bold uppercase tracking-wider px-2 py-0.5">
+                        <Check className="w-3 h-3" />
+                        Selected
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center rounded-full border border-border/60 text-muted-foreground text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-colors">
+                        Select bundle
+                      </span>
+                    )}
+                  </div>
+                </button>
+
+                {/* Annual prepaid box */}
+                <button
+                  type="button"
+                  disabled={readOnly}
+                  onClick={() => onSelect("annual")}
+                  aria-pressed={annualSelected}
+                  className={`group w-full rounded-xl border px-3.5 py-3 text-left transition-all ${
+                    annualSelected
+                      ? "border-emerald-500/70 bg-emerald-500/15 ring-1 ring-emerald-500/50 shadow-sm"
+                      : "border-emerald-500/30 bg-emerald-500/[0.05] hover:border-emerald-500/60 hover:bg-emerald-500/[0.10]"
+                  } ${readOnly ? "opacity-60 cursor-not-allowed" : ""}`}
+                >
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
+                    Annual Prepaid
+                  </p>
+                  <p
+                    className="text-2xl font-bold text-card-foreground leading-none mt-1.5"
+                    style={{ fontVariantNumeric: "tabular-nums" }}
+                  >
+                    {formatUSD(annualPerMo)}
+                    <span className="text-[10px] font-normal text-muted-foreground ml-0.5">
+                      /rooftop/mo
+                    </span>
+                  </p>
+                  <p
+                    className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold mt-1"
+                    style={{ fontVariantNumeric: "tabular-nums" }}
+                  >
+                    Pay 12 mo upfront · save {annualDiscountPct}%
+                  </p>
+                  {rooftopCount > 1 && (
+                    <p
+                      className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold"
+                      style={{ fontVariantNumeric: "tabular-nums" }}
+                    >
+                      {formatUSD(annualMultiplied)}/mo · {rooftopCount} rooftops
+                    </p>
+                  )}
+                  <div className="mt-2">
+                    {annualSelected ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600 text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5">
+                        <Check className="w-3 h-3" />
+                        Selected
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center rounded-full border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-600 transition-colors">
+                        Select bundle
+                      </span>
+                    )}
+                  </div>
+                </button>
+              </>
+            ) : (
+              <>
+                <div>
+                  <p className="text-3xl sm:text-4xl font-bold text-card-foreground leading-none">
+                    {formatUSD(price)}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground mt-1">per rooftop/mo</p>
+                  {rooftopCount > 1 && (
+                    <p className="text-xs text-primary font-semibold mt-1.5">
+                      {formatUSD(multiplied)}/mo total
+                    </p>
+                  )}
+                </div>
+                {!readOnly && (
+                  <Button
+                    size="sm"
+                    className="w-full"
+                    onClick={() => onSelect("monthly")}
+                  >
+                    {isSelected ? (
+                      <>
+                        Selected <Check className="w-3.5 h-3.5 ml-1.5" />
+                      </>
+                    ) : (
+                      "Select bundle"
+                    )}
+                  </Button>
                 )}
-              </Button>
+              </>
             )}
           </div>
         </div>
