@@ -465,6 +465,17 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate, targetDealershipId, onD
               variant="rows"
               autoSave
               readOnly={readOnly}
+              // Architecture-gated tiers: multi-rooftop structures don't
+              // get the smallest AutoFrame tier (it caps at 75 units,
+              // which is too small for two-location and up).
+              unavailableTiers={
+                account.architecture === "single_store_secondary" ||
+                account.architecture === "multi_location" ||
+                account.architecture === "dealer_group" ||
+                account.architecture === "enterprise"
+                  ? { autoframe_70: "Multi-location — 125 units minimum" }
+                  : undefined
+              }
               initialSelection={
                 currentSubscription?.bundle_id
                   ? {
