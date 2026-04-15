@@ -84,14 +84,15 @@ export function PlanCard({
   const multiplied = monthlyPrice * rooftopCount;
   const isHero = variant === "hero";
 
-  // The monthly CTA is "selected" only when the tier itself is selected
-  // AND the user picked the monthly cycle. Annual CTA uses annualSelected.
+  // Tiers with a set annual price get the two-box monthly/annual
+  // layout. Without one we keep the original single-price + Select
+  // CTA shape.
+  const hasAnnual = annualPricePerMonth != null && annualPricePerMonth > 0;
   const monthlySelected = selected && !annualSelected;
-  const annualSavings =
-    annualPricePerMonth != null ? monthlyPrice - annualPricePerMonth : 0;
+  const annualSavings = hasAnnual ? monthlyPrice - (annualPricePerMonth as number) : 0;
   const annualDiscountPct =
-    annualPricePerMonth != null && monthlyPrice > 0
-      ? Math.round(((monthlyPrice - annualPricePerMonth) / monthlyPrice) * 100)
+    hasAnnual && monthlyPrice > 0
+      ? Math.round(((monthlyPrice - (annualPricePerMonth as number)) / monthlyPrice) * 100)
       : 0;
 
   return (
@@ -141,22 +142,131 @@ export function PlanCard({
           </div>
         </div>
 
-        {/* Price block */}
-        <div>
-          <p
-            className={`${isHero ? "text-3xl" : "text-2xl"} font-bold text-card-foreground leading-none`}
-          >
-            {formatUSD(monthlyPrice)}
-            <span className="text-[11px] font-normal text-muted-foreground ml-0.5">
-              /rooftop/mo
-            </span>
-          </p>
-          {rooftopCount > 1 && (
-            <p className="text-[10px] text-primary font-semibold mt-1">
-              {formatUSD(multiplied)}/mo × {rooftopCount} rooftops
+        {/* PRICE / CTA BLOCK
+            · With annual  → two peer boxes (Monthly / 12-Month Prepaid)
+            · Without      → single big price + Select button below */}
+        {hasAnnual ? (
+          <div className="grid grid-cols-2 gap-2">
+            {/* Monthly box */}
+            <button
+              type="button"
+              disabled={disabled || readOnly}
+              onClick={() => onSelect?.("monthly")}
+              aria-pressed={monthlySelected}
+              className={`group relative rounded-xl border px-3 py-3 text-left transition-all ${
+                monthlySelected
+                  ? "border-primary/70 bg-primary/10 ring-1 ring-primary/40 shadow-sm"
+                  : "border-border/60 bg-card hover:border-primary/40 hover:bg-primary/[0.04]"
+              } ${disabled || readOnly ? "opacity-60 cursor-not-allowed" : ""}`}
+            >
+              <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                Monthly
+              </p>
+              <p
+                className="text-xl font-bold text-card-foreground leading-none mt-1.5"
+                style={{ fontVariantNumeric: "tabular-nums" }}
+              >
+                {formatUSD(monthlyPrice)}
+                <span className="text-[10px] font-normal text-muted-foreground ml-0.5">
+                  /mo
+                </span>
+              </p>
+              <p className="text-[10px] text-muted-foreground mt-1">
+                Billed monthly
+              </p>
+              <div className="mt-2">
+                {monthlySelected ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-primary text-primary-foreground text-[9px] font-bold uppercase tracking-wider px-2 py-0.5">
+                    <Check className="w-3 h-3" />
+                    Selected
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center rounded-full border border-border/60 text-muted-foreground text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-colors">
+                    Select
+                  </span>
+                )}
+              </div>
+            </button>
+
+            {/* 12-month prepaid box */}
+            <button
+              type="button"
+              disabled={disabled || readOnly}
+              onClick={() => onSelect?.("annual")}
+              aria-pressed={annualSelected}
+              className={`group relative rounded-xl border px-3 py-3 text-left transition-all ${
+                annualSelected
+                  ? "border-emerald-500/70 bg-emerald-500/15 ring-1 ring-emerald-500/50 shadow-sm"
+                  : "border-emerald-500/30 bg-emerald-500/[0.05] hover:border-emerald-500/60 hover:bg-emerald-500/[0.10]"
+              } ${disabled || readOnly ? "opacity-60 cursor-not-allowed" : ""}`}
+            >
+              <div className="flex items-center gap-1">
+                <TrendingDown className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <p className="text-[9px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
+                  Annual Prepaid
+                </p>
+              </div>
+              <p
+                className="text-xl font-bold text-card-foreground leading-none mt-1.5"
+                style={{ fontVariantNumeric: "tabular-nums" }}
+              >
+                {formatUSD(annualPricePerMonth as number)}
+                <span className="text-[10px] font-normal text-muted-foreground ml-0.5">
+                  /mo
+                </span>
+              </p>
+              <p
+                className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold mt-1"
+                style={{ fontVariantNumeric: "tabular-nums" }}
+              >
+                Pay 12 mo upfront · save {annualDiscountPct}%
+              </p>
+              <div className="mt-2">
+                {annualSelected ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600 text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5">
+                    <Check className="w-3 h-3" />
+                    Selected
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center rounded-full border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-600 transition-colors">
+                    Select
+                  </span>
+                )}
+              </div>
+            </button>
+          </div>
+        ) : (
+          <div>
+            <p
+              className={`${isHero ? "text-3xl" : "text-2xl"} font-bold text-card-foreground leading-none`}
+            >
+              {formatUSD(monthlyPrice)}
+              <span className="text-[11px] font-normal text-muted-foreground ml-0.5">
+                /rooftop/mo
+              </span>
             </p>
-          )}
-        </div>
+            {rooftopCount > 1 && (
+              <p className="text-[10px] text-primary font-semibold mt-1">
+                {formatUSD(multiplied)}/mo × {rooftopCount} rooftops
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Multi-rooftop math line under the two-box layout, when needed */}
+        {hasAnnual && rooftopCount > 1 && (
+          <p
+            className="text-[10px] text-primary font-semibold -mt-1"
+            style={{ fontVariantNumeric: "tabular-nums" }}
+          >
+            × {rooftopCount} rooftops:{" "}
+            {monthlySelected
+              ? `${formatUSD(multiplied)}/mo monthly`
+              : annualSelected
+                ? `${formatUSD((annualPricePerMonth as number) * rooftopCount)}/mo annual`
+                : `${formatUSD(multiplied)}/mo monthly or ${formatUSD((annualPricePerMonth as number) * rooftopCount)}/mo annual`}
+          </p>
+        )}
 
         {/* Features */}
         {features.length > 0 && (
@@ -193,16 +303,17 @@ export function PlanCard({
           </div>
         )}
 
-        {/* Monthly CTA */}
-        {!readOnly && (
+        {/* Single-price tiers keep the Select CTA. The two-box layout
+            above is itself the CTA — no trailing button needed. */}
+        {!readOnly && !hasAnnual && (
           <Button
-            variant={monthlySelected ? "default" : "outline"}
+            variant={selected ? "default" : "outline"}
             size="sm"
             className="w-full mt-auto"
             disabled={disabled}
             onClick={() => onSelect?.("monthly")}
           >
-            {monthlySelected ? (
+            {selected ? (
               <>
                 Selected <Check className="w-3.5 h-3.5 ml-1.5" />
               </>
@@ -214,61 +325,8 @@ export function PlanCard({
             )}
           </Button>
         )}
-
-        {/* Annual-prepaid savings box — only when tier exposes annual */}
-        {!readOnly && annualPricePerMonth != null && annualSavings > 0 && (
-          <button
-            type="button"
-            disabled={disabled}
-            onClick={() => onSelect?.("annual")}
-            aria-pressed={annualSelected}
-            className={`group w-full rounded-xl border p-3 text-left transition-all ${
-              annualSelected
-                ? "border-emerald-500/70 bg-emerald-500/10 ring-1 ring-emerald-500/40 shadow-sm"
-                : "border-emerald-500/30 bg-emerald-500/[0.04] hover:border-emerald-500/60 hover:bg-emerald-500/[0.08]"
-            } ${disabled ? "opacity-60" : ""}`}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <TrendingDown className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
-                    Pay 12 months upfront
-                  </p>
-                </div>
-                <p
-                  className="text-base font-bold text-card-foreground leading-none mt-1.5"
-                  style={{ fontVariantNumeric: "tabular-nums" }}
-                >
-                  {formatUSD(annualPricePerMonth)}
-                  <span className="text-[10px] font-normal text-muted-foreground ml-0.5">
-                    /rooftop/mo
-                  </span>
-                </p>
-                <p
-                  className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold mt-1"
-                  style={{ fontVariantNumeric: "tabular-nums" }}
-                >
-                  Save {formatUSD(annualSavings)}/mo · {annualDiscountPct}% off
-                </p>
-              </div>
-              <div className="shrink-0">
-                {annualSelected ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600 text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5">
-                    <Check className="w-3 h-3" />
-                    On
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 group-hover:bg-emerald-500 group-hover:text-white group-hover:border-emerald-500 transition-colors">
-                    Switch
-                    <ArrowRight className="w-3 h-3" />
-                  </span>
-                )}
-              </div>
-            </div>
-          </button>
-        )}
       </CardContent>
     </Card>
   );
 }
+
