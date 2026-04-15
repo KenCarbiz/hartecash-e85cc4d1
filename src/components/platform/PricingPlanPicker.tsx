@@ -330,12 +330,14 @@ const PricingPlanPicker = ({
     nextCycle?: "monthly" | "annual",
   ) => {
     const effectiveCycle = nextCycle ?? cycle;
-    if (nextCycle && nextCycle !== cycle) setCycle(nextCycle);
-    // Toggle: clicking the already-selected tier for this product
-    // clears the selection instead of flipping to a no-op. Same
-    // click-once-on / click-once-off grammar on every row.
-    const wasSelected = selectedTiers[productId] === tierId && !selectedBundle;
-    if (wasSelected) {
+    // Toggle semantics: only clear when the user clicks the EXACT same
+    // tier AND cycle they already have on. Clicking the other cycle box
+    // for the same tier is a cycle switch (Monthly → Annual Prepaid or
+    // back), not a deselect — otherwise the user can never cross from
+    // one cycle to the other on a tier they're on.
+    const sameTier = selectedTiers[productId] === tierId && !selectedBundle;
+    const sameCycle = nextCycle == null || nextCycle === cycle;
+    if (sameTier && sameCycle) {
       setSelectedTiers((prev) => {
         const n = { ...prev };
         delete n[productId];
@@ -349,6 +351,7 @@ const PricingPlanPicker = ({
       });
       return;
     }
+    if (nextCycle && nextCycle !== cycle) setCycle(nextCycle);
     setSelectedBundle(null);
     setSelectedTiers((prev) => {
       const n = { ...prev, [productId]: tierId };
@@ -367,14 +370,17 @@ const PricingPlanPicker = ({
     nextCycle?: "monthly" | "annual",
   ) => {
     const effectiveCycle = nextCycle ?? cycle;
-    if (nextCycle && nextCycle !== cycle) setCycle(nextCycle);
-    // Toggle: re-clicking the selected bundle clears it, same grammar
-    // as the tier rows.
-    if (selectedBundle === bundleId) {
+    // Only clear when the user clicks the same bundle AND the same
+    // cycle they're already on. A cycle flip (Monthly → Annual Prepaid
+    // or back) on the same bundle switches instead of deselecting.
+    const sameBundle = selectedBundle === bundleId;
+    const sameCycle = nextCycle == null || nextCycle === cycle;
+    if (sameBundle && sameCycle) {
       setSelectedBundle(null);
       emit(null);
       return;
     }
+    if (nextCycle && nextCycle !== cycle) setCycle(nextCycle);
     setSelectedTiers({});
     setSelectedBundle(bundleId);
     emit({ kind: "bundle", bundleId, cycle: effectiveCycle, rooftopCount });
