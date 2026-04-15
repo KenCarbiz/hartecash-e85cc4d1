@@ -30,6 +30,7 @@ const CommunicationLog = React.lazy(() => import("./CommunicationLog"));
 const ExecutiveKPIHub = React.lazy(() => import("./ExecutiveKPIHub"));
 const OfferSettings = React.lazy(() => import("./OfferSettings"));
 const SiteConfiguration = React.lazy(() => import("./SiteConfiguration"));
+const PlatformCatalogManager = React.lazy(() => import("./PlatformCatalogManager"));
 const NotificationSettings = React.lazy(() => import("./NotificationSettings"));
 const FormConfiguration = React.lazy(() => import("./FormConfiguration"));
 const InspectionConfiguration = React.lazy(() => import("./InspectionConfiguration"));
@@ -437,8 +438,11 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
       {activeSection === "locations" && canManageAccess && <LocationManagement />}
       {activeSection === "image-inventory" && canManageAccess && <VehicleImageInventory />}
       {activeSection === "system-settings" && canManageAccess && (
-        <div className="space-y-6">
+        <div className="space-y-8">
           <h2 className="text-lg font-semibold text-card-foreground">System Settings</h2>
+          <React.Suspense fallback={<AdminLoadingSkeleton />}>
+            <PlatformCatalogManager />
+          </React.Suspense>
           <ChangelogManagement />
         </div>
       )}
