@@ -77,7 +77,7 @@ export const FALLBACK_TIERS: PlatformProductTier[] = [
     description:
       "Full acquisition stack — unlimited submissions, instant cash offers, inspection workflow.",
     monthly_price: 1995,
-    annual_price: 17988, // $1,499/mo × 12 = $17,988 prepaid
+    annual_price: 20388, // $1,699/mo × 12 = $20,388 prepaid
     features: [
       "Unlimited customer submissions",
       "Instant cash offers",
