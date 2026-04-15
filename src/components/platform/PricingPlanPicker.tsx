@@ -114,14 +114,55 @@ const PricingPlanPicker = ({
   autoSave = false,
 }: PricingPlanPickerProps) => {
   const platform = usePlatform();
-  // Guaranteed-non-empty catalog. If PlatformContext hasn't populated
-  // yet (DB migration not run in this environment, first render before
-  // fetch resolves, etc.), we fall back to the hardcoded authoritative
-  // catalog so the UI never renders blank buttons. The context data
-  // wins whenever it's present.
-  const products = platform.products.length > 0 ? platform.products : FALLBACK_PRODUCTS;
-  const bundles = platform.bundles.length > 0 ? platform.bundles : FALLBACK_BUNDLES;
-  const tiers = platform.tiers.length > 0 ? platform.tiers : FALLBACK_TIERS;
+  // Guaranteed-complete catalog with per-product fallback.
+  //
+  // The previous "replace the whole array when empty" approach had a
+  // subtle bug: if the DB had products but no ACTIVE tiers (e.g. the
+  // seed migration inserted products but a later migration deactivated
+  // every tier), `platform.tiers.length > 0` would be true but
+  // `tiersByProduct` would be empty after filtering — so every
+  // ProductRow silently returned null.
+  //
+  // We now merge by id with the fallback as the base, DB rows winning
+  // on matching ids. Additionally, for any active product that has no
+  // active tiers in the DB, we splice in the fallback tiers for that
+  // product so the row always renders with clickable buttons.
+  const { products, tiers, bundles } = useMemo(() => {
+    const mergeById = <T extends { id: string }>(fb: T[], db: T[]): T[] => {
+      const map = new Map<string, T>();
+      for (const x of fb) map.set(x.id, x);
+      for (const x of db) map.set(x.id, x);
+      return Array.from(map.values());
+    };
+
+    const mergedProducts = mergeById(FALLBACK_PRODUCTS, platform.products);
+    const mergedBundles = mergeById(FALLBACK_BUNDLES, platform.bundles);
+    const mergedTiersBase = mergeById(FALLBACK_TIERS, platform.tiers);
+
+    // Per-product fill: if ANY active fallback product lacks an active
+    // tier after the merge, keep the fallback tiers for that product.
+    const activeProductIds = new Set(
+      mergedProducts.filter((p) => p.is_active).map((p) => p.id),
+    );
+    const productsWithActiveTiers = new Set(
+      mergedTiersBase
+        .filter((t) => t.is_active)
+        .map((t) => t.product_id),
+    );
+    const needsFallbackFor = new Set(
+      [...activeProductIds].filter((pid) => !productsWithActiveTiers.has(pid)),
+    );
+    const supplementalTiers = FALLBACK_TIERS.filter(
+      (t) => needsFallbackFor.has(t.product_id) && t.is_active,
+    );
+    const mergedTiers = [...mergedTiersBase, ...supplementalTiers];
+
+    return {
+      products: mergedProducts,
+      bundles: mergedBundles,
+      tiers: mergedTiers,
+    };
+  }, [platform.products, platform.bundles, platform.tiers]);
 
   // `rows` variant exposes the monthly/annual toggle via per-product
   // buttons (AutoCurb / All-Apps bundle show both options), so the

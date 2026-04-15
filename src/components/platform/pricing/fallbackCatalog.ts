@@ -20,8 +20,8 @@ import type {
  * Row ordering (sort_order, user direction):
  *   1. AutoCurb     — off-street acquisition
  *   2. AutoLabels   — stickers + FTC compliance
- *   3. AutoFilm     — video MPI
- *   4. AutoFrame    — AI photo booth
+ *   3. AutoFrame    — AI photo booth
+ *   4. AutoFilm     — video MPI
  *  (bundle: All-Apps Unlimited, featured at the bottom)
  */
 
@@ -47,22 +47,22 @@ export const FALLBACK_PRODUCTS: PlatformProduct[] = [
     sort_order: 2,
   },
   {
-    id: "autofilm",
-    name: "AutoFilm",
-    description:
-      "Video MPI for sales and service — walkarounds, customer-facing delivery.",
-    icon_name: "Video",
-    base_url: "https://autofilm.io",
-    is_active: true,
-    sort_order: 3,
-  },
-  {
     id: "autoframe",
     name: "AutoFrame",
     description:
       "AI-powered vehicle photography — inventory-tiered pricing for every lot.",
     icon_name: "Camera",
     base_url: "https://autoframe.io",
+    is_active: true,
+    sort_order: 3,
+  },
+  {
+    id: "autofilm",
+    name: "AutoFilm",
+    description:
+      "Video MPI for sales and service — walkarounds, customer-facing delivery.",
+    icon_name: "Video",
+    base_url: "https://autofilm.io",
     is_active: true,
     sort_order: 4,
   },
@@ -77,7 +77,7 @@ export const FALLBACK_TIERS: PlatformProductTier[] = [
     description:
       "Full acquisition stack — unlimited submissions, instant cash offers, inspection workflow.",
     monthly_price: 1995,
-    annual_price: 17940, // $1,495/mo × 12 = $17,940 prepaid
+    annual_price: 17988, // $1,499/mo × 12 = $17,988 prepaid
     features: [
       "Unlimited customer submissions",
       "Instant cash offers",
@@ -101,11 +101,11 @@ export const FALLBACK_TIERS: PlatformProductTier[] = [
   {
     id: "autolabels_base",
     product_id: "autolabels",
-    name: "Standard",
+    name: "Basic",
     description:
       "Unlimited window stickers and addendums for new and used vehicles.",
-    monthly_price: 299,
-    annual_price: 2990,
+    monthly_price: 399,
+    annual_price: 3990,
     features: [
       "Unlimited new-car addendums",
       "Unlimited used-car addendums",
@@ -128,8 +128,8 @@ export const FALLBACK_TIERS: PlatformProductTier[] = [
     name: "Premium",
     description:
       "End-to-end FTC compliance with accessory tracking, customer disclosure, and signoffs. Compliant in all 50 states.",
-    monthly_price: 895,
-    annual_price: 8950,
+    monthly_price: 899,
+    annual_price: 8990,
     features: [
       "Everything in Standard",
       "FTC CARS Rule compliance",
