@@ -300,17 +300,25 @@ function TierButton({
   const annualPerMo =
     tier.annual_price != null ? Number(tier.annual_price) / 12 : null;
 
+  // Derive the 3-row grammar every tier button renders:
+  //   row 1 — uppercase tracking-wide label
+  //   row 2 — big tabular price
+  //   row 3 — muted micro-text (Pattern B from the Linear/GitHub/Apple
+  //            research — savings and billing-cycle callouts live in
+  //            the same baseline slot so sibling buttons align.)
   let header: string;
   let bigPrice: string;
   let smallUnit: string;
-  let caption: string;
-  let badge: { label: string; tone: "emerald" | "amber" | "brand" } | null = null;
+  let microText: { text: string; tone: "muted" | "emerald" | "amber" } = {
+    text: "",
+    tone: "muted",
+  };
 
   if (kind === "monthly") {
     header = "Monthly";
     bigPrice = formatUSD(monthlyPrice);
     smallUnit = "/mo";
-    caption = "Billed monthly · cancel any time";
+    microText = { text: "Billed monthly", tone: "muted" };
   } else if (kind === "annual" && annualPerMo != null) {
     const savePct =
       monthlyPrice * 12 > Number(tier.annual_price!)
@@ -319,14 +327,20 @@ function TierButton({
     header = "Annual Prepaid";
     bigPrice = formatUSD(Math.round(annualPerMo));
     smallUnit = "/mo";
-    caption = `${formatUSD(Number(tier.annual_price!))} upfront · 12 months`;
-    if (savePct > 0) badge = { label: `Save ${savePct}%`, tone: "emerald" };
+    // Pair-choice rule: savings sits in the same baseline slot as
+    // "Billed monthly" on the sibling — never as an inline pill
+    // beside the header (that broke alignment).
+    microText =
+      savePct > 0
+        ? { text: `Save ${savePct}%`, tone: "emerald" }
+        : { text: "Paid annually", tone: "muted" };
   } else {
     header = tier.name;
     bigPrice = formatUSD(monthlyPrice);
     smallUnit = "/mo";
-    caption = tier.description?.trim() || "";
-    if (tier.is_introductory) badge = { label: "Intro", tone: "amber" };
+    microText = tier.is_introductory
+      ? { text: "Introductory pricing", tone: "amber" }
+      : { text: tier.description?.trim() || "", tone: "muted" };
   }
 
   return (
@@ -353,29 +367,14 @@ function TierButton({
         />
       )}
 
-      <div className="flex items-center gap-1.5 flex-wrap pr-5">
-        <p
-          className={cn(
-            "text-[10px] font-semibold uppercase tracking-[0.18em]",
-            selected ? brand.text : "text-muted-foreground",
-          )}
-        >
-          {header}
-        </p>
-        {badge && (
-          <span
-            className={cn(
-              "text-[9px] font-bold uppercase tracking-wider rounded-full px-2 py-0.5",
-              badge.tone === "emerald" && "bg-emerald-500 text-white",
-              badge.tone === "amber" &&
-                "bg-amber-500/10 text-amber-700 border border-amber-500/20",
-              badge.tone === "brand" && brand.badge,
-            )}
-          >
-            {badge.label}
-          </span>
+      <p
+        className={cn(
+          "text-[10px] font-semibold uppercase tracking-[0.18em] pr-5 truncate",
+          selected ? brand.text : "text-muted-foreground",
         )}
-      </div>
+      >
+        {header}
+      </p>
 
       <p className="text-[28px] font-bold text-card-foreground leading-none mt-2 tabular-nums">
         {bigPrice}
@@ -384,9 +383,16 @@ function TierButton({
         </span>
       </p>
 
-      {caption && (
-        <p className="text-[10.5px] text-muted-foreground mt-2 leading-snug line-clamp-1">
-          {caption}
+      {microText.text && (
+        <p
+          className={cn(
+            "text-[11px] font-medium mt-2 leading-snug line-clamp-1",
+            microText.tone === "emerald" && "text-emerald-600",
+            microText.tone === "amber" && "text-amber-600",
+            microText.tone === "muted" && "text-muted-foreground",
+          )}
+        >
+          {microText.text}
         </p>
       )}
     </button>
@@ -458,7 +464,7 @@ function BundleRow({
           <BundleButton
             label="Monthly"
             price={formatUSD(bundle.monthly_price)}
-            caption="Billed monthly · cancel any time"
+            microText={{ text: "Billed monthly", tone: "muted" }}
             selected={isSelected && cycle === "monthly"}
             disabled={readOnly}
             onClick={() => onSelect("monthly")}
@@ -467,8 +473,11 @@ function BundleRow({
             <BundleButton
               label="Annual Prepaid"
               price={formatUSD(Math.round(annualPerMo))}
-              caption={`${formatUSD(Number(bundle.annual_price!))} upfront · 12 months`}
-              badge={savePct > 0 ? `Save ${savePct}%` : null}
+              microText={
+                savePct > 0
+                  ? { text: `Save ${savePct}%`, tone: "emerald" }
+                  : { text: "Paid annually", tone: "muted" }
+              }
               selected={isSelected && cycle === "annual"}
               disabled={readOnly}
               onClick={() => onSelect("annual")}
@@ -483,16 +492,14 @@ function BundleRow({
 function BundleButton({
   label,
   price,
-  caption,
-  badge,
+  microText,
   selected,
   disabled,
   onClick,
 }: {
   label: string;
   price: string;
-  caption: string;
-  badge?: string | null;
+  microText: { text: string; tone: "muted" | "emerald" | "amber" };
   selected: boolean;
   disabled: boolean;
   onClick: () => void;
@@ -516,21 +523,14 @@ function BundleButton({
         <CheckCircle2 className="absolute top-2.5 right-2.5 w-4 h-4 text-foreground" />
       )}
 
-      <div className="flex items-center gap-1.5 flex-wrap pr-5">
-        <p
-          className={cn(
-            "text-[10px] font-semibold uppercase tracking-[0.18em]",
-            selected ? "text-foreground" : "text-muted-foreground",
-          )}
-        >
-          {label}
-        </p>
-        {badge && (
-          <span className="text-[9px] font-bold uppercase tracking-wider rounded-full px-2 py-0.5 bg-emerald-500 text-white">
-            {badge}
-          </span>
+      <p
+        className={cn(
+          "text-[10px] font-semibold uppercase tracking-[0.18em] pr-5 truncate",
+          selected ? "text-foreground" : "text-muted-foreground",
         )}
-      </div>
+      >
+        {label}
+      </p>
 
       <p className="text-[28px] font-bold text-card-foreground leading-none mt-2 tabular-nums">
         {price}
@@ -539,8 +539,15 @@ function BundleButton({
         </span>
       </p>
 
-      <p className="text-[10.5px] text-muted-foreground mt-2 leading-snug line-clamp-1">
-        {caption}
+      <p
+        className={cn(
+          "text-[11px] font-medium mt-2 leading-snug line-clamp-1",
+          microText.tone === "emerald" && "text-emerald-600",
+          microText.tone === "amber" && "text-amber-600",
+          microText.tone === "muted" && "text-muted-foreground",
+        )}
+      >
+        {microText.text}
       </p>
     </button>
   );

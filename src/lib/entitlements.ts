@@ -21,6 +21,13 @@ export interface PlatformProduct {
   base_url: string;
   is_active: boolean;
   sort_order: number;
+  /**
+   * Super-admin visibility gate. Default true. When false, the product
+   * is hidden from the new-subscription pickers (Billing & Plan,
+   * onboarding) so apps that aren't built out can stay out of the
+   * dealer UI without being soft-deleted.
+   */
+  is_available_for_new_subs?: boolean;
 }
 
 export interface PlatformBundle {
@@ -38,6 +45,8 @@ export interface PlatformBundle {
    * ignores the bundle (pricing is negotiated per group).
    */
   is_enterprise?: boolean;
+  /** Super-admin visibility gate — see PlatformProduct field. */
+  is_available_for_new_subs?: boolean;
 }
 
 export interface PlatformProductTier {

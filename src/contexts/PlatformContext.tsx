@@ -25,6 +25,9 @@ interface PlatformContextValue {
   getActiveTier: (productId: string) => PlatformProductTier | null;
   subscription: DealerSubscription | null;
   loading: boolean;
+  /** Re-fetch the catalog. Used by PlatformCatalogManager after a
+   *  super-admin toggles visibility on a product/bundle. */
+  refreshCatalog: () => Promise<void>;
 }
 
 const PlatformContext = createContext<PlatformContextValue>({
@@ -38,6 +41,7 @@ const PlatformContext = createContext<PlatformContextValue>({
   getActiveTier: () => null,
   subscription: null,
   loading: true,
+  refreshCatalog: async () => {},
 });
 
 export const usePlatform = () => useContext(PlatformContext);
@@ -50,64 +54,65 @@ export const PlatformProvider = ({ children }: { children: ReactNode }) => {
   const [subscription, setSubscription] = useState<DealerSubscription | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const fetchPlatformData = useCallback(async () => {
+    try {
+      // Fetch products, bundles, tiers, and the dealer subscription in parallel.
+      // Tier / visibility column lookups are tolerated-missing so older
+      // environments that haven't run the relevant migration yet still
+      // render the rest of the app.
+      const [productsRes, bundlesRes, tiersRes, subRes] = await Promise.all([
+        supabase
+          .from("platform_products")
+          .select("id, name, description, icon_name, base_url, is_active, sort_order, is_available_for_new_subs")
+          .order("sort_order"),
+        supabase
+          .from("platform_bundles")
+          .select("id, name, description, monthly_price, annual_price, product_ids, is_featured, sort_order, is_enterprise, is_available_for_new_subs")
+          .order("sort_order"),
+        supabase
+          .from("platform_product_tiers" as unknown as "platform_bundles")
+          .select("id, product_id, name, description, monthly_price, annual_price, features, inventory_limit, included_with_product_ids, is_introductory, is_active, sort_order, allow_overage, overage_price_per_unit")
+          .order("sort_order"),
+        supabase
+          .from("dealer_subscriptions")
+          .select("id, bundle_id, product_ids, tier_ids, status, trial_ends_at, billing_cycle, monthly_amount, rooftop_count")
+          .eq("dealership_id", tenant.dealership_id)
+          .maybeSingle(),
+      ]);
+
+      if (productsRes.data) {
+        setProducts(productsRes.data as PlatformProduct[]);
+      }
+      if (bundlesRes.data) {
+        setBundles(bundlesRes.data as PlatformBundle[]);
+      }
+      if (tiersRes.data && !tiersRes.error) {
+        setTiers(tiersRes.data as unknown as PlatformProductTier[]);
+      }
+      if (subRes.data) {
+        // Default legacy subscription rows that predate the v2 columns.
+        const row = subRes.data as Record<string, unknown>;
+        setSubscription({
+          ...(row as unknown as DealerSubscription),
+          tier_ids: (row.tier_ids as string[]) ?? [],
+          rooftop_count: (row.rooftop_count as number) ?? 1,
+        });
+      }
+    } catch (err) {
+      console.error("Failed to fetch platform data:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [tenant.dealership_id]);
+
   useEffect(() => {
     let cancelled = false;
-
-    const fetchPlatformData = async () => {
-      try {
-        // Fetch products, bundles, tiers, and the dealer subscription in parallel.
-        // Tier lookup is tolerated-missing so older environments that haven't
-        // run the pricing v2 migration yet still render the rest of the app.
-        const [productsRes, bundlesRes, tiersRes, subRes] = await Promise.all([
-          supabase
-            .from("platform_products")
-            .select("id, name, description, icon_name, base_url, is_active, sort_order")
-            .order("sort_order"),
-          supabase
-            .from("platform_bundles")
-            .select("id, name, description, monthly_price, annual_price, product_ids, is_featured, sort_order, is_enterprise")
-            .order("sort_order"),
-          supabase
-            .from("platform_product_tiers" as unknown as "platform_bundles")
-            .select("id, product_id, name, description, monthly_price, annual_price, features, inventory_limit, included_with_product_ids, is_introductory, is_active, sort_order, allow_overage, overage_price_per_unit")
-            .order("sort_order"),
-          supabase
-            .from("dealer_subscriptions")
-            .select("id, bundle_id, product_ids, tier_ids, status, trial_ends_at, billing_cycle, monthly_amount, rooftop_count")
-            .eq("dealership_id", tenant.dealership_id)
-            .maybeSingle(),
-        ]);
-
-        if (cancelled) return;
-
-        if (productsRes.data) {
-          setProducts(productsRes.data as PlatformProduct[]);
-        }
-        if (bundlesRes.data) {
-          setBundles(bundlesRes.data as PlatformBundle[]);
-        }
-        if (tiersRes.data && !tiersRes.error) {
-          setTiers(tiersRes.data as unknown as PlatformProductTier[]);
-        }
-        if (subRes.data) {
-          // Default legacy subscription rows that predate the v2 columns.
-          const row = subRes.data as Record<string, unknown>;
-          setSubscription({
-            ...(row as unknown as DealerSubscription),
-            tier_ids: (row.tier_ids as string[]) ?? [],
-            rooftop_count: (row.rooftop_count as number) ?? 1,
-          });
-        }
-      } catch (err) {
-        console.error("Failed to fetch platform data:", err);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-
-    fetchPlatformData();
+    (async () => {
+      await fetchPlatformData();
+      void cancelled;
+    })();
     return () => { cancelled = true; };
-  }, [tenant.dealership_id]);
+  }, [fetchPlatformData]);
 
   const entitledTierIds = useMemo(
     () => resolveEntitledTierIds({ subscription, bundles, tiers }),
@@ -152,6 +157,7 @@ export const PlatformProvider = ({ children }: { children: ReactNode }) => {
         getActiveTier: getActiveTierFor,
         subscription,
         loading,
+        refreshCatalog: fetchPlatformData,
       }}
     >
       {children}
