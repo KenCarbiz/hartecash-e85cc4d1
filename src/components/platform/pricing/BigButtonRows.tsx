@@ -68,6 +68,19 @@ export function BigButtonRows({
 
   return (
     <div className="space-y-4">
+      {/* Single elegant banner when the bundle is active — replaces the
+          noisy per-row "Included" ribbons. Restraint over repetition. */}
+      {bundleActive && (
+        <div className="flex items-center gap-2.5 rounded-xl border border-primary/25 bg-primary/[0.04] px-4 py-2.5 text-xs">
+          <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+          <p className="text-card-foreground leading-snug">
+            Your <span className="font-semibold">{bundleName}</span> plan
+            covers every app below at its top tier. Pick a single app to
+            switch to à la carte.
+          </p>
+        </div>
+      )}
+
       {products.map((product) => {
         const list = (tiersByProduct.get(product.id) ?? []).filter((t) => t.is_active);
         if (list.length === 0) return null;
@@ -139,12 +152,16 @@ function ProductRow({
   const rowHasComplimentary =
     !anyTierSelected && tiers.some((t) => complimentary[t.id]);
 
+  // Reference `bundleName` so TypeScript doesn't flag the prop as unused
+  // now that the per-row ribbon is gone (banner at the top covers it).
+  void bundleName;
+
   return (
     <div
       className={cn(
         "relative rounded-xl border-2 p-4 sm:p-5 transition-all duration-200",
         bundleActive
-          ? "border-primary/20 bg-primary/[0.02] opacity-80"
+          ? "border-border/60 bg-muted/20 opacity-60"
           : anyTierSelected
             ? "border-primary/40 bg-primary/[0.02] shadow-sm"
             : rowHasComplimentary
@@ -152,13 +169,6 @@ function ProductRow({
               : "border-border bg-card",
       )}
     >
-      {/* Bundle-cascade overlay badge */}
-      {bundleActive && (
-        <div className="absolute top-3 right-3 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 border border-primary/20 rounded-full px-2.5 py-1">
-          <CheckCircle2 className="w-3 h-3" />
-          Included in {bundleName}
-        </div>
-      )}
 
       <div className="flex flex-col md:flex-row md:items-stretch gap-4">
         {/* Left: product identity (matches ArchitectureSelector icon + title) */}
