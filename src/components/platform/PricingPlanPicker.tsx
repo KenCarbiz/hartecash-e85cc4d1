@@ -924,7 +924,13 @@ function AppTierTabs({
                       key={tier.id}
                       name={tier.name}
                       description={tier.description}
-                      monthlyPrice={price}
+                      // The Monthly box ALWAYS shows the actual monthly
+                      // catalog price — never the cycle-swapped value.
+                      // `tierPrice(tier)` returns annual_price (the full
+                      // 12-month amount) when cycle=annual, which is the
+                      // WRONG number for the monthly box and what caused
+                      // AutoCurb to display "$20,388/mo · save 92%".
+                      monthlyPrice={tier.monthly_price}
                       annualPricePerMonth={
                         tier.annual_price != null
                           ? Math.round(tier.annual_price / 12)
