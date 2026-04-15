@@ -171,29 +171,34 @@ function ProductRow({
     >
 
       <div className="flex flex-col md:flex-row md:items-stretch gap-4">
-        {/* Left: product identity (matches ArchitectureSelector icon + title) */}
-        <div className="flex items-start gap-3 md:w-60 md:shrink-0">
+        {/* Left: product identity (mirrors ArchitectureSelector spacing).
+            Narrower on desktop so 3-tier rows like AutoFrame have
+            breathing room. */}
+        <div className="flex items-start gap-3 md:w-52 md:shrink-0">
           <div
             className={cn(
               "flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl shrink-0 transition-colors",
-              bundleActive || anyTierSelected
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "bg-muted text-muted-foreground",
+              bundleActive
+                ? "bg-muted text-muted-foreground"
+                : anyTierSelected
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "bg-muted text-muted-foreground",
             )}
           >
             <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="font-bold text-[15px] sm:text-base text-card-foreground leading-tight">
+            <h3 className="font-bold text-[15px] sm:text-base text-card-foreground leading-tight tracking-tight">
               {product.name}
             </h3>
-            <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 leading-snug">
+            <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 leading-snug line-clamp-2">
               {product.description}
             </p>
           </div>
         </div>
 
-        {/* Right: tier buttons, horizontal, left-to-right */}
+        {/* Right: tier buttons, horizontal, left-to-right. 3-tier rows
+            stay 3-col from sm+ so all three prices live on one line. */}
         <div
           className={cn(
             "flex-1 grid gap-2.5",
@@ -332,11 +337,10 @@ function TierButton({
     header = tier.name;
     bigPrice = formatUSD(monthlyPrice);
     smallUnit = "/mo";
-    const inv =
-      tier.inventory_limit != null
-        ? `Up to ${tier.inventory_limit.toLocaleString()} units`
-        : null;
-    caption = inv ?? tier.description ?? "";
+    // Prefer the short marketing description (e.g. "Growing
+    // inventories") over the redundant "Up to N units" line, since
+    // the unit count is already in the header.
+    caption = tier.description?.trim() || "";
     if (tier.is_introductory) badge = { label: "Intro", tone: "amber" };
   }
 
@@ -397,7 +401,7 @@ function TierButton({
             </span>
           )}
         </div>
-        <p className="text-2xl font-bold text-card-foreground leading-none mt-1">
+        <p className="text-2xl font-bold text-card-foreground leading-none mt-1 tabular-nums">
           {bigPrice}
           <span className="text-[11px] font-normal text-muted-foreground ml-0.5">
             {smallUnit}
@@ -525,7 +529,7 @@ function BundleRow({
               >
                 Monthly
               </p>
-              <p className="text-2xl font-bold text-card-foreground leading-none mt-1">
+              <p className="text-2xl font-bold text-card-foreground leading-none mt-1 tabular-nums">
                 {formatUSD(bundle.monthly_price)}
                 <span className="text-[11px] font-normal text-muted-foreground ml-0.5">
                   /mo
@@ -588,7 +592,7 @@ function BundleRow({
                     </span>
                   )}
                 </div>
-                <p className="text-2xl font-bold text-card-foreground leading-none mt-1">
+                <p className="text-2xl font-bold text-card-foreground leading-none mt-1 tabular-nums">
                   {formatUSD(Math.round(annualPerMo))}
                   <span className="text-[11px] font-normal text-muted-foreground ml-0.5">
                     /mo

@@ -147,15 +147,16 @@ export const FALLBACK_TIERS: PlatformProductTier[] = [
     sort_order: 1,
   },
 
-  // AutoFilm — one tier, both sales + service
+  // AutoFilm — one tier, Monthly vs Annual-Prepaid pair in the UI.
+  // $899/mo × 12 = $10,788 annual prepaid.
   {
     id: "autofilm_full",
     product_id: "autofilm",
-    name: "Sales + Service MPI",
+    name: "AutoFilm",
     description:
-      "Video walkarounds for sales and service MPI for service — one subscription, both departments.",
+      "Sales walkaround videos and service MPI — one subscription covers both departments.",
     monthly_price: 999,
-    annual_price: 9990,
+    annual_price: 10788,
     features: [
       "Sales walkaround videos",
       "Service MPI videos",
@@ -172,18 +173,19 @@ export const FALLBACK_TIERS: PlatformProductTier[] = [
     sort_order: 0,
   },
 
-  // AutoFrame — inventory-tiered
+  // AutoFrame — inventory-tiered. Captions are short + evocative so
+  // the 3-column row reads like a Michelin menu, not a spec sheet.
   {
     id: "autoframe_70",
     product_id: "autoframe",
-    name: "75 Units",
-    description: "AI photo booth for smaller lots — up to 75 active inventory units.",
+    name: "75 Vehicles",
+    description: "Perfect for smaller lots",
     monthly_price: 399,
     annual_price: 3990,
     features: [
       "AI background removal",
       "Consistent studio lighting",
-      "Up to 75 active units",
+      "Up to 75 active vehicles",
       "Standard turnaround",
       "Email support",
     ],
@@ -196,8 +198,8 @@ export const FALLBACK_TIERS: PlatformProductTier[] = [
   {
     id: "autoframe_120",
     product_id: "autoframe",
-    name: "125 Units",
-    description: "Growing lots — up to 125 active inventory units.",
+    name: "125 Vehicles",
+    description: "Growing inventories",
     monthly_price: 599,
     annual_price: 5990,
     features: [
@@ -216,7 +218,7 @@ export const FALLBACK_TIERS: PlatformProductTier[] = [
     id: "autoframe_unlimited",
     product_id: "autoframe",
     name: "Unlimited",
-    description: "High-volume stores and groups — unlimited inventory.",
+    description: "High-volume lots & groups",
     monthly_price: 799,
     annual_price: 7990,
     features: [
@@ -240,8 +242,8 @@ export const FALLBACK_BUNDLES: PlatformBundle[] = [
     description:
       "Every app at its top tier, unlimited usage, with white-glove onboarding, a dedicated Customer Success Manager, priority 24/7 support, and quarterly business reviews. Per rooftop.",
     monthly_price: 3999,
-    // $3,799/mo × 12 = $45,588 annual prepaid
-    annual_price: 45588,
+    // $3,499/mo × 12 = $41,988 annual prepaid
+    annual_price: 41988,
     product_ids: ["autocurb", "autolabels", "autofilm", "autoframe"],
     is_featured: true,
     is_enterprise: false,
