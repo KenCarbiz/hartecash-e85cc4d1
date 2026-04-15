@@ -417,28 +417,60 @@ const PricingPlanPicker = ({
   // Per-rooftop annual-prepaid subtotal. Only populated when cycle is
   // "annual" AND the selected tiers/bundle actually expose an annual
   // plan. Drives the emerald "Due now" bubble under the monthly total.
+  //
+  // Resolution for annual_price falls through:
+  //   merged tier (may be null if DB row has null) → FALLBACK_TIERS →
+  //   monthly_price × 12 as a last resort.
+  // Otherwise the bubble silently hides when the DB forgot to set
+  // annual_price on a tier that clearly has one (saw this on
+  // autolabels_base / autoframe_70 on hartecash).
+  const annualPriceFor = (tierId: string): number | null => {
+    const merged = tiers.find((x) => x.id === tierId);
+    if (merged?.annual_price != null && merged.annual_price > 0) {
+      return merged.annual_price;
+    }
+    const fb = FALLBACK_TIERS.find((x) => x.id === tierId);
+    if (fb?.annual_price != null && fb.annual_price > 0) {
+      return fb.annual_price;
+    }
+    if (merged?.monthly_price != null && merged.monthly_price > 0) {
+      return merged.monthly_price * 12;
+    }
+    return null;
+  };
+
+  const bundleAnnualPriceFor = (bundleId: string): number | null => {
+    const merged = bundles.find((x) => x.id === bundleId);
+    if (merged?.annual_price != null && merged.annual_price > 0) {
+      return merged.annual_price;
+    }
+    const fb = FALLBACK_BUNDLES.find((x) => x.id === bundleId);
+    if (fb?.annual_price != null && fb.annual_price > 0) {
+      return fb.annual_price;
+    }
+    if (merged?.monthly_price != null && merged.monthly_price > 0) {
+      return merged.monthly_price * 12;
+    }
+    return null;
+  };
+
   const annualPrepaidPerRooftop = useMemo(() => {
     if (cycle !== "annual") return null;
     if (selectedBundle) {
-      const b = bundles.find((x) => x.id === selectedBundle);
-      return b?.annual_price ?? null;
+      return bundleAnnualPriceFor(selectedBundle);
     }
     if (Object.keys(selectedTiers).length === 0) return null;
     let sum = 0;
     let any = false;
     for (const tid of Object.values(selectedTiers)) {
-      const t = tiers.find((x) => x.id === tid);
-      if (!t) continue;
-      if (t.annual_price != null && t.annual_price > 0) {
-        sum += t.annual_price;
+      const annual = annualPriceFor(tid);
+      if (annual != null && annual > 0) {
+        sum += annual;
         any = true;
-      } else {
-        // Tier has no annual plan — the monthly-billed portion
-        // collapses to zero upfront (keeps the total honest).
-        sum += 0;
       }
     }
     return any ? sum : null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cycle, selectedBundle, selectedTiers, bundles, tiers]);
 
   // Summary copy.
