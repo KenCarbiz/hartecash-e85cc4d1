@@ -602,15 +602,16 @@ const PricingPlanPicker = ({
   };
 
   const annualPrepaidPerRooftop = useMemo(() => {
-    if (cycle !== "annual") return null;
     if (selectedBundle) {
+      if (cycle !== "annual") return null;
       return bundleAnnualPriceFor(selectedBundle);
     }
     if (Object.keys(selectedTiers).length === 0) return null;
     let sum = 0;
     let any = false;
-    for (const tid of Object.values(selectedTiers)) {
+    for (const [productId, tid] of Object.entries(selectedTiers)) {
       if (complimentary[tid]) continue;
+      if (cycleFor(productId) !== "annual") continue;
       const annual = annualPriceFor(tid);
       if (annual != null && annual > 0) {
         sum += annual;
@@ -619,7 +620,7 @@ const PricingPlanPicker = ({
     }
     return any ? sum : null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cycle, selectedBundle, selectedTiers, bundles, tiers, complimentary]);
+  }, [cycle, selectedBundle, selectedTiers, tierCycles, bundles, tiers, complimentary]);
 
   // Summary copy.
   const summaryTitle = selectedBundle
@@ -724,6 +725,8 @@ const PricingPlanPicker = ({
         summaryTitle={summaryTitle}
         summarySubtitle={summarySubtitle}
         perRooftopTotal={perRooftopTotal}
+        annualPrepaidPerRooftop={annualPrepaidPerRooftop}
+        dueTodayPerRooftop={dueTodayPerRooftop}
         rooftopCount={rooftopCount}
         ctaLabel={ctaLabel}
         onConfirm={!autoSave && onConfirm ? handleConfirm : undefined}
@@ -1243,6 +1246,8 @@ function RowsVariantLayout(props: {
   summaryTitle: string;
   summarySubtitle: string;
   perRooftopTotal: number;
+  annualPrepaidPerRooftop?: number | null;
+  dueTodayPerRooftop?: number | null;
   rooftopCount: number;
   ctaLabel: string;
   onConfirm?: () => void;
@@ -1265,6 +1270,8 @@ function RowsVariantLayout(props: {
     summaryTitle,
     summarySubtitle,
     perRooftopTotal,
+    annualPrepaidPerRooftop,
+    dueTodayPerRooftop,
     rooftopCount,
     ctaLabel,
     onConfirm,
