@@ -24,6 +24,8 @@ interface PlatformContextValue {
   hasProduct: (productId: string) => boolean;
   getActiveTier: (productId: string) => PlatformProductTier | null;
   subscription: DealerSubscription | null;
+  /** Dealer's architecture type — single_store, multi_location, dealer_group, etc. */
+  architecture: string | undefined;
   loading: boolean;
   /** Re-fetch the catalog. Used by PlatformCatalogManager after a
    *  super-admin toggles visibility on a product/bundle. */
@@ -40,6 +42,7 @@ const PlatformContext = createContext<PlatformContextValue>({
   hasProduct: () => false,
   getActiveTier: () => null,
   subscription: null,
+  architecture: undefined,
   loading: true,
   refreshCatalog: async () => {},
 });
@@ -52,6 +55,7 @@ export const PlatformProvider = ({ children }: { children: ReactNode }) => {
   const [bundles, setBundles] = useState<PlatformBundle[]>([]);
   const [tiers, setTiers] = useState<PlatformProductTier[]>([]);
   const [subscription, setSubscription] = useState<DealerSubscription | null>(null);
+  const [architecture, setArchitecture] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(true);
 
   const fetchPlatformData = useCallback(async () => {
@@ -60,7 +64,7 @@ export const PlatformProvider = ({ children }: { children: ReactNode }) => {
       // Tier / visibility column lookups are tolerated-missing so older
       // environments that haven't run the relevant migration yet still
       // render the rest of the app.
-      const [productsRes, bundlesRes, tiersRes, subRes] = await Promise.all([
+      const [productsRes, bundlesRes, tiersRes, subRes, accountRes] = await Promise.all([
         supabase
           .from("platform_products")
           .select("id, name, description, icon_name, base_url, is_active, sort_order, is_available_for_new_subs")
@@ -76,6 +80,11 @@ export const PlatformProvider = ({ children }: { children: ReactNode }) => {
         supabase
           .from("dealer_subscriptions")
           .select("id, bundle_id, product_ids, tier_ids, status, trial_ends_at, billing_cycle, monthly_amount, rooftop_count")
+          .eq("dealership_id", tenant.dealership_id)
+          .maybeSingle(),
+        supabase
+          .from("dealer_accounts")
+          .select("architecture")
           .eq("dealership_id", tenant.dealership_id)
           .maybeSingle(),
       ]);
@@ -97,6 +106,10 @@ export const PlatformProvider = ({ children }: { children: ReactNode }) => {
           tier_ids: (row.tier_ids as string[]) ?? [],
           rooftop_count: (row.rooftop_count as number) ?? 1,
         });
+      }
+      if (accountRes.data) {
+        const acct = accountRes.data as Record<string, unknown>;
+        setArchitecture((acct.architecture as string) ?? undefined);
       }
     } catch (err) {
       console.error("Failed to fetch platform data:", err);
@@ -156,6 +169,7 @@ export const PlatformProvider = ({ children }: { children: ReactNode }) => {
         hasProduct,
         getActiveTier: getActiveTierFor,
         subscription,
+        architecture,
         loading,
         refreshCatalog: fetchPlatformData,
       }}

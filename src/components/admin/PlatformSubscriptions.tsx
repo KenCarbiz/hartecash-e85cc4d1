@@ -52,7 +52,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const PlatformSubscriptions = () => {
-  const { products: dbProducts, bundles: dbBundles, tiers: dbTiers, subscription, hasProduct, getActiveTier, entitledTierIds } = usePlatform();
+  const { products: dbProducts, bundles: dbBundles, tiers: dbTiers, subscription, architecture, hasProduct, getActiveTier, entitledTierIds } = usePlatform();
   const { tenant } = useTenant();
   const { toast } = useToast();
   // "Change plan" is collapsed by default — admins arrive here to see
@@ -650,6 +650,7 @@ const PlatformSubscriptions = () => {
         <CollapsibleContent className="pt-6 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0">
           <PricingPlanPicker
             variant="full"
+            architecture={architecture}
             initialSelection={
               subscription?.bundle_id
                 ? {

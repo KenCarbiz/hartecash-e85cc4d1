@@ -15,7 +15,7 @@ import { ArrowLeft } from "lucide-react";
  */
 const PlanPageInner = () => {
   const { tenant } = useTenant();
-  const { subscription, tiers } = usePlatform();
+  const { subscription, tiers, architecture } = usePlatform();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -82,6 +82,7 @@ const PlanPageInner = () => {
         </div>
 
         <PricingPlanPicker
+          architecture={architecture}
           initialSelection={
             subscription?.bundle_id
               ? {
