@@ -4,6 +4,7 @@ import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { usePlatform } from "@/contexts/PlatformContext";
@@ -98,6 +99,54 @@ const PlatformPricingManager = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  // Product availability toggles — tracks is_available_for_new_subs
+  // per product. Initialized from the merged catalog on load.
+  const [availability, setAvailability] = useState<Record<string, boolean>>({});
+
+  const toggleProductAvailability = async (productId: string, enabled: boolean) => {
+    setAvailability((prev) => ({ ...prev, [productId]: enabled }));
+    // Persist to platform_products table
+    const { error } = await supabase
+      .from("platform_products")
+      .update({ is_available_for_new_subs: enabled } as never)
+      .eq("id", productId);
+    if (error) {
+      // eslint-disable-next-line no-console
+      console.warn("[PricingManager] availability toggle failed:", error.message);
+      // Revert on failure
+      setAvailability((prev) => ({ ...prev, [productId]: !enabled }));
+      toast({
+        title: "Couldn't update availability",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: enabled ? "Product enabled" : "Product paused",
+        description: enabled
+          ? `${productId} is now available for new subscriptions.`
+          : `${productId} is hidden from new subscribers. Existing customers are unaffected.`,
+      });
+    }
+  };
+
+  const toggleBundleAvailability = async (bundleId: string, enabled: boolean) => {
+    setAvailability((prev) => ({ ...prev, [bundleId]: enabled }));
+    const { error } = await supabase
+      .from("platform_bundles")
+      .update({ is_available_for_new_subs: enabled } as never)
+      .eq("id", bundleId);
+    if (error) {
+      console.warn("[PricingManager] bundle availability toggle failed:", error.message);
+      setAvailability((prev) => ({ ...prev, [bundleId]: !enabled }));
+      toast({
+        title: "Couldn't update availability",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -155,6 +204,18 @@ const PlatformPricingManager = () => {
     for (const x of bundles) map.set(x.id, x);
     return Array.from(map.values());
   }, [bundles]);
+
+  // Initialize availability from merged catalog
+  useEffect(() => {
+    const avail: Record<string, boolean> = {};
+    for (const p of mergedProducts) {
+      avail[p.id] = p.is_available_for_new_subs !== false;
+    }
+    for (const b of mergedBundles) {
+      avail[b.id] = b.is_available_for_new_subs !== false;
+    }
+    setAvailability(avail);
+  }, [mergedProducts, mergedBundles]);
 
   const mergedTiers = useMemo(() => {
     const map = new Map<string, PlatformProductTier>();
@@ -462,53 +523,90 @@ const PlatformPricingManager = () => {
             {sortedProducts.map((product) => {
               const productTiers = tiersByProduct[product.id] ?? [];
               if (productTiers.length === 0) return null;
-              if (productTiers.length === 1) {
-                return (
-                  <MainTierRow
-                    key={product.id}
-                    product={product}
-                    tier={productTiers[0]}
-                    price={getTierPrice(productTiers[0].id, "single_store")}
-                    onChange={(patch) =>
-                      setTierPrice(productTiers[0].id, "single_store", patch)
-                    }
-                    onReset={() =>
-                      setTierPrice(productTiers[0].id, "single_store", {
-                        monthly: undefined,
-                        annual: undefined,
-                      })
-                    }
-                  />
-                );
-              }
+              const isAvailable = availability[product.id] !== false;
               return (
-                <MultiTierRow
-                  key={product.id}
-                  product={product}
-                  productTiers={productTiers}
-                  getPrice={(tierId) => getTierPrice(tierId, "single_store")}
-                  onChange={(tierId, patch) =>
-                    setTierPrice(tierId, "single_store", patch)
-                  }
-                />
+                <div key={product.id} className={`relative ${!isAvailable ? "opacity-50" : ""}`}>
+                  {/* Availability toggle — left edge */}
+                  <div className="absolute left-1.5 top-1/2 -translate-y-1/2 z-10 flex flex-col items-center gap-1">
+                    <Switch
+                      checked={isAvailable}
+                      onCheckedChange={(v) => toggleProductAvailability(product.id, v)}
+                      className="scale-75"
+                    />
+                  </div>
+                  {!isAvailable && (
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10">
+                      <Badge variant="outline" className="text-[9px] uppercase tracking-wider font-semibold text-amber-600 border-amber-500/30 bg-amber-500/5">
+                        Paused
+                      </Badge>
+                    </div>
+                  )}
+                  <div className="pl-10">
+                    {productTiers.length === 1 ? (
+                      <MainTierRow
+                        product={product}
+                        tier={productTiers[0]}
+                        price={getTierPrice(productTiers[0].id, "single_store")}
+                        onChange={(patch) =>
+                          setTierPrice(productTiers[0].id, "single_store", patch)
+                        }
+                        onReset={() =>
+                          setTierPrice(productTiers[0].id, "single_store", {
+                            monthly: undefined,
+                            annual: undefined,
+                          })
+                        }
+                      />
+                    ) : (
+                      <MultiTierRow
+                        product={product}
+                        productTiers={productTiers}
+                        getPrice={(tierId) => getTierPrice(tierId, "single_store")}
+                        onChange={(tierId, patch) =>
+                          setTierPrice(tierId, "single_store", patch)
+                        }
+                      />
+                    )}
+                  </div>
+                </div>
               );
             })}
-            {sortedBundles.map((bundle) => (
-              <BundleRow
-                key={bundle.id}
-                bundle={bundle}
-                price={getBundlePrice(bundle.id, "single_store")}
-                onChange={(patch) =>
-                  setBundlePrice(bundle.id, "single_store", patch)
-                }
-                onReset={() =>
-                  setBundlePrice(bundle.id, "single_store", {
-                    monthly: undefined,
-                    annual: undefined,
-                  })
-                }
-              />
-            ))}
+            {sortedBundles.map((bundle) => {
+              const isAvailable = availability[bundle.id] !== false;
+              return (
+                <div key={bundle.id} className={`relative ${!isAvailable ? "opacity-50" : ""}`}>
+                  <div className="absolute left-1.5 top-1/2 -translate-y-1/2 z-10 flex flex-col items-center gap-1">
+                    <Switch
+                      checked={isAvailable}
+                      onCheckedChange={(v) => toggleBundleAvailability(bundle.id, v)}
+                      className="scale-75"
+                    />
+                  </div>
+                  {!isAvailable && (
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10">
+                      <Badge variant="outline" className="text-[9px] uppercase tracking-wider font-semibold text-amber-600 border-amber-500/30 bg-amber-500/5">
+                        Paused
+                      </Badge>
+                    </div>
+                  )}
+                  <div className="pl-10">
+                    <BundleRow
+                      bundle={bundle}
+                      price={getBundlePrice(bundle.id, "single_store")}
+                      onChange={(patch) =>
+                        setBundlePrice(bundle.id, "single_store", patch)
+                      }
+                      onReset={() =>
+                        setBundlePrice(bundle.id, "single_store", {
+                          monthly: undefined,
+                          annual: undefined,
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
