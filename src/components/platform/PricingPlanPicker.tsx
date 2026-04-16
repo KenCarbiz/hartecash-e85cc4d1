@@ -246,14 +246,10 @@ const PricingPlanPicker = ({
     };
   }, [platform.products, platform.bundles, platform.tiers, architecture, pricingModel.row]);
 
-  // Global billing-cycle toggle. Always seeded from the saved
-  // selection so the picker opens reflecting the dealer's current
-  // plan. The `annualSelected` prop on PlanCard uses the per-product
-  // tierCycles (not this global), so the highlighted box always
-  // matches the price the math uses — no desync possible.
-  const [cycle, setCycle] = useState<"monthly" | "annual">(
-    initialSelection?.cycle ?? "monthly",
-  );
+  // Global cycle — used ONLY for bundle selections. Per-tier
+  // calculations use tierCycles[productId] with a hard "monthly"
+  // fallback (see cycleFor), so this value never leaks into tier math.
+  const [cycle, setCycle] = useState<"monthly" | "annual">("monthly");
   const [rooftopCount, setRooftopCount] = useState<number>(
     Math.max(1, initialSelection?.rooftopCount ?? 1),
   );
@@ -279,24 +275,15 @@ const PricingPlanPicker = ({
   // This is what powers the "Due Today" math — first month of every
   // monthly-billed tier + full 12-month upfront for every annual tier,
   // all on the same cart.
-  // Per-tier cycle — seeded from the saved selection so every tier
-  // starts on the same cycle the dealer last saved. The `annualSelected`
-  // prop on PlanCard reads `tierCycles[productId] ?? cycle`, which is
-  // the same value `cycleFor()` uses in the totals math — so the
-  // highlighted box and the charged amount are always identical.
-  const [tierCycles, setTierCycles] = useState<Record<string, "monthly" | "annual">>(
-    initialSelection?.kind === "tiers"
-      ? Object.fromEntries(
-          (initialSelection.tierIds ?? [])
-            .map((tid) => {
-              const tier = tiers.find((t) => t.id === tid);
-              if (!tier) return null;
-              return [tier.product_id, initialSelection.cycle] as [string, "monthly" | "annual"];
-            })
-            .filter(Boolean) as Array<[string, "monthly" | "annual"]>,
-        )
-      : {},
-  );
+  // Per-tier cycle — starts EMPTY. Every tier defaults to "monthly"
+  // via cycleFor() until the user explicitly clicks Annual Prepaid.
+  // We intentionally ignore initialSelection.cycle because it's a
+  // single field that can't represent per-tier state and is often
+  // stale (e.g. saved as "annual" by the rows variant even when the
+  // dealer's actual billing is monthly). The display (annualSelected)
+  // and the math (cycleFor) both read the same value, so they can
+  // never disagree.
+  const [tierCycles, setTierCycles] = useState<Record<string, "monthly" | "annual">>({});
 
   const featuredBundle =
     bundles.find((b) => b.is_featured && !b.is_enterprise) ??
@@ -471,9 +458,11 @@ const PricingPlanPicker = ({
     return map;
   }, [selectedTiers, tiers, products]);
 
-  // Per-tier-cycle resolution helper.
+  // Per-tier-cycle resolution helper. Falls back to "monthly" — NOT
+  // the global cycle — so stale initialSelection.cycle never leaks
+  // into tier math. The global cycle is only for bundles.
   const cycleFor = (productId: string): "monthly" | "annual" =>
-    tierCycles[productId] ?? cycle;
+    tierCycles[productId] ?? "monthly";
 
   // Round-trip helper: catalog annual → displayed monthly → back to
   // 12-month total. Ensures the charged total always equals the
@@ -1157,7 +1146,7 @@ function AppTierTabs({
 
                   // Effective cycle for THIS product — matches what the
                   // price calculations use via cycleFor().
-                  const productCycle = tierCycles[p.id] ?? cycle;
+                  const productCycle = tierCycles[p.id] ?? "monthly";
 
                   return (
                     <PlanCard
