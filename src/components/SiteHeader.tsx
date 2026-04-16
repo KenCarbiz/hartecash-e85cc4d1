@@ -18,9 +18,9 @@ const SiteHeader = () => {
   const hide = () => { timeout.current = setTimeout(() => setOpen(false), 200); };
 
   const rawLogoSrc = config.logo_url || logoFallback;
-  // Serve a resized version via Supabase image transforms to reduce LCP payload
+  // Serve a smaller, compressed version via Supabase image transforms to reduce LCP payload
   const logoSrc = rawLogoSrc.includes("supabase.co/storage/")
-    ? `${rawLogoSrc}?width=400&resize=contain&quality=80`
+    ? `${rawLogoSrc}?width=200&resize=contain&quality=75&format=origin`
     : rawLogoSrc;
   const dealerName = config.dealership_name || "Our Dealership";
 
