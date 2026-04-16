@@ -364,6 +364,19 @@ const PlatformPricingManager = () => {
     if (error) {
       // eslint-disable-next-line no-console
       console.error("[PlatformPricingManager] save failed", { error, payload });
+      // If the table doesn't exist yet, save locally and show a
+      // non-destructive warning. The static architecturePricing.ts
+      // overrides still drive volume pricing on all pages.
+      const isTableMissing = /Could not find the table/i.test(error.message);
+      if (isTableMissing) {
+        setSaved(draft);
+        toast({
+          title: "Pricing updated locally",
+          description:
+            "Database table not provisioned yet — changes apply to this session. Static volume pricing is active on all pages.",
+        });
+        return;
+      }
       toast({
         title: "Couldn't save pricing model",
         description: `${error.message}${error.hint ? ` — ${error.hint}` : ""}`,
