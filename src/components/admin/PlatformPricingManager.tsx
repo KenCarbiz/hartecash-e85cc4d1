@@ -25,20 +25,15 @@ import type { PlatformProduct, PlatformProductTier, PlatformBundle } from "@/lib
 /**
  * Super-admin-only Platform Pricing Manager.
  *
- * Grid layout mirroring the authoritative rate card (image set dated
- * 2026-04-15): four architecture cards stacked top-to-bottom, each with
- * one row per product plus the All-Apps Unlimited bundle. Monthly
- * prices are manually editable; discount sliders next to any row that
- * supports annual prepaid drive the annual-equivalent monthly price.
+ * Simplified design: ONE base pricing block showing catalog prices
+ * for all products with editable monthly + annual discount sliders.
+ * Below that, volume discount percentage sliders per tier that
+ * automatically compute discounted prices for multi-location and
+ * dealer group architectures.
  *
- * Architectures:
- *   • single_store           — Dealer single location (1 rooftop)
- *   • single_store_secondary — Single + secondary lot (2 rooftops)
- *   • multi_location         — Multi-location dealers (3–5 rooftops)
- *   • dealer_group           — Dealer group (6–10 rooftops)
- *
- * Persists to `platform_pricing_model`. NOT yet wired to the dealer
- * onboarding picker — this is the staging ground.
+ * Persists to `platform_pricing_model` in the same format as before
+ * (tier_overrides / bundle_overrides keyed by tier_id → arch → prices).
+ * The picker, billing page, and onboarding all read the same data.
  */
 
 type Arch =
@@ -47,27 +42,22 @@ type Arch =
   | "multi_location"
   | "dealer_group";
 
-const ARCHITECTURES: {
+/** Volume discount tiers — displayed as sliders below the base block. */
+const VOLUME_TIERS: {
   key: Arch;
   label: string;
   sublabel: string;
   icon: typeof Store;
 }[] = [
   {
-    key: "single_store",
-    label: "Dealer — Single Location",
-    sublabel: "1 rooftop",
-    icon: Store,
-  },
-  {
     key: "single_store_secondary",
-    label: "Dealer — Single + Secondary",
+    label: "Single + Secondary",
     sublabel: "2 rooftops",
     icon: Building2,
   },
   {
     key: "multi_location",
-    label: "Multi-Location Dealers",
+    label: "Multi-Location",
     sublabel: "3–5 rooftops",
     icon: Building,
   },
@@ -198,7 +188,87 @@ const PlatformPricingManager = () => {
     return byProduct;
   }, [mergedTiers]);
 
-  // ── Helpers ──
+  // ── Volume discount percentages (per architecture tier) ──
+  // Stored locally; on save, the component computes dollar overrides
+  // from base prices × (1 - volume%) and writes to the same DB format.
+  const [volumeDiscounts, setVolumeDiscounts] = useState<Record<Arch, number>>({
+    single_store: 0,
+    single_store_secondary: 0,
+    multi_location: 15,
+    dealer_group: 20,
+  });
+
+  // Derive initial volume discounts from saved overrides on load.
+  // Uses autocurb_standard as the reference tier — if it has a
+  // multi_location override, compute what % off catalog that is.
+  useEffect(() => {
+    if (!saved || !mergedTiers.length) return;
+    const ref = mergedTiers.find((t) => t.id === "autocurb_standard");
+    if (!ref) return;
+    const base = ref.monthly_price;
+    const derived: Record<string, number> = {};
+    for (const tier of VOLUME_TIERS) {
+      const override = saved.tier_overrides["autocurb_standard"]?.[tier.key];
+      if (override?.monthly != null && base > 0) {
+        derived[tier.key] = Math.round(((base - override.monthly) / base) * 100);
+      }
+    }
+    if (Object.keys(derived).length > 0) {
+      setVolumeDiscounts((prev) => ({ ...prev, ...derived }));
+    }
+  }, [saved, mergedTiers]);
+
+  // Apply a volume discount to ALL tiers and bundles for a given arch.
+  // Computes monthly = catalog × (1 - pct/100), annual = monthly × (1 - annualPct/100).
+  const applyVolumeDiscount = (arch: Arch, pct: number) => {
+    setVolumeDiscounts((prev) => ({ ...prev, [arch]: pct }));
+    setDraft((d) => {
+      const tierOverrides = { ...d.tier_overrides };
+      const bundleOverrides = { ...d.bundle_overrides };
+
+      // Apply to every active tier
+      for (const tier of mergedTiers) {
+        if (tier.is_active === false) continue;
+        const base = tier.monthly_price;
+        if (pct === 0) {
+          // Remove override for this arch
+          const archMap = { ...(tierOverrides[tier.id] ?? {}) } as ArchPricing;
+          delete archMap[arch];
+          if (Object.keys(archMap).length === 0) delete tierOverrides[tier.id];
+          else tierOverrides[tier.id] = archMap;
+        } else {
+          const discountedMonthly = Math.round(base * (1 - pct / 100));
+          const annualPct = d.annual_discount_pct || 15;
+          const discountedAnnual = Math.round(discountedMonthly * (1 - annualPct / 100));
+          const archMap = { ...(tierOverrides[tier.id] ?? {}) } as ArchPricing;
+          archMap[arch] = { monthly: discountedMonthly, annual: discountedAnnual };
+          tierOverrides[tier.id] = archMap;
+        }
+      }
+
+      // Apply to every bundle
+      for (const bundle of sortedBundles) {
+        const base = bundle.monthly_price;
+        if (pct === 0) {
+          const archMap = { ...(bundleOverrides[bundle.id] ?? {}) } as ArchPricing;
+          delete archMap[arch];
+          if (Object.keys(archMap).length === 0) delete bundleOverrides[bundle.id];
+          else bundleOverrides[bundle.id] = archMap;
+        } else {
+          const discountedMonthly = Math.round(base * (1 - pct / 100));
+          const annualPct = d.annual_discount_pct || 15;
+          const discountedAnnual = Math.round(discountedMonthly * (1 - annualPct / 100));
+          const archMap = { ...(bundleOverrides[bundle.id] ?? {}) } as ArchPricing;
+          archMap[arch] = { monthly: discountedMonthly, annual: discountedAnnual };
+          bundleOverrides[bundle.id] = archMap;
+        }
+      }
+
+      return { ...d, tier_overrides: tierOverrides, bundle_overrides: bundleOverrides };
+    });
+  };
+
+  // ── Per-tier helpers (kept for base block editing) ──
   const getTierPrice = (tierId: string, arch: Arch): PricePair =>
     draft.tier_overrides[tierId]?.[arch] ?? {};
 
@@ -346,101 +416,296 @@ const PlatformPricingManager = () => {
         </div>
       </div>
 
-      {/* Four architecture cards, stacked like the source rate card */}
-      <div className="space-y-6">
-        {ARCHITECTURES.map((arch) => {
-          const Icon = arch.icon;
-          return (
-            <Card key={arch.key} className="border-border/60 overflow-hidden">
-              {/* Card header */}
-              <div className="flex items-center gap-3 px-6 py-4 border-b border-border/50 bg-muted/30">
-                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Icon className="w-4.5 h-4.5 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-base font-semibold text-card-foreground tracking-tight">
-                    {arch.label}
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
-                    {arch.sublabel} · per-store pricing
-                  </p>
-                </div>
-                <Badge
-                  variant="outline"
-                  className="text-[10px] uppercase tracking-wider font-semibold"
-                >
-                  {arch.key.replace(/_/g, " ")}
-                </Badge>
-              </div>
-
-              <CardContent className="p-0">
-                <div className="divide-y divide-border/40">
-                  {/* Products */}
-                  {sortedProducts.map((product) => {
-                    const productTiers = tiersByProduct[product.id] ?? [];
-                    if (productTiers.length === 0) return null;
-
-                    // Single-tier products (autocurb, autofilm) get the
-                    // full monthly + slider + annual layout. Multi-tier
-                    // (autolabels basic/premium, autoframe 75/125/unl)
-                    // render inline tier chips — no annual, just
-                    // editable monthlies.
-                    if (productTiers.length === 1) {
-                      return (
-                        <MainTierRow
-                          key={product.id}
-                          product={product}
-                          tier={productTiers[0]}
-                          price={getTierPrice(productTiers[0].id, arch.key)}
-                          onChange={(patch) =>
-                            setTierPrice(productTiers[0].id, arch.key, patch)
-                          }
-                          onReset={() =>
-                            setTierPrice(productTiers[0].id, arch.key, {
-                              monthly: undefined,
-                              annual: undefined,
-                            })
-                          }
-                        />
-                      );
+      {/* ─── Block 1: Base Catalog Pricing ─── */}
+      <Card className="border-border/60 overflow-hidden">
+        <div className="flex items-center gap-3 px-6 py-4 border-b border-border/50 bg-muted/30">
+          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Store className="w-4.5 h-4.5 text-primary" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-base font-semibold text-card-foreground tracking-tight">
+              Base Catalog Pricing
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Single store · 1 rooftop · full price
+            </p>
+          </div>
+          <Badge variant="outline" className="text-[10px] uppercase tracking-wider font-semibold">
+            Base Rate
+          </Badge>
+        </div>
+        <CardContent className="p-0">
+          <div className="divide-y divide-border/40">
+            {sortedProducts.map((product) => {
+              const productTiers = tiersByProduct[product.id] ?? [];
+              if (productTiers.length === 0) return null;
+              if (productTiers.length === 1) {
+                return (
+                  <MainTierRow
+                    key={product.id}
+                    product={product}
+                    tier={productTiers[0]}
+                    price={getTierPrice(productTiers[0].id, "single_store")}
+                    onChange={(patch) =>
+                      setTierPrice(productTiers[0].id, "single_store", patch)
                     }
+                    onReset={() =>
+                      setTierPrice(productTiers[0].id, "single_store", {
+                        monthly: undefined,
+                        annual: undefined,
+                      })
+                    }
+                  />
+                );
+              }
+              return (
+                <MultiTierRow
+                  key={product.id}
+                  product={product}
+                  productTiers={productTiers}
+                  getPrice={(tierId) => getTierPrice(tierId, "single_store")}
+                  onChange={(tierId, patch) =>
+                    setTierPrice(tierId, "single_store", patch)
+                  }
+                />
+              );
+            })}
+            {sortedBundles.map((bundle) => (
+              <BundleRow
+                key={bundle.id}
+                bundle={bundle}
+                price={getBundlePrice(bundle.id, "single_store")}
+                onChange={(patch) =>
+                  setBundlePrice(bundle.id, "single_store", patch)
+                }
+                onReset={() =>
+                  setBundlePrice(bundle.id, "single_store", {
+                    monthly: undefined,
+                    annual: undefined,
+                  })
+                }
+              />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
+      {/* ─── Block 2: Volume Discount Tiers ─── */}
+      <Card className="border-border/60 overflow-hidden">
+        <div className="flex items-center gap-3 px-6 py-4 border-b border-border/50 bg-muted/30">
+          <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+            <Building className="w-4.5 h-4.5 text-emerald-600" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-base font-semibold text-card-foreground tracking-tight">
+              Volume Discount Tiers
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Percentage off base pricing per rooftop count tier
+            </p>
+          </div>
+        </div>
+        <CardContent className="p-0">
+          <div className="divide-y divide-border/40">
+            {VOLUME_TIERS.map((tier) => {
+              const Icon = tier.icon;
+              const pct = volumeDiscounts[tier.key] ?? 0;
+              return (
+                <div
+                  key={tier.key}
+                  className="px-6 py-5 grid grid-cols-1 md:grid-cols-[200px_1fr_100px] items-center gap-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                      <Icon className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-card-foreground">
+                        {tier.label}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {tier.sublabel} · per-store
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <Slider
+                      value={[pct]}
+                      min={0}
+                      max={30}
+                      step={1}
+                      onValueChange={([v]) => applyVolumeDiscount(tier.key, v)}
+                      className="flex-1"
+                    />
+                  </div>
+
+                  <div className="text-right">
+                    <span
+                      className={`text-lg font-bold ${
+                        pct > 0
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : "text-muted-foreground"
+                      }`}
+                      style={{ fontVariantNumeric: "tabular-nums" }}
+                    >
+                      {pct}% off
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Enterprise row — no slider, just "Contact Sales" */}
+            <div className="px-6 py-5 grid grid-cols-1 md:grid-cols-[200px_1fr_100px] items-center gap-4 bg-slate-900 text-slate-50 rounded-b-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-amber-400/20 flex items-center justify-center shrink-0">
+                  <Factory className="w-4 h-4 text-amber-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">Enterprise</p>
+                  <p className="text-[11px] text-slate-400">11+ rooftops</p>
+                </div>
+              </div>
+              <p className="text-sm text-slate-400">Custom pricing · negotiated per group</p>
+              <div className="text-right">
+                <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">
+                  Contact Sales
+                </span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ─── Block 3: Live Preview Table ─── */}
+      <Card className="border-border/60 overflow-hidden">
+        <div className="flex items-center gap-3 px-6 py-4 border-b border-border/50 bg-muted/30">
+          <div className="flex-1">
+            <h3 className="text-base font-semibold text-card-foreground tracking-tight">
+              Computed Price Preview
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Per-store monthly prices after volume discounts · updates live
+            </p>
+          </div>
+        </div>
+        <CardContent className="p-0 overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border/40 bg-muted/20">
+                <th className="text-left px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+                  Product
+                </th>
+                <th
+                  className="text-right px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider"
+                  style={{ fontVariantNumeric: "tabular-nums" }}
+                >
+                  Base
+                </th>
+                {VOLUME_TIERS.map((tier) => (
+                  <th
+                    key={tier.key}
+                    className="text-right px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider"
+                    style={{ fontVariantNumeric: "tabular-nums" }}
+                  >
+                    {tier.label}
+                    <br />
+                    <span className="text-[9px] font-normal">
+                      ({volumeDiscounts[tier.key] ?? 0}% off)
+                    </span>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/30">
+              {mergedTiers
+                .filter((t) => t.is_active !== false)
+                .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+                .map((tier) => {
+                  const product = sortedProducts.find((p) => p.id === tier.product_id);
+                  const base = tier.monthly_price;
+                  return (
+                    <tr key={tier.id} className="hover:bg-muted/10">
+                      <td className="px-4 py-2.5 text-card-foreground">
+                        <span className="font-medium">{product?.name ?? tier.product_id}</span>
+                        <span className="text-muted-foreground ml-1.5 text-xs">
+                          {tier.name}
+                        </span>
+                      </td>
+                      <td
+                        className="text-right px-4 py-2.5 font-semibold text-card-foreground"
+                        style={{ fontVariantNumeric: "tabular-nums" }}
+                      >
+                        ${base.toLocaleString()}
+                      </td>
+                      {VOLUME_TIERS.map((vt) => {
+                        const pct = volumeDiscounts[vt.key] ?? 0;
+                        const discounted = Math.round(base * (1 - pct / 100));
+                        const changed = discounted !== base;
+                        return (
+                          <td
+                            key={vt.key}
+                            className={`text-right px-4 py-2.5 font-semibold ${
+                              changed
+                                ? "text-emerald-600 dark:text-emerald-400"
+                                : "text-muted-foreground"
+                            }`}
+                            style={{ fontVariantNumeric: "tabular-nums" }}
+                          >
+                            ${discounted.toLocaleString()}
+                            {changed && (
+                              <span className="text-[10px] text-muted-foreground line-through ml-1.5">
+                                ${base.toLocaleString()}
+                              </span>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              {/* Bundle row */}
+              {sortedBundles.map((bundle) => (
+                <tr key={bundle.id} className="hover:bg-muted/10 bg-primary/[0.02]">
+                  <td className="px-4 py-2.5 text-card-foreground font-medium">
+                    All-Apps Unlimited
+                  </td>
+                  <td
+                    className="text-right px-4 py-2.5 font-semibold text-card-foreground"
+                    style={{ fontVariantNumeric: "tabular-nums" }}
+                  >
+                    ${bundle.monthly_price.toLocaleString()}
+                  </td>
+                  {VOLUME_TIERS.map((vt) => {
+                    const pct = volumeDiscounts[vt.key] ?? 0;
+                    const discounted = Math.round(bundle.monthly_price * (1 - pct / 100));
+                    const changed = discounted !== bundle.monthly_price;
                     return (
-                      <MultiTierRow
-                        key={product.id}
-                        product={product}
-                        productTiers={productTiers}
-                        getPrice={(tierId) => getTierPrice(tierId, arch.key)}
-                        onChange={(tierId, patch) =>
-                          setTierPrice(tierId, arch.key, patch)
-                        }
-                      />
+                      <td
+                        key={vt.key}
+                        className={`text-right px-4 py-2.5 font-semibold ${
+                          changed
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : "text-muted-foreground"
+                        }`}
+                        style={{ fontVariantNumeric: "tabular-nums" }}
+                      >
+                        ${discounted.toLocaleString()}
+                        {changed && (
+                          <span className="text-[10px] text-muted-foreground line-through ml-1.5">
+                            ${bundle.monthly_price.toLocaleString()}
+                          </span>
+                        )}
+                      </td>
                     );
                   })}
-
-                  {/* Bundles (All-Apps Unlimited) */}
-                  {sortedBundles.map((bundle) => (
-                    <BundleRow
-                      key={bundle.id}
-                      bundle={bundle}
-                      price={getBundlePrice(bundle.id, arch.key)}
-                      onChange={(patch) =>
-                        setBundlePrice(bundle.id, arch.key, patch)
-                      }
-                      onReset={() =>
-                        setBundlePrice(bundle.id, arch.key, {
-                          monthly: undefined,
-                          annual: undefined,
-                        })
-                      }
-                    />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
 
       {/* Sticky save bar */}
       {dirty && (
