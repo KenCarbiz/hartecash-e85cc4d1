@@ -246,19 +246,13 @@ const PricingPlanPicker = ({
     };
   }, [platform.products, platform.bundles, platform.tiers, architecture, pricingModel.row]);
 
-  // The "rows" variant (admin Billing & Plan) has per-product
-  // Monthly/Annual buttons that reliably save per-tier cycle state.
-  // The full/compact variants can NOT trust initialSelection.cycle
-  // because PlanSelection stores a SINGLE cycle field for all tiers —
-  // it can't represent "AutoCurb monthly + AutoLabels annual". A stale
-  // "annual" value causes the displayed "Monthly SELECTED" to disagree
-  // with the calculation (which reads tierCycles). The only safe
-  // default for full/compact is "monthly": the display, the math, and
-  // the user's expectations all start in sync. If the dealer wants
-  // annual, they click the Annual Prepaid box — one click per tier.
-  const canTrustSavedCycle = variant === "rows";
+  // Global billing-cycle toggle. Always seeded from the saved
+  // selection so the picker opens reflecting the dealer's current
+  // plan. The `annualSelected` prop on PlanCard uses the per-product
+  // tierCycles (not this global), so the highlighted box always
+  // matches the price the math uses — no desync possible.
   const [cycle, setCycle] = useState<"monthly" | "annual">(
-    canTrustSavedCycle ? (initialSelection?.cycle ?? "monthly") : "monthly",
+    initialSelection?.cycle ?? "monthly",
   );
   const [rooftopCount, setRooftopCount] = useState<number>(
     Math.max(1, initialSelection?.rooftopCount ?? 1),
@@ -285,9 +279,11 @@ const PricingPlanPicker = ({
   // This is what powers the "Due Today" math — first month of every
   // monthly-billed tier + full 12-month upfront for every annual tier,
   // all on the same cart.
-  // Per-tier cycle — must stay in sync with the global `cycle` above.
-  // The "rows" variant can trust the saved cycle; full/compact always
-  // start on "monthly" so the displayed highlight and the math agree.
+  // Per-tier cycle — seeded from the saved selection so every tier
+  // starts on the same cycle the dealer last saved. The `annualSelected`
+  // prop on PlanCard reads `tierCycles[productId] ?? cycle`, which is
+  // the same value `cycleFor()` uses in the totals math — so the
+  // highlighted box and the charged amount are always identical.
   const [tierCycles, setTierCycles] = useState<Record<string, "monthly" | "annual">>(
     initialSelection?.kind === "tiers"
       ? Object.fromEntries(
@@ -295,8 +291,7 @@ const PricingPlanPicker = ({
             .map((tid) => {
               const tier = tiers.find((t) => t.id === tid);
               if (!tier) return null;
-              const c = canTrustSavedCycle ? initialSelection.cycle : "monthly";
-              return [tier.product_id, c] as [string, "monthly" | "annual"];
+              return [tier.product_id, initialSelection.cycle] as [string, "monthly" | "annual"];
             })
             .filter(Boolean) as Array<[string, "monthly" | "annual"]>,
         )
