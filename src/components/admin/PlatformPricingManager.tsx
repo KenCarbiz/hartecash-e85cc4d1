@@ -102,7 +102,7 @@ const PlatformPricingManager = () => {
     let cancelled = false;
     (async () => {
       const { data, error } = await supabase
-        .from("pricing_models" as never)
+        .from("platform_pricing_model" as never)
         .select("*")
         .eq("id", "global")
         .maybeSingle();
@@ -347,7 +347,7 @@ const PlatformPricingManager = () => {
     let error: { message: string; hint?: string } | null = null;
     for (let attempt = 0; attempt < 4; attempt++) {
       const res = await supabase
-        .from("pricing_models" as never)
+        .from("platform_pricing_model" as never)
         .upsert(payload as never, { onConflict: "id" });
       error = res.error as typeof error;
       if (!error) break;
