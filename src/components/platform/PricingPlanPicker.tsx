@@ -606,16 +606,24 @@ const PricingPlanPicker = ({
     return null;
   };
 
+  // Per-rooftop annual-prepaid subtotal. Sums the full 12-month
+  // upfront for every tier whose per-product cycle is "annual".
+  // Previously this used the global `cycle` as a gate and then summed
+  // ALL tiers — so a mixed selection (some monthly, some annual) would
+  // either show nothing (cycle=monthly) or overcount (cycle=annual but
+  // some tiers actually on monthly). Now it respects cycleFor() like
+  // dueTodayPerRooftop does.
   const annualPrepaidPerRooftop = useMemo(() => {
-    if (cycle !== "annual") return null;
     if (selectedBundle) {
+      if (cycle !== "annual") return null;
       return bundleAnnualPriceFor(selectedBundle);
     }
     if (Object.keys(selectedTiers).length === 0) return null;
     let sum = 0;
     let any = false;
-    for (const tid of Object.values(selectedTiers)) {
+    for (const [productId, tid] of Object.entries(selectedTiers)) {
       if (complimentary[tid]) continue;
+      if (cycleFor(productId) !== "annual") continue;
       const annual = annualPriceFor(tid);
       if (annual != null && annual > 0) {
         sum += annual;
@@ -624,7 +632,7 @@ const PricingPlanPicker = ({
     }
     return any ? sum : null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cycle, selectedBundle, selectedTiers, bundles, tiers, complimentary]);
+  }, [cycle, selectedBundle, selectedTiers, tierCycles, bundles, tiers, complimentary]);
 
   // Summary copy.
   const summaryTitle = selectedBundle
