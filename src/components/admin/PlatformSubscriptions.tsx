@@ -122,6 +122,15 @@ const PlatformSubscriptions = () => {
       ? "annual"
       : "monthly";
 
+  // Per-tier cycles from the picker's live state. When the user clicks
+  // Annual Prepaid on a specific tier, this map records it so the
+  // Current Plan card shows the correct rate ($666/mo annual, not
+  // $799/mo monthly). Falls back to the global cycle when absent.
+  const displayedTierCycles: Record<string, "monthly" | "annual"> =
+    hasInFlight && inFlight?.kind === "tiers" && inFlight.tierCycles
+      ? inFlight.tierCycles
+      : {};
+
   const displayedRooftopCount = Math.max(
     1,
     hasInFlight
@@ -147,16 +156,28 @@ const PlatformSubscriptions = () => {
       .filter(Boolean) as PlatformProductTier[];
   }, [displayedTierIds, tiers]);
 
-  const effectiveMonthly = (row: { monthly_price: number; annual_price: number | null }) =>
-    cycle === "annual" && row.annual_price
+  // Per-tier-aware price resolver. Uses the tier's own cycle from the
+  // picker's tierCycles map, falling back to the global displayedCycle.
+  const effectiveMonthly = (
+    row: { monthly_price: number; annual_price: number | null },
+    tierId?: string,
+  ) => {
+    const tierProductId = tierId
+      ? tiers.find((t) => t.id === tierId)?.product_id
+      : undefined;
+    const tierCycle = tierProductId
+      ? (displayedTierCycles[tierProductId] ?? cycle)
+      : cycle;
+    return tierCycle === "annual" && row.annual_price
       ? Math.round(row.annual_price / 12)
       : row.monthly_price;
+  };
 
   const monthlyPerRooftop = useMemo(() => {
     if (activeBundle) return effectiveMonthly(activeBundle);
-    return subscribedTiers.reduce((acc, t) => acc + effectiveMonthly(t), 0);
+    return subscribedTiers.reduce((acc, t) => acc + effectiveMonthly(t, t.id), 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeBundle, subscribedTiers, cycle]);
+  }, [activeBundle, subscribedTiers, cycle, displayedTierCycles]);
 
   const monthlyTotal = monthlyPerRooftop * rooftopCount;
 
@@ -472,7 +493,11 @@ const PlatformSubscriptions = () => {
 
                       return entries.map(({ product, tier, complimentaryFrom }) => {
                         const Icon = ICON_MAP[product.icon_name] || Car;
-                        const price = effectiveMonthly(tier);
+                        const price = effectiveMonthly(tier, tier.id);
+                        const tierProductId = products.find((p) => p.id === tier.product_id)?.id;
+                        const tierCycleForCard = tierProductId
+                          ? (displayedTierCycles[tierProductId] ?? cycle)
+                          : cycle;
                         const isComplimentary = complimentaryFrom != null;
                         // Pick up to two short features for the iPad/
                         // desktop-expanded card body.
@@ -536,7 +561,7 @@ const PlatformSubscriptions = () => {
                                     /mo
                                   </span>
                                 </p>
-                                {cycle === "annual" && tier?.annual_price && (
+                                {tierCycleForCard === "annual" && tier?.annual_price && (
                                   <p className="text-[9px] md:text-[10px] text-emerald-600 font-semibold mt-0.5">
                                     Annual prepaid
                                   </p>

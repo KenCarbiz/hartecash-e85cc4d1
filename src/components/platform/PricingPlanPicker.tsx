@@ -40,7 +40,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
 
 export type PlanSelection =
   | { kind: "bundle"; bundleId: string; cycle: "monthly" | "annual"; rooftopCount: number }
-  | { kind: "tiers"; tierIds: string[]; cycle: "monthly" | "annual"; rooftopCount: number }
+  | { kind: "tiers"; tierIds: string[]; cycle: "monthly" | "annual"; tierCycles?: Record<string, "monthly" | "annual">; rooftopCount: number }
   | { kind: "enterprise"; bundleId: string; rooftopCount: number };
 
 // Annual pricing schema is live; the UI toggle is parked until we're
@@ -354,9 +354,11 @@ const PricingPlanPicker = ({
         const n = { ...prev };
         delete n[productId];
         const tierIds = Object.values(n);
+        const updatedCycles = { ...tierCycles };
+        delete updatedCycles[productId];
         emit(
           tierIds.length > 0
-            ? { kind: "tiers", tierIds, cycle: effectiveCycle, rooftopCount }
+            ? { kind: "tiers", tierIds, cycle, tierCycles: updatedCycles, rooftopCount }
             : null,
         );
         return n;
@@ -383,10 +385,19 @@ const PricingPlanPicker = ({
     setSelectedBundle(null);
     setSelectedTiers((prev) => {
       const n = { ...prev, [productId]: tierId };
+      // Build the up-to-date tierCycles snapshot. The setTierCycles
+      // call above hasn't flushed yet, so we reconstruct it here.
+      const updatedTierCycles = { ...tierCycles };
+      if (nextCycle) {
+        updatedTierCycles[productId] = nextCycle;
+      } else if (!(productId in updatedTierCycles)) {
+        updatedTierCycles[productId] = "monthly";
+      }
       emit({
         kind: "tiers",
         tierIds: Object.values(n),
         cycle,
+        tierCycles: updatedTierCycles,
         rooftopCount,
       });
       return n;
