@@ -87,7 +87,7 @@ export function usePricingModel(): PricingModelLookup {
 
     const load = async () => {
       const { data, error } = await supabase
-        .from("platform_pricing_model" as never)
+        .from("pricing_models" as never)
         .select("*")
         .eq("id", "global")
         .maybeSingle();
@@ -106,14 +106,14 @@ export function usePricingModel(): PricingModelLookup {
     // Pricing Model page, every open picker (onboarding + billing) gets
     // the new values pushed to it, no refresh needed.
     const channel = supabase
-      .channel("platform_pricing_model")
+      .channel("pricing_models")
       .on(
         // @ts-expect-error — supabase realtime types are loose here
         "postgres_changes",
         {
           event: "*",
           schema: "public",
-          table: "platform_pricing_model",
+          table: "pricing_models",
           filter: "id=eq.global",
         },
         (payload: { new?: unknown }) => {
