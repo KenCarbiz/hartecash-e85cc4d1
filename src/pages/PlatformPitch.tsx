@@ -150,19 +150,21 @@ const PlatformPitch = () => {
       {/* ── Sticky Nav ── */}
       <header className="sticky top-0 z-50 border-b border-border/50 bg-background/95 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <span className="text-lg font-bold tracking-tight">
-              AutoCurb<span className="text-primary">.ai</span>
+          <div className="flex items-center gap-2.5">
+            <span className="text-xl font-bold tracking-tight">
+              <span className="text-[#4a4a4a] dark:text-slate-200">Auto</span>
+              <span className="text-[#4CAF50]">Curb</span>
+              <span className="text-[#4a4a4a] dark:text-slate-400 text-base">.io</span>
+            </span>
+            <span className="hidden sm:inline text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-semibold border-l border-border/60 pl-2.5 ml-0.5">
+              Bring the Curb to the Cloud
             </span>
           </div>
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" asChild>
               <a href="#pricing">Pricing</a>
             </Button>
-            <Button size="sm" className="gap-1.5" asChild>
+            <Button size="sm" className="gap-1.5 bg-[#4CAF50] hover:bg-[#43A047] text-white" asChild>
               <a href="mailto:sales@autocurb.io?subject=Platform%20Demo%20Request">
                 Get a Demo
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -174,28 +176,28 @@ const PlatformPitch = () => {
 
       {/* ── Section 1: Hero ── */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.04] via-transparent to-emerald-500/[0.03]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#4CAF50]/[0.06] via-transparent to-[#4CAF50]/[0.03]" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24 lg:py-32">
           <div className="max-w-3xl mx-auto text-center space-y-6">
-            <Badge variant="outline" className="text-xs font-semibold tracking-wider uppercase px-3 py-1">
+            <Badge variant="outline" className="text-xs font-semibold tracking-wider uppercase px-3 py-1 border-[#4CAF50]/30 text-[#4CAF50]">
               The Dealer Platform
             </Badge>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-card-foreground leading-[1.1]">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-[#333] dark:text-slate-100 leading-[1.1]">
               From Curb to Customer.{" "}
-              <span className="text-primary">One Platform.</span>
+              <span className="text-[#4CAF50]">One Platform.</span>
             </h1>
             <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
               Acquire vehicles, stay FTC compliant, shoot studio photos, and
               deliver walkaround videos — all from one dashboard.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-              <Button size="lg" className="gap-2 text-base px-8" asChild>
+              <Button size="lg" className="gap-2 text-base px-8 bg-[#4CAF50] hover:bg-[#43A047] text-white" asChild>
                 <a href="mailto:sales@autocurb.io?subject=Platform%20Demo%20Request">
                   Get a Demo
                   <ArrowRight className="w-4 h-4" />
                 </a>
               </Button>
-              <Button variant="outline" size="lg" className="gap-2 text-base" asChild>
+              <Button variant="outline" size="lg" className="gap-2 text-base border-[#4CAF50]/30 text-[#4CAF50] hover:bg-[#4CAF50]/5" asChild>
                 <a href="#products">
                   <Play className="w-4 h-4" />
                   See How It Works
@@ -357,7 +359,7 @@ const PlatformPitch = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {ROI_METRICS.map((metric) => (
               <div key={metric.label} className="text-center space-y-2 p-6 rounded-2xl bg-slate-800/50 border border-slate-700/50">
-                <p className="text-3xl sm:text-4xl font-bold text-emerald-400" style={{ fontVariantNumeric: "tabular-nums" }}>
+                <p className="text-3xl sm:text-4xl font-bold text-[#66BB6A]" style={{ fontVariantNumeric: "tabular-nums" }}>
                   {metric.value}
                 </p>
                 <p className="text-sm font-semibold text-slate-200">
@@ -407,7 +409,7 @@ const PlatformPitch = () => {
               { step: "3", title: "Launch", description: "Go live across all four products. See ROI from week one." },
             ].map((item) => (
               <div key={item.step} className="text-center space-y-3">
-                <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground text-lg font-bold flex items-center justify-center mx-auto">
+                <div className="w-12 h-12 rounded-full bg-[#4CAF50] text-white text-lg font-bold flex items-center justify-center mx-auto">
                   {item.step}
                 </div>
                 <h3 className="text-lg font-bold text-card-foreground">{item.title}</h3>
@@ -437,10 +439,10 @@ const PlatformPitch = () => {
                   <p className="text-xs text-muted-foreground">per rooftop · mix and match</p>
                 </CardContent>
               </Card>
-              <Card className="border-primary/30 bg-primary/[0.03]">
+              <Card className="border-[#4CAF50]/30 bg-[#4CAF50]/[0.03]">
                 <CardContent className="p-6 text-center space-y-2">
                   <div className="flex items-center justify-center gap-1.5">
-                    <p className="text-sm font-semibold text-primary uppercase tracking-wider">All-Apps Bundle</p>
+                    <p className="text-sm font-semibold text-[#4CAF50] uppercase tracking-wider">All-Apps Bundle</p>
                     <Badge className="text-[9px]">Best Value</Badge>
                   </div>
                   <p className="text-3xl font-bold text-card-foreground">$3,999<span className="text-base font-normal text-muted-foreground">/mo</span></p>
@@ -484,7 +486,7 @@ const PlatformPitch = () => {
       </section>
 
       {/* ── Section 9: Final CTA ── */}
-      <section className="bg-gradient-to-br from-primary/[0.06] via-transparent to-emerald-500/[0.04]">
+      <section className="bg-gradient-to-br from-[#4CAF50]/[0.06] via-transparent to-[#4CAF50]/[0.03]">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16 sm:py-24 text-center space-y-6">
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-card-foreground">
             Ready to Simplify Your Dealership?
@@ -493,13 +495,13 @@ const PlatformPitch = () => {
             Join dealer groups across the country who replaced their vendor stack with one platform.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Button size="lg" className="gap-2 text-base px-8" asChild>
+            <Button size="lg" className="gap-2 text-base px-8 bg-[#4CAF50] hover:bg-[#43A047] text-white" asChild>
               <a href="mailto:sales@autocurb.io?subject=Platform%20Demo%20Request">
                 Get a Demo
                 <ArrowRight className="w-4 h-4" />
               </a>
             </Button>
-            <Button variant="outline" size="lg" className="gap-2" asChild>
+            <Button variant="outline" size="lg" className="gap-2 border-[#4CAF50]/30 text-[#4CAF50] hover:bg-[#4CAF50]/5" asChild>
               <a href="tel:+18668517390">
                 Call (866) 851-7390
               </a>
@@ -512,9 +514,12 @@ const PlatformPitch = () => {
       <footer className="border-t border-border/50 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-3.5 h-3.5 text-primary" />
-            <span className="font-semibold">AutoCurb.ai</span>
-            <span>· Powered by Autocurb.ai</span>
+            <span className="font-bold">
+              <span className="text-[#4a4a4a] dark:text-slate-300">Auto</span>
+              <span className="text-[#4CAF50]">Curb</span>
+              <span className="text-[#4a4a4a] dark:text-slate-400">.io</span>
+            </span>
+            <span>· Bring the Curb to the Cloud</span>
           </div>
           <div className="flex items-center gap-4">
             <a href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</a>
