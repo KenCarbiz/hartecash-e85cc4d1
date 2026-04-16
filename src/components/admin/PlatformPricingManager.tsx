@@ -341,9 +341,9 @@ const PlatformPricingManager = () => {
       updated_at: new Date().toISOString(),
     };
 
-    // PostgREST schema cache can lag behind recent DDL — if it does,
-    // strip the unknown column and retry so saves land on whatever
-    // the schema cache currently knows about.
+    // PostgREST schema cache can lag behind recent DDL. Retry logic:
+    //   • "table not found" → wait 2s and retry (cache may refresh)
+    //   • "column not found" → strip the column and retry immediately
     let error: { message: string; hint?: string } | null = null;
     for (let attempt = 0; attempt < 4; attempt++) {
       const res = await supabase
@@ -351,6 +351,16 @@ const PlatformPricingManager = () => {
         .upsert(payload as never, { onConflict: "id" });
       error = res.error as typeof error;
       if (!error) break;
+
+      // Table not in schema cache — wait and retry
+      if (/Could not find the table/i.test(error.message)) {
+        // eslint-disable-next-line no-console
+        console.warn(`[PlatformPricingManager] table not in cache, retry ${attempt + 1}/4`);
+        await new Promise((r) => setTimeout(r, 2000));
+        continue;
+      }
+
+      // Column not in schema cache — strip it and retry
       const match = /Could not find the '([a-z_]+)' column/i.exec(error.message);
       if (!match) break;
       // eslint-disable-next-line no-console
@@ -364,16 +374,16 @@ const PlatformPricingManager = () => {
     if (error) {
       // eslint-disable-next-line no-console
       console.error("[PlatformPricingManager] save failed", { error, payload });
-      // If the table doesn't exist yet, save locally and show a
-      // non-destructive warning. The static architecturePricing.ts
-      // overrides still drive volume pricing on all pages.
+      // If still failing after retries, save locally so the admin
+      // isn't blocked. Static architecturePricing.ts overrides
+      // continue to drive volume pricing on all pages.
       const isTableMissing = /Could not find the table/i.test(error.message);
       if (isTableMissing) {
         setSaved(draft);
         toast({
           title: "Pricing updated locally",
           description:
-            "Database table not provisioned yet — changes apply to this session. Static volume pricing is active on all pages.",
+            "Database schema cache is refreshing — changes apply to this session. Try saving again in a minute.",
         });
         return;
       }
