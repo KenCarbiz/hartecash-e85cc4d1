@@ -112,7 +112,7 @@ export default function OBDScanButton({
                     OBD-II Diagnostic Scan
                     <InDevelopmentBadge
                       label="Beta"
-                      reason="Requires an OBDLink CX or compatible BLE adapter. Currently in beta."
+                      reason="Requires an OBDLink CX adapter (BLE 5.1, STN2120 chipset). Currently in beta."
                       size="sm"
                     />
                   </DialogTitle>
@@ -148,7 +148,7 @@ export default function OBDScanButton({
                   <ul className="space-y-2">
                     <InstructionRow
                       icon={Cable}
-                      text="Plug the OBDLink MX+ into the vehicle's OBD-II port (usually under the dash)."
+                      text="Plug the OBDLink CX into the vehicle's OBD-II port (usually under the dash)."
                     />
                     <InstructionRow
                       icon={Power}

@@ -91,11 +91,12 @@ class ELM327Scanner {
   } | null = null;
 
   // Common BLE OBD service UUIDs, tried in order.
+  // OBDLink CX (primary/supported adapter) advertises the FFF0 family.
   private static readonly SERVICE_UUIDS = [
-    "0000fff0-0000-1000-8000-00805f9b34fb", // Generic ELM327 BLE
+    "0000fff0-0000-1000-8000-00805f9b34fb", // OBDLink CX (FFF0/FFF1/FFF2) + generic ELM327 BLE
+    "e7810a71-73ae-499d-8c15-faa9aef0c3f2", // OBDLink legacy / common
     "0000ffe0-0000-1000-8000-00805f9b34fb", // HM-10 / iCar
     "000018f0-0000-1000-8000-00805f9b34fb", // Vgate
-    "e7810a71-73ae-499d-8c15-faa9aef0c3f2", // OBDLink / common
   ];
 
   async connect(): Promise<void> {
@@ -166,13 +167,16 @@ class ELM327Scanner {
     await this.notifyChar.startNotifications();
     this.notifyChar.addEventListener("characteristicvaluechanged", this.handleNotify);
 
-    // Initialize the ELM327
+    // Initialize the ELM327 / STN2120
     await this.sendCommand("ATZ"); // reset
     await this.sendCommand("ATE0"); // echo off
     await this.sendCommand("ATL0"); // linefeeds off
     await this.sendCommand("ATS0"); // spaces off
     await this.sendCommand("ATH0"); // headers off
     await this.sendCommand("ATSP0"); // auto protocol
+    // STN-specific: enable fast auto-protocol search on OBDLink CX.
+    // Silently ignored on generic ELM327 clones.
+    try { await this.sendCommand("STPX"); } catch { /* not an STN chip */ }
   }
 
   private handleNotify = (e: Event) => {
