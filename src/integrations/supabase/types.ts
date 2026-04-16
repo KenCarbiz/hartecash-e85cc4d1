@@ -1554,6 +1554,36 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_pricing_model: {
+        Row: {
+          annual_discount_pct: number
+          bundle_overrides: Json
+          id: string
+          multi_location_overrides: Json
+          tier_overrides: Json
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          annual_discount_pct?: number
+          bundle_overrides?: Json
+          id?: string
+          multi_location_overrides?: Json
+          tier_overrides?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          annual_discount_pct?: number
+          bundle_overrides?: Json
+          id?: string
+          multi_location_overrides?: Json
+          tier_overrides?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       platform_product_tiers: {
         Row: {
           allow_overage: boolean
