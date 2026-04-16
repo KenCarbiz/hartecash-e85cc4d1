@@ -65,15 +65,19 @@ export const PlatformProvider = ({ children }: { children: ReactNode }) => {
       // environments that haven't run the relevant migration yet still
       // render the rest of the app.
       // Architecture query is best-effort — if the table or column
-      // doesn't exist yet (pre-migration), swallow the error so the
-      // rest of the app still renders.
-      const accountQuery = supabase
-        .from("dealer_accounts")
-        .select("architecture")
-        .eq("dealership_id", tenant.dealership_id)
-        .maybeSingle()
-        .then((res) => res)
-        .catch(() => ({ data: null, error: null }));
+      // doesn't exist yet (pre-migration) or RLS blocks it, swallow
+      // the error so the rest of the app still renders.
+      const accountQuery = (async () => {
+        try {
+          return await supabase
+            .from("dealer_accounts" as never)
+            .select("architecture")
+            .eq("dealership_id", tenant.dealership_id)
+            .maybeSingle();
+        } catch {
+          return { data: null, error: null };
+        }
+      })();
 
       const [productsRes, bundlesRes, tiersRes, subRes, accountRes] = await Promise.all([
         supabase
