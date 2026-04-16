@@ -737,6 +737,8 @@ const PricingPlanPicker = ({
         summaryTitle={summaryTitle}
         summarySubtitle={summarySubtitle}
         perRooftopTotal={perRooftopTotal}
+        annualPrepaidPerRooftop={annualPrepaidPerRooftop}
+        dueTodayPerRooftop={dueTodayPerRooftop}
         rooftopCount={rooftopCount}
         ctaLabel={ctaLabel}
         onConfirm={!autoSave && onConfirm ? handleConfirm : undefined}
@@ -778,7 +780,7 @@ const PricingPlanPicker = ({
           subtitle={summarySubtitle}
           perRooftopTotal={perRooftopTotal}
           annualPrepaidPerRooftop={annualPrepaidPerRooftop}
-            dueTodayPerRooftop={dueTodayPerRooftop}
+          dueTodayPerRooftop={dueTodayPerRooftop}
           rooftopCount={rooftopCount}
           readOnly={readOnly}
           ctaLabel={ctaLabel}
@@ -1268,6 +1270,8 @@ function RowsVariantLayout(props: {
   summaryTitle: string;
   summarySubtitle: string;
   perRooftopTotal: number;
+  annualPrepaidPerRooftop?: number | null;
+  dueTodayPerRooftop?: number;
   rooftopCount: number;
   ctaLabel: string;
   onConfirm?: () => void;
@@ -1290,6 +1294,8 @@ function RowsVariantLayout(props: {
     summaryTitle,
     summarySubtitle,
     perRooftopTotal,
+    annualPrepaidPerRooftop,
+    dueTodayPerRooftop,
     rooftopCount,
     ctaLabel,
     onConfirm,
