@@ -547,7 +547,7 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate, targetDealershipId, onD
               // Remount when architecture changes so the new rooftop
               // count + volume pricing re-apply cleanly to initialSelection.
               key={account.architecture}
-              variant="rows"
+              variant="full"
               autoSave
               readOnly={readOnly}
               architecture={account.architecture}
