@@ -64,6 +64,17 @@ export const PlatformProvider = ({ children }: { children: ReactNode }) => {
       // Tier / visibility column lookups are tolerated-missing so older
       // environments that haven't run the relevant migration yet still
       // render the rest of the app.
+      // Architecture query is best-effort — if the table or column
+      // doesn't exist yet (pre-migration), swallow the error so the
+      // rest of the app still renders.
+      const accountQuery = supabase
+        .from("dealer_accounts")
+        .select("architecture")
+        .eq("dealership_id", tenant.dealership_id)
+        .maybeSingle()
+        .then((res) => res)
+        .catch(() => ({ data: null, error: null }));
+
       const [productsRes, bundlesRes, tiersRes, subRes, accountRes] = await Promise.all([
         supabase
           .from("platform_products")
@@ -82,11 +93,7 @@ export const PlatformProvider = ({ children }: { children: ReactNode }) => {
           .select("id, bundle_id, product_ids, tier_ids, status, trial_ends_at, billing_cycle, monthly_amount, rooftop_count")
           .eq("dealership_id", tenant.dealership_id)
           .maybeSingle(),
-        supabase
-          .from("dealer_accounts")
-          .select("architecture")
-          .eq("dealership_id", tenant.dealership_id)
-          .maybeSingle(),
+        accountQuery,
       ]);
 
       if (productsRes.data) {
@@ -107,7 +114,7 @@ export const PlatformProvider = ({ children }: { children: ReactNode }) => {
           rooftop_count: (row.rooftop_count as number) ?? 1,
         });
       }
-      if (accountRes.data) {
+      if (accountRes?.data) {
         const acct = accountRes.data as Record<string, unknown>;
         setArchitecture((acct.architecture as string) ?? undefined);
       }
