@@ -476,6 +476,14 @@ const PricingPlanPicker = ({
   const cycleFor = (productId: string): "monthly" | "annual" =>
     tierCycles[productId] ?? cycle;
 
+  // Round-trip helper: catalog annual → displayed monthly → back to
+  // 12-month total. Ensures the charged total always equals the
+  // displayed-per-month × 12, eliminating rounding gaps (e.g.
+  // $8,990/12 = $749.17 → displayed $749 → $749 × 12 = $8,988,
+  // not the catalog $8,990).
+  const roundTripAnnual = (annualPrice: number): number =>
+    Math.round(annualPrice / 12) * 12;
+
   // Per-rooftop MONTHLY COMMITMENT — the /mo equivalent across EVERY
   // selected item, regardless of whether each is billed monthly or
   // annually prepaid. For annual-prepaid tiers we use annual_price/12.
@@ -518,7 +526,7 @@ const PricingPlanPicker = ({
     if (selectedBundle) {
       if (cycle !== "annual") return 0;
       const b = bundles.find((x) => x.id === selectedBundle);
-      return b?.annual_price ?? 0;
+      return b?.annual_price ? roundTripAnnual(b.annual_price) : 0;
     }
     let upfront = 0;
     for (const [productId, tid] of Object.entries(selectedTiers)) {
@@ -527,10 +535,8 @@ const PricingPlanPicker = ({
       const t = tiers.find((x) => x.id === tid);
       if (!t) continue;
       if (t.annual_price != null && t.annual_price > 0) {
-        upfront += t.annual_price;
+        upfront += roundTripAnnual(t.annual_price);
       } else if (t.monthly_price > 0) {
-        // Fallback: if annual_price is missing from the DB row, derive
-        // it from monthly × 12 so the Due-Today math stays sane.
         upfront += t.monthly_price * 12;
       }
     }
@@ -545,7 +551,9 @@ const PricingPlanPicker = ({
     if (selectedBundle) {
       const b = bundles.find((x) => x.id === selectedBundle);
       if (!b) return 0;
-      if (cycle === "annual") return b.annual_price ?? b.monthly_price * 12;
+      if (cycle === "annual") {
+        return b.annual_price ? roundTripAnnual(b.annual_price) : b.monthly_price * 12;
+      }
       return b.monthly_price;
     }
     let total = 0;
@@ -555,7 +563,9 @@ const PricingPlanPicker = ({
       if (!t) continue;
       const tc = cycleFor(productId);
       if (tc === "annual") {
-        total += t.annual_price ?? t.monthly_price * 12;
+        total += t.annual_price
+          ? roundTripAnnual(t.annual_price)
+          : t.monthly_price * 12;
       } else {
         total += t.monthly_price;
       }
@@ -616,7 +626,8 @@ const PricingPlanPicker = ({
   const annualPrepaidPerRooftop = useMemo(() => {
     if (selectedBundle) {
       if (cycle !== "annual") return null;
-      return bundleAnnualPriceFor(selectedBundle);
+      const raw = bundleAnnualPriceFor(selectedBundle);
+      return raw != null ? roundTripAnnual(raw) : null;
     }
     if (Object.keys(selectedTiers).length === 0) return null;
     let sum = 0;
@@ -626,7 +637,7 @@ const PricingPlanPicker = ({
       if (cycleFor(productId) !== "annual") continue;
       const annual = annualPriceFor(tid);
       if (annual != null && annual > 0) {
-        sum += annual;
+        sum += roundTripAnnual(annual);
         any = true;
       }
     }
