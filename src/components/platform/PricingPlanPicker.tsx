@@ -389,17 +389,17 @@ const PricingPlanPicker = ({
     } else if (!(productId in tierCycles)) {
       setTierCycles((prev) => ({ ...prev, [productId]: cycle }));
     }
-    // Keep the top-level `cycle` in sync when a switch happens so the
-    // bundle card + back-compat summary copy stays aligned with the
-    // most recent user intent.
-    if (nextCycle && nextCycle !== cycle) setCycle(nextCycle);
+    // Do NOT update the global `cycle` here. Per-tier cycle changes
+    // must stay isolated — clicking Annual on AutoFilm must not flip
+    // AutoCurb from monthly ($1,995) to annual ($1,699). The global
+    // cycle is only changed by bundle selections (handleSelectBundle).
     setSelectedBundle(null);
     setSelectedTiers((prev) => {
       const n = { ...prev, [productId]: tierId };
       emit({
         kind: "tiers",
         tierIds: Object.values(n),
-        cycle: effectiveCycle,
+        cycle,
         rooftopCount,
       });
       return n;
