@@ -124,11 +124,47 @@ const AdminSidebar = ({
   const isPlatformAdmin = canManageAccess && dealershipId === "default";
   const isManager = isManagerRole(userRole) || canManageAccess;
 
-  // ── PIPELINE ── (All staff see Leads & Appointments; Performance is manager+)
+  // Permission helpers for acquisition / pipeline items
+  const isAcquisitionStaff =
+    isManager || userRole === "sales_bdc" || canManageAccess;
+  const isCheckInStaff =
+    isAcquisitionStaff || userRole === "inspector";
+  const canSeeAppraiserQueue = isManager || isAppraiser;
+
+  // ── PIPELINE ── (All staff see Leads & Appointments; Performance & Appraiser Queue are manager+)
   const pipelineItems: SidebarItem[] = [
     { key: "submissions", label: "All Leads", icon: Inbox, badge: submissionCount > 0 ? String(submissionCount) : undefined },
     { key: "accepted-appts", label: "Appointments", icon: CalendarDays, badge: appointmentCount > 0 ? String(appointmentCount) : undefined },
+    ...(canSeeAppraiserQueue
+      ? [{
+          key: "appraiser-queue",
+          label: "Appraiser Queue",
+          icon: Gauge,
+          badge: appraiserQueueCount > 0 ? String(appraiserQueueCount) : undefined,
+          badgeVariant: "destructive" as const,
+        }]
+      : []),
     ...(isManager ? [{ key: "executive", label: "Performance", icon: BarChart3 }] : []),
+  ].filter((item) => isAllowed(item.key));
+
+  // ── ACQUISITION ── (Manager+ — daily operational tools)
+  const acquisitionItems: SidebarItem[] = [
+    ...(isCheckInStaff
+      ? [{ key: "inspection-checkin", label: "Inspection Check-In", icon: ScanLine }]
+      : []),
+    ...(isAcquisitionStaff
+      ? [{ key: "service-quick-entry", label: "Service Quick Entry", icon: Zap }]
+      : []),
+    ...(isManager
+      ? [{ key: "equity-mining", label: "Equity Mining", icon: TrendingUp }]
+      : []),
+    ...(isManager
+      ? [{ key: "voice-ai", label: "Voice AI", icon: Phone }]
+      : []),
+    ...(canManageAccess ? [{ key: "image-inventory", label: "Vehicle Images", icon: Car }] : []),
+    ...(isManager && (enterpriseBetaEnabled || isPlatformAdmin)
+      ? [{ key: "wholesale-marketplace", label: "Wholesale Exit", icon: Store }]
+      : []),
   ].filter((item) => isAllowed(item.key));
 
   // ── CONFIGURATION ── (Offer Logic is manager+; rest is admin-only)
@@ -144,13 +180,16 @@ const AdminSidebar = ({
     ] : []),
   ].filter((item) => isAllowed(item.key));
 
-  // ── STOREFRONT ── (Admin-only)
+  // ── STOREFRONT ── (Admin-only — customer-facing content)
   const storefrontItems: SidebarItem[] = canManageAccess
     ? [
         { key: "site-config", label: "Branding", icon: Settings },
         ...(locationCount > 1 ? [{ key: "locations", label: "Locations", icon: MapPin }] : []),
         { key: "testimonials", label: "Testimonials", icon: MessageSquareQuote },
         { key: "embed-toolkit", label: "Website Embed", icon: Wrench },
+        ...(enterpriseBetaEnabled || isPlatformAdmin
+          ? [{ key: "white-label", label: "White Label", icon: Paintbrush }]
+          : []),
       ].filter((item) => isAllowed(item.key))
     : [];
 
@@ -160,77 +199,29 @@ const AdminSidebar = ({
     { key: "my-referrals", label: "My Referrals", icon: Gift },
   ];
 
-  // ── TEAM & ADMIN ── (Mixed access levels)
+  // ── SETTINGS ── (Low-frequency admin config — bottom of sidebar)
   const teamBadgeCount = canManageAccess ? pendingRequestCount + permissionRequestCount : 0;
-  const teamItems: SidebarItem[] = [
+  const settingsItems: SidebarItem[] = [
+    ...(canManageAccess ? [{ key: "onboarding", label: "Dealer Setup", icon: Rocket }] : []),
     ...(canManageAccess ? [{ key: "staff", label: "Staff & Permissions", icon: Users, badge: teamBadgeCount > 0 ? String(teamBadgeCount) : undefined, badgeVariant: "destructive" as const }] : []),
-    ...(canManageAccess ? [{ key: "referrals", label: "Referral Program", icon: Gift }] : []),
+    ...(canManageAccess && (enterpriseBetaEnabled || isPlatformAdmin)
+      ? [{ key: "platform-billing", label: "Platform & Billing", icon: CreditCard }]
+      : []),
+    ...(isPlatformAdmin ? [{ key: "pricing-model", label: "Pricing Model", icon: DollarSign }] : []),
+    ...(canManageAccess && (enterpriseBetaEnabled || isPlatformAdmin)
+      ? [{ key: "integrations-status", label: "Integrations", icon: Activity }]
+      : []),
+    ...(canManageAccess && (enterpriseBetaEnabled || isPlatformAdmin)
+      ? [{ key: "api-access", label: "API Access", icon: Code2 }]
+      : []),
+    ...(canManageAccess && (enterpriseBetaEnabled || isPlatformAdmin)
+      ? [{ key: "vauto-integration", label: "vAuto Integration", icon: Truck }]
+      : []),
     { key: "compliance", label: "Compliance", icon: ShieldCheck },
     ...(isManager ? [{ key: "reports", label: "Reports & Export", icon: Send }] : []),
-    ...(canManageAccess ? [{ key: "image-inventory", label: "Vehicle Images", icon: Car }] : []),
-    ...(canManageAccess ? [{ key: "onboarding", label: "Dealer Setup", icon: Rocket }] : []),
+    ...(canManageAccess ? [{ key: "referrals", label: "Referral Program", icon: Gift }] : []),
     ...(canManageAccess ? [{ key: "system-settings", label: "System Settings", icon: Wrench }] : []),
-    ...(isPlatformAdmin ? [{ key: "pricing-model", label: "Pricing Model", icon: DollarSign }] : []),
     ...(isPlatformAdmin ? [{ key: "tenants", label: "Dealer Tenants", icon: Network }] : []),
-  ].filter((item) => isAllowed(item.key));
-
-  // ── ENTERPRISE ── (Admin-only — API & White Label features)
-  // Gated on the enterprise_beta_enabled site_config flag + platform
-  // admin override. Regular dealers never see this group unless their
-  // Success Manager has enrolled them in the Enterprise Beta program.
-  // Platform admins (dealership_id === "default") always see the group
-  // so internal users can continue developing the features.
-  const showEnterpriseGroup =
-    canManageAccess && (enterpriseBetaEnabled || isPlatformAdmin);
-  const enterpriseItems: SidebarItem[] = showEnterpriseGroup
-    ? [
-        { key: "platform-billing", label: "Platform & Billing", icon: CreditCard },
-        { key: "integrations-status", label: "Integrations Status", icon: Activity },
-        { key: "api-access", label: "API Access", icon: Code2 },
-        { key: "vauto-integration", label: "vAuto Integration", icon: Truck },
-        { key: "white-label", label: "White Label", icon: Paintbrush },
-      ].filter((item) => isAllowed(item.key))
-    : [];
-
-  // ── ACQUISITION ── (Manager+ — equity mining & wholesale.
-  //    Service Quick Entry is visible to all staff roles including sales_bdc.
-  //    Inspection Check-In is also visible to inspector role.)
-  const isAcquisitionStaff =
-    isManager || userRole === "sales_bdc" || canManageAccess;
-  const isCheckInStaff =
-    isAcquisitionStaff || userRole === "inspector";
-  // Appraiser Queue is visible to UCM/GSM/Admin by default, and to any
-  // role that's been granted the Appraiser credential (including an
-  // inspector or sales rep that the dealer wants to loop in).
-  const canSeeAppraiserQueue = isManager || isAppraiser;
-  const acquisitionItems: SidebarItem[] = [
-    ...(isCheckInStaff
-      ? [{ key: "inspection-checkin", label: "Inspection Check-In", icon: ScanLine }]
-      : []),
-    ...(isAcquisitionStaff
-      ? [{ key: "service-quick-entry", label: "Service Quick Entry", icon: Zap }]
-      : []),
-    ...(canSeeAppraiserQueue
-      ? [{
-          key: "appraiser-queue",
-          label: "Appraiser Queue",
-          icon: Gauge,
-          badge: appraiserQueueCount > 0 ? String(appraiserQueueCount) : undefined,
-          badgeVariant: "destructive" as const,
-        }]
-      : []),
-    ...(isManager
-      ? [{ key: "equity-mining", label: "Equity Mining", icon: TrendingUp }]
-      : []),
-    ...(isManager
-      ? [{ key: "voice-ai", label: "Voice AI", icon: Phone }]
-      : []),
-    // Wholesale Exit is part of the Enterprise Beta program — hidden
-    // unless the dealer has been enrolled, same gate as the Enterprise
-    // group. Platform admins always see it so they can develop it.
-    ...(isManager && (enterpriseBetaEnabled || isPlatformAdmin)
-      ? [{ key: "wholesale-marketplace", label: "Wholesale Exit", icon: Store }]
-      : []),
   ].filter((item) => isAllowed(item.key));
 
   // Locked sections for "Request Access"
@@ -259,8 +250,7 @@ const AdminSidebar = ({
     ["Configuration", configItems],
     ["Storefront", storefrontItems],
     ["My Tools", myToolsItems],
-    ["Team & Admin", teamItems],
-    ["Enterprise", enterpriseItems],
+    ["Settings", settingsItems],
   ];
   useEffect(() => {
     const activeGroup = groupEntries.find(([, items]) =>
@@ -344,8 +334,7 @@ const AdminSidebar = ({
         {renderGroup("Configuration", configItems)}
         {renderGroup("Storefront", storefrontItems)}
         {renderGroup("My Tools", myToolsItems)}
-        {renderGroup("Team & Admin", teamItems)}
-        {renderGroup("Enterprise", enterpriseItems)}
+        {renderGroup("Settings", settingsItems)}
 
         {lockedSections.length > 0 && !collapsed && (
           <SidebarGroup>
