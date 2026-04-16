@@ -62,9 +62,14 @@ const SiteFooter = () => {
           <div className="text-center mb-12 lg:mb-16">
             {config.logo_url && (
               <img
-                src={config.logo_url}
+                src={config.logo_url.includes("supabase.co/storage/")
+                  ? `${config.logo_url}?width=200&resize=contain&quality=75&format=origin`
+                  : config.logo_url}
                 alt={dealerName}
                 className="h-16 md:h-20 w-auto mx-auto mb-4 opacity-90"
+                width={120}
+                height={80}
+                loading="lazy"
               />
             )}
             <h3 className="text-xl lg:text-2xl font-bold tracking-wide">{dealerName.toUpperCase()}</h3>
