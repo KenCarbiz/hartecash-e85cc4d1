@@ -246,15 +246,19 @@ const PricingPlanPicker = ({
     };
   }, [platform.products, platform.bundles, platform.tiers, architecture, pricingModel.row]);
 
-  // `rows` variant exposes the monthly/annual toggle via per-product
-  // Global billing-cycle toggle. Always seeded from the initial
-  // selection so the picker reflects the dealer's saved state — even
-  // when the public annual-toggle UI hasn't shipped yet
-  // (ANNUAL_AVAILABLE=false). Previously the non-rows variants forced
-  // "monthly" regardless, which desynchronised the display (Monthly
-  // SELECTED) from the per-tier calculations (annual price).
+  // The "rows" variant (admin Billing & Plan) has per-product
+  // Monthly/Annual buttons that reliably save per-tier cycle state.
+  // The full/compact variants can NOT trust initialSelection.cycle
+  // because PlanSelection stores a SINGLE cycle field for all tiers —
+  // it can't represent "AutoCurb monthly + AutoLabels annual". A stale
+  // "annual" value causes the displayed "Monthly SELECTED" to disagree
+  // with the calculation (which reads tierCycles). The only safe
+  // default for full/compact is "monthly": the display, the math, and
+  // the user's expectations all start in sync. If the dealer wants
+  // annual, they click the Annual Prepaid box — one click per tier.
+  const canTrustSavedCycle = variant === "rows";
   const [cycle, setCycle] = useState<"monthly" | "annual">(
-    initialSelection?.cycle ?? "monthly",
+    canTrustSavedCycle ? (initialSelection?.cycle ?? "monthly") : "monthly",
   );
   const [rooftopCount, setRooftopCount] = useState<number>(
     Math.max(1, initialSelection?.rooftopCount ?? 1),
@@ -281,10 +285,9 @@ const PricingPlanPicker = ({
   // This is what powers the "Due Today" math — first month of every
   // monthly-billed tier + full 12-month upfront for every annual tier,
   // all on the same cart.
-  // Per-tier cycle — seeded from the initial selection so the picker
-  // reflects the dealer's saved state. The previous version forced
-  // "monthly" when ANNUAL_AVAILABLE was false, which desynchronised
-  // tierCycles from the global `cycle` and broke the totals.
+  // Per-tier cycle — must stay in sync with the global `cycle` above.
+  // The "rows" variant can trust the saved cycle; full/compact always
+  // start on "monthly" so the displayed highlight and the math agree.
   const [tierCycles, setTierCycles] = useState<Record<string, "monthly" | "annual">>(
     initialSelection?.kind === "tiers"
       ? Object.fromEntries(
@@ -292,7 +295,8 @@ const PricingPlanPicker = ({
             .map((tid) => {
               const tier = tiers.find((t) => t.id === tid);
               if (!tier) return null;
-              return [tier.product_id, initialSelection.cycle] as [string, "monthly" | "annual"];
+              const c = canTrustSavedCycle ? initialSelection.cycle : "monthly";
+              return [tier.product_id, c] as [string, "monthly" | "annual"];
             })
             .filter(Boolean) as Array<[string, "monthly" | "annual"]>,
         )
