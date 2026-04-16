@@ -167,9 +167,25 @@ export function PlanCard({
         </div>
 
         {/* PRICE / CTA BLOCK
+            · Complimentary → "Included" with strikethrough original price
             · With annual  → two peer boxes (Monthly / 12-Month Prepaid)
             · Without      → single big price + Select button below */}
-        {hasAnnual ? (
+        {complimentaryReason ? (
+          <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/[0.05] px-3 py-3">
+            <p
+              className="text-xl font-bold text-emerald-700 dark:text-emerald-400 leading-none flex items-baseline gap-2"
+              style={{ fontVariantNumeric: "tabular-nums" }}
+            >
+              Included
+              <span className="text-sm font-normal text-muted-foreground line-through">
+                {formatUSD(safeMonthly)}/mo
+              </span>
+            </p>
+            <p className="text-[10px] text-emerald-700/80 dark:text-emerald-400/80 mt-1.5 leading-snug">
+              Free with {complimentaryReason}
+            </p>
+          </div>
+        ) : hasAnnual ? (
           <div className="grid grid-cols-2 gap-2">
             {/* Monthly box */}
             <button
@@ -328,8 +344,9 @@ export function PlanCard({
         )}
 
         {/* Single-price tiers keep the Select CTA. The two-box layout
-            above is itself the CTA — no trailing button needed. */}
-        {!readOnly && !hasAnnual && (
+            above is itself the CTA — no trailing button needed.
+            Complimentary tiers never show a CTA — they're included free. */}
+        {!readOnly && !hasAnnual && !complimentaryReason && (
           <Button
             variant={selected ? "default" : "outline"}
             size="sm"
