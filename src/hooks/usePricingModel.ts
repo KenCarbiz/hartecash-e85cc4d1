@@ -108,7 +108,7 @@ export function usePricingModel(): PricingModelLookup {
     const channel = supabase
       .channel("platform_pricing_model")
       .on(
-        // @ts-expect-error — supabase realtime types are loose here
+        // @ts-ignore — supabase realtime types are loose here
         "postgres_changes",
         {
           event: "*",

@@ -329,7 +329,9 @@ export type Database = {
           id: string
           monthly_amount: number | null
           product_ids: string[]
+          rooftop_count: number
           status: string
+          tier_ids: string[]
           trial_ends_at: string | null
           updated_at: string
         }
@@ -341,7 +343,9 @@ export type Database = {
           id?: string
           monthly_amount?: number | null
           product_ids?: string[]
+          rooftop_count?: number
           status?: string
+          tier_ids?: string[]
           trial_ends_at?: string | null
           updated_at?: string
         }
@@ -353,7 +357,9 @@ export type Database = {
           id?: string
           monthly_amount?: number | null
           product_ids?: string[]
+          rooftop_count?: number
           status?: string
+          tier_ids?: string[]
           trial_ends_at?: string | null
           updated_at?: string
         }
@@ -1509,6 +1515,8 @@ export type Database = {
           created_at: string
           description: string
           id: string
+          is_available_for_new_subs: boolean
+          is_enterprise: boolean
           is_featured: boolean
           monthly_price: number
           name: string
@@ -1521,6 +1529,8 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          is_available_for_new_subs?: boolean
+          is_enterprise?: boolean
           is_featured?: boolean
           monthly_price?: number
           name: string
@@ -1533,6 +1543,8 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          is_available_for_new_subs?: boolean
+          is_enterprise?: boolean
           is_featured?: boolean
           monthly_price?: number
           name?: string
@@ -1542,6 +1554,71 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_product_tiers: {
+        Row: {
+          allow_overage: boolean
+          annual_price: number | null
+          created_at: string
+          description: string | null
+          features: string[]
+          id: string
+          included_with_product_ids: string[]
+          inventory_limit: number | null
+          is_active: boolean
+          is_introductory: boolean
+          monthly_price: number
+          name: string
+          overage_price_per_unit: number | null
+          product_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          allow_overage?: boolean
+          annual_price?: number | null
+          created_at?: string
+          description?: string | null
+          features?: string[]
+          id?: string
+          included_with_product_ids?: string[]
+          inventory_limit?: number | null
+          is_active?: boolean
+          is_introductory?: boolean
+          monthly_price?: number
+          name: string
+          overage_price_per_unit?: number | null
+          product_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          allow_overage?: boolean
+          annual_price?: number | null
+          created_at?: string
+          description?: string | null
+          features?: string[]
+          id?: string
+          included_with_product_ids?: string[]
+          inventory_limit?: number | null
+          is_active?: boolean
+          is_introductory?: boolean
+          monthly_price?: number
+          name?: string
+          overage_price_per_unit?: number | null
+          product_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_product_tiers_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "platform_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_products: {
         Row: {
           base_url: string
@@ -1550,6 +1627,7 @@ export type Database = {
           icon_name: string
           id: string
           is_active: boolean
+          is_available_for_new_subs: boolean
           name: string
           sort_order: number
           updated_at: string
@@ -1561,6 +1639,7 @@ export type Database = {
           icon_name?: string
           id?: string
           is_active?: boolean
+          is_available_for_new_subs?: boolean
           name: string
           sort_order?: number
           updated_at?: string
@@ -1572,6 +1651,7 @@ export type Database = {
           icon_name?: string
           id?: string
           is_active?: boolean
+          is_available_for_new_subs?: boolean
           name?: string
           sort_order?: number
           updated_at?: string
