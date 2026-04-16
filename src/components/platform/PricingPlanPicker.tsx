@@ -141,6 +141,20 @@ const PricingPlanPicker = ({
   // precedence over the static architecturePricing.ts table when an
   // entry exists for this tier+architecture combination.
   const pricingModel = usePricingModel();
+
+  // Rooftop count + effective architecture MUST be declared before the
+  // catalog merge useMemo below, which references effectiveArchitecture.
+  const [rooftopCount, setRooftopCount] = useState<number>(
+    Math.max(1, initialSelection?.rooftopCount ?? 1),
+  );
+  // Dynamic architecture: when the rooftop count crosses a tier
+  // boundary (1-2 → 3-5 → 6-10 → 11+), the per-store pricing
+  // automatically shifts to the correct volume tier. The prop from
+  // the parent is the initial hint; the rooftop count overrides it.
+  const effectiveArchitecture = architecture
+    ? architectureForRooftopCount(rooftopCount)
+    : undefined;
+
   // Guaranteed-complete catalog with per-product fallback.
   //
   // The previous "replace the whole array when empty" approach had a
@@ -251,17 +265,6 @@ const PricingPlanPicker = ({
   // calculations use tierCycles[productId] with a hard "monthly"
   // fallback (see cycleFor), so this value never leaks into tier math.
   const [cycle, setCycle] = useState<"monthly" | "annual">("monthly");
-  const [rooftopCount, setRooftopCount] = useState<number>(
-    Math.max(1, initialSelection?.rooftopCount ?? 1),
-  );
-
-  // Dynamic architecture: when the rooftop count crosses a tier
-  // boundary (1-2 → 3-5 → 6-10 → 11+), the per-store pricing
-  // automatically shifts to the correct volume tier. The prop from
-  // the parent is the initial hint; the rooftop count overrides it.
-  const effectiveArchitecture = architecture
-    ? architectureForRooftopCount(rooftopCount)
-    : undefined;
   const [selectedBundle, setSelectedBundle] = useState<string | null>(
     initialSelection?.kind === "bundle" ? (initialSelection.bundleId ?? null) : null,
   );
