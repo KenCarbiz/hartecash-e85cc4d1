@@ -333,8 +333,9 @@ const PlatformSubscriptions = () => {
         </CardHeader>
         <CardContent className="relative space-y-4">
           {hasAnySelection ? (
-            <div className="flex flex-col lg:flex-row gap-4">
-              {/* ── LEFT: horizontal lineup of subscribed products ───── */}
+            <div>
+              {/* Full-width horizontal card lineup — the sticky Your
+                  Selection rail below holds all the totals. */}
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
                   Your Platform Choices
@@ -379,132 +380,201 @@ const PlatformSubscriptions = () => {
                         </span>
                       </p>
                     </div>
-                  ) : subscribedTiers.length > 0 ? (
-                    // Union of products with a selected tier (live or saved).
-                    // Uses displayedTierIds when dirty so the lineup reflects
-                    // the picker clicks before the dealer hits Save.
-                    activeProducts
-                      .filter((p) => {
-                        if (hasInFlight) {
-                          return displayedTierIds.some(
-                            (tid) => tiers.find((t) => t.id === tid)?.product_id === p.id,
-                          );
-                        }
-                        return hasProduct(p.id);
-                      })
-                      .map((product) => {
-                        const Icon = ICON_MAP[product.icon_name] || Car;
-                        const tierByDisplayed = hasInFlight
+                  ) : (
+                    // Lineup cards — includes every product the dealer
+                    // has either (a) explicitly picked a tier for, OR
+                    // (b) is entitled to a complimentary tier for (e.g.
+                    // AutoLabels Basic is free when AutoCurb is picked).
+                    // Complimentary cards render with an "Included with
+                    // AutoCurb" marker instead of a price.
+                    //
+                    // Responsive: narrow card on mobile (icon + name +
+                    // price), expanded on md+ with tier tagline and
+                    // top features so iPad/desktop users see what
+                    // they're actually getting.
+                    (() => {
+                      const displayedProductIds = new Set(
+                        displayedTierIds
+                          .map((tid) => tiers.find((t) => t.id === tid)?.product_id)
+                          .filter(Boolean) as string[],
+                      );
+                      // Tier entries to render — one per product that
+                      // is either explicitly selected or complimentary.
+                      const entries: Array<{
+                        product: PlatformProduct;
+                        tier: PlatformProductTier;
+                        complimentaryFrom: string | null;
+                      }> = [];
+                      for (const product of activeProducts) {
+                        // Explicit selection first.
+                        const explicitTier = hasInFlight
                           ? tiers.find(
                               (t) =>
-                                displayedTierIds.includes(t.id) && t.product_id === product.id,
+                                displayedTierIds.includes(t.id) &&
+                                t.product_id === product.id,
                             ) ?? null
                           : getActiveTier(product.id);
-                        const tier = tierByDisplayed;
-                        // Is this tier actually free given the current
-                        // lineup? Check the displayed tier IDs' product_ids
-                        // against the tier's `included_with_product_ids`.
-                        const displayedProductIds = new Set(
-                          displayedTierIds
-                            .map((tid) => tiers.find((t) => t.id === tid)?.product_id)
-                            .filter(Boolean) as string[],
-                        );
-                        const complimentary =
-                          tier &&
-                          tier.included_with_product_ids.length > 0 &&
-                          tier.included_with_product_ids.some(
-                            (pid) => displayedProductIds.has(pid) && pid !== tier.product_id,
+                        if (explicitTier) {
+                          const cf = explicitTier.included_with_product_ids?.find(
+                            (pid) =>
+                              displayedProductIds.has(pid) && pid !== product.id,
                           );
-                        const price = tier ? effectiveMonthly(tier) : 0;
+                          if (cf) {
+                            const cfProduct = products.find((p) => p.id === cf);
+                            entries.push({
+                              product,
+                              tier: explicitTier,
+                              complimentaryFrom: cfProduct?.name ?? cf,
+                            });
+                          } else {
+                            entries.push({
+                              product,
+                              tier: explicitTier,
+                              complimentaryFrom: null,
+                            });
+                          }
+                          continue;
+                        }
+                        // No explicit tier — maybe a catalog tier is
+                        // complimentary for this product given the
+                        // dealer's other selections. Show it as
+                        // "Included with X".
+                        const complimentaryTier = tiers.find(
+                          (t) =>
+                            t.product_id === product.id &&
+                            t.is_active !== false &&
+                            (t.included_with_product_ids ?? []).some(
+                              (pid) =>
+                                displayedProductIds.has(pid) && pid !== product.id,
+                            ),
+                        );
+                        if (complimentaryTier) {
+                          const cf = complimentaryTier.included_with_product_ids.find(
+                            (pid) =>
+                              displayedProductIds.has(pid) && pid !== product.id,
+                          );
+                          const cfProduct = products.find((p) => p.id === cf);
+                          entries.push({
+                            product,
+                            tier: complimentaryTier,
+                            complimentaryFrom: cfProduct?.name ?? cf ?? "another app",
+                          });
+                        }
+                      }
+
+                      if (entries.length === 0) {
+                        return (
+                          <div className="w-full p-3 rounded-lg bg-muted/50 border border-border text-[11px] text-muted-foreground">
+                            No tiers assigned yet — pick one per app below.
+                          </div>
+                        );
+                      }
+
+                      return entries.map(({ product, tier, complimentaryFrom }) => {
+                        const Icon = ICON_MAP[product.icon_name] || Car;
+                        const price = effectiveMonthly(tier);
+                        const isComplimentary = complimentaryFrom != null;
+                        // Pick up to two short features for the iPad/
+                        // desktop-expanded card body.
+                        const featuresPreview = (tier.features ?? []).slice(0, 2);
                         return (
                           <div
                             key={product.id}
-                            className="shrink-0 w-48 rounded-xl border border-border/60 bg-card p-3 shadow-sm flex flex-col"
+                            className={`shrink-0 w-48 md:w-64 lg:w-72 rounded-xl border p-3 md:p-4 shadow-sm flex flex-col ${
+                              isComplimentary
+                                ? "border-emerald-500/40 bg-emerald-500/[0.05]"
+                                : "border-border/60 bg-card"
+                            }`}
                           >
+                            {/* Header — always visible */}
                             <div className="flex items-center gap-2 mb-1">
-                              <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                                <Icon className="w-3.5 h-3.5" />
+                              <div
+                                className={`w-7 h-7 md:w-8 md:h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                                  isComplimentary
+                                    ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                                    : "bg-primary/10 text-primary"
+                                }`}
+                              >
+                                <Icon className="w-3.5 h-3.5 md:w-4 md:h-4" />
                               </div>
-                              <p className="text-xs font-bold text-card-foreground truncate">
+                              <p className="text-xs md:text-sm font-bold text-card-foreground truncate">
                                 {product.name}
                               </p>
                             </div>
-                            {tier && (
-                              <p className="text-[10px] text-muted-foreground mb-1.5 truncate">
-                                {tier.name}
+
+                            {/* Tier name */}
+                            <p className="text-[10px] md:text-[11px] text-muted-foreground mb-1.5 truncate">
+                              {tier.name}
+                            </p>
+
+                            {/* Tagline — expanded viewports only */}
+                            {tier.description && (
+                              <p className="hidden md:block text-[11px] text-muted-foreground leading-snug mb-2 line-clamp-2">
+                                {tier.description.split(" — ")[0]}
                               </p>
                             )}
-                            {complimentary ? (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600">
-                                <Gift className="w-2.5 h-2.5" /> Included
-                              </span>
-                            ) : (
-                              <p
-                                className="text-base font-bold text-card-foreground"
-                                style={{ fontVariantNumeric: "tabular-nums" }}
-                              >
-                                {formatUSD(price)}
-                                <span className="text-[10px] font-normal text-muted-foreground ml-0.5">
-                                  /mo
+
+                            {/* Price / Included */}
+                            {isComplimentary ? (
+                              <div className="space-y-0.5">
+                                <span className="inline-flex items-center gap-1 text-[10px] md:text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                                  <Gift className="w-2.5 h-2.5 md:w-3 md:h-3" />
+                                  Included
                                 </span>
-                              </p>
+                                <p className="text-[10px] md:text-[11px] text-emerald-700 dark:text-emerald-400 leading-snug">
+                                  Free with {complimentaryFrom}
+                                </p>
+                              </div>
+                            ) : (
+                              <>
+                                <p
+                                  className="text-base md:text-lg font-bold text-card-foreground"
+                                  style={{ fontVariantNumeric: "tabular-nums" }}
+                                >
+                                  {formatUSD(price)}
+                                  <span className="text-[10px] font-normal text-muted-foreground ml-0.5">
+                                    /mo
+                                  </span>
+                                </p>
+                                {cycle === "annual" && tier?.annual_price && (
+                                  <p className="text-[9px] md:text-[10px] text-emerald-600 font-semibold mt-0.5">
+                                    Annual prepaid
+                                  </p>
+                                )}
+                              </>
                             )}
-                            {cycle === "annual" && tier?.annual_price && (
-                              <p className="text-[9px] text-emerald-600 font-semibold mt-0.5">
-                                Annual prepaid
-                              </p>
+
+                            {/* Feature preview — desktop / iPad only */}
+                            {featuresPreview.length > 0 && (
+                              <ul className="hidden md:block mt-3 pt-3 border-t border-border/40 space-y-1">
+                                {featuresPreview.map((f) => (
+                                  <li
+                                    key={f}
+                                    className="flex items-start gap-1.5 text-[10px] text-muted-foreground leading-snug"
+                                  >
+                                    <Check className="w-2.5 h-2.5 mt-0.5 text-emerald-500 shrink-0" />
+                                    <span className="line-clamp-2">{f}</span>
+                                  </li>
+                                ))}
+                                {(tier.features?.length ?? 0) > featuresPreview.length && (
+                                  <li className="text-[9px] text-muted-foreground/70 italic pl-4">
+                                    + {(tier.features?.length ?? 0) - featuresPreview.length} more
+                                  </li>
+                                )}
+                              </ul>
                             )}
                           </div>
                         );
-                      })
-                  ) : (
-                    <div className="w-full p-3 rounded-lg bg-muted/50 border border-border text-[11px] text-muted-foreground">
-                      No tiers assigned yet — pick one per app below.
-                    </div>
+                      });
+                    })()
                   )}
                 </div>
               </div>
 
-              {/* ── RIGHT: totals bubbles ──────────────────────────── */}
-              <div className="lg:w-64 shrink-0 flex flex-col gap-2.5">
-                <div className="rounded-xl border border-primary/50 bg-gradient-to-br from-primary/10 to-primary/[0.04] p-4 shadow-sm">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-primary">
-                    Monthly Total
-                  </p>
-                  <p
-                    className="text-3xl font-bold text-card-foreground leading-none mt-1.5"
-                    style={{ fontVariantNumeric: "tabular-nums" }}
-                  >
-                    {formatUSD(monthlyTotal)}
-                    <span className="text-[11px] font-normal text-muted-foreground ml-1">/mo</span>
-                  </p>
-                  <p className="text-[10px] text-muted-foreground mt-1">
-                    {rooftopCount} rooftop{rooftopCount > 1 ? "s" : ""}
-                    {rooftopCount > 1 && (
-                      <span className="ml-1">
-                        · {formatUSD(monthlyPerRooftop)}/ea
-                      </span>
-                    )}
-                  </p>
-                </div>
-
-                {cycle === "annual" && dueNow > 0 && (
-                  <div className="rounded-xl border border-emerald-500/50 bg-gradient-to-br from-emerald-500/10 to-emerald-500/[0.05] p-4 shadow-sm">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
-                      Due now · 12 months upfront
-                    </p>
-                    <p
-                      className="text-2xl font-bold text-card-foreground leading-none mt-1.5"
-                      style={{ fontVariantNumeric: "tabular-nums" }}
-                    >
-                      {formatUSD(dueNow)}
-                    </p>
-                    <p className="text-[10px] text-emerald-700 dark:text-emerald-300 mt-1">
-                      Then {formatUSD(monthlyTotal)}/mo at renewal
-                    </p>
-                  </div>
-                )}
-              </div>
+              {/* Totals intentionally omitted here — the sticky
+                  "Your Selection" rail below owns the Monthly /
+                  Annual Prepaid / Due Today breakdown. Keeping the
+                  top yellow area as a clean horizontal plan lineup. */}
             </div>
           ) : (
             <div className="text-center py-8">
