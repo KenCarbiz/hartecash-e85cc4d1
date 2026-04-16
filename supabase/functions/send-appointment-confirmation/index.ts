@@ -122,10 +122,6 @@ Deno.serve(async (req) => {
 
     // Fetch dealership name using appointment's dealership_id
     const appointmentDealershipId = typeof appointment.dealership_id === "string" ? appointment.dealership_id : "default";
-    const adminClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
     const { data: siteConfig } = await adminClient
       .from("site_config")
       .select("dealership_name")

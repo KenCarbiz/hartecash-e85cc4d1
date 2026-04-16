@@ -382,7 +382,9 @@ function OnboardingMobileInner() {
             <div className="text-[11px] text-emerald-600 font-medium">
               {planSelection.kind === "bundle"
                 ? "Bundle selected — great choice."
-                : `${planSelection.tierIds.length} tier${planSelection.tierIds.length === 1 ? "" : "s"} selected.`}
+                : planSelection.kind === "tiers"
+                  ? `${planSelection.tierIds.length} tier${planSelection.tierIds.length === 1 ? "" : "s"} selected.`
+                  : "Enterprise plan selected."}
             </div>
           )}
         </div>

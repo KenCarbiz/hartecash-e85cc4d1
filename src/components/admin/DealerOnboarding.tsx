@@ -314,10 +314,10 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate, targetDealershipId, onD
     }
 
     setCurrentSubscription({
-      bundle_id: subPayload.bundle_id,
-      tier_ids: subPayload.tier_ids,
-      billing_cycle: subPayload.billing_cycle,
-      rooftop_count: subPayload.rooftop_count,
+      bundle_id: subPayload.bundle_id as string,
+      tier_ids: subPayload.tier_ids as string[],
+      billing_cycle: subPayload.billing_cycle as string,
+      rooftop_count: subPayload.rooftop_count as number,
     });
   };
 
