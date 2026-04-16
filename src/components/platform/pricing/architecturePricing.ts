@@ -79,6 +79,23 @@ const BUNDLE_PRICE_OVERRIDES: Record<string, Partial<Record<Architecture, PriceO
   },
 };
 
+/**
+ * Derive the pricing architecture tier from a rooftop count.
+ * Used by the billing page rooftop stepper so that changing the
+ * count automatically shifts pricing tiers:
+ *   1-2  → single_store (catalog prices)
+ *   3-5  → multi_location (~15% off)
+ *   6-10 → dealer_group  (~20% off)
+ *   11+  → enterprise    (custom / contact sales)
+ */
+export function architectureForRooftopCount(count: number): Architecture {
+  if (count >= 11) return "enterprise";
+  if (count >= 6) return "dealer_group";
+  if (count >= 3) return "multi_location";
+  if (count === 2) return "single_store_secondary";
+  return "single_store";
+}
+
 /** Lookup helper — returns the override or null if none applies. */
 export function tierPriceOverride(
   tierId: string,

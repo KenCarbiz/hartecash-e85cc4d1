@@ -27,6 +27,7 @@ import {
 import {
   tierPriceOverride,
   bundlePriceOverride,
+  architectureForRooftopCount,
 } from "./pricing/architecturePricing";
 import { usePricingModel } from "@/hooks/usePricingModel";
 
@@ -211,7 +212,7 @@ const PricingPlanPicker = ({
       perMonthEquiv == null ? null : Math.round(perMonthEquiv * 12);
 
     const mergedTiers = mergedTiersAllRaw.map((t) => {
-      const db = pricingModel.getTierOverride(t.id, architecture);
+      const db = pricingModel.getTierOverride(t.id, effectiveArchitecture);
       if (db && db.monthly != null) {
         return {
           ...t,
@@ -219,13 +220,13 @@ const PricingPlanPicker = ({
           annual_price: toFullAnnual(db.annual) ?? t.annual_price,
         };
       }
-      const legacy = tierPriceOverride(t.id, architecture);
+      const legacy = tierPriceOverride(t.id, effectiveArchitecture);
       return legacy
         ? { ...t, monthly_price: legacy.monthly, annual_price: legacy.annual }
         : t;
     });
     const mergedBundles = mergedBundlesBase.map((b) => {
-      const db = pricingModel.getBundleOverride(b.id, architecture);
+      const db = pricingModel.getBundleOverride(b.id, effectiveArchitecture);
       if (db && db.monthly != null) {
         return {
           ...b,
@@ -233,7 +234,7 @@ const PricingPlanPicker = ({
           annual_price: toFullAnnual(db.annual) ?? b.annual_price,
         };
       }
-      const legacy = bundlePriceOverride(b.id, architecture);
+      const legacy = bundlePriceOverride(b.id, effectiveArchitecture);
       return legacy
         ? { ...b, monthly_price: legacy.monthly, annual_price: legacy.annual }
         : b;
@@ -244,7 +245,7 @@ const PricingPlanPicker = ({
       bundles: mergedBundles,
       tiers: mergedTiers,
     };
-  }, [platform.products, platform.bundles, platform.tiers, architecture, pricingModel.row]);
+  }, [platform.products, platform.bundles, platform.tiers, effectiveArchitecture, pricingModel.row]);
 
   // Global cycle — used ONLY for bundle selections. Per-tier
   // calculations use tierCycles[productId] with a hard "monthly"
@@ -253,6 +254,14 @@ const PricingPlanPicker = ({
   const [rooftopCount, setRooftopCount] = useState<number>(
     Math.max(1, initialSelection?.rooftopCount ?? 1),
   );
+
+  // Dynamic architecture: when the rooftop count crosses a tier
+  // boundary (1-2 → 3-5 → 6-10 → 11+), the per-store pricing
+  // automatically shifts to the correct volume tier. The prop from
+  // the parent is the initial hint; the rooftop count overrides it.
+  const effectiveArchitecture = architecture
+    ? architectureForRooftopCount(rooftopCount)
+    : undefined;
   const [selectedBundle, setSelectedBundle] = useState<string | null>(
     initialSelection?.kind === "bundle" ? (initialSelection.bundleId ?? null) : null,
   );
