@@ -470,7 +470,7 @@ const PlatformSubscriptions = () => {
                             ),
                         );
                         if (complimentaryTier) {
-                          const cf = complimentaryTier.included_with_product_ids.find(
+                          const cf = (complimentaryTier.included_with_product_ids ?? []).find(
                             (pid) =>
                               displayedProductIds.has(pid) && pid !== product.id,
                           );
