@@ -98,6 +98,10 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate, targetDealershipId, onD
   const [tenants, setTenants] = useState<{ dealership_id: string; display_name: string }[]>([]);
   const dealershipId = targetDealershipId || tenant.dealership_id;
   const [account, setAccount] = useState<Omit<DealerAccount, "id">>({ ...DEFAULT_ACCOUNT, dealership_id: dealershipId });
+  // Explicit store count chosen by the dealer in the architecture
+  // selector dropdown (multi_location 3-5, dealer_group 6-10).
+  // null = use the architecture default from rooftopCountForArchitecture().
+  const [storeCount, setStoreCount] = useState<number | null>(null);
   // Surface whether the picker is quoting from the super-admin's
   // Pricing Model. When the row is present, the pill reads "Live" and
   // the admin knows their edits in Admin → Pricing Model are what
@@ -452,12 +456,16 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate, targetDealershipId, onD
         <CardContent className="pt-6">
           <ArchitectureSelector
             selected={dbArchToArchType(account.architecture, account.plan_tier)}
+            storeCount={storeCount ?? rooftopCountForArchitecture(account.architecture)}
+            onStoreCountChange={(count) => setStoreCount(count)}
+            disabled={readOnly}
             onSelect={(arch) => {
               if (readOnly) return;
               const dbArch = architectureToDbValue(arch);
               updateField("architecture", dbArch);
-              // Multi-rooftop structures imply >1 rooftop — seed the
-              // picker so admins don't have to fix the count manually.
+              // Reset store count to the architecture default when
+              // switching tiers so the dropdown starts clean.
+              setStoreCount(null);
               if (arch === "enterprise") {
                 updateField("plan_tier", "enterprise");
               }
@@ -544,17 +552,13 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate, targetDealershipId, onD
           </CardHeader>
           <CardContent className="space-y-5">
             <PricingPlanPicker
-              // Remount when architecture changes so the new rooftop
-              // count + volume pricing re-apply cleanly to initialSelection.
-              key={account.architecture}
+              // Remount when architecture OR store count changes so the
+              // rooftop multiplier re-applies cleanly.
+              key={`${account.architecture}-${storeCount}`}
               variant="compact"
               autoSave
               readOnly={readOnly}
               architecture={account.architecture}
-              // Single + Secondary is a two-rooftop business with one
-              // small primary lot + a satellite — 75 units doesn't fit.
-              // Multi-location / dealer group / enterprise all have
-              // access to the 75-unit tier (just at discounted pricing).
               unavailableTiers={
                 account.architecture === "single_store_secondary"
                   ? { autoframe_70: "Multi-location — 125 units minimum" }
@@ -562,11 +566,10 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate, targetDealershipId, onD
               }
               initialSelection={(() => {
                 const archRooftops = rooftopCountForArchitecture(account.architecture);
-                // Honor an explicitly set subscription rooftop_count if
-                // it's higher than the architecture default; otherwise
-                // default to the architecture-implied count so totals
-                // multiply out correctly without manual input.
-                const rooftopCount = Math.max(
+                // Use the explicit store count from the dropdown when
+                // available, otherwise fall back to architecture default
+                // or existing subscription count.
+                const rooftopCount = storeCount ?? Math.max(
                   currentSubscription?.rooftop_count ?? 1,
                   archRooftops,
                 );
