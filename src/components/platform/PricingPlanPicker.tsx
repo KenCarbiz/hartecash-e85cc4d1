@@ -280,6 +280,13 @@ const PricingPlanPicker = ({
   // This is what powers the "Due Today" math — first month of every
   // monthly-billed tier + full 12-month upfront for every annual tier,
   // all on the same cart.
+  // When ANNUAL_AVAILABLE is false (and we're not in the rows variant
+  // which explicitly supports annual), force every tier to "monthly".
+  // Otherwise initialSelection.cycle could be "annual" (e.g. saved by
+  // the rows variant) and the per-tier cycle would diverge from the
+  // forced-monthly global `cycle`, causing the card to DISPLAY "Monthly
+  // SELECTED" while the calculation silently uses the annual price.
+  const annualAllowed = variant === "rows" || ANNUAL_AVAILABLE;
   const [tierCycles, setTierCycles] = useState<Record<string, "monthly" | "annual">>(
     initialSelection?.kind === "tiers"
       ? Object.fromEntries(
@@ -287,7 +294,8 @@ const PricingPlanPicker = ({
             .map((tid) => {
               const tier = tiers.find((t) => t.id === tid);
               if (!tier) return null;
-              return [tier.product_id, initialSelection.cycle] as [string, "monthly" | "annual"];
+              const c = annualAllowed ? initialSelection.cycle : "monthly";
+              return [tier.product_id, c] as [string, "monthly" | "annual"];
             })
             .filter(Boolean) as Array<[string, "monthly" | "annual"]>,
         )
@@ -684,6 +692,7 @@ const PricingPlanPicker = ({
         rooftopCount={rooftopCount}
         selectedTiers={selectedTiers}
         cycle={cycle}
+        tierCycles={tierCycles}
         complimentary={complimentary}
         readOnly={readOnly}
         onSelectTier={handleSelectTier}
@@ -1022,6 +1031,7 @@ function AppTierTabs({
   rooftopCount,
   selectedTiers,
   cycle,
+  tierCycles,
   complimentary,
   readOnly,
   onSelectTier,
@@ -1032,6 +1042,7 @@ function AppTierTabs({
   rooftopCount: number;
   selectedTiers: Record<string, string>;
   cycle: "monthly" | "annual";
+  tierCycles: Record<string, "monthly" | "annual">;
   complimentary: Record<string, string>;
   readOnly: boolean;
   onSelectTier: (productId: string, tierId: string, nextCycle?: "monthly" | "annual") => void;
@@ -1129,24 +1140,29 @@ function AppTierTabs({
                         } as const)
                       : null;
 
+                  // Effective cycle for THIS product — matches what the
+                  // price calculations use via cycleFor().
+                  const productCycle = tierCycles[p.id] ?? cycle;
+
                   return (
                     <PlanCard
                       key={tier.id}
                       name={tier.name}
                       description={tier.description}
-                      // The Monthly box ALWAYS shows the actual monthly
-                      // catalog price — never the cycle-swapped value.
-                      // `tierPrice(tier)` returns annual_price (the full
-                      // 12-month amount) when cycle=annual, which is the
-                      // WRONG number for the monthly box and what caused
-                      // AutoCurb to display "$20,388/mo · save 92%".
                       monthlyPrice={tier.monthly_price}
+                      // Complimentary tiers (e.g. Basic free with AutoCurb)
+                      // must not expose an annual toggle — they're $0 either
+                      // way and clicking annual would corrupt the cycle state.
                       annualPricePerMonth={
-                        tier.annual_price != null
-                          ? Math.round(tier.annual_price / 12)
-                          : undefined
+                        isComplimentary
+                          ? undefined
+                          : tier.annual_price != null
+                            ? Math.round(tier.annual_price / 12)
+                            : undefined
                       }
-                      annualSelected={isSelected && cycle === "annual"}
+                      // Use the per-product cycle so the highlight matches
+                      // what the totals math actually uses.
+                      annualSelected={isSelected && productCycle === "annual"}
                       rooftopCount={rooftopCount}
                       features={tier.features}
                       badge={badge}
@@ -1154,8 +1170,13 @@ function AppTierTabs({
                       selected={isSelected}
                       complimentaryReason={complimentaryReason}
                       readOnly={readOnly}
-                      onSelect={(nextCycle) =>
-                        onSelectTier(p.id, tier.id, nextCycle)
+                      // Complimentary tiers are already included at $0 —
+                      // clicking should not add them to selectedTiers or
+                      // touch the cycle state.
+                      onSelect={
+                        isComplimentary
+                          ? undefined
+                          : (nextCycle) => onSelectTier(p.id, tier.id, nextCycle)
                       }
                     />
                   );
