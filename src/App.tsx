@@ -21,6 +21,7 @@ const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const PitchDeck = lazy(() => import("./pages/PitchDeck"));
+const PlatformPitch = lazy(() => import("./pages/PlatformPitch"));
 const ServiceLanding = lazy(() => import("./pages/ServiceLanding"));
 const KenPage = lazy(() => import("./pages/KenPage"));
 const ServiceLinkGen = lazy(() => import("./pages/ServiceLinkGen"));
@@ -114,6 +115,7 @@ const AnimatedRoutes = () => {
         <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
         <Route path="/service" element={<ServiceLanding />} />
         <Route path="/pitch" element={<PitchDeck />} />
+        <Route path="/platform" element={<PlatformPitch />} />
         <Route path="/ken" element={<KenPage />} />
         <Route path="/servicelinkgen" element={<ServiceLinkGen />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
