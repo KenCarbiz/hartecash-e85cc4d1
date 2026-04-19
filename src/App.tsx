@@ -51,6 +51,7 @@ const OBDScan = lazy(() => import("./pages/OBDScan"));
 const ServiceQuickEntry = lazy(() => import("./pages/ServiceQuickEntry"));
 const InspectionCheckIn = lazy(() => import("./pages/InspectionCheckIn"));
 const PlanPage = lazy(() => import("./pages/PlanPage"));
+const BillingPage = lazy(() => import("./pages/BillingPage"));
 
 const queryClient = new QueryClient();
 
@@ -144,6 +145,7 @@ const AnimatedRoutes = () => {
         <Route path="/service-quick-entry" element={<ProtectedRoute><ServiceQuickEntry /></ProtectedRoute>} />
         <Route path="/inspection-checkin" element={<ProtectedRoute><InspectionCheckIn /></ProtectedRoute>} />
         <Route path="/plan" element={<ProtectedRoute><PlanPage /></ProtectedRoute>} />
+        <Route path="/billing" element={<ProtectedRoute><BillingPage /></ProtectedRoute>} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
