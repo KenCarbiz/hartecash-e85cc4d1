@@ -285,7 +285,7 @@ export default function BillingPage() {
     setPending("portal");
     try {
       const { data, error } = await supabase.functions.invoke<{ url: string }>(
-        "billing-portal",
+        "billing-portal-session",
         {
           body: {
             return_url: handoffReturn || `${window.location.origin}/billing`,
