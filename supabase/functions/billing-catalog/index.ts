@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
           }
         }
         if (includes.length === 0) {
-          includes = raw.split(",").map((s) => s.trim()).filter(Boolean);
+          includes = raw.split(",").map((s: string) => s.trim()).filter(Boolean);
         }
         entries.push({
           price_id: price.id,
