@@ -76,3 +76,7 @@ project_id = "ptiwdwfdckfqivoocyvp"
   # Public read of active Stripe prices (metadata-driven catalog for /billing).
   [functions.billing-catalog]
     verify_jwt = false
+  # Ops replay of autocurb_sync_entitlements. Custom Bearer check against
+  # SUPABASE_SERVICE_ROLE_KEY — no user JWT flow.
+  [functions.billing-replay]
+    verify_jwt = false
