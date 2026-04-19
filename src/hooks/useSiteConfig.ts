@@ -2,6 +2,16 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
 
+export type LandingTemplate = "classic" | "video" | "inventory" | "trust" | "editorial";
+
+export const LANDING_TEMPLATES: { value: LandingTemplate; label: string; description: string }[] = [
+  { value: "classic", label: "Classic", description: "Split hero with instant-offer form. Balanced and form-forward." },
+  { value: "video", label: "Video Hero", description: "Full-bleed cinematic background with a single focused CTA." },
+  { value: "inventory", label: "Inventory-Forward", description: "Plate / VIN / make-model search leads; trust blocks follow." },
+  { value: "trust", label: "Trust-Wall", description: "Minimal hero, huge review wall, community and local focus." },
+  { value: "editorial", label: "Editorial", description: "Long-scroll narrative that walks through each step of the flow." },
+];
+
 export interface AboutMilestone {
   year: string;
   label: string;
@@ -29,6 +39,7 @@ export interface SiteConfig {
   hero_headline: string;
   hero_subtext: string;
   hero_layout: string;
+  landing_template: LandingTemplate;
   price_guarantee_days: number;
   stats_cars_purchased: string;
   stats_years_in_business: string;
@@ -111,6 +122,7 @@ const DEFAULTS: SiteConfig = {
   hero_headline: "Sell Your Car The Easy Way",
   hero_subtext: "Get a top-dollar cash offer in 2 minutes. No haggling, no stress.",
   hero_layout: "offset_right",
+  landing_template: "classic",
   price_guarantee_days: 8,
   stats_cars_purchased: "14,721+",
   stats_years_in_business: "78 yrs",
@@ -186,6 +198,7 @@ const LOCATION_OVERRIDE_KEYS: (keyof SiteConfig)[] = [
   "hero_headline",
   "hero_subtext",
   "hero_layout",
+  "landing_template",
   "service_hero_headline",
   "service_hero_subtext",
   "trade_hero_headline",

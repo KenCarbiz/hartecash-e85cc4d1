@@ -21,7 +21,15 @@ export interface OfferEstimate {
   projectedGross: number;          // retail_clean - offer - recon (informational)
   // AI condition adjustment
   aiConditionAdjustment: number;   // dollar amount added/removed by AI damage analysis
+  // Dealer-configurable "range_then_price" reveal — shown to the customer
+  // before the final offer when the dealer opts into range display. Derived
+  // directly from Black Book tiers, independent of the final offer math.
+  displayRange: { low: number; high: number } | null;
 }
+
+export type PricingRevealMode = "price_first" | "range_then_price" | "contact_first";
+export type RangeHighMode = "bb_value" | "percent_above_low";
+export type PaymentSelectionTiming = "before_final_offer" | "with_final_offer" | "none_before_final_offer";
 
 // ─────────────────────────────────────────────────────────────
 // STRATEGY MODES
@@ -378,6 +386,15 @@ export interface OfferSettings {
   retail_search_radius?: number;
   retail_search_zip?: string;
   max_market_pct?: number | null;
+
+  // Landing-page offer flow (set per dealer in the Landing Page & Offer Flow panel)
+  pricing_reveal_mode?: PricingRevealMode;
+  show_range_before_final?: boolean;
+  range_low_source?: string;           // one of the 11 BB tiers
+  range_high_mode?: RangeHighMode;
+  range_high_source?: string | null;   // BB tier when range_high_mode = 'bb_value'
+  range_high_percent?: number | null;  // percent above low when range_high_mode = 'percent_above_low'
+  payment_selection_timing?: PaymentSelectionTiming;
 }
 
 export interface OfferRule {
@@ -952,9 +969,35 @@ export function calculateOffer(
 
   const low = high;
 
+  // ── Customer-facing display range (Black-Book anchored) ──
+  // Shown only when the dealer enables range_then_price or show_range_before_final.
+  // Completely independent of `low`/`high` (which represent the actual offer).
+  let displayRange: { low: number; high: number } | null = null;
+  const revealMode: PricingRevealMode = cfg.pricing_reveal_mode ?? "price_first";
+  const wantsRange = revealMode === "range_then_price" || cfg.show_range_before_final === true;
+
+  if (wantsRange) {
+    const lowSource = cfg.range_low_source || "wholesale_avg";
+    const lowVal = Math.round(getBBValue(bbVehicle, lowSource));
+    if (lowVal > 0) {
+      let highVal: number;
+      if (cfg.range_high_mode === "bb_value" && cfg.range_high_source) {
+        highVal = Math.round(getBBValue(bbVehicle, cfg.range_high_source));
+      } else {
+        const pct = cfg.range_high_percent ?? 8;
+        highVal = Math.round(lowVal * (1 + pct / 100));
+      }
+      // Keep ordering sane even if the dealer picks a high tier that happens to be lower
+      const rLow = Math.min(lowVal, highVal);
+      const rHigh = Math.max(lowVal, highVal);
+      if (rHigh > 0) displayRange = { low: rLow, high: rHigh };
+    }
+  }
+
   return {
     low,
     high,
+    displayRange,
     baseValue: Math.round(baseValue),
     totalDeductions: Math.round(deductions),
     reconCost: Math.round(reconCost),

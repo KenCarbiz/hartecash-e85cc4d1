@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Plus, Trash2, GripVertical, Save, Loader2, MapPin, ChevronDown, ChevronRight, X, MapPinned, Car, Radar, Store, Building2, ShoppingCart, Warehouse, Image, Eye, Globe, Megaphone, Link2, ExternalLink, CheckCircle2, AlertCircle } from "lucide-react";
 import LocationLogoSection from "./LocationLogoSection";
+import { LANDING_TEMPLATES, type LandingTemplate } from "@/hooks/useSiteConfig";
 
 const LOCATION_TYPE_OPTIONS = [
   { value: "primary", label: "Primary Store", icon: Store, color: "bg-primary/10 text-primary border-primary/20" },
@@ -70,6 +71,7 @@ interface Location {
   hero_headline: string | null;
   hero_subtext: string | null;
   hero_layout: string | null;
+  landing_template: string | null;
   service_hero_headline: string | null;
   service_hero_subtext: string | null;
   trade_hero_headline: string | null;
@@ -298,6 +300,7 @@ const LocationManagement = () => {
           hero_headline: loc.hero_headline || null,
           hero_subtext: loc.hero_subtext || null,
           hero_layout: loc.hero_layout || null,
+          landing_template: loc.landing_template || null,
           service_hero_headline: loc.service_hero_headline || null,
           service_hero_subtext: loc.service_hero_subtext || null,
           trade_hero_headline: loc.trade_hero_headline || null,
@@ -784,6 +787,50 @@ const LocationManagement = () => {
                             <Label className="text-[10px] text-muted-foreground mb-1 block">Email</Label>
                             <Input value={loc.email || ""} onChange={e => updateLocation(loc.id, "email", e.target.value || null)} placeholder="Inherit from corporate" />
                           </div>
+                        </div>
+                      </div>
+
+                      {/* Landing Template */}
+                      <div className="space-y-3 border-t border-border/30 pt-4">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs font-semibold">Landing Template</Label>
+                          {loc.landing_template ? (
+                            <button
+                              type="button"
+                              onClick={() => updateLocation(loc.id, "landing_template", null)}
+                              className="text-[10px] font-semibold text-primary hover:underline"
+                            >
+                              Reset to corporate
+                            </button>
+                          ) : (
+                            <span className="text-[10px] font-semibold text-muted-foreground">
+                              Inheriting from corporate
+                            </span>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          {LANDING_TEMPLATES.map((t) => {
+                            const active = loc.landing_template === t.value;
+                            return (
+                              <button
+                                key={t.value}
+                                type="button"
+                                onClick={() =>
+                                  updateLocation(loc.id, "landing_template", t.value as LandingTemplate)
+                                }
+                                className={`text-left rounded-lg border-2 p-2.5 transition-all ${
+                                  active
+                                    ? "border-primary bg-primary/5"
+                                    : "border-border bg-background hover:border-primary/30"
+                                }`}
+                              >
+                                <div className="font-semibold text-xs">{t.label}</div>
+                                <div className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">
+                                  {t.description}
+                                </div>
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
 

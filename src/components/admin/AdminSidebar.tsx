@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 import {
   Inbox, CalendarDays, Users, ShieldCheck, SlidersHorizontal,
-  Settings, Bell, ListChecks, MessageSquareQuote, BarChart3, Send, MapPin, Car, ScrollText, Shield, Lock, Wrench, Rocket, Gauge, Network, Camera, Gift, Megaphone, ChevronDown, Link2, Code2, Paintbrush, TrendingUp, Store, Truck, Zap, Activity, ScanLine, CreditCard, Phone, DollarSign
+  Settings, Bell, ListChecks, MessageSquareQuote, BarChart3, Send, MapPin, Car, ScrollText, Shield, Lock, Wrench, Rocket, Gauge, Network, Camera, Gift, Megaphone, ChevronDown, Link2, Code2, Paintbrush, TrendingUp, Store, Truck, Zap, Activity, ScanLine, CreditCard, Phone, DollarSign, Layout
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
@@ -184,6 +184,7 @@ const AdminSidebar = ({
   const storefrontItems: SidebarItem[] = canManageAccess
     ? [
         { key: "site-config", label: "Branding", icon: Settings },
+        { key: "landing-flow", label: "Landing & Flow", icon: Layout },
         ...(locationCount > 1 ? [{ key: "locations", label: "Locations", icon: MapPin }] : []),
         { key: "testimonials", label: "Testimonials", icon: MessageSquareQuote },
         { key: "embed-toolkit", label: "Website Embed", icon: Wrench },
@@ -229,7 +230,7 @@ const AdminSidebar = ({
     "submissions", "accepted-appts", "executive", "appraiser-queue",
     "offer-settings", "form-config", "inspection-config", "photo-config",
     "depth-policies", "promotions", "notifications",
-    "site-config", "locations", "testimonials", "embed-toolkit",
+    "site-config", "landing-flow", "locations", "testimonials", "embed-toolkit",
     "my-lead-link", "my-referrals",
     "staff", "referrals", "compliance", "reports", "image-inventory",
     "onboarding", "system-settings", "pricing-model",
