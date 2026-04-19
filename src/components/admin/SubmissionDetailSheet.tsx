@@ -139,6 +139,7 @@ const ArrayDetail = ({ label, value, icon }: { label: string; value: string[] | 
 
 // ── Compact OBD indicator — fetches latest scan for a submission ──
 const CompactOBDIndicator = ({ submissionId, token }: { submissionId: string; token: string }) => {
+  const routerNavigate = useNavigate();
   const [scan, setScan] = useState<{ mil_on: boolean | null; dtc_codes: any; created_at: string } | null>(null);
   const [loading, setLoading] = useState(true);
 

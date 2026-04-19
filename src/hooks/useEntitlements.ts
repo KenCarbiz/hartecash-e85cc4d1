@@ -63,8 +63,8 @@ export function useEntitlements(tenantIdHint?: string | null) {
         return;
       }
 
-      const { data: memberships, error: mErr } = await supabase
-        // @ts-expect-error shared-schema table not in generated types
+      const sb = supabase as any;
+      const { data: memberships, error: mErr } = await sb
         .from("tenant_members")
         .select("tenant_id, role")
         .eq("user_id", user.id);
@@ -85,8 +85,7 @@ export function useEntitlements(tenantIdHint?: string | null) {
             (ROLE_RANK[a.role] ?? 9) - (ROLE_RANK[b.role] ?? 9),
         )[0];
 
-      const { data: tenant, error: tErr } = await supabase
-        // @ts-expect-error shared-schema table not in generated types
+      const { data: tenant, error: tErr } = await sb
         .from("tenants")
         .select("id, name, stripe_customer_id, primary_email, billing_email")
         .eq("id", picked.tenant_id)
@@ -98,8 +97,7 @@ export function useEntitlements(tenantIdHint?: string | null) {
         return;
       }
 
-      const { data: ents, error: eErr } = await supabase
-        // @ts-expect-error shared-schema table not in generated types
+      const { data: ents, error: eErr } = await sb
         .from("app_entitlements")
         .select(
           "app_slug, plan_tier, status, activated_at, trial_ends_at, expires_at, stripe_subscription_id, stripe_subscription_item_id, seat_limit",
