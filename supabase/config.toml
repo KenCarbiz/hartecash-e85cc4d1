@@ -54,3 +54,24 @@ project_id = "ptiwdwfdckfqivoocyvp"
   # Admin-only: historical market insight panel in appraisal tool.
   [functions.compute-historical-insight]
     verify_jwt = true
+  # Stripe webhook — authenticated via STRIPE_WEBHOOK_SECRET signature.
+  [functions.stripe-webhook]
+    verify_jwt = false
+  # Dealer-facing: creates a Stripe Checkout session. JWT required.
+  [functions.billing-checkout]
+    verify_jwt = true
+  # Dealer-facing: appends an item to the tenant's subscription. JWT required.
+  [functions.billing-add-app]
+    verify_jwt = true
+  # Dealer-facing: swaps items for a bundle price. JWT required.
+  [functions.billing-upgrade-to-bundle]
+    verify_jwt = true
+  # Dealer-facing: schedules a plan change at period end. JWT required.
+  [functions.billing-downgrade]
+    verify_jwt = true
+  # Dealer-facing: creates a Stripe Customer Portal session. JWT required.
+  [functions.billing-portal]
+    verify_jwt = true
+  # Public read of active Stripe prices (metadata-driven catalog for /billing).
+  [functions.billing-catalog]
+    verify_jwt = false
