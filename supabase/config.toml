@@ -70,7 +70,8 @@ project_id = "ptiwdwfdckfqivoocyvp"
   [functions.billing-downgrade]
     verify_jwt = true
   # Dealer-facing: creates a Stripe Customer Portal session. JWT required.
-  [functions.billing-portal]
+  # Endpoint name matches the cross-app contract (AutoLabels f6e8a57).
+  [functions.billing-portal-session]
     verify_jwt = true
   # Public read of active Stripe prices (metadata-driven catalog for /billing).
   [functions.billing-catalog]
