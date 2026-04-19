@@ -54,10 +54,21 @@ Deno.serve(async (req) => {
           active: boolean;
         };
         if (!product?.active) continue;
-        const includes = (meta.includes_apps || meta.app_slug)
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean);
+        const raw = (meta.includes_apps || meta.app_slug || "").trim();
+        let includes: string[] = [];
+        if (raw.startsWith("[")) {
+          try {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) {
+              includes = parsed.map((s) => String(s).trim()).filter(Boolean);
+            }
+          } catch {
+            // fall through
+          }
+        }
+        if (includes.length === 0) {
+          includes = raw.split(",").map((s) => s.trim()).filter(Boolean);
+        }
         entries.push({
           price_id: price.id,
           product_id: product.id,

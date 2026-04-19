@@ -127,8 +127,17 @@ export async function authenticate(
 }
 
 /**
- * Ensure the tenant has a Stripe Customer record. Creates one and
- * persists the id on tenants.stripe_customer_id if missing.
+ * Ensure the tenant has a Stripe Customer record with metadata.tenant_id
+ * set (the cross-app contract: the webhook reads this to attribute
+ * events to the right tenants.id UUID).
+ *
+ * Three cases:
+ *   - No Customer yet: create one with metadata.tenant_id and persist
+ *     the id on tenants.stripe_customer_id.
+ *   - Customer exists but was created outside this flow (manual Dashboard
+ *     entry, legacy): patch metadata.tenant_id onto it so future webhooks
+ *     resolve correctly.
+ *   - Customer exists with metadata: no-op.
  *
  * Idempotent — safe to call on every billing action.
  */
@@ -137,7 +146,19 @@ export async function ensureStripeCustomer(
   stripe: Stripe,
 ): Promise<string> {
   if (caller.tenant.stripe_customer_id) {
-    return caller.tenant.stripe_customer_id;
+    const existing = await stripe.customers.retrieve(
+      caller.tenant.stripe_customer_id,
+    );
+    if (!existing.deleted) {
+      const meta = (existing as Stripe.Customer).metadata ?? {};
+      if (meta.tenant_id !== caller.tenant.id) {
+        await stripe.customers.update(caller.tenant.stripe_customer_id, {
+          metadata: { ...meta, tenant_id: caller.tenant.id },
+        });
+      }
+      return caller.tenant.stripe_customer_id;
+    }
+    // Deleted — fall through to recreate.
   }
   const customer = await stripe.customers.create({
     email:
