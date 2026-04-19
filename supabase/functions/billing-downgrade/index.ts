@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
     const stripe = getStripe();
     const sub = await stripe.subscriptions.retrieve(subId);
 
-    const currentItems = sub.items.data.map((i) => ({
+    const currentItems = sub.items.data.map((i: any) => ({
       price: i.price.id,
       quantity: i.quantity ?? 1,
     }));

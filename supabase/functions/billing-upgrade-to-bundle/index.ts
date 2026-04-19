@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
     const stripe = getStripe();
     const sub = await stripe.subscriptions.retrieve(subId);
 
-    const itemsToRemove = sub.items.data.map((i) => ({
+    const itemsToRemove = sub.items.data.map((i: any) => ({
       id: i.id,
       deleted: true as const,
     }));
