@@ -30,6 +30,7 @@ const CommunicationLog = React.lazy(() => import("./CommunicationLog"));
 const ExecutiveKPIHub = React.lazy(() => import("./ExecutiveKPIHub"));
 const OfferSettings = React.lazy(() => import("./OfferSettings"));
 const SiteConfiguration = React.lazy(() => import("./SiteConfiguration"));
+const LandingFlowConfig = React.lazy(() => import("./LandingFlowConfig"));
 const PlatformCatalogManager = React.lazy(() => import("./PlatformCatalogManager"));
 const PlatformPricingManager = React.lazy(() => import("./PlatformPricingManager"));
 const NotificationSettings = React.lazy(() => import("./NotificationSettings"));
@@ -418,6 +419,7 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
         <OfferSettings userId={userId || undefined} userRole={userRole} />
       )}
       {activeSection === "site-config" && canManageAccess && <SiteConfiguration focusField={focusField} />}
+      {activeSection === "landing-flow" && canManageAccess && <LandingFlowConfig />}
       {activeSection === "promotions" && canManageAccess && <PromotionManagement />}
       {activeSection === "notifications" && canManageAccess && (
         <div className="space-y-6">
