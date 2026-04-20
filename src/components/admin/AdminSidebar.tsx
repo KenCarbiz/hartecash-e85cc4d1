@@ -219,6 +219,9 @@ const AdminSidebar = ({
     ...(canManageAccess ? [{ key: "onboarding", label: "Dealer Setup", icon: Rocket }] : []),
     ...(canManageAccess ? [{ key: "staff", label: "Staff & Permissions", icon: Users, badge: teamBadgeCount > 0 ? String(teamBadgeCount) : undefined, badgeVariant: "destructive" as const }] : []),
     ...(canManageAccess ? [{ key: "system-settings", label: "System Settings", icon: Wrench }] : []),
+    // Edits the entries shown on the public /updates page (footer link).
+    // Lives here, not under System Settings, because it's content management.
+    ...(canManageAccess ? [{ key: "changelog", label: "Platform Updates", icon: ScrollText }] : []),
   ].filter((item) => isAllowed(item.key));
 
   // ── INTEGRATIONS ── (Enterprise — third-party connectors)
@@ -250,7 +253,7 @@ const AdminSidebar = ({
     "depth-policies", "promotions", "notifications",
     "site-config", "landing-flow", "locations", "rooftop-websites", "testimonials", "embed-toolkit",
     "my-lead-link", "my-referrals",
-    "staff", "referrals", "compliance", "reports", "image-inventory",
+    "staff", "referrals", "compliance", "reports", "image-inventory", "changelog",
     "onboarding", "system-settings", "pricing-model",
     "platform-billing", "integrations-status", "api-access", "vauto-integration", "white-label",
     "equity-mining", "voice-ai", "wholesale-marketplace", "service-quick-entry", "inspection-checkin",

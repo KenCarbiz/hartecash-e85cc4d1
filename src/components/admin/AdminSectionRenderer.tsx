@@ -448,9 +448,9 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
           <React.Suspense fallback={<AdminLoadingSkeleton />}>
             <PlatformCatalogManager />
           </React.Suspense>
-          <ChangelogManagement />
         </div>
       )}
+      {activeSection === "changelog" && canManageAccess && <ChangelogManagement />}
       {activeSection === "pricing-model" && canManageAccess && tenant.dealership_id === "default" && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <PlatformPricingManager />
