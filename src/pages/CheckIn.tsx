@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Loader2, ScanLine, Hash, Car, ArrowRight, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useToast } from "@/hooks/use-toast";
 import SEO from "@/components/SEO";
 
@@ -30,6 +31,7 @@ const LAST6_RE = /^[A-HJ-NPR-Z0-9]{6}$/;
 const CheckIn = () => {
   const navigate = useNavigate();
   const { tenant } = useTenant();
+  const { config } = useSiteConfig();
   const { toast } = useToast();
   const [last6, setLast6] = useState("");
   const [looking, setLooking] = useState(false);
@@ -69,11 +71,9 @@ const CheckIn = () => {
       return;
     }
     if (rows.length === 1) {
-      // Single hit — jump straight to the inspection page
       navigate(`/inspection/${rows[0].id}`);
       return;
     }
-    // Multiple hits — show a disambiguation list
     setMatches(rows);
   };
 
@@ -81,30 +81,45 @@ const CheckIn = () => {
     [m.vehicle_year, m.vehicle_make, m.vehicle_model].filter(Boolean).join(" ") || "Vehicle on file";
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary via-primary/95 to-primary/80 flex flex-col">
-      <SEO title="Inspection Check-In" description="Scan a VIN or enter the last 6 to open the customer's inspection." path="/checkin" />
+    <div className="min-h-screen bg-background flex flex-col">
+      <SEO
+        title="Inspection Check-In"
+        description="Scan a VIN or enter the last 6 to open the customer's inspection."
+        path="/checkin"
+      />
 
-      <header className="px-5 pt-8 pb-4 text-primary-foreground text-center">
-        <div className="inline-flex items-center gap-2 bg-primary-foreground/10 border border-primary-foreground/20 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.3em]">
+      <header className="px-5 pt-10 pb-4 text-center">
+        {config.logo_url ? (
+          <img
+            src={config.logo_url}
+            alt={config.dealership_name}
+            className="h-10 mx-auto mb-6 object-contain"
+          />
+        ) : (
+          <div className="text-xs font-bold uppercase tracking-[0.3em] text-muted-foreground mb-6">
+            {config.dealership_name}
+          </div>
+        )}
+        <div className="inline-flex items-center gap-2 bg-primary/10 text-primary rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em]">
           <ScanLine className="w-3 h-3" /> Check-In
         </div>
-        <h1 className="font-display text-3xl md:text-4xl font-extrabold tracking-tight mt-4">
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight mt-4 text-foreground">
           Scan a VIN or enter the last 6
         </h1>
-        <p className="text-primary-foreground/75 text-sm mt-2">
-          We'll pull up the customer's inspection in one tap.
+        <p className="text-muted-foreground text-sm mt-2">
+          We&rsquo;ll pull up the customer&rsquo;s inspection in one tap.
         </p>
       </header>
 
       <main className="flex-1 px-5 pb-10">
-        <div className="max-w-lg mx-auto space-y-4">
+        <div className="max-w-md mx-auto space-y-3">
           {/* ── Primary: last 6 entry ── */}
           <form
             onSubmit={handleLookup}
-            className="bg-card rounded-2xl shadow-2xl border border-border/50 p-6 space-y-4"
+            className="bg-card rounded-2xl shadow-[0_10px_40px_-12px_rgba(0,0,0,0.18)] border border-border/60 p-5 space-y-4"
           >
             <div>
-              <label className="text-[11px] font-bold uppercase tracking-[0.15em] text-muted-foreground flex items-center gap-1.5 mb-2">
+              <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-muted-foreground flex items-center gap-1.5 mb-2">
                 <Hash className="w-3.5 h-3.5" /> Last 6 of VIN
               </label>
               <input
@@ -114,17 +129,17 @@ const CheckIn = () => {
                 autoFocus
                 value={last6}
                 onChange={(e) => setLast6(e.target.value.toUpperCase().slice(0, 6))}
-                placeholder="e.g. 23A1B5"
-                className="w-full text-center text-3xl md:text-4xl font-mono font-bold tracking-[0.35em] tabular-nums bg-muted/40 border-2 border-border rounded-xl py-4 px-4 focus:outline-none focus:border-primary transition-colors uppercase"
+                placeholder="23A1B5"
+                className="w-full text-center text-3xl md:text-4xl font-mono font-bold tracking-[0.35em] tabular-nums bg-muted/30 border border-border rounded-xl py-4 px-4 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors uppercase placeholder:text-muted-foreground/40"
               />
               <p className="text-[10px] text-muted-foreground text-center mt-1.5">
-                Found on the bottom of the windshield or door-jamb sticker.
+                Found on the bottom of the windshield or the door-jamb sticker.
               </p>
             </div>
             <button
               type="submit"
               disabled={!LAST6_RE.test(last6) || looking}
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base py-4 rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-base py-3.5 rounded-xl shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {looking ? (
                 <>
@@ -144,28 +159,29 @@ const CheckIn = () => {
           <button
             type="button"
             onClick={() => navigate("/inspection-checkin")}
-            className="w-full bg-primary-foreground/10 hover:bg-primary-foreground/15 backdrop-blur border border-primary-foreground/25 text-primary-foreground font-bold text-base py-4 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2"
+            className="w-full bg-card hover:bg-muted/50 border border-border text-foreground font-semibold text-sm py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
           >
-            <ScanLine className="w-5 h-5" />
+            <ScanLine className="w-4 h-4" />
             Open VIN scanner
           </button>
 
           {/* ── Matches panel ── */}
           {matches && matches.length === 0 && (
-            <div className="bg-amber-500/10 border border-amber-500/30 text-amber-100 rounded-2xl p-5 space-y-2">
+            <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-2xl p-5 space-y-3">
               <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <p className="font-bold">No matching submission</p>
-                  <p className="text-sm opacity-90 mt-0.5">
-                    No customer on file with a VIN ending in <span className="font-mono font-bold">{last6}</span>.
+                  <p className="font-semibold text-amber-900 dark:text-amber-100">No matching submission</p>
+                  <p className="text-sm text-amber-800 dark:text-amber-200 mt-0.5">
+                    No customer on file with a VIN ending in{" "}
+                    <span className="font-mono font-bold">{last6}</span>.
                   </p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => navigate("/inspection-checkin")}
-                className="w-full mt-2 bg-amber-500 hover:bg-amber-500/90 text-amber-950 font-bold text-sm py-2.5 rounded-xl"
+                className="w-full bg-amber-500 hover:bg-amber-500/90 text-amber-950 font-semibold text-sm py-2.5 rounded-xl"
               >
                 Start a new check-in
               </button>
@@ -173,8 +189,8 @@ const CheckIn = () => {
           )}
 
           {matches && matches.length > 1 && (
-            <div className="bg-card rounded-2xl border border-border/50 p-5 shadow-xl">
-              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">
+            <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
                 Multiple matches — pick the right one
               </p>
               <ul className="space-y-2">
@@ -207,8 +223,9 @@ const CheckIn = () => {
         </div>
       </main>
 
-      <footer className="px-5 py-4 text-center text-[10px] text-primary-foreground/50">
-        Can't find the VIN? Tap <span className="font-semibold">Open VIN scanner</span> for full scan + new-customer start.
+      <footer className="px-5 py-6 text-center text-[10px] text-muted-foreground">
+        Can&rsquo;t find the VIN? Tap{" "}
+        <span className="font-semibold text-foreground">Open VIN scanner</span> for full scan + new-customer start.
       </footer>
     </div>
   );
