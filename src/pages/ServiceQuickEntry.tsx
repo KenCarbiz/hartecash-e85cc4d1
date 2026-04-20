@@ -20,6 +20,8 @@ import {
   Snowflake,
   ThermometerSun,
   LogOut,
+  UserCheck,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -80,6 +82,17 @@ const ServiceQuickEntry = () => {
     wholesale_avg: null,
     tradein_avg: null,
   });
+  // Existing customer match — populated when a submission with this VIN
+  // already exists in our system for this dealership. Shown as a banner
+  // so the service writer doesn't accidentally create a duplicate.
+  const [existingMatch, setExistingMatch] = useState<{
+    id: string;
+    name: string | null;
+    phone: string | null;
+    progress_status: string | null;
+    offered_price: number | null;
+    created_at: string;
+  } | null>(null);
 
   // Submission state
   const [submitting, setSubmitting] = useState(false);
@@ -150,6 +163,7 @@ const ServiceQuickEntry = () => {
     setLookupLoading(true);
     setVehicle(null);
     setBbValues({ retail_avg: null, wholesale_avg: null, tradein_avg: null });
+    setExistingMatch(null);
     try {
       const { data, error } = await supabase.functions.invoke("bb-lookup", {
         body: {
@@ -177,6 +191,34 @@ const ServiceQuickEntry = () => {
         tradein_avg: v.tradein?.avg ?? null,
       });
       setVin(trimmedVin);
+
+      // Dedup check — is this VIN already in our system for this dealer?
+      // If so we still let the rep proceed, but we surface a banner so they
+      // don't unknowingly create a duplicate record.
+      try {
+        const { data: existing } = await supabase
+          .from("submissions")
+          .select("id, name, phone, progress_status, offered_price, created_at")
+          .eq("vin", trimmedVin)
+          .eq("dealership_id", tenant.dealership_id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (existing) {
+          setExistingMatch(existing as any);
+          // Pre-fill customer fields from the existing record so the rep
+          // can confirm instead of retyping.
+          if (!firstName && !lastName && (existing as any).name) {
+            const parts = String((existing as any).name).trim().split(/\s+/);
+            setFirstName(parts[0] || "");
+            setLastName(parts.slice(1).join(" ") || "");
+          }
+          if (!phone && (existing as any).phone) setPhone((existing as any).phone);
+        }
+      } catch {
+        // Non-fatal — dedup is best-effort.
+      }
+
       setStage("lookup-done");
     } catch (err) {
       setLookupError("Lookup failed. Please try again.");
@@ -286,6 +328,7 @@ const ServiceQuickEntry = () => {
     setBbValues({ retail_avg: null, wholesale_avg: null, tradein_avg: null });
     setLookupError("");
     setCreatedToken("");
+    setExistingMatch(null);
   };
 
   const sendCustomerLink = async (method: "sms" | "email") => {
@@ -609,8 +652,56 @@ const ServiceQuickEntry = () => {
           )}
         </section>
 
+        {/* Existing customer match banner — surfaced when the VIN is
+            already tied to a submission at this dealership. Keeps the rep
+            from accidentally creating a duplicate record. */}
+        {stage === "lookup-done" && existingMatch && (
+          <section className="rounded-3xl border-2 border-amber-500/40 bg-amber-500/10 p-5 shadow-lg">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0">
+                <UserCheck className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 mb-1">
+                  Already in your system
+                </p>
+                <p className="text-base font-bold text-foreground">
+                  {existingMatch.name || "Unnamed customer"}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {existingMatch.phone || "No phone on file"} ·{" "}
+                  {existingMatch.progress_status || "new"} · opened{" "}
+                  {new Date(existingMatch.created_at).toLocaleDateString()}
+                  {existingMatch.offered_price
+                    ? ` · offered $${Math.round(existingMatch.offered_price).toLocaleString()}`
+                    : ""}
+                </p>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => navigate(`/admin?submission=${existingMatch.id}`)}
+                    className="h-9"
+                  >
+                    <Eye className="w-4 h-4 mr-1.5" />
+                    View existing record
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setExistingMatch(null)}
+                    className="h-9 text-muted-foreground"
+                  >
+                    Create new record anyway
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Customer + Loan Card — only shown after lookup */}
-        {stage === "lookup-done" && (
+        {stage === "lookup-done" && !existingMatch && (
           <>
             <section className="bg-card/80 backdrop-blur-sm border border-border/50 rounded-3xl p-6 shadow-lg">
               <div className="flex items-center gap-3 mb-5">
