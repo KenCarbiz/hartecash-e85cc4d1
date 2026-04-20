@@ -31,7 +31,7 @@ import {
   Settings2, Wrench, Key, Wind, Cigarette, CircleDot, Sparkles, TrendingUp,
   AlertTriangle, Bell, Mail, Phone, StickyNote, CalendarDays, Camera,
   ExternalLink, Upload, Check, XCircle, MapPin, Star, History, Clock,
-  ClipboardCheck, ClipboardList, Save, Trash2, CheckCircle2, Activity,
+  ClipboardCheck, ClipboardList, Save, Trash2, CheckCircle2, Activity, ChevronDown,
 } from "lucide-react";
 import { calculateLeadScore, getScoreColor } from "@/lib/leadScoring";
 import { calculateEquity } from "@/lib/equityCalculator";
@@ -1652,16 +1652,9 @@ const SubmissionDetailSheet = ({
               </SectionCard>
             </div>
 
-            {/* Retail Market Context */}
-            {(sub.vin || sub.vehicle_year) && (
-              <SectionCard icon={TrendingUp} title="Retail Market">
-                <RetailMarketPanel
-                  vin={sub.vin || undefined}
-                  zipcode={sub.zip || undefined}
-                  offerHigh={sub.offered_price ?? sub.estimated_offer_high ?? 0}
-                />
-              </SectionCard>
-            )}
+            {/* Retail Market was moved into the "Research & Automation"
+                collapsible further down so the top of the right column
+                stays focused on deal-critical info. */}
 
             {/* Internal Notes — Premium
                 InspectionVitals replaces the old auto-generated
@@ -1796,6 +1789,34 @@ const SubmissionDetailSheet = ({
               </div>
             </SectionCard>
 
+            {/* ─────────────────────────────────────────────────────────
+                Research & Automation — collapsible so the top of the file
+                stays focused on the deal. Contains Retail Market,
+                Follow-Up Sequencer, AI Call History, and the full Activity
+                Log. All were cluttering the everyday BDC / sales view.
+                ───────────────────────────────────────────────────────── */}
+            <details className="group/more rounded-2xl border border-border/40 bg-card/40 overflow-hidden [&[open]>summary>svg]:rotate-180">
+              <summary className="flex items-center justify-between gap-2 px-4 py-3 cursor-pointer hover:bg-muted/30 transition-colors list-none [&::-webkit-details-marker]:hidden">
+                <span className="text-sm font-semibold text-card-foreground flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-muted-foreground" />
+                  Research &amp; Automation
+                </span>
+                <span className="text-[10px] text-muted-foreground">Market · Follow-ups · Call history · Activity log</span>
+                <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform duration-200" />
+              </summary>
+              <div className="px-4 pb-4 pt-2 space-y-5 border-t border-border/30">
+
+            {/* Retail Market Context (moved into collapsible) */}
+            {(sub.vin || sub.vehicle_year) && (
+              <SectionCard icon={TrendingUp} title="Retail Market">
+                <RetailMarketPanel
+                  vin={sub.vin || undefined}
+                  zipcode={sub.zip || undefined}
+                  offerHigh={sub.offered_price ?? sub.estimated_offer_high ?? 0}
+                />
+              </SectionCard>
+            )}
+
             {/* Follow-Up Sequence */}
             <FollowUpPanel submissionId={sub.id} hasOffer={!!(sub.offered_price || sub.estimated_offer_high)} progressStatus={sub.progress_status} />
 
@@ -1925,6 +1946,10 @@ const SubmissionDetailSheet = ({
                 </SectionCard>
               );
             })()}
+
+              </div>
+            </details>
+            {/* ── END Research & Automation collapsible ── */}
           </div>
           {/* ── END RIGHT COLUMN ── */}
         </div>
