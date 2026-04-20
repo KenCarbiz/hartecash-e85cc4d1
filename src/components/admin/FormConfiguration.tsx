@@ -5,6 +5,8 @@ import { useToast } from "@/hooks/use-toast";
 import { clearFormConfigCache } from "@/hooks/useFormConfig";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Save, ChevronDown, Loader2, Car, ClipboardList, User, Flag, Lock } from "lucide-react";
@@ -14,6 +16,8 @@ interface FormConfigData {
   dealership_id: string;
   step_vehicle_build: boolean;
   step_condition_history: boolean;
+  step_ai_photos: boolean;
+  ai_photos_min_required: number;
   offer_before_details: boolean;
   q_overall_condition: boolean;
   q_exterior_damage: boolean;
@@ -39,6 +43,8 @@ const DEFAULTS: FormConfigData = {
   dealership_id: "default",
   step_vehicle_build: true,
   step_condition_history: true,
+  step_ai_photos: true,
+  ai_photos_min_required: 4,
   offer_before_details: false,
   q_overall_condition: true,
   q_exterior_damage: true,
@@ -255,6 +261,53 @@ export default function FormConfiguration() {
             <Badge variant={config.step_condition_history ? "default" : "secondary"} className="text-xs">
               {config.step_condition_history ? "Active" : "Skipped"}
             </Badge>
+          </div>
+
+          {/* AI Condition Scoring — adds an opt-in photo step that may
+              raise the offer when actual condition beats self-report. */}
+          <div className="py-2.5 px-3 rounded-lg bg-success/5 border border-success/20 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Switch
+                  checked={config.step_ai_photos}
+                  onCheckedChange={v => set("step_ai_photos", v)}
+                />
+                <div>
+                  <p className="text-sm font-medium flex items-center gap-1.5">
+                    Step 3.5 — AI Condition Scoring
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-success bg-success/15 px-1.5 py-0.5 rounded">New</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Optional photo upload after Condition. Customer can skip — when they upload, the AI verifies actual condition and may bump the offer up.
+                  </p>
+                </div>
+              </div>
+              <Badge variant={config.step_ai_photos ? "default" : "secondary"} className="text-xs shrink-0">
+                {config.step_ai_photos ? "Active" : "Skipped"}
+              </Badge>
+            </div>
+            {config.step_ai_photos && (
+              <div className="ml-10 flex items-center gap-2 pt-1">
+                <Label className="text-xs text-muted-foreground" htmlFor="ai-photos-min">Min photos required:</Label>
+                <Input
+                  id="ai-photos-min"
+                  type="number"
+                  min={1}
+                  max={8}
+                  value={config.ai_photos_min_required}
+                  onChange={(e) =>
+                    set(
+                      "ai_photos_min_required",
+                      Math.max(1, Math.min(8, Number(e.target.value) || 4)) as any,
+                    )
+                  }
+                  className="w-16 h-7 text-sm"
+                />
+                <span className="text-[11px] text-muted-foreground">
+                  default 4 (front, rear, driver, passenger)
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Offer-First Toggle */}

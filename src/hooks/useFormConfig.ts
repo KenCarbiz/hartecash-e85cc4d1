@@ -5,6 +5,11 @@ import { useTenant } from "@/contexts/TenantContext";
 export interface FormConfig {
   step_vehicle_build: boolean;
   step_condition_history: boolean;
+  // AI photo upload step (between Condition and History). Customer-facing
+  // value: "Get a higher offer with AI condition scoring." Skip is always
+  // available inside the step itself.
+  step_ai_photos: boolean;
+  ai_photos_min_required: number;
   offer_before_details: boolean;
   q_overall_condition: boolean;
   q_exterior_damage: boolean;
@@ -29,6 +34,8 @@ export interface FormConfig {
 const DEFAULTS: FormConfig = {
   step_vehicle_build: true,
   step_condition_history: true,
+  step_ai_photos: true,
+  ai_photos_min_required: 4,
   offer_before_details: false,
   q_overall_condition: true,
   q_exterior_damage: true,

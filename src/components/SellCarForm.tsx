@@ -279,9 +279,10 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
     if (formConfig.step_vehicle_build) steps.push("Vehicle Build");
     if (formConfig.step_condition_history) steps.push("Condition");
     // AI Photo step sits between Condition and History — opt-in per dealer
-    // via site_config.ai_condition_scoring_enabled. Customers can skip from
-    // inside the step itself; this only controls whether it appears at all.
-    if ((config as any).ai_condition_scoring_enabled !== false) steps.push("Photos");
+    // via form_config.step_ai_photos (lives with the other step toggles in
+    // the Lead Form admin). Customers can skip from inside the step itself;
+    // this flag only controls whether the step appears at all.
+    if (formConfig.step_ai_photos !== false) steps.push("Photos");
     steps.push("History");
     // Always include contact capture — even in offer-first mode
     steps.push("Finalize");
@@ -693,7 +694,7 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
           <StepPhotos
             submissionToken={photoSessionToken}
             dealershipId={tenant.dealership_id}
-            minRequired={(config as any).ai_condition_scoring_min_required ?? 4}
+            minRequired={formConfig.ai_photos_min_required ?? 4}
             onComplete={() => {
               setDirection(1);
               setStep((s) => s + 1);

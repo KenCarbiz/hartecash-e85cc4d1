@@ -10,7 +10,7 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, Eye, EyeOff } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, ExternalLink } from "lucide-react";
 
 interface ChangelogEntry {
   id: string;
@@ -162,11 +162,23 @@ export default function ChangelogManagement() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-foreground">Changelog Entries</h2>
-        <Button size="sm" onClick={openNew}>
-          <Plus className="w-4 h-4 mr-1" /> Add Entry
-        </Button>
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h2 className="text-lg font-bold text-foreground">Platform Updates</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Edit the changelog shown to staff and customers at <code className="bg-muted px-1 rounded text-[11px]">/updates</code>.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" asChild>
+            <a href="/updates" target="_blank" rel="noopener noreferrer" className="gap-1.5">
+              View public page <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </Button>
+          <Button size="sm" onClick={openNew}>
+            <Plus className="w-4 h-4 mr-1" /> Add Entry
+          </Button>
+        </div>
       </div>
 
       <div className="border border-border rounded-lg overflow-hidden">

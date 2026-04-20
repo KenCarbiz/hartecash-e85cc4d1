@@ -387,19 +387,9 @@ const AdminSidebar = ({
       </SidebarContent>
       <SidebarFooter className="p-3 space-y-2 border-t border-border/50">
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              onClick={() => {
-                navigate("/updates");
-                if (isMobile) setOpenMobile(false);
-              }}
-              tooltip={collapsed ? "Platform Updates" : undefined}
-              className="transition-all duration-200 dark:hover:bg-white/8"
-            >
-              <ScrollText className="w-4 h-4 shrink-0" />
-              {!collapsed && <span className="flex-1 truncate">Platform Updates</span>}
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          {/* Platform Updates lives at Admin → Platform Updates (the editor
+              there links out to the public /updates page). The duplicate
+              footer entry was removed to keep one source of truth. */}
           {isPlatformAdmin && (
             <SidebarMenuItem>
               <SidebarMenuButton
