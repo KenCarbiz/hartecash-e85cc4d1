@@ -76,6 +76,16 @@ serve(async (req) => {
       campaign_id,
       script_template_id,
       bump_amount,
+      // ── Customer-initiated AI appraiser Q&A ──
+      // When the customer hits "Talk to our appraiser now" on the offer page,
+      // the front end calls us with campaign_type: "appraiser_qa" and a
+      // context blob containing the vehicle summary and current offer. We
+      // synthesize a script template inline so the dealer doesn't need to
+      // pre-author one in voice_script_templates.
+      campaign_type,
+      context,
+      submission_token,
+      phone: requestedPhone,
     } = await req.json();
 
     if (!submission_id) {
@@ -285,7 +295,15 @@ serve(async (req) => {
     // ── Build script from template ──
     let scriptTemplate = "";
 
-    if (script_template_id) {
+    if (campaign_type === "appraiser_qa") {
+      // Inline template — no DB row needed. The Bland agent acts as a friendly
+      // appraiser who already knows the customer's vehicle and offer. They
+      // answer questions about the offer, the inspection process, pickup
+      // logistics, and condition deductions. No selling, no pressure.
+      const vehicleSummary = context?.vehicle_summary || "your vehicle";
+      const offerDollars = context?.cash_offer ? `$${Math.round(context.cash_offer).toLocaleString()}` : "your offer";
+      scriptTemplate = `You are a friendly appraiser calling back a customer who just received a cash offer of ${offerDollars} for their ${vehicleSummary}. They asked us to call so you could answer any questions about the offer, the in-person inspection, the pickup process, or how the condition deductions worked. You are NOT trying to sell them or push them to accept. You are explaining and answering. If they want to accept the offer, walk them through scheduling pickup. If they're hesitant, ask what specifically is on their mind. If they ask something you don't know, say "I'll have the team follow up by text within an hour." Keep responses under 30 seconds each. Be warm, knowledgeable, and concise.`;
+    } else if (script_template_id) {
       const { data: tmpl } = await supabase
         .from("voice_script_templates")
         .select("script_template")

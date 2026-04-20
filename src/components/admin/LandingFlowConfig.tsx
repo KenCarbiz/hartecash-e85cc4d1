@@ -36,6 +36,8 @@ interface State {
   range_high_source: string | null;
   range_high_percent: number;
   payment_selection_timing: PaymentSelectionTiming;
+  ai_condition_scoring_enabled: boolean;
+  ai_condition_scoring_min_required: number;
 }
 
 const DEFAULTS: State = {
@@ -47,6 +49,8 @@ const DEFAULTS: State = {
   range_high_source: null,
   range_high_percent: 8,
   payment_selection_timing: "with_final_offer",
+  ai_condition_scoring_enabled: true,
+  ai_condition_scoring_min_required: 4,
 };
 
 const LandingFlowConfig = () => {
@@ -63,7 +67,7 @@ const LandingFlowConfig = () => {
     (async () => {
       setLoading(true);
       const [siteRes, offerRes] = await Promise.all([
-        supabase.from("site_config" as any).select("landing_template").eq("dealership_id", dealershipId).maybeSingle(),
+        supabase.from("site_config" as any).select("landing_template, ai_condition_scoring_enabled, ai_condition_scoring_min_required").eq("dealership_id", dealershipId).maybeSingle(),
         supabase.from("offer_settings" as any).select(
           "pricing_reveal_mode, show_range_before_final, range_low_source, range_high_mode, range_high_source, range_high_percent, payment_selection_timing"
         ).eq("dealership_id", dealershipId).maybeSingle(),
@@ -79,6 +83,11 @@ const LandingFlowConfig = () => {
         payment_selection_timing:
           ((offerRes.data as any)?.payment_selection_timing as PaymentSelectionTiming) ||
           DEFAULTS.payment_selection_timing,
+        ai_condition_scoring_enabled:
+          (siteRes.data as any)?.ai_condition_scoring_enabled ?? DEFAULTS.ai_condition_scoring_enabled,
+        ai_condition_scoring_min_required: Number(
+          (siteRes.data as any)?.ai_condition_scoring_min_required ?? DEFAULTS.ai_condition_scoring_min_required,
+        ),
       };
       setState(next);
       setSaved(next);
@@ -96,7 +105,12 @@ const LandingFlowConfig = () => {
 
     const { error: siteErr } = await supabase
       .from("site_config" as any)
-      .update({ landing_template: state.landing_template, updated_at: new Date().toISOString() } as any)
+      .update({
+        landing_template: state.landing_template,
+        ai_condition_scoring_enabled: state.ai_condition_scoring_enabled,
+        ai_condition_scoring_min_required: state.ai_condition_scoring_min_required,
+        updated_at: new Date().toISOString(),
+      } as any)
       .eq("dealership_id", dealershipId);
 
     const { error: offerErr } = await supabase
@@ -395,6 +409,56 @@ const LandingFlowConfig = () => {
             );
           })}
         </div>
+      </section>
+
+      {/* ── AI Condition Scoring ── */}
+      <section className="bg-card rounded-xl border border-border p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Sparkles className="w-4 h-4 text-primary" />
+          <h3 className="font-bold">AI Condition Scoring</h3>
+        </div>
+        <p className="text-xs text-muted-foreground mb-4">
+          Adds an optional photo-upload step between Condition and History. Our
+          AI scores the photos and adjusts the offer when actual condition is
+          better than self-reported. Customers can always skip.
+        </p>
+
+        <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/40 border border-border mb-4">
+          <Switch
+            checked={state.ai_condition_scoring_enabled}
+            onCheckedChange={(v) => update("ai_condition_scoring_enabled", v)}
+          />
+          <div>
+            <div className="font-semibold text-sm">
+              Show AI photo step in the customer flow
+            </div>
+            <div className="text-xs text-muted-foreground mt-0.5">
+              When off, the form skips straight from Condition to History.
+            </div>
+          </div>
+        </div>
+
+        {state.ai_condition_scoring_enabled && (
+          <div className="space-y-1.5 max-w-xs">
+            <Label className="text-xs font-semibold">Minimum required photos</Label>
+            <Input
+              type="number"
+              min={1}
+              max={8}
+              value={state.ai_condition_scoring_min_required}
+              onChange={(e) =>
+                update(
+                  "ai_condition_scoring_min_required",
+                  Math.max(1, Math.min(8, Number(e.target.value) || 4)),
+                )
+              }
+            />
+            <p className="text-[10px] text-muted-foreground">
+              Default 4 — front, rear, driver side, passenger side. Mark which shots
+              are AI-required per dealer in <strong>Photo Requirements</strong>.
+            </p>
+          </div>
+        )}
       </section>
 
       <div className="sticky bottom-4 flex justify-end">

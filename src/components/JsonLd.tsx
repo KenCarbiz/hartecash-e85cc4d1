@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface JsonLdProps {
   data: Record<string, unknown>;
@@ -12,18 +13,33 @@ const JsonLd = ({ data }: JsonLdProps) => (
 );
 
 // ── Organization + AutoDealer ──
+// When the page is serving a specific rooftop (tenant.location_id is set),
+// the schema includes the rooftop's city/state/address so Google understands
+// this is a local business for that geography. On the corporate group hub
+// (location_id null) we emit only the parent Organization schema and let
+// each rooftop URL surface its own LocalBusiness.
 export const LocalBusinessJsonLd = () => {
   const { config } = useSiteConfig();
+  const { tenant } = useTenant();
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+  const isRooftop = !!tenant.location_id;
+  const cityState = [
+    (config as any).city || (config as any).address?.split(",")?.[1]?.trim(),
+    (config as any).state,
+  ]
+    .filter(Boolean)
+    .join(", ");
   return (
     <JsonLd
       data={{
         "@context": "https://schema.org",
-        "@type": ["AutoDealer", "Organization"],
+        "@type": ["AutoDealer", isRooftop ? "LocalBusiness" : "Organization"],
         name: config.dealership_name,
-        url: baseUrl,
+        url: baseUrl + (typeof window !== "undefined" ? window.location.pathname : "/"),
         logo: config.logo_url || `${baseUrl}/og-service.jpg`,
-        description: `${config.dealership_name} purchases vehicles directly from consumers. Sellers receive a firm cash offer within 2 minutes, backed by a ${config.price_guarantee_days}-day price guarantee.`,
+        description: cityState
+          ? `${config.dealership_name} in ${cityState} buys cars directly from consumers — instant cash offer in 2 minutes, ${config.price_guarantee_days}-day price guarantee, free pickup.`
+          : `${config.dealership_name} purchases vehicles directly from consumers. Sellers receive a firm cash offer within 2 minutes, backed by a ${config.price_guarantee_days}-day price guarantee.`,
         slogan: config.tagline,
         ...(config.phone ? { telephone: config.phone } : {}),
         ...(config.address
@@ -31,7 +47,18 @@ export const LocalBusinessJsonLd = () => {
               address: {
                 "@type": "PostalAddress",
                 streetAddress: config.address,
+                ...((config as any).city ? { addressLocality: (config as any).city } : {}),
+                ...((config as any).state ? { addressRegion: (config as any).state } : {}),
                 addressCountry: "US",
+              },
+            }
+          : {}),
+        ...(((config as any).center_lat && (config as any).center_lng)
+          ? {
+              geo: {
+                "@type": "GeoCoordinates",
+                latitude: (config as any).center_lat,
+                longitude: (config as any).center_lng,
               },
             }
           : {}),

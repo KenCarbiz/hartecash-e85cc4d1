@@ -17,6 +17,7 @@ const UploadDocs = lazy(() => import("./pages/UploadDocs"));
 const CustomerPortal = lazy(() => import("./pages/CustomerPortal"));
 const CustomerLookup = lazy(() => import("./pages/CustomerLookup"));
 const ScheduleVisit = lazy(() => import("./pages/ScheduleVisit"));
+const WatchMyCar = lazy(() => import("./pages/WatchMyCar"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -107,11 +108,17 @@ const AnimatedRoutes = () => {
       <main id="main-content" tabIndex={-1}>
       <Routes>
         <Route path="/" element={<Index />} />
+        {/* Subdirectory rooftop URL — preferred for SEO, pools authority to
+            the main domain. Renders the same Index; TenantContext resolves
+            the rooftop from the slug path segment. */}
+        <Route path="/locations/:rooftopSlug" element={<Index />} />
         <Route path="/upload/:token" element={<UploadPhotos />} />
         <Route path="/docs/:token" element={<UploadDocs />} />
         <Route path="/my-submission" element={<CustomerLookup />} />
         <Route path="/my-submission/:token" element={<CustomerPortal />} />
         <Route path="/schedule" element={<ScheduleVisit />} />
+        {/* Customer-facing vehicle value tracker (Watch My Car's Worth). */}
+        <Route path="/watch-my-car/:token" element={<WatchMyCar />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
         <Route path="/service" element={<ServiceLanding />} />

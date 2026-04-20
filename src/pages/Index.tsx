@@ -4,6 +4,7 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import BackToTop from "@/components/BackToTop";
 import LandingTemplateRouter from "@/components/landing/LandingTemplateRouter";
+import NearestRooftopBanner from "@/components/NearestRooftopBanner";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useEmbedMode } from "@/hooks/useEmbedMode";
 
@@ -22,6 +23,11 @@ const Index = () => {
       <FAQPageJsonLd />
       <HowToJsonLd />
       {!embed && <SiteHeader />}
+      {/* Geo banner only renders on the corporate group hub (location_id null
+          AND multiple rooftops with their own URLs). It self-hides on
+          rooftop-specific pages, on single-location dealers, and once the
+          customer dismisses it for the session. */}
+      {!embed && <NearestRooftopBanner />}
       <main>
         <LandingTemplateRouter />
       </main>

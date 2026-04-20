@@ -51,6 +51,12 @@ export interface SiteConfig {
   track_abandoned_leads: boolean;
   auto_route_appraiser_queue: boolean;
   ai_photo_reappraisal: boolean;
+  // ── AI condition scoring (in-form, customer-facing) ──
+  // When true, the sell-form shows a Photos step between Condition and
+  // History where the customer uploads exterior shots. The AI scores them
+  // and the offer engine picks up ai_condition_score automatically.
+  ai_condition_scoring_enabled: boolean;
+  ai_condition_scoring_min_required: number;
   ai_auto_bump_enabled: boolean;
   ai_auto_bump_max_pct: number;
   ai_auto_bump_max_dollars: number;
@@ -134,6 +140,8 @@ const DEFAULTS: SiteConfig = {
   track_abandoned_leads: true,
   auto_route_appraiser_queue: false,
   ai_photo_reappraisal: false,
+  ai_condition_scoring_enabled: true,
+  ai_condition_scoring_min_required: 4,
   ai_auto_bump_enabled: false,
   ai_auto_bump_max_pct: 15,
   ai_auto_bump_max_dollars: 2000,

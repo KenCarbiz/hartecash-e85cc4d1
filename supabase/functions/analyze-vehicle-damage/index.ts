@@ -75,26 +75,36 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are an expert automotive appraiser analyzing vehicle photos for damage assessment. 
-Analyze the provided vehicle photo and identify ALL visible damage including dents, scratches, rust, paint chips, cracks, missing parts, misaligned panels, and other cosmetic or structural issues.
+            content: `You are an automotive appraiser scoring a customer-uploaded photo of a used vehicle being submitted for trade-in. The platform uses your output to adjust a cash offer up or down. Be specific and conservative — false positives reduce a real customer's offer, false negatives cost the dealer money at inspection.
 
-For each damage item found, provide:
-- type: one of "dent", "scratch", "rust", "paint_chip", "crack", "misaligned_panel", "missing_part", "stain", "tear", "wear", "other"
-- location: specific area (e.g., "front_bumper", "driver_door", "hood", "roof", "rear_quarter_panel", "windshield", "dashboard", "driver_seat")
-- severity: "minor" (cosmetic only, barely noticeable), "moderate" (clearly visible, affects appearance), "severe" (structural or major cosmetic damage)
-- description: brief description of the damage
+Identify visible damage:
+- type: dent, scratch, rust, paint_chip, crack, misaligned_panel, missing_part, stain, tear, wear, other
+- location: specific panel (front_bumper, driver_door, hood, roof, rear_quarter_panel, windshield, dashboard, driver_seat, wheel, etc.)
+- severity:
+  - minor: cosmetic only, barely noticeable from 6 feet (e.g. light swirl marks, single scratch <2 inches, single chip <1 cm, light curb rash)
+  - moderate: clearly visible but localized (e.g. door ding, fading clearcoat on one panel, multiple scratches, chipped paint)
+  - severe: structural, multiple panels affected, accident damage, deep rust, missing trim, cracked windshield, deployed airbag visible
+- description: one short factual sentence
 
-Also provide:
-- overall_severity: "none", "minor", "moderate", or "severe" for the photo overall
-- confidence_score: 0-100 how confident you are in the assessment
-- suggested_condition: one of "excellent", "good", "fair", "poor" based on what you see`,
+Photo category context: this is the "${'$'}{PHOTO_CATEGORY}" shot — focus your reading on what that angle reveals. (e.g. wheel shots: tire tread/curb rash; rocker panels: rust along sills; dashboard: warning lights, odometer.)
+
+DO NOT flag normal age-appropriate wear (light interior scuffs on an older vehicle, average tire wear, factory-original paint variation) as damage.
+
+Then provide overall judgement:
+- overall_severity: none / minor / moderate / severe
+- confidence_score: 0-100 — lower if photo is dark, blurry, partial, or off-angle
+- suggested_condition: maps to the platform's 4-tier scale used by the offer engine —
+    excellent  = no visible damage, looks new (top 3% of cars KBB values)
+    very_good  = minor cosmetic only, no functional issues (top 28%)
+    good       = moderate cosmetic, repairable, no major mechanical signals (top 50%)
+    fair       = severe cosmetic OR visible mechanical signs (rust, panels, fluid, smoke residue)`,
           },
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text: `Analyze this ${photo_category} vehicle photo for any damage, wear, or condition issues. Be thorough but accurate — don't flag normal wear as damage.`,
+                text: `Score this "${photo_category}" photo for damage and condition. Be conservative — only flag what is clearly visible. Use the 4-tier scale (excellent / very_good / good / fair) for suggested_condition.`,
               },
               {
                 type: "image_url",
@@ -128,7 +138,7 @@ Also provide:
                   },
                   overall_severity: { type: "string", enum: ["none", "minor", "moderate", "severe"] },
                   confidence_score: { type: "number", minimum: 0, maximum: 100 },
-                  suggested_condition: { type: "string", enum: ["excellent", "good", "fair", "poor"] },
+                  suggested_condition: { type: "string", enum: ["excellent", "very_good", "good", "fair"] },
                 },
                 required: ["damage_detected", "damage_items", "overall_severity", "confidence_score", "suggested_condition"],
                 additionalProperties: false,

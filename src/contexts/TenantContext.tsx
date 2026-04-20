@@ -116,6 +116,30 @@ let cachedTenant: { hostname: string; tenant: TenantInfo } | null = null;
  */
 async function resolveTenant(): Promise<TenantInfo> {
   const hostname = window.location.hostname;
+  const pathname = window.location.pathname;
+
+  // Path-based subdirectory routing: /locations/:slug — outranks subdomains
+  // for SEO because authority pools to the main domain. Same tenant rows
+  // back both forms; subdomains keep working for direct URLs and existing
+  // bookmarks.
+  const pathSlugMatch = pathname.match(/^\/locations\/([a-z0-9][a-z0-9-]{1,62}[a-z0-9])(?:\/|$)/i);
+  if (pathSlugMatch) {
+    const pathSlug = pathSlugMatch[1].toLowerCase();
+    const cacheKey = `${hostname}#${pathSlug}`;
+    if (cachedTenant && cachedTenant.hostname === cacheKey) return cachedTenant.tenant;
+    const { data: byPath } = await supabase.rpc("get_tenant_by_domain", { _domain: pathSlug });
+    if (byPath && byPath.length > 0) {
+      const t: TenantInfo = {
+        dealership_id: byPath[0].dealership_id,
+        slug: byPath[0].slug,
+        display_name: byPath[0].display_name,
+        location_id: byPath[0].location_id ?? null,
+      };
+      cachedTenant = { hostname: cacheKey, tenant: t };
+      return t;
+    }
+    // Fall through to host-based resolution if the path slug is invalid
+  }
 
   if (cachedTenant && cachedTenant.hostname === hostname) return cachedTenant.tenant;
 

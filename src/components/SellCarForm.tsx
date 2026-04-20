@@ -23,6 +23,7 @@ import StepVehicleBuild from "./sell-form/StepVehicleBuild";
 import StepSelectTrim from "./sell-form/StepSelectTrim";
 import StepCondition from "./sell-form/StepCondition";
 import StepHistory from "./sell-form/StepHistory";
+import StepPhotos from "./sell-form/StepPhotos";
 import StepFinalize from "./sell-form/StepFinalize";
 import { motion, AnimatePresence } from "framer-motion";
 import LiveOfferPreview from "./sell-form/LiveOfferPreview";
@@ -72,6 +73,15 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
   const [submitting, setSubmitting] = useState(false);
   const [showCalculating, setShowCalculating] = useState(false);
   const [pendingToken, setPendingToken] = useState<string | null>(null);
+  // Pre-issued token used to namespace customer photo uploads. Generated
+  // once on mount so AI photo storage paths are stable across step
+  // navigation; reused as the submission token if it matches what the
+  // form ultimately submits with.
+  const [photoSessionToken] = useState<string>(() => {
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+  });
   const [honeypot, setHoneypot] = useState("");
   const formRef = useRef<HTMLDivElement>(null);
   const partialIdRef = useRef<string | null>(null);
@@ -268,6 +278,10 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
     if (showTrimStep) steps.push("Select Your Vehicle");
     if (formConfig.step_vehicle_build) steps.push("Vehicle Build");
     if (formConfig.step_condition_history) steps.push("Condition");
+    // AI Photo step sits between Condition and History — opt-in per dealer
+    // via site_config.ai_condition_scoring_enabled. Customers can skip from
+    // inside the step itself; this only controls whether it appears at all.
+    if ((config as any).ai_condition_scoring_enabled !== false) steps.push("Photos");
     steps.push("History");
     // Always include contact capture — even in offer-first mode
     steps.push("Finalize");
@@ -674,6 +688,22 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
             <StepCondition formData={formData} updateArray={updateArray} update={update} formConfig={formConfig} bbVehicle={bbSelectedVehicle} vehicleInfo={vehicleInfo} />
           </>
         );
+      case "Photos":
+        return (
+          <StepPhotos
+            submissionToken={photoSessionToken}
+            dealershipId={tenant.dealership_id}
+            minRequired={(config as any).ai_condition_scoring_min_required ?? 4}
+            onComplete={() => {
+              setDirection(1);
+              setStep((s) => s + 1);
+            }}
+            onSkip={() => {
+              setDirection(1);
+              setStep((s) => s + 1);
+            }}
+          />
+        );
       case "History":
         return <StepHistory formData={formData} update={update} formConfig={formConfig} bbVehicle={bbSelectedVehicle} vehicleInfo={vehicleInfo} leadSource={leadSource} />;
       case "Finalize":
@@ -753,7 +783,9 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
           </motion.div>
         </AnimatePresence>
 
-        <div className="flex gap-3">
+        {/* Photos step provides its own Continue / Skip — suppress the
+            standard footer so we don't render two competing CTAs. */}
+        <div className={`flex gap-3 ${currentStepName === "Photos" ? "hidden" : ""}`}>
           {step > 0 && (
             <Button
               type="button"

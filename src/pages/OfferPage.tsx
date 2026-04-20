@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, DollarSign, ArrowDown, TrendingUp, ShieldCheck, Info, Printer, CheckCircle, ArrowRight, Car, Gauge, Palette, Settings2, Pencil, User, Clock, Star, Zap, Shield, BadgeCheck, Handshake, Camera } from "lucide-react";
+import InspectionConfidence from "@/components/InspectionConfidence";
+import TalkToAppraiserButton from "@/components/TalkToAppraiserButton";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -678,6 +680,26 @@ const OfferPage = () => {
             <Shield className="w-3 h-3" />
             Subject to in-person inspection
           </p>
+          {/* Inspection Confidence Score — pre-empts the "offer slashed at
+              inspection" complaint by showing transparently how confident
+              we are that the in-person number will match. Self-hides when
+              there's no AI photo data on the submission. */}
+          <div className="mt-3 flex flex-wrap justify-center items-center gap-3">
+            <InspectionConfidence
+              submissionId={s.id}
+              customerCondition={s.overall_condition || null}
+              aiCondition={condition?.ai_condition_score || null}
+            />
+            {/* Talk to AI appraiser — Bland call with full submission context.
+                Shipped here so customers can ask questions any hour. */}
+            <TalkToAppraiserButton
+              submissionId={s.id}
+              submissionToken={s.token || ""}
+              defaultPhone={s.phone || null}
+              vehicleSummary={vehicleStr}
+              cashOffer={cashOffer}
+            />
+          </div>
           {/* Prominent disclosure when the offer was manually or
               AI-bumped above the algorithmic estimate. Even though the
               fine print above always says "subject to inspection," we
