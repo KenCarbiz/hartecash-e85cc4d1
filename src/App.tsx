@@ -51,6 +51,7 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const OBDScan = lazy(() => import("./pages/OBDScan"));
 const ServiceQuickEntry = lazy(() => import("./pages/ServiceQuickEntry"));
 const InspectionCheckIn = lazy(() => import("./pages/InspectionCheckIn"));
+const CheckIn = lazy(() => import("./pages/CheckIn"));
 const PlanPage = lazy(() => import("./pages/PlanPage"));
 const BillingPage = lazy(() => import("./pages/BillingPage"));
 
@@ -151,6 +152,8 @@ const AnimatedRoutes = () => {
         <Route path="/obd-scan/:token" element={<OBDScan />} />
         <Route path="/service-quick-entry" element={<ProtectedRoute><ServiceQuickEntry /></ProtectedRoute>} />
         <Route path="/inspection-checkin" element={<ProtectedRoute><InspectionCheckIn /></ProtectedRoute>} />
+        {/* Public kiosk-style check-in — last 6 of VIN → jump to inspection. */}
+        <Route path="/checkin" element={<CheckIn />} />
         <Route path="/plan" element={<ProtectedRoute><PlanPage /></ProtectedRoute>} />
         <Route path="/billing" element={<ProtectedRoute><BillingPage /></ProtectedRoute>} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
