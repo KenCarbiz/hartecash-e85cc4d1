@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { resolveCaller, forbidden } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -32,6 +33,26 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Tenant isolation. Anonymous customers (during their own form flow)
+    // are allowed — submission_id is a UUID and acts as a capability token.
+    // Authenticated staff, however, must belong to the submission's tenant.
+    const caller = await resolveCaller(
+      req,
+      supabaseUrl,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      supabaseKey,
+    );
+    if (caller.kind === "tenant_staff") {
+      const { data: subTenant } = await supabase
+        .from("submissions")
+        .select("dealership_id")
+        .eq("id", submission_id)
+        .maybeSingle();
+      if (subTenant && subTenant.dealership_id !== caller.dealershipId) {
+        return forbidden(corsHeaders);
+      }
+    }
 
     // Get signed URL for the photo
     const { data: signedData, error: signedErr } = await supabase.storage

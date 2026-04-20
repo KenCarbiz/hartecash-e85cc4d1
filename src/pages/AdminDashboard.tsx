@@ -6,12 +6,16 @@ import AdminBreadcrumbNav from "@/components/admin/AdminBreadcrumb";
 import AdminCommandPalette from "@/components/admin/AdminCommandPalette";
 import AdminSectionRenderer from "@/components/admin/AdminSectionRenderer";
 import RequestAccessDialog from "@/components/admin/RequestAccessDialog";
-import SubmissionDetailSheet from "@/components/admin/SubmissionDetailSheet";
 import TenantViewBanner from "@/components/admin/TenantViewBanner";
 import { PlatformProvider } from "@/contexts/PlatformContext";
 import { useAdminDashboard } from "@/hooks/useAdminDashboard";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
-import { useRef, useEffect, useState } from "react";
+import { lazy, Suspense, useRef, useEffect, useState } from "react";
+
+// SubmissionDetailSheet is the largest component in the codebase (~1.6k lines).
+// It only renders when a row is clicked, so lazy-loading it keeps it out of
+// the AdminDashboard initial paint chunk.
+const SubmissionDetailSheet = lazy(() => import("@/components/admin/SubmissionDetailSheet"));
 import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
@@ -154,13 +158,15 @@ const AdminDashboard = () => {
           allowedSections={db.allowedSections}
         />
 
-        <SubmissionDetailSheet
-          selected={db.selected}
-          onClose={() => {
-            db.setSelected(null);
-            db.setPhotos([]);
-            db.setDocs([]);
-          }}
+        {db.selected && (
+          <Suspense fallback={null}>
+            <SubmissionDetailSheet
+              selected={db.selected}
+              onClose={() => {
+                db.setSelected(null);
+                db.setPhotos([]);
+                db.setDocs([]);
+              }}
           photos={db.photos}
           docs={db.docs}
           activityLog={db.activityLog}
@@ -191,7 +197,9 @@ const AdminDashboard = () => {
           }}
           fetchActivityLog={db.fetchActivityLog}
           fetchSubmissions={db.fetchSubmissions}
-        />
+            />
+          </Suspense>
+        )}
         {/* Delete submission confirmation */}
         <AlertDialog open={!!db.pendingDeleteId} onOpenChange={(open) => { if (!open) db.cancelDelete(); }}>
           <AlertDialogContent>

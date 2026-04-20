@@ -17,8 +17,19 @@ class SectionErrorBoundary extends Component<{ children: ReactNode }, { hasError
   static getDerivedStateFromError() {
     return { hasError: true };
   }
+  componentDidCatch(error: Error) {
+    // Surface to whatever error sink is wired up so we know about it.
+    // Silent failures masquerade as broken sections in prod.
+    console.error("[SectionErrorBoundary]", error);
+  }
   render() {
-    if (this.state.hasError) return null;
+    if (this.state.hasError) {
+      return (
+        <div className="w-full py-10 px-5 text-center text-sm text-muted-foreground">
+          This section is temporarily unavailable. Refresh to try again.
+        </div>
+      );
+    }
     return this.props.children;
   }
 }

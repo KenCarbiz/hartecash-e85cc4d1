@@ -74,7 +74,7 @@ const EditorialTemplate = () => {
             onClick={scrollToForm}
             className="mt-8 inline-flex items-center gap-2 bg-foreground hover:bg-foreground/90 text-background font-semibold px-8 py-3.5 rounded-full transition-all hover:gap-3"
           >
-            Start My Offer <ArrowRight className="w-4 h-4" />
+            Get My Cash Offer <ArrowRight className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
       </section>

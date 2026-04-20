@@ -56,7 +56,7 @@ const VideoTemplate = () => {
             className="inline-flex items-center gap-3 bg-accent hover:bg-accent/90 text-accent-foreground font-bold text-lg px-10 py-5 rounded-full shadow-2xl transition-all hover:scale-[1.03]"
           >
             Get My Cash Offer
-            <ChevronDown className="w-5 h-5" />
+            <ChevronDown className="w-5 h-5" aria-hidden="true" />
           </button>
 
           <div className="flex items-center justify-center gap-3 mt-8 opacity-90">

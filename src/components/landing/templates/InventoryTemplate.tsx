@@ -52,7 +52,7 @@ const InventoryTemplate = () => {
               </div>
             </div>
             <span className="hidden md:inline-flex items-center bg-accent text-accent-foreground font-bold px-6 py-2.5 rounded-full group-hover:bg-accent/90">
-              Get Offer
+              Get My Cash Offer
             </span>
           </motion.button>
 

@@ -174,7 +174,7 @@ const AdminSidebar = ({
       { key: "form-config", label: "Lead Form", icon: ListChecks },
       { key: "inspection-config", label: "Inspection Sheet", icon: Shield },
       { key: "photo-config", label: "Photo Requirements", icon: Camera },
-      { key: "depth-policies", label: "Depth Policies", icon: Gauge },
+      { key: "depth-policies", label: "Inspection Standards", icon: Gauge },
       { key: "promotions", label: "Promotions", icon: Megaphone },
       { key: "notifications", label: "Notifications", icon: Bell },
     ] : []),

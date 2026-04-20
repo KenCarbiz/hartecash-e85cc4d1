@@ -22,7 +22,8 @@ const FALLBACK: Testimonial[] = [
 
 const Testimonials = () => {
   const { config } = useSiteConfig();
-  const [testimonials, setTestimonials] = useState<Testimonial[]>(FALLBACK);
+  // null = still loading, [] = loaded but empty (hide section), [...] = real
+  const [testimonials, setTestimonials] = useState<Testimonial[] | null>(null);
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(1);
 
@@ -33,9 +34,21 @@ const Testimonials = () => {
       .eq("is_active", true)
       .order("sort_order", { ascending: true })
       .then(({ data }) => {
-        if (data && data.length > 0) setTestimonials(data as Testimonial[]);
+        // For new dealers with no real reviews, only show the FALLBACK on the
+        // platform default tenant so brand-new dealers don't unintentionally
+        // ship fake CT testimonials to their customers.
+        if (data && data.length > 0) {
+          setTestimonials(data as Testimonial[]);
+        } else if (config.dealership_name === "Our Dealership" || !config.dealership_name) {
+          setTestimonials(FALLBACK);
+        } else {
+          setTestimonials([]);
+        }
       });
-  }, []);
+  }, [config.dealership_name]);
+
+  // Hide the section entirely while loading or when the dealer has no reviews
+  if (testimonials === null || testimonials.length === 0) return null;
 
   useEffect(() => {
     if (testimonials.length <= 1) return;

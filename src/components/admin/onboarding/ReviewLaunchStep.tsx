@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, MapPin, Store, Phone, Building2, Bot, Shield } from "lucide-react";
+import { CheckCircle2, MapPin, Store, Phone, Building2, Bot, Shield, Globe } from "lucide-react";
 import type { WizardState } from "./types";
 
 const PLAN_LABELS: Record<string, string> = {
@@ -101,6 +101,41 @@ const ReviewLaunchStep = ({ state }: Props) => {
                 {loc.scrapedData && <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />}
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Rooftop websites — additional tenant rows that will be created */}
+      {state.locations.some((l) => l.ownRooftopSite) && (
+        <div className="space-y-2">
+          <h4 className="text-sm font-semibold flex items-center gap-2">
+            <Globe className="w-3.5 h-3.5 text-primary" />
+            Rooftop Websites ({state.locations.filter((l) => l.ownRooftopSite).length})
+          </h4>
+          <p className="text-[11px] text-muted-foreground">
+            Each gets its own URL but shares this group's admin, leads, and staff.
+          </p>
+          <div className="space-y-1.5">
+            {state.locations
+              .filter((l) => l.ownRooftopSite)
+              .map((loc) => (
+                <div
+                  key={loc.id}
+                  className="flex items-center gap-2 text-xs bg-primary/5 rounded-lg px-3 py-2 border border-primary/20"
+                >
+                  <Globe className="w-3.5 h-3.5 text-primary shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium">{loc.name}</div>
+                    <div className="text-muted-foreground font-mono text-[10px] truncate">
+                      {loc.rooftopSlug}.autocurb.io
+                      {loc.rooftopCustomDomain && <span> · {loc.rooftopCustomDomain}</span>}
+                    </div>
+                  </div>
+                  <Badge variant="secondary" className="text-[10px] shrink-0">
+                    {loc.rooftopLandingTemplate || "group default"}
+                  </Badge>
+                </div>
+              ))}
           </div>
         </div>
       )}

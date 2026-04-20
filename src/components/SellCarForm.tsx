@@ -27,6 +27,10 @@ import StepFinalize from "./sell-form/StepFinalize";
 import { motion, AnimatePresence } from "framer-motion";
 import LiveOfferPreview from "./sell-form/LiveOfferPreview";
 
+// Pragmatic email validator — rejects clearly broken addresses (no @, no
+// domain dot, whitespace) without trying to be RFC-5322 compliant.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const stepTimeEstimates: Record<string, string> = {
   "Vehicle Info": "30 sec",
   "Select Your Vehicle": "15 sec",
@@ -99,6 +103,55 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
     }
   }, [storeParam]);
 
+  // ── Resume an abandoned partial submission ──
+  // Two entry points:
+  //   1. URL ?resume=<submission_id> — typically sent by BDC follow-up
+  //   2. localStorage fallback — same-browser revisit within the same session
+  // Either way we hydrate formData with whatever the customer entered before
+  // and adopt the partial id so the next savePartial() updates instead of
+  // creating a new row.
+  useEffect(() => {
+    const resumeId = searchParams.get("resume") || localStorage.getItem("hartecash_partial_id");
+    if (!resumeId) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("submissions")
+        .select("id, name, phone, email, zip, plate, plate_state, vin, vehicle_year, vehicle_make, vehicle_model, mileage, dealership_id, progress_status")
+        .eq("id", resumeId)
+        .eq("progress_status", "partial")
+        .maybeSingle();
+      if (cancelled || !data) return;
+      // Only resume if the partial belongs to the current tenant — prevents
+      // stale localStorage from a different dealer hijacking this session.
+      if ((data as any).dealership_id && (data as any).dealership_id !== tenant.dealership_id) {
+        localStorage.removeItem("hartecash_partial_id");
+        return;
+      }
+      partialIdRef.current = (data as any).id;
+      setFormData((prev) => ({
+        ...prev,
+        name: (data as any).name || prev.name,
+        phone: (data as any).phone || prev.phone,
+        email: (data as any).email || prev.email,
+        zip: (data as any).zip || prev.zip,
+        plate: (data as any).plate || prev.plate,
+        state: (data as any).plate_state || prev.state,
+        vin: (data as any).vin || prev.vin,
+        mileage: String((data as any).mileage || prev.mileage || ""),
+        manualYear: String((data as any).vehicle_year || prev.manualYear || ""),
+        manualMake: (data as any).vehicle_make || prev.manualMake,
+        manualModel: (data as any).vehicle_model || prev.manualModel,
+      }));
+      toast({
+        title: "Welcome back",
+        description: "We picked up where you left off — finish the last few details to get your offer.",
+      });
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenant.dealership_id]);
+
   // Fetch offer settings and active promos early
   useEffect(() => {
     resolveEffectiveSettings(tenant.dealership_id).then(({ settings, rules }) => {
@@ -127,7 +180,7 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
   savePartialRef.current = () => {
     if (submittedRef.current) return;
     if (!config.track_abandoned_leads) return;
-    const hasContact = formData.email.trim().length > 3 && formData.email.includes("@");
+    const hasContact = EMAIL_RE.test(formData.email.trim());
     if (!hasContact) return;
 
     const payload = {
@@ -153,9 +206,13 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
       // Update existing partial
       supabase.from("submissions").update(payload as any).eq("id", partialIdRef.current).then(() => {});
     } else {
-      // Insert new partial
+      // Insert new partial; cache the id locally so the next visit on this
+      // browser auto-resumes (URL ?resume= still wins when present).
       supabase.from("submissions").insert(payload as any).select("id").maybeSingle().then(({ data }) => {
-        if (data) partialIdRef.current = data.id;
+        if (data) {
+          partialIdRef.current = data.id;
+          try { localStorage.setItem("hartecash_partial_id", data.id); } catch { /* private mode */ }
+        }
       });
     }
   };
@@ -370,7 +427,13 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
     } else if (currentStepName === "Finalize") {
       if (!formData.name.trim()) missing.push("Full Name");
       if (!formData.phone.trim() || formData.phone.replace(/\D/g, "").length < 10) missing.push("Phone Number");
-      if (!formData.email.trim()) missing.push("Email Address");
+      if (!formData.email.trim()) {
+        missing.push("Email Address");
+      } else if (!EMAIL_RE.test(formData.email.trim())) {
+        // Reject obvious garbage (no @, no domain, trailing dots) so we don't
+        // end up with bounce-prone leads in the inbox.
+        missing.push("Valid Email Address");
+      }
     }
 
     // In offer-first mode, the last step is History — no contact validation needed
@@ -523,6 +586,7 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
         supabase.from("submissions").delete().eq("id", partialIdRef.current).then(() => {});
         partialIdRef.current = null;
       }
+      try { localStorage.removeItem("hartecash_partial_id"); } catch { /* noop */ }
 
       // Fire new_submission staff notification
       const { data: insertedSub } = await supabase

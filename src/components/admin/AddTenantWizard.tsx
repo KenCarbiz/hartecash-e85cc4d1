@@ -138,7 +138,16 @@ const AddTenantWizard = ({ onClose, onCreated }: Props) => {
       case "scrape":
         return true; // optional
       case "locations":
-        return state.locations.length > 0 && state.locations.every((l) => l.name.trim() && l.city.trim());
+        return (
+          state.locations.length > 0 &&
+          state.locations.every((l) =>
+            l.name.trim() &&
+            l.city.trim() &&
+            !!l.locationType &&
+            // If a rooftop opted into its own URL, it must have a non-empty slug
+            (!l.ownRooftopSite || !!l.rooftopSlug.trim()),
+          )
+        );
       case "review":
         return true;
       default:
