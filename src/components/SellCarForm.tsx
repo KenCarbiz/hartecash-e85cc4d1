@@ -24,6 +24,7 @@ import StepSelectTrim from "./sell-form/StepSelectTrim";
 import StepCondition from "./sell-form/StepCondition";
 import StepHistory from "./sell-form/StepHistory";
 import StepPhotos from "./sell-form/StepPhotos";
+import StepPhotoChoice from "./sell-form/StepPhotoChoice";
 import StepFinalize from "./sell-form/StepFinalize";
 import { motion, AnimatePresence } from "framer-motion";
 import LiveOfferPreview from "./sell-form/LiveOfferPreview";
@@ -97,6 +98,11 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
   const [bbLoading, setBbLoading] = useState(false);
   const [selectedAddDeducts, setSelectedAddDeducts] = useState<string[]>([]);
   const [showTrimStep, setShowTrimStep] = useState(false);
+  // Photo path decision — null = hasn't picked yet, true = AI photos, false = quick answers.
+  // Drives (a) whether the Photos step appears in displaySteps and (b) whether
+  // the Condition step suppresses the visual damage questions (exterior /
+  // interior / windshield / moonroof) that the AI covers from the photos.
+  const [aiPhotoPath, setAiPhotoPath] = useState<boolean | null>(null);
   const [offerSettingsEarly, setOfferSettingsEarly] = useState<OfferSettings | null>(null);
   const [offerRulesEarly, setOfferRulesEarly] = useState<OfferRule[]>([]);
   const [promoBonus, setPromoBonus] = useState(0);
@@ -277,12 +283,15 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
     const steps: string[] = ["Vehicle Info"];
     if (showTrimStep) steps.push("Select Your Vehicle");
     if (formConfig.step_vehicle_build) steps.push("Vehicle Build");
+    // When the dealer has AI photos on, show a small decision gate BEFORE
+    // Condition so the customer picks between "quick answers" and "upload
+    // photos." Their choice decides whether Photos appears, and whether
+    // the Condition step suppresses the visual damage sub-questions.
+    const aiPhotosEnabled = formConfig.step_ai_photos !== false;
+    if (aiPhotosEnabled) steps.push("Photo Choice");
+    // Photos step only appears once they've opted in at the gate.
+    if (aiPhotosEnabled && aiPhotoPath === true) steps.push("Photos");
     if (formConfig.step_condition_history) steps.push("Condition");
-    // AI Photo step sits between Condition and History — opt-in per dealer
-    // via form_config.step_ai_photos (lives with the other step toggles in
-    // the Lead Form admin). Customers can skip from inside the step itself;
-    // this flag only controls whether the step appears at all.
-    if (formConfig.step_ai_photos !== false) steps.push("Photos");
     steps.push("History");
     // Always include contact capture — even in offer-first mode
     steps.push("Finalize");
@@ -421,13 +430,17 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
       if (formConfig.q_modifications && !formData.modifications) missing.push("Modifications");
     } else if (currentStepName === "Condition") {
       if (formConfig.q_overall_condition && !formData.overallCondition) missing.push("Overall Condition");
-      if (formConfig.q_exterior_damage && formData.exteriorDamage.length === 0) missing.push("Exterior Damage");
-      if (formConfig.q_windshield_damage && !formData.windshieldDamage) missing.push("Windshield Damage");
+      // Damage questions are suppressed when the customer opted into AI
+      // photo scoring — the AI covers exterior / interior / windshield /
+      // moonroof condition from the uploaded photos.
+      const suppressDamage = aiPhotoPath === true;
+      if (!suppressDamage && formConfig.q_exterior_damage && formData.exteriorDamage.length === 0) missing.push("Exterior Damage");
+      if (!suppressDamage && formConfig.q_windshield_damage && !formData.windshieldDamage) missing.push("Windshield Damage");
       const noMoonroofDetectable = bbSelectedVehicle && !bbSelectedVehicle.add_deduct_list?.some(
         ad => /moon|sun|panoramic/i.test(ad.name)
       );
-      if (formConfig.q_moonroof && !formData.moonroof && !noMoonroofDetectable) missing.push("Moonroof");
-      if (formConfig.q_interior_damage && formData.interiorDamage.length === 0) missing.push("Interior Damage");
+      if (!suppressDamage && formConfig.q_moonroof && !formData.moonroof && !noMoonroofDetectable) missing.push("Moonroof");
+      if (!suppressDamage && formConfig.q_interior_damage && formData.interiorDamage.length === 0) missing.push("Interior Damage");
       if (formConfig.q_tech_issues && formData.techIssues.length === 0) missing.push("Technology Issues");
       if (formConfig.q_engine_issues && formData.engineIssues.length === 0) missing.push("Engine Issues");
       if (formConfig.q_mechanical_issues && formData.mechanicalIssues.length === 0) missing.push("Mechanical Issues");
@@ -686,8 +699,26 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
         return (
           <>
             <LiveOfferPreview formData={formData} bbVehicle={bbSelectedVehicle} selectedAddDeducts={selectedAddDeducts} offerSettings={offerSettingsEarly} offerRules={offerRulesEarly} promoBonus={promoBonus} />
-            <StepCondition formData={formData} updateArray={updateArray} update={update} formConfig={formConfig} bbVehicle={bbSelectedVehicle} vehicleInfo={vehicleInfo} />
+            <StepCondition
+              formData={formData}
+              updateArray={updateArray}
+              update={update}
+              formConfig={formConfig}
+              bbVehicle={bbSelectedVehicle}
+              vehicleInfo={vehicleInfo}
+              suppressDamageQuestions={aiPhotoPath === true}
+            />
           </>
+        );
+      case "Photo Choice":
+        return (
+          <StepPhotoChoice
+            onChoose={(useAI) => {
+              setAiPhotoPath(useAI);
+              setDirection(1);
+              setStep((s) => s + 1);
+            }}
+          />
         );
       case "Photos":
         return (
@@ -700,6 +731,9 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
               setStep((s) => s + 1);
             }}
             onSkip={() => {
+              // Revert the AI path — Condition step will now show all
+              // damage questions again because they didn't actually score.
+              setAiPhotoPath(false);
               setDirection(1);
               setStep((s) => s + 1);
             }}
@@ -784,9 +818,9 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
           </motion.div>
         </AnimatePresence>
 
-        {/* Photos step provides its own Continue / Skip — suppress the
-            standard footer so we don't render two competing CTAs. */}
-        <div className={`flex gap-3 ${currentStepName === "Photos" ? "hidden" : ""}`}>
+        {/* Photos + Photo Choice provide their own inline CTAs — suppress the
+            standard footer so we don't render two competing buttons. */}
+        <div className={`flex gap-3 ${currentStepName === "Photos" || currentStepName === "Photo Choice" ? "hidden" : ""}`}>
           {step > 0 && (
             <Button
               type="button"

@@ -158,48 +158,52 @@ const AdminDashboard = () => {
           allowedSections={db.allowedSections}
         />
 
-        {db.selected && (
-          <Suspense fallback={null}>
-            <SubmissionDetailSheet
-              selected={db.selected}
-              onClose={() => {
-                db.setSelected(null);
-                db.setPhotos([]);
-                db.setDocs([]);
-              }}
-          photos={db.photos}
-          docs={db.docs}
-          activityLog={db.activityLog}
-          duplicateWarnings={db.duplicateWarnings}
-          optOutStatus={db.optOutStatus}
-          selectedApptTime={db.selectedApptTime}
-          selectedApptLocation={db.selectedApptLocation}
-          dealerLocations={db.dealerLocations}
-          canSetPrice={db.canSetPrice}
-          canApprove={db.canApprove}
-          canDelete={db.canDelete}
-          canUpdateStatus={true}
-          auditLabel={db.auditLabel}
-          userName={db.userName}
-          onUpdate={(updated) =>
-            db.setSubmissions((prev) => prev.map((s) => (s.id === updated.id ? updated : s)))
-          }
-          onDelete={db.handleDelete}
-          onRefresh={db.handleView}
-          onScheduleAppointment={db.handleScheduleAppt}
-          onDeletePhoto={(fileName) => {
-            if (!db.selected || !db.canDelete) return;
-            setPendingPhotoDelete(fileName);
-          }}
-          onDeleteDoc={(docType, fileName) => {
-            if (!db.selected || !db.canDelete) return;
-            setPendingDocDelete({ docType, fileName });
-          }}
-          fetchActivityLog={db.fetchActivityLog}
-          fetchSubmissions={db.fetchSubmissions}
-            />
-          </Suspense>
-        )}
+        {/* Always render the sheet so Radix can own its own open/close
+            animation state. Suspense keeps the chunk lazy (it only loads
+            the first time admin renders), but the Sheet itself is mounted
+            and driven by `open={!!selected}` internally — unmounting it
+            on close breaks the slide-out animation and can race the first
+            open. */}
+        <Suspense fallback={null}>
+          <SubmissionDetailSheet
+            selected={db.selected}
+            onClose={() => {
+              db.setSelected(null);
+              db.setPhotos([]);
+              db.setDocs([]);
+            }}
+            photos={db.photos}
+            docs={db.docs}
+            activityLog={db.activityLog}
+            duplicateWarnings={db.duplicateWarnings}
+            optOutStatus={db.optOutStatus}
+            selectedApptTime={db.selectedApptTime}
+            selectedApptLocation={db.selectedApptLocation}
+            dealerLocations={db.dealerLocations}
+            canSetPrice={db.canSetPrice}
+            canApprove={db.canApprove}
+            canDelete={db.canDelete}
+            canUpdateStatus={true}
+            auditLabel={db.auditLabel}
+            userName={db.userName}
+            onUpdate={(updated) =>
+              db.setSubmissions((prev) => prev.map((s) => (s.id === updated.id ? updated : s)))
+            }
+            onDelete={db.handleDelete}
+            onRefresh={db.handleView}
+            onScheduleAppointment={db.handleScheduleAppt}
+            onDeletePhoto={(fileName) => {
+              if (!db.selected || !db.canDelete) return;
+              setPendingPhotoDelete(fileName);
+            }}
+            onDeleteDoc={(docType, fileName) => {
+              if (!db.selected || !db.canDelete) return;
+              setPendingDocDelete({ docType, fileName });
+            }}
+            fetchActivityLog={db.fetchActivityLog}
+            fetchSubmissions={db.fetchSubmissions}
+          />
+        </Suspense>
         {/* Delete submission confirmation */}
         <AlertDialog open={!!db.pendingDeleteId} onOpenChange={(open) => { if (!open) db.cancelDelete(); }}>
           <AlertDialogContent>

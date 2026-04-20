@@ -16,6 +16,13 @@ interface Props {
   formConfig?: FormConfig;
   bbVehicle?: BBVehicle | null;
   vehicleInfo?: VehicleInfo | null;
+  /**
+   * When true, hide the visual-damage sub-questions (exterior / interior /
+   * windshield / moonroof). Set by SellCarForm when the customer has opted
+   * into AI photo scoring — the AI reads those from the uploaded photos
+   * so asking the same question twice is redundant.
+   */
+  suppressDamageQuestions?: boolean;
 }
 
 const conditionRatings = [
@@ -86,7 +93,7 @@ const kbbDefinitions = [
   },
 ];
 
-const StepCondition = ({ formData, updateArray, update, formConfig, bbVehicle, vehicleInfo }: Props) => {
+const StepCondition = ({ formData, updateArray, update, formConfig, bbVehicle, vehicleInfo, suppressDamageQuestions = false }: Props) => {
   const [showKbb, setShowKbb] = useState(false);
 
   // Detect if vehicle is electric from BB data
@@ -122,6 +129,15 @@ const StepCondition = ({ formData, updateArray, update, formConfig, bbVehicle, v
   return (
     <>
       <VehicleSummaryBar vehicleInfo={vehicleInfo} bbVehicle={bbVehicle} />
+
+      {suppressDamageQuestions && (
+        <div className="rounded-xl bg-success/10 border border-success/25 px-3 py-2.5 mb-4 flex items-center gap-2.5 text-xs">
+          <Zap className="w-4 h-4 text-success shrink-0" />
+          <span className="text-card-foreground">
+            <strong>AI is handling the damage check</strong> — we pulled exterior, interior, and windshield condition from your photos. Just confirm the overall rating below.
+          </span>
+        </div>
+      )}
 
       <Dialog open={showKbb} onOpenChange={setShowKbb}>
         <DialogContent className="max-h-[80vh] overflow-y-auto p-0">
@@ -189,7 +205,7 @@ const StepCondition = ({ formData, updateArray, update, formConfig, bbVehicle, v
         </FormField>
       )}
 
-      {(!formConfig || formConfig.q_exterior_damage) && (
+      {!suppressDamageQuestions && (!formConfig || formConfig.q_exterior_damage) && (
         <FormField label="Is there any exterior damage?">
           <div className="grid gap-2">
             {exteriorOptions.map((opt) => (
@@ -199,7 +215,7 @@ const StepCondition = ({ formData, updateArray, update, formConfig, bbVehicle, v
         </FormField>
       )}
 
-      {(!formConfig || formConfig.q_windshield_damage) && (
+      {!suppressDamageQuestions && (!formConfig || formConfig.q_windshield_damage) && (
         <FormField label="Is your front windshield damaged?">
           <div className="grid gap-2">
             {["No windshield damage", "Minor chips or pitting", "Major cracks or chips"].map((opt) => (
@@ -210,7 +226,7 @@ const StepCondition = ({ formData, updateArray, update, formConfig, bbVehicle, v
       )}
 
       {/* Moonroof: auto-skip if BB shows no moonroof in equipment, show if detected or unknown */}
-      {(!formConfig || formConfig.q_moonroof) && !noMoonroofDetectable && (
+      {!suppressDamageQuestions && (!formConfig || formConfig.q_moonroof) && !noMoonroofDetectable && (
         <FormField label={hasMoonroofEquipment
           ? "Your vehicle has a moonroof/sunroof — does it work?"
           : "If your vehicle has a moonroof, does it work?"
@@ -223,7 +239,7 @@ const StepCondition = ({ formData, updateArray, update, formConfig, bbVehicle, v
         </FormField>
       )}
 
-      {(!formConfig || formConfig.q_interior_damage) && (
+      {!suppressDamageQuestions && (!formConfig || formConfig.q_interior_damage) && (
         <FormField label="Is there any interior damage?">
           <div className="grid gap-2">
             {interiorOptions.map((opt) => (

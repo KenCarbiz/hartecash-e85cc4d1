@@ -122,12 +122,16 @@ const CustomerAvatar = ({ name }: { name: string | null }) => {
 const DetailRow = ({ label, value, icon }: { label: string; value: React.ReactNode | string | null | undefined; icon?: React.ReactNode }) => {
   if (!value) return null;
   return (
-    <div className="flex items-center justify-between py-2 border-b border-border/40 last:border-0 group/row hover:bg-muted/30 -mx-1 px-1 rounded-md transition-colors">
-      <span className="text-sm text-muted-foreground flex items-center gap-2">
+    // items-start (not center) so multi-line values don't visually stack on the
+    // label. gap-3 enforces a minimum horizontal gutter, shrink-0 stops the
+    // label from compressing, min-w-0 + break-words lets long values wrap
+    // cleanly, break-all handles unbroken tokens like VINs.
+    <div className="flex items-start justify-between gap-3 py-2 border-b border-border/40 last:border-0 group/row hover:bg-muted/30 -mx-1 px-1 rounded-md transition-colors">
+      <span className="text-sm text-muted-foreground flex items-center gap-2 shrink-0">
         {icon && <span className="text-muted-foreground/50 group-hover/row:text-primary/60 transition-colors">{icon}</span>}
         {label}
       </span>
-      <span className="text-sm font-semibold text-card-foreground text-right max-w-[60%]">{value}</span>
+      <span className="text-sm font-semibold text-card-foreground text-right max-w-[65%] min-w-0 break-words [overflow-wrap:anywhere]">{value}</span>
     </div>
   );
 };

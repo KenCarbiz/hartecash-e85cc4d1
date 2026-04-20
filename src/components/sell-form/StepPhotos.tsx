@@ -47,7 +47,7 @@ interface Props {
   dealershipId: string;
   slots?: PhotoSlot[];
   minRequired?: number;           // gate before "Continue" enables; defaults to count of required slots
-  onComplete: (result: { uploaded: number; aiAvailable: boolean }) => void;
+  onComplete: (result: { uploadedSlots: string[]; aiAvailable: boolean }) => void;
   onSkip: () => void;
 }
 
@@ -268,7 +268,15 @@ const StepPhotos = ({
         <button
           type="button"
           disabled={!canContinue}
-          onClick={() => onComplete({ uploaded: totalDone, aiAvailable: requiredDone >= requiredCount })}
+          onClick={() => {
+            // Report the shot_id of every slot the customer actually finished
+            // uploading. SellCarForm uses this to suppress only the
+            // condition / history questions that the photos cover.
+            const uploadedSlots = Object.entries(uploads)
+              .filter(([, state]) => state.status === "done")
+              .map(([slotId]) => slotId);
+            onComplete({ uploadedSlots, aiAvailable: requiredDone >= requiredCount });
+          }}
           className="px-5 py-2.5 rounded-full bg-primary text-primary-foreground font-bold text-sm shadow-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors"
         >
           Continue with AI scoring
