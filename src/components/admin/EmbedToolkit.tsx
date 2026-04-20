@@ -8,9 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Copy, Check, Code2, ExternalLink, Monitor, MapPin, PanelRightOpen, LayoutList, Lightbulb, MousePointerClick, Award, Info, Eye, EyeOff } from "lucide-react";
+import { Copy, Check, Code2, ExternalLink, Monitor, MapPin, PanelRightOpen, LayoutList, Lightbulb, MousePointerClick, Award, Info, Eye, EyeOff, Layout } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { LANDING_TEMPLATES, type LandingTemplate } from "@/hooks/useSiteConfig";
 
 interface DealerLocation {
   id: string;
@@ -50,6 +51,9 @@ const EmbedToolkit = () => {
   const [openMode, setOpenMode] = useState("drawer");
   const [locations, setLocations] = useState<DealerLocation[]>([]);
   const [selectedLocationId, setSelectedLocationId] = useState<string>("__all__");
+  // "__default__" = use whatever the dealer set as landing_template in Landing & Flow.
+  // Any other value forces that specific template for embeds landing on "/".
+  const [embedTemplate, setEmbedTemplate] = useState<LandingTemplate | "__default__">("__default__");
 
   // VDP/SRP Banner options
   const [bannerHeadline, setBannerHeadline] = useState("Have a Trade-In?");
@@ -80,10 +84,13 @@ const EmbedToolkit = () => {
 
   const baseUrl = window.location.origin;
 
-  // Build URL with optional store param
+  // Build URL with optional store + landing-template params.
+  // template= only piggybacks on "/" embeds (the homepage landing). Other
+  // paths like /trade-in have their own iframe-optimized layout and ignore it.
   const buildUrl = (path: string, extraParams: string[] = []) => {
     const params = [...extraParams];
     if (selectedLocationId && selectedLocationId !== "__all__") params.push(`store=${selectedLocationId}`);
+    if (path === "/" && embedTemplate !== "__default__") params.push(`template=${embedTemplate}`);
     const qs = params.length > 0 ? `?${params.join("&")}` : "";
     return `${baseUrl}${path}${qs}`;
   };
@@ -130,6 +137,29 @@ const EmbedToolkit = () => {
   };
   document.body.appendChild(s);
 })();
+</script>`;
+
+  // ── Snippet: Homepage Iframe (honors the template picker above) ──
+  const homepageTemplateLabel =
+    embedTemplate === "__default__"
+      ? `Dealer default${config.landing_template ? ` (${config.landing_template})` : ""}`
+      : embedTemplate;
+  const homepageIframeSnippet = `<!-- ${config.dealership_name}${selectedLocLabel ? ` — ${selectedLocLabel.name}` : ''} - Homepage Landing (${homepageTemplateLabel}) -->
+<iframe
+  id="hartecash-home"
+  src="${buildUrl("/")}"
+  style="width:100%;min-height:900px;border:none;border-radius:12px"
+  title="Sell Your Car - ${config.dealership_name}"
+  loading="lazy"
+  allow="camera"
+></iframe>
+<script>
+window.addEventListener("message", function(e) {
+  if (e.data && e.data.type === "hartecash-resize") {
+    var iframe = document.getElementById("hartecash-home");
+    if (iframe) iframe.style.height = e.data.height + "px";
+  }
+});
 </script>`;
 
   // ── Snippet: Trade Iframe ──
@@ -403,6 +433,55 @@ window.addEventListener("message", function(e) {
             </div>
           </div>
 
+          {/* Homepage template override — only relevant for "/" embeds */}
+          <div className="p-3 bg-muted/30 rounded-lg border border-border space-y-2.5">
+            <div className="flex items-center gap-2">
+              <Layout className="w-4 h-4 text-primary" />
+              <Label className="text-xs font-semibold">Homepage Template</Label>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Picks which landing-page layout loads for embeds that hit{" "}
+              <code className="bg-muted px-1 rounded">/</code>. Ignored for /trade-in, /service, and
+              Push/Pull/Tow embeds — those have their own layouts.
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => setEmbedTemplate("__default__")}
+                className={`text-left rounded-lg border-2 p-2.5 transition-all ${
+                  embedTemplate === "__default__"
+                    ? "border-primary bg-primary/5"
+                    : "border-border bg-background hover:border-primary/30"
+                }`}
+              >
+                <div className="font-semibold text-xs">Dealer Default</div>
+                <div className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">
+                  Use whatever is set in Landing &amp; Flow.
+                </div>
+              </button>
+              {LANDING_TEMPLATES.map((t) => {
+                const active = embedTemplate === t.value;
+                return (
+                  <button
+                    key={t.value}
+                    type="button"
+                    onClick={() => setEmbedTemplate(t.value)}
+                    className={`text-left rounded-lg border-2 p-2.5 transition-all ${
+                      active
+                        ? "border-primary bg-primary/5"
+                        : "border-border bg-background hover:border-primary/30"
+                    }`}
+                  >
+                    <div className="font-semibold text-xs">{t.label}</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">
+                      {t.description}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Store Location Selector */}
           {locations.length > 1 && (
             <div className="p-3 bg-muted/30 rounded-lg border border-border space-y-2">
@@ -546,9 +625,12 @@ window.addEventListener("message", function(e) {
 
       {/* ── Code Snippets ── */}
       <Tabs defaultValue="iframe" className="w-full">
-        <TabsList className={`grid w-full ${pptEnabled ? "grid-cols-6" : "grid-cols-5"}`}>
+        <TabsList className={`grid w-full ${pptEnabled ? "grid-cols-7" : "grid-cols-6"}`}>
           <TabsTrigger value="iframe" className="gap-1.5 text-xs">
             <Monitor className="w-3.5 h-3.5" /> Trade iFrame
+          </TabsTrigger>
+          <TabsTrigger value="homepage" className="gap-1.5 text-xs">
+            <Layout className="w-3.5 h-3.5" /> Homepage
           </TabsTrigger>
           <TabsTrigger value="widget" className="gap-1.5 text-xs">
             <PanelRightOpen className="w-3.5 h-3.5" /> Floating Widget
@@ -592,6 +674,39 @@ window.addEventListener("message", function(e) {
                   <li>Paste this code into the page body. Remove any existing trade tools (KBB, TradePending, etc.).</li>
                   <li>The iframe auto-resizes to fit the form — no scrollbars needed.</li>
                   <li>Update the dealer site's "Trade Your Car" navigation link to point to this page.</li>
+                </ol>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Homepage iFrame — lets the dealer embed the full landing flow with a chosen template */}
+        <TabsContent value="homepage" className="mt-4 space-y-3">
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-base">Homepage Landing iFrame</CardTitle>
+                <Badge variant="secondary" className="text-[10px]">
+                  {embedTemplate === "__default__" ? "Dealer Default" : LANDING_TEMPLATES.find(t => t.value === embedTemplate)?.label}
+                </Badge>
+              </div>
+              <CardDescription>
+                Embed the full sell-your-car landing flow on the dealer's website. Pick any of the
+                five templates above to override the dealer's default — or leave it on "Dealer
+                Default" to inherit whatever is set in Landing &amp; Flow.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <PreviewToggle id="homepage-preview" label="Preview Homepage" />
+              <IframePreview src={buildUrl("/")} id="homepage-preview" height="700px" />
+              <CodeBlock code={homepageIframeSnippet} id="homepage" />
+              <div className="bg-muted/30 rounded-lg border border-border p-3 space-y-2">
+                <p className="text-xs font-semibold text-card-foreground">How to install:</p>
+                <ol className="text-xs text-muted-foreground space-y-1 list-decimal pl-4">
+                  <li>Create a page on the dealer site — e.g. <code className="bg-muted px-1 rounded">/sell-your-car</code>.</li>
+                  <li>Paste this iframe into the page body.</li>
+                  <li>The template override travels in the URL (<code className="bg-muted px-1 rounded">?template=…</code>) so different stores can embed different layouts on different pages.</li>
+                  <li>To change the template later, come back here, pick a different one, and re-paste the snippet.</li>
                 </ol>
               </div>
             </CardContent>

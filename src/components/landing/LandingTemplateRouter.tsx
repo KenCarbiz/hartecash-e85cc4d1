@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useSiteConfig, type LandingTemplate } from "@/hooks/useSiteConfig";
 
 const ClassicTemplate = lazy(() => import("./templates/ClassicTemplate"));
@@ -21,14 +22,23 @@ const templateMap: Record<LandingTemplate, React.ComponentType> = {
   editorial: EditorialTemplate,
 };
 
+const VALID_TEMPLATES = new Set<LandingTemplate>(["classic", "video", "inventory", "trust", "editorial"]);
+
 interface Props {
-  /** Optional override (for the admin preview). Ignores the dealer's configured template. */
+  /** Explicit override (admin preview). Ignores URL param and dealer config. */
   override?: LandingTemplate;
 }
 
 const LandingTemplateRouter = ({ override }: Props) => {
   const { config } = useSiteConfig();
-  const chosen: LandingTemplate = override || (config.landing_template as LandingTemplate) || "classic";
+  const [searchParams] = useSearchParams();
+
+  // Resolution order: prop override → ?template= URL param (used by embeds) → configured default.
+  const urlParam = searchParams.get("template") as LandingTemplate | null;
+  const fromUrl = urlParam && VALID_TEMPLATES.has(urlParam) ? urlParam : null;
+  const chosen: LandingTemplate =
+    override || fromUrl || (config.landing_template as LandingTemplate) || "classic";
+
   const Template = templateMap[chosen] || ClassicTemplate;
 
   return (
