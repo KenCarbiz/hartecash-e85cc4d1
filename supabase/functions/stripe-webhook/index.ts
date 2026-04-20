@@ -97,7 +97,7 @@ async function syncFromSubscription(
   sub: Stripe.Subscription,
   tenantId: string,
 ) {
-  const items = sub.items.data.map((i) => serializeItem(i, sub));
+  const items = sub.items.data.map((i: any) => serializeItem(i, sub));
   const { error } = await admin.rpc("autocurb_sync_entitlements", {
     p_tenant_id: tenantId,
     p_items: items,
@@ -222,7 +222,7 @@ Deno.serve(async (req) => {
         await audit("subscription_activated", sub.id, tenantId, {
           user_id: session.metadata?.user_id ?? null,
           checkout_session_id: session.id,
-          items: items.map((i) => ({
+          items: items.map((i: any) => ({
             app_slug: i.app_slug,
             plan_tier: i.plan_tier,
           })),
@@ -249,7 +249,7 @@ Deno.serve(async (req) => {
           {
             status: sub.status,
             last_action: sub.metadata?.last_action ?? null,
-            items: items.map((i) => ({
+            items: items.map((i: any) => ({
               app_slug: i.app_slug,
               plan_tier: i.plan_tier,
             })),
