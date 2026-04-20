@@ -24,15 +24,30 @@ export interface PhotoSlot {
   required: boolean;   // counts toward the "you need 4 to continue" gate
 }
 
+// The six required shots are the minimum set that lets the AI make a
+// defensible condition call AND verify the biggest customer-answered
+// questions (mileage, warning lights, interior damage). Everything
+// below the required block is optional but each one meaningfully
+// tightens the appraisal — tire tread alone is worth $400–$800 either
+// direction and is the single best verifier of the "tires replaced"
+// self-report.
+// Slot ids mirror the shot_ids seeded in public.photo_config so inspector
+// and customer screens stay aligned. Labels and hints are customer-facing
+// and can be friendlier than the internal shot names.
 const DEFAULT_SLOTS: PhotoSlot[] = [
-  { id: "front",          label: "Front 3/4",          hint: "Stand at the front corner — capture the full bumper and one side.",            required: true  },
-  { id: "rear",           label: "Rear 3/4",           hint: "Stand at the rear corner — capture the full bumper and one side.",              required: true  },
-  { id: "driver_side",    label: "Driver Side",        hint: "Step back so the whole car is in frame, wheels visible.",                       required: true  },
-  { id: "passenger_side", label: "Passenger Side",     hint: "Step back so the whole car is in frame, wheels visible.",                       required: true  },
-  { id: "dashboard",      label: "Dashboard & Odometer", hint: "Capture the full dash — odometer reading must be readable.",                    required: false },
-  { id: "interior",       label: "Front Interior",     hint: "Front seats, console, and steering wheel.",                                      required: false },
-  { id: "wheel",          label: "Wheel / Tire",       hint: "Fill the frame with one wheel — tread depth visible.",                            required: false },
-  { id: "windshield",     label: "Windshield",         hint: "Look for chips and cracks. Stand at the front corner.",                          required: false },
+  // Required baseline — 4 exterior angles + dashboard + interior front
+  { id: "front",          label: "Front 3/4",            hint: "Stand at the driver-side front corner — full bumper + one side in frame.",         required: true  },
+  { id: "rear",           label: "Rear 3/4",             hint: "Stand at the passenger-side rear corner — full bumper + one side in frame.",       required: true  },
+  { id: "driver_side",    label: "Driver Side",          hint: "Step back so the whole car is in frame, both wheels visible.",                     required: true  },
+  { id: "passenger_side", label: "Passenger Side",       hint: "Step back so the whole car is in frame, both wheels visible.",                     required: true  },
+  { id: "dashboard",      label: "Dashboard — Engine On", hint: "Engine running. Odometer and any dashboard warning lights must be readable.",      required: true  },
+  { id: "interior",       label: "Driver Interior",      hint: "Driver seat, steering wheel, and dash close-up.",                                  required: true  },
+  // Highly encouraged (unlocks extra verification, NOT required to continue)
+  { id: "interior_rear",  label: "Rear Interior",        hint: "Rear seats and floor — catches stains, pet damage, car-seat wear.",                required: false },
+  { id: "windshield",     label: "Windshield (Inside)",  hint: "From the driver seat looking out — chips and long cracks show up clearly.",         required: false },
+  { id: "wheel",          label: "Tire Tread",           hint: "Pick the worst-looking tire. Fill frame with the tread so wear bars are visible.",  required: false },
+  { id: "hood",           label: "Engine Bay",           hint: "Hood open — shows any fluid leaks, aftermarket parts, or accident repair.",         required: false },
+  { id: "damage",         label: "Damage Close-up",      hint: "Anything you want us to see up close — dent, scratch, crack.",                     required: false },
 ];
 
 interface UploadState {

@@ -99,10 +99,13 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
   const [selectedAddDeducts, setSelectedAddDeducts] = useState<string[]>([]);
   const [showTrimStep, setShowTrimStep] = useState(false);
   // Photo path decision — null = hasn't picked yet, true = AI photos, false = quick answers.
-  // Drives (a) whether the Photos step appears in displaySteps and (b) whether
-  // the Condition step suppresses the visual damage questions (exterior /
-  // interior / windshield / moonroof) that the AI covers from the photos.
+  // Drives whether the Photos step appears in displaySteps.
   const [aiPhotoPath, setAiPhotoPath] = useState<boolean | null>(null);
+  // The actual slots the customer uploaded (front / rear / interior / wheel / etc.).
+  // Drives granular question suppression — we only hide the "is there
+  // interior damage?" question when the customer actually uploaded an
+  // interior photo, not just because they started the photo flow.
+  const [uploadedPhotoSlots, setUploadedPhotoSlots] = useState<string[]>([]);
   const [offerSettingsEarly, setOfferSettingsEarly] = useState<OfferSettings | null>(null);
   const [offerRulesEarly, setOfferRulesEarly] = useState<OfferRule[]>([]);
   const [promoBonus, setPromoBonus] = useState(0);
@@ -279,6 +282,19 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
   // Build step order — when offer_before_details is on, contact info moves to offer page
   const offerFirst = formConfig.offer_before_details;
 
+  // Per-topic AI coverage derived from the slots the customer actually
+  // uploaded. The downstream steps read this to skip the exact question
+  // the AI has already answered. Slot → topic mapping mirrors the
+  // CATEGORY_FOCUS table in analyze-vehicle-damage.
+  const aiCovered = {
+    // Exterior damage = covered when ANY exterior angle was uploaded
+    exterior: ["front", "rear", "driver_side", "passenger_side"].some((s) => uploadedPhotoSlots.includes(s)),
+    windshield: uploadedPhotoSlots.includes("windshield") || uploadedPhotoSlots.includes("front"),
+    interior: uploadedPhotoSlots.includes("interior") || uploadedPhotoSlots.includes("interior_rear"),
+    tires: uploadedPhotoSlots.includes("wheel"),
+    dashboard: uploadedPhotoSlots.includes("dashboard"),
+  };
+
   const getDisplaySteps = () => {
     const steps: string[] = ["Vehicle Info"];
     if (showTrimStep) steps.push("Select Your Vehicle");
@@ -430,17 +446,17 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
       if (formConfig.q_modifications && !formData.modifications) missing.push("Modifications");
     } else if (currentStepName === "Condition") {
       if (formConfig.q_overall_condition && !formData.overallCondition) missing.push("Overall Condition");
-      // Damage questions are suppressed when the customer opted into AI
-      // photo scoring — the AI covers exterior / interior / windshield /
-      // moonroof condition from the uploaded photos.
-      const suppressDamage = aiPhotoPath === true;
-      if (!suppressDamage && formConfig.q_exterior_damage && formData.exteriorDamage.length === 0) missing.push("Exterior Damage");
-      if (!suppressDamage && formConfig.q_windshield_damage && !formData.windshieldDamage) missing.push("Windshield Damage");
+      // Damage questions are suppressed per-topic when the customer
+      // uploaded a photo that covers that topic. Moonroof is ALSO
+      // auto-skipped when Black Book confirms the trim has no moonroof
+      // option available.
+      if (!aiCovered.exterior && formConfig.q_exterior_damage && formData.exteriorDamage.length === 0) missing.push("Exterior Damage");
+      if (!aiCovered.windshield && formConfig.q_windshield_damage && !formData.windshieldDamage) missing.push("Windshield Damage");
       const noMoonroofDetectable = bbSelectedVehicle && !bbSelectedVehicle.add_deduct_list?.some(
         ad => /moon|sun|panoramic/i.test(ad.name)
       );
-      if (!suppressDamage && formConfig.q_moonroof && !formData.moonroof && !noMoonroofDetectable) missing.push("Moonroof");
-      if (!suppressDamage && formConfig.q_interior_damage && formData.interiorDamage.length === 0) missing.push("Interior Damage");
+      if (formConfig.q_moonroof && !formData.moonroof && !noMoonroofDetectable) missing.push("Moonroof");
+      if (!aiCovered.interior && formConfig.q_interior_damage && formData.interiorDamage.length === 0) missing.push("Interior Damage");
       if (formConfig.q_tech_issues && formData.techIssues.length === 0) missing.push("Technology Issues");
       if (formConfig.q_engine_issues && formData.engineIssues.length === 0) missing.push("Engine Issues");
       if (formConfig.q_mechanical_issues && formData.mechanicalIssues.length === 0) missing.push("Mechanical Issues");
@@ -449,7 +465,9 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
       if (!formData.mileage.trim()) missing.push("Mileage");
       if (formConfig.q_accidents && !formData.accidents) missing.push("Accidents");
       if (formConfig.q_smoked_in && !formData.smokedIn) missing.push("Smoked In");
-      if (formConfig.q_tires_replaced && !formData.tiresReplaced) missing.push("Tires Replaced");
+      // Tires replaced is suppressed when the customer uploaded a wheel
+      // photo — the AI reads tread depth directly.
+      if (!aiCovered.tires && formConfig.q_tires_replaced && !formData.tiresReplaced) missing.push("Tires Replaced");
       if (formConfig.q_num_keys && !formData.numKeys) missing.push("Number of Keys");
       if (!formData.zip.trim()) missing.push("ZIP Code");
     } else if (currentStepName === "Finalize") {
@@ -706,7 +724,7 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
               formConfig={formConfig}
               bbVehicle={bbSelectedVehicle}
               vehicleInfo={vehicleInfo}
-              suppressDamageQuestions={aiPhotoPath === true}
+              aiCovered={aiCovered}
             />
           </>
         );
@@ -726,7 +744,11 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
             submissionToken={photoSessionToken}
             dealershipId={tenant.dealership_id}
             minRequired={formConfig.ai_photos_min_required ?? 4}
-            onComplete={() => {
+            onComplete={({ uploadedSlots }) => {
+              // Record exactly which slots the customer finished so the
+              // Condition + History steps can skip the corresponding
+              // questions (exterior, interior, windshield, tires).
+              setUploadedPhotoSlots(uploadedSlots);
               setDirection(1);
               setStep((s) => s + 1);
             }}
@@ -734,13 +756,14 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
               // Revert the AI path — Condition step will now show all
               // damage questions again because they didn't actually score.
               setAiPhotoPath(false);
+              setUploadedPhotoSlots([]);
               setDirection(1);
               setStep((s) => s + 1);
             }}
           />
         );
       case "History":
-        return <StepHistory formData={formData} update={update} formConfig={formConfig} bbVehicle={bbSelectedVehicle} vehicleInfo={vehicleInfo} leadSource={leadSource} />;
+        return <StepHistory formData={formData} update={update} formConfig={formConfig} bbVehicle={bbSelectedVehicle} vehicleInfo={vehicleInfo} leadSource={leadSource} aiCovered={aiCovered} />;
       case "Finalize":
         return <StepFinalize formData={formData} update={update} offerFirst={offerFirst} />;
       default:

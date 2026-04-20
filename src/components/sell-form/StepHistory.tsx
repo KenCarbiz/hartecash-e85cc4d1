@@ -16,6 +16,14 @@ interface DealerLocation {
   state: string;
 }
 
+interface AiCoverageFlags {
+  exterior: boolean;
+  windshield: boolean;
+  interior: boolean;
+  tires: boolean;
+  dashboard: boolean;
+}
+
 interface Props {
   formData: FormData;
   update: (field: string, value: string) => void;
@@ -23,9 +31,10 @@ interface Props {
   bbVehicle?: BBVehicle | null;
   vehicleInfo?: VehicleInfo | null;
   leadSource?: string;
+  aiCovered?: AiCoverageFlags;
 }
 
-const StepHistory = ({ formData, update, formConfig, bbVehicle, vehicleInfo, leadSource }: Props) => {
+const StepHistory = ({ formData, update, formConfig, bbVehicle, vehicleInfo, leadSource, aiCovered }: Props) => {
   const { config } = useSiteConfig();
   const isTrade = leadSource === "trade";
   const showLocationPicker = isTrade || (config as any).assign_customer_picks === true;
@@ -77,7 +86,7 @@ const StepHistory = ({ formData, update, formConfig, bbVehicle, vehicleInfo, lea
         </FormField>
       )}
 
-      {(!formConfig || formConfig.q_tires_replaced) && (
+      {!aiCovered?.tires && (!formConfig || formConfig.q_tires_replaced) && (
         <FormField label="How many tires replaced in the past 12 months?">
           <div className="grid grid-cols-3 gap-2">
             {["None", "1", "2", "3", "4"].map((opt) => (
