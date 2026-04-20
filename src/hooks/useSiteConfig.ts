@@ -2,14 +2,29 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
 
-export type LandingTemplate = "classic" | "bold" | "minimal" | "elegant" | "showroom";
+export type LandingTemplate =
+  | "classic" | "bold" | "minimal" | "elegant" | "showroom"
+  | "cinema" | "portal" | "carousel" | "slab" | "diagonal"
+  | "pickup" | "magazine" | "circular" | "motion" | "mosaic";
 
 export const LANDING_TEMPLATES: { value: LandingTemplate; label: string; description: string }[] = [
+  // ── Originals ──
   { value: "classic",  label: "Classic",  description: "Default split hero with instant-offer form. Choose left, center, or right hero alignment." },
   { value: "bold",     label: "Bold",     description: "Dark, premium, asymmetric. Large display type with one focused CTA — Carvana-style." },
   { value: "minimal",  label: "Minimal",  description: "White space and one giant search box with VIN / Plate / Year-Make-Model tabs." },
-  { value: "elegant",  label: "Elegant",  description: "Cream + dark with serif accents and gold borders. Premium feel for luxury and franchise dealers." },
+  { value: "elegant",  label: "Elegant",  description: "Cream + dark with serif accents and gold borders. Luxury franchise feel." },
   { value: "showroom", label: "Showroom", description: "Inventory grid behind a translucent form card. \u201CWe buy yours, browse ours.\u201D" },
+  // ── OEM-style ──
+  { value: "cinema",   label: "Cinema",   description: "Full-bleed cinematic hero with model strip and a corner payment widget. Dealer Inspire \u2192 Toyota / Honda look." },
+  { value: "portal",   label: "Portal",   description: "OEM brand-portal split: vehicle photo left, stacked CTA cards right. Dealer.com \u2192 GM / BMW look." },
+  { value: "carousel", label: "Carousel", description: "Classic 16:9 hero slider with arrow chevrons and a four-tile row underneath. CDK form factor." },
+  { value: "slab",     label: "Slab",     description: "Conversion-first \u2014 the inventory search bar IS the hero. Two pill CTAs, fast LCP. DealerOn / Overfuel." },
+  { value: "diagonal", label: "Diagonal", description: "Asymmetric diagonal color block slicing across a vehicle photo. Chunky rounded buttons. DealerSocket." },
+  { value: "pickup",   label: "Pickup",   description: "Truck-at-dawn photography with a brand-color ribbon nav and twin Build / Search CTAs. Ford / GM truck dealer feel." },
+  { value: "magazine", label: "Magazine", description: "Editorial: full-width photo, oversized left-aligned headline with a thin underline and kicker text. Stream Companies." },
+  { value: "circular", label: "Circular", description: "Dealership-circular promo energy: incentive bursts, payment-per-month chips, vehicle cutout on gradient. Force Marketing." },
+  { value: "motion",   label: "Motion",   description: "Animated background shapes (Lottie-style) behind a mid-weight headline. Teal / orange accents on dark navy. fusionZONE." },
+  { value: "mosaic",   label: "Mosaic",   description: "No hero photo \u2014 a tile-mosaic of model categories above the fold. Performance-first light mode. Jazel." },
 ];
 
 export interface AboutMilestone {

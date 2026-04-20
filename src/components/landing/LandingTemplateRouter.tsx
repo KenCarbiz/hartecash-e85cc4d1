@@ -2,11 +2,24 @@ import { lazy, Suspense } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useSiteConfig, type LandingTemplate } from "@/hooks/useSiteConfig";
 
+// ── Originals ──────────────────────────────────────────────────────
 const ClassicTemplate  = lazy(() => import("./templates/ClassicTemplate"));
 const BoldTemplate     = lazy(() => import("./templates/BoldTemplate"));
 const MinimalTemplate  = lazy(() => import("./templates/MinimalTemplate"));
 const ElegantTemplate  = lazy(() => import("./templates/ElegantTemplate"));
 const ShowroomTemplate = lazy(() => import("./templates/ShowroomTemplate"));
+
+// ── OEM-style ──────────────────────────────────────────────────────
+const CinemaTemplate   = lazy(() => import("./templates/CinemaTemplate"));
+const PortalTemplate   = lazy(() => import("./templates/PortalTemplate"));
+const CarouselTemplate = lazy(() => import("./templates/CarouselTemplate"));
+const SlabTemplate     = lazy(() => import("./templates/SlabTemplate"));
+const DiagonalTemplate = lazy(() => import("./templates/DiagonalTemplate"));
+const PickupTemplate   = lazy(() => import("./templates/PickupTemplate"));
+const MagazineTemplate = lazy(() => import("./templates/MagazineTemplate"));
+const CircularTemplate = lazy(() => import("./templates/CircularTemplate"));
+const MotionTemplate   = lazy(() => import("./templates/MotionTemplate"));
+const MosaicTemplate   = lazy(() => import("./templates/MosaicTemplate"));
 
 const TemplateFallback = () => (
   <div className="min-h-[60vh] flex items-center justify-center">
@@ -20,9 +33,23 @@ const templateMap: Record<LandingTemplate, React.ComponentType> = {
   minimal:  MinimalTemplate,
   elegant:  ElegantTemplate,
   showroom: ShowroomTemplate,
+  cinema:   CinemaTemplate,
+  portal:   PortalTemplate,
+  carousel: CarouselTemplate,
+  slab:     SlabTemplate,
+  diagonal: DiagonalTemplate,
+  pickup:   PickupTemplate,
+  magazine: MagazineTemplate,
+  circular: CircularTemplate,
+  motion:   MotionTemplate,
+  mosaic:   MosaicTemplate,
 };
 
-const VALID_TEMPLATES = new Set<LandingTemplate>(["classic", "bold", "minimal", "elegant", "showroom"]);
+const VALID_TEMPLATES = new Set<LandingTemplate>([
+  "classic", "bold", "minimal", "elegant", "showroom",
+  "cinema", "portal", "carousel", "slab", "diagonal",
+  "pickup", "magazine", "circular", "motion", "mosaic",
+]);
 
 interface Props {
   /** Explicit override (admin preview). Ignores URL param and dealer config. */
