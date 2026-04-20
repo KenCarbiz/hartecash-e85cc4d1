@@ -142,6 +142,121 @@ const ArrayDetail = ({ label, value, icon }: { label: string; value: string[] | 
 };
 
 // ── Compact OBD indicator — fetches latest scan for a submission ──
+// ── InspectionVitals ─────────────────────────────────────────────────
+// Compact traffic-light view of tires + brakes as recorded by the
+// inspector. Never auto-generates text notes — the inspector's typed
+// notes (if any) live in a separate textarea below. Shows nothing if no
+// inspection values exist.
+//
+// Thresholds: >=6 green (good), 3-5 yellow (fair), <=2 red (replace).
+// Works for both tire (32nds) and brake (mm) values since they share the
+// same 0-10 range in practice and the bands line up with fleet standards.
+const InspectionVitals = ({ submissionId }: { submissionId: string }) => {
+  const [data, setData] = useState<{
+    tire_lf: number | null; tire_rf: number | null; tire_lr: number | null; tire_rr: number | null;
+    brake_lf: number | null; brake_rf: number | null; brake_lr: number | null; brake_rr: number | null;
+  } | null>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!submissionId) return;
+    let cancelled = false;
+    (async () => {
+      const { data: row } = await supabase
+        .from("submissions")
+        .select("tire_lf, tire_rf, tire_lr, tire_rr, brake_lf, brake_rf, brake_lr, brake_rr")
+        .eq("id", submissionId)
+        .maybeSingle();
+      if (!cancelled) {
+        setData((row as any) ?? null);
+        setLoaded(true);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [submissionId]);
+
+  if (!loaded || !data) return null;
+
+  const values = [data.tire_lf, data.tire_rf, data.tire_lr, data.tire_rr, data.brake_lf, data.brake_rf, data.brake_lr, data.brake_rr];
+  const anyValue = values.some((v) => typeof v === "number");
+  if (!anyValue) return null;
+
+  type State = "green" | "yellow" | "red" | "empty";
+  const stateOf = (v: number | null | undefined): State => {
+    if (v == null || isNaN(v)) return "empty";
+    if (v >= 6) return "green";
+    if (v >= 3) return "yellow";
+    return "red";
+  };
+
+  const stateClass: Record<State, string> = {
+    green:  "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
+    yellow: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
+    red:    "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30",
+    empty:  "bg-muted text-muted-foreground/40 border-border",
+  };
+
+  const Pos = ({ label, value, kind }: { label: string; value: number | null | undefined; kind: "tire" | "brake" }) => {
+    const s = stateOf(value);
+    return (
+      <div className={`rounded-xl border p-2.5 flex items-center gap-2 ${stateClass[s]}`}>
+        {kind === "tire" ? (
+          // Tire glyph — rounded rect w/ tread grooves
+          <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <rect x="5" y="3" width="14" height="18" rx="3" />
+            <line x1="9" y1="5" x2="9" y2="19" />
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="15" y1="5" x2="15" y2="19" />
+          </svg>
+        ) : (
+          // Brake glyph — caliper circle with pad wedge
+          <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <circle cx="12" cy="12" r="9" />
+            <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none" />
+            <path d="M12 3 A9 9 0 0 1 21 12" strokeWidth="2.5" />
+          </svg>
+        )}
+        <div className="min-w-0 flex-1">
+          <div className="text-[9px] font-bold uppercase tracking-wider opacity-75 leading-none">{label}</div>
+          <div className="text-[11px] font-semibold leading-tight mt-0.5">
+            {s === "empty" ? "Not recorded" : s === "green" ? "Good" : s === "yellow" ? "Fair" : "Replace"}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-3 mb-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        {/* Tires */}
+        <div>
+          <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-1.5">Tires</div>
+          <div className="grid grid-cols-2 gap-2">
+            <Pos label="LF" value={data.tire_lf} kind="tire" />
+            <Pos label="RF" value={data.tire_rf} kind="tire" />
+            <Pos label="LR" value={data.tire_lr} kind="tire" />
+            <Pos label="RR" value={data.tire_rr} kind="tire" />
+          </div>
+        </div>
+        {/* Brakes */}
+        <div>
+          <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-1.5">Brake Pads</div>
+          <div className="grid grid-cols-2 gap-2">
+            <Pos label="LF" value={data.brake_lf} kind="brake" />
+            <Pos label="RF" value={data.brake_rf} kind="brake" />
+            <Pos label="LR" value={data.brake_lr} kind="brake" />
+            <Pos label="RR" value={data.brake_rr} kind="brake" />
+          </div>
+        </div>
+      </div>
+      <p className="text-[10px] text-muted-foreground italic">
+        From the inspection — Green good, Amber fair, Red replace.
+      </p>
+    </div>
+  );
+};
+
 const CompactOBDIndicator = ({ submissionId, token }: { submissionId: string; token: string }) => {
   const routerNavigate = useNavigate();
   const [scan, setScan] = useState<{ mil_on: boolean | null; dtc_codes: any; created_at: string } | null>(null);
@@ -1403,11 +1518,19 @@ const SubmissionDetailSheet = ({
               </SectionCard>
             )}
 
-            {/* Internal Notes — Premium */}
+            {/* Internal Notes — Premium
+                InspectionVitals replaces the old auto-generated
+                "[INSPECTION...]" text dump. Inspector-typed notes still
+                live in the textarea below. */}
             <SectionCard icon={StickyNote} title="Internal Notes">
+              <InspectionVitals submissionId={sub.id} />
               <Textarea
                 placeholder="Add team notes, observations, or follow-up reminders..."
-                value={sub.internal_notes || ""}
+                value={
+                  // Strip any legacy auto-generated "[INSPECTION…]" dump so the
+                  // field only shows the inspector's actual typed text.
+                  (sub.internal_notes || "").replace(/\[INSPECTION[\s\S]*?\](\s*\n)?/g, "").trim()
+                }
                 onChange={(e) => updateField({ internal_notes: e.target.value || null })}
                 rows={4}
                 className="rounded-xl border-border/40 focus:border-primary/40 resize-none text-sm leading-relaxed"
