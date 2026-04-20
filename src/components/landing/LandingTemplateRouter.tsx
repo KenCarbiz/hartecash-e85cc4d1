@@ -2,11 +2,11 @@ import { lazy, Suspense } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useSiteConfig, type LandingTemplate } from "@/hooks/useSiteConfig";
 
-const ClassicTemplate = lazy(() => import("./templates/ClassicTemplate"));
-const VideoTemplate = lazy(() => import("./templates/VideoTemplate"));
-const InventoryTemplate = lazy(() => import("./templates/InventoryTemplate"));
-const TrustTemplate = lazy(() => import("./templates/TrustTemplate"));
-const EditorialTemplate = lazy(() => import("./templates/EditorialTemplate"));
+const ClassicTemplate  = lazy(() => import("./templates/ClassicTemplate"));
+const BoldTemplate     = lazy(() => import("./templates/BoldTemplate"));
+const MinimalTemplate  = lazy(() => import("./templates/MinimalTemplate"));
+const ElegantTemplate  = lazy(() => import("./templates/ElegantTemplate"));
+const ShowroomTemplate = lazy(() => import("./templates/ShowroomTemplate"));
 
 const TemplateFallback = () => (
   <div className="min-h-[60vh] flex items-center justify-center">
@@ -15,14 +15,14 @@ const TemplateFallback = () => (
 );
 
 const templateMap: Record<LandingTemplate, React.ComponentType> = {
-  classic: ClassicTemplate,
-  video: VideoTemplate,
-  inventory: InventoryTemplate,
-  trust: TrustTemplate,
-  editorial: EditorialTemplate,
+  classic:  ClassicTemplate,
+  bold:     BoldTemplate,
+  minimal:  MinimalTemplate,
+  elegant:  ElegantTemplate,
+  showroom: ShowroomTemplate,
 };
 
-const VALID_TEMPLATES = new Set<LandingTemplate>(["classic", "video", "inventory", "trust", "editorial"]);
+const VALID_TEMPLATES = new Set<LandingTemplate>(["classic", "bold", "minimal", "elegant", "showroom"]);
 
 interface Props {
   /** Explicit override (admin preview). Ignores URL param and dealer config. */

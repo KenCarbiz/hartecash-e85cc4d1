@@ -2,14 +2,14 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
 
-export type LandingTemplate = "classic" | "video" | "inventory" | "trust" | "editorial";
+export type LandingTemplate = "classic" | "bold" | "minimal" | "elegant" | "showroom";
 
 export const LANDING_TEMPLATES: { value: LandingTemplate; label: string; description: string }[] = [
-  { value: "classic", label: "Classic", description: "Split hero with instant-offer form. Balanced and form-forward." },
-  { value: "video", label: "Video Hero", description: "Full-bleed cinematic background with a single focused CTA." },
-  { value: "inventory", label: "Inventory-Forward", description: "Plate / VIN / make-model search leads; trust blocks follow." },
-  { value: "trust", label: "Trust-Wall", description: "Minimal hero, huge review wall, community and local focus." },
-  { value: "editorial", label: "Editorial", description: "Long-scroll narrative that walks through each step of the flow." },
+  { value: "classic",  label: "Classic",  description: "Default split hero with instant-offer form. Choose left, center, or right hero alignment." },
+  { value: "bold",     label: "Bold",     description: "Dark, premium, asymmetric. Large display type with one focused CTA — Carvana-style." },
+  { value: "minimal",  label: "Minimal",  description: "White space and one giant search box with VIN / Plate / Year-Make-Model tabs." },
+  { value: "elegant",  label: "Elegant",  description: "Cream + dark with serif accents and gold borders. Premium feel for luxury and franchise dealers." },
+  { value: "showroom", label: "Showroom", description: "Inventory grid behind a translucent form card. \u201CWe buy yours, browse ours.\u201D" },
 ];
 
 export interface AboutMilestone {
