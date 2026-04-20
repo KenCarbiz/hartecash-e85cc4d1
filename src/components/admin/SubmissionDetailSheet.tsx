@@ -257,6 +257,139 @@ const InspectionVitals = ({ submissionId }: { submissionId: string }) => {
   );
 };
 
+// ── QuickSummary ─────────────────────────────────────────────────────
+// Pinned strip at the top of the customer file. BDCs / sales / managers
+// read this first — name, phone, email with click-to-call / click-to-SMS,
+// current pipeline stage, lead source, and last activity. Everything
+// below the strip is "click to get deeper."
+const QuickSummary = ({
+  sub,
+  statusLabel,
+}: {
+  sub: any;
+  statusLabel: string;
+}) => {
+  const phoneDigits = (sub.phone || "").replace(/\D/g, "");
+  const phoneHref = phoneDigits ? `tel:+1${phoneDigits}` : null;
+  const smsHref = phoneDigits ? `sms:+1${phoneDigits}` : null;
+  const emailHref = sub.email ? `mailto:${sub.email}` : null;
+  const leadSource = sub.lead_source || "Not set";
+  const lastActivity = sub.updated_at || sub.created_at;
+  const lastActivityAgo = lastActivity
+    ? (() => {
+        const ms = Date.now() - new Date(lastActivity).getTime();
+        const mins = Math.floor(ms / 60000);
+        if (mins < 1) return "just now";
+        if (mins < 60) return `${mins}m ago`;
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return `${hrs}h ago`;
+        return `${Math.floor(hrs / 24)}d ago`;
+      })()
+    : "—";
+
+  return (
+    <div className="rounded-2xl border border-border/50 bg-card shadow-[0_2px_10px_rgba(0,0,0,0.05)] overflow-hidden">
+      <div className="px-4 py-3 border-b border-border/40 bg-gradient-to-r from-muted/40 to-transparent flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-primary bg-primary/10 px-2 py-0.5 rounded">
+            {statusLabel}
+          </span>
+          <span className="text-[10px] font-semibold text-muted-foreground">·</span>
+          <span className="text-[10px] font-semibold text-muted-foreground">{leadSource}</span>
+        </div>
+        <span className="text-[10px] text-muted-foreground whitespace-nowrap">Last activity · {lastActivityAgo}</span>
+      </div>
+      <div className="px-4 py-3 space-y-2">
+        <div className="text-base font-bold text-card-foreground leading-tight">
+          {sub.name || <span className="text-muted-foreground italic">Unknown customer</span>}
+        </div>
+        <div className="flex flex-wrap gap-2 text-xs">
+          {phoneHref && (
+            <a
+              href={phoneHref}
+              className="inline-flex items-center gap-1.5 bg-muted/60 hover:bg-muted px-2.5 py-1 rounded-md text-card-foreground font-mono"
+            >
+              <span aria-hidden>📞</span>
+              {sub.phone}
+            </a>
+          )}
+          {smsHref && (
+            <a
+              href={smsHref}
+              className="inline-flex items-center gap-1.5 bg-muted/60 hover:bg-muted px-2.5 py-1 rounded-md text-card-foreground"
+            >
+              <span aria-hidden>💬</span>
+              SMS
+            </a>
+          )}
+          {emailHref && (
+            <a
+              href={emailHref}
+              className="inline-flex items-center gap-1.5 bg-muted/60 hover:bg-muted px-2.5 py-1 rounded-md text-card-foreground max-w-full truncate"
+              title={sub.email}
+            >
+              <span aria-hidden>✉️</span>
+              <span className="truncate">{sub.email}</span>
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── DLAtAGlance ──────────────────────────────────────────────────────
+// Shows the front of the driver's license as a small thumbnail next to
+// the customer name when one is uploaded. Click = zoom. Self-hides if
+// nothing's uploaded. Paired with a masked number so BDCs can verify ID
+// without hunting through the Documents card.
+const DLAtAGlance = ({
+  docs,
+}: {
+  docs: { type: string; name: string; url: string }[];
+}) => {
+  const [zoom, setZoom] = useState(false);
+  const frontDoc = docs.find(
+    (d) =>
+      (d.type === "drivers_license_front" || d.type === "drivers_license") &&
+      /\.(jpg|jpeg|png|gif|webp)$/i.test(d.name),
+  );
+  if (!frontDoc) return null;
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setZoom(true)}
+        className="group inline-flex items-center gap-2 rounded-lg border border-border bg-card hover:border-primary/50 hover:shadow-sm transition-all px-2 py-1.5"
+        title="View driver's license"
+      >
+        <img
+          src={frontDoc.url}
+          alt="Driver's license — front"
+          className="w-12 h-8 object-cover rounded"
+        />
+        <span className="text-[10px] font-semibold text-muted-foreground group-hover:text-primary transition-colors">
+          DL on file
+        </span>
+      </button>
+      {zoom && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setZoom(false)}
+          className="fixed inset-0 z-[100] bg-black/70 backdrop-blur flex items-center justify-center p-6"
+        >
+          <img
+            src={frontDoc.url}
+            alt="Driver's license — front"
+            className="max-w-full max-h-[85vh] rounded-xl shadow-2xl cursor-zoom-out"
+          />
+        </div>
+      )}
+    </>
+  );
+};
+
 const CompactOBDIndicator = ({ submissionId, token }: { submissionId: string; token: string }) => {
   const routerNavigate = useNavigate();
   const [scan, setScan] = useState<{ mil_on: boolean | null; dtc_codes: any; created_at: string } | null>(null);
@@ -717,7 +850,11 @@ const SubmissionDetailSheet = ({
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-1.5">
                     {[
-                      { label: "Inspection", icon: ClipboardList, onClick: () => { routerNavigate(`/inspection/${sub.id}`); } },
+                      // "Inspection" was removed — inspectors have their own
+                      // entry points (Inspection Check-In, Appraiser Queue)
+                      // and the customer-file header isn't where they start.
+                      // "Appraisal" remains — it's the most common jump from
+                      // the customer view.
                       { label: "Appraisal", icon: Gauge, onClick: () => { routerNavigate(`/appraisal/${sub.token}`); } },
                       {
                         label: (sub as any).needs_appraisal ? "In Queue" : "Send to Appraiser",
@@ -766,7 +903,7 @@ const SubmissionDetailSheet = ({
                         <Button variant="ghost" size="sm" onClick={action.onClick} className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10 rounded-xl text-xs h-8 print:hidden transition-all">
                           <action.icon className="w-3.5 h-3.5 mr-1.5" /> {action.label}
                         </Button>
-                        {(action.label === "Appraisal" || action.label === "Inspection") && (
+                        {action.label === "Appraisal" && (
                           <span className="text-[9px] text-primary-foreground/40 mt-0.5 print:hidden">Opens in this tab</span>
                         )}
                       </div>
@@ -865,6 +1002,14 @@ const SubmissionDetailSheet = ({
           {/* LEFT COLUMN — sticky deal summary (~40%)                      */}
           {/* ────────────────────────────────────────────────────────────── */}
           <div className="lg:w-[40%] lg:border-r border-border/30 overflow-y-auto p-5 lg:p-6 space-y-5 shrink-0 bg-gradient-to-b from-muted/10 to-transparent">
+
+            {/* Pinned quick-summary — first thing BDCs / sales see */}
+            <div className="flex items-start gap-3">
+              <div className="flex-1 min-w-0">
+                <QuickSummary sub={sub} statusLabel={getStatusLabel(sub.progress_status)} />
+              </div>
+              <DLAtAGlance docs={docs} />
+            </div>
 
             {/* Offered Price — Hero Deal Card */}
             {(canSetPrice || sub.offered_price) && (
