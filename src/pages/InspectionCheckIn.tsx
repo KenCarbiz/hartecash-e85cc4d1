@@ -52,8 +52,14 @@ type BBData = {
 };
 
 const VIN_REGEX = /^[A-HJ-NPR-Z0-9]{17}$/;
+// Accept either a full 17-char VIN (for new-customer check-in via lookup +
+// create) OR the last 6 characters (quick jump when the submission already
+// exists). Staff mostly use last-6 because the 17-char VIN is inconvenient
+// to type and the barcode scanner handles the full one anyway.
+const LAST6_REGEX = /^[A-HJ-NPR-Z0-9]{6}$/;
 
 const isValidVin = (vin: string) => VIN_REGEX.test(vin.toUpperCase());
+const isLast6 = (v: string) => LAST6_REGEX.test(v.toUpperCase());
 
 const InspectionCheckIn = () => {
   const navigate = useNavigate();
@@ -70,6 +76,11 @@ const InspectionCheckIn = () => {
   // VIN capture
   const [vin, setVin] = useState("");
   const [manualVin, setManualVin] = useState("");
+  // When the staff enters a last-6 that matches more than one submission,
+  // we show an inline picker so they choose the right one before we route
+  // to /inspection/:id.
+  const [last6Matches, setLast6Matches] = useState<ExistingSubmission[] | null>(null);
+  const [last6Looking, setLast6Looking] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [scannerError, setScannerError] = useState<string>("");
   // scannerMode: "native" = Chromium BarcodeDetector; "zxing" = JS fallback
@@ -393,24 +404,65 @@ const InspectionCheckIn = () => {
     setScannerOpen(false);
   };
 
-  const handleManualContinue = () => {
+  const handleManualContinue = async () => {
     const cleaned = manualVin.trim().toUpperCase();
-    if (!isValidVin(cleaned)) {
-      toast({
-        title: "Invalid VIN",
-        description:
-          "VIN must be 17 characters, alphanumeric (no I, O, or Q).",
-        variant: "destructive",
-      });
+
+    // Path A — full 17-char VIN: existing lookup + create-new flow.
+    if (isValidVin(cleaned)) {
+      handleVinCaptured(cleaned);
       return;
     }
-    handleVinCaptured(cleaned);
+
+    // Path B — last 6: quick jump to existing submission's inspection.
+    if (isLast6(cleaned)) {
+      setLast6Looking(true);
+      setLast6Matches(null);
+      const { data, error } = await supabase
+        .from("submissions")
+        .select(
+          "id, token, name, vehicle_year, vehicle_make, vehicle_model, progress_status, mileage, phone, email",
+        )
+        .ilike("vin", `%${cleaned}`)
+        .eq("dealership_id", tenant.dealership_id)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      setLast6Looking(false);
+
+      if (error) {
+        toast({ title: "Lookup failed", description: error.message, variant: "destructive" });
+        return;
+      }
+      const rows = (data as ExistingSubmission[]) || [];
+      if (rows.length === 0) {
+        toast({
+          title: "No matching customer",
+          description: "No submission found for that last-6. Enter the full 17-character VIN to start a new check-in.",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (rows.length === 1) {
+        navigate(`/inspection/${rows[0].id}`);
+        return;
+      }
+      // Multiple — show inline picker
+      setLast6Matches(rows);
+      return;
+    }
+
+    toast({
+      title: "Invalid VIN",
+      description: "Enter the full 17-character VIN or the last 6 digits.",
+      variant: "destructive",
+    });
   };
 
   const resetAll = () => {
     setStage("capture");
     setVin("");
     setManualVin("");
+    setLast6Matches(null);
+    setLast6Looking(false);
     setExisting(null);
     setLookupDone(false);
     setBbData(null);
@@ -756,14 +808,14 @@ const InspectionCheckIn = () => {
                 <div>
                   <h3 className="text-lg font-bold text-foreground">Manual Entry</h3>
                   <p className="text-xs text-muted-foreground">
-                    Type the 17-character VIN
+                    Full 17-character VIN, or last 6 digits if the customer is already on file
                   </p>
                 </div>
               </div>
               <div className="space-y-3">
                 <div>
                   <Label htmlFor="manualVin" className="text-sm font-semibold mb-2 block">
-                    VIN
+                    VIN <span className="text-muted-foreground font-normal">or last 6</span>
                   </Label>
                   <Input
                     id="manualVin"
@@ -774,8 +826,10 @@ const InspectionCheckIn = () => {
                         .replace(/[^A-HJ-NPR-Z0-9]/g, "")
                         .slice(0, 17);
                       setManualVin(v);
+                      // Clear stale picker if the user keeps typing
+                      if (last6Matches) setLast6Matches(null);
                     }}
-                    placeholder="17-character VIN"
+                    placeholder="17-character VIN or last 6 digits"
                     maxLength={17}
                     autoCapitalize="characters"
                     autoCorrect="off"
@@ -784,18 +838,74 @@ const InspectionCheckIn = () => {
                     className="h-14 text-lg font-mono tracking-wider"
                   />
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {manualVin.length}/17 · No I, O, or Q
+                    {manualVin.length === 17 ? (
+                      <>17/17 · Full VIN — ready to look up or create</>
+                    ) : manualVin.length === 6 ? (
+                      <>6/6 · Last-6 — will jump to the matching inspection</>
+                    ) : (
+                      <>{manualVin.length}/17 · No I, O, or Q · or type last 6</>
+                    )}
                   </p>
                 </div>
                 <Button
                   onClick={handleManualContinue}
-                  disabled={manualVin.length !== 17}
+                  disabled={!(manualVin.length === 17 || manualVin.length === 6) || last6Looking}
                   className="w-full h-14 text-base font-bold"
                   size="lg"
                 >
-                  Continue
-                  <ArrowRight className="w-5 h-5 ml-2" />
+                  {last6Looking ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Looking up…
+                    </>
+                  ) : (
+                    <>
+                      {manualVin.length === 6 ? "Find inspection" : "Continue"}
+                      <ArrowRight className="w-5 h-5 ml-2" />
+                    </>
+                  )}
                 </Button>
+
+                {/* Multi-match picker — shown when the last-6 lookup
+                    returned more than one submission and the staff has
+                    to pick which vehicle they're checking in. */}
+                {last6Matches && last6Matches.length > 1 && (
+                  <div className="mt-4 rounded-2xl border border-border/60 bg-muted/20 p-4 space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Multiple matches — pick the right one
+                    </p>
+                    <ul className="space-y-1.5">
+                      {last6Matches.map((m) => {
+                        const veh =
+                          [m.vehicle_year, m.vehicle_make, m.vehicle_model]
+                            .filter(Boolean)
+                            .join(" ") || "Vehicle on file";
+                        return (
+                          <li key={m.id}>
+                            <button
+                              type="button"
+                              onClick={() => navigate(`/inspection/${m.id}`)}
+                              className="w-full flex items-center gap-3 p-3 rounded-xl border border-border bg-card hover:border-primary hover:bg-primary/5 transition-all text-left"
+                            >
+                              <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                                <Car className="w-4 h-4" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-semibold text-sm text-card-foreground truncate">
+                                  {veh}
+                                </div>
+                                <div className="text-xs text-muted-foreground truncate">
+                                  {m.name || "Unknown customer"}
+                                </div>
+                              </div>
+                              <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                )}
               </div>
             </section>
           </>
