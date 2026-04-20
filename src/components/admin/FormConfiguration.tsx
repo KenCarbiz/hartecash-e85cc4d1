@@ -9,7 +9,45 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Save, ChevronDown, Loader2, Car, ClipboardList, User, Flag, Lock } from "lucide-react";
+import { Save, ChevronDown, Loader2, Car, ClipboardList, User, Flag, Lock, DollarSign, Banknote } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { PricingRevealMode, RangeHighMode, PaymentSelectionTiming } from "@/lib/offerCalculator";
+
+// Same 11 Black Book tiers the offer engine exposes — kept in sync with
+// OfferSettings.tsx / the engine's getBBValue() lookup.
+const BB_TIERS = [
+  { value: "wholesale_xclean", label: "Wholesale – Extra Clean" },
+  { value: "wholesale_clean", label: "Wholesale – Clean" },
+  { value: "wholesale_avg", label: "Wholesale – Average" },
+  { value: "wholesale_rough", label: "Wholesale – Rough" },
+  { value: "tradein_clean", label: "Trade-In – Clean" },
+  { value: "tradein_avg", label: "Trade-In – Average" },
+  { value: "tradein_rough", label: "Trade-In – Rough" },
+  { value: "retail_xclean", label: "Retail – Extra Clean" },
+  { value: "retail_clean", label: "Retail – Clean" },
+  { value: "retail_avg", label: "Retail – Average" },
+  { value: "retail_rough", label: "Retail – Rough" },
+] as const;
+
+interface OfferFlowState {
+  pricing_reveal_mode: PricingRevealMode;
+  show_range_before_final: boolean;
+  range_low_source: string;
+  range_high_mode: RangeHighMode;
+  range_high_source: string | null;
+  range_high_percent: number;
+  payment_selection_timing: PaymentSelectionTiming;
+}
+
+const OFFER_FLOW_DEFAULTS: OfferFlowState = {
+  pricing_reveal_mode: "price_first",
+  show_range_before_final: false,
+  range_low_source: "wholesale_avg",
+  range_high_mode: "percent_above_low",
+  range_high_source: null,
+  range_high_percent: 8,
+  payment_selection_timing: "with_final_offer",
+};
 
 interface FormConfigData {
   id?: string;
@@ -99,6 +137,7 @@ const OFFER_QUESTIONS = [
 export default function FormConfiguration() {
   const { toast } = useToast();
   const [config, setConfig] = useState<FormConfigData>(DEFAULTS);
+  const [offerFlow, setOfferFlow] = useState<OfferFlowState>(OFFER_FLOW_DEFAULTS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
@@ -107,6 +146,8 @@ export default function FormConfiguration() {
     condition: true,
     details: false,
     offer: false,
+    reveal: true,
+    payment: true,
   });
 
   const { tenant } = useTenant();
@@ -118,20 +159,42 @@ export default function FormConfiguration() {
 
   const fetchConfig = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("form_config" as any)
-      .select("*")
-      .eq("dealership_id", dealershipId)
-      .maybeSingle();
-    if (data) {
-      setConfig({ ...DEFAULTS, ...(data as any) });
+    const [formRes, offerRes] = await Promise.all([
+      supabase.from("form_config" as any).select("*").eq("dealership_id", dealershipId).maybeSingle(),
+      supabase.from("offer_settings" as any).select(
+        "pricing_reveal_mode, show_range_before_final, range_low_source, range_high_mode, range_high_source, range_high_percent, payment_selection_timing"
+      ).eq("dealership_id", dealershipId).maybeSingle(),
+    ]);
+    if (formRes.data) {
+      setConfig({ ...DEFAULTS, ...(formRes.data as any) });
+    }
+    if (offerRes.data) {
+      const row = offerRes.data as any;
+      setOfferFlow({
+        pricing_reveal_mode: (row.pricing_reveal_mode as PricingRevealMode) || OFFER_FLOW_DEFAULTS.pricing_reveal_mode,
+        show_range_before_final: !!row.show_range_before_final,
+        range_low_source: (row.range_low_source as string) || OFFER_FLOW_DEFAULTS.range_low_source,
+        range_high_mode: (row.range_high_mode as RangeHighMode) || OFFER_FLOW_DEFAULTS.range_high_mode,
+        range_high_source: (row.range_high_source as string) ?? null,
+        range_high_percent: Number(row.range_high_percent ?? OFFER_FLOW_DEFAULTS.range_high_percent),
+        payment_selection_timing:
+          (row.payment_selection_timing as PaymentSelectionTiming) || OFFER_FLOW_DEFAULTS.payment_selection_timing,
+      });
     }
     setLoading(false);
   };
 
   const handleSave = async () => {
     setSaving(true);
-    const payload = { ...config, updated_at: new Date().toISOString() };
+    // Keep offer_before_details (form_config) in sync with pricing_reveal_mode
+    // (offer_settings) so any legacy code still reading the old column
+    // keeps working.
+    const offerBeforeDetails = offerFlow.pricing_reveal_mode === "price_first";
+    const payload = {
+      ...config,
+      offer_before_details: offerBeforeDetails,
+      updated_at: new Date().toISOString(),
+    };
     delete (payload as any).id;
 
     const { data: existing } = await supabase
@@ -150,17 +213,50 @@ export default function FormConfiguration() {
       ({ error } = await supabase.from("form_config" as any).insert(payload));
     }
 
+    // Persist the offer-flow settings on offer_settings
+    const { error: offerErr } = await supabase
+      .from("offer_settings" as any)
+      .update({
+        pricing_reveal_mode: offerFlow.pricing_reveal_mode,
+        show_range_before_final: offerFlow.show_range_before_final,
+        range_low_source: offerFlow.range_low_source,
+        range_high_mode: offerFlow.range_high_mode,
+        range_high_source: offerFlow.range_high_mode === "bb_value" ? offerFlow.range_high_source : null,
+        range_high_percent: offerFlow.range_high_mode === "percent_above_low" ? offerFlow.range_high_percent : null,
+        payment_selection_timing: offerFlow.payment_selection_timing,
+      } as any)
+      .eq("dealership_id", dealershipId);
+
     setSaving(false);
     clearFormConfigCache();
-    if (error) {
-      toast({ title: "Error", description: (error as any).message, variant: "destructive" });
+    const err = (error || offerErr) as any;
+    if (err) {
+      // Diagnose the two most common causes (unapplied migration or stale
+      // PostgREST cache) so the dealer doesn't chase a raw Postgres message.
+      const msg: string = err.message || "";
+      const missingCol =
+        /schema cache/i.test(msg) ||
+        (/column/i.test(msg) && /does not exist/i.test(msg)) ||
+        /pricing_reveal_mode|range_low_source|payment_selection_timing|step_ai_photos/.test(msg);
+      toast({
+        title: missingCol ? "Pending migration" : "Save failed",
+        description: missingCol
+          ? "One or more form-flow columns (pricing_reveal_mode, range_low_source, payment_selection_timing, step_ai_photos) aren't provisioned on this environment yet. Apply the pending Supabase migrations or refresh the PostgREST schema cache, then try again."
+          : msg,
+        variant: "destructive",
+      });
     } else {
+      // Reflect the derived column locally so the visible Step 4/5 labels
+      // update immediately without a refetch.
+      setConfig((c) => ({ ...c, offer_before_details: offerBeforeDetails }));
       toast({ title: "Saved", description: "Form configuration updated." });
     }
   };
 
   const toggle = (key: string) => setOpenSections(s => ({ ...s, [key]: !s[key] }));
   const set = (key: string, val: boolean) => setConfig(c => ({ ...c, [key]: val }));
+  const updateFlow = <K extends keyof OfferFlowState>(k: K, v: OfferFlowState[K]) =>
+    setOfferFlow((prev) => ({ ...prev, [k]: v }));
 
   const enabledCount = (questions: { key: string }[]) =>
     questions.filter(q => (config as any)[q.key]).length;
@@ -310,26 +406,10 @@ export default function FormConfiguration() {
             )}
           </div>
 
-          {/* Offer-First Toggle */}
-          <div className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-accent/10 border border-accent/30">
-            <div className="flex items-center gap-3">
-              <Switch
-                checked={config.offer_before_details}
-                onCheckedChange={v => set("offer_before_details", v)}
-              />
-              <div>
-                <p className="text-sm font-medium">Offer-First Flow</p>
-                <p className="text-xs text-muted-foreground">
-                  {config.offer_before_details
-                    ? "Customer sees their offer BEFORE providing contact info (like CarMax/Peddle)"
-                    : "Customer provides contact info first, then sees offer (traditional flow)"}
-                </p>
-              </div>
-            </div>
-            <Badge variant={config.offer_before_details ? "default" : "secondary"} className="text-xs">
-              {config.offer_before_details ? "Offer First" : "Details First"}
-            </Badge>
-          </div>
+          {/* The old "Offer-First Flow" toggle was removed — the Pricing
+              Reveal card below supersedes it. offer_before_details on
+              form_config is now derived automatically from the reveal
+              mode on save. */}
 
           <div className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-muted/20">
             <div className="flex items-center gap-3">
@@ -436,6 +516,220 @@ export default function FormConfiguration() {
           {OFFER_QUESTIONS.map(q => renderQuestionRow(q))}
         </CollapsibleContent>
       </Collapsible>
+
+      {/* ─────────────────────────────────────────────────────────────
+          Pricing Reveal, Range Configuration, and Payment Selection
+          Timing were moved here from Landing & Flow so every "what the
+          customer sees in the form" decision lives in one place. Visual
+          treatment preserved from the original.
+          ───────────────────────────────────────────────────────────── */}
+
+      {/* ── Pricing reveal ── */}
+      <section className="bg-card rounded-xl border border-border p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <DollarSign className="w-4 h-4 text-primary" />
+          <h3 className="font-bold">Pricing Reveal</h3>
+        </div>
+        <p className="text-xs text-muted-foreground mb-4">
+          Controls whether the customer sees a number before providing their contact info.
+        </p>
+
+        <div className="space-y-2">
+          {([
+            {
+              v: "price_first",
+              title: "Offer Before Contact",
+              desc: "Show the exact cash offer on-screen first. Contact info is collected afterward.",
+            },
+            {
+              v: "range_then_price",
+              title: "Range, Then Final Offer",
+              desc: "Show an estimated range based on Black Book, collect contact info, then reveal the exact offer.",
+            },
+            {
+              v: "contact_first",
+              title: "Offer After Contact",
+              desc: "Customer provides contact info first; no number is shown until then.",
+            },
+          ] as { v: PricingRevealMode; title: string; desc: string }[]).map((o) => {
+            const active = offerFlow.pricing_reveal_mode === o.v;
+            return (
+              <button
+                key={o.v}
+                type="button"
+                onClick={() => updateFlow("pricing_reveal_mode", o.v)}
+                className={`w-full text-left rounded-lg border-2 p-4 transition-all ${
+                  active ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div
+                    className={`mt-0.5 w-4 h-4 rounded-full border-2 flex-shrink-0 ${
+                      active ? "border-primary bg-primary" : "border-muted-foreground/40"
+                    }`}
+                  />
+                  <div>
+                    <div className="font-semibold text-sm">{o.title}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{o.desc}</div>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Secondary toggle: show range even when reveal mode is price_first or contact_first */}
+        {offerFlow.pricing_reveal_mode !== "range_then_price" && (
+          <div className="flex items-start gap-3 mt-4 p-3 rounded-lg bg-muted/40 border border-border">
+            <Switch
+              checked={offerFlow.show_range_before_final}
+              onCheckedChange={(v) => updateFlow("show_range_before_final", v)}
+            />
+            <div>
+              <div className="font-semibold text-sm">
+                Also show a range while the customer waits
+              </div>
+              <div className="text-xs text-muted-foreground mt-0.5">
+                Displays the Black Book range as a preview before the final number is ready.
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* ── Range config ── */}
+      {(offerFlow.pricing_reveal_mode === "range_then_price" || offerFlow.show_range_before_final) && (
+        <section className="bg-card rounded-xl border border-border p-6">
+          <h3 className="font-bold mb-1">Range Configuration</h3>
+          <p className="text-xs text-muted-foreground mb-5">
+            Pick which Black Book tiers anchor the low and high ends of the range.
+            <span className="block mt-1 opacity-80">
+              Asterisk on the page: * preliminary — subject to final inspection.
+            </span>
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Low Range Source</Label>
+              <Select
+                value={offerFlow.range_low_source}
+                onValueChange={(v) => updateFlow("range_low_source", v)}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {BB_TIERS.map((t) => (
+                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">High Range Method</Label>
+              <Select
+                value={offerFlow.range_high_mode}
+                onValueChange={(v) => updateFlow("range_high_mode", v as RangeHighMode)}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="bb_value">Second Black Book tier</SelectItem>
+                  <SelectItem value="percent_above_low">Percent above the low</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {offerFlow.range_high_mode === "bb_value" ? (
+              <div className="space-y-1.5 md:col-span-2">
+                <Label className="text-xs font-semibold">High Range Source</Label>
+                <Select
+                  value={offerFlow.range_high_source ?? ""}
+                  onValueChange={(v) => updateFlow("range_high_source", v)}
+                >
+                  <SelectTrigger><SelectValue placeholder="Pick a tier…" /></SelectTrigger>
+                  <SelectContent>
+                    {BB_TIERS.map((t) => (
+                      <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : (
+              <div className="space-y-1.5 md:col-span-2">
+                <Label className="text-xs font-semibold">Percent Above Low</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={0.5}
+                    value={offerFlow.range_high_percent}
+                    onChange={(e) => updateFlow("range_high_percent", Number(e.target.value))}
+                    className="w-28"
+                  />
+                  <span className="text-sm text-muted-foreground">%</span>
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  Example: 8% above a $10,000 low = $10,800 high.
+                </p>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* ── Payment timing ── */}
+      <section className="bg-card rounded-xl border border-border p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Banknote className="w-4 h-4 text-primary" />
+          <h3 className="font-bold">Payment Selection Timing</h3>
+        </div>
+        <p className="text-xs text-muted-foreground mb-4">
+          When the customer picks how you pay them (ACH, check, wire, etc.).
+        </p>
+        <div className="space-y-2">
+          {([
+            {
+              v: "before_final_offer",
+              title: "Before Final Offer",
+              desc: "Customer picks their preferred payment method before seeing the final offer.",
+            },
+            {
+              v: "with_final_offer",
+              title: "With the Final Offer",
+              desc: "Payment method is chosen on the same screen as the accepted offer.",
+            },
+            {
+              v: "none_before_final_offer",
+              title: "After Final Offer (Handled Later)",
+              desc: "Skip during the landing flow — your team confirms payment method in follow-up.",
+            },
+          ] as { v: PaymentSelectionTiming; title: string; desc: string }[]).map((o) => {
+            const active = offerFlow.payment_selection_timing === o.v;
+            return (
+              <button
+                key={o.v}
+                type="button"
+                onClick={() => updateFlow("payment_selection_timing", o.v)}
+                className={`w-full text-left rounded-lg border-2 p-4 transition-all ${
+                  active ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div
+                    className={`mt-0.5 w-4 h-4 rounded-full border-2 flex-shrink-0 ${
+                      active ? "border-primary bg-primary" : "border-muted-foreground/40"
+                    }`}
+                  />
+                  <div>
+                    <div className="font-semibold text-sm">{o.title}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{o.desc}</div>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </section>
     </div>
   );
 }
