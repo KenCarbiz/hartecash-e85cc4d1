@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Save, Loader2, Layout, DollarSign, Banknote, Sparkles } from "lucide-react";
 import { LANDING_TEMPLATES, type LandingTemplate } from "@/hooks/useSiteConfig";
 import type { PricingRevealMode, RangeHighMode, PaymentSelectionTiming } from "@/lib/offerCalculator";
+import TemplateThumbnail from "@/components/landing/TemplateThumbnail";
 
 // Keep in sync with BB_VALUE_OPTIONS in OfferSettings.tsx — same 11 tiers.
 const BB_TIERS = [
@@ -165,13 +166,16 @@ const LandingFlowConfig = () => {
                 key={t.value}
                 type="button"
                 onClick={() => update("landing_template", t.value)}
-                className={`text-left rounded-xl border-2 p-4 transition-all ${
+                className={`text-left rounded-xl border-2 p-3 transition-all ${
                   active
                     ? "border-primary bg-primary/5 shadow-md"
                     : "border-border bg-muted/30 hover:bg-muted hover:border-primary/30"
                 }`}
               >
-                <div className="flex items-center justify-between mb-1.5">
+                <div className="aspect-[16/10] mb-2.5 rounded-md overflow-hidden border border-border/60">
+                  <TemplateThumbnail template={t.value} />
+                </div>
+                <div className="flex items-center justify-between mb-1">
                   <span className="font-bold text-sm">{t.label}</span>
                   {active && (
                     <span className="text-[10px] font-bold uppercase tracking-wider text-primary">

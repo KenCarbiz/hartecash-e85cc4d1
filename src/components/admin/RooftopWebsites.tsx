@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Loader2, Plus, Trash2, Globe, Save, ExternalLink, Building2 } from "lucide-react";
 import { LANDING_TEMPLATES, type LandingTemplate } from "@/hooks/useSiteConfig";
+import TemplateThumbnail from "@/components/landing/TemplateThumbnail";
 
 interface LocationRow {
   id: string;

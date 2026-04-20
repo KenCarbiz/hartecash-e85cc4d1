@@ -12,6 +12,7 @@ import { Copy, Check, Code2, ExternalLink, Monitor, MapPin, PanelRightOpen, Layo
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { LANDING_TEMPLATES, type LandingTemplate } from "@/hooks/useSiteConfig";
+import TemplateThumbnail from "@/components/landing/TemplateThumbnail";
 
 interface DealerLocation {
   id: string;
@@ -448,12 +449,17 @@ window.addEventListener("message", function(e) {
               <button
                 type="button"
                 onClick={() => setEmbedTemplate("__default__")}
-                className={`text-left rounded-lg border-2 p-2.5 transition-all ${
+                className={`text-left rounded-lg border-2 p-2 transition-all ${
                   embedTemplate === "__default__"
                     ? "border-primary bg-primary/5"
                     : "border-border bg-background hover:border-primary/30"
                 }`}
               >
+                <div className="aspect-[16/10] mb-1.5 rounded overflow-hidden border border-dashed border-border bg-muted/40 flex items-center justify-center">
+                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Inherits
+                  </span>
+                </div>
                 <div className="font-semibold text-xs">Dealer Default</div>
                 <div className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">
                   Use whatever is set in Landing &amp; Flow.
@@ -466,12 +472,15 @@ window.addEventListener("message", function(e) {
                     key={t.value}
                     type="button"
                     onClick={() => setEmbedTemplate(t.value)}
-                    className={`text-left rounded-lg border-2 p-2.5 transition-all ${
+                    className={`text-left rounded-lg border-2 p-2 transition-all ${
                       active
                         ? "border-primary bg-primary/5"
                         : "border-border bg-background hover:border-primary/30"
                     }`}
                   >
+                    <div className="aspect-[16/10] mb-1.5 rounded overflow-hidden border border-border/60">
+                      <TemplateThumbnail template={t.value} />
+                    </div>
                     <div className="font-semibold text-xs">{t.label}</div>
                     <div className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">
                       {t.description}

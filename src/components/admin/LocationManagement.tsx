@@ -18,6 +18,7 @@ import {
 import { Plus, Trash2, GripVertical, Save, Loader2, MapPin, ChevronDown, ChevronRight, X, MapPinned, Car, Radar, Store, Building2, ShoppingCart, Warehouse, Image, Eye, Globe, Megaphone, Link2, ExternalLink, CheckCircle2, AlertCircle } from "lucide-react";
 import LocationLogoSection from "./LocationLogoSection";
 import { LANDING_TEMPLATES, type LandingTemplate } from "@/hooks/useSiteConfig";
+import TemplateThumbnail from "@/components/landing/TemplateThumbnail";
 
 const LOCATION_TYPE_OPTIONS = [
   { value: "primary", label: "Primary Store", icon: Store, color: "bg-primary/10 text-primary border-primary/20" },
@@ -818,12 +819,15 @@ const LocationManagement = () => {
                                 onClick={() =>
                                   updateLocation(loc.id, "landing_template", t.value as LandingTemplate)
                                 }
-                                className={`text-left rounded-lg border-2 p-2.5 transition-all ${
+                                className={`text-left rounded-lg border-2 p-2 transition-all ${
                                   active
                                     ? "border-primary bg-primary/5"
                                     : "border-border bg-background hover:border-primary/30"
                                 }`}
                               >
+                                <div className="aspect-[16/10] mb-1.5 rounded overflow-hidden border border-border/60">
+                                  <TemplateThumbnail template={t.value} />
+                                </div>
                                 <div className="font-semibold text-xs">{t.label}</div>
                                 <div className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">
                                   {t.description}
