@@ -196,6 +196,11 @@ const AddTenantWizard = ({ onClose, onCreated }: Props) => {
             logo_url: loc.locationLogoUrl || null,
             logo_white_url: loc.locationLogoDarkUrl || null,
             oem_logo_urls: loc.oem_logo_urls,
+            // Rooftop-site options — edge function uses these to create additional tenant rows
+            own_rooftop_site: loc.ownRooftopSite || false,
+            rooftop_slug: loc.rooftopSlug || null,
+            rooftop_custom_domain: loc.rooftopCustomDomain || null,
+            rooftop_landing_template: loc.rooftopLandingTemplate || null,
           })),
           corporate_logo_url: state.corporateLogoUrl || null,
           corporate_logo_dark_url: state.corporateLogoDarkUrl || null,

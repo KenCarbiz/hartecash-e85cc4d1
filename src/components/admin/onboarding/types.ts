@@ -5,6 +5,14 @@ export type ArchitectureType =
   | "dealer_group"
   | "enterprise";
 
+export type RooftopLandingTemplate =
+  | ""
+  | "classic"
+  | "video"
+  | "inventory"
+  | "trust"
+  | "editorial";
+
 export interface LocationEntry {
   id: string;
   name: string;
@@ -22,6 +30,14 @@ export interface LocationEntry {
   locationLogoDarkUrl: string;
   oem_logo_urls: string[];
   scrapedData: Record<string, any> | null;
+  // Rooftop-site options. When ownRooftopSite is true, onboarding creates a
+  // second `tenants` row for this location so it has its own URL + landing
+  // page independent of the group's main tenant. Leaving ownRooftopSite false
+  // means the location still exists, but only the group slug resolves to it.
+  ownRooftopSite: boolean;
+  rooftopSlug: string;         // subdomain segment; empty = auto-generate from name
+  rooftopCustomDomain: string; // optional dealer-owned domain
+  rooftopLandingTemplate: RooftopLandingTemplate; // "" = inherit group default
 }
 
 export interface WizardState {
@@ -78,7 +94,23 @@ export function createLocationEntry(index: number): LocationEntry {
     locationLogoDarkUrl: "",
     oem_logo_urls: [],
     scrapedData: null,
+    ownRooftopSite: false,
+    rooftopSlug: "",
+    rooftopCustomDomain: "",
+    rooftopLandingTemplate: "",
   };
+}
+
+/** Slugify a location name for subdomain use. "Smith Toyota of Hartford" → "smith-toyota-of-hartford". */
+export function suggestRooftopSlug(groupSlug: string, locationName: string): string {
+  const locPart = (locationName || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40);
+  if (!locPart) return "";
+  if (!groupSlug) return locPart;
+  return `${groupSlug}-${locPart}`.replace(/-+/g, "-").slice(0, 60);
 }
 
 export function architectureToplanTier(arch: ArchitectureType): string {

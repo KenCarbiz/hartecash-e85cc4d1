@@ -298,8 +298,23 @@ serve(async (req) => {
     );
     steps.push("photo_config");
 
-    // 9. Seed dealership locations — from wizard body or scraped data
+    // 9. Seed dealership locations — from wizard body or scraped data.
+    // We capture the inserted IDs (plus optional rooftop-site options from the
+    // body) so step 9b can create one extra `tenants` row per rooftop that
+    // opted into its own URL.
     const bodyLocations = body.locations;
+    // For each inserted location, carry forward the rooftop-site options the
+    // wizard collected. Aligned to `insertedLocs` by array position.
+    type RooftopOpt = {
+      own_rooftop_site: boolean;
+      rooftop_slug: string | null;
+      rooftop_custom_domain: string | null;
+      rooftop_landing_template: string | null;
+      locationName: string;
+    };
+    let rooftopOpts: RooftopOpt[] = [];
+    let insertedLocs: { id: string; name: string }[] = [];
+
     if (bodyLocations?.length) {
       const locs = bodyLocations.map((loc: any, i: number) => ({
         dealership_id,
@@ -320,8 +335,21 @@ serve(async (req) => {
         oem_logo_urls: loc.oem_logo_urls || [],
         established_year: sd.established_year ? parseInt(sd.established_year) : null,
         website_url: loc.website_url || null,
+        landing_template: loc.rooftop_landing_template || null,
       }));
-      await admin.from("dealership_locations").insert(locs);
+      rooftopOpts = bodyLocations.map((loc: any) => ({
+        own_rooftop_site: !!loc.own_rooftop_site,
+        rooftop_slug: loc.rooftop_slug || null,
+        rooftop_custom_domain: loc.rooftop_custom_domain || null,
+        rooftop_landing_template: loc.rooftop_landing_template || null,
+        locationName: loc.name || display_name,
+      }));
+      const { data: inserted, error: locErr } = await admin
+        .from("dealership_locations")
+        .insert(locs)
+        .select("id, name");
+      if (locErr) throw locErr;
+      insertedLocs = inserted || [];
       steps.push(`locations (${locs.length})`);
     } else if (sd.locations?.length) {
       const locs = sd.locations.map((loc: any, i: number) => {
@@ -356,6 +384,58 @@ serve(async (req) => {
         established_year: sd.established_year ? parseInt(sd.established_year) : null,
       });
       steps.push("locations (1 default)");
+    }
+
+    // 9b. Create an additional `tenants` row for each rooftop that opted into
+    // its own URL. Shares dealership_id with the group (so admin + leads + staff
+    // stay unified) but has its own slug / custom_domain / location_id, which
+    // makes the domain resolver serve that rooftop's overrides at its URL.
+    const rooftopTenantRows: any[] = [];
+    const rooftopTenantLog: string[] = [];
+    for (let i = 0; i < rooftopOpts.length && i < insertedLocs.length; i++) {
+      const opt = rooftopOpts[i];
+      if (!opt.own_rooftop_site) continue;
+
+      let rSlug = (opt.rooftop_slug || "").toLowerCase().trim();
+      if (!rSlug) {
+        // Auto-derive from location name if user left it blank
+        const locPart = opt.locationName
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "")
+          .slice(0, 40);
+        rSlug = locPart ? `${slug}-${locPart}`.slice(0, 60) : "";
+      }
+      if (!rSlug || !SLUG_RE.test(rSlug) || RESERVED.has(rSlug) || rSlug === slug) {
+        console.warn(`Skipping rooftop tenant — invalid slug for ${opt.locationName}:`, rSlug);
+        continue;
+      }
+
+      const customDomain = opt.rooftop_custom_domain?.trim().toLowerCase() || null;
+      if (customDomain && !/^[a-z0-9.-]+$/i.test(customDomain)) {
+        console.warn(`Skipping rooftop domain — invalid for ${opt.locationName}:`, customDomain);
+        continue;
+      }
+
+      rooftopTenantRows.push({
+        dealership_id, // shared with group
+        slug: rSlug,
+        display_name: opt.locationName || display_name,
+        custom_domain: customDomain,
+        location_id: insertedLocs[i].id,
+        is_active: true,
+      });
+      rooftopTenantLog.push(rSlug);
+    }
+    if (rooftopTenantRows.length) {
+      const { error: rtErr } = await admin.from("tenants").insert(rooftopTenantRows);
+      if (rtErr) {
+        // Unique-violation on slug or custom_domain is non-fatal — log and continue.
+        console.warn("rooftop tenants insert warning:", rtErr.message);
+        steps.push(`rooftop_tenants (partial — ${rtErr.message})`);
+      } else {
+        steps.push(`rooftop_tenants (${rooftopTenantLog.length}: ${rooftopTenantLog.join(", ")})`);
+      }
     }
 
     // 10. Seed testimonials if scraped

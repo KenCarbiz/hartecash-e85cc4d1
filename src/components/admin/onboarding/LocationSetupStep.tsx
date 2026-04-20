@@ -13,8 +13,18 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import type { LocationEntry, WizardState } from "./types";
-import { createLocationEntry } from "./types";
+import { Switch } from "@/components/ui/switch";
+import type { LocationEntry, RooftopLandingTemplate, WizardState } from "./types";
+import { createLocationEntry, suggestRooftopSlug } from "./types";
+
+const ROOFTOP_TEMPLATE_OPTIONS: { value: RooftopLandingTemplate; label: string }[] = [
+  { value: "", label: "Group default" },
+  { value: "classic", label: "Classic" },
+  { value: "video", label: "Video Hero" },
+  { value: "inventory", label: "Inventory-Forward" },
+  { value: "trust", label: "Trust-Wall" },
+  { value: "editorial", label: "Editorial" },
+];
 
 const LOCATION_TYPES = [
   { value: "primary", label: "Primary Store" },
@@ -235,6 +245,97 @@ const LocationSetupStep = ({ state, onChange }: Props) => {
                     <MiniLogoSlot label="Light Logo" value={loc.locationLogoUrl} onChange={(v) => updateLocation(idx, { locationLogoUrl: v })} />
                     <MiniLogoSlot label="Dark Logo" value={loc.locationLogoDarkUrl} onChange={(v) => updateLocation(idx, { locationLogoDarkUrl: v })} />
                   </div>
+                </div>
+
+                {/* Rooftop Website — optional per-location URL + landing template */}
+                <div className="space-y-3 border-t pt-4">
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/40 border border-border">
+                    <Switch
+                      checked={loc.ownRooftopSite}
+                      onCheckedChange={(v) => {
+                        const next: Partial<LocationEntry> = { ownRooftopSite: v };
+                        // When enabling for the first time, pre-fill slug suggestion
+                        if (v && !loc.rooftopSlug) {
+                          next.rooftopSlug = suggestRooftopSlug(state.slug, loc.name);
+                        }
+                        updateLocation(idx, next);
+                      }}
+                    />
+                    <div className="flex-1">
+                      <div className="font-semibold text-sm">Give this rooftop its own website</div>
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        Creates a second URL for this location so it can have its own landing page,
+                        template, and branding. Leads still flow to the group's single inbox.
+                      </div>
+                    </div>
+                  </div>
+
+                  {loc.ownRooftopSite && (
+                    <div className="space-y-3 pl-3 border-l-2 border-primary/30">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs font-medium">
+                            Rooftop Slug <span className="text-muted-foreground">(subdomain)</span>
+                          </Label>
+                          <Input
+                            value={loc.rooftopSlug}
+                            onChange={(e) => updateLocation(idx, { rooftopSlug: e.target.value })}
+                            onBlur={() => {
+                              // Auto-suggest on blur if still empty
+                              if (!loc.rooftopSlug && loc.name) {
+                                updateLocation(idx, {
+                                  rooftopSlug: suggestRooftopSlug(state.slug, loc.name),
+                                });
+                              }
+                            }}
+                            placeholder={suggestRooftopSlug(state.slug, loc.name) || "smith-toyota"}
+                            className="mt-1 text-sm font-mono"
+                          />
+                          {loc.rooftopSlug && (
+                            <p className="text-[10px] text-muted-foreground mt-1">
+                              Will serve at <span className="font-mono">{loc.rooftopSlug}.autocurb.io</span>
+                            </p>
+                          )}
+                        </div>
+                        <div>
+                          <Label className="text-xs font-medium">
+                            Custom Domain <span className="text-muted-foreground">(optional)</span>
+                          </Label>
+                          <Input
+                            value={loc.rooftopCustomDomain}
+                            onChange={(e) => updateLocation(idx, { rooftopCustomDomain: e.target.value })}
+                            placeholder="smithtoyota.com"
+                            className="mt-1 text-sm font-mono"
+                          />
+                          <p className="text-[10px] text-muted-foreground mt-1">
+                            Add later in Rooftop Websites if the dealer doesn't own one yet.
+                          </p>
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-xs font-medium">Landing Template for this rooftop</Label>
+                        <Select
+                          value={loc.rooftopLandingTemplate}
+                          onValueChange={(v) =>
+                            updateLocation(idx, { rooftopLandingTemplate: v as RooftopLandingTemplate })
+                          }
+                        >
+                          <SelectTrigger className="mt-1 text-sm"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {ROOFTOP_TEMPLATE_OPTIONS.map((opt) => (
+                              <SelectItem key={opt.value || "__group__"} value={opt.value}>
+                                {opt.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          "Group default" uses whatever the group picks in Landing &amp; Flow.
+                          Dealers can always switch later per rooftop.
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
