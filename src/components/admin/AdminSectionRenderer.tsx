@@ -416,7 +416,7 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
           <AppraiserQueue userRole={userRole} isAppraiser={props.isAppraiser} />
         </React.Suspense>
       )}
-      {activeSection === "offer-settings" && (canManageAccess || userRole === "gsm_gm") && (
+      {activeSection === "offer-settings" && (canManageAccess || userRole === "gsm_gm" || userRole === "gm") && (
         <OfferSettings userId={userId || undefined} userRole={userRole} />
       )}
       {activeSection === "site-config" && canManageAccess && <SiteConfiguration focusField={focusField} />}
@@ -456,7 +456,12 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
           <PlatformPricingManager />
         </React.Suspense>
       )}
-      {activeSection === "tenants" && canManageAccess && (
+      {/* Dealer Tenants list is super-admin territory only. The default
+          tenant acts as the platform-admin scope — a dealer admin on
+          their own rooftop shouldn't see other dealers' tenant records.
+          Rooftop management (locations within THIS dealership) lives
+          in the Locations section, which stays admin-accessible. */}
+      {activeSection === "tenants" && canManageAccess && tenant.dealership_id === "default" && (
         <TenantManagement
           onSetupDealer={(dealerId) => {
             setOnboardingDealershipId(dealerId);

@@ -83,6 +83,7 @@ export const ROLE_LABELS: Record<string, string> = {
   new_car_manager: "New Car Manager",
   gsm_gm: "GSM",
   gm: "General Manager",
+  receptionist: "Receptionist",
 };
 
 export const DOC_TYPE_LABELS: Record<string, string> = {
@@ -265,6 +266,7 @@ export const ROLE_LABELS_FULL: Record<string, string> = {
   platform_admin: "Super Admin",
   inspector: "Inspector",
   appraiser: "Appraiser",
+  receptionist: "Reception",
 };
 
 // Longer, more descriptive labels used in onboarding and staff management
@@ -280,6 +282,7 @@ export const ROLE_LABELS_LONG: Record<string, string> = {
   platform_admin: "Super Admin",
   inspector: "Inspector",
   appraiser: "Appraiser",
+  receptionist: "Receptionist",
 };
 
 // Roles that sit at the "sales floor" tier — individual contributors
@@ -323,6 +326,27 @@ export const APPROVAL_ROLES = ["admin", "gsm_gm", "gm"] as const;
 // P&L dashboard.
 export const EXECUTIVE_HUD_ROLES = ["admin", "gm", "platform_admin"] as const;
 
+// Roles allowed to edit the DEALER's offer model — how aggressive the
+// offer is vs. book, recon buffers, promo bonuses, payment timing.
+// This is the dealer's own tuning knob, not the subscription-pricing
+// model (which is platform-admin only via tenant.dealership_id check).
+export const OFFER_MODEL_EDIT_ROLES = ["admin", "gsm_gm", "gm"] as const;
+
+// Roles allowed to access the check-in kiosk workflow. Receptionist
+// stops here — they check customers in and see today's appointments,
+// nothing else.
+export const CHECKIN_ROLES = [
+  "admin",
+  "receptionist",
+  "inspector",
+  "sales_bdc",
+  "sales",
+  "used_car_manager",
+  "new_car_manager",
+  "gsm_gm",
+  "gm",
+] as const;
+
 export const isManagerRole = (role: string | null | undefined): boolean =>
   !!role && (MANAGER_ROLES as readonly string[]).includes(role);
 
@@ -349,6 +373,15 @@ export const canEditPricing = (role: string | null | undefined): boolean =>
 
 export const canViewExecutiveHUD = (role: string | null | undefined): boolean =>
   !!role && (EXECUTIVE_HUD_ROLES as readonly string[]).includes(role);
+
+export const canEditOfferModel = (role: string | null | undefined): boolean =>
+  !!role && (OFFER_MODEL_EDIT_ROLES as readonly string[]).includes(role);
+
+export const canAccessCheckIn = (role: string | null | undefined): boolean =>
+  !!role && (CHECKIN_ROLES as readonly string[]).includes(role);
+
+export const isReceptionistRole = (role: string | null | undefined): boolean =>
+  role === "receptionist";
 
 export const getRoleLabel = (role: string | null | undefined, variant: "short" | "long" = "short"): string => {
   if (!role) return "Unknown";
