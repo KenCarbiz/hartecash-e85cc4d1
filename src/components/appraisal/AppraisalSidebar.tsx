@@ -341,7 +341,7 @@ export default function AppraisalSidebar({
            The desk sees how every day on the lot erodes this deal so
            they can reason about bumps vs. turn time. */}
       {canViewExecutiveHUD(userRole) && (
-        <HoldingCostChip acv={finalValue || currentOffer || (offerResult?.finalValue ?? null)} />
+        <HoldingCostChip acv={finalValue || currentOffer || (offerResult?.high ?? null)} />
       )}
 
       {sub.ai_damage_summary && (
