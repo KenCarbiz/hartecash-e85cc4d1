@@ -167,6 +167,12 @@ export const DEFAULT_TEMPLATES: Record<string, TemplateDefaults> = {
     sms_body:
       "{{customer_name}} just arrived for their {{vehicle}} inspection. They're at the front desk.",
   },
+  staff_customer_replied: {
+    email_subject: "Customer texted back — {{customer_name}}",
+    email_body:
+      "{{customer_name}} just replied to one of your SMS messages.\n\n{{custom_body}}\n\nCustomer file: {{admin_link}}",
+    sms_body: "{{custom_body}}",
+  },
   customer_check_ready_for_pickup: {
     email_subject: "Your check is ready — {{vehicle}}",
     email_body:
