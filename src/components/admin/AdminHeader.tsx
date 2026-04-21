@@ -3,6 +3,7 @@ import { LogOut, Moon, Sun, Crown, Menu, PanelLeft } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { ROLE_LABELS } from "@/lib/adminConstants";
+import PushNotificationToggle from "@/components/admin/PushNotificationToggle";
 import AppSwitcher from "@/components/platform/AppSwitcher";
 import { usePlatform } from "@/contexts/PlatformContext";
 import { Badge } from "@/components/ui/badge";
@@ -115,6 +116,10 @@ const AdminHeader = ({ darkMode, setDarkMode, userRole, onLogout, userName, isPl
           >
             {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </Button>
+          {/* Staff-side push-notification toggle. Compact rendering so
+               it sits neatly in the header; full-width version ships
+               in the staff profile page later. */}
+          <PushNotificationToggle compact />
           <Button
             variant="ghost"
             size="sm"
