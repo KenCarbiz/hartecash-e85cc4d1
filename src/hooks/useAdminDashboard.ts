@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useStaffPermissions } from "@/hooks/useStaffPermissions";
 import { useTenant } from "@/contexts/TenantContext";
 import type { Submission, DealerLocation, Appointment } from "@/lib/adminConstants";
-import { ROLE_LABELS, PAGE_SIZE, getStatusLabel, isPricingRole, isApprovalRole } from "@/lib/adminConstants";
+import { ROLE_LABELS, PAGE_SIZE, getStatusLabel, isPricingRole, isApprovalRole, canViewPricing as canViewPricingHelper, isSalesFloorRole } from "@/lib/adminConstants";
 import { safeInvoke } from "@/lib/safeInvoke";
 
 export interface PendingRequest {
@@ -77,6 +77,14 @@ export function useAdminDashboard() {
   const canApprove = isApprovalRole(userRole);
   const canDelete = userRole === "admin";
   const canManageAccess = userRole === "admin";
+  // Read-only pricing visibility for the sales floor — they can SEE
+  // book values and ACV so they can quote customers, but every edit
+  // affordance stays gated by canSetPrice.
+  const canViewPricing = canViewPricingHelper(userRole);
+  // Sensitive sections that leak margin math or internal operations
+  // (profit spread, AI call transcripts, full activity log) are hidden
+  // from the sales floor entirely.
+  const isSalesFloor = isSalesFloorRole(userRole);
   const { allowedSections } = useStaffPermissions(userId, canManageAccess);
 
   // Audit label — every activity_log entry uses this as performed_by.
@@ -459,7 +467,7 @@ export function useAdminDashboard() {
     approveRole, setApproveRole,
 
     // Derived
-    canSetPrice, canApprove, canDelete, canManageAccess,
+    canSetPrice, canApprove, canDelete, canManageAccess, canViewPricing, isSalesFloor,
     allowedSections, auditLabel, tenant,
 
     // Handlers

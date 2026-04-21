@@ -77,9 +77,12 @@ export const getStatusLabel = (dbStatus: string): string =>
 
 export const ROLE_LABELS: Record<string, string> = {
   admin: "Admin",
-  sales_bdc: "Sales / BDC",
+  sales_bdc: "BDC",
+  sales: "Salesperson",
   used_car_manager: "Used Car Manager",
-  gsm_gm: "GSM / GM",
+  new_car_manager: "New Car Manager",
+  gsm_gm: "GSM",
+  gm: "General Manager",
 };
 
 export const DOC_TYPE_LABELS: Record<string, string> = {
@@ -252,10 +255,12 @@ export const getTimeSlotsForDate = (dateStr: string) => {
 // they differ only in which department they report to. Permission
 // checks should treat them identically everywhere.
 export const ROLE_LABELS_FULL: Record<string, string> = {
-  sales_bdc: "BDC / Sales",
+  sales_bdc: "BDC",
+  sales: "Sales",
   used_car_manager: "UCM",
   new_car_manager: "NCM",
-  gsm_gm: "GSM / GM",
+  gsm_gm: "GSM",
+  gm: "GM",
   admin: "Admin",
   platform_admin: "Super Admin",
   inspector: "Inspector",
@@ -265,32 +270,58 @@ export const ROLE_LABELS_FULL: Record<string, string> = {
 // Longer, more descriptive labels used in onboarding and staff management
 // where there's room for the full title.
 export const ROLE_LABELS_LONG: Record<string, string> = {
-  sales_bdc: "Sales / BDC",
+  sales_bdc: "BDC Representative",
+  sales: "Salesperson",
   used_car_manager: "Used Car Manager",
   new_car_manager: "New Car Manager",
-  gsm_gm: "GSM / GM",
+  gsm_gm: "General Sales Manager",
+  gm: "General Manager",
   admin: "Admin",
   platform_admin: "Super Admin",
   inspector: "Inspector",
   appraiser: "Appraiser",
 };
 
-// Roles that sit at the "manager" tier — they get the same pricing,
-// queue, and appraisal access. Add any future manager-tier role here
-// and every permission check picks it up automatically.
+// Roles that sit at the "sales floor" tier — individual contributors
+// working leads. BDC focuses on appointment-setting + declined-offer
+// objection handling + escalation; Sales owns the customer through
+// the deal. Both see read-only pricing (see PRICING_VIEW_ROLES).
+export const SALES_FLOOR_ROLES = ["sales_bdc", "sales"] as const;
+
+// Roles that sit at the "manager" tier — they get full pricing edit,
+// queue access, and the appraisal tool. gm is included because every
+// manager-tier permission still applies (GMs don't lose approval
+// rights just because they also see the executive HUD).
 export const MANAGER_ROLES = [
   "used_car_manager",
   "new_car_manager",
   "gsm_gm",
+  "gm",
 ] as const;
 
-// Roles allowed to see cost basis, the waterfall, and the full
-// appraisal tool. A strict superset of MANAGER_ROLES + admin.
+// Roles allowed to EDIT pricing — cost basis, overrides, waterfall.
+// Strict superset of MANAGER_ROLES + admin.
 export const PRICING_ROLES = ["admin", ...MANAGER_ROLES] as const;
+
+// Roles allowed to VIEW pricing information (book values, ACV, market
+// comps) — read-only for the sales floor, full access for managers.
+// Keeps the sales team able to quote customers without leaking the
+// margin math they don't need to see edited or overridden.
+export const PRICING_VIEW_ROLES = [
+  ...SALES_FLOOR_ROLES,
+  ...PRICING_ROLES,
+  "appraiser",
+] as const;
 
 // Roles allowed to approve the highest-stakes statuses (deal finalized,
 // check request submitted, purchase complete). GM-tier only.
-export const APPROVAL_ROLES = ["admin", "gsm_gm"] as const;
+export const APPROVAL_ROLES = ["admin", "gsm_gm", "gm"] as const;
+
+// Roles allowed to see the executive HUD: conversion rates, lead source
+// mix, employee performance, floor-plan holding costs. Owner-adjacent
+// by design — GSMs and below stay focused on their deals, not the
+// P&L dashboard.
+export const EXECUTIVE_HUD_ROLES = ["admin", "gm", "platform_admin"] as const;
 
 export const isManagerRole = (role: string | null | undefined): boolean =>
   !!role && (MANAGER_ROLES as readonly string[]).includes(role);
@@ -300,6 +331,24 @@ export const isPricingRole = (role: string | null | undefined): boolean =>
 
 export const isApprovalRole = (role: string | null | undefined): boolean =>
   !!role && (APPROVAL_ROLES as readonly string[]).includes(role);
+
+export const isSalesFloorRole = (role: string | null | undefined): boolean =>
+  !!role && (SALES_FLOOR_ROLES as readonly string[]).includes(role);
+
+export const isBDCRole = (role: string | null | undefined): boolean =>
+  role === "sales_bdc";
+
+export const isSalesRole = (role: string | null | undefined): boolean =>
+  role === "sales";
+
+export const canViewPricing = (role: string | null | undefined): boolean =>
+  !!role && (PRICING_VIEW_ROLES as readonly string[]).includes(role);
+
+export const canEditPricing = (role: string | null | undefined): boolean =>
+  isPricingRole(role);
+
+export const canViewExecutiveHUD = (role: string | null | undefined): boolean =>
+  !!role && (EXECUTIVE_HUD_ROLES as readonly string[]).includes(role);
 
 export const getRoleLabel = (role: string | null | undefined, variant: "short" | "long" = "short"): string => {
   if (!role) return "Unknown";

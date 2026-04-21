@@ -59,6 +59,20 @@ interface SubmissionDetailSheetProps {
   canApprove: boolean;
   canDelete: boolean;
   canUpdateStatus: boolean;
+  /**
+   * Read-only pricing visibility. Sales-floor roles get this true even
+   * when canSetPrice is false — they can see book values and ACV so
+   * they can quote customers, but every edit control stays gated by
+   * canSetPrice.
+   */
+  canViewPricing?: boolean;
+  /**
+   * True for sales_bdc / sales. Used to hide margin math (profit
+   * spread, retail market comps, activity log, AI call transcripts)
+   * that internal-operations-level users need but the sales floor
+   * does not.
+   */
+  isSalesFloor?: boolean;
   auditLabel: string;
   userName: string;
   onUpdate: (updated: Submission) => void;
@@ -519,6 +533,8 @@ const SubmissionDetailSheet = ({
   canApprove,
   canDelete,
   canUpdateStatus,
+  canViewPricing = true,
+  isSalesFloor = false,
   auditLabel,
   userName,
   onUpdate,
@@ -1034,7 +1050,10 @@ const SubmissionDetailSheet = ({
               <div className="flex-1 min-w-0">
                 <QuickSummary sub={sub} statusLabel={getStatusLabel(sub.progress_status)} />
               </div>
-              <DLAtAGlance docs={docs} />
+              {/* Driver's license thumbnail is ID-document material —
+                   hidden from the sales floor. Managers and inspectors
+                   still see it. */}
+              {!isSalesFloor && <DLAtAGlance docs={docs} />}
             </div>
 
             {/* Offered Price — Hero Deal Card */}
@@ -1143,12 +1162,14 @@ const SubmissionDetailSheet = ({
               );
             })()}
 
-            {/* ACV Value — Premium */}
-            {sub.acv_value && (
+            {/* ACV Value — Premium. Spread / margin hidden from the
+                 sales floor (isSalesFloor) — they can see the ACV
+                 number but not the dealer-vs-customer-offer delta. */}
+            {sub.acv_value && canViewPricing && (
               <SectionCard icon={Gauge} title="Appraisal Value (ACV)" accent="success">
                 <div className="flex items-end justify-between mb-3">
                   <p className="text-2xl font-black text-card-foreground tracking-tight font-display">${Number(sub.acv_value).toLocaleString()}</p>
-                  {sub.offered_price && sub.acv_value && (
+                  {sub.offered_price && sub.acv_value && !isSalesFloor && (
                     <div className="text-right">
                       <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Spread</p>
                       <p className={`text-sm font-bold ${(sub.acv_value - sub.offered_price) > 0 ? "text-success" : "text-destructive"}`}>
@@ -1162,9 +1183,13 @@ const SubmissionDetailSheet = ({
                     <Users className="w-3 h-3" /> Appraised by: <span className="font-semibold text-card-foreground/70">{sub.appraised_by}</span>
                   </p>
                 )}
-                <Button variant="outline" size="sm" className="rounded-xl h-9 text-xs font-semibold" onClick={() => { routerNavigate(`/appraisal/${sub.token}`); }}>
-                  <Gauge className="w-3.5 h-3.5 mr-1.5" /> Open Appraisal Tool
-                </Button>
+                {/* Full appraisal tool is margin-math — the sales floor
+                     sees the ACV number but doesn't get the tool. */}
+                {!isSalesFloor && (
+                  <Button variant="outline" size="sm" className="rounded-xl h-9 text-xs font-semibold" onClick={() => { routerNavigate(`/appraisal/${sub.token}`); }}>
+                    <Gauge className="w-3.5 h-3.5 mr-1.5" /> Open Appraisal Tool
+                  </Button>
+                )}
               </SectionCard>
             )}
             {!sub.acv_value && canSetPrice && (
@@ -1180,8 +1205,12 @@ const SubmissionDetailSheet = ({
             {/* OBD-II Quick Indicator */}
             {sub.id && <CompactOBDIndicator submissionId={sub.id} token={sub.token} />}
 
-            {/* Black Book Market Values — Private Party reference */}
-            {(() => {
+            {/* Black Book Market Values — Private Party reference.
+                 Sales floor sees this read-only (they can quote the
+                 customer with confidence); managers and above see it
+                 plus every edit affordance. Non-pricing roles (e.g.
+                 inspector) don't see it at all. */}
+            {canViewPricing && (() => {
               const tiers = typeof sub.bb_value_tiers === "string" ? (() => { try { return JSON.parse(sub.bb_value_tiers); } catch { return null; } })() : sub.bb_value_tiers;
               const hasAnyBBData = tiers || sub.bb_tradein_avg || sub.bb_retail_avg || sub.bb_wholesale_avg;
               if (!hasAnyBBData) return null;
@@ -1815,19 +1844,27 @@ const SubmissionDetailSheet = ({
               </div>
             </SectionCard>
 
+            {/* Follow-Up Sequence — hoisted above the collapsible so
+                 the sales floor can see pending next steps at a glance.
+                 This is the primary sales action list and belongs in
+                 the top of the right column, not buried in Research. */}
+            <FollowUpPanel submissionId={sub.id} hasOffer={!!(sub.offered_price || sub.estimated_offer_high)} progressStatus={sub.progress_status} />
+
             {/* ─────────────────────────────────────────────────────────
                 Research & Automation — collapsible so the top of the file
                 stays focused on the deal. Contains Retail Market,
-                Follow-Up Sequencer, AI Call History, and the full Activity
-                Log. All were cluttering the everyday BDC / sales view.
+                AI Call History, and the full Activity Log. Hidden for
+                the sales floor (isSalesFloor) — they're follow-up-focused,
+                not internal-ops focused.
                 ───────────────────────────────────────────────────────── */}
+            {!isSalesFloor && (
             <details className="group/more rounded-2xl border border-border/40 bg-card/40 overflow-hidden [&[open]>summary>svg]:rotate-180">
               <summary className="flex items-center justify-between gap-2 px-4 py-3 cursor-pointer hover:bg-muted/30 transition-colors list-none [&::-webkit-details-marker]:hidden">
                 <span className="text-sm font-semibold text-card-foreground flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-muted-foreground" />
                   Research &amp; Automation
                 </span>
-                <span className="text-[10px] text-muted-foreground">Market · Follow-ups · Call history · Activity log</span>
+                <span className="text-[10px] text-muted-foreground">Market · Call history · Activity log</span>
                 <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform duration-200" />
               </summary>
               <div className="px-4 pb-4 pt-2 space-y-5 border-t border-border/30">
@@ -1842,9 +1879,6 @@ const SubmissionDetailSheet = ({
                 />
               </SectionCard>
             )}
-
-            {/* Follow-Up Sequence */}
-            <FollowUpPanel submissionId={sub.id} hasOffer={!!(sub.offered_price || sub.estimated_offer_high)} progressStatus={sub.progress_status} />
 
             {/* AI Call History */}
             {callHistory.length > 0 && (
@@ -1975,6 +2009,7 @@ const SubmissionDetailSheet = ({
 
               </div>
             </details>
+            )}
             {/* ── END Research & Automation collapsible ── */}
           </div>
           {/* ── END RIGHT COLUMN ── */}
