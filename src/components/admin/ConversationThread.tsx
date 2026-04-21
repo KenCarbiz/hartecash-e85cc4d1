@@ -81,7 +81,7 @@ const ConversationThread = ({
   const load = useCallback(async () => {
     if (!submissionId) return;
     setLoading(true);
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from("conversation_events")
       .select("id, channel, direction, actor_type, actor_label, body_text, body_html, occurred_at, metadata")
       .eq("submission_id", submissionId)
@@ -108,7 +108,7 @@ const ConversationThread = ({
         // audit consistency (the trigger on activity_log also mirrors
         // into conversation_events but with a system-generated body —
         // the staff-typed body we're inserting below is richer).
-        const { error } = await supabase.from("conversation_events").insert({
+        const { error } = await (supabase as any).from("conversation_events").insert({
           submission_id: submissionId,
           dealership_id: dealershipId || "default",
           channel: "note",
@@ -149,7 +149,7 @@ const ConversationThread = ({
         // so the timeline shows the actual typed body, not the generic
         // "customer_staff_reply_sms → phone" placeholder the mirror
         // would use.
-        await supabase.from("conversation_events").insert({
+        await (supabase as any).from("conversation_events").insert({
           submission_id: submissionId,
           dealership_id: dealershipId || "default",
           channel: "sms",
@@ -176,7 +176,7 @@ const ConversationThread = ({
           },
         });
         if (error) throw error;
-        await supabase.from("conversation_events").insert({
+        await (supabase as any).from("conversation_events").insert({
           submission_id: submissionId,
           dealership_id: dealershipId || "default",
           channel: "email",

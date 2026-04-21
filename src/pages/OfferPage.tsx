@@ -176,7 +176,7 @@ const OfferPage = () => {
       // Portal engagement tracking — second view flips offer_locked_at,
       // which the UI uses to switch from estimate-range to single-locked
       // display. Fire-and-forget so load time isn't impacted.
-      supabase.rpc("increment_portal_view", { _token: token }).then(() => {}, () => {});
+      (supabase as any).rpc("increment_portal_view", { _token: token }).then(() => {}, () => {});
       try {
         const { data, error: err } = await supabase.rpc("get_submission_portal", { _token: token });
         if (cancelled) return;

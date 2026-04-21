@@ -261,8 +261,8 @@ const MobileInspection = () => {
         setOverallGrade(sub.overall_condition || "");
 
         // Fetch inspection config for this submission's dealership to get input mode
-        const { data: subFull } = await supabase.from("submissions").select("dealership_id, inspection_started_notified_at").eq("id", id).maybeSingle();
-        if (subFull?.dealership_id) {
+        const { data: subFull } = await supabase.from("submissions").select("dealership_id").eq("id", id).maybeSingle();
+        if ((subFull as any)?.dealership_id) {
           const { data: cfgData } = await supabase.from("inspection_config").select("tire_brake_input_mode").eq("dealership_id", subFull.dealership_id).maybeSingle();
           if (cfgData && (cfgData as any).tire_brake_input_mode === "pass_fail") {
             setTireBrakeInputMode("pass_fail");
@@ -274,7 +274,7 @@ const MobileInspection = () => {
         // the inspection_started_notified_at column (fetched above).
         // Fire-and-forget so any SMS-provider blip doesn't block the
         // inspector's workflow.
-        if (!(subFull as any)?.inspection_started_notified_at) {
+        if (!(sub as any)?.inspection_started_notified_at) {
           safeInvoke("send-notification", {
             body: { trigger_key: "customer_inspection_started", submission_id: id },
             context: { from: "MobileInspection.firstOpen" },

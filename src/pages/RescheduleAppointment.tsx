@@ -59,7 +59,7 @@ const RescheduleAppointment = () => {
     if (!token) return;
     let cancelled = false;
     (async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("appointments")
         .select("id, scheduled_at, preferred_date, preferred_time, location, store_location, status, confirmed_at, rescheduled_at, dealership_id")
         .eq("reschedule_token", token)

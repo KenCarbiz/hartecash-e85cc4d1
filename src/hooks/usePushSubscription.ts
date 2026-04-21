@@ -108,7 +108,7 @@ export const usePushSubscription = () => {
         existing ||
         (await reg.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(vapid),
+          applicationServerKey: urlBase64ToUint8Array(vapid) as unknown as BufferSource,
         }));
 
       const json = sub.toJSON() as { endpoint?: string; keys?: { p256dh?: string; auth?: string } };
@@ -122,7 +122,7 @@ export const usePushSubscription = () => {
 
       // Upsert on endpoint — re-enabling on the same device replaces
       // the existing row rather than duplicating.
-      const { error: upsertErr } = await supabase
+      const { error: upsertErr } = await (supabase as any)
         .from("push_subscriptions")
         .upsert(
           {
@@ -154,7 +154,7 @@ export const usePushSubscription = () => {
       if (sub) {
         const endpoint = sub.endpoint;
         await sub.unsubscribe();
-        await supabase
+        await (supabase as any)
           .from("push_subscriptions")
           .update({ is_active: false, updated_at: new Date().toISOString() } as any)
           .eq("endpoint", endpoint);
