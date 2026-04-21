@@ -118,6 +118,20 @@ export const DEFAULT_TEMPLATES: Record<string, TemplateDefaults> = {
     sms_body:
       "For your upcoming inspection, please bring: Driver's License, Title/Registration, all keys & remotes, and loan payoff info if applicable. Visit takes ~15-20 min. — {{dealership_name}}",
   },
+  customer_inspection_started: {
+    email_subject: "Inspection in progress — {{vehicle}}",
+    email_body:
+      "Hi {{customer_name}},\n\nOur team is starting the inspection of your {{vehicle}} now. You'll get a quick update when we're done — usually 15-20 minutes.\n\nHang tight, and thanks for choosing {{dealership_name}}.",
+    sms_body:
+      "Hi {{customer_name}} — our team is starting your {{vehicle}} inspection now. Usually takes 15-20 min. We'll text when we're done. — {{dealership_name}}",
+  },
+  customer_inspection_progress: {
+    email_subject: "Inspection progress — {{vehicle}}",
+    email_body:
+      "Hi {{customer_name}},\n\nQuick update: tires and brakes have been checked on your {{vehicle}}. We're wrapping up the rest of the inspection and will send your final number shortly.\n\n— {{dealership_name}}",
+    sms_body:
+      "Quick update: tires & brakes checked on your {{vehicle}}, wrapping up the rest. Final number coming shortly. — {{dealership_name}}",
+  },
   customer_inspection_complete: {
     email_subject: "Inspection Complete — {{vehicle}}",
     email_body:

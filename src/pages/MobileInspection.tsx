@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 
 import { useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { safeInvoke } from "@/lib/safeInvoke";
 import {
   Save, CheckCircle, Gauge, Wrench, Car, Lock, DollarSign, ClipboardCheck,
   Paintbrush, Armchair, Zap, Eye,
@@ -258,14 +259,31 @@ const MobileInspection = () => {
         const sub = (subRes.data as any[])[0];
         setSubmission(sub);
         setOverallGrade(sub.overall_condition || "");
-        
+
         // Fetch inspection config for this submission's dealership to get input mode
-        const { data: subFull } = await supabase.from("submissions").select("dealership_id").eq("id", id).maybeSingle();
+        const { data: subFull } = await supabase.from("submissions").select("dealership_id, inspection_started_notified_at").eq("id", id).maybeSingle();
         if (subFull?.dealership_id) {
           const { data: cfgData } = await supabase.from("inspection_config").select("tire_brake_input_mode").eq("dealership_id", subFull.dealership_id).maybeSingle();
           if (cfgData && (cfgData as any).tire_brake_input_mode === "pass_fail") {
             setTireBrakeInputMode("pass_fail");
           }
+        }
+
+        // Live-inspection transparency SMS — fire exactly once per
+        // submission when an inspector first opens the sheet. Dedup via
+        // the inspection_started_notified_at column (fetched above).
+        // Fire-and-forget so any SMS-provider blip doesn't block the
+        // inspector's workflow.
+        if (!(subFull as any)?.inspection_started_notified_at) {
+          safeInvoke("send-notification", {
+            body: { trigger_key: "customer_inspection_started", submission_id: id },
+            context: { from: "MobileInspection.firstOpen" },
+          });
+          supabase
+            .from("submissions")
+            .update({ inspection_started_notified_at: new Date().toISOString() } as any)
+            .eq("id", id)
+            .then(() => {}, () => {});
         }
       }
       if (dmgRes.data) {
@@ -343,8 +361,32 @@ const MobileInspection = () => {
     } else {
       const result = data as any;
       if (result && result.adjustment !== undefined) setLastAdjustment(result);
-      
+
       toast({ title: "Inspection saved", description: "Data synced to the customer file." });
+
+      // Mid-inspection progress SMS — fire once per submission after
+      // the inspector saves tire/brake measurements. Dedup via the
+      // inspection_progress_notified_at column.
+      const wroteTireOrBrake =
+        tireLF !== null || brakeLF !== null || brakeRF !== null || brakeLR !== null || brakeRR !== null;
+      if (wroteTireOrBrake && id) {
+        const { data: subFull } = await supabase
+          .from("submissions")
+          .select("inspection_progress_notified_at")
+          .eq("id", id)
+          .maybeSingle();
+        if (!(subFull as any)?.inspection_progress_notified_at) {
+          safeInvoke("send-notification", {
+            body: { trigger_key: "customer_inspection_progress", submission_id: id },
+            context: { from: "MobileInspection.midSave" },
+          });
+          supabase
+            .from("submissions")
+            .update({ inspection_progress_notified_at: new Date().toISOString() } as any)
+            .eq("id", id)
+            .then(() => {}, () => {});
+        }
+      }
     }
   };
 
