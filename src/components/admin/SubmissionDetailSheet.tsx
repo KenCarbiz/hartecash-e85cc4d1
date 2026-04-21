@@ -49,6 +49,11 @@ import {
 import { printSubmissionDetail, printAllDocs, printCheckRequest } from "@/lib/printUtils";
 import { useToast } from "@/hooks/use-toast";
 import logoFallback from "@/assets/logo-placeholder.png";
+import { SubmissionDetailSheetLegacy } from "./SubmissionDetailSheet.legacy";
+
+// Feature flag — when false (default), users see the legacy sheet.
+// Flip VITE_CUSTOMER_FILE_REFRESH=true in env to preview the refresh.
+const ENABLE_REFRESH = import.meta.env.VITE_CUSTOMER_FILE_REFRESH === "true";
 
 interface SubmissionDetailSheetProps {
   selected: Submission | null;
@@ -98,7 +103,9 @@ interface SubmissionDetailSheetProps {
   fetchSubmissions: () => void;
 }
 
-// ── Section Card wrapper — premium glass design ──
+// ── Section Card wrapper — refreshed visual chrome (calmer, slate-200) ──
+// Brief §2: rounded-xl, white card, slate-200 border, slate-500 label.
+// CONTENTS of each card are unchanged — only the outer chrome.
 const SectionCard = ({
   icon: Icon,
   title,
@@ -1190,152 +1197,184 @@ const RefreshedSheet = ({
 
   return (
     <Sheet open={!!selected} onOpenChange={() => { setEditState(null); onClose(); }}>
-      <SheetContent side="right" className="w-full sm:max-w-5xl lg:max-w-6xl p-0 flex flex-col overflow-hidden [&>button]:hidden">
+      <SheetContent side="right" className="w-full sm:max-w-5xl lg:max-w-6xl p-0 flex flex-col overflow-hidden bg-slate-50 [&>button]:hidden">
         {/* ── Sticky header — refreshed design chrome ─────────────────
              Solid blue gradient per design file. Typography leads with
              Year/Make/Model in DM Serif Display; offer number is the
              biggest glyph on screen (right column). Existing buttons +
-             avatar + data bindings preserved exactly. */}
+             avatar + data bindings preserved exactly. The data attribute
+             lets future tweaks target this header without a class hunt. */}
         {/* TODO(ui-refresh-arrived-banner): Wire up when
              submissions.arrived_at and submissions.on_the_way_at columns
              exist. See handoff brief §3 item 2. Banner should render a red
              strip below this header with "Customer Arrived · <timestamp>
              — Go greet them now" when progress_status === 'arrived'. */}
-        <div className="sticky top-0 z-10 shrink-0">
-          <div className="relative bg-gradient-to-r from-[#003b80] to-[#005bb5] text-white overflow-hidden">
-            <div className="relative px-6 py-5">
-              <SheetHeader>
-                {/* Top bar: quick actions + close */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-1.5">
-                    {[
-                      // "Inspection" was removed — inspectors have their own
-                      // entry points (Inspection Check-In, Appraiser Queue)
-                      // and the customer-file header isn't where they start.
-                      // "Appraisal" remains — it's the most common jump from
-                      // the customer view.
-                      { label: "Appraisal", icon: Gauge, onClick: () => { routerNavigate(`/appraisal/${sub.token}`); } },
-                      {
-                        label: (sub as any).needs_appraisal ? "In Queue" : "Send to Appraiser",
-                        icon: Gauge,
-                        onClick: async () => {
-                          const next = !(sub as any).needs_appraisal;
-                          const { error } = await (supabase as any)
-                            .from("submissions")
-                            .update({ needs_appraisal: next })
-                            .eq("id", sub.id);
-                          if (error) {
-                            // Friendly error when the column hasn't been
-                            // provisioned on this environment yet.
-                            const isMissingColumn =
-                              error.message?.includes("needs_appraisal") ||
-                              (error.message?.includes("column") && error.message?.includes("does not exist"));
-                            toast({
-                              title: isMissingColumn ? "Queue not yet provisioned" : "Failed",
-                              description: isMissingColumn
-                                ? "The Appraiser Queue is still rolling out on your database. Refresh in a few minutes, or contact support if this persists."
-                                : error.message,
-                              variant: "destructive",
-                            });
-                            return;
-                          }
-                          updateField({ needs_appraisal: next } as any);
-                          await supabase.from("activity_log").insert({
-                            submission_id: sub.id,
-                            action: next ? "Flagged for Appraiser Queue" : "Removed from Appraiser Queue",
-                            old_value: null,
-                            new_value: null,
-                            performed_by: auditLabel,
-                          });
+        <div data-customer-header className="sticky top-0 z-10 shrink-0 bg-gradient-to-r from-[#003b80] to-[#005bb5] text-white">
+          <div className="px-6 py-5">
+            <SheetHeader>
+              {/* Top bar: quick actions + close */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-1.5">
+                  {[
+                    // "Inspection" was removed — inspectors have their own
+                    // entry points (Inspection Check-In, Appraiser Queue)
+                    // and the customer-file header isn't where they start.
+                    // "Appraisal" remains — it's the most common jump from
+                    // the customer view.
+                    { label: "Appraisal", icon: Gauge, onClick: () => { routerNavigate(`/appraisal/${sub.token}`); } },
+                    {
+                      label: (sub as any).needs_appraisal ? "In Queue" : "Send to Appraiser",
+                      icon: Gauge,
+                      onClick: async () => {
+                        const next = !(sub as any).needs_appraisal;
+                        const { error } = await (supabase as any)
+                          .from("submissions")
+                          .update({ needs_appraisal: next })
+                          .eq("id", sub.id);
+                        if (error) {
+                          // Friendly error when the column hasn't been
+                          // provisioned on this environment yet.
+                          const isMissingColumn =
+                            error.message?.includes("needs_appraisal") ||
+                            (error.message?.includes("column") && error.message?.includes("does not exist"));
                           toast({
-                            title: next ? "Sent to Appraiser Queue" : "Removed from queue",
-                            description: next
-                              ? "A manager can now see this in the Appraiser Queue."
-                              : undefined,
+                            title: isMissingColumn ? "Queue not yet provisioned" : "Failed",
+                            description: isMissingColumn
+                              ? "The Appraiser Queue is still rolling out on your database. Refresh in a few minutes, or contact support if this persists."
+                              : error.message,
+                            variant: "destructive",
                           });
-                          fetchActivityLog(sub.id);
-                        },
+                          return;
+                        }
+                        updateField({ needs_appraisal: next } as any);
+                        await supabase.from("activity_log").insert({
+                          submission_id: sub.id,
+                          action: next ? "Flagged for Appraiser Queue" : "Removed from Appraiser Queue",
+                          old_value: null,
+                          new_value: null,
+                          performed_by: auditLabel,
+                        });
+                        toast({
+                          title: next ? "Sent to Appraiser Queue" : "Removed from queue",
+                          description: next
+                            ? "A manager can now see this in the Appraiser Queue."
+                            : undefined,
+                        });
+                        fetchActivityLog(sub.id);
                       },
-                      { label: "Print", icon: Printer, onClick: handlePrint },
-                    ].map(action => (
-                      <div key={action.label} className="flex flex-col items-center">
-                        <Button variant="ghost" size="sm" onClick={action.onClick} className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10 rounded-xl text-xs h-8 print:hidden transition-all">
-                          <action.icon className="w-3.5 h-3.5 mr-1.5" /> {action.label}
-                        </Button>
-                        {action.label === "Appraisal" && (
-                          <span className="text-[9px] text-primary-foreground/40 mt-0.5 print:hidden">Opens in this tab</span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  <Button variant="ghost" size="icon" onClick={() => { setEditState(null); onClose(); }} className="text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/10 h-9 w-9 rounded-xl transition-all">
-                    <X className="w-5 h-5" />
-                  </Button>
+                    },
+                    { label: "Print", icon: Printer, onClick: handlePrint },
+                  ].map(action => (
+                    <Button
+                      key={action.label}
+                      variant="ghost"
+                      size="sm"
+                      onClick={action.onClick}
+                      className="text-white/80 hover:text-white hover:bg-white/10 rounded-lg text-xs h-8 print:hidden transition"
+                    >
+                      <action.icon className="w-3.5 h-3.5 mr-1.5" /> {action.label}
+                    </Button>
+                  ))}
                 </div>
+                <button
+                  type="button"
+                  onClick={() => { setEditState(null); onClose(); }}
+                  aria-label="Close"
+                  className="text-white/70 hover:text-white hover:bg-white/10 h-9 w-9 rounded-lg inline-flex items-center justify-center transition"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
 
-                {/* Hero — refreshed typography per design. Avatar + status
-                    row retained below the title block. */}
-                <div className="flex items-start gap-4">
-                  <CustomerAvatar name={sub.name} />
-                  <div className="flex-1 min-w-0">
-                    {/* Year + mileage caption */}
-                    <div className="text-[11px] uppercase tracking-[0.15em] text-white/60 font-semibold mb-1">
-                      {sub.vehicle_year}
-                      {sub.mileage ? ` · ${Number(String(sub.mileage).replace(/[^0-9]/g, "")).toLocaleString()} mi` : ""}
-                    </div>
-                    {/* BIG Make + Model */}
-                    <SheetTitle className="font-display text-[34px] leading-[1.05] tracking-tight text-white">
-                      {sub.vehicle_make} {sub.vehicle_model || "Submission Details"}
-                    </SheetTitle>
-                    {/* VIN pill + plate + color */}
-                    {(sub.vin || sub.plate || sub.exterior_color) && (
-                      <div className="flex items-center gap-3 mt-2 text-[13px] text-white/80 flex-wrap">
-                        {sub.vin && (
-                          <span className="font-mono bg-white/10 rounded px-2 py-0.5 tracking-wider">{sub.vin}</span>
-                        )}
-                        {sub.plate && <span>Plate · {sub.plate}</span>}
-                        {sub.exterior_color && <span className="text-white/60">· {sub.exterior_color}</span>}
-                      </div>
-                    )}
-                    {/* Status chips row (preserved) */}
-                    <div className="flex items-center gap-3 mt-3 flex-wrap">
-                      <span className="text-white/60 text-sm font-medium">
-                        {sub.name || "Unknown Customer"}
-                      </span>
-                      <span className="text-white/30">|</span>
-                      <span className="text-white/50 text-xs">
-                        {new Date(sub.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                      </span>
-                      <Badge className={`text-[10px] font-bold tracking-wider rounded-lg px-2.5 py-0.5 ${
-                        sub.progress_status === "purchase_complete" ? "bg-success/20 text-success border-success/30 shadow-[0_0_8px_rgba(34,197,94,0.15)]" :
-                        sub.progress_status === "dead_lead" ? "bg-destructive/25 text-destructive-foreground border-destructive/30" :
-                        "bg-white/15 text-white border-white/20"
-                      }`}>
-                        {getStatusLabel(sub.progress_status)}
-                      </Badge>
-                      {sub.is_hot_lead && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-orange-500/20 text-orange-200 border border-orange-400/30 rounded-lg px-2 py-0.5 animate-pulse">
-                          🔥 Hot Lead
-                        </span>
-                      )}
-                    </div>
+              {/* Hero — refreshed typography per design. Avatar on the
+                  left, vehicle identifiers lead (year/mileage caption →
+                  big Make+Model → VIN pill), then a meta row with the
+                  customer name, submission date, clickable phone/email,
+                  status badge, hot-lead flag. Big offer value on the
+                  right. */}
+              <div className="flex items-start gap-4">
+                <CustomerAvatar name={sub.name} />
+                <div className="flex-1 min-w-0">
+                  {/* Year + mileage caption */}
+                  <div className="text-[11px] uppercase tracking-[0.15em] text-white/60 font-semibold mb-1">
+                    {sub.vehicle_year}
+                    {sub.mileage ? ` · ${Number(String(sub.mileage).replace(/[^0-9]/g, "")).toLocaleString()} mi` : ""}
                   </div>
-
-                  {/* Deal value — bigger per design, right-aligned column */}
-                  {(sub.offered_price || sub.estimated_offer_high) && (
-                    <div className="text-right shrink-0 hidden sm:block">
-                      <p className="text-white/60 text-[11px] uppercase tracking-[0.15em] font-semibold mb-0.5">
-                        {sub.offered_price ? "Offer Given" : "Estimated Offer"}
-                      </p>
-                      <p className="font-display text-[44px] leading-none tracking-tight text-white">
-                        ${Math.floor(sub.offered_price || sub.estimated_offer_high || 0).toLocaleString()}
-                      </p>
+                  {/* BIG Make + Model */}
+                  <SheetTitle className="font-display text-[34px] leading-[1.05] tracking-tight text-white">
+                    {sub.vehicle_make} {sub.vehicle_model || "Submission Details"}
+                  </SheetTitle>
+                  {/* VIN pill + plate + color */}
+                  {(sub.vin || sub.plate || sub.exterior_color) && (
+                    <div className="flex items-center gap-3 mt-2 text-[13px] text-white/80 flex-wrap">
+                      {sub.vin && (
+                        <span className="font-mono bg-white/10 rounded px-2 py-0.5 tracking-wider">{sub.vin}</span>
+                      )}
+                      {sub.plate && <span>Plate · {sub.plate}</span>}
+                      {sub.exterior_color && <span className="text-white/60">· {sub.exterior_color}</span>}
                     </div>
                   )}
+                  {/* Meta row — name, date, tel: / mailto: quick-actions
+                      (carried over from main so sales can one-click
+                      reach out), status + hot-lead. */}
+                  <div className="mt-3 flex items-center gap-3 flex-wrap text-xs">
+                    <span className="text-white/60 text-sm font-medium">
+                      {sub.name || "Unknown Customer"}
+                    </span>
+                    <span className="text-white/30">|</span>
+                    <span className="text-white/50">
+                      {new Date(sub.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                    </span>
+                    {sub.phone && (
+                      <a
+                        href={`tel:+1${(sub.phone || "").replace(/\D/g, "")}`}
+                        className="font-mono text-white/85 hover:text-white inline-flex items-center gap-1.5 bg-white/10 hover:bg-white/15 rounded px-2 py-0.5 transition"
+                      >
+                        <Phone className="w-3 h-3" /> {sub.phone}
+                      </a>
+                    )}
+                    {sub.email && (
+                      <a
+                        href={`mailto:${sub.email}`}
+                        className="font-mono text-white/85 hover:text-white inline-flex items-center gap-1.5 bg-white/10 hover:bg-white/15 rounded px-2 py-0.5 transition max-w-[260px] truncate"
+                        title={sub.email}
+                      >
+                        <Mail className="w-3 h-3 shrink-0" /> <span className="truncate">{sub.email}</span>
+                      </a>
+                    )}
+                    <Badge className={`text-[10px] font-bold tracking-wider rounded-lg px-2.5 py-0.5 ${
+                      sub.progress_status === "purchase_complete" ? "bg-success/20 text-success border-success/30 shadow-[0_0_8px_rgba(34,197,94,0.15)]" :
+                      sub.progress_status === "dead_lead" ? "bg-destructive/25 text-destructive-foreground border-destructive/30" :
+                      "bg-white/15 text-white border-white/20"
+                    }`}>
+                      {getStatusLabel(sub.progress_status)}
+                    </Badge>
+                    {sub.is_hot_lead && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-orange-500/20 text-orange-200 border border-orange-400/30 rounded-lg px-2 py-0.5 animate-pulse">
+                        🔥 Hot Lead
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </SheetHeader>
-            </div>
+
+                {/* Deal value — bigger per design, right-aligned column */}
+                {(sub.offered_price || sub.estimated_offer_high) && (
+                  <div className="text-right shrink-0 hidden sm:block">
+                    <p className="text-white/60 text-[11px] uppercase tracking-[0.15em] font-semibold mb-0.5">
+                      {sub.offered_price ? "Offer Given" : "Estimated Offer"}
+                    </p>
+                    <p className="font-display text-[44px] leading-none tracking-tight text-white">
+                      ${Math.floor(sub.offered_price || sub.estimated_offer_high || 0).toLocaleString()}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </SheetHeader>
           </div>
+
+          {/* TODO(ui-refresh-arrived-banner): Wire up when submissions.arrived_at
+              and submissions.on_the_way_at columns exist. Will render a red
+              banner below the header when progress_status === 'arrived'. */}
         </div>
 
         {/* ── Alerts (full width) — premium banner style ── */}
@@ -1378,7 +1417,7 @@ const RefreshedSheet = ({
           {/* ────────────────────────────────────────────────────────────── */}
           {/* LEFT COLUMN — sticky deal summary (~40%)                      */}
           {/* ────────────────────────────────────────────────────────────── */}
-          <div className="lg:w-[40%] lg:border-r border-border/30 overflow-y-auto p-5 lg:p-6 space-y-5 shrink-0 bg-gradient-to-b from-muted/10 to-transparent">
+          <div className="lg:w-[40%] lg:border-r lg:border-slate-200 overflow-y-auto p-5 lg:p-6 space-y-4 shrink-0 bg-white">
 
             {/* Pinned quick-summary — first thing BDCs / sales see */}
             <div className="flex items-start gap-3">
@@ -2310,15 +2349,13 @@ const RefreshedSheet = ({
 // requires a rebuild — Lovable handles that automatically when the env
 // changes. Instant rollback: unset the var (or set it to anything other
 // than the literal string "true") and Lovable rebuilds within a minute.
+// ENABLE_REFRESH is declared at the top of the file alongside the legacy
+// import; the dispatcher below picks which implementation renders.
 //
 // Default export signature unchanged — AdminDashboard.tsx's
 // lazy-imported consumer sees the same props contract.
-const ENABLE_REFRESH =
-  typeof import.meta !== "undefined" &&
-  import.meta.env?.VITE_CUSTOMER_FILE_REFRESH === "true";
-
 const SubmissionDetailSheet = (props: SubmissionDetailSheetProps) => {
-  if (!ENABLE_REFRESH) return <SubmissionDetailSheetLegacy {...(props as any)} />;
+  if (!ENABLE_REFRESH) return <SubmissionDetailSheetLegacy {...props} />;
   return <RefreshedSheet {...props} />;
 };
 

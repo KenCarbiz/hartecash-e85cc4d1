@@ -71,6 +71,11 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      fontFamily: {
+        // Refreshed Customer File sheet uses DM Serif Display for the
+        // headline. Falls back to Georgia, then serif system fonts.
+        display: ['"DM Serif Display"', "Georgia", "serif"],
+      },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },
