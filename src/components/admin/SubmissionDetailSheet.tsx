@@ -102,7 +102,9 @@ interface SubmissionDetailSheetProps {
   fetchSubmissions: () => void;
 }
 
-// ── Section Card wrapper — premium glass design ──
+// ── Section Card wrapper — refreshed visual chrome (calmer, slate-200) ──
+// Brief §2: rounded-xl, white card, slate-200 border, slate-500 label.
+// CONTENTS of each card are unchanged — only the outer chrome.
 const SectionCard = ({
   icon: Icon,
   title,
@@ -118,21 +120,29 @@ const SectionCard = ({
   className?: string;
   accent?: "success" | "warning" | "destructive";
 }) => {
-  const accentBorder = accent === "success" ? "border-l-success" : accent === "warning" ? "border-l-amber-500" : accent === "destructive" ? "border-l-destructive" : "border-l-primary/40";
+  // Accent rail keeps existing semantic states visible without
+  // dragging back the heavy gradient chrome from the legacy sheet.
+  const accentBorder =
+    accent === "success"
+      ? "border-l-emerald-500"
+      : accent === "warning"
+        ? "border-l-amber-500"
+        : accent === "destructive"
+          ? "border-l-red-500"
+          : "border-l-transparent";
   return (
-    <div data-print-section className={`group/card rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm shadow-[0_1px_3px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.03)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.06),0_12px_32px_rgba(0,0,0,0.05)] transition-all duration-300 overflow-hidden border-l-[3px] ${accentBorder} ${className}`}>
-      <div className="bg-gradient-to-r from-muted/60 via-muted/30 to-transparent px-5 py-3 border-b border-border/40 flex items-center justify-between">
-        <h3 className="text-[11px] font-bold text-foreground/80 uppercase tracking-[0.12em] flex items-center gap-2">
-          {Icon && (
-            <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-primary/10 group-hover/card:bg-primary/15 transition-colors">
-              <Icon className="w-3.5 h-3.5 text-primary" />
-            </span>
-          )}
+    <div
+      data-print-section
+      className={`group/card rounded-xl border border-slate-200 bg-white shadow-sm transition-shadow duration-200 hover:shadow-md overflow-hidden border-l-[3px] ${accentBorder} ${className}`}
+    >
+      <div className="px-5 pt-4 pb-2 flex items-center justify-between">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+          {Icon && <Icon className="w-3.5 h-3.5 text-slate-400" />}
           {title}
         </h3>
         {headerRight}
       </div>
-      <div className="p-5">{children}</div>
+      <div className="px-5 pb-5 pt-1 space-y-3">{children}</div>
     </div>
   );
 };
