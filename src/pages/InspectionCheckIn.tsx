@@ -40,6 +40,7 @@ type ExistingSubmission = {
   mileage: string | null;
   phone: string | null;
   email: string | null;
+  assigned_rep_email?: string | null;
 };
 
 type BBData = {
@@ -1025,7 +1026,7 @@ const InspectionCheckIn = () => {
                         // actually pinged the rep. Now we look up the
                         // rep's phone + email from user_roles and fire
                         // a direct staff_customer_arrived notification.
-                        const { data: repRow } = await supabase
+                        const { data: repRow } = await (supabase as any)
                           .from("user_roles")
                           .select("phone, email")
                           .eq("email", rep)

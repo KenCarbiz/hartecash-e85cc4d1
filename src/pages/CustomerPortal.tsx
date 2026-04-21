@@ -134,7 +134,7 @@ const CustomerPortal = () => {
       // RPC atomically increments portal_view_count and, on the second
       // view, stamps offer_locked_at so the offer flips from estimate-
       // range to locked. Commitment-device lift per the D2b plan.
-      supabase.rpc("increment_portal_view", { _token: token }).then(() => {}, () => {});
+      (supabase as any).rpc("increment_portal_view", { _token: token }).then(() => {}, () => {});
 
       const [condRes] = await Promise.all([
         supabase
