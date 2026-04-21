@@ -128,10 +128,18 @@ const AdminSidebar = ({
 
   // Permission helpers for acquisition / pipeline items
   const isAcquisitionStaff =
-    isManager || userRole === "sales_bdc" || canManageAccess;
+    isManager ||
+    userRole === "sales_bdc" ||
+    userRole === "sales" ||
+    userRole === "internet_manager" ||
+    canManageAccess;
   const isCheckInStaff =
-    isAcquisitionStaff || userRole === "inspector";
+    isAcquisitionStaff || userRole === "inspector" || userRole === "receptionist";
   const canSeeAppraiserQueue = isManager || isAppraiser;
+  // Receptionist is locked to Appointments + Check-In. Nothing else in
+  // the sidebar should render for them — they're a front-desk role,
+  // not an ops role.
+  const isReceptionist = userRole === "receptionist";
 
   // ── PIPELINE ── (All staff see Leads & Appointments; Performance & Appraiser Queue are manager+)
   const pipelineItems: SidebarItem[] = [
@@ -266,17 +274,27 @@ const AdminSidebar = ({
   const groupContainsActive = (items: { key: string }[]) => items.some((item) => item.key === activeSection);
 
   // Auto-expand the group containing the active section
-  const groupEntries: [string, SidebarItem[]][] = [
-    ["Pipeline", pipelineItems],
-    ["Acquisition", acquisitionItems],
-    ["Configuration", configItems],
-    ["Storefront", storefrontItems],
-    ["My Tools", myToolsItems],
-    ["Insights", insightsItems],
-    ["Admin", adminItems],
-    ["Integrations", integrationsItems],
-    ["Platform", platformItems],
-  ];
+  const groupEntries: [string, SidebarItem[]][] = isReceptionist
+    ? [
+        // Receptionist nav is intentionally tiny — they check customers
+        // in and see today's appointments. Nothing else is relevant to
+        // their job and extra items just add visual noise at the front
+        // desk.
+        ["Pipeline", pipelineItems.filter((i) => i.key === "accepted-appts")],
+        ["Acquisition", acquisitionItems.filter((i) => i.key === "inspection-checkin")],
+        ["My Tools", myToolsItems],
+      ]
+    : [
+        ["Pipeline", pipelineItems],
+        ["Acquisition", acquisitionItems],
+        ["Configuration", configItems],
+        ["Storefront", storefrontItems],
+        ["My Tools", myToolsItems],
+        ["Insights", insightsItems],
+        ["Admin", adminItems],
+        ["Integrations", integrationsItems],
+        ["Platform", platformItems],
+      ];
   useEffect(() => {
     const activeGroup = groupEntries.find(([, items]) =>
       items.some((item) => item.key === activeSection)

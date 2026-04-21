@@ -25,6 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTenant } from "@/contexts/TenantContext";
 import SEO from "@/components/SEO";
+import CustomerLookupPanel from "@/components/checkin/CustomerLookupPanel";
 
 type Stage = "capture" | "lookup" | "create";
 
@@ -763,9 +764,21 @@ const InspectionCheckIn = () => {
                 Inspection Check-In
               </h2>
               <p className="text-muted-foreground text-sm sm:text-base px-4">
-                Scan the VIN barcode on the driver-side door, or enter it manually
+                Scan the VIN barcode on the driver-side door, enter it manually, or look up by name / phone / email
               </p>
             </div>
+
+            {/* Receptionist / front-desk multi-field search. Covers the
+                 walk-in who doesn't want to hand over their driver's
+                 license yet — type whatever they can give you. */}
+            <CustomerLookupPanel
+              onPick={(m) => {
+                // Same routing as a VIN hit — jump into the inspection
+                // workflow so downstream notify / send-to-appraiser /
+                // open actions stay consistent.
+                navigate(`/inspection/${m.id}`);
+              }}
+            />
 
             {/* Option A — Camera */}
             <section className="bg-card/80 backdrop-blur-sm border border-border/50 rounded-3xl p-6 shadow-lg">
@@ -999,11 +1012,59 @@ const InspectionCheckIn = () => {
                     <CheckCircle2 className="w-5 h-5 mr-2" />
                     Start Inspection
                   </Button>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button
+                      onClick={async () => {
+                        const rep = existing.assigned_rep_email;
+                        if (!rep) {
+                          toast({ title: "No sales rep assigned", description: "Assign a rep from the customer file first.", variant: "destructive" });
+                          return;
+                        }
+                        await supabase.from("activity_log").insert({
+                          submission_id: existing.id,
+                          action: "Customer Arrived",
+                          old_value: null,
+                          new_value: `Notified ${rep}`,
+                          performed_by: userEmail || "reception",
+                        } as any);
+                        toast({ title: "Rep notified", description: `${rep} will get the customer.` });
+                      }}
+                      variant="outline"
+                      className="h-12 text-sm font-semibold"
+                    >
+                      <Phone className="w-4 h-4 mr-1.5" />
+                      Notify Sales Rep
+                    </Button>
+                    <Button
+                      onClick={async () => {
+                        const { error } = await supabase
+                          .from("submissions")
+                          .update({ needs_appraisal: true } as any)
+                          .eq("id", existing.id);
+                        if (error) {
+                          toast({ title: "Could not flag", description: error.message, variant: "destructive" });
+                          return;
+                        }
+                        await supabase.from("activity_log").insert({
+                          submission_id: existing.id,
+                          action: "Flagged for Appraiser",
+                          old_value: null,
+                          new_value: "Customer arrived at check-in",
+                          performed_by: userEmail || "reception",
+                        } as any);
+                        toast({ title: "Sent to appraiser", description: "Lead flagged for the appraiser queue." });
+                      }}
+                      variant="outline"
+                      className="h-12 text-sm font-semibold"
+                    >
+                      <User className="w-4 h-4 mr-1.5" />
+                      Send to Appraiser
+                    </Button>
+                  </div>
                   <Button
                     onClick={() => navigate("/admin")}
-                    variant="outline"
-                    className="w-full h-14 text-base font-semibold"
-                    size="lg"
+                    variant="ghost"
+                    className="w-full h-10 text-xs font-medium text-muted-foreground"
                   >
                     Open Customer File
                   </Button>

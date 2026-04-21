@@ -79,6 +79,7 @@ export const ROLE_LABELS: Record<string, string> = {
   admin: "Admin",
   sales_bdc: "BDC",
   sales: "Salesperson",
+  internet_manager: "Internet Manager",
   used_car_manager: "Used Car Manager",
   new_car_manager: "New Car Manager",
   gsm_gm: "GSM",
@@ -258,6 +259,7 @@ export const getTimeSlotsForDate = (dateStr: string) => {
 export const ROLE_LABELS_FULL: Record<string, string> = {
   sales_bdc: "BDC",
   sales: "Sales",
+  internet_manager: "Internet Mgr",
   used_car_manager: "UCM",
   new_car_manager: "NCM",
   gsm_gm: "GSM",
@@ -274,6 +276,7 @@ export const ROLE_LABELS_FULL: Record<string, string> = {
 export const ROLE_LABELS_LONG: Record<string, string> = {
   sales_bdc: "BDC Representative",
   sales: "Salesperson",
+  internet_manager: "Internet Manager",
   used_car_manager: "Used Car Manager",
   new_car_manager: "New Car Manager",
   gsm_gm: "General Sales Manager",
@@ -341,11 +344,18 @@ export const CHECKIN_ROLES = [
   "inspector",
   "sales_bdc",
   "sales",
+  "internet_manager",
   "used_car_manager",
   "new_car_manager",
   "gsm_gm",
   "gm",
 ] as const;
+
+// Internet Manager sits at a sub-manager tier — they coordinate BDC +
+// sales but don't edit pricing / offer model / configuration. Gives
+// them the lead pipeline, appointment queue, and per-rep performance
+// for internet leads.
+export const INTERNET_MANAGER_ROLES = ["internet_manager"] as const;
 
 export const isManagerRole = (role: string | null | undefined): boolean =>
   !!role && (MANAGER_ROLES as readonly string[]).includes(role);
@@ -382,6 +392,9 @@ export const canAccessCheckIn = (role: string | null | undefined): boolean =>
 
 export const isReceptionistRole = (role: string | null | undefined): boolean =>
   role === "receptionist";
+
+export const isInternetManagerRole = (role: string | null | undefined): boolean =>
+  role === "internet_manager";
 
 export const getRoleLabel = (role: string | null | undefined, variant: "short" | "long" = "short"): string => {
   if (!role) return "Unknown";
