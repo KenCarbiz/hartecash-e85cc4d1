@@ -54,6 +54,10 @@ const EscalateToManagerDialog = ({ open, onOpenChange, submissionId, userEmail, 
       escalation_created_by: userEmail || null,
       escalation_resolved_at: null,
       escalation_resolved_by: null,
+      // Clear any prior SLA-breach flag so the 30-minute SLA alert
+      // re-arms for this fresh escalation. Without this, re-escalating
+      // the same submission would never fire the overdue alert.
+      escalation_sla_breach_notified_at: null,
     };
     const { error } = await supabase
       .from("submissions")

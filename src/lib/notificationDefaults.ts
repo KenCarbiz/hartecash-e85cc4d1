@@ -146,6 +146,13 @@ export const DEFAULT_TEMPLATES: Record<string, TemplateDefaults> = {
     sms_body:
       "Hi {{customer_name}}, your check for your {{vehicle}} is being processed. We'll notify you when it's ready! — {{dealership_name}}",
   },
+  staff_escalation_overdue: {
+    email_subject: "[OVERDUE] Escalation open {{minutes_open}}m — {{vehicle}}",
+    email_body:
+      "An escalation on {{customer_name}}'s {{vehicle}} has been open for {{minutes_open}} minutes without resolution.\n\nReason: {{escalation_reason}}\nNotes: {{escalation_notes}}\nEscalated by: {{escalation_created_by}}\n\nOpen the customer file: {{admin_link}}",
+    sms_body:
+      "Escalation open {{minutes_open}}m — {{customer_name}}'s {{vehicle}}. Reason: {{escalation_reason}}. Needs someone.",
+  },
   customer_check_ready_for_pickup: {
     email_subject: "Your check is ready — {{vehicle}}",
     email_body:
