@@ -1377,7 +1377,7 @@ const RefreshedSubmissionDetailSheet = ({
           {/* ────────────────────────────────────────────────────────────── */}
           {/* LEFT COLUMN — sticky deal summary (~40%)                      */}
           {/* ────────────────────────────────────────────────────────────── */}
-          <div className="lg:w-[40%] lg:border-r border-border/30 overflow-y-auto p-5 lg:p-6 space-y-5 shrink-0 bg-gradient-to-b from-muted/10 to-transparent">
+          <div className="lg:w-[40%] lg:border-r lg:border-slate-200 overflow-y-auto p-5 lg:p-6 space-y-4 shrink-0 bg-white">
 
             {/* Pinned quick-summary — first thing BDCs / sales see */}
             <div className="flex items-start gap-3">
