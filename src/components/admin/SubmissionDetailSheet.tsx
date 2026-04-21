@@ -1675,6 +1675,54 @@ const SubmissionDetailSheet = ({
                 </div>
               ) : isPriceAgreedOrBeyond ? (
                 <div className="space-y-3">
+                  {/* Same-day check — distinct from "Generate Check Request"
+                       (that queues the paperwork for accounting). This button
+                       stamps the moment the physical check is in hand and
+                       texts the customer to come pick it up. Admin+GSM+GM
+                       only. */}
+                  {canApprove && (sub as any).check_request_done && !(sub as any).check_ready_at && (
+                    <Button
+                      size="sm"
+                      className="rounded-xl h-10 text-xs font-bold w-full bg-success hover:bg-success/90 text-success-foreground"
+                      onClick={async () => {
+                        const nowIso = new Date().toISOString();
+                        const { error } = await supabase
+                          .from("submissions")
+                          .update({
+                            check_ready_at: nowIso,
+                            check_pickup_notified_at: nowIso,
+                          } as any)
+                          .eq("id", sub.id);
+                        if (error) {
+                          toast({ title: "Could not mark ready", description: error.message, variant: "destructive" });
+                          return;
+                        }
+                        safeInvoke("send-notification", {
+                          body: { trigger_key: "customer_check_ready_for_pickup", submission_id: sub.id },
+                          context: { from: "SubmissionDetailSheet.checkReady" },
+                        });
+                        await supabase.from("activity_log").insert({
+                          submission_id: sub.id,
+                          action: "Check Ready for Pickup",
+                          old_value: null,
+                          new_value: "Customer notified",
+                          performed_by: auditLabel,
+                        } as any);
+                        toast({ title: "Customer notified", description: "SMS sent — customer can come pick up their check." });
+                        onRefresh(sub);
+                      }}
+                    >
+                      <DollarSign className="w-4 h-4 mr-1.5" /> Mark Check Ready — Notify Customer
+                    </Button>
+                  )}
+                  {(sub as any).check_ready_at && (
+                    <div className="rounded-xl bg-success/10 border border-success/30 p-3 text-xs text-success flex items-center gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>
+                        Check ready since {new Date((sub as any).check_ready_at).toLocaleString()} — customer notified.
+                      </span>
+                    </div>
+                  )}
                   <div className="flex flex-wrap gap-2">
                     <Button variant="outline" size="sm" className="rounded-xl h-9 text-xs font-semibold" onClick={handleGenerateCheckRequest}>
                       <Printer className="w-3.5 h-3.5 mr-1.5" /> Generate Check Request

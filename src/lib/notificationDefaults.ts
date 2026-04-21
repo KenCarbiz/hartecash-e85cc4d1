@@ -146,6 +146,13 @@ export const DEFAULT_TEMPLATES: Record<string, TemplateDefaults> = {
     sms_body:
       "Hi {{customer_name}}, your check for your {{vehicle}} is being processed. We'll notify you when it's ready! — {{dealership_name}}",
   },
+  customer_check_ready_for_pickup: {
+    email_subject: "Your check is ready — {{vehicle}}",
+    email_body:
+      "Hi {{customer_name}},\n\nGreat news — your check for the {{vehicle}} is ready for pickup. Come on by whenever works for you today.\n\nJust ask for your salesperson at the front desk.\n\nThank you,\n{{dealership_name}}",
+    sms_body:
+      "Hi {{customer_name}} — your check for the {{vehicle}} is ready! Come pick it up any time today. — {{dealership_name}}",
+  },
   customer_purchase_complete: {
     email_subject: "Purchase Complete — Thank You!",
     email_body:
