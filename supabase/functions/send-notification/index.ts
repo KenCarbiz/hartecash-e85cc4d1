@@ -270,13 +270,35 @@ Deno.serve(async (req) => {
       if (body.recipient_phone) smsRecipients = [body.recipient_phone];
       else if (sub?.phone) smsRecipients = [sub.phone];
     } else if (isStaffTrigger) {
-      const triggerRecipients = (notifSettings as any)?.staff_trigger_recipients?.[trigger_key];
-      if (triggerRecipients) {
-        emailRecipients = triggerRecipients.emails || [];
-        smsRecipients = triggerRecipients.phones || [];
+      // Explicit recipient overrides win — used when we want to ping a
+      // SPECIFIC staff member (e.g. reception hitting "Notify Sales Rep"
+      // needs to text that specific rep, not the whole admin list).
+      if (body.recipient_email || body.recipient_phone) {
+        if (body.recipient_email) emailRecipients = [body.recipient_email];
+        if (body.recipient_phone) smsRecipients = [body.recipient_phone];
+        // Respect per-staff opt-in — look up the user_roles row by the
+        // recipient email (primary key we can match reliably). Skip any
+        // channel the staff member has opted out of.
+        if (body.recipient_email) {
+          const { data: staffRow } = await supabase
+            .from("user_roles")
+            .select("sms_notifications_opted_in, email_notifications_opted_in")
+            .eq("email", body.recipient_email)
+            .maybeSingle();
+          if (staffRow) {
+            if ((staffRow as any).sms_notifications_opted_in === false) smsRecipients = [];
+            if ((staffRow as any).email_notifications_opted_in === false) emailRecipients = [];
+          }
+        }
       } else {
-        emailRecipients = (notifSettings as any)?.email_recipients || [];
-        smsRecipients = (notifSettings as any)?.sms_recipients || [];
+        const triggerRecipients = (notifSettings as any)?.staff_trigger_recipients?.[trigger_key];
+        if (triggerRecipients) {
+          emailRecipients = triggerRecipients.emails || [];
+          smsRecipients = triggerRecipients.phones || [];
+        } else {
+          emailRecipients = (notifSettings as any)?.email_recipients || [];
+          smsRecipients = (notifSettings as any)?.sms_recipients || [];
+        }
       }
     }
 

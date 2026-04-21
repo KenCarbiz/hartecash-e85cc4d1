@@ -153,6 +153,20 @@ export const DEFAULT_TEMPLATES: Record<string, TemplateDefaults> = {
     sms_body:
       "Escalation open {{minutes_open}}m — {{customer_name}}'s {{vehicle}}. Reason: {{escalation_reason}}. Needs someone.",
   },
+  staff_escalation_opened: {
+    email_subject: "[ESCALATION] {{escalation_reason}} — {{customer_name}}",
+    email_body:
+      "{{escalation_created_by}} just escalated {{customer_name}}'s {{vehicle}}.\n\nReason: {{escalation_reason}}\nNotes: {{escalation_notes}}\n\nOpen the customer file: {{admin_link}}",
+    sms_body:
+      "Escalation: {{customer_name}} — {{vehicle}}. Reason: {{escalation_reason}}. Needs a manager.",
+  },
+  staff_customer_arrived: {
+    email_subject: "Customer arrived — {{customer_name}}",
+    email_body:
+      "{{customer_name}} just checked in at reception for their {{vehicle}} inspection.\n\nHead to the front desk to greet them.\n\nCustomer file: {{admin_link}}",
+    sms_body:
+      "{{customer_name}} just arrived for their {{vehicle}} inspection. They're at the front desk.",
+  },
   customer_check_ready_for_pickup: {
     email_subject: "Your check is ready — {{vehicle}}",
     email_body:

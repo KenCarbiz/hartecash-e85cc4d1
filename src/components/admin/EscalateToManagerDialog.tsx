@@ -77,6 +77,20 @@ const EscalateToManagerDialog = ({ open, onOpenChange, submissionId, userEmail, 
       new_value: ESCALATION_REASONS.find((r) => r.value === reason)?.label || reason,
       performed_by: userEmail || "unknown",
     } as any);
+    // Fire the staff SMS/email — this is the F1 fix for "escalations
+    // that sit in the queue with no one actually pinged". Respects the
+    // admin-level staff_trigger_recipients list in Notification
+    // Settings; the 30-min overdue SLA (F3) still re-fires if nobody
+    // resolves it.
+    await supabase.functions.invoke("send-notification", {
+      body: {
+        trigger_key: "staff_escalation_opened",
+        submission_id: submissionId,
+        escalation_reason: ESCALATION_REASONS.find((r) => r.value === reason)?.label || reason,
+        escalation_notes: notes.trim() || null,
+        escalation_created_by: userEmail || null,
+      },
+    }).catch(() => {});
     setReason("");
     setNotes("");
     onEscalated?.();

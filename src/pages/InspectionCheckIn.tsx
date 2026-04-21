@@ -1020,6 +1020,24 @@ const InspectionCheckIn = () => {
                           toast({ title: "No sales rep assigned", description: "Assign a rep from the customer file first.", variant: "destructive" });
                           return;
                         }
+                        // F1 fix: Reception hitting "Notify Sales Rep"
+                        // used to only write activity_log — nothing
+                        // actually pinged the rep. Now we look up the
+                        // rep's phone + email from user_roles and fire
+                        // a direct staff_customer_arrived notification.
+                        const { data: repRow } = await supabase
+                          .from("user_roles")
+                          .select("phone, email")
+                          .eq("email", rep)
+                          .maybeSingle();
+                        await supabase.functions.invoke("send-notification", {
+                          body: {
+                            trigger_key: "staff_customer_arrived",
+                            submission_id: existing.id,
+                            recipient_phone: (repRow as any)?.phone || undefined,
+                            recipient_email: rep,
+                          },
+                        }).catch(() => {});
                         await supabase.from("activity_log").insert({
                           submission_id: existing.id,
                           action: "Customer Arrived",
@@ -1027,7 +1045,7 @@ const InspectionCheckIn = () => {
                           new_value: `Notified ${rep}`,
                           performed_by: userEmail || "reception",
                         } as any);
-                        toast({ title: "Rep notified", description: `${rep} will get the customer.` });
+                        toast({ title: "Rep notified", description: `${rep} has been texted.` });
                       }}
                       variant="outline"
                       className="h-12 text-sm font-semibold"
