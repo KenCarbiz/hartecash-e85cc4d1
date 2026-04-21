@@ -35,6 +35,14 @@ interface Props {
   currentOffer: number | null;
   bookAvg: number | null; // best tier we have — tradein or wholesale
   acv: number | null;
+  /**
+   * What the customer said they wanted to walk out with. Shown as the
+   * "target" the manager is shooting for. Drives a 4th preset tile
+   * when a bump to the target is within spread.
+   */
+  walkAwayNumber?: number | null;
+  competitorName?: string | null;
+  competitorOffer?: number | null;
   auditLabel?: string;
   onSaved?: () => void;
 }
@@ -46,6 +54,9 @@ const SaveTheDealDialog = ({
   currentOffer,
   bookAvg,
   acv,
+  walkAwayNumber,
+  competitorName,
+  competitorOffer,
   auditLabel,
   onSaved,
 }: Props) => {
@@ -62,12 +73,29 @@ const SaveTheDealDialog = ({
 
   const presets = useMemo(() => {
     if (!spread || spread <= 0 || !currentOffer) return [] as { label: string; bump: number; newOffer: number }[];
-    return [
+    const baseline = [
       { label: "Small bump", bump: 100, newOffer: currentOffer + 100 },
       { label: "Meet halfway", bump: Math.round(spread / 2), newOffer: currentOffer + Math.round(spread / 2) },
       { label: "Full spread", bump: spread, newOffer: currentOffer + spread },
     ];
-  }, [spread, currentOffer]);
+    // Add targeted presets when we know the customer's walk-away or the
+    // competitor's number — these are far more useful than generic tiers.
+    const targeted: { label: string; bump: number; newOffer: number }[] = [];
+    if (walkAwayNumber && walkAwayNumber > currentOffer) {
+      const bump = walkAwayNumber - currentOffer;
+      if (ceiling === null || walkAwayNumber <= ceiling) {
+        targeted.push({ label: "Meet their number", bump, newOffer: walkAwayNumber });
+      }
+    }
+    if (competitorOffer && competitorOffer > currentOffer) {
+      const bump = competitorOffer - currentOffer + 100; // beat by $100
+      const newOffer = currentOffer + bump;
+      if (ceiling === null || newOffer <= ceiling) {
+        targeted.push({ label: "Beat competitor +$100", bump, newOffer });
+      }
+    }
+    return [...targeted, ...baseline];
+  }, [spread, currentOffer, walkAwayNumber, competitorOffer, ceiling]);
 
   const customBump = customAmount ? Number(customAmount.replace(/[^0-9]/g, "")) : 0;
   const customNewOffer = currentOffer && customBump > 0 ? currentOffer + customBump : null;
@@ -139,6 +167,24 @@ const SaveTheDealDialog = ({
                 {currentOffer ? `$${currentOffer.toLocaleString()}` : "—"}
               </span>
             </div>
+            {walkAwayNumber && (
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Customer wants</span>
+                <span className="font-bold text-primary">
+                  ${Number(walkAwayNumber).toLocaleString()}
+                </span>
+              </div>
+            )}
+            {competitorOffer && (
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">
+                  {competitorName || "Competitor"}
+                </span>
+                <span className="font-semibold text-amber-600 dark:text-amber-400">
+                  ${Number(competitorOffer).toLocaleString()}
+                </span>
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">{acv ? "ACV" : "Book avg"}</span>
               <span className="font-semibold text-card-foreground">

@@ -661,6 +661,23 @@ const BDCActionStrip = ({
             {sub.declined_notes && (
               <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{sub.declined_notes}</p>
             )}
+            {(sub.customer_walk_away_number || sub.competitor_mentioned) && (
+              <div className="flex flex-wrap gap-1.5 mt-1.5">
+                {sub.customer_walk_away_number && (
+                  <span className="inline-flex items-center text-[10px] font-semibold text-card-foreground bg-background border border-border/60 px-2 py-0.5 rounded-full">
+                    Wants: ${Number(sub.customer_walk_away_number).toLocaleString()}
+                  </span>
+                )}
+                {sub.competitor_mentioned && (
+                  <span className="inline-flex items-center text-[10px] font-semibold text-card-foreground bg-background border border-border/60 px-2 py-0.5 rounded-full">
+                    {sub.competitor_mentioned}
+                    {sub.competitor_offer_amount
+                      ? `: $${Number(sub.competitor_offer_amount).toLocaleString()}`
+                      : ""}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
           <div className="flex flex-col gap-1.5 shrink-0">
             {isManager && (
@@ -738,6 +755,9 @@ const BDCActionStrip = ({
         userEmail={userEmail}
         initialReason={sub.declined_reason}
         initialNotes={sub.declined_notes}
+        initialWalkAway={sub.customer_walk_away_number}
+        initialCompetitor={sub.competitor_mentioned}
+        initialCompetitorAmount={sub.competitor_offer_amount}
         onSaved={onRefresh}
       />
       <SaveTheDealDialog
@@ -747,6 +767,9 @@ const BDCActionStrip = ({
         currentOffer={sub.offered_price ?? sub.estimated_offer_high ?? null}
         bookAvg={sub.bb_tradein_avg ?? sub.bb_wholesale_avg ?? null}
         acv={sub.acv_value ?? null}
+        walkAwayNumber={sub.customer_walk_away_number ?? null}
+        competitorName={sub.competitor_mentioned ?? null}
+        competitorOffer={sub.competitor_offer_amount ?? null}
         auditLabel={auditLabel}
         onSaved={onRefresh}
       />

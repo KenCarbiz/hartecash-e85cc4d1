@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, XCircle } from "lucide-react";
+import { Loader2, XCircle, DollarSign } from "lucide-react";
 
 /**
  * DeclinedReasonDialog — BDC captures WHY a customer didn't accept.
@@ -31,21 +32,45 @@ interface Props {
   userEmail?: string | null;
   initialReason?: string | null;
   initialNotes?: string | null;
+  initialWalkAway?: number | null;
+  initialCompetitor?: string | null;
+  initialCompetitorAmount?: number | null;
   onSaved?: () => void;
 }
 
-const DeclinedReasonDialog = ({ open, onOpenChange, submissionId, userEmail, initialReason, initialNotes, onSaved }: Props) => {
+const DeclinedReasonDialog = ({
+  open,
+  onOpenChange,
+  submissionId,
+  userEmail,
+  initialReason,
+  initialNotes,
+  initialWalkAway,
+  initialCompetitor,
+  initialCompetitorAmount,
+  onSaved,
+}: Props) => {
   const { toast } = useToast();
   const [reason, setReason] = useState<string>(initialReason || "");
   const [notes, setNotes] = useState<string>(initialNotes || "");
+  const [walkAway, setWalkAway] = useState<string>(
+    initialWalkAway ? String(initialWalkAway) : ""
+  );
+  const [competitor, setCompetitor] = useState<string>(initialCompetitor || "");
+  const [competitorAmount, setCompetitorAmount] = useState<string>(
+    initialCompetitorAmount ? String(initialCompetitorAmount) : ""
+  );
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (open) {
       setReason(initialReason || "");
       setNotes(initialNotes || "");
+      setWalkAway(initialWalkAway ? String(initialWalkAway) : "");
+      setCompetitor(initialCompetitor || "");
+      setCompetitorAmount(initialCompetitorAmount ? String(initialCompetitorAmount) : "");
     }
-  }, [open, initialReason, initialNotes]);
+  }, [open, initialReason, initialNotes, initialWalkAway, initialCompetitor, initialCompetitorAmount]);
 
   const selectedHint = DECLINED_REASONS.find((r) => r.value === reason)?.hint;
 
@@ -55,12 +80,28 @@ const DeclinedReasonDialog = ({ open, onOpenChange, submissionId, userEmail, ini
       return;
     }
     setSaving(true);
-    const payload = {
+    const walkAwayNum = walkAway ? Number(walkAway.replace(/[^0-9]/g, "")) : null;
+    const competitorAmountNum = competitorAmount ? Number(competitorAmount.replace(/[^0-9]/g, "")) : null;
+    const payload: Record<string, unknown> = {
       declined_reason: reason,
       declined_notes: notes.trim() || null,
       declined_at: new Date().toISOString(),
       declined_by: userEmail || null,
     };
+    // Only stamp the walk-away / competitor fields when we actually
+    // have new data — keeps the previous capture (and its timestamp)
+    // intact if the user is only editing the reason.
+    if (walkAwayNum && walkAwayNum > 0) {
+      payload.customer_walk_away_number = walkAwayNum;
+      payload.walk_away_captured_at = new Date().toISOString();
+      payload.walk_away_captured_by = userEmail || null;
+    }
+    if (competitor.trim()) {
+      payload.competitor_mentioned = competitor.trim();
+    }
+    if (competitorAmountNum && competitorAmountNum > 0) {
+      payload.competitor_offer_amount = competitorAmountNum;
+    }
     const { error } = await supabase
       .from("submissions")
       .update(payload as any)
@@ -122,6 +163,64 @@ const DeclinedReasonDialog = ({ open, onOpenChange, submissionId, userEmail, ini
               className="min-h-24"
             />
           </div>
+
+          {/* Price-specific follow-up: capture walk-away + competitor
+               offer when the customer declined on price. Feeds the
+               Save-the-Deal bump calculator and competitor reporting. */}
+          {reason === "price_too_low" && (
+            <div className="rounded-lg border border-primary/25 bg-primary/5 p-3 space-y-3">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-primary">
+                Price objection details
+              </p>
+              <div>
+                <Label htmlFor="walkAway" className="text-sm font-semibold mb-1.5 block">
+                  Their walk-away number <span className="font-normal text-muted-foreground">(what they want to get)</span>
+                </Label>
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                  <Input
+                    id="walkAway"
+                    type="tel"
+                    inputMode="numeric"
+                    value={walkAway}
+                    onChange={(e) => setWalkAway(e.target.value.replace(/[^0-9]/g, ""))}
+                    placeholder="e.g. 13500"
+                    className="pl-9"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label htmlFor="competitor" className="text-sm font-semibold mb-1.5 block">
+                    Competitor <span className="font-normal text-muted-foreground">(if any)</span>
+                  </Label>
+                  <Input
+                    id="competitor"
+                    value={competitor}
+                    onChange={(e) => setCompetitor(e.target.value)}
+                    placeholder="CarMax, Carvana, dealer…"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="competitorAmount" className="text-sm font-semibold mb-1.5 block">
+                    Their offer <span className="font-normal text-muted-foreground">(if known)</span>
+                  </Label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                    <Input
+                      id="competitorAmount"
+                      type="tel"
+                      inputMode="numeric"
+                      value={competitorAmount}
+                      onChange={(e) => setCompetitorAmount(e.target.value.replace(/[^0-9]/g, ""))}
+                      placeholder="e.g. 13500"
+                      className="pl-9"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <DialogFooter>
