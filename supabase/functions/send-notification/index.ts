@@ -490,6 +490,52 @@ Deno.serve(async (req) => {
       results.email = channels.includes("email") ? "skipped: no recipients" : "channel_disabled";
     }
 
+    // ── SEND PUSH (staff triggers only, hybrid-first) ──
+    // Try PWA web-push first for staff triggers. If at least one push
+    // actually delivered we skip SMS for that recipient set — saves
+    // Twilio cost and avoids double-notifying. Email always still goes.
+    let pushDelivered = 0;
+    if (isStaffTrigger && smsRecipients.length > 0) {
+      try {
+        // Resolve the target user_ids by looking up user_roles via
+        // recipient email. SMS recipients-only (no email) won't get
+        // push — there's no clean way to reverse-lookup a phone to a
+        // user without a separate index.
+        const lookupEmails = emailRecipients.length > 0 ? emailRecipients : [];
+        if (lookupEmails.length > 0) {
+          const { data: userRows } = await supabase
+            .from("user_roles")
+            .select("user_id")
+            .in("email", lookupEmails);
+          const userIds = [...new Set(((userRows as any[]) || []).map((r) => r.user_id).filter(Boolean))];
+          if (userIds.length > 0) {
+            const { data: pushResult } = await supabase.functions.invoke("send-push", {
+              body: {
+                user_ids: userIds,
+                title: emailSubject || "Autocurb",
+                body: smsBodyText,
+                url: body.url || "/admin",
+                tag: trigger_key,
+                submission_id: submission_id || null,
+                trigger_key,
+                require_interaction: trigger_key === "staff_escalation_opened" || trigger_key === "staff_escalation_overdue",
+              },
+            });
+            pushDelivered = Number((pushResult as any)?.sent || 0);
+            // If at least one device got the push, suppress SMS for
+            // this send. Email still fires independently — it's a
+            // cheap audit trail and doesn't cost Twilio $.
+            if (pushDelivered > 0) {
+              await logNotification("push", userIds.join(","), "sent");
+              smsRecipients = [];
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("send-push fallback to SMS:", e);
+      }
+    }
+
     // ── SEND SMS ──
     if (channels.includes("sms") && smsRecipients.length > 0) {
       const twilioSid = Deno.env.get("TWILIO_ACCOUNT_SID");
