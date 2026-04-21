@@ -25,6 +25,9 @@ import StaffFileUpload from "@/components/admin/StaffFileUpload";
 import FollowUpPanel from "@/components/admin/FollowUpPanel";
 import RetailMarketPanel from "@/components/admin/RetailMarketPanel";
 import HistoricalInsightPanel from "@/components/appraisal/HistoricalInsightPanel";
+import EscalateToManagerDialog, { ESCALATION_REASONS } from "@/components/admin/EscalateToManagerDialog";
+import DeclinedReasonDialog, { DECLINED_REASONS } from "@/components/admin/DeclinedReasonDialog";
+import { isBDCRole, isSalesFloorRole, isManagerRole } from "@/lib/adminConstants";
 import { useTenant } from "@/contexts/TenantContext";
 import {
   X, Printer, Users, Car, Search, DollarSign, Info, FileText, Gauge, Palette, BarChart3, ScanLine,
@@ -73,6 +76,13 @@ interface SubmissionDetailSheetProps {
    * does not.
    */
   isSalesFloor?: boolean;
+  /**
+   * Current user role + email. Needed so BDC-specific affordances
+   * (Escalate to Manager, Log Declined Reason) can write audit trail
+   * entries attributed to the actor.
+   */
+  userRole?: string;
+  userEmail?: string;
   auditLabel: string;
   userName: string;
   onUpdate: (updated: Submission) => void;
@@ -518,6 +528,207 @@ const CompactOBDIndicator = ({ submissionId, token }: { submissionId: string; to
   );
 };
 
+// ── BDCActionStrip ────────────────────────────────────────────────────
+// BDC / sales affordances for the top of the customer file.
+//
+// - Escalation banner: shown to everyone when the lead is escalated.
+//   Managers see a "Resolve" button; BDC/sales just see the status.
+// - Declined-reason banner: shown to everyone when a reason was logged;
+//   sales floor can open the dialog to update it.
+// - Action row: BDC / sales get Escalate-to-Manager + Log-Declined-Reason
+//   + Book-Inspection buttons. Managers don't need these in their own
+//   view — they act on escalations via the queue.
+const BDCActionStrip = ({
+  sub,
+  userRole,
+  userEmail,
+  isSalesFloor,
+  onRefresh,
+}: {
+  sub: any;
+  userRole?: string;
+  userEmail?: string;
+  isSalesFloor: boolean;
+  onRefresh: () => void;
+}) => {
+  const [escalateOpen, setEscalateOpen] = useState(false);
+  const [declineOpen, setDeclineOpen] = useState(false);
+  const [resolving, setResolving] = useState(false);
+  const { toast } = useToast();
+
+  const isManager = isManagerRole(userRole);
+  const isSalesOrBDC = isSalesFloorRole(userRole);
+  const isBDC = isBDCRole(userRole);
+
+  const escalated = !!sub.escalated_to_manager;
+  const declinedReasonLabel = sub.declined_reason
+    ? DECLINED_REASONS.find((r) => r.value === sub.declined_reason)?.label || sub.declined_reason
+    : null;
+  const escalationReasonLabel = sub.escalation_reason
+    ? ESCALATION_REASONS.find((r) => r.value === sub.escalation_reason)?.label || sub.escalation_reason
+    : null;
+
+  // Lead looks "declined" when the pipeline status says so — keep this
+  // list in sync with the canonical status set. The action button
+  // surfaces whenever a reason hasn't been captured yet.
+  const declinedLike = ["offer_declined", "lost", "unreachable"].includes(
+    sub.progress_status || ""
+  );
+  const needsDeclinedReason = declinedLike && !sub.declined_reason;
+
+  const noAppointmentYet = !sub.appointment_set;
+
+  const handleResolveEscalation = async () => {
+    setResolving(true);
+    const { error } = await supabase
+      .from("submissions")
+      .update({
+        escalated_to_manager: false,
+        escalation_resolved_at: new Date().toISOString(),
+        escalation_resolved_by: userEmail || null,
+      } as any)
+      .eq("id", sub.id);
+    setResolving(false);
+    if (error) {
+      toast({ title: "Could not resolve", description: error.message, variant: "destructive" });
+      return;
+    }
+    await supabase.from("activity_log").insert({
+      submission_id: sub.id,
+      action: "Escalation Resolved",
+      old_value: null,
+      new_value: null,
+      performed_by: userEmail || "unknown",
+    } as any);
+    toast({ title: "Escalation resolved", description: "Marked as handled." });
+    onRefresh();
+  };
+
+  const showActionRow = isSalesOrBDC && !escalated;
+  const somethingToShow = escalated || declinedReasonLabel || showActionRow;
+  if (!somethingToShow) return null;
+
+  return (
+    <div className="space-y-3">
+      {/* Escalation active */}
+      {escalated && (
+        <div className="rounded-2xl border-2 border-amber-500/50 bg-amber-500/10 p-4 flex items-start gap-3">
+          <div className="w-9 h-9 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0">
+            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 mb-0.5">
+              Escalated to manager
+            </p>
+            <p className="text-sm font-semibold text-foreground">
+              {escalationReasonLabel || "Needs manager attention"}
+            </p>
+            {sub.escalation_notes && (
+              <p className="text-xs text-muted-foreground mt-1 leading-snug">{sub.escalation_notes}</p>
+            )}
+            <p className="text-[10px] text-muted-foreground mt-1.5">
+              by {sub.escalation_created_by || "unknown"} · {sub.escalation_created_at ? new Date(sub.escalation_created_at).toLocaleString() : ""}
+            </p>
+          </div>
+          {isManager && (
+            <Button
+              size="sm"
+              onClick={handleResolveEscalation}
+              disabled={resolving}
+              className="shrink-0"
+            >
+              {resolving ? "…" : "Resolve"}
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* Declined reason logged */}
+      {declinedReasonLabel && (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 flex items-start gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0">
+            <XCircle className="w-3.5 h-3.5 text-destructive" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-destructive mb-0.5">
+              Customer declined
+            </p>
+            <p className="text-sm font-semibold text-foreground">{declinedReasonLabel}</p>
+            {sub.declined_notes && (
+              <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{sub.declined_notes}</p>
+            )}
+          </div>
+          {(isSalesOrBDC || isManager) && (
+            <Button variant="outline" size="sm" onClick={() => setDeclineOpen(true)} className="shrink-0 h-7 text-[11px]">
+              Edit
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* Action row — BDC / sales only */}
+      {showActionRow && (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-muted/20 px-3 py-2.5">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mr-1">
+            {isBDC ? "BDC actions" : "Sales actions"}
+          </span>
+          {noAppointmentYet && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                // Scrolls to the appointment section — actual
+                // scheduling logic lives there already.
+                const el = document.getElementById("appointment-section");
+                if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+              className="h-7 text-[11px]"
+            >
+              <CalendarDays className="w-3 h-3 mr-1" /> Book Inspection
+            </Button>
+          )}
+          {(needsDeclinedReason || !sub.declined_reason) && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setDeclineOpen(true)}
+              className={`h-7 text-[11px] ${needsDeclinedReason ? "border-destructive/60 text-destructive" : ""}`}
+            >
+              <XCircle className="w-3 h-3 mr-1" />
+              {needsDeclinedReason ? "Log Declined Reason" : "Log Declined Reason"}
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setEscalateOpen(true)}
+            className="h-7 text-[11px] border-amber-500/60 text-amber-600 dark:text-amber-400 ml-auto"
+          >
+            <AlertTriangle className="w-3 h-3 mr-1" /> Escalate to Manager
+          </Button>
+        </div>
+      )}
+
+      <EscalateToManagerDialog
+        open={escalateOpen}
+        onOpenChange={setEscalateOpen}
+        submissionId={sub.id}
+        userEmail={userEmail}
+        onEscalated={onRefresh}
+      />
+      <DeclinedReasonDialog
+        open={declineOpen}
+        onOpenChange={setDeclineOpen}
+        submissionId={sub.id}
+        userEmail={userEmail}
+        initialReason={sub.declined_reason}
+        initialNotes={sub.declined_notes}
+        onSaved={onRefresh}
+      />
+    </div>
+  );
+};
+
 const SubmissionDetailSheet = ({
   selected,
   onClose,
@@ -535,6 +746,8 @@ const SubmissionDetailSheet = ({
   canUpdateStatus,
   canViewPricing = true,
   isSalesFloor = false,
+  userRole,
+  userEmail,
   auditLabel,
   userName,
   onUpdate,
@@ -1370,7 +1583,9 @@ const SubmissionDetailSheet = ({
               </Select>
             </SectionCard>
 
-            {/* Appointment — Premium */}
+            {/* Appointment — Premium. id target for BDC "Book Inspection"
+                 quick-action button that lives in BDCActionStrip. */}
+            <div id="appointment-section" />
             <SectionCard icon={CalendarDays} title="Appointment" accent={sub.appointment_set ? "success" : undefined}>
               {sub.appointment_set && sub.appointment_date ? (
                 <div className="space-y-3">
@@ -1491,6 +1706,15 @@ const SubmissionDetailSheet = ({
           {/* RIGHT COLUMN — scrollable details (~60%)                      */}
           {/* ────────────────────────────────────────────────────────────── */}
           <div className="flex-1 overflow-y-auto p-5 lg:p-6 space-y-6 min-h-0">
+
+            {/* ── BDC / Escalation / Declined-reason banners ────────────── */}
+            <BDCActionStrip
+              sub={sub}
+              userRole={userRole}
+              userEmail={userEmail}
+              isSalesFloor={isSalesFloor}
+              onRefresh={() => onRefresh(sub)}
+            />
 
             {/* Contact + Vehicle */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">

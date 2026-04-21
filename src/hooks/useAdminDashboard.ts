@@ -447,7 +447,7 @@ export function useAdminDashboard() {
     total,
     pendingRequests,
     appointments, setAppointments,
-    userRole, userName,
+    userRole, userName, userEmail,
     isAppraiser,
     appraiserQueueCount,
     showFilterPanel, setShowFilterPanel,
