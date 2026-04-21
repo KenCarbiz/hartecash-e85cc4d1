@@ -20,6 +20,7 @@ const ScheduleVisit = lazy(() => import("./pages/ScheduleVisit"));
 const WatchMyCar = lazy(() => import("./pages/WatchMyCar"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const RescheduleAppointment = lazy(() => import("./pages/RescheduleAppointment"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const PitchDeck = lazy(() => import("./pages/PitchDeck"));
 const PlatformPitch = lazy(() => import("./pages/PlatformPitch"));
@@ -116,6 +117,7 @@ const AnimatedRoutes = () => {
         <Route path="/docs/:token" element={<UploadDocs />} />
         <Route path="/my-submission" element={<CustomerLookup />} />
         <Route path="/my-submission/:token" element={<CustomerPortal />} />
+        <Route path="/reschedule/:token" element={<RescheduleAppointment />} />
         <Route path="/schedule" element={<ScheduleVisit />} />
         {/* Customer-facing vehicle value tracker (Watch My Car's Worth). */}
         <Route path="/watch-my-car/:token" element={<WatchMyCar />} />
