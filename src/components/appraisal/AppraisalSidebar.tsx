@@ -1,4 +1,5 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import type { RetailStats } from "@/components/admin/RetailMarketPanel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +18,7 @@ import type { OfferEstimate } from "@/lib/offerCalculator";
 interface Props {
   sub: {
     id: string;
+    dealership_id?: string | null;
     vin: string | null;
     zip: string | null;
     mileage?: string | null;
@@ -57,7 +59,35 @@ export default function AppraisalSidebar({
   onRefreshInspection, onRetailStatsLoaded, onClosestCompPrice,
 }: Props) {
   const [refreshingInspection, setRefreshingInspection] = useState(false);
-  const hasTires = !!(sub.tire_lf && sub.tire_rf && sub.tire_lr && sub.tire_rr);
+  const [tireBrakeInputMode, setTireBrakeInputMode] = useState<"measurement" | "pass_fail">("measurement");
+
+  // Fetch the dealer's tire/brake input mode so read-only widgets render
+  // the stored values correctly — 0/1 are pass/fail flags under
+  // pass_fail mode, not tread depths.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      let dealership = sub.dealership_id ?? null;
+      if (!dealership && sub.id) {
+        const { data } = await supabase.from("submissions").select("dealership_id").eq("id", sub.id).maybeSingle();
+        dealership = (data as any)?.dealership_id ?? null;
+      }
+      if (!dealership) return;
+      const { data: cfg } = await supabase
+        .from("inspection_config")
+        .select("tire_brake_input_mode")
+        .eq("dealership_id", dealership)
+        .maybeSingle();
+      if (!cancelled && (cfg as any)?.tire_brake_input_mode === "pass_fail") {
+        setTireBrakeInputMode("pass_fail");
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [sub.id, sub.dealership_id]);
+
+  // Use != null so pass_fail mode (values are 0 or 1) doesn't treat a
+  // recorded Fail (0) as "no data".
+  const hasTires = sub.tire_lf != null || sub.tire_rf != null || sub.tire_lr != null || sub.tire_rr != null;
   const hasBrakes = !!(sub.brake_lf != null || sub.brake_rf != null || sub.brake_lr != null || sub.brake_rr != null);
   const brakeDepths = (sub.brake_lf != null || sub.brake_rf != null || sub.brake_lr != null || sub.brake_rr != null)
     ? { lf: sub.brake_lf, rf: sub.brake_rf, lr: sub.brake_lr, rr: sub.brake_rr } : null;
@@ -268,6 +298,7 @@ export default function AppraisalSidebar({
                       showBrakes={hasActualBrakes}
                       tireDepths={{ leftFront: sub.tire_lf, rightFront: sub.tire_rf, leftRear: sub.tire_lr, rightRear: sub.tire_rr }}
                       brakeDepths={brakeDepths ? { leftFront: brakeDepths.lf, rightFront: brakeDepths.rf, leftRear: brakeDepths.lr, rightRear: brakeDepths.rr } : undefined}
+                      inputMode={tireBrakeInputMode}
                       readOnly compact
                     />
                   </div>

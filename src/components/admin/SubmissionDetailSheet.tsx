@@ -155,7 +155,9 @@ const InspectionVitals = ({ submissionId }: { submissionId: string }) => {
   const [data, setData] = useState<{
     tire_lf: number | null; tire_rf: number | null; tire_lr: number | null; tire_rr: number | null;
     brake_lf: number | null; brake_rf: number | null; brake_lr: number | null; brake_rr: number | null;
+    dealership_id: string | null;
   } | null>(null);
+  const [inputMode, setInputMode] = useState<"measurement" | "pass_fail">("measurement");
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -164,11 +166,25 @@ const InspectionVitals = ({ submissionId }: { submissionId: string }) => {
     (async () => {
       const { data: row } = await supabase
         .from("submissions")
-        .select("tire_lf, tire_rf, tire_lr, tire_rr, brake_lf, brake_rf, brake_lr, brake_rr")
+        .select("tire_lf, tire_rf, tire_lr, tire_rr, brake_lf, brake_rf, brake_lr, brake_rr, dealership_id")
         .eq("id", submissionId)
         .maybeSingle();
+      // Pull the dealer's tire/brake input preference so we interpret
+      // the stored values correctly — 0/1 are pass/fail flags under
+      // pass_fail mode, not tread depths.
+      let mode: "measurement" | "pass_fail" = "measurement";
+      const dealership = (row as any)?.dealership_id;
+      if (dealership) {
+        const { data: cfg } = await supabase
+          .from("inspection_config")
+          .select("tire_brake_input_mode")
+          .eq("dealership_id", dealership)
+          .maybeSingle();
+        if ((cfg as any)?.tire_brake_input_mode === "pass_fail") mode = "pass_fail";
+      }
       if (!cancelled) {
         setData((row as any) ?? null);
+        setInputMode(mode);
         setLoaded(true);
       }
     })();
@@ -184,9 +200,19 @@ const InspectionVitals = ({ submissionId }: { submissionId: string }) => {
   type State = "green" | "yellow" | "red" | "empty";
   const stateOf = (v: number | null | undefined): State => {
     if (v == null || isNaN(v)) return "empty";
+    if (inputMode === "pass_fail") {
+      // 1 = pass (green), 0 = fail (red). No middle band in pass/fail.
+      return v === 1 ? "green" : "red";
+    }
     if (v >= 6) return "green";
     if (v >= 3) return "yellow";
     return "red";
+  };
+
+  const labelFor = (s: State): string => {
+    if (s === "empty") return "Not recorded";
+    if (inputMode === "pass_fail") return s === "green" ? "Pass" : "Fail";
+    return s === "green" ? "Good" : s === "yellow" ? "Fair" : "Replace";
   };
 
   const stateClass: Record<State, string> = {
@@ -219,7 +245,7 @@ const InspectionVitals = ({ submissionId }: { submissionId: string }) => {
         <div className="min-w-0 flex-1">
           <div className="text-[9px] font-bold uppercase tracking-wider opacity-75 leading-none">{label}</div>
           <div className="text-[11px] font-semibold leading-tight mt-0.5">
-            {s === "empty" ? "Not recorded" : s === "green" ? "Good" : s === "yellow" ? "Fair" : "Replace"}
+            {labelFor(s)}
           </div>
         </div>
       </div>
@@ -251,7 +277,7 @@ const InspectionVitals = ({ submissionId }: { submissionId: string }) => {
         </div>
       </div>
       <p className="text-[10px] text-muted-foreground italic">
-        From the inspection — Green good, Amber fair, Red replace.
+        From the inspection — {inputMode === "pass_fail" ? "Green pass, Red fail." : "Green good, Amber fair, Red replace."}
       </p>
     </div>
   );
