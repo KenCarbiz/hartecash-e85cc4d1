@@ -12,10 +12,13 @@ import MarketContextPanel from "@/components/admin/MarketContextPanel";
 import RetailMarketPanel from "@/components/admin/RetailMarketPanel";
 import BrakePadDepthWidget from "@/components/inspection/BrakePadDepthWidget";
 import AIVerificationPanel from "@/components/appraisal/AIVerificationPanel";
+import HoldingCostChip from "@/components/appraisal/HoldingCostChip";
+import { canViewExecutiveHUD } from "@/lib/adminConstants";
 import type { BBVehicle } from "@/components/sell-form/types";
 import type { OfferEstimate } from "@/lib/offerCalculator";
 
 interface Props {
+  userRole?: string;
   sub: {
     id: string;
     dealership_id?: string | null;
@@ -52,7 +55,7 @@ interface Props {
 }
 
 export default function AppraisalSidebar({
-  sub, bbVehicle, offerResult, finalValue, currentOffer,
+  sub, userRole, bbVehicle, offerResult, finalValue, currentOffer,
   wholesaleAvg, tradeinAvg, retailAvg,
   reconCost, effectivePack, projectedProfit, profitMargin, activeSettings, dealerZip,
   closestCompPrice, wholesaleRough, soldAvg,
@@ -333,6 +336,13 @@ export default function AppraisalSidebar({
       )}
 
       <AIVerificationPanel submissionId={sub.id} customerMileage={sub.mileage} />
+
+      {/* Per-unit carrying-cost math — GM / admin / super-admin only.
+           The desk sees how every day on the lot erodes this deal so
+           they can reason about bumps vs. turn time. */}
+      {canViewExecutiveHUD(userRole) && (
+        <HoldingCostChip acv={finalValue || currentOffer || (offerResult?.finalValue ?? null)} />
+      )}
 
       {sub.ai_damage_summary && (
         <Card>

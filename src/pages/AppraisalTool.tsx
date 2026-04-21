@@ -218,6 +218,7 @@ export default function AppraisalTool() {
   // basis, and retail markup. Only roles that are allowed to see a
   // dealer's true cost structure should be able to open it.
   const [roleCheckState, setRoleCheckState] = useState<"loading" | "allowed" | "denied">("loading");
+  const [userRole, setUserRole] = useState<string>("");
   useEffect(() => {
     const checkRole = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -232,6 +233,7 @@ export default function AppraisalTool() {
         .limit(1)
         .maybeSingle();
       const role = (roleData as any)?.role || "";
+      setUserRole(role);
       // Pricing tier: admin + every manager-tier role (UCM, NCM, GSM/GM).
       // Uses the canonical helper so adding new manager roles in the
       // future propagates automatically.
@@ -1427,6 +1429,7 @@ export default function AppraisalTool() {
             {/* Appraisal Sidebar — Market intelligence leads */}
             <AppraisalSidebar
               sub={sub}
+              userRole={userRole}
               bbVehicle={bbVehicle}
               offerResult={offerResult}
               finalValue={finalValue}
