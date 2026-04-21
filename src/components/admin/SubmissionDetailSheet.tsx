@@ -28,6 +28,7 @@ import HistoricalInsightPanel from "@/components/appraisal/HistoricalInsightPane
 import EscalateToManagerDialog, { ESCALATION_REASONS } from "@/components/admin/EscalateToManagerDialog";
 import DeclinedReasonDialog, { DECLINED_REASONS } from "@/components/admin/DeclinedReasonDialog";
 import SaveTheDealDialog from "@/components/admin/SaveTheDealDialog";
+import ConversationThread from "@/components/admin/ConversationThread";
 import { isBDCRole, isSalesFloorRole, isManagerRole, canWorkLeads, isInternetManagerRole } from "@/lib/adminConstants";
 import { useTenant } from "@/contexts/TenantContext";
 import {
@@ -35,7 +36,7 @@ import {
   Settings2, Wrench, Key, Wind, Cigarette, CircleDot, Sparkles, TrendingUp,
   AlertTriangle, Bell, Mail, Phone, StickyNote, CalendarDays, Camera,
   ExternalLink, Upload, Check, XCircle, MapPin, Star, History, Clock,
-  ClipboardCheck, ClipboardList, Save, Trash2, CheckCircle2, Activity, ChevronDown, UserCheck,
+  ClipboardCheck, ClipboardList, Save, Trash2, CheckCircle2, Activity, ChevronDown, UserCheck, MessageSquare,
 } from "lucide-react";
 import { calculateLeadScore, getScoreColor } from "@/lib/leadScoring";
 import { calculateEquity } from "@/lib/equityCalculator";
@@ -2228,6 +2229,15 @@ const SubmissionDetailSheet = ({
                 <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform duration-200" />
               </summary>
               <div className="px-4 pb-4 pt-2 space-y-5 border-t border-border/30">
+
+            {/* Unified Conversation Thread — replaces the old separate
+                 AI Call History + Activity Log panels. Reads from
+                 conversation_events which auto-populates from every
+                 existing source via triggers. Pins to the top of the
+                 collapsible so it's the first thing managers see. */}
+            <SectionCard icon={MessageSquare} title="Conversation">
+              <ConversationThread submissionId={sub.id} />
+            </SectionCard>
 
             {/* Retail Market Context (moved into collapsible) */}
             {(sub.vin || sub.vehicle_year) && (
