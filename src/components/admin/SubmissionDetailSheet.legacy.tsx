@@ -48,11 +48,6 @@ import {
 import { printSubmissionDetail, printAllDocs, printCheckRequest } from "@/lib/printUtils";
 import { useToast } from "@/hooks/use-toast";
 import logoFallback from "@/assets/logo-placeholder.png";
-import { SubmissionDetailSheetLegacy } from "./SubmissionDetailSheet.legacy";
-
-// Feature flag — when false (default), users see the legacy sheet.
-// Flip VITE_CUSTOMER_FILE_REFRESH=true in env to preview the refresh.
-const ENABLE_REFRESH = import.meta.env.VITE_CUSTOMER_FILE_REFRESH === "true";
 
 interface SubmissionDetailSheetProps {
   selected: Submission | null;
@@ -822,7 +817,7 @@ const BDCActionStrip = ({
   );
 };
 
-const RefreshedSubmissionDetailSheet = ({
+const SubmissionDetailSheetLegacy = ({
   selected,
   onClose,
   photos,
@@ -2274,9 +2269,5 @@ const RefreshedSubmissionDetailSheet = ({
   );
 };
 
-const SubmissionDetailSheet = (props: SubmissionDetailSheetProps) => {
-  if (!ENABLE_REFRESH) return <SubmissionDetailSheetLegacy {...props} />;
-  return <RefreshedSubmissionDetailSheet {...props} />;
-};
-
-export default SubmissionDetailSheet;
+export { SubmissionDetailSheetLegacy };
+export default SubmissionDetailSheetLegacy;
