@@ -50,6 +50,12 @@ type SidebarItem = {
   icon: React.ElementType;
   badge?: string;
   badgeVariant?: "destructive" | "secondary";
+  /**
+   * When set, clicking navigates to this path via react-router instead
+   * of triggering an inline section change. Used for "My Plan" which
+   * lives on a dedicated /plan route with its own context provider.
+   */
+  href?: string;
 };
 
 const STORAGE_KEY = "admin-sidebar-collapsed";
@@ -96,8 +102,12 @@ const AdminSidebar = ({
   const collapsed = isMobile ? false : state === "collapsed";
   const navigate = useNavigate();
 
-  const handleItemClick = (key: string) => {
-    onSectionChange(key);
+  const handleItemClick = (item: { key: string; href?: string }) => {
+    if (item.href) {
+      navigate(item.href);
+    } else {
+      onSectionChange(item.key);
+    }
     if (isMobile) {
       setOpenMobile(false);
     }
@@ -243,6 +253,14 @@ const AdminSidebar = ({
     ...(canManageAccess ? [{ key: "onboarding", label: "Dealer Setup", icon: Rocket }] : []),
     ...(canManageAccess ? [{ key: "staff", label: "Staff & Permissions", icon: Users, badge: teamBadgeCount > 0 ? String(teamBadgeCount) : undefined, badgeVariant: "destructive" as const }] : []),
     ...(canManageAccess ? [{ key: "system-settings", label: "System Settings", icon: Wrench }] : []),
+    // My Plan — dealer admin can view + change their Autocurb
+    // subscription. Navigates to the standalone /plan page which has
+    // its own PlatformProvider. Kept in the Admin group (next to
+    // Dealer Setup) because it's an account-management task, not a
+    // daily ops task.
+    ...(canManageAccess && !isPlatformAdmin
+      ? [{ key: "my-plan", label: "My Plan", icon: CreditCard, href: "/plan" }]
+      : []),
     // Edits the entries shown on the public /updates page (footer link).
     // Lives here, not under System Settings, because it's content management.
     ...(canManageAccess ? [{ key: "changelog", label: "Platform Updates", icon: ScrollText }] : []),
@@ -356,7 +374,7 @@ const AdminSidebar = ({
                   return (
                     <SidebarMenuItem key={item.key}>
                       <SidebarMenuButton
-                        onClick={() => handleItemClick(item.key)}
+                        onClick={() => handleItemClick(item)}
                         isActive={isActive}
                         tooltip={collapsed ? item.label : undefined}
                         className="transition-all duration-200 dark:hover:bg-white/8 dark:hover:shadow-[0_0_12px_rgba(255,255,255,0.06)] dark:data-[active=true]:shadow-[0_0_16px_rgba(100,160,255,0.12)]"
