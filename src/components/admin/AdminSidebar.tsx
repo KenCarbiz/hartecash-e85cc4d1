@@ -19,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { isManagerRole } from "@/lib/adminConstants";
+import { isManagerRole, canViewExecutiveHUD } from "@/lib/adminConstants";
 
 interface AdminSidebarProps {
   activeSection: string;
@@ -165,6 +165,12 @@ const AdminSidebar = ({
         }]
       : []),
     ...(isManager ? [{ key: "executive", label: "Performance", icon: BarChart3 }] : []),
+    // GM HUD — owner-adjacent executive view with carrying-cost math,
+    // conversion funnel, competitor intel. Admin + GM + platform admin
+    // only per canViewExecutiveHUD.
+    ...(canViewExecutiveHUD(userRole)
+      ? [{ key: "gm-hud", label: "GM HUD", icon: DollarSign }]
+      : []),
   ].filter((item) => isAllowed(item.key));
 
   // ── ACQUISITION ── (Manager+ — daily operational tools)

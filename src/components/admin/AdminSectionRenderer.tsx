@@ -61,6 +61,7 @@ const VautoIntegration = React.lazy(() => import("./VautoIntegration"));
 const IntegrationsStatus = React.lazy(() => import("./IntegrationsStatus"));
 const AppraiserQueue = React.lazy(() => import("./AppraiserQueue"));
 const BDCPriorityQueue = React.lazy(() => import("./BDCPriorityQueue"));
+const ExecutiveHUD = React.lazy(() => import("./ExecutiveHUD"));
 const PlatformSubscriptions = React.lazy(() => import("./PlatformSubscriptions"));
 const VoiceAICampaigns = React.lazy(() => import("./VoiceAICampaigns"));
 
@@ -412,6 +413,11 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
   const configSections = (
     <>
       {activeSection === "executive" && <ExecutiveKPIHub />}
+      {activeSection === "gm-hud" && (
+        <React.Suspense fallback={<AdminLoadingSkeleton />}>
+          <ExecutiveHUD />
+        </React.Suspense>
+      )}
       {activeSection === "appraiser-queue" && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <AppraiserQueue userRole={userRole} isAppraiser={props.isAppraiser} />
