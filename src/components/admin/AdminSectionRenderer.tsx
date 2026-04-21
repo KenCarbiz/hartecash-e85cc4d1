@@ -60,6 +60,7 @@ const WholesaleMarketplace = React.lazy(() => import("./WholesaleMarketplace"));
 const VautoIntegration = React.lazy(() => import("./VautoIntegration"));
 const IntegrationsStatus = React.lazy(() => import("./IntegrationsStatus"));
 const AppraiserQueue = React.lazy(() => import("./AppraiserQueue"));
+const BDCPriorityQueue = React.lazy(() => import("./BDCPriorityQueue"));
 const PlatformSubscriptions = React.lazy(() => import("./PlatformSubscriptions"));
 const VoiceAICampaigns = React.lazy(() => import("./VoiceAICampaigns"));
 
@@ -414,6 +415,23 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
       {activeSection === "appraiser-queue" && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <AppraiserQueue userRole={userRole} isAppraiser={props.isAppraiser} />
+        </React.Suspense>
+      )}
+      {activeSection === "bdc-queue" && (
+        <React.Suspense fallback={<AdminLoadingSkeleton />}>
+          <BDCPriorityQueue
+            onOpenSubmission={(id) => {
+              // Parent manages the selected submission via the
+              // submissions section's state. Easiest handoff: switch
+              // section to submissions and pass the id via query.
+              props.setActiveSection?.("submissions");
+              if (typeof window !== "undefined") {
+                const url = new URL(window.location.href);
+                url.searchParams.set("submission", id);
+                window.history.pushState(null, "", url.toString());
+              }
+            }}
+          />
         </React.Suspense>
       )}
       {activeSection === "offer-settings" && (canManageAccess || userRole === "gsm_gm" || userRole === "gm") && (
