@@ -10,11 +10,13 @@ import ProfitSpreadGauge from "@/components/admin/ProfitSpreadGauge";
 import MarketContextPanel from "@/components/admin/MarketContextPanel";
 import RetailMarketPanel from "@/components/admin/RetailMarketPanel";
 import BrakePadDepthWidget from "@/components/inspection/BrakePadDepthWidget";
+import AIVerificationPanel from "@/components/appraisal/AIVerificationPanel";
 import type { BBVehicle } from "@/components/sell-form/types";
 import type { OfferEstimate } from "@/lib/offerCalculator";
 
 interface Props {
   sub: {
+    id: string;
     vin: string | null;
     zip: string | null;
     mileage?: string | null;
@@ -298,6 +300,8 @@ export default function AppraisalSidebar({
           </CardContent>
         </Card>
       )}
+
+      <AIVerificationPanel submissionId={sub.id} customerMileage={sub.mileage} />
 
       {sub.ai_damage_summary && (
         <Card>
