@@ -654,6 +654,20 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
             context: { from: "SellCarForm.submit.hot_lead", submission_id: insertedSub.id },
           });
         }
+
+        // Fire the customer-facing "your offer is ready" notification as
+        // soon as the record lands. Industry data: conversion on offer
+        // review drops sharply after the first 30 minutes post-submission.
+        // The trigger_key / template / channels are dealer-configurable in
+        // Notification Settings — this is just the trigger point. Only
+        // fire when we actually computed a number (unpriced submissions
+        // would text the customer an empty offer).
+        if (estimate?.high && estimate.high > 0) {
+          safeInvoke("send-notification", {
+            body: { trigger_key: "customer_offer_ready", submission_id: insertedSub.id },
+            context: { from: "SellCarForm.submit.offer_ready", submission_id: insertedSub.id },
+          });
+        }
       }
 
       localStorage.setItem("lastSubmissionTime", Date.now().toString());
