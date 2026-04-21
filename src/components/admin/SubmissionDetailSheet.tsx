@@ -27,6 +27,7 @@ import RetailMarketPanel from "@/components/admin/RetailMarketPanel";
 import HistoricalInsightPanel from "@/components/appraisal/HistoricalInsightPanel";
 import EscalateToManagerDialog, { ESCALATION_REASONS } from "@/components/admin/EscalateToManagerDialog";
 import DeclinedReasonDialog, { DECLINED_REASONS } from "@/components/admin/DeclinedReasonDialog";
+import SaveTheDealDialog from "@/components/admin/SaveTheDealDialog";
 import { isBDCRole, isSalesFloorRole, isManagerRole } from "@/lib/adminConstants";
 import { useTenant } from "@/contexts/TenantContext";
 import {
@@ -543,16 +544,19 @@ const BDCActionStrip = ({
   userRole,
   userEmail,
   isSalesFloor,
+  auditLabel,
   onRefresh,
 }: {
   sub: any;
   userRole?: string;
   userEmail?: string;
   isSalesFloor: boolean;
+  auditLabel?: string;
   onRefresh: () => void;
 }) => {
   const [escalateOpen, setEscalateOpen] = useState(false);
   const [declineOpen, setDeclineOpen] = useState(false);
+  const [saveDealOpen, setSaveDealOpen] = useState(false);
   const [resolving, setResolving] = useState(false);
   const { toast } = useToast();
 
@@ -658,11 +662,22 @@ const BDCActionStrip = ({
               <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{sub.declined_notes}</p>
             )}
           </div>
-          {(isSalesOrBDC || isManager) && (
-            <Button variant="outline" size="sm" onClick={() => setDeclineOpen(true)} className="shrink-0 h-7 text-[11px]">
-              Edit
-            </Button>
-          )}
+          <div className="flex flex-col gap-1.5 shrink-0">
+            {isManager && (
+              <Button
+                size="sm"
+                onClick={() => setSaveDealOpen(true)}
+                className="h-7 text-[11px] bg-success hover:bg-success/90 text-success-foreground"
+              >
+                Save the Deal
+              </Button>
+            )}
+            {(isSalesOrBDC || isManager) && (
+              <Button variant="outline" size="sm" onClick={() => setDeclineOpen(true)} className="h-7 text-[11px]">
+                Edit reason
+              </Button>
+            )}
+          </div>
         </div>
       )}
 
@@ -723,6 +738,16 @@ const BDCActionStrip = ({
         userEmail={userEmail}
         initialReason={sub.declined_reason}
         initialNotes={sub.declined_notes}
+        onSaved={onRefresh}
+      />
+      <SaveTheDealDialog
+        open={saveDealOpen}
+        onOpenChange={setSaveDealOpen}
+        submissionId={sub.id}
+        currentOffer={sub.offered_price ?? sub.estimated_offer_high ?? null}
+        bookAvg={sub.bb_tradein_avg ?? sub.bb_wholesale_avg ?? null}
+        acv={sub.acv_value ?? null}
+        auditLabel={auditLabel}
         onSaved={onRefresh}
       />
     </div>
@@ -1713,6 +1738,7 @@ const SubmissionDetailSheet = ({
               userRole={userRole}
               userEmail={userEmail}
               isSalesFloor={isSalesFloor}
+              auditLabel={auditLabel}
               onRefresh={() => onRefresh(sub)}
             />
 
