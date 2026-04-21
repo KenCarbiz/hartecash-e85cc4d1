@@ -113,21 +113,32 @@ const SectionCard = ({
   className?: string;
   accent?: "success" | "warning" | "destructive";
 }) => {
-  const accentBorder = accent === "success" ? "border-l-success" : accent === "warning" ? "border-l-amber-500" : accent === "destructive" ? "border-l-destructive" : "border-l-primary/40";
+  // Accent pipe on the card's left edge keeps the existing semantic signal
+  // (success / warning / destructive) while the rest of the chrome moves
+  // to the lighter design-file aesthetic — white body, slate border,
+  // quieter header band, no gradients.
+  const accentPipe =
+    accent === "success"     ? "border-l-[3px] border-l-emerald-500" :
+    accent === "warning"     ? "border-l-[3px] border-l-amber-500"   :
+    accent === "destructive" ? "border-l-[3px] border-l-red-500"     :
+    "";
   return (
-    <div data-print-section className={`group/card rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm shadow-[0_1px_3px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.03)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.06),0_12px_32px_rgba(0,0,0,0.05)] transition-all duration-300 overflow-hidden border-l-[3px] ${accentBorder} ${className}`}>
-      <div className="bg-gradient-to-r from-muted/60 via-muted/30 to-transparent px-5 py-3 border-b border-border/40 flex items-center justify-between">
-        <h3 className="text-[11px] font-bold text-foreground/80 uppercase tracking-[0.12em] flex items-center gap-2">
+    <div
+      data-print-section
+      className={`rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden ${accentPipe} ${className}`}
+    >
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100">
+        <h3 className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.1em] flex items-center gap-2">
           {Icon && (
-            <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-primary/10 group-hover/card:bg-primary/15 transition-colors">
-              <Icon className="w-3.5 h-3.5 text-primary" />
+            <span className="flex items-center justify-center w-5 h-5 rounded-md bg-slate-100">
+              <Icon className="w-3 h-3 text-slate-500" />
             </span>
           )}
           {title}
         </h3>
         {headerRight}
       </div>
-      <div className="p-5">{children}</div>
+      <div className="p-4">{children}</div>
     </div>
   );
 };
@@ -1179,14 +1190,18 @@ const SubmissionDetailSheet = ({
   return (
     <Sheet open={!!selected} onOpenChange={() => { setEditState(null); onClose(); }}>
       <SheetContent side="right" className="w-full sm:max-w-5xl lg:max-w-6xl p-0 flex flex-col overflow-hidden [&>button]:hidden">
-        {/* ── Premium Sticky Header ── */}
+        {/* ── Sticky header — refreshed design chrome ─────────────────
+             Solid blue gradient per design file. Typography leads with
+             Year/Make/Model in DM Serif Display; offer number is the
+             biggest glyph on screen (right column). Existing buttons +
+             avatar + data bindings preserved exactly. */}
+        {/* TODO(ui-refresh-arrived-banner): Wire up when
+             submissions.arrived_at and submissions.on_the_way_at columns
+             exist. See handoff brief §3 item 2. Banner should render a red
+             strip below this header with "Customer Arrived · <timestamp>
+             — Go greet them now" when progress_status === 'arrived'. */}
         <div className="sticky top-0 z-10 shrink-0">
-          {/* Gradient mesh background */}
-          <div className="relative bg-gradient-to-br from-primary via-primary/95 to-primary/80 text-primary-foreground overflow-hidden">
-            {/* Decorative mesh pattern */}
-            <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: "radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px), radial-gradient(circle at 60% 80%, white 1px, transparent 1px)", backgroundSize: "60px 60px, 80px 80px, 40px 40px" }} />
-            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-primary-foreground/5 to-transparent rounded-full -translate-y-1/2 translate-x-1/4" />
-
+          <div className="relative bg-gradient-to-r from-[#003b80] to-[#005bb5] text-white overflow-hidden">
             <div className="relative px-6 py-5">
               <SheetHeader>
                 {/* Top bar: quick actions + close */}
@@ -1257,25 +1272,43 @@ const SubmissionDetailSheet = ({
                   </Button>
                 </div>
 
-                {/* Hero: Avatar + Vehicle + Status */}
+                {/* Hero — refreshed typography per design. Avatar + status
+                    row retained below the title block. */}
                 <div className="flex items-start gap-4">
                   <CustomerAvatar name={sub.name} />
                   <div className="flex-1 min-w-0">
-                    <SheetTitle className="text-2xl font-extrabold text-primary-foreground font-display tracking-wide leading-tight">
-                      {sub.vehicle_year} {sub.vehicle_make} {sub.vehicle_model || "Submission Details"}
+                    {/* Year + mileage caption */}
+                    <div className="text-[11px] uppercase tracking-[0.15em] text-white/60 font-semibold mb-1">
+                      {sub.vehicle_year}
+                      {sub.mileage ? ` · ${Number(String(sub.mileage).replace(/[^0-9]/g, "")).toLocaleString()} mi` : ""}
+                    </div>
+                    {/* BIG Make + Model */}
+                    <SheetTitle className="font-display text-[34px] leading-[1.05] tracking-tight text-white">
+                      {sub.vehicle_make} {sub.vehicle_model || "Submission Details"}
                     </SheetTitle>
-                    <div className="flex items-center gap-3 mt-2 flex-wrap">
-                      <span className="text-primary-foreground/60 text-sm font-medium">
+                    {/* VIN pill + plate + color */}
+                    {(sub.vin || sub.plate || sub.exterior_color) && (
+                      <div className="flex items-center gap-3 mt-2 text-[13px] text-white/80 flex-wrap">
+                        {sub.vin && (
+                          <span className="font-mono bg-white/10 rounded px-2 py-0.5 tracking-wider">{sub.vin}</span>
+                        )}
+                        {sub.plate && <span>Plate · {sub.plate}</span>}
+                        {sub.exterior_color && <span className="text-white/60">· {sub.exterior_color}</span>}
+                      </div>
+                    )}
+                    {/* Status chips row (preserved) */}
+                    <div className="flex items-center gap-3 mt-3 flex-wrap">
+                      <span className="text-white/60 text-sm font-medium">
                         {sub.name || "Unknown Customer"}
                       </span>
-                      <span className="text-primary-foreground/30">|</span>
-                      <span className="text-primary-foreground/50 text-xs">
+                      <span className="text-white/30">|</span>
+                      <span className="text-white/50 text-xs">
                         {new Date(sub.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                       </span>
                       <Badge className={`text-[10px] font-bold tracking-wider rounded-lg px-2.5 py-0.5 ${
                         sub.progress_status === "purchase_complete" ? "bg-success/20 text-success border-success/30 shadow-[0_0_8px_rgba(34,197,94,0.15)]" :
                         sub.progress_status === "dead_lead" ? "bg-destructive/25 text-destructive-foreground border-destructive/30" :
-                        "bg-primary-foreground/15 text-primary-foreground border-primary-foreground/20"
+                        "bg-white/15 text-white border-white/20"
                       }`}>
                         {getStatusLabel(sub.progress_status)}
                       </Badge>
@@ -1287,13 +1320,13 @@ const SubmissionDetailSheet = ({
                     </div>
                   </div>
 
-                  {/* Quick deal value in header */}
+                  {/* Deal value — bigger per design, right-aligned column */}
                   {(sub.offered_price || sub.estimated_offer_high) && (
                     <div className="text-right shrink-0 hidden sm:block">
-                      <p className="text-primary-foreground/50 text-[10px] uppercase tracking-widest font-semibold mb-0.5">
-                        {sub.offered_price ? "Offered" : "Estimated"}
+                      <p className="text-white/60 text-[11px] uppercase tracking-[0.15em] font-semibold mb-0.5">
+                        {sub.offered_price ? "Offer Given" : "Estimated Offer"}
                       </p>
-                      <p className="text-2xl font-black text-primary-foreground tracking-tight font-display">
+                      <p className="font-display text-[44px] leading-none tracking-tight text-white">
                         ${Math.floor(sub.offered_price || sub.estimated_offer_high || 0).toLocaleString()}
                       </p>
                     </div>
