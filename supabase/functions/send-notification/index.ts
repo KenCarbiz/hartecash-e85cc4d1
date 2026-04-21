@@ -254,11 +254,29 @@ Deno.serve(async (req) => {
 
     const customEmail = customTemplates?.find((t: any) => t.channel === "email");
     const customSms = customTemplates?.find((t: any) => t.channel === "sms");
-    const defaults = DEFAULT_TEMPLATES[trigger_key];
+    const defaults = DEFAULT_TEMPLATES[trigger_key] || {
+      email_subject: "Message from {{dealership_name}}",
+      email_body: "{{custom_body}}",
+      sms_body: "{{custom_body}}",
+    };
 
-    const emailSubject = replacePlaceholders(customEmail?.subject || defaults.email_subject, templateVars);
-    const emailBodyText = replacePlaceholders(customEmail?.body || defaults.email_body, templateVars);
-    const smsBodyText = replacePlaceholders(customSms?.body || defaults.sms_body, templateVars);
+    // custom_body + custom_subject override the trigger template. Used
+    // by the staff reply composer on the customer file — the rep types
+    // the message, we route it through the existing send pipeline
+    // (channel selection, opt-out, Twilio/email queue) without needing
+    // a per-message trigger row in the templates table.
+    const emailSubject = replacePlaceholders(
+      body.custom_subject || customEmail?.subject || defaults.email_subject,
+      templateVars
+    );
+    const emailBodyText = replacePlaceholders(
+      body.custom_body || customEmail?.body || defaults.email_body,
+      { ...templateVars, custom_body: body.custom_body || "" }
+    );
+    const smsBodyText = replacePlaceholders(
+      body.custom_body || customSms?.body || defaults.sms_body,
+      { ...templateVars, custom_body: body.custom_body || "" }
+    );
 
     // Determine recipients
     let emailRecipients: string[] = [];

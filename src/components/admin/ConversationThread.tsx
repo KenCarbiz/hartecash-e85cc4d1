@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 import {
   Phone, MessageSquare, Mail, FileText, Activity, ChevronDown, ChevronUp,
-  Loader2, Play, Clock,
+  Loader2, Play, Clock, Send, StickyNote,
 } from "lucide-react";
 
 /**
@@ -50,30 +52,155 @@ const CHANNEL_LABELS: Record<string, string> = {
   portal: "Portal",
 };
 
-const ConversationThread = ({ submissionId }: { submissionId: string }) => {
+interface Props {
+  submissionId: string;
+  customerPhone?: string | null;
+  customerEmail?: string | null;
+  userEmail?: string | null;
+  dealershipId?: string | null;
+  canReply?: boolean;
+}
+
+const ConversationThread = ({
+  submissionId,
+  customerPhone,
+  customerEmail,
+  userEmail,
+  dealershipId,
+  canReply = true,
+}: Props) => {
   const [events, setEvents] = useState<ConvEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [channelFilter, setChannelFilter] = useState<string | null>(null);
+  const [replyChannel, setReplyChannel] = useState<"sms" | "email" | "note">("note");
+  const [replyBody, setReplyBody] = useState("");
+  const [sending, setSending] = useState(false);
+  const { toast } = useToast();
+
+  const load = useCallback(async () => {
+    if (!submissionId) return;
+    setLoading(true);
+    const { data } = await supabase
+      .from("conversation_events")
+      .select("id, channel, direction, actor_type, actor_label, body_text, body_html, occurred_at, metadata")
+      .eq("submission_id", submissionId)
+      .order("occurred_at", { ascending: false })
+      .limit(200);
+    setEvents((data as any[]) || []);
+    setLoading(false);
+  }, [submissionId]);
 
   useEffect(() => {
-    if (!submissionId) return;
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      const { data } = await supabase
-        .from("conversation_events")
-        .select("id, channel, direction, actor_type, actor_label, body_text, body_html, occurred_at, metadata")
-        .eq("submission_id", submissionId)
-        .order("occurred_at", { ascending: false })
-        .limit(200);
-      if (!cancelled) {
-        setEvents((data as any[]) || []);
-        setLoading(false);
+    load();
+  }, [load]);
+
+  const handleSendReply = async () => {
+    const text = replyBody.trim();
+    if (!text) return;
+    setSending(true);
+    try {
+      if (replyChannel === "note") {
+        // Internal note — direct insert, no customer contact. The
+        // activity_log + conversation_events tables are separate here:
+        // we write straight to conversation_events so the thread
+        // renders immediately, and also log an activity_log row for
+        // audit consistency (the trigger on activity_log also mirrors
+        // into conversation_events but with a system-generated body —
+        // the staff-typed body we're inserting below is richer).
+        const { error } = await supabase.from("conversation_events").insert({
+          submission_id: submissionId,
+          dealership_id: dealershipId || "default",
+          channel: "note",
+          direction: "internal",
+          actor_type: "staff",
+          actor_label: userEmail || "Staff",
+          body_text: text,
+          occurred_at: new Date().toISOString(),
+          source_table: "manual",
+        } as any);
+        if (error) throw error;
+        await supabase.from("activity_log").insert({
+          submission_id: submissionId,
+          action: "Internal Note",
+          old_value: null,
+          new_value: text.slice(0, 500),
+          performed_by: userEmail || "staff",
+        } as any);
+        toast({ title: "Note added", description: "Saved to the conversation timeline." });
+      } else if (replyChannel === "sms") {
+        if (!customerPhone) {
+          toast({ title: "No phone on file", description: "Can't text the customer — phone number missing.", variant: "destructive" });
+          setSending(false);
+          return;
+        }
+        const { error } = await supabase.functions.invoke("send-notification", {
+          body: {
+            trigger_key: "customer_staff_reply_sms",
+            submission_id: submissionId,
+            recipient_phone: customerPhone,
+            custom_body: text,
+          },
+        });
+        if (error) throw error;
+        // The notification_log mirror trigger writes a conversation
+        // event automatically once the send-notification function
+        // logs to notification_log. Supplement with a richer event
+        // so the timeline shows the actual typed body, not the generic
+        // "customer_staff_reply_sms → phone" placeholder the mirror
+        // would use.
+        await supabase.from("conversation_events").insert({
+          submission_id: submissionId,
+          dealership_id: dealershipId || "default",
+          channel: "sms",
+          direction: "outbound",
+          actor_type: "staff",
+          actor_label: userEmail || "Staff",
+          body_text: text,
+          occurred_at: new Date().toISOString(),
+          source_table: "manual_sms",
+        } as any);
+        toast({ title: "SMS sent", description: `Texted ${customerPhone}` });
+      } else if (replyChannel === "email") {
+        if (!customerEmail) {
+          toast({ title: "No email on file", description: "Can't email the customer — email missing.", variant: "destructive" });
+          setSending(false);
+          return;
+        }
+        const { error } = await supabase.functions.invoke("send-notification", {
+          body: {
+            trigger_key: "customer_staff_reply_email",
+            submission_id: submissionId,
+            recipient_email: customerEmail,
+            custom_body: text,
+          },
+        });
+        if (error) throw error;
+        await supabase.from("conversation_events").insert({
+          submission_id: submissionId,
+          dealership_id: dealershipId || "default",
+          channel: "email",
+          direction: "outbound",
+          actor_type: "staff",
+          actor_label: userEmail || "Staff",
+          body_text: text,
+          occurred_at: new Date().toISOString(),
+          source_table: "manual_email",
+        } as any);
+        toast({ title: "Email sent", description: `Emailed ${customerEmail}` });
       }
-    })();
-    return () => { cancelled = true; };
-  }, [submissionId]);
+      setReplyBody("");
+      await load();
+    } catch (e) {
+      toast({
+        title: "Could not send",
+        description: e instanceof Error ? e.message : "Unknown error",
+        variant: "destructive",
+      });
+    } finally {
+      setSending(false);
+    }
+  };
 
   const filtered = channelFilter
     ? events.filter((e) => e.channel === channelFilter)
@@ -128,6 +255,69 @@ const ConversationThread = ({ submissionId }: { submissionId: string }) => {
           </button>
         ))}
       </div>
+
+      {/* Reply composer — staff types a reply directly in the thread.
+           Channel picker routes SMS / email / internal note through
+           the right path (send-notification for outbound, direct
+           insert for internal). */}
+      {canReply && (
+        <div className="rounded-xl border-2 border-border bg-card p-3 space-y-2">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mr-1">Reply</span>
+            {[
+              { value: "note", label: "Internal note", Icon: StickyNote },
+              { value: "sms", label: "SMS", Icon: MessageSquare },
+              { value: "email", label: "Email", Icon: Mail },
+            ].map(({ value, label, Icon }) => {
+              const disabled =
+                (value === "sms" && !customerPhone) ||
+                (value === "email" && !customerEmail);
+              return (
+                <button
+                  key={value}
+                  onClick={() => !disabled && setReplyChannel(value as "sms" | "email" | "note")}
+                  disabled={disabled}
+                  title={disabled ? `No ${value === "sms" ? "phone" : "email"} on file` : undefined}
+                  className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                    replyChannel === value
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-background border-border text-muted-foreground hover:border-primary/40"
+                  }`}
+                >
+                  <Icon className="w-3 h-3" />
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          <Textarea
+            value={replyBody}
+            onChange={(e) => setReplyBody(e.target.value)}
+            placeholder={
+              replyChannel === "note"
+                ? "Internal note — only visible to staff. Not sent to the customer."
+                : replyChannel === "sms"
+                ? `Text the customer…  (${customerPhone || "no phone on file"})`
+                : `Email the customer…  (${customerEmail || "no email on file"})`
+            }
+            className="min-h-16 text-sm"
+            disabled={sending}
+          />
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-muted-foreground">
+              {replyChannel === "note"
+                ? "Internal only"
+                : replyChannel === "sms"
+                ? "Goes to customer's phone via SMS"
+                : "Goes to customer's email"}
+            </span>
+            <Button size="sm" onClick={handleSendReply} disabled={sending || !replyBody.trim()} className="h-8 text-xs">
+              {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <Send className="w-3.5 h-3.5 mr-1.5" />}
+              {sending ? "Sending…" : replyChannel === "note" ? "Add note" : "Send"}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Timeline */}
       <div className="space-y-2">

@@ -2236,7 +2236,13 @@ const SubmissionDetailSheet = ({
                  existing source via triggers. Pins to the top of the
                  collapsible so it's the first thing managers see. */}
             <SectionCard icon={MessageSquare} title="Conversation">
-              <ConversationThread submissionId={sub.id} />
+              <ConversationThread
+                submissionId={sub.id}
+                customerPhone={sub.phone}
+                customerEmail={sub.email}
+                dealershipId={(sub as any).dealership_id}
+                userEmail={userEmail}
+              />
             </SectionCard>
 
             {/* Retail Market Context (moved into collapsible) */}
