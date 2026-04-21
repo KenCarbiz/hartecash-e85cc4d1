@@ -28,14 +28,14 @@ import HistoricalInsightPanel from "@/components/appraisal/HistoricalInsightPane
 import EscalateToManagerDialog, { ESCALATION_REASONS } from "@/components/admin/EscalateToManagerDialog";
 import DeclinedReasonDialog, { DECLINED_REASONS } from "@/components/admin/DeclinedReasonDialog";
 import SaveTheDealDialog from "@/components/admin/SaveTheDealDialog";
-import { isBDCRole, isSalesFloorRole, isManagerRole } from "@/lib/adminConstants";
+import { isBDCRole, isSalesFloorRole, isManagerRole, canWorkLeads, isInternetManagerRole } from "@/lib/adminConstants";
 import { useTenant } from "@/contexts/TenantContext";
 import {
   X, Printer, Users, Car, Search, DollarSign, Info, FileText, Gauge, Palette, BarChart3, ScanLine,
   Settings2, Wrench, Key, Wind, Cigarette, CircleDot, Sparkles, TrendingUp,
   AlertTriangle, Bell, Mail, Phone, StickyNote, CalendarDays, Camera,
   ExternalLink, Upload, Check, XCircle, MapPin, Star, History, Clock,
-  ClipboardCheck, ClipboardList, Save, Trash2, CheckCircle2, Activity, ChevronDown,
+  ClipboardCheck, ClipboardList, Save, Trash2, CheckCircle2, Activity, ChevronDown, UserCheck,
 } from "lucide-react";
 import { calculateLeadScore, getScoreColor } from "@/lib/leadScoring";
 import { calculateEquity } from "@/lib/equityCalculator";
@@ -563,6 +563,11 @@ const BDCActionStrip = ({
   const isManager = isManagerRole(userRole);
   const isSalesOrBDC = isSalesFloorRole(userRole);
   const isBDC = isBDCRole(userRole);
+  const isIM = isInternetManagerRole(userRole);
+  // Lead-workers = sales floor + internet_manager. This is the tier
+  // that actively touches leads — escalating, capturing decline
+  // reasons, booking inspections, flipping to appraiser.
+  const isLeadWorker = canWorkLeads(userRole);
 
   const escalated = !!sub.escalated_to_manager;
   const declinedReasonLabel = sub.declined_reason
@@ -608,7 +613,10 @@ const BDCActionStrip = ({
     onRefresh();
   };
 
-  const showActionRow = isSalesOrBDC && !escalated;
+  // Internet managers share the BDC action affordances per user
+  // direction — they still work leads hands-on and escalate just like
+  // a BDC rep does, they just have team-level visibility on top.
+  const showActionRow = isLeadWorker && !escalated;
   const somethingToShow = escalated || declinedReasonLabel || showActionRow;
   if (!somethingToShow) return null;
 
@@ -698,11 +706,11 @@ const BDCActionStrip = ({
         </div>
       )}
 
-      {/* Action row — BDC / sales only */}
+      {/* Action row — BDC / sales / internet manager */}
       {showActionRow && (
         <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-muted/20 px-3 py-2.5">
           <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mr-1">
-            {isBDC ? "BDC actions" : "Sales actions"}
+            {isBDC ? "BDC actions" : isIM ? "Internet mgr actions" : "Sales actions"}
           </span>
           {noAppointmentYet && (
             <Button
@@ -730,11 +738,42 @@ const BDCActionStrip = ({
               {needsDeclinedReason ? "Log Declined Reason" : "Log Declined Reason"}
             </Button>
           )}
+          {/* Direct to appraiser — shortcut for "this needs an
+               appraisal value today, skip the manager bounce". Flips
+               needs_appraisal=true which lights up the Appraiser
+               Queue. Separate from Escalate-to-Manager which is for
+               cross-cutting issues the manager has to decide. */}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={async () => {
+              const { error } = await supabase
+                .from("submissions")
+                .update({ needs_appraisal: true } as any)
+                .eq("id", sub.id);
+              if (error) {
+                toast({ title: "Could not send", description: error.message, variant: "destructive" });
+                return;
+              }
+              await supabase.from("activity_log").insert({
+                submission_id: sub.id,
+                action: "Sent to Appraiser",
+                old_value: null,
+                new_value: `by ${userEmail || "lead worker"}`,
+                performed_by: userEmail || "unknown",
+              } as any);
+              toast({ title: "Sent to Appraiser", description: "Lead is on the appraiser queue." });
+              onRefresh();
+            }}
+            className="h-7 text-[11px] border-primary/60 text-primary ml-auto"
+          >
+            <UserCheck className="w-3 h-3 mr-1" /> Send to Appraiser
+          </Button>
           <Button
             size="sm"
             variant="outline"
             onClick={() => setEscalateOpen(true)}
-            className="h-7 text-[11px] border-amber-500/60 text-amber-600 dark:text-amber-400 ml-auto"
+            className="h-7 text-[11px] border-amber-500/60 text-amber-600 dark:text-amber-400"
           >
             <AlertTriangle className="w-3 h-3 mr-1" /> Escalate to Manager
           </Button>

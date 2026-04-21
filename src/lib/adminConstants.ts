@@ -393,6 +393,19 @@ export const canAccessCheckIn = (role: string | null | undefined): boolean =>
 export const isReceptionistRole = (role: string | null | undefined): boolean =>
   role === "receptionist";
 
+// Roles that actively work individual leads — call them, text them,
+// book their inspection, escalate to a manager. Wider than the sales
+// floor because internet_manager is hands-on by design (they bounce
+// between managing the BDC team and working leads themselves per
+// user direction).
+export const LEAD_WORKING_ROLES = [
+  ...SALES_FLOOR_ROLES,
+  "internet_manager",
+] as const;
+
+export const canWorkLeads = (role: string | null | undefined): boolean =>
+  !!role && (LEAD_WORKING_ROLES as readonly string[]).includes(role);
+
 export const isInternetManagerRole = (role: string | null | undefined): boolean =>
   role === "internet_manager";
 
