@@ -129,6 +129,13 @@ const CustomerPortal = () => {
       setSubmission(data[0] as unknown as PortalSubmission);
       setLoading(false);
 
+      // Portal engagement tracking. Fire-and-forget — we don't want a
+      // network blip to block the customer from seeing their page. The
+      // RPC atomically increments portal_view_count and, on the second
+      // view, stamps offer_locked_at so the offer flips from estimate-
+      // range to locked. Commitment-device lift per the D2b plan.
+      supabase.rpc("increment_portal_view", { _token: token }).then(() => {}, () => {});
+
       const [condRes] = await Promise.all([
         supabase
           .from("submissions")
