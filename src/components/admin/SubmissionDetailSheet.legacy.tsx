@@ -817,7 +817,7 @@ const BDCActionStrip = ({
   );
 };
 
-const SubmissionDetailSheet = ({
+const SubmissionDetailSheetLegacy = ({
   selected,
   onClose,
   photos,
@@ -2269,4 +2269,5 @@ const SubmissionDetailSheet = ({
   );
 };
 
-export default SubmissionDetailSheet;
+export { SubmissionDetailSheetLegacy };
+export default SubmissionDetailSheetLegacy;
