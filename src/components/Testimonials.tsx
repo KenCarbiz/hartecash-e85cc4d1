@@ -47,17 +47,17 @@ const Testimonials = () => {
       });
   }, [config.dealership_name]);
 
-  // Hide the section entirely while loading or when the dealer has no reviews
-  if (testimonials === null || testimonials.length === 0) return null;
-
   useEffect(() => {
-    if (testimonials.length <= 1) return;
+    if (!testimonials || testimonials.length <= 1) return;
     const timer = setInterval(() => {
       setDirection(1);
       setCurrent((c) => (c + 1) % testimonials.length);
     }, 5000);
     return () => clearInterval(timer);
   }, [testimonials.length]);
+
+  // Hide the section entirely while loading or when the dealer has no reviews
+  if (testimonials === null || testimonials.length === 0) return null;
 
   const go = (dir: number) => {
     setDirection(dir);
