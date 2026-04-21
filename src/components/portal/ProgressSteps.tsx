@@ -7,6 +7,19 @@ interface ProgressStepsProps {
   isComplete: boolean;
   appointmentSet: boolean;
   scheduleLink: string;
+  /**
+   * When set, we know the inspector has actually started the physical
+   * inspection — shifts the "Inspection Scheduled" active indicator
+   * into an explicit "Inspecting now" state with a live animation.
+   * Reduces the customer's "is anyone working on my car?" anxiety.
+   */
+  inspectionStartedAt?: string | null;
+  /**
+   * When set, the check is physically printed and ready for pickup.
+   * Shifts step 4 ("Paperwork Complete") into an explicit
+   * "Check Ready — pick up today" active indicator.
+   */
+  checkReadyAt?: string | null;
 }
 
 const STEPS = [
@@ -17,7 +30,22 @@ const STEPS = [
   { label: "Check Received" },
 ];
 
-const ProgressSteps = ({ currentStageIdx, isComplete, appointmentSet, scheduleLink }: ProgressStepsProps) => {
+const ProgressSteps = ({
+  currentStageIdx,
+  isComplete,
+  appointmentSet,
+  scheduleLink,
+  inspectionStartedAt,
+  checkReadyAt,
+}: ProgressStepsProps) => {
+  // Live-state overrides — these upgrade the labels for the current
+  // active step so the customer sees what's ACTUALLY happening right
+  // now, not just the generic stage name.
+  const liveLabel = (stageIdx: number, fallback: string): string => {
+    if (stageIdx === 1 && inspectionStartedAt) return "Inspecting now";
+    if (stageIdx === 3 && checkReadyAt) return "Check ready for pickup";
+    return fallback;
+  };
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -69,14 +97,14 @@ const ProgressSteps = ({ currentStageIdx, isComplete, appointmentSet, scheduleLi
                 )}
               </div>
 
-              {/* Label */}
+              {/* Label — upgraded to live-state text when active */}
               <span className={`text-[11px] leading-tight text-center font-medium ${
                 done ? "text-card-foreground"
                   : isPendingInspection ? "text-yellow-600 dark:text-yellow-400 font-bold"
                   : active ? "text-accent font-bold"
                   : "text-muted-foreground/50"
               }`}>
-                {step.label}
+                {active ? liveLabel(i, step.label) : step.label}
               </span>
               {isPendingInspection && (
                 <span className="text-[9px] text-yellow-600 dark:text-yellow-400 mt-0.5 underline group-hover:no-underline">

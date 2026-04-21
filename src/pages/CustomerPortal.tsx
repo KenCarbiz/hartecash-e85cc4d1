@@ -337,7 +337,14 @@ const CustomerPortal = () => {
 
       {/* Progress bar */}
       <div className="max-w-5xl mx-auto px-6 -mt-0 pt-5">
-        <ProgressSteps currentStageIdx={stepIdx} isComplete={isComplete} appointmentSet={s.appointment_set} scheduleLink={scheduleLink} />
+        <ProgressSteps
+          currentStageIdx={stepIdx}
+          isComplete={isComplete}
+          appointmentSet={s.appointment_set}
+          scheduleLink={scheduleLink}
+          inspectionStartedAt={(s as any).inspection_started_notified_at}
+          checkReadyAt={(s as any).check_ready_at}
+        />
       </div>
 
       {/* ─── DESKTOP: Two-column layout ─── */}
