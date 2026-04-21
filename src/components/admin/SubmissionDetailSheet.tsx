@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { safeInvoke } from "@/lib/safeInvoke";
 import { formatPhone } from "@/lib/utils";
+import { SubmissionDetailSheetLegacy } from "./SubmissionDetailSheet.legacy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -828,7 +829,7 @@ const BDCActionStrip = ({
   );
 };
 
-const SubmissionDetailSheet = ({
+const RefreshedSheet = ({
   selected,
   onClose,
   photos,
@@ -2300,6 +2301,25 @@ const SubmissionDetailSheet = ({
       </SheetContent>
     </Sheet>
   );
+};
+
+// ── §4 Feature flag dispatcher ─────────────────────────────────────────
+// Default: OFF — legacy renders. Set VITE_CUSTOMER_FILE_REFRESH=true in
+// Lovable Project Settings → Environment (or .env locally) to flip the
+// refreshed sheet on. Vite bakes env vars at build time, so flipping
+// requires a rebuild — Lovable handles that automatically when the env
+// changes. Instant rollback: unset the var (or set it to anything other
+// than the literal string "true") and Lovable rebuilds within a minute.
+//
+// Default export signature unchanged — AdminDashboard.tsx's
+// lazy-imported consumer sees the same props contract.
+const ENABLE_REFRESH =
+  typeof import.meta !== "undefined" &&
+  import.meta.env?.VITE_CUSTOMER_FILE_REFRESH === "true";
+
+const SubmissionDetailSheet = (props: SubmissionDetailSheetProps) => {
+  if (!ENABLE_REFRESH) return <SubmissionDetailSheetLegacy {...(props as any)} />;
+  return <RefreshedSheet {...props} />;
 };
 
 export default SubmissionDetailSheet;
