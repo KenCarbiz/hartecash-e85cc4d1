@@ -3,19 +3,26 @@ import { formatPhone } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  Search, Eye, Trash2, ChevronLeft, ChevronRight, CheckCircle,
-  AlertTriangle, TrendingUp, UserCheck, XCircle, Camera, FileText,
-  Rows3, Rows2, X, Inbox, Sparkles,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Search, Eye, Trash2, ChevronLeft, ChevronRight, MoreHorizontal,
+  Phone, MessageSquare, Mail, DollarSign, Calendar, Check,
+  Rows3, Rows2, X, Inbox, Sparkles, Flame,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { supabase } from "@/integrations/supabase/client";
 import type { Submission, DealerLocation } from "@/lib/adminConstants";
-import { ALL_STATUS_OPTIONS, getStatusLabel, isAcceptedWithAppointment, isAcceptedWithoutAppointment, isOfferPendingSubmission, isOfferUpdatedByStaff } from "@/lib/adminConstants";
+import {
+  ALL_STATUS_OPTIONS, getStatusLabel,
+  isAcceptedWithAppointment, isAcceptedWithoutAppointment,
+} from "@/lib/adminConstants";
 import { calculateLeadScore, getScoreColor } from "@/lib/leadScoring";
+import { nextActionForLead, type LeadAction } from "@/lib/leadNextAction";
 import DashboardAnalytics from "@/components/admin/DashboardAnalytics";
 
 interface SubmissionsTableProps {
@@ -45,7 +52,85 @@ interface SubmissionsTableProps {
   onView: (sub: Submission) => void;
   onDelete: (id: string) => void;
   onInlineStatusChange: (sub: Submission, newStatus: string) => void;
+  onScheduleAppointment?: (sub: Submission) => void;
 }
+
+// ── Local helpers ─────────────────────────────────────────────
+const statusTone = (status: string): "slate" | "blue" | "amber" | "emerald" | "red" => {
+  if (["new"].includes(status)) return "blue";
+  if (["contacted", "no_contact"].includes(status)) return "slate";
+  if (["inspection_scheduled", "inspection_completed", "appraisal_completed",
+       "manager_approval_inspection"].includes(status)) return "amber";
+  if (["offer_accepted", "price_agreed", "deal_finalized",
+       "title_ownership_verified", "check_request_submitted",
+       "purchase_complete"].includes(status)) return "emerald";
+  if (["dead_lead", "partial"].includes(status)) return "red";
+  return "slate";
+};
+
+const statusToneClasses: Record<string, string> = {
+  slate: "bg-slate-100 text-slate-700 border-slate-200",
+  blue: "bg-sky-100 text-sky-800 border-sky-200",
+  amber: "bg-amber-100 text-amber-800 border-amber-200",
+  emerald: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  red: "bg-red-100 text-red-800 border-red-200",
+};
+
+const initialsOf = (name: string | null): string => {
+  if (!name) return "—";
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "—";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+};
+
+const formatMiles = (m: string | null): string => {
+  if (!m) return "";
+  const n = parseInt(m.replace(/\D/g, ""), 10);
+  return isNaN(n) ? "" : n.toLocaleString();
+};
+
+const formatSmartAge = (createdAt: string): string => {
+  const hours = (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60);
+  if (hours < 1) return `${Math.max(1, Math.round(hours * 60))}m`;
+  if (hours < 24) return `${Math.round(hours)}h`;
+  const days = hours / 24;
+  if (days < 7) return `${Math.round(days)}d`;
+  return `${Math.round(days / 7)}w`;
+};
+
+const formatSpread = (v: number): string => {
+  const abs = Math.abs(v);
+  const sign = v >= 0 ? "+" : "-";
+  if (abs >= 1000) {
+    const k = abs / 1000;
+    const formatted = k >= 10 ? Math.round(k).toString() : k.toFixed(1).replace(/\.0$/, "");
+    return `${sign}$${formatted}k`;
+  }
+  return `${sign}$${abs}`;
+};
+
+const ActionIcon = ({ icon }: { icon: LeadAction["icon"] }) => {
+  if (icon === "phone") return <Phone className="w-3.5 h-3.5" />;
+  if (icon === "dollar") return <DollarSign className="w-3.5 h-3.5" />;
+  if (icon === "calendar") return <Calendar className="w-3.5 h-3.5" />;
+  if (icon === "check") return <Check className="w-3.5 h-3.5" />;
+  if (icon === "eye") return <Eye className="w-3.5 h-3.5" />;
+  return null;
+};
+
+const hoursSince = (iso: string | null | undefined): number => {
+  if (!iso) return 0;
+  return (Date.now() - new Date(iso).getTime()) / (1000 * 60 * 60);
+};
+
+const isStuck = (sub: Submission): boolean => {
+  if (["purchase_complete", "dead_lead", "check_request_submitted", "partial"].includes(sub.progress_status)) {
+    return false;
+  }
+  const ref = sub.status_updated_at || sub.created_at;
+  return hoursSince(ref) > 24;
+};
 
 const SubmissionsTable = ({
   submissions,
@@ -74,6 +159,7 @@ const SubmissionsTable = ({
   onView,
   onDelete,
   onInlineStatusChange,
+  onScheduleAppointment,
 }: SubmissionsTableProps) => {
   const [density, setDensity] = useState<"compact" | "spacious">(() => {
     try { return (localStorage.getItem("admin-table-density") as "compact" | "spacious") || "spacious"; }
@@ -99,45 +185,8 @@ const SubmissionsTable = ({
 
   const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
 
-  const cellPad = isCompact ? "px-2 py-1.5" : "px-3 py-3";
-  const fontSize = isCompact ? "text-xs" : "text-sm";
-
-  const getHoursSinceUpdate = (sub: Submission) => {
-    const refDate = sub.status_updated_at || sub.created_at;
-    return (Date.now() - new Date(refDate).getTime()) / (1000 * 60 * 60);
-  };
-
-  const getAgeBadge = (sub: Submission): { color: string; borderClass: string; label: string; bgClass: string } => {
-    const status = sub.progress_status;
-    if (["purchase_complete", "dead_lead"].includes(status))
-      return { color: "text-muted-foreground", borderClass: "border-l-border", label: "", bgClass: "" };
-    const days = (Date.now() - new Date(sub.created_at).getTime()) / (1000 * 60 * 60 * 24);
-    if (days < 3)
-      return { color: "text-muted-foreground", borderClass: "border-l-border", label: "", bgClass: "" };
-    if (days < 6)
-      return { color: "text-amber-500", borderClass: "border-l-amber-500", label: "Follow Up", bgClass: "bg-amber-500/5" };
-    return { color: "text-destructive", borderClass: "border-l-destructive", label: "Critical", bgClass: "bg-destructive/5" };
-  };
-
-  const getSlaLevel = (hours: number, status: string): { color: string; borderClass: string; label: string; bgClass: string } => {
-    if (["purchase_complete", "dead_lead"].includes(status))
-      return { color: "text-muted-foreground", borderClass: "border-l-border", label: "", bgClass: "" };
-    if (hours < 2)
-      return { color: "text-success", borderClass: "border-l-success", label: "", bgClass: "" };
-    if (hours < 12)
-      return { color: "text-emerald-500", borderClass: "border-l-emerald-500", label: "", bgClass: "" };
-    if (hours < 24)
-      return { color: "text-amber-500", borderClass: "border-l-amber-500", label: "", bgClass: "" };
-    if (hours < 48)
-      return { color: "text-orange-500", borderClass: "border-l-orange-500", label: "", bgClass: "" };
-    return { color: "text-destructive", borderClass: "border-l-destructive", label: "", bgClass: "" };
-  };
-
-  const formatAge = (hours: number) => {
-    if (hours < 1) return `${Math.round(hours * 60)}m`;
-    if (hours < 24) return `${Math.round(hours)}h`;
-    return `${Math.floor(hours / 24)}d`;
-  };
+  const rowPad = isCompact ? "py-2" : "py-3";
+  const cellPadX = "px-3";
 
   const filtered = submissions.filter((s) => {
     if (search) {
@@ -153,14 +202,18 @@ const SubmissionsTable = ({
     }
     if (statusFilter === "__hot__") { if (!s.is_hot_lead) return false; }
     else if (statusFilter === "__mine__") { if (s.status_updated_by !== auditLabel && !s.appraised_by?.includes(userName)) return false; }
+    else if (statusFilter === "__appts__") { if (!s.appointment_set) return false; }
+    else if (statusFilter === "__accepted__") { if (!isAcceptedWithoutAppointment(s) && !isAcceptedWithAppointment(s)) return false; }
+    else if (statusFilter === "__stuck__") { if (!isStuck(s)) return false; }
     else if (statusFilter && statusFilter !== "__all__" && s.progress_status !== statusFilter) return false;
+
     if (sourceFilter && sourceFilter !== "__all__" && s.lead_source !== sourceFilter) return false;
     if (storeFilter && storeFilter !== "__all__") {
       if (storeFilter === "__unassigned__") { if (s.store_location_id) return false; }
       else { if (s.store_location_id !== storeFilter) return false; }
     }
     if (dateRangeFilter.from || dateRangeFilter.to) {
-      const d = new Date(s.created_at).toISOString().split('T')[0];
+      const d = new Date(s.created_at).toISOString().split("T")[0];
       if (dateRangeFilter.from && d < dateRangeFilter.from) return false;
       if (dateRangeFilter.to && d > dateRangeFilter.to) return false;
     }
@@ -206,34 +259,105 @@ const SubmissionsTable = ({
 
   const totalPages = Math.ceil(total / pageSize);
 
-  const quickFilters = [
-    { label: "All", value: "__all__", icon: undefined },
-    { label: "Abandoned", value: "partial", icon: <AlertTriangle className="w-3 h-3" /> },
-    { label: "New", value: "new", icon: undefined },
-    { label: "My Queue", value: "__mine__", icon: <UserCheck className="w-3 h-3" /> },
-    { label: "Hot Leads", value: "__hot__", icon: <TrendingUp className="w-3 h-3" /> },
-    { label: "Dead", value: "dead_lead", icon: <XCircle className="w-3 h-3" /> },
+  // ── Chip counts: computed from the full submission set, not the filtered view
+  const counts = useMemo(() => ({
+    all: submissions.length,
+    new: submissions.filter(s => s.progress_status === "new").length,
+    hot: submissions.filter(s => s.is_hot_lead).length,
+    appts: submissions.filter(s => s.appointment_set).length,
+    accepted: submissions.filter(s => isAcceptedWithoutAppointment(s) || isAcceptedWithAppointment(s)).length,
+    stuck: submissions.filter(isStuck).length,
+  }), [submissions]);
+
+  type Chip = { key: string; label: string; count: number };
+  const chips: Chip[] = [
+    { key: "__all__", label: "All", count: counts.all },
+    { key: "new", label: "New", count: counts.new },
+    { key: "__hot__", label: "Hot", count: counts.hot },
+    { key: "__appts__", label: "Appointments", count: counts.appts },
+    { key: "__accepted__", label: "Accepted", count: counts.accepted },
+    { key: "__stuck__", label: "Stuck > 24h", count: counts.stuck },
   ];
 
-  const getChipStyle = (value: string, isActive: boolean) => {
-    if (!isActive) return "bg-muted/50 border-border text-muted-foreground hover:bg-muted";
-    switch (value) {
-      case "partial": return "bg-amber-500/15 border-amber-500/40 text-amber-700 dark:text-amber-400";
-      case "dead_lead": return "bg-destructive/10 border-destructive/40 text-destructive";
-      case "__hot__": return "bg-orange-500/15 border-orange-500/40 text-orange-700 dark:text-orange-400";
-      case "__mine__": return "bg-primary/15 border-primary/40 text-primary";
-      default: return "bg-primary/10 border-primary/40 text-primary";
+  // ── Primary action button click handler (per action key)
+  const handleActionClick = useCallback((sub: Submission, action: LeadAction) => {
+    const logAction = async (label: string) => {
+      try {
+        await supabase.from("activity_log").insert({
+          submission_id: sub.id,
+          action: label,
+          old_value: null,
+          new_value: null,
+          performed_by: auditLabel,
+        });
+      } catch {
+        // activity log is best-effort — never block the outreach action on a log failure
+      }
+    };
+
+    if (action.actionKey === "call" && action.href) {
+      logAction("Call initiated");
+      window.location.href = action.href;
+      return;
     }
+    if (action.actionKey === "sms" && action.href) {
+      logAction("SMS initiated");
+      window.location.href = action.href;
+      return;
+    }
+    if (action.actionKey === "appt") {
+      if (onScheduleAppointment) onScheduleAppointment(sub);
+      else onView(sub);
+      return;
+    }
+    // open, offer, revive all route to the detail sheet
+    onView(sub);
+  }, [auditLabel, onView, onScheduleAppointment]);
+
+  const handleMenuCall = (sub: Submission) => {
+    const digits = sub.phone?.replace(/\D/g, "");
+    if (!digits) return;
+    void supabase.from("activity_log").insert({
+      submission_id: sub.id,
+      action: "Call initiated",
+      performed_by: auditLabel,
+    });
+    window.location.href = `tel:+1${digits}`;
+  };
+  const handleMenuSms = (sub: Submission) => {
+    const digits = sub.phone?.replace(/\D/g, "");
+    if (!digits) return;
+    void supabase.from("activity_log").insert({
+      submission_id: sub.id,
+      action: "SMS initiated",
+      performed_by: auditLabel,
+    });
+    window.location.href = `sms:+1${digits}`;
+  };
+  const handleMenuEmail = (sub: Submission) => {
+    if (!sub.email) return;
+    void supabase.from("activity_log").insert({
+      submission_id: sub.id,
+      action: "Email initiated",
+      performed_by: auditLabel,
+    });
+    window.location.href = `mailto:${sub.email}`;
   };
 
   return (
     <div>
       <div className="mb-6"><DashboardAnalytics /></div>
 
-      <div className="mb-4 flex items-center justify-between gap-3">
+      {/* Search + density + filter toggle */}
+      <div className="mb-3 flex items-center justify-between gap-3">
         <div className="relative flex-1 max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Search leads..." value={search} onChange={(e) => onSearchChange(e.target.value)} className="pl-9" />
+          <Input
+            placeholder="Search name, VIN, phone…"
+            value={search}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="pl-9"
+          />
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -246,36 +370,32 @@ const SubmissionsTable = ({
             {isCompact ? <Rows3 className="w-4 h-4" /> : <Rows2 className="w-4 h-4" />}
           </Button>
           <Button variant={showFilterPanel ? "default" : "outline"} size="sm" onClick={onToggleFilterPanel}>
-            Filter {(statusFilter || sourceFilter || storeFilter || dateRangeFilter.from || dateRangeFilter.to) && "*"}
+            Filter {(sourceFilter || storeFilter || dateRangeFilter.from || dateRangeFilter.to) && "*"}
           </Button>
         </div>
       </div>
 
       {/* Quick-filter chips */}
       <div className="mb-3 flex items-center gap-2 flex-wrap">
-        {quickFilters.map(chip => {
-          const isActive = chip.value === "__hot__" ? statusFilter === "__hot__"
-            : chip.value === "__mine__" ? statusFilter === "__mine__"
-            : chip.value === "__all__" ? (!statusFilter || statusFilter === "__all__")
-            : statusFilter === chip.value;
+        {chips.map(chip => {
+          const isActive =
+            chip.key === "__all__"
+              ? (!statusFilter || statusFilter === "__all__")
+              : statusFilter === chip.key;
           return (
             <button
-              key={chip.value}
-              onClick={() => onStatusFilterChange(chip.value)}
-              className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-semibold border transition-all ${getChipStyle(chip.value, isActive)}`}
+              key={chip.key}
+              onClick={() => onStatusFilterChange(chip.key)}
+              className={`inline-flex items-center gap-1.5 px-3 h-7 rounded-full text-[12px] font-semibold border transition-colors ${
+                isActive
+                  ? "bg-slate-900 text-white border-slate-900"
+                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+              }`}
             >
-              {chip.icon}
               {chip.label}
-              {chip.value === "partial" && (
-                <span className="ml-0.5 bg-amber-500/20 px-1.5 rounded-full text-[10px]">
-                  {submissions.filter(s => s.progress_status === "partial").length}
-                </span>
-              )}
-              {chip.value === "__mine__" && (
-                <span className="ml-0.5 bg-primary/20 px-1.5 rounded-full text-[10px]">
-                  {submissions.filter(s => s.status_updated_by === auditLabel || s.appraised_by?.includes(userName)).length}
-                </span>
-              )}
+              <span className={`text-[11px] font-semibold ${isActive ? "text-white/70" : "text-slate-400"}`}>
+                · {chip.count}
+              </span>
             </button>
           );
         })}
@@ -335,19 +455,21 @@ const SubmissionsTable = ({
       )}
 
       {loading ? (
-        <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden animate-in fade-in">
-          <div className="divide-y divide-border">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden animate-in fade-in">
+          <div className="divide-y divide-slate-100">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-4 px-4 py-3">
-                <Skeleton className="h-3.5 w-20 shrink-0" />
-                <Skeleton className="h-3.5 w-32 shrink-0" />
-                <Skeleton className="h-3.5 w-40 hidden md:block" />
-                <Skeleton className="h-3.5 w-36 hidden lg:block" />
-                <Skeleton className="h-3.5 w-24 hidden xl:block" />
-                <Skeleton className="h-5 w-20 rounded-full ml-auto" />
-                <Skeleton className="h-7 w-40 rounded" />
-                <Skeleton className="h-3.5 w-8 hidden md:block" />
-                <Skeleton className="h-8 w-8 rounded" />
+              <div key={i} className="flex items-center gap-4 px-5 py-3">
+                <Skeleton className="h-9 w-9 rounded-full shrink-0" />
+                <div className="flex-1 space-y-1.5">
+                  <Skeleton className="h-3.5 w-40" />
+                  <Skeleton className="h-3 w-56" />
+                </div>
+                <Skeleton className="h-5 w-24 rounded-md hidden md:block" />
+                <Skeleton className="h-5 w-20 rounded-md hidden lg:block" />
+                <Skeleton className="h-5 w-10 hidden xl:block" />
+                <Skeleton className="h-6 w-12 rounded-full hidden xl:block" />
+                <Skeleton className="h-7 w-24 rounded-md" />
+                <Skeleton className="h-7 w-7 rounded-md" />
               </div>
             ))}
           </div>
@@ -363,15 +485,14 @@ const SubmissionsTable = ({
           const totalIsZero = total === 0 && !hasActiveFilters;
 
           if (totalIsZero) {
-            // First-run empty state — no leads have ever been submitted.
             return (
-              <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-4 animate-in fade-in bg-card rounded-xl border border-dashed border-border">
+              <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-4 animate-in fade-in bg-white rounded-xl border border-dashed border-slate-200">
                 <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
                   <Inbox className="w-7 h-7 text-primary" />
                 </div>
                 <div className="text-center space-y-1 max-w-md">
-                  <p className="text-base font-semibold text-foreground">No leads yet</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-base font-semibold text-slate-900">No leads yet</p>
+                  <p className="text-sm text-slate-500">
                     As soon as a customer submits a trade-in through your website or
                     service drive, they'll land here. To start generating leads:
                   </p>
@@ -397,7 +518,6 @@ const SubmissionsTable = ({
             );
           }
 
-          // Filter-empty state — leads exist but none match the current filters.
           return (
             <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-2 animate-in fade-in">
               <div className="w-14 h-14 rounded-2xl bg-muted/60 flex items-center justify-center">
@@ -424,177 +544,205 @@ const SubmissionsTable = ({
         })()
       ) : (
         <>
-          <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
             <div className="overflow-x-auto">
-              <table className={`min-w-[1000px] ${fontSize}`}>
-                <thead>
-                  <tr className="border-b border-border bg-muted/50">
-                    <th className={`${cellPad} w-10 text-center`}>
+              <table className="w-full text-sm">
+                <thead className="bg-slate-50 text-slate-600 text-[11px] uppercase tracking-wider font-semibold">
+                  <tr>
+                    <th className={`${cellPadX} py-2.5 w-10 text-center`}>
                       <Checkbox
                         checked={allVisibleSelected ? true : someVisibleSelected ? "indeterminate" : false}
                         onCheckedChange={toggleSelectAll}
                         aria-label="Select all visible rows"
                       />
                     </th>
-                    <th className={`text-left ${cellPad} font-semibold text-muted-foreground whitespace-nowrap`}>Date</th>
-                    <th className={`text-left ${cellPad} font-semibold text-muted-foreground whitespace-nowrap`}>Name</th>
-                    <th className={`text-left ${cellPad} font-semibold text-muted-foreground whitespace-nowrap`}>Vehicle</th>
-                    <th className={`text-left ${cellPad} font-semibold text-muted-foreground whitespace-nowrap`}>Contact</th>
-                    <th className={`text-left ${cellPad} font-semibold text-muted-foreground whitespace-nowrap`}>Location</th>
-                    <th className={`text-right ${cellPad} font-semibold text-muted-foreground whitespace-nowrap`}>Offer</th>
-                    <th className={`text-left ${cellPad} font-semibold text-muted-foreground whitespace-nowrap min-w-[160px]`}>Status</th>
-                    <th className={`text-center px-2 ${isCompact ? "py-1.5" : "py-3"} font-semibold text-muted-foreground whitespace-nowrap`}>Age</th>
-                    <th className={`text-center px-2 ${isCompact ? "py-1.5" : "py-3"} font-semibold text-muted-foreground whitespace-nowrap`}>Score</th>
-                    <th className={`text-right ${cellPad} font-semibold text-muted-foreground whitespace-nowrap`}>Actions</th>
+                    <th className={`${cellPadX} py-2.5 w-[44px]`} />
+                    <th className={`${cellPadX} py-2.5 text-left font-semibold`}>Customer &amp; Vehicle</th>
+                    <th className={`${cellPadX} py-2.5 text-left font-semibold`}>Status</th>
+                    <th className={`${cellPadX} py-2.5 text-right font-semibold`}>Offer / ACV</th>
+                    <th className={`px-2 py-2.5 text-center font-semibold`}>Age</th>
+                    <th className={`px-2 py-2.5 text-center font-semibold`}>Score</th>
+                    <th className={`${cellPadX} py-2.5 text-right font-semibold w-[200px]`} />
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((sub, idx) => {
-                    const hours = getHoursSinceUpdate(sub);
-                    const sla = getSlaLevel(hours, sub.progress_status);
-                    const age = getAgeBadge(sub);
+                  {filtered.map((sub) => {
+                    const action = nextActionForLead(sub);
+                    const tone = statusTone(sub.progress_status);
+                    const offerVal = sub.offered_price ?? sub.estimated_offer_high ?? null;
+                    const isEstimate = sub.offered_price == null && (sub.estimated_offer_high ?? 0) > 0;
+                    const spread = sub.offered_price != null && sub.acv_value != null
+                      ? sub.offered_price - sub.acv_value
+                      : null;
+                    const ls = calculateLeadScore(sub);
+                    const digits = sub.phone?.replace(/\D/g, "");
+                    const miles = formatMiles(sub.mileage);
+                    const vehicle = sub.vehicle_year && sub.vehicle_make
+                      ? `${sub.vehicle_year} ${sub.vehicle_make} ${sub.vehicle_model || ""}`.trim()
+                      : (sub.plate || "—");
+                    const btnVariant =
+                      action.variant === "primary" ? "default" :
+                      action.variant === "destructive" ? "destructive" : "ghost";
+                    const isRowSelected = selectedIds.has(sub.id);
+
                     return (
-                    <tr key={sub.id} className={`border-b border-border last:border-0 hover:bg-primary/5 transition-colors border-l-3 ${sla.borderClass} ${age.bgClass} ${idx % 2 === 1 ? "bg-muted/20" : ""} ${selectedIds.has(sub.id) ? "bg-primary/10" : ""} admin-row`}>
-                      <td className={`${cellPad} text-center w-10`}>
-                        <Checkbox
-                          checked={selectedIds.has(sub.id)}
-                          onCheckedChange={() => toggleSelectOne(sub.id)}
-                          aria-label={`Select ${sub.name || "submission"}`}
-                        />
-                      </td>
-                      <td className={`${cellPad} whitespace-nowrap`}>{new Date(sub.created_at).toLocaleDateString()}</td>
-                      <td className={`${cellPad} font-medium text-card-foreground whitespace-nowrap`}>{sub.name || "—"}</td>
-                      <td className={`${cellPad} whitespace-nowrap`}>
-                        <span className="flex items-center gap-1">
-                          {sub.is_hot_lead && <span title="Hot Lead">🔥</span>}
-                          {sub.vehicle_year && sub.vehicle_make ? `${sub.vehicle_year} ${sub.vehicle_make} ${sub.vehicle_model || ""}` : sub.plate || "—"}
-                          {sub.photos_uploaded && <span title="Photos uploaded"><Camera className="w-3 h-3 text-success ml-1 shrink-0" /></span>}
-                          {sub.docs_uploaded && <span title="Docs uploaded"><FileText className="w-3 h-3 text-primary ml-0.5 shrink-0" /></span>}
-                        </span>
-                      </td>
-                      <td className={`${cellPad} whitespace-nowrap`}>
-                        <div>{sub.email || "—"}</div>
-                        {sub.phone ? (
-                          <a href={`tel:${sub.phone}`} className="text-muted-foreground text-xs text-primary/80 hover:text-primary hover:underline transition-colors cursor-pointer">{formatPhone(sub.phone)}</a>
-                        ) : null}
-                      </td>
-                      <td className={`${cellPad} whitespace-nowrap`}>
-                        {(() => {
-                          const loc = sub.store_location_id ? dealerLocations.find(l => l.id === sub.store_location_id) : null;
-                          return loc ? (
-                            <Badge variant="outline" className="text-[10px] font-medium truncate max-w-[120px]">{loc.name}</Badge>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">—</span>
-                          );
-                        })()}
-                      </td>
-                      <td className={`${cellPad} text-right whitespace-nowrap`}>
-                        {(() => {
-                          const isAccepted = isAcceptedWithAppointment(sub) || isAcceptedWithoutAppointment(sub);
-                          const offerValue = sub.offered_price || sub.estimated_offer_high;
-
-                          if (!offerValue || offerValue <= 0) return <span className="text-xs text-muted-foreground">—</span>;
-
-                          const displayVal = sub.offered_price
-                            ? `$${Math.floor(sub.offered_price).toLocaleString()}`
-                            : `~$${Math.floor(sub.estimated_offer_high!).toLocaleString()}`;
-
-                          if (isAccepted) {
-                            return (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border bg-success/15 text-success border-success/30">
-                                {displayVal}
+                      <tr
+                        key={sub.id}
+                        className={`border-t border-slate-100 transition-colors ${
+                          isRowSelected ? "bg-sky-50/60" : "hover:bg-slate-50/60"
+                        }`}
+                      >
+                        <td className={`${cellPadX} ${rowPad} text-center w-10`}>
+                          <Checkbox
+                            checked={isRowSelected}
+                            onCheckedChange={() => toggleSelectOne(sub.id)}
+                            aria-label={`Select ${sub.name || "submission"}`}
+                          />
+                        </td>
+                        <td className={`${cellPadX} ${rowPad} w-[44px]`}>
+                          <div
+                            className="w-9 h-9 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold flex items-center justify-center"
+                            aria-hidden
+                          >
+                            {initialsOf(sub.name)}
+                          </div>
+                        </td>
+                        <td className={`${cellPadX} ${rowPad}`}>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-sm font-semibold text-slate-900 truncate">
+                                {sub.name || "—"}
                               </span>
-                            );
-                          }
-
-                          return <span className="text-xs font-medium text-card-foreground">{displayVal}</span>;
-                        })()}
-                      </td>
-                      <td className={cellPad}>
-                        <div className="flex flex-col gap-1">
-                          <Select value={sub.progress_status} onValueChange={(val) => onInlineStatusChange(sub, val)}>
-                            <SelectTrigger className={`w-44 h-7 text-xs font-medium ${
-                              sub.progress_status === "purchase_complete" ? "border-success/50 text-success" :
-                              sub.progress_status === "dead_lead" ? "border-destructive/50 text-destructive" :
-                              sub.progress_status === "partial" ? "border-amber-500/50 text-amber-600 dark:text-amber-400" :
-                              sub.progress_status === "new" || sub.progress_status === "not_contacted" ? "border-muted text-muted-foreground" :
-                              "border-accent/50 text-accent"
-                            }`}>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {ALL_STATUS_OPTIONS.filter(s => s.key !== "partial").map(s => {
-                                const locked = ["deal_finalized", "check_request_submitted", "purchase_complete"].includes(s.key) && !canApprove;
-                                return <SelectItem key={s.key} value={s.key} disabled={locked}>{s.label}{locked ? " 🔒" : ""}</SelectItem>;
-                              })}
-                            </SelectContent>
-                          </Select>
-                          {sub.progress_status === "partial" && <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400">⚠ Abandoned — needs follow-up</span>}
-                          {isAcceptedWithoutAppointment(sub) && (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-success bg-success/15 border border-success/30 rounded-full px-2.5 py-0.5">
-                              <CheckCircle className="w-3 h-3" /> Offer Accepted
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className={`px-2 ${isCompact ? "py-1.5" : "py-3"} text-center`}>
-                        <div className="flex flex-col items-center gap-0.5">
-                          <span className={`text-xs font-bold ${age.color}`} title={`${Math.round(hours)}h since last update`}>
-                            {formatAge(hours)}
+                              {sub.is_hot_lead && (
+                                <Flame className="w-3.5 h-3.5 text-orange-500 shrink-0" aria-label="Hot lead" />
+                              )}
+                            </div>
+                            <div className="text-xs text-slate-500 truncate">
+                              {vehicle}
+                              {miles && <> · {miles} mi</>}
+                            </div>
+                          </div>
+                        </td>
+                        <td className={`${cellPadX} ${rowPad}`}>
+                          <span
+                            className={`inline-flex items-center text-[11px] font-semibold rounded-md px-2 py-0.5 border ${statusToneClasses[tone]}`}
+                          >
+                            {getStatusLabel(sub.progress_status)}
                           </span>
-                          {age.label && (
-                            <span className={`text-[9px] font-bold uppercase tracking-wider ${age.color}`}>
-                              {age.label}
-                            </span>
+                        </td>
+                        <td className={`${cellPadX} ${rowPad} text-right whitespace-nowrap`}>
+                          {offerVal != null && offerVal > 0 ? (
+                            <div className="leading-tight">
+                              <div className="text-sm font-bold text-slate-900">
+                                {isEstimate ? "~" : ""}${Math.floor(offerVal).toLocaleString()}
+                              </div>
+                              {sub.acv_value != null && sub.acv_value > 0 && (
+                                <div className="text-[11px] text-slate-400">
+                                  ACV ${Math.floor(sub.acv_value).toLocaleString()}
+                                  {spread != null && Math.abs(spread) >= 1 && (
+                                    <span className={`ml-1.5 font-semibold ${spread >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                                      {formatSpread(spread)}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-slate-400">—</span>
                           )}
-                        </div>
-                      </td>
-                      <td className={`px-2 ${isCompact ? "py-1.5" : "py-3"} text-center`}>
-                        {(() => {
-                          const ls = calculateLeadScore(sub);
-                          return (
-                            <TooltipProvider delayDuration={200}>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border cursor-help ${getScoreColor(ls.score)}`}>
-                                    {ls.score} {ls.label}
-                                  </span>
-                                </TooltipTrigger>
-                                <TooltipContent side="top" className="max-w-[260px] text-xs space-y-1">
-                                  {ls.factors.map((f, i) => (
-                                    <div key={i}>{f}</div>
-                                  ))}
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          );
-                        })()}
-                      </td>
-                      <td className={`${cellPad} text-right`}>
-                        <div className="flex justify-end items-center gap-1">
-                          {!sub.status_updated_by && (
+                        </td>
+                        <td className={`px-2 ${rowPad} text-center`}>
+                          <span className="text-xs font-semibold text-slate-600" title={new Date(sub.created_at).toLocaleString()}>
+                            {formatSmartAge(sub.created_at)}
+                          </span>
+                        </td>
+                        <td className={`px-2 ${rowPad} text-center`}>
+                          <TooltipProvider delayDuration={200}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border cursor-help ${getScoreColor(ls.score)}`}>
+                                  {ls.score}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="max-w-[260px] text-xs space-y-1">
+                                <div className="font-semibold">{ls.label}</div>
+                                {ls.factors.map((f, i) => <div key={i}>{f}</div>)}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </td>
+                        <td className={`${cellPadX} ${rowPad} text-right`}>
+                          <div className="flex items-center justify-end gap-1.5">
                             <Button
-                              variant="ghost"
+                              variant={btnVariant}
                               size="sm"
-                              onClick={() => onInlineStatusChange(sub, sub.progress_status)}
-                              title="Claim this lead"
-                              className="text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 gap-1 text-[10px] font-semibold px-1.5"
+                              onClick={() => handleActionClick(sub, action)}
+                              className="h-7 text-[12px] font-semibold gap-1"
                             >
-                              <UserCheck className="w-3.5 h-3.5" />
-                              <span className="hidden xl:inline">Claim</span>
+                              <ActionIcon icon={action.icon} />
+                              {action.label}
                             </Button>
-                          )}
-                          <Button variant="ghost" size="sm" onClick={() => onView(sub)}><Eye className="w-4 h-4" /></Button>
-                          {canDelete && <Button variant="ghost" size="sm" onClick={() => onDelete(sub.id)} className="text-destructive hover:text-destructive"><Trash2 className="w-4 h-4" /></Button>}
-                        </div>
-                      </td>
-                    </tr>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 w-7 p-0 text-slate-400 hover:text-slate-700"
+                                  aria-label="More actions"
+                                >
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-40">
+                                <DropdownMenuItem onClick={() => onView(sub)}>
+                                  <Eye className="w-4 h-4 mr-2" />
+                                  View
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleMenuCall(sub)}
+                                  disabled={!digits}
+                                >
+                                  <Phone className="w-4 h-4 mr-2" />
+                                  Call
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleMenuSms(sub)}
+                                  disabled={!digits}
+                                >
+                                  <MessageSquare className="w-4 h-4 mr-2" />
+                                  SMS
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleMenuEmail(sub)}
+                                  disabled={!sub.email}
+                                >
+                                  <Mail className="w-4 h-4 mr-2" />
+                                  Email
+                                </DropdownMenuItem>
+                                {canDelete && (
+                                  <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      onClick={() => onDelete(sub.id)}
+                                      className="text-destructive focus:text-destructive"
+                                    >
+                                      <Trash2 className="w-4 h-4 mr-2" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </td>
+                      </tr>
                     );
                   })}
                 </tbody>
               </table>
             </div>
           </div>
+
           {activeSelectedIds.size > 0 && (
             <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl bg-card/95 backdrop-blur-xl shadow-2xl border border-border/60 ring-1 ring-primary/10 animate-in slide-in-from-bottom-4 fade-in duration-200">
               <span className="text-sm font-semibold text-card-foreground whitespace-nowrap">
@@ -608,7 +756,7 @@ const SubmissionsTable = ({
                 <SelectContent>
                   {ALL_STATUS_OPTIONS.filter(s => s.key !== "partial").map(s => {
                     const locked = ["deal_finalized", "check_request_submitted", "purchase_complete"].includes(s.key) && !canApprove;
-                    return <SelectItem key={s.key} value={s.key} disabled={locked}>{s.label}{locked ? " \uD83D\uDD12" : ""}</SelectItem>;
+                    return <SelectItem key={s.key} value={s.key} disabled={locked}>{s.label}{locked ? " 🔒" : ""}</SelectItem>;
                   })}
                 </SelectContent>
               </Select>
@@ -624,6 +772,7 @@ const SubmissionsTable = ({
               </Button>
             </div>
           )}
+
           {totalPages > 1 && (
             <div className="flex items-center justify-between mt-4">
               <span className="text-xs text-muted-foreground">
