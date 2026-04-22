@@ -2325,12 +2325,10 @@ const SubmissionDetailSheetV2 = ({
             {(duplicateWarnings[sub.id]?.length > 0 || optOutStatus.email || optOutStatus.sms) && (
               <div className="space-y-2">
                 {duplicateWarnings[sub.id]?.length > 0 && (
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2.5">
-                    <AlertTriangle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-xs font-semibold text-red-700">Possible Duplicate</p>
-                      {duplicateWarnings[sub.id].map((w, i) => <p key={i} className="text-[11px] text-red-600/80 mt-0.5">{w}</p>)}
-                    </div>
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 flex items-center gap-2">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                    <span className="text-xs font-bold text-amber-800">Possible Duplicate</span>
+                    <span className="text-xs text-amber-700 truncate">{duplicateWarnings[sub.id][0]}</span>
                   </div>
                 )}
                 {(optOutStatus.email || optOutStatus.sms) && (
@@ -2712,11 +2710,14 @@ const SubmissionDetailSheetV2 = ({
                 <div className="pt-2 border-t border-slate-100 space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="text-[11px] text-slate-500 font-semibold">Verified Payoff</label>
-                    <div className="flex items-center gap-1.5">
-                      <Checkbox id="rp-payoff-verified" checked={!!(sub as any).loan_payoff_verified}
-                        onCheckedChange={(c) => updateField({ loan_payoff_verified: !!c, loan_payoff_updated_at: new Date().toISOString() } as any)} />
-                      <label htmlFor="rp-payoff-verified" className="text-[11px] text-slate-500 cursor-pointer">Confirmed</label>
-                    </div>
+                    <button
+                      onClick={() => updateField({ loan_payoff_verified: !(sub as any).loan_payoff_verified, loan_payoff_updated_at: new Date().toISOString() } as any)}
+                      className="flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-slate-700 transition-colors">
+                      <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${(sub as any).loan_payoff_verified ? "border-emerald-500 bg-emerald-500" : "border-slate-300 bg-white"}`}>
+                        {(sub as any).loan_payoff_verified && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                      </span>
+                      Confirmed
+                    </button>
                   </div>
                   <div className="relative">
                     <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
