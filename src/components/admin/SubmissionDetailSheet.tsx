@@ -10,7 +10,6 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { safeInvoke } from "@/lib/safeInvoke";
 import { formatPhone } from "@/lib/utils";
-import { SubmissionDetailSheetLegacy } from "./SubmissionDetailSheet.legacy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,18 +25,13 @@ import StaffFileUpload from "@/components/admin/StaffFileUpload";
 import FollowUpPanel from "@/components/admin/FollowUpPanel";
 import RetailMarketPanel from "@/components/admin/RetailMarketPanel";
 import HistoricalInsightPanel from "@/components/appraisal/HistoricalInsightPanel";
-import EscalateToManagerDialog, { ESCALATION_REASONS } from "@/components/admin/EscalateToManagerDialog";
-import DeclinedReasonDialog, { DECLINED_REASONS } from "@/components/admin/DeclinedReasonDialog";
-import SaveTheDealDialog from "@/components/admin/SaveTheDealDialog";
-import ConversationThread from "@/components/admin/ConversationThread";
-import { isBDCRole, isSalesFloorRole, isManagerRole, canWorkLeads, isInternetManagerRole } from "@/lib/adminConstants";
 import { useTenant } from "@/contexts/TenantContext";
 import {
   X, Printer, Users, Car, Search, DollarSign, Info, FileText, Gauge, Palette, BarChart3, ScanLine,
   Settings2, Wrench, Key, Wind, Cigarette, CircleDot, Sparkles, TrendingUp,
   AlertTriangle, Bell, Mail, Phone, StickyNote, CalendarDays, Camera,
   ExternalLink, Upload, Check, XCircle, MapPin, Star, History, Clock,
-  ClipboardCheck, ClipboardList, Save, Trash2, CheckCircle2, Activity, ChevronDown, UserCheck, MessageSquare,
+  ClipboardCheck, ClipboardList, Save, Trash2, CheckCircle2, Activity, ChevronDown,
 } from "lucide-react";
 import { calculateLeadScore, getScoreColor } from "@/lib/leadScoring";
 import { calculateEquity } from "@/lib/equityCalculator";
@@ -51,8 +45,6 @@ import { useToast } from "@/hooks/use-toast";
 import logoFallback from "@/assets/logo-placeholder.png";
 import { SubmissionDetailSheetLegacy } from "./SubmissionDetailSheet.legacy";
 
-// Feature flag — when false (default), users see the legacy sheet.
-// Flip VITE_CUSTOMER_FILE_REFRESH=true in env to preview the refresh.
 const ENABLE_REFRESH = import.meta.env.VITE_CUSTOMER_FILE_REFRESH === "true";
 
 interface SubmissionDetailSheetProps {
@@ -70,27 +62,6 @@ interface SubmissionDetailSheetProps {
   canApprove: boolean;
   canDelete: boolean;
   canUpdateStatus: boolean;
-  /**
-   * Read-only pricing visibility. Sales-floor roles get this true even
-   * when canSetPrice is false — they can see book values and ACV so
-   * they can quote customers, but every edit control stays gated by
-   * canSetPrice.
-   */
-  canViewPricing?: boolean;
-  /**
-   * True for sales_bdc / sales. Used to hide margin math (profit
-   * spread, retail market comps, activity log, AI call transcripts)
-   * that internal-operations-level users need but the sales floor
-   * does not.
-   */
-  isSalesFloor?: boolean;
-  /**
-   * Current user role + email. Needed so BDC-specific affordances
-   * (Escalate to Manager, Log Declined Reason) can write audit trail
-   * entries attributed to the actor.
-   */
-  userRole?: string;
-  userEmail?: string;
   auditLabel: string;
   userName: string;
   onUpdate: (updated: Submission) => void;
@@ -103,9 +74,7 @@ interface SubmissionDetailSheetProps {
   fetchSubmissions: () => void;
 }
 
-// ── Section Card wrapper — refreshed visual chrome (calmer, slate-200) ──
-// Brief §2: rounded-xl, white card, slate-200 border, slate-500 label.
-// CONTENTS of each card are unchanged — only the outer chrome.
+// ── Section Card wrapper ──
 const SectionCard = ({
   icon: Icon,
   title,
@@ -121,32 +90,17 @@ const SectionCard = ({
   className?: string;
   accent?: "success" | "warning" | "destructive";
 }) => {
-  // Accent pipe on the card's left edge keeps the existing semantic signal
-  // (success / warning / destructive) while the rest of the chrome moves
-  // to the lighter design-file aesthetic — white body, slate border,
-  // quieter header band, no gradients.
-  const accentPipe =
-    accent === "success"     ? "border-l-[3px] border-l-emerald-500" :
-    accent === "warning"     ? "border-l-[3px] border-l-amber-500"   :
-    accent === "destructive" ? "border-l-[3px] border-l-red-500"     :
-    "";
+  const accentBorder = accent === "success" ? "border-l-emerald-500" : accent === "warning" ? "border-l-amber-500" : accent === "destructive" ? "border-l-red-500" : "border-l-[#003b80]/30";
   return (
-    <div
-      data-print-section
-      className={`rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden ${accentPipe} ${className}`}
-    >
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100">
-        <h3 className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.1em] flex items-center gap-2">
-          {Icon && (
-            <span className="flex items-center justify-center w-5 h-5 rounded-md bg-slate-100">
-              <Icon className="w-3 h-3 text-slate-500" />
-            </span>
-          )}
+    <div data-print-section className={`rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden border-l-[3px] ${accentBorder} ${className}`}>
+      <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+          {Icon && <Icon className="w-3.5 h-3.5 text-[#003b80]/50" />}
           {title}
         </h3>
         {headerRight}
       </div>
-      <div className="p-4">{children}</div>
+      <div className="p-5">{children}</div>
     </div>
   );
 };
@@ -167,16 +121,12 @@ const CustomerAvatar = ({ name }: { name: string | null }) => {
 const DetailRow = ({ label, value, icon }: { label: string; value: React.ReactNode | string | null | undefined; icon?: React.ReactNode }) => {
   if (!value) return null;
   return (
-    // items-start (not center) so multi-line values don't visually stack on the
-    // label. gap-3 enforces a minimum horizontal gutter, shrink-0 stops the
-    // label from compressing, min-w-0 + break-words lets long values wrap
-    // cleanly, break-all handles unbroken tokens like VINs.
-    <div className="flex items-start justify-between gap-3 py-2 border-b border-border/40 last:border-0 group/row hover:bg-muted/30 -mx-1 px-1 rounded-md transition-colors">
-      <span className="text-sm text-muted-foreground flex items-center gap-2 shrink-0">
-        {icon && <span className="text-muted-foreground/50 group-hover/row:text-primary/60 transition-colors">{icon}</span>}
+    <div className="flex items-start justify-between gap-3 py-2 border-b border-slate-100 last:border-0">
+      <span className="text-sm text-slate-500 flex items-center gap-2 shrink-0">
+        {icon && <span className="text-slate-400">{icon}</span>}
         {label}
       </span>
-      <span className="text-sm font-semibold text-card-foreground text-right max-w-[65%] min-w-0 break-words [overflow-wrap:anywhere]">{value}</span>
+      <span className="text-sm font-semibold text-slate-900 text-right max-w-[65%] min-w-0 break-words [overflow-wrap:anywhere]">{value}</span>
     </div>
   );
 };
@@ -200,9 +150,7 @@ const InspectionVitals = ({ submissionId }: { submissionId: string }) => {
   const [data, setData] = useState<{
     tire_lf: number | null; tire_rf: number | null; tire_lr: number | null; tire_rr: number | null;
     brake_lf: number | null; brake_rf: number | null; brake_lr: number | null; brake_rr: number | null;
-    dealership_id: string | null;
   } | null>(null);
-  const [inputMode, setInputMode] = useState<"measurement" | "pass_fail">("measurement");
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -211,25 +159,11 @@ const InspectionVitals = ({ submissionId }: { submissionId: string }) => {
     (async () => {
       const { data: row } = await supabase
         .from("submissions")
-        .select("tire_lf, tire_rf, tire_lr, tire_rr, brake_lf, brake_rf, brake_lr, brake_rr, dealership_id")
+        .select("tire_lf, tire_rf, tire_lr, tire_rr, brake_lf, brake_rf, brake_lr, brake_rr")
         .eq("id", submissionId)
         .maybeSingle();
-      // Pull the dealer's tire/brake input preference so we interpret
-      // the stored values correctly — 0/1 are pass/fail flags under
-      // pass_fail mode, not tread depths.
-      let mode: "measurement" | "pass_fail" = "measurement";
-      const dealership = (row as any)?.dealership_id;
-      if (dealership) {
-        const { data: cfg } = await supabase
-          .from("inspection_config")
-          .select("tire_brake_input_mode")
-          .eq("dealership_id", dealership)
-          .maybeSingle();
-        if ((cfg as any)?.tire_brake_input_mode === "pass_fail") mode = "pass_fail";
-      }
       if (!cancelled) {
         setData((row as any) ?? null);
-        setInputMode(mode);
         setLoaded(true);
       }
     })();
@@ -245,19 +179,9 @@ const InspectionVitals = ({ submissionId }: { submissionId: string }) => {
   type State = "green" | "yellow" | "red" | "empty";
   const stateOf = (v: number | null | undefined): State => {
     if (v == null || isNaN(v)) return "empty";
-    if (inputMode === "pass_fail") {
-      // 1 = pass (green), 0 = fail (red). No middle band in pass/fail.
-      return v === 1 ? "green" : "red";
-    }
     if (v >= 6) return "green";
     if (v >= 3) return "yellow";
     return "red";
-  };
-
-  const labelFor = (s: State): string => {
-    if (s === "empty") return "Not recorded";
-    if (inputMode === "pass_fail") return s === "green" ? "Pass" : "Fail";
-    return s === "green" ? "Good" : s === "yellow" ? "Fair" : "Replace";
   };
 
   const stateClass: Record<State, string> = {
@@ -290,7 +214,7 @@ const InspectionVitals = ({ submissionId }: { submissionId: string }) => {
         <div className="min-w-0 flex-1">
           <div className="text-[9px] font-bold uppercase tracking-wider opacity-75 leading-none">{label}</div>
           <div className="text-[11px] font-semibold leading-tight mt-0.5">
-            {labelFor(s)}
+            {s === "empty" ? "Not recorded" : s === "green" ? "Good" : s === "yellow" ? "Fair" : "Replace"}
           </div>
         </div>
       </div>
@@ -322,7 +246,7 @@ const InspectionVitals = ({ submissionId }: { submissionId: string }) => {
         </div>
       </div>
       <p className="text-[10px] text-muted-foreground italic">
-        From the inspection — {inputMode === "pass_fail" ? "Green pass, Red fail." : "Green good, Amber fair, Red replace."}
+        From the inspection — Green good, Amber fair, Red replace.
       </p>
     </div>
   );
@@ -549,293 +473,6 @@ const CompactOBDIndicator = ({ submissionId, token }: { submissionId: string; to
   );
 };
 
-// ── BDCActionStrip ────────────────────────────────────────────────────
-// BDC / sales affordances for the top of the customer file.
-//
-// - Escalation banner: shown to everyone when the lead is escalated.
-//   Managers see a "Resolve" button; BDC/sales just see the status.
-// - Declined-reason banner: shown to everyone when a reason was logged;
-//   sales floor can open the dialog to update it.
-// - Action row: BDC / sales get Escalate-to-Manager + Log-Declined-Reason
-//   + Book-Inspection buttons. Managers don't need these in their own
-//   view — they act on escalations via the queue.
-const BDCActionStrip = ({
-  sub,
-  userRole,
-  userEmail,
-  isSalesFloor,
-  auditLabel,
-  onRefresh,
-}: {
-  sub: any;
-  userRole?: string;
-  userEmail?: string;
-  isSalesFloor: boolean;
-  auditLabel?: string;
-  onRefresh: () => void;
-}) => {
-  const [escalateOpen, setEscalateOpen] = useState(false);
-  const [declineOpen, setDeclineOpen] = useState(false);
-  const [saveDealOpen, setSaveDealOpen] = useState(false);
-  const [resolving, setResolving] = useState(false);
-  const { toast } = useToast();
-
-  const isManager = isManagerRole(userRole);
-  const isSalesOrBDC = isSalesFloorRole(userRole);
-  const isBDC = isBDCRole(userRole);
-  const isIM = isInternetManagerRole(userRole);
-  // Lead-workers = sales floor + internet_manager. This is the tier
-  // that actively touches leads — escalating, capturing decline
-  // reasons, booking inspections, flipping to appraiser.
-  const isLeadWorker = canWorkLeads(userRole);
-
-  const escalated = !!sub.escalated_to_manager;
-  const declinedReasonLabel = sub.declined_reason
-    ? DECLINED_REASONS.find((r) => r.value === sub.declined_reason)?.label || sub.declined_reason
-    : null;
-  const escalationReasonLabel = sub.escalation_reason
-    ? ESCALATION_REASONS.find((r) => r.value === sub.escalation_reason)?.label || sub.escalation_reason
-    : null;
-
-  // Lead looks "declined" when the pipeline status says so — keep this
-  // list in sync with the canonical status set. The action button
-  // surfaces whenever a reason hasn't been captured yet.
-  const declinedLike = ["offer_declined", "lost", "unreachable"].includes(
-    sub.progress_status || ""
-  );
-  const needsDeclinedReason = declinedLike && !sub.declined_reason;
-
-  const noAppointmentYet = !sub.appointment_set;
-
-  const handleResolveEscalation = async () => {
-    setResolving(true);
-    const { error } = await supabase
-      .from("submissions")
-      .update({
-        escalated_to_manager: false,
-        escalation_resolved_at: new Date().toISOString(),
-        escalation_resolved_by: userEmail || null,
-      } as any)
-      .eq("id", sub.id);
-    setResolving(false);
-    if (error) {
-      toast({ title: "Could not resolve", description: error.message, variant: "destructive" });
-      return;
-    }
-    await supabase.from("activity_log").insert({
-      submission_id: sub.id,
-      action: "Escalation Resolved",
-      old_value: null,
-      new_value: null,
-      performed_by: userEmail || "unknown",
-    } as any);
-    toast({ title: "Escalation resolved", description: "Marked as handled." });
-    onRefresh();
-  };
-
-  // Internet managers share the BDC action affordances per user
-  // direction — they still work leads hands-on and escalate just like
-  // a BDC rep does, they just have team-level visibility on top.
-  const showActionRow = isLeadWorker && !escalated;
-  const somethingToShow = escalated || declinedReasonLabel || showActionRow;
-  if (!somethingToShow) return null;
-
-  return (
-    <div className="space-y-3">
-      {/* Escalation active */}
-      {escalated && (
-        <div className="rounded-2xl border-2 border-amber-500/50 bg-amber-500/10 p-4 flex items-start gap-3">
-          <div className="w-9 h-9 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0">
-            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 mb-0.5">
-              Escalated to manager
-            </p>
-            <p className="text-sm font-semibold text-foreground">
-              {escalationReasonLabel || "Needs manager attention"}
-            </p>
-            {sub.escalation_notes && (
-              <p className="text-xs text-muted-foreground mt-1 leading-snug">{sub.escalation_notes}</p>
-            )}
-            <p className="text-[10px] text-muted-foreground mt-1.5">
-              by {sub.escalation_created_by || "unknown"} · {sub.escalation_created_at ? new Date(sub.escalation_created_at).toLocaleString() : ""}
-            </p>
-          </div>
-          {isManager && (
-            <Button
-              size="sm"
-              onClick={handleResolveEscalation}
-              disabled={resolving}
-              className="shrink-0"
-            >
-              {resolving ? "…" : "Resolve"}
-            </Button>
-          )}
-        </div>
-      )}
-
-      {/* Declined reason logged */}
-      {declinedReasonLabel && (
-        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 flex items-start gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0">
-            <XCircle className="w-3.5 h-3.5 text-destructive" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-destructive mb-0.5">
-              Customer declined
-            </p>
-            <p className="text-sm font-semibold text-foreground">{declinedReasonLabel}</p>
-            {sub.declined_notes && (
-              <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{sub.declined_notes}</p>
-            )}
-            {(sub.customer_walk_away_number || sub.competitor_mentioned) && (
-              <div className="flex flex-wrap gap-1.5 mt-1.5">
-                {sub.customer_walk_away_number && (
-                  <span className="inline-flex items-center text-[10px] font-semibold text-card-foreground bg-background border border-border/60 px-2 py-0.5 rounded-full">
-                    Wants: ${Number(sub.customer_walk_away_number).toLocaleString()}
-                  </span>
-                )}
-                {sub.competitor_mentioned && (
-                  <span className="inline-flex items-center text-[10px] font-semibold text-card-foreground bg-background border border-border/60 px-2 py-0.5 rounded-full">
-                    {sub.competitor_mentioned}
-                    {sub.competitor_offer_amount
-                      ? `: $${Number(sub.competitor_offer_amount).toLocaleString()}`
-                      : ""}
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-          <div className="flex flex-col gap-1.5 shrink-0">
-            {isManager && (
-              <Button
-                size="sm"
-                onClick={() => setSaveDealOpen(true)}
-                className="h-7 text-[11px] bg-success hover:bg-success/90 text-success-foreground"
-              >
-                Save the Deal
-              </Button>
-            )}
-            {(isSalesOrBDC || isManager) && (
-              <Button variant="outline" size="sm" onClick={() => setDeclineOpen(true)} className="h-7 text-[11px]">
-                Edit reason
-              </Button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Action row — BDC / sales / internet manager */}
-      {showActionRow && (
-        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-muted/20 px-3 py-2.5">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mr-1">
-            {isBDC ? "BDC actions" : isIM ? "Internet mgr actions" : "Sales actions"}
-          </span>
-          {noAppointmentYet && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                // Scrolls to the appointment section — actual
-                // scheduling logic lives there already.
-                const el = document.getElementById("appointment-section");
-                if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-              }}
-              className="h-7 text-[11px]"
-            >
-              <CalendarDays className="w-3 h-3 mr-1" /> Book Inspection
-            </Button>
-          )}
-          {(needsDeclinedReason || !sub.declined_reason) && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setDeclineOpen(true)}
-              className={`h-7 text-[11px] ${needsDeclinedReason ? "border-destructive/60 text-destructive" : ""}`}
-            >
-              <XCircle className="w-3 h-3 mr-1" />
-              {needsDeclinedReason ? "Log Declined Reason" : "Log Declined Reason"}
-            </Button>
-          )}
-          {/* Direct to appraiser — shortcut for "this needs an
-               appraisal value today, skip the manager bounce". Flips
-               needs_appraisal=true which lights up the Appraiser
-               Queue. Separate from Escalate-to-Manager which is for
-               cross-cutting issues the manager has to decide. */}
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={async () => {
-              const { error } = await supabase
-                .from("submissions")
-                .update({ needs_appraisal: true } as any)
-                .eq("id", sub.id);
-              if (error) {
-                toast({ title: "Could not send", description: error.message, variant: "destructive" });
-                return;
-              }
-              await supabase.from("activity_log").insert({
-                submission_id: sub.id,
-                action: "Sent to Appraiser",
-                old_value: null,
-                new_value: `by ${userEmail || "lead worker"}`,
-                performed_by: userEmail || "unknown",
-              } as any);
-              toast({ title: "Sent to Appraiser", description: "Lead is on the appraiser queue." });
-              onRefresh();
-            }}
-            className="h-7 text-[11px] border-primary/60 text-primary ml-auto"
-          >
-            <UserCheck className="w-3 h-3 mr-1" /> Send to Appraiser
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setEscalateOpen(true)}
-            className="h-7 text-[11px] border-amber-500/60 text-amber-600 dark:text-amber-400"
-          >
-            <AlertTriangle className="w-3 h-3 mr-1" /> Escalate to Manager
-          </Button>
-        </div>
-      )}
-
-      <EscalateToManagerDialog
-        open={escalateOpen}
-        onOpenChange={setEscalateOpen}
-        submissionId={sub.id}
-        userEmail={userEmail}
-        onEscalated={onRefresh}
-      />
-      <DeclinedReasonDialog
-        open={declineOpen}
-        onOpenChange={setDeclineOpen}
-        submissionId={sub.id}
-        userEmail={userEmail}
-        initialReason={sub.declined_reason}
-        initialNotes={sub.declined_notes}
-        initialWalkAway={sub.customer_walk_away_number}
-        initialCompetitor={sub.competitor_mentioned}
-        initialCompetitorAmount={sub.competitor_offer_amount}
-        onSaved={onRefresh}
-      />
-      <SaveTheDealDialog
-        open={saveDealOpen}
-        onOpenChange={setSaveDealOpen}
-        submissionId={sub.id}
-        currentOffer={sub.offered_price ?? sub.estimated_offer_high ?? null}
-        bookAvg={sub.bb_tradein_avg ?? sub.bb_wholesale_avg ?? null}
-        acv={sub.acv_value ?? null}
-        walkAwayNumber={sub.customer_walk_away_number ?? null}
-        competitorName={sub.competitor_mentioned ?? null}
-        competitorOffer={sub.competitor_offer_amount ?? null}
-        auditLabel={auditLabel}
-        onSaved={onRefresh}
-      />
-    </div>
-  );
-};
-
 const RefreshedSheet = ({
   selected,
   onClose,
@@ -851,10 +488,6 @@ const RefreshedSheet = ({
   canApprove,
   canDelete,
   canUpdateStatus,
-  canViewPricing = true,
-  isSalesFloor = false,
-  userRole,
-  userEmail,
   auditLabel,
   userName,
   onUpdate,
@@ -1197,43 +830,53 @@ const RefreshedSheet = ({
 
   return (
     <Sheet open={!!selected} onOpenChange={() => { setEditState(null); onClose(); }}>
-      <SheetContent side="right" className="w-full sm:max-w-5xl lg:max-w-6xl p-0 flex flex-col overflow-hidden bg-slate-50 [&>button]:hidden">
-        {/* ── Sticky header — refreshed design chrome ─────────────────
-             Solid blue gradient per design file. Typography leads with
-             Year/Make/Model in DM Serif Display; offer number is the
-             biggest glyph on screen (right column). Existing buttons +
-             avatar + data bindings preserved exactly. The data attribute
-             lets future tweaks target this header without a class hunt. */}
-        {/* TODO(ui-refresh-arrived-banner): Wire up when
-             submissions.arrived_at and submissions.on_the_way_at columns
-             exist. See handoff brief §3 item 2. Banner should render a red
-             strip below this header with "Customer Arrived · <timestamp>
-             — Go greet them now" when progress_status === 'arrived'. */}
-        <div data-customer-header className="sticky top-0 z-10 shrink-0 bg-gradient-to-r from-[#003b80] to-[#005bb5] text-white">
-          <div className="px-6 py-5">
-            <SheetHeader>
-              {/* Top bar: quick actions + close */}
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-1.5">
-                  {[
-                    // "Inspection" was removed — inspectors have their own
-                    // entry points (Inspection Check-In, Appraiser Queue)
-                    // and the customer-file header isn't where they start.
-                    // "Appraisal" remains — it's the most common jump from
-                    // the customer view.
-                    { label: "Appraisal", icon: Gauge, onClick: () => { routerNavigate(`/appraisal/${sub.token}`); } },
-                    {
-                      label: (sub as any).needs_appraisal ? "In Queue" : "Send to Appraiser",
-                      icon: Gauge,
-                      onClick: async () => {
+      <SheetContent side="right" className="w-full sm:max-w-5xl lg:max-w-6xl p-0 flex flex-col overflow-hidden [&>button]:hidden">
+        {/* ── Premium Sticky Header ── */}
+        <div className="sticky top-0 z-10 shrink-0">
+          {/* Blue header — vehicle-first layout per design */}
+          <div className="bg-gradient-to-r from-[#003b80] to-[#005bb5] text-white overflow-hidden">
+            <div className="px-6 pt-4 pb-5">
+              <SheetHeader>
+                {/* Top row: close left, actions right */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => { setEditState(null); onClose(); }}
+                      className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white hover:text-white transition-all print:hidden"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                    <span className="text-white/70 text-xs">Customer File</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 print:hidden">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handlePrint}
+                      className="px-3 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white hover:text-white text-xs font-semibold transition-all"
+                    >
+                      <Printer className="w-3.5 h-3.5 mr-1.5" /> Print
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => { routerNavigate(`/appraisal/${sub.token}`); }}
+                      className="px-3 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white hover:text-white text-xs font-semibold transition-all"
+                    >
+                      <Gauge className="w-3.5 h-3.5 mr-1.5" /> Appraisal
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={async () => {
                         const next = !(sub as any).needs_appraisal;
                         const { error } = await (supabase as any)
                           .from("submissions")
                           .update({ needs_appraisal: next })
                           .eq("id", sub.id);
                         if (error) {
-                          // Friendly error when the column hasn't been
-                          // provisioned on this environment yet.
                           const isMissingColumn =
                             error.message?.includes("needs_appraisal") ||
                             (error.message?.includes("column") && error.message?.includes("does not exist"));
@@ -1256,153 +899,138 @@ const RefreshedSheet = ({
                         });
                         toast({
                           title: next ? "Sent to Appraiser Queue" : "Removed from queue",
-                          description: next
-                            ? "A manager can now see this in the Appraiser Queue."
-                            : undefined,
+                          description: next ? "A manager can now see this in the Appraiser Queue." : undefined,
                         });
                         fetchActivityLog(sub.id);
-                      },
-                    },
-                    { label: "Print", icon: Printer, onClick: handlePrint },
-                  ].map(action => (
-                    <Button
-                      key={action.label}
-                      variant="ghost"
-                      size="sm"
-                      onClick={action.onClick}
-                      className="text-white/80 hover:text-white hover:bg-white/10 rounded-lg text-xs h-8 print:hidden transition"
+                      }}
+                      className="px-3 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white hover:text-white text-xs font-semibold transition-all"
                     >
-                      <action.icon className="w-3.5 h-3.5 mr-1.5" /> {action.label}
+                      <Gauge className="w-3.5 h-3.5 mr-1.5" />
+                      {(sub as any).needs_appraisal ? "In Queue" : "Send to Appraiser"}
                     </Button>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => { setEditState(null); onClose(); }}
-                  aria-label="Close"
-                  className="text-white/70 hover:text-white hover:bg-white/10 h-9 w-9 rounded-lg inline-flex items-center justify-center transition"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Hero — refreshed typography per design. Avatar on the
-                  left, vehicle identifiers lead (year/mileage caption →
-                  big Make+Model → VIN pill), then a meta row with the
-                  customer name, submission date, clickable phone/email,
-                  status badge, hot-lead flag. Big offer value on the
-                  right. */}
-              <div className="flex items-start gap-4">
-                <CustomerAvatar name={sub.name} />
-                <div className="flex-1 min-w-0">
-                  {/* Year + mileage caption */}
-                  <div className="text-[11px] uppercase tracking-[0.15em] text-white/60 font-semibold mb-1">
-                    {sub.vehicle_year}
-                    {sub.mileage ? ` · ${Number(String(sub.mileage).replace(/[^0-9]/g, "")).toLocaleString()} mi` : ""}
                   </div>
-                  {/* BIG Make + Model */}
-                  <SheetTitle className="font-display text-[34px] leading-[1.05] tracking-tight text-white">
-                    {sub.vehicle_make} {sub.vehicle_model || "Submission Details"}
-                  </SheetTitle>
-                  {/* VIN pill + plate + color */}
-                  {(sub.vin || sub.plate || sub.exterior_color) && (
+                </div>
+
+                {/* Vehicle — make/model leads, year + mileage above, VIN/plate below */}
+                <div className="flex items-end gap-4 flex-wrap">
+                  <div className="flex-1 min-w-[260px]">
+                    <div className="text-[11px] uppercase tracking-[0.15em] text-white/60 font-semibold mb-1">
+                      {[sub.name, sub.vehicle_year, sub.mileage ? `${Number(sub.mileage).toLocaleString()} mi` : null].filter(Boolean).join(" · ")}
+                    </div>
+                    <SheetTitle className="font-display text-[28px] leading-[1.05] tracking-tight text-white">
+                      {[sub.vehicle_make, sub.vehicle_model].filter(Boolean).join(" ") || "Submission Details"}
+                    </SheetTitle>
                     <div className="flex items-center gap-3 mt-2 text-[13px] text-white/80 flex-wrap">
                       {sub.vin && (
-                        <span className="font-mono bg-white/10 rounded px-2 py-0.5 tracking-wider">{sub.vin}</span>
+                        <span className="font-mono bg-white/10 rounded px-2 py-0.5 tracking-wider text-[12px]">{sub.vin}</span>
                       )}
                       {sub.plate && <span>Plate · {sub.plate}</span>}
                       {sub.exterior_color && <span className="text-white/60">· {sub.exterior_color}</span>}
                     </div>
-                  )}
-                  {/* Meta row — name, date, tel: / mailto: quick-actions
-                      (carried over from main so sales can one-click
-                      reach out), status + hot-lead. */}
-                  <div className="mt-3 flex items-center gap-3 flex-wrap text-xs">
-                    <span className="text-white/60 text-sm font-medium">
-                      {sub.name || "Unknown Customer"}
-                    </span>
-                    <span className="text-white/30">|</span>
-                    <span className="text-white/50">
-                      {new Date(sub.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                    </span>
-                    {sub.phone && (
-                      <a
-                        href={`tel:+1${(sub.phone || "").replace(/\D/g, "")}`}
-                        className="font-mono text-white/85 hover:text-white inline-flex items-center gap-1.5 bg-white/10 hover:bg-white/15 rounded px-2 py-0.5 transition"
-                      >
-                        <Phone className="w-3 h-3" /> {sub.phone}
-                      </a>
-                    )}
-                    {sub.email && (
-                      <a
-                        href={`mailto:${sub.email}`}
-                        className="font-mono text-white/85 hover:text-white inline-flex items-center gap-1.5 bg-white/10 hover:bg-white/15 rounded px-2 py-0.5 transition max-w-[260px] truncate"
-                        title={sub.email}
-                      >
-                        <Mail className="w-3 h-3 shrink-0" /> <span className="truncate">{sub.email}</span>
-                      </a>
-                    )}
-                    <Badge className={`text-[10px] font-bold tracking-wider rounded-lg px-2.5 py-0.5 ${
-                      sub.progress_status === "purchase_complete" ? "bg-success/20 text-success border-success/30 shadow-[0_0_8px_rgba(34,197,94,0.15)]" :
-                      sub.progress_status === "dead_lead" ? "bg-destructive/25 text-destructive-foreground border-destructive/30" :
-                      "bg-white/15 text-white border-white/20"
-                    }`}>
-                      {getStatusLabel(sub.progress_status)}
-                    </Badge>
-                    {sub.is_hot_lead && (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-orange-500/20 text-orange-200 border border-orange-400/30 rounded-lg px-2 py-0.5 animate-pulse">
-                        🔥 Hot Lead
-                      </span>
-                    )}
                   </div>
+
+                  {/* Big offer / estimate number */}
+                  {(sub.offered_price || sub.estimated_offer_high) && (
+                    <div className="text-right shrink-0">
+                      <div className="text-[11px] uppercase tracking-[0.15em] text-white/60 font-semibold">
+                        {sub.offered_price ? "Offer Given" : "Estimated Offer"}
+                      </div>
+                      <div className="font-display text-[44px] leading-none tracking-tight mt-0.5">
+                        ${Math.floor(sub.offered_price || sub.estimated_offer_high || 0).toLocaleString()}
+                      </div>
+                      {sub.acv_value != null && (
+                        <div className="text-[11px] text-white/60 mt-1">
+                          ACV ${Number(sub.acv_value).toLocaleString()}
+                          {sub.offered_price != null && (
+                            <span className={`ml-2 font-semibold ${sub.offered_price > sub.acv_value ? "text-emerald-300" : "text-red-300"}`}>
+                              {sub.offered_price > sub.acv_value ? "+" : ""}${Math.floor(sub.offered_price - sub.acv_value).toLocaleString()} spread
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
-                {/* Deal value — bigger per design, right-aligned column */}
-                {(sub.offered_price || sub.estimated_offer_high) && (
-                  <div className="text-right shrink-0 hidden sm:block">
-                    <p className="text-white/60 text-[11px] uppercase tracking-[0.15em] font-semibold mb-0.5">
-                      {sub.offered_price ? "Offer Given" : "Estimated Offer"}
-                    </p>
-                    <p className="font-display text-[44px] leading-none tracking-tight text-white">
-                      ${Math.floor(sub.offered_price || sub.estimated_offer_high || 0).toLocaleString()}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </SheetHeader>
-          </div>
+                {/* Status chips row */}
+                <div className="flex items-center gap-2 mt-4 flex-wrap">
+                  <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider rounded-md px-2.5 py-1 border whitespace-nowrap ${
+                    sub.progress_status === "purchase_complete" ? "bg-emerald-400/25 text-emerald-100 border-emerald-300/40" :
+                    sub.progress_status === "dead_lead" ? "bg-red-400/25 text-red-100 border-red-300/40" :
+                    "bg-white/15 text-white border-white/25"
+                  }`}>
+                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                    {getStatusLabel(sub.progress_status)}
+                  </span>
+                  {sub.is_hot_lead && (
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider rounded-md px-2.5 py-1 bg-orange-400/25 text-orange-100 border border-orange-300/50 whitespace-nowrap">
+                      🔥 Hot Lead
+                    </span>
+                  )}
+                  <span className="text-[11px] text-white/60 ml-auto">
+                    {new Date(sub.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  </span>
+                </div>
+              </SheetHeader>
+            </div>
 
-          {/* TODO(ui-refresh-arrived-banner): Wire up when submissions.arrived_at
-              and submissions.on_the_way_at columns exist. Will render a red
-              banner below the header when progress_status === 'arrived'. */}
+            {/* Status banner — shown when customer has arrived or is on the way.
+                Uses (sub as any) because arrived_at / on_the_way_at may not be
+                in the Submission type yet; degrades gracefully when absent. */}
+            {(sub as any).arrived_at && sub.progress_status === "arrived" ? (
+              <div className="bg-gradient-to-r from-red-600 to-red-500 border-t border-red-900/30 px-6 py-3">
+                <div className="flex items-center gap-3">
+                  <span className="relative flex items-center justify-center shrink-0">
+                    <span className="absolute inline-flex h-3 w-3 rounded-full bg-white/60 animate-ping" />
+                    <span className="relative inline-flex h-3 w-3 rounded-full bg-white" />
+                  </span>
+                  <span className="text-sm font-semibold text-white">
+                    Customer Arrived · {new Date((sub as any).arrived_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })} — Go greet them now
+                  </span>
+                </div>
+              </div>
+            ) : (sub as any).on_the_way_at && sub.progress_status === "on_the_way" ? (
+              <div className="bg-gradient-to-r from-amber-600 to-amber-500 border-t border-amber-900/30 px-6 py-3">
+                <div className="flex items-center gap-3">
+                  <span className="relative flex items-center justify-center shrink-0">
+                    <span className="absolute inline-flex h-3 w-3 rounded-full bg-white/60 animate-ping" />
+                    <span className="relative inline-flex h-3 w-3 rounded-full bg-white" />
+                  </span>
+                  <span className="text-sm font-semibold text-white">
+                    Customer On The Way · {new Date((sub as any).on_the_way_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })} — Prepare for their arrival
+                  </span>
+                </div>
+              </div>
+            ) : null}
+          </div>
         </div>
 
-        {/* ── Alerts (full width) — premium banner style ── */}
+        {/* Alerts (full width) */}
         {(duplicateWarnings[sub.id]?.length > 0 || optOutStatus.email || optOutStatus.sms) && (
           <div className="px-6 pt-4 space-y-2.5 shrink-0">
             {duplicateWarnings[sub.id]?.length > 0 && (
-              <div className="bg-destructive/8 border border-destructive/20 rounded-2xl p-4 flex items-start gap-3 backdrop-blur-sm shadow-[0_0_16px_rgba(239,68,68,0.06)]">
-                <div className="w-9 h-9 rounded-xl bg-destructive/15 flex items-center justify-center flex-shrink-0">
-                  <AlertTriangle className="w-5 h-5 text-destructive" />
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle className="w-4 h-4 text-red-600" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-destructive">Possible Duplicate Detected</p>
-                  {duplicateWarnings[sub.id].map((w, i) => <p key={i} className="text-xs text-destructive/70 mt-0.5">{w}</p>)}
+                  <p className="text-sm font-semibold text-red-700">Possible Duplicate Detected</p>
+                  {duplicateWarnings[sub.id].map((w, i) => <p key={i} className="text-xs text-red-600/80 mt-0.5">{w}</p>)}
                 </div>
               </div>
             )}
             {(optOutStatus.email || optOutStatus.sms) && (
-              <div className="bg-amber-500/8 border border-amber-500/20 rounded-2xl p-4 flex items-start gap-3 backdrop-blur-sm">
-                <div className="w-9 h-9 rounded-xl bg-amber-500/15 flex items-center justify-center flex-shrink-0">
-                  <Bell className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                  <Bell className="w-4 h-4 text-amber-600" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-amber-700 dark:text-amber-300">Customer Unsubscribed</p>
+                  <p className="text-sm font-semibold text-amber-700">Customer Unsubscribed</p>
                   <div className="flex gap-2 mt-1.5">
-                    {optOutStatus.email && <Badge variant="outline" className="text-xs border-amber-500/30 text-amber-700 dark:text-amber-300 rounded-lg"><Mail className="w-3 h-3 mr-1" /> Email opted out</Badge>}
-                    {optOutStatus.sms && <Badge variant="outline" className="text-xs border-amber-500/30 text-amber-700 dark:text-amber-300 rounded-lg"><Phone className="w-3 h-3 mr-1" /> SMS opted out</Badge>}
+                    {optOutStatus.email && <Badge variant="outline" className="text-xs border-amber-300 text-amber-700 rounded-lg"><Mail className="w-3 h-3 mr-1" /> Email opted out</Badge>}
+                    {optOutStatus.sms && <Badge variant="outline" className="text-xs border-amber-300 text-amber-700 rounded-lg"><Phone className="w-3 h-3 mr-1" /> SMS opted out</Badge>}
                   </div>
-                  <p className="text-[11px] text-amber-600/70 dark:text-amber-400/70 mt-1.5">Follow-up messages to opted-out channels will be skipped automatically.</p>
+                  <p className="text-[11px] text-amber-600/80 mt-1.5">Follow-up messages to opted-out channels will be skipped automatically.</p>
                 </div>
               </div>
             )}
@@ -1417,36 +1045,29 @@ const RefreshedSheet = ({
           {/* ────────────────────────────────────────────────────────────── */}
           {/* LEFT COLUMN — sticky deal summary (~40%)                      */}
           {/* ────────────────────────────────────────────────────────────── */}
-          <div className="lg:w-[40%] lg:border-r lg:border-slate-200 overflow-y-auto p-5 lg:p-6 space-y-4 shrink-0 bg-white">
+          <div className="lg:w-[40%] lg:border-r border-slate-200 overflow-y-auto p-5 lg:p-6 space-y-5 shrink-0 bg-slate-50/50">
 
             {/* Pinned quick-summary — first thing BDCs / sales see */}
             <div className="flex items-start gap-3">
               <div className="flex-1 min-w-0">
                 <QuickSummary sub={sub} statusLabel={getStatusLabel(sub.progress_status)} />
               </div>
-              {/* Driver's license thumbnail is ID-document material —
-                   hidden from the sales floor. Managers and inspectors
-                   still see it. */}
-              {!isSalesFloor && <DLAtAGlance docs={docs} />}
+              <DLAtAGlance docs={docs} />
             </div>
 
-            {/* Offered Price — Hero Deal Card */}
+            {/* Offered Price — Deal Value Card */}
             {(canSetPrice || sub.offered_price) && (
-              <div data-print-section className="relative rounded-2xl border border-border/60 bg-gradient-to-br from-card via-card to-primary/[0.03] shadow-[0_2px_12px_rgba(0,0,0,0.06)] overflow-hidden">
-                {/* Subtle accent glow */}
-                {sub.offered_price && <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-success/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/4 pointer-events-none" />}
-                <div className="bg-gradient-to-r from-muted/60 via-muted/30 to-transparent px-5 py-3 border-b border-border/40 flex items-center justify-between">
-                  <h3 className="text-[11px] font-bold text-foreground/80 uppercase tracking-[0.12em] flex items-center gap-2">
-                    <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-primary/10">
-                      <DollarSign className="w-3.5 h-3.5 text-primary" />
-                    </span>
+              <div data-print-section className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                    <DollarSign className="w-3.5 h-3.5 text-[#003b80]/50" />
                     Deal Value
                   </h3>
                   {sub.offered_price != null && (
                     <TooltipProvider delayDuration={200}>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 rounded-lg cursor-help transition-colors ${isAutoPopulated ? "bg-accent/10 text-accent border border-accent/20" : "bg-primary/10 text-primary border border-primary/20"}`}>
+                          <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 rounded-lg cursor-help border ${isAutoPopulated ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-slate-50 text-slate-600 border-slate-200"}`}>
                             {isAutoPopulated ? <><CheckCircle2 className="w-3 h-3" /> Auto · Accepted</> : <><Users className="w-3 h-3" /> Staff Set</>}
                           </span>
                         </TooltipTrigger>
@@ -1457,15 +1078,15 @@ const RefreshedSheet = ({
                     </TooltipProvider>
                   )}
                 </div>
-                <div className="relative p-5">
+                <div className="p-5">
                   {canSetPrice ? (
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-muted-foreground/60">$</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-slate-400">$</span>
                       <Input
                         type="text"
                         inputMode="decimal"
                         placeholder="0.00"
-                        className="pl-10 h-14 text-2xl font-black tracking-tight border-2 focus:border-primary/50 rounded-xl"
+                        className="pl-10 h-14 text-2xl font-black tracking-tight border-2 border-slate-200 focus:border-[#003b80]/50 rounded-lg"
                         value={sub.offered_price != null ? Number(sub.offered_price).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ""}
                         onChange={(e) => {
                           const raw = e.target.value.replace(/[^0-9.]/g, "");
@@ -1474,17 +1095,16 @@ const RefreshedSheet = ({
                       />
                     </div>
                   ) : (
-                    <p className="text-4xl font-black text-card-foreground tracking-tight font-display">
+                    <p className="text-4xl font-black text-slate-900 tracking-tight font-display">
                       {(() => {
                         const val = sub.offered_price ?? 0;
                         const [dollars, cents] = val.toFixed(2).split(".");
-                        return <>${Number(dollars).toLocaleString()}<span className="text-lg text-muted-foreground font-semibold">.{cents}</span></>;
+                        return <>${Number(dollars).toLocaleString()}<span className="text-lg text-slate-400 font-semibold">.{cents}</span></>;
                       })()}
                     </p>
                   )}
-                  {/* Estimated range context */}
                   {sub.estimated_offer_high && sub.offered_price !== sub.estimated_offer_high && (
-                    <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1.5">
+                    <p className="text-xs text-slate-400 mt-2 flex items-center gap-1.5">
                       <TrendingUp className="w-3 h-3" />
                       Estimated range: ${Math.floor(sub.estimated_offer_high * 0.9).toLocaleString()} — ${Math.floor(sub.estimated_offer_high).toLocaleString()}
                     </p>
@@ -1497,12 +1117,10 @@ const RefreshedSheet = ({
             {(() => {
               const ls = calculateLeadScore(sub);
               return (
-                <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm shadow-sm overflow-hidden">
-                  <div className="bg-gradient-to-r from-muted/60 via-muted/30 to-transparent px-5 py-3 border-b border-border/40 flex items-center justify-between">
-                    <h3 className="text-[11px] font-bold text-foreground/80 uppercase tracking-[0.12em] flex items-center gap-2">
-                      <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-primary/10">
-                        <TrendingUp className="w-3.5 h-3.5 text-primary" />
-                      </span>
+                <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                  <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                      <TrendingUp className="w-3.5 h-3.5 text-[#003b80]/50" />
                       Lead Score
                     </h3>
                     <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border ${getScoreColor(ls.score)}`}>
@@ -1511,15 +1129,15 @@ const RefreshedSheet = ({
                   </div>
                   <div className="p-5">
                     <div className="flex items-center gap-4 mb-3">
-                      <span className="text-3xl font-black tracking-tight text-card-foreground">{ls.score}</span>
+                      <span className="text-3xl font-black tracking-tight text-slate-900">{ls.score}</span>
                       <div className="flex-1">
-                        <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
+                        <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
                           <div
                             className={`h-full rounded-full transition-all duration-500 ${
                               ls.score >= 80 ? "bg-orange-500" :
                               ls.score >= 60 ? "bg-amber-500" :
                               ls.score >= 40 ? "bg-blue-500" :
-                              "bg-muted-foreground/40"
+                              "bg-slate-300"
                             }`}
                             style={{ width: `${ls.score}%` }}
                           />
@@ -1528,7 +1146,7 @@ const RefreshedSheet = ({
                     </div>
                     <div className="space-y-1">
                       {ls.factors.map((f, i) => (
-                        <p key={i} className="text-[11px] text-muted-foreground leading-snug">{f}</p>
+                        <p key={i} className="text-[11px] text-slate-400 leading-snug">{f}</p>
                       ))}
                     </div>
                   </div>
@@ -1536,41 +1154,35 @@ const RefreshedSheet = ({
               );
             })()}
 
-            {/* ACV Value — Premium. Spread / margin hidden from the
-                 sales floor (isSalesFloor) — they can see the ACV
-                 number but not the dealer-vs-customer-offer delta. */}
-            {sub.acv_value && canViewPricing && (
+            {/* ACV Value */}
+            {sub.acv_value && (
               <SectionCard icon={Gauge} title="Appraisal Value (ACV)" accent="success">
                 <div className="flex items-end justify-between mb-3">
-                  <p className="text-2xl font-black text-card-foreground tracking-tight font-display">${Number(sub.acv_value).toLocaleString()}</p>
-                  {sub.offered_price && sub.acv_value && !isSalesFloor && (
+                  <p className="text-2xl font-black text-slate-900 tracking-tight font-display">${Number(sub.acv_value).toLocaleString()}</p>
+                  {sub.offered_price && sub.acv_value && (
                     <div className="text-right">
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Spread</p>
-                      <p className={`text-sm font-bold ${(sub.acv_value - sub.offered_price) > 0 ? "text-success" : "text-destructive"}`}>
+                      <p className="text-[10px] text-slate-400 uppercase tracking-wider">Spread</p>
+                      <p className={`text-sm font-bold ${(sub.acv_value - sub.offered_price) > 0 ? "text-emerald-600" : "text-red-600"}`}>
                         {(sub.acv_value - sub.offered_price) > 0 ? "+" : ""}${Math.floor(sub.acv_value - sub.offered_price).toLocaleString()}
                       </p>
                     </div>
                   )}
                 </div>
                 {sub.appraised_by && (
-                  <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 mb-3">
-                    <Users className="w-3 h-3" /> Appraised by: <span className="font-semibold text-card-foreground/70">{sub.appraised_by}</span>
+                  <p className="text-[11px] text-slate-400 flex items-center gap-1.5 mb-3">
+                    <Users className="w-3 h-3" /> Appraised by: <span className="font-semibold text-slate-700">{sub.appraised_by}</span>
                   </p>
                 )}
-                {/* Full appraisal tool is margin-math — the sales floor
-                     sees the ACV number but doesn't get the tool. */}
-                {!isSalesFloor && (
-                  <Button variant="outline" size="sm" className="rounded-xl h-9 text-xs font-semibold" onClick={() => { routerNavigate(`/appraisal/${sub.token}`); }}>
-                    <Gauge className="w-3.5 h-3.5 mr-1.5" /> Open Appraisal Tool
-                  </Button>
-                )}
+                <Button variant="outline" size="sm" className="rounded-lg h-9 text-xs font-semibold border-slate-300 bg-white text-slate-700" onClick={() => { routerNavigate(`/appraisal/${sub.token}`); }}>
+                  <Gauge className="w-3.5 h-3.5 mr-1.5" /> Open Appraisal Tool
+                </Button>
               </SectionCard>
             )}
             {!sub.acv_value && canSetPrice && (
-              <div className="rounded-2xl border-2 border-dashed border-border/40 bg-muted/10 p-5 text-center">
-                <Gauge className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-                <p className="text-xs text-muted-foreground mb-3">No ACV set yet</p>
-                <Button variant="outline" size="sm" className="rounded-xl h-9 text-xs font-semibold" onClick={() => { routerNavigate(`/appraisal/${sub.token}`); }}>
+              <div className="rounded-xl border-2 border-dashed border-slate-200 bg-white p-5 text-center">
+                <Gauge className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                <p className="text-xs text-slate-400 mb-3">No ACV set yet</p>
+                <Button variant="outline" size="sm" className="rounded-lg h-9 text-xs font-semibold border-slate-300 bg-white text-slate-700" onClick={() => { routerNavigate(`/appraisal/${sub.token}`); }}>
                   <Gauge className="w-3.5 h-3.5 mr-1.5" /> Open Appraisal Tool
                 </Button>
               </div>
@@ -1579,12 +1191,8 @@ const RefreshedSheet = ({
             {/* OBD-II Quick Indicator */}
             {sub.id && <CompactOBDIndicator submissionId={sub.id} token={sub.token} />}
 
-            {/* Black Book Market Values — Private Party reference.
-                 Sales floor sees this read-only (they can quote the
-                 customer with confidence); managers and above see it
-                 plus every edit affordance. Non-pricing roles (e.g.
-                 inspector) don't see it at all. */}
-            {canViewPricing && (() => {
+            {/* Black Book Market Values — Private Party reference */}
+            {(() => {
               const tiers = typeof sub.bb_value_tiers === "string" ? (() => { try { return JSON.parse(sub.bb_value_tiers); } catch { return null; } })() : sub.bb_value_tiers;
               const hasAnyBBData = tiers || sub.bb_tradein_avg || sub.bb_retail_avg || sub.bb_wholesale_avg;
               if (!hasAnyBBData) return null;
@@ -1605,25 +1213,25 @@ const RefreshedSheet = ({
 
               return (
                 <SectionCard icon={BarChart3} title="Book Values" headerRight={
-                  <span className="text-[9px] font-semibold text-muted-foreground bg-muted/50 rounded-md px-1.5 py-0.5 uppercase tracking-wider">Black Book</span>
+                  <span className="text-[9px] font-semibold text-slate-400 bg-slate-100 rounded px-1.5 py-0.5 uppercase tracking-wider">Black Book</span>
                 }>
                   <div className="space-y-2">
                     {valueRows.map(row => (
-                      <div key={row.label} className={`flex items-center justify-between py-2 px-3 rounded-xl transition-colors ${row.highlight ? `${row.bg} border border-amber-500/15` : "hover:bg-muted/30"}`}>
+                      <div key={row.label} className={`flex items-center justify-between py-2 px-3 rounded-lg transition-colors ${row.highlight ? `${row.bg} border border-amber-200` : "hover:bg-slate-50"}`}>
                         <span className="flex items-center gap-2 text-sm">
                           <span className={`w-2 h-2 rounded-full ${row.dotBg}`} />
-                          <span className={row.highlight ? "font-bold text-card-foreground" : "text-muted-foreground"}>{row.label}</span>
-                          {row.highlight && <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Key Ref</span>}
+                          <span className={row.highlight ? "font-bold text-slate-900" : "text-slate-500"}>{row.label}</span>
+                          {row.highlight && <span className="text-[9px] font-bold text-amber-600 uppercase tracking-wider">Key Ref</span>}
                         </span>
                         <span className={`text-sm font-bold ${row.color}`}>${Math.floor(row.value!).toLocaleString()}</span>
                       </div>
                     ))}
                   </div>
                   {privatePartyAvg && sub.offered_price && (
-                    <div className="mt-3 pt-3 border-t border-border/30">
+                    <div className="mt-3 pt-3 border-t border-slate-100">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">Savings vs Private Sale</span>
-                        <span className="font-bold text-primary">
+                        <span className="text-slate-400">Savings vs Private Sale</span>
+                        <span className="font-bold text-[#003b80]">
                           Customer saves ~${Math.floor(privatePartyAvg - sub.offered_price).toLocaleString()} in hassle
                         </span>
                       </div>
@@ -1636,20 +1244,20 @@ const RefreshedSheet = ({
             {/* Acquisition Tracker (Status + Pipeline) */}
             <SectionCard icon={TrendingUp} title="Acquisition Tracker" headerRight={
               sub.progress_status !== "new" && sub.progress_status !== "dead_lead" ? (
-                <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground bg-muted/50 rounded-lg px-2 py-0.5"><Check className="w-3 h-3 text-success" /> Synced</span>
+                <span className="inline-flex items-center gap-1 text-[10px] text-slate-400 bg-slate-100 rounded px-2 py-0.5"><Check className="w-3 h-3 text-emerald-500" /> Synced</span>
               ) : undefined
             }>
-              {/* Status chips with premium styling */}
+              {/* Status chips */}
               <div className="flex flex-wrap gap-2 mb-5">
                 {[
                   { check: sub.appointment_set, label: "Inspection", activeLabel: "Scheduled", pendingLabel: "Not Set", icon: CalendarDays },
                   { check: sub.docs_uploaded, label: "Docs", activeLabel: "Uploaded", pendingLabel: "Pending", icon: FileText },
                   { check: sub.photos_uploaded, label: "Photos", activeLabel: "Uploaded", pendingLabel: "Pending", icon: Camera },
                 ].map(chip => (
-                  <div key={chip.label} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold border transition-all ${
+                  <div key={chip.label} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold border transition-all ${
                     chip.check
-                      ? "bg-success/10 text-success border-success/20 shadow-[0_0_8px_rgba(34,197,94,0.08)]"
-                      : "bg-muted/40 text-muted-foreground border-border/40"
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      : "bg-slate-50 text-slate-400 border-slate-200"
                   }`}>
                     {chip.check ? <CheckCircle2 className="w-3.5 h-3.5" /> : <chip.icon className="w-3.5 h-3.5" />}
                     {chip.label} {chip.check ? chip.activeLabel : chip.pendingLabel}
@@ -1658,13 +1266,13 @@ const RefreshedSheet = ({
               </div>
 
               {sub.progress_status === "dead_lead" ? (
-                <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-destructive/10 border border-destructive/20">
-                  <div className="w-8 h-8 rounded-xl bg-destructive/15 flex items-center justify-center">
-                    <XCircle className="w-5 h-5 text-destructive" />
+                <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-red-50 border border-red-200">
+                  <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center">
+                    <XCircle className="w-5 h-5 text-red-600" />
                   </div>
                   <div>
-                    <span className="font-bold text-destructive text-sm block">Dead Lead</span>
-                    <span className="text-xs text-destructive/70">This opportunity has been closed</span>
+                    <span className="font-bold text-red-700 text-sm block">Dead Lead</span>
+                    <span className="text-xs text-red-500">This opportunity has been closed</span>
                   </div>
                 </div>
               ) : (
@@ -1675,24 +1283,24 @@ const RefreshedSheet = ({
                     return (
                       <div key={stage.key} className="flex items-center flex-1 min-w-0">
                         <div className="flex flex-col items-center w-full">
-                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-xs font-bold transition-all duration-300 ${
-                            isComplete ? "bg-gradient-to-br from-success to-success/80 text-success-foreground shadow-[0_2px_8px_rgba(34,197,94,0.25)]" :
-                            isCurrent ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-[0_2px_12px_rgba(var(--primary),0.3)] ring-[3px] ring-primary/20 animate-[pulse_3s_ease-in-out_infinite]" :
-                            "bg-muted/60 text-muted-foreground/60 border border-border/40"
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold transition-all duration-300 ${
+                            isComplete ? "bg-emerald-500 text-white" :
+                            isCurrent ? "bg-[#003b80] text-white ring-[3px] ring-[#003b80]/20" :
+                            "bg-slate-100 text-slate-400 border border-slate-200"
                           }`}>
                             {isComplete ? <Check className="w-4 h-4" /> : <stage.icon className="w-3.5 h-3.5" />}
                           </div>
                           <span className={`text-[10px] mt-2 text-center leading-tight max-w-[70px] transition-colors ${
-                            isCurrent ? "font-extrabold text-primary" :
-                            isComplete ? "font-semibold text-card-foreground" :
-                            "text-muted-foreground/60"
+                            isCurrent ? "font-extrabold text-[#003b80]" :
+                            isComplete ? "font-semibold text-slate-700" :
+                            "text-slate-400"
                           }`}>
                             {stage.label}
                           </span>
                         </div>
                         {i < arr.length - 1 && (
                           <div className={`h-[2px] flex-1 min-w-[8px] -mt-5 rounded-full transition-all ${
-                            isComplete ? "bg-gradient-to-r from-success to-success/60" : "bg-border/40"
+                            isComplete ? "bg-emerald-500" : "bg-slate-200"
                           }`} />
                         )}
                       </div>
@@ -1710,7 +1318,7 @@ const RefreshedSheet = ({
               )}
 
               <div className="mt-4">
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Update Status</label>
+                <label className="text-xs font-semibold text-slate-500 mb-1 block uppercase tracking-wider">Update Status</label>
                 <Select
                   value={sub.progress_status}
                   disabled={!canUpdateStatus || (["deal_finalized", "check_request_submitted", "purchase_complete"].includes(sub.progress_status) && !canApprove)}
@@ -1744,31 +1352,29 @@ const RefreshedSheet = ({
               </Select>
             </SectionCard>
 
-            {/* Appointment — Premium. id target for BDC "Book Inspection"
-                 quick-action button that lives in BDCActionStrip. */}
-            <div id="appointment-section" />
+            {/* Appointment — Premium */}
             <SectionCard icon={CalendarDays} title="Appointment" accent={sub.appointment_set ? "success" : undefined}>
               {sub.appointment_set && sub.appointment_date ? (
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3 bg-success/5 border border-success/15 rounded-xl p-3">
-                    <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center flex-shrink-0">
-                      <CalendarDays className="w-5 h-5 text-success" />
+                  <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                    <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                      <CalendarDays className="w-5 h-5 text-emerald-600" />
                     </div>
                     <div>
-                      <p className="text-sm text-card-foreground font-bold">
+                      <p className="text-sm text-slate-900 font-bold">
                         {new Date(sub.appointment_date + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
-                        {selectedApptTime && <span className="text-success font-semibold ml-1.5">at {selectedApptTime}</span>}
+                        {selectedApptTime && <span className="text-emerald-700 font-semibold ml-1.5">at {selectedApptTime}</span>}
                       </p>
-                      {selectedApptLocation && <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1"><MapPin className="w-3 h-3" /> {getLocationLabel(selectedApptLocation)}</p>}
+                      {selectedApptLocation && <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1"><MapPin className="w-3 h-3" /> {getLocationLabel(selectedApptLocation)}</p>}
                     </div>
                   </div>
-                  <Button variant="outline" size="sm" className="rounded-xl h-9 text-xs font-semibold" onClick={() => onScheduleAppointment(sub)}>
+                  <Button variant="outline" size="sm" className="rounded-lg h-9 text-xs font-semibold border-slate-300 bg-white text-slate-700" onClick={() => onScheduleAppointment(sub)}>
                     <CalendarDays className="w-3.5 h-3.5 mr-1.5" /> Reschedule
                   </Button>
                 </div>
               ) : (
                 <div className="text-center py-2">
-                  <Button variant="outline" size="sm" className="rounded-xl h-9 text-xs font-semibold" onClick={() => onScheduleAppointment(sub)}>
+                  <Button variant="outline" size="sm" className="rounded-lg h-9 text-xs font-semibold border-slate-300 bg-white text-slate-700" onClick={() => onScheduleAppointment(sub)}>
                     <CalendarDays className="w-3.5 h-3.5 mr-1.5" /> Schedule Appointment
                   </Button>
                 </div>
@@ -1777,104 +1383,53 @@ const RefreshedSheet = ({
 
             {/* Check Request — Premium */}
             <SectionCard icon={ClipboardCheck} title="Check Request" accent={sub.check_request_done ? "success" : undefined}>
-              <div className="flex items-center gap-3 mb-4 bg-muted/20 rounded-xl p-3 border border-border/20">
+              <div className="flex items-center gap-3 mb-4 bg-slate-50 rounded-lg p-3 border border-slate-200">
                 <Checkbox id="check-request-done" checked={sub.check_request_done} disabled={!isPriceAgreedOrBeyond || !(sub as any).appraisal_finalized} onCheckedChange={(checked) => updateField({ check_request_done: !!checked })} className="rounded-md" />
-                <label htmlFor="check-request-done" className={`text-sm font-semibold ${isPriceAgreedOrBeyond ? "text-card-foreground" : "text-muted-foreground"}`}>Check Request Completed</label>
+                <label htmlFor="check-request-done" className={`text-sm font-semibold ${isPriceAgreedOrBeyond ? "text-slate-900" : "text-slate-400"}`}>Check Request Completed</label>
               </div>
               {!(sub as any).appraisal_finalized ? (
-                <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-500/8 border border-amber-500/15 rounded-xl p-3">
+                <div className="flex items-center gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
                   <AlertTriangle className="w-4 h-4 flex-shrink-0" />
                   <span className="font-medium">Appraisal must be finalized before generating a check request.</span>
                 </div>
               ) : isPriceAgreedOrBeyond ? (
                 <div className="space-y-3">
-                  {/* Same-day check — distinct from "Generate Check Request"
-                       (that queues the paperwork for accounting). This button
-                       stamps the moment the physical check is in hand and
-                       texts the customer to come pick it up. Admin+GSM+GM
-                       only. */}
-                  {canApprove && (sub as any).check_request_done && !(sub as any).check_ready_at && (
-                    <Button
-                      size="sm"
-                      className="rounded-xl h-10 text-xs font-bold w-full bg-success hover:bg-success/90 text-success-foreground"
-                      onClick={async () => {
-                        const nowIso = new Date().toISOString();
-                        const { error } = await supabase
-                          .from("submissions")
-                          .update({
-                            check_ready_at: nowIso,
-                            check_pickup_notified_at: nowIso,
-                          } as any)
-                          .eq("id", sub.id);
-                        if (error) {
-                          toast({ title: "Could not mark ready", description: error.message, variant: "destructive" });
-                          return;
-                        }
-                        safeInvoke("send-notification", {
-                          body: { trigger_key: "customer_check_ready_for_pickup", submission_id: sub.id },
-                          context: { from: "SubmissionDetailSheet.checkReady" },
-                        });
-                        await supabase.from("activity_log").insert({
-                          submission_id: sub.id,
-                          action: "Check Ready for Pickup",
-                          old_value: null,
-                          new_value: "Customer notified",
-                          performed_by: auditLabel,
-                        } as any);
-                        toast({ title: "Customer notified", description: "SMS sent — customer can come pick up their check." });
-                        onRefresh(sub);
-                      }}
-                    >
-                      <DollarSign className="w-4 h-4 mr-1.5" /> Mark Check Ready — Notify Customer
-                    </Button>
-                  )}
-                  {(sub as any).check_ready_at && (
-                    <div className="rounded-xl bg-success/10 border border-success/30 p-3 text-xs text-success flex items-center gap-2">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>
-                        Check ready since {new Date((sub as any).check_ready_at).toLocaleString()} — customer notified.
-                      </span>
-                    </div>
-                  )}
                   <div className="flex flex-wrap gap-2">
-                    <Button variant="outline" size="sm" className="rounded-xl h-9 text-xs font-semibold" onClick={handleGenerateCheckRequest}>
+                    <Button variant="outline" size="sm" className="rounded-lg h-9 text-xs font-semibold border-slate-300 bg-white text-slate-700" onClick={handleGenerateCheckRequest}>
                       <Printer className="w-3.5 h-3.5 mr-1.5" /> Generate Check Request
                     </Button>
-                    <Button variant="outline" size="sm" className="rounded-xl h-9 text-xs font-semibold" onClick={handlePrintAllDocs}>
+                    <Button variant="outline" size="sm" className="rounded-lg h-9 text-xs font-semibold border-slate-300 bg-white text-slate-700" onClick={handlePrintAllDocs}>
                       <FileText className="w-3.5 h-3.5 mr-1.5" /> Print All Docs
                     </Button>
                   </div>
-                  <p className="text-[11px] text-muted-foreground/70">Check request includes all docs. "Print All Docs" reprints supporting documents only.</p>
+                  <p className="text-[11px] text-slate-400">Check request includes all docs. "Print All Docs" reprints supporting documents only.</p>
                 </div>
               ) : (
-                <p className="text-xs text-muted-foreground italic">Available once price is agreed and entered.</p>
+                <p className="text-xs text-slate-400 italic">Available once price is agreed and entered.</p>
               )}
             </SectionCard>
 
-            {/* Review Request — Premium celebration card */}
+            {/* Review Request */}
             {sub.progress_status === "purchase_complete" && sub.email && (
-              <div className="relative rounded-2xl border border-success/20 bg-gradient-to-br from-success/5 via-card to-success/[0.03] overflow-hidden shadow-[0_2px_12px_rgba(34,197,94,0.06)]">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-success/8 to-transparent rounded-full -translate-y-1/2 translate-x-1/4 pointer-events-none" />
-                <div className="bg-gradient-to-r from-success/12 to-success/5 px-5 py-3 border-b border-success/15">
-                  <h3 className="text-[11px] font-bold text-foreground/80 uppercase tracking-[0.12em] flex items-center gap-2">
-                    <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-success/15">
-                      <Star className="w-3.5 h-3.5 text-success" />
-                    </span>
+              <div className="rounded-xl border border-emerald-200 bg-white overflow-hidden">
+                <div className="flex items-center justify-between px-5 py-3 border-b border-emerald-100">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                    <Star className="w-3.5 h-3.5 text-[#003b80]/50" />
                     Request Customer Review
                   </h3>
                 </div>
                 <div className="relative p-5">
                   {sub.review_requested ? (
-                    <div className="flex items-center gap-3 text-sm text-success bg-success/8 rounded-xl p-3 border border-success/15">
-                      <div className="w-8 h-8 rounded-xl bg-success/15 flex items-center justify-center">
-                        <Check className="w-4 h-4" />
+                    <div className="flex items-center gap-3 text-sm text-emerald-700 bg-emerald-50 rounded-lg p-3 border border-emerald-200">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+                        <Check className="w-4 h-4 text-emerald-600" />
                       </div>
                       <span className="font-semibold">Review request sent{sub.review_requested_at ? ` on ${new Date(sub.review_requested_at).toLocaleDateString()}` : ""}</span>
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      <p className="text-sm text-muted-foreground">Send an email asking the customer to leave a review for this completed purchase.</p>
-                      <Button variant="outline" size="sm" className="border-success/30 text-success hover:bg-success/10 rounded-xl h-9 font-semibold" onClick={async () => {
+                      <p className="text-sm text-slate-500">Send an email asking the customer to leave a review for this completed purchase.</p>
+                      <Button variant="outline" size="sm" className="border-emerald-300 text-emerald-700 hover:bg-emerald-50 rounded-lg h-9 font-semibold" onClick={async () => {
                         toast({ title: "Sending...", description: "Sending review request email..." });
                         try {
                           const res = await supabase.functions.invoke("send-review-request", { body: { submission_id: sub.id, submission_token: sub.token } });
@@ -1894,17 +1449,17 @@ const RefreshedSheet = ({
               </div>
             )}
 
-            {/* Save + Delete — Premium floating action bar */}
-            <div className="sticky bottom-0 bg-gradient-to-t from-card via-card/98 to-card/90 backdrop-blur-md pt-4 pb-2 border-t border-border/30 flex gap-3 shadow-[0_-8px_32px_rgba(0,0,0,0.08)] rounded-t-2xl px-5 -mx-5 -mb-5">
+            {/* Save + Delete */}
+            <div className="sticky bottom-0 bg-white/95 backdrop-blur-sm pt-4 pb-2 border-t border-slate-200 flex gap-3 px-5 -mx-5 -mb-5">
               <Button
-                className="flex-1 h-11 rounded-xl font-bold text-sm shadow-[0_2px_12px_rgba(var(--primary),0.2)] hover:shadow-[0_4px_20px_rgba(var(--primary),0.3)] transition-all"
+                className="flex-1 h-10 px-5 rounded-lg font-semibold text-sm bg-[#003b80] hover:bg-[#002a5c] text-white transition-colors"
                 disabled={sub.progress_status === "inspection_completed" && !sub.acv_value}
                 onClick={handleSave}
               >
                 <Save className="w-4 h-4 mr-2" /> Update Record
               </Button>
               {canDelete && (
-                <Button variant="destructive" className="h-11 rounded-xl font-bold text-sm px-5 shadow-sm hover:shadow-md transition-all" onClick={() => onDelete(sub.id)}>
+                <Button variant="destructive" className="h-10 px-5 rounded-lg font-semibold text-sm" onClick={() => onDelete(sub.id)}>
                   <Trash2 className="w-4 h-4 mr-2" /> Delete
                 </Button>
               )}
@@ -1914,17 +1469,7 @@ const RefreshedSheet = ({
           {/* ────────────────────────────────────────────────────────────── */}
           {/* RIGHT COLUMN — scrollable details (~60%)                      */}
           {/* ────────────────────────────────────────────────────────────── */}
-          <div className="flex-1 overflow-y-auto p-5 lg:p-6 space-y-6 min-h-0">
-
-            {/* ── BDC / Escalation / Declined-reason banners ────────────── */}
-            <BDCActionStrip
-              sub={sub}
-              userRole={userRole}
-              userEmail={userEmail}
-              isSalesFloor={isSalesFloor}
-              auditLabel={auditLabel}
-              onRefresh={() => onRefresh(sub)}
-            />
+          <div className="flex-1 overflow-y-auto p-5 lg:p-6 space-y-5 min-h-0 bg-white">
 
             {/* Contact + Vehicle */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
@@ -1932,12 +1477,12 @@ const RefreshedSheet = ({
                 (sub.phone || sub.email) ? (
                   <div className="flex items-center gap-1">
                     {sub.phone && (
-                      <a href={`tel:${sub.phone}`} className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-lg bg-success/10 text-success border border-success/20 hover:bg-success/20 transition-colors cursor-pointer">
+                      <a href={`tel:${sub.phone}`} className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors cursor-pointer">
                         <Phone className="w-3 h-3" /> Call
                       </a>
                     )}
                     {sub.email && (
-                      <a href={`mailto:${sub.email}`} className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors cursor-pointer">
+                      <a href={`mailto:${sub.email}`} className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-lg bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200 transition-colors cursor-pointer">
                         <Mail className="w-3 h-3" /> Email
                       </a>
                     )}
@@ -1947,7 +1492,7 @@ const RefreshedSheet = ({
                 <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                   <div className="space-y-1.5">
                     <Label className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider">Name</Label>
-                    <Input value={sub.name || ""} onChange={(e) => updateField({ name: e.target.value || null })} placeholder="Full name" className="h-9 text-sm rounded-xl border-border/60 focus:border-primary/40" />
+                    <Input value={sub.name || ""} onChange={(e) => updateField({ name: e.target.value || null })} placeholder="Full name" className="h-9 text-sm rounded-lg border-slate-200 focus:border-[#003b80]/40" />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider flex items-center gap-1.5">
@@ -1958,7 +1503,7 @@ const RefreshedSheet = ({
                         </a>
                       )}
                     </Label>
-                    <Input value={sub.phone || ""} onChange={(e) => updateField({ phone: e.target.value || null })} placeholder="(555) 123-4567" className="h-9 text-sm rounded-xl border-border/60 focus:border-primary/40" />
+                    <Input value={sub.phone || ""} onChange={(e) => updateField({ phone: e.target.value || null })} placeholder="(555) 123-4567" className="h-9 text-sm rounded-lg border-slate-200 focus:border-[#003b80]/40" />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider flex items-center gap-1.5">
@@ -1969,20 +1514,20 @@ const RefreshedSheet = ({
                         </a>
                       )}
                     </Label>
-                    <Input type="email" value={sub.email || ""} onChange={(e) => updateField({ email: e.target.value || null })} placeholder="email@example.com" className="h-9 text-sm rounded-xl border-border/60 focus:border-primary/40" />
+                    <Input type="email" value={sub.email || ""} onChange={(e) => updateField({ email: e.target.value || null })} placeholder="email@example.com" className="h-9 text-sm rounded-lg border-slate-200 focus:border-[#003b80]/40" />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider">ZIP</Label>
-                    <Input value={sub.zip || ""} onChange={(e) => updateField({ zip: e.target.value || null })} placeholder="ZIP code" className="h-9 text-sm rounded-xl border-border/60 focus:border-primary/40" />
+                    <Input value={sub.zip || ""} onChange={(e) => updateField({ zip: e.target.value || null })} placeholder="ZIP code" className="h-9 text-sm rounded-lg border-slate-200 focus:border-[#003b80]/40" />
                   </div>
                 </div>
                 <div className="mt-4 pt-4 border-t border-border/30">
                   <Label className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider block mb-2.5">Address</Label>
                   <div className="space-y-2.5">
-                    <Input value={sub.address_street || ""} onChange={(e) => updateField({ address_street: e.target.value || null })} placeholder="Street address" className="h-9 text-sm rounded-xl border-border/60 focus:border-primary/40" />
+                    <Input value={sub.address_street || ""} onChange={(e) => updateField({ address_street: e.target.value || null })} placeholder="Street address" className="h-9 text-sm rounded-lg border-slate-200 focus:border-[#003b80]/40" />
                     <div className="grid grid-cols-3 gap-2">
-                      <Input value={sub.address_city || ""} onChange={(e) => updateField({ address_city: e.target.value || null })} placeholder="City" className="h-9 text-sm rounded-xl border-border/60 focus:border-primary/40" />
-                      <Input value={sub.address_state || ""} onChange={(e) => updateField({ address_state: e.target.value || null })} placeholder="State" className="h-9 text-sm rounded-xl border-border/60 focus:border-primary/40" />
+                      <Input value={sub.address_city || ""} onChange={(e) => updateField({ address_city: e.target.value || null })} placeholder="City" className="h-9 text-sm rounded-lg border-slate-200 focus:border-[#003b80]/40" />
+                      <Input value={sub.address_state || ""} onChange={(e) => updateField({ address_state: e.target.value || null })} placeholder="State" className="h-9 text-sm rounded-lg border-slate-200 focus:border-[#003b80]/40" />
                       <Input value={sub.zip || ""} placeholder="ZIP" className="h-9 text-sm rounded-xl border-border/60 opacity-50" disabled />
                     </div>
                   </div>
@@ -2007,7 +1552,7 @@ const RefreshedSheet = ({
                 })()}
               >
                 {sub.vehicle_year && sub.vehicle_make && sub.vehicle_model && (
-                  <div className="mb-4 rounded-lg overflow-hidden bg-gradient-to-b from-muted/30 to-transparent" style={{ aspectRatio: "16/7" }}>
+                  <div className="mb-4 rounded-lg overflow-hidden bg-slate-100" style={{ aspectRatio: "16/7" }}>
                     <VehicleImage year={sub.vehicle_year} make={sub.vehicle_make} model={sub.vehicle_model} selectedColor={sub.exterior_color || ""} compact />
                   </div>
                 )}
@@ -2160,7 +1705,7 @@ const RefreshedSheet = ({
                 }
                 onChange={(e) => updateField({ internal_notes: e.target.value || null })}
                 rows={4}
-                className="rounded-xl border-border/40 focus:border-primary/40 resize-none text-sm leading-relaxed"
+                className="rounded-lg border-slate-200 focus:border-[#003b80]/40 resize-none text-sm leading-relaxed text-slate-700"
               />
             </SectionCard>
 
@@ -2193,9 +1738,9 @@ const RefreshedSheet = ({
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-6 border-2 border-dashed border-border/40 rounded-xl">
-                    <Camera className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-                    <p className="text-sm text-muted-foreground">No photos uploaded</p>
+                  <div className="text-center py-6 border-2 border-dashed border-slate-200 rounded-xl">
+                    <Camera className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                    <p className="text-sm text-slate-400">No photos uploaded</p>
                   </div>
                 )}
                 <div className="mt-3">
@@ -2244,9 +1789,9 @@ const RefreshedSheet = ({
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-6 border-2 border-dashed border-border/40 rounded-xl">
-                    <FileText className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-                    <p className="text-sm text-muted-foreground">No documents uploaded</p>
+                  <div className="text-center py-6 border-2 border-dashed border-slate-200 rounded-xl">
+                    <FileText className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                    <p className="text-sm text-slate-400">No documents uploaded</p>
                   </div>
                 )}
                 <div className="mt-3">
@@ -2257,20 +1802,20 @@ const RefreshedSheet = ({
 
             {/* Customer Documents QR — Premium sharing card */}
             <SectionCard icon={Upload} title="Document Upload Link">
-              <p className="text-sm text-muted-foreground mb-4">Share this link with the customer to upload their documents securely.</p>
+              <p className="text-sm text-slate-500 mb-4">Share this link with the customer to upload their documents securely.</p>
               <div className="flex items-start gap-5">
-                <div className="bg-white p-3 rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-border/20 flex-shrink-0">
+                <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-200 flex-shrink-0">
                   <QRCodeSVG value={getDocsUrl(sub.token)} size={110} />
                 </div>
                 <div className="flex-1 space-y-3">
-                  <div className="bg-muted/30 rounded-xl p-3 border border-border/30">
-                    <p className="text-[11px] text-muted-foreground break-all font-mono leading-relaxed">{getDocsUrl(sub.token)}</p>
+                  <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
+                    <p className="text-[11px] text-slate-500 break-all font-mono leading-relaxed">{getDocsUrl(sub.token)}</p>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="rounded-xl h-9 font-semibold text-xs" onClick={() => { navigator.clipboard.writeText(getDocsUrl(sub.token)); toast({ title: "Link copied!" }); }}>
+                    <Button variant="outline" size="sm" className="rounded-lg h-9 font-semibold text-xs border-slate-300 bg-white text-slate-700" onClick={() => { navigator.clipboard.writeText(getDocsUrl(sub.token)); toast({ title: "Link copied!" }); }}>
                       <ClipboardCheck className="w-3.5 h-3.5 mr-1.5" /> Copy Link
                     </Button>
-                    <Button variant="outline" size="sm" className="rounded-xl h-9 font-semibold text-xs" onClick={() => window.open(getDocsUrl(sub.token), "_blank")}>
+                    <Button variant="outline" size="sm" className="rounded-lg h-9 font-semibold text-xs border-slate-300 bg-white text-slate-700" onClick={() => window.open(getDocsUrl(sub.token), "_blank")}>
                       <ExternalLink className="w-3.5 h-3.5 mr-1.5" /> Open
                     </Button>
                   </div>
@@ -2278,45 +1823,22 @@ const RefreshedSheet = ({
               </div>
             </SectionCard>
 
-            {/* Follow-Up Sequence — hoisted above the collapsible so
-                 the sales floor can see pending next steps at a glance.
-                 This is the primary sales action list and belongs in
-                 the top of the right column, not buried in Research. */}
-            <FollowUpPanel submissionId={sub.id} hasOffer={!!(sub.offered_price || sub.estimated_offer_high)} progressStatus={sub.progress_status} />
-
             {/* ─────────────────────────────────────────────────────────
                 Research & Automation — collapsible so the top of the file
                 stays focused on the deal. Contains Retail Market,
-                AI Call History, and the full Activity Log. Hidden for
-                the sales floor (isSalesFloor) — they're follow-up-focused,
-                not internal-ops focused.
+                Follow-Up Sequencer, AI Call History, and the full Activity
+                Log. All were cluttering the everyday BDC / sales view.
                 ───────────────────────────────────────────────────────── */}
-            {!isSalesFloor && (
-            <details className="group/more rounded-2xl border border-border/40 bg-card/40 overflow-hidden [&[open]>summary>svg]:rotate-180">
-              <summary className="flex items-center justify-between gap-2 px-4 py-3 cursor-pointer hover:bg-muted/30 transition-colors list-none [&::-webkit-details-marker]:hidden">
-                <span className="text-sm font-semibold text-card-foreground flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-muted-foreground" />
+            <details className="group/more rounded-xl border border-slate-200 bg-white overflow-hidden [&[open]>summary>svg]:rotate-180">
+              <summary className="flex items-center justify-between gap-2 px-5 py-3 cursor-pointer hover:bg-slate-50 transition-colors list-none [&::-webkit-details-marker]:hidden">
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                  <TrendingUp className="w-3.5 h-3.5 text-[#003b80]/50" />
                   Research &amp; Automation
                 </span>
-                <span className="text-[10px] text-muted-foreground">Market · Call history · Activity log</span>
-                <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform duration-200" />
+                <span className="text-[10px] text-slate-400">Market · Follow-ups · Call history · Activity log</span>
+                <ChevronDown className="w-4 h-4 text-slate-400 transition-transform duration-200" />
               </summary>
-              <div className="px-4 pb-4 pt-2 space-y-5 border-t border-border/30">
-
-            {/* Unified Conversation Thread — replaces the old separate
-                 AI Call History + Activity Log panels. Reads from
-                 conversation_events which auto-populates from every
-                 existing source via triggers. Pins to the top of the
-                 collapsible so it's the first thing managers see. */}
-            <SectionCard icon={MessageSquare} title="Conversation">
-              <ConversationThread
-                submissionId={sub.id}
-                customerPhone={sub.phone}
-                customerEmail={sub.email}
-                dealershipId={(sub as any).dealership_id}
-                userEmail={userEmail}
-              />
-            </SectionCard>
+              <div className="px-4 pb-4 pt-2 space-y-5 border-t border-slate-100">
 
             {/* Retail Market Context (moved into collapsible) */}
             {(sub.vin || sub.vehicle_year) && (
@@ -2329,10 +1851,138 @@ const RefreshedSheet = ({
               </SectionCard>
             )}
 
+            {/* Follow-Up Sequence */}
+            <FollowUpPanel submissionId={sub.id} hasOffer={!!(sub.offered_price || sub.estimated_offer_high)} progressStatus={sub.progress_status} />
+
+            {/* AI Call History */}
+            {callHistory.length > 0 && (
+              <SectionCard icon={Phone} title="AI Call History" headerRight={
+                <span className="text-[10px] text-muted-foreground">{callHistory.length} calls</span>
+              }>
+                <div className="space-y-3">
+                  {callHistory.map(call => (
+                    <div key={call.id} className="border border-border/30 rounded-xl overflow-hidden">
+                      {/* Header: outcome badge + duration + date */}
+                      <div className="flex items-center justify-between px-3 py-2 bg-muted/20">
+                        <div className="flex items-center gap-2">
+                          <Badge className={outcomeColor(call.outcome)}>{call.outcome?.replace(/_/g, ' ') || call.status}</Badge>
+                          {call.duration_seconds && <span className="text-xs text-muted-foreground">{Math.round(call.duration_seconds / 60)}m {Math.round(call.duration_seconds % 60)}s</span>}
+                          {call.attempt_number > 1 && <span className="text-[10px] text-muted-foreground">Attempt #{call.attempt_number}</span>}
+                        </div>
+                        <span className="text-xs text-muted-foreground">{new Date(call.created_at).toLocaleString()}</span>
+                      </div>
+
+                      {/* Summary */}
+                      {call.summary && (
+                        <div className="px-3 py-2 text-sm text-card-foreground border-b border-border/20">
+                          <p className="font-medium text-xs text-muted-foreground mb-1">Summary</p>
+                          {call.summary}
+                        </div>
+                      )}
+
+                      {/* Expandable Transcript */}
+                      {call.transcript && (
+                        <details className="group">
+                          <summary className="px-3 py-2 text-xs text-primary cursor-pointer hover:bg-muted/10 font-medium">
+                            View Full Transcript
+                          </summary>
+                          <div className="px-3 py-2 bg-muted/10 text-xs whitespace-pre-wrap font-mono leading-relaxed max-h-64 overflow-y-auto">
+                            {call.transcript}
+                          </div>
+                        </details>
+                      )}
+
+                      {/* Recording link */}
+                      {call.recording_url && (
+                        <div className="px-3 py-1.5 border-t border-border/20">
+                          <a href={call.recording_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
+                            <Phone className="w-3 h-3" /> Play Recording
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </SectionCard>
+            )}
+
+            {/* Activity Log — Premium Timeline */}
+            {(() => {
+              const mergedActivity = [
+                ...activityLog,
+                ...callHistory.map(c => ({
+                  id: `call-${c.id}`,
+                  action: `AI Call: ${c.outcome?.replace(/_/g, ' ') || c.status}`,
+                  old_value: null,
+                  new_value: c.summary || `${Math.round((c.duration_seconds || 0) / 60)}m call`,
+                  performed_by: 'Voice AI',
+                  created_at: c.created_at,
+                }))
+              ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+              return (
+                <SectionCard icon={History} title="Activity Log" headerRight={
+                  mergedActivity.length > 0 ? (
+                    <span className="text-[10px] text-muted-foreground bg-muted/50 rounded-lg px-2 py-0.5 font-medium">{mergedActivity.length} events</span>
+                  ) : undefined
+                }>
+                  {mergedActivity.length > 0 ? (
+                    <div className="relative max-h-64 overflow-y-auto pr-1">
+                      {/* Timeline line */}
+                      <div className="absolute left-[11px] top-3 bottom-3 w-[2px] bg-gradient-to-b from-primary/20 via-border/40 to-transparent rounded-full" />
+                      <div className="space-y-0">
+                        {mergedActivity.map((log, idx) => (
+                          <div key={log.id} className="relative flex items-start gap-4 py-3 group/timeline">
+                            {/* Timeline dot */}
+                            <div className={`relative z-10 w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
+                              idx === 0
+                                ? "bg-primary/15 border-2 border-primary shadow-[0_0_8px_rgba(var(--primary),0.15)]"
+                                : "bg-muted/60 border border-border/60 group-hover/timeline:border-primary/30 group-hover/timeline:bg-primary/5"
+                            }`}>
+                              <Clock className={`w-3 h-3 ${idx === 0 ? "text-primary" : "text-muted-foreground/60 group-hover/timeline:text-primary/60"} transition-colors`} />
+                            </div>
+                            <div className="flex-1 min-w-0 -mt-0.5">
+                              <div className="flex items-baseline gap-2 flex-wrap">
+                                <span className={`font-semibold text-sm ${idx === 0 ? "text-card-foreground" : "text-card-foreground/80"}`}>{log.action}</span>
+                                {log.old_value && log.new_value && (
+                                  <span className="text-xs text-muted-foreground">
+                                    <span className="line-through opacity-60">{log.old_value}</span>
+                                    <span className="mx-1 text-primary">→</span>
+                                    <span className="font-medium text-card-foreground/80">{log.new_value}</span>
+                                  </span>
+                                )}
+                                {!log.old_value && log.new_value && (
+                                  <span className="text-xs text-muted-foreground font-medium">{log.new_value}</span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground/70">
+                                {log.performed_by && (
+                                  <span className="inline-flex items-center gap-1 capitalize bg-muted/40 rounded-md px-1.5 py-0.5">
+                                    <Users className="w-2.5 h-2.5" />
+                                    {log.performed_by.replace(/_/g, " ")}
+                                  </span>
+                                )}
+                                <span>{new Date(log.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-6">
+                      <div className="w-10 h-10 rounded-2xl bg-muted/40 flex items-center justify-center mx-auto mb-2">
+                        <History className="w-5 h-5 text-muted-foreground/40" />
+                      </div>
+                      <p className="text-sm text-muted-foreground">No activity recorded yet</p>
+                    </div>
+                  )}
+                </SectionCard>
+              );
+            })()}
 
               </div>
             </details>
-            )}
             {/* ── END Research & Automation collapsible ── */}
           </div>
           {/* ── END RIGHT COLUMN ── */}
@@ -2342,21 +1992,7 @@ const RefreshedSheet = ({
   );
 };
 
-// ── §4 Feature flag dispatcher ─────────────────────────────────────────
-// Default: OFF — legacy renders. Set VITE_CUSTOMER_FILE_REFRESH=true in
-// Lovable Project Settings → Environment (or .env locally) to flip the
-// refreshed sheet on. Vite bakes env vars at build time, so flipping
-// requires a rebuild — Lovable handles that automatically when the env
-// changes. Instant rollback: unset the var (or set it to anything other
-// than the literal string "true") and Lovable rebuilds within a minute.
-// ENABLE_REFRESH is declared at the top of the file alongside the legacy
-// import; the dispatcher below picks which implementation renders.
-//
-// Default export signature unchanged — AdminDashboard.tsx's
-// lazy-imported consumer sees the same props contract.
-const SubmissionDetailSheet = (props: SubmissionDetailSheetProps) => {
+export default function SubmissionDetailSheet(props: SubmissionDetailSheetProps) {
   if (!ENABLE_REFRESH) return <SubmissionDetailSheetLegacy {...props} />;
   return <RefreshedSheet {...props} />;
-};
-
-export default SubmissionDetailSheet;
+}
