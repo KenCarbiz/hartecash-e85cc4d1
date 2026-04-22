@@ -5,7 +5,7 @@
  * ALL LOGIC IS IDENTICAL TO ORIGINAL — only JSX restructured.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { safeInvoke } from "@/lib/safeInvoke";
@@ -2138,6 +2138,27 @@ const SubmissionDetailSheetV2 = ({
   };
 
   const [photoIdx, setPhotoIdx] = useState(0);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
+  const handlePhotoUpload = async (files: FileList | null) => {
+    if (!files?.length || !sub) return;
+    setPhotoUploading(true);
+    try {
+      for (const file of Array.from(files)) {
+        const ext = file.name.split(".").pop();
+        const name = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error } = await supabase.storage.from("submission-photos").upload(`${sub.token}/${name}`, file, { contentType: file.type });
+        if (error) throw error;
+      }
+      await supabase.rpc("mark_photos_uploaded", { _token: sub.token });
+      toast({ title: "Photos uploaded", description: `${files.length} photo${files.length !== 1 ? "s" : ""} added.` });
+      onRefresh(sub);
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    }
+    setPhotoUploading(false);
+  };
 
   // Reset carousel index when a different submission is opened
   useEffect(() => { setPhotoIdx(0); }, [selected?.id]);
@@ -2378,13 +2399,16 @@ const SubmissionDetailSheetV2 = ({
                   )}
                 </div>
                 <div className="p-3">
+                  {/* Hidden file input — triggered by + button */}
+                  <input ref={photoInputRef} type="file" accept="image/*" multiple className="hidden"
+                    onChange={(e) => { handlePhotoUpload(e.target.files); e.target.value = ""; }} />
+
                   {carouselItems.length > 0 ? (
                     <div>
                       <div className="relative rounded-lg overflow-hidden bg-slate-100 mb-2 group" style={{ aspectRatio: "4/3" }}>
                         <a href={carouselItems[photoIdx]?.url} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
                           <img src={carouselItems[photoIdx]?.url} alt={`Item ${photoIdx + 1}`} className="w-full h-full object-cover" />
                         </a>
-                        {/* Doc type label badge */}
                         {carouselItems[photoIdx]?.docLabel && (
                           <div className="absolute top-2 left-2 bg-black/60 text-white text-[10px] font-bold px-2 py-0.5 rounded-md z-10 uppercase tracking-wide">
                             {carouselItems[photoIdx].docLabel}
@@ -2405,7 +2429,6 @@ const SubmissionDetailSheetV2 = ({
                             </div>
                           </>
                         )}
-                        {/* Only allow delete for vehicle photos (not docs) */}
                         {canDelete && carouselItems[photoIdx]?.docLabel === null && (
                           <button onClick={() => onDeletePhoto(carouselItems[photoIdx].name)}
                             className="absolute top-2 right-2 bg-destructive/90 text-white rounded-md p-1 opacity-0 group-hover:opacity-100 transition-all z-10">
@@ -2413,31 +2436,36 @@ const SubmissionDetailSheetV2 = ({
                           </button>
                         )}
                       </div>
-                      {carouselItems.length > 1 && (
-                        <div className="flex gap-1.5 overflow-x-auto pb-1">
-                          {carouselItems.map((item, i) => (
-                            <button key={i} onClick={() => setPhotoIdx(i)}
-                              className={`relative flex-shrink-0 w-12 h-9 rounded-md overflow-hidden border-2 transition-all ${i === photoIdx ? "border-[#003b80]" : "border-transparent opacity-50 hover:opacity-100 hover:border-slate-300"}`}>
-                              <img src={item.url} alt={`Thumb ${i + 1}`} className="w-full h-full object-cover" />
-                              {item.docLabel && (
-                                <div className="absolute inset-0 bg-black/40 flex items-end justify-center pb-0.5">
-                                  <span className="text-[7px] text-white font-bold uppercase leading-none text-center px-0.5 truncate w-full text-center">{item.docLabel}</span>
-                                </div>
-                              )}
-                            </button>
-                          ))}
-                        </div>
-                      )}
+                      {/* Thumbnail strip + grey + square at the end */}
+                      <div className="flex gap-1.5 overflow-x-auto pb-1">
+                        {carouselItems.map((item, i) => (
+                          <button key={i} onClick={() => setPhotoIdx(i)}
+                            className={`relative flex-shrink-0 w-12 h-9 rounded-md overflow-hidden border-2 transition-all ${i === photoIdx ? "border-[#003b80]" : "border-transparent opacity-50 hover:opacity-100 hover:border-slate-300"}`}>
+                            <img src={item.url} alt={`Thumb ${i + 1}`} className="w-full h-full object-cover" />
+                            {item.docLabel && (
+                              <div className="absolute inset-0 bg-black/40 flex items-end justify-center pb-0.5">
+                                <span className="text-[7px] text-white font-bold uppercase leading-none text-center px-0.5 truncate w-full">{item.docLabel}</span>
+                              </div>
+                            )}
+                          </button>
+                        ))}
+                        {/* + Add photo button */}
+                        <button onClick={() => photoInputRef.current?.click()}
+                          disabled={photoUploading}
+                          className="flex-shrink-0 w-12 h-9 rounded-md bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center hover:bg-slate-200 hover:border-slate-400 transition-colors">
+                          <span className="text-slate-400 text-xl font-light leading-none">{photoUploading ? "…" : "+"}</span>
+                        </button>
+                      </div>
                     </div>
                   ) : (
-                    <div className="text-center py-8 border-2 border-dashed border-slate-200 rounded-lg">
-                      <Camera className="w-7 h-7 text-slate-300 mx-auto mb-2" />
-                      <p className="text-sm text-slate-400">No photos yet</p>
-                    </div>
+                    /* Empty state — dashed box with centred + button */
+                    <button onClick={() => photoInputRef.current?.click()} disabled={photoUploading}
+                      className="w-full text-center py-8 border-2 border-dashed border-slate-200 rounded-lg hover:border-slate-300 hover:bg-slate-50 transition-colors flex flex-col items-center gap-2">
+                      <Camera className="w-7 h-7 text-slate-300" />
+                      <span className="text-sm text-slate-400">{photoUploading ? "Uploading…" : "No photos yet"}</span>
+                      <span className="w-8 h-8 rounded-lg bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 text-xl font-light">+</span>
+                    </button>
                   )}
-                  <div className="mt-2">
-                    <StaffFileUpload token={sub.token} bucket="submission-photos" onUploadComplete={() => onRefresh(sub)} />
-                  </div>
                 </div>
               </div>
 

@@ -260,7 +260,6 @@ export function useAdminDashboard() {
   const handleView = useCallback(
     async (sub: Submission) => {
       setSelected(sub);
-      setDocs([]);
       setActivityLog([]);
       setSelectedApptTime(null);
       setSelectedApptLocation(null);
