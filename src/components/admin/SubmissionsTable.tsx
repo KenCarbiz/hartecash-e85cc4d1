@@ -11,7 +11,7 @@ import {
 import {
   Search, Eye, Trash2, ChevronLeft, ChevronRight, MoreHorizontal,
   Phone, MessageSquare, Mail, DollarSign, Calendar, Check,
-  Rows3, Rows2, X, Inbox, Sparkles, Flame,
+  Rows3, Rows2, X, Inbox, Sparkles, Flame, User,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -69,19 +69,48 @@ const statusTone = (status: string): "slate" | "blue" | "amber" | "emerald" | "r
 };
 
 const statusToneClasses: Record<string, string> = {
-  slate: "bg-slate-100 text-slate-700 border-slate-200",
-  blue: "bg-sky-100 text-sky-800 border-sky-200",
-  amber: "bg-amber-100 text-amber-800 border-amber-200",
-  emerald: "bg-emerald-100 text-emerald-800 border-emerald-200",
-  red: "bg-red-100 text-red-800 border-red-200",
+  slate:   "bg-slate-100 text-slate-700 border-slate-200",
+  blue:    "bg-sky-50 text-sky-700 border-sky-200",
+  amber:   "bg-amber-50 text-amber-800 border-amber-200",
+  emerald: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  red:     "bg-red-50 text-red-700 border-red-200",
 };
 
-const initialsOf = (name: string | null): string => {
-  if (!name) return "—";
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "—";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+const shortStatusLabel = (status: string): string => {
+  const short: Record<string, string> = {
+    "new": "New",
+    "contacted": "Contacted",
+    "no_contact": "Unable to Reach",
+    "offer_accepted": "Accepted",
+    "inspection_scheduled": "Inspection",
+    "inspection_completed": "Inspected",
+    "appraisal_completed": "Appraised",
+    "manager_approval_inspection": "MAI",
+    "price_agreed": "Price Agreed",
+    "deal_finalized": "Finalized",
+    "title_ownership_verified": "Title Verified",
+    "check_request_submitted": "Check Requested",
+    "purchase_complete": "Purchased",
+    "dead_lead": "Dead",
+    "partial": "Abandoned",
+  };
+  return short[status] || getStatusLabel(status);
+};
+
+const initialsOrFallback = (sub: Submission): { kind: "text" | "icon"; value: string } => {
+  if (sub.name && sub.name.trim()) {
+    const parts = sub.name.trim().split(/\s+/).filter(Boolean);
+    return {
+      kind: "text",
+      value: parts.length === 1
+        ? parts[0].slice(0, 2).toUpperCase()
+        : (parts[0][0] + parts[parts.length - 1][0]).toUpperCase(),
+    };
+  }
+  if (sub.vehicle_make && sub.vehicle_make.trim()) {
+    return { kind: "text", value: sub.vehicle_make.trim()[0].toUpperCase() };
+  }
+  return { kind: "icon", value: "user" };
 };
 
 const formatMiles = (m: string | null): string => {
@@ -185,7 +214,7 @@ const SubmissionsTable = ({
 
   const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
 
-  const rowPad = isCompact ? "py-2" : "py-3";
+  const rowPad = isCompact ? "py-2" : "py-3.5";
   const cellPadX = "px-3";
 
   const filtered = submissions.filter((s) => {
@@ -580,9 +609,17 @@ const SubmissionsTable = ({
                     const vehicle = sub.vehicle_year && sub.vehicle_make
                       ? `${sub.vehicle_year} ${sub.vehicle_make} ${sub.vehicle_model || ""}`.trim()
                       : (sub.plate || "—");
-                    const btnVariant =
-                      action.variant === "primary" ? "default" :
-                      action.variant === "destructive" ? "destructive" : "ghost";
+                    const primaryBtnClasses =
+                      "bg-slate-900 hover:bg-slate-800 text-white border border-slate-900";
+                    const destructiveBtnClasses =
+                      "bg-red-600 hover:bg-red-500 text-white border border-red-600";
+                    const ghostBtnClasses =
+                      "bg-white hover:bg-slate-50 text-slate-700 border border-slate-200";
+                    const btnClass =
+                      action.variant === "primary" ? primaryBtnClasses :
+                      action.variant === "destructive" ? destructiveBtnClasses :
+                      ghostBtnClasses;
+                    const avatar = initialsOrFallback(sub);
                     const isRowSelected = selectedIds.has(sub.id);
 
                     return (
@@ -604,14 +641,16 @@ const SubmissionsTable = ({
                             className="w-9 h-9 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold flex items-center justify-center"
                             aria-hidden
                           >
-                            {initialsOf(sub.name)}
+                            {avatar.kind === "text"
+                              ? <span>{avatar.value}</span>
+                              : <User className="w-4 h-4 text-slate-400" />}
                           </div>
                         </td>
                         <td className={`${cellPadX} ${rowPad}`}>
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
                               <span className="text-sm font-semibold text-slate-900 truncate">
-                                {sub.name || "—"}
+                                {sub.name || "Unknown customer"}
                               </span>
                               {sub.is_hot_lead && (
                                 <Flame className="w-3.5 h-3.5 text-orange-500 shrink-0" aria-label="Hot lead" />
@@ -627,7 +666,7 @@ const SubmissionsTable = ({
                           <span
                             className={`inline-flex items-center text-[11px] font-semibold rounded-md px-2 py-0.5 border ${statusToneClasses[tone]}`}
                           >
-                            {getStatusLabel(sub.progress_status)}
+                            {shortStatusLabel(sub.progress_status)}
                           </span>
                         </td>
                         <td className={`${cellPadX} ${rowPad} text-right whitespace-nowrap`}>
@@ -674,10 +713,10 @@ const SubmissionsTable = ({
                         <td className={`${cellPadX} ${rowPad} text-right`}>
                           <div className="flex items-center justify-end gap-1.5">
                             <Button
-                              variant={btnVariant}
+                              variant="outline"
                               size="sm"
                               onClick={() => handleActionClick(sub, action)}
-                              className="h-7 text-[12px] font-semibold gap-1"
+                              className={`h-7 text-[12px] font-semibold gap-1 ${btnClass}`}
                             >
                               <ActionIcon icon={action.icon} />
                               {action.label}
