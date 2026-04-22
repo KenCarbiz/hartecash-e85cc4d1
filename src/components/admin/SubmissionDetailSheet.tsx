@@ -2315,13 +2315,13 @@ const SubmissionDetailSheetV2 = ({
         </div>
         {/* ══ END HEADER ══ */}
 
-        {/* ══ THREE-COLUMN BODY ══ */}
+        {/* ══ TWO-COLUMN BODY ══ */}
         <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0 bg-[#f4f6f9]">
 
-          {/* ── LEFT COLUMN (~40%) — Photos · Customer · Vehicle · Inspection ── */}
-          <div className="lg:w-[40%] overflow-y-auto p-4 space-y-3 shrink-0">
+          {/* ── LEFT PANEL (flex-1, ~65%) ── */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
 
-            {/* Alerts — duplicates / opt-out */}
+            {/* Alerts */}
             {(duplicateWarnings[sub.id]?.length > 0 || optOutStatus.email || optOutStatus.sms) && (
               <div className="space-y-2">
                 {duplicateWarnings[sub.id]?.length > 0 && (
@@ -2348,433 +2348,299 @@ const SubmissionDetailSheetV2 = ({
               </div>
             )}
 
-            {/* Vehicle Photos — Carousel */}
-            <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                  <Camera className="w-3.5 h-3.5 text-[#003b80]/50" /> Photos
-                </h3>
-                {photos.length > 0 && <span className="text-[10px] font-bold bg-primary/10 text-primary rounded-lg px-2 py-0.5">{photos.length}</span>}
-              </div>
-              <div className="p-4">
-                {photos.length > 0 ? (
-                  <div>
-                    {/* Main image with prev/next controls */}
-                    <div className="relative rounded-xl overflow-hidden bg-slate-100 mb-2.5 group" style={{ aspectRatio: "16/10" }}>
-                      <a href={photos[photoIdx]?.url} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
-                        <img src={photos[photoIdx]?.url} alt={`Photo ${photoIdx + 1}`} className="w-full h-full object-cover" />
-                      </a>
-                      {photos.length > 1 && (
-                        <>
-                          <button onClick={(e) => { e.preventDefault(); setPhotoIdx(i => (i - 1 + photos.length) % photos.length); }}
-                            className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 hover:bg-black/65 text-white flex items-center justify-center transition-all z-10">
-                            <ChevronLeft className="w-4 h-4" />
+            {/* ── TOP ROW: Photos carousel (left) + ID/Intent (right) ── */}
+            <div className="flex gap-3 items-stretch">
+
+              {/* Vehicle Photos — Carousel */}
+              <div className="flex-1 rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden min-w-0">
+                <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100">
+                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Vehicle Photos</h3>
+                  {photos.length > 0 && <span className="text-[10px] font-semibold text-slate-400">{photos.length} photos</span>}
+                </div>
+                <div className="p-3">
+                  {photos.length > 0 ? (
+                    <div>
+                      <div className="relative rounded-lg overflow-hidden bg-slate-100 mb-2 group" style={{ aspectRatio: "4/3" }}>
+                        <a href={photos[photoIdx]?.url} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                          <img src={photos[photoIdx]?.url} alt={`Photo ${photoIdx + 1}`} className="w-full h-full object-cover" />
+                        </a>
+                        {photos.length > 1 && (
+                          <>
+                            <button onClick={(e) => { e.preventDefault(); setPhotoIdx(i => (i - 1 + photos.length) % photos.length); }}
+                              className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 hover:bg-black/65 text-white flex items-center justify-center transition-all z-10">
+                              <ChevronLeft className="w-4 h-4" />
+                            </button>
+                            <button onClick={(e) => { e.preventDefault(); setPhotoIdx(i => (i + 1) % photos.length); }}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 hover:bg-black/65 text-white flex items-center justify-center transition-all z-10">
+                              <ChevronRight className="w-4 h-4" />
+                            </button>
+                            <div className="absolute bottom-2 right-2 bg-black/50 text-white text-[10px] font-bold px-2 py-0.5 rounded-full z-10">
+                              {photoIdx + 1} / {photos.length}
+                            </div>
+                          </>
+                        )}
+                        {canDelete && (
+                          <button onClick={() => onDeletePhoto(photos[photoIdx].name)}
+                            className="absolute top-2 left-2 bg-destructive/90 text-white rounded-md p-1 opacity-0 group-hover:opacity-100 transition-all z-10">
+                            <Trash2 className="w-3 h-3" />
                           </button>
-                          <button onClick={(e) => { e.preventDefault(); setPhotoIdx(i => (i + 1) % photos.length); }}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 hover:bg-black/65 text-white flex items-center justify-center transition-all z-10">
-                            <ChevronRight className="w-4 h-4" />
-                          </button>
-                          <div className="absolute bottom-2 right-2 bg-black/50 text-white text-[10px] font-bold px-2 py-0.5 rounded-full z-10">
-                            {photoIdx + 1} / {photos.length}
-                          </div>
-                        </>
-                      )}
-                      {canDelete && (
-                        <button onClick={() => onDeletePhoto(photos[photoIdx].name)}
-                          className="absolute top-2 left-2 bg-destructive/90 text-destructive-foreground rounded-lg p-1 opacity-0 group-hover:opacity-100 transition-all hover:bg-destructive z-10">
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      )}
-                    </div>
-                    {/* Thumbnail strip */}
-                    {photos.length > 1 && (
-                      <div className="flex gap-1.5 overflow-x-auto pb-1">
-                        {photos.map((photo, i) => (
-                          <button key={i} onClick={() => setPhotoIdx(i)}
-                            className={`flex-shrink-0 w-14 h-10 rounded-lg overflow-hidden border-2 transition-all ${i === photoIdx ? "border-[#003b80] opacity-100" : "border-transparent opacity-55 hover:opacity-100 hover:border-slate-300"}`}>
-                            <img src={photo.url} alt={`Thumb ${i + 1}`} className="w-full h-full object-cover" />
-                          </button>
-                        ))}
+                        )}
                       </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="text-center py-6 border-2 border-dashed border-slate-200 rounded-xl">
-                    <Camera className="w-7 h-7 text-slate-300 mx-auto mb-2" />
-                    <p className="text-sm text-slate-400">No photos yet</p>
-                  </div>
-                )}
-                <div className="mt-3">
-                  <StaffFileUpload token={sub.token} bucket="submission-photos" onUploadComplete={() => onRefresh(sub)} />
-                </div>
-              </div>
-            </div>
-
-            {/* Customer Info */}
-            <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden border-l-[3px] border-l-[#003b80]/30">
-              <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                  <Users className="w-3.5 h-3.5 text-[#003b80]/50" /> Customer Info
-                </h3>
-                <div className="flex items-center gap-1">
-                  {sub.phone && <a href={`tel:${sub.phone}`} className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors"><Phone className="w-3 h-3" /> Call</a>}
-                  {sub.email && <a href={`mailto:${sub.email}`} className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-lg bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200 transition-colors"><Mail className="w-3 h-3" /> Email</a>}
-                </div>
-              </div>
-              <div className="p-5 grid grid-cols-2 gap-x-4 gap-y-3">
-                <div className="space-y-1.5">
-                  <Label className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider">Name</Label>
-                  <Input value={sub.name || ""} onChange={(e) => updateField({ name: e.target.value || null })} placeholder="Full name" className="h-9 text-sm rounded-lg border-slate-200 focus:border-[#003b80]/40" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider">Phone</Label>
-                  <Input value={sub.phone || ""} onChange={(e) => updateField({ phone: e.target.value || null })} placeholder="(555) 123-4567" className="h-9 text-sm rounded-lg border-slate-200 focus:border-[#003b80]/40" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider">Email</Label>
-                  <Input type="email" value={sub.email || ""} onChange={(e) => updateField({ email: e.target.value || null })} placeholder="email@example.com" className="h-9 text-sm rounded-lg border-slate-200 focus:border-[#003b80]/40" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider">ZIP</Label>
-                  <Input value={sub.zip || ""} onChange={(e) => updateField({ zip: e.target.value || null })} placeholder="ZIP" className="h-9 text-sm rounded-lg border-slate-200 focus:border-[#003b80]/40" />
-                </div>
-                <div className="col-span-2 space-y-2 pt-2 border-t border-slate-100">
-                  <Label className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider">Address</Label>
-                  <Input value={sub.address_street || ""} onChange={(e) => updateField({ address_street: e.target.value || null })} placeholder="Street address" className="h-9 text-sm rounded-lg border-slate-200 focus:border-[#003b80]/40" />
-                  <div className="grid grid-cols-3 gap-2">
-                    <Input value={sub.address_city || ""} onChange={(e) => updateField({ address_city: e.target.value || null })} placeholder="City" className="h-9 text-sm rounded-lg border-slate-200 focus:border-[#003b80]/40" />
-                    <Input value={sub.address_state || ""} onChange={(e) => updateField({ address_state: e.target.value || null })} placeholder="State" className="h-9 text-sm rounded-lg border-slate-200 focus:border-[#003b80]/40" />
-                    <Input value={sub.zip || ""} placeholder="ZIP" disabled className="h-9 text-sm rounded-lg opacity-50" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Vehicle Details */}
-            <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden border-l-[3px] border-l-[#003b80]/30">
-              <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                  <Car className="w-3.5 h-3.5 text-[#003b80]/50" /> Vehicle Details
-                </h3>
-                {(() => {
-                  const done = ['inspection_completed','appraisal_completed','manager_approval','price_agreed','title_verified','ownership_verified','purchase_complete'].includes(sub.progress_status);
-                  return (
-                    <Button size="sm" className={`h-7 text-xs gap-1 border-0 ${done ? "bg-gradient-to-r from-emerald-500 to-green-500 text-white" : "bg-gradient-to-r from-orange-400 to-amber-500 text-white"}`}
-                      onClick={() => routerNavigate(`/inspection/${sub.id}`)}>
-                      <ClipboardList className="w-3.5 h-3.5" />{done ? "Inspected" : "Inspect"}
-                    </Button>
-                  );
-                })()}
-              </div>
-              <div className="p-5">
-                {sub.vehicle_year && sub.vehicle_make && sub.vehicle_model && (
-                  <div className="mb-4 rounded-lg overflow-hidden bg-slate-100" style={{ aspectRatio: "16/7" }}>
-                    <VehicleImage year={sub.vehicle_year} make={sub.vehicle_make} model={sub.vehicle_model} selectedColor={sub.exterior_color || ""} compact />
-                  </div>
-                )}
-                <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-                  <DetailRow label="Year/Make/Model" value={`${sub.vehicle_year || ""} ${sub.vehicle_make || ""} ${sub.vehicle_model || ""}`.trim() || null} icon={<Car className="w-3.5 h-3.5" />} />
-                  <DetailRow label="VIN" value={sub.vin ? <span className="font-mono text-xs">{sub.vin}</span> : null} icon={<Info className="w-3.5 h-3.5" />} />
-                  <DetailRow label="Plate" value={sub.plate} icon={<FileText className="w-3.5 h-3.5" />} />
-                  <DetailRow label="Mileage" value={sub.mileage ? `${Number(sub.mileage).toLocaleString()} mi` : null} icon={<Gauge className="w-3.5 h-3.5" />} />
-                  <DetailRow label="Color" value={sub.exterior_color} icon={<Palette className="w-3.5 h-3.5" />} />
-                  <DetailRow label="Drivetrain" value={sub.drivetrain} icon={<Settings2 className="w-3.5 h-3.5" />} />
-                  <DetailRow label="Overall" value={sub.overall_condition} icon={<Sparkles className="w-3.5 h-3.5" />} />
-                  <DetailRow label="Drivable" value={sub.drivable} icon={<Car className="w-3.5 h-3.5" />} />
-                  <ArrayDetail label="Exterior Damage" value={sub.exterior_damage} icon={<Palette className="w-3.5 h-3.5" />} />
-                  <ArrayDetail label="Mechanical Issues" value={sub.mechanical_issues} icon={<Wrench className="w-3.5 h-3.5" />} />
-                  <DetailRow label="Accidents" value={sub.accidents} icon={<Car className="w-3.5 h-3.5" />} />
-                  <DetailRow label="Keys" value={sub.num_keys} icon={<Key className="w-3.5 h-3.5" />} />
-                </div>
-              </div>
-            </div>
-
-            {/* Inspection Summary */}
-            {sub.id && (
-              <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden border-l-[3px] border-l-[#003b80]/30">
-                <div className="px-5 py-3 border-b border-slate-100">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                    <ScanLine className="w-3.5 h-3.5 text-[#003b80]/50" /> Inspection Summary
-                  </h3>
-                </div>
-                <div className="p-4 space-y-3">
-                  <InspectionVitals submissionId={sub.id} />
-                  <CompactOBDIndicator submissionId={sub.id} token={sub.token} />
-                </div>
-              </div>
-            )}
-
-          </div>
-          {/* ── END LEFT COLUMN ── */}
-
-          {/* ── MIDDLE COLUMN (~22%) — ID · Intent · Documents · Upload ── */}
-          <div className="lg:w-[22%] overflow-y-auto p-4 space-y-3 shrink-0 border-x border-slate-200 bg-white">
-
-            {/* Driver's License / ID */}
-            <div className="rounded-xl border border-slate-200 bg-slate-50 overflow-hidden">
-              <div className="px-4 py-3 border-b border-slate-100">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                  <FileText className="w-3.5 h-3.5 text-[#003b80]/50" /> ID on File
-                </h3>
-              </div>
-              <div className="p-4">
-                {dlDocs.length > 0 ? (
-                  <div className="space-y-3">
-                    <div className="rounded-lg overflow-hidden border border-slate-200 bg-white">
-                      {(() => {
-                        const firstDoc = dlDocs[0];
-                        const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(firstDoc.name);
-                        return isImage ? (
-                          <a href={firstDoc.url} target="_blank" rel="noopener noreferrer">
-                            <img src={firstDoc.url} alt="Driver's License" className="w-full object-cover" style={{ maxHeight: 120 }} />
-                          </a>
-                        ) : (
-                          <div className="h-20 flex items-center justify-center text-slate-400">
-                            <FileText className="w-8 h-8" />
-                          </div>
-                        );
-                      })()}
+                      {photos.length > 1 && (
+                        <div className="flex gap-1.5 overflow-x-auto pb-1">
+                          {photos.map((photo, i) => (
+                            <button key={i} onClick={() => setPhotoIdx(i)}
+                              className={`flex-shrink-0 w-12 h-9 rounded-md overflow-hidden border-2 transition-all ${i === photoIdx ? "border-[#003b80]" : "border-transparent opacity-50 hover:opacity-100 hover:border-slate-300"}`}>
+                              <img src={photo.url} alt={`Thumb ${i + 1}`} className="w-full h-full object-cover" />
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    <div className="text-center space-y-1.5">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Driver's License</p>
-                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
-                        <CheckCircle2 className="w-3 h-3" /> Verified on file
-                      </span>
+                  ) : (
+                    <div className="text-center py-8 border-2 border-dashed border-slate-200 rounded-lg">
+                      <Camera className="w-7 h-7 text-slate-300 mx-auto mb-2" />
+                      <p className="text-sm text-slate-400">No photos yet</p>
                     </div>
-                    <a href={dlDocs[0].url} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-1 text-[11px] text-[#003b80] font-semibold hover:underline">
-                      <ExternalLink className="w-3 h-3" /> View Full Size
-                    </a>
-                    {dlDocs[1] && (
-                      <a href={dlDocs[1].url} target="_blank" rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-1 text-[11px] text-slate-500 hover:underline">
-                        View back →
-                      </a>
-                    )}
+                  )}
+                  <div className="mt-2">
+                    <StaffFileUpload token={sub.token} bucket="submission-photos" onUploadComplete={() => onRefresh(sub)} />
                   </div>
-                ) : (
-                  <div className="text-center py-4">
-                    <FileText className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                    <p className="text-[11px] text-slate-400">No ID on file</p>
-                    <p className="text-[10px] text-slate-400 mt-1">Customer uploads via QR link</p>
+                </div>
+              </div>
+
+              {/* ID + Intent stacked */}
+              <div className="w-[44%] flex flex-col gap-3 shrink-0">
+
+                {/* ID / Driver's License */}
+                <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                  <div className="px-4 py-2.5 border-b border-slate-100">
+                    <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">ID</h3>
                   </div>
-                )}
-              </div>
-            </div>
-
-            {/* Intent */}
-            <div className="rounded-xl border border-slate-200 bg-slate-50 overflow-hidden">
-              <div className="px-4 py-3 border-b border-slate-100">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Intent</h3>
-              </div>
-              <div className="p-5 text-center">
-                <p className="text-2xl font-bold text-slate-900 mb-1">{intentLabel.label}</p>
-                <p className="text-xs text-slate-500">{intentLabel.sub}</p>
-                {sub.lead_source && (
-                  <span className="inline-block mt-3 text-[10px] font-semibold uppercase tracking-wider bg-[#003b80]/10 text-[#003b80] px-3 py-1 rounded-full">
-                    {sub.lead_source.replace(/_/g, " ")}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Documents */}
-            <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                  <FileText className="w-3.5 h-3.5 text-[#003b80]/50" /> Documents
-                </h3>
-                {docs.length > 0 && <span className="text-[10px] font-bold bg-primary/10 text-primary rounded-lg px-2 py-0.5">{docs.length}</span>}
-              </div>
-              <div className="p-3">
-                {docs.length > 0 ? (
-                  <div className="space-y-3">
-                    {Object.entries(docs.reduce<Record<string, typeof docs>>((acc, doc) => { if (!acc[doc.type]) acc[doc.type] = []; acc[doc.type].push(doc); return acc; }, {})).map(([type, typeDocs]) => (
-                      <div key={type}>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">{DOC_TYPE_LABELS[type] || type}</p>
-                        <div className="grid grid-cols-2 gap-1.5">
-                          {typeDocs.map((doc, i) => {
-                            const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(doc.name);
-                            return (
-                              <div key={i} className="relative group/doc rounded-lg overflow-hidden border border-slate-200 hover:shadow-md transition-all">
-                                <a href={doc.url} target="_blank" rel="noopener noreferrer" className="block">
-                                  {isImage
-                                    ? <img src={doc.url} alt={doc.name} className="w-full h-16 object-cover" />
-                                    : <div className="w-full h-16 bg-slate-50 flex flex-col items-center justify-center"><FileText className="w-5 h-5 text-slate-300 mb-1" /><span className="text-[9px] text-slate-400 truncate px-1 w-full text-center">{doc.name}</span></div>
-                                  }
-                                </a>
-                                {canDelete && (
-                                  <button onClick={() => onDeleteDoc(doc.type, doc.name)}
-                                    className="absolute top-1 right-1 bg-destructive/90 text-destructive-foreground rounded p-0.5 opacity-0 group-hover/doc:opacity-100 transition-all hover:bg-destructive">
-                                    <Trash2 className="w-2.5 h-2.5" />
-                                  </button>
-                                )}
-                              </div>
-                            );
-                          })}
+                  <div className="p-3">
+                    {dlDocs.length > 0 ? (
+                      <div className="flex items-center gap-3">
+                        <a href={dlDocs[0].url} target="_blank" rel="noopener noreferrer"
+                          className="flex-shrink-0 w-16 h-11 rounded-md overflow-hidden border border-slate-200 bg-slate-100 hover:opacity-80 transition-opacity">
+                          {/\.(jpg|jpeg|png|gif|webp)$/i.test(dlDocs[0].name)
+                            ? <img src={dlDocs[0].url} alt="DL" className="w-full h-full object-cover" />
+                            : <div className="w-full h-full flex items-center justify-center"><FileText className="w-5 h-5 text-slate-300" /></div>
+                          }
+                        </a>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-0.5">Driver's License</p>
+                          <p className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3 shrink-0" /> Verified on file
+                          </p>
+                        </div>
+                        <a href={dlDocs[0].url} target="_blank" rel="noopener noreferrer"
+                          className="text-[11px] font-bold text-[#003b80] hover:underline shrink-0">View</a>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-3 py-1">
+                        <FileText className="w-7 h-7 shrink-0 text-slate-300" />
+                        <div>
+                          <p className="text-[11px] font-semibold text-slate-500">No ID on file</p>
+                          <p className="text-[10px] text-slate-400">Customer uploads via QR link</p>
                         </div>
                       </div>
-                    ))}
+                    )}
                   </div>
-                ) : (
-                  <div className="text-center py-4 border-2 border-dashed border-slate-200 rounded-xl">
-                    <FileText className="w-6 h-6 text-slate-300 mx-auto mb-1.5" />
-                    <p className="text-xs text-slate-400">No documents</p>
-                  </div>
-                )}
-                <div className="mt-2.5">
-                  <StaffFileUpload token={sub.token} bucket="customer-documents" onUploadComplete={() => onRefresh(sub)} />
                 </div>
+
+                {/* Intent */}
+                <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden flex-1">
+                  <div className="px-4 py-2.5 border-b border-slate-100">
+                    <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Intent</h3>
+                  </div>
+                  <div className="p-4">
+                    <p className="text-[22px] font-bold text-slate-900 mb-0.5 leading-tight">{intentLabel.label}</p>
+                    <p className="text-xs text-slate-500">{intentLabel.sub}</p>
+                  </div>
+                </div>
+
               </div>
             </div>
+            {/* ── END TOP ROW ── */}
 
-            {/* Customer Upload QR Link */}
-            <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-              <div className="px-4 py-3 border-b border-slate-100">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                  <Upload className="w-3.5 h-3.5 text-[#003b80]/50" /> Upload Link
-                </h3>
-              </div>
-              <div className="p-4 flex flex-col items-center gap-3">
-                <div className="bg-white p-2 rounded-xl shadow-sm border border-slate-200">
-                  <QRCodeSVG value={getDocsUrl(sub.token)} size={80} />
+            {/* ── CUSTOMER + VEHICLE ROW ── */}
+            <div className="grid grid-cols-2 gap-3">
+
+              {/* Customer */}
+              <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                <div className="px-4 py-2.5 border-b border-slate-100">
+                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Customer</h3>
                 </div>
-                <div className="flex gap-2 w-full">
-                  <Button variant="outline" size="sm" className="flex-1 rounded-lg h-8 font-semibold text-xs border-slate-300 bg-white text-slate-700"
-                    onClick={() => { navigator.clipboard.writeText(getDocsUrl(sub.token)); toast({ title: "Link copied!" }); }}>
-                    <ClipboardCheck className="w-3 h-3 mr-1" /> Copy
-                  </Button>
-                  <Button variant="outline" size="sm" className="flex-1 rounded-lg h-8 font-semibold text-xs border-slate-300 bg-white text-slate-700"
-                    onClick={() => window.open(getDocsUrl(sub.token), "_blank")}>
-                    <ExternalLink className="w-3 h-3 mr-1" /> Open
-                  </Button>
+                <div className="p-4 space-y-2.5">
+                  {sub.name && (
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="text-sm text-slate-400 shrink-0">Name</span>
+                      <span className="text-sm font-semibold text-slate-900 text-right">{sub.name}</span>
+                    </div>
+                  )}
+                  {sub.phone && (
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="text-sm text-slate-400 shrink-0">Phone</span>
+                      <a href={`tel:${sub.phone}`} className="text-sm font-semibold text-[#003b80] hover:underline">{sub.phone}</a>
+                    </div>
+                  )}
+                  {sub.email && (
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-sm text-slate-400 shrink-0">Email</span>
+                      <a href={`mailto:${sub.email}`} className="text-xs font-semibold text-[#003b80] hover:underline text-right break-all">{sub.email}</a>
+                    </div>
+                  )}
+                  {(sub.address_street || sub.address_city) && (
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-sm text-slate-400 shrink-0">Address</span>
+                      <span className="text-xs font-semibold text-slate-900 text-right leading-relaxed">
+                        {sub.address_street && <span className="block">{sub.address_street}</span>}
+                        {[sub.address_city, sub.address_state, sub.zip].filter(Boolean).join(", ")}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
+
+              {/* Vehicle */}
+              <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                <div className="px-4 py-2.5 border-b border-slate-100">
+                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Vehicle</h3>
+                </div>
+                <div className="p-4 space-y-2.5">
+                  {[
+                    { label: "Year", value: sub.vehicle_year?.toString() || null },
+                    { label: "Make / Model", value: [sub.vehicle_make, sub.vehicle_model].filter(Boolean).join(" ") || null },
+                    { label: "VIN", value: sub.vin || null, mono: true },
+                    { label: "Plate", value: [sub.address_state, sub.plate].filter(Boolean).join(" ") || null },
+                    { label: "Mileage", value: sub.mileage ? `${Number(sub.mileage).toLocaleString()} mi` : null },
+                    { label: "Color", value: sub.exterior_color || null },
+                    { label: "Drivable", value: sub.drivable || null },
+                  ].filter(r => r.value).map(row => (
+                    <div key={row.label} className="flex items-baseline justify-between gap-2">
+                      <span className="text-sm text-slate-400 shrink-0">{row.label}</span>
+                      <span className={`text-sm font-semibold text-slate-900 text-right min-w-0 break-words [overflow-wrap:anywhere] ${(row as any).mono ? "font-mono text-xs" : ""}`}>{row.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
             </div>
 
-          </div>
-          {/* ── END MIDDLE COLUMN ── */}
-
-          {/* ── RIGHT COLUMN — Next Action · Deal · Offer · Loan · Notes · Activity (~38%) ── */}
-          <div className="flex-1 overflow-y-auto p-5 lg:p-6 space-y-5 min-h-0 bg-[#f4f6f9]">
-
-            {/* ── NEXT ACTION CARD — the single most important thing to do ── */}
-            {sub.progress_status !== "purchase_complete" && sub.progress_status !== "dead_lead" && (() => {
-              const na = nextAction;
-              const Icon = na.icon;
-              const phoneDigits = (sub.phone || "").replace(/\D/g, "");
+            {/* ── INSPECTION SUMMARY ── */}
+            {sub.id && (() => {
+              const inspDone = ['inspection_completed','appraisal_completed','manager_approval','price_agreed','title_verified','ownership_verified','purchase_complete'].includes(sub.progress_status);
               return (
-                <div className={`rounded-xl overflow-hidden bg-gradient-to-r ${na.color} text-white shadow-md`}>
-                  <div className="px-5 py-4 flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                      <Icon className="w-5 h-5 text-white" />
+                <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100">
+                    <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Inspection Summary</h3>
+                    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${inspDone ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
+                      {inspDone ? "Completed" : "Pending"}
+                    </span>
+                  </div>
+                  <div className="p-4 space-y-3">
+                    <InspectionVitals submissionId={sub.id} />
+                    <CompactOBDIndicator submissionId={sub.id} token={sub.token} />
+                    <div className="flex items-center gap-4 pt-1">
+                      <button onClick={() => routerNavigate(`/inspection/${sub.id}`)}
+                        className="flex items-center gap-1.5 text-[11px] font-semibold text-[#003b80] hover:underline">
+                        <ClipboardList className="w-3.5 h-3.5" /> View Full Inspection
+                      </button>
+                      <button onClick={() => routerNavigate(`/appraisal/${sub.token}`)}
+                        className="text-[11px] font-semibold text-slate-500 hover:text-slate-700 hover:underline">
+                        Re-Appraise
+                      </button>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/70 mb-0.5">Next Action</p>
-                      <p className="text-sm font-bold text-white leading-snug">{na.label}</p>
-                    </div>
-                    {na.action === "call" && phoneDigits && (
-                      <a href={`tel:+1${phoneDigits}`}
-                        className="shrink-0 px-4 h-9 rounded-lg bg-white/20 hover:bg-white/30 text-white text-xs font-bold flex items-center gap-1.5 transition-colors">
-                        <Phone className="w-3.5 h-3.5" /> Call Now
-                      </a>
-                    )}
-                    {na.action === "schedule" && (
-                      <Button size="sm" className="shrink-0 h-9 px-4 rounded-lg bg-white/20 hover:bg-white/30 text-white text-xs font-bold border-0"
-                        onClick={() => onScheduleAppointment(sub)}>
-                        <CalendarDays className="w-3.5 h-3.5 mr-1.5" /> Schedule
-                      </Button>
-                    )}
-                    {na.action === "appraise" && (
-                      <Button size="sm" className="shrink-0 h-9 px-4 rounded-lg bg-white/20 hover:bg-white/30 text-white text-xs font-bold border-0"
-                        onClick={() => routerNavigate(`/appraisal/${sub.token}`)}>
-                        <Gauge className="w-3.5 h-3.5 mr-1.5" /> Open Appraisal
-                      </Button>
-                    )}
-                    {na.action === "view" && (
-                      <Button size="sm" className="shrink-0 h-9 px-4 rounded-lg bg-white/20 hover:bg-white/30 text-white text-xs font-bold border-0"
-                        onClick={() => routerNavigate(`/inspection/${sub.id}`)}>
-                        <ClipboardList className="w-3.5 h-3.5 mr-1.5" /> View
-                      </Button>
-                    )}
                   </div>
                 </div>
               );
             })()}
 
-            {/* Purchase complete celebration */}
-            {sub.progress_status === "purchase_complete" && (
-              <div className="rounded-xl overflow-hidden bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-md px-5 py-4 flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                  <Star className="w-5 h-5 text-white" />
+          </div>
+          {/* ── END LEFT PANEL ── */}
+
+          {/* ── RIGHT PANEL (~35%) — Next Action · Deal · Offer · Loan · Notes · Activity ── */}
+          <div className="lg:w-[35%] overflow-y-auto p-4 space-y-3 shrink-0 border-l border-slate-200 bg-white">
+
+            {/* ── NEXT ACTION CARD ── */}
+            {(() => {
+              const isForManager = ["deal_finalized","check_request_submitted","manager_approval_inspection"].includes(sub.progress_status);
+              const bgClass = sub.progress_status === "purchase_complete"
+                ? "from-emerald-700 to-emerald-600"
+                : sub.progress_status === "dead_lead"
+                ? "from-slate-600 to-slate-500"
+                : "from-[#1b5e35] to-[#217a42]";
+              return (
+                <div className="rounded-xl overflow-hidden shadow-sm border border-slate-200">
+                  <div className={`bg-gradient-to-br ${bgClass} p-4`}>
+                    <div className="flex items-start justify-between mb-3">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/65">Next Action</p>
+                      <span className={`text-[10px] font-bold uppercase tracking-wider rounded px-2 py-0.5 border ${isForManager ? "bg-amber-400/25 border-amber-300/40 text-amber-100" : "bg-white/15 border-white/25 text-white"}`}>
+                        {isForManager ? "For Manager" : "For Sales"}
+                      </span>
+                    </div>
+                    <p className="text-[20px] font-bold text-white leading-tight mb-1">{naCard.title}</p>
+                    <p className="text-[12px] text-white/70 leading-relaxed">{naCard.desc}</p>
+                    {naCard.cta && (
+                      <div className="mt-3">
+                        {naCard.ctaHref ? (
+                          <a href={naCard.ctaHref}
+                            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg border border-white/30 text-white text-sm font-semibold hover:bg-white/10 transition-colors">
+                            {naCard.cta} ›
+                          </a>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              if (naCard.ctaAction === "schedule") onScheduleAppointment(sub);
+                              else if (naCard.ctaAction === "appraise") routerNavigate(`/appraisal/${sub.token}`);
+                              else if (naCard.ctaAction === "inspect") routerNavigate(`/inspection/${sub.id}`);
+                            }}
+                            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg border border-white/30 text-white text-sm font-semibold hover:bg-white/10 transition-colors">
+                            {naCard.cta} ›
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {/* Follow-up row: SMS · Email · AI Call */}
+                  {!["dead_lead","purchase_complete"].includes(sub.progress_status) && (
+                    <div className="flex border-t border-slate-100 bg-white">
+                      {[
+                        { label: "SMS", icon: Phone },
+                        { label: "Email", icon: Mail },
+                        { label: "AI Call", icon: Phone },
+                      ].map((item, i, arr) => (
+                        <button key={item.label}
+                          className={`flex-1 py-2.5 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 flex items-center justify-center gap-1.5 transition-colors ${i < arr.length - 1 ? "border-r border-slate-100" : ""}`}>
+                          <item.icon className="w-3 h-3" /> {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <div className="flex-1">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/70 mb-0.5">Deal Closed</p>
-                  <p className="text-sm font-bold text-white">Purchase complete — great work!</p>
-                </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* ── DEAL STATUS ── */}
-            <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden border-l-[3px] border-l-[#003b80]/30">
-              <div className="px-5 py-3 border-b border-slate-100">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                  <TrendingUp className="w-3.5 h-3.5 text-[#003b80]/50" /> Deal Status
-                </h3>
+            <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+              <div className="px-4 py-2.5 border-b border-slate-100">
+                <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Deal Status</h3>
               </div>
-              <div className="p-5 space-y-5">
-                {/* Checklist chips */}
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { check: sub.appointment_set, label: "Inspection", icon: CalendarDays },
-                    { check: sub.docs_uploaded, label: "Docs", icon: FileText },
-                    { check: sub.photos_uploaded, label: "Photos", icon: Camera },
-                  ].map(chip => (
-                    <div key={chip.label} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold border ${chip.check ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-slate-50 text-slate-400 border-slate-200"}`}>
-                      {chip.check ? <CheckCircle2 className="w-3.5 h-3.5" /> : <chip.icon className="w-3.5 h-3.5" />}
-                      {chip.label} {chip.check ? "✓" : "pending"}
-                    </div>
-                  ))}
+              <div className="p-4 space-y-3">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Current Step</p>
+                  <p className="text-sm font-bold text-slate-900">{getStatusLabel(sub.progress_status)}</p>
                 </div>
-
-                {/* Progress pipeline */}
-                {sub.progress_status === "dead_lead" ? (
-                  <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-red-50 border border-red-200">
-                    <XCircle className="w-5 h-5 text-red-600" />
-                    <div>
-                      <span className="font-bold text-red-700 text-sm block">Dead Lead</span>
-                      <span className="text-xs text-red-500">This opportunity has been closed</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-0 w-full">
-                    {stages.filter(s => s.key !== "dead_lead").map((stage, i, arr) => {
-                      const isComplete = i < currentStageIdx;
-                      const isCurrent = i === currentStageIdx;
-                      return (
-                        <div key={stage.key} className="flex items-center flex-1 min-w-0">
-                          <div className="flex flex-col items-center w-full">
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold transition-all ${
-                              isComplete ? "bg-emerald-500 text-white" :
-                              isCurrent ? "bg-[#003b80] text-white ring-[3px] ring-[#003b80]/20" :
-                              "bg-slate-100 text-slate-400 border border-slate-200"
-                            }`}>
-                              {isComplete ? <Check className="w-4 h-4" /> : <stage.icon className="w-3.5 h-3.5" />}
-                            </div>
-                            <span className={`text-[9px] mt-1.5 text-center leading-tight max-w-[60px] ${isCurrent ? "font-extrabold text-[#003b80]" : isComplete ? "font-semibold text-slate-700" : "text-slate-400"}`}>
-                              {stage.label}
-                            </span>
-                          </div>
-                          {i < arr.length - 1 && <div className={`h-[2px] flex-1 min-w-[6px] -mt-5 rounded-full ${isComplete ? "bg-emerald-500" : "bg-slate-200"}`} />}
-                        </div>
-                      );
-                    })}
+                {sub.appointment_set && sub.appointment_date && (
+                  <div className="rounded-lg bg-[#003b80]/8 border border-[#003b80]/15 p-3">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#003b80]/60 mb-0.5">Appointment</p>
+                    <p className="text-sm font-bold text-slate-900">
+                      {new Date(sub.appointment_date + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                      {selectedApptTime && <span className="text-[#003b80] ml-1.5">· {selectedApptTime}</span>}
+                    </p>
                   </div>
                 )}
-
-                {/* Status selector */}
-                <div>
-                  <label className="text-xs font-semibold text-slate-500 mb-1 block uppercase tracking-wider">Update Status</label>
+                <div className="flex gap-2">
                   <Select value={sub.progress_status}
                     disabled={!canUpdateStatus || (["deal_finalized","check_request_submitted","purchase_complete"].includes(sub.progress_status) && !canApprove)}
                     onValueChange={(val) => {
@@ -2783,7 +2649,7 @@ const SubmissionDetailSheetV2 = ({
                       }
                       updateField({ progress_status: val });
                     }}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="flex-1 h-9 text-xs rounded-lg"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {ALL_STATUS_OPTIONS.map(s => {
                         const locked = ["deal_finalized","check_request_submitted","purchase_complete"].includes(s.key) && !canApprove;
@@ -2791,234 +2657,116 @@ const SubmissionDetailSheetV2 = ({
                       })}
                     </SelectContent>
                   </Select>
+                  <Button variant="outline" className="h-9 px-3 rounded-lg text-xs font-semibold border-slate-300 text-slate-700 shrink-0"
+                    onClick={() => onScheduleAppointment(sub)}>
+                    Schedule
+                  </Button>
                 </div>
+              </div>
+            </div>
 
-                {/* Appointment */}
-                <div>
-                  {sub.appointment_set && sub.appointment_date ? (
-                    <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-lg p-3">
-                      <CalendarDays className="w-5 h-5 text-emerald-600 shrink-0" />
-                      <div className="flex-1">
-                        <p className="text-sm font-bold text-slate-900">
-                          {new Date(sub.appointment_date + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
-                          {selectedApptTime && <span className="text-emerald-700 ml-1.5">{selectedApptTime}</span>}
-                        </p>
-                        {selectedApptLocation && <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5"><MapPin className="w-3 h-3" />{getLocationLabel(selectedApptLocation)}</p>}
-                      </div>
-                      <Button variant="outline" size="sm" className="h-8 text-xs rounded-lg" onClick={() => onScheduleAppointment(sub)}>Reschedule</Button>
+            {/* ── OFFER BREAKDOWN ── */}
+            <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+              <div className="px-4 py-2.5 border-b border-slate-100">
+                <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Offer Breakdown</h3>
+              </div>
+              <div className="p-4 space-y-2.5">
+                <div className="flex items-baseline justify-between">
+                  <span className="text-sm text-slate-500">Offer Given</span>
+                  {canSetPrice ? (
+                    <div className="relative w-32">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-sm">$</span>
+                      <Input type="text" inputMode="decimal" placeholder="0"
+                        className="h-8 pl-6 text-sm font-bold text-right border-slate-200 rounded-lg"
+                        value={sub.offered_price != null ? sub.offered_price.toLocaleString("en-US") : ""}
+                        onChange={(e) => { const raw = e.target.value.replace(/[^0-9.]/g, ""); updateField({ offered_price: raw ? Number(raw) : null }); }} />
                     </div>
                   ) : (
-                    <Button variant="outline" className="w-full h-9 rounded-lg text-xs font-semibold border-slate-300 text-slate-700" onClick={() => onScheduleAppointment(sub)}>
-                      <CalendarDays className="w-3.5 h-3.5 mr-1.5" /> Schedule Inspection
-                    </Button>
+                    <span className="text-xl font-bold text-slate-900">{sub.offered_price ? `$${Number(sub.offered_price).toLocaleString()}` : "—"}</span>
                   )}
                 </div>
-
-                {/* Assigned Store */}
-                <div>
-                  <label className="text-xs font-semibold text-slate-500 mb-1 block uppercase tracking-wider">Assigned Store</label>
-                  <Select value={sub.store_location_id || "unassigned"} onValueChange={(v) => updateField({ store_location_id: v === "unassigned" ? null : v })}>
-                    <SelectTrigger><SelectValue placeholder="Select store" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="unassigned">— Not Assigned —</SelectItem>
-                      {dealerLocations.map(loc => <SelectItem key={loc.id} value={loc.id}>{loc.name} — {loc.city}, {loc.state}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-
-            {/* ── OFFER & VALUE ── */}
-            <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden border-l-[3px] border-l-emerald-500">
-              <div className="px-5 py-3 border-b border-slate-100">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                  <DollarSign className="w-3.5 h-3.5 text-[#003b80]/50" /> Offer &amp; Value
-                </h3>
-              </div>
-              <div className="p-5 space-y-4">
-                {/* Offered Price */}
-                {(canSetPrice || sub.offered_price) && (
-                  <div>
-                    <label className="text-xs font-semibold text-slate-500 mb-1.5 block uppercase tracking-wider">Offered Price</label>
-                    {canSetPrice ? (
-                      <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-slate-400">$</span>
-                        <Input type="text" inputMode="decimal" placeholder="0.00"
-                          className="pl-10 h-14 text-2xl font-black tracking-tight border-2 border-slate-200 focus:border-[#003b80]/50 rounded-lg"
-                          value={sub.offered_price != null ? Number(sub.offered_price).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ""}
-                          onChange={(e) => { const raw = e.target.value.replace(/[^0-9.]/g, ""); updateField({ offered_price: raw ? Number(raw) : null }); }} />
-                      </div>
-                    ) : (
-                      <p className="text-4xl font-black text-slate-900 tracking-tight font-display">
-                        {(() => { const val = sub.offered_price ?? 0; const [d, c] = val.toFixed(2).split("."); return <>${Number(d).toLocaleString()}<span className="text-lg text-slate-400">.{c}</span></>; })()}
-                      </p>
-                    )}
-                    {sub.estimated_offer_high && sub.offered_price !== sub.estimated_offer_high && (
-                      <p className="text-xs text-slate-400 mt-1.5 flex items-center gap-1"><TrendingUp className="w-3 h-3" />Est. range: ${Math.floor(sub.estimated_offer_high * 0.9).toLocaleString()} — ${Math.floor(sub.estimated_offer_high).toLocaleString()}</p>
-                    )}
+                {sub.acv_value != null && (
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-sm text-slate-500">ACV</span>
+                    <span className="text-sm font-semibold text-slate-700">${Number(sub.acv_value).toLocaleString()}</span>
                   </div>
                 )}
-
-                {/* ACV */}
-                {sub.acv_value && (
-                  <div className="flex items-end justify-between p-3 rounded-lg bg-emerald-50 border border-emerald-200">
-                    <div>
-                      <p className="text-[11px] text-emerald-600 font-semibold uppercase tracking-wider mb-0.5">Appraisal Value (ACV)</p>
-                      <p className="text-2xl font-black text-slate-900">${Number(sub.acv_value).toLocaleString()}</p>
-                    </div>
-                    {sub.offered_price && (
-                      <div className="text-right">
-                        <p className="text-[10px] text-slate-400 uppercase tracking-wider">Spread</p>
-                        <p className={`text-sm font-bold ${(sub.acv_value - sub.offered_price) > 0 ? "text-emerald-600" : "text-red-600"}`}>
-                          {(sub.acv_value - sub.offered_price) > 0 ? "+" : ""}${Math.floor(sub.acv_value - sub.offered_price).toLocaleString()}
-                        </p>
-                      </div>
-                    )}
+                {(sub as any).loan_payoff_amount != null && (
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-sm text-slate-500">Loan Payoff</span>
+                    <span className="text-sm font-semibold text-red-600">-${Number((sub as any).loan_payoff_amount).toLocaleString()}</span>
                   </div>
                 )}
-
-                {/* Lead Score */}
                 {(() => {
-                  const ls = calculateLeadScore(sub);
+                  const v = sub.offered_price ?? sub.estimated_offer_high ?? 0;
+                  const result = calculateEquity(v, (sub as any).loan_payoff_amount ?? null);
+                  if (!v) return null;
                   return (
-                    <div className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 bg-slate-50">
-                      <div className="flex-1">
-                        <p className="text-[11px] text-slate-500 font-semibold uppercase tracking-wider mb-1">Lead Score</p>
-                        <div className="flex items-center gap-3">
-                          <span className="text-2xl font-black text-slate-900">{ls.score}</span>
-                          <div className="flex-1 h-2 rounded-full bg-slate-200 overflow-hidden">
-                            <div className={`h-full rounded-full ${ls.score >= 80 ? "bg-orange-500" : ls.score >= 60 ? "bg-amber-500" : ls.score >= 40 ? "bg-blue-500" : "bg-slate-300"}`}
-                              style={{ width: `${ls.score}%` }} />
-                          </div>
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold border ${getScoreColor(ls.score)}`}>{ls.label}</span>
-                        </div>
-                      </div>
+                    <div className="flex items-baseline justify-between pt-2.5 border-t border-slate-100">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Customer Equity</span>
+                      <span className={`text-base font-bold ${result.color}`}>{result.displayText}</span>
                     </div>
                   );
                 })()}
-
-                {/* Book Values */}
-                {(() => {
-                  const tiers = typeof sub.bb_value_tiers === "string" ? (() => { try { return JSON.parse(sub.bb_value_tiers); } catch { return null; } })() : sub.bb_value_tiers;
-                  const rows = [
-                    { label: "Retail", value: tiers?.retail?.avg ? Number(tiers.retail.avg) : (sub.bb_retail_avg ? Number(sub.bb_retail_avg) : null), color: "text-emerald-600" },
-                    { label: "Trade-In", value: tiers?.tradein?.avg ? Number(tiers.tradein.avg) : (sub.bb_tradein_avg ? Number(sub.bb_tradein_avg) : null), color: "text-primary" },
-                    { label: "Wholesale", value: tiers?.wholesale?.avg ? Number(tiers.wholesale.avg) : (sub.bb_wholesale_avg ? Number(sub.bb_wholesale_avg) : null), color: "text-blue-600" },
-                  ].filter(r => r.value && r.value > 0);
-                  if (rows.length === 0) return null;
-                  return (
-                    <div>
-                      <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5"><BarChart3 className="w-3 h-3" /> Book Values <span className="text-[9px] text-slate-400 bg-slate-100 rounded px-1.5 py-0.5">Black Book</span></p>
-                      <div className="space-y-1.5">
-                        {rows.map(r => (
-                          <div key={r.label} className="flex items-center justify-between py-1.5 px-3 rounded-lg hover:bg-slate-50">
-                            <span className="text-sm text-slate-500">{r.label}</span>
-                            <span className={`text-sm font-bold ${r.color}`}>${Math.floor(r.value!).toLocaleString()}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                {/* Open Appraisal Tool */}
-                <Button variant="outline" className="w-full h-9 rounded-lg text-xs font-semibold border-slate-300 text-slate-700" onClick={() => routerNavigate(`/appraisal/${sub.token}`)}>
-                  <Gauge className="w-3.5 h-3.5 mr-1.5" /> Open Appraisal Tool
-                </Button>
-              </div>
-            </div>
-
-            {/* ── LOAN & EQUITY ── */}
-            <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden border-l-[3px] border-l-[#003b80]/30">
-              <div className="px-5 py-3 border-b border-slate-100">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                  <DollarSign className="w-3.5 h-3.5 text-[#003b80]/50" /> Loan &amp; Equity
-                </h3>
-              </div>
-              <div className="p-5 grid grid-cols-2 gap-x-6 gap-y-2">
-                <DetailRow label="Loan Status" value={sub.loan_status} icon={<Info className="w-3.5 h-3.5" />} />
-                <DetailRow label="Loan Company" value={sub.loan_company} icon={<FileText className="w-3.5 h-3.5" />} />
-                <DetailRow label="Loan Balance" value={sub.loan_balance} icon={<DollarSign className="w-3.5 h-3.5" />} />
-                <DetailRow label="Loan Payment" value={sub.loan_payment} icon={<DollarSign className="w-3.5 h-3.5" />} />
-                <div className="col-span-2 mt-2 p-3 rounded-xl bg-muted/30 border border-border/40 space-y-2">
+                {/* Payoff input */}
+                <div className="pt-2 border-t border-slate-100 space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Verified Payoff</Label>
+                    <label className="text-[11px] text-slate-500 font-semibold">Verified Payoff</label>
                     <div className="flex items-center gap-1.5">
-                      <Checkbox id="v2-loan-payoff-verified" checked={!!(sub as any).loan_payoff_verified}
-                        onCheckedChange={(checked) => updateField({ loan_payoff_verified: !!checked, loan_payoff_updated_at: new Date().toISOString() } as any)}
-                        className="rounded-md h-4 w-4" />
-                      <label htmlFor="v2-loan-payoff-verified" className="text-[11px] text-muted-foreground cursor-pointer">Verified with lender</label>
+                      <Checkbox id="rp-payoff-verified" checked={!!(sub as any).loan_payoff_verified}
+                        onCheckedChange={(c) => updateField({ loan_payoff_verified: !!c, loan_payoff_updated_at: new Date().toISOString() } as any)} />
+                      <label htmlFor="rp-payoff-verified" className="text-[11px] text-slate-500 cursor-pointer">Confirmed</label>
                     </div>
                   </div>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
-                    <Input type="number" inputMode="decimal" placeholder="0"
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
+                    <Input type="number" inputMode="decimal" placeholder="Payoff amount"
                       value={(sub as any).loan_payoff_amount ?? ""}
                       onChange={(e) => {
                         const payoff = e.target.value === "" ? null : Number(e.target.value);
-                        const vehicleValue = sub.offered_price ?? sub.estimated_offer_high ?? 0;
-                        updateField({ loan_payoff_amount: payoff, estimated_equity: vehicleValue > 0 ? vehicleValue - (payoff ?? 0) : null, loan_payoff_updated_at: new Date().toISOString() } as any);
+                        const v = sub.offered_price ?? sub.estimated_offer_high ?? 0;
+                        updateField({ loan_payoff_amount: payoff, estimated_equity: v > 0 ? v - (payoff ?? 0) : null, loan_payoff_updated_at: new Date().toISOString() } as any);
                       }}
-                      className="h-9 pl-7 text-sm rounded-xl border-border/60 focus:border-primary/40" />
+                      className="h-9 pl-7 text-sm rounded-lg border-slate-200" />
                   </div>
-                  {(() => {
-                    const vehicleValue = sub.offered_price ?? sub.estimated_offer_high ?? 0;
-                    const payoff = (sub as any).loan_payoff_amount ?? null;
-                    const result = calculateEquity(vehicleValue, payoff);
-                    return (
-                      <div className="flex items-center justify-between pt-1">
-                        <span className="text-[11px] text-muted-foreground">Customer Equity</span>
-                        <span className={`text-sm font-bold ${result.color}`}>{result.displayText}</span>
-                      </div>
-                    );
-                  })()}
                 </div>
               </div>
             </div>
 
-            {/* ── CHECK REQUEST ── */}
-            {isPriceAgreedOrBeyond && (
-              <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden border-l-[3px] border-l-amber-500">
-                <div className="px-5 py-3 border-b border-slate-100">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                    <ClipboardCheck className="w-3.5 h-3.5 text-[#003b80]/50" /> Check Request
-                  </h3>
+            {/* ── LOAN ── */}
+            {(sub.loan_status || sub.loan_company || sub.loan_balance) && (
+              <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                <div className="px-4 py-2.5 border-b border-slate-100">
+                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Loan</h3>
                 </div>
-                <div className="p-5 space-y-3">
-                  <div className="flex items-center gap-3 bg-slate-50 rounded-lg p-3 border border-slate-200">
-                    <Checkbox id="v2-check-request-done" checked={sub.check_request_done}
-                      disabled={!isPriceAgreedOrBeyond || !(sub as any).appraisal_finalized}
-                      onCheckedChange={(checked) => updateField({ check_request_done: !!checked })} className="rounded-md" />
-                    <label htmlFor="v2-check-request-done" className="text-sm font-semibold text-slate-900">Check Request Completed</label>
-                  </div>
-                  {(sub as any).appraisal_finalized && (
-                    <Button variant="outline" size="sm" className="rounded-lg h-9 text-xs font-semibold border-slate-300 bg-white text-slate-700 w-full"
-                      onClick={async () => {
-                        const vehicleStr = [sub.vehicle_year, sub.vehicle_make, sub.vehicle_model].filter(Boolean).join(" ") || "N/A";
-                        toast({ title: "Generating...", description: "Building check request PDF." });
-                        const html = printCheckRequest(sub, "", [], []);
-                        if (html) toast({ title: "Check request printed" });
-                        else toast({ title: "Error", description: "Missing required documents.", variant: "destructive" });
-                      }}>
-                      <Printer className="w-3.5 h-3.5 mr-1.5" /> Generate Check Request
-                    </Button>
-                  )}
+                <div className="p-4 space-y-2.5">
+                  {[
+                    { label: "Status", value: sub.loan_status },
+                    { label: "Lender", value: sub.loan_company },
+                    { label: "Balance", value: sub.loan_balance ? `$${Number(sub.loan_balance).toLocaleString()}` : null },
+                    { label: "Verified Payoff", value: (sub as any).loan_payoff_amount ? `$${Number((sub as any).loan_payoff_amount).toLocaleString()}` : null },
+                  ].filter(r => r.value).map(row => (
+                    <div key={row.label} className="flex items-baseline justify-between gap-2">
+                      <span className="text-sm text-slate-500 shrink-0">{row.label}</span>
+                      <span className="text-sm font-semibold text-slate-900 text-right">{row.value}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
 
-            {/* ── FOLLOW-UP & NOTES ── */}
-            <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden border-l-[3px] border-l-[#003b80]/30">
-              <div className="px-5 py-3 border-b border-slate-100">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                  <StickyNote className="w-3.5 h-3.5 text-[#003b80]/50" /> Notes &amp; Follow-Up
+            {/* ── NOTES ── */}
+            <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+              <div className="px-4 py-2.5 border-b border-slate-100">
+                <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <StickyNote className="w-3.5 h-3.5" /> Notes
                 </h3>
               </div>
-              <div className="p-5 space-y-4">
+              <div className="p-4 space-y-3">
                 <Textarea placeholder="Add team notes, observations, or follow-up reminders..."
                   value={(sub.internal_notes || "").replace(/\[INSPECTION[\s\S]*?\](\s*\n)?/g, "").trim()}
                   onChange={(e) => updateField({ internal_notes: e.target.value || null })}
-                  rows={4} className="rounded-lg border-slate-200 focus:border-[#003b80]/40 resize-none text-sm leading-relaxed text-slate-700" />
+                  rows={3} className="rounded-lg border-slate-200 focus:border-[#003b80]/40 resize-none text-sm text-slate-700" />
                 <FollowUpPanel submissionId={sub.id} hasOffer={!!(sub.offered_price || sub.estimated_offer_high)} progressStatus={sub.progress_status} />
               </div>
             </div>
@@ -3033,63 +2781,46 @@ const SubmissionDetailSheetV2 = ({
                   performed_by: 'Voice AI', created_at: c.created_at,
                 }))
               ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
+              if (mergedActivity.length === 0) return null;
               return (
                 <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-                  <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                      <History className="w-3.5 h-3.5 text-[#003b80]/50" /> Activity Log
+                  <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100">
+                    <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                      <History className="w-3.5 h-3.5" /> Activity
                     </h3>
-                    {mergedActivity.length > 0 && <span className="text-[10px] text-muted-foreground bg-muted/50 rounded-lg px-2 py-0.5">{mergedActivity.length} events</span>}
+                    <span className="text-[10px] text-slate-400 bg-slate-100 rounded px-1.5 py-0.5">{mergedActivity.length}</span>
                   </div>
-                  <div className="p-5">
-                    {mergedActivity.length > 0 ? (
-                      <div className="relative max-h-64 overflow-y-auto pr-1">
-                        <div className="absolute left-[11px] top-3 bottom-3 w-[2px] bg-gradient-to-b from-primary/20 via-border/40 to-transparent rounded-full" />
-                        <div className="space-y-0">
-                          {mergedActivity.map((log, idx) => (
-                            <div key={log.id} className="relative flex items-start gap-4 py-3">
-                              <div className={`relative z-10 w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${idx === 0 ? "bg-primary/15 border-2 border-primary" : "bg-muted/60 border border-border/60"}`}>
-                                <Clock className={`w-3 h-3 ${idx === 0 ? "text-primary" : "text-muted-foreground/60"}`} />
-                              </div>
-                              <div className="flex-1 min-w-0 -mt-0.5">
-                                <div className="flex items-baseline gap-2 flex-wrap">
-                                  <span className="font-semibold text-sm text-card-foreground">{log.action}</span>
-                                  {log.old_value && log.new_value && (
-                                    <span className="text-xs text-muted-foreground"><span className="line-through opacity-60">{log.old_value}</span><span className="mx-1 text-primary">→</span><span className="font-medium">{log.new_value}</span></span>
-                                  )}
-                                  {!log.old_value && log.new_value && <span className="text-xs text-muted-foreground font-medium">{log.new_value}</span>}
-                                </div>
-                                <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground/70">
-                                  {log.performed_by && <span className="bg-muted/40 rounded-md px-1.5 py-0.5">{log.performed_by}</span>}
-                                  <span>{new Date(log.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
+                  <div className="p-4 max-h-48 overflow-y-auto space-y-3">
+                    {mergedActivity.map((log, idx) => (
+                      <div key={log.id} className="flex items-start gap-3">
+                        <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${idx === 0 ? "bg-[#003b80]/15 border-2 border-[#003b80]" : "bg-slate-100 border border-slate-200"}`}>
+                          <Clock className={`w-2.5 h-2.5 ${idx === 0 ? "text-[#003b80]" : "text-slate-400"}`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-slate-800">{log.action}</p>
+                          {log.new_value && <p className="text-[11px] text-slate-500 mt-0.5">{log.new_value}</p>}
+                          <p className="text-[10px] text-slate-400 mt-0.5">
+                            {new Date(log.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                            {log.performed_by && ` · ${log.performed_by}`}
+                          </p>
                         </div>
                       </div>
-                    ) : (
-                      <div className="text-center py-6">
-                        <History className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-                        <p className="text-sm text-muted-foreground">No activity recorded yet</p>
-                      </div>
-                    )}
+                    ))}
                   </div>
                 </div>
               );
             })()}
 
             {/* ── SAVE / DELETE ── sticky footer */}
-            <div className="sticky bottom-0 bg-white/95 backdrop-blur-sm pt-4 pb-2 border-t border-slate-200 flex gap-3 px-5 -mx-5 -mb-5">
-              <Button className="flex-1 h-10 px-5 rounded-lg font-semibold text-sm bg-[#003b80] hover:bg-[#002a5c] text-white transition-colors"
+            <div className="sticky bottom-0 bg-white/95 backdrop-blur-sm pt-3 pb-3 border-t border-slate-200 flex gap-2 -mx-4 px-4 -mb-4">
+              <Button className="flex-1 h-10 rounded-lg font-semibold text-sm bg-[#003b80] hover:bg-[#002a5c] text-white"
                 disabled={sub.progress_status === "inspection_completed" && !sub.acv_value}
                 onClick={handleSave}>
                 <Save className="w-4 h-4 mr-2" /> Update Record
               </Button>
               {canDelete && (
-                <Button variant="destructive" className="h-10 px-5 rounded-lg font-semibold text-sm" onClick={() => onDelete(sub.id)}>
-                  <Trash2 className="w-4 h-4 mr-2" /> Delete
+                <Button variant="destructive" className="h-10 px-4 rounded-lg font-semibold text-sm" onClick={() => onDelete(sub.id)}>
+                  <Trash2 className="w-4 h-4" />
                 </Button>
               )}
             </div>
