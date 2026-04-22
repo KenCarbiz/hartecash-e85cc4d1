@@ -2653,7 +2653,7 @@ const SubmissionDetailSheetV2 = ({
                         else if (naCard.ctaAction === "inspect") routerNavigate(`/inspection/${sub.id}`);
                         // "followup" and others: wire later
                       }}
-                      className="w-full py-2.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/30 text-white text-[13px] font-bold transition-colors text-center">
+                      className="w-full py-2.5 rounded-xl bg-white hover:bg-white/90 text-slate-900 text-[13px] font-bold transition-colors text-center">
                       {naCard.cta ?? "Send Follow-Up"} ›
                     </button>
                   </div>
