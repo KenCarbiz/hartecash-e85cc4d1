@@ -1,0 +1,82 @@
+project_id = "ptiwdwfdckfqivoocyvp"
+
+# Edge-function auth policy
+# ------------------------
+# `verify_jwt = true` is the default and MUST be the choice for any function
+# that mutates tenant data, sends messages on behalf of a dealership, or
+# exposes admin-only information. Only flip to `false` when the function is
+# invoked by (a) unauthenticated customer flows that validate their own
+# submission/unsubscribe token, or (b) external webhooks (Supabase Auth
+# hooks, email-provider callbacks) which authenticate via a shared secret
+# or signature instead of a user JWT.
+
+[functions]
+  # Customer-facing: photo upload AI (guarded by submission token in body).
+  [functions.analyze-vehicle-damage]
+    verify_jwt = false
+  # Supabase Auth webhook — authenticated via SEND_EMAIL_HOOK_SECRET.
+  [functions.auth-email-hook]
+    verify_jwt = false
+  # External webhook: Bland.AI voice agent books appointments.
+  # Authenticated via BLAND_WEBHOOK_SECRET (X-Webhook-Secret header or
+  # ?secret= query param). Same secret as voice-call-webhook.
+  [functions.bland-appointment-webhook]
+    verify_jwt = false
+  # Customer-facing: called during public sell/appraisal flow.
+  # Function validates request via submission token + origin.
+  [functions.bb-lookup]
+    verify_jwt = false
+  # Customer-facing: public ScheduleVisit form invokes this.
+  # Function validates the appointment/submission token.
+  [functions.notify-appointment]
+    verify_jwt = false
+  # Admin/cron: trusted caller required.
+  [functions.process-email-queue]
+    verify_jwt = true
+  # Admin-only: send confirmation from dealer dashboard.
+  [functions.send-appointment-confirmation]
+    verify_jwt = true
+  # Admin-only: send reschedule notification from dealer dashboard.
+  [functions.send-reschedule-notification]
+    verify_jwt = true
+  # Admin/cron: trusted caller required.
+  [functions.send-transactional-email]
+    verify_jwt = true
+  # Admin-only: email template preview (Supabase dashboard + admins).
+  [functions.preview-transactional-email]
+    verify_jwt = true
+  # Customer-facing: unsubscribe link contains a signed token. No JWT.
+  [functions.handle-email-unsubscribe]
+    verify_jwt = false
+  # Email-provider webhook (bounce/complaint) — validates provider secret.
+  [functions.handle-email-suppression]
+    verify_jwt = false
+  # Admin-only: historical market insight panel in appraisal tool.
+  [functions.compute-historical-insight]
+    verify_jwt = true
+  # Stripe webhook — authenticated via STRIPE_WEBHOOK_SECRET signature.
+  [functions.stripe-webhook]
+    verify_jwt = false
+  # Dealer-facing: creates a Stripe Checkout session. JWT required.
+  [functions.billing-checkout]
+    verify_jwt = true
+  # Dealer-facing: appends an item to the tenant's subscription. JWT required.
+  [functions.billing-add-app]
+    verify_jwt = true
+  # Dealer-facing: swaps items for a bundle price. JWT required.
+  [functions.billing-upgrade-to-bundle]
+    verify_jwt = true
+  # Dealer-facing: schedules a plan change at period end. JWT required.
+  [functions.billing-downgrade]
+    verify_jwt = true
+  # Dealer-facing: creates a Stripe Customer Portal session. JWT required.
+  # Endpoint name matches the cross-app contract (AutoLabels f6e8a57).
+  [functions.billing-portal-session]
+    verify_jwt = true
+  # Public read of active Stripe prices (metadata-driven catalog for /billing).
+  [functions.billing-catalog]
+    verify_jwt = false
+  # Ops replay of autocurb_sync_entitlements. Custom Bearer check against
+  # SUPABASE_SERVICE_ROLE_KEY — no user JWT flow.
+  [functions.billing-replay]
+    verify_jwt = false

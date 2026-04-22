@@ -1,0 +1,1 @@
+ALTER TABLE public.submissions ADD COLUMN acv_value numeric NULL;

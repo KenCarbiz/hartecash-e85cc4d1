@@ -1,0 +1,1 @@
+ALTER TABLE public.submissions ADD COLUMN assigned_rep_email text;

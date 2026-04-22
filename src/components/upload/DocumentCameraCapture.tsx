@@ -1,0 +1,296 @@
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Camera, X, RotateCcw, Check, FlipHorizontal, Upload, ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { type DocDimensions } from "@/lib/documentDimensions";
+import {
+  type CameraBlock,
+  preflightCamera,
+  classifyCameraError,
+  requestCameraStream,
+} from "@/lib/cameraSupport";
+
+interface DocumentCameraCaptureProps {
+  docLabel: string;
+  dimensions: DocDimensions;
+  onCapture: (file: File, preview: string) => void;
+  onClose: () => void;
+}
+
+const DocumentCameraCapture = ({
+  docLabel,
+  dimensions,
+  onCapture,
+  onClose,
+}: DocumentCameraCaptureProps) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fallbackInputRef = useRef<HTMLInputElement>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [captured, setCaptured] = useState<string | null>(null);
+  const [block, setBlock] = useState<CameraBlock | null>(null);
+  const [facingMode, setFacingMode] = useState<"environment" | "user">("environment");
+
+  const startCamera = useCallback(async (facing: "environment" | "user") => {
+    // Synchronous preflight — catches in-app webviews, non-HTTPS, and
+    // missing mediaDevices BEFORE we trigger a broken permission prompt.
+    const pre = preflightCamera();
+    if (pre) {
+      setBlock(pre);
+      return;
+    }
+    try {
+      // Stop existing stream
+      stream?.getTracks().forEach((t) => t.stop());
+      const mediaStream = await requestCameraStream(facing);
+      setStream(mediaStream);
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+      }
+      setBlock(null);
+    } catch (err) {
+      setBlock(classifyCameraError(err));
+    }
+  }, []); // intentionally exclude stream to avoid re-render loops
+
+  useEffect(() => {
+    startCamera(facingMode);
+    return () => {
+      stream?.getTracks().forEach((t) => t.stop());
+    };
+  }, [facingMode]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleCapture = () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas) return;
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.drawImage(video, 0, 0);
+
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+    setCaptured(dataUrl);
+  };
+
+  const handleConfirm = () => {
+    if (!captured) return;
+    // Convert data URL to File
+    const byteString = atob(captured.split(",")[1]);
+    const mimeString = captured.split(",")[0].split(":")[1].split(";")[0];
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+    const blob = new Blob([ab], { type: mimeString });
+    const file = new File([blob], `${docLabel.replace(/\s+/g, "_").toLowerCase()}_${Date.now()}.jpg`, {
+      type: "image/jpeg",
+    });
+    onCapture(file, captured);
+  };
+
+  const handleRetake = () => {
+    setCaptured(null);
+  };
+
+  const toggleCamera = () => {
+    setFacingMode((prev) => (prev === "environment" ? "user" : "environment"));
+  };
+
+  // Native OS camera / file picker fallback — works in every browser
+  // including in-app webviews because it doesn't touch getUserMedia.
+  const handleFallbackFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const preview = (ev.target?.result as string) || "";
+      onCapture(file, preview);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Calculate guide frame dimensions to fit within viewport
+  const { aspectRatio, orientation, sizeLabel } = dimensions;
+  const isLandscape = orientation === "landscape";
+
+  // Guide tips per doc type
+  const tips = docLabel.toLowerCase().includes("license")
+    ? "Lay flat on a dark surface · All text must be readable"
+    : docLabel.toLowerCase().includes("title")
+    ? "Lay flat · Ensure VIN and owner info are visible"
+    : "Lay flat · Ensure all text is legible";
+
+  if (block) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center p-6">
+        <div className="text-center text-white max-w-sm">
+          <Camera className="w-16 h-16 mx-auto mb-4 opacity-50" />
+          <h3 className="text-lg font-bold mb-2">{block.title}</h3>
+          <p className="text-sm text-white/80 mb-5 leading-relaxed">{block.detail}</p>
+          <div className="flex flex-col gap-2">
+            {/* Always-on fallback: native file picker with camera capture hint.
+                This bypasses getUserMedia entirely and works in every browser. */}
+            <input
+              ref={fallbackInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleFallbackFile}
+              className="hidden"
+            />
+            <Button
+              size="lg"
+              onClick={() => fallbackInputRef.current?.click()}
+              className="bg-white text-black hover:bg-white/90 gap-2"
+            >
+              <Upload className="w-5 h-5" />
+              Upload Photo
+            </Button>
+            {block.retryable && (
+              <Button
+                variant="outline"
+                onClick={() => { setBlock(null); startCamera(facingMode); }}
+                className="text-white border-white/30 hover:bg-white/10"
+              >
+                Try Camera Again
+              </Button>
+            )}
+            {block.reason === "in_app_webview" && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  // Best-effort: copy the URL to the clipboard so the user
+                  // can paste it into Safari/Chrome
+                  const url = window.location.href;
+                  navigator.clipboard?.writeText(url).catch(() => null);
+                }}
+                className="text-white border-white/30 hover:bg-white/10 gap-2"
+              >
+                <ExternalLink className="w-4 h-4" /> Copy Link for Safari/Chrome
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              onClick={onClose}
+              className="text-white/70 hover:bg-white/10 hover:text-white"
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black flex flex-col">
+      {/* Top bar */}
+      <div className="flex items-center justify-between px-4 py-3 bg-black/80 z-10">
+        <button onClick={onClose} className="text-white p-1">
+          <X className="w-6 h-6" />
+        </button>
+        <span className="text-white text-sm font-semibold">{docLabel}</span>
+        <button onClick={toggleCamera} className="text-white p-1">
+          <FlipHorizontal className="w-5 h-5" />
+        </button>
+      </div>
+
+      {/* Camera / Preview */}
+      <div className="flex-1 relative overflow-hidden">
+        {captured ? (
+          <img src={captured} alt="Captured" className="w-full h-full object-contain" />
+        ) : (
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className="w-full h-full object-cover"
+          />
+        )}
+
+        {/* Guide overlay — only shown when camera is live */}
+        {!captured && (
+          <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+            {/* Dimmed edges */}
+            <div className="absolute inset-0 bg-black/50" />
+
+            {/* Clear guide window */}
+            <div
+              className="relative z-10 border-2 border-white/80 rounded-lg"
+              style={{
+                width: isLandscape ? "85vw" : `${85 / aspectRatio}vw`,
+                maxWidth: isLandscape ? "85vw" : "70vw",
+                aspectRatio: String(aspectRatio),
+                boxShadow: "0 0 0 9999px rgba(0,0,0,0.5)",
+              }}
+            >
+              {/* Corner brackets */}
+              <div className="absolute -top-0.5 -left-0.5 w-6 h-6 border-t-[3px] border-l-[3px] border-white rounded-tl-md" />
+              <div className="absolute -top-0.5 -right-0.5 w-6 h-6 border-t-[3px] border-r-[3px] border-white rounded-tr-md" />
+              <div className="absolute -bottom-0.5 -left-0.5 w-6 h-6 border-b-[3px] border-l-[3px] border-white rounded-bl-md" />
+              <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 border-b-[3px] border-r-[3px] border-white rounded-br-md" />
+
+              {/* Label */}
+              <div className="absolute -top-8 left-0 right-0 text-center">
+                <span className="text-white text-xs font-medium bg-black/60 px-2 py-0.5 rounded">
+                  Align {docLabel} inside frame
+                </span>
+              </div>
+
+              {/* Size label */}
+              <div className="absolute -bottom-7 left-0 right-0 text-center">
+                <span className="text-white/60 text-[10px]">{sizeLabel}</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Tips */}
+      <div className="bg-black/80 px-4 py-2 text-center">
+        <p className="text-white/70 text-xs">{tips}</p>
+      </div>
+
+      {/* Bottom controls */}
+      <div className="bg-black/80 px-6 py-5 flex items-center justify-center gap-8">
+        {captured ? (
+          <>
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={handleRetake}
+              className="bg-transparent border-white/30 text-white hover:bg-white/10 gap-2"
+            >
+              <RotateCcw className="w-5 h-5" />
+              Retake
+            </Button>
+            <Button
+              size="lg"
+              onClick={handleConfirm}
+              className="bg-success hover:bg-success/90 text-white gap-2 px-8"
+            >
+              <Check className="w-5 h-5" />
+              Use Photo
+            </Button>
+          </>
+        ) : (
+          <button
+            onClick={handleCapture}
+            className="w-16 h-16 rounded-full bg-white border-4 border-white/30 hover:bg-white/90 transition-colors flex items-center justify-center"
+            aria-label="Take photo"
+          >
+            <div className="w-12 h-12 rounded-full border-2 border-black/10" />
+          </button>
+        )}
+      </div>
+
+      <canvas ref={canvasRef} className="hidden" />
+    </div>
+  );
+};
+
+export default DocumentCameraCapture;

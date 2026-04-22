@@ -1,0 +1,1 @@
+ALTER TABLE public.site_config ALTER COLUMN hero_layout SET DEFAULT 'offset_right';

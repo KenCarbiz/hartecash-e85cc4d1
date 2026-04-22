@@ -1,0 +1,1 @@
+ALTER TABLE public.offer_settings ADD COLUMN IF NOT EXISTS hide_pack_from_appraisal boolean NOT NULL DEFAULT false;

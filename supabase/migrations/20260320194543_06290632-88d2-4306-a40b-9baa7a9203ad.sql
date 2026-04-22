@@ -1,0 +1,1 @@
+ALTER TABLE public.appointments ADD COLUMN store_location text DEFAULT null;

@@ -1,0 +1,1 @@
+ALTER TABLE public.offer_settings ADD COLUMN IF NOT EXISTS mileage_tiers jsonb NOT NULL DEFAULT '[]'::jsonb;

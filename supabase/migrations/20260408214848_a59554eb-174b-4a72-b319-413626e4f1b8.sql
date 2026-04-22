@@ -1,0 +1,1 @@
+ALTER TABLE offer_settings ADD COLUMN IF NOT EXISTS strategy_mode text DEFAULT 'standard';

@@ -1,0 +1,1 @@
+ALTER TABLE public.dealership_locations ADD COLUMN use_bdc boolean NOT NULL DEFAULT false;

@@ -1,0 +1,1327 @@
+import React, { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useTenant } from "@/contexts/TenantContext";
+import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Save, Loader2, ChevronDown, Building2, Palette, Type, BarChart3, Upload, Star, Sparkles, Eye, ScanLine, MapPin, FileText, GitCompare, Clock, Facebook, Instagram, Youtube, Globe, Plus, Trash2, Gift } from "lucide-react";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import CalculatingOffer from "@/components/CalculatingOffer";
+import AboutPageConfig from "@/components/admin/AboutPageConfig";
+import ComparisonConfig from "@/components/admin/ComparisonConfig";
+
+interface SiteConfig {
+  id: string;
+  dealership_name: string;
+  tagline: string;
+  phone: string;
+  email: string;
+  address: string;
+  website_url: string;
+  logo_url: string;
+  logo_white_url: string;
+  favicon_url: string;
+  primary_color: string;
+  accent_color: string;
+  success_color: string;
+  hero_headline: string;
+  hero_subtext: string;
+  hero_layout: string;
+  price_guarantee_days: number;
+  stats_cars_purchased: string;
+  stats_years_in_business: string;
+  stats_rating: string;
+  stats_reviews_count: string;
+  review_request_subject: string;
+  review_request_message: string;
+  enable_animations: boolean;
+  use_animated_calculating: boolean;
+  enable_dl_ocr: boolean;
+  track_abandoned_leads: boolean;
+  auto_route_appraiser_queue: boolean;
+  ai_photo_reappraisal: boolean;
+  ai_auto_bump_enabled: boolean;
+  ai_auto_bump_max_pct: number;
+  ai_auto_bump_max_dollars: number;
+  ai_auto_bump_daily_cap: number;
+  ai_auto_bump_confidence_floor: number;
+  cta_offer_color: string;
+  cta_accept_color: string;
+  assign_customer_picks: boolean;
+  assign_auto_zip: boolean;
+  assign_oem_brand_match: boolean;
+  assign_buying_center: boolean;
+  buying_center_location_id: string | null;
+  vehicle_image_angle: string;
+  referral_program_enabled: boolean;
+  referral_reward_sell_enabled: boolean;
+  referral_reward_sell_amount: number;
+  referral_reward_buy_enabled: boolean;
+  referral_reward_buy_amount: number;
+  referral_reward_sell_buy_enabled: boolean;
+  referral_reward_sell_buy_amount: number;
+  referral_reward_trade_enabled: boolean;
+  referral_reward_trade_amount: number;
+  referral_reward_type: string;
+  established_year: number | null;
+}
+
+const DEFAULT_CONFIG: SiteConfig = {
+  id: "",
+  dealership_name: "Our Dealership",
+  tagline: "Sell Your Car The Easy Way",
+  phone: "",
+  email: "",
+  address: "",
+  website_url: "",
+  logo_url: "",
+  logo_white_url: "",
+  favicon_url: "",
+  primary_color: "213 80% 20%",
+  accent_color: "0 80% 50%",
+  success_color: "142 71% 45%",
+  hero_headline: "Sell Your Car The Easy Way",
+  hero_subtext: "Get a top-dollar cash offer in 2 minutes. No haggling, no stress.",
+  hero_layout: "centered",
+  price_guarantee_days: 8,
+  stats_cars_purchased: "14,721+",
+  stats_years_in_business: "78 yrs",
+  stats_rating: "4.9",
+  stats_reviews_count: "2,400+",
+  review_request_subject: "We'd Love Your Feedback!",
+  review_request_message: "Thank you for choosing us! We hope you had a great experience selling your vehicle. Would you take a moment to share your feedback? Your review helps other car owners make the right choice.",
+  enable_animations: false,
+  use_animated_calculating: false,
+  enable_dl_ocr: false,
+  track_abandoned_leads: true,
+  auto_route_appraiser_queue: false,
+  ai_photo_reappraisal: false,
+  ai_auto_bump_enabled: false,
+  ai_auto_bump_max_pct: 15,
+  ai_auto_bump_max_dollars: 2000,
+  ai_auto_bump_daily_cap: 10000,
+  ai_auto_bump_confidence_floor: 70,
+  cta_offer_color: "",
+  cta_accept_color: "",
+  assign_customer_picks: false,
+  assign_auto_zip: true,
+  assign_oem_brand_match: false,
+  assign_buying_center: false,
+  buying_center_location_id: null,
+  vehicle_image_angle: "three_quarter",
+  referral_program_enabled: false,
+  referral_reward_sell_enabled: false,
+  referral_reward_sell_amount: 0,
+  referral_reward_buy_enabled: false,
+  referral_reward_buy_amount: 0,
+  referral_reward_sell_buy_enabled: false,
+  referral_reward_sell_buy_amount: 0,
+  referral_reward_trade_enabled: false,
+  referral_reward_trade_amount: 0,
+  referral_reward_type: "cash",
+  established_year: null,
+};
+
+interface SectionProps {
+  icon: React.ElementType;
+  title: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+  sectionId?: string;
+  forceOpen?: boolean;
+}
+
+const Section = ({ icon: Icon, title, children, defaultOpen = false, sectionId, forceOpen }: SectionProps) => {
+  const [open, setOpen] = useState(defaultOpen || !!forceOpen);
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (forceOpen) {
+      setOpen(true);
+      // Scroll into view after a short delay to let collapsible open
+      setTimeout(() => {
+        ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        // Flash highlight
+        ref.current?.classList.add("ring-2", "ring-primary/50", "rounded-lg");
+        setTimeout(() => ref.current?.classList.remove("ring-2", "ring-primary/50", "rounded-lg"), 2000);
+      }, 150);
+    }
+  }, [forceOpen]);
+
+  return (
+    <div ref={ref} id={sectionId}>
+      <Collapsible open={open} onOpenChange={setOpen}>
+        <CollapsibleTrigger asChild>
+          <button className="w-full flex items-center justify-between px-4 py-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors text-left">
+            <div className="flex items-center gap-2">
+              <Icon className="w-4 h-4 text-primary" />
+              <span className="font-semibold text-sm text-card-foreground">{title}</span>
+            </div>
+            <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="px-1 pt-3 pb-1">{children}</CollapsibleContent>
+      </Collapsible>
+    </div>
+  );
+};
+
+interface DealerLocation {
+  id: string;
+  name: string;
+  city: string;
+  state: string;
+}
+
+const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
+  const { tenant } = useTenant();
+  const dealershipId = tenant.dealership_id;
+  const [config, setConfig] = useState<SiteConfig>(DEFAULT_CONFIG);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+  const [savedConfig, setSavedConfig] = useState<SiteConfig>(DEFAULT_CONFIG);
+  const [dealerLocations, setDealerLocations] = useState<DealerLocation[]>([]);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchConfig();
+    supabase.from("dealership_locations").select("id, name, city, state").eq("dealership_id", dealershipId).eq("is_active", true).order("sort_order")
+      .then(({ data }) => { if (data) setDealerLocations(data); });
+  }, [dealershipId]);
+
+  const fetchConfig = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("site_config")
+      .select("*")
+      .eq("dealership_id", dealershipId)
+      .maybeSingle();
+
+    if (data && !error) {
+      const loaded = { ...DEFAULT_CONFIG, ...data } as SiteConfig;
+      setConfig(loaded);
+      setSavedConfig(loaded);
+    }
+    setLoading(false);
+  };
+
+  const update = (field: keyof SiteConfig, value: string | number) => {
+    setConfig(prev => {
+      const next = { ...prev, [field]: value };
+      setHasChanges(JSON.stringify(next) !== JSON.stringify(savedConfig));
+      return next;
+    });
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    const { id, ...rest } = config;
+    const payload = { ...rest, dealership_id: dealershipId, updated_at: new Date().toISOString() };
+
+    // Try update first, if no rows affected then insert
+    const { data: existing } = await supabase
+      .from("site_config")
+      .select("id")
+      .eq("dealership_id", dealershipId)
+      .maybeSingle();
+
+    let error;
+    if (existing) {
+      ({ error } = await supabase
+        .from("site_config")
+        .update(payload)
+        .eq("id", existing.id));
+    } else {
+      ({ error } = await supabase
+        .from("site_config")
+        .insert(payload));
+    }
+
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      setSavedConfig(config);
+      setHasChanges(false);
+      toast({ title: "Saved", description: "Site configuration updated." });
+    }
+    setSaving(false);
+  };
+
+  const handleLogoUpload = async (field: "logo_url" | "logo_white_url" | "favicon_url", file: File) => {
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: "Too large", description: "Max 2 MB.", variant: "destructive" });
+      return;
+    }
+    const ext = file.name.split(".").pop();
+    const path = `branding/${field}_${Date.now()}.${ext}`;
+
+    const { error } = await supabase.storage.from("staff-avatars").upload(path, file, { upsert: true });
+    if (error) {
+      toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    const { data: urlData } = supabase.storage.from("staff-avatars").getPublicUrl(path);
+    update(field, urlData.publicUrl);
+    toast({ title: "Uploaded", description: "Logo uploaded — save to apply." });
+  };
+
+  if (loading) {
+    return <div className="flex items-center justify-center py-12 text-muted-foreground"><Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading configuration...</div>;
+  }
+
+  return (
+    <div className="space-y-4 max-w-3xl">
+      {/* Save bar */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          {hasChanges ? "You have unsaved changes." : "All changes saved."}
+        </p>
+        <Button onClick={handleSave} disabled={saving || !hasChanges}>
+          {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
+          Save Configuration
+        </Button>
+      </div>
+
+      {/* Dealership Info */}
+      <Section icon={Building2} title="Dealership Information" defaultOpen sectionId="dealership-info" forceOpen={focusField === "dealership-info"}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Dealership Name</Label>
+            <Input value={config.dealership_name} onChange={e => update("dealership_name", e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Tagline</Label>
+            <Input value={config.tagline} onChange={e => update("tagline", e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Phone Number</Label>
+            <Input value={config.phone} onChange={e => update("phone", e.target.value)} placeholder="(860) 555-1234" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Email</Label>
+            <Input value={config.email} onChange={e => update("email", e.target.value)} type="email" placeholder="info@dealership.com" />
+          </div>
+          <div className="sm:col-span-2 space-y-1.5">
+            <Label className="text-xs font-semibold">Address</Label>
+            <Input value={config.address} onChange={e => update("address", e.target.value)} placeholder="123 Main St, Hartford, CT 06103" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Website URL</Label>
+            <Input value={config.website_url} onChange={e => update("website_url", e.target.value)} placeholder="https://www.dealership.com" />
+          </div>
+        </div>
+      </Section>
+
+      {/* Business Hours */}
+      <Section icon={Clock} title="Business Hours" sectionId="hours" forceOpen={focusField === "hours"}>
+        <p className="text-xs text-muted-foreground mb-3">Set your dealership hours. These appear on the customer portal and contact cards.</p>
+        <div className="space-y-2">
+          {((config as any).business_hours || []).map((row: any, i: number) => (
+            <div key={i} className="flex items-center gap-2">
+              <Input
+                value={row.days}
+                onChange={e => {
+                  const hrs = [...((config as any).business_hours || [])];
+                  hrs[i] = { ...hrs[i], days: e.target.value };
+                  update("business_hours" as any, hrs as any);
+                }}
+                placeholder="Mon–Fri"
+                className="h-8 text-xs w-32"
+              />
+              <Input
+                value={row.hours}
+                onChange={e => {
+                  const hrs = [...((config as any).business_hours || [])];
+                  hrs[i] = { ...hrs[i], hours: e.target.value };
+                  update("business_hours" as any, hrs as any);
+                }}
+                placeholder="9 AM – 7 PM"
+                className="h-8 text-xs flex-1"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const hrs = ((config as any).business_hours || []).filter((_: any, j: number) => j !== i);
+                  update("business_hours" as any, hrs as any);
+                }}
+                className="text-muted-foreground hover:text-destructive"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => {
+              const hrs = [...((config as any).business_hours || []), { days: "", hours: "" }];
+              update("business_hours" as any, hrs as any);
+            }}
+            className="flex items-center gap-1 text-xs text-primary hover:underline"
+          >
+            <Plus className="w-3 h-3" /> Add row
+          </button>
+        </div>
+      </Section>
+
+      {/* Social & Review Links */}
+      <Section icon={Globe} title="Social Media & Review Links" sectionId="social" forceOpen={focusField === "social"}>
+        <p className="text-xs text-muted-foreground mb-3">Add your social profiles and Google review link. These appear in the footer and contact cards.</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold flex items-center gap-1.5"><Facebook className="w-3.5 h-3.5" /> Facebook URL</Label>
+            <Input value={(config as any).facebook_url || ""} onChange={e => update("facebook_url" as any, e.target.value)} placeholder="https://facebook.com/dealership" className="h-8 text-xs" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold flex items-center gap-1.5"><Instagram className="w-3.5 h-3.5" /> Instagram URL</Label>
+            <Input value={(config as any).instagram_url || ""} onChange={e => update("instagram_url" as any, e.target.value)} placeholder="https://instagram.com/dealership" className="h-8 text-xs" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold flex items-center gap-1.5"><Youtube className="w-3.5 h-3.5" /> YouTube URL</Label>
+            <Input value={(config as any).youtube_url || ""} onChange={e => update("youtube_url" as any, e.target.value)} placeholder="https://youtube.com/@dealership" className="h-8 text-xs" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold flex items-center gap-1.5">TikTok URL</Label>
+            <Input value={(config as any).tiktok_url || ""} onChange={e => update("tiktok_url" as any, e.target.value)} placeholder="https://tiktok.com/@dealership" className="h-8 text-xs" />
+          </div>
+          <div className="sm:col-span-2 space-y-1.5">
+            <Label className="text-xs font-semibold flex items-center gap-1.5"><Star className="w-3.5 h-3.5" /> Google Review URL</Label>
+            <Input value={(config as any).google_review_url || ""} onChange={e => update("google_review_url" as any, e.target.value)} placeholder="https://g.page/r/..." className="h-8 text-xs" />
+            <p className="text-xs text-muted-foreground">Used for the review request email and footer link.</p>
+          </div>
+        </div>
+      </Section>
+
+      {/* Logos */}
+      <Section icon={Upload} title="Logos & Branding Assets" sectionId="logos" forceOpen={focusField === "logos"}>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {(["logo_url", "logo_white_url", "favicon_url"] as const).map(field => {
+            const labels: Record<string, string> = {
+              logo_url: "Primary Logo",
+              logo_white_url: "White Logo (dark backgrounds)",
+              favicon_url: "Favicon",
+            };
+            return (
+              <div key={field} className="space-y-2">
+                <Label className="text-xs font-semibold">{labels[field]}</Label>
+                <div className="border border-border rounded-lg p-3 bg-muted/30 flex flex-col items-center gap-2 min-h-[100px]">
+                  {config[field] ? (
+                    <img src={config[field]} alt={labels[field]} className="max-h-16 object-contain" />
+                  ) : (
+                    <div className="text-xs text-muted-foreground">No image set</div>
+                  )}
+                  <label className="cursor-pointer text-xs text-primary hover:underline">
+                    Upload
+                    <input type="file" accept="image/*" className="hidden" onChange={e => {
+                      const file = e.target.files?.[0];
+                      if (file) handleLogoUpload(field, file);
+                      e.target.value = "";
+                    }} />
+                  </label>
+                </div>
+                <Input
+                  value={config[field]}
+                  onChange={e => update(field, e.target.value)}
+                  placeholder="Or paste URL"
+                  className="text-xs h-8"
+                />
+              </div>
+            );
+          })}
+        </div>
+      </Section>
+
+      {/* Colors */}
+      <Section icon={Palette} title="Brand Colors" sectionId="colors" forceOpen={focusField === "colors"}>
+        <p className="text-xs text-muted-foreground mb-3">
+          Colors in HSL format (e.g. "213 80% 20%"). These will be used as CSS custom properties across the site.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {([
+            { key: "primary_color" as const, label: "Primary Color", desc: "Headers, buttons, links" },
+            { key: "accent_color" as const, label: "Accent / CTA Color", desc: "Call-to-action buttons" },
+            { key: "success_color" as const, label: "Success Color", desc: "Checkmarks, positive states" },
+          ]).map(({ key, label, desc }) => (
+            <div key={key} className="space-y-1.5">
+              <Label className="text-xs font-semibold">{label}</Label>
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-8 h-8 rounded-md border border-border shrink-0"
+                  style={{ backgroundColor: `hsl(${config[key]})` }}
+                />
+                <Input value={config[key]} onChange={e => update(key, e.target.value)} className="h-8 text-xs" />
+              </div>
+              <p className="text-xs text-muted-foreground">{desc}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4 pt-4 border-t border-border">
+          <p className="text-xs font-semibold text-card-foreground mb-1">CTA Button Overrides</p>
+          <p className="text-xs text-muted-foreground mb-3">
+            Leave blank to use the default Accent color. Set custom HSL values to override specific buttons when white-labeling.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {([
+              { key: "cta_offer_color" as const, label: "\"Get My Offer\" Button", btnText: "Get My Offer", desc: "Form submit & Continue buttons" },
+              { key: "cta_accept_color" as const, label: "\"Accept Offer\" Button", btnText: "Accept Offer", desc: "Accept & Lock In Your Price (accepted badge stays green)" },
+            ]).map(({ key, label, btnText, desc }) => {
+              const effectiveColor = config[key] || config.accent_color;
+              return (
+                <div key={key} className="space-y-2">
+                  <Label className="text-xs font-semibold">{label}</Label>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-8 h-8 rounded-md border border-border shrink-0"
+                      style={{ backgroundColor: `hsl(${effectiveColor})` }}
+                    />
+                    <Input
+                      value={config[key]}
+                      onChange={e => update(key, e.target.value)}
+                      className="h-8 text-xs"
+                      placeholder={`Default: ${config.accent_color}`}
+                    />
+                    {config[key] && (
+                      <button
+                        type="button"
+                        onClick={() => update(key, "")}
+                        className="text-xs text-muted-foreground hover:text-foreground whitespace-nowrap"
+                      >
+                        Reset
+                      </button>
+                    )}
+                  </div>
+                  <div
+                    className="inline-block px-4 py-2 rounded-lg text-xs font-semibold text-white shadow-sm transition-colors cursor-default"
+                    style={{ backgroundColor: `hsl(${effectiveColor})` }}
+                  >
+                    {btnText}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{desc}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </Section>
+
+      {/* Hero & Content */}
+      <Section icon={Type} title="Hero Section & Content">
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Hero Layout</Label>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { value: "offset_right", label: "Default" },
+                { value: "centered", label: "Centered" },
+                { value: "offset_left", label: "Offset Left" },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => update("hero_layout", opt.value)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                    config.hero_layout === opt.value
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-muted/50 text-muted-foreground border-border hover:bg-muted"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          {/* Main Landing Page (/) */}
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Main Page Headline <span className="text-muted-foreground font-normal">(/)</span></Label>
+            <Input value={config.hero_headline} onChange={e => update("hero_headline", e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Main Page Subtext</Label>
+            <Textarea value={config.hero_subtext} onChange={e => update("hero_subtext", e.target.value)} rows={2} />
+          </div>
+
+          {/* Service Landing Page (/service) */}
+          <div className="border-t border-border pt-4 mt-4">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3">Service Page (/service)</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Service Page Headline</Label>
+            <Input value={(config as any).service_hero_headline || ""} onChange={e => update("service_hero_headline" as any, e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Service Page Subtext</Label>
+            <Textarea value={(config as any).service_hero_subtext || ""} onChange={e => update("service_hero_subtext" as any, e.target.value)} rows={2} />
+          </div>
+
+          {/* Trade Landing Page (/trade) */}
+          <div className="border-t border-border pt-4 mt-4">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3">Trade Page (/trade)</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Trade Page Headline</Label>
+            <Input value={(config as any).trade_hero_headline || ""} onChange={e => update("trade_hero_headline" as any, e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Trade Page Subtext</Label>
+            <Textarea value={(config as any).trade_hero_subtext || ""} onChange={e => update("trade_hero_subtext" as any, e.target.value)} rows={2} />
+          </div>
+
+          {/* Trade iFrame (/trade-in) */}
+          <div className="border-t border-border pt-4 mt-4">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3">Trade iFrame (/trade-in) — Dealer Website Embed</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">iFrame Headline</Label>
+            <Input value={(config as any).trade_iframe_headline || ""} onChange={e => update("trade_iframe_headline" as any, e.target.value)} placeholder="What's Your Trade Worth?" />
+            <p className="text-[10px] text-muted-foreground">Shown on the iframe page embedded on the dealer's website.</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">iFrame Subtext</Label>
+            <Textarea value={(config as any).trade_iframe_subtext || ""} onChange={e => update("trade_iframe_subtext" as any, e.target.value)} rows={2} placeholder="Get your trade-in value in under 2 minutes — includes your tax savings." />
+          </div>
+
+          {/* Push/Pull/Tow */}
+          <div className="border-t border-border pt-4 mt-4">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3">Push / Pull / Tow Guarantee</p>
+          </div>
+          <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={(config as any).ppt_enabled || false}
+                onCheckedChange={v => update("ppt_enabled" as any, v ? 1 : 0)}
+              />
+              <div>
+                <p className="text-sm font-medium">Enable Push/Pull/Tow Program</p>
+                <p className="text-xs text-muted-foreground">
+                  Offer a guaranteed minimum trade-in value. Activates the PPT tab in Website Embed.
+                </p>
+              </div>
+            </div>
+          </div>
+          {(config as any).ppt_enabled && (
+            <>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Guarantee Amount ($)</Label>
+                <Input type="number" min={500} step={500} value={(config as any).ppt_guarantee_amount || 3000} onChange={e => update("ppt_guarantee_amount" as any, parseInt(e.target.value) || 3000)} className="w-32" />
+                <p className="text-[10px] text-muted-foreground">Minimum trade-in value guaranteed to the customer (e.g. 3000 for $3,000).</p>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">PPT Headline (optional)</Label>
+                <Input value={(config as any).ppt_headline || ""} onChange={e => update("ppt_headline" as any, e.target.value)} placeholder="$3,000 Minimum Trade Guarantee" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">PPT Subtext (optional)</Label>
+                <Textarea value={(config as any).ppt_subtext || ""} onChange={e => update("ppt_subtext" as any, e.target.value)} rows={2} placeholder="Push it, pull it, or tow it — your trade is worth at least this much toward your next vehicle." />
+              </div>
+            </>
+          )}
+
+          <div className="border-t border-border pt-4 mt-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Price Guarantee (days)</Label>
+              <Input type="number" value={config.price_guarantee_days} onChange={e => update("price_guarantee_days", parseInt(e.target.value) || 0)} className="w-24" />
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      {/* Review Request Email */}
+      <Section icon={Star} title="Review Request Email">
+        <p className="text-xs text-muted-foreground mb-3">
+          This message is sent to customers after a purchase is completed when you click "Send Review Request."
+        </p>
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Email Subject</Label>
+            <Input value={config.review_request_subject} onChange={e => update("review_request_subject", e.target.value)} placeholder="We'd Love Your Feedback!" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Email Message</Label>
+            <Textarea value={config.review_request_message} onChange={e => update("review_request_message", e.target.value)} rows={4} placeholder="Thank you for choosing us..." />
+          </div>
+        </div>
+      </Section>
+
+      {/* Stats */}
+      <Section icon={BarChart3} title="Trust Statistics">
+        <p className="text-xs text-muted-foreground mb-3">
+          These numbers appear in the trust badges section of the landing page.
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Year Established</Label>
+            <Input
+              type="number"
+              min={1800}
+              max={new Date().getFullYear()}
+              value={config.established_year ?? ""}
+              onChange={e => {
+                const yr = e.target.value ? Number(e.target.value) : null;
+                setConfig(prev => {
+                  const yearsStr = yr ? `${new Date().getFullYear() - yr} yrs` : prev.stats_years_in_business;
+                  const next = { ...prev, established_year: yr, stats_years_in_business: yearsStr };
+                  setHasChanges(JSON.stringify(next) !== JSON.stringify(savedConfig));
+                  return next;
+                });
+              }}
+              placeholder="e.g. 1947"
+            />
+            <p className="text-[10px] text-muted-foreground">Auto-calculates "Years in Business"</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Cars Purchased</Label>
+            <Input value={config.stats_cars_purchased} onChange={e => update("stats_cars_purchased", e.target.value)} placeholder="14,721+" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Years in Business</Label>
+            <Input
+              value={config.stats_years_in_business}
+              onChange={e => update("stats_years_in_business", e.target.value)}
+              placeholder="78 yrs"
+              disabled={!!config.established_year}
+            />
+            {config.established_year && (
+              <p className="text-[10px] text-muted-foreground">Auto: {new Date().getFullYear() - config.established_year} yrs (from est. {config.established_year})</p>
+            )}
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Rating</Label>
+            <Input value={config.stats_rating} onChange={e => update("stats_rating", e.target.value)} placeholder="4.9" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Reviews Count</Label>
+            <Input value={config.stats_reviews_count} onChange={e => update("stats_reviews_count", e.target.value)} placeholder="2,400+" />
+          </div>
+        </div>
+      </Section>
+
+      {/* Animations */}
+      <Section icon={Sparkles} title="Animations & Transitions">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
+            <div>
+              <Label className="text-sm font-semibold">Scroll Reveal Animations</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">Enable scroll-triggered entrance animations on landing page sections like the comparison table.</p>
+            </div>
+            <Switch
+              checked={config.enable_animations}
+              onCheckedChange={v => {
+                setConfig(prev => {
+                  const next = { ...prev, enable_animations: v };
+                  setHasChanges(JSON.stringify(next) !== JSON.stringify(savedConfig));
+                  return next;
+                });
+              }}
+            />
+          </div>
+
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
+            <div className="flex-1">
+              <Label className="text-sm font-semibold">Animated Offer Calculation Screen</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Show a step-by-step animated loading screen while calculating the customer's offer, instead of the default ghost car loader.
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors">
+                    <Eye className="w-3.5 h-3.5" />
+                    Preview
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl p-0 overflow-hidden h-[500px]">
+                  <div className="w-full h-full">
+                    <CalculatingOffer
+                      vehicleYear="2023"
+                      vehicleMake="Toyota"
+                      vehicleModel="Camry SE"
+                      previewMode
+                    />
+                  </div>
+                </DialogContent>
+              </Dialog>
+              <Switch
+                checked={config.use_animated_calculating}
+                onCheckedChange={v => {
+                  setConfig(prev => {
+                    const next = { ...prev, use_animated_calculating: v };
+                    setHasChanges(JSON.stringify(next) !== JSON.stringify(savedConfig));
+                    return next;
+                  });
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Vehicle Image Angle */}
+          <div className="p-3 rounded-lg bg-muted/30 border border-border">
+            <Label className="text-sm font-semibold">Vehicle Display Image — Camera Angle</Label>
+            <p className="text-xs text-muted-foreground mt-0.5 mb-3">
+              Controls the angle of the vehicle image shown on the <strong>offer page</strong>, <strong>customer portal</strong>, and <strong>admin submission cards</strong>. This is the hero image pulled from the VIN or generated by AI — it is <em>not</em> the photo upload overlay.
+            </p>
+            <div className="flex gap-3">
+              {[
+                { value: "three_quarter", label: "3/4 Front Angle", desc: "Classic showroom hero shot" },
+                { value: "side", label: "Side Profile", desc: "Clean side-on view" },
+              ].map(opt => {
+                const isSelected = config.vehicle_image_angle === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    onClick={() => {
+                      setConfig(prev => {
+                        const next = { ...prev, vehicle_image_angle: opt.value };
+                        setHasChanges(JSON.stringify(next) !== JSON.stringify(savedConfig));
+                        return next;
+                      });
+                    }}
+                    className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all text-left ${
+                      isSelected
+                        ? "border-primary bg-primary/5"
+                        : "border-border bg-card hover:border-muted-foreground/30"
+                    }`}
+                  >
+                    <span className={`text-sm font-medium ${isSelected ? "text-foreground" : "text-muted-foreground"}`}>{opt.label}</span>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">{opt.desc}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      {/* AI & Automation */}
+      <Section icon={ScanLine} title="AI & Automation">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
+            <div className="flex-1 mr-3">
+              <Label className="text-sm font-semibold">Driver's License OCR Auto-Fill</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                When a driver's license photo is uploaded (by customer or staff), use AI to extract the customer's name and address and auto-fill empty fields on their record.
+              </p>
+            </div>
+            <Switch
+              checked={config.enable_dl_ocr}
+              onCheckedChange={v => {
+                setConfig(prev => {
+                  const next = { ...prev, enable_dl_ocr: v };
+                  setHasChanges(JSON.stringify(next) !== JSON.stringify(savedConfig));
+                  return next;
+                });
+              }}
+            />
+          </div>
+
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
+            <div className="flex-1 mr-3">
+              <Label className="text-sm font-semibold">Abandoned Lead Tracking</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Automatically capture partial form submissions when a customer provides contact info but doesn't complete the process. Abandoned leads appear in the submissions list and Executive HUD for follow-up.
+              </p>
+            </div>
+            <Switch
+              checked={config.track_abandoned_leads}
+              onCheckedChange={v => {
+                setConfig(prev => {
+                  const next = { ...prev, track_abandoned_leads: v };
+                  setHasChanges(JSON.stringify(next) !== JSON.stringify(savedConfig));
+                  return next;
+                });
+              }}
+            />
+          </div>
+
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
+            <div className="flex-1 mr-3">
+              <Label className="text-sm font-semibold">AI Auto-Route to Appraiser Queue</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                When enabled, the Appraiser Queue automatically includes declined offers, walk-ins,
+                service-drive captures, and manual entries that don't have an ACV yet. When disabled,
+                the queue shows only submissions a manager explicitly flags with "Send to Appraiser".
+                Any offer the AI raises above the algorithmic baseline is automatically marked as
+                subject to physical inspection.
+              </p>
+            </div>
+            <Switch
+              checked={(config as any).auto_route_appraiser_queue}
+              onCheckedChange={v => {
+                setConfig(prev => {
+                  const next = { ...prev, auto_route_appraiser_queue: v };
+                  setHasChanges(JSON.stringify(next) !== JSON.stringify(savedConfig));
+                  return next;
+                });
+              }}
+            />
+          </div>
+
+          {/* AI Photo Re-Appraisal — master toggle */}
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
+            <div className="flex-1 mr-3">
+              <Label className="text-sm font-semibold">AI Photo Re-Appraisal</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                When a customer uploads vehicle photos, Gemini re-scores the condition from the
+                images and compares it to what the customer self-reported. If the AI sees better
+                condition than claimed, it writes a recommended offer bump to the Appraiser Queue
+                for a human to review and apply. Does nothing on its own — you still decide every
+                bump unless you also enable Auto-Bump below.
+              </p>
+            </div>
+            <Switch
+              checked={(config as any).ai_photo_reappraisal}
+              onCheckedChange={v => {
+                setConfig(prev => {
+                  const next = { ...prev, ai_photo_reappraisal: v };
+                  setHasChanges(JSON.stringify(next) !== JSON.stringify(savedConfig));
+                  return next;
+                });
+              }}
+            />
+          </div>
+
+          {/* AI Auto-Bump — only shown when Photo Re-Appraisal is on */}
+          {(config as any).ai_photo_reappraisal && (
+            <div className="ml-4 pl-4 border-l-2 border-primary/30 space-y-3">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/20">
+                <div className="flex-1 mr-3">
+                  <Label className="text-sm font-semibold">AI Auto-Bump (advanced)</Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    When enabled, the AI automatically applies bump recommendations without
+                    human approval. Every auto-bump is subject to the safety limits below, and
+                    every auto-bump automatically marks the offer as subject to physical
+                    inspection on the customer's confirmation screen. <strong>Start with this off</strong>,
+                    watch the queue for a week, and flip it on only after you trust the
+                    recommendations.
+                  </p>
+                </div>
+                <Switch
+                  checked={(config as any).ai_auto_bump_enabled}
+                  onCheckedChange={v => {
+                    setConfig(prev => {
+                      const next = { ...prev, ai_auto_bump_enabled: v };
+                      setHasChanges(JSON.stringify(next) !== JSON.stringify(savedConfig));
+                      return next;
+                    });
+                  }}
+                />
+              </div>
+
+              {(config as any).ai_auto_bump_enabled && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="p-3 rounded-lg bg-card border border-border">
+                    <Label className="text-xs font-semibold">Max Bump %</Label>
+                    <p className="text-[10px] text-muted-foreground mt-0.5 mb-2">
+                      Anything above this % of the current offer goes to the queue instead of auto-applying.
+                    </p>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={50}
+                      value={(config as any).ai_auto_bump_max_pct}
+                      onChange={e => {
+                        const v = Number(e.target.value) || 0;
+                        setConfig(prev => {
+                          const next = { ...prev, ai_auto_bump_max_pct: v };
+                          setHasChanges(JSON.stringify(next) !== JSON.stringify(savedConfig));
+                          return next;
+                        });
+                      }}
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="p-3 rounded-lg bg-card border border-border">
+                    <Label className="text-xs font-semibold">Max Bump $</Label>
+                    <p className="text-[10px] text-muted-foreground mt-0.5 mb-2">
+                      Anything above this dollar amount goes to the queue instead of auto-applying.
+                    </p>
+                    <Input
+                      type="number"
+                      min={100}
+                      max={10000}
+                      step={100}
+                      value={(config as any).ai_auto_bump_max_dollars}
+                      onChange={e => {
+                        const v = Number(e.target.value) || 0;
+                        setConfig(prev => {
+                          const next = { ...prev, ai_auto_bump_max_dollars: v };
+                          setHasChanges(JSON.stringify(next) !== JSON.stringify(savedConfig));
+                          return next;
+                        });
+                      }}
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="p-3 rounded-lg bg-card border border-border">
+                    <Label className="text-xs font-semibold">Daily Cap $</Label>
+                    <p className="text-[10px] text-muted-foreground mt-0.5 mb-2">
+                      Max cumulative auto-bump dollars per day across the whole dealership. Set to 0 to disable.
+                    </p>
+                    <Input
+                      type="number"
+                      min={0}
+                      step={500}
+                      value={(config as any).ai_auto_bump_daily_cap}
+                      onChange={e => {
+                        const v = Number(e.target.value) || 0;
+                        setConfig(prev => {
+                          const next = { ...prev, ai_auto_bump_daily_cap: v };
+                          setHasChanges(JSON.stringify(next) !== JSON.stringify(savedConfig));
+                          return next;
+                        });
+                      }}
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="p-3 rounded-lg bg-card border border-border">
+                    <Label className="text-xs font-semibold">Confidence Floor %</Label>
+                    <p className="text-[10px] text-muted-foreground mt-0.5 mb-2">
+                      Minimum AI confidence (0-100) required to auto-apply. Below this, bumps go to the queue.
+                    </p>
+                    <Input
+                      type="number"
+                      min={50}
+                      max={99}
+                      value={(config as any).ai_auto_bump_confidence_floor}
+                      onChange={e => {
+                        const v = Number(e.target.value) || 0;
+                        setConfig(prev => {
+                          const next = { ...prev, ai_auto_bump_confidence_floor: v };
+                          setHasChanges(JSON.stringify(next) !== JSON.stringify(savedConfig));
+                          return next;
+                        });
+                      }}
+                      className="h-9"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </Section>
+
+      {/* Store Assignment — only show when multiple locations */}
+      {dealerLocations.length > 1 && (
+      <Section icon={MapPin} title="Store Assignment Rules">
+        <p className="text-xs text-muted-foreground mb-4">
+          Control how incoming leads from the <strong>Sell Your Car</strong> landing page are assigned to dealership locations. These settings do not affect the /trade page.
+        </p>
+        <div className="space-y-4">
+          {/* Customer Picks */}
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
+            <div className="flex-1 mr-3">
+              <Label className="text-sm font-semibold">Let Customer Choose Location</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">Show a location dropdown on the form so the customer can pick their preferred dealership.</p>
+            </div>
+            <Switch
+              checked={config.assign_customer_picks}
+              onCheckedChange={v => {
+                setConfig(prev => {
+                  const next = { ...prev, assign_customer_picks: v };
+                  setHasChanges(JSON.stringify(next) !== JSON.stringify(savedConfig));
+                  return next;
+                });
+              }}
+            />
+          </div>
+
+          {/* Auto ZIP */}
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
+            <div className="flex-1 mr-3">
+              <Label className="text-sm font-semibold">Auto-Assign by ZIP Code</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">Automatically assign the nearest store based on the customer's ZIP code.</p>
+            </div>
+            <Switch
+              checked={config.assign_auto_zip}
+              onCheckedChange={v => {
+                setConfig(prev => {
+                  const next = { ...prev, assign_auto_zip: v };
+                  setHasChanges(JSON.stringify(next) !== JSON.stringify(savedConfig));
+                  return next;
+                });
+              }}
+            />
+          </div>
+
+          {/* OEM Brand Match */}
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
+            <div className="flex-1 mr-3">
+              <Label className="text-sm font-semibold">Match Vehicle Brand to OEM Dealership</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">Route vehicles to the matching brand's location based on the vehicle make being sold.</p>
+            </div>
+            <Switch
+              checked={config.assign_oem_brand_match}
+              onCheckedChange={v => {
+                setConfig(prev => {
+                  const next = { ...prev, assign_oem_brand_match: v };
+                  setHasChanges(JSON.stringify(next) !== JSON.stringify(savedConfig));
+                  return next;
+                });
+              }}
+            />
+          </div>
+
+          {/* Buying Center */}
+          <div className="p-3 rounded-lg bg-muted/30 border border-border space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex-1 mr-3">
+                <Label className="text-sm font-semibold">Buying Center Mode</Label>
+                <p className="text-xs text-muted-foreground mt-0.5">Send ALL incoming leads to a single designated buying center location. Overrides ZIP and OEM matching.</p>
+              </div>
+              <Switch
+                checked={config.assign_buying_center}
+                onCheckedChange={v => {
+                  setConfig(prev => {
+                    const next = { ...prev, assign_buying_center: v };
+                    setHasChanges(JSON.stringify(next) !== JSON.stringify(savedConfig));
+                    return next;
+                  });
+                }}
+              />
+            </div>
+            {config.assign_buying_center && (
+              <div className="space-y-1.5 pl-1">
+                <Label className="text-xs font-semibold">Buying Center Location</Label>
+                <Select
+                  value={config.buying_center_location_id || ""}
+                  onValueChange={v => {
+                    setConfig(prev => {
+                      const next = { ...prev, buying_center_location_id: v || null };
+                      setHasChanges(JSON.stringify(next) !== JSON.stringify(savedConfig));
+                      return next;
+                    });
+                  }}
+                >
+                  <SelectTrigger><SelectValue placeholder="Select location..." /></SelectTrigger>
+                  <SelectContent>
+                    {dealerLocations.map(loc => (
+                      <SelectItem key={loc.id} value={loc.id}>{loc.name} — {loc.city}, {loc.state}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+        </div>
+      </Section>
+      )}
+
+      {/* Referral Program */}
+      <Section icon={Gift} title="Referral Program">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="text-sm font-semibold">Enable Referral Program</Label>
+              <p className="text-xs text-muted-foreground">Allow customers to refer others and earn rewards</p>
+            </div>
+            <Switch
+              checked={config.referral_program_enabled}
+              onCheckedChange={v => {
+                setConfig(prev => {
+                  const next = { ...prev, referral_program_enabled: v };
+                  setHasChanges(JSON.stringify(next) !== JSON.stringify(savedConfig));
+                  return next;
+                });
+              }}
+            />
+          </div>
+
+          {config.referral_program_enabled && (
+            <div className="space-y-4 pl-1 border-l-2 border-primary/20 ml-2 pl-4">
+              {/* Reward Type */}
+              <div className="space-y-1.5 p-4 bg-muted/40 rounded-xl border border-border">
+                <Label className="text-sm font-semibold">Reward Type</Label>
+                <p className="text-xs text-muted-foreground mb-2">How do you pay referrers?</p>
+                <Select value={config.referral_reward_type} onValueChange={v => update("referral_reward_type", v)}>
+                  <SelectTrigger className="max-w-[220px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cash">Cash / Check</SelectItem>
+                    <SelectItem value="service_credit">Service Credit</SelectItem>
+                    <SelectItem value="gift_card">Gift Card</SelectItem>
+                    <SelectItem value="dealer_choice">Dealer's Choice</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Sell Reward */}
+              <div className="space-y-3 p-4 bg-muted/40 rounded-xl border border-border">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm font-semibold">Reward: Referred Customer Sells Us Their Car</Label>
+                    <p className="text-xs text-muted-foreground">Pay the referrer when the person they sent sells us a vehicle</p>
+                  </div>
+                  <Switch
+                    checked={config.referral_reward_sell_enabled}
+                    onCheckedChange={v => {
+                      setConfig(prev => {
+                        const next = { ...prev, referral_reward_sell_enabled: v };
+                        setHasChanges(JSON.stringify(next) !== JSON.stringify(savedConfig));
+                        return next;
+                      });
+                    }}
+                  />
+                </div>
+                {config.referral_reward_sell_enabled && (
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold">Reward Amount ($)</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={config.referral_reward_sell_amount}
+                      onChange={e => update("referral_reward_sell_amount", Number(e.target.value))}
+                      className="max-w-[160px]"
+                      placeholder="e.g. 200"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Buy Reward */}
+              <div className="space-y-3 p-4 bg-muted/40 rounded-xl border border-border">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm font-semibold">Reward: Referred Customer Buys a Car</Label>
+                    <p className="text-xs text-muted-foreground">Pay the referrer when the person they sent purchases a vehicle from you</p>
+                  </div>
+                  <Switch
+                    checked={config.referral_reward_buy_enabled}
+                    onCheckedChange={v => {
+                      setConfig(prev => {
+                        const next = { ...prev, referral_reward_buy_enabled: v };
+                        setHasChanges(JSON.stringify(next) !== JSON.stringify(savedConfig));
+                        return next;
+                      });
+                    }}
+                  />
+                </div>
+                {config.referral_reward_buy_enabled && (
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold">Reward Amount ($)</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={config.referral_reward_buy_amount}
+                      onChange={e => update("referral_reward_buy_amount", Number(e.target.value))}
+                      className="max-w-[160px]"
+                      placeholder="e.g. 150"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Sell + Buy Combo Reward */}
+              <div className="space-y-3 p-4 bg-muted/40 rounded-xl border border-border">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm font-semibold">Bonus: Referred Customer Sells AND Buys</Label>
+                    <p className="text-xs text-muted-foreground">Higher reward when the referral both sells their car and purchases from you</p>
+                  </div>
+                  <Switch
+                    checked={config.referral_reward_sell_buy_enabled}
+                    onCheckedChange={v => {
+                      setConfig(prev => {
+                        const next = { ...prev, referral_reward_sell_buy_enabled: v };
+                        setHasChanges(JSON.stringify(next) !== JSON.stringify(savedConfig));
+                        return next;
+                      });
+                    }}
+                  />
+                </div>
+                {config.referral_reward_sell_buy_enabled && (
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold">Combo Reward Amount ($)</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={config.referral_reward_sell_buy_amount}
+                      onChange={e => update("referral_reward_sell_buy_amount", Number(e.target.value))}
+                      className="max-w-[160px]"
+                      placeholder="e.g. 350"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Legacy trade-in bonus */}
+              <div className="space-y-3 p-4 bg-muted/40 rounded-xl border border-border">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm font-semibold">Stackable Trade-In Bonus</Label>
+                    <p className="text-xs text-muted-foreground">Additional bonus on top of sell reward when a trade-in is involved</p>
+                  </div>
+                  <Switch
+                    checked={config.referral_reward_trade_enabled}
+                    onCheckedChange={v => {
+                      setConfig(prev => {
+                        const next = { ...prev, referral_reward_trade_enabled: v };
+                        setHasChanges(JSON.stringify(next) !== JSON.stringify(savedConfig));
+                        return next;
+                      });
+                    }}
+                  />
+                </div>
+                {config.referral_reward_trade_enabled && (
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold">Bonus Amount ($)</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={config.referral_reward_trade_amount}
+                      onChange={e => update("referral_reward_trade_amount", Number(e.target.value))}
+                      className="max-w-[160px]"
+                      placeholder="e.g. 100"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <p className="text-xs text-muted-foreground italic">
+                Example: $200 sell + $150 buy + $350 combo (sell & buy). Reward type: {config.referral_reward_type === "cash" ? "Cash/Check" : config.referral_reward_type === "service_credit" ? "Service Credit" : config.referral_reward_type === "gift_card" ? "Gift Card" : "Dealer's Choice"}.
+              </p>
+            </div>
+          )}
+        </div>
+      </Section>
+
+      {/* About Page */}
+      <Section icon={FileText} title="About Page Content">
+        <AboutPageConfig />
+      </Section>
+
+      {/* Comparison Table */}
+      <Section icon={GitCompare} title="Competitor Comparison Table">
+        <ComparisonConfig />
+      </Section>
+
+      {/* Preview */}
+      <div className="rounded-xl border border-border bg-muted/30 p-4">
+        <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Live Preview</h4>
+        <div className="rounded-lg overflow-hidden" style={{ background: `linear-gradient(135deg, hsl(${config.primary_color}), hsl(${config.primary_color} / 0.8))` }}>
+          <div className="p-6 text-center text-white space-y-2">
+            {config.logo_white_url && <img src={config.logo_white_url} alt="Logo" className="h-12 mx-auto mb-2" />}
+            <h2 className="text-xl font-bold">{config.hero_headline || "Your Headline"}</h2>
+            <p className="text-sm opacity-80">{config.hero_subtext || "Your subtext here"}</p>
+            <button
+              className="mt-3 px-4 py-2 rounded-lg text-sm font-semibold text-white"
+              style={{ backgroundColor: `hsl(${config.accent_color})` }}
+            >
+              Get Your Offer
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SiteConfiguration;

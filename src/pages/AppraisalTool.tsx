@@ -1,0 +1,1664 @@
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import type { RetailStats } from "@/components/admin/RetailMarketPanel";
+import { useParams, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useTenant } from "@/contexts/TenantContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useToast } from "@/hooks/use-toast";
+import {
+  ArrowLeft, Car, DollarSign, TrendingUp, TrendingDown, Minus,
+  Gauge, ChevronDown, Save, AlertTriangle, CheckCircle, XCircle, Shield,
+  Pencil, ArrowDown, Loader2, SlidersHorizontal, CheckSquare, Lock, Unlock, Printer,
+  ChevronRight, Camera,
+} from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import CustomerVsInspectorComparison from "@/components/appraisal/CustomerVsInspectorComparison";
+import AppraisalTireBrakeHealth from "@/components/appraisal/AppraisalTireBrakeHealth";
+import AppraisalSidebar from "@/components/appraisal/AppraisalSidebar";
+import DealStatusBanner from "@/components/appraisal/DealStatusBanner";
+import DealMakerSection from "@/components/appraisal/DealMakerSection";
+import ManagementOverride from "@/components/appraisal/ManagementOverride";
+import { calculateOffer, type OfferSettings, type OfferRule, type OfferEstimate, type StrategyMode, calcHighMileagePenaltyPct, calcColorAdjustmentPct, DEFAULT_HIGH_MILEAGE_PENALTY, DEFAULT_COLOR_DESIRABILITY, DEFAULT_SEASONAL_ADJUSTMENT } from "@/lib/offerCalculator";
+import { isManagerRole } from "@/lib/adminConstants";
+import type { FormData, BBVehicle, BBAddDeduct } from "@/components/sell-form/types";
+import { formatGrade } from "@/lib/formatGrade";
+import ACVSheet from "@/components/offer/ACVSheet";
+import OutcomeEntryPanel from "@/components/appraisal/OutcomeEntryPanel";
+import HistoricalInsightPanel from "@/components/appraisal/HistoricalInsightPanel";
+import MarketPulseCard from "@/components/appraisal/MarketPulseCard";
+import OBDScanResults from "@/components/inspection/OBDScanResults";
+
+
+// ── Types ──
+interface Submission {
+  id: string; token: string;
+  vehicle_year: string | null; vehicle_make: string | null; vehicle_model: string | null;
+  vin: string | null; mileage: string | null; exterior_color: string | null;
+  overall_condition: string | null; offered_price: number | null;
+  estimated_offer_high: number | null; estimated_offer_low: number | null;
+  acv_value: number | null;
+  bb_tradein_avg: number | null; bb_wholesale_avg: number | null; bb_retail_avg: number | null;
+  bb_msrp: number | null; bb_mileage_adj: number | null; bb_regional_adj: number | null;
+  bb_base_whole_avg: number | null; bb_add_deducts: any;
+  bb_class_name: string | null; bb_drivetrain: string | null;
+  bb_transmission: string | null; bb_fuel_type: string | null; bb_engine: string | null;
+  bb_value_tiers: any;
+  name: string | null; phone: string | null; email: string | null;
+  progress_status: string;
+  accidents: string | null; drivable: string | null; smoked_in: string | null;
+  tires_replaced: string | null; num_keys: string | null;
+  exterior_damage: string[] | null; interior_damage: string[] | null;
+  windshield_damage: string | null; moonroof: string | null;
+  tech_issues: string[] | null; engine_issues: string[] | null;
+  mechanical_issues: string[] | null; modifications: string | null;
+  drivetrain: string | null; internal_notes: string | null;
+  tire_lf: number | null; tire_rf: number | null; tire_lr: number | null; tire_rr: number | null;
+  tire_adjustment: number | null;
+  brake_lf: number | null; brake_rf: number | null; brake_lr: number | null; brake_rr: number | null;
+  ai_condition_score: string | null; ai_damage_summary: string | null;
+  appraised_by: string | null; zip: string | null;
+  inspector_grade: string | null;
+  bb_selected_options: string[] | null;
+  appraisal_finalized: boolean;
+  appraisal_finalized_at: string | null;
+  appraisal_finalized_by: string | null;
+}
+
+const CONDITIONS = ["excellent", "very_good", "good", "fair"] as const;
+const CONDITION_LABELS: Record<string, string> = {
+  excellent: "Excellent",
+  very_good: "Very Good",
+  good: "Good",
+  fair: "Fair",
+};
+
+const BB_VALUE_OPTIONS = [
+  { value: "wholesale_xclean", label: "Wholesale – Extra Clean" },
+  { value: "wholesale_clean", label: "Wholesale – Clean" },
+  { value: "wholesale_avg", label: "Wholesale – Average" },
+  { value: "wholesale_rough", label: "Wholesale – Rough" },
+  { value: "tradein_clean", label: "Trade-In – Clean" },
+  { value: "tradein_avg", label: "Trade-In – Average" },
+  { value: "tradein_rough", label: "Trade-In – Rough" },
+  { value: "retail_xclean", label: "Retail – Extra Clean" },
+  { value: "retail_clean", label: "Retail – Clean" },
+  { value: "retail_avg", label: "Retail – Average" },
+  { value: "retail_rough", label: "Retail – Rough" },
+];
+
+const BB_CATEGORIES = [
+  {
+    label: "WHOLESALE",
+    tiers: [
+      { key: "wholesale_xclean", short: "X-Clean", tierKey: "xclean" },
+      { key: "wholesale_clean", short: "Clean", tierKey: "clean" },
+      { key: "wholesale_avg", short: "Avg", tierKey: "avg" },
+      { key: "wholesale_rough", short: "Rough", tierKey: "rough" },
+    ],
+    dataKey: "wholesale" as const,
+  },
+  {
+    label: "TRADE-IN",
+    tiers: [
+      { key: "tradein_clean", short: "Clean", tierKey: "clean" },
+      { key: "tradein_avg", short: "Avg", tierKey: "avg" },
+      { key: "tradein_rough", short: "Rough", tierKey: "rough" },
+    ],
+    dataKey: "tradein" as const,
+  },
+  {
+    label: "RETAIL",
+    tiers: [
+      { key: "retail_xclean", short: "X-Clean", tierKey: "xclean" },
+      { key: "retail_clean", short: "Clean", tierKey: "clean" },
+      { key: "retail_avg", short: "Avg", tierKey: "avg" },
+      { key: "retail_rough", short: "Rough", tierKey: "rough" },
+    ],
+    dataKey: "retail" as const,
+  },
+];
+
+// ── Waterfall Block ──
+interface WaterfallBlock {
+  id: string; label: string; value: number; runningTotal: number;
+  type: "base" | "add" | "subtract" | "total";
+  editable: boolean; editKey?: string; editType?: "flat" | "pct" | "multiplier";
+  currentEditValue?: number;
+}
+
+const WaterfallBlockRow = ({
+  block, maxVal, onValueChange, isExpanded, onToggleExpand,
+}: {
+  block: WaterfallBlock; maxVal: number;
+  onValueChange?: (editKey: string, value: number, editType: string) => void;
+  isExpanded: boolean; onToggleExpand: () => void;
+}) => {
+  const barWidth = maxVal > 0 ? Math.abs(block.type === "total" || block.type === "base" ? block.runningTotal : block.value) / maxVal * 100 : 0;
+  const isBase = block.type === "base";
+  const isTotal = block.type === "total";
+  const isPositive = block.type === "add";
+  const isNegative = block.type === "subtract";
+  const barColor = isBase ? "bg-primary/25 border-primary/40" : isTotal ? "bg-primary border-primary/60" : isPositive ? "bg-emerald-500/25 border-emerald-500/40" : "bg-destructive/25 border-destructive/40";
+  const textColor = isTotal ? "text-primary-foreground" : isBase ? "text-primary" : isPositive ? "text-emerald-700 dark:text-emerald-400" : "text-destructive";
+
+  return (
+    <div className="group">
+      <button onClick={block.editable ? onToggleExpand : undefined}
+        className={`flex items-center gap-2 w-full text-left transition-all rounded-md px-1 py-0.5 ${block.editable ? "hover:bg-muted/50 cursor-pointer" : "cursor-default"} ${isExpanded ? "bg-muted/50" : ""}`}>
+        <div className="w-4 shrink-0 flex items-center justify-center">
+          {block.editable && <Pencil className={`w-2.5 h-2.5 transition-opacity ${isExpanded ? "text-primary opacity-100" : "text-muted-foreground opacity-0 group-hover:opacity-100"}`} />}
+        </div>
+        <div className="w-20 sm:w-28 shrink-0 text-right pr-1">
+          <span className={`text-[11px] leading-tight ${isTotal ? "font-bold text-card-foreground" : "text-muted-foreground"}`}>{block.label}</span>
+        </div>
+        <div className="flex-1 h-7 relative rounded-sm overflow-hidden bg-muted/20">
+          <div className={`h-full rounded-sm border flex items-center transition-all duration-300 ${barColor}`} style={{ width: `${Math.max(barWidth, 4)}%` }}>
+            <span className={`text-[11px] font-bold px-2 truncate whitespace-nowrap ${textColor}`}>
+              {isBase || isTotal ? `$${block.runningTotal.toLocaleString()}` : `${block.value >= 0 ? "+" : ""}$${block.value.toLocaleString()}`}
+            </span>
+          </div>
+        </div>
+        <div className="w-4 shrink-0">
+          {isPositive && <TrendingUp className="w-3 h-3 text-emerald-500" />}
+          {isNegative && <TrendingDown className="w-3 h-3 text-destructive" />}
+          {(isBase || isTotal) && <Minus className="w-3 h-3 text-muted-foreground" />}
+        </div>
+      </button>
+      {isExpanded && block.editable && block.editKey && onValueChange && (
+        <div className="ml-6 mr-6 mt-1 mb-2 p-2 bg-card border border-border rounded-lg shadow-sm">
+          <div className="flex items-center gap-2">
+            <Label className="text-[10px] font-semibold text-muted-foreground shrink-0">
+              {block.editType === "pct" ? "%" : block.editType === "multiplier" ? "×" : "$"}
+            </Label>
+            <Input type="number" value={block.currentEditValue ?? 0}
+              onChange={e => onValueChange(block.editKey!, Number(e.target.value), block.editType || "flat")}
+              className="h-7 text-sm w-28"
+              step={block.editType === "multiplier" ? "0.01" : block.editType === "pct" ? "0.5" : "50"} autoFocus />
+            <Slider
+              value={[block.editType === "multiplier" ? (block.currentEditValue ?? 1) * 100 : block.currentEditValue ?? 0]}
+              min={block.editType === "multiplier" ? 50 : block.editType === "pct" ? -30 : -5000}
+              max={block.editType === "multiplier" ? 130 : block.editType === "pct" ? 30 : 10000}
+              step={block.editType === "multiplier" ? 1 : block.editType === "pct" ? 0.5 : 25}
+              onValueChange={([v]) => onValueChange(block.editKey!, block.editType === "multiplier" ? v / 100 : v, block.editType || "flat")}
+              className="flex-1" />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Helper to calc equipment total
+function calcEquipmentTotal(bbVehicle: BBVehicle, selectedAddDeducts: string[]): number {
+  return (bbVehicle.add_deduct_list || [])
+    .filter((ad: BBAddDeduct) => selectedAddDeducts.includes(ad.uoc))
+    .reduce((sum: number, ad: BBAddDeduct) => sum + (ad.avg || 0), 0);
+}
+
+// ═══════════════════════════════════════════
+// MAIN PAGE
+// ═══════════════════════════════════════════
+export default function AppraisalTool() {
+  const { token } = useParams<{ token: string }>();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { tenant } = useTenant();
+  const dealershipId = tenant.dealership_id;
+
+  // ── Role gate (#3 pricing access enforcement) ────────────────────
+  // The appraisal tool exposes every deduction, waterfall block, cost
+  // basis, and retail markup. Only roles that are allowed to see a
+  // dealer's true cost structure should be able to open it.
+  const [roleCheckState, setRoleCheckState] = useState<"loading" | "allowed" | "denied">("loading");
+  const [userRole, setUserRole] = useState<string>("");
+  useEffect(() => {
+    const checkRole = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/admin/login");
+        return;
+      }
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", session.user.id)
+        .limit(1)
+        .maybeSingle();
+      const role = (roleData as any)?.role || "";
+      setUserRole(role);
+      // Pricing tier: admin + every manager-tier role (UCM, NCM, GSM/GM).
+      // Uses the canonical helper so adding new manager roles in the
+      // future propagates automatically.
+      if (role === "admin" || isManagerRole(role)) {
+        setRoleCheckState("allowed");
+      } else {
+        setRoleCheckState("denied");
+      }
+    };
+    checkRole();
+  }, [navigate]);
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [sub, setSub] = useState<Submission | null>(null);
+  const [settings, setSettings] = useState<OfferSettings | null>(null);
+  const [rules, setRules] = useState<OfferRule[]>([]);
+  const [dealerPack, setDealerPack] = useState(0);
+  const [hidePackFromAppraisal, setHidePackFromAppraisal] = useState(false);
+  const [retailProfitBasis, setRetailProfitBasis] = useState("retail_avg");
+  const [expandedBlock, setExpandedBlock] = useState<string | null>(null);
+  const [depthPolicies, setDepthPolicies] = useState<{ id: string; name: string; policy_type: string; oem_brands: string[]; all_brands: boolean; max_vehicle_age_years: number | null; max_mileage: number | null; min_tire_depth: number; min_brake_depth: number }[]>([]);
+  const [dealerZip, setDealerZip] = useState<string>("");
+  const [showACVSheet, setShowACVSheet] = useState(false);
+  const [showFinalizeSuccess, setShowFinalizeSuccess] = useState(false);
+  const [retailMarketStats, setRetailMarketStats] = useState<RetailStats | null>(null);
+  const [closestCompPrice, setClosestCompPrice] = useState<number | null>(null);
+  const acvSheetRef = useRef<HTMLDivElement>(null);
+
+  // Editable overrides
+  const [localSettings, setLocalSettings] = useState<OfferSettings | null>(null);
+  const [acvOverride, setAcvOverride] = useState<number | null>(null);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [bbValueBasis, setBbValueBasis] = useState("tradein_avg");
+  const [managerOverride, setManagerOverride] = useState<{ amount: number | null; reason: string | null; by: string | null }>({ amount: null, reason: null, by: null });
+  const [managerPin, setManagerPin] = useState("0000");
+  const [targetGrossMin, setTargetGrossMin] = useState(0);
+
+  // Editable condition fields (pre-filled from customer, overridable by appraiser)
+  const [condition, setCondition] = useState("good");
+  const [accidents, setAccidents] = useState("0");
+  const [drivable, setDrivable] = useState("yes");
+  const [smokedIn, setSmokedIn] = useState("no");
+  const [exteriorItems, setExteriorItems] = useState(0);
+  const [interiorItems, setInteriorItems] = useState(0);
+  const [mechItems, setMechItems] = useState(0);
+  const [engineItems, setEngineItems] = useState(0);
+  const [techItems, setTechItems] = useState(0);
+  const [windshield, setWindshield] = useState("none");
+  const [moonroof, setMoonroof] = useState("No moonroof");
+  const [tiresReplaced, setTiresReplaced] = useState("4");
+  const [numKeys, setNumKeys] = useState("2+");
+  const [modifications, setModifications] = useState("none");
+
+  // Live BB vehicle for full calc
+  const [liveBbVehicle, setLiveBbVehicle] = useState<BBVehicle | null>(null);
+  const [liveSelectedAddDeducts, setLiveSelectedAddDeducts] = useState<string[]>([]);
+  const [bbLoading, setBbLoading] = useState(false);
+
+  const updateLocalSetting = useCallback(<K extends keyof OfferSettings>(key: K, value: OfferSettings[K]) => {
+    setLocalSettings(prev => prev ? { ...prev, [key]: value } : prev);
+  }, []);
+
+  // Load data
+  useEffect(() => {
+    if (!token) return;
+    const load = async () => {
+      setLoading(true);
+      const { data: subData } = await supabase.from("submissions").select("*").eq("token", token).maybeSingle();
+      if (!subData) { toast({ title: "Not Found", description: "Submission not found.", variant: "destructive" }); setLoading(false); return; }
+      const s = subData as any as Submission;
+      setSub(s);
+      setAcvOverride(s.acv_value ?? null);
+      // Map customer condition to our 4-tier system
+      const custCondition = s.inspector_grade || s.overall_condition || "good";
+      setCondition(custCondition);
+      // Map customer answers to local state
+      const custAccidents = s.accidents || "No accidents";
+      if (custAccidents.includes("1")) setAccidents("1");
+      else if (custAccidents.includes("2") || custAccidents.includes("3")) setAccidents("2+");
+      else setAccidents("0");
+
+      const custDrivable = s.drivable || "Drivable";
+      setDrivable(custDrivable.toLowerCase().includes("not") ? "no" : "yes");
+
+      setSmokedIn((s.smoked_in || "No").toLowerCase().includes("yes") ? "yes" : "no");
+
+      setExteriorItems((s.exterior_damage || []).filter(d => d !== "none" && d !== "No exterior damage").length);
+      setInteriorItems((s.interior_damage || []).filter(d => d !== "none" && d !== "No interior damage").length);
+      setMechItems((s.mechanical_issues || []).filter(d => d !== "none" && d !== "No mechanical issues").length);
+      setEngineItems((s.engine_issues || []).filter(d => d !== "none" && d !== "No engine issues").length);
+      setTechItems((s.tech_issues || []).filter(d => d !== "none" && d !== "No tech issues").length);
+
+      // Windshield
+      const wd = (s.windshield_damage || "").toLowerCase();
+      if (wd.includes("major") || wd.includes("crack")) setWindshield("major_cracks");
+      else if (wd.includes("minor") || wd.includes("chip") || wd.includes("pitting")) setWindshield("minor_chips");
+      else setWindshield("none");
+
+      // Moonroof
+      const mr = (s.moonroof || "").toLowerCase();
+      if (mr.includes("doesn't") || mr.includes("not working") || mr.includes("broken")) setMoonroof("Doesn't work");
+      else if (mr.includes("works") || mr.includes("great")) setMoonroof("Works great");
+      else setMoonroof("No moonroof");
+
+      // Tires
+      const tr = s.tires_replaced || "4";
+      setTiresReplaced(tr);
+
+      // Keys
+      const nk = s.num_keys || "2+";
+      setNumKeys(nk);
+
+      // Modifications
+      setModifications((s.modifications || "").trim() ? "yes" : "none");
+
+      const { data: settingsData } = await supabase.from("offer_settings").select("*").eq("dealership_id", dealershipId).maybeSingle();
+      if (settingsData) {
+        setSettings(settingsData as any);
+        setLocalSettings(settingsData as any);
+        setDealerPack((settingsData as any).dealer_pack ?? 0);
+        setHidePackFromAppraisal((settingsData as any).hide_pack_from_appraisal ?? false);
+        setRetailProfitBasis((settingsData as any).retail_profit_basis || "retail_avg");
+        setBbValueBasis(settingsData.bb_value_basis || "tradein_avg");
+        setManagerPin((settingsData as any).manager_pin || "0000");
+        setTargetGrossMin((settingsData as any).target_gross_min || 0);
+        // If a custom retail search ZIP is configured in offer settings, use it
+        if ((settingsData as any).retail_search_zip) {
+          setDealerZip((settingsData as any).retail_search_zip);
+        }
+      }
+
+      const { data: rulesData } = await supabase.from("offer_rules").select("*").eq("dealership_id", dealershipId).eq("is_active", true);
+      if (rulesData) setRules(rulesData as any);
+
+      const { data: policiesData } = await supabase.from("depth_policies").select("*").eq("dealership_id", dealershipId).eq("is_active", true).order("sort_order");
+      if (policiesData) setDepthPolicies(policiesData as any);
+
+      // Fetch dealer's primary location ZIP for market data default
+      const { data: locData } = await supabase
+        .from("dealership_locations")
+        .select("center_zip")
+        .eq("dealership_id", dealershipId)
+        .eq("location_type", "primary")
+        .eq("is_active", true)
+        .maybeSingle();
+      if (locData?.center_zip) setDealerZip(locData.center_zip);
+
+      // BB lookup
+      if (s.vin) {
+        setBbLoading(true);
+        try {
+          const { data, error } = await supabase.functions.invoke("bb-lookup", {
+            body: { lookup_type: "vin", vin: s.vin, mileage: parseInt(s.mileage || "0") || 50000 },
+          });
+          if (!error && data?.vehicles?.length > 0) {
+            const vehicle = data.vehicles[0] as BBVehicle;
+            setLiveBbVehicle(vehicle);
+            const customerSelections: string[] = s.bb_selected_options || [];
+            if (customerSelections.length > 0) {
+              setLiveSelectedAddDeducts(customerSelections);
+            } else {
+              const autoSelected = (vehicle.add_deduct_list || []).filter((ad: BBAddDeduct) => ad.auto !== "N").map((ad: BBAddDeduct) => ad.uoc);
+              setLiveSelectedAddDeducts(autoSelected);
+            }
+          }
+        } catch (e) { console.error("BB lookup for appraisal:", e); }
+        setBbLoading(false);
+      }
+
+      setLoading(false);
+    };
+    load();
+  }, [token]);
+
+  const activeSettings = localSettings;
+
+  // Map simulator values to match customer form values for offerCalculator
+  const mappedWindshield = windshield === "minor_chips" ? "Minor chips or pitting" : windshield === "major_cracks" ? "Major cracks or chips" : "No windshield damage";
+  const mappedDrivable = drivable === "no" ? "Not drivable" : "Drivable";
+  const mappedAccidents = accidents === "0" ? "No accidents" : accidents === "1" ? "1 accident" : "2+ accidents";
+  const mappedSmokedIn = smokedIn === "yes" ? "Yes" : "No";
+  const mappedTires = tiresReplaced;
+  const mappedKeys = numKeys === "2+" ? "2+" : numKeys;
+
+  // Build form data from editable condition fields
+  const formData: FormData = useMemo(() => ({
+    plate: "", state: sub?.zip || "", vin: sub?.vin || "", mileage: sub?.mileage || "0",
+    bbUvc: "", bbSelectedAddDeducts: liveSelectedAddDeducts,
+    exteriorColor: sub?.exterior_color || "", drivetrain: sub?.drivetrain || "",
+    modifications: modifications === "none" ? "" : modifications,
+    overallCondition: condition,
+    exteriorDamage: Array.from({ length: exteriorItems }, (_, i) => `item_${i}`),
+    windshieldDamage: mappedWindshield, moonroof,
+    interiorDamage: Array.from({ length: interiorItems }, (_, i) => `item_${i}`),
+    techIssues: Array.from({ length: techItems }, (_, i) => `item_${i}`),
+    engineIssues: Array.from({ length: engineItems }, (_, i) => `item_${i}`),
+    mechanicalIssues: Array.from({ length: mechItems }, (_, i) => `item_${i}`),
+    drivable: mappedDrivable, accidents: mappedAccidents, smokedIn: mappedSmokedIn,
+    tiresReplaced: mappedTires, numKeys: mappedKeys,
+    name: sub?.name || "", phone: sub?.phone || "", email: sub?.email || "", zip: sub?.zip || "",
+    loanStatus: "", loanCompany: "", loanBalance: "", loanPayment: "",
+    nextStep: "", preferredLocationId: "", salespersonName: "", manualYear: "", manualMake: "", manualModel: "",
+  }), [sub, condition, accidents, drivable, smokedIn, exteriorItems, interiorItems, mechItems, engineItems, techItems, windshield, moonroof, tiresReplaced, numKeys, modifications, liveSelectedAddDeducts, mappedWindshield, mappedDrivable, mappedAccidents, mappedSmokedIn, mappedTires, mappedKeys]);
+
+  // Use live BB vehicle if available, else reconstruct from stored data
+  const bbVehicle: BBVehicle | null = useMemo(() => {
+    if (liveBbVehicle) return liveBbVehicle;
+    if (!sub || !sub.bb_tradein_avg) return null;
+    // Try to reconstruct from bb_value_tiers if available
+    const tiers = sub.bb_value_tiers as any;
+    return {
+      year: sub.vehicle_year || "", make: sub.vehicle_make || "", model: sub.vehicle_model || "",
+      series: "", style: "", uvc: "", vin: sub.vin || "", price_includes: "",
+      exterior_colors: [], class_name: sub.bb_class_name || "",
+      drivetrain: sub.bb_drivetrain || "", engine: sub.bb_engine || "",
+      transmission: sub.bb_transmission || "", fuel_type: sub.bb_fuel_type || "",
+      msrp: Number(sub.bb_msrp || 0),
+      wholesale: tiers?.wholesale || { avg: sub.bb_wholesale_avg || 0, clean: 0, rough: 0, xclean: 0 },
+      tradein: tiers?.tradein || { avg: sub.bb_tradein_avg || 0, clean: 0, rough: 0 },
+      retail: tiers?.retail || { avg: sub.bb_retail_avg || 0, clean: 0, rough: 0, xclean: 0 },
+      mileage_adj: sub.bb_mileage_adj || 0, regional_adj: sub.bb_regional_adj || 0,
+      base_whole_avg: sub.bb_base_whole_avg || 0,
+      add_deduct_list: Array.isArray(sub.bb_add_deducts) ? sub.bb_add_deducts : [],
+    };
+  }, [liveBbVehicle, sub]);
+
+  const equipmentTotal = useMemo(() => {
+    if (!bbVehicle) return 0;
+    return calcEquipmentTotal(bbVehicle, liveSelectedAddDeducts);
+  }, [bbVehicle, liveSelectedAddDeducts]);
+
+  const offerResult = useMemo(() => {
+    if (!bbVehicle || !activeSettings) return null;
+    return calculateOffer(
+      bbVehicle, formData, liveSelectedAddDeducts, activeSettings, rules,
+      undefined, // promoBonus
+      retailMarketStats?.market_days_supply ?? undefined,
+      retailMarketStats?.sold?.mean_price ?? undefined,
+      retailMarketStats?.active?.mean_price ?? undefined,
+      sub?.ai_condition_score,
+      sub?.ai_damage_summary,
+    );
+  }, [bbVehicle, formData, liveSelectedAddDeducts, activeSettings, rules, retailMarketStats, sub?.ai_condition_score, sub?.ai_damage_summary]);
+
+  // Effective values
+  const currentOffer = sub?.offered_price || sub?.estimated_offer_high || 0;
+  const effectivePack = dealerPack;
+  // Resolve retail value based on dealer's chosen retail_profit_basis
+  const RETAIL_TIERS = ["retail_xclean", "retail_clean", "retail_avg", "retail_rough"] as const;
+  const RETAIL_TIER_LABELS: Record<string, string> = { retail_xclean: "Retail X-Clean", retail_clean: "Retail Clean", retail_avg: "Retail Avg", retail_rough: "Retail Rough" };
+  const resolveRetailValue = (basis: string) => {
+    if (!bbVehicle) return sub?.bb_retail_avg ? Number(sub.bb_retail_avg) : 0;
+    const tierMap: Record<string, number> = {
+      retail_xclean: Number(bbVehicle.retail?.xclean || 0),
+      retail_clean: Number(bbVehicle.retail?.clean || 0),
+      retail_avg: Number(bbVehicle.retail?.avg || 0),
+      retail_rough: Number(bbVehicle.retail?.rough || 0),
+    };
+    return tierMap[basis] || Number(bbVehicle.retail?.avg || sub?.bb_retail_avg || 0);
+  };
+  const retailAvg = resolveRetailValue(retailProfitBasis);
+  const wholesaleAvg = Number(bbVehicle?.wholesale?.avg || sub?.bb_wholesale_avg || 0);
+  const tradeinAvg = Number(bbVehicle?.tradein?.avg || sub?.bb_tradein_avg || 0);
+  const cycleRetailBasis = () => {
+    const idx = RETAIL_TIERS.indexOf(retailProfitBasis as any);
+    const next = RETAIL_TIERS[(idx + 1) % RETAIL_TIERS.length];
+    setRetailProfitBasis(next);
+  };
+
+  // Build waterfall blocks — matching OfferSimulator with all adjustments
+  const waterfallBlocks: WaterfallBlock[] = useMemo(() => {
+    if (!offerResult || !activeSettings || !bbVehicle) return [];
+    const blocks: WaterfallBlock[] = [];
+    let running = offerResult.baseValue;
+    const condMult = activeSettings.condition_multipliers?.[condition as keyof typeof activeSettings.condition_multipliers] ?? 1;
+    const currentYear = new Date().getFullYear();
+    const vehicleAge = currentYear - Number(bbVehicle.year);
+    const mileageNum = parseInt((sub?.mileage || "0").replace(/[^0-9]/g, "")) || 0;
+    const matchedAge = (activeSettings.age_tiers || []).find((t: any) => vehicleAge >= t.min_years && vehicleAge <= t.max_years);
+
+    // 1. Base
+    blocks.push({ id: "base", label: "Base Value", value: running, runningTotal: running, type: "base", editable: true, editKey: "bb_value_basis", editType: "flat" });
+
+    // 2. Condition
+    const condAdj = Math.round(offerResult.baseValue * condMult) - offerResult.baseValue;
+    running += condAdj;
+    blocks.push({ id: "condition", label: `Condition (${CONDITION_LABELS[condition] || condition})`, value: condAdj, runningTotal: running, type: condAdj >= 0 ? "add" : "subtract", editable: true, editKey: "condition_multiplier", editType: "multiplier", currentEditValue: condMult });
+
+    // 3. Equipment
+    const condEquipMap = (activeSettings as any).condition_equipment_map || { excellent: true, very_good: true, good: true, fair: true };
+    const equipEnabled = condEquipMap[condition] ?? true;
+    const effectiveEquip = equipEnabled ? equipmentTotal : 0;
+    if (effectiveEquip !== 0) {
+      running += effectiveEquip;
+      blocks.push({ id: "equipment", label: "Equipment", value: effectiveEquip, runningTotal: running, type: effectiveEquip >= 0 ? "add" : "subtract", editable: false });
+    }
+
+    // 4. Deductions (excluding AI adjustment, which is shown separately)
+    const manualDeductions = offerResult.totalDeductions - offerResult.aiConditionAdjustment;
+    if (manualDeductions > 0) {
+      running -= manualDeductions;
+      blocks.push({ id: "deductions", label: "Deductions", value: -manualDeductions, runningTotal: running, type: "subtract", editable: false });
+    }
+
+    // 4b. AI Condition Adjustment (separated from manual deductions for visibility)
+    if (offerResult.aiConditionAdjustment !== 0) {
+      // Positive aiConditionAdjustment = additional deduction, negative = reduced deduction (reward)
+      running -= offerResult.aiConditionAdjustment;
+      const aiValue = -offerResult.aiConditionAdjustment;
+      blocks.push({ id: "ai_condition", label: "AI Condition Adjustment", value: aiValue, runningTotal: running, type: aiValue >= 0 ? "add" : "subtract", editable: false });
+    }
+
+    // 5. Recon & Pack are NOT subtracted from customer offer — they are internal costs for profit analysis only
+
+    // 6. Global %
+    if (activeSettings.global_adjustment_pct !== 0) {
+      const adj = Math.round(running * (activeSettings.global_adjustment_pct / 100));
+      running += adj;
+      blocks.push({ id: "global", label: `Global (${activeSettings.global_adjustment_pct > 0 ? "+" : ""}${activeSettings.global_adjustment_pct}%)`, value: adj, runningTotal: running, type: adj >= 0 ? "add" : "subtract", editable: true, editKey: "global_adjustment_pct", editType: "pct", currentEditValue: activeSettings.global_adjustment_pct });
+    }
+
+    // 7. Regional
+    if (activeSettings.regional_adjustment_pct !== 0) {
+      const adj = Math.round(running * (activeSettings.regional_adjustment_pct / 100));
+      running += adj;
+      blocks.push({ id: "regional", label: `Regional (${activeSettings.regional_adjustment_pct > 0 ? "+" : ""}${activeSettings.regional_adjustment_pct}%)`, value: adj, runningTotal: running, type: adj >= 0 ? "add" : "subtract", editable: true, editKey: "regional_adjustment_pct", editType: "pct", currentEditValue: activeSettings.regional_adjustment_pct });
+    }
+
+    // 8. Age
+    if (matchedAge) {
+      const adj = Math.round(running * (matchedAge.adjustment_pct / 100));
+      running += adj;
+      blocks.push({ id: "age", label: `Age (${vehicleAge}yr)`, value: adj, runningTotal: running, type: adj >= 0 ? "add" : "subtract", editable: false });
+    }
+
+    // 9. Low-Mileage Bonus
+    const lmb = (activeSettings as any).low_mileage_bonus;
+    if (lmb?.enabled && bbVehicle.year) {
+      const age = Math.max(currentYear - Number(bbVehicle.year), 1);
+      const milesPerYear = mileageNum / age;
+      if (milesPerYear < lmb.avg_miles_per_year && milesPerYear >= (lmb.min_miles_per_year || 4000)) {
+        const pctBelow = ((lmb.avg_miles_per_year - milesPerYear) / lmb.avg_miles_per_year) * 100;
+        const steps = Math.floor(pctBelow / (lmb.step_size_pct || 20));
+        const bonusPct = Math.min(steps * (lmb.bonus_pct_per_step || 2), lmb.max_bonus_pct || 8);
+        if (bonusPct > 0) {
+          const adj = Math.round(running * (bonusPct / 100));
+          running += adj;
+          blocks.push({ id: "low_mileage", label: `Low Mileage Bonus (+${bonusPct}%)`, value: adj, runningTotal: running, type: "add", editable: false });
+        }
+      }
+    }
+
+    // 10. High-Mileage Penalty
+    const hmp = (activeSettings as any).high_mileage_penalty || DEFAULT_HIGH_MILEAGE_PENALTY;
+    if (hmp?.enabled && bbVehicle.year) {
+      const age = Math.max(currentYear - Number(bbVehicle.year), 1);
+      const milesPerYear = mileageNum / age;
+      if (milesPerYear > hmp.avg_miles_per_year && milesPerYear <= (hmp.max_miles_per_year || 25000)) {
+        const pctAbove = ((milesPerYear - hmp.avg_miles_per_year) / hmp.avg_miles_per_year) * 100;
+        const steps = Math.floor(pctAbove / (hmp.step_size_pct || 20));
+        const penaltyPct = Math.min(steps * (hmp.penalty_pct_per_step || 2), hmp.max_penalty_pct || 10);
+        if (penaltyPct > 0) {
+          const adj = -Math.round(running * (penaltyPct / 100));
+          running += adj;
+          blocks.push({ id: "high_mileage", label: `High Mileage Penalty (-${penaltyPct}%)`, value: adj, runningTotal: running, type: "subtract", editable: false });
+        }
+      }
+    }
+
+    // 11. Seasonal
+    const seasonal = (activeSettings as any).seasonal_adjustment || DEFAULT_SEASONAL_ADJUSTMENT;
+    if (seasonal?.enabled && seasonal.adjustment_pct !== 0) {
+      const adj = Math.round(running * (seasonal.adjustment_pct / 100));
+      running += adj;
+      blocks.push({ id: "seasonal", label: `Seasonal (${seasonal.adjustment_pct > 0 ? "+" : ""}${seasonal.adjustment_pct}%)`, value: adj, runningTotal: running, type: adj >= 0 ? "add" : "subtract", editable: false });
+    }
+
+    // 12. Color Desirability
+    const colorConfig = (activeSettings as any).color_desirability || DEFAULT_COLOR_DESIRABILITY;
+    if (colorConfig?.enabled) {
+      const sampleColor = sub?.exterior_color || bbVehicle.exterior_colors?.[0]?.name || "";
+      const colorPct = calcColorAdjustmentPct(sampleColor, colorConfig);
+      if (colorPct !== 0) {
+        const adj = Math.round(running * (colorPct / 100));
+        running += adj;
+        blocks.push({ id: "color", label: `Color (${sampleColor || "—"}) ${colorPct > 0 ? "+" : ""}${colorPct}%`, value: adj, runningTotal: running, type: adj >= 0 ? "add" : "subtract", editable: false });
+      }
+    }
+
+    // 13. Market Adjustment (NEW — from live market data)
+    if (offerResult.marketAdjustment !== 0) {
+      running += offerResult.marketAdjustment;
+      const mdsLabel = offerResult.marketDaysSupply != null ? ` (MDS ${offerResult.marketDaysSupply}d)` : "";
+      blocks.push({ id: "market_adj", label: `Market Adj${mdsLabel}`, value: offerResult.marketAdjustment, runningTotal: running, type: offerResult.marketAdjustment >= 0 ? "add" : "subtract", editable: false });
+    }
+
+    // 14. Tire adjustment
+    if (sub?.tire_adjustment && sub.tire_adjustment !== 0) {
+      running += Number(sub.tire_adjustment);
+      blocks.push({ id: "tire_adj", label: "Tire Adjustment", value: Number(sub.tire_adjustment), runningTotal: running, type: Number(sub.tire_adjustment) >= 0 ? "add" : "subtract", editable: false });
+    }
+
+    // Floor
+    const clamped = Math.max(running, activeSettings.offer_floor || 500);
+    if (clamped !== running) {
+      blocks.push({ id: "floor", label: `Floor ($${(activeSettings.offer_floor || 500).toLocaleString()})`, value: clamped - running, runningTotal: clamped, type: "add", editable: false });
+      running = clamped;
+    }
+
+    // Safety Cap
+    if (offerResult.isCapped) {
+      const capDiff = offerResult.high - running;
+      if (capDiff !== 0) {
+        running = offerResult.high;
+        blocks.push({ id: "safety_cap", label: "⚠ Safety Cap", value: capDiff, runningTotal: running, type: "subtract", editable: false });
+      }
+    }
+
+    blocks.push({ id: "final", label: "FINAL OFFER", value: running, runningTotal: running, type: "total", editable: false });
+    return blocks;
+  }, [offerResult, activeSettings, bbVehicle, condition, sub, effectivePack, equipmentTotal, hidePackFromAppraisal, retailMarketStats]);
+
+  const maxVal = Math.max(...waterfallBlocks.map(s => Math.max(Math.abs(s.runningTotal), Math.abs(s.value), s.type === "base" ? s.value : 0)), 1);
+
+  const waterfallFinal = waterfallBlocks.find(b => b.id === "final")?.runningTotal ?? 0;
+  const finalValue = acvOverride != null && acvOverride > 0 ? acvOverride : waterfallFinal;
+  const reconCost = activeSettings?.recon_cost || 0;
+  const projectedProfit = retailAvg > 0 ? retailAvg - finalValue - effectivePack - reconCost : 0;
+  const profitMargin = retailAvg > 0 ? (projectedProfit / retailAvg) * 100 : 0;
+
+  const handleBlockValueChange = useCallback((editKey: string, value: number, editType: string) => {
+    if (editKey === "condition_multiplier") {
+      updateLocalSetting("condition_multipliers", { excellent: 1, very_good: 1, good: 1, fair: 1, ...(activeSettings?.condition_multipliers || {}), [condition]: value });
+    } else if (editKey === "recon_cost") {
+      updateLocalSetting("recon_cost", value);
+    } else if (editKey === "global_adjustment_pct") {
+      updateLocalSetting("global_adjustment_pct", value);
+    } else if (editKey === "regional_adjustment_pct") {
+      updateLocalSetting("regional_adjustment_pct", value);
+    } else if (editKey === "offer_floor") {
+      updateLocalSetting("offer_floor", value);
+    }
+  }, [activeSettings, condition, updateLocalSetting]);
+
+  const toggleAddDeduct = (uoc: string) => {
+    setLiveSelectedAddDeducts(prev => prev.includes(uoc) ? prev.filter(u => u !== uoc) : [...prev, uoc]);
+  };
+
+  // Refresh inspection data from DB without leaving page
+  const handleRefreshInspection = useCallback(async () => {
+    if (!sub) return;
+    const { data } = await supabase.from("submissions").select("*").eq("id", sub.id).maybeSingle();
+    if (data) {
+      setSub(data as any);
+      // Re-map inspector grade if updated
+      const grade = (data as any).inspector_grade || data.overall_condition || condition;
+      setCondition(grade);
+      toast({ title: "Inspection Updated", description: "Latest inspection data has been loaded." });
+    }
+  }, [sub, condition, toast]);
+
+   // Save Final Appraised Value
+  const handleSave = async () => {
+    if (!sub) return;
+    if (sub.appraisal_finalized) {
+      toast({ title: "Locked", description: "Appraisal is finalized. Unlock to make changes.", variant: "destructive" });
+      return;
+    }
+    const effectiveOverride = managerOverride.amount || 0;
+    const saveVal = (acvOverride != null && acvOverride > 0 ? acvOverride : finalValue) + effectiveOverride;
+    setSaving(true);
+    const updatePayload: any = { acv_value: saveVal };
+    if (managerOverride.amount != null && managerOverride.amount !== 0) {
+      updatePayload.manager_override_amount = managerOverride.amount;
+      updatePayload.manager_override_reason = managerOverride.reason;
+      updatePayload.manager_override_by = managerOverride.by;
+    }
+    const { error } = await supabase.from("submissions").update(updatePayload).eq("id", sub.id);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      setSub(prev => prev ? { ...prev, acv_value: saveVal } : prev);
+      setAcvOverride(saveVal);
+      setLastSavedAt(new Date());
+      toast({ title: "Saved", description: `Appraisal value set to $${saveVal.toLocaleString()}` });
+    }
+    setSaving(false);
+  };
+
+  // Finalize / lock the appraisal
+  const handleFinalize = async () => {
+    if (!sub) return;
+    const saveVal = acvOverride != null && acvOverride > 0 ? acvOverride : finalValue;
+    setSaving(true);
+    const { error } = await supabase.from("submissions").update({
+      acv_value: saveVal,
+      appraisal_finalized: true,
+      appraisal_finalized_at: new Date().toISOString(),
+      appraisal_finalized_by: sub.appraised_by || "Staff",
+    } as any).eq("id", sub.id);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      setSub(prev => prev ? { ...prev, acv_value: saveVal, appraisal_finalized: true, appraisal_finalized_at: new Date().toISOString(), appraisal_finalized_by: sub.appraised_by || "Staff" } : prev);
+      setAcvOverride(saveVal);
+      toast({ title: "Appraisal Finalized", description: `Locked at $${saveVal.toLocaleString()}. Check request can now be generated.` });
+      setShowFinalizeSuccess(true);
+
+      // Auto-save ACV sheet to customer documents
+      setShowACVSheet(true);
+      setTimeout(async () => {
+        try {
+          if (acvSheetRef.current) {
+            const html = `<html><head><title>ACV Worksheet</title>
+              <style>body{margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}</style>
+              <script src="https://cdn.tailwindcss.com"><\/script>
+              </head><body>${acvSheetRef.current.innerHTML}</body></html>`;
+            const blob = new Blob([html], { type: "text/html" });
+            const fileName = `acv-worksheet-${new Date().toISOString().slice(0, 10)}.html`;
+            await supabase.storage
+              .from("customer-documents")
+              .upload(`${sub.token}/appraisal/${fileName}`, blob, { contentType: "text/html", upsert: true });
+          }
+        } catch (e) {
+          console.error("Failed to save ACV sheet to documents:", e);
+        }
+        setShowACVSheet(false);
+      }, 150);
+    }
+    setSaving(false);
+  };
+
+  // Unlock appraisal
+  const handleUnlockAppraisal = async () => {
+    if (!sub) return;
+    setSaving(true);
+    const { error } = await supabase.from("submissions").update({
+      appraisal_finalized: false,
+      appraisal_finalized_at: null,
+      appraisal_finalized_by: null,
+    } as any).eq("id", sub.id);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      setSub(prev => prev ? { ...prev, appraisal_finalized: false, appraisal_finalized_at: null, appraisal_finalized_by: null } : prev);
+      toast({ title: "Unlocked", description: "Appraisal unlocked for editing." });
+    }
+    setSaving(false);
+  };
+
+  const handleUpdateAcv = async () => {
+    if (!sub) return;
+    const newVal = acvOverride != null && acvOverride > 0 ? acvOverride : finalValue;
+    if (!newVal || newVal <= 0) {
+      toast({ title: "Invalid", description: "Enter a valid ACV amount.", variant: "destructive" });
+      return;
+    }
+    setSaving(true);
+    const { error } = await supabase
+      .from("submissions")
+      .update({ acv_value: newVal } as any)
+      .eq("id", sub.id);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      setSub(prev => prev ? { ...prev, acv_value: newVal } : prev);
+      setAcvOverride(newVal);
+      setLastSavedAt(new Date());
+      toast({ title: "ACV Updated", description: `Appraisal value updated to $${newVal.toLocaleString()}. Still finalized.` });
+    }
+    setSaving(false);
+  };
+
+  const handlePrintACVSheet = useCallback(() => {
+    setShowACVSheet(true);
+    setTimeout(() => {
+      if (acvSheetRef.current) {
+        const printWindow = window.open("", "_blank");
+        if (printWindow) {
+          printWindow.document.write(`
+            <html><head><title>ACV Worksheet</title>
+            <style>
+              body { margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; }
+              @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+            </style>
+            <script src="https://cdn.tailwindcss.com"><\/script>
+            </head><body>${acvSheetRef.current.innerHTML}</body></html>
+          `);
+          printWindow.document.close();
+          setTimeout(() => { printWindow.print(); }, 500);
+        }
+      }
+      setShowACVSheet(false);
+    }, 100);
+  }, []);
+
+  const inspectionData = useMemo(() => {
+    if (!sub?.internal_notes) return null;
+    if (!sub.internal_notes.includes("[INSPECTION")) return null;
+    return sub.internal_notes;
+  }, [sub]);
+
+  const brakeDepths = useMemo(() => {
+    if (sub?.brake_lf != null || sub?.brake_rf != null || sub?.brake_lr != null || sub?.brake_rr != null) {
+      return { lf: sub.brake_lf, rf: sub.brake_rf, lr: sub.brake_lr, rr: sub.brake_rr };
+    }
+    return null;
+  }, [sub]);
+
+  const hasBrakes = !!(brakeDepths && (brakeDepths.lf != null || brakeDepths.rf != null || brakeDepths.lr != null || brakeDepths.rr != null));
+
+  // ── Role gate enforcement ──
+  // Pricing access is checked before anything else so no waterfall,
+  // deductions, or cost basis ever render for unauthorized roles.
+  if (roleCheckState === "loading") {
+    return <div className="flex items-center justify-center min-h-screen bg-background"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
+  }
+  if (roleCheckState === "denied") {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background gap-4 px-6">
+        <Lock className="w-12 h-12 text-muted-foreground" />
+        <div className="text-center max-w-md space-y-1">
+          <p className="text-lg font-semibold text-foreground">Pricing Access Required</p>
+          <p className="text-sm text-muted-foreground">
+            The appraisal tool exposes cost basis, deductions, and the full
+            price waterfall. Only Used Car Manager, GSM/GM, and Admin roles
+            can access it. Contact your administrator if you need temporary
+            pricing access.
+          </p>
+        </div>
+        <Button variant="outline" onClick={() => navigate("/admin")}>Back to Dashboard</Button>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen bg-background"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
+  }
+  if (!sub) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background gap-4">
+        <XCircle className="w-12 h-12 text-destructive" />
+        <p className="text-lg text-muted-foreground">Submission not found</p>
+        <Button onClick={() => navigate("/admin")}>Back to Dashboard</Button>
+      </div>
+    );
+  }
+
+  const hasTires = !!(sub.tire_lf && sub.tire_rf && sub.tire_lr && sub.tire_rr);
+  const avgTireDepth = hasTires ? ((sub.tire_lf! + sub.tire_rf! + sub.tire_lr! + sub.tire_rr!) / 4).toFixed(1) : null;
+  const hasInspection = !!(hasTires || hasBrakes || inspectionData);
+
+  // Customer's original answers for comparison
+  const customerAnswers = {
+    condition: sub.overall_condition,
+    accidents: sub.accidents,
+    drivable: sub.drivable,
+    smokedIn: sub.smoked_in,
+    exteriorDamage: sub.exterior_damage,
+    interiorDamage: sub.interior_damage,
+    windshield: sub.windshield_damage,
+    moonroof: sub.moonroof,
+    tires: sub.tires_replaced,
+    keys: sub.num_keys,
+    modifications: sub.modifications,
+    mechIssues: sub.mechanical_issues,
+    engineIssues: sub.engine_issues,
+    techIssues: sub.tech_issues,
+  };
+
+  // Deduction helpers
+  const da = activeSettings?.deduction_amounts || {} as Record<string, number>;
+  const dc = activeSettings?.deductions_config || {} as Record<string, boolean>;
+  const getAmt = (key: string) => (da as any)[key] || 0;
+  const isOn = (key: string) => (dc as any)[key] !== false;
+  const accidentDeduct = accidents === "1" ? getAmt("accidents_1") : accidents === "2+" ? getAmt("accidents_2") : 0;
+  const extDeduct = exteriorItems * getAmt("exterior_damage_per_item");
+  const intDeduct = interiorItems * getAmt("interior_damage_per_item");
+  const windDeduct = windshield === "major_cracks" ? getAmt("windshield_cracked") : windshield === "minor_chips" ? getAmt("windshield_chipped") : 0;
+  const moonroofDeduct = moonroof === "Doesn't work" ? getAmt("moonroof_broken") : 0;
+  const engDeduct = engineItems * getAmt("engine_issue_per_item");
+  const mechDeduct = mechItems * getAmt("mechanical_issue_per_item");
+  const techDeduct = techItems * getAmt("tech_issue_per_item");
+  const drivDeduct = drivable === "no" ? getAmt("not_drivable") : 0;
+  const smokeDeduct = smokedIn === "yes" ? getAmt("smoked_in") : 0;
+  const tiresDeduct = (tiresReplaced === "None" || tiresReplaced === "1") ? getAmt("tires_not_replaced") : 0;
+  const keyDeduct = numKeys === "1" ? getAmt("missing_keys_1") : numKeys === "0" ? getAmt("missing_keys_0") : 0;
+
+  const DeductBadge = ({ amount }: { amount: number }) => amount > 0 ? (
+    <span className="text-[9px] font-bold text-destructive bg-destructive/10 px-1.5 py-0.5 rounded-full ml-auto shrink-0">
+      -${amount.toLocaleString()}
+    </span>
+  ) : (
+    <span className="text-[9px] font-bold text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded-full ml-auto shrink-0">
+      No deduction
+    </span>
+  );
+
+  const SourceTag = ({ customer, inspector }: { customer?: string | null; inspector?: boolean }) => {
+    if (inspector) return <Badge variant="outline" className="text-[7px] px-1 py-0 border-primary/40 text-primary shrink-0">Inspector</Badge>;
+    if (customer) return <Badge variant="outline" className="text-[7px] px-1 py-0 border-amber-400/50 text-amber-600 shrink-0">Customer</Badge>;
+    return null;
+  };
+
+  return (
+    <div className="min-h-screen bg-background pb-28">
+      {/* ═══════════════════════════════════════ */}
+      {/*  STICKY HEADER                          */}
+      {/* ═══════════════════════════════════════ */}
+      <div className="sticky top-0 z-20 bg-gradient-to-br from-primary via-[hsl(210,100%,28%)] to-[hsl(215,90%,22%)] text-primary-foreground px-6 py-4 shadow-xl">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                // If inspection was actually done, go back to inspection.
+                // Otherwise return to dashboard where the customer file lives.
+                if (sub.inspector_grade) {
+                  navigate(`/inspection/${sub.id}`);
+                } else {
+                  navigate("/admin");
+                }
+              }}
+              className="text-primary-foreground hover:bg-primary-foreground/10 rounded-xl"
+              title={sub.inspector_grade ? "Back to Inspection" : "Back to Dashboard"}
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div className="border-l border-primary-foreground/15 pl-4">
+              <h1 className="font-display text-xl tracking-wide">
+                {sub.vehicle_year} {sub.vehicle_make} {sub.vehicle_model}
+              </h1>
+              <p className="text-primary-foreground/60 text-sm mt-0.5">
+                {sub.name} · {sub.vin || "No VIN"} · {sub.mileage ? `${Number(sub.mileage).toLocaleString()} mi` : "—"}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {sub.appraisal_finalized && (
+              <Button onClick={handlePrintACVSheet} variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10 rounded-xl border border-primary-foreground/10">
+                <Printer className="w-4 h-4 mr-1.5" />
+                ACV Sheet
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Breadcrumb — adapts based on whether inspection was completed */}
+      <div className="max-w-7xl mx-auto px-6 pt-3 pb-0">
+        <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <button onClick={() => navigate("/admin")} className="hover:text-primary transition-colors font-medium">
+            Dashboard
+          </button>
+          <ChevronRight className="w-3.5 h-3.5" />
+          {sub.inspector_grade ? (
+            <>
+              <button onClick={() => navigate(`/inspection/${sub.id}`)} className="hover:text-primary transition-colors font-medium">
+                Inspection
+              </button>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </>
+          ) : (
+            <>
+              <span className="font-medium">Customer File</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </>
+          )}
+          <span className="font-bold text-card-foreground">Appraisal</span>
+        </nav>
+      </div>
+
+      {/* Step Indicator — reflects actual inspection status */}
+      <div className="max-w-7xl mx-auto px-6 pt-2 pb-0">
+        <div className="flex items-center gap-1 text-xs font-semibold">
+          {sub.inspector_grade ? (
+            <button onClick={() => navigate(`/inspection/${sub.id}`)} className="flex items-center gap-1 text-emerald-600 hover:text-emerald-700 transition-colors">
+              <span className="w-5 h-5 rounded-full bg-emerald-500 text-white text-[10px] font-black flex items-center justify-center shrink-0">1</span>
+              <span>Inspection</span>
+              <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
+            </button>
+          ) : (
+            <button onClick={() => navigate(`/inspection/${sub.id}`)} className="flex items-center gap-1 text-amber-600 dark:text-amber-400 hover:text-amber-700 transition-colors">
+              <span className="w-5 h-5 rounded-full bg-amber-500 text-white text-[10px] font-black flex items-center justify-center shrink-0">1</span>
+              <span>Inspection</span>
+              <span className="text-[10px] text-muted-foreground">(not yet)</span>
+            </button>
+          )}
+          <span className="text-muted-foreground mx-1">
+            <ChevronRight className="w-3.5 h-3.5 inline" />
+          </span>
+          <span className="flex items-center gap-1 text-primary">
+            <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-black flex items-center justify-center shrink-0">2</span>
+            <span className="font-bold">Appraisal</span>
+            <span className="text-[10px] text-muted-foreground font-medium">(current)</span>
+          </span>
+          <span className="text-muted-foreground mx-1">
+            <ChevronRight className="w-3.5 h-3.5 inline" />
+          </span>
+          <span className="flex items-center gap-1 text-muted-foreground">
+            <span className="w-5 h-5 rounded-full bg-muted text-muted-foreground text-[10px] font-black flex items-center justify-center border border-border shrink-0">3</span>
+            <span>Check Request</span>
+          </span>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto p-6">
+        {/* ═══════════════════════════════════════ */}
+        {/*  ZONE 1 — ORIENT                       */}
+        {/* ═══════════════════════════════════════ */}
+
+        {/* Deal Status Banner */}
+        <DealStatusBanner
+          progressStatus={sub.progress_status}
+          offeredPrice={sub.offered_price}
+          estimatedOfferHigh={sub.estimated_offer_high}
+          appraisalFinalized={sub.appraisal_finalized}
+          appraisalFinalizedAt={sub.appraisal_finalized_at}
+          appraisalFinalizedBy={sub.appraisal_finalized_by}
+          acvValue={sub.acv_value}
+        />
+
+        {/* HUD — Key Metrics Strip — Appraisal Value is DOMINANT scoreboard */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 mb-5">
+          {/* DOMINANT — Appraisal Value card spans 2 cols */}
+          <div className={`col-span-2 rounded-xl border-2 p-4 text-center transition-all shadow-lg ${
+            sub.appraisal_finalized
+              ? "bg-emerald-500/10 border-emerald-500/40 ring-2 ring-emerald-500/30"
+              : "bg-primary/10 border-primary/40 ring-2 ring-primary/30"
+          }`}>
+            <div className="text-[10px] uppercase tracking-[0.1em] font-bold text-muted-foreground mb-1">Appraisal Value</div>
+            <div className={`text-4xl font-black tracking-tight ${sub.appraisal_finalized ? "text-emerald-700 dark:text-emerald-400" : "text-primary"}`}>
+              ${Math.floor(finalValue + (managerOverride.amount || 0)).toLocaleString()}
+            </div>
+            {managerOverride.amount ? (
+              <div className="text-xs font-bold text-amber-500 mt-1">MGR ADJ active</div>
+            ) : sub.appraisal_finalized ? (
+              <div className="text-[10px] font-bold text-emerald-600 mt-1">
+                ✓ Finalized {sub.appraisal_finalized_at ? new Date(sub.appraisal_finalized_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : ""}
+              </div>
+            ) : lastSavedAt ? (
+              <div className="text-[10px] font-bold text-muted-foreground mt-1">
+                Updated {lastSavedAt.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+              </div>
+            ) : null}
+          </div>
+          {/* Secondary metric tiles */}
+          {(() => {
+            const inventoryCost = finalValue + reconCost + effectivePack;
+            const stratMode = activeSettings?.strategy_mode || offerResult?.strategyMode || "custom";
+            const stratBadge = { conservative: "text-muted-foreground bg-card border-border/60", standard: "text-primary bg-primary/5 border-primary/25", aggressive: "text-amber-600 bg-amber-500/5 border-amber-500/25", predator: "text-destructive bg-destructive/5 border-destructive/25", custom: "text-muted-foreground bg-card border-border/60" }[stratMode] || "bg-card border-border/60";
+            const secondaryMetrics = [
+              { label: "Customer Offer", value: `$${Math.floor(currentOffer).toLocaleString()}`, color: "text-card-foreground", bg: "bg-card border-border/60 shadow-sm" },
+              { label: "Strategy", value: (stratMode || "custom").toUpperCase(), color: stratBadge.split(" ")[0], bg: stratBadge },
+              { label: "Inventory Cost", value: `$${Math.floor(inventoryCost).toLocaleString()}`, color: "text-amber-600", bg: "bg-amber-500/5 border-amber-500/25 shadow-sm" },
+              { label: "Projected Profit", value: `${projectedProfit >= 0 ? "+" : ""}$${Math.floor(Math.abs(projectedProfit)).toLocaleString()}`, color: projectedProfit >= 0 ? "text-emerald-600" : "text-destructive", bg: projectedProfit >= 0 ? "bg-emerald-500/5 border-emerald-500/25 shadow-sm" : "bg-destructive/5 border-destructive/25 shadow-sm" },
+            ];
+            return secondaryMetrics.map(m => (
+              <div key={m.label} className={`rounded-xl border p-3 text-center transition-all hover:shadow-md ${m.bg}`}>
+                <div className="text-[9px] uppercase tracking-[0.08em] font-bold text-muted-foreground mb-0.5">{m.label}</div>
+                <div className={`text-lg font-black tracking-tight ${m.color}`}>{m.value}</div>
+              </div>
+            ));
+          })()}
+        </div>
+
+        {/* Vehicle Summary Bar — Commanding identity */}
+        <div className="bg-card rounded-xl border-2 border-primary/20 p-5 mb-4 shadow-md">
+          <div className="flex items-center gap-3 mb-3">
+            <Car className="w-6 h-6 text-primary" />
+            <span className="font-display text-lg font-black text-card-foreground tracking-wide">
+              {sub.vehicle_year} {(sub.vehicle_make || "").toUpperCase()} {(sub.vehicle_model || "").toUpperCase()} {liveBbVehicle?.series || ""}
+            </span>
+            {(liveBbVehicle?.class_name || sub.bb_class_name) && (
+              <span className="text-[11px] font-bold bg-primary/15 text-primary px-2.5 py-1 rounded-full">{liveBbVehicle?.class_name || sub.bb_class_name}</span>
+            )}
+            {bbLoading && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />}
+            <div className="ml-auto flex items-center gap-2">
+              {sub.inspector_grade && (
+                <Badge className="bg-primary/15 text-primary border border-primary/30 text-[10px]">
+                  <Shield className="w-3 h-3 mr-1" /> Inspector: {formatGrade(sub.inspector_grade)}
+                </Badge>
+              )}
+              {sub.overall_condition && (
+                <Badge variant="outline" className="text-[10px] border-amber-400/50 text-amber-600">
+                  Customer: {formatGrade(sub.overall_condition)}
+                </Badge>
+              )}
+            </div>
+          </div>
+          <div className="grid grid-cols-3 sm:grid-cols-7 gap-3 text-sm">
+            <div><span className="text-muted-foreground text-xs">Style</span><div className="font-semibold text-card-foreground">{liveBbVehicle?.style || "—"}</div></div>
+            <div><span className="text-muted-foreground text-xs">Drivetrain</span><div className="font-bold text-card-foreground">{liveBbVehicle?.drivetrain || sub.bb_drivetrain || "—"}</div></div>
+            <div><span className="text-muted-foreground text-xs">Engine</span><div className="font-semibold text-card-foreground">{liveBbVehicle?.engine || sub.bb_engine || "—"}</div></div>
+            <div><span className="text-muted-foreground text-xs">Transmission</span><div className="font-semibold text-card-foreground">{liveBbVehicle?.transmission || sub.bb_transmission || "—"}</div></div>
+            <div><span className="text-muted-foreground text-xs">MSRP</span><div className="font-bold text-card-foreground">${Number(liveBbVehicle?.msrp || sub.bb_msrp || 0).toLocaleString()}</div></div>
+            <div><span className="text-muted-foreground text-xs">Fuel</span><div className="font-bold text-card-foreground">{liveBbVehicle?.fuel_type || sub.bb_fuel_type || "—"}</div></div>
+            <div><span className="text-muted-foreground text-xs">Color</span><div className="font-semibold text-card-foreground">{sub.exterior_color || "—"}</div></div>
+          </div>
+        </div>
+
+        <MarketPulseCard
+          retailMarketStats={retailMarketStats}
+          dealershipId={dealershipId}
+          bbClassName={liveBbVehicle?.class_name || sub?.bb_class_name}
+          vehicleYear={sub?.vehicle_year}
+          vehicleMake={sub?.vehicle_make}
+          vehicleModel={sub?.vehicle_model}
+          condition={condition}
+          mileage={sub?.mileage}
+          currentAcv={finalValue}
+        />
+
+        {/* ═══════════════════════════════════════ */}
+        {/*  ZONE 2 (INSPECT) + ZONE 3 RIGHT COL  */}
+        {/* ═══════════════════════════════════════ */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
+          {/* ── LEFT: Inspection Checklist ── */}
+          <div className="space-y-4">
+
+            {/* ① SET CONDITION */}
+            {bbVehicle && activeSettings && (
+              <div className="bg-gradient-to-r from-primary/5 to-transparent rounded-xl border border-primary/20 p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-black flex items-center justify-center">1</span>
+                  <span className="text-sm font-bold text-card-foreground uppercase tracking-wider">Set Condition</span>
+                  {sub?.ai_condition_score && (
+                    <Badge className="bg-violet-500/15 text-violet-600 dark:text-violet-400 border border-violet-500/30 text-[10px] ml-auto">
+                      <Camera className="w-3 h-3 mr-1" /> AI Assessment: {formatGrade(sub.ai_condition_score)}
+                    </Badge>
+                  )}
+                </div>
+                {sub?.ai_condition_score && sub.ai_condition_score.toLowerCase() !== condition.toLowerCase() && (
+                  <div className="mb-3 px-2.5 py-1.5 rounded-md bg-amber-500/10 border border-amber-500/20 flex items-center gap-2">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-400">
+                      AI analysis differs from inspector grade &mdash; AI detected <strong>{formatGrade(sub.ai_condition_score)}</strong>, inspector set <strong>{formatGrade(condition)}</strong>
+                    </span>
+                  </div>
+                )}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {CONDITIONS.map(cond => {
+                    const basisMap = activeSettings.condition_basis_map || {};
+                    const selectedBasis = (basisMap as Record<string, string>)[cond] || "tradein_avg";
+                    const mult = activeSettings.condition_multipliers?.[cond] ?? 1.0;
+                    const isActive = cond === condition;
+                    const selectedValue = (() => {
+                      const [cat, tier] = selectedBasis.split("_");
+                      const tierKey = tier === "xclean" ? "xclean" : tier;
+                      const data = bbVehicle[cat as "wholesale" | "tradein" | "retail"] as Record<string, number> | undefined;
+                      return data?.[tierKey] || 0;
+                    })();
+                    const bubbleFormData = { ...formData, overallCondition: cond };
+                    const bubbleResult = calculateOffer(bbVehicle, bubbleFormData, liveSelectedAddDeducts, activeSettings, rules, undefined, retailMarketStats?.market_days_supply ?? undefined, retailMarketStats?.sold?.mean_price ?? undefined, retailMarketStats?.active?.mean_price ?? undefined, sub?.ai_condition_score, sub?.ai_damage_summary);
+
+                    return (
+                      <button
+                        key={cond}
+                        onClick={() => setCondition(cond)}
+                        className={`rounded-xl border-2 p-3 text-center transition-all ${
+                          isActive
+                            ? "border-primary bg-primary/10 ring-2 ring-primary/30 shadow-md scale-[1.02]"
+                            : "border-border bg-card hover:border-primary/40 hover:shadow-sm"
+                        }`}
+                      >
+                        <div className={`text-xs font-bold uppercase tracking-wider mb-1 ${isActive ? "text-primary" : "text-muted-foreground"}`}>
+                          {CONDITION_LABELS[cond]}
+                        </div>
+                        <div className={`text-lg font-bold ${isActive ? "text-primary" : "text-card-foreground"}`}>
+                          ${bubbleResult.high.toLocaleString()}
+                        </div>
+                        <div className="text-[10px] font-bold text-muted-foreground mt-0.5">
+                          Base: ${selectedValue.toLocaleString()} × {mult.toFixed(2)}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* OBD-II Diagnostic findings — appraiser view */}
+            {sub?.id && <OBDScanResults submissionId={sub.id} showHistory />}
+
+            {/* ② REVIEW FINDINGS — Customer vs Inspector */}
+            <Collapsible defaultOpen>
+              <CollapsibleTrigger asChild>
+                <button className="flex items-center justify-between w-full px-3 py-2.5 text-left hover:bg-muted/30 transition-colors rounded-xl border border-border">
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-black flex items-center justify-center">2</span>
+                    <span className="font-semibold text-sm text-card-foreground">Review Findings</span>
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="mt-2">
+                  <CustomerVsInspectorComparison
+                    state={{
+                      condition, modifications, drivable, exteriorItems, windshield, moonroof,
+                      interiorItems, techItems, engineItems, mechItems, accidents, smokedIn, tiresReplaced, numKeys,
+                    }}
+                    setters={{
+                      setModifications, setDrivable, setExteriorItems: (v) => setExteriorItems(v), setWindshield,
+                      setMoonroof, setInteriorItems: (v) => setInteriorItems(v), setTechItems: (v) => setTechItems(v),
+                      setEngineItems: (v) => setEngineItems(v), setMechItems: (v) => setMechItems(v),
+                      setAccidents, setSmokedIn, setTiresReplaced, setNumKeys,
+                    }}
+                    customerAnswers={customerAnswers}
+                    deductions={{ getAmt, isOn }}
+                    deductAmounts={{
+                      accidentDeduct, extDeduct, intDeduct, windDeduct, moonroofDeduct,
+                      engDeduct, mechDeduct, techDeduct, drivDeduct, smokeDeduct, tiresDeduct, keyDeduct,
+                    }}
+                    hasInspection={hasInspection}
+                    inspectorGrade={sub.inspector_grade}
+                    overallCondition={sub.overall_condition}
+                  />
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* ③ VERIFY EQUIPMENT */}
+            {bbVehicle && bbVehicle.add_deduct_list?.length > 0 && (
+              <Collapsible>
+                <CollapsibleTrigger asChild>
+                  <button className="flex items-center justify-between w-full px-3 py-2.5 text-left hover:bg-muted/30 transition-colors rounded-xl border border-border">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-black flex items-center justify-center">3</span>
+                      <span className="font-semibold text-sm text-card-foreground">Verify Equipment ({liveSelectedAddDeducts.length}/{bbVehicle.add_deduct_list.length})</span>
+                      {equipmentTotal !== 0 && (
+                        <Badge variant="secondary" className={`text-[9px] ${equipmentTotal > 0 ? "text-emerald-600" : "text-destructive"}`}>
+                          {equipmentTotal > 0 ? "+" : ""}${equipmentTotal.toLocaleString()}
+                        </Badge>
+                      )}
+                    </div>
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="mx-1 mt-2 mb-1 px-2.5 py-1.5 rounded-md bg-amber-500/10 border border-amber-500/20 flex items-center gap-2">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-400">
+                      Inspector: Verify all customer-selected equipment is present on the vehicle during in-person inspection.
+                    </span>
+                  </div>
+                  <div className="space-y-0.5 max-h-48 overflow-y-auto px-1 py-2">
+                    {bbVehicle.add_deduct_list.map((ad: BBAddDeduct) => {
+                      const isSelected = liveSelectedAddDeducts.includes(ad.uoc);
+                      const wasCustomerSelected = (sub.bb_selected_options || []).includes(ad.uoc);
+                      const isAutoDetected = ad.auto !== "N";
+                      const dollarStr = ad.avg !== 0 ? ` (${ad.avg > 0 ? "+" : ""}$${Math.abs(ad.avg)})` : "";
+                      return (
+                        <label key={ad.uoc} className={`flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer text-[10px] ${isSelected ? "bg-primary/10 text-card-foreground" : "text-muted-foreground hover:bg-muted"}`}>
+                          <input type="checkbox" checked={isSelected} onChange={() => toggleAddDeduct(ad.uoc)} className="rounded border-border w-3 h-3" />
+                          <span className="truncate">{ad.name}{dollarStr}</span>
+                          {wasCustomerSelected && (
+                            <span className="text-[8px] bg-primary/15 text-primary px-1 rounded shrink-0">Customer ✓</span>
+                          )}
+                          {isAutoDetected && !wasCustomerSelected && (
+                            <span className="text-[8px] bg-muted text-muted-foreground px-1 rounded shrink-0">VIN detected</span>
+                          )}
+                        </label>
+                      );
+                    })}
+                  </div>
+                  {liveSelectedAddDeducts.length > 0 && (
+                    <div className="mx-1 mb-1 px-2.5 py-1 text-[9px] text-muted-foreground border-t border-border">
+                      <strong>{liveSelectedAddDeducts.length}</strong> option{liveSelectedAddDeducts.length !== 1 ? "s" : ""} selected → value impact: <strong className={equipmentTotal >= 0 ? "text-emerald-600" : "text-destructive"}>{equipmentTotal >= 0 ? "+" : ""}${equipmentTotal.toLocaleString()}</strong>
+                    </div>
+                  )}
+                </CollapsibleContent>
+              </Collapsible>
+            )}
+
+            {/* ④ TIRES & BRAKES */}
+            <Collapsible>
+              <CollapsibleTrigger asChild>
+                <button className="flex items-center justify-between w-full px-3 py-2.5 text-left hover:bg-muted/30 transition-colors rounded-xl border border-border">
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-black flex items-center justify-center">4</span>
+                    <span className="font-semibold text-sm text-card-foreground">Tires & Brakes</span>
+                    {hasTires && avgTireDepth && (
+                      <Badge variant="secondary" className="text-[9px]">Avg {avgTireDepth}/32″</Badge>
+                    )}
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="mt-2">
+                  <AppraisalTireBrakeHealth
+                    tireLF={sub.tire_lf} tireRF={sub.tire_rf} tireLR={sub.tire_lr} tireRR={sub.tire_rr}
+                    brakeLF={sub.brake_lf} brakeRF={sub.brake_rf} brakeLR={sub.brake_lr} brakeRR={sub.brake_rr}
+                    tireAdjustment={sub.tire_adjustment}
+                    depthPolicies={depthPolicies}
+                    vehicleYear={sub.vehicle_year} vehicleMake={sub.vehicle_make} mileage={sub.mileage}
+                  />
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* ⑤ HOW WE GOT HERE — Price Waterfall */}
+            {offerResult && (
+              <Collapsible>
+                <CollapsibleTrigger asChild>
+                  <button className="flex items-center justify-between w-full px-3 py-2.5 text-left hover:bg-muted/30 transition-colors rounded-xl border border-border">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-black flex items-center justify-center">5</span>
+                      <span className="font-semibold text-sm text-card-foreground">How We Got Here</span>
+                      <Badge variant="outline" className="text-[9px]">${waterfallFinal.toLocaleString()}</Badge>
+                    </div>
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="mt-2 rounded-lg border border-primary/20 p-3 bg-gradient-to-b from-muted/20 to-transparent">
+                    <div className="space-y-0.5">
+                      {waterfallBlocks.map(block => (
+                        <WaterfallBlockRow key={block.id} block={block} maxVal={maxVal}
+                          onValueChange={handleBlockValueChange}
+                          isExpanded={expandedBlock === block.id}
+                          onToggleExpand={() => setExpandedBlock(prev => prev === block.id ? null : block.id)} />
+                      ))}
+                    </div>
+
+                    {/* BB Value Tiles — inside waterfall as reference sub-section */}
+                    {bbVehicle && (
+                      <Collapsible>
+                        <CollapsibleTrigger asChild>
+                          <button className="flex items-center justify-between w-full px-3 py-2 mt-3 text-left hover:bg-muted/30 transition-colors rounded-lg border border-border">
+                            <div className="flex items-center gap-1.5">
+                              <DollarSign className="w-3.5 h-3.5 text-primary" />
+                              <span className="font-semibold text-[11px] text-card-foreground">Black Book Market Values</span>
+                            </div>
+                            <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                          </button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="p-2">
+                            {BB_CATEGORIES.map(cat => {
+                              const data = bbVehicle[cat.dataKey] as Record<string, number> | undefined;
+                              if (!data) return null;
+                              return (
+                                <div key={cat.label} className="mb-1.5">
+                                  <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block mb-0.5">{cat.label}</span>
+                                  <div className="grid grid-cols-4 gap-1">
+                                    {cat.tiers.map(tier => {
+                                      const value = data[tier.tierKey] || 0;
+                                      const isSelected = bbValueBasis === tier.key;
+                                      if (value <= 0) return null;
+                                      return (
+                                        <button key={tier.key}
+                                          onClick={() => { setBbValueBasis(tier.key); updateLocalSetting("bb_value_basis", tier.key); }}
+                                          className={`rounded-md px-2 py-1.5 text-center transition-all border ${
+                                            isSelected
+                                              ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30 shadow-sm"
+                                              : "bg-muted/40 border-border hover:border-primary/40 hover:bg-primary/5 text-card-foreground"
+                                          }`}>
+                                          <div className="text-[9px] font-medium opacity-80">{tier.short}</div>
+                                          <div className={`text-sm font-bold ${isSelected ? "" : "text-card-foreground"}`}>${value.toLocaleString()}</div>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    )}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            )}
+
+            {/* Outcome Entry — appears after finalization */}
+            {sub.appraisal_finalized && (
+              <OutcomeEntryPanel
+                submissionId={sub.id}
+                appraisalFinalizedAt={sub.appraisal_finalized_at}
+                existingOutcome={sub as any}
+                onSaved={() => handleRefreshInspection()}
+              />
+            )}
+          </div>
+
+          {/* ── RIGHT COLUMN — Intelligence first, then decision tools ── */}
+          <div className="space-y-4">
+            {/* Appraisal Sidebar — Market intelligence leads */}
+            <AppraisalSidebar
+              sub={sub}
+              userRole={userRole}
+              bbVehicle={bbVehicle}
+              offerResult={offerResult}
+              finalValue={finalValue}
+              currentOffer={currentOffer}
+              wholesaleAvg={wholesaleAvg}
+              tradeinAvg={tradeinAvg}
+              retailAvg={retailAvg}
+              reconCost={reconCost}
+              effectivePack={effectivePack}
+              projectedProfit={projectedProfit}
+              profitMargin={profitMargin}
+              activeSettings={activeSettings}
+              dealerZip={dealerZip}
+              closestCompPrice={closestCompPrice}
+              wholesaleRough={Number(liveBbVehicle?.wholesale?.rough || 0)}
+              soldAvg={retailMarketStats?.sold?.mean_price ?? null}
+              onRefreshInspection={handleRefreshInspection}
+              onRetailStatsLoaded={setRetailMarketStats}
+              onClosestCompPrice={setClosestCompPrice}
+            />
+
+            {/* Historical Intelligence Panel */}
+            <HistoricalInsightPanel
+              dealershipId={dealershipId}
+              bbClassName={liveBbVehicle?.class_name || sub.bb_class_name}
+              overallCondition={condition}
+              mileage={sub.mileage}
+              reconEstimate={reconCost}
+              learningThreshold={(activeSettings as any)?.learning_threshold ?? 250}
+            />
+
+            {/* Deal Maker Section — decision tool */}
+            <DealMakerSection
+              customerExpected={sub.offered_price || sub.estimated_offer_high || 0}
+              currentAppraisal={finalValue}
+              bbVehicle={bbVehicle}
+              reconCost={reconCost}
+              targetGrossMin={targetGrossMin}
+              show={sub.progress_status === "offer_declined" || sub.progress_status === "scheduled" || sub.progress_status === "visiting"}
+            />
+
+            {/* Management Override — requires PIN */}
+            {!sub.appraisal_finalized && (
+              <ManagementOverride
+                managerPin={managerPin}
+                currentValue={finalValue}
+                onOverrideChange={(amount, reason) => setManagerOverride({ amount, reason, by: "Manager" })}
+                existingOverride={managerOverride}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ═══════════════════════════════════════ */}
+      {/*  ZONE 3 — STICKY BOTTOM DECIDE BAR     */}
+      {/* ═══════════════════════════════════════ */}
+      <div className="fixed bottom-0 left-0 right-0 z-30 bg-[hsl(var(--primary))] border-t border-primary-foreground/15 shadow-[0_-4px_20px_rgba(0,0,0,0.3)]">
+        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center gap-4">
+          {sub.appraisal_finalized ? (
+            <>
+              {/* Finalized state — with ACV adjust */}
+              <div className="shrink-0">
+                <div className="text-[10px] text-primary-foreground/60 font-semibold uppercase tracking-wider">Finalized ACV</div>
+                <div className="text-2xl font-black text-emerald-400">${finalValue.toLocaleString()}</div>
+                {sub.appraisal_finalized_by && (
+                  <div className="text-[10px] text-primary-foreground/50">
+                    by {sub.appraisal_finalized_by} · {sub.appraisal_finalized_at ? new Date(sub.appraisal_finalized_at).toLocaleDateString() : ""}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex-1" />
+
+              {/* ACV adjustment input */}
+              <div className="flex items-center gap-2">
+                <div className="text-[10px] text-primary-foreground/50 font-semibold uppercase tracking-wider shrink-0">Adjust ACV</div>
+                <div className="relative w-44">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg font-bold text-primary-foreground/40">$</span>
+                  <Input
+                    type="text" inputMode="numeric"
+                    value={acvOverride != null ? acvOverride.toLocaleString("en-US") : ""}
+                    onChange={e => { const raw = e.target.value.replace(/[^0-9]/g, ""); setAcvOverride(raw ? Number(raw) : null); }}
+                    placeholder={finalValue ? finalValue.toLocaleString("en-US") : "Enter amount"}
+                    className="h-10 text-base font-bold pl-8 bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/30 focus:ring-primary-foreground/30"
+                  />
+                </div>
+                <Button
+                  onClick={handleUpdateAcv}
+                  disabled={saving || (acvOverride == null || acvOverride <= 0)}
+                  variant="ghost"
+                  className="text-primary-foreground hover:bg-primary-foreground/10 border border-primary-foreground/20 rounded-xl h-10"
+                >
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Save className="w-4 h-4 mr-1" />}
+                  Update ACV
+                </Button>
+              </div>
+
+              <Button onClick={handlePrintACVSheet} variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10 border border-primary-foreground/20 rounded-xl">
+                <Printer className="w-4 h-4 mr-1.5" />
+                ACV Sheet
+              </Button>
+
+              <Button onClick={handleUnlockAppraisal} disabled={saving} variant="outline" className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 rounded-xl">
+                <Unlock className="w-4 h-4 mr-1.5" />
+                Unlock
+              </Button>
+            </>
+          ) : (
+            <>
+              {/* Active state */}
+              <div className="shrink-0">
+                <div className="text-[10px] text-primary-foreground/60 font-semibold uppercase tracking-wider">COMPASS™ Offer</div>
+                <div className="text-lg font-black text-primary-foreground">${waterfallFinal.toLocaleString()}</div>
+                {managerOverride.amount != null && managerOverride.amount !== 0 && (
+                  <span className="text-xs font-bold text-amber-300">+${managerOverride.amount.toLocaleString()} MGR ADJ</span>
+                )}
+              </div>
+
+              <div className="flex-1 flex items-center gap-2 max-w-md">
+                <div className="relative flex-1">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg font-bold text-primary-foreground/40">$</span>
+                  <Input
+                    type="text" inputMode="numeric"
+                    value={acvOverride != null ? acvOverride.toLocaleString("en-US") : ""}
+                    onChange={e => { const raw = e.target.value.replace(/[^0-9]/g, ""); setAcvOverride(raw ? Number(raw) : null); }}
+                    placeholder="Final Offer to Customer"
+                    className="h-11 text-lg font-bold pl-8 bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/30 focus:ring-primary-foreground/30"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <Button onClick={handleSave} disabled={saving} variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10 border border-primary-foreground/20 rounded-xl">
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Save className="w-4 h-4 mr-1" />}
+                  Save
+                </Button>
+                <Button
+                  onClick={handleFinalize}
+                  disabled={saving || (acvOverride == null && finalValue <= 0)}
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-base px-6 h-11 rounded-xl shadow-lg shadow-emerald-500/30"
+                >
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <Lock className="w-4 h-4 mr-1.5" />}
+                  Finalize Appraisal
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Finalize Success Modal */}
+      <Dialog open={showFinalizeSuccess} onOpenChange={setShowFinalizeSuccess}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
+              <CheckCircle className="w-6 h-6 text-emerald-500" />
+              Appraisal Finalized
+            </DialogTitle>
+            <DialogDescription>
+              The appraisal has been locked and the ACV worksheet has been saved.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="rounded-xl bg-emerald-500/10 border-2 border-emerald-500/30 p-5 text-center mb-4">
+              <div className="text-xs uppercase tracking-wider font-bold text-muted-foreground mb-1">Finalized ACV</div>
+              <div className="text-4xl font-black text-emerald-700 dark:text-emerald-400 tracking-tight">
+                ${(acvOverride != null && acvOverride > 0 ? acvOverride : finalValue).toLocaleString()}
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Button
+                onClick={() => { setShowFinalizeSuccess(false); navigate("/admin"); }}
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Customer File
+              </Button>
+              <Button
+                onClick={() => { setShowFinalizeSuccess(false); handlePrintACVSheet(); }}
+                variant="outline"
+                className="w-full font-bold"
+              >
+                <Printer className="w-4 h-4 mr-2" />
+                Print ACV Sheet
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Hidden ACV Sheet for printing */}
+      {showACVSheet && (
+        <div className="fixed left-[-9999px] top-0">
+          <ACVSheet
+            ref={acvSheetRef}
+            sub={sub}
+            bbVehicle={bbVehicle}
+            offerResult={offerResult}
+            finalValue={finalValue}
+            wholesaleAvg={wholesaleAvg}
+            tradeinAvg={tradeinAvg}
+            retailAvg={retailAvg}
+            reconCost={reconCost}
+            dealerPack={effectivePack}
+            projectedProfit={projectedProfit}
+            profitMargin={profitMargin}
+            condition={condition}
+            dealerName={tenant.display_name}
+            retailMarketData={retailMarketStats ? {
+              activeCount: retailMarketStats.active?.vehicle_count,
+              activeMean: retailMarketStats.active?.mean_price,
+              activeMedian: retailMarketStats.active?.median_price,
+              soldCount: retailMarketStats.sold?.vehicle_count,
+              soldMean: retailMarketStats.sold?.mean_price,
+              soldMedian: retailMarketStats.sold?.median_price,
+              marketDaysSupply: retailMarketStats.market_days_supply ?? undefined,
+              meanDaysToTurn: retailMarketStats.mean_days_to_turn ?? undefined,
+            } : undefined}
+            waterfallBlocks={waterfallBlocks.map(b => ({ label: b.label, value: b.value, runningTotal: b.runningTotal, type: b.type }))}
+            deductionDetails={{
+              accidents, drivable, smokedIn, tiresReplaced, numKeys, windshield, moonroof,
+              exteriorItems, interiorItems, mechItems, engineItems, techItems,
+              deductionAmounts: (activeSettings?.deduction_amounts || {}) as Record<string, number>,
+              deductionsConfig: (activeSettings?.deductions_config || {}) as Record<string, boolean>,
+            }}
+          />
+        </div>
+      )}
+    </div>
+  );
+}

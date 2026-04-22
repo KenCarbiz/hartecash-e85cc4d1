@@ -1,0 +1,1 @@
+ALTER TABLE public.site_config ADD COLUMN enable_animations boolean NOT NULL DEFAULT false;

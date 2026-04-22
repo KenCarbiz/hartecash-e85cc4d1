@@ -1,0 +1,1 @@
+ALTER TABLE public.submissions ADD COLUMN IF NOT EXISTS bb_selected_options text[] DEFAULT '{}';

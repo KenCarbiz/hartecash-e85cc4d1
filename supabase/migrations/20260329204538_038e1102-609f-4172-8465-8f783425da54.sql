@@ -1,0 +1,1 @@
+ALTER TABLE public.submissions ADD COLUMN IF NOT EXISTS vin_verified boolean NOT NULL DEFAULT false;

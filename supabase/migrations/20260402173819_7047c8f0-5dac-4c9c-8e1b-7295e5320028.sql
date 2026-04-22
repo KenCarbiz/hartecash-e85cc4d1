@@ -1,0 +1,1 @@
+ALTER TABLE public.submissions ADD COLUMN IF NOT EXISTS bb_value_tiers jsonb DEFAULT NULL;

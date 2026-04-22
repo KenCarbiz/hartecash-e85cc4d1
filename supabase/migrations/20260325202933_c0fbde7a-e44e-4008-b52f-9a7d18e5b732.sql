@@ -1,0 +1,1 @@
+DELETE FROM changelog_entries WHERE id = '18cb6b38-c17d-4ede-ae92-b25075de314d';

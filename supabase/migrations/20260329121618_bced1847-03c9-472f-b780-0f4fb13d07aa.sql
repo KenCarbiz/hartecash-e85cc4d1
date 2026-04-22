@@ -1,0 +1,1 @@
+ALTER TABLE public.offer_settings ADD COLUMN IF NOT EXISTS retail_search_radius integer NOT NULL DEFAULT 100;

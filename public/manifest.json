@@ -1,0 +1,17 @@
+{
+  "name": "Harte Cash — Sell Your Car",
+  "short_name": "Harte Cash",
+  "description": "Get a top-dollar cash offer for your car in 2 minutes.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f7fa",
+  "theme_color": "#003366",
+  "icons": [
+    {
+      "src": "/pwa-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

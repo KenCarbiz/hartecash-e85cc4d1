@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>GhostCar Photo Guide</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;background:#050810}
+body{font-family:-apple-system,'SF Pro Display',Inter,sans-serif;color:#fff}
+#app{display:flex;flex-direction:column;height:100vh;width:100vw;background:#050810}
+#hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:rgba(5,8,16,0.97);border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;z-index:10}
+#logo{display:flex;align-items:center;gap:10px}
+#logo-text{font-size:13px;font-weight:700;letter-spacing:3px;color:#fff}
+#logo-sub{font-size:9px;letter-spacing:2px;color:rgba(255,255,255,0.3);margin-top:1px}
+#progress-wrap{display:flex;align-items:center;gap:10px}
+#prog-label{font-size:11px;color:rgba(255,255,255,0.4);font-weight:500}
+#prog-bar{width:80px;height:3px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden}
+#prog-fill{height:100%;border-radius:2px;transition:width 0.4s cubic-bezier(0.4,0,0.2,1)}
+#viewfinder{flex:1;position:relative;overflow:hidden;min-height:0}
+#vf-grid{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#vf-canvas{position:absolute;inset:0}
+.corner{position:absolute;width:24px;height:24px;z-index:4}
+.corner.tl{top:16px;left:16px;border-top:2px solid;border-left:2px solid}
+.corner.tr{top:16px;right:16px;border-top:2px solid;border-right:2px solid}
+.corner.bl{bottom:70px;left:16px;border-bottom:2px solid;border-left:2px solid}
+.corner.br{bottom:70px;right:16px;border-bottom:2px solid;border-right:2px solid}
+#instruction-bar{position:absolute;bottom:0;left:0;right:0;padding:12px 20px 16px;background:linear-gradient(transparent,rgba(5,8,16,0.95));pointer-events:none;z-index:3}
+#instruction-text{font-size:11px;color:rgba(255,255,255,0.55);text-align:center;letter-spacing:0.4px}
+#captured-flash{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity 0.25s;display:flex;align-items:center;justify-content:center;z-index:5}
+#flash-check{width:64px;height:64px;border-radius:50%;border:2.5px solid;display:flex;align-items:center;justify-content:center;opacity:0;transform:scale(0.4);transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1)}
+#rotate-notice{position:absolute;top:14px;left:50%;transform:translateX(-50%);background:rgba(255,140,0,0.12);border:1px solid rgba(255,140,0,0.3);border-radius:20px;padding:5px 16px;font-size:10px;color:#FF8C00;letter-spacing:0.5px;display:none;white-space:nowrap;z-index:5}
+#ctrl-panel{flex-shrink:0;background:rgba(5,8,16,0.98);border-top:1px solid rgba(255,255,255,0.06)}
+#shot-info{padding:14px 20px 0;display:flex;align-items:flex-start;justify-content:space-between}
+#shot-name{font-size:17px;font-weight:600;letter-spacing:-0.3px}
+#shot-counter{font-size:10px;color:rgba(255,255,255,0.3);margin-top:2px;font-weight:500;letter-spacing:0.5px}
+#color-row{display:flex;align-items:center;gap:10px;padding:10px 20px 0}
+#color-label{font-size:9px;letter-spacing:1.5px;color:rgba(255,255,255,0.2);font-weight:600}
+.color-dot{width:18px;height:18px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all 0.2s;flex-shrink:0}
+.color-dot.active{border-color:#fff;transform:scale(1.2)}
+#capture-row{display:flex;align-items:center;justify-content:space-between;padding:10px 20px 14px;gap:12px}
+#btn-prev,#btn-next{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);cursor:pointer;color:rgba(255,255,255,0.45);font-size:18px;transition:all 0.2s;flex-shrink:0;-webkit-appearance:none;appearance:none}
+#btn-prev:active,#btn-next:active{background:rgba(255,255,255,0.1);color:#fff}
+#btn-prev:disabled,#btn-next:disabled{opacity:0.18;cursor:default}
+#btn-capture{width:72px;height:72px;border-radius:50%;border:3px solid;background:rgba(255,255,255,0.04);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0;-webkit-appearance:none;appearance:none;position:relative}
+#btn-capture:active{transform:scale(0.9)}
+#capture-ring{width:56px;height:56px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+#capture-dot{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.1);transition:all 0.2s}
+#shot-pills{display:flex;gap:5px;flex-wrap:wrap;padding:0 20px 12px;max-height:48px;overflow:hidden}
+.pill{padding:4px 10px;border-radius:20px;font-size:9.5px;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,0.07);color:rgba(255,255,255,0.2);transition:all 0.15s;letter-spacing:0.3px;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+#complete-bar{display:none;margin:0 16px 12px;padding:12px 16px;border-radius:10px;border:1px solid;text-align:center}
+#complete-text{font-size:12px;font-weight:600;margin-bottom:8px}
+#btn-submit{padding:9px 28px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:none;letter-spacing:0.5px;-webkit-appearance:none;appearance:none}
+#file-input{display:none;position:absolute;width:0;height:0}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hdr">
+    <div id="logo">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <rect x="2" y="2" width="24" height="24" rx="6" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+        <path d="M6 18 L8 13 Q9 11 11 11 L17 11 Q19 11 20 13 L22 18" stroke="rgba(255,255,255,0.8)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <circle cx="9.5" cy="17.5" r="2" stroke="rgba(255,255,255,0.8)" stroke-width="1.2" fill="none"/>
+        <circle cx="18.5" cy="17.5" r="2" stroke="rgba(255,255,255,0.8)" stroke-width="1.2" fill="none"/>
+      </svg>
+      <div>
+        <div id="logo-text">GHOSTCAR</div>
+        <div id="logo-sub">PHOTO GUIDE</div>
+      </div>
+    </div>
+    <div id="progress-wrap">
+      <div id="prog-label">0 / 9</div>
+      <div id="prog-bar"><div id="prog-fill" style="width:0%"></div></div>
+    </div>
+  </div>
+  <div id="viewfinder">
+    <svg id="vf-grid" viewBox="0 0 100 100" preserveAspectRatio="none">
+      <line x1="33.3" y1="0" x2="33.3" y2="100" stroke="rgba(255,255,255,0.035)" stroke-width="0.3"/>
+      <line x1="66.6" y1="0" x2="66.6" y2="100" stroke="rgba(255,255,255,0.035)" stroke-width="0.3"/>
+      <line x1="0" y1="33.3" x2="100" y2="33.3" stroke="rgba(255,255,255,0.035)" stroke-width="0.3"/>
+      <line x1="0" y1="66.6" x2="100" y2="66.6" stroke="rgba(255,255,255,0.035)" stroke-width="0.3"/>
+    </svg>
+    <canvas id="vf-canvas"></canvas>
+    <div class="corner tl"></div>
+    <div class="corner tr"></div>
+    <div class="corner bl"></div>
+    <div class="corner br"></div>
+    <div id="rotate-notice">&#8635; Rotate to landscape for best results</div>
+    <div id="captured-flash">
+      <div id="flash-check">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M5 13l6 6L21 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+    <div id="instruction-bar"><div id="instruction-text"></div></div>
+  </div>
+  <div id="ctrl-panel">
+    <div id="shot-info">
+      <div><div id="shot-name"></div><div id="shot-counter"></div></div>
+    </div>
+    <div id="color-row">
+      <div id="color-label">GUIDE</div>
+      <div class="color-dot active" data-c="#00FF88" style="background:#00FF88" onclick="setColor(this)"></div>
+      <div class="color-dot" data-c="#FF3B3B" style="background:#FF3B3B" onclick="setColor(this)"></div>
+      <div class="color-dot" data-c="#FFFFFF" style="background:rgba(255,255,255,0.85);border-color:rgba(255,255,255,0.2)" onclick="setColor(this)"></div>
+      <div class="color-dot" data-c="#00BFFF" style="background:#00BFFF" onclick="setColor(this)"></div>
+      <div class="color-dot" data-c="#FFD700" style="background:#FFD700" onclick="setColor(this)"></div>
+    </div>
+    <div id="capture-row">
+      <button id="btn-prev" onclick="prevShot()">&#8592;</button>
+      <button id="btn-capture" onclick="triggerCapture()">
+        <div id="capture-ring"><div id="capture-dot"></div></div>
+      </button>
+      <button id="btn-next" onclick="nextShot()">&#8594;</button>
+    </div>
+    <div id="shot-pills"></div>
+    <div id="complete-bar">
+      <div id="complete-text">All photos captured</div>
+      <button id="btn-submit" onclick="submitPhotos()">Submit for Appraisal &rarr;</button>
+    </div>
+  </div>
+</div>
+<input type="file" id="file-input" accept="image/*" capture="environment"/>
+<script>
+const SHOTS=[
+  {id:'driver_side',    label:'Driver Side',          desc:'Step back — fit full length bumper to bumper',    landscape:true},
+  {id:'passenger_side', label:'Passenger Side',        desc:'Step back — fit full length bumper to bumper',    landscape:true},
+  {id:'front',          label:'Front',                 desc:'Center front bumper, capture full width',         landscape:true},
+  {id:'rear',           label:'Rear',                  desc:'Center rear bumper, capture full width',          landscape:true},
+  {id:'wheel',          label:'Wheel / Tire',          desc:'Fill frame with one wheel — show tread depth',    landscape:false},
+  {id:'hood',           label:'Engine Bay',            desc:'Open hood — capture full engine compartment',     landscape:true},
+  {id:'driver_door',    label:'Driver Door Interior',  desc:'Open door — shoot across front seat from outside',landscape:false},
+  {id:'dashboard',      label:'Dashboard & Odometer',  desc:'Capture full dash — odometer must be visible',    landscape:true},
+  {id:'windshield',     label:'Windshield',            desc:'Stand at corner — look for chips and cracks',     landscape:true},
+];
+const params=new URLSearchParams(window.location.search);
+let vehicleType=params.get('vehicle')||'sedan';
+let shotIdx=0,color='#00FF88',captured={};
+let isPortrait=window.innerHeight>window.innerWidth;
+const canvas=document.getElementById('vf-canvas');
+const ctx=canvas.getContext('2d');
+
+function resize(){
+  const vf=document.getElementById('viewfinder');
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=vf.offsetWidth*dpr;
+  canvas.height=vf.offsetHeight*dpr;
+  canvas.style.width=vf.offsetWidth+'px';
+  canvas.style.height=vf.offsetHeight+'px';
+  isPortrait=window.innerHeight>window.innerWidth;
+  draw();
+}
+
+function draw(){
+  const W=canvas.width,H=canvas.height,dpr=window.devicePixelRatio||1;
+  ctx.clearRect(0,0,W,H);
+  ctx.save();
+  ctx.strokeStyle=color;ctx.fillStyle=color;
+  ctx.lineWidth=2.2*dpr;ctx.lineCap='round';ctx.lineJoin='round';
+  ctx.shadowColor=color;ctx.shadowBlur=10*dpr;ctx.globalAlpha=0.72;
+  const id=SHOTS[shotIdx].id;
+  if(id==='driver_side'||id==='passenger_side')drawSide(W,H,dpr);
+  else if(id==='front')drawFront(W,H,dpr);
+  else if(id==='rear')drawRear(W,H,dpr);
+  else if(id==='wheel')drawWheel(W,H,dpr);
+  else if(id==='hood')drawHood(W,H,dpr);
+  else if(id==='driver_door')drawDoor(W,H,dpr);
+  else if(id==='dashboard')drawDash(W,H,dpr);
+  else if(id==='windshield')drawWindshield(W,H,dpr);
+  ctx.restore();
+  document.querySelectorAll('.corner').forEach(c=>c.style.borderColor=color);
+  const notice=document.getElementById('rotate-notice');
+  notice.style.display=(isPortrait&&SHOTS[shotIdx].landscape)?'block':'none';
+}
+
+function L(x1,y1,x2,y2){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke()}
+function A(x,y,r){ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.stroke()}
+function D(x,y,r){ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill()}
+
+function wheel(cx,cy,r,dpr){
+  ctx.lineWidth=2.8*dpr;A(cx,cy,r);
+  ctx.lineWidth=2*dpr;A(cx,cy,r*0.7);
+  ctx.lineWidth=1.5*dpr;A(cx,cy,r*0.2);
+  D(cx,cy,r*0.06);
+  ctx.lineWidth=2*dpr;
+  for(let i=0;i<5;i++){
+    const a=(i/5)*Math.PI*2-Math.PI/2;
+    const a2=a+Math.PI*2/10;
+    ctx.beginPath();
+    ctx.moveTo(cx+Math.cos(a)*r*0.22,cy+Math.sin(a)*r*0.22);
+    ctx.quadraticCurveTo(cx+Math.cos(a2)*r*0.5,cy+Math.sin(a2)*r*0.5,cx+Math.cos(a)*r*0.67,cy+Math.sin(a)*r*0.67);
+    ctx.stroke();
+    ctx.lineWidth=1.8*dpr;
+    L(cx+Math.cos(a)*r*0.22,cy+Math.sin(a)*r*0.22,cx+Math.cos(a+Math.PI*2/10)*r*0.62,cy+Math.sin(a+Math.PI*2/10)*r*0.62);
+    ctx.lineWidth=2*dpr;
+  }
+  ctx.lineWidth=1.2*dpr;ctx.globalAlpha=0.25;
+  for(let i=0;i<24;i++){const a=(i/24)*Math.PI*2;L(cx+Math.cos(a)*r*0.92,cy+Math.sin(a)*r*0.92,cx+Math.cos(a)*r,cy+Math.sin(a)*r)}
+  ctx.globalAlpha=0.72;
+}
+
+function drawSide(W,H,dpr){
+  const sw=2.5*dpr;ctx.lineWidth=sw;
+  const pad=W*0.07,bL=pad,bR=W-pad,bW=bR-bL;
+  const flY=H*0.74,bTop=H*0.38,bBot=H*0.62,wR=H*0.115;
+  const fwX=bL+bW*0.2,rwX=bL+bW*0.8;
+  ctx.beginPath();
+  ctx.moveTo(bL,bBot);ctx.lineTo(bL,bTop);
+  ctx.bezierCurveTo(bL+bW*0.02,bTop,bL+bW*0.15,H*0.22,bL+bW*0.23,H*0.22);
+  ctx.lineTo(bL+bW*0.71,H*0.22);
+  ctx.bezierCurveTo(bL+bW*0.82,H*0.22,bR-bW*0.02,bTop,bR,bTop);
+  ctx.lineTo(bR,bBot);ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(bL,bBot);
+  ctx.bezierCurveTo(bL,bBot+H*0.025,fwX-wR*1.1,bBot+H*0.025,fwX-wR*1.1,bBot);ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(fwX+wR*1.1,bBot);
+  ctx.bezierCurveTo(fwX+wR*1.15,bBot+H*0.025,rwX-wR*1.15,bBot+H*0.025,rwX-wR*1.1,bBot);ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(rwX+wR*1.1,bBot);
+  ctx.bezierCurveTo(rwX+wR*1.1,bBot+H*0.025,bR,bBot+H*0.025,bR,bBot);ctx.stroke();
+  ctx.lineWidth=sw*0.9;
+  L(bL+bW*0.23,H*0.22,bL+bW*0.27,bTop);
+  L(bL+bW*0.48,H*0.22,bL+bW*0.5,bTop);
+  L(bL+bW*0.71,H*0.22,bL+bW*0.69,bTop);
+  ctx.lineWidth=sw*0.5;ctx.setLineDash([6*dpr,4*dpr]);ctx.globalAlpha=0.35;
+  L(bL+bW*0.27,bTop+(bBot-bTop)*0.2,bL+bW*0.49,bTop+(bBot-bTop)*0.2);
+  L(bL+bW*0.51,bTop+(bBot-bTop)*0.2,bL+bW*0.69,bTop+(bBot-bTop)*0.2);
+  ctx.setLineDash([]);ctx.globalAlpha=0.72;ctx.lineWidth=sw;
+  wheel(fwX,flY,wR,dpr);wheel(rwX,flY,wR,dpr);
+  ctx.lineWidth=sw*0.4;ctx.globalAlpha=0.18;
+  L(bL,flY+wR*1.05,bR,flY+wR*1.05);
+  ctx.globalAlpha=0.72;
+}
+
+function drawFront(W,H,dpr){
+  const sw=2.5*dpr;ctx.lineWidth=sw;
+  const cX=W/2,bW=W*0.72,bH=H*0.36;
+  const bL=cX-bW/2,bR=cX+bW/2,bT=H*0.18,bBot=bT+bH;
+  ctx.beginPath();
+  ctx.moveTo(bL+bW*0.05,bT);
+  ctx.bezierCurveTo(bL,bT,bL,bT+bH*0.08,bL,bT+bH*0.22);
+  ctx.lineTo(bL,bBot);ctx.lineTo(bR,bBot);
+  ctx.lineTo(bR,bT+bH*0.22);
+  ctx.bezierCurveTo(bR,bT+bH*0.08,bR,bT,bR-bW*0.05,bT);
+  ctx.closePath();ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(bL+bW*0.04,bT);ctx.lineTo(bL+bW*0.1,H*0.09);
+  ctx.lineTo(bR-bW*0.1,H*0.09);ctx.lineTo(bR-bW*0.04,bT);ctx.stroke();
+  ctx.lineWidth=sw*0.7;
+  const wL=bL+bW*0.06,wR2=bR-bW*0.06,wT=H*0.095,wB=bT-H*0.005;
+  ctx.beginPath();
+  ctx.moveTo(wL+bW*0.07,wT);ctx.lineTo(wL,wB);ctx.lineTo(wR2,wB);ctx.lineTo(wR2-bW*0.07,wT);
+  ctx.closePath();ctx.stroke();
+  ctx.lineWidth=sw;
+  const gL=bL+bW*0.08,gR=bR-bW*0.08,gT=bT+bH*0.1,gB=bT+bH*0.52;
+  ctx.beginPath();ctx.roundRect(gL,gT,gR-gL,gB-gT,6*dpr);ctx.stroke();
+  ctx.lineWidth=sw*0.45;ctx.globalAlpha=0.3;
+  for(let i=1;i<4;i++)L(gL+4*dpr,gT+(gB-gT)*i/4,gR-4*dpr,gT+(gB-gT)*i/4);
+  for(let i=1;i<5;i++)L(gL+(gR-gL)*i/5,gT+4*dpr,gL+(gR-gL)*i/5,gB-4*dpr);
+  ctx.globalAlpha=0.72;ctx.lineWidth=sw;
+  ctx.beginPath();ctx.roundRect(bL+bW*0.04,bT+bH*0.54,bW*0.19,bH*0.36,5*dpr);ctx.stroke();
+  ctx.beginPath();ctx.roundRect(bR-bW*0.23,bT+bH*0.54,bW*0.19,bH*0.36,5*dpr);ctx.stroke();
+  ctx.lineWidth=sw*0.45;ctx.setLineDash([3*dpr,3*dpr]);ctx.globalAlpha=0.3;
+  L(cX,bT,cX,bBot);ctx.setLineDash([]);ctx.globalAlpha=0.72;ctx.lineWidth=sw;
+  const flY=H*0.82,owR=bW*0.085;
+  wheel(bL+bW*0.14,flY,owR,dpr);wheel(bR-bW*0.14,flY,owR,dpr);
+  ctx.lineWidth=sw*0.4;ctx.globalAlpha=0.15;
+  L(bL-W*0.04,flY+owR,bR+W*0.04,flY+owR);ctx.globalAlpha=0.72;
+}
+
+function drawRear(W,H,dpr){
+  const sw=2.5*dpr;ctx.lineWidth=sw;
+  const cX=W/2,bW=W*0.72,bH=H*0.34;
+  const bL=cX-bW/2,bR=cX+bW/2,bT=H*0.2,bBot=bT+bH;
+  ctx.beginPath();
+  ctx.moveTo(bL,bT+bH*0.08);
+  ctx.bezierCurveTo(bL,bT,bL+bW*0.04,bT,bL+bW*0.1,bT);
+  ctx.lineTo(bR-bW*0.1,bT);
+  ctx.bezierCurveTo(bR-bW*0.04,bT,bR,bT,bR,bT+bH*0.08);
+  ctx.lineTo(bR,bBot);ctx.lineTo(bL,bBot);ctx.closePath();ctx.stroke();
+  ctx.lineWidth=sw*0.7;
+  const wsL=bL+bW*0.06,wsR=bR-bW*0.06,wsT=bT+bH*0.04,wsB=bT+bH*0.42;
+  ctx.beginPath();
+  ctx.moveTo(wsL+bW*0.04,wsT);ctx.lineTo(wsL,wsB);ctx.lineTo(wsR,wsB);ctx.lineTo(wsR-bW*0.04,wsT);
+  ctx.closePath();ctx.stroke();
+  ctx.lineWidth=sw;
+  ctx.beginPath();ctx.roundRect(bL+bW*0.03,bBot-bH*0.42,bW*0.25,bH*0.34,5*dpr);ctx.stroke();
+  ctx.beginPath();ctx.roundRect(bR-bW*0.28,bBot-bH*0.42,bW*0.25,bH*0.34,5*dpr);ctx.stroke();
+  ctx.lineWidth=sw*0.6;ctx.globalAlpha=0.35;
+  L(bL+bW*0.03+(bW*0.25/2),bBot-bH*0.42+bH*0.14,bL+bW*0.03+(bW*0.25/2)+1,bBot-bH*0.42+bH*0.14+0.5);
+  ctx.globalAlpha=0.72;ctx.lineWidth=sw;
+  ctx.beginPath();ctx.roundRect(cX-bW*0.17,bBot-bH*0.36,bW*0.34,bH*0.26,4*dpr);ctx.stroke();
+  ctx.lineWidth=sw*0.4;ctx.setLineDash([3*dpr,3*dpr]);ctx.globalAlpha=0.28;
+  L(cX,bT,cX,bBot);ctx.setLineDash([]);ctx.globalAlpha=0.72;ctx.lineWidth=sw;
+  const flY=H*0.82,owR=W*0.06;
+  wheel(bL+bW*0.14,flY,owR,dpr);wheel(bR-bW*0.14,flY,owR,dpr);
+}
+
+function drawWheel(W,H,dpr){
+  const cX=W/2,cY=H/2,outerR=Math.min(W,H)*0.37;
+  ctx.lineWidth=3.5*dpr;A(cX,cY,outerR);
+  ctx.lineWidth=2*dpr;
+  ctx.setLineDash([4*dpr,3*dpr]);A(cX,cY,outerR*0.64);ctx.setLineDash([]);
+  ctx.lineWidth=2*dpr;A(cX,cY,outerR*0.18);D(cX,cY,outerR*0.04);
+  ctx.lineWidth=2.5*dpr;
+  for(let i=0;i<5;i++){
+    const a=(i/5)*Math.PI*2-Math.PI/2;
+    const a2=((i+0.45)/5)*Math.PI*2-Math.PI/2;
+    ctx.beginPath();
+    ctx.moveTo(cX+Math.cos(a)*outerR*0.2,cY+Math.sin(a)*outerR*0.2);
+    ctx.bezierCurveTo(cX+Math.cos(a2)*outerR*0.42,cY+Math.sin(a2)*outerR*0.42,cX+Math.cos(a2)*outerR*0.56,cY+Math.sin(a2)*outerR*0.56,cX+Math.cos(a)*outerR*0.6,cY+Math.sin(a)*outerR*0.6);
+    ctx.stroke();
+  }
+  ctx.lineWidth=1.4*dpr;ctx.globalAlpha=0.3;
+  for(let i=0;i<28;i++){const a=(i/28)*Math.PI*2;L(cX+Math.cos(a)*outerR*0.91,cY+Math.sin(a)*outerR*0.91,cX+Math.cos(a)*outerR*0.99,cY+Math.sin(a)*outerR*0.99)}
+  ctx.globalAlpha=0.72;
+}
+
+function drawHood(W,H,dpr){
+  const sw=2*dpr;ctx.lineWidth=sw;
+  const pad=W*0.06,tP=H*0.08;
+  ctx.beginPath();ctx.roundRect(pad,tP,W-pad*2,H-tP*2,8*dpr);ctx.stroke();
+  const eL=pad+W*0.08,eT=tP+H*0.1,eBot=tP+H*0.48;
+  ctx.beginPath();ctx.roundRect(eL,eT,(W/2-eL-W*0.04),eBot-eT,5*dpr);ctx.stroke();
+  ctx.beginPath();ctx.roundRect(W/2+W*0.04,eT,(W-pad-W*0.08-(W/2+W*0.04)),eBot-eT,5*dpr);ctx.stroke();
+  ctx.beginPath();ctx.roundRect(eL,tP+H*0.54,W-pad*2-W*0.16,H*0.28,5*dpr);ctx.stroke();
+  ctx.lineWidth=sw*0.5;ctx.setLineDash([6*dpr,4*dpr]);ctx.globalAlpha=0.3;
+  L(W/2,tP,W/2,H-tP);ctx.setLineDash([]);ctx.globalAlpha=0.72;
+}
+
+function drawDoor(W,H,dpr){
+  const sw=2*dpr;ctx.lineWidth=sw;
+  ctx.beginPath();ctx.roundRect(W*0.05,H*0.06,W*0.9,H*0.88,8*dpr);ctx.stroke();
+  ctx.beginPath();ctx.roundRect(W*0.13,H*0.14,W*0.74,H*0.38,4*dpr);ctx.stroke();
+  A(W*0.84,H*0.52,H*0.026);ctx.lineWidth=sw*0.6;ctx.globalAlpha=0.4;A(W*0.84,H*0.52,H*0.04);
+  ctx.globalAlpha=0.72;ctx.lineWidth=sw;
+  ctx.beginPath();ctx.roundRect(W*0.13,H*0.59,W*0.33,H*0.24,4*dpr);ctx.stroke();
+  ctx.beginPath();ctx.roundRect(W*0.54,H*0.59,W*0.33,H*0.24,4*dpr);ctx.stroke();
+  ctx.lineWidth=sw*0.4;ctx.setLineDash([4*dpr,3*dpr]);ctx.globalAlpha=0.25;
+  L(W*0.05,H*0.55,W*0.95,H*0.55);ctx.setLineDash([]);ctx.globalAlpha=0.72;
+}
+
+function drawDash(W,H,dpr){
+  const sw=2*dpr;ctx.lineWidth=sw;
+  ctx.beginPath();ctx.roundRect(W*0.03,H*0.06,W*0.94,H*0.52,10*dpr);ctx.stroke();
+  const g=[{x:W*0.22,y:H*0.3,r:H*0.155,a:-Math.PI*0.65},{x:W*0.5,y:H*0.3,r:H*0.135,a:Math.PI*0.12}];
+  g.forEach(({x,y,r,a})=>{
+    A(x,y,r);A(x,y,r*0.16);D(x,y,r*0.05);
+    L(x,y,x+Math.cos(a)*r*0.76,y+Math.sin(a)*r*0.76);
+    ctx.lineWidth=sw*0.45;
+    for(let i=0;i<9;i++){const ag=-Math.PI+i*(Math.PI/8);L(x+Math.cos(ag)*r*0.82,y+Math.sin(ag)*r*0.82,x+Math.cos(ag)*r*0.96,y+Math.sin(ag)*r*0.96)}
+    ctx.lineWidth=sw;
+  });
+  ctx.beginPath();ctx.roundRect(W*0.69,H*0.13,W*0.25,H*0.3,6*dpr);ctx.stroke();
+  ctx.lineWidth=sw*0.5;ctx.globalAlpha=0.3;
+  L(W*0.695,H*0.13+H*0.1,W*0.935,H*0.13+H*0.1);
+  ctx.globalAlpha=0.72;ctx.lineWidth=sw;
+  ctx.beginPath();ctx.roundRect(W*0.29,H*0.68,W*0.42,H*0.18,5*dpr);ctx.stroke();
+  ctx.globalAlpha=0.28;
+  ctx.font=(10*dpr)+'px monospace';ctx.fillStyle=color;ctx.textAlign='center';
+  ctx.fillText('ODOMETER',W*0.5,H*0.8);ctx.globalAlpha=0.72;
+}
+
+function drawWindshield(W,H,dpr){
+  const sw=2.5*dpr;ctx.lineWidth=sw;
+  ctx.beginPath();
+  ctx.moveTo(W*0.12,H*0.78);
+  ctx.bezierCurveTo(W*0.06,H*0.62,W*0.22,H*0.13,W*0.32,H*0.11);
+  ctx.lineTo(W*0.68,H*0.11);
+  ctx.bezierCurveTo(W*0.78,H*0.13,W*0.94,H*0.62,W*0.88,H*0.78);
+  ctx.closePath();ctx.stroke();
+  ctx.lineWidth=sw*0.65;ctx.globalAlpha=0.38;
+  ctx.beginPath();
+  ctx.moveTo(W*0.18,H*0.73);
+  ctx.bezierCurveTo(W*0.14,H*0.59,W*0.26,H*0.18,W*0.34,H*0.16);
+  ctx.lineTo(W*0.66,H*0.16);
+  ctx.bezierCurveTo(W*0.74,H*0.18,W*0.86,H*0.59,W*0.82,H*0.73);
+  ctx.closePath();ctx.stroke();
+  ctx.globalAlpha=0.72;ctx.lineWidth=sw*0.75;
+  ctx.beginPath();ctx.moveTo(W*0.14,H*0.74);ctx.bezierCurveTo(W*0.5,H*0.36,W*0.86,H*0.74,W*0.86,H*0.74);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(W*0.16,H*0.63);ctx.bezierCurveTo(W*0.5,H*0.28,W*0.84,H*0.63,W*0.84,H*0.63);ctx.stroke();
+  ctx.lineWidth=sw*0.4;ctx.setLineDash([3*dpr,3*dpr]);ctx.globalAlpha=0.25;
+  L(W*0.5,H*0.11,W*0.5,H*0.78);ctx.setLineDash([]);
+  ctx.globalAlpha=0.25;ctx.font=(10*dpr)+'px -apple-system,sans-serif';ctx.fillStyle=color;ctx.textAlign='center';
+  ctx.fillText('SCAN FOR CHIPS',W*0.5,H*0.52);ctx.globalAlpha=0.72;
+}
+
+function setColor(el){
+  color=el.dataset.c;
+  document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('btn-capture').style.borderColor=color;
+  document.getElementById('prog-fill').style.background=color;
+  draw();updatePills();
+}
+
+function updateUI(){
+  const s=SHOTS[shotIdx];
+  document.getElementById('shot-name').textContent=s.label;
+  document.getElementById('shot-counter').textContent='Photo '+(shotIdx+1)+' of '+SHOTS.length;
+  document.getElementById('instruction-text').textContent=s.desc;
+  document.getElementById('btn-prev').disabled=shotIdx===0;
+  document.getElementById('btn-next').disabled=shotIdx===SHOTS.length-1;
+  const done=Object.keys(captured).length;
+  document.getElementById('prog-label').textContent=done+' / '+SHOTS.length;
+  document.getElementById('prog-fill').style.width=(done/SHOTS.length*100)+'%';
+  document.getElementById('prog-fill').style.background=color;
+  document.getElementById('btn-capture').style.borderColor=color;
+  if(captured[s.id]){
+    document.getElementById('capture-dot').style.background=color+'30';
+    document.getElementById('btn-capture').style.background=color+'15';
+  } else {
+    document.getElementById('capture-dot').style.background='rgba(255,255,255,0.1)';
+    document.getElementById('btn-capture').style.background='rgba(255,255,255,0.04)';
+  }
+  const allDone=SHOTS.every(s=>captured[s.id]);
+  const cb=document.getElementById('complete-bar');
+  if(allDone){
+    cb.style.display='block';cb.style.borderColor=color+'44';cb.style.background=color+'08';
+    document.getElementById('complete-text').style.color=color;
+    document.getElementById('btn-submit').style.background=color;
+    document.getElementById('btn-submit').style.color='#000';
+  } else cb.style.display='none';
+  updatePills();draw();
+}
+
+function updatePills(){
+  const pills=document.querySelectorAll('.pill');
+  pills.forEach((p,i)=>{
+    const s=SHOTS[i];
+    if(i===shotIdx){p.style.borderColor=color;p.style.color=color;p.style.background=color+'18'}
+    else if(captured[s.id]){p.style.borderColor='rgba(255,255,255,0.12)';p.style.color='rgba(255,255,255,0.38)';p.style.background='transparent';p.textContent='✓ '+s.label}
+    else{p.style.borderColor='rgba(255,255,255,0.07)';p.style.color='rgba(255,255,255,0.18)';p.style.background='transparent';p.textContent=s.label}
+  });
+}
+
+function buildPills(){
+  const c=document.getElementById('shot-pills');c.innerHTML='';
+  SHOTS.forEach((s,i)=>{
+    const p=document.createElement('div');p.className='pill';p.textContent=s.label;
+    p.onclick=()=>{shotIdx=i;updateUI()};c.appendChild(p);
+  });
+}
+
+function triggerCapture(){
+  const fi=document.getElementById('file-input');
+  fi.value='';
+  fi.onchange=function(){if(this.files&&this.files[0])doCapture()};
+  fi.click();
+}
+
+function doCapture(){
+  captured[SHOTS[shotIdx].id]=true;
+  const flash=document.getElementById('captured-flash');
+  const check=document.getElementById('flash-check');
+  check.style.borderColor=color;check.style.color=color;
+  flash.style.opacity='1';check.style.opacity='1';check.style.transform='scale(1)';
+  setTimeout(()=>{
+    flash.style.opacity='0';check.style.opacity='0';check.style.transform='scale(0.4)';
+    if(shotIdx<SHOTS.length-1)setTimeout(()=>{shotIdx++;updateUI()},250);
+    else updateUI();
+  },700);
+  updateUI();
+  if(window.parent!==window){
+    window.parent.postMessage({type:'ghostcar_photo',shotId:SHOTS[shotIdx].id,vehicleType},'*');
+  }
+}
+
+function prevShot(){if(shotIdx>0){shotIdx--;updateUI()}}
+function nextShot(){if(shotIdx<SHOTS.length-1){shotIdx++;updateUI()}}
+function submitPhotos(){
+  if(window.parent!==window){
+    window.parent.postMessage({type:'ghostcar_complete',captured,vehicleType},'*');
+  } else alert('Photos submitted for appraisal.');
+}
+
+window.addEventListener('resize',()=>{isPortrait=window.innerHeight>window.innerWidth;resize()});
+window.addEventListener('orientationchange',()=>setTimeout(resize,100));
+buildPills();updateUI();requestAnimationFrame(resize);
+</script>
+</body>
+</html>

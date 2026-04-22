@@ -1,0 +1,1 @@
+ALTER TABLE public.site_config ADD COLUMN IF NOT EXISTS use_animated_calculating boolean NOT NULL DEFAULT false;
