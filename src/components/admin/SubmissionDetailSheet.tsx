@@ -2077,6 +2077,7 @@ const SubmissionDetailSheetV2 = ({
       address_city: sub.address_city,
       address_state: sub.address_state,
       store_location_id: sub.store_location_id || null,
+      drivable: sub.drivable ?? null,
       status_updated_at: new Date().toISOString(),
       loan_payoff_amount: (sub as any).loan_payoff_amount ?? null,
       loan_payoff_verified: (sub as any).loan_payoff_verified ?? false,
@@ -2571,21 +2572,37 @@ const SubmissionDetailSheetV2 = ({
                 <div className="px-4 py-2.5 border-b border-slate-100">
                   <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Vehicle</h3>
                 </div>
-                <div className="p-4 space-y-2.5">
+                <div className="divide-y divide-slate-100">
                   {[
                     { label: "Year", value: sub.vehicle_year?.toString() || null },
                     { label: "Make / Model", value: [sub.vehicle_make, sub.vehicle_model].filter(Boolean).join(" ") || null },
                     { label: "VIN", value: sub.vin || null, mono: true },
-                    { label: "Plate", value: [sub.address_state, sub.plate].filter(Boolean).join(" ") || null },
-                    { label: "Mileage", value: sub.mileage ? `${Number(sub.mileage).toLocaleString()} mi` : null },
+                    { label: "Plate", value: [sub.address_state, sub.plate].filter(Boolean).join(" ") || null, mono: true },
+                    { label: "Miles", value: sub.mileage ? `${Number(sub.mileage).toLocaleString()} mi` : null },
                     { label: "Color", value: sub.exterior_color || null },
-                    { label: "Drivable", value: sub.drivable || null },
-                  ].filter(r => r.value).map(row => (
-                    <div key={row.label} className="flex items-baseline justify-between gap-2">
-                      <span className="text-sm text-slate-400 shrink-0">{row.label}</span>
-                      <span className={`text-sm font-semibold text-slate-900 text-right min-w-0 break-words [overflow-wrap:anywhere] ${(row as any).mono ? "font-mono text-xs" : ""}`}>{row.value}</span>
+                  ].map(row => (
+                    <div key={row.label} className="flex items-baseline justify-between gap-2 px-4 py-2">
+                      <span className="text-[11px] uppercase tracking-wide text-slate-400 shrink-0">{row.label}</span>
+                      <span className={`text-sm font-semibold text-slate-900 text-right min-w-0 break-words [overflow-wrap:anywhere] ${(row as any).mono ? "font-mono text-xs" : ""}`}>{row.value ?? "—"}</span>
                     </div>
                   ))}
+                  {/* Drivable — inline radio */}
+                  <div className="flex items-center justify-between gap-2 px-4 py-2">
+                    <span className="text-[11px] uppercase tracking-wide text-slate-400 shrink-0">Drivable</span>
+                    <div className="flex gap-1">
+                      {(["Yes", "No", "Unknown"] as const).map(opt => {
+                        const d = sub.drivable?.toLowerCase();
+                        const active = opt === "Yes" ? (d === "yes" || d === "true") : opt === "No" ? (d === "no" || d === "false") : !d || d === "unknown";
+                        return (
+                          <button
+                            key={opt}
+                            onClick={() => updateField({ drivable: opt === "Unknown" ? null : opt.toLowerCase() })}
+                            className={`text-[11px] font-semibold px-2 py-0.5 rounded-md border transition-colors ${active ? "bg-slate-800 text-white border-slate-800" : "bg-white text-slate-500 border-slate-200 hover:border-slate-400"}`}
+                          >{opt}</button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               </div>
 
