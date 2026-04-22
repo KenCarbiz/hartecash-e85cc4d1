@@ -32,6 +32,7 @@ import {
   AlertTriangle, Bell, Mail, Phone, StickyNote, CalendarDays, Camera,
   ExternalLink, Upload, Check, XCircle, MapPin, Star, History, Clock,
   ClipboardCheck, ClipboardList, Save, Trash2, CheckCircle2, Activity, ChevronDown,
+  ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { calculateLeadScore, getScoreColor } from "@/lib/leadScoring";
 import { calculateEquity } from "@/lib/equityCalculator";
@@ -1989,7 +1990,7 @@ const RefreshedSheet = ({
   );
 };
 
-// ── V2 — Two-column redesign: media/info left, actions/deal right ──
+// ── V2 — Three-column redesign matching approved design ──
 // RefreshedSheet above is kept as V1 dead code for rollback.
 const SubmissionDetailSheetV2 = ({
   selected,
@@ -2136,157 +2137,189 @@ const SubmissionDetailSheetV2 = ({
     }
   };
 
+  const [photoIdx, setPhotoIdx] = useState(0);
+
   if (!sub) return null;
 
   const currentStageIdx = getStageIndex(sub.progress_status);
   const stages = getProgressStages(sub);
   const isPriceAgreedOrBeyond = sub.progress_status !== "dead_lead" && currentStageIdx >= getStageIndex("deal_finalized") && sub.offered_price;
   const nextAction = getNextAction(sub.progress_status);
-  const outcomeColor = (outcome: string | null) => {
-    switch (outcome) {
-      case 'accepted': return 'bg-success/15 text-success border-success/30';
-      case 'appointment_scheduled': return 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30';
-      case 'wants_higher_offer': return 'bg-amber-500/15 text-amber-600 border-amber-500/30';
-      case 'callback_requested': return 'bg-blue-500/15 text-blue-600 border-blue-500/30';
-      case 'not_interested': return 'bg-muted text-muted-foreground border-border';
-      case 'voicemail_left': return 'bg-purple-500/15 text-purple-600 border-purple-500/30';
-      case 'opted_out': return 'bg-destructive/15 text-destructive border-destructive/30';
-      default: return 'bg-muted text-muted-foreground border-border';
+
+  // Intent label from lead_source
+  const intentLabel = (() => {
+    switch (sub.lead_source) {
+      case "trade": case "in_store_trade": return { label: "Trade-In", sub: "Buying another car here" };
+      case "service": return { label: "Service Drive", sub: "Brought in for service" };
+      case "inventory": return { label: "Sell", sub: "Looking to sell their vehicle" };
+      default: return { label: "Sell", sub: "Looking to sell their vehicle" };
     }
-  };
+  })();
+
+  // Driver's license doc(s) from docs prop
+  const dlDocs = docs.filter(d => d.type === "drivers_license" || d.type === "drivers_license_front" || d.type === "drivers_license_back");
+
+  // Next action card details per status
+  const naCard = (() => {
+    const hasOffer = !!(sub.offered_price || sub.estimated_offer_high);
+    switch (sub.progress_status) {
+      case "new_lead": return { title: "Call the customer", desc: "They just submitted — first contact is critical.", cta: "Call Now", ctaHref: sub.phone ? `tel:${sub.phone.replace(/\D/g,"")}` : null, ctaAction: null };
+      case "in_progress": return { title: "Schedule an inspection", desc: "Customer is engaged. Lock in a time.", cta: "Schedule", ctaHref: null, ctaAction: "schedule" };
+      case "appointment_set": return { title: "Prepare for inspection", desc: "Inspection is booked. Review vehicle info.", cta: "View Inspection", ctaHref: null, ctaAction: "inspect" };
+      case "inspection_completed": case "manager_approval_inspection": return { title: "Build the offer", desc: "Inspection is done. Set your ACV and offer.", cta: "Open Appraisal", ctaHref: null, ctaAction: "appraise" };
+      case "offer_sent": case "deal_finalized": return hasOffer ? { title: "Review Offer", desc: "Customer has an offer. Follow up to close.", cta: "Send Follow-Up", ctaHref: null, ctaAction: "followup" } : { title: "Send the offer", desc: "Build and send the offer to the customer.", cta: "Open Appraisal", ctaHref: null, ctaAction: "appraise" };
+      case "check_request_submitted": return { title: "Complete check request", desc: "Price agreed. Generate and submit the check request.", cta: "Generate", ctaHref: null, ctaAction: "checkreq" };
+      case "purchase_complete": return { title: "Deal closed!", desc: "Great work. Consider requesting a review.", cta: "Send Review Request", ctaHref: null, ctaAction: "review" };
+      case "dead_lead": return { title: "Lead is closed", desc: "This opportunity has been marked as dead.", cta: null, ctaHref: null, ctaAction: null };
+      default: return { title: "Follow up", desc: "Stay in touch with the customer.", cta: "Send Follow-Up", ctaHref: null, ctaAction: "followup" };
+    }
+  })();
 
   return (
     <Sheet open={!!selected} onOpenChange={() => { setEditState(null); onClose(); }}>
       <SheetContent side="right" className="w-full sm:max-w-5xl lg:max-w-6xl p-0 flex flex-col overflow-hidden [&>button]:hidden">
 
-        {/* ── STICKY HEADER ── */}
-        <div className="sticky top-0 z-10 shrink-0">
-          <div className="bg-gradient-to-r from-[#003b80] to-[#005bb5] text-white overflow-hidden">
-            <div className="px-6 pt-4 pb-5">
-              <SheetHeader>
-                {/* Top row: close + breadcrumb left, actions right */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => { setEditState(null); onClose(); }}
-                      className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white hover:text-white transition-all print:hidden">
-                      <X className="w-4 h-4" />
-                    </Button>
-                    <span className="text-white/70 text-xs">Customer File</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 print:hidden">
-                    <Button variant="ghost" size="sm" onClick={handlePrint}
-                      className="px-3 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white hover:text-white text-xs font-semibold transition-all">
-                      <Printer className="w-3.5 h-3.5 mr-1.5" /> Print
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => onScheduleAppointment(sub)}
-                      className="px-3 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white hover:text-white text-xs font-semibold transition-all">
-                      <CalendarDays className="w-3.5 h-3.5 mr-1.5" /> Schedule
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => routerNavigate(`/inspection/${sub.id}`)}
-                      className="px-3 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white hover:text-white text-xs font-semibold transition-all">
-                      <ClipboardList className="w-3.5 h-3.5 mr-1.5" /> Inspection
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => routerNavigate(`/appraisal/${sub.token}`)}
-                      className="px-3 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white hover:text-white text-xs font-semibold transition-all">
-                      <Gauge className="w-3.5 h-3.5 mr-1.5" /> Appraisal
-                    </Button>
-                  </div>
-                </div>
+        {/* ══ STICKY HEADER ══ */}
+        <div className="sticky top-0 z-10 shrink-0 bg-gradient-to-r from-[#003b80] to-[#005bb5] text-white">
 
-                {/* Vehicle title row */}
-                <div className="flex items-end gap-4 flex-wrap">
-                  <div className="flex-1 min-w-[260px]">
-                    <div className="text-[11px] uppercase tracking-[0.15em] text-white/60 font-semibold mb-1">
-                      {[sub.name, sub.vehicle_year, sub.mileage ? `${Number(sub.mileage).toLocaleString()} mi` : null].filter(Boolean).join(" · ")}
-                    </div>
-                    <SheetTitle className="font-display text-[28px] leading-[1.05] tracking-tight text-white">
-                      {[sub.vehicle_make, sub.vehicle_model].filter(Boolean).join(" ") || "Submission Details"}
-                    </SheetTitle>
-                    <div className="flex items-center gap-3 mt-2 text-[13px] text-white/80 flex-wrap">
-                      {sub.vin && <span className="font-mono bg-white/10 rounded px-2 py-0.5 tracking-wider text-[12px]">{sub.vin}</span>}
-                      {sub.plate && <span>Plate · {sub.plate}</span>}
-                      {sub.exterior_color && <span className="text-white/60">· {sub.exterior_color}</span>}
-                    </div>
+          {/* ── Top bar: X + "Customer File" | Notes + Print ── */}
+          <div className="flex items-center justify-between px-4 py-2 border-b border-white/10">
+            <div className="flex items-center gap-2">
+              <button onClick={() => { setEditState(null); onClose(); }}
+                className="w-7 h-7 rounded-lg border border-white/25 flex items-center justify-center text-white/80 hover:bg-white/15 hover:text-white transition-all print:hidden">
+                <X className="w-3.5 h-3.5" />
+              </button>
+              <span className="text-white/70 text-xs font-semibold tracking-wide">Customer File</span>
+            </div>
+            <div className="flex items-center gap-1.5 print:hidden">
+              <button onClick={() => {}}
+                className="flex items-center gap-1.5 px-2.5 h-7 rounded-lg border border-white/25 text-white/80 hover:bg-white/15 hover:text-white text-[11px] font-semibold transition-all">
+                <StickyNote className="w-3 h-3" /> Notes
+              </button>
+              <button onClick={handlePrint}
+                className="flex items-center gap-1.5 px-2.5 h-7 rounded-lg border border-white/25 text-white/80 hover:bg-white/15 hover:text-white text-[11px] font-semibold transition-all">
+                <Printer className="w-3 h-3" /> Print
+              </button>
+            </div>
+          </div>
+
+          {/* ── Vehicle info (left) + Offer (right) ── */}
+          <div className="flex items-start justify-between px-5 pt-3 pb-4 gap-6">
+
+            {/* Left: year/mi · make/model · VIN box · plate/color · 3 badges */}
+            <div className="flex-1 min-w-0">
+
+              {/* Year — Mileage */}
+              <div className="text-[11px] font-semibold text-white/55 uppercase tracking-[0.12em] mb-1">
+                {[sub.vehicle_year, sub.mileage ? `${Number(sub.mileage).toLocaleString()} MI` : null].filter(Boolean).join("  ·  ")}
+              </div>
+
+              {/* Make / Model (large bold) */}
+              <SheetTitle className="text-[22px] font-display font-bold leading-tight text-white mb-2">
+                {[sub.vehicle_make, sub.vehicle_model].filter(Boolean).join(" ") || "Submission Details"}
+              </SheetTitle>
+
+              {/* VIN box · Plate · Color */}
+              <div className="flex items-center gap-2 flex-wrap mb-3">
+                {sub.vin && (
+                  <span className="font-mono text-[10px] bg-white/15 border border-white/20 rounded-md px-2 py-0.5 text-white tracking-widest whitespace-nowrap">
+                    {sub.vin}
+                  </span>
+                )}
+                {sub.plate && (
+                  <span className="text-[11px] text-white/75 font-medium">
+                    Plate · {[sub.address_state, sub.plate].filter(Boolean).join(" ")}
+                  </span>
+                )}
+                {sub.exterior_color && (
+                  <span className="text-[11px] text-white/50">· {sub.exterior_color}</span>
+                )}
+              </div>
+
+              {/* Three rounded indicator badges: Offer status · Intent · Lead quality */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* Offer status */}
+                {sub.offered_price ? (
+                  <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider rounded-md px-2.5 py-1 bg-emerald-400/20 text-emerald-100 border border-emerald-300/40 whitespace-nowrap">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 shrink-0" /> Offer Sent
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider rounded-md px-2.5 py-1 bg-white/10 text-white/60 border border-white/20 whitespace-nowrap">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white/40 shrink-0" /> No Offer
+                  </span>
+                )}
+
+                {/* Intent: Trade-In / Sell / Not Sure */}
+                {(sub.lead_source === "trade" || sub.lead_source === "in_store_trade") ? (
+                  <span className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider rounded-md px-2.5 py-1 bg-sky-400/20 text-sky-100 border border-sky-300/35 whitespace-nowrap">Trade-In</span>
+                ) : sub.lead_source ? (
+                  <span className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider rounded-md px-2.5 py-1 bg-white/10 text-white/70 border border-white/25 whitespace-nowrap">Sell</span>
+                ) : (
+                  <span className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider rounded-md px-2.5 py-1 bg-white/10 text-white/50 border border-white/20 whitespace-nowrap">Not Sure</span>
+                )}
+
+                {/* Lead quality */}
+                {sub.is_hot_lead ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider rounded-md px-2.5 py-1 bg-orange-400/25 text-orange-100 border border-orange-300/50 whitespace-nowrap">🔥 Hot Lead</span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider rounded-md px-2.5 py-1 bg-sky-400/15 text-sky-100 border border-sky-300/30 whitespace-nowrap">
+                    <span className="w-1.5 h-1.5 rounded-full bg-sky-300 shrink-0" /> Warm Lead
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Right: Offer amount + ACV + spread + submitted */}
+            <div className="text-right shrink-0 min-w-[160px]">
+              <div className="text-[10px] uppercase tracking-[0.15em] text-white/50 font-semibold mb-0.5">
+                {sub.offered_price ? "OFFER GIVEN" : sub.estimated_offer_high ? "ESTIMATED" : "NO OFFER YET"}
+              </div>
+              {(sub.offered_price || sub.estimated_offer_high) ? (
+                <>
+                  <div className="font-display text-[36px] leading-none font-bold">
+                    ${Math.floor(sub.offered_price || sub.estimated_offer_high || 0).toLocaleString()}
                   </div>
-                  {(sub.offered_price || sub.estimated_offer_high) && (
-                    <div className="text-right shrink-0">
-                      <div className="text-[11px] uppercase tracking-[0.15em] text-white/60 font-semibold">
-                        {sub.offered_price ? "Offer Given" : "Estimated Offer"}
-                      </div>
-                      <div className="font-display text-[44px] leading-none tracking-tight mt-0.5">
-                        ${Math.floor(sub.offered_price || sub.estimated_offer_high || 0).toLocaleString()}
-                      </div>
-                      {sub.acv_value != null && (
-                        <div className="text-[11px] text-white/60 mt-1">
-                          ACV ${Number(sub.acv_value).toLocaleString()}
-                          {sub.offered_price != null && (
-                            <span className={`ml-2 font-semibold ${sub.offered_price > sub.acv_value ? "text-emerald-300" : "text-red-300"}`}>
-                              {sub.offered_price > sub.acv_value ? "+" : ""}${Math.floor(sub.offered_price - sub.acv_value).toLocaleString()} spread
-                            </span>
-                          )}
-                        </div>
+                  {sub.acv_value != null && (
+                    <div className="text-[11px] text-white/60 mt-1.5">
+                      ACV ${Number(sub.acv_value).toLocaleString()}
+                      {sub.offered_price != null && (
+                        <span className={`ml-2 font-bold ${sub.offered_price >= sub.acv_value ? "text-emerald-300" : "text-red-300"}`}>
+                          {sub.offered_price >= sub.acv_value ? "+" : ""}${Math.floor(sub.offered_price - sub.acv_value).toLocaleString()} spread
+                        </span>
                       )}
                     </div>
                   )}
-                </div>
-
-                {/* Status chips row */}
-                <div className="flex items-center gap-2 mt-4 flex-wrap">
-                  <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider rounded-md px-2.5 py-1 border whitespace-nowrap ${
-                    sub.progress_status === "purchase_complete" ? "bg-emerald-400/25 text-emerald-100 border-emerald-300/40" :
-                    sub.progress_status === "dead_lead" ? "bg-red-400/25 text-red-100 border-red-300/40" :
-                    "bg-white/15 text-white border-white/25"
-                  }`}>
-                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                    {getStatusLabel(sub.progress_status)}
-                  </span>
-                  {sub.is_hot_lead && (
-                    <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider rounded-md px-2.5 py-1 bg-orange-400/25 text-orange-100 border border-orange-300/50 whitespace-nowrap">
-                      🔥 Hot Lead
-                    </span>
-                  )}
-                  <span className="text-[11px] text-white/60 ml-auto">
-                    {new Date(sub.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                  </span>
-                </div>
-              </SheetHeader>
+                </>
+              ) : (
+                <div className="text-[15px] font-semibold text-white/40 mt-1">—</div>
+              )}
+              <div className="text-[10px] text-white/35 mt-3">
+                Submitted {new Date(sub.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+              </div>
             </div>
-
-            {/* Arrived / On the way banner */}
-            {(sub as any).arrived_at && sub.progress_status === "arrived" ? (
-              <div className="bg-gradient-to-r from-red-600 to-red-500 border-t border-red-900/30 px-6 py-3">
-                <div className="flex items-center gap-3">
-                  <span className="relative flex items-center justify-center shrink-0">
-                    <span className="absolute inline-flex h-3 w-3 rounded-full bg-white/60 animate-ping" />
-                    <span className="relative inline-flex h-3 w-3 rounded-full bg-white" />
-                  </span>
-                  <span className="text-sm font-semibold text-white">
-                    Customer Arrived · {new Date((sub as any).arrived_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })} — Go greet them now
-                  </span>
-                </div>
-              </div>
-            ) : (sub as any).on_the_way_at && sub.progress_status === "on_the_way" ? (
-              <div className="bg-gradient-to-r from-amber-600 to-amber-500 border-t border-amber-900/30 px-6 py-3">
-                <div className="flex items-center gap-3">
-                  <span className="relative flex items-center justify-center shrink-0">
-                    <span className="absolute inline-flex h-3 w-3 rounded-full bg-white/60 animate-ping" />
-                    <span className="relative inline-flex h-3 w-3 rounded-full bg-white" />
-                  </span>
-                  <span className="text-sm font-semibold text-white">
-                    Customer On The Way · {new Date((sub as any).on_the_way_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })} — Prepare for their arrival
-                  </span>
-                </div>
-              </div>
-            ) : null}
           </div>
+
+          {/* Arrived / On-the-way banners */}
+          {(sub as any).arrived_at && sub.progress_status === "arrived" && (
+            <div className="bg-red-600 px-5 py-2.5 flex items-center gap-3 border-t border-red-900/30">
+              <span className="relative flex shrink-0"><span className="absolute inline-flex h-3 w-3 rounded-full bg-white/60 animate-ping" /><span className="relative inline-flex h-3 w-3 rounded-full bg-white" /></span>
+              <span className="text-sm font-semibold text-white">Customer Arrived · {new Date((sub as any).arrived_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })} — Go greet them now</span>
+            </div>
+          )}
+          {(sub as any).on_the_way_at && sub.progress_status === "on_the_way" && (
+            <div className="bg-amber-600 px-5 py-2.5 flex items-center gap-3 border-t border-amber-900/30">
+              <span className="relative flex shrink-0"><span className="absolute inline-flex h-3 w-3 rounded-full bg-white/60 animate-ping" /><span className="relative inline-flex h-3 w-3 rounded-full bg-white" /></span>
+              <span className="text-sm font-semibold text-white">Customer On The Way · {new Date((sub as any).on_the_way_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })} — Prepare</span>
+            </div>
+          )}
         </div>
-        {/* ── END HEADER ── */}
+        {/* ══ END HEADER ══ */}
 
-        {/* ── TWO-COLUMN BODY ── */}
-        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
+        {/* ══ THREE-COLUMN BODY ══ */}
+        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0 bg-[#f4f6f9]">
 
-          {/* ── LEFT COLUMN — Photos · Customer · Vehicle · Inspection (~45%) ── */}
-          <div className="lg:w-[45%] lg:border-r border-slate-200 overflow-y-auto p-5 lg:p-6 space-y-5 shrink-0 bg-slate-50/50">
+          {/* ── LEFT COLUMN (~40%) — Photos · Customer · Vehicle · Inspection ── */}
+          <div className="lg:w-[40%] overflow-y-auto p-4 space-y-3 shrink-0">
 
             {/* Alerts — duplicates / opt-out */}
             {(duplicateWarnings[sub.id]?.length > 0 || optOutStatus.email || optOutStatus.sms) && (
@@ -2315,7 +2348,7 @@ const SubmissionDetailSheetV2 = ({
               </div>
             )}
 
-            {/* Vehicle Photos */}
+            {/* Vehicle Photos — Carousel */}
             <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
               <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
@@ -2325,21 +2358,45 @@ const SubmissionDetailSheetV2 = ({
               </div>
               <div className="p-4">
                 {photos.length > 0 ? (
-                  <div className="grid grid-cols-3 gap-2">
-                    {photos.map((photo, i) => (
-                      <div key={i} className="relative group/photo rounded-xl overflow-hidden border border-border/30 shadow-sm hover:shadow-lg transition-all duration-300">
-                        <a href={photo.url} target="_blank" rel="noopener noreferrer" className="block">
-                          <img src={photo.url} alt={`Photo ${i + 1}`} className="w-full h-24 object-cover group-hover/photo:scale-105 transition-transform duration-500" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover/photo:opacity-100 transition-opacity" />
-                        </a>
-                        {canDelete && (
-                          <button onClick={() => onDeletePhoto(photo.name)}
-                            className="absolute top-1.5 right-1.5 bg-destructive/90 text-destructive-foreground rounded-lg p-1 opacity-0 group-hover/photo:opacity-100 transition-all hover:bg-destructive">
-                            <Trash2 className="w-3 h-3" />
+                  <div>
+                    {/* Main image with prev/next controls */}
+                    <div className="relative rounded-xl overflow-hidden bg-slate-100 mb-2.5 group" style={{ aspectRatio: "16/10" }}>
+                      <a href={photos[photoIdx]?.url} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                        <img src={photos[photoIdx]?.url} alt={`Photo ${photoIdx + 1}`} className="w-full h-full object-cover" />
+                      </a>
+                      {photos.length > 1 && (
+                        <>
+                          <button onClick={(e) => { e.preventDefault(); setPhotoIdx(i => (i - 1 + photos.length) % photos.length); }}
+                            className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 hover:bg-black/65 text-white flex items-center justify-center transition-all z-10">
+                            <ChevronLeft className="w-4 h-4" />
                           </button>
-                        )}
+                          <button onClick={(e) => { e.preventDefault(); setPhotoIdx(i => (i + 1) % photos.length); }}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 hover:bg-black/65 text-white flex items-center justify-center transition-all z-10">
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
+                          <div className="absolute bottom-2 right-2 bg-black/50 text-white text-[10px] font-bold px-2 py-0.5 rounded-full z-10">
+                            {photoIdx + 1} / {photos.length}
+                          </div>
+                        </>
+                      )}
+                      {canDelete && (
+                        <button onClick={() => onDeletePhoto(photos[photoIdx].name)}
+                          className="absolute top-2 left-2 bg-destructive/90 text-destructive-foreground rounded-lg p-1 opacity-0 group-hover:opacity-100 transition-all hover:bg-destructive z-10">
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                    {/* Thumbnail strip */}
+                    {photos.length > 1 && (
+                      <div className="flex gap-1.5 overflow-x-auto pb-1">
+                        {photos.map((photo, i) => (
+                          <button key={i} onClick={() => setPhotoIdx(i)}
+                            className={`flex-shrink-0 w-14 h-10 rounded-lg overflow-hidden border-2 transition-all ${i === photoIdx ? "border-[#003b80] opacity-100" : "border-transparent opacity-55 hover:opacity-100 hover:border-slate-300"}`}>
+                            <img src={photo.url} alt={`Thumb ${i + 1}`} className="w-full h-full object-cover" />
+                          </button>
+                        ))}
                       </div>
-                    ))}
+                    )}
                   </div>
                 ) : (
                   <div className="text-center py-6 border-2 border-dashed border-slate-200 rounded-xl">
@@ -2447,35 +2504,109 @@ const SubmissionDetailSheetV2 = ({
               </div>
             )}
 
+          </div>
+          {/* ── END LEFT COLUMN ── */}
+
+          {/* ── MIDDLE COLUMN (~22%) — ID · Intent · Documents · Upload ── */}
+          <div className="lg:w-[22%] overflow-y-auto p-4 space-y-3 shrink-0 border-x border-slate-200 bg-white">
+
+            {/* Driver's License / ID */}
+            <div className="rounded-xl border border-slate-200 bg-slate-50 overflow-hidden">
+              <div className="px-4 py-3 border-b border-slate-100">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-[#003b80]/50" /> ID on File
+                </h3>
+              </div>
+              <div className="p-4">
+                {dlDocs.length > 0 ? (
+                  <div className="space-y-3">
+                    <div className="rounded-lg overflow-hidden border border-slate-200 bg-white">
+                      {(() => {
+                        const firstDoc = dlDocs[0];
+                        const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(firstDoc.name);
+                        return isImage ? (
+                          <a href={firstDoc.url} target="_blank" rel="noopener noreferrer">
+                            <img src={firstDoc.url} alt="Driver's License" className="w-full object-cover" style={{ maxHeight: 120 }} />
+                          </a>
+                        ) : (
+                          <div className="h-20 flex items-center justify-center text-slate-400">
+                            <FileText className="w-8 h-8" />
+                          </div>
+                        );
+                      })()}
+                    </div>
+                    <div className="text-center space-y-1.5">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Driver's License</p>
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
+                        <CheckCircle2 className="w-3 h-3" /> Verified on file
+                      </span>
+                    </div>
+                    <a href={dlDocs[0].url} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-1 text-[11px] text-[#003b80] font-semibold hover:underline">
+                      <ExternalLink className="w-3 h-3" /> View Full Size
+                    </a>
+                    {dlDocs[1] && (
+                      <a href={dlDocs[1].url} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-1 text-[11px] text-slate-500 hover:underline">
+                        View back →
+                      </a>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <FileText className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                    <p className="text-[11px] text-slate-400">No ID on file</p>
+                    <p className="text-[10px] text-slate-400 mt-1">Customer uploads via QR link</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Intent */}
+            <div className="rounded-xl border border-slate-200 bg-slate-50 overflow-hidden">
+              <div className="px-4 py-3 border-b border-slate-100">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Intent</h3>
+              </div>
+              <div className="p-5 text-center">
+                <p className="text-2xl font-bold text-slate-900 mb-1">{intentLabel.label}</p>
+                <p className="text-xs text-slate-500">{intentLabel.sub}</p>
+                {sub.lead_source && (
+                  <span className="inline-block mt-3 text-[10px] font-semibold uppercase tracking-wider bg-[#003b80]/10 text-[#003b80] px-3 py-1 rounded-full">
+                    {sub.lead_source.replace(/_/g, " ")}
+                  </span>
+                )}
+              </div>
+            </div>
+
             {/* Documents */}
-            <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+            <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
                   <FileText className="w-3.5 h-3.5 text-[#003b80]/50" /> Documents
                 </h3>
                 {docs.length > 0 && <span className="text-[10px] font-bold bg-primary/10 text-primary rounded-lg px-2 py-0.5">{docs.length}</span>}
               </div>
-              <div className="p-4">
+              <div className="p-3">
                 {docs.length > 0 ? (
                   <div className="space-y-3">
                     {Object.entries(docs.reduce<Record<string, typeof docs>>((acc, doc) => { if (!acc[doc.type]) acc[doc.type] = []; acc[doc.type].push(doc); return acc; }, {})).map(([type, typeDocs]) => (
                       <div key={type}>
-                        <p className="text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider mb-1.5">{DOC_TYPE_LABELS[type] || type}</p>
-                        <div className="grid grid-cols-3 gap-2">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">{DOC_TYPE_LABELS[type] || type}</p>
+                        <div className="grid grid-cols-2 gap-1.5">
                           {typeDocs.map((doc, i) => {
                             const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(doc.name);
                             return (
-                              <div key={i} className="relative group/doc rounded-xl overflow-hidden border border-border/30 hover:shadow-md transition-all">
+                              <div key={i} className="relative group/doc rounded-lg overflow-hidden border border-slate-200 hover:shadow-md transition-all">
                                 <a href={doc.url} target="_blank" rel="noopener noreferrer" className="block">
                                   {isImage
-                                    ? <img src={doc.url} alt={doc.name} className="w-full h-24 object-cover group-hover/doc:scale-105 transition-transform duration-500" />
-                                    : <div className="w-full h-24 bg-muted/40 flex flex-col items-center justify-center"><FileText className="w-6 h-6 text-muted-foreground/40 mb-1" /><span className="text-[10px] text-muted-foreground truncate px-2 w-full text-center">{doc.name}</span></div>
+                                    ? <img src={doc.url} alt={doc.name} className="w-full h-16 object-cover" />
+                                    : <div className="w-full h-16 bg-slate-50 flex flex-col items-center justify-center"><FileText className="w-5 h-5 text-slate-300 mb-1" /><span className="text-[9px] text-slate-400 truncate px-1 w-full text-center">{doc.name}</span></div>
                                   }
                                 </a>
                                 {canDelete && (
                                   <button onClick={() => onDeleteDoc(doc.type, doc.name)}
-                                    className="absolute top-1.5 right-1.5 bg-destructive/90 text-destructive-foreground rounded-lg p-1 opacity-0 group-hover/doc:opacity-100 transition-all hover:bg-destructive">
-                                    <Trash2 className="w-3 h-3" />
+                                    className="absolute top-1 right-1 bg-destructive/90 text-destructive-foreground rounded p-0.5 opacity-0 group-hover/doc:opacity-100 transition-all hover:bg-destructive">
+                                    <Trash2 className="w-2.5 h-2.5" />
                                   </button>
                                 )}
                               </div>
@@ -2486,51 +2617,46 @@ const SubmissionDetailSheetV2 = ({
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-5 border-2 border-dashed border-slate-200 rounded-xl">
-                    <FileText className="w-7 h-7 text-slate-300 mx-auto mb-2" />
-                    <p className="text-sm text-slate-400">No documents uploaded</p>
+                  <div className="text-center py-4 border-2 border-dashed border-slate-200 rounded-xl">
+                    <FileText className="w-6 h-6 text-slate-300 mx-auto mb-1.5" />
+                    <p className="text-xs text-slate-400">No documents</p>
                   </div>
                 )}
-                <div className="mt-3">
+                <div className="mt-2.5">
                   <StaffFileUpload token={sub.token} bucket="customer-documents" onUploadComplete={() => onRefresh(sub)} />
                 </div>
               </div>
             </div>
 
-            {/* Document Upload QR Link */}
-            <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-              <div className="px-5 py-3 border-b border-slate-100">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                  <Upload className="w-3.5 h-3.5 text-[#003b80]/50" /> Customer Upload Link
+            {/* Customer Upload QR Link */}
+            <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+              <div className="px-4 py-3 border-b border-slate-100">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <Upload className="w-3.5 h-3.5 text-[#003b80]/50" /> Upload Link
                 </h3>
               </div>
-              <div className="p-5 flex items-start gap-4">
-                <div className="bg-white p-2.5 rounded-xl shadow-sm border border-slate-200 flex-shrink-0">
-                  <QRCodeSVG value={getDocsUrl(sub.token)} size={90} />
+              <div className="p-4 flex flex-col items-center gap-3">
+                <div className="bg-white p-2 rounded-xl shadow-sm border border-slate-200">
+                  <QRCodeSVG value={getDocsUrl(sub.token)} size={80} />
                 </div>
-                <div className="flex-1 space-y-2">
-                  <div className="bg-slate-50 rounded-lg p-2.5 border border-slate-200">
-                    <p className="text-[11px] text-slate-500 break-all font-mono leading-relaxed">{getDocsUrl(sub.token)}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="rounded-lg h-8 font-semibold text-xs border-slate-300 bg-white text-slate-700"
-                      onClick={() => { navigator.clipboard.writeText(getDocsUrl(sub.token)); toast({ title: "Link copied!" }); }}>
-                      <ClipboardCheck className="w-3 h-3 mr-1" /> Copy
-                    </Button>
-                    <Button variant="outline" size="sm" className="rounded-lg h-8 font-semibold text-xs border-slate-300 bg-white text-slate-700"
-                      onClick={() => window.open(getDocsUrl(sub.token), "_blank")}>
-                      <ExternalLink className="w-3 h-3 mr-1" /> Open
-                    </Button>
-                  </div>
+                <div className="flex gap-2 w-full">
+                  <Button variant="outline" size="sm" className="flex-1 rounded-lg h-8 font-semibold text-xs border-slate-300 bg-white text-slate-700"
+                    onClick={() => { navigator.clipboard.writeText(getDocsUrl(sub.token)); toast({ title: "Link copied!" }); }}>
+                    <ClipboardCheck className="w-3 h-3 mr-1" /> Copy
+                  </Button>
+                  <Button variant="outline" size="sm" className="flex-1 rounded-lg h-8 font-semibold text-xs border-slate-300 bg-white text-slate-700"
+                    onClick={() => window.open(getDocsUrl(sub.token), "_blank")}>
+                    <ExternalLink className="w-3 h-3 mr-1" /> Open
+                  </Button>
                 </div>
               </div>
             </div>
 
           </div>
-          {/* ── END LEFT COLUMN ── */}
+          {/* ── END MIDDLE COLUMN ── */}
 
-          {/* ── RIGHT COLUMN — Next Action · Deal · Offer · Loan · Notes · Activity (~55%) ── */}
-          <div className="flex-1 overflow-y-auto p-5 lg:p-6 space-y-5 min-h-0 bg-white">
+          {/* ── RIGHT COLUMN — Next Action · Deal · Offer · Loan · Notes · Activity (~38%) ── */}
+          <div className="flex-1 overflow-y-auto p-5 lg:p-6 space-y-5 min-h-0 bg-[#f4f6f9]">
 
             {/* ── NEXT ACTION CARD — the single most important thing to do ── */}
             {sub.progress_status !== "purchase_complete" && sub.progress_status !== "dead_lead" && (() => {
