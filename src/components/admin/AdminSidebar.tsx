@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 import {
   Inbox, CalendarDays, Users, ShieldCheck, SlidersHorizontal,
-  Settings, Bell, ListChecks, MessageSquareQuote, BarChart3, Send, MapPin, Car, ScrollText, Shield, Lock, Wrench, Rocket, Gauge, Network, Camera, Gift, Megaphone, ChevronDown, Link2, Code2, Paintbrush, TrendingUp, Store, Truck, Zap, Activity, ScanLine, CreditCard, Phone, DollarSign, Layout, Globe, Palette, UserCheck, Award, Flame
+  Settings, Bell, ListChecks, MessageSquareQuote, BarChart3, Send, MapPin, Car, ScrollText, Shield, Lock, Wrench, Rocket, Gauge, Network, Camera, Gift, Megaphone, ChevronDown, Link2, Code2, Paintbrush, TrendingUp, Store, Truck, Zap, Activity, ScanLine, CreditCard, Phone, DollarSign, Layout, Globe, Palette, UserCheck, Award, Flame, Home
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
@@ -38,9 +38,9 @@ interface AdminSidebarProps {
   userRole?: string;
   isAppraiser?: boolean;
   dealershipId?: string;
-  /** Enterprise beta program enrollment. Hides the Enterprise
-   *  sidebar group (API Access, vAuto, White Label, Wholesale
-   *  Marketplace) by default. Flipped on per-dealer by Super Admin. */
+  /** Enterprise beta program enrollment. Hides the enterprise-only
+   *  items (API Access, vAuto, White Label, Wholesale Marketplace) by
+   *  default. Flipped on per-dealer by Super Admin. */
   enterpriseBetaEnabled?: boolean;
 }
 
@@ -61,19 +61,13 @@ type SidebarItem = {
 const STORAGE_KEY = "admin-sidebar-collapsed";
 
 /**
- * Role hierarchy (least → most access):
- *   sales_bdc → used_car_manager → gsm_gm → admin
- *
  * Sidebar groups (top → bottom):
- *   - Pipeline       — Leads, Appointments, Appraiser Queue, Performance
- *   - Acquisition    — Daily operational tools (manager+ for most)
- *   - Configuration  — Offer Logic (mgr+) + admin-only Lead Form, Promotions, etc.
- *   - Storefront     — Admin-only customer-facing site config
- *   - My Tools       — Personal items (everyone): Lead Link, My Referrals
- *   - Insights       — Reports (mgr+) and Compliance (everyone)
- *   - Admin          — Dealer Setup, Staff & Permissions, System Settings (admin)
- *   - Integrations   — Enterprise connectors (gated on enterprise beta)
- *   - Platform       — Cross-tenant ops (platform admin only)
+ *   - Work     — daily tasks: Today, All Leads, Appraiser Queue, Appointments + ops tools
+ *   - Grow     — revenue-driving tools: Equity Mining, Voice AI, Wholesale
+ *   - Measure  — analytics & reporting: Performance, GM HUD, Reports, Compliance
+ *   - Setup    — dealer configuration: Offer Logic, Branding, Locations, etc.
+ *   - Account  — Staff & Permissions, Plan, Dealer Setup, System Settings
+ *   - Platform — super-admin cross-tenant tools
  */
 
 const AdminSidebar = ({
@@ -96,9 +90,6 @@ const AdminSidebar = ({
   enterpriseBetaEnabled = false,
 }: AdminSidebarProps) => {
   const { state, isMobile, setOpenMobile } = useSidebar();
-  // On mobile the sidebar renders inside a Sheet drawer, so it should
-  // always show the expanded (full-label) layout regardless of the
-  // desktop collapsed/expanded state.
   const collapsed = isMobile ? false : state === "collapsed";
   const navigate = useNavigate();
 
@@ -113,7 +104,6 @@ const AdminSidebar = ({
     }
   };
 
-  // Persisted collapsed groups
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -131,12 +121,10 @@ const AdminSidebar = ({
     setCollapsedGroups((prev) => ({ ...prev, [label]: !prev[label] }));
   };
 
-  // Permission helpers
   const isAllowed = (key: string) => allowedSections === null || allowedSections.includes(key);
   const isPlatformAdmin = canManageAccess && dealershipId === "default";
   const isManager = isManagerRole(userRole) || canManageAccess;
 
-  // Permission helpers for acquisition / pipeline items
   const isAcquisitionStaff =
     isManager ||
     userRole === "sales_bdc" ||
@@ -146,25 +134,16 @@ const AdminSidebar = ({
   const isCheckInStaff =
     isAcquisitionStaff || userRole === "inspector" || userRole === "receptionist";
   const canSeeAppraiserQueue = isManager || isAppraiser;
-  // Receptionist is locked to Appointments + Check-In. Nothing else in
-  // the sidebar should render for them — they're a front-desk role,
-  // not an ops role.
   const isReceptionist = userRole === "receptionist";
 
-  // ── PIPELINE ── (All staff see Leads & Appointments; Performance & Appraiser Queue are manager+)
-  const pipelineItems: SidebarItem[] = [
+  // ── TODAY ── Dashboard landing (its own group per design)
+  const todayItems: SidebarItem[] = [
+    { key: "today", label: "Today", icon: Home },
+  ].filter((item) => isAllowed(item.key));
+
+  // ── WORK ── Daily tasks: leads, queues, appointments + ops
+  const workItems: SidebarItem[] = [
     { key: "submissions", label: "All Leads", icon: Inbox, badge: submissionCount > 0 ? String(submissionCount) : undefined },
-    { key: "accepted-appts", label: "Appointments", icon: CalendarDays, badge: appointmentCount > 0 ? String(appointmentCount) : undefined },
-    // BDC Priority Queue — score-ranked "who to call next". Visible
-    // to anyone working leads (sales_bdc, sales, internet_manager) and
-    // managers + admins who want to supervise.
-    ...((userRole === "sales_bdc" ||
-         userRole === "sales" ||
-         userRole === "internet_manager" ||
-         isManager ||
-         canManageAccess)
-      ? [{ key: "bdc-queue", label: "BDC Priority Queue", icon: Flame }]
-      : []),
     ...(canSeeAppraiserQueue
       ? [{
           key: "appraiser-queue",
@@ -174,39 +153,53 @@ const AdminSidebar = ({
           badgeVariant: "destructive" as const,
         }]
       : []),
-    ...(isManager ? [{ key: "executive", label: "Performance", icon: BarChart3 }] : []),
-    // GM HUD — owner-adjacent executive view with carrying-cost math,
-    // conversion funnel, competitor intel. Admin + GM + platform admin
-    // only per canViewExecutiveHUD.
-    ...(canViewExecutiveHUD(userRole)
-      ? [{ key: "gm-hud", label: "GM HUD", icon: DollarSign }]
+    { key: "accepted-appts", label: "Appointments", icon: CalendarDays, badge: appointmentCount > 0 ? String(appointmentCount) : undefined },
+    ...((userRole === "sales_bdc" ||
+         userRole === "sales" ||
+         userRole === "internet_manager" ||
+         isManager ||
+         canManageAccess)
+      ? [{ key: "bdc-queue", label: "BDC Priority Queue", icon: Flame }]
       : []),
-  ].filter((item) => isAllowed(item.key));
-
-  // ── ACQUISITION ── (Manager+ — daily operational tools)
-  const acquisitionItems: SidebarItem[] = [
     ...(isCheckInStaff
       ? [{ key: "inspection-checkin", label: "Inspection Check-In", icon: ScanLine }]
       : []),
     ...(isAcquisitionStaff
       ? [{ key: "service-quick-entry", label: "Service Quick Entry", icon: Zap }]
       : []),
+    ...(canManageAccess ? [{ key: "image-inventory", label: "Vehicle Images", icon: Car }] : []),
+    { key: "my-lead-link", label: "My Lead Link", icon: Link2 },
+    { key: "my-referrals", label: "My Referrals", icon: Award },
+  ].filter((item) => isAllowed(item.key));
+
+  // ── GROW ── Revenue-driving tools (manager+)
+  const growItems: SidebarItem[] = [
     ...(isManager
       ? [{ key: "equity-mining", label: "Equity Mining", icon: TrendingUp }]
       : []),
     ...(isManager
       ? [{ key: "voice-ai", label: "Voice AI", icon: Phone }]
       : []),
-    ...(canManageAccess ? [{ key: "image-inventory", label: "Vehicle Images", icon: Car }] : []),
     ...(isManager && (enterpriseBetaEnabled || isPlatformAdmin)
-      ? [{ key: "wholesale-marketplace", label: "Wholesale Marketplace", icon: Store }]
+      ? [{ key: "wholesale-marketplace", label: "Wholesale", icon: Store }]
       : []),
   ].filter((item) => isAllowed(item.key));
 
-  // ── CONFIGURATION ── (Offer Logic is manager+; rest is admin-only)
-  // Promotions and Referral Program live together — both are marketing programs.
-  const configItems: SidebarItem[] = [
+  // ── MEASURE ── Performance, HUD, reports, compliance
+  const measureItems: SidebarItem[] = [
+    ...(isManager ? [{ key: "executive", label: "Performance", icon: BarChart3 }] : []),
+    ...(canViewExecutiveHUD(userRole)
+      ? [{ key: "gm-hud", label: "GM HUD", icon: DollarSign }]
+      : []),
+    ...(isManager ? [{ key: "reports", label: "Reports", icon: Send }] : []),
+    { key: "compliance", label: "Compliance", icon: ShieldCheck },
+  ].filter((item) => isAllowed(item.key));
+
+  // ── SETUP ── Dealer configuration (Offer Logic mgr+; rest admin-only)
+  const setupItems: SidebarItem[] = [
     ...(isManager ? [{ key: "offer-settings", label: "Offer Logic", icon: SlidersHorizontal, badge: pricingAccessRequestCount > 0 ? String(pricingAccessRequestCount) : undefined, badgeVariant: "destructive" as const }] : []),
+    ...(canManageAccess ? [{ key: "site-config", label: "Branding", icon: Palette }] : []),
+    ...(canManageAccess && locationCount > 1 ? [{ key: "locations", label: "Locations", icon: MapPin }] : []),
     ...(canManageAccess ? [
       { key: "form-config", label: "Lead Form", icon: ListChecks },
       { key: "inspection-config", label: "Inspection Sheet", icon: Shield },
@@ -215,71 +208,34 @@ const AdminSidebar = ({
       { key: "promotions", label: "Promotions", icon: Megaphone },
       { key: "referrals", label: "Referral Program", icon: Gift },
       { key: "notifications", label: "Notifications", icon: Bell },
+      { key: "landing-flow", label: "Landing & Flow", icon: Layout },
+      ...(locationCount > 1 ? [{ key: "rooftop-websites", label: "Rooftop Websites", icon: Globe }] : []),
+      { key: "testimonials", label: "Testimonials", icon: MessageSquareQuote },
+      { key: "embed-toolkit", label: "Website Embed", icon: Code2 },
     ] : []),
-  ].filter((item) => isAllowed(item.key));
-
-  // ── STOREFRONT ── (Admin-only — customer-facing content)
-  const storefrontItems: SidebarItem[] = canManageAccess
-    ? [
-        { key: "site-config", label: "Branding", icon: Palette },
-        { key: "landing-flow", label: "Landing & Flow", icon: Layout },
-        ...(locationCount > 1 ? [{ key: "locations", label: "Locations", icon: MapPin }] : []),
-        ...(locationCount > 1 ? [{ key: "rooftop-websites", label: "Rooftop Websites", icon: Globe }] : []),
-        { key: "testimonials", label: "Testimonials", icon: MessageSquareQuote },
-        { key: "embed-toolkit", label: "Website Embed", icon: Code2 },
-        ...(enterpriseBetaEnabled || isPlatformAdmin
-          ? [{ key: "white-label", label: "White Label", icon: Paintbrush }]
-          : []),
-      ].filter((item) => isAllowed(item.key))
-    : [];
-
-  // ── MY TOOLS ── (Visible to all staff — personal items)
-  // My Referrals uses Award (not Gift) so it doesn't collide visually with the
-  // admin Referral Program entry in Configuration.
-  const myToolsItems: SidebarItem[] = [
-    { key: "my-lead-link", label: "My Lead Link", icon: Link2 },
-    { key: "my-referrals", label: "My Referrals", icon: Award },
-  ];
-
-  // ── INSIGHTS ── (Reports + Compliance — oversight tooling)
-  const insightsItems: SidebarItem[] = [
-    ...(isManager ? [{ key: "reports", label: "Reports & Export", icon: Send }] : []),
-    { key: "compliance", label: "Compliance", icon: ShieldCheck },
-  ].filter((item) => isAllowed(item.key));
-
-  // ── ADMIN ── (Dealer-level setup — staff, account, system)
-  const teamBadgeCount = canManageAccess ? pendingRequestCount + permissionRequestCount : 0;
-  const adminItems: SidebarItem[] = [
-    ...(canManageAccess ? [{ key: "onboarding", label: "Dealer Setup", icon: Rocket }] : []),
-    ...(canManageAccess ? [{ key: "staff", label: "Staff & Permissions", icon: Users, badge: teamBadgeCount > 0 ? String(teamBadgeCount) : undefined, badgeVariant: "destructive" as const }] : []),
-    ...(canManageAccess ? [{ key: "system-settings", label: "System Settings", icon: Wrench }] : []),
-    // My Plan — dealer admin can view + change their Autocurb
-    // subscription. Navigates to the standalone /plan page which has
-    // its own PlatformProvider. Kept in the Admin group (next to
-    // Dealer Setup) because it's an account-management task, not a
-    // daily ops task.
-    ...(canManageAccess && !isPlatformAdmin
-      ? [{ key: "my-plan", label: "My Plan", icon: CreditCard, href: "/plan" }]
+    ...(canManageAccess && (enterpriseBetaEnabled || isPlatformAdmin)
+      ? [
+          { key: "white-label", label: "White Label", icon: Paintbrush },
+          { key: "integrations-status", label: "Integrations", icon: Activity },
+          { key: "api-access", label: "API Access", icon: Code2 },
+          { key: "vauto-integration", label: "vAuto Integration", icon: Truck },
+        ]
       : []),
-    // Edits the entries shown on the public /updates page (footer link).
-    // Lives here, not under System Settings, because it's content management.
+  ].filter((item) => isAllowed(item.key));
+
+  // ── ACCOUNT ── Staff & Permissions, Plan, Dealer Setup, System Settings
+  const teamBadgeCount = canManageAccess ? pendingRequestCount + permissionRequestCount : 0;
+  const accountItems: SidebarItem[] = [
+    ...(canManageAccess ? [{ key: "staff", label: "Staff & Permissions", icon: Users, badge: teamBadgeCount > 0 ? String(teamBadgeCount) : undefined, badgeVariant: "destructive" as const }] : []),
+    ...(canManageAccess && !isPlatformAdmin
+      ? [{ key: "my-plan", label: "Plan", icon: CreditCard, href: "/plan" }]
+      : []),
+    ...(canManageAccess ? [{ key: "onboarding", label: "Dealer Setup", icon: Rocket }] : []),
+    ...(canManageAccess ? [{ key: "system-settings", label: "System Settings", icon: Wrench }] : []),
     ...(canManageAccess ? [{ key: "changelog", label: "Platform Updates", icon: ScrollText }] : []),
   ].filter((item) => isAllowed(item.key));
 
-  // ── INTEGRATIONS ── (Enterprise — third-party connectors)
-  const integrationsItems: SidebarItem[] = [
-    ...(canManageAccess && (enterpriseBetaEnabled || isPlatformAdmin)
-      ? [{ key: "integrations-status", label: "Integrations", icon: Activity }]
-      : []),
-    ...(canManageAccess && (enterpriseBetaEnabled || isPlatformAdmin)
-      ? [{ key: "api-access", label: "API Access", icon: Code2 }]
-      : []),
-    ...(canManageAccess && (enterpriseBetaEnabled || isPlatformAdmin)
-      ? [{ key: "vauto-integration", label: "vAuto Integration", icon: Truck }]
-      : []),
-  ].filter((item) => isAllowed(item.key));
-
-  // ── PLATFORM ── (Platform admin only — cross-tenant operations)
+  // ── PLATFORM ── Super-admin only, cross-tenant operations
   const platformItems: SidebarItem[] = [
     ...(isPlatformAdmin ? [{ key: "tenants", label: "Dealer Tenants", icon: Network }] : []),
     ...(isPlatformAdmin ? [{ key: "pricing-model", label: "Pricing Model", icon: DollarSign }] : []),
@@ -288,9 +244,8 @@ const AdminSidebar = ({
       : []),
   ].filter((item) => isAllowed(item.key));
 
-  // Locked sections for "Request Access"
   const allSectionKeys = [
-    "submissions", "accepted-appts", "executive", "appraiser-queue",
+    "today", "submissions", "accepted-appts", "executive", "appraiser-queue",
     "offer-settings", "form-config", "inspection-config", "photo-config",
     "depth-policies", "promotions", "notifications",
     "site-config", "landing-flow", "locations", "rooftop-websites", "testimonials", "embed-toolkit",
@@ -304,31 +259,24 @@ const AdminSidebar = ({
     ? allSectionKeys.filter((k) => !allowedSections.includes(k))
     : [];
 
-  // Check if group contains active section
   const groupContainsActive = (items: { key: string }[]) => items.some((item) => item.key === activeSection);
 
-  // Auto-expand the group containing the active section
+  // Receptionist nav is intentionally minimal — check-in + today's appointments only
   const groupEntries: [string, SidebarItem[]][] = isReceptionist
     ? [
-        // Receptionist nav is intentionally tiny — they check customers
-        // in and see today's appointments. Nothing else is relevant to
-        // their job and extra items just add visual noise at the front
-        // desk.
-        ["Pipeline", pipelineItems.filter((i) => i.key === "accepted-appts")],
-        ["Acquisition", acquisitionItems.filter((i) => i.key === "inspection-checkin")],
-        ["My Tools", myToolsItems],
+        ["Today", todayItems],
+        ["Work", workItems.filter((i) => i.key === "accepted-appts" || i.key === "inspection-checkin" || i.key === "my-lead-link" || i.key === "my-referrals")],
       ]
     : [
-        ["Pipeline", pipelineItems],
-        ["Acquisition", acquisitionItems],
-        ["Configuration", configItems],
-        ["Storefront", storefrontItems],
-        ["My Tools", myToolsItems],
-        ["Insights", insightsItems],
-        ["Admin", adminItems],
-        ["Integrations", integrationsItems],
+        ["Today", todayItems],
+        ["Work", workItems],
+        ["Grow", growItems],
+        ["Measure", measureItems],
+        ["Setup", setupItems],
+        ["Account", accountItems],
         ["Platform", platformItems],
       ];
+
   useEffect(() => {
     const activeGroup = groupEntries.find(([, items]) =>
       items.some((item) => item.key === activeSection)
@@ -406,15 +354,7 @@ const AdminSidebar = ({
   return (
     <Sidebar collapsible="icon" className="border-r border-border">
       <SidebarContent className="pt-2">
-        {renderGroup("Pipeline", pipelineItems)}
-        {renderGroup("Acquisition", acquisitionItems)}
-        {renderGroup("Configuration", configItems)}
-        {renderGroup("Storefront", storefrontItems)}
-        {renderGroup("My Tools", myToolsItems)}
-        {renderGroup("Insights", insightsItems)}
-        {renderGroup("Admin", adminItems)}
-        {renderGroup("Integrations", integrationsItems)}
-        {renderGroup("Platform", platformItems)}
+        {groupEntries.map(([label, items]) => renderGroup(label, items))}
 
         {lockedSections.length > 0 && !collapsed && (
           <SidebarGroup>
@@ -439,9 +379,6 @@ const AdminSidebar = ({
       </SidebarContent>
       <SidebarFooter className="p-3 space-y-2 border-t border-border/50">
         <SidebarMenu>
-          {/* Platform Updates lives at Admin → Platform Updates (the editor
-              there links out to the public /updates page). The duplicate
-              footer entry was removed to keep one source of truth. */}
           {isPlatformAdmin && (
             <SidebarMenuItem>
               <SidebarMenuButton
