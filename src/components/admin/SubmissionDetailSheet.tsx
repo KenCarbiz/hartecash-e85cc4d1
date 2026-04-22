@@ -2223,20 +2223,32 @@ const SubmissionDetailSheetV2 = ({
         {/* ══ STICKY HEADER ══ */}
         <div className="sticky top-0 z-10 shrink-0 bg-gradient-to-r from-[#003b80] to-[#005bb5] text-white">
 
+          {/* ── Top bar: X + "Customer File" | Notes + Print ── */}
+          <div className="flex items-center justify-between px-4 py-2 border-b border-white/10">
+            <div className="flex items-center gap-2">
+              <button onClick={() => { setEditState(null); onClose(); }}
+                className="w-7 h-7 rounded-lg border border-white/25 flex items-center justify-center text-white/80 hover:bg-white/15 hover:text-white transition-all print:hidden">
+                <X className="w-3.5 h-3.5" />
+              </button>
+              <span className="text-white/70 text-xs font-semibold tracking-wide">Customer File</span>
+            </div>
+            <div className="flex items-center gap-1.5 print:hidden">
+              <button onClick={() => {}}
+                className="flex items-center gap-1.5 px-2.5 h-7 rounded-lg border border-white/25 text-white/80 hover:bg-white/15 hover:text-white text-[11px] font-semibold transition-all">
+                <StickyNote className="w-3 h-3" /> Notes
+              </button>
+              <button onClick={handlePrint}
+                className="flex items-center gap-1.5 px-2.5 h-7 rounded-lg border border-white/25 text-white/80 hover:bg-white/15 hover:text-white text-[11px] font-semibold transition-all">
+                <Printer className="w-3 h-3" /> Print
+              </button>
+            </div>
+          </div>
+
           {/* ── Vehicle info (left) + Offer (right) ── */}
           <div className="flex items-start justify-between px-5 pt-3 pb-4 gap-6">
 
             {/* Left: year/mi · make/model · VIN box · plate/color · 3 badges */}
             <div className="flex-1 min-w-0">
-
-              {/* X · Customer File label */}
-              <div className="flex items-center gap-2 mb-2 print:hidden">
-                <button onClick={() => { setEditState(null); onClose(); }}
-                  className="w-6 h-6 rounded-md border border-white/25 flex items-center justify-center text-white/70 hover:bg-white/15 hover:text-white transition-all">
-                  <X className="w-3 h-3" />
-                </button>
-                <span className="text-white/55 text-[11px] font-semibold tracking-wide">Customer File</span>
-              </div>
 
               {/* Year — Mileage */}
               <div className="text-[11px] font-semibold text-white/55 uppercase tracking-[0.12em] mb-1">
@@ -2298,18 +2310,8 @@ const SubmissionDetailSheetV2 = ({
               </div>
             </div>
 
-            {/* Right: Notes + Print, then Offer amount + ACV + spread + submitted */}
+            {/* Right: Offer amount + ACV + spread + submitted */}
             <div className="text-right shrink-0 min-w-[160px]">
-              <div className="flex items-center justify-end gap-1.5 mb-2 print:hidden">
-                <button onClick={() => {}}
-                  className="flex items-center gap-1 px-2 h-6 rounded-md border border-white/25 text-white/70 hover:bg-white/15 hover:text-white text-[11px] font-semibold transition-all">
-                  <StickyNote className="w-3 h-3" /> Notes
-                </button>
-                <button onClick={handlePrint}
-                  className="flex items-center gap-1 px-2 h-6 rounded-md border border-white/25 text-white/70 hover:bg-white/15 hover:text-white text-[11px] font-semibold transition-all">
-                  <Printer className="w-3 h-3" /> Print
-                </button>
-              </div>
               <div className="text-[10px] uppercase tracking-[0.15em] text-white/50 font-semibold mb-0.5">
                 {sub.offered_price ? "OFFER GIVEN" : sub.estimated_offer_high ? "ESTIMATED" : "NO OFFER YET"}
               </div>
