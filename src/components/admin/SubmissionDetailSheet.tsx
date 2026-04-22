@@ -2603,52 +2603,41 @@ const SubmissionDetailSheetV2 = ({
                 ? "from-slate-600 to-slate-500"
                 : "from-[#1b5e35] to-[#217a42]";
               return (
-                <div className="rounded-xl overflow-hidden shadow-sm border border-slate-200">
+                <div className="rounded-2xl overflow-hidden shadow-md border border-slate-200">
                   <div className={`bg-gradient-to-br ${bgClass} p-4`}>
                     <div className="flex items-start justify-between mb-3">
                       <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/65">Next Action</p>
-                      <span className={`text-[10px] font-bold uppercase tracking-wider rounded px-2 py-0.5 border ${isForManager ? "bg-amber-400/25 border-amber-300/40 text-amber-100" : "bg-white/15 border-white/25 text-white"}`}>
+                      <span className={`text-[10px] font-bold uppercase tracking-wider rounded-md px-2 py-0.5 border ${isForManager ? "bg-amber-400/25 border-amber-300/40 text-amber-100" : "bg-white/15 border-white/25 text-white"}`}>
                         {isForManager ? "For Manager" : "For Sales"}
                       </span>
                     </div>
                     <p className="text-[20px] font-bold text-white leading-tight mb-1">{naCard.title}</p>
-                    <p className="text-[12px] text-white/70 leading-relaxed">{naCard.desc}</p>
-                    {naCard.cta && (
-                      <div className="mt-3">
-                        {naCard.ctaHref ? (
-                          <a href={naCard.ctaHref}
-                            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg border border-white/30 text-white text-sm font-semibold hover:bg-white/10 transition-colors">
-                            {naCard.cta} ›
-                          </a>
-                        ) : (
-                          <button
-                            onClick={() => {
-                              if (naCard.ctaAction === "schedule") onScheduleAppointment(sub);
-                              else if (naCard.ctaAction === "appraise") routerNavigate(`/appraisal/${sub.token}`);
-                              else if (naCard.ctaAction === "inspect") routerNavigate(`/inspection/${sub.id}`);
-                            }}
-                            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg border border-white/30 text-white text-sm font-semibold hover:bg-white/10 transition-colors">
-                            {naCard.cta} ›
-                          </button>
-                        )}
-                      </div>
-                    )}
+                    <p className="text-[12px] text-white/70 leading-relaxed mb-4">{naCard.desc}</p>
+                    {/* Send Follow-Up — rounded rectangle CTA */}
+                    <button
+                      onClick={() => {
+                        if (naCard.ctaAction === "schedule") onScheduleAppointment(sub);
+                        else if (naCard.ctaAction === "appraise") routerNavigate(`/appraisal/${sub.token}`);
+                        else if (naCard.ctaAction === "inspect") routerNavigate(`/inspection/${sub.id}`);
+                        // "followup" and others: wire later
+                      }}
+                      className="w-full py-2.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/30 text-white text-[13px] font-bold transition-colors text-center">
+                      {naCard.cta ?? "Send Follow-Up"} ›
+                    </button>
                   </div>
-                  {/* Follow-up row: SMS · Email · AI Call */}
-                  {!["dead_lead","purchase_complete"].includes(sub.progress_status) && (
-                    <div className="flex border-t border-slate-100 bg-white">
-                      {[
-                        { label: "SMS", icon: Phone },
-                        { label: "Email", icon: Mail },
-                        { label: "AI Call", icon: Phone },
-                      ].map((item, i, arr) => (
-                        <button key={item.label}
-                          className={`flex-1 py-2.5 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 flex items-center justify-center gap-1.5 transition-colors ${i < arr.length - 1 ? "border-r border-slate-100" : ""}`}>
-                          <item.icon className="w-3 h-3" /> {item.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  {/* SMS · Email · AI Call — always visible below */}
+                  <div className="flex bg-white border-t border-slate-100">
+                    {[
+                      { label: "SMS", icon: Phone },
+                      { label: "Email", icon: Mail },
+                      { label: "AI Call", icon: Phone },
+                    ].map((item, i, arr) => (
+                      <button key={item.label}
+                        className={`flex-1 py-3 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 flex items-center justify-center gap-1.5 transition-colors ${i < arr.length - 1 ? "border-r border-slate-100" : ""}`}>
+                        <item.icon className="w-3 h-3" /> {item.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               );
             })()}
