@@ -25,18 +25,13 @@ import StaffFileUpload from "@/components/admin/StaffFileUpload";
 import FollowUpPanel from "@/components/admin/FollowUpPanel";
 import RetailMarketPanel from "@/components/admin/RetailMarketPanel";
 import HistoricalInsightPanel from "@/components/appraisal/HistoricalInsightPanel";
-import EscalateToManagerDialog, { ESCALATION_REASONS } from "@/components/admin/EscalateToManagerDialog";
-import DeclinedReasonDialog, { DECLINED_REASONS } from "@/components/admin/DeclinedReasonDialog";
-import SaveTheDealDialog from "@/components/admin/SaveTheDealDialog";
-import ConversationThread from "@/components/admin/ConversationThread";
-import { isBDCRole, isSalesFloorRole, isManagerRole, canWorkLeads, isInternetManagerRole } from "@/lib/adminConstants";
 import { useTenant } from "@/contexts/TenantContext";
 import {
   X, Printer, Users, Car, Search, DollarSign, Info, FileText, Gauge, Palette, BarChart3, ScanLine,
   Settings2, Wrench, Key, Wind, Cigarette, CircleDot, Sparkles, TrendingUp,
   AlertTriangle, Bell, Mail, Phone, StickyNote, CalendarDays, Camera,
   ExternalLink, Upload, Check, XCircle, MapPin, Star, History, Clock,
-  ClipboardCheck, ClipboardList, Save, Trash2, CheckCircle2, Activity, ChevronDown, UserCheck, MessageSquare,
+  ClipboardCheck, ClipboardList, Save, Trash2, CheckCircle2, Activity, ChevronDown,
 } from "lucide-react";
 import { calculateLeadScore, getScoreColor } from "@/lib/leadScoring";
 import { calculateEquity } from "@/lib/equityCalculator";
@@ -64,27 +59,6 @@ interface SubmissionDetailSheetProps {
   canApprove: boolean;
   canDelete: boolean;
   canUpdateStatus: boolean;
-  /**
-   * Read-only pricing visibility. Sales-floor roles get this true even
-   * when canSetPrice is false — they can see book values and ACV so
-   * they can quote customers, but every edit control stays gated by
-   * canSetPrice.
-   */
-  canViewPricing?: boolean;
-  /**
-   * True for sales_bdc / sales. Used to hide margin math (profit
-   * spread, retail market comps, activity log, AI call transcripts)
-   * that internal-operations-level users need but the sales floor
-   * does not.
-   */
-  isSalesFloor?: boolean;
-  /**
-   * Current user role + email. Needed so BDC-specific affordances
-   * (Escalate to Manager, Log Declined Reason) can write audit trail
-   * entries attributed to the actor.
-   */
-  userRole?: string;
-  userEmail?: string;
   auditLabel: string;
   userName: string;
   onUpdate: (updated: Submission) => void;
@@ -181,9 +155,7 @@ const InspectionVitals = ({ submissionId }: { submissionId: string }) => {
   const [data, setData] = useState<{
     tire_lf: number | null; tire_rf: number | null; tire_lr: number | null; tire_rr: number | null;
     brake_lf: number | null; brake_rf: number | null; brake_lr: number | null; brake_rr: number | null;
-    dealership_id: string | null;
   } | null>(null);
-  const [inputMode, setInputMode] = useState<"measurement" | "pass_fail">("measurement");
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -192,25 +164,11 @@ const InspectionVitals = ({ submissionId }: { submissionId: string }) => {
     (async () => {
       const { data: row } = await supabase
         .from("submissions")
-        .select("tire_lf, tire_rf, tire_lr, tire_rr, brake_lf, brake_rf, brake_lr, brake_rr, dealership_id")
+        .select("tire_lf, tire_rf, tire_lr, tire_rr, brake_lf, brake_rf, brake_lr, brake_rr")
         .eq("id", submissionId)
         .maybeSingle();
-      // Pull the dealer's tire/brake input preference so we interpret
-      // the stored values correctly — 0/1 are pass/fail flags under
-      // pass_fail mode, not tread depths.
-      let mode: "measurement" | "pass_fail" = "measurement";
-      const dealership = (row as any)?.dealership_id;
-      if (dealership) {
-        const { data: cfg } = await supabase
-          .from("inspection_config")
-          .select("tire_brake_input_mode")
-          .eq("dealership_id", dealership)
-          .maybeSingle();
-        if ((cfg as any)?.tire_brake_input_mode === "pass_fail") mode = "pass_fail";
-      }
       if (!cancelled) {
         setData((row as any) ?? null);
-        setInputMode(mode);
         setLoaded(true);
       }
     })();
@@ -226,19 +184,9 @@ const InspectionVitals = ({ submissionId }: { submissionId: string }) => {
   type State = "green" | "yellow" | "red" | "empty";
   const stateOf = (v: number | null | undefined): State => {
     if (v == null || isNaN(v)) return "empty";
-    if (inputMode === "pass_fail") {
-      // 1 = pass (green), 0 = fail (red). No middle band in pass/fail.
-      return v === 1 ? "green" : "red";
-    }
     if (v >= 6) return "green";
     if (v >= 3) return "yellow";
     return "red";
-  };
-
-  const labelFor = (s: State): string => {
-    if (s === "empty") return "Not recorded";
-    if (inputMode === "pass_fail") return s === "green" ? "Pass" : "Fail";
-    return s === "green" ? "Good" : s === "yellow" ? "Fair" : "Replace";
   };
 
   const stateClass: Record<State, string> = {
@@ -271,7 +219,7 @@ const InspectionVitals = ({ submissionId }: { submissionId: string }) => {
         <div className="min-w-0 flex-1">
           <div className="text-[9px] font-bold uppercase tracking-wider opacity-75 leading-none">{label}</div>
           <div className="text-[11px] font-semibold leading-tight mt-0.5">
-            {labelFor(s)}
+            {s === "empty" ? "Not recorded" : s === "green" ? "Good" : s === "yellow" ? "Fair" : "Replace"}
           </div>
         </div>
       </div>
@@ -303,7 +251,7 @@ const InspectionVitals = ({ submissionId }: { submissionId: string }) => {
         </div>
       </div>
       <p className="text-[10px] text-muted-foreground italic">
-        From the inspection — {inputMode === "pass_fail" ? "Green pass, Red fail." : "Green good, Amber fair, Red replace."}
+        From the inspection — Green good, Amber fair, Red replace.
       </p>
     </div>
   );
@@ -530,294 +478,7 @@ const CompactOBDIndicator = ({ submissionId, token }: { submissionId: string; to
   );
 };
 
-// ── BDCActionStrip ────────────────────────────────────────────────────
-// BDC / sales affordances for the top of the customer file.
-//
-// - Escalation banner: shown to everyone when the lead is escalated.
-//   Managers see a "Resolve" button; BDC/sales just see the status.
-// - Declined-reason banner: shown to everyone when a reason was logged;
-//   sales floor can open the dialog to update it.
-// - Action row: BDC / sales get Escalate-to-Manager + Log-Declined-Reason
-//   + Book-Inspection buttons. Managers don't need these in their own
-//   view — they act on escalations via the queue.
-const BDCActionStrip = ({
-  sub,
-  userRole,
-  userEmail,
-  isSalesFloor,
-  auditLabel,
-  onRefresh,
-}: {
-  sub: any;
-  userRole?: string;
-  userEmail?: string;
-  isSalesFloor: boolean;
-  auditLabel?: string;
-  onRefresh: () => void;
-}) => {
-  const [escalateOpen, setEscalateOpen] = useState(false);
-  const [declineOpen, setDeclineOpen] = useState(false);
-  const [saveDealOpen, setSaveDealOpen] = useState(false);
-  const [resolving, setResolving] = useState(false);
-  const { toast } = useToast();
-
-  const isManager = isManagerRole(userRole);
-  const isSalesOrBDC = isSalesFloorRole(userRole);
-  const isBDC = isBDCRole(userRole);
-  const isIM = isInternetManagerRole(userRole);
-  // Lead-workers = sales floor + internet_manager. This is the tier
-  // that actively touches leads — escalating, capturing decline
-  // reasons, booking inspections, flipping to appraiser.
-  const isLeadWorker = canWorkLeads(userRole);
-
-  const escalated = !!sub.escalated_to_manager;
-  const declinedReasonLabel = sub.declined_reason
-    ? DECLINED_REASONS.find((r) => r.value === sub.declined_reason)?.label || sub.declined_reason
-    : null;
-  const escalationReasonLabel = sub.escalation_reason
-    ? ESCALATION_REASONS.find((r) => r.value === sub.escalation_reason)?.label || sub.escalation_reason
-    : null;
-
-  // Lead looks "declined" when the pipeline status says so — keep this
-  // list in sync with the canonical status set. The action button
-  // surfaces whenever a reason hasn't been captured yet.
-  const declinedLike = ["offer_declined", "lost", "unreachable"].includes(
-    sub.progress_status || ""
-  );
-  const needsDeclinedReason = declinedLike && !sub.declined_reason;
-
-  const noAppointmentYet = !sub.appointment_set;
-
-  const handleResolveEscalation = async () => {
-    setResolving(true);
-    const { error } = await supabase
-      .from("submissions")
-      .update({
-        escalated_to_manager: false,
-        escalation_resolved_at: new Date().toISOString(),
-        escalation_resolved_by: userEmail || null,
-      } as any)
-      .eq("id", sub.id);
-    setResolving(false);
-    if (error) {
-      toast({ title: "Could not resolve", description: error.message, variant: "destructive" });
-      return;
-    }
-    await supabase.from("activity_log").insert({
-      submission_id: sub.id,
-      action: "Escalation Resolved",
-      old_value: null,
-      new_value: null,
-      performed_by: userEmail || "unknown",
-    } as any);
-    toast({ title: "Escalation resolved", description: "Marked as handled." });
-    onRefresh();
-  };
-
-  // Internet managers share the BDC action affordances per user
-  // direction — they still work leads hands-on and escalate just like
-  // a BDC rep does, they just have team-level visibility on top.
-  const showActionRow = isLeadWorker && !escalated;
-  const somethingToShow = escalated || declinedReasonLabel || showActionRow;
-  if (!somethingToShow) return null;
-
-  return (
-    <div className="space-y-3">
-      {/* Escalation active */}
-      {escalated && (
-        <div className="rounded-2xl border-2 border-amber-500/50 bg-amber-500/10 p-4 flex items-start gap-3">
-          <div className="w-9 h-9 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0">
-            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 mb-0.5">
-              Escalated to manager
-            </p>
-            <p className="text-sm font-semibold text-foreground">
-              {escalationReasonLabel || "Needs manager attention"}
-            </p>
-            {sub.escalation_notes && (
-              <p className="text-xs text-muted-foreground mt-1 leading-snug">{sub.escalation_notes}</p>
-            )}
-            <p className="text-[10px] text-muted-foreground mt-1.5">
-              by {sub.escalation_created_by || "unknown"} · {sub.escalation_created_at ? new Date(sub.escalation_created_at).toLocaleString() : ""}
-            </p>
-          </div>
-          {isManager && (
-            <Button
-              size="sm"
-              onClick={handleResolveEscalation}
-              disabled={resolving}
-              className="shrink-0"
-            >
-              {resolving ? "…" : "Resolve"}
-            </Button>
-          )}
-        </div>
-      )}
-
-      {/* Declined reason logged */}
-      {declinedReasonLabel && (
-        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 flex items-start gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0">
-            <XCircle className="w-3.5 h-3.5 text-destructive" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-destructive mb-0.5">
-              Customer declined
-            </p>
-            <p className="text-sm font-semibold text-foreground">{declinedReasonLabel}</p>
-            {sub.declined_notes && (
-              <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{sub.declined_notes}</p>
-            )}
-            {(sub.customer_walk_away_number || sub.competitor_mentioned) && (
-              <div className="flex flex-wrap gap-1.5 mt-1.5">
-                {sub.customer_walk_away_number && (
-                  <span className="inline-flex items-center text-[10px] font-semibold text-card-foreground bg-background border border-border/60 px-2 py-0.5 rounded-full">
-                    Wants: ${Number(sub.customer_walk_away_number).toLocaleString()}
-                  </span>
-                )}
-                {sub.competitor_mentioned && (
-                  <span className="inline-flex items-center text-[10px] font-semibold text-card-foreground bg-background border border-border/60 px-2 py-0.5 rounded-full">
-                    {sub.competitor_mentioned}
-                    {sub.competitor_offer_amount
-                      ? `: $${Number(sub.competitor_offer_amount).toLocaleString()}`
-                      : ""}
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-          <div className="flex flex-col gap-1.5 shrink-0">
-            {isManager && (
-              <Button
-                size="sm"
-                onClick={() => setSaveDealOpen(true)}
-                className="h-7 text-[11px] bg-success hover:bg-success/90 text-success-foreground"
-              >
-                Save the Deal
-              </Button>
-            )}
-            {(isSalesOrBDC || isManager) && (
-              <Button variant="outline" size="sm" onClick={() => setDeclineOpen(true)} className="h-7 text-[11px]">
-                Edit reason
-              </Button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Action row — BDC / sales / internet manager */}
-      {showActionRow && (
-        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-muted/20 px-3 py-2.5">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mr-1">
-            {isBDC ? "BDC actions" : isIM ? "Internet mgr actions" : "Sales actions"}
-          </span>
-          {noAppointmentYet && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                // Scrolls to the appointment section — actual
-                // scheduling logic lives there already.
-                const el = document.getElementById("appointment-section");
-                if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-              }}
-              className="h-7 text-[11px]"
-            >
-              <CalendarDays className="w-3 h-3 mr-1" /> Book Inspection
-            </Button>
-          )}
-          {(needsDeclinedReason || !sub.declined_reason) && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setDeclineOpen(true)}
-              className={`h-7 text-[11px] ${needsDeclinedReason ? "border-destructive/60 text-destructive" : ""}`}
-            >
-              <XCircle className="w-3 h-3 mr-1" />
-              {needsDeclinedReason ? "Log Declined Reason" : "Log Declined Reason"}
-            </Button>
-          )}
-          {/* Direct to appraiser — shortcut for "this needs an
-               appraisal value today, skip the manager bounce". Flips
-               needs_appraisal=true which lights up the Appraiser
-               Queue. Separate from Escalate-to-Manager which is for
-               cross-cutting issues the manager has to decide. */}
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={async () => {
-              const { error } = await supabase
-                .from("submissions")
-                .update({ needs_appraisal: true } as any)
-                .eq("id", sub.id);
-              if (error) {
-                toast({ title: "Could not send", description: error.message, variant: "destructive" });
-                return;
-              }
-              await supabase.from("activity_log").insert({
-                submission_id: sub.id,
-                action: "Sent to Appraiser",
-                old_value: null,
-                new_value: `by ${userEmail || "lead worker"}`,
-                performed_by: userEmail || "unknown",
-              } as any);
-              toast({ title: "Sent to Appraiser", description: "Lead is on the appraiser queue." });
-              onRefresh();
-            }}
-            className="h-7 text-[11px] border-primary/60 text-primary ml-auto"
-          >
-            <UserCheck className="w-3 h-3 mr-1" /> Send to Appraiser
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setEscalateOpen(true)}
-            className="h-7 text-[11px] border-amber-500/60 text-amber-600 dark:text-amber-400"
-          >
-            <AlertTriangle className="w-3 h-3 mr-1" /> Escalate to Manager
-          </Button>
-        </div>
-      )}
-
-      <EscalateToManagerDialog
-        open={escalateOpen}
-        onOpenChange={setEscalateOpen}
-        submissionId={sub.id}
-        userEmail={userEmail}
-        onEscalated={onRefresh}
-      />
-      <DeclinedReasonDialog
-        open={declineOpen}
-        onOpenChange={setDeclineOpen}
-        submissionId={sub.id}
-        userEmail={userEmail}
-        initialReason={sub.declined_reason}
-        initialNotes={sub.declined_notes}
-        initialWalkAway={sub.customer_walk_away_number}
-        initialCompetitor={sub.competitor_mentioned}
-        initialCompetitorAmount={sub.competitor_offer_amount}
-        onSaved={onRefresh}
-      />
-      <SaveTheDealDialog
-        open={saveDealOpen}
-        onOpenChange={setSaveDealOpen}
-        submissionId={sub.id}
-        currentOffer={sub.offered_price ?? sub.estimated_offer_high ?? null}
-        bookAvg={sub.bb_tradein_avg ?? sub.bb_wholesale_avg ?? null}
-        acv={sub.acv_value ?? null}
-        walkAwayNumber={sub.customer_walk_away_number ?? null}
-        competitorName={sub.competitor_mentioned ?? null}
-        competitorOffer={sub.competitor_offer_amount ?? null}
-        auditLabel={auditLabel}
-        onSaved={onRefresh}
-      />
-    </div>
-  );
-};
-
-const SubmissionDetailSheetLegacy = ({
+export const SubmissionDetailSheetLegacy = ({
   selected,
   onClose,
   photos,
@@ -832,10 +493,6 @@ const SubmissionDetailSheetLegacy = ({
   canApprove,
   canDelete,
   canUpdateStatus,
-  canViewPricing = true,
-  isSalesFloor = false,
-  userRole,
-  userEmail,
   auditLabel,
   userName,
   onUpdate,
@@ -1351,10 +1008,7 @@ const SubmissionDetailSheetLegacy = ({
               <div className="flex-1 min-w-0">
                 <QuickSummary sub={sub} statusLabel={getStatusLabel(sub.progress_status)} />
               </div>
-              {/* Driver's license thumbnail is ID-document material —
-                   hidden from the sales floor. Managers and inspectors
-                   still see it. */}
-              {!isSalesFloor && <DLAtAGlance docs={docs} />}
+              <DLAtAGlance docs={docs} />
             </div>
 
             {/* Offered Price — Hero Deal Card */}
@@ -1463,14 +1117,12 @@ const SubmissionDetailSheetLegacy = ({
               );
             })()}
 
-            {/* ACV Value — Premium. Spread / margin hidden from the
-                 sales floor (isSalesFloor) — they can see the ACV
-                 number but not the dealer-vs-customer-offer delta. */}
-            {sub.acv_value && canViewPricing && (
+            {/* ACV Value — Premium */}
+            {sub.acv_value && (
               <SectionCard icon={Gauge} title="Appraisal Value (ACV)" accent="success">
                 <div className="flex items-end justify-between mb-3">
                   <p className="text-2xl font-black text-card-foreground tracking-tight font-display">${Number(sub.acv_value).toLocaleString()}</p>
-                  {sub.offered_price && sub.acv_value && !isSalesFloor && (
+                  {sub.offered_price && sub.acv_value && (
                     <div className="text-right">
                       <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Spread</p>
                       <p className={`text-sm font-bold ${(sub.acv_value - sub.offered_price) > 0 ? "text-success" : "text-destructive"}`}>
@@ -1484,13 +1136,9 @@ const SubmissionDetailSheetLegacy = ({
                     <Users className="w-3 h-3" /> Appraised by: <span className="font-semibold text-card-foreground/70">{sub.appraised_by}</span>
                   </p>
                 )}
-                {/* Full appraisal tool is margin-math — the sales floor
-                     sees the ACV number but doesn't get the tool. */}
-                {!isSalesFloor && (
-                  <Button variant="outline" size="sm" className="rounded-xl h-9 text-xs font-semibold" onClick={() => { routerNavigate(`/appraisal/${sub.token}`); }}>
-                    <Gauge className="w-3.5 h-3.5 mr-1.5" /> Open Appraisal Tool
-                  </Button>
-                )}
+                <Button variant="outline" size="sm" className="rounded-xl h-9 text-xs font-semibold" onClick={() => { routerNavigate(`/appraisal/${sub.token}`); }}>
+                  <Gauge className="w-3.5 h-3.5 mr-1.5" /> Open Appraisal Tool
+                </Button>
               </SectionCard>
             )}
             {!sub.acv_value && canSetPrice && (
@@ -1506,12 +1154,8 @@ const SubmissionDetailSheetLegacy = ({
             {/* OBD-II Quick Indicator */}
             {sub.id && <CompactOBDIndicator submissionId={sub.id} token={sub.token} />}
 
-            {/* Black Book Market Values — Private Party reference.
-                 Sales floor sees this read-only (they can quote the
-                 customer with confidence); managers and above see it
-                 plus every edit affordance. Non-pricing roles (e.g.
-                 inspector) don't see it at all. */}
-            {canViewPricing && (() => {
+            {/* Black Book Market Values — Private Party reference */}
+            {(() => {
               const tiers = typeof sub.bb_value_tiers === "string" ? (() => { try { return JSON.parse(sub.bb_value_tiers); } catch { return null; } })() : sub.bb_value_tiers;
               const hasAnyBBData = tiers || sub.bb_tradein_avg || sub.bb_retail_avg || sub.bb_wholesale_avg;
               if (!hasAnyBBData) return null;
@@ -1671,9 +1315,7 @@ const SubmissionDetailSheetLegacy = ({
               </Select>
             </SectionCard>
 
-            {/* Appointment — Premium. id target for BDC "Book Inspection"
-                 quick-action button that lives in BDCActionStrip. */}
-            <div id="appointment-section" />
+            {/* Appointment — Premium */}
             <SectionCard icon={CalendarDays} title="Appointment" accent={sub.appointment_set ? "success" : undefined}>
               {sub.appointment_set && sub.appointment_date ? (
                 <div className="space-y-3">
@@ -1715,54 +1357,6 @@ const SubmissionDetailSheetLegacy = ({
                 </div>
               ) : isPriceAgreedOrBeyond ? (
                 <div className="space-y-3">
-                  {/* Same-day check — distinct from "Generate Check Request"
-                       (that queues the paperwork for accounting). This button
-                       stamps the moment the physical check is in hand and
-                       texts the customer to come pick it up. Admin+GSM+GM
-                       only. */}
-                  {canApprove && (sub as any).check_request_done && !(sub as any).check_ready_at && (
-                    <Button
-                      size="sm"
-                      className="rounded-xl h-10 text-xs font-bold w-full bg-success hover:bg-success/90 text-success-foreground"
-                      onClick={async () => {
-                        const nowIso = new Date().toISOString();
-                        const { error } = await supabase
-                          .from("submissions")
-                          .update({
-                            check_ready_at: nowIso,
-                            check_pickup_notified_at: nowIso,
-                          } as any)
-                          .eq("id", sub.id);
-                        if (error) {
-                          toast({ title: "Could not mark ready", description: error.message, variant: "destructive" });
-                          return;
-                        }
-                        safeInvoke("send-notification", {
-                          body: { trigger_key: "customer_check_ready_for_pickup", submission_id: sub.id },
-                          context: { from: "SubmissionDetailSheet.checkReady" },
-                        });
-                        await supabase.from("activity_log").insert({
-                          submission_id: sub.id,
-                          action: "Check Ready for Pickup",
-                          old_value: null,
-                          new_value: "Customer notified",
-                          performed_by: auditLabel,
-                        } as any);
-                        toast({ title: "Customer notified", description: "SMS sent — customer can come pick up their check." });
-                        onRefresh(sub);
-                      }}
-                    >
-                      <DollarSign className="w-4 h-4 mr-1.5" /> Mark Check Ready — Notify Customer
-                    </Button>
-                  )}
-                  {(sub as any).check_ready_at && (
-                    <div className="rounded-xl bg-success/10 border border-success/30 p-3 text-xs text-success flex items-center gap-2">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>
-                        Check ready since {new Date((sub as any).check_ready_at).toLocaleString()} — customer notified.
-                      </span>
-                    </div>
-                  )}
                   <div className="flex flex-wrap gap-2">
                     <Button variant="outline" size="sm" className="rounded-xl h-9 text-xs font-semibold" onClick={handleGenerateCheckRequest}>
                       <Printer className="w-3.5 h-3.5 mr-1.5" /> Generate Check Request
@@ -1842,16 +1436,6 @@ const SubmissionDetailSheetLegacy = ({
           {/* RIGHT COLUMN — scrollable details (~60%)                      */}
           {/* ────────────────────────────────────────────────────────────── */}
           <div className="flex-1 overflow-y-auto p-5 lg:p-6 space-y-6 min-h-0">
-
-            {/* ── BDC / Escalation / Declined-reason banners ────────────── */}
-            <BDCActionStrip
-              sub={sub}
-              userRole={userRole}
-              userEmail={userEmail}
-              isSalesFloor={isSalesFloor}
-              auditLabel={auditLabel}
-              onRefresh={() => onRefresh(sub)}
-            />
 
             {/* Contact + Vehicle */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
@@ -2205,45 +1789,22 @@ const SubmissionDetailSheetLegacy = ({
               </div>
             </SectionCard>
 
-            {/* Follow-Up Sequence — hoisted above the collapsible so
-                 the sales floor can see pending next steps at a glance.
-                 This is the primary sales action list and belongs in
-                 the top of the right column, not buried in Research. */}
-            <FollowUpPanel submissionId={sub.id} hasOffer={!!(sub.offered_price || sub.estimated_offer_high)} progressStatus={sub.progress_status} />
-
             {/* ─────────────────────────────────────────────────────────
                 Research & Automation — collapsible so the top of the file
                 stays focused on the deal. Contains Retail Market,
-                AI Call History, and the full Activity Log. Hidden for
-                the sales floor (isSalesFloor) — they're follow-up-focused,
-                not internal-ops focused.
+                Follow-Up Sequencer, AI Call History, and the full Activity
+                Log. All were cluttering the everyday BDC / sales view.
                 ───────────────────────────────────────────────────────── */}
-            {!isSalesFloor && (
             <details className="group/more rounded-2xl border border-border/40 bg-card/40 overflow-hidden [&[open]>summary>svg]:rotate-180">
               <summary className="flex items-center justify-between gap-2 px-4 py-3 cursor-pointer hover:bg-muted/30 transition-colors list-none [&::-webkit-details-marker]:hidden">
                 <span className="text-sm font-semibold text-card-foreground flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-muted-foreground" />
                   Research &amp; Automation
                 </span>
-                <span className="text-[10px] text-muted-foreground">Market · Call history · Activity log</span>
+                <span className="text-[10px] text-muted-foreground">Market · Follow-ups · Call history · Activity log</span>
                 <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform duration-200" />
               </summary>
               <div className="px-4 pb-4 pt-2 space-y-5 border-t border-border/30">
-
-            {/* Unified Conversation Thread — replaces the old separate
-                 AI Call History + Activity Log panels. Reads from
-                 conversation_events which auto-populates from every
-                 existing source via triggers. Pins to the top of the
-                 collapsible so it's the first thing managers see. */}
-            <SectionCard icon={MessageSquare} title="Conversation">
-              <ConversationThread
-                submissionId={sub.id}
-                customerPhone={sub.phone}
-                customerEmail={sub.email}
-                dealershipId={(sub as any).dealership_id}
-                userEmail={userEmail}
-              />
-            </SectionCard>
 
             {/* Retail Market Context (moved into collapsible) */}
             {(sub.vin || sub.vehicle_year) && (
@@ -2256,10 +1817,138 @@ const SubmissionDetailSheetLegacy = ({
               </SectionCard>
             )}
 
+            {/* Follow-Up Sequence */}
+            <FollowUpPanel submissionId={sub.id} hasOffer={!!(sub.offered_price || sub.estimated_offer_high)} progressStatus={sub.progress_status} />
+
+            {/* AI Call History */}
+            {callHistory.length > 0 && (
+              <SectionCard icon={Phone} title="AI Call History" headerRight={
+                <span className="text-[10px] text-muted-foreground">{callHistory.length} calls</span>
+              }>
+                <div className="space-y-3">
+                  {callHistory.map(call => (
+                    <div key={call.id} className="border border-border/30 rounded-xl overflow-hidden">
+                      {/* Header: outcome badge + duration + date */}
+                      <div className="flex items-center justify-between px-3 py-2 bg-muted/20">
+                        <div className="flex items-center gap-2">
+                          <Badge className={outcomeColor(call.outcome)}>{call.outcome?.replace(/_/g, ' ') || call.status}</Badge>
+                          {call.duration_seconds && <span className="text-xs text-muted-foreground">{Math.round(call.duration_seconds / 60)}m {Math.round(call.duration_seconds % 60)}s</span>}
+                          {call.attempt_number > 1 && <span className="text-[10px] text-muted-foreground">Attempt #{call.attempt_number}</span>}
+                        </div>
+                        <span className="text-xs text-muted-foreground">{new Date(call.created_at).toLocaleString()}</span>
+                      </div>
+
+                      {/* Summary */}
+                      {call.summary && (
+                        <div className="px-3 py-2 text-sm text-card-foreground border-b border-border/20">
+                          <p className="font-medium text-xs text-muted-foreground mb-1">Summary</p>
+                          {call.summary}
+                        </div>
+                      )}
+
+                      {/* Expandable Transcript */}
+                      {call.transcript && (
+                        <details className="group">
+                          <summary className="px-3 py-2 text-xs text-primary cursor-pointer hover:bg-muted/10 font-medium">
+                            View Full Transcript
+                          </summary>
+                          <div className="px-3 py-2 bg-muted/10 text-xs whitespace-pre-wrap font-mono leading-relaxed max-h-64 overflow-y-auto">
+                            {call.transcript}
+                          </div>
+                        </details>
+                      )}
+
+                      {/* Recording link */}
+                      {call.recording_url && (
+                        <div className="px-3 py-1.5 border-t border-border/20">
+                          <a href={call.recording_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
+                            <Phone className="w-3 h-3" /> Play Recording
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </SectionCard>
+            )}
+
+            {/* Activity Log — Premium Timeline */}
+            {(() => {
+              const mergedActivity = [
+                ...activityLog,
+                ...callHistory.map(c => ({
+                  id: `call-${c.id}`,
+                  action: `AI Call: ${c.outcome?.replace(/_/g, ' ') || c.status}`,
+                  old_value: null,
+                  new_value: c.summary || `${Math.round((c.duration_seconds || 0) / 60)}m call`,
+                  performed_by: 'Voice AI',
+                  created_at: c.created_at,
+                }))
+              ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+              return (
+                <SectionCard icon={History} title="Activity Log" headerRight={
+                  mergedActivity.length > 0 ? (
+                    <span className="text-[10px] text-muted-foreground bg-muted/50 rounded-lg px-2 py-0.5 font-medium">{mergedActivity.length} events</span>
+                  ) : undefined
+                }>
+                  {mergedActivity.length > 0 ? (
+                    <div className="relative max-h-64 overflow-y-auto pr-1">
+                      {/* Timeline line */}
+                      <div className="absolute left-[11px] top-3 bottom-3 w-[2px] bg-gradient-to-b from-primary/20 via-border/40 to-transparent rounded-full" />
+                      <div className="space-y-0">
+                        {mergedActivity.map((log, idx) => (
+                          <div key={log.id} className="relative flex items-start gap-4 py-3 group/timeline">
+                            {/* Timeline dot */}
+                            <div className={`relative z-10 w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
+                              idx === 0
+                                ? "bg-primary/15 border-2 border-primary shadow-[0_0_8px_rgba(var(--primary),0.15)]"
+                                : "bg-muted/60 border border-border/60 group-hover/timeline:border-primary/30 group-hover/timeline:bg-primary/5"
+                            }`}>
+                              <Clock className={`w-3 h-3 ${idx === 0 ? "text-primary" : "text-muted-foreground/60 group-hover/timeline:text-primary/60"} transition-colors`} />
+                            </div>
+                            <div className="flex-1 min-w-0 -mt-0.5">
+                              <div className="flex items-baseline gap-2 flex-wrap">
+                                <span className={`font-semibold text-sm ${idx === 0 ? "text-card-foreground" : "text-card-foreground/80"}`}>{log.action}</span>
+                                {log.old_value && log.new_value && (
+                                  <span className="text-xs text-muted-foreground">
+                                    <span className="line-through opacity-60">{log.old_value}</span>
+                                    <span className="mx-1 text-primary">→</span>
+                                    <span className="font-medium text-card-foreground/80">{log.new_value}</span>
+                                  </span>
+                                )}
+                                {!log.old_value && log.new_value && (
+                                  <span className="text-xs text-muted-foreground font-medium">{log.new_value}</span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground/70">
+                                {log.performed_by && (
+                                  <span className="inline-flex items-center gap-1 capitalize bg-muted/40 rounded-md px-1.5 py-0.5">
+                                    <Users className="w-2.5 h-2.5" />
+                                    {log.performed_by.replace(/_/g, " ")}
+                                  </span>
+                                )}
+                                <span>{new Date(log.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-6">
+                      <div className="w-10 h-10 rounded-2xl bg-muted/40 flex items-center justify-center mx-auto mb-2">
+                        <History className="w-5 h-5 text-muted-foreground/40" />
+                      </div>
+                      <p className="text-sm text-muted-foreground">No activity recorded yet</p>
+                    </div>
+                  )}
+                </SectionCard>
+              );
+            })()}
 
               </div>
             </details>
-            )}
             {/* ── END Research & Automation collapsible ── */}
           </div>
           {/* ── END RIGHT COLUMN ── */}
@@ -2269,5 +1958,5 @@ const SubmissionDetailSheetLegacy = ({
   );
 };
 
-export { SubmissionDetailSheetLegacy };
+// Legacy export only — use SubmissionDetailSheetLegacy named export
 export default SubmissionDetailSheetLegacy;
