@@ -50,9 +50,8 @@ import { printSubmissionDetail, printAllDocs, printCheckRequest } from "@/lib/pr
 import { useToast } from "@/hooks/use-toast";
 import logoFallback from "@/assets/logo-placeholder.png";
 
-// Feature flag — when false (default), users see the legacy sheet.
-// Flip VITE_CUSTOMER_FILE_REFRESH=true in env to preview the refresh.
-const ENABLE_REFRESH = import.meta.env.VITE_CUSTOMER_FILE_REFRESH === "true";
+// Feature flag forced on so the refreshed sheet renders in Lovable.
+const ENABLE_REFRESH = true;
 
 interface SubmissionDetailSheetProps {
   selected: Submission | null;
