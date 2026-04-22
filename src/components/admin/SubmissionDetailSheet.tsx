@@ -2139,6 +2139,9 @@ const SubmissionDetailSheetV2 = ({
 
   const [photoIdx, setPhotoIdx] = useState(0);
 
+  // Reset carousel index when a different submission is opened
+  useEffect(() => { setPhotoIdx(0); }, [selected?.id]);
+
   if (!sub) return null;
 
   const currentStageIdx = getStageIndex(sub.progress_status);
@@ -2156,8 +2159,23 @@ const SubmissionDetailSheetV2 = ({
     }
   })();
 
-  // Driver's license doc(s) from docs prop
+  // Driver's license doc(s) → ID card only
   const dlDocs = docs.filter(d => d.type === "drivers_license" || d.type === "drivers_license_front" || d.type === "drivers_license_back");
+
+  // Non-DL docs that belong in the photo viewer (title, registration, payoff, etc.)
+  const CAROUSEL_DOC_TYPES = new Set(["title", "title_front", "title_back", "title_inquiry", "registration", "payoff_verification", "appraisal", "carfax"]);
+  const CAROUSEL_DOC_LABELS: Record<string, string> = {
+    title: "Title", title_front: "Title (Front)", title_back: "Title (Back)",
+    title_inquiry: "Title Inquiry", registration: "Registration",
+    payoff_verification: "Payoff Letter", appraisal: "Appraisal", carfax: "Carfax",
+  };
+  // Merge vehicle photos + title/reg/payoff doc images into one carousel list
+  const carouselItems: { url: string; name: string; docLabel: string | null }[] = [
+    ...photos.map(p => ({ url: p.url, name: p.name, docLabel: null })),
+    ...docs
+      .filter(d => CAROUSEL_DOC_TYPES.has(d.type))
+      .map(d => ({ url: d.url, name: d.name, docLabel: CAROUSEL_DOC_LABELS[d.type] ?? d.type })),
+  ];
 
   // Next action card details per status
   const naCard = (() => {
@@ -2349,47 +2367,63 @@ const SubmissionDetailSheetV2 = ({
             {/* ── TOP ROW: Photos carousel (left) + ID/Intent (right) ── */}
             <div className="flex gap-3 items-stretch">
 
-              {/* Vehicle Photos — Carousel */}
+              {/* Vehicle Photos + Doc Images — Carousel */}
               <div className="flex-1 rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden min-w-0">
                 <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100">
                   <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Vehicle Photos</h3>
-                  {photos.length > 0 && <span className="text-[10px] font-semibold text-slate-400">{photos.length} photos</span>}
+                  {carouselItems.length > 0 && (
+                    <span className="text-[10px] font-semibold text-slate-400">
+                      {carouselItems.length} {carouselItems.length === 1 ? "item" : "items"}
+                    </span>
+                  )}
                 </div>
                 <div className="p-3">
-                  {photos.length > 0 ? (
+                  {carouselItems.length > 0 ? (
                     <div>
                       <div className="relative rounded-lg overflow-hidden bg-slate-100 mb-2 group" style={{ aspectRatio: "4/3" }}>
-                        <a href={photos[photoIdx]?.url} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
-                          <img src={photos[photoIdx]?.url} alt={`Photo ${photoIdx + 1}`} className="w-full h-full object-cover" />
+                        <a href={carouselItems[photoIdx]?.url} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                          <img src={carouselItems[photoIdx]?.url} alt={`Item ${photoIdx + 1}`} className="w-full h-full object-cover" />
                         </a>
-                        {photos.length > 1 && (
+                        {/* Doc type label badge */}
+                        {carouselItems[photoIdx]?.docLabel && (
+                          <div className="absolute top-2 left-2 bg-black/60 text-white text-[10px] font-bold px-2 py-0.5 rounded-md z-10 uppercase tracking-wide">
+                            {carouselItems[photoIdx].docLabel}
+                          </div>
+                        )}
+                        {carouselItems.length > 1 && (
                           <>
-                            <button onClick={(e) => { e.preventDefault(); setPhotoIdx(i => (i - 1 + photos.length) % photos.length); }}
+                            <button onClick={(e) => { e.preventDefault(); setPhotoIdx(i => (i - 1 + carouselItems.length) % carouselItems.length); }}
                               className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 hover:bg-black/65 text-white flex items-center justify-center transition-all z-10">
                               <ChevronLeft className="w-4 h-4" />
                             </button>
-                            <button onClick={(e) => { e.preventDefault(); setPhotoIdx(i => (i + 1) % photos.length); }}
+                            <button onClick={(e) => { e.preventDefault(); setPhotoIdx(i => (i + 1) % carouselItems.length); }}
                               className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 hover:bg-black/65 text-white flex items-center justify-center transition-all z-10">
                               <ChevronRight className="w-4 h-4" />
                             </button>
                             <div className="absolute bottom-2 right-2 bg-black/50 text-white text-[10px] font-bold px-2 py-0.5 rounded-full z-10">
-                              {photoIdx + 1} / {photos.length}
+                              {photoIdx + 1} / {carouselItems.length}
                             </div>
                           </>
                         )}
-                        {canDelete && (
-                          <button onClick={() => onDeletePhoto(photos[photoIdx].name)}
-                            className="absolute top-2 left-2 bg-destructive/90 text-white rounded-md p-1 opacity-0 group-hover:opacity-100 transition-all z-10">
+                        {/* Only allow delete for vehicle photos (not docs) */}
+                        {canDelete && carouselItems[photoIdx]?.docLabel === null && (
+                          <button onClick={() => onDeletePhoto(carouselItems[photoIdx].name)}
+                            className="absolute top-2 right-2 bg-destructive/90 text-white rounded-md p-1 opacity-0 group-hover:opacity-100 transition-all z-10">
                             <Trash2 className="w-3 h-3" />
                           </button>
                         )}
                       </div>
-                      {photos.length > 1 && (
+                      {carouselItems.length > 1 && (
                         <div className="flex gap-1.5 overflow-x-auto pb-1">
-                          {photos.map((photo, i) => (
+                          {carouselItems.map((item, i) => (
                             <button key={i} onClick={() => setPhotoIdx(i)}
-                              className={`flex-shrink-0 w-12 h-9 rounded-md overflow-hidden border-2 transition-all ${i === photoIdx ? "border-[#003b80]" : "border-transparent opacity-50 hover:opacity-100 hover:border-slate-300"}`}>
-                              <img src={photo.url} alt={`Thumb ${i + 1}`} className="w-full h-full object-cover" />
+                              className={`relative flex-shrink-0 w-12 h-9 rounded-md overflow-hidden border-2 transition-all ${i === photoIdx ? "border-[#003b80]" : "border-transparent opacity-50 hover:opacity-100 hover:border-slate-300"}`}>
+                              <img src={item.url} alt={`Thumb ${i + 1}`} className="w-full h-full object-cover" />
+                              {item.docLabel && (
+                                <div className="absolute inset-0 bg-black/40 flex items-end justify-center pb-0.5">
+                                  <span className="text-[7px] text-white font-bold uppercase leading-none text-center px-0.5 truncate w-full text-center">{item.docLabel}</span>
+                                </div>
+                              )}
                             </button>
                           ))}
                         </div>

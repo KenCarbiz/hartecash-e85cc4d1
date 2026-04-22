@@ -314,7 +314,7 @@ export function useAdminDashboard() {
 
       const docTypes = [
         "drivers_license", "drivers_license_front", "drivers_license_back", "registration",
-        "title_inquiry", "title", "payoff_verification", "appraisal", "carfax", "window_sticker",
+        "title_inquiry", "title", "title_front", "title_back", "payoff_verification", "appraisal", "carfax", "window_sticker",
       ];
       const allDocs: { name: string; url: string; type: string }[] = [];
       for (const dt of docTypes) {
