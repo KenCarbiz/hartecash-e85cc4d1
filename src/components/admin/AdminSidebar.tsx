@@ -136,9 +136,13 @@ const AdminSidebar = ({
   const canSeeAppraiserQueue = isManager || isAppraiser;
   const isReceptionist = userRole === "receptionist";
 
-  // ── WORK ── Daily tasks: Today (dashboard), leads, queues, appointments + ops
-  const workItems: SidebarItem[] = [
+  // ── TODAY ── Dashboard landing (its own group per design)
+  const todayItems: SidebarItem[] = [
     { key: "today", label: "Today", icon: Home },
+  ].filter((item) => isAllowed(item.key));
+
+  // ── WORK ── Daily tasks: leads, queues, appointments + ops
+  const workItems: SidebarItem[] = [
     { key: "submissions", label: "All Leads", icon: Inbox, badge: submissionCount > 0 ? String(submissionCount) : undefined },
     ...(canSeeAppraiserQueue
       ? [{
@@ -260,9 +264,11 @@ const AdminSidebar = ({
   // Receptionist nav is intentionally minimal — check-in + today's appointments only
   const groupEntries: [string, SidebarItem[]][] = isReceptionist
     ? [
-        ["Work", workItems.filter((i) => i.key === "today" || i.key === "accepted-appts" || i.key === "inspection-checkin" || i.key === "my-lead-link" || i.key === "my-referrals")],
+        ["Today", todayItems],
+        ["Work", workItems.filter((i) => i.key === "accepted-appts" || i.key === "inspection-checkin" || i.key === "my-lead-link" || i.key === "my-referrals")],
       ]
     : [
+        ["Today", todayItems],
         ["Work", workItems],
         ["Grow", growItems],
         ["Measure", measureItems],
