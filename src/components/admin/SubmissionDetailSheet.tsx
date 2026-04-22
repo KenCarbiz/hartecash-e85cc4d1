@@ -2139,6 +2139,7 @@ const SubmissionDetailSheetV2 = ({
 
   const [photoIdx, setPhotoIdx] = useState(0);
   const [photoUploading, setPhotoUploading] = useState(false);
+  const [dlExpanded, setDlExpanded] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   const handlePhotoUpload = async (files: FileList | null) => {
@@ -2160,8 +2161,8 @@ const SubmissionDetailSheetV2 = ({
     setPhotoUploading(false);
   };
 
-  // Reset carousel index when a different submission is opened
-  useEffect(() => { setPhotoIdx(0); }, [selected?.id]);
+  // Reset carousel + DL expanded state when a different submission is opened
+  useEffect(() => { setPhotoIdx(0); setDlExpanded(false); }, [selected?.id]);
 
   if (!sub) return null;
 
@@ -2479,22 +2480,25 @@ const SubmissionDetailSheetV2 = ({
                   </div>
                   <div className="p-3">
                     {dlDocs.length > 0 ? (
-                      <div className="flex items-center gap-3">
-                        <a href={dlDocs[0].url} target="_blank" rel="noopener noreferrer"
-                          className="flex-shrink-0 w-16 h-11 rounded-md overflow-hidden border border-slate-200 bg-slate-100 hover:opacity-80 transition-opacity">
-                          {/\.(jpg|jpeg|png|gif|webp)$/i.test(dlDocs[0].name)
-                            ? <img src={dlDocs[0].url} alt="DL" className="w-full h-full object-cover" />
-                            : <div className="w-full h-full flex items-center justify-center"><FileText className="w-5 h-5 text-slate-300" /></div>
-                          }
-                        </a>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-0.5">Driver's License</p>
-                          <p className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
-                            <CheckCircle2 className="w-3 h-3 shrink-0" /> Verified on file
-                          </p>
+                      <div className="space-y-2">
+                        {/* Thumbnail — click to expand, View to open in new tab */}
+                        <div className="flex items-center gap-3">
+                          <button onClick={() => setDlExpanded(e => !e)}
+                            className={`flex-shrink-0 rounded-md overflow-hidden border border-slate-200 bg-slate-100 hover:opacity-80 transition-all duration-200 ${dlExpanded ? "w-32 h-[88px]" : "w-16 h-11"}`}>
+                            {/\.(jpg|jpeg|png|gif|webp)$/i.test(dlDocs[0].name)
+                              ? <img src={dlDocs[0].url} alt="DL" className="w-full h-full object-cover" />
+                              : <div className="w-full h-full flex items-center justify-center"><FileText className="w-5 h-5 text-slate-300" /></div>
+                            }
+                          </button>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-0.5">Driver's License</p>
+                            <p className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
+                              <CheckCircle2 className="w-3 h-3 shrink-0" /> Verified on file
+                            </p>
+                          </div>
+                          <a href={dlDocs[0].url} target="_blank" rel="noopener noreferrer"
+                            className="text-[11px] font-bold text-[#003b80] hover:underline shrink-0">View</a>
                         </div>
-                        <a href={dlDocs[0].url} target="_blank" rel="noopener noreferrer"
-                          className="text-[11px] font-bold text-[#003b80] hover:underline shrink-0">View</a>
                       </div>
                     ) : (
                       <div className="flex items-center gap-3 py-1">
@@ -2508,14 +2512,14 @@ const SubmissionDetailSheetV2 = ({
                   </div>
                 </div>
 
-                {/* Intent */}
-                <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden flex-1">
-                  <div className="px-4 py-2.5 border-b border-slate-100">
+                {/* Intent — compact */}
+                <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                  <div className="px-4 py-2 border-b border-slate-100">
                     <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Intent</h3>
                   </div>
-                  <div className="p-4">
-                    <p className="text-[22px] font-bold text-slate-900 mb-0.5 leading-tight">{intentLabel.label}</p>
-                    <p className="text-xs text-slate-500">{intentLabel.sub}</p>
+                  <div className="px-4 py-3">
+                    <p className="text-[17px] font-bold text-slate-900 leading-tight">{intentLabel.label}</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">{intentLabel.sub}</p>
                   </div>
                 </div>
 
