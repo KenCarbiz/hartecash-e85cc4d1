@@ -1,0 +1,367 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700;800&display=swap') layer(fonts);
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Premium display font for headlines */
+.font-display {
+  font-family: 'DM Serif Display', Georgia, serif;
+}
+
+/* VIN glow effect on 17-char match */
+.vin-glow {
+  box-shadow: 0 0 0 3px hsl(var(--success) / 0.3), 0 0 20px hsl(var(--success) / 0.15);
+  border-color: hsl(var(--success)) !important;
+  transition: box-shadow 0.4s ease, border-color 0.4s ease;
+}
+
+/* Premium shimmer animation for admin header */
+@keyframes shimmer {
+  0%, 100% { transform: translateX(-100%); }
+  50% { transform: translateX(100%); }
+}
+
+/* Premium card hover lift */
+.premium-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.premium-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px -8px hsl(var(--primary) / 0.12);
+}
+
+/* Admin table row micro-interaction */
+.admin-row {
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+.admin-row:active {
+  transform: scale(0.998);
+}
+
+@layer base {
+  :root {
+    --background: 216 33% 97%;
+    --foreground: 210 29% 24%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 13% 18%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 13% 18%;
+
+    --primary: 210 100% 25%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 33% 96%;
+    --secondary-foreground: 210 100% 25%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+
+    --accent: 0 77% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 100%;
+    --warning: 43 96% 52%;
+    --warning-foreground: 210 29% 24%;
+
+    --cta-offer: 0 80% 50%;
+    --cta-accept: 0 80% 50%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 210 100% 25%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222 47% 5%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 47% 8%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 8%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 100% 25%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 0 77% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 100%;
+    --warning: 43 96% 52%;
+    --warning-foreground: 222 47% 8%;
+
+    --cta-offer: 0 80% 50%;
+    --cta-accept: 0 80% 50%;
+
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 210 100% 40%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+}
+
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  body {
+    background: white !important;
+  }
+
+  /* Hide everything except the portal — skip when .print-native is present */
+  #root:not(:has(.print-native)) {
+    display: none !important;
+  }
+
+  /* Make portals visible and static */
+  body > div[data-radix-portal] {
+    position: static !important;
+    display: block !important;
+  }
+
+  /* Hide the overlay backdrop */
+  body > div[data-radix-portal] > [data-state="open"][style*="pointer-events"],
+  body > div[data-radix-portal] > div[data-state] {
+    display: none !important;
+  }
+
+  /* But show the dialog itself */
+  body > div[data-radix-portal] > div[role="dialog"] {
+    display: block !important;
+    position: static !important;
+    transform: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    animation: none !important;
+    opacity: 1 !important;
+  }
+
+  /* Remove all scroll constraints inside dialog */
+  body > div[data-radix-portal] div {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* Hide close button and print button */
+  .print\\:hidden {
+    display: none !important;
+  }
+  div[role="dialog"] > button {
+    display: none !important;
+  }
+
+  /* Force background colors to print */
+  [data-print-section] {
+    background-color: hsl(210 20% 96%) !important;
+    border: 1px solid hsl(210 20% 90%) !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 12px !important;
+  }
+
+  /* Header bar */
+  .bg-primary.text-primary-foreground {
+    background-color: hsl(216 50% 30%) !important;
+    color: white !important;
+  }
+  .bg-primary.text-primary-foreground * {
+    color: white !important;
+  }
+
+  /* Deal progress stage circles */
+  .bg-success.text-success-foreground {
+    background-color: hsl(142 71% 40%) !important;
+    color: white !important;
+  }
+  .bg-accent.text-accent-foreground {
+    background-color: hsl(0 72% 51%) !important;
+    color: white !important;
+  }
+  .bg-destructive.text-destructive-foreground {
+    background-color: hsl(0 84% 60%) !important;
+    color: white !important;
+  }
+
+  /* Deal progress row highlights */
+  [data-print-stage="complete"] {
+    background-color: hsl(142 71% 40% / 0.15) !important;
+  }
+  [data-print-stage="current"] {
+    background-color: hsl(0 72% 51% / 0.2) !important;
+  }
+  [data-print-stage="dead"] {
+    background-color: hsl(0 84% 60% / 0.15) !important;
+  }
+
+  /* Sticky footer should not print */
+  .sticky.bottom-0 {
+    display: none !important;
+  }
+
+  /* Sticky header should be static */
+  .sticky.top-0 {
+    position: static !important;
+  }
+
+  /* ─── Offer page: single-page print layout ─── */
+  .print-offer-layout {
+    display: block !important;
+    padding: 0 !important;
+    font-size: 11px;
+  }
+
+
+  @page {
+    margin: 0.3in 0.4in;
+    size: letter;
+  }
+
+  .print-offer-layout {
+    font-size: 10px;
+  }
+}
+
+/* Prose styles for disclosure page accordion content */
+.prose-disclosure p {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.85;
+  color: hsl(var(--muted-foreground));
+}
+.prose-disclosure p:last-child {
+  margin-bottom: 0;
+}
+.prose-disclosure strong {
+  color: hsl(var(--foreground));
+  font-weight: 600;
+}
+
+/* ── Print styles ────────────────────────────────────────────────────
+ * Used by the Onboarding Script, Inspection Sheet, and Check Request
+ * workflows so a UCM can print a clean one-pager without CSS bleed
+ * from the admin chrome, sidebar, or marketing shell.
+ */
+@media print {
+  /* Global resets */
+  html, body {
+    background: white !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Kill anything that isn't part of the printable content */
+  .print\:hidden,
+  nav,
+  header:not([data-print-header]),
+  [data-sidebar],
+  .sidebar,
+  footer:not([data-print-footer]),
+  [data-radix-popper-content-wrapper],
+  [role="dialog"]:not([data-print-dialog]),
+  button:not([data-print-keep]),
+  .print-hide {
+    display: none !important;
+  }
+
+  .print\:block { display: block !important; }
+  .print\:break-inside-avoid,
+  [data-print-section] { break-inside: avoid; }
+  .print-page-break { break-before: page; }
+
+  /* Expand content to full page, drop shadows and gradients */
+  main, .main, [data-admin-main] {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  [data-print-section],
+  .card,
+  .bg-card {
+    box-shadow: none !important;
+    border: 1px solid #bbb !important;
+    background: white !important;
+    page-break-inside: avoid;
+  }
+
+  /* Text: make sure it's readable on paper even if the screen theme is dark */
+  h1, h2, h3, h4, h5, h6, p, span, td, th, li { color: black !important; }
+  a { color: black !important; text-decoration: underline; }
+
+  /* Tables: force borders and keep rows together */
+  table { border-collapse: collapse !important; width: 100% !important; }
+  thead { display: table-header-group; }
+  tr, td, th { break-inside: avoid; page-break-inside: avoid; }
+  td, th { border: 1px solid #888 !important; padding: 4px 6px !important; }
+
+  /* Inspection sheet and check request dedicated containers */
+  [data-print-inspection],
+  [data-print-check-request] {
+    padding: 0.25in !important;
+    font-size: 11pt !important;
+  }
+  [data-print-inspection] [data-print-section],
+  [data-print-check-request] [data-print-section] {
+    margin-bottom: 0.15in !important;
+  }
+
+  @page { margin: 0.5in; size: letter; }
+}

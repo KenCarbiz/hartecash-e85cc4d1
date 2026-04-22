@@ -1,0 +1,1456 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Admin Refresh — Autocurb</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink: 220 20% 12%;
+    --ink-soft: 220 10% 40%;
+    --ink-faint: 220 8% 62%;
+    --surface: 40 30% 98%;
+    --surface-2: 40 20% 96%;
+    --surface-3: 40 15% 93%;
+    --hair: 220 15% 90%;
+    --hair-soft: 220 15% 94%;
+    --accent: 216 85% 48%;
+    --accent-soft: 216 85% 94%;
+    --success: 150 55% 40%;
+    --success-soft: 150 55% 92%;
+    --warn: 32 85% 48%;
+    --warn-soft: 32 85% 94%;
+    --danger: 4 72% 52%;
+    --danger-soft: 4 72% 95%;
+  }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+    font-feature-settings: 'cv11','ss01','ss03';
+    color: hsl(var(--ink));
+    background: hsl(var(--surface));
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  .mono { font-family: 'Geist Mono', ui-monospace, monospace; }
+  .hair { border-color: hsl(var(--hair)); }
+  .hair-soft { border-color: hsl(var(--hair-soft)); }
+  .ink { color: hsl(var(--ink)); }
+  .ink-soft { color: hsl(var(--ink-soft)); }
+  .ink-faint { color: hsl(var(--ink-faint)); }
+  .bg-surface { background: hsl(var(--surface)); }
+  .bg-surface-2 { background: hsl(var(--surface-2)); }
+  .bg-surface-3 { background: hsl(var(--surface-3)); }
+  .accent-bg { background: hsl(var(--accent)); }
+  .accent-text { color: hsl(var(--accent)); }
+  .accent-soft-bg { background: hsl(var(--accent-soft)); }
+  .success-text { color: hsl(var(--success)); }
+  .success-bg { background: hsl(var(--success)); }
+  .success-soft { background: hsl(var(--success-soft)); color: hsl(var(--success)); }
+  .warn-text { color: hsl(var(--warn)); }
+  .warn-soft { background: hsl(var(--warn-soft)); color: hsl(var(--warn)); }
+  .danger-text { color: hsl(var(--danger)); }
+  .danger-bg { background: hsl(var(--danger)); }
+  .danger-soft { background: hsl(var(--danger-soft)); color: hsl(var(--danger)); }
+
+  /* Old-style gradient header for kill-switch OFF mode */
+  .legacy-header {
+    background: linear-gradient(90deg, hsl(var(--accent)) 0%, hsl(216 85% 58%) 60%, hsl(216 85% 68%) 100%);
+  }
+  .legacy-grid::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image: radial-gradient(rgba(0,0,0,0.06) 1px, transparent 1px);
+    background-size: 24px 24px;
+    pointer-events: none;
+  }
+
+  /* Arrived row pulse */
+  @keyframes pulse-arrived {
+    0%, 100% { box-shadow: inset 3px 0 0 hsl(var(--danger)); background: hsl(var(--danger-soft)); }
+    50%      { box-shadow: inset 3px 0 0 hsl(var(--danger)); background: hsl(4 72% 90%); }
+  }
+  .arrived-row { animation: pulse-arrived 2s ease-in-out infinite; }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.4); }
+  }
+  .pulse-dot { animation: pulse-dot 1.2s ease-in-out infinite; }
+
+  /* Tweaks panel */
+  .tweaks-panel {
+    position: fixed; right: 16px; bottom: 16px; z-index: 60;
+    width: 300px;
+    background: hsl(var(--surface));
+    border: 1px solid hsl(var(--hair));
+    border-radius: 14px;
+    box-shadow: 0 20px 40px -12px rgba(20,24,40,0.18), 0 0 0 1px rgba(0,0,0,0.02);
+    overflow: hidden;
+  }
+
+  /* Remove scrollbar noise */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: hsl(var(--hair)); border-radius: 10px; border: 2px solid hsl(var(--surface)); }
+  ::-webkit-scrollbar-track { background: transparent; }
+
+  /* Focus-fill for interactive rows */
+  .row-hover:hover { background: hsl(var(--surface-2)); }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 500;
+    padding: 6px 10px; border-radius: 8px;
+    border: 1px solid hsl(var(--hair)); background: hsl(var(--surface));
+    transition: background 120ms, border-color 120ms, color 120ms;
+    white-space: nowrap;
+  }
+  .btn:hover { background: hsl(var(--surface-2)); border-color: hsl(var(--ink-faint)); }
+  .btn-primary { background: hsl(var(--ink)); color: white; border-color: hsl(var(--ink)); }
+  .btn-primary:hover { background: hsl(220 20% 18%); }
+  .btn-accent { background: hsl(var(--accent)); color: white; border-color: hsl(var(--accent)); }
+  .btn-accent:hover { background: hsl(216 85% 42%); }
+  .btn-danger { background: hsl(var(--danger)); color: white; border-color: hsl(var(--danger)); }
+  .btn-danger:hover { background: hsl(4 72% 44%); }
+  .btn-ghost { background: transparent; border-color: transparent; color: hsl(var(--ink-soft)); }
+  .btn-ghost:hover { background: hsl(var(--surface-2)); color: hsl(var(--ink)); }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 600;
+    padding: 2px 8px; border-radius: 999px;
+    background: hsl(var(--surface-3)); color: hsl(var(--ink-soft));
+    letter-spacing: 0.01em;
+  }
+
+  .kbd {
+    font-family: 'Geist Mono', ui-monospace, monospace;
+    font-size: 10px; padding: 1px 5px;
+    border: 1px solid hsl(var(--hair));
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    background: hsl(var(--surface));
+    color: hsl(var(--ink-soft));
+  }
+
+  .row-action-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 500;
+    padding: 4px 10px; border-radius: 6px;
+    border: 1px solid hsl(var(--hair));
+    background: hsl(var(--surface));
+    color: hsl(var(--ink));
+    white-space: nowrap;
+  }
+  .row-action-btn:hover { background: hsl(var(--surface-2)); border-color: hsl(var(--ink-faint)); }
+  .row-action-btn-primary { background: hsl(var(--ink)); color: white; border-color: hsl(var(--ink)); }
+  .row-action-btn-primary:hover { background: hsl(220 20% 18%); }
+  .row-action-btn-danger { background: hsl(var(--danger)); color: white; border-color: hsl(var(--danger)); }
+  .row-action-btn-accent { background: hsl(var(--accent)); color: white; border-color: hsl(var(--accent)); }
+
+  .sidebar-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 10px; border-radius: 7px;
+    font-size: 13px; color: hsl(var(--ink-soft));
+    cursor: pointer;
+    transition: background 100ms, color 100ms;
+  }
+  .sidebar-item:hover { background: hsl(var(--surface-2)); color: hsl(var(--ink)); }
+  .sidebar-item.active {
+    background: hsl(var(--ink));
+    color: white;
+  }
+  .sidebar-item.active .sidebar-badge { background: rgba(255,255,255,0.2); color: white; }
+
+  .sidebar-badge {
+    margin-left: auto;
+    font-size: 10px; font-weight: 600;
+    padding: 1px 6px; border-radius: 999px;
+    background: hsl(var(--surface-3));
+    color: hsl(var(--ink-soft));
+  }
+  .sidebar-badge.danger { background: hsl(var(--danger-soft)); color: hsl(var(--danger)); }
+
+  .sidebar-group {
+    font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: hsl(var(--ink-faint));
+    padding: 14px 10px 6px;
+  }
+
+  /* Alert strip */
+  .alert-strip {
+    background: linear-gradient(90deg, hsl(var(--danger-soft)), hsl(var(--warn-soft)));
+    border: 1px solid hsl(var(--danger)/0.3);
+    border-left: 3px solid hsl(var(--danger));
+  }
+
+  /* Subtle card */
+  .card {
+    background: hsl(var(--surface));
+    border: 1px solid hsl(var(--hair));
+    border-radius: 12px;
+  }
+  .card-soft {
+    background: hsl(var(--surface-2));
+    border: 1px solid hsl(var(--hair-soft));
+    border-radius: 12px;
+  }
+
+  [data-legacy="true"] .shell-new { display: none; }
+  [data-legacy="false"] .shell-legacy { display: none; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useMemo, useEffect } = React;
+
+/* ──────────────────────────────────────────
+   Tweak state — persisted in the page file.
+   ────────────────────────────────────────── */
+const TWEAKS = /*EDITMODE-BEGIN*/{
+  "role": "gsm_gm",
+  "killSwitch": true,
+  "alertIntensity": "noticeable",
+  "showArrivedBanner": true,
+  "showOnTheWay": true,
+  "showHotLead": true,
+  "showSlaBreach": true,
+  "compactTable": false
+}/*EDITMODE-END*/;
+
+/* ──────────────────────────────────────────
+   Role definitions — each role gets a
+   different default home + sidebar shape.
+   ────────────────────────────────────────── */
+const ROLES = {
+  gsm_gm:        { label: "GSM / GM",             name: "Marcus Hartman",  initials: "MH", home: "today" },
+  used_car_mgr:  { label: "Used Car Manager",     name: "Devon Reyes",     initials: "DR", home: "appraiser" },
+  bdc:           { label: "BDC Rep",              name: "Tasha Bell",      initials: "TB", home: "bdc" },
+  appraiser:     { label: "Appraiser",            name: "Luis Okafor",     initials: "LO", home: "appraiser" },
+  receptionist:  { label: "Receptionist",         name: "Jamie Park",      initials: "JP", home: "reception" },
+  super_admin:   { label: "Super Admin",          name: "Autocurb Admin",  initials: "AA", home: "platform" },
+};
+
+/* Icons — small inline SVGs, no library. */
+const Icon = {
+  home:     (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1Z" transform="translate(-1 0)"/></svg>,
+  inbox:    (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11Z"/></svg>,
+  flame:    (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M8.5 14.5A2.5 2.5 0 0 0 11 17c1.4 0 2.5-1.1 2.5-2.5 0-1.4-1-2.5-3-4.5-2 2-3 3.1-3 4.5Z"/><path d="M12 2c1 2.5-1 4-1 4 0 0-2 1-2 3.5 0 2.5 2 4 2 4s-1-4.5 3-6c0 0 .5 2 2 3 0 1-3 2.5-1 4.5C13 15.5 18 13 18 8.5 18 5 14 3 12 2Z"/></svg>,
+  gauge:    (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M12 14 8 10"/><path d="M20 12a8 8 0 1 0-16 0"/></svg>,
+  calendar: (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>,
+  checkin:  (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5M15 12H3"/></svg>,
+  chart:    (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-7"/></svg>,
+  equity:   (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>,
+  voice:    (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1M12 18v3"/></svg>,
+  store:    (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M3 9l1.5-5h15L21 9M3 9h18v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9ZM3 9c0 1.7 1.3 3 3 3s3-1.3 3-3M9 9c0 1.7 1.3 3 3 3s3-1.3 3-3M15 9c0 1.7 1.3 3 3 3s3-1.3 3-3"/></svg>,
+  cog:      (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10 3.1V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8 1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>,
+  users:    (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+  cc:       (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>,
+  bell:     (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>,
+  search:   (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>,
+  phone:    (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M22 16.9v3a2 2 0 0 1-2.2 2 20 20 0 0 1-8.6-3 20 20 0 0 1-6-6 20 20 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 3a2 2 0 0 1-.5 2L8 10.1a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c1 .3 2 .6 3 .7a2 2 0 0 1 1.7 2Z"/></svg>,
+  msg:      (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg>,
+  check:    (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="20 6 9 17 4 12"/></svg>,
+  x:        (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M18 6 6 18M6 6l12 12"/></svg>,
+  dollar:   (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
+  car:      (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M5 17h14M5 17a2 2 0 1 1 4 0M15 17a2 2 0 1 0 4 0M3 13l1.5-5.5A2 2 0 0 1 6.5 6h11a2 2 0 0 1 2 1.5L21 13v4H3Z"/></svg>,
+  arrow:    (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M5 12h14M13 5l7 7-7 7"/></svg>,
+  clock:    (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>,
+  lock:     (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
+  pin:      (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M20 10c0 6-8 13-8 13s-8-7-8-13a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>,
+  sparkle:  (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8"/></svg>,
+};
+
+/* ──────────────────────────────────────────
+   Mock leads
+   ────────────────────────────────────────── */
+const LEADS = [
+  { id: 1, name: "Jenna Whitcomb", vehicle: "2020 Subaru Outback", mileage: "68,400",
+    phone: "(313) 555-0198", offer: 18400, status: "arrived", ageHours: 0.1,
+    score: 94, scoreLabel: "Hot", nextAction: "Greet now",
+    appt: "10:00 AM", store: "Hartecash Woodward",
+    note: "JUST ARRIVED — 2 minutes ago" },
+
+  { id: 2, name: "Marcus Lee", vehicle: "2019 Honda Accord", mileage: "54,200",
+    phone: "(248) 555-0144", offer: 16750, status: "on_way", ageHours: 0.3,
+    score: 88, scoreLabel: "Hot", nextAction: "Prep file",
+    appt: "10:30 AM", store: "Hartecash Woodward",
+    note: "Tapped 'on my way' · ETA ~20 min" },
+
+  { id: 3, name: "Priya Ramesh", vehicle: "2021 Toyota RAV4", mileage: "41,900",
+    phone: "(586) 555-0177", offer: 22100, status: "accepted", ageHours: 2.1,
+    score: 82, scoreLabel: "Hot", nextAction: "Book appointment",
+    appt: null, store: "Hartecash Telegraph" },
+
+  { id: 4, name: "Derek Obi", vehicle: "2018 Ford F-150", mileage: "89,500",
+    phone: "(734) 555-0132", offer: null, estOffer: 24500, status: "inspected", ageHours: 4.5,
+    score: 76, scoreLabel: "Warm", nextAction: "Make offer",
+    appt: null, store: "Hartecash Woodward" },
+
+  { id: 5, name: "Sarah Klein", vehicle: "2020 Chevy Equinox", mileage: "62,100",
+    phone: "(313) 555-0156", offer: null, estOffer: 15800, status: "contacted", ageHours: 6.2,
+    score: 68, scoreLabel: "Warm", nextAction: "Follow up",
+    appt: null, store: "Hartecash Telegraph" },
+
+  { id: 6, name: "Tom Benedetti", vehicle: "2017 Nissan Altima", mileage: "94,800",
+    phone: "(248) 555-0189", offer: null, estOffer: 9200, status: "new", ageHours: 26.0,
+    score: 52, scoreLabel: "SLA Breach", nextAction: "Call now",
+    appt: null, store: "Hartecash Woodward", slaBreached: true },
+
+  { id: 7, name: "Ana Morales", vehicle: "2022 Hyundai Tucson", mileage: "28,300",
+    phone: "(586) 555-0143", offer: null, estOffer: 21400, status: "new", ageHours: 1.2,
+    score: 71, scoreLabel: "Warm", nextAction: "Call",
+    appt: null, store: "Hartecash Telegraph" },
+
+  { id: 8, name: "Robert Hwang", vehicle: "2019 Jeep Grand Cherokee", mileage: "71,200",
+    phone: "(313) 555-0112", offer: 19900, status: "purchase_complete", ageHours: 50,
+    score: null, scoreLabel: "Closed", nextAction: "—",
+    appt: null, store: "Hartecash Woodward" },
+
+  { id: 9, name: "Denise Park", vehicle: "2016 Mazda CX-5", mileage: "112,400",
+    phone: "(734) 555-0167", offer: null, estOffer: 6400, status: "dead", ageHours: 120,
+    score: null, scoreLabel: "Dead", nextAction: "—",
+    appt: null, store: "Hartecash Telegraph" },
+
+  { id: 10, name: "Kevin Oduya", vehicle: "2021 Kia Telluride", mileage: "35,600",
+    phone: "(248) 555-0129", offer: null, estOffer: 31500, status: "new", ageHours: 0.5,
+    score: 79, scoreLabel: "Warm", nextAction: "Call",
+    appt: null, store: "Hartecash Woodward" },
+];
+
+const STATUS_META = {
+  arrived:  { label: "Arrived", cls: "danger-soft", dot: "danger-bg" },
+  on_way:   { label: "On the way", cls: "warn-soft", dot: "warn-bg" },
+  new:      { label: "New", cls: "bg-surface-3 ink-soft", dot: "bg-gray-400" },
+  contacted:{ label: "Contacted", cls: "accent-soft-bg accent-text", dot: "accent-bg" },
+  inspected:{ label: "Inspected", cls: "accent-soft-bg accent-text", dot: "accent-bg" },
+  accepted: { label: "Offer accepted", cls: "success-soft", dot: "success-bg" },
+  purchase_complete: { label: "Purchased", cls: "success-soft", dot: "success-bg" },
+  dead:     { label: "Dead", cls: "bg-surface-3 ink-faint", dot: "bg-gray-300" },
+};
+
+/* ──────────────────────────────────────────
+   Sidebar per role
+   ────────────────────────────────────────── */
+function sidebarForRole(role) {
+  const common = {
+    Work: [
+      { id: "today", label: "Today", icon: Icon.home },
+    ],
+  };
+
+  if (role === "receptionist") {
+    return {
+      Work: [
+        { id: "today", label: "Today", icon: Icon.home },
+        { id: "reception", label: "Appointments", icon: Icon.calendar, badge: 7 },
+        { id: "checkin", label: "Check-In", icon: Icon.checkin },
+      ],
+    };
+  }
+
+  if (role === "bdc") {
+    return {
+      Work: [
+        { id: "today", label: "Today", icon: Icon.home },
+        { id: "bdc", label: "Priority Queue", icon: Icon.flame, badge: 12, badgeDanger: true },
+        { id: "leads", label: "All Leads", icon: Icon.inbox, badge: 84 },
+        { id: "reception", label: "Appointments", icon: Icon.calendar, badge: 7 },
+      ],
+      Tools: [
+        { id: "leadlink", label: "My Lead Link", icon: Icon.arrow },
+      ],
+    };
+  }
+
+  if (role === "appraiser") {
+    return {
+      Work: [
+        { id: "today", label: "Today", icon: Icon.home },
+        { id: "appraiser", label: "Appraiser Queue", icon: Icon.gauge, badge: 6, badgeDanger: true },
+        { id: "leads", label: "All Leads", icon: Icon.inbox, badge: 84 },
+      ],
+    };
+  }
+
+  if (role === "used_car_mgr") {
+    return {
+      Work: [
+        { id: "today", label: "Today", icon: Icon.home },
+        { id: "leads", label: "All Leads", icon: Icon.inbox, badge: 84 },
+        { id: "bdc", label: "Priority Queue", icon: Icon.flame, badge: 12 },
+        { id: "appraiser", label: "Appraiser Queue", icon: Icon.gauge, badge: 6, badgeDanger: true },
+        { id: "reception", label: "Appointments", icon: Icon.calendar, badge: 7 },
+      ],
+      Grow: [
+        { id: "equity", label: "Equity Mining", icon: Icon.equity },
+        { id: "voice", label: "Voice AI", icon: Icon.voice },
+      ],
+      Measure: [
+        { id: "performance", label: "Performance", icon: Icon.chart },
+        { id: "reports", label: "Reports", icon: Icon.chart },
+      ],
+    };
+  }
+
+  if (role === "gsm_gm") {
+    return {
+      Work: [
+        { id: "today", label: "Today", icon: Icon.home },
+        { id: "leads", label: "All Leads", icon: Icon.inbox, badge: 84 },
+        { id: "appraiser", label: "Appraiser Queue", icon: Icon.gauge, badge: 6, badgeDanger: true },
+        { id: "reception", label: "Appointments", icon: Icon.calendar, badge: 7 },
+      ],
+      Grow: [
+        { id: "equity", label: "Equity Mining", icon: Icon.equity },
+        { id: "voice", label: "Voice AI", icon: Icon.voice },
+        { id: "marketplace", label: "Wholesale", icon: Icon.store },
+      ],
+      Measure: [
+        { id: "performance", label: "Performance", icon: Icon.chart },
+        { id: "gmhud", label: "GM HUD", icon: Icon.dollar },
+        { id: "reports", label: "Reports", icon: Icon.chart },
+      ],
+      Setup: [
+        { id: "offer", label: "Offer Logic", icon: Icon.cog },
+        { id: "branding", label: "Branding", icon: Icon.sparkle },
+        { id: "locations", label: "Locations", icon: Icon.pin },
+      ],
+      Account: [
+        { id: "staff", label: "Staff & Permissions", icon: Icon.users },
+        { id: "plan", label: "Plan", icon: Icon.cc },
+      ],
+    };
+  }
+
+  // super_admin
+  return {
+    Platform: [
+      { id: "platform", label: "Tenants", icon: Icon.store, badge: 24 },
+      { id: "pricing", label: "Pricing Model", icon: Icon.dollar },
+      { id: "billing", label: "Platform Billing", icon: Icon.cc },
+    ],
+    Override: [
+      { id: "today", label: "View as Dealer", icon: Icon.home },
+      { id: "killswitch", label: "UI Kill Switch", icon: Icon.lock },
+    ],
+  };
+}
+
+/* ──────────────────────────────────────────
+   Small reusable bits
+   ────────────────────────────────────────── */
+const Pill = ({ children, className = "" }) => (
+  <span className={`pill ${className}`}>{children}</span>
+);
+
+const StatusPill = ({ status }) => {
+  const m = STATUS_META[status] || { label: status, cls: "pill", dot: "bg-gray-400" };
+  return (
+    <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2 py-0.5 rounded-full ${m.cls}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${m.dot} ${status === "arrived" ? "pulse-dot" : ""}`} />
+      {m.label}
+    </span>
+  );
+};
+
+const formatAge = (h) => {
+  if (h < 1) return `${Math.round(h * 60)}m`;
+  if (h < 24) return `${Math.round(h)}h`;
+  return `${Math.floor(h / 24)}d`;
+};
+
+const nextActionFor = (lead) => {
+  if (lead.status === "arrived") return { label: "Greet now", variant: "danger", icon: Icon.arrow };
+  if (lead.status === "on_way") return { label: "Prep file", variant: "primary", icon: Icon.arrow };
+  if (lead.status === "accepted") return { label: "Book appt", variant: "primary", icon: Icon.calendar };
+  if (lead.status === "inspected") return { label: "Make offer", variant: "accent", icon: Icon.dollar };
+  if (lead.status === "contacted") return { label: "Follow up", variant: "ghost", icon: Icon.phone };
+  if (lead.status === "new") return { label: "Call", variant: "primary", icon: Icon.phone };
+  if (lead.status === "purchase_complete") return { label: "View", variant: "ghost", icon: null };
+  if (lead.status === "dead") return { label: "Revive", variant: "ghost", icon: null };
+  return { label: "Open", variant: "ghost", icon: null };
+};
+</script>
+
+<script type="text/babel" data-presets="react">
+/* ──────────────────────────────────────────
+   HEADER (new)
+   ────────────────────────────────────────── */
+function AppHeader({ role, setRole, setActive, alertCount }) {
+  const r = ROLES[role];
+  return (
+    <header className="sticky top-0 z-40 bg-surface border-b hair">
+      <div className="h-12 px-4 flex items-center gap-4">
+        <div className="flex items-center gap-2.5 min-w-[200px]">
+          <div className="w-6 h-6 rounded-md accent-bg flex items-center justify-center text-white text-[11px] font-bold">H</div>
+          <div className="text-[13px] font-semibold ink">Hartecash</div>
+          <span className="pill text-[10px]">Woodward</span>
+        </div>
+
+        <div className="flex-1 max-w-xl">
+          <div className="relative">
+            <Icon.search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ink-faint" />
+            <input
+              placeholder="Search leads, VIN, plate…"
+              className="w-full bg-surface-2 border hair-soft rounded-lg h-8 pl-9 pr-14 text-[13px] placeholder:ink-faint outline-none focus:border-gray-400"
+            />
+            <span className="kbd absolute right-2 top-1/2 -translate-y-1/2">⌘K</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1">
+          <button className="btn-ghost btn relative" onClick={() => setActive("alerts")}>
+            <Icon.bell className="w-4 h-4" />
+            {alertCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] rounded-full danger-bg text-white text-[10px] font-bold flex items-center justify-center px-1">
+                {alertCount}
+              </span>
+            )}
+          </button>
+
+          <select
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            className="bg-surface border hair rounded-lg h-8 px-2 text-[12px] ink-soft outline-none hover:bg-surface-2"
+            title="Switch role (demo)"
+          >
+            {Object.entries(ROLES).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+          </select>
+
+          <div className="flex items-center gap-2 pl-2 ml-1 border-l hair">
+            <div className="w-7 h-7 rounded-full bg-surface-3 flex items-center justify-center text-[11px] font-semibold ink">{r.initials}</div>
+            <div className="text-[12px] leading-tight">
+              <div className="font-medium ink">{r.name.split(" ")[0]}</div>
+              <div className="ink-faint text-[10px]">{r.label}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function LegacyHeader({ role, setRole }) {
+  const r = ROLES[role];
+  return (
+    <header className="relative sticky top-0 z-40 overflow-hidden legacy-header shadow-lg">
+      <div className="legacy-grid absolute inset-0 opacity-20"></div>
+      <div className="relative px-5 py-3 flex items-center justify-between gap-2 text-white">
+        <div className="flex items-center gap-4 min-w-0">
+          <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center text-lg font-black">H</div>
+          <div className="hidden sm:block h-8 w-px bg-white/15"></div>
+          <div className="min-w-0 flex flex-col">
+            <span className="text-lg font-semibold tracking-tight">Good afternoon, {r.name.split(" ")[0]}</span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/70 font-medium border border-white/10 w-fit">{r.label}</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] text-white/60">Hartecash · Woodward</span>
+          <select
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            className="bg-white/10 border border-white/15 text-white rounded-lg h-8 px-2 text-[12px] outline-none"
+          >
+            {Object.entries(ROLES).map(([k, v]) => <option key={k} value={k} className="text-black">{v.label}</option>)}
+          </select>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+/* ──────────────────────────────────────────
+   SIDEBAR (new)
+   ────────────────────────────────────────── */
+function Sidebar({ role, active, setActive }) {
+  const groups = sidebarForRole(role);
+  return (
+    <aside className="w-[220px] shrink-0 bg-surface-2 border-r hair-soft flex flex-col">
+      <nav className="flex-1 px-2 py-3 overflow-auto">
+        {Object.entries(groups).map(([group, items]) => (
+          <div key={group}>
+            <div className="sidebar-group">{group}</div>
+            <div className="space-y-0.5">
+              {items.map((item) => {
+                const I = item.icon;
+                return (
+                  <div
+                    key={item.id}
+                    className={`sidebar-item ${active === item.id ? "active" : ""}`}
+                    onClick={() => setActive(item.id)}
+                  >
+                    <I className="w-4 h-4 shrink-0" />
+                    <span>{item.label}</span>
+                    {item.badge && (
+                      <span className={`sidebar-badge ${item.badgeDanger ? "danger" : ""}`}>{item.badge}</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </nav>
+      <div className="px-4 py-2.5 border-t hair-soft text-[10px] ink-faint">
+        Autocurb.io
+      </div>
+    </aside>
+  );
+}
+
+function LegacySidebar({ role, active, setActive }) {
+  const groups = sidebarForRole(role);
+  // Simulate the busier old sidebar
+  return (
+    <aside className="w-[240px] shrink-0 bg-white border-r hair flex flex-col">
+      <nav className="flex-1 px-2 py-2 overflow-auto">
+        {Object.entries(groups).map(([group, items]) => (
+          <div key={group}>
+            <div className="text-[10px] font-bold uppercase tracking-[0.12em] text-gray-400 px-3 pt-4 pb-1.5">{group}</div>
+            <div className="space-y-0.5">
+              {items.map((item) => {
+                const I = item.icon;
+                const isActive = active === item.id;
+                return (
+                  <div
+                    key={item.id}
+                    className={`flex items-center gap-2.5 px-3 py-2 text-[13px] rounded-md cursor-pointer ${isActive ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700 hover:bg-gray-50"}`}
+                    onClick={() => setActive(item.id)}
+                  >
+                    <I className="w-4 h-4 shrink-0" />
+                    <span>{item.label}</span>
+                    {item.badge && (
+                      <span className={`ml-auto text-[10px] font-bold px-1.5 rounded ${item.badgeDanger ? "bg-red-500 text-white" : "bg-gray-200 text-gray-700"}`}>{item.badge}</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </nav>
+    </aside>
+  );
+}
+
+Object.assign(window, { AppHeader, LegacyHeader, Sidebar, LegacySidebar });
+</script>
+
+<script type="text/babel" data-presets="react">
+/* ──────────────────────────────────────────
+   HOME VIEWS — per role
+   ────────────────────────────────────────── */
+function KpiTile({ label, value, sub, tone = "neutral" }) {
+  const toneMap = {
+    neutral: "ink",
+    success: "success-text",
+    warn: "warn-text",
+    danger: "danger-text",
+    accent: "accent-text",
+  };
+  return (
+    <div className="card p-4">
+      <div className="text-[10px] uppercase tracking-[0.1em] ink-faint font-semibold">{label}</div>
+      <div className={`text-2xl font-bold tracking-tight mt-1 ${toneMap[tone]}`}>{value}</div>
+      {sub && <div className="text-[11px] ink-soft mt-0.5">{sub}</div>}
+    </div>
+  );
+}
+
+function ActionRow({ lead, primary = false }) {
+  const next = nextActionFor(lead);
+  const IconComp = next.icon;
+  const variantCls = {
+    primary: "row-action-btn-primary",
+    accent: "row-action-btn-accent",
+    danger: "row-action-btn-danger",
+    ghost: "btn-ghost",
+  }[next.variant] || "";
+
+  return (
+    <div className={`flex items-center gap-3 py-2.5 ${primary ? "" : "border-t hair-soft"}`}>
+      <div className="w-8 h-8 rounded-full bg-surface-3 flex items-center justify-center text-[11px] font-semibold ink-soft shrink-0">
+        {lead.name.split(" ").map(n => n[0]).join("")}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <div className="text-[13px] font-semibold ink truncate">{lead.name}</div>
+          <StatusPill status={lead.status} />
+        </div>
+        <div className="text-[11px] ink-soft truncate">
+          {lead.vehicle} · {lead.offer ? `$${lead.offer.toLocaleString()}` : (lead.estOffer ? `~$${lead.estOffer.toLocaleString()}` : "—")}
+          {lead.appt && ` · ${lead.appt}`}
+          {lead.note && <span className="ml-1 danger-text font-medium">· {lead.note}</span>}
+        </div>
+      </div>
+      <div className="text-right shrink-0">
+        <div className="text-[10px] ink-faint mono">{formatAge(lead.ageHours)}</div>
+      </div>
+      <button className={`row-action-btn ${variantCls} shrink-0`}>
+        {IconComp && <IconComp className="w-3.5 h-3.5" />}
+        {next.label}
+      </button>
+    </div>
+  );
+}
+
+function TodayHome({ role, setActive }) {
+  const r = ROLES[role];
+  const now = new Date();
+  const greeting = now.getHours() < 12 ? "Good morning" : now.getHours() < 17 ? "Good afternoon" : "Good evening";
+
+  const arrivedNow = LEADS.filter(l => l.status === "arrived");
+  const onTheirWay = LEADS.filter(l => l.status === "on_way");
+  const needsCall = LEADS.filter(l => ["new", "contacted"].includes(l.status) && !l.slaBreached).slice(0, 4);
+  const slaBreached = LEADS.filter(l => l.slaBreached);
+  const needsOffer = LEADS.filter(l => l.status === "inspected").slice(0, 2);
+  const appts = LEADS.filter(l => l.appt);
+
+  return (
+    <div className="max-w-[1100px] mx-auto px-6 py-8 space-y-8">
+      {/* Masthead */}
+      <div>
+        <div className="text-[12px] ink-faint mb-1">
+          {now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+        </div>
+        <h1 className="text-[28px] font-bold tracking-tight">{greeting}, {r.name.split(" ")[0]}.</h1>
+        <p className="ink-soft text-[14px] mt-0.5">
+          Here's what needs you today.
+        </p>
+      </div>
+
+      {/* Right-now strip — arrivals + on-way (only renders if something is happening) */}
+      {(arrivedNow.length > 0 || onTheirWay.length > 0) && (
+        <section>
+          <div className="flex items-baseline justify-between mb-2">
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.1em] ink-faint">Right now</h2>
+            <span className="text-[11px] ink-faint">Live updates</span>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {arrivedNow.map(l => (
+              <div key={l.id} className="card p-4 border-l-[3px]" style={{ borderLeftColor: "hsl(var(--danger))" }}>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="w-2 h-2 rounded-full danger-bg pulse-dot" />
+                  <span className="text-[11px] font-bold uppercase tracking-wider danger-text">Just arrived</span>
+                  <span className="text-[10px] ink-faint mono ml-auto">{formatAge(l.ageHours)}</span>
+                </div>
+                <div className="text-[16px] font-semibold">{l.name}</div>
+                <div className="text-[12px] ink-soft mt-0.5">{l.vehicle} · ${l.offer?.toLocaleString()}</div>
+                <div className="flex gap-2 mt-3">
+                  <button className="row-action-btn row-action-btn-danger flex-1">
+                    <Icon.arrow className="w-3.5 h-3.5" /> Greet now
+                  </button>
+                  <button className="row-action-btn">Open file</button>
+                </div>
+              </div>
+            ))}
+            {onTheirWay.map(l => (
+              <div key={l.id} className="card p-4 border-l-[3px]" style={{ borderLeftColor: "hsl(var(--warn))" }}>
+                <div className="flex items-center gap-2 mb-2">
+                  <Icon.clock className="w-3 h-3 warn-text" />
+                  <span className="text-[11px] font-bold uppercase tracking-wider warn-text">On the way</span>
+                  <span className="text-[10px] ink-faint mono ml-auto">{formatAge(l.ageHours)}</span>
+                </div>
+                <div className="text-[16px] font-semibold">{l.name}</div>
+                <div className="text-[12px] ink-soft mt-0.5">{l.vehicle} · Appt {l.appt}</div>
+                <div className="flex gap-2 mt-3">
+                  <button className="row-action-btn row-action-btn-primary flex-1">
+                    <Icon.arrow className="w-3.5 h-3.5" /> Prep file
+                  </button>
+                  <button className="row-action-btn">Call</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* KPIs — quiet, 4 tiles */}
+      <section>
+        <div className="grid grid-cols-4 gap-3">
+          <KpiTile label="Today" value="3" sub="acquisitions" />
+          <KpiTile label="MTD Gross" value="$47.2k" sub="+12% vs last month" tone="success" />
+          <KpiTile label="Open leads" value="84" sub="12 need action" />
+          <KpiTile label="Avg response" value="38m" sub="goal < 2h" tone="success" />
+        </div>
+      </section>
+
+      {/* Action list — the meat */}
+      <section>
+        <div className="flex items-baseline justify-between mb-2">
+          <h2 className="text-[11px] font-semibold uppercase tracking-[0.1em] ink-faint">Do next</h2>
+          <button className="btn btn-ghost text-[11px]" onClick={() => setActive("leads")}>
+            View all leads <Icon.arrow className="w-3 h-3" />
+          </button>
+        </div>
+
+        <div className="card px-4">
+          {/* SLA breaches first — they're red */}
+          {slaBreached.map((l, i) => (
+            <div key={l.id} className={`flex items-center gap-3 py-2.5 ${i > 0 ? "border-t hair-soft" : ""}`}>
+              <div className="w-1 h-8 danger-bg rounded-full shrink-0"></div>
+              <div className="w-8 h-8 rounded-full bg-surface-3 flex items-center justify-center text-[11px] font-semibold shrink-0">
+                {l.name.split(" ").map(n => n[0]).join("")}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <div className="text-[13px] font-semibold">{l.name}</div>
+                  <span className="danger-soft text-[10px] font-bold px-1.5 py-0.5 rounded">SLA · {formatAge(l.ageHours)}</span>
+                </div>
+                <div className="text-[11px] ink-soft truncate">{l.vehicle} · ~${l.estOffer?.toLocaleString()}</div>
+              </div>
+              <button className="row-action-btn row-action-btn-danger">
+                <Icon.phone className="w-3.5 h-3.5" /> Call now
+              </button>
+            </div>
+          ))}
+          {needsOffer.map((l, i) => <ActionRow key={l.id} lead={l} primary={slaBreached.length === 0 && i === 0} />)}
+          {needsCall.map((l) => <ActionRow key={l.id} lead={l} />)}
+        </div>
+      </section>
+
+      {/* Today's appointments (if any) */}
+      {appts.length > 0 && (
+        <section>
+          <div className="flex items-baseline justify-between mb-2">
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.1em] ink-faint">Appointments today</h2>
+            <span className="text-[11px] ink-faint">{appts.length} scheduled</span>
+          </div>
+          <div className="card divide-y hair-soft">
+            {appts.map(l => (
+              <div key={l.id} className="flex items-center gap-3 py-2.5 px-4">
+                <div className="mono text-[13px] font-semibold w-16">{l.appt}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[13px] font-medium">{l.name}</div>
+                  <div className="text-[11px] ink-soft">{l.vehicle}</div>
+                </div>
+                <StatusPill status={l.status} />
+                <button className="btn btn-ghost">Open</button>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}
+
+function ReceptionHome() {
+  const appts = LEADS.filter(l => l.appt || l.status === "arrived" || l.status === "on_way");
+  return (
+    <div className="max-w-[900px] mx-auto px-6 py-8 space-y-8">
+      <div>
+        <h1 className="text-[28px] font-bold tracking-tight">Front desk</h1>
+        <p className="ink-soft text-[14px] mt-0.5">Check customers in and keep the schedule moving.</p>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3">
+        <KpiTile label="Today" value="7" sub="appointments" />
+        <KpiTile label="Right now" value="1" sub="arrived" tone="danger" />
+        <KpiTile label="On the way" value="1" sub="customer" tone="warn" />
+      </div>
+
+      <section>
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.1em] ink-faint mb-2">Today's schedule</h2>
+        <div className="card divide-y hair-soft">
+          {appts.map(l => (
+            <div key={l.id} className={`flex items-center gap-3 py-3 px-4 ${l.status === "arrived" ? "arrived-row" : ""}`}>
+              <div className="mono text-[13px] font-semibold w-16">{l.appt || "—"}</div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[13px] font-medium flex items-center gap-2">
+                  {l.name}
+                  <StatusPill status={l.status} />
+                </div>
+                <div className="text-[11px] ink-soft">{l.vehicle}</div>
+              </div>
+              {l.status === "arrived" ? (
+                <button className="row-action-btn row-action-btn-danger">
+                  <Icon.check className="w-3.5 h-3.5" /> Mark greeted
+                </button>
+              ) : (
+                <button className="row-action-btn">Check in</button>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function BdcHome() {
+  const scored = [...LEADS].filter(l => l.score != null && !["purchase_complete", "dead"].includes(l.status))
+    .sort((a, b) => b.score - a.score);
+  const callNow = scored.filter(l => l.score >= 80).slice(0, 4);
+  const today = scored.filter(l => l.score >= 65 && l.score < 80).slice(0, 4);
+  const later = scored.filter(l => l.score < 65).slice(0, 3);
+
+  return (
+    <div className="max-w-[1000px] mx-auto px-6 py-8 space-y-8">
+      <div>
+        <h1 className="text-[28px] font-bold tracking-tight">Call list</h1>
+        <p className="ink-soft text-[14px] mt-0.5">Ranked by score. Work top to bottom.</p>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3">
+        <KpiTile label="Call now" value={callNow.length} sub="score ≥ 80" tone="danger" />
+        <KpiTile label="Today" value={today.length} sub="score 65–80" tone="warn" />
+        <KpiTile label="Later" value={later.length} sub="score < 65" />
+      </div>
+
+      {[
+        { title: "Call now", tone: "danger", list: callNow },
+        { title: "Today", tone: "warn", list: today },
+        { title: "Later this week", tone: "neutral", list: later },
+      ].map(section => section.list.length > 0 && (
+        <section key={section.title}>
+          <h2 className={`text-[11px] font-semibold uppercase tracking-[0.1em] mb-2 ${section.tone === "danger" ? "danger-text" : section.tone === "warn" ? "warn-text" : "ink-faint"}`}>
+            {section.title} · {section.list.length}
+          </h2>
+          <div className="card px-4">
+            {section.list.map((l, i) => (
+              <div key={l.id} className={`flex items-center gap-3 py-2.5 ${i > 0 ? "border-t hair-soft" : ""}`}>
+                <div className="w-8 h-8 rounded-full bg-surface-3 flex items-center justify-center text-[11px] font-semibold shrink-0">
+                  {l.name.split(" ").map(n => n[0]).join("")}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[13px] font-semibold">{l.name}
+                    <span className="ml-2 pill">{l.score}</span>
+                  </div>
+                  <div className="text-[11px] ink-soft truncate">{l.vehicle} · {l.phone}</div>
+                </div>
+                <button className="row-action-btn"><Icon.phone className="w-3.5 h-3.5" /> Call</button>
+                <button className="row-action-btn"><Icon.msg className="w-3.5 h-3.5" /></button>
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+function AppraiserHome() {
+  const walkIns = LEADS.filter(l => l.status === "arrived" || l.status === "inspected").slice(0, 4);
+  return (
+    <div className="max-w-[1000px] mx-auto px-6 py-8 space-y-8">
+      <div>
+        <h1 className="text-[28px] font-bold tracking-tight">Appraiser queue</h1>
+        <p className="ink-soft text-[14px] mt-0.5">6 vehicles need a number.</p>
+      </div>
+
+      <div className="grid grid-cols-4 gap-3">
+        <KpiTile label="Walk-ins" value="1" tone="danger" />
+        <KpiTile label="Service drive" value="2" tone="warn" />
+        <KpiTile label="Flagged" value="2" tone="accent" />
+        <KpiTile label="Declined" value="1" />
+      </div>
+
+      <section>
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.1em] ink-faint mb-2">Queue</h2>
+        <div className="space-y-2">
+          {walkIns.map(l => (
+            <div key={l.id} className="card p-4 flex items-start gap-4">
+              <div className="w-10 h-10 rounded-lg bg-surface-3 flex items-center justify-center shrink-0">
+                <Icon.car className="w-5 h-5 ink-soft" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <StatusPill status={l.status} />
+                  <div className="text-[14px] font-semibold">{l.vehicle}</div>
+                  <span className="text-[11px] ink-faint">· {l.mileage} mi</span>
+                </div>
+                <div className="text-[12px] ink-soft">{l.name} · {l.phone}</div>
+              </div>
+              <button className="row-action-btn row-action-btn-primary">
+                <Icon.gauge className="w-3.5 h-3.5" /> Open appraisal
+              </button>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function PlatformHome() {
+  return (
+    <div className="max-w-[1000px] mx-auto px-6 py-8 space-y-8">
+      <div>
+        <h1 className="text-[28px] font-bold tracking-tight">Platform</h1>
+        <p className="ink-soft text-[14px] mt-0.5">24 dealers · 6 on trial · 3 past due</p>
+      </div>
+      <div className="grid grid-cols-4 gap-3">
+        <KpiTile label="Active dealers" value="24" />
+        <KpiTile label="MRR" value="$31.4k" tone="success" sub="+8% MoM" />
+        <KpiTile label="Trial → Paid" value="67%" tone="accent" />
+        <KpiTile label="Past due" value="3" tone="warn" />
+      </div>
+      <div className="card p-5 space-y-2">
+        <div className="flex items-center gap-2">
+          <Icon.lock className="w-4 h-4 accent-text" />
+          <div className="text-[13px] font-semibold">UI Refresh Kill Switch</div>
+        </div>
+        <p className="text-[12px] ink-soft">
+          Flip a dealer back to the legacy UI if their team isn't ready. Toggle it in the Tweaks panel at the bottom-right.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { TodayHome, ReceptionHome, BdcHome, AppraiserHome, PlatformHome, KpiTile, ActionRow });
+</script>
+
+<script type="text/babel" data-presets="react">
+/* ──────────────────────────────────────────
+   ALERT STRIP (top of leads table or home)
+   ────────────────────────────────────────── */
+function AlertStrip({ alerts, onDismiss }) {
+  if (!alerts || alerts.length === 0) return null;
+  const primary = alerts[0];
+  return (
+    <div className="alert-strip rounded-xl px-4 py-3 mb-4 flex items-center gap-3">
+      <div className="w-2 h-2 rounded-full danger-bg pulse-dot shrink-0"></div>
+      <div className="flex-1 min-w-0">
+        <div className="text-[13px] font-semibold ink">
+          {primary.title}
+        </div>
+        <div className="text-[12px] ink-soft">
+          {primary.subtitle}
+        </div>
+      </div>
+      {alerts.length > 1 && (
+        <span className="pill">+{alerts.length - 1} more</span>
+      )}
+      <button className="row-action-btn row-action-btn-danger">
+        {primary.action}
+      </button>
+      <button className="btn-ghost btn p-1.5" onClick={onDismiss} aria-label="Dismiss">
+        <Icon.x className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────
+   NEW LEADS TABLE (simplified)
+   ────────────────────────────────────────── */
+function LeadsTable({ alertIntensity, showArrivedBanner, showHotLead, showSlaBreach, compact }) {
+  const [dismissed, setDismissed] = useState(false);
+
+  const alerts = [];
+  if (showArrivedBanner) alerts.push({
+    title: "Jenna Whitcomb just arrived on the lot",
+    subtitle: "2020 Subaru Outback · 10:00 AM appointment · Go greet now",
+    action: "Greet now",
+    kind: "arrived",
+  });
+  if (showHotLead) alerts.push({
+    title: "Marcus Lee is on his way",
+    subtitle: "ETA 20 min · 10:30 AM appointment",
+    action: "Prep file",
+    kind: "on_way",
+  });
+  if (showSlaBreach) alerts.push({
+    title: "Tom Benedetti — no contact for 26h",
+    subtitle: "SLA breached · 2017 Nissan Altima",
+    action: "Call now",
+    kind: "sla",
+  });
+
+  const padY = compact ? "py-1.5" : "py-3";
+
+  return (
+    <div className="max-w-[1200px] mx-auto px-6 py-6">
+      <div className="flex items-baseline justify-between mb-4">
+        <div>
+          <h1 className="text-[22px] font-bold tracking-tight">All leads</h1>
+          <p className="text-[12px] ink-soft">84 total · 12 need action</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Icon.search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ink-faint" />
+            <input placeholder="Search" className="bg-surface border hair rounded-lg h-8 pl-9 pr-3 text-[13px] w-60 outline-none focus:border-gray-400" />
+          </div>
+          <button className="btn">Filter</button>
+          <button className="btn btn-primary">New lead</button>
+        </div>
+      </div>
+
+      {!dismissed && <AlertStrip alerts={alerts} onDismiss={() => setDismissed(true)} />}
+
+      {/* Quick filter chips */}
+      <div className="flex items-center gap-1.5 mb-3 flex-wrap">
+        <button className="pill bg-ink text-white">All · 84</button>
+        <button className="pill">New · 12</button>
+        <button className="pill">Hot · 6</button>
+        <button className="pill">Appointments · 7</button>
+        <button className="pill">Accepted · 4</button>
+        <button className="pill">Stuck &gt; 24h · 3</button>
+      </div>
+
+      {/* Table */}
+      <div className="card overflow-hidden">
+        <table className="w-full text-[13px]">
+          <thead>
+            <tr className="bg-surface-2 border-b hair-soft text-[11px] font-semibold uppercase tracking-wider ink-faint">
+              <th className="text-left px-4 py-2">Customer & vehicle</th>
+              <th className="text-left px-4 py-2">Status</th>
+              <th className="text-right px-4 py-2">Offer</th>
+              <th className="text-right px-4 py-2">Age</th>
+              <th className="text-right px-4 py-2">Score</th>
+              <th className="text-right px-4 py-2 w-[180px]">Next</th>
+            </tr>
+          </thead>
+          <tbody>
+            {LEADS.map((l) => {
+              const next = nextActionFor(l);
+              const IconComp = next.icon;
+              const variantCls = {
+                primary: "row-action-btn-primary",
+                accent: "row-action-btn-accent",
+                danger: "row-action-btn-danger",
+                ghost: "btn-ghost",
+              }[next.variant] || "";
+              const isArrived = l.status === "arrived";
+              return (
+                <tr key={l.id} className={`border-t hair-soft row-hover ${isArrived ? "arrived-row" : ""}`}>
+                  <td className={`px-4 ${padY}`}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-surface-3 flex items-center justify-center text-[11px] font-semibold shrink-0">
+                        {l.name.split(" ").map(n => n[0]).join("")}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-semibold truncate">{l.name}</div>
+                        <div className="text-[11px] ink-soft truncate">{l.vehicle} · {l.mileage} mi</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className={`px-4 ${padY}`}><StatusPill status={l.status} /></td>
+                  <td className={`px-4 ${padY} text-right mono`}>
+                    {l.offer ? (
+                      <span className="font-semibold">${l.offer.toLocaleString()}</span>
+                    ) : l.estOffer ? (
+                      <span className="ink-faint">~${l.estOffer.toLocaleString()}</span>
+                    ) : (
+                      <span className="ink-faint">—</span>
+                    )}
+                  </td>
+                  <td className={`px-4 ${padY} text-right mono text-[12px] ink-soft`}>
+                    {formatAge(l.ageHours)}
+                  </td>
+                  <td className={`px-4 ${padY} text-right`}>
+                    {l.score ? (
+                      <span className={`pill ${l.score >= 80 ? "danger-soft" : l.score >= 65 ? "warn-soft" : ""}`}>{l.score}</span>
+                    ) : <span className="ink-faint">—</span>}
+                  </td>
+                  <td className={`px-4 ${padY} text-right`}>
+                    <button className={`row-action-btn ${variantCls}`}>
+                      {IconComp && <IconComp className="w-3.5 h-3.5" />}
+                      {next.label}
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Footer */}
+      <div className="flex items-center justify-between mt-3 text-[11px] ink-soft">
+        <div>Showing 10 of 84 leads</div>
+        <div className="flex items-center gap-2">
+          <button className="btn">← Prev</button>
+          <button className="btn">Next →</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────
+   LEGACY TABLE (kill switch OFF)
+   ────────────────────────────────────────── */
+function LegacyLeadsTable() {
+  return (
+    <div className="max-w-[1400px] mx-auto p-6">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-[12px]">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="w-10 text-center px-2 py-3"><input type="checkbox" /></th>
+                <th className="text-left px-3 py-3 font-semibold text-gray-500 uppercase text-[10px] tracking-wider">Date</th>
+                <th className="text-left px-3 py-3 font-semibold text-gray-500 uppercase text-[10px] tracking-wider">Name</th>
+                <th className="text-left px-3 py-3 font-semibold text-gray-500 uppercase text-[10px] tracking-wider">Vehicle</th>
+                <th className="text-left px-3 py-3 font-semibold text-gray-500 uppercase text-[10px] tracking-wider">Contact</th>
+                <th className="text-left px-3 py-3 font-semibold text-gray-500 uppercase text-[10px] tracking-wider">Location</th>
+                <th className="text-right px-3 py-3 font-semibold text-gray-500 uppercase text-[10px] tracking-wider">Offer</th>
+                <th className="text-left px-3 py-3 font-semibold text-gray-500 uppercase text-[10px] tracking-wider">Status</th>
+                <th className="text-center px-2 py-3 font-semibold text-gray-500 uppercase text-[10px] tracking-wider">Age</th>
+                <th className="text-center px-2 py-3 font-semibold text-gray-500 uppercase text-[10px] tracking-wider">Score</th>
+                <th className="text-right px-3 py-3 font-semibold text-gray-500 uppercase text-[10px] tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {LEADS.map((l) => (
+                <tr key={l.id} className="border-b border-gray-100">
+                  <td className="text-center"><input type="checkbox" /></td>
+                  <td className="px-3 py-3 whitespace-nowrap">Oct 21</td>
+                  <td className="px-3 py-3 font-medium whitespace-nowrap">{l.name}</td>
+                  <td className="px-3 py-3 whitespace-nowrap">{l.vehicle}</td>
+                  <td className="px-3 py-3 whitespace-nowrap">
+                    <div>{l.phone}</div>
+                    <div className="text-[10px] text-blue-600">email@example.com</div>
+                  </td>
+                  <td className="px-3 py-3"><span className="text-[10px] border border-gray-300 rounded px-2 py-0.5">{l.store}</span></td>
+                  <td className="px-3 py-3 text-right whitespace-nowrap">
+                    {l.offer ? `$${l.offer.toLocaleString()}` : l.estOffer ? `~$${l.estOffer.toLocaleString()}` : "—"}
+                  </td>
+                  <td className="px-3 py-3">
+                    <select className="text-[11px] border border-gray-300 rounded px-2 py-1 w-40">
+                      <option>{STATUS_META[l.status]?.label || l.status}</option>
+                    </select>
+                  </td>
+                  <td className="text-center whitespace-nowrap">{formatAge(l.ageHours)}</td>
+                  <td className="text-center whitespace-nowrap">
+                    {l.score ? <span className="text-[10px] border rounded-full px-2 py-0.5">{l.score}</span> : "—"}
+                  </td>
+                  <td className="px-3 py-3 text-right whitespace-nowrap">
+                    <button className="text-blue-600 text-[11px] mr-2">View</button>
+                    <button className="text-red-600 text-[11px]">Delete</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { LeadsTable, LegacyLeadsTable, AlertStrip });
+</script>
+
+<script type="text/babel" data-presets="react">
+/* ──────────────────────────────────────────
+   TWEAKS PANEL
+   ────────────────────────────────────────── */
+function TweaksPanel({ state, set, open, setOpen }) {
+  if (!open) {
+    return (
+      <button
+        className="fixed bottom-4 right-4 z-50 btn btn-primary shadow-lg"
+        onClick={() => setOpen(true)}
+      >
+        <Icon.sparkle className="w-4 h-4" /> Tweaks
+      </button>
+    );
+  }
+  return (
+    <div className="tweaks-panel">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b hair-soft">
+        <div className="flex items-center gap-2">
+          <Icon.sparkle className="w-4 h-4 accent-text" />
+          <span className="text-[13px] font-semibold">Tweaks</span>
+        </div>
+        <button className="btn-ghost btn p-1" onClick={() => setOpen(false)}>
+          <Icon.x className="w-4 h-4" />
+        </button>
+      </div>
+      <div className="p-4 space-y-4">
+        {/* Kill switch */}
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.1em] ink-faint font-semibold mb-2">Super Admin</div>
+          <label className="flex items-center justify-between cursor-pointer py-1">
+            <div>
+              <div className="text-[12px] font-medium">Use refreshed UI</div>
+              <div className="text-[10px] ink-faint">Off = legacy look</div>
+            </div>
+            <div className={`relative w-9 h-5 rounded-full transition-colors ${state.killSwitch ? "accent-bg" : "bg-gray-300"}`}
+                 onClick={() => set("killSwitch", !state.killSwitch)}>
+              <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${state.killSwitch ? "left-[18px]" : "left-0.5"}`}></div>
+            </div>
+          </label>
+        </div>
+
+        {/* Role */}
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.1em] ink-faint font-semibold mb-2">Role</div>
+          <select
+            value={state.role}
+            onChange={(e) => set("role", e.target.value)}
+            className="w-full bg-surface-2 border hair rounded-lg h-8 px-2 text-[12px] outline-none"
+          >
+            {Object.entries(ROLES).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+          </select>
+        </div>
+
+        {/* Alert intensity */}
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.1em] ink-faint font-semibold mb-2">Alert intensity</div>
+          <div className="grid grid-cols-3 gap-1">
+            {["gentle", "noticeable", "aggressive"].map(t => (
+              <button
+                key={t}
+                onClick={() => set("alertIntensity", t)}
+                className={`text-[11px] py-1.5 rounded-md border capitalize ${state.alertIntensity === t ? "accent-bg text-white border-transparent" : "border-gray-200 hover:bg-surface-2"}`}
+              >{t}</button>
+            ))}
+          </div>
+        </div>
+
+        {/* Alert triggers */}
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.1em] ink-faint font-semibold mb-2">Show alerts for</div>
+          <div className="space-y-1.5">
+            {[
+              ["showArrivedBanner", "Customer arrived"],
+              ["showOnTheWay", "Customer on the way"],
+              ["showHotLead", "Hot lead threshold"],
+              ["showSlaBreach", "SLA breach (&gt; 24h)"],
+            ].map(([k, label]) => (
+              <label key={k} className="flex items-center justify-between cursor-pointer">
+                <span className="text-[12px]" dangerouslySetInnerHTML={{ __html: label }} />
+                <input type="checkbox" checked={state[k]} onChange={() => set(k, !state[k])} />
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Table density */}
+        <div>
+          <label className="flex items-center justify-between cursor-pointer">
+            <span className="text-[12px]">Compact table</span>
+            <input type="checkbox" checked={state.compactTable} onChange={() => set("compactTable", !state.compactTable)} />
+          </label>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { TweaksPanel });
+</script>
+
+<script type="text/babel" data-presets="react">
+/* ──────────────────────────────────────────
+   ROOT APP
+   ────────────────────────────────────────── */
+function App() {
+  const [state, setState] = useState(() => {
+    try {
+      const saved = localStorage.getItem("autocurb-refresh-tweaks");
+      return saved ? { ...TWEAKS, ...JSON.parse(saved) } : TWEAKS;
+    } catch { return TWEAKS; }
+  });
+  const [active, setActive] = useState(ROLES[state.role].home);
+  const [tweaksOpen, setTweaksOpen] = useState(false);
+
+  const set = (key, val) => {
+    setState(s => {
+      const next = { ...s, [key]: val };
+      localStorage.setItem("autocurb-refresh-tweaks", JSON.stringify(next));
+      if (key === "role") setActive(ROLES[val].home);
+      // Also post to parent for persistence via edit mode
+      try {
+        window.parent.postMessage({ type: "__edit_mode_set_keys", edits: { [key]: val } }, "*");
+      } catch {}
+      return next;
+    });
+  };
+
+  // Edit-mode listener
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.data?.type === "__activate_edit_mode") setTweaksOpen(true);
+      if (e.data?.type === "__deactivate_edit_mode") setTweaksOpen(false);
+    };
+    window.addEventListener("message", handler);
+    try { window.parent.postMessage({ type: "__edit_mode_available" }, "*"); } catch {}
+    return () => window.removeEventListener("message", handler);
+  }, []);
+
+  // Build the alert count for the header bell
+  const alertCount = useMemo(() => {
+    return [state.showArrivedBanner, state.showOnTheWay, state.showHotLead, state.showSlaBreach].filter(Boolean).length;
+  }, [state]);
+
+  const legacy = !state.killSwitch;
+
+  // Pick the right home/page
+  const renderContent = () => {
+    if (legacy) return <LegacyLeadsTable />;
+    if (active === "today") return <TodayHome role={state.role} setActive={setActive} />;
+    if (active === "reception") return <ReceptionHome />;
+    if (active === "bdc") return <BdcHome />;
+    if (active === "appraiser") return <AppraiserHome />;
+    if (active === "platform") return <PlatformHome />;
+    if (active === "leads") return (
+      <LeadsTable
+        alertIntensity={state.alertIntensity}
+        showArrivedBanner={state.showArrivedBanner}
+        showHotLead={state.showHotLead}
+        showSlaBreach={state.showSlaBreach}
+        compact={state.compactTable}
+      />
+    );
+    // Fallback: placeholder card for unmocked sections
+    return (
+      <div className="max-w-[900px] mx-auto px-6 py-16 text-center">
+        <div className="card p-10">
+          <div className="text-[13px] font-semibold mb-1">Section placeholder</div>
+          <div className="text-[12px] ink-soft">Switch to Today, All Leads, or another mocked view.</div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div data-legacy={legacy} className="min-h-screen flex flex-col">
+      {legacy ? (
+        <>
+          <LegacyHeader role={state.role} setRole={(r) => set("role", r)} />
+          <div className="flex-1 flex min-h-0">
+            <LegacySidebar role={state.role} active={active} setActive={setActive} />
+            <main className="flex-1 min-w-0 overflow-auto bg-gray-50">
+              {renderContent()}
+            </main>
+          </div>
+        </>
+      ) : (
+        <>
+          <AppHeader role={state.role} setRole={(r) => set("role", r)} setActive={setActive} alertCount={alertCount} />
+          <div className="flex-1 flex min-h-0">
+            <Sidebar role={state.role} active={active} setActive={setActive} />
+            <main className="flex-1 min-w-0 overflow-auto">
+              {renderContent()}
+            </main>
+          </div>
+        </>
+      )}
+
+      <TweaksPanel state={state} set={set} open={tweaksOpen} setOpen={setTweaksOpen} />
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App />);
+</script>
+</body>
+</html>
