@@ -43,9 +43,6 @@ import {
 import { printSubmissionDetail, printAllDocs, printCheckRequest } from "@/lib/printUtils";
 import { useToast } from "@/hooks/use-toast";
 import logoFallback from "@/assets/logo-placeholder.png";
-import { SubmissionDetailSheetLegacy } from "./SubmissionDetailSheet.legacy";
-
-const ENABLE_REFRESH = import.meta.env.VITE_CUSTOMER_FILE_REFRESH === "true";
 
 interface SubmissionDetailSheetProps {
   selected: Submission | null;
@@ -1993,6 +1990,5 @@ const RefreshedSheet = ({
 };
 
 export default function SubmissionDetailSheet(props: SubmissionDetailSheetProps) {
-  if (!ENABLE_REFRESH) return <SubmissionDetailSheetLegacy {...props} />;
   return <RefreshedSheet {...props} />;
 }
