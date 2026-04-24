@@ -125,6 +125,20 @@ export interface SiteConfig {
   established_year: number | null;
   competitor_columns?: any;
   comparison_features?: any;
+  // ── Admin Refresh: appearance + layout ──
+  ui_scale: number;
+  text_scale: number;
+  top_bar_style: "solid" | "gradient" | "gradient-diagonal" | "gradient-3stop";
+  top_bar_bg: string;
+  top_bar_bg_2: string;
+  top_bar_text: string;
+  top_bar_height: number;
+  top_bar_shimmer: boolean;
+  top_bar_shimmer_style: string;
+  top_bar_shimmer_speed: number;
+  file_layout: "classic" | "conversation";
+  customer_file_accent: string;
+  customer_file_accent_2: string;
 }
 
 const DEFAULTS: SiteConfig = {
@@ -199,6 +213,20 @@ const DEFAULTS: SiteConfig = {
   photo_allow_color_change: true,
   vehicle_image_angle: "three_quarter",
   established_year: null,
+  // ── Admin Refresh: appearance + layout ──
+  ui_scale: 100,
+  text_scale: 100,
+  top_bar_style: "solid",
+  top_bar_bg: "#00407f",
+  top_bar_bg_2: "#005bb5",
+  top_bar_text: "#ffffff",
+  top_bar_height: 64,
+  top_bar_shimmer: true,
+  top_bar_shimmer_style: "sheen",
+  top_bar_shimmer_speed: 3.2,
+  file_layout: "classic",
+  customer_file_accent: "#003b80",
+  customer_file_accent_2: "#005bb5",
 };
 
 /**
