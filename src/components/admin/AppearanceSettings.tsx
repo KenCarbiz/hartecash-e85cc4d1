@@ -137,7 +137,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
       if (error) throw error;
 
       toast({ title: "Appearance saved", description: "Changes applied to this tenant." });
-      await refresh();
+      await queryClient.invalidateQueries({ queryKey: ["site_config"] });
     } catch (err: any) {
       toast({
         title: "Save failed",
