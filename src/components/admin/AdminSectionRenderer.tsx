@@ -445,6 +445,9 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
         <OfferSettings userId={userId || undefined} userRole={userRole} />
       )}
       {activeSection === "site-config" && canManageAccess && <SiteConfiguration focusField={focusField} />}
+      {activeSection === "appearance" && canManageAccess && (
+        <AppearanceSettings userRole={userRole} canManageAccess={canManageAccess} />
+      )}
       {activeSection === "landing-flow" && canManageAccess && <LandingFlowConfig />}
       {activeSection === "rooftop-websites" && canManageAccess && <RooftopWebsites />}
       {activeSection === "promotions" && canManageAccess && <PromotionManagement />}
