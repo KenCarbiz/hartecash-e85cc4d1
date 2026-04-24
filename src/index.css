@@ -366,14 +366,6 @@
   @page { margin: 0.5in; size: letter; }
 }
 
-/* ── Admin Refresh: UI scale + text scale ──
-   Scoped to the authenticated admin shell (.admin-scaled set on <html>
-   by ThemeProvider when the route is an admin route). Uses font-size on
-   the admin shell to scale rem-based sizing, and a CSS var for components
-   that want to opt into proportional spacing. */
-html.admin-scaled .admin-shell {
-  font-size: calc(1rem * var(--admin-text-scale, 1));
-}
-html.admin-scaled .admin-shell .admin-ui-scale {
-  zoom: var(--admin-ui-scale, 1);
-}
+/* Admin Refresh UI/text scale is applied imperatively in ThemeProvider.tsx
+   via document.documentElement.style.zoom and an injected style tag. See
+   Wiring Brief §5 for rationale. No CSS rules needed here. */
