@@ -290,6 +290,7 @@ const AdminSidebar = ({
     : [
         ["Today", todayItems],
         ["Work", workItems],
+        ["Floor Tools", floorToolsItems],
         ["Grow", growItems],
         ["Measure", measureItems],
         ["Setup · Dealer", setupDealerItems],
