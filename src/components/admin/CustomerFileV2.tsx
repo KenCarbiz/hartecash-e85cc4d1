@@ -120,7 +120,7 @@ export default function CustomerFileV2(props: CustomerFileV2Props) {
               <V2Tabs tab={tab} onChange={setTab} unread={0} />
               <div className="flex-1 min-h-0 flex">
                 <main className="flex-1 min-w-0 overflow-y-auto">
-                  {tab === "conversation" && <ConversationTab sub={sub} />}
+                  {tab === "conversation" && <ConversationTab sub={sub} activityLog={activityLog} />}
                   {tab === "activity" && <ActivityTab activityLog={activityLog} />}
                   {tab === "deal" && <DealTab sub={sub} />}
                   {tab === "vehicle" && <VehicleTab sub={sub} />}
