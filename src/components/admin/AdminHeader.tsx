@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { LogOut, Moon, Sun, Crown, Menu, PanelLeft } from "lucide-react";
+import { LogOut, Moon, Sun, Crown, Menu, PanelLeft, Bell, Search } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { ROLE_LABELS } from "@/lib/adminConstants";
