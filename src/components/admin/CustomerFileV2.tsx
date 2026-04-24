@@ -101,7 +101,7 @@ export default function CustomerFileV2(props: CustomerFileV2Props) {
 
   const dealValue = useMemo(() => {
     if (!sub) return null;
-    return sub.offered_price ?? sub.estimated_offer_high ?? sub.estimated_offer_low ?? null;
+    return sub.offered_price ?? sub.estimated_offer_high ?? null;
   }, [sub]);
   const dealKind = sub?.offered_price != null ? "Offer Given" : "Estimated Offer";
 
@@ -264,9 +264,9 @@ function V2Header({
         </div>
 
         <div className="flex items-center gap-2 mt-3 flex-wrap">
-          {sub.status && (
+          {sub.progress_status && (
             <Badge className="bg-white/15 text-white border-0 text-[11px] uppercase tracking-wider font-bold">
-              {sub.status.replace(/_/g, " ")}
+              {sub.progress_status.replace(/_/g, " ")}
             </Badge>
           )}
           {dealValue != null && dealValue > 20000 && (
@@ -399,23 +399,26 @@ function ActivityTab({
 
 /* ─────────────── TAB: DEAL ─────────────── */
 function DealTab({ sub }: { sub: Submission }) {
+  const loanBalanceNum =
+    sub.loan_balance != null && sub.loan_balance !== ""
+      ? Number(sub.loan_balance)
+      : null;
   return (
     <div className="p-6 space-y-3">
       <Card title="Offer">
-        <Row label="Estimated Low" value={fmtMoney(sub.estimated_offer_low)} />
         <Row label="Estimated High" value={fmtMoney(sub.estimated_offer_high)} />
         <Row label="Offered Price" value={fmtMoney(sub.offered_price)} highlight />
         <Row label="ACV" value={fmtMoney(sub.acv_value)} />
       </Card>
       <Card title="Status">
-        <Row label="Status" value={sub.status?.replace(/_/g, " ") || "—"} />
+        <Row label="Status" value={sub.progress_status?.replace(/_/g, " ") || "—"} />
         <Row label="Created" value={sub.created_at ? fmtTime(sub.created_at) : "—"} />
       </Card>
-      {sub.loan_balance != null && (
+      {loanBalanceNum != null && (
         <Card title="Loan">
-          <Row label="Lender" value={sub.lender || "—"} />
-          <Row label="Balance" value={fmtMoney(sub.loan_balance)} />
-          <Row label="Monthly Payment" value={fmtMoney(sub.monthly_payment)} />
+          <Row label="Lender" value={sub.loan_company || "—"} />
+          <Row label="Balance" value={fmtMoney(loanBalanceNum)} />
+          <Row label="Monthly Payment" value={sub.loan_payment || "—"} />
         </Card>
       )}
     </div>
@@ -478,7 +481,7 @@ function ContextRail({
         <div className="text-[13px] text-slate-700 dark:text-slate-300">
           <div className="flex justify-between py-1">
             <span className="text-slate-500">Status</span>
-            <span className="font-semibold">{sub.status?.replace(/_/g, " ") || "—"}</span>
+            <span className="font-semibold">{sub.progress_status?.replace(/_/g, " ") || "—"}</span>
           </div>
         </div>
       </RailCard>
@@ -491,11 +494,11 @@ function ContextRail({
         </div>
       </RailCard>
 
-      {sub.loan_balance != null && (
+      {sub.loan_balance != null && sub.loan_balance !== "" && (
         <RailCard title="Loan">
           <div className="text-[13px] space-y-1">
-            <Row label="Lender" value={sub.lender || "—"} compact />
-            <Row label="Balance" value={fmtMoney(sub.loan_balance)} compact />
+            <Row label="Lender" value={sub.loan_company || "—"} compact />
+            <Row label="Balance" value={fmtMoney(Number(sub.loan_balance))} compact />
           </div>
         </RailCard>
       )}
