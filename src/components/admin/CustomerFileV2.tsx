@@ -18,13 +18,13 @@ import { useEffect, useMemo, useState } from "react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   MessageSquare, Activity, FileText, Car, X, Printer, StickyNote,
-  Phone, Mail, Flame, ChevronDown, ChevronUp,
+  Phone, Mail, Flame, ChevronDown, ChevronUp, Send, CheckCircle2, AlertCircle, Clock,
 } from "lucide-react";
 import type { Submission, DealerLocation } from "@/lib/adminConstants";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { supabase } from "@/integrations/supabase/client";
 import CustomerFileAccentStyle from "./CustomerFileAccentStyle";
 
 interface CustomerFileV2Props {
