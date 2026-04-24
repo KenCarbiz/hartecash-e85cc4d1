@@ -264,14 +264,19 @@ function V2Header({
         </div>
 
         <div className="flex items-center gap-2 mt-3 flex-wrap">
+          {sub.offered_price != null && sub.offered_price > 0 && (
+            <Badge className="bg-emerald-400/90 text-emerald-950 border-0 text-[11px] uppercase tracking-wider font-bold">
+              <CheckCircle2 className="w-3 h-3 mr-1" /> Offer Accepted
+            </Badge>
+          )}
+          {sub.is_hot_lead && (
+            <Badge className="bg-amber-400/90 text-amber-950 border-0 text-[11px] uppercase tracking-wider font-bold">
+              <Flame className="w-3 h-3 mr-1" /> Hot Lead
+            </Badge>
+          )}
           {sub.progress_status && (
             <Badge className="bg-white/15 text-white border-0 text-[11px] uppercase tracking-wider font-bold">
               {sub.progress_status.replace(/_/g, " ")}
-            </Badge>
-          )}
-          {dealValue != null && dealValue > 20000 && (
-            <Badge className="bg-amber-400/90 text-amber-950 border-0 text-[11px] uppercase tracking-wider font-bold">
-              <Flame className="w-3 h-3 mr-1" /> Hot Lead
             </Badge>
           )}
         </div>
