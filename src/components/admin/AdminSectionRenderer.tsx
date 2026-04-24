@@ -30,6 +30,7 @@ const CommunicationLog = React.lazy(() => import("./CommunicationLog"));
 const ExecutiveKPIHub = React.lazy(() => import("./ExecutiveKPIHub"));
 const OfferSettings = React.lazy(() => import("./OfferSettings"));
 const SiteConfiguration = React.lazy(() => import("./SiteConfiguration"));
+const AppearanceSettings = React.lazy(() => import("./AppearanceSettings"));
 const LandingFlowConfig = React.lazy(() => import("./LandingFlowConfig"));
 const RooftopWebsites = React.lazy(() => import("./RooftopWebsites"));
 const PlatformCatalogManager = React.lazy(() => import("./PlatformCatalogManager"));
