@@ -183,7 +183,6 @@ const AdminDashboard = () => {
             canSetPrice={db.canSetPrice}
             canApprove={db.canApprove}
             canDelete={db.canDelete}
-            canViewPricing={db.canViewPricing}
             isSalesFloor={db.isSalesFloor}
             userRole={db.userRole}
             userEmail={db.userEmail}
