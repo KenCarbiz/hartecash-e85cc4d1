@@ -141,7 +141,7 @@ const AdminSidebar = ({
     { key: "today", label: "Today", icon: Home },
   ].filter((item) => isAllowed(item.key));
 
-  // ── WORK ── Daily tasks: leads, queues, appointments + ops
+  // ── WORK ── Daily tasks: leads, queues, appointments
   const workItems: SidebarItem[] = [
     { key: "submissions", label: "All Leads", icon: Inbox, badge: submissionCount > 0 ? String(submissionCount) : undefined },
     ...(canSeeAppraiserQueue
@@ -161,6 +161,14 @@ const AdminSidebar = ({
          canManageAccess)
       ? [{ key: "bdc-queue", label: "BDC Priority Queue", icon: Flame }]
       : []),
+    { key: "my-lead-link", label: "My Lead Link", icon: Link2 },
+    { key: "my-referrals", label: "My Referrals", icon: Award },
+  ].filter((item) => isAllowed(item.key));
+
+  // ── FLOOR TOOLS ── Hands-on lot/service tooling. Split out of WORK
+  // so floor staff (inspectors, receptionists, service writers) see
+  // their tools as a distinct surface rather than buried in a long list.
+  const floorToolsItems: SidebarItem[] = [
     ...(isCheckInStaff
       ? [{ key: "inspection-checkin", label: "Inspection Check-In", icon: ScanLine }]
       : []),
@@ -168,8 +176,6 @@ const AdminSidebar = ({
       ? [{ key: "service-quick-entry", label: "Service Quick Entry", icon: Zap }]
       : []),
     ...(canManageAccess ? [{ key: "image-inventory", label: "Vehicle Images", icon: Car }] : []),
-    { key: "my-lead-link", label: "My Lead Link", icon: Link2 },
-    { key: "my-referrals", label: "My Referrals", icon: Award },
   ].filter((item) => isAllowed(item.key));
 
   // ── GROW ── Revenue-driving tools (manager+)
