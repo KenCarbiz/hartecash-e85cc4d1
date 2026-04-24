@@ -195,8 +195,11 @@ const AdminSidebar = ({
     { key: "compliance", label: "Compliance", icon: ShieldCheck },
   ].filter((item) => isAllowed(item.key));
 
-  // ── SETUP ── Dealer configuration (Offer Logic mgr+; rest admin-only)
-  const setupItems: SidebarItem[] = [
+  // ── SETUP · DEALER ── Identity, branding, locations, and core data-capture
+  // configuration (Offer Logic, Lead Form, Inspection, Photos, Standards).
+  // Offer Logic is the manager+ entry point for pricing and unlocks the
+  // approval-request badge; everything else is admin-only.
+  const setupDealerItems: SidebarItem[] = [
     ...(isManager ? [{ key: "offer-settings", label: "Offer Logic", icon: SlidersHorizontal, badge: pricingAccessRequestCount > 0 ? String(pricingAccessRequestCount) : undefined, badgeVariant: "destructive" as const }] : []),
     ...(canManageAccess ? [{ key: "site-config", label: "Branding", icon: Palette }] : []),
     ...(canManageAccess ? [{ key: "appearance", label: "Appearance", icon: Paintbrush }] : []),
@@ -206,6 +209,16 @@ const AdminSidebar = ({
       { key: "inspection-config", label: "Inspection Sheet", icon: Shield },
       { key: "photo-config", label: "Photo Requirements", icon: Camera },
       { key: "depth-policies", label: "Inspection Standards", icon: Gauge },
+    ] : []),
+  ].filter((item) => isAllowed(item.key));
+
+  // ── SETUP · PROCESS ── Customer-facing flow, marketing, comms, and
+  // distribution channels (promos, referrals, notifications, landing,
+  // rooftop micro-sites, testimonials, embed). Enterprise-only items
+  // (White Label, Integrations, API, vAuto) tail this group so they
+  // stay grouped with operational tooling rather than dealer identity.
+  const setupProcessItems: SidebarItem[] = [
+    ...(canManageAccess ? [
       { key: "promotions", label: "Promotions", icon: Megaphone },
       { key: "referrals", label: "Referral Program", icon: Gift },
       { key: "notifications", label: "Notifications", icon: Bell },
@@ -273,7 +286,8 @@ const AdminSidebar = ({
         ["Work", workItems],
         ["Grow", growItems],
         ["Measure", measureItems],
-        ["Setup", setupItems],
+        ["Setup · Dealer", setupDealerItems],
+        ["Setup · Process", setupProcessItems],
         ["Account", accountItems],
         ["Platform", platformItems],
       ];
