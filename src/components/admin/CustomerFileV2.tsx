@@ -440,37 +440,52 @@ function ConversationTab({
   return (
     <div className="p-6 space-y-4">
       {/* Quick send card */}
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="min-w-0">
+            <h3 className="text-[15px] font-semibold text-slate-900 dark:text-slate-100">
               Reach out to {sub.name?.split(" ")[0] || "customer"}
             </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Send a follow-up via {sub.email ? "email" : ""}{sub.email && sub.phone ? " or " : ""}{sub.phone ? "SMS" : ""}.
+            <p className="text-[12px] text-slate-500 mt-0.5">
+              Send a follow-up via {sub.email ? "email" : ""}{sub.email && sub.phone ? ", SMS, or call" : sub.phone ? "SMS or call" : ""}.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             {sub.email && (
-              <Button size="sm" variant="outline" asChild>
-                <a href={`mailto:${sub.email}`}>
-                  <Mail className="w-3.5 h-3.5 mr-1.5" /> Email
-                </a>
-              </Button>
+              <a
+                href={`mailto:${sub.email}`}
+                aria-label="Send email"
+                className="group flex flex-col items-center gap-1"
+              >
+                <span className="w-11 h-11 rounded-full bg-[var(--customer-file-accent,#003b80)] text-white flex items-center justify-center shadow-sm transition-transform group-hover:scale-105 group-active:scale-95">
+                  <Mail className="w-4 h-4" />
+                </span>
+                <span className="text-[10.5px] font-semibold text-slate-600 dark:text-slate-300">Email</span>
+              </a>
             )}
             {sub.phone && (
-              <Button size="sm" variant="outline" asChild>
-                <a href={`sms:${sub.phone}`}>
-                  <MessageSquare className="w-3.5 h-3.5 mr-1.5" /> SMS
-                </a>
-              </Button>
+              <a
+                href={`sms:${sub.phone}`}
+                aria-label="Send SMS"
+                className="group flex flex-col items-center gap-1"
+              >
+                <span className="w-11 h-11 rounded-full bg-[var(--customer-file-accent,#003b80)] text-white flex items-center justify-center shadow-sm transition-transform group-hover:scale-105 group-active:scale-95">
+                  <MessageSquare className="w-4 h-4" />
+                </span>
+                <span className="text-[10.5px] font-semibold text-slate-600 dark:text-slate-300">SMS</span>
+              </a>
             )}
             {sub.phone && (
-              <Button size="sm" variant="outline" asChild>
-                <a href={`tel:${sub.phone}`}>
-                  <Phone className="w-3.5 h-3.5 mr-1.5" /> Call
-                </a>
-              </Button>
+              <a
+                href={`tel:${sub.phone}`}
+                aria-label="Call customer"
+                className="group flex flex-col items-center gap-1"
+              >
+                <span className="w-11 h-11 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-sm transition-transform group-hover:scale-105 group-active:scale-95">
+                  <Phone className="w-4 h-4" />
+                </span>
+                <span className="text-[10.5px] font-semibold text-slate-600 dark:text-slate-300">Call</span>
+              </a>
             )}
           </div>
         </div>
