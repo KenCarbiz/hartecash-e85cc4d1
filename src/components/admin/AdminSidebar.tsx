@@ -318,9 +318,9 @@ const AdminSidebar = ({
 
     return (
       <Collapsible key={label} open={isOpen} onOpenChange={() => toggleGroup(label)}>
-        <SidebarGroup>
+        <SidebarGroup className="py-0.5 px-2">
           <CollapsibleTrigger asChild>
-            <SidebarGroupLabel className="text-[10px] uppercase tracking-widest font-bold text-sidebar-foreground/50 cursor-pointer hover:text-sidebar-foreground/70 transition-colors flex items-center justify-between pr-2 select-none">
+            <SidebarGroupLabel className="h-5 px-2 text-[9.5px] uppercase tracking-widest font-bold text-sidebar-foreground/50 cursor-pointer hover:text-sidebar-foreground/70 transition-colors flex items-center justify-between select-none">
               <span className="flex items-center gap-1.5">
                 {label}
                 {!isOpen && hasActive && (
@@ -337,7 +337,7 @@ const AdminSidebar = ({
           </CollapsibleTrigger>
           <CollapsibleContent>
             <SidebarGroupContent>
-              <SidebarMenu>
+              <SidebarMenu className="gap-0">
                 {items.map((item) => {
                   const isActive = activeSection === item.key;
                   const Icon = item.icon;
@@ -347,7 +347,7 @@ const AdminSidebar = ({
                         onClick={() => handleItemClick(item)}
                         isActive={isActive}
                         tooltip={collapsed ? item.label : undefined}
-                        className="transition-all duration-200 dark:hover:bg-white/8 dark:hover:shadow-[0_0_12px_rgba(255,255,255,0.06)] dark:data-[active=true]:shadow-[0_0_16px_rgba(100,160,255,0.12)]"
+                        className="h-7 text-[13px] transition-all duration-200 dark:hover:bg-white/8 dark:hover:shadow-[0_0_12px_rgba(255,255,255,0.06)] dark:data-[active=true]:shadow-[0_0_16px_rgba(100,160,255,0.12)]"
                       >
                         <Icon className="w-4 h-4 shrink-0" />
                         {!collapsed && (
@@ -356,7 +356,7 @@ const AdminSidebar = ({
                         {!collapsed && item.badge && (
                           <Badge
                             variant={item.badgeVariant === "destructive" ? "destructive" : "secondary"}
-                            className="ml-auto text-[10px] h-5 min-w-5 flex items-center justify-center"
+                            className="ml-auto text-[10px] h-4 min-w-4 px-1 flex items-center justify-center"
                           >
                             {item.badge}
                           </Badge>
