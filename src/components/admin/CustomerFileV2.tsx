@@ -329,27 +329,207 @@ function V2Tabs({
   );
 }
 
-/* ─────────────── TAB: CONVERSATION ─────────────── */
-function ConversationTab({ sub }: { sub: Submission }) {
+/* ─────────────── TAB: CONVERSATION (Activity + Follow-ups timeline) ─────────────── */
+type TimelineEvent = {
+  id: string;
+  ts: string;
+  kind: "follow_up" | "notification" | "activity";
+  channel?: string;
+  status?: string;
+  title: string;
+  detail?: string;
+  who?: string;
+};
+
+const CHANNEL_ICON: Record<string, React.ElementType> = {
+  email: Mail,
+  sms: MessageSquare,
+  call: Phone,
+  push: Send,
+};
+
+function statusTone(status?: string): { icon: React.ElementType; cls: string } {
+  if (!status) return { icon: Clock, cls: "text-slate-400" };
+  if (["sent", "delivered", "success"].includes(status)) return { icon: CheckCircle2, cls: "text-emerald-500" };
+  if (["failed", "error", "bounced"].includes(status)) return { icon: AlertCircle, cls: "text-red-500" };
+  return { icon: Clock, cls: "text-amber-500" };
+}
+
+function ConversationTab({
+  sub,
+  activityLog,
+}: {
+  sub: Submission;
+  activityLog: CustomerFileV2Props["activityLog"];
+}) {
+  const [events, setEvents] = useState<TimelineEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
+      const [{ data: followUps }, { data: notifs }] = await Promise.all([
+        supabase
+          .from("follow_ups")
+          .select("id, channel, status, touch_number, error_message, triggered_by, created_at")
+          .eq("submission_id", sub.id)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("notification_log")
+          .select("id, channel, status, recipient, trigger_key, error_message, created_at")
+          .eq("submission_id", sub.id)
+          .order("created_at", { ascending: false }),
+      ]);
+
+      if (cancelled) return;
+
+      const merged: TimelineEvent[] = [];
+
+      for (const f of followUps || []) {
+        const touch = f.touch_number === 1 ? "Gentle Nudge" : f.touch_number === 2 ? "Value Add" : "Last Chance";
+        merged.push({
+          id: `f-${f.id}`,
+          ts: f.created_at,
+          kind: "follow_up",
+          channel: f.channel,
+          status: f.status,
+          title: `Follow-up #${f.touch_number} · ${touch}`,
+          detail: f.error_message || `Sent via ${f.channel}`,
+          who: f.triggered_by || "System",
+        });
+      }
+
+      for (const n of notifs || []) {
+        merged.push({
+          id: `n-${n.id}`,
+          ts: n.created_at,
+          kind: "notification",
+          channel: n.channel,
+          status: n.status,
+          title: (n.trigger_key || "Notification").replace(/_/g, " "),
+          detail: n.error_message || `${n.channel} → ${n.recipient}`,
+          who: "System",
+        });
+      }
+
+      for (const a of activityLog || []) {
+        merged.push({
+          id: `a-${a.id}`,
+          ts: a.created_at,
+          kind: "activity",
+          title: a.action.replace(/_/g, " "),
+          detail:
+            a.old_value && a.new_value
+              ? `${a.old_value} → ${a.new_value}`
+              : a.new_value || undefined,
+          who: a.performed_by || "System",
+        });
+      }
+
+      merged.sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
+      setEvents(merged);
+      setLoading(false);
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [sub.id, activityLog]);
+
   return (
     <div className="p-6 space-y-4">
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 text-center">
-        <MessageSquare className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">
-          Conversation thread
-        </h3>
-        <p className="text-xs text-slate-500 max-w-md mx-auto">
-          SMS &amp; email history with {sub.name} will appear here. Send a follow-up,
-          appointment confirmation, or reply directly inline.
-        </p>
-        <div className="flex items-center justify-center gap-2 mt-5">
-          <Button size="sm" variant="outline">
-            <Mail className="w-3.5 h-3.5 mr-1.5" /> Send Email
-          </Button>
-          <Button size="sm" variant="outline">
-            <Phone className="w-3.5 h-3.5 mr-1.5" /> Send SMS
-          </Button>
+      {/* Quick send card */}
+      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+              Reach out to {sub.name?.split(" ")[0] || "customer"}
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Send a follow-up via {sub.email ? "email" : ""}{sub.email && sub.phone ? " or " : ""}{sub.phone ? "SMS" : ""}.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {sub.email && (
+              <Button size="sm" variant="outline" asChild>
+                <a href={`mailto:${sub.email}`}>
+                  <Mail className="w-3.5 h-3.5 mr-1.5" /> Email
+                </a>
+              </Button>
+            )}
+            {sub.phone && (
+              <Button size="sm" variant="outline" asChild>
+                <a href={`sms:${sub.phone}`}>
+                  <MessageSquare className="w-3.5 h-3.5 mr-1.5" /> SMS
+                </a>
+              </Button>
+            )}
+            {sub.phone && (
+              <Button size="sm" variant="outline" asChild>
+                <a href={`tel:${sub.phone}`}>
+                  <Phone className="w-3.5 h-3.5 mr-1.5" /> Call
+                </a>
+              </Button>
+            )}
+          </div>
         </div>
+      </div>
+
+      {/* Timeline */}
+      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+        <div className="px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+          <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+            Communication Timeline
+          </h3>
+          <span className="text-[11px] text-slate-400">{events.length} events</span>
+        </div>
+        {loading ? (
+          <div className="p-6 text-center text-sm text-slate-500">Loading…</div>
+        ) : events.length === 0 ? (
+          <div className="p-8 text-center">
+            <MessageSquare className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+            <p className="text-xs text-slate-500">
+              No outreach yet. Send the first follow-up above.
+            </p>
+          </div>
+        ) : (
+          <ol className="divide-y divide-slate-100 dark:divide-slate-800">
+            {events.map((e) => {
+              const ChIcon = e.channel ? CHANNEL_ICON[e.channel] || Send : Activity;
+              const tone = statusTone(e.status);
+              const StatusIcon = tone.icon;
+              return (
+                <li key={e.id} className="px-4 py-3 flex items-start gap-3">
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
+                    style={{ background: "color-mix(in srgb, var(--customer-file-accent, #003b80) 10%, transparent)" }}
+                  >
+                    <ChIcon className="w-4 h-4 text-[var(--customer-file-accent,#003b80)]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[13px] font-semibold text-slate-900 dark:text-slate-100 truncate">
+                        {e.title}
+                      </span>
+                      {e.status && (
+                        <StatusIcon className={`w-3.5 h-3.5 ${tone.cls}`} />
+                      )}
+                    </div>
+                    {e.detail && (
+                      <div className="text-[12px] text-slate-600 dark:text-slate-400 mt-0.5 truncate">
+                        {e.detail}
+                      </div>
+                    )}
+                    <div className="text-[11px] text-slate-400 mt-0.5">
+                      {e.who} · {fmtTime(e.ts)}
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        )}
       </div>
     </div>
   );
