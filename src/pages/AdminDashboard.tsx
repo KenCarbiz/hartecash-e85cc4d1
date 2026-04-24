@@ -14,8 +14,10 @@ import { lazy, Suspense, useRef, useEffect, useState } from "react";
 
 // SubmissionDetailSheet is the largest component in the codebase (~1.6k lines).
 // It only renders when a row is clicked, so lazy-loading it keeps it out of
-// the AdminDashboard initial paint chunk.
+// the AdminDashboard initial paint chunk. CustomerFileV2 is the
+// conversation-first alternative — same props, different layout.
 const SubmissionDetailSheet = lazy(() => import("@/components/admin/SubmissionDetailSheet"));
+const CustomerFileV2 = lazy(() => import("@/components/admin/CustomerFileV2"));
 import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
@@ -163,46 +165,88 @@ const AdminDashboard = () => {
             the first time admin renders), but the Sheet itself is mounted
             and driven by `open={!!selected}` internally — unmounting it
             on close breaks the slide-out animation and can race the first
-            open. */}
+            open. The site_config.file_layout flag chooses Classic vs
+            Conversation-first; both consume the identical prop shape. */}
         <Suspense fallback={null}>
-          <SubmissionDetailSheet
-            selected={db.selected}
-            onClose={() => {
-              db.setSelected(null);
-              db.setPhotos([]);
-              db.setDocs([]);
-            }}
-            photos={db.photos}
-            docs={db.docs}
-            activityLog={db.activityLog}
-            duplicateWarnings={db.duplicateWarnings}
-            optOutStatus={db.optOutStatus}
-            selectedApptTime={db.selectedApptTime}
-            selectedApptLocation={db.selectedApptLocation}
-            dealerLocations={db.dealerLocations}
-            canSetPrice={db.canSetPrice}
-            canApprove={db.canApprove}
-            canDelete={db.canDelete}
-            canUpdateStatus={true}
-            auditLabel={db.auditLabel}
-            userName={db.userName}
-            onUpdate={(updated) =>
-              db.setSubmissions((prev) => prev.map((s) => (s.id === updated.id ? updated : s)))
-            }
-            onDelete={db.handleDelete}
-            onRefresh={db.handleView}
-            onScheduleAppointment={db.handleScheduleAppt}
-            onDeletePhoto={(fileName) => {
-              if (!db.selected || !db.canDelete) return;
-              setPendingPhotoDelete(fileName);
-            }}
-            onDeleteDoc={(docType, fileName) => {
-              if (!db.selected || !db.canDelete) return;
-              setPendingDocDelete({ docType, fileName });
-            }}
-            fetchActivityLog={db.fetchActivityLog}
-            fetchSubmissions={db.fetchSubmissions}
-          />
+          {siteConfig.file_layout === "conversation" ? (
+            <CustomerFileV2
+              selected={db.selected}
+              onClose={() => {
+                db.setSelected(null);
+                db.setPhotos([]);
+                db.setDocs([]);
+              }}
+              photos={db.photos}
+              docs={db.docs}
+              activityLog={db.activityLog}
+              duplicateWarnings={db.duplicateWarnings}
+              optOutStatus={db.optOutStatus}
+              selectedApptTime={db.selectedApptTime}
+              selectedApptLocation={db.selectedApptLocation}
+              dealerLocations={db.dealerLocations}
+              canSetPrice={db.canSetPrice}
+              canApprove={db.canApprove}
+              canDelete={db.canDelete}
+              canUpdateStatus={true}
+              auditLabel={db.auditLabel}
+              userName={db.userName}
+              onUpdate={(updated) =>
+                db.setSubmissions((prev) => prev.map((s) => (s.id === updated.id ? updated : s)))
+              }
+              onDelete={db.handleDelete}
+              onRefresh={db.handleView}
+              onScheduleAppointment={db.handleScheduleAppt}
+              onDeletePhoto={(fileName) => {
+                if (!db.selected || !db.canDelete) return;
+                setPendingPhotoDelete(fileName);
+              }}
+              onDeleteDoc={(docType, fileName) => {
+                if (!db.selected || !db.canDelete) return;
+                setPendingDocDelete({ docType, fileName });
+              }}
+              fetchActivityLog={db.fetchActivityLog}
+              fetchSubmissions={db.fetchSubmissions}
+            />
+          ) : (
+            <SubmissionDetailSheet
+              selected={db.selected}
+              onClose={() => {
+                db.setSelected(null);
+                db.setPhotos([]);
+                db.setDocs([]);
+              }}
+              photos={db.photos}
+              docs={db.docs}
+              activityLog={db.activityLog}
+              duplicateWarnings={db.duplicateWarnings}
+              optOutStatus={db.optOutStatus}
+              selectedApptTime={db.selectedApptTime}
+              selectedApptLocation={db.selectedApptLocation}
+              dealerLocations={db.dealerLocations}
+              canSetPrice={db.canSetPrice}
+              canApprove={db.canApprove}
+              canDelete={db.canDelete}
+              canUpdateStatus={true}
+              auditLabel={db.auditLabel}
+              userName={db.userName}
+              onUpdate={(updated) =>
+                db.setSubmissions((prev) => prev.map((s) => (s.id === updated.id ? updated : s)))
+              }
+              onDelete={db.handleDelete}
+              onRefresh={db.handleView}
+              onScheduleAppointment={db.handleScheduleAppt}
+              onDeletePhoto={(fileName) => {
+                if (!db.selected || !db.canDelete) return;
+                setPendingPhotoDelete(fileName);
+              }}
+              onDeleteDoc={(docType, fileName) => {
+                if (!db.selected || !db.canDelete) return;
+                setPendingDocDelete({ docType, fileName });
+              }}
+              fetchActivityLog={db.fetchActivityLog}
+              fetchSubmissions={db.fetchSubmissions}
+            />
+          )}
         </Suspense>
         {/* Delete submission confirmation */}
         <AlertDialog open={!!db.pendingDeleteId} onOpenChange={(open) => { if (!open) db.cancelDelete(); }}>
