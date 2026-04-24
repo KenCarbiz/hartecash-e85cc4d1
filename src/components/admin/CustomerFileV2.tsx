@@ -1,0 +1,604 @@
+/**
+ * CustomerFileV2 — Conversation-first customer file slide-out.
+ *
+ * Drop-in alternative to SubmissionDetailSheet, used when
+ * site_config.file_layout === "conversation". Accepts the IDENTICAL
+ * props interface so AdminDashboard can swap them with one line.
+ *
+ * Layout (per Admin Refresh mockup):
+ *   [ Accent header — customer · vehicle · offer ]
+ *   [ Tabs — Conversation (default) | Activity | Deal | Vehicle ]
+ *   [ 60/40 split: primary tab content | context rail ]
+ *
+ * The Classic SubmissionDetailSheet (~1.6k lines) is preserved untouched.
+ * This V2 reuses adminConstants types and the same Sheet primitive so
+ * Radix owns the open/close animation just like V1.
+ */
+import { useEffect, useMemo, useState } from "react";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  MessageSquare, Activity, FileText, Car, X, Printer, StickyNote,
+  Phone, Mail, Flame, ChevronDown, ChevronUp,
+} from "lucide-react";
+import type { Submission, DealerLocation } from "@/lib/adminConstants";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
+import CustomerFileAccentStyle from "./CustomerFileAccentStyle";
+
+interface CustomerFileV2Props {
+  selected: Submission | null;
+  onClose: () => void;
+  photos: { url: string; name: string }[];
+  docs: { name: string; url: string; type: string }[];
+  activityLog: {
+    id: string;
+    action: string;
+    old_value: string | null;
+    new_value: string | null;
+    performed_by: string | null;
+    created_at: string;
+  }[];
+  duplicateWarnings: Record<string, string[]>;
+  optOutStatus: { email: boolean; sms: boolean };
+  selectedApptTime: string | null;
+  selectedApptLocation: string | null;
+  dealerLocations: DealerLocation[];
+  canSetPrice: boolean;
+  canApprove: boolean;
+  canDelete: boolean;
+  canUpdateStatus: boolean;
+  auditLabel: string;
+  userName: string;
+  onUpdate: (updated: Submission) => void;
+  onDelete: (id: string) => void;
+  onRefresh: (sub: Submission) => void;
+  onScheduleAppointment: (sub: Submission) => void;
+  onDeletePhoto: (fileName: string) => void;
+  onDeleteDoc: (docType: string, fileName: string) => void;
+  fetchActivityLog: (id: string) => void;
+  fetchSubmissions: () => void;
+}
+
+type TabId = "conversation" | "activity" | "deal" | "vehicle";
+
+const fmtMoney = (n: number | null | undefined) =>
+  n == null ? "—" : `$${Number(n).toLocaleString()}`;
+
+const fmtTime = (iso: string) => {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString(undefined, {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  } catch {
+    return iso;
+  }
+};
+
+export default function CustomerFileV2(props: CustomerFileV2Props) {
+  const { selected, onClose, activityLog, photos, docs, fetchActivityLog } = props;
+  const { config } = useSiteConfig();
+  const [tab, setTab] = useState<TabId>("conversation");
+
+  // Refresh activity when a new submission is opened
+  useEffect(() => {
+    if (selected?.id) fetchActivityLog(selected.id);
+  }, [selected?.id, fetchActivityLog]);
+
+  const open = !!selected;
+
+  // Reset to default tab on each open
+  useEffect(() => {
+    if (open) setTab("conversation");
+  }, [open]);
+
+  const sub = selected;
+
+  const dealValue = useMemo(() => {
+    if (!sub) return null;
+    return sub.offered_price ?? sub.estimated_offer_high ?? sub.estimated_offer_low ?? null;
+  }, [sub]);
+  const dealKind = sub?.offered_price != null ? "Offer Given" : "Estimated Offer";
+
+  return (
+    <>
+      <CustomerFileAccentStyle />
+      <Sheet open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+        <SheetContent
+          side="right"
+          className="p-0 w-full sm:max-w-[1100px] flex flex-col bg-slate-50 dark:bg-slate-950 [&>button]:hidden"
+          data-customer-file-v2
+        >
+          {sub && (
+            <>
+              <V2Header sub={sub} dealValue={dealValue} dealKind={dealKind} onClose={onClose} />
+              <V2Tabs tab={tab} onChange={setTab} unread={0} />
+              <div className="flex-1 min-h-0 flex">
+                <main className="flex-1 min-w-0 overflow-y-auto">
+                  {tab === "conversation" && <ConversationTab sub={sub} />}
+                  {tab === "activity" && <ActivityTab activityLog={activityLog} />}
+                  {tab === "deal" && <DealTab sub={sub} />}
+                  {tab === "vehicle" && <VehicleTab sub={sub} />}
+                </main>
+                <aside className="hidden lg:block w-[340px] shrink-0 border-l border-slate-200 dark:border-slate-800 bg-slate-100/50 dark:bg-slate-900/50 overflow-y-auto">
+                  <ContextRail
+                    sub={sub}
+                    photos={photos}
+                    docs={docs}
+                    apptTime={props.selectedApptTime}
+                    apptLocation={props.selectedApptLocation}
+                  />
+                </aside>
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
+    </>
+  );
+}
+
+/* ─────────────── HEADER ─────────────── */
+function V2Header({
+  sub,
+  dealValue,
+  dealKind,
+  onClose,
+}: {
+  sub: Submission;
+  dealValue: number | null;
+  dealKind: string;
+  onClose: () => void;
+}) {
+  return (
+    <header
+      className="shrink-0 text-white"
+      style={{
+        background:
+          "linear-gradient(to right, var(--customer-file-accent, #003b80) 0%, var(--customer-file-accent-2, #005bb5) 100%)",
+      }}
+    >
+      <div className="px-6 pt-4 pb-5">
+        <div className="flex items-center justify-between mb-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="h-8 w-8 rounded-lg bg-white/10 hover:bg-white/20 text-white"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 px-3 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[12px] font-semibold"
+            >
+              <StickyNote className="w-3.5 h-3.5 mr-1.5" />
+              Notes
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 px-3 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[12px] font-semibold"
+              onClick={() => window.print()}
+            >
+              <Printer className="w-3.5 h-3.5 mr-1.5" />
+              Print
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-12 gap-6 items-start">
+          <div className="col-span-12 md:col-span-4 min-w-0">
+            <div className="text-[11px] uppercase tracking-[0.15em] text-white/55 font-bold">
+              Customer
+            </div>
+            <div className="text-[26px] font-bold leading-tight mt-0.5 truncate">
+              {sub.name}
+            </div>
+            <div className="space-y-0.5 text-[13px] text-white/85 mt-1">
+              {sub.phone && (
+                <div className="flex items-center gap-1.5">
+                  <Phone className="w-3 h-3" /> {sub.phone}
+                </div>
+              )}
+              {sub.email && (
+                <div className="flex items-center gap-1.5 truncate">
+                  <Mail className="w-3 h-3 shrink-0" />{" "}
+                  <span className="truncate">{sub.email}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="col-span-12 md:col-span-5 min-w-0">
+            <div className="text-[11px] uppercase tracking-[0.15em] text-white/55 font-bold">
+              Vehicle
+            </div>
+            <div className="text-[22px] font-bold leading-tight mt-0.5 truncate">
+              {sub.vehicle_year} {sub.vehicle_make} {sub.vehicle_model}
+            </div>
+            <div className="flex items-center gap-2 flex-wrap text-[12px] text-white/80 mt-1">
+              {sub.vin && (
+                <span className="font-mono bg-white/10 rounded px-2 py-0.5 tracking-wider">
+                  {sub.vin}
+                </span>
+              )}
+              {sub.mileage != null && (
+                <>
+                  <span>·</span>
+                  <span>{Number(sub.mileage).toLocaleString()} mi</span>
+                </>
+              )}
+              {sub.exterior_color && (
+                <>
+                  <span>·</span>
+                  <span>{sub.exterior_color}</span>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="col-span-12 md:col-span-3 text-left md:text-right">
+            <div className="text-[11px] uppercase tracking-[0.15em] text-white/55 font-bold">
+              {dealKind}
+            </div>
+            <div className="text-[36px] font-bold leading-none mt-0.5 font-mono">
+              {fmtMoney(dealValue)}
+            </div>
+            {sub.acv_value != null && dealValue != null && (
+              <div className="text-[11px] text-white/70 mt-1">
+                ACV {fmtMoney(sub.acv_value)} ·{" "}
+                <span className="text-emerald-300 font-semibold">
+                  +{fmtMoney(dealValue - Number(sub.acv_value))}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 mt-3 flex-wrap">
+          {sub.status && (
+            <Badge className="bg-white/15 text-white border-0 text-[11px] uppercase tracking-wider font-bold">
+              {sub.status.replace(/_/g, " ")}
+            </Badge>
+          )}
+          {dealValue != null && dealValue > 20000 && (
+            <Badge className="bg-amber-400/90 text-amber-950 border-0 text-[11px] uppercase tracking-wider font-bold">
+              <Flame className="w-3 h-3 mr-1" /> Hot Lead
+            </Badge>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+}
+
+/* ─────────────── TABS ─────────────── */
+function V2Tabs({
+  tab,
+  onChange,
+  unread,
+}: {
+  tab: TabId;
+  onChange: (t: TabId) => void;
+  unread: number;
+}) {
+  const items: { id: TabId; label: string; icon: React.ElementType }[] = [
+    { id: "conversation", label: "Conversation", icon: MessageSquare },
+    { id: "activity", label: "Activity", icon: Activity },
+    { id: "deal", label: "Deal", icon: FileText },
+    { id: "vehicle", label: "Vehicle", icon: Car },
+  ];
+  return (
+    <div className="shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 flex items-center gap-1">
+      {items.map((t) => {
+        const active = tab === t.id;
+        const Icon = t.icon;
+        return (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => onChange(t.id)}
+            className={`relative px-3.5 py-3 text-[12.5px] font-semibold flex items-center gap-1.5 border-b-2 -mb-px transition-colors ${
+              active
+                ? "text-[var(--customer-file-accent,#003b80)]"
+                : "border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
+            }`}
+            style={
+              active
+                ? { borderColor: "var(--customer-file-accent, #003b80)" }
+                : undefined
+            }
+          >
+            <Icon className="w-3.5 h-3.5" />
+            {t.label}
+            {t.id === "conversation" && unread > 0 && !active && (
+              <span className="absolute top-2 right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" />
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ─────────────── TAB: CONVERSATION ─────────────── */
+function ConversationTab({ sub }: { sub: Submission }) {
+  return (
+    <div className="p-6 space-y-4">
+      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 text-center">
+        <MessageSquare className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">
+          Conversation thread
+        </h3>
+        <p className="text-xs text-slate-500 max-w-md mx-auto">
+          SMS &amp; email history with {sub.name} will appear here. Send a follow-up,
+          appointment confirmation, or reply directly inline.
+        </p>
+        <div className="flex items-center justify-center gap-2 mt-5">
+          <Button size="sm" variant="outline">
+            <Mail className="w-3.5 h-3.5 mr-1.5" /> Send Email
+          </Button>
+          <Button size="sm" variant="outline">
+            <Phone className="w-3.5 h-3.5 mr-1.5" /> Send SMS
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────── TAB: ACTIVITY ─────────────── */
+function ActivityTab({
+  activityLog,
+}: {
+  activityLog: CustomerFileV2Props["activityLog"];
+}) {
+  if (!activityLog?.length) {
+    return (
+      <div className="p-6">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 text-center text-sm text-slate-500">
+          No activity yet.
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="p-6">
+      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 divide-y divide-slate-100 dark:divide-slate-800">
+        {activityLog.map((a) => (
+          <div key={a.id} className="px-4 py-3 flex items-start gap-3">
+            <div className="w-1.5 h-1.5 mt-2 rounded-full bg-[var(--customer-file-accent,#003b80)]" />
+            <div className="flex-1 min-w-0">
+              <div className="text-[13px] text-slate-900 dark:text-slate-100">
+                <span className="font-semibold">{a.action.replace(/_/g, " ")}</span>
+                {a.old_value && a.new_value && (
+                  <span className="text-slate-500">
+                    {" "}
+                    — {a.old_value} → <span className="text-slate-900 dark:text-slate-100 font-medium">{a.new_value}</span>
+                  </span>
+                )}
+              </div>
+              <div className="text-[11px] text-slate-500 mt-0.5">
+                {a.performed_by || "System"} · {fmtTime(a.created_at)}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────── TAB: DEAL ─────────────── */
+function DealTab({ sub }: { sub: Submission }) {
+  return (
+    <div className="p-6 space-y-3">
+      <Card title="Offer">
+        <Row label="Estimated Low" value={fmtMoney(sub.estimated_offer_low)} />
+        <Row label="Estimated High" value={fmtMoney(sub.estimated_offer_high)} />
+        <Row label="Offered Price" value={fmtMoney(sub.offered_price)} highlight />
+        <Row label="ACV" value={fmtMoney(sub.acv_value)} />
+      </Card>
+      <Card title="Status">
+        <Row label="Status" value={sub.status?.replace(/_/g, " ") || "—"} />
+        <Row label="Created" value={sub.created_at ? fmtTime(sub.created_at) : "—"} />
+      </Card>
+      {sub.loan_balance != null && (
+        <Card title="Loan">
+          <Row label="Lender" value={sub.lender || "—"} />
+          <Row label="Balance" value={fmtMoney(sub.loan_balance)} />
+          <Row label="Monthly Payment" value={fmtMoney(sub.monthly_payment)} />
+        </Card>
+      )}
+    </div>
+  );
+}
+
+/* ─────────────── TAB: VEHICLE ─────────────── */
+function VehicleTab({ sub }: { sub: Submission }) {
+  return (
+    <div className="p-6 space-y-3">
+      <Card title="Identification">
+        <Row label="VIN" value={sub.vin || "—"} mono />
+        <Row label="Year" value={String(sub.vehicle_year || "—")} />
+        <Row label="Make" value={sub.vehicle_make || "—"} />
+        <Row label="Model" value={sub.vehicle_model || "—"} />
+        <Row label="Mileage" value={sub.mileage != null ? `${Number(sub.mileage).toLocaleString()} mi` : "—"} />
+      </Card>
+      <Card title="Appearance">
+        <Row label="Exterior Color" value={sub.exterior_color || "—"} />
+        <Row label="Interior Color" value={(sub as any).interior_color || "—"} />
+      </Card>
+      <Card title="Condition">
+        <Row label="Overall" value={(sub as any).overall_condition || "—"} />
+        <Row label="Accidents" value={(sub as any).accidents || "—"} />
+        <Row label="Drivable" value={(sub as any).drivable ? "Yes" : "—"} />
+      </Card>
+    </div>
+  );
+}
+
+/* ─────────────── CONTEXT RAIL ─────────────── */
+function ContextRail({
+  sub,
+  photos,
+  docs,
+  apptTime,
+  apptLocation,
+}: {
+  sub: Submission;
+  photos: { url: string; name: string }[];
+  docs: { name: string; url: string; type: string }[];
+  apptTime: string | null;
+  apptLocation: string | null;
+}) {
+  const [moreOpen, setMoreOpen] = useState(false);
+  return (
+    <div className="p-4 space-y-3">
+      <RailCard title="Next Action">
+        <p className="text-[13px] text-slate-700 dark:text-slate-300">
+          {apptTime
+            ? `Appointment on ${fmtTime(apptTime)}${apptLocation ? ` at ${apptLocation}` : ""}.`
+            : "Schedule an appointment with this customer."}
+        </p>
+        <Button size="sm" className="w-full mt-3" style={{ background: "var(--customer-file-accent, #003b80)" }}>
+          {apptTime ? "Reschedule" : "Schedule Appointment"}
+        </Button>
+      </RailCard>
+
+      <RailCard title="Deal Status">
+        <div className="text-[13px] text-slate-700 dark:text-slate-300">
+          <div className="flex justify-between py-1">
+            <span className="text-slate-500">Status</span>
+            <span className="font-semibold">{sub.status?.replace(/_/g, " ") || "—"}</span>
+          </div>
+        </div>
+      </RailCard>
+
+      <RailCard title="Offer">
+        <div className="text-[13px] space-y-1">
+          <Row label="Estimated High" value={fmtMoney(sub.estimated_offer_high)} compact />
+          <Row label="Offered Price" value={fmtMoney(sub.offered_price)} compact highlight />
+          <Row label="ACV" value={fmtMoney(sub.acv_value)} compact />
+        </div>
+      </RailCard>
+
+      {sub.loan_balance != null && (
+        <RailCard title="Loan">
+          <div className="text-[13px] space-y-1">
+            <Row label="Lender" value={sub.lender || "—"} compact />
+            <Row label="Balance" value={fmtMoney(sub.loan_balance)} compact />
+          </div>
+        </RailCard>
+      )}
+
+      <button
+        type="button"
+        onClick={() => setMoreOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-3 py-2 text-[12px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800/60 rounded-md transition"
+      >
+        <span>More</span>
+        {moreOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+      </button>
+
+      {moreOpen && (
+        <>
+          <RailCard title={`Photos (${photos.length})`}>
+            {photos.length === 0 ? (
+              <p className="text-[12px] text-slate-500">No photos uploaded.</p>
+            ) : (
+              <div className="grid grid-cols-3 gap-1.5">
+                {photos.slice(0, 6).map((p) => (
+                  <a key={p.name} href={p.url} target="_blank" rel="noreferrer" className="block aspect-square rounded overflow-hidden bg-slate-200">
+                    <img src={p.url} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
+                  </a>
+                ))}
+              </div>
+            )}
+          </RailCard>
+          <RailCard title={`Documents (${docs.length})`}>
+            {docs.length === 0 ? (
+              <p className="text-[12px] text-slate-500">No documents uploaded.</p>
+            ) : (
+              <ul className="space-y-1">
+                {docs.map((d) => (
+                  <li key={d.name}>
+                    <a href={d.url} target="_blank" rel="noreferrer" className="text-[12px] text-[var(--customer-file-accent,#003b80)] hover:underline truncate block">
+                      {d.name}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </RailCard>
+        </>
+      )}
+    </div>
+  );
+}
+
+/* ─────────────── PRIMITIVES ─────────────── */
+function Card({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden border-l-[3px]" style={{ borderLeftColor: "var(--customer-file-accent, #003b80)" }}>
+      <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+          {title}
+        </h3>
+      </div>
+      <div className="px-5 py-3 divide-y divide-slate-100 dark:divide-slate-800">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function RailCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+      <div className="px-3.5 py-2 border-b border-slate-100 dark:border-slate-800">
+        <h3 className="text-[10.5px] font-bold uppercase tracking-wider text-slate-500">
+          {title}
+        </h3>
+      </div>
+      <div className="px-3.5 py-2.5">{children}</div>
+    </div>
+  );
+}
+
+function Row({
+  label,
+  value,
+  mono,
+  highlight,
+  compact,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+  highlight?: boolean;
+  compact?: boolean;
+}) {
+  return (
+    <div className={`flex items-center justify-between ${compact ? "py-0.5" : "py-2"}`}>
+      <span className="text-[12px] text-slate-500">{label}</span>
+      <span
+        className={`text-[13px] ${mono ? "font-mono" : ""} ${
+          highlight
+            ? "font-bold text-[var(--customer-file-accent,#003b80)]"
+            : "text-slate-900 dark:text-slate-100"
+        }`}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
