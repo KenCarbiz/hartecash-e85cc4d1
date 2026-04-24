@@ -208,6 +208,28 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
     return (
       <>
         <TodayActionSummary submissions={submissions} appointments={appointments} onNavigate={setActiveSection} />
+        <AllLeadsPage
+          submissions={submissions}
+          loading={props.loading}
+          search={props.search}
+          onSearchChange={props.setSearch}
+          page={props.page}
+          total={props.total}
+          pageSize={PAGE_SIZE}
+          onPageChange={props.setPage}
+          dealerLocations={props.dealerLocations}
+          onView={props.handleView}
+        />
+      </>
+    );
+  }
+
+  // Legacy classic table — kept as fallback per brief.
+  if (activeSection === "submissions-classic") {
+    if (props.loading) return <AdminLoadingSkeleton />;
+    return (
+      <>
+        <TodayActionSummary submissions={submissions} appointments={appointments} onNavigate={setActiveSection} />
         <SubmissionsTable {...submissionsTableProps(props, submissions, true)} />
       </>
     );
