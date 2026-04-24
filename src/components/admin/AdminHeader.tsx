@@ -96,6 +96,23 @@ const AdminHeader = ({ darkMode, setDarkMode, userRole, onLogout, userName, isPl
     />
   ) : null;
 
+  // Initials for the avatar pill (right cluster).
+  const initials = (userName || "")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((n) => n[0]?.toUpperCase() ?? "")
+    .join("") || "?";
+
+  const roleLabel = ROLE_LABELS[userRole] || userRole;
+
+  // Click/focus on the search input opens the existing AdminCommandPalette
+  // by dispatching a synthetic ⌘K keydown — same path the breadcrumb kbd uses
+  // in AdminDashboard.tsx. Keeps a single source of truth for global search.
+  const openCommandPalette = () => {
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }));
+  };
+
   return (
     <header
       className="sticky top-0 z-50 shadow-lg overflow-hidden"
@@ -112,10 +129,11 @@ const AdminHeader = ({ darkMode, setDarkMode, userRole, onLogout, userName, isPl
       />
 
       <div
-        className="relative px-3 md:px-5 py-2 flex items-center justify-between gap-2"
+        className="relative px-3 md:px-5 py-2 flex items-center gap-3 md:gap-4"
         style={{ minHeight: `${topBarHeight}px` }}
       >
-        <div className="flex items-center gap-2 md:gap-4 min-w-0">
+        {/* ── LEFT CLUSTER ── sidebar toggle, brand mark, greeting + role pill */}
+        <div className="flex items-center gap-2 md:gap-3 min-w-0 shrink-0">
           <Button
             variant="ghost"
             size="icon"
@@ -139,91 +157,183 @@ const AdminHeader = ({ darkMode, setDarkMode, userRole, onLogout, userName, isPl
           
           <div className="min-w-0 flex flex-col">
             <div className="flex items-center gap-2">
-              <span className="text-sm md:text-lg font-semibold tracking-tight" style={{ color: topBarText }}>
+              <span className="text-sm md:text-[22px] leading-tight font-semibold tracking-tight" style={{ color: topBarText }}>
                 {firstName ? `${greeting}, ${firstName}` : "Dashboard"}
               </span>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 mt-0.5">
               {isPlatformAdmin && (
-                <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30">
+                <span className="inline-flex items-center gap-1 text-[12px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30">
                   <Crown className="w-2.5 h-2.5" />
                   SUPER ADMIN
                 </span>
               )}
               {!isPlatformAdmin && (
                 <span
-                  className="text-[10px] px-2 py-0.5 rounded-full font-medium border"
+                  className="text-[12px] px-2 py-0.5 rounded-full font-medium border w-fit"
                   style={{
                     background: `${topBarText}1a`,
                     color: `${topBarText}b3`,
                     borderColor: `${topBarText}1a`,
                   }}
                 >
-                  {ROLE_LABELS[userRole] || userRole}
+                  {roleLabel}
                 </span>
               )}
             </div>
           </div>
         </div>
         
-        <div className="flex items-center gap-1 md:gap-2 shrink-0">
-          {/* Dealer name + plan badge (desktop) */}
-          {(dealerName || currentBundle) && (
-            <div
-              className="hidden md:flex items-center gap-2 pr-2 mr-1 border-r"
-              style={{ borderColor: `${topBarText}1a` }}
-            >
-              {dealerName && (
-                <span
-                  className="text-[11px] font-medium truncate max-w-[160px]"
-                  style={{ color: `${topBarText}99` }}
-                >
-                  {dealerName}
-                </span>
-              )}
-              {currentBundle && (
-                <Badge
-                  variant="outline"
-                  className="text-[9px] h-5 px-2 font-semibold uppercase tracking-wider"
-                  style={{
-                    borderColor: `${topBarText}33`,
-                    color: `${topBarText}cc`,
-                    background: `${topBarText}14`,
-                  }}
-                >
-                  {currentBundle.name}
-                </Badge>
-              )}
+        {/* ── CENTER ── global search (opens command palette) + dealer name beneath */}
+        <div className="hidden md:flex flex-1 min-w-0 items-center justify-center">
+          <div className="w-full max-w-xl flex flex-col items-center gap-0.5">
+            <div className="relative w-full">
+              <Search
+                className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+                style={{ color: `${topBarText}80` }}
+              />
+              <input
+                readOnly
+                placeholder="Search leads, VIN, plate…"
+                onClick={openCommandPalette}
+                onFocus={openCommandPalette}
+                className="w-full h-9 pl-9 pr-14 text-[13px] rounded-lg outline-none cursor-pointer transition-colors"
+                style={{
+                  background: `${topBarText}14`,
+                  border: `1px solid ${topBarText}26`,
+                  color: topBarText,
+                }}
+                aria-label="Open command palette"
+              />
+              <span
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-mono px-1.5 py-0.5 rounded"
+                style={{
+                  background: `${topBarText}1a`,
+                  color: `${topBarText}b3`,
+                  border: `1px solid ${topBarText}26`,
+                }}
+              >
+                ⌘K
+              </span>
             </div>
-          )}
+            {(dealerName || currentBundle) && (
+              <div className="flex items-center gap-1.5 text-[11px]" style={{ color: `${topBarText}99` }}>
+                {dealerName && <span className="truncate max-w-[200px]">{dealerName}</span>}
+                {currentBundle && (
+                  <>
+                    {dealerName && <span style={{ color: `${topBarText}66` }}>·</span>}
+                    <Badge
+                      variant="outline"
+                      className="text-[9px] h-4 px-1.5 font-semibold uppercase tracking-wider"
+                      style={{
+                        borderColor: `${topBarText}33`,
+                        color: `${topBarText}cc`,
+                        background: `${topBarText}14`,
+                      }}
+                    >
+                      {currentBundle.name}
+                    </Badge>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
 
-          {/* App switcher — primary cross-product nav */}
+        {/* ── RIGHT CLUSTER ── AppSwitcher → dark/light → bell → push → avatar+name → logout */}
+        <div className="flex items-center gap-1 md:gap-1.5 shrink-0 ml-auto md:ml-0">
+          {/* AutoCurb cross-product switcher */}
           <AppSwitcher currentApp="autocurb" />
 
-          <div className="hidden sm:block h-5 w-px mx-0.5" style={{ background: `${topBarText}26` }} />
-
+          {/* Dark / light toggle */}
           <Button
             variant="ghost"
-            size="sm"
+            size="icon"
             onClick={() => setDarkMode(!darkMode)}
-            className="hover:bg-white/10 px-2 transition-all"
-            style={{ color: `${topBarText}99` }}
+            className="h-9 w-9 hover:bg-white/10 transition-all"
+            style={{ color: `${topBarText}b3` }}
             aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
           >
             {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </Button>
-          {/* Staff-side push-notification toggle. Compact rendering so
-               it sits neatly in the header; full-width version ships
-               in the staff profile page later. */}
-          <PushNotificationToggle compact />
+
+          {/* Bell + notification dot. Push-toggle UI lives in staff profile;
+               here we just expose the bell affordance. The dot is a static
+               visual indicator until a real unread-count source is wired. */}
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 hover:bg-white/10 transition-all"
+              style={{ color: `${topBarText}b3` }}
+              aria-label="Notifications"
+            >
+              <Bell className="w-4 h-4" />
+            </Button>
+            <span
+              className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full"
+              style={{ background: "#ef4444", boxShadow: `0 0 0 2px ${topBarBg}` }}
+              aria-hidden
+            />
+          </div>
+
+          {/* Hidden push-notification toggle stays mounted so the
+               useEffect logic that subscribes to push events keeps firing.
+               The visible bell above is the user-facing affordance. */}
+          <div className="sr-only">
+            <PushNotificationToggle compact />
+          </div>
+
+          {/* Role pill (right side, mockup spec). Mirrors the left-side
+               role label but lives in the right cluster as a quick visual
+               anchor for the avatar block. */}
+          <span
+            className="hidden md:inline-flex items-center text-[12px] h-9 px-3 rounded-full font-medium border"
+            style={{
+              background: `${topBarText}14`,
+              color: `${topBarText}cc`,
+              borderColor: `${topBarText}26`,
+            }}
+          >
+            {roleLabel}
+          </span>
+
+          {/* Avatar + name */}
+          <div
+            className="hidden md:flex items-center gap-2 pl-2 ml-1 border-l"
+            style={{ borderColor: `${topBarText}26` }}
+          >
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-semibold"
+              style={{
+                background: `${topBarText}1f`,
+                color: topBarText,
+                border: `1px solid ${topBarText}26`,
+              }}
+              aria-hidden
+            >
+              {initials}
+            </div>
+            <div className="leading-tight">
+              <div className="text-[12px] font-medium" style={{ color: topBarText }}>
+                {firstName || "Staff"}
+              </div>
+              <div className="text-[10px]" style={{ color: `${topBarText}99` }}>
+                {roleLabel}
+              </div>
+            </div>
+          </div>
+
+          {/* Logout */}
           <Button
             variant="ghost"
             size="sm"
             onClick={onLogout}
-            className="hover:bg-white/10 px-2 transition-all"
-            style={{ color: `${topBarText}99` }}
+            className="h-9 px-2 hover:bg-white/10 transition-all"
+            style={{ color: `${topBarText}b3` }}
           >
-            <LogOut className="w-4 h-4" /> <span className="hidden md:inline ml-1">Logout</span>
+            <LogOut className="w-4 h-4" />
+            <span className="hidden lg:inline ml-1.5 text-[12px]">Logout</span>
           </Button>
         </div>
       </div>
