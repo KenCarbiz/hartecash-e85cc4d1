@@ -63,7 +63,8 @@ const lightenHex = (hex: string, amount: number): string => {
 };
 
 const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsProps) => {
-  const { config, refresh } = useSiteConfig();
+  const { config } = useSiteConfig();
+  const queryClient = useQueryClient();
   const { toast } = useToast();
   const [tab, setTab] = useState<"theme" | "layout" | "finetune">("theme");
   const [saving, setSaving] = useState(false);
