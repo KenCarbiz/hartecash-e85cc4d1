@@ -272,7 +272,7 @@ const AdminHeader = ({ darkMode, setDarkMode, userRole, onLogout, userName, isPl
             </Button>
             <span
               className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full"
-              style={{ background: "#ef4444", boxShadow: `0 0 0 2px ${topBarBg}` }}
+              style={{ background: "hsl(var(--destructive))", boxShadow: `0 0 0 2px ${topBarBg}` }}
               aria-hidden
             />
           </div>
