@@ -2015,6 +2015,8 @@ export type Database = {
           created_at: string
           cta_accept_color: string
           cta_offer_color: string
+          customer_file_accent: string | null
+          customer_file_accent_2: string | null
           dealership_id: string
           dealership_name: string
           email: string | null
@@ -2023,6 +2025,7 @@ export type Database = {
           established_year: number | null
           facebook_url: string | null
           favicon_url: string | null
+          file_layout: string | null
           google_review_url: string | null
           hero_headline: string
           hero_layout: string
@@ -2057,10 +2060,20 @@ export type Database = {
           stats_years_in_business: string | null
           success_color: string
           tagline: string
+          text_scale: number | null
           tiktok_url: string | null
+          top_bar_bg: string | null
+          top_bar_bg_2: string | null
+          top_bar_height: number | null
+          top_bar_shimmer: boolean | null
+          top_bar_shimmer_speed: number | null
+          top_bar_shimmer_style: string | null
+          top_bar_style: string | null
+          top_bar_text: string | null
           track_abandoned_leads: boolean
           trade_hero_headline: string
           trade_hero_subtext: string
+          ui_scale: number | null
           updated_at: string
           use_animated_calculating: boolean
           vehicle_image_angle: string
@@ -2088,6 +2101,8 @@ export type Database = {
           created_at?: string
           cta_accept_color?: string
           cta_offer_color?: string
+          customer_file_accent?: string | null
+          customer_file_accent_2?: string | null
           dealership_id?: string
           dealership_name?: string
           email?: string | null
@@ -2096,6 +2111,7 @@ export type Database = {
           established_year?: number | null
           facebook_url?: string | null
           favicon_url?: string | null
+          file_layout?: string | null
           google_review_url?: string | null
           hero_headline?: string
           hero_layout?: string
@@ -2130,10 +2146,20 @@ export type Database = {
           stats_years_in_business?: string | null
           success_color?: string
           tagline?: string
+          text_scale?: number | null
           tiktok_url?: string | null
+          top_bar_bg?: string | null
+          top_bar_bg_2?: string | null
+          top_bar_height?: number | null
+          top_bar_shimmer?: boolean | null
+          top_bar_shimmer_speed?: number | null
+          top_bar_shimmer_style?: string | null
+          top_bar_style?: string | null
+          top_bar_text?: string | null
           track_abandoned_leads?: boolean
           trade_hero_headline?: string
           trade_hero_subtext?: string
+          ui_scale?: number | null
           updated_at?: string
           use_animated_calculating?: boolean
           vehicle_image_angle?: string
@@ -2161,6 +2187,8 @@ export type Database = {
           created_at?: string
           cta_accept_color?: string
           cta_offer_color?: string
+          customer_file_accent?: string | null
+          customer_file_accent_2?: string | null
           dealership_id?: string
           dealership_name?: string
           email?: string | null
@@ -2169,6 +2197,7 @@ export type Database = {
           established_year?: number | null
           facebook_url?: string | null
           favicon_url?: string | null
+          file_layout?: string | null
           google_review_url?: string | null
           hero_headline?: string
           hero_layout?: string
@@ -2203,10 +2232,20 @@ export type Database = {
           stats_years_in_business?: string | null
           success_color?: string
           tagline?: string
+          text_scale?: number | null
           tiktok_url?: string | null
+          top_bar_bg?: string | null
+          top_bar_bg_2?: string | null
+          top_bar_height?: number | null
+          top_bar_shimmer?: boolean | null
+          top_bar_shimmer_speed?: number | null
+          top_bar_shimmer_style?: string | null
+          top_bar_style?: string | null
+          top_bar_text?: string | null
           track_abandoned_leads?: boolean
           trade_hero_headline?: string
           trade_hero_subtext?: string
+          ui_scale?: number | null
           updated_at?: string
           use_animated_calculating?: boolean
           vehicle_image_angle?: string
