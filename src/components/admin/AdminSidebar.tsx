@@ -249,7 +249,7 @@ const AdminSidebar = ({
     "today", "submissions", "accepted-appts", "executive", "appraiser-queue",
     "offer-settings", "form-config", "inspection-config", "photo-config",
     "depth-policies", "promotions", "notifications",
-    "site-config", "landing-flow", "locations", "rooftop-websites", "testimonials", "embed-toolkit",
+    "site-config", "appearance", "landing-flow", "locations", "rooftop-websites", "testimonials", "embed-toolkit",
     "my-lead-link", "my-referrals",
     "staff", "referrals", "compliance", "reports", "image-inventory", "changelog",
     "onboarding", "system-settings", "pricing-model",
