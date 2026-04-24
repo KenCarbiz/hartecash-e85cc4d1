@@ -199,6 +199,7 @@ const AdminSidebar = ({
   const setupItems: SidebarItem[] = [
     ...(isManager ? [{ key: "offer-settings", label: "Offer Logic", icon: SlidersHorizontal, badge: pricingAccessRequestCount > 0 ? String(pricingAccessRequestCount) : undefined, badgeVariant: "destructive" as const }] : []),
     ...(canManageAccess ? [{ key: "site-config", label: "Branding", icon: Palette }] : []),
+    ...(canManageAccess ? [{ key: "appearance", label: "Appearance", icon: Paintbrush }] : []),
     ...(canManageAccess && locationCount > 1 ? [{ key: "locations", label: "Locations", icon: MapPin }] : []),
     ...(canManageAccess ? [
       { key: "form-config", label: "Lead Form", icon: ListChecks },
@@ -248,7 +249,7 @@ const AdminSidebar = ({
     "today", "submissions", "accepted-appts", "executive", "appraiser-queue",
     "offer-settings", "form-config", "inspection-config", "photo-config",
     "depth-policies", "promotions", "notifications",
-    "site-config", "landing-flow", "locations", "rooftop-websites", "testimonials", "embed-toolkit",
+    "site-config", "appearance", "landing-flow", "locations", "rooftop-websites", "testimonials", "embed-toolkit",
     "my-lead-link", "my-referrals",
     "staff", "referrals", "compliance", "reports", "image-inventory", "changelog",
     "onboarding", "system-settings", "pricing-model",
