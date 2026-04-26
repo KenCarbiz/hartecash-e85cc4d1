@@ -81,7 +81,7 @@ const CustomerCheckIn = () => {
     setPending(action);
     setErrMsg(null);
     const result = await callEdge({ token, action });
-    if (result.ok) {
+    if (result.ok === true) {
       setSubmission(result.submission);
     } else if (result.error === "terminal_state") {
       setErrMsg("This visit has already wrapped up — no need to check in.");
