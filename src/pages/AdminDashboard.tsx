@@ -94,12 +94,12 @@ const AdminDashboard = () => {
   }, [db.activeSection]);
   return (
     <PlatformProvider>
-    <SidebarProvider>
       {/* Tenant View banner — non-dismissible red banner that shows whenever
-          a Super Admin is viewing another tenant's data. Lives outside the
-          flex container so it spans the full viewport width above the
-          sidebar and main content. */}
+          a Super Admin is viewing another tenant's data. Kept outside the
+          sidebar provider's flex wrapper so it spans the full viewport width
+          instead of becoming a left-side flex column. */}
       <TenantViewBanner />
+      <SidebarProvider>
         <div className="min-h-screen bg-background transition-colors duration-300 flex w-full relative">
           {/* Subtle grid pattern for premium depth */}
           <div className="absolute inset-0 bg-[radial-gradient(hsl(var(--border)/0.5)_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none opacity-30 dark:opacity-10" />
