@@ -62,14 +62,14 @@ const CustomerCheckIn = () => {
     (async () => {
       const result = await callEdge({ token, action: "fetch" });
       if (cancelled) return;
-      if (!result.ok) {
+      if (result.ok === true) {
+        setSubmission(result.submission);
+      } else {
         setErrMsg(
           result.error === "not_found"
             ? "We couldn't find your appointment. Double-check the link from your confirmation email."
             : "Something went wrong. Try again in a moment.",
         );
-      } else {
-        setSubmission(result.submission);
       }
       setLoading(false);
     })();
