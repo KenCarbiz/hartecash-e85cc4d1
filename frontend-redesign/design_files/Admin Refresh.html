@@ -1,0 +1,3070 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Admin Refresh — Autocurb</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink: 220 20% 12%;
+    --ink-soft: 220 10% 40%;
+    --ink-faint: 220 8% 62%;
+    --surface: 40 30% 98%;
+    --surface-2: 40 20% 96%;
+    --surface-3: 40 15% 93%;
+    --hair: 220 15% 90%;
+    --hair-soft: 220 15% 94%;
+    --accent: 216 85% 48%;
+    --accent-soft: 216 85% 94%;
+    --accent-2: 216 85% 58%;
+    --success: 150 55% 40%;
+    --success-soft: 150 55% 92%;
+    --warn: 32 85% 48%;
+    --warn-soft: 32 85% 94%;
+    --danger: 4 72% 52%;
+    --danger-soft: 4 72% 95%;
+  }
+  .dark {
+    --ink: 220 15% 92%;
+    --ink-soft: 220 10% 70%;
+    --ink-faint: 220 8% 52%;
+    --surface: 222 20% 9%;
+    --surface-2: 222 18% 12%;
+    --surface-3: 222 16% 16%;
+    --hair: 222 15% 20%;
+    --hair-soft: 222 15% 16%;
+    --accent: 216 85% 62%;
+    --accent-soft: 216 50% 22%;
+    --accent-2: 216 85% 72%;
+    --success: 150 55% 55%;
+    --success-soft: 150 35% 18%;
+    --warn: 32 85% 60%;
+    --warn-soft: 32 40% 20%;
+    --danger: 4 72% 60%;
+    --danger-soft: 4 40% 22%;
+  }
+  /* Smooth theme crossfade */
+  html.theming *,
+  html.theming *::before,
+  html.theming *::after {
+    transition: background-color .22s ease, color .22s ease, border-color .22s ease, fill .22s ease, stroke .22s ease !important;
+  }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+    font-feature-settings: 'cv11','ss01','ss03';
+    color: hsl(var(--ink));
+    background: hsl(var(--surface));
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  .mono { font-family: 'Geist Mono', ui-monospace, monospace; }
+  .hair { border-color: hsl(var(--hair)); }
+  .hair-soft { border-color: hsl(var(--hair-soft)); }
+  .ink { color: hsl(var(--ink)); }
+  .ink-soft { color: hsl(var(--ink-soft)); }
+  .ink-faint { color: hsl(var(--ink-faint)); }
+  .bg-surface { background: hsl(var(--surface)); }
+  .bg-surface-2 { background: hsl(var(--surface-2)); }
+  .bg-surface-3 { background: hsl(var(--surface-3)); }
+  .accent-bg { background: hsl(var(--accent)); }
+  .accent-text { color: hsl(var(--accent)); }
+  .accent-soft-bg { background: hsl(var(--accent-soft)); }
+  .success-text { color: hsl(var(--success)); }
+  .success-bg { background: hsl(var(--success)); }
+  .success-soft { background: hsl(var(--success-soft)); color: hsl(var(--success)); }
+  .warn-text { color: hsl(var(--warn)); }
+  .warn-soft { background: hsl(var(--warn-soft)); color: hsl(var(--warn)); }
+  .danger-text { color: hsl(var(--danger)); }
+  .danger-bg { background: hsl(var(--danger)); }
+  .danger-soft { background: hsl(var(--danger-soft)); color: hsl(var(--danger)); }
+
+  /* Old-style gradient header for kill-switch OFF mode */
+  .legacy-header {
+    background: linear-gradient(90deg, hsl(var(--accent)) 0%, hsl(216 85% 58%) 60%, hsl(216 85% 68%) 100%);
+  }
+  .legacy-grid::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image: radial-gradient(rgba(0,0,0,0.06) 1px, transparent 1px);
+    background-size: 24px 24px;
+    pointer-events: none;
+  }
+
+  /* Arrived row pulse */
+  @keyframes pulse-arrived {
+    0%, 100% { box-shadow: inset 3px 0 0 hsl(var(--danger)); background: hsl(var(--danger-soft)); }
+    50%      { box-shadow: inset 3px 0 0 hsl(var(--danger)); background: hsl(4 72% 90%); }
+  }
+  .arrived-row { animation: pulse-arrived 2s ease-in-out infinite; }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.4); }
+  }
+
+  @keyframes sheet-in {
+    from { transform: translateX(40px); opacity: 0; }
+    to   { transform: translateX(0); opacity: 1; }
+  }
+  .sheet-enter { animation: sheet-in .22s cubic-bezier(.2,.8,.2,1); }
+  .pulse-dot { animation: pulse-dot 1.2s ease-in-out infinite; }
+
+  /* Top bar shimmer */
+  @keyframes topbar-shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  .topbar-shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(100deg,
+      rgba(255,255,255,0) 20%,
+      rgba(255,255,255,0.18) 40%,
+      rgba(255,255,255,0.35) 50%,
+      rgba(255,255,255,0.18) 60%,
+      rgba(255,255,255,0) 80%);
+    background-size: 200% 100%;
+    animation: topbar-shimmer var(--shimmer-speed, 3.2s) linear infinite;
+    mix-blend-mode: screen;
+  }
+
+  /* Hartecash-style narrow diagonal shimmer: 135° white band, sweeps across */
+  @keyframes topbar-shimmer-hartecash {
+    0%, 100% { transform: translateX(-100%); }
+    50%      { transform: translateX(100%); }
+  }
+  .topbar-shimmer-hartecash::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(135deg,
+      transparent 40%,
+      rgba(255,255,255,0.10) 50%,
+      transparent 60%);
+    animation: topbar-shimmer-hartecash var(--shimmer-speed, 8s) ease-in-out infinite;
+  }
+
+  /* Hairline under the top bar — edge-to-edge fade */
+  .topbar-hairline::before {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent 0%, rgba(255,255,255,0.20) 50%, transparent 100%);
+    pointer-events: none;
+  }
+
+  /* Tweaks panel */
+  .tweaks-panel {
+    position: fixed; right: 16px; bottom: 16px; top: 60px; z-index: 60;
+    width: 300px;
+    background: hsl(var(--surface));
+    border: 1px solid hsl(var(--hair));
+    border-radius: 14px;
+    box-shadow: 0 20px 40px -12px rgba(20,24,40,0.18), 0 0 0 1px rgba(0,0,0,0.02);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .tweaks-panel > div:last-child { overflow-y: auto; flex: 1 1 auto; }
+
+  /* Remove scrollbar noise */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: hsl(var(--hair)); border-radius: 10px; border: 2px solid hsl(var(--surface)); }
+  ::-webkit-scrollbar-track { background: transparent; }
+
+  /* Focus-fill for interactive rows */
+  .row-hover:hover { background: hsl(var(--surface-2)); }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 500;
+    padding: 6px 10px; border-radius: 8px;
+    border: 1px solid hsl(var(--hair)); background: hsl(var(--surface));
+    transition: background 120ms, border-color 120ms, color 120ms;
+    white-space: nowrap;
+  }
+  .btn:hover { background: hsl(var(--surface-2)); border-color: hsl(var(--ink-faint)); }
+  .btn-primary { background: hsl(var(--ink)); color: hsl(var(--surface)); border-color: hsl(var(--ink)); }
+  .btn-primary:hover { background: hsl(220 20% 18%); }
+  .dark .btn-primary:hover { background: hsl(220 15% 82%); }
+  .btn-accent { background: hsl(var(--accent)); color: white; border-color: hsl(var(--accent)); }
+  .btn-accent:hover { background: hsl(216 85% 42%); }
+  .btn-danger { background: hsl(var(--danger)); color: white; border-color: hsl(var(--danger)); }
+  .btn-danger:hover { background: hsl(4 72% 44%); }
+  .btn-ghost { background: transparent; border-color: transparent; color: hsl(var(--ink-soft)); }
+  .btn-ghost:hover { background: hsl(var(--surface-2)); color: hsl(var(--ink)); }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 600;
+    padding: 2px 8px; border-radius: 999px;
+    background: hsl(var(--surface-3)); color: hsl(var(--ink-soft));
+    letter-spacing: 0.01em;
+  }
+
+  .kbd {
+    font-family: 'Geist Mono', ui-monospace, monospace;
+    font-size: 10px; padding: 1px 5px;
+    border: 1px solid hsl(var(--hair));
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    background: hsl(var(--surface));
+    color: hsl(var(--ink-soft));
+  }
+
+  .row-action-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 500;
+    padding: 4px 10px; border-radius: 6px;
+    border: 1px solid hsl(var(--hair));
+    background: hsl(var(--surface));
+    color: hsl(var(--ink));
+    white-space: nowrap;
+  }
+  .row-action-btn:hover { background: hsl(var(--surface-2)); border-color: hsl(var(--ink-faint)); }
+  .row-action-btn-primary { background: hsl(var(--ink)); color: hsl(var(--surface)); border-color: hsl(var(--ink)); }
+  .row-action-btn-primary:hover { background: hsl(220 20% 18%); }
+  .dark .row-action-btn-primary:hover { background: hsl(220 15% 82%); }
+  .row-action-btn-danger { background: hsl(var(--danger)); color: white; border-color: hsl(var(--danger)); }
+  .row-action-btn-accent { background: hsl(var(--accent)); color: white; border-color: hsl(var(--accent)); }
+
+  .sidebar-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 10px; border-radius: 7px;
+    font-size: 13px; color: hsl(var(--ink-soft));
+    cursor: pointer;
+    transition: background 100ms, color 100ms;
+  }
+  .sidebar-item:hover { background: hsl(var(--surface-2)); color: hsl(var(--ink)); }
+  .sidebar-item.active {
+    background: hsl(var(--ink));
+    color: hsl(var(--surface));
+  }
+  .sidebar-item.active .sidebar-badge { background: hsla(0,0%,50%,0.25); color: hsl(var(--surface)); }
+
+  .sidebar-badge {
+    margin-left: auto;
+    font-size: 10px; font-weight: 600;
+    padding: 1px 6px; border-radius: 999px;
+    background: hsl(var(--surface-3));
+    color: hsl(var(--ink-soft));
+  }
+  .sidebar-badge.danger { background: hsl(var(--danger-soft)); color: hsl(var(--danger)); }
+
+  .sidebar-group {
+    font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: hsl(var(--ink-faint));
+    padding: 14px 10px 6px;
+  }
+
+  /* Alert strip */
+  .alert-strip {
+    background: linear-gradient(90deg, hsl(var(--danger-soft)), hsl(var(--warn-soft)));
+    border: 1px solid hsl(var(--danger)/0.3);
+    border-left: 3px solid hsl(var(--danger));
+  }
+
+  /* Subtle card */
+  .card {
+    background: hsl(var(--surface));
+    border: 1px solid hsl(var(--hair));
+    border-radius: 12px;
+  }
+  .card-soft {
+    background: hsl(var(--surface-2));
+    border: 1px solid hsl(var(--hair-soft));
+    border-radius: 12px;
+  }
+
+  [data-legacy="true"] .shell-new { display: none; }
+  [data-legacy="false"] .shell-legacy { display: none; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="customer-data.js"></script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useMemo, useEffect } = React;
+
+/* ──────────────────────────────────────────
+   Tweak state — persisted in the page file.
+   ────────────────────────────────────────── */
+const TWEAKS = /*EDITMODE-BEGIN*/{
+  "role": "gsm_gm",
+  "killSwitch": true,
+  "alertIntensity": "gentle",
+  "showArrivedBanner": true,
+  "showOnTheWay": true,
+  "showHotLead": true,
+  "showSlaBreach": true,
+  "compactTable": false,
+  "secondaryLine": "vehicle_mileage",
+  "messagingLayout": "tabs",
+  "fileLayout": "classic",
+  "topBarHeight": 105,
+  "topBarBg": "#00407f",
+  "topBarText": "#ffffff",
+  "topBarStyle": "gradient-3stop",
+  "topBarBg2": "#00407f",
+  "topBarShimmer": true,
+  "topBarShimmerSpeed": 8,
+  "topBarShimmerStyle": "hartecash",
+  "customerFileAccent": "#005bb5",
+  "customerFileAccent2": "#005bb5",
+  "uiScale": 86,
+  "textScale": 100,
+  "mainScale": 117,
+  "mainScaleGlobal": 100,
+  "channels": {
+    "smsTwoWay": true,
+    "emailTwoWay": true,
+    "aiPhone": true
+  }
+}/*EDITMODE-END*/;
+
+/* ──────────────────────────────────────────
+   Row "secondary line" presets.
+   Dealers pick the pattern shown under the
+   customer name in lead rows.
+   ────────────────────────────────────────── */
+const SECONDARY_PRESETS = {
+  vehicle_mileage:     { label: "Vehicle · Mileage",        fmt: (l) => `${l.vehicle} · ${l.mileage} mi` },
+  vehicle_mileage_vin: { label: "Vehicle · Mileage · VIN",  fmt: (l) => `${l.vehicle} · ${l.mileage} mi · ${l.vin}` },
+  vehicle_phone:       { label: "Vehicle · Phone",          fmt: (l) => `${l.vehicle} · ${l.phone}` },
+  vin_only:            { label: "VIN only",                 fmt: (l) => l.vin },
+};
+const formatSecondary = (l, mode) => (SECONDARY_PRESETS[mode] || SECONDARY_PRESETS.vehicle_mileage).fmt(l);
+window.SECONDARY_PRESETS = SECONDARY_PRESETS;
+window.formatSecondary   = formatSecondary;
+
+/* ──────────────────────────────────────────
+   Role definitions — each role gets a
+   different default home + sidebar shape.
+   ────────────────────────────────────────── */
+const ROLES = {
+  gsm_gm:        { label: "GSM / GM",             name: "Marcus Hartman",  initials: "MH", home: "today" },
+  owner:         { label: "Owner",                name: "Eleanor Harte",   initials: "EH", home: "today" },
+  sales_director:{ label: "Sales Director",       name: "Priya Shah",      initials: "PS", home: "today" },
+  sales_mgr_appraiser: { label: "Sales Mgr / Appraiser", name: "Ray Cordell", initials: "RC", home: "appraiser-queue" },
+  used_car_mgr:  { label: "Used Car Manager",     name: "Devon Reyes",     initials: "DR", home: "appraiser-queue" },
+  admin:         { label: "Admin",                name: "Sam Bridger",     initials: "SB", home: "today" },
+  bdc:           { label: "BDC Rep",              name: "Tasha Bell",      initials: "TB", home: "bdc-queue" },
+  appraiser:     { label: "Appraiser",            name: "Luis Okafor",     initials: "LO", home: "appraiser-queue" },
+  receptionist:  { label: "Receptionist",         name: "Jamie Park",      initials: "JP", home: "accepted-appts" },
+  super_admin:   { label: "Super Admin",          name: "Ken",             initials: "KN", email: "ken@ken.cc", home: "tenants" },
+};
+
+/* Icons — small inline SVGs, no library. */
+const Icon = {
+  home:     (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1Z" transform="translate(-1 0)"/></svg>,
+  inbox:    (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11Z"/></svg>,
+  flame:    (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M8.5 14.5A2.5 2.5 0 0 0 11 17c1.4 0 2.5-1.1 2.5-2.5 0-1.4-1-2.5-3-4.5-2 2-3 3.1-3 4.5Z"/><path d="M12 2c1 2.5-1 4-1 4 0 0-2 1-2 3.5 0 2.5 2 4 2 4s-1-4.5 3-6c0 0 .5 2 2 3 0 1-3 2.5-1 4.5C13 15.5 18 13 18 8.5 18 5 14 3 12 2Z"/></svg>,
+  gauge:    (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M12 14 8 10"/><path d="M20 12a8 8 0 1 0-16 0"/></svg>,
+  calendar: (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>,
+  checkin:  (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5M15 12H3"/></svg>,
+  chart:    (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-7"/></svg>,
+  equity:   (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>,
+  voice:    (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1M12 18v3"/></svg>,
+  store:    (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M3 9l1.5-5h15L21 9M3 9h18v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9ZM3 9c0 1.7 1.3 3 3 3s3-1.3 3-3M9 9c0 1.7 1.3 3 3 3s3-1.3 3-3M15 9c0 1.7 1.3 3 3 3s3-1.3 3-3"/></svg>,
+  cog:      (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10 3.1V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8 1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>,
+  users:    (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+  cc:       (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>,
+  bell:     (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>,
+  search:   (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>,
+  phone:    (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M22 16.9v3a2 2 0 0 1-2.2 2 20 20 0 0 1-8.6-3 20 20 0 0 1-6-6 20 20 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 3a2 2 0 0 1-.5 2L8 10.1a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c1 .3 2 .6 3 .7a2 2 0 0 1 1.7 2Z"/></svg>,
+  msg:      (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg>,
+  check:    (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="20 6 9 17 4 12"/></svg>,
+  x:        (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M18 6 6 18M6 6l12 12"/></svg>,
+  dollar:   (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
+  car:      (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M5 17h14M5 17a2 2 0 1 1 4 0M15 17a2 2 0 1 0 4 0M3 13l1.5-5.5A2 2 0 0 1 6.5 6h11a2 2 0 0 1 2 1.5L21 13v4H3Z"/></svg>,
+  arrow:    (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M5 12h14M13 5l7 7-7 7"/></svg>,
+  clock:    (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>,
+  lock:     (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
+  pin:      (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M20 10c0 6-8 13-8 13s-8-7-8-13a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>,
+  sparkle:  (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8"/></svg>,
+  eye:      (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z"/><circle cx="12" cy="12" r="3"/></svg>,
+  wrench:   (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M14.7 6.3a4 4 0 0 0 5 5L21 13l-8 8a2.8 2.8 0 0 1-4-4l8-8 1.7-1.7Z"/></svg>,
+  image:    (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>,
+  shield:   (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>,
+  doc:      (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h8M8 17h5"/></svg>,
+  link:     (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 1 0-7-7l-1.8 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 1 0 7 7l1.8-1.7"/></svg>,
+  gift:     (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><path d="M12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7ZM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7Z"/></svg>,
+  logout:   (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><path d="M21 12H9"/></svg>,
+  panelLeft:   (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg>,
+  crown:       (p) => <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" {...p}><path d="M2 7l4 8 6-10 6 10 4-8v13H2V7z"/></svg>,
+  moon:        (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>,
+  sun:         (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>,
+  grid:        (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...p}><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>,
+  chevronDown: (p) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="6 9 12 15 18 9"/></svg>,
+};
+
+/* ──────────────────────────────────────────
+   Mock leads
+   ────────────────────────────────────────── */
+const LEADS = [
+  { id: 1, vin: "4S4BTGKD2L3247891", name: "Jenna Whitcomb", vehicle: "2020 Subaru Outback", mileage: "68,400",
+    phone: "(313) 555-0198", offer: 18400, status: "arrived", ageHours: 0.1,
+    score: 94, scoreLabel: "Hot", nextAction: "Greet now",
+    appt: "10:00 AM", store: "Hartecash Woodward",
+    note: "JUST ARRIVED — 2 minutes ago" },
+
+  { id: 2, vin: "1HGCV1F34KA056789", name: "Marcus Lee", vehicle: "2019 Honda Accord", mileage: "54,200",
+    phone: "(248) 555-0144", offer: 16750, status: "on_way", ageHours: 0.3,
+    score: 88, scoreLabel: "Hot", nextAction: "Prep file",
+    appt: "10:30 AM", store: "Hartecash Woodward",
+    note: "Tapped 'on my way' · ETA ~20 min" },
+
+  { id: 3, vin: "2T3F1RFV8MW123456", name: "Priya Ramesh", vehicle: "2021 Toyota RAV4", mileage: "41,900",
+    phone: "(586) 555-0177", offer: 22100, status: "accepted", ageHours: 2.1,
+    score: 82, scoreLabel: "Hot", nextAction: "Book appointment",
+    appt: null, store: "Hartecash Telegraph" },
+
+  { id: 4, vin: "1FTEW1E53JFA54321", name: "Derek Obi", vehicle: "2018 Ford F-150", mileage: "89,500",
+    phone: "(734) 555-0132", offer: null, estOffer: 24500, status: "inspected", ageHours: 4.5,
+    score: 76, scoreLabel: "Warm", nextAction: "Make offer",
+    appt: null, store: "Hartecash Woodward" },
+
+  { id: 5, vin: "3GNAXKEV0LS678901", name: "Sarah Klein", vehicle: "2020 Chevy Equinox", mileage: "62,100",
+    phone: "(313) 555-0156", offer: null, estOffer: 15800, status: "contacted", ageHours: 6.2,
+    score: 68, scoreLabel: "Warm", nextAction: "Follow up",
+    appt: null, store: "Hartecash Telegraph" },
+
+  { id: 6, vin: "1N4AL3AP7HC112233", name: "Tom Benedetti", vehicle: "2017 Nissan Altima", mileage: "94,800",
+    phone: "(248) 555-0189", offer: null, estOffer: 9200, status: "new", ageHours: 26.0,
+    score: 52, scoreLabel: "SLA Breach", nextAction: "Call now",
+    appt: null, store: "Hartecash Woodward", slaBreached: true },
+
+  { id: 7, vin: "KM8J3CAL3NU445566", name: "Ana Morales", vehicle: "2022 Hyundai Tucson", mileage: "28,300",
+    phone: "(586) 555-0143", offer: null, estOffer: 21400, status: "new", ageHours: 1.2,
+    score: 71, scoreLabel: "Warm", nextAction: "Call",
+    appt: null, store: "Hartecash Telegraph" },
+
+  { id: 8, vin: "1C4RJFBG9KC778899", name: "Robert Hwang", vehicle: "2019 Jeep Grand Cherokee", mileage: "71,200",
+    phone: "(313) 555-0112", offer: 19900, status: "purchase_complete", ageHours: 50,
+    score: null, scoreLabel: "Closed", nextAction: "—",
+    appt: null, store: "Hartecash Woodward" },
+
+  { id: 9, vin: "JM3KE4DY4G0334455", name: "Denise Park", vehicle: "2016 Mazda CX-5", mileage: "112,400",
+    phone: "(734) 555-0167", offer: null, estOffer: 6400, status: "dead", ageHours: 120,
+    score: null, scoreLabel: "Dead", nextAction: "—",
+    appt: null, store: "Hartecash Telegraph" },
+
+  { id: 10, vin: "5XYP34HC3MG987654", name: "Kevin Oduya", vehicle: "2021 Kia Telluride", mileage: "35,600",
+    phone: "(248) 555-0129", offer: null, estOffer: 31500, status: "new", ageHours: 0.5,
+    score: 79, scoreLabel: "Warm", nextAction: "Call",
+    appt: null, store: "Hartecash Woodward" },
+];
+
+const STATUS_META = {
+  arrived:  { label: "Arrived", cls: "danger-soft", dot: "danger-bg" },
+  on_way:   { label: "On the way", cls: "warn-soft", dot: "warn-bg" },
+  new:      { label: "New", cls: "bg-surface-3 ink-soft", dot: "bg-gray-400" },
+  contacted:{ label: "Contacted", cls: "accent-soft-bg accent-text", dot: "accent-bg" },
+  inspected:{ label: "Inspected", cls: "accent-soft-bg accent-text", dot: "accent-bg" },
+  accepted: { label: "Offer accepted", cls: "success-soft", dot: "success-bg" },
+  purchase_complete: { label: "Purchased", cls: "success-soft", dot: "success-bg" },
+  dead:     { label: "Dead", cls: "bg-surface-3 ink-faint", dot: "bg-gray-300" },
+};
+
+/* ──────────────────────────────────────────
+   Sidebar per role
+   ────────────────────────────────────────── */
+function sidebarForRole(role) {
+  const common = {
+    Work: [
+      { id: "today", label: "Today", icon: Icon.home },
+    ],
+  };
+
+  if (role === "admin") {
+    return {
+      Work: [
+        { id: "today", label: "Today", icon: Icon.home },
+        { id: "submissions", label: "All Leads", icon: Icon.inbox, badge: 84 },
+        { id: "accepted-appts", label: "Appointments", icon: Icon.calendar, badge: 7 },
+      ],
+      "Setup · Dealer": [
+        { id: "appearance", label: "Appearance & Access", icon: Icon.sparkle },
+        { id: "channels", label: "Channels", icon: Icon.msg },
+        { id: "site-config", label: "Branding", icon: Icon.sparkle },
+        { id: "locations", label: "Locations", icon: Icon.pin },
+      ],
+    };
+  }
+
+  if (role === "receptionist") {
+    return {
+      Work: [
+        { id: "today", label: "Today", icon: Icon.home },
+        { id: "accepted-appts", label: "Appointments", icon: Icon.calendar, badge: 7 },
+        { id: "inspection-checkin", label: "Check-In", icon: Icon.checkin },
+      ],
+    };
+  }
+
+  if (role === "bdc-queue") {
+    return {
+      Work: [
+        { id: "today", label: "Today", icon: Icon.home },
+        { id: "bdc-queue", label: "Priority Queue", icon: Icon.flame, badge: 12, badgeDanger: true },
+        { id: "submissions", label: "All Leads", icon: Icon.inbox, badge: 84 },
+        { id: "accepted-appts", label: "Appointments", icon: Icon.calendar, badge: 7 },
+      ],
+      Tools: [
+        { id: "my-lead-link", label: "My Lead Link", icon: Icon.arrow },
+      ],
+    };
+  }
+
+  if (role === "appraiser-queue") {
+    return {
+      Work: [
+        { id: "today", label: "Today", icon: Icon.home },
+        { id: "appraiser-queue", label: "Appraiser Queue", icon: Icon.gauge, badge: 6, badgeDanger: true },
+        { id: "submissions", label: "All Leads", icon: Icon.inbox, badge: 84 },
+      ],
+    };
+  }
+
+  if (role === "used_car_mgr" || role === "sales_mgr_appraiser") {
+    return {
+      Work: [
+        { id: "today", label: "Today", icon: Icon.home },
+        { id: "submissions", label: "All Leads", icon: Icon.inbox, badge: 84 },
+        { id: "bdc-queue", label: "Priority Queue", icon: Icon.flame, badge: 12 },
+        { id: "appraiser-queue", label: "Appraiser Queue", icon: Icon.gauge, badge: 6, badgeDanger: true },
+        { id: "accepted-appts", label: "Appointments", icon: Icon.calendar, badge: 7 },
+      ],
+      Grow: [
+        { id: "equity-mining", label: "Equity Mining", icon: Icon.equity },
+        { id: "voice-ai", label: "Voice AI", icon: Icon.voice },
+      ],
+      Measure: [
+        { id: "executive", label: "Performance", icon: Icon.chart },
+        { id: "reports", label: "Reports", icon: Icon.chart },
+      ],
+    };
+  }
+
+  if (role === "gsm_gm" || role === "owner" || role === "sales_director") {
+    return {
+      Work: [
+        { id: "today", label: "Today", icon: Icon.home },
+      ],
+      Queues: [
+        { id: "submissions", label: "All Leads", icon: Icon.inbox, badge: 4 },
+        { id: "appraiser-queue", label: "Appraiser Queue", icon: Icon.gauge, badge: 2, badgeDanger: true },
+        { id: "accepted-appts", label: "Appointments", icon: Icon.calendar, badge: 3 },
+        { id: "bdc-queue", label: "BDC Priority Queue", icon: Icon.flame },
+      ],
+      "Floor Tools": [
+        { id: "inspection-checkin", label: "Inspection Check-In", icon: Icon.checkin },
+        { id: "service-quick-entry", label: "Service Quick Entry", icon: Icon.wrench },
+        { id: "image-inventory", label: "Vehicle Images", icon: Icon.image },
+      ],
+      Grow: [
+        { id: "equity-mining", label: "Equity Mining", icon: Icon.equity },
+        { id: "voice-ai", label: "Voice AI", icon: Icon.voice },
+        { id: "wholesale-marketplace", label: "Wholesale", icon: Icon.store },
+      ],
+      Measure: [
+        { id: "executive", label: "Performance", icon: Icon.chart },
+        { id: "gm-hud", label: "GM HUD", icon: Icon.dollar },
+        { id: "reports", label: "Reports", icon: Icon.chart },
+        { id: "compliance", label: "Compliance", icon: Icon.shield },
+      ],
+      "Setup · Dealer": [
+        { id: "appearance", label: "Appearance & Access", icon: Icon.sparkle },
+        { id: "channels", label: "Channels", icon: Icon.msg },
+        { id: "site-config", label: "Branding", icon: Icon.sparkle },
+        { id: "locations", label: "Locations", icon: Icon.pin },
+      ],
+      "Setup · Process": [
+        { id: "offer-settings", label: "Offer Logic", icon: Icon.cog },
+        { id: "form-config", label: "Lead Form", icon: Icon.doc },
+        { id: "inspection-config", label: "Inspection Sheet", icon: Icon.doc },
+      ],
+      My: [
+        { id: "my-lead-link", label: "My Lead Link", icon: Icon.link },
+        { id: "my-referrals", label: "My Referrals", icon: Icon.gift },
+      ],
+    };
+  }
+
+  // super_admin
+  return {
+    Platform: [
+      { id: "tenants", label: "Tenants", icon: Icon.store, badge: 24 },
+      { id: "pricing-model", label: "Pricing Model", icon: Icon.dollar },
+      { id: "platform-billing", label: "Platform Billing", icon: Icon.cc },
+    ],
+    Override: [
+      { id: "today", label: "View as Dealer", icon: Icon.home },
+      { id: "killswitch", label: "UI Kill Switch", icon: Icon.lock },
+    ],
+  };
+}
+
+/* ──────────────────────────────────────────
+   Small reusable bits
+   ────────────────────────────────────────── */
+const Pill = ({ children, className = "" }) => (
+  <span className={`pill ${className}`}>{children}</span>
+);
+
+const StatusPill = ({ status }) => {
+  const m = STATUS_META[status] || { label: status, cls: "pill", dot: "bg-gray-400" };
+  return (
+    <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2 py-0.5 rounded-full ${m.cls}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${m.dot} ${status === "arrived" ? "pulse-dot" : ""}`} />
+      {m.label}
+    </span>
+  );
+};
+
+const formatAge = (h) => {
+  if (h < 1) return `${Math.round(h * 60)}m`;
+  if (h < 24) return `${Math.round(h)}h`;
+  return `${Math.floor(h / 24)}d`;
+};
+
+const nextActionFor = (lead) => {
+  if (lead.status === "arrived") return { label: "Greet now", variant: "danger", icon: Icon.arrow };
+  if (lead.status === "on_way") return { label: "Prep file", variant: "primary", icon: Icon.arrow };
+  if (lead.status === "accepted") return { label: "Book appt", variant: "primary", icon: Icon.calendar };
+  if (lead.status === "inspected") return { label: "Make offer", variant: "accent", icon: Icon.dollar };
+  if (lead.status === "contacted") return { label: "Follow up", variant: "ghost", icon: Icon.phone };
+  if (lead.status === "new") return { label: "Call", variant: "primary", icon: Icon.phone };
+  if (lead.status === "purchase_complete") return { label: "View", variant: "ghost", icon: null };
+  if (lead.status === "dead") return { label: "Revive", variant: "ghost", icon: null };
+  return { label: "Open", variant: "ghost", icon: null };
+};
+</script>
+
+<script type="text/babel" data-presets="react">
+/* ──────────────────────────────────────────
+   HEADER (new)
+   ────────────────────────────────────────── */
+function hexToRgba(hex, alpha = 1) {
+  const h = (hex || "").replace("#", "");
+  if (h.length !== 6 && h.length !== 3) return hex;
+  const full = h.length === 3 ? h.split("").map(c => c + c).join("") : h;
+  const r = parseInt(full.slice(0, 2), 16);
+  const g = parseInt(full.slice(2, 4), 16);
+  const b = parseInt(full.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function AppHeader({ role, setRole, setActive, alertCount, topBarHeight = 48, topBarBg, topBarText, topBarStyle = "solid", topBarBg2, topBarShimmer, topBarShimmerSpeed = 3.2, topBarShimmerStyle = "sheen", darkMode = false }) {
+  const r = ROLES[role];
+  const [pushPerm, setPushPerm] = useState(() => {
+    try { return typeof Notification !== "undefined" ? Notification.permission : "default"; }
+    catch { return "default"; }
+  });
+  const [pushHelpOpen, setPushHelpOpen] = useState(false);
+  const requestPush = async () => {
+    try {
+      if (typeof Notification === "undefined") { setPushPerm("denied"); return; }
+      const res = await Notification.requestPermission();
+      setPushPerm(res);
+    } catch { setPushPerm("denied"); }
+  };
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (h < 12) return "Good morning";
+    if (h < 17) return "Good afternoon";
+    return "Good evening";
+  })();
+  let background;
+  if (topBarStyle === "gradient") {
+    background = `linear-gradient(90deg, ${topBarBg || "#1e40af"} 0%, ${topBarBg2 || "#3b82f6"} 100%)`;
+  } else if (topBarStyle === "gradient-diagonal") {
+    background = `linear-gradient(135deg, ${topBarBg || "#1e40af"} 0%, ${topBarBg2 || "#3b82f6"} 100%)`;
+  } else if (topBarStyle === "gradient-3stop") {
+    // Hartecash: same hue at 100% → 80% → 60% opacity
+    const c = topBarBg || "#00407f";
+    background = `linear-gradient(to right, ${c} 0%, ${hexToRgba(c, 0.8)} 50%, ${hexToRgba(c, 0.6)} 100%), ${topBarBg2 || "#0f172a"}`;
+  } else {
+    background = topBarBg || undefined;
+  }
+  const shimmerClass = topBarShimmer
+    ? (topBarShimmerStyle === "hartecash" ? " topbar-shimmer-hartecash topbar-hairline relative overflow-hidden" : " topbar-shimmer relative overflow-hidden")
+    : "";
+  const headerClass = "sticky top-0 z-40 border-b hair" + shimmerClass;
+  return (
+    <header className={headerClass} style={{ background, color: topBarText || undefined, "--shimmer-speed": topBarShimmerSpeed + "s" }}>
+      <div className="px-3 md:px-5 flex items-center justify-between gap-2 relative z-10" style={{ height: topBarHeight + "px" }}>
+        {/* LEFT: sidebar toggle, logo, greeting */}
+        <div className="flex items-center gap-2 md:gap-4 min-w-0">
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent("__toggle_sidebar"))}
+            className="opacity-70 hover:opacity-100 hover:bg-white/10 rounded-md h-7 w-7 flex items-center justify-center transition-colors shrink-0"
+            style={{ color: topBarText || undefined }}
+            aria-label="Toggle sidebar"
+            title="Toggle sidebar"
+          >
+            <Icon.panelLeft className="w-4 h-4" />
+          </button>
+
+          {/* Harte-style logo mark */}
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="h-12 md:h-16 px-3 md:px-5 rounded bg-white/95 flex items-center text-[26px] md:text-[36px] font-black tracking-tight" style={{ color: topBarBg || "#00407f" }}>
+              Harte
+            </div>
+            <div className="hidden sm:flex flex-col leading-none">
+              <span className="text-[12px] font-bold tracking-[0.18em] opacity-80" style={{ color: topBarText || undefined }}>AUTO GROUP</span>
+            </div>
+          </div>
+
+          <div className="hidden sm:block h-8 w-px bg-white/15 shrink-0"></div>
+
+          {/* Greeting + super admin pill */}
+          <div className="min-w-0 flex flex-col leading-tight">
+            <span className="text-[17px] md:text-[22px] font-semibold tracking-tight truncate" style={{ color: topBarText || undefined }}>
+              {greeting}, {r.name.split(" ")[0]}
+            </span>
+            <div className="flex items-center gap-1.5 mt-1.5">
+              {r.label.toLowerCase().includes("admin") || role === "admin" ? (
+                <span className="inline-flex items-center gap-1 text-[12px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30">
+                  <Icon.crown className="w-3 h-3" />
+                  SUPER ADMIN
+                </span>
+              ) : (
+                <span className="text-[12px] px-2.5 py-0.5 rounded-full bg-white/10 text-white/70 font-medium border border-white/10">
+                  {r.label}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT: dealer name, app switcher, dark toggle, push pill, logout */}
+        <div className="flex items-center gap-1 md:gap-2 shrink-0">
+          <div className="hidden md:flex items-center gap-2 pr-2 mr-1 border-r border-white/10">
+            <span className="text-[13px] font-medium truncate max-w-[200px]" style={{ color: topBarText || undefined, opacity: 0.7 }}>
+              Harte Auto Group
+            </span>
+          </div>
+
+          {/* App switcher */}
+          <button
+            className="hidden md:inline-flex items-center gap-1.5 h-9 px-3 rounded-md bg-white/10 hover:bg-white/15 border border-white/10 text-[13px] font-medium transition-colors"
+            style={{ color: topBarText || undefined }}
+          >
+            <Icon.grid className="w-3.5 h-3.5" />
+            Autocurb
+            <Icon.chevronDown className="w-3.5 h-3.5 opacity-60" />
+          </button>
+
+          <div className="hidden sm:block h-5 w-px bg-white/15 mx-0.5"></div>
+
+          {/* Dark mode toggle — icon shows opposite of current state */}
+          <button
+            className="h-9 w-9 rounded-md hover:bg-white/10 flex items-center justify-center opacity-70 hover:opacity-100 transition-all"
+            style={{ color: topBarText || undefined }}
+            aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+            title={(darkMode ? "Switch to light mode" : "Switch to dark mode") + " (⌘⇧D)"}
+            onClick={() => window.dispatchEvent(new CustomEvent("__toggle_darkmode"))}
+          >
+            {darkMode ? <Icon.sun className="w-5 h-5" /> : <Icon.moon className="w-5 h-5" />}
+          </button>
+
+          {/* Enable push — only shown when permission is "default";
+              once granted, disappears; if denied, shows a muted bell for recovery */}
+          {pushPerm === "default" && (
+            <button
+              onClick={requestPush}
+              className="hidden sm:inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-white hover:bg-white/90 text-[11px] font-medium shadow-sm transition-colors"
+              style={{ color: topBarBg || "#00407f" }}
+              title="Enable push notifications"
+            >
+              <Icon.bell className="w-3 h-3" />
+              Enable push
+            </button>
+          )}
+          {pushPerm === "denied" && (
+            <button
+              className="h-9 w-9 rounded-md hover:bg-white/10 flex items-center justify-center opacity-60 hover:opacity-100 transition-all relative"
+              style={{ color: topBarText || undefined }}
+              title="Push notifications are blocked — enable them in your browser settings"
+              onClick={() => setPushHelpOpen(true)}
+            >
+              <Icon.bell className="w-5 h-5" />
+              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-amber-400 border border-white/40"></span>
+            </button>
+          )}
+
+          {/* Role switcher — Super Admin (ken@ken.cc) only */}
+          {role === "super_admin" && (
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              className="hidden lg:inline-block bg-white/10 border border-white/15 rounded-md h-9 px-2 text-[13px] outline-none hover:bg-white/15 cursor-pointer"
+              style={{ color: topBarText || undefined }}
+              title="Switch role (super admin only)"
+            >
+              {Object.entries(ROLES).map(([k, v]) => <option key={k} value={k} className="text-black">{v.label}</option>)}
+            </select>
+          )}
+
+          {/* Logout */}
+          <button
+            className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md hover:bg-white/10 text-[13px] font-medium text-white/60 hover:text-white transition-all"
+            style={{ color: topBarText || undefined }}
+            title="Logout"
+          >
+            <Icon.logout className="w-5 h-5" />
+            <span className="hidden md:inline">Logout</span>
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function LegacyHeader({ role, setRole }) {
+  const r = ROLES[role];
+  return (
+    <header className="relative sticky top-0 z-40 overflow-hidden legacy-header shadow-lg">
+      <div className="legacy-grid absolute inset-0 opacity-20"></div>
+      <div className="relative px-5 py-3 flex items-center justify-between gap-2 text-white">
+        <div className="flex items-center gap-4 min-w-0">
+          <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center text-lg font-black">H</div>
+          <div className="hidden sm:block h-8 w-px bg-white/15"></div>
+          <div className="min-w-0 flex flex-col">
+            <span className="text-lg font-semibold tracking-tight">Good afternoon, {r.name.split(" ")[0]}</span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/70 font-medium border border-white/10 w-fit">{r.label}</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] text-white/60">Hartecash · Woodward</span>
+          {role === "super_admin" && (
+          <select
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            className="bg-white/10 border border-white/15 text-white rounded-lg h-8 px-2 text-[12px] outline-none"
+          >
+            {Object.entries(ROLES).map(([k, v]) => <option key={k} value={k} className="text-black">{v.label}</option>)}
+          </select>
+          )}
+        </div>
+      </div>
+      {pushHelpOpen && (
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/40 px-4"
+          onClick={() => setPushHelpOpen(false)}
+        >
+          <div
+            className="bg-white rounded-xl shadow-2xl border border-slate-200 max-w-sm w-full p-5 text-slate-900"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3 mb-3">
+              <div className="w-9 h-9 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0">
+                <Icon.bell className="w-4 h-4 text-amber-600" />
+              </div>
+              <div>
+                <div className="text-[14px] font-semibold">Push notifications are blocked</div>
+                <div className="text-[12px] text-slate-500 mt-0.5">Re-enable them in your browser:</div>
+              </div>
+            </div>
+            <ol className="text-[13px] text-slate-700 space-y-1.5 pl-5 list-decimal mb-4">
+              <li>Click the lock or info icon in your browser's address bar</li>
+              <li>Find "Notifications" in the permissions list</li>
+              <li>Change it to "Allow"</li>
+              <li>Reload this page</li>
+            </ol>
+            <div className="flex justify-end">
+              <button
+                className="h-8 px-3 rounded-md bg-slate-900 hover:bg-slate-800 text-white text-[12px] font-medium"
+                onClick={() => setPushHelpOpen(false)}
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </header>
+  );
+}
+
+/* ──────────────────────────────────────────
+   SIDEBAR (new)
+   ────────────────────────────────────────── */
+function Sidebar({ role, active, setActive, collapsed = false, sidebarAccess }) {
+  const rawGroups = sidebarForRole(role);
+  const isAdmin = role === "super_admin" || role === "gsm_gm" || role === "owner" || role === "sales_director" || role === "admin";
+  // Admin-only items — filter out for non-admin roles
+  const ADMIN_ONLY_IDS = new Set(["appearance"]);
+  // Per-role access overrides set by admins via Appearance & Access page
+  const access = (sidebarAccess && sidebarAccess[role]) || {};
+  const groups = Object.fromEntries(
+    Object.entries(rawGroups).map(([g, items]) => [
+      g,
+      items.filter(i => {
+        if (!isAdmin && ADMIN_ONLY_IDS.has(i.id)) return false;
+        // If an explicit override exists for this role+id, respect it; default = visible
+        if (Object.prototype.hasOwnProperty.call(access, i.id)) return access[i.id];
+        return true;
+      })
+    ]).filter(([, items]) => items.length > 0)
+  );
+  return (
+    <aside className={`${collapsed ? "w-[56px]" : "w-[220px]"} shrink-0 bg-surface-2 border-r hair-soft flex flex-col transition-[width] duration-200`}>
+      <nav className="flex-1 px-2 py-3 overflow-y-auto overflow-x-hidden">
+        {Object.entries(groups).map(([group, items]) => (
+          <div key={group}>
+            {!collapsed && <div className="sidebar-group">{group}</div>}
+            {collapsed && <div className="h-px bg-gray-200 my-2 mx-2"></div>}
+            <div className="space-y-0.5">
+              {items.map((item) => {
+                const I = item.icon;
+                return (
+                  <div
+                    key={item.id}
+                    className={`sidebar-item ${active === item.id ? "active" : ""} ${collapsed ? "justify-center px-0" : ""}`}
+                    onClick={() => setActive(item.id)}
+                    title={collapsed ? item.label : undefined}
+                  >
+                    <I className="w-4 h-4 shrink-0" />
+                    {!collapsed && <span className="flex-1 min-w-0 truncate">{item.label}</span>}
+                    {!collapsed && item.badge && (
+                      <span className={`sidebar-badge ${item.badgeDanger ? "danger" : ""}`}>{item.badge}</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </nav>
+      {!collapsed && (
+        <div className="px-4 py-2.5 border-t hair-soft text-[10px] ink-faint">
+          Autocurb.io
+        </div>
+      )}
+    </aside>
+  );
+}
+
+function LegacySidebar({ role, active, setActive }) {
+  const groups = sidebarForRole(role);
+  // Simulate the busier old sidebar
+  return (
+    <aside className="w-[240px] shrink-0 bg-white border-r hair flex flex-col">
+      <nav className="flex-1 px-2 py-2 overflow-auto">
+        {Object.entries(groups).map(([group, items]) => (
+          <div key={group}>
+            <div className="text-[10px] font-bold uppercase tracking-[0.12em] text-gray-400 px-3 pt-4 pb-1.5">{group}</div>
+            <div className="space-y-0.5">
+              {items.map((item) => {
+                const I = item.icon;
+                const isActive = active === item.id;
+                return (
+                  <div
+                    key={item.id}
+                    className={`flex items-center gap-2.5 px-3 py-2 text-[13px] rounded-md cursor-pointer ${isActive ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-700 hover:bg-gray-50"}`}
+                    onClick={() => setActive(item.id)}
+                  >
+                    <I className="w-4 h-4 shrink-0" />
+                    <span>{item.label}</span>
+                    {item.badge && (
+                      <span className={`ml-auto text-[10px] font-bold px-1.5 rounded ${item.badgeDanger ? "bg-red-500 text-white" : "bg-gray-200 text-gray-700"}`}>{item.badge}</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </nav>
+    </aside>
+  );
+}
+
+Object.assign(window, { AppHeader, LegacyHeader, Sidebar, LegacySidebar });
+</script>
+
+<script type="text/babel" data-presets="react">
+/* ──────────────────────────────────────────
+   HOME VIEWS — per role
+   ────────────────────────────────────────── */
+function KpiTile({ label, value, sub, tone = "neutral" }) {
+  const toneMap = {
+    neutral: "ink",
+    success: "success-text",
+    warn: "warn-text",
+    danger: "danger-text",
+    accent: "accent-text",
+  };
+  return (
+    <div className="card p-4">
+      <div className="text-[10px] uppercase tracking-[0.1em] ink-faint font-semibold">{label}</div>
+      <div className={`text-2xl font-bold tracking-tight mt-1 ${toneMap[tone]}`}>{value}</div>
+      {sub && <div className="text-[11px] ink-soft mt-0.5">{sub}</div>}
+    </div>
+  );
+}
+
+function EyeButton({ onClick, title = "Open full customer file" }) {
+  return (
+    <button
+      onClick={(e) => { e.stopPropagation(); onClick && onClick(e); }}
+      title={title}
+      className="w-7 h-7 rounded-md flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 shrink-0 transition-colors"
+    >
+      <Icon.eye className="w-4 h-4" />
+    </button>
+  );
+}
+
+function ActionRow({ lead, primary = false, onOpen }) {
+  const next = nextActionFor(lead);
+  const IconComp = next.icon;
+  const variantCls = {
+    primary: "row-action-btn-primary",
+    accent: "row-action-btn-accent",
+    danger: "row-action-btn-danger",
+    ghost: "btn-ghost",
+  }[next.variant] || "";
+
+  return (
+    <div
+      className={`flex items-center gap-3 py-2.5 -mx-4 px-4 rounded ${primary ? "" : "border-t hair-soft"}`}
+    >
+      <div className="w-8 h-8 rounded-full bg-surface-3 flex items-center justify-center text-[11px] font-semibold ink-soft shrink-0">
+        {lead.name.split(" ").map(n => n[0]).join("")}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <div className="text-[13px] font-semibold ink truncate">{lead.name}</div>
+          <StatusPill status={lead.status} />
+        </div>
+        <div className="text-[11px] ink-soft truncate">
+          {lead.vehicle} · {lead.offer ? `$${lead.offer.toLocaleString()}` : (lead.estOffer ? `~$${lead.estOffer.toLocaleString()}` : "—")}
+          {lead.appt && ` · ${lead.appt}`}
+          {lead.note && <span className="ml-1 danger-text font-medium">· {lead.note}</span>}
+        </div>
+      </div>
+      <div className="text-right shrink-0">
+        <div className="text-[10px] ink-faint mono">{formatAge(lead.ageHours)}</div>
+      </div>
+      <EyeButton onClick={() => onOpen && onOpen(lead)} />
+      <button
+        onClick={(e) => e.stopPropagation()}
+        className={`row-action-btn ${variantCls} shrink-0`}
+      >
+        {IconComp && <IconComp className="w-3.5 h-3.5" />}
+        {next.label}
+      </button>
+    </div>
+  );
+}
+
+function TodayHome({ role, setActive, onOpen }) {
+  const r = ROLES[role];
+  const now = new Date();
+  const greeting = now.getHours() < 12 ? "Good morning" : now.getHours() < 17 ? "Good afternoon" : "Good evening";
+
+  const arrivedNow = LEADS.filter(l => l.status === "arrived");
+  const onTheirWay = LEADS.filter(l => l.status === "on_way");
+  const needsCall = LEADS.filter(l => ["new", "contacted"].includes(l.status) && !l.slaBreached).slice(0, 4);
+  const slaBreached = LEADS.filter(l => l.slaBreached);
+  const needsOffer = LEADS.filter(l => l.status === "inspected").slice(0, 2);
+  const appts = LEADS.filter(l => l.appt);
+
+  return (
+    <div className="max-w-[1100px] mx-auto px-6 py-8 space-y-8">
+      {/* Masthead */}
+      <div>
+        <div className="text-[12px] ink-faint mb-1">
+          {now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+        </div>
+        <h1 className="text-[28px] font-bold tracking-tight">{greeting}, {r.name.split(" ")[0]}.</h1>
+        <p className="ink-soft text-[14px] mt-0.5">
+          Here's what needs you today.
+        </p>
+      </div>
+
+      {/* Right-now strip — arrivals + on-way (only renders if something is happening) */}
+      {(arrivedNow.length > 0 || onTheirWay.length > 0) && (
+        <section>
+          <div className="flex items-baseline justify-between mb-2">
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.1em] ink-faint whitespace-nowrap">Right now</h2>
+            <span className="text-[11px] ink-faint whitespace-nowrap">Live updates</span>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {arrivedNow.map(l => (
+              <div
+                key={l.id}
+                onClick={() => onOpen && onOpen(l)}
+                className="card p-4 border-l-[3px] cursor-pointer hover:shadow"
+                style={{ borderLeftColor: "hsl(var(--danger))" }}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="w-2 h-2 rounded-full danger-bg pulse-dot" />
+                  <span className="text-[11px] font-bold uppercase tracking-wider danger-text">Just arrived</span>
+                  <span className="text-[10px] ink-faint mono ml-auto">{formatAge(l.ageHours)}</span>
+                </div>
+                <div className="text-[16px] font-semibold">{l.name}</div>
+                <div className="text-[12px] ink-soft mt-0.5">{l.vehicle} · ${l.offer?.toLocaleString()}</div>
+                <div className="flex gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    onClick={() => onOpen && onOpen(l)}
+                    className="row-action-btn row-action-btn-danger flex-1"
+                  >
+                    <Icon.arrow className="w-3.5 h-3.5" /> Greet now
+                  </button>
+                  <button onClick={() => onOpen && onOpen(l)} className="row-action-btn">Open file</button>
+                </div>
+              </div>
+            ))}
+            {onTheirWay.map(l => (
+              <div
+                key={l.id}
+                onClick={() => onOpen && onOpen(l)}
+                className="card p-4 border-l-[3px] cursor-pointer hover:shadow"
+                style={{ borderLeftColor: "hsl(var(--warn))" }}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <Icon.clock className="w-3 h-3 warn-text" />
+                  <span className="text-[11px] font-bold uppercase tracking-wider warn-text">On the way</span>
+                  <span className="text-[10px] ink-faint mono ml-auto">{formatAge(l.ageHours)}</span>
+                </div>
+                <div className="text-[16px] font-semibold">{l.name}</div>
+                <div className="text-[12px] ink-soft mt-0.5">{l.vehicle} · Appt {l.appt}</div>
+                <div className="flex gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    onClick={() => onOpen && onOpen(l)}
+                    className="row-action-btn row-action-btn-primary flex-1"
+                  >
+                    <Icon.arrow className="w-3.5 h-3.5" /> Prep file
+                  </button>
+                  <button onClick={() => onOpen && onOpen(l)} className="row-action-btn">Call</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* KPIs — quiet, 4 tiles */}
+      <section>
+        <div className="grid grid-cols-4 gap-3">
+          <KpiTile label="Today" value="3" sub="acquisitions" />
+          <KpiTile label="MTD Gross" value="$47.2k" sub="+12% vs last month" tone="success" />
+          <KpiTile label="Open leads" value="84" sub="12 need action" />
+          <KpiTile label="Avg response" value="38m" sub="goal < 2h" tone="success" />
+        </div>
+      </section>
+
+      {/* Action list — the meat */}
+      <section>
+        <div className="flex items-baseline justify-between mb-2">
+          <h2 className="text-[11px] font-semibold uppercase tracking-[0.1em] ink-faint">Do next</h2>
+          <button className="btn btn-ghost text-[11px]" onClick={() => setActive("submissions")}>
+            View all leads <Icon.arrow className="w-3 h-3" />
+          </button>
+        </div>
+
+        <div className="card px-4">
+          {/* SLA breaches first — they're red */}
+          {slaBreached.map((l, i) => (
+            <div
+              key={l.id}
+              className={`flex items-center gap-3 py-2.5 -mx-4 px-4 ${i > 0 ? "border-t hair-soft" : ""}`}
+            >
+              <div className="w-1 h-8 danger-bg rounded-full shrink-0"></div>
+              <div className="w-8 h-8 rounded-full bg-surface-3 flex items-center justify-center text-[11px] font-semibold shrink-0">
+                {l.name.split(" ").map(n => n[0]).join("")}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <div className="text-[13px] font-semibold">{l.name}</div>
+                  <span className="danger-soft text-[10px] font-bold px-1.5 py-0.5 rounded">SLA · {formatAge(l.ageHours)}</span>
+                </div>
+                <div className="text-[11px] ink-soft truncate">{l.vehicle} · ~${l.estOffer?.toLocaleString()}</div>
+              </div>
+              <EyeButton onClick={() => onOpen && onOpen(l)} />
+              <button
+                onClick={(e) => e.stopPropagation()}
+                className="row-action-btn row-action-btn-danger"
+              >
+                <Icon.phone className="w-3.5 h-3.5" /> Call now
+              </button>
+            </div>
+          ))}
+          {needsOffer.map((l, i) => <ActionRow key={l.id} lead={l} primary={slaBreached.length === 0 && i === 0} onOpen={onOpen} />)}
+          {needsCall.map((l) => <ActionRow key={l.id} lead={l} onOpen={onOpen} />)}
+        </div>
+      </section>
+
+      {/* Today's appointments (if any) */}
+      {appts.length > 0 && (
+        <section>
+          <div className="flex items-baseline justify-between mb-2">
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.1em] ink-faint">Appointments today</h2>
+            <span className="text-[11px] ink-faint">{appts.length} scheduled</span>
+          </div>
+          <div className="card divide-y hair-soft">
+            {appts.map(l => (
+              <div
+                key={l.id}
+                onClick={() => onOpen && onOpen(l)}
+                className="flex items-center gap-3 py-2.5 px-4 cursor-pointer hover:bg-[hsl(var(--surface-2))]"
+              >
+                <div className="mono text-[13px] font-semibold w-16">{l.appt}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[13px] font-medium">{l.name}</div>
+                  <div className="text-[11px] ink-soft">{l.vehicle}</div>
+                </div>
+                <StatusPill status={l.status} />
+                <button
+                  onClick={(e) => { e.stopPropagation(); onOpen && onOpen(l); }}
+                  className="btn btn-ghost"
+                >Open</button>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}
+
+function ReceptionHome({ onOpen }) {
+  const appts = LEADS.filter(l => l.appt || l.status === "arrived" || l.status === "on_way");
+  return (
+    <div className="max-w-[900px] mx-auto px-6 py-8 space-y-8">
+      <div>
+        <h1 className="text-[28px] font-bold tracking-tight">Front desk</h1>
+        <p className="ink-soft text-[14px] mt-0.5">Check customers in and keep the schedule moving.</p>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3">
+        <KpiTile label="Today" value="7" sub="appointments" />
+        <KpiTile label="Right now" value="1" sub="arrived" tone="danger" />
+        <KpiTile label="On the way" value="1" sub="customer" tone="warn" />
+      </div>
+
+      <section>
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.1em] ink-faint mb-2">Today's schedule</h2>
+        <div className="card divide-y hair-soft">
+          {appts.map(l => (
+            <div
+              key={l.id}
+              onClick={() => onOpen && onOpen(l)}
+              className={`flex items-center gap-3 py-3 px-4 cursor-pointer hover:bg-[hsl(var(--surface-2))] ${l.status === "arrived" ? "arrived-row" : ""}`}
+            >
+              <div className="mono text-[13px] font-semibold w-16">{l.appt || "—"}</div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[13px] font-medium flex items-center gap-2">
+                  {l.name}
+                  <StatusPill status={l.status} />
+                </div>
+                <div className="text-[11px] ink-soft">{l.vehicle}</div>
+              </div>
+              {l.status === "arrived" ? (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onOpen && onOpen(l); }}
+                  className="row-action-btn row-action-btn-danger"
+                >
+                  <Icon.check className="w-3.5 h-3.5" /> Mark greeted
+                </button>
+              ) : (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onOpen && onOpen(l); }}
+                  className="row-action-btn"
+                >Check in</button>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function BdcHome({ onOpen }) {
+  const active = [...LEADS].filter(l => !["purchase_complete", "dead"].includes(l.status));
+  const scored = active.filter(l => l.score != null).sort((a, b) => b.score - a.score);
+
+  // Bucket by urgency — drives the header stat tiles AND the queue's left accent.
+  const callNow = scored.filter(l => l.score >= 80);
+  const today   = scored.filter(l => l.score >= 65 && l.score < 80);
+  const later   = scored.filter(l => l.score < 65);
+  const slaBreach = active.filter(l =>
+    l.status === "new" || l.status === "offer_sent" || l.status === "contacted"
+  ).slice(0, 6);
+
+  // Order the queue: urgent first, then today, then later
+  const queue = [...callNow, ...today, ...later];
+
+  const urgencyFor = (l) => {
+    if (l.score >= 80) return { label: "Call now",  tone: "danger" };
+    if (l.score >= 65) return { label: "Today",     tone: "warn"   };
+    return                   { label: "Later week", tone: "neutral"};
+  };
+
+  const reasonFor = (l) => {
+    if (l.status === "new")        return "SLA at risk · Needs first contact";
+    if (l.status === "contacted")  return "Contacted · Not booked";
+    if (l.status === "offer_sent") return "Offer sent · No reply";
+    if (l.status === "offer_pending") return "Waiting on appraiser";
+    if (l.status === "arrived")    return "Arrived · On the lot";
+    if (l.status === "on_the_way") return "On the way · Prep now";
+    return "Keep warm";
+  };
+
+  return (
+    <div className="max-w-[1000px] mx-auto px-6 py-8 space-y-8">
+      <div>
+        <h1 className="text-[28px] font-bold tracking-tight">BDC priority queue</h1>
+        <p className="ink-soft text-[14px] mt-0.5">{queue.length} leads ranked by urgency. Work top to bottom.</p>
+      </div>
+
+      <div className="grid grid-cols-4 gap-3">
+        <KpiTile label="Call now"     value={callNow.length} sub="score ≥ 80"   tone="danger" />
+        <KpiTile label="Today"        value={today.length}   sub="score 65–80"  tone="warn" />
+        <KpiTile label="Later"        value={later.length}   sub="score < 65" />
+        <KpiTile label="SLA breach"   value={slaBreach.length} sub="> 2h open"  tone="accent" />
+      </div>
+
+      <section>
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.1em] ink-faint mb-2">Queue</h2>
+        <div className="space-y-2">
+          {queue.map(l => {
+            const u = urgencyFor(l);
+            const accentCls =
+              u.tone === "danger" ? "border-l-4 row-accent-danger" :
+              u.tone === "warn"   ? "border-l-4 row-accent-warn"   :
+                                    "";
+            return (
+              <div
+                key={l.id}
+                onClick={() => onOpen && onOpen(l)}
+                className={`card p-4 flex items-start gap-4 cursor-pointer hover:shadow ${accentCls}`}
+              >
+                <div className="w-10 h-10 rounded-full bg-surface-3 flex items-center justify-center text-[12px] font-semibold shrink-0">
+                  {l.name.split(" ").map(n => n[0]).join("")}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <StatusPill status={l.status} />
+                    <div className="text-[14px] font-semibold">{l.name}</div>
+                    <span className="pill">{l.score}</span>
+                  </div>
+                  <div className="text-[12px] ink-soft truncate">{l.vehicle} · {l.phone}</div>
+                  <div className={`text-[11.5px] mt-1 font-semibold ${
+                    u.tone === "danger" ? "danger-text" :
+                    u.tone === "warn"   ? "warn-text"   : "ink-faint"
+                  }`}>{reasonFor(l)}</div>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                  <button onClick={() => onOpen && onOpen(l)} className="row-action-btn row-action-btn-primary">
+                    <Icon.phone className="w-3.5 h-3.5" /> Call
+                  </button>
+                  <button onClick={() => onOpen && onOpen(l)} className="row-action-btn" title="Message">
+                    <Icon.msg className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+          {queue.length === 0 && (
+            <div className="card p-8 text-center text-[13px] ink-soft">Inbox zero. Nothing to chase.</div>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function AppraiserHome({ onOpen }) {
+  const walkIns = LEADS.filter(l => l.status === "arrived" || l.status === "inspected").slice(0, 4);
+  return (
+    <div className="max-w-[1000px] mx-auto px-6 py-8 space-y-8">
+      <div>
+        <h1 className="text-[28px] font-bold tracking-tight">Appraiser queue</h1>
+        <p className="ink-soft text-[14px] mt-0.5">6 vehicles need a number.</p>
+      </div>
+
+      <div className="grid grid-cols-4 gap-3">
+        <KpiTile label="Walk-ins" value="1" tone="danger" />
+        <KpiTile label="Service drive" value="2" tone="warn" />
+        <KpiTile label="Flagged" value="2" tone="accent" />
+        <KpiTile label="Declined" value="1" />
+      </div>
+
+      <section>
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.1em] ink-faint mb-2">Queue</h2>
+        <div className="space-y-2">
+          {walkIns.map(l => (
+            <div
+              key={l.id}
+              onClick={() => onOpen && onOpen(l)}
+              className="card p-4 flex items-start gap-4 cursor-pointer hover:shadow"
+            >
+              <div className="w-10 h-10 rounded-lg bg-surface-3 flex items-center justify-center shrink-0">
+                <Icon.car className="w-5 h-5 ink-soft" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <StatusPill status={l.status} />
+                  <div className="text-[14px] font-semibold">{l.vehicle}</div>
+                  <span className="text-[11px] ink-faint">· {l.mileage} mi</span>
+                </div>
+                <div className="text-[12px] ink-soft">{l.name} · {l.phone}</div>
+              </div>
+              <button
+                onClick={(e) => { e.stopPropagation(); onOpen && onOpen(l); }}
+                className="row-action-btn row-action-btn-primary"
+              >
+                <Icon.gauge className="w-3.5 h-3.5" /> Open appraisal
+              </button>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function AccessMatrix({ state, set, role }) {
+  // Roles whose sidebars admins can curate. super_admin's own sidebar is platform-only — exclude.
+  const editableRoles = ["gsm_gm", "owner", "sales_director", "sales_mgr_appraiser", "used_car_mgr", "admin", "bdc-queue", "appraiser-queue", "receptionist"];
+  const access = state.sidebarAccess || {};
+  // Build the catalog of every (group, item) per role from sidebarForRole
+  const catalog = React.useMemo(() => {
+    const c = {};
+    editableRoles.forEach(r => {
+      const groups = sidebarForRole(r);
+      c[r] = Object.entries(groups).map(([g, items]) => ({ group: g, items }));
+    });
+    return c;
+  }, []);
+
+  const [selectedRole, setSelectedRole] = React.useState(editableRoles[0]);
+  const groups = catalog[selectedRole] || [];
+
+  const isVisible = (roleId, itemId) => {
+    const r = access[roleId] || {};
+    if (Object.prototype.hasOwnProperty.call(r, itemId)) return r[itemId];
+    return true; // default: visible
+  };
+  const toggle = (roleId, itemId) => {
+    const next = { ...(access || {}) };
+    next[roleId] = { ...(next[roleId] || {}) };
+    next[roleId][itemId] = !isVisible(roleId, itemId);
+    set("sidebarAccess", next);
+  };
+  const setAll = (roleId, value) => {
+    const next = { ...(access || {}) };
+    next[roleId] = { ...(next[roleId] || {}) };
+    (catalog[roleId] || []).forEach(({ items }) => items.forEach(i => { next[roleId][i.id] = value; }));
+    set("sidebarAccess", next);
+  };
+  const resetRole = (roleId) => {
+    const next = { ...(access || {}) };
+    delete next[roleId];
+    set("sidebarAccess", next);
+  };
+
+  // Counts per role for the row pills
+  const totalCount = (roleId) => (catalog[roleId] || []).reduce((s, g) => s + g.items.length, 0);
+  const hiddenCount = (roleId) => {
+    const total = totalCount(roleId);
+    let visible = 0;
+    (catalog[roleId] || []).forEach(({ items }) => items.forEach(i => { if (isVisible(roleId, i.id)) visible++; }));
+    return total - visible;
+  };
+
+  return (
+    <div className="grid grid-cols-[240px_1fr] gap-5">
+      {/* Role list */}
+      <div className="card p-2 h-fit">
+        <div className="text-[10px] uppercase tracking-[0.1em] ink-faint font-semibold px-2 py-2">Roles</div>
+        <div className="space-y-0.5">
+          {editableRoles.map(rid => {
+            const r = ROLES[rid];
+            const hidden = hiddenCount(rid);
+            const isSel = selectedRole === rid;
+            return (
+              <button
+                key={rid}
+                onClick={() => setSelectedRole(rid)}
+                className={`w-full flex items-center gap-2 px-2 py-2 rounded-md text-left transition-colors ${isSel ? "bg-surface-2 border hair" : "hover:bg-surface-2 border border-transparent"}`}
+              >
+                <div className="w-7 h-7 rounded-full bg-[hsl(var(--ink))]/10 flex items-center justify-center text-[10px] font-bold ink shrink-0">{r.initials}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[12px] font-medium truncate">{r.label}</div>
+                  <div className="text-[10px] ink-faint truncate">{r.name}</div>
+                </div>
+                {hidden > 0 && (
+                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 border border-amber-500/30 shrink-0" title={`${hidden} hidden`}>{hidden}</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Matrix for selected role */}
+      <div className="card p-5">
+        <div className="flex items-start justify-between gap-4 mb-4">
+          <div>
+            <div className="text-[11px] uppercase tracking-[0.1em] ink-faint font-semibold">Sidebar access</div>
+            <h2 className="text-[18px] font-bold leading-tight mt-0.5">{ROLES[selectedRole].label}</h2>
+            <div className="text-[12px] ink-soft mt-0.5">
+              Toggle which left-bar links {ROLES[selectedRole].name.split(" ")[0]} sees. Hidden links are inaccessible — no link, no route.
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button onClick={() => setAll(selectedRole, true)} className="text-[11px] px-2 py-1 rounded border hair hover:bg-surface-2">Show all</button>
+            <button onClick={() => setAll(selectedRole, false)} className="text-[11px] px-2 py-1 rounded border hair hover:bg-surface-2">Hide all</button>
+            <button onClick={() => resetRole(selectedRole)} className="text-[11px] px-2 py-1 rounded border hair hover:bg-surface-2" title="Restore defaults">Reset</button>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          {groups.map(({ group, items }) => (
+            <div key={group}>
+              <div className="text-[10px] uppercase tracking-[0.12em] ink-faint font-semibold mb-1.5">{group}</div>
+              <div className="border hair rounded-md divide-y hair-soft">
+                {items.map(item => {
+                  const I = item.icon;
+                  const visible = isVisible(selectedRole, item.id);
+                  return (
+                    <label key={item.id} className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-surface-2">
+                      <I className="w-4 h-4 ink-soft shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[13px] font-medium">{item.label}</div>
+                        <div className="text-[10px] ink-faint mono">{item.id}</div>
+                      </div>
+                      {item.badge && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full border hair ink-soft">{item.badge}</span>
+                      )}
+                      {/* Toggle */}
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={visible}
+                        onClick={(e) => { e.preventDefault(); toggle(selectedRole, item.id); }}
+                        className={`relative w-9 h-5 rounded-full transition-colors shrink-0 ${visible ? "accent-bg" : "bg-gray-300"}`}
+                      >
+                        <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${visible ? "left-[18px]" : "left-0.5"}`} />
+                      </button>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4 flex items-center justify-between text-[11px] ink-faint">
+          <div>{totalCount(selectedRole) - hiddenCount(selectedRole)} of {totalCount(selectedRole)} visible</div>
+          <div>Saved automatically · applies on next page load for this role</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChannelsPage({ state, set, role }) {
+  const isAdmin = role === "super_admin" || role === "gsm_gm" || role === "owner" || role === "sales_director" || role === "admin";
+  if (!isAdmin) {
+    return (
+      <div className="max-w-md mx-auto mt-24 text-center px-6">
+        <Icon.lock className="w-10 h-10 mx-auto ink-faint mb-3" />
+        <h1 className="text-[20px] font-bold">Admin access required</h1>
+        <p className="ink-soft text-[13px] mt-1">Channel settings are managed by your GM, owner, or platform admin.</p>
+      </div>
+    );
+  }
+
+  const channels = state.channels || { smsTwoWay: true, emailTwoWay: true, aiPhone: true };
+  const setChannel = (key, val) => set("channels", { ...channels, [key]: val });
+
+  const dealerName = state.dealerName || "Harte Auto Group";
+
+  const rows = [
+    {
+      key: "smsTwoWay",
+      title: "Two-way SMS",
+      sub: "Staff can send and receive SMS replies inside the customer file.",
+      offMeans: "SMS becomes read-only. Inbound messages still log to the activity feed; staff cannot reply or compose new SMS from CRM. Existing automation continues to send.",
+      icon: Icon.msg,
+    },
+    {
+      key: "emailTwoWay",
+      title: "Two-way Email",
+      sub: "Staff can compose and reply to customer emails inside the customer file.",
+      offMeans: "Email becomes read-only. Inbound emails still log; staff cannot reply or compose from CRM. Existing automation continues to send.",
+      icon: Icon.inbox,
+    },
+    {
+      key: "aiPhone",
+      title: "AI phone calls",
+      sub: "Outbound and inbound AI voice agent (calling, qualifying, scheduling).",
+      offMeans: "AI dialer and AI receptionist are disabled. No AI voice calls are placed or answered. Human-placed calls and call logs are unaffected.",
+      icon: Icon.voice,
+    },
+  ];
+
+  return (
+    <div className="px-6 py-6 max-w-[900px]">
+      <div className="mb-6">
+        <div className="text-[11px] uppercase tracking-wider ink-faint">Setup · Dealer</div>
+        <h1 className="text-[24px] font-bold leading-tight mt-0.5">Channels</h1>
+        <div className="text-[13px] ink-soft mt-1">
+          Turn customer-facing communication channels on or off for <span className="font-semibold">{dealerName}</span>. These switches control whether staff can use a channel at all — separate from automation rules.
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-slate-200 bg-white overflow-hidden">
+        {rows.map((r, i) => {
+          const on = !!channels[r.key];
+          const IconComp = r.icon;
+          return (
+            <div key={r.key} className={`flex items-start gap-4 px-5 py-5 ${i > 0 ? "border-t border-slate-100" : ""}`}>
+              <div className={`mt-0.5 w-9 h-9 rounded-md flex items-center justify-center shrink-0 ${on ? "bg-slate-900 text-white" : "bg-slate-100 ink-faint"}`}>
+                <IconComp className="w-4 h-4" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <div className="text-[15px] font-semibold">{r.title}</div>
+                  <span className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded ${on ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-slate-100 ink-soft border border-slate-200"}`}>
+                    {on ? "On" : "Off"}
+                  </span>
+                </div>
+                <div className="text-[13px] ink-soft mt-1">{r.sub}</div>
+                {!on && (
+                  <div className="text-[12px] mt-2 px-3 py-2 rounded bg-amber-50 border border-amber-200 text-amber-900">
+                    <span className="font-semibold">When off: </span>{r.offMeans}
+                  </div>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setChannel(r.key, !on)}
+                className={`shrink-0 mt-1 relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${on ? "bg-emerald-500" : "bg-slate-300"}`}
+                aria-pressed={on}
+                aria-label={`Toggle ${r.title}`}
+              >
+                <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${on ? "translate-x-5" : "translate-x-0.5"}`} />
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-5 text-[12px] ink-faint">
+        These switches do not affect automated outbound (drip emails, scheduled SMS, follow-up sequences). To disable automated outbound, see <span className="underline">Process · Offer Logic</span>.
+      </div>
+    </div>
+  );
+}
+
+function AppearancePage({ state, set, role }) {
+  const [tab, setTab] = React.useState("theme");
+  const isAdmin = role === "super_admin" || role === "gsm_gm" || role === "owner" || role === "sales_director" || role === "admin";
+  const dealerId = state.dealerId || "harte-auto-group";
+
+  if (!isAdmin) {
+    return (
+      <div className="max-w-[600px] mx-auto px-6 py-16 text-center">
+        <Icon.lock className="w-10 h-10 mx-auto ink-faint mb-3" />
+        <h1 className="text-[20px] font-bold">Admin access required</h1>
+        <p className="ink-soft text-[13px] mt-1">Appearance settings are managed by your GM or platform admin.</p>
+      </div>
+    );
+  }
+
+  const tabs = [
+    { k: "theme",    label: "Theme",     sub: "Brand colors, logo, typography" },
+    { k: "layout",   label: "Layout",    sub: "Top bar + page layouts" },
+    { k: "access",   label: "Access",    sub: "Choose which sidebar links each role can see" },
+    { k: "finetune", label: "Fine-tune", sub: "Advanced per-component tweaks" },
+  ];
+
+  return (
+    <div className="max-w-[1100px] mx-auto px-6 py-6">
+      <div className="mb-5 flex items-start justify-between gap-4">
+        <div>
+          <div className="text-[11px] uppercase tracking-[0.15em] ink-faint font-semibold">Setup · Dealer</div>
+          <h1 className="text-[24px] font-bold leading-tight mt-0.5">Appearance &amp; Access</h1>
+          <div className="text-[13px] ink-soft mt-1">
+            Configure how <span className="font-semibold">{state.dealerName || "Harte Auto Group"}</span> looks to staff and customers, and what each role can see.
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-[10px] px-2 py-1 rounded bg-amber-500/15 text-amber-700 border border-amber-500/30 font-semibold flex items-center gap-1">
+            <Icon.crown className="w-3 h-3" /> Admin only
+          </span>
+          <span className="text-[10px] mono ink-faint">Tenant: {dealerId}</span>
+        </div>
+      </div>
+
+      <div className="flex gap-1 border-b hair mb-4">
+        {tabs.map(t => (
+          <button
+            key={t.k}
+            onClick={() => setTab(t.k)}
+            className={`relative px-4 py-2.5 text-[13px] font-medium transition-colors ${tab === t.k ? "ink" : "ink-soft hover:ink"}`}
+          >
+            {t.label}
+            {tab === t.k && <span className="absolute left-0 right-0 bottom-[-1px] h-[2px] bg-[hsl(var(--ink))]" />}
+          </button>
+        ))}
+      </div>
+      <div className="text-[12px] ink-faint mb-4">{tabs.find(t => t.k === tab)?.sub}</div>
+
+      {tab === "theme" && (
+        <div className="grid grid-cols-[1fr_280px] gap-5">
+          <div className="card p-5 space-y-5">
+            <div>
+              <div className="text-[11px] uppercase tracking-[0.1em] ink-faint font-semibold mb-2">Brand colors</div>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="flex items-center gap-2 p-2 border hair rounded-md cursor-pointer">
+                  <input type="color" value={state.topBarBg || "#00407f"} onChange={(e) => set("topBarBg", e.target.value)} className="w-8 h-8 rounded cursor-pointer" />
+                  <div><div className="text-[12px] font-medium">Primary</div><div className="text-[10px] mono ink-faint">{state.topBarBg || "#00407f"}</div></div>
+                </label>
+                <label className="flex items-center gap-2 p-2 border hair rounded-md cursor-pointer">
+                  <input type="color" value={state.customerFileAccent || "#003b80"} onChange={(e) => set("customerFileAccent", e.target.value)} className="w-8 h-8 rounded cursor-pointer" />
+                  <div><div className="text-[12px] font-medium">Accent</div><div className="text-[10px] mono ink-faint">{state.customerFileAccent || "#003b80"}</div></div>
+                </label>
+              </div>
+            </div>
+            <div>
+              <div className="text-[11px] uppercase tracking-[0.1em] ink-faint font-semibold mb-2">Preset themes</div>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { name: "Hartecash", bg: "#00407f", accent: "#005bb5" },
+                  { name: "Classic Blue", bg: "#1e40af", accent: "#3b82f6" },
+                  { name: "Forest", bg: "#065f46", accent: "#10b981" },
+                  { name: "Oxblood", bg: "#7f1d1d", accent: "#dc2626" },
+                  { name: "Ink",      bg: "#0f172a", accent: "#334155" },
+                  { name: "Terracotta", bg: "#c2410c", accent: "#f97316" },
+                ].map(p => (
+                  <button key={p.name} onClick={() => { set("topBarBg", p.bg); set("topBarBg2", p.bg); set("customerFileAccent", p.accent); set("customerFileAccent2", p.accent); }}
+                    className="border hair rounded-lg p-2 hover:bg-surface-2 text-left">
+                    <div className="flex gap-0.5 mb-1.5"><div className="h-6 flex-1 rounded-sm" style={{background: p.bg}}/><div className="h-6 flex-1 rounded-sm" style={{background: p.accent}}/></div>
+                    <div className="text-[11px] font-medium">{p.name}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div className="text-[11px] uppercase tracking-[0.1em] ink-faint font-semibold mb-2">Logo</div>
+              <div className="border border-dashed hair rounded-md p-4 text-center ink-soft text-[12px]">
+                <Icon.doc className="w-6 h-6 mx-auto mb-1 ink-faint" />
+                Upload logo (SVG or PNG, transparent bg)
+                <div className="mt-1.5"><button className="btn text-[11px]">Choose file</button></div>
+              </div>
+            </div>
+          </div>
+          <div className="card p-4">
+            <div className="text-[10px] uppercase tracking-[0.1em] ink-faint font-semibold mb-2">Live preview</div>
+            <div className="rounded-md overflow-hidden border hair">
+              <div className="h-10 flex items-center px-2.5 gap-2" style={{background: state.topBarBg || "#00407f"}}>
+                <div className="h-6 px-1.5 rounded bg-white/95 flex items-center text-[11px] font-black" style={{color: state.topBarBg || "#00407f"}}>Harte</div>
+                <span className="text-[10px] text-white/90 font-semibold">Good afternoon, Marcus</span>
+              </div>
+              <div className="p-3 space-y-2 bg-surface-2">
+                <div className="h-2 w-20 rounded bg-surface-3"></div>
+                <div className="h-8 rounded" style={{background: state.customerFileAccent || "#003b80", opacity: 0.15}}></div>
+              </div>
+            </div>
+            <div className="text-[11px] ink-faint mt-2">Applied everywhere: admin, customer file, staff tools.</div>
+          </div>
+        </div>
+      )}
+
+      {tab === "layout" && (
+        <div className="space-y-4">
+          <div className="card p-5">
+            <div className="text-[11px] uppercase tracking-[0.1em] ink-faint font-semibold mb-3">Top bar style</div>
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                { k: "solid", label: "Solid" },
+                { k: "gradient", label: "Gradient" },
+                { k: "gradient-diagonal", label: "Diagonal" },
+                { k: "gradient-3stop", label: "3-stop (Hartecash)" },
+              ].map(o => {
+                // auto-seed topBarBg2 with a lighter tint when switching to a gradient
+                const pickStyle = () => {
+                  set("topBarStyle", o.k);
+                  if (o.k.startsWith("gradient") && (!state.topBarBg2 || state.topBarBg2.toLowerCase() === (state.topBarBg || "").toLowerCase())) {
+                    // lighten topBarBg by ~35% toward white
+                    const hex = (state.topBarBg || "#1e40af").replace("#","");
+                    const r = parseInt(hex.slice(0,2),16), g = parseInt(hex.slice(2,4),16), b = parseInt(hex.slice(4,6),16);
+                    const lr = Math.round(r + (255-r)*0.35), lg = Math.round(g + (255-g)*0.35), lb = Math.round(b + (255-b)*0.35);
+                    const toHex = (n) => n.toString(16).padStart(2,"0");
+                    set("topBarBg2", `#${toHex(lr)}${toHex(lg)}${toHex(lb)}`);
+                  }
+                };
+                return (
+                <button key={o.k} onClick={pickStyle}
+                  className={`border hair rounded-md px-3 py-3 text-[12px] text-left ${state.topBarStyle === o.k ? "bg-surface-2 font-semibold border-[hsl(var(--ink))]" : "hover:bg-surface-2"}`}>
+                  <div className="h-6 rounded mb-2" style={{background: o.k === "gradient" ? `linear-gradient(90deg, ${state.topBarBg || "#1e40af"}, ${state.topBarBg2 || "#3b82f6"})` : o.k === "gradient-diagonal" ? `linear-gradient(135deg, ${state.topBarBg || "#1e40af"}, ${state.topBarBg2 || "#3b82f6"})` : state.topBarBg || "#1e40af"}}/>
+                  {o.label}
+                </button>
+                );
+              })}
+            </div>
+            {/* color pickers — second color only appears for gradient modes */}
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <label className="text-[11px] ink-soft flex items-center gap-2">
+                <span className="w-24">{state.topBarStyle === "solid" ? "Background" : "Start color"}</span>
+                <input type="color" value={state.topBarBg || "#1e40af"} onChange={(e) => set("topBarBg", e.target.value)} className="w-10 h-8 rounded border hair" />
+                <span className="mono text-[11px]">{state.topBarBg || "#1e40af"}</span>
+              </label>
+              {state.topBarStyle !== "solid" && (
+                <label className="text-[11px] ink-soft flex items-center gap-2">
+                  <span className="w-24">End color</span>
+                  <input type="color" value={state.topBarBg2 || "#3b82f6"} onChange={(e) => set("topBarBg2", e.target.value)} className="w-10 h-8 rounded border hair" />
+                  <span className="mono text-[11px]">{state.topBarBg2 || "#3b82f6"}</span>
+                </label>
+              )}
+            </div>
+          </div>
+          <div className="card p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <div className="text-[11px] uppercase tracking-[0.1em] ink-faint font-semibold">UI scale</div>
+                <div className="text-[11px] ink-soft mt-0.5">Scale all text & controls proportionally. Baseline is 100%.</div>
+              </div>
+              <span className="text-[13px] mono ink-faint">{state.uiScale ?? 100}%</span>
+            </div>
+            <input
+              type="range"
+              min="85"
+              max="125"
+              step="1"
+              value={state.uiScale ?? 100}
+              onChange={(e) => set("uiScale", Number(e.target.value))}
+              className="w-full"
+            />
+            <div className="flex items-center justify-between mt-2">
+              <button onClick={() => set("uiScale", 100)} className="text-[11px] ink-soft hover:text-[hsl(var(--ink))] underline">Reset to 100%</button>
+              <div className="flex items-center gap-1 text-[10px] ink-faint">
+                <button onClick={() => set("uiScale", 90)} className="px-1.5 py-0.5 border hair rounded hover:bg-surface-2">90%</button>
+                <button onClick={() => set("uiScale", 100)} className="px-1.5 py-0.5 border hair rounded hover:bg-surface-2">100%</button>
+                <button onClick={() => set("uiScale", 110)} className="px-1.5 py-0.5 border hair rounded hover:bg-surface-2">110%</button>
+                <button onClick={() => set("uiScale", 120)} className="px-1.5 py-0.5 border hair rounded hover:bg-surface-2">120%</button>
+              </div>
+            </div>
+          </div>
+          <div className="card p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <div className="text-[11px] uppercase tracking-[0.1em] ink-faint font-semibold">Text size</div>
+                <div className="text-[11px] ink-soft mt-0.5">Scale text only — layout & icons stay the same.</div>
+              </div>
+              <span className="text-[13px] mono ink-faint">{state.textScale ?? 100}%</span>
+            </div>
+            <input
+              type="range"
+              min="85"
+              max="140"
+              step="1"
+              value={state.textScale ?? 100}
+              onChange={(e) => set("textScale", Number(e.target.value))}
+              className="w-full"
+            />
+            <div className="flex items-center justify-between mt-2">
+              <button onClick={() => set("textScale", 100)} className="text-[11px] ink-soft hover:text-[hsl(var(--ink))] underline">Reset to 100%</button>
+              <div className="flex items-center gap-1 text-[10px] ink-faint">
+                <button onClick={() => set("textScale", 90)} className="px-1.5 py-0.5 border hair rounded hover:bg-surface-2">90%</button>
+                <button onClick={() => set("textScale", 100)} className="px-1.5 py-0.5 border hair rounded hover:bg-surface-2">100%</button>
+                <button onClick={() => set("textScale", 115)} className="px-1.5 py-0.5 border hair rounded hover:bg-surface-2">115%</button>
+                <button onClick={() => set("textScale", 130)} className="px-1.5 py-0.5 border hair rounded hover:bg-surface-2">130%</button>
+              </div>
+            </div>
+          </div>
+          <div className="card p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <div className="text-[11px] uppercase tracking-[0.1em] ink-faint font-semibold">Main content scale {role === "super_admin" ? "(per-dealer)" : ""}</div>
+                <div className="text-[11px] ink-soft mt-0.5">Scales just the main page area (sidebar & top bar stay fixed). Use this to dial in proportions for tables and dashboards.</div>
+              </div>
+              <span className="text-[13px] mono ink-faint">{state.mainScale ?? 100}%</span>
+            </div>
+            <input
+              type="range"
+              min="80"
+              max="150"
+              step="1"
+              value={state.mainScale ?? 100}
+              onChange={(e) => set("mainScale", Number(e.target.value))}
+              className="w-full"
+            />
+            <div className="flex items-center justify-between mt-2">
+              <button onClick={() => set("mainScale", 100)} className="text-[11px] ink-soft hover:text-[hsl(var(--ink))] underline">Reset to 100%</button>
+              <div className="flex items-center gap-1 text-[10px] ink-faint">
+                <button onClick={() => set("mainScale", 90)} className="px-1.5 py-0.5 border hair rounded hover:bg-surface-2">90%</button>
+                <button onClick={() => set("mainScale", 100)} className="px-1.5 py-0.5 border hair rounded hover:bg-surface-2">100%</button>
+                <button onClick={() => set("mainScale", 110)} className="px-1.5 py-0.5 border hair rounded hover:bg-surface-2">110%</button>
+                <button onClick={() => set("mainScale", 125)} className="px-1.5 py-0.5 border hair rounded hover:bg-surface-2">125%</button>
+              </div>
+            </div>
+            {state.mainScaleGlobal && state.mainScaleGlobal !== 100 && (
+              <div className="mt-3 text-[11px] px-3 py-2 rounded bg-amber-50 border border-amber-200 text-amber-900">
+                Platform global override is active at <span className="font-semibold mono">{state.mainScaleGlobal}%</span> — this per-dealer setting is ignored until the global override returns to 100%.
+              </div>
+            )}
+          </div>
+          {role === "super_admin" && (
+            <div className="card p-5 border-2 border-amber-300 bg-amber-50/40">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <div className="text-[11px] uppercase tracking-[0.1em] text-amber-700 font-semibold">Platform · Global main scale override</div>
+                  <div className="text-[11px] ink-soft mt-0.5">Super-admin only. Overrides every tenant's per-dealer Main content scale. Set to 100% to disable the override and let each dealership use their own value.</div>
+                </div>
+                <span className="text-[13px] mono ink-faint">{state.mainScaleGlobal ?? 100}%</span>
+              </div>
+              <input
+                type="range"
+                min="80"
+                max="150"
+                step="1"
+                value={state.mainScaleGlobal ?? 100}
+                onChange={(e) => set("mainScaleGlobal", Number(e.target.value))}
+                className="w-full"
+              />
+              <div className="flex items-center justify-between mt-2">
+                <button onClick={() => set("mainScaleGlobal", 100)} className="text-[11px] text-amber-800 hover:text-amber-900 underline">Disable override (100%)</button>
+                <div className="flex items-center gap-1 text-[10px] ink-faint">
+                  <button onClick={() => set("mainScaleGlobal", 95)} className="px-1.5 py-0.5 border hair rounded hover:bg-surface-2">95%</button>
+                  <button onClick={() => set("mainScaleGlobal", 100)} className="px-1.5 py-0.5 border hair rounded hover:bg-surface-2">100%</button>
+                  <button onClick={() => set("mainScaleGlobal", 110)} className="px-1.5 py-0.5 border hair rounded hover:bg-surface-2">110%</button>
+                  <button onClick={() => set("mainScaleGlobal", 125)} className="px-1.5 py-0.5 border hair rounded hover:bg-surface-2">125%</button>
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="card p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-[11px] uppercase tracking-[0.1em] ink-faint font-semibold">Top bar height</div>
+              <span className="text-[11px] mono ink-faint">{state.topBarHeight ?? 48}px</span>
+            </div>
+            <input type="range" min="40" max="135" step="1" value={state.topBarHeight ?? 48} onChange={(e) => set("topBarHeight", Number(e.target.value))} className="w-full" />
+          </div>
+          <div className="card p-5">
+            <div className="text-[11px] uppercase tracking-[0.1em] ink-faint font-semibold mb-3">File layout</div>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { k: "classic", label: "Classic", sub: "Tabs + right rail" },
+                { k: "conversation", label: "Conversation-first", sub: "Messages primary, deal collapsed" },
+              ].map(o => (
+                <button key={o.k} onClick={() => set("fileLayout", o.k)}
+                  className={`border hair rounded-md px-3 py-3 text-left ${state.fileLayout === o.k ? "bg-surface-2 font-semibold border-[hsl(var(--ink))]" : "hover:bg-surface-2"}`}>
+                  <div className="text-[13px]">{o.label}</div>
+                  <div className="text-[11px] ink-soft mt-0.5">{o.sub}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tab === "access" && (
+        <AccessMatrix state={state} set={set} role={role} />
+      )}
+
+      {tab === "finetune" && (
+        <div className="card p-5">
+          <div className="text-[12px] ink-soft mb-3">All advanced tweaks available in the floating Tweaks panel are exposed here for a dedicated full-page editing flow.</div>
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent("__open_tweaks"))}
+            className="btn btn-primary"
+          >Open Tweaks panel</button>
+          <div className="mt-4 grid grid-cols-2 gap-3 text-[12px]">
+            <div className="p-3 border hair rounded-md">
+              <div className="text-[10px] uppercase tracking-[0.1em] ink-faint mb-1">Alert intensity</div>
+              <div className="font-semibold">{state.alertIntensity || "moderate"}</div>
+            </div>
+            <div className="p-3 border hair rounded-md">
+              <div className="text-[10px] uppercase tracking-[0.1em] ink-faint mb-1">Messaging layout</div>
+              <div className="font-semibold">{state.messagingLayout || "tabs"}</div>
+            </div>
+            <div className="p-3 border hair rounded-md">
+              <div className="text-[10px] uppercase tracking-[0.1em] ink-faint mb-1">Shimmer</div>
+              <div className="font-semibold">{state.topBarShimmer ? `On · ${state.topBarShimmerStyle || "sheen"}` : "Off"}</div>
+            </div>
+            <div className="p-3 border hair rounded-md">
+              <div className="text-[10px] uppercase tracking-[0.1em] ink-faint mb-1">Compact table</div>
+              <div className="font-semibold">{state.compactTable ? "On" : "Off"}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="mt-5 flex items-center justify-between text-[11px] ink-faint">
+        <div>Changes save automatically to tenant: <span className="mono">{dealerId}</span></div>
+        <div>Last modified · just now · {ROLES[role]?.name}</div>
+      </div>
+    </div>
+  );
+}
+
+function PlatformHome() {
+  return (
+    <div className="max-w-[1000px] mx-auto px-6 py-8 space-y-8">
+      <div>
+        <h1 className="text-[28px] font-bold tracking-tight">Platform</h1>
+        <p className="ink-soft text-[14px] mt-0.5">24 dealers · 6 on trial · 3 past due</p>
+      </div>
+      <div className="grid grid-cols-4 gap-3">
+        <KpiTile label="Active dealers" value="24" />
+        <KpiTile label="MRR" value="$31.4k" tone="success" sub="+8% MoM" />
+        <KpiTile label="Trial → Paid" value="67%" tone="accent" />
+        <KpiTile label="Past due" value="3" tone="warn" />
+      </div>
+      <div className="card p-5 space-y-2">
+        <div className="flex items-center gap-2">
+          <Icon.lock className="w-4 h-4 accent-text" />
+          <div className="text-[13px] font-semibold">UI Refresh Kill Switch</div>
+        </div>
+        <p className="text-[12px] ink-soft">
+          Flip a dealer back to the legacy UI if their team isn't ready. Toggle it in the Tweaks panel at the bottom-right.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { TodayHome, ReceptionHome, BdcHome, AppraiserHome, PlatformHome, KpiTile, ActionRow });
+</script>
+
+<script type="text/babel" data-presets="react">
+/* ──────────────────────────────────────────
+   ALERT STRIP (top of leads table or home)
+   ────────────────────────────────────────── */
+function AlertStrip({ alerts, onDismiss }) {
+  if (!alerts || alerts.length === 0) return null;
+  const primary = alerts[0];
+  return (
+    <div className="alert-strip rounded-xl px-4 py-3 mb-4 flex items-center gap-3">
+      <div className="w-2 h-2 rounded-full danger-bg pulse-dot shrink-0"></div>
+      <div className="flex-1 min-w-0">
+        <div className="text-[13px] font-semibold ink">
+          {primary.title}
+        </div>
+        <div className="text-[12px] ink-soft">
+          {primary.subtitle}
+        </div>
+      </div>
+      {alerts.length > 1 && (
+        <span className="pill">+{alerts.length - 1} more</span>
+      )}
+      <button className="row-action-btn row-action-btn-danger">
+        {primary.action}
+      </button>
+      <button className="btn-ghost btn p-1.5" onClick={onDismiss} aria-label="Dismiss">
+        <Icon.x className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────
+   NEW LEADS TABLE (simplified)
+   ────────────────────────────────────────── */
+function LeadsTable({ alertIntensity, showArrivedBanner, showHotLead, showSlaBreach, compact, secondaryLine, onOpen }) {
+  const [dismissed, setDismissed] = useState(false);
+
+  const alerts = [];
+  if (showArrivedBanner) alerts.push({
+    title: "Jenna Whitcomb just arrived on the lot",
+    subtitle: "2020 Subaru Outback · 10:00 AM appointment · Go greet now",
+    action: "Greet now",
+    kind: "arrived",
+  });
+  if (showHotLead) alerts.push({
+    title: "Marcus Lee is on his way",
+    subtitle: "ETA 20 min · 10:30 AM appointment",
+    action: "Prep file",
+    kind: "on_way",
+  });
+  if (showSlaBreach) alerts.push({
+    title: "Tom Benedetti — no contact for 26h",
+    subtitle: "SLA breached · 2017 Nissan Altima",
+    action: "Call now",
+    kind: "sla",
+  });
+
+  const padY = compact ? "py-1.5" : "py-3";
+
+  return (
+    <div className="max-w-[1200px] mx-auto px-6 py-6">
+      <div className="flex items-baseline justify-between mb-4">
+        <div>
+          <h1 className="text-[22px] font-bold tracking-tight">All leads</h1>
+          <p className="text-[12px] ink-soft">84 total · 12 need action</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Icon.search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ink-faint" />
+            <input placeholder="Search" className="bg-surface border hair rounded-lg h-8 pl-9 pr-3 text-[13px] w-60 outline-none focus:border-gray-400" />
+          </div>
+          <button className="btn">Filter</button>
+          <button className="btn btn-primary">New lead</button>
+        </div>
+      </div>
+
+      {!dismissed && <AlertStrip alerts={alerts} onDismiss={() => setDismissed(true)} />}
+
+      {/* Quick filter chips */}
+      <div className="flex items-center gap-1.5 mb-3 flex-wrap">
+        <button className="pill bg-ink text-white">All · 84</button>
+        <button className="pill">New · 12</button>
+        <button className="pill">Hot · 6</button>
+        <button className="pill">Appointments · 7</button>
+        <button className="pill">Accepted · 4</button>
+        <button className="pill">Stuck &gt; 24h · 3</button>
+      </div>
+
+      {/* Table */}
+      <div className="card overflow-hidden">
+        <table className="w-full text-[13px]">
+          <thead>
+            <tr className="bg-surface-2 border-b hair-soft text-[11px] font-semibold uppercase tracking-wider ink-faint">
+              <th className="text-left px-4 py-2">Customer & vehicle</th>
+              <th className="text-left px-4 py-2">Status</th>
+              <th className="text-right px-4 py-2">Offer</th>
+              <th className="text-right px-4 py-2">Age</th>
+              <th className="text-right px-4 py-2">Score</th>
+              <th className="text-right px-4 py-2 w-[180px]">Next</th>
+            </tr>
+          </thead>
+          <tbody>
+            {LEADS.map((l) => {
+              const next = nextActionFor(l);
+              const IconComp = next.icon;
+              const variantCls = {
+                primary: "row-action-btn-primary",
+                accent: "row-action-btn-accent",
+                danger: "row-action-btn-danger",
+                ghost: "btn-ghost",
+              }[next.variant] || "";
+              const isArrived = l.status === "arrived";
+              return (
+                <tr key={l.id} className={`border-t hair-soft row-hover ${isArrived ? "arrived-row" : ""}`}
+                    style={{ cursor: "pointer" }}
+                    onClick={() => onOpen && onOpen(l)}>
+                  <td className={`px-4 ${padY}`}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-surface-3 flex items-center justify-center text-[11px] font-semibold shrink-0">
+                        {l.name.split(" ").map(n => n[0]).join("")}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-semibold truncate">{l.name}</div>
+                        <div className="text-[11px] ink-soft truncate">{formatSecondary(l, secondaryLine)}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className={`px-4 ${padY}`}><StatusPill status={l.status} /></td>
+                  <td className={`px-4 ${padY} text-right mono`}>
+                    {l.offer ? (
+                      <span className="font-semibold">${l.offer.toLocaleString()}</span>
+                    ) : l.estOffer ? (
+                      <span className="ink-faint">~${l.estOffer.toLocaleString()}</span>
+                    ) : (
+                      <span className="ink-faint">—</span>
+                    )}
+                  </td>
+                  <td className={`px-4 ${padY} text-right mono text-[12px] ink-soft`}>
+                    {formatAge(l.ageHours)}
+                  </td>
+                  <td className={`px-4 ${padY} text-right`}>
+                    {l.score ? (
+                      <span className={`pill ${l.score >= 80 ? "danger-soft" : l.score >= 65 ? "warn-soft" : ""}`}>{l.score}</span>
+                    ) : <span className="ink-faint">—</span>}
+                  </td>
+                  <td className={`px-4 ${padY} text-right`}>
+                    <div className="flex items-center justify-end gap-1.5">
+                      <EyeButton onClick={() => onOpen && onOpen(l)} />
+                      <button className={`row-action-btn ${variantCls}`} onClick={(e) => e.stopPropagation()}>
+                        {IconComp && <IconComp className="w-3.5 h-3.5" />}
+                        {next.label}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Footer */}
+      <div className="flex items-center justify-between mt-3 text-[11px] ink-soft">
+        <div>Showing 10 of 84 leads</div>
+        <div className="flex items-center gap-2">
+          <button className="btn">← Prev</button>
+          <button className="btn">Next →</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────
+   LEGACY TABLE (kill switch OFF)
+   ────────────────────────────────────────── */
+function LegacyLeadsTable() {
+  return (
+    <div className="max-w-[1400px] mx-auto p-6">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-[12px]">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="w-10 text-center px-2 py-3"><input type="checkbox" /></th>
+                <th className="text-left px-3 py-3 font-semibold text-gray-500 uppercase text-[10px] tracking-wider">Date</th>
+                <th className="text-left px-3 py-3 font-semibold text-gray-500 uppercase text-[10px] tracking-wider">Name</th>
+                <th className="text-left px-3 py-3 font-semibold text-gray-500 uppercase text-[10px] tracking-wider">Vehicle</th>
+                <th className="text-left px-3 py-3 font-semibold text-gray-500 uppercase text-[10px] tracking-wider">Contact</th>
+                <th className="text-left px-3 py-3 font-semibold text-gray-500 uppercase text-[10px] tracking-wider">Location</th>
+                <th className="text-right px-3 py-3 font-semibold text-gray-500 uppercase text-[10px] tracking-wider">Offer</th>
+                <th className="text-left px-3 py-3 font-semibold text-gray-500 uppercase text-[10px] tracking-wider">Status</th>
+                <th className="text-center px-2 py-3 font-semibold text-gray-500 uppercase text-[10px] tracking-wider">Age</th>
+                <th className="text-center px-2 py-3 font-semibold text-gray-500 uppercase text-[10px] tracking-wider">Score</th>
+                <th className="text-right px-3 py-3 font-semibold text-gray-500 uppercase text-[10px] tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {LEADS.map((l) => (
+                <tr key={l.id} className="border-b border-gray-100">
+                  <td className="text-center"><input type="checkbox" /></td>
+                  <td className="px-3 py-3 whitespace-nowrap">Oct 21</td>
+                  <td className="px-3 py-3 font-medium whitespace-nowrap">{l.name}</td>
+                  <td className="px-3 py-3 whitespace-nowrap">{l.vehicle}</td>
+                  <td className="px-3 py-3 whitespace-nowrap">
+                    <div>{l.phone}</div>
+                    <div className="text-[10px] text-blue-600">email@example.com</div>
+                  </td>
+                  <td className="px-3 py-3"><span className="text-[10px] border border-gray-300 rounded px-2 py-0.5">{l.store}</span></td>
+                  <td className="px-3 py-3 text-right whitespace-nowrap">
+                    {l.offer ? `$${l.offer.toLocaleString()}` : l.estOffer ? `~$${l.estOffer.toLocaleString()}` : "—"}
+                  </td>
+                  <td className="px-3 py-3">
+                    <select className="text-[11px] border border-gray-300 rounded px-2 py-1 w-40">
+                      <option>{STATUS_META[l.status]?.label || l.status}</option>
+                    </select>
+                  </td>
+                  <td className="text-center whitespace-nowrap">{formatAge(l.ageHours)}</td>
+                  <td className="text-center whitespace-nowrap">
+                    {l.score ? <span className="text-[10px] border rounded-full px-2 py-0.5">{l.score}</span> : "—"}
+                  </td>
+                  <td className="px-3 py-3 text-right whitespace-nowrap">
+                    <button className="text-blue-600 text-[11px] mr-2">View</button>
+                    <button className="text-red-600 text-[11px]">Delete</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { LeadsTable, LegacyLeadsTable, AlertStrip });
+</script>
+
+<script type="text/babel" data-presets="react">
+/* ──────────────────────────────────────────
+   TWEAKS PANEL
+   ────────────────────────────────────────── */
+function TweaksPanel({ state, set, open, setOpen }) {
+  if (!open) {
+    return (
+      <button
+        className="fixed bottom-4 right-4 z-50 btn btn-primary shadow-lg"
+        onClick={() => setOpen(true)}
+      >
+        <Icon.sparkle className="w-4 h-4" /> Tweaks
+      </button>
+    );
+  }
+  return (
+    <div className="tweaks-panel">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b hair-soft">
+        <div className="flex items-center gap-2">
+          <Icon.sparkle className="w-4 h-4 accent-text" />
+          <span className="text-[13px] font-semibold">Tweaks</span>
+        </div>
+        <button className="btn-ghost btn p-1" onClick={() => setOpen(false)}>
+          <Icon.x className="w-4 h-4" />
+        </button>
+      </div>
+      <div className="p-4 space-y-4">
+        {/* Kill switch */}
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.1em] ink-faint font-semibold mb-2">Super Admin</div>
+          <label className="flex items-center justify-between cursor-pointer py-1">
+            <div>
+              <div className="text-[12px] font-medium">Use refreshed UI</div>
+              <div className="text-[10px] ink-faint">Off = legacy look</div>
+            </div>
+            <div className={`relative w-9 h-5 rounded-full transition-colors ${state.killSwitch ? "accent-bg" : "bg-gray-300"}`}
+                 onClick={() => set("killSwitch", !state.killSwitch)}>
+              <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${state.killSwitch ? "left-[18px]" : "left-0.5"}`}></div>
+            </div>
+          </label>
+        </div>
+
+        {/* Role */}
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.1em] ink-faint font-semibold mb-2">Role</div>
+          <div className="grid grid-cols-1 gap-1">
+            {Object.entries(ROLES).map(([k, v]) => (
+              <button
+                key={k}
+                type="button"
+                onClick={() => set("role", k)}
+                className={`text-[11px] py-1.5 px-2 rounded-md border text-left flex items-center justify-between ${state.role === k ? "accent-bg text-white border-transparent" : "border-gray-200 hover:bg-surface-2"}`}
+              >
+                <span>{v.label}</span>
+                <span className={`text-[10px] ${state.role === k ? "text-white/70" : "ink-faint"}`}>{v.initials}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Alert intensity */}
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.1em] ink-faint font-semibold mb-2">Alert intensity</div>
+          <div className="grid grid-cols-3 gap-1">
+            {["gentle", "noticeable", "aggressive"].map(t => (
+              <button
+                key={t}
+                onClick={() => set("alertIntensity", t)}
+                className={`text-[11px] py-1.5 rounded-md border capitalize ${state.alertIntensity === t ? "accent-bg text-white border-transparent" : "border-gray-200 hover:bg-surface-2"}`}
+              >{t}</button>
+            ))}
+          </div>
+        </div>
+
+        {/* Alert triggers */}
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.1em] ink-faint font-semibold mb-2">Show alerts for</div>
+          <div className="space-y-1.5">
+            {[
+              ["showArrivedBanner", "Customer arrived"],
+              ["showOnTheWay", "Customer on the way"],
+              ["showHotLead", "Hot lead threshold"],
+              ["showSlaBreach", "SLA breach (> 24h)"],
+            ].map(([k, label]) => (
+              <label key={k} className="flex items-center justify-between cursor-pointer">
+                <span className="text-[12px]">{label}</span>
+                <input type="checkbox" checked={state[k]} onChange={() => set(k, !state[k])} />
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Row secondary line */}
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.1em] ink-faint font-semibold mb-2">Row info pattern</div>
+          <select
+            value={state.secondaryLine}
+            onChange={(e) => set("secondaryLine", e.target.value)}
+            className="w-full bg-surface-2 border hair rounded-lg h-8 px-2 text-[12px] outline-none"
+          >
+            {Object.entries(SECONDARY_PRESETS).map(([k, v]) => (
+              <option key={k} value={k}>{v.label}</option>
+            ))}
+          </select>
+          <div className="text-[10px] ink-faint mt-1.5">Shown under the customer name in lead rows.</div>
+        </div>
+
+        {/* Table density */}
+        <div>
+          <label className="flex items-center justify-between cursor-pointer">
+            <span className="text-[12px]">Compact table</span>
+            <input type="checkbox" checked={state.compactTable} onChange={() => set("compactTable", !state.compactTable)} />
+          </label>
+        </div>
+
+        {/* Messaging layout */}
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.1em] ink-faint font-semibold mb-2">Customer file layout</div>
+          <div className="flex gap-2">
+            {[
+              { k: "v2_conversation_first", label: "Conversation-first", sub: "Tabs + AI composer (new)" },
+              { k: "classic",               label: "Classic",            sub: "Cards + rails" },
+            ].map(o => (
+              <button
+                key={o.k}
+                onClick={() => set("fileLayout", o.k)}
+                className={`flex-1 border hair rounded-lg px-2 py-1.5 text-[11px] text-left ${state.fileLayout === o.k ? "bg-surface-2" : ""}`}
+              >
+                <div className="font-semibold">{o.label}</div>
+                <div className="ink-faint text-[10px]">{o.sub}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.1em] ink-faint font-semibold mb-2">Customer file messaging</div>
+          <div className="flex gap-2">
+            {[
+              { k: "tabs",    label: "Tabs",    sub: "SMS / Email / Calls" },
+              { k: "unified", label: "Unified", sub: "One thread" },
+            ].map(o => (
+              <button
+                key={o.k}
+                onClick={() => set("messagingLayout", o.k)}
+                className={`flex-1 border hair rounded-lg px-2 py-1.5 text-[11px] text-left ${state.messagingLayout === o.k ? "bg-surface-2" : ""}`}
+              >
+                <div className="font-semibold">{o.label}</div>
+                <div className="ink-faint text-[10px]">{o.sub}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Customer File accent (matches slide-out header gradient) */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-[10px] uppercase tracking-[0.1em] ink-faint font-semibold">Customer file accent</div>
+            <button
+              onClick={() => {
+                set("customerFileAccent", state.topBarBg || "#003b80");
+                set("customerFileAccent2", state.topBarBg2 || state.topBarBg || "#005bb5");
+              }}
+              className="text-[10px] px-2 py-0.5 rounded border hair hover:bg-surface-2"
+              title="Copy top bar colors"
+            >Match top bar</button>
+          </div>
+
+          {/* Accent start */}
+          <div className="mb-2">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[11px] ink-soft">Start</span>
+              <span className="text-[10px] font-mono ink-faint">{state.customerFileAccent || "#003b80"}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={state.customerFileAccent || "#003b80"}
+                onChange={(e) => set("customerFileAccent", e.target.value)}
+                className="h-7 w-10 rounded border hair cursor-pointer"
+              />
+              <input
+                type="text"
+                value={state.customerFileAccent || "#003b80"}
+                onChange={(e) => set("customerFileAccent", e.target.value.trim())}
+                placeholder="#003b80"
+                className="flex-1 bg-surface-2 border hair rounded h-7 px-2 text-[11px] font-mono outline-none focus:border-gray-400"
+              />
+            </div>
+          </div>
+
+          {/* Accent end */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[11px] ink-soft">End (gradient)</span>
+              <span className="text-[10px] font-mono ink-faint">{state.customerFileAccent2 || "#005bb5"}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={state.customerFileAccent2 || "#005bb5"}
+                onChange={(e) => set("customerFileAccent2", e.target.value)}
+                className="h-7 w-10 rounded border hair cursor-pointer"
+              />
+              <input
+                type="text"
+                value={state.customerFileAccent2 || "#005bb5"}
+                onChange={(e) => set("customerFileAccent2", e.target.value.trim())}
+                placeholder="#005bb5"
+                className="flex-1 bg-surface-2 border hair rounded h-7 px-2 text-[11px] font-mono outline-none focus:border-gray-400"
+              />
+            </div>
+            <div className="text-[10px] ink-faint mt-1">Used by the slide-out header gradient and primary buttons.</div>
+          </div>
+
+          {/* Preview */}
+          <div
+            className="mt-2 h-7 rounded-md border hair flex items-center px-2 text-[10px] font-semibold text-white"
+            style={{ background: `linear-gradient(to right, ${state.customerFileAccent || "#003b80"} 0%, ${state.customerFileAccent2 || "#005bb5"} 100%)` }}
+          >Preview · Customer File header</div>
+        </div>
+
+        {/* Top bar tweaks */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-[10px] uppercase tracking-[0.1em] ink-faint font-semibold">Top bar</div>
+          </div>
+          <div className="mb-2 flex gap-1">
+            <button
+              onClick={() => {
+                set("topBarStyle", "gradient-3stop");
+                set("topBarBg", "#00407f");
+                set("topBarBg2", "#00407f");
+                set("topBarText", "#ffffff");
+                set("topBarHeight", 56);
+                set("topBarShimmer", true);
+                set("topBarShimmerStyle", "hartecash");
+                set("topBarShimmerSpeed", 8);
+              }}
+              className="flex-1 text-[11px] font-medium px-2 py-1.5 rounded-md border hair hover:bg-surface-2"
+              title="Apply the Hartecash admin header recipe"
+            >🎨 Hartecash preset</button>
+            <button
+              onClick={() => {
+                set("topBarStyle", "solid");
+                set("topBarBg", "#1e40af");
+                set("topBarBg2", "#3b82f6");
+                set("topBarText", "#ffffff");
+                set("topBarHeight", 48);
+                set("topBarShimmer", false);
+              }}
+              className="flex-1 text-[11px] font-medium px-2 py-1.5 rounded-md border hair hover:bg-surface-2"
+              title="Reset top bar to default"
+            >Default</button>
+          </div>
+          <div className="space-y-2">
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[11px] ink-soft">Height</span>
+                <span className="text-[11px] font-mono ink-faint">{state.topBarHeight ?? 48}px</span>
+              </div>
+              <input
+                type="range" min="40" max="135" step="1"
+                value={state.topBarHeight ?? 48}
+                onChange={(e) => set("topBarHeight", Number(e.target.value))}
+                className="w-full accent-current"
+              />
+              <div className="flex gap-1 mt-1">
+                {[
+                  { v: 48, label: "Default" },
+                  { v: 64, label: "Thicker" },
+                  { v: 80, label: "Tall" },
+                ].map(p => (
+                  <button
+                    key={p.v}
+                    onClick={() => set("topBarHeight", p.v)}
+                    className={`flex-1 border hair rounded-md px-1 py-1 text-[10px] ${state.topBarHeight === p.v ? "bg-surface-2 font-semibold" : ""}`}
+                  >{p.label} <span className="ink-faint font-mono">{p.v}</span></button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[11px] ink-soft">Style</span>
+              </div>
+              <div className="grid grid-cols-4 gap-1">
+                {[
+                  { k: "solid",             label: "Solid" },
+                  { k: "gradient",          label: "Gradient" },
+                  { k: "gradient-diagonal", label: "Diagonal" },
+                  { k: "gradient-3stop",    label: "3-stop" },
+                ].map(o => (
+                  <button
+                    key={o.k}
+                    onClick={() => set("topBarStyle", o.k)}
+                    className={`border hair rounded-md px-1 py-1 text-[10px] ${state.topBarStyle === o.k ? "bg-surface-2 font-semibold" : ""}`}
+                  >{o.label}</button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="flex items-center justify-between cursor-pointer py-0.5">
+                <div>
+                  <div className="text-[12px] font-medium">Shimmer</div>
+                  <div className="text-[10px] ink-faint">Subtle animated sheen</div>
+                </div>
+                <div className={`relative w-9 h-5 rounded-full transition-colors ${state.topBarShimmer ? "accent-bg" : "bg-gray-300"}`}
+                     onClick={() => set("topBarShimmer", !state.topBarShimmer)}>
+                  <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${state.topBarShimmer ? "left-[18px]" : "left-0.5"}`}></div>
+                </div>
+              </label>
+              {state.topBarShimmer && (
+                <div className="mt-2 space-y-2">
+                  <div>
+                    <div className="text-[11px] ink-soft mb-1">Shimmer style</div>
+                    <div className="grid grid-cols-2 gap-1">
+                      {[
+                        { k: "sheen",     label: "Sheen" },
+                        { k: "hartecash", label: "Hartecash" },
+                      ].map(o => (
+                        <button
+                          key={o.k}
+                          onClick={() => {
+                            set("topBarShimmerStyle", o.k);
+                            if (o.k === "hartecash" && (state.topBarShimmerSpeed ?? 0) < 5) set("topBarShimmerSpeed", 8);
+                          }}
+                          className={`border hair rounded-md px-1 py-1 text-[10px] ${(state.topBarShimmerStyle || "sheen") === o.k ? "bg-surface-2 font-semibold" : ""}`}
+                        >{o.label}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[11px] ink-soft">Shimmer speed</span>
+                      <span className="text-[11px] font-mono ink-faint">{(state.topBarShimmerSpeed ?? 3.2).toFixed(1)}s</span>
+                    </div>
+                    <input
+                      type="range" min="0.5" max="10" step="0.1"
+                      value={state.topBarShimmerSpeed ?? 3.2}
+                      onChange={(e) => set("topBarShimmerSpeed", Number(e.target.value))}
+                      className="w-full"
+                    />
+                    <div className="flex gap-1 mt-1">
+                      {[
+                        { v: 1.2, label: "Fast"   },
+                        { v: 3.2, label: "Normal" },
+                        { v: 6,   label: "Slow"   },
+                      ].map(p => (
+                        <button
+                          key={p.v}
+                          onClick={() => set("topBarShimmerSpeed", p.v)}
+                          className={`flex-1 border hair rounded-md px-1 py-1 text-[10px] ${state.topBarShimmerSpeed === p.v ? "bg-surface-2 font-semibold" : ""}`}
+                        >{p.label} <span className="ink-faint font-mono">{p.v}s</span></button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[11px] ink-soft">{(state.topBarStyle === "gradient" || state.topBarStyle === "gradient-diagonal" || state.topBarStyle === "gradient-3stop") ? "Gradient start" : "Background"}</span>
+                <span className="text-[10px] font-mono ink-faint">{state.topBarBg || "#ffffff"}</span>
+              </div>
+              <div className="flex items-center gap-2 mb-1.5">
+                <input
+                  type="color"
+                  value={state.topBarBg || "#ffffff"}
+                  onChange={(e) => set("topBarBg", e.target.value)}
+                  className="h-7 w-10 rounded border hair cursor-pointer"
+                />
+                <input
+                  type="text"
+                  value={state.topBarBg || "#ffffff"}
+                  onChange={(e) => {
+                    const v = e.target.value.trim();
+                    if (/^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(v) || /^(rgb|hsl|oklch)/i.test(v)) set("topBarBg", v);
+                    else set("topBarBg", v); // accept anything while typing
+                  }}
+                  placeholder="#ffffff"
+                  className="flex-1 bg-surface-2 border hair rounded h-7 px-2 text-[11px] font-mono outline-none focus:border-gray-400"
+                />
+              </div>
+              <div className="flex gap-1">
+                {[
+                  { v: "#ffffff", label: "White" },
+                  { v: "#0f172a", label: "Slate" },
+                  { v: "#1e40af", label: "Blue"  },
+                  { v: "#111111", label: "Black" },
+                ].map(p => (
+                  <button
+                    key={p.v}
+                    onClick={() => set("topBarBg", p.v)}
+                    className="flex-1 rounded-md border hair text-[10px] py-1"
+                    style={{ background: p.v, color: p.v === "#ffffff" ? "#0f172a" : "#fff" }}
+                  >{p.label}</button>
+                ))}
+              </div>
+            </div>
+
+            {(state.topBarStyle === "gradient" || state.topBarStyle === "gradient-diagonal") && (
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[11px] ink-soft">Gradient end</span>
+                  <span className="text-[10px] font-mono ink-faint">{state.topBarBg2 || "#3b82f6"}</span>
+                </div>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <input
+                    type="color"
+                    value={state.topBarBg2 || "#3b82f6"}
+                    onChange={(e) => set("topBarBg2", e.target.value)}
+                    className="h-7 w-10 rounded border hair cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={state.topBarBg2 || "#3b82f6"}
+                    onChange={(e) => set("topBarBg2", e.target.value.trim())}
+                    placeholder="#3b82f6"
+                    className="flex-1 bg-surface-2 border hair rounded h-7 px-2 text-[11px] font-mono outline-none focus:border-gray-400"
+                  />
+                </div>
+                <div className="flex gap-1">
+                  {[
+                    { v: "#3b82f6", label: "Sky"    },
+                    { v: "#005bb5", label: "Blue"   },
+                    { v: "#7c3aed", label: "Violet" },
+                    { v: "#0ea5e9", label: "Cyan"   },
+                  ].map(p => (
+                    <button
+                      key={p.v}
+                      onClick={() => set("topBarBg2", p.v)}
+                      className="flex-1 rounded-md border hair text-[10px] py-1"
+                      style={{ background: p.v, color: "#fff" }}
+                    >{p.label}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[11px] ink-soft">Text color</span>
+                <span className="text-[10px] font-mono ink-faint">{state.topBarText || "#0f172a"}</span>
+              </div>
+              <div className="flex items-center gap-2 mb-1.5">
+                <input
+                  type="color"
+                  value={state.topBarText || "#0f172a"}
+                  onChange={(e) => set("topBarText", e.target.value)}
+                  className="h-7 w-10 rounded border hair cursor-pointer"
+                />
+                <input
+                  type="text"
+                  value={state.topBarText || "#0f172a"}
+                  onChange={(e) => set("topBarText", e.target.value.trim())}
+                  placeholder="#0f172a"
+                  className="flex-1 bg-surface-2 border hair rounded h-7 px-2 text-[11px] font-mono outline-none focus:border-gray-400"
+                />
+              </div>
+              <div className="flex gap-1">
+                {[
+                  { v: "#0f172a", label: "Dark"  },
+                  { v: "#ffffff", label: "White" },
+                  { v: "#64748b", label: "Muted" },
+                ].map(p => (
+                  <button
+                    key={p.v}
+                    onClick={() => set("topBarText", p.v)}
+                    className="flex-1 rounded-md border hair text-[10px] py-1"
+                    style={{ color: p.v, background: p.v === "#ffffff" ? "#1e293b" : undefined }}
+                  >{p.label}</button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { TweaksPanel });
+</script>
+
+<script src="mock-data.js"></script>
+<script src="lead-to-submission.js"></script>
+<script type="text/babel" data-presets="react" src="customer-comms.jsx" data-plugins="transform-react-jsx-source" data-filename="customer-comms.jsx"></script>
+<script type="text/babel" data-presets="react" src="CustomerFile.jsx" data-plugins="transform-react-jsx-source" data-filename="CustomerFile.jsx"></script>
+<script type="text/babel" data-presets="react" src="notes-modal.jsx" data-plugins="transform-react-jsx-source" data-filename="notes-modal.jsx"></script>
+<script type="text/babel" data-presets="react" src="customer-file-v2.jsx" data-plugins="transform-react-jsx-source" data-filename="customer-file-v2.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+/* ──────────────────────────────────────────
+   ROOT APP
+   ────────────────────────────────────────── */
+function App() {
+  const [state, setState] = useState(() => {
+    try {
+      const saved = localStorage.getItem("autocurb-refresh-tweaks");
+      return saved ? { ...TWEAKS, ...JSON.parse(saved) } : TWEAKS;
+    } catch { return TWEAKS; }
+  });
+  const [active, setActive] = useState(ROLES[state.role].home);
+  const [tweaksOpen, setTweaksOpen] = useState(false);
+  const [openLead, setOpenLead] = useState(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem("autocurb-dark");
+      if (saved !== null) return saved === "1";
+    } catch {}
+    return typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  });
+
+  // Apply dark class to <html>, with a brief transition window
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.add("theming");
+    if (darkMode) root.classList.add("dark");
+    else root.classList.remove("dark");
+    try { localStorage.setItem("autocurb-dark", darkMode ? "1" : "0"); } catch {}
+    const t = setTimeout(() => root.classList.remove("theming"), 260);
+    return () => clearTimeout(t);
+  }, [darkMode]);
+
+  useEffect(() => {
+    const h = () => setSidebarCollapsed(c => !c);
+    window.addEventListener("__toggle_sidebar", h);
+    return () => window.removeEventListener("__toggle_sidebar", h);
+  }, []);
+
+  useEffect(() => {
+    const h = () => setDarkMode(d => !d);
+    window.addEventListener("__toggle_darkmode", h);
+    // ⌘⇧D / Ctrl⇧D shortcut
+    const key = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === "D" || e.key === "d")) {
+        e.preventDefault();
+        setDarkMode(d => !d);
+      }
+    };
+    window.addEventListener("keydown", key);
+    return () => {
+      window.removeEventListener("__toggle_darkmode", h);
+      window.removeEventListener("keydown", key);
+    };
+  }, []);
+
+  const set = (key, val) => {
+    setState(s => {
+      const next = { ...s, [key]: val };
+      localStorage.setItem("autocurb-refresh-tweaks", JSON.stringify(next));
+      if (key === "role") setActive(ROLES[val].home);
+      // Also post to parent for persistence via edit mode
+      try {
+        window.parent.postMessage({ type: "__edit_mode_set_keys", edits: { [key]: val } }, "*");
+      } catch {}
+      return next;
+    });
+  };
+
+  // Edit-mode listener
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.data?.type === "__activate_edit_mode") setTweaksOpen(true);
+      if (e.data?.type === "__deactivate_edit_mode") setTweaksOpen(false);
+    };
+    const openTweaks = () => setTweaksOpen(true);
+    window.addEventListener("message", handler);
+    window.addEventListener("__open_tweaks", openTweaks);
+    // Only announce tweaks availability for admin/super-admin roles.
+    const isAdmin = state.role === "super_admin" || state.role === "gsm_gm";
+    if (isAdmin) { try { window.parent.postMessage({ type: "__edit_mode_available" }, "*"); } catch {} }
+    else { try { window.parent.postMessage({ type: "__edit_mode_dismissed" }, "*"); } catch {} }
+    return () => {
+      window.removeEventListener("message", handler);
+      window.removeEventListener("__open_tweaks", openTweaks);
+    };
+  }, [state.role]);
+
+  // Apply global UI scale via `zoom` on <html> (Chrome/Safari/Edge/Firefox)
+  useEffect(() => {
+    const scale = (state.uiScale ?? 100) / 100;
+    document.documentElement.style.zoom = scale;
+    return () => { document.documentElement.style.zoom = ""; };
+  }, [state.uiScale]);
+
+  // Text-only scale: override Tailwind text-[NNpx] utilities by generating
+  // !important rules for every common px size multiplied by textScale.
+  useEffect(() => {
+    const id = "__text-scale-override";
+    let tag = document.getElementById(id);
+    if (!tag) { tag = document.createElement("style"); tag.id = id; document.head.appendChild(tag); }
+    const mult = (state.textScale ?? 100) / 100;
+    if (mult === 1) { tag.textContent = ""; return; }
+    // Common Tailwind arbitrary px sizes used in this file (scan once):
+    const sizes = [9,10,10.5,11,11.5,12,12.5,13,13.5,14,15,16,17,18,19,20,21,22,24,26,28,30,32,34,36,40,44,48,56,64,72];
+    // Also include the Tailwind default scale
+    const named = {
+      "text-xs":   12,
+      "text-sm":   14,
+      "text-base": 16,
+      "text-lg":   18,
+      "text-xl":   20,
+      "text-2xl":  24,
+      "text-3xl":  30,
+      "text-4xl":  36,
+      "text-5xl":  48,
+      "text-6xl":  60,
+      "text-7xl":  72,
+    };
+    const rules = [];
+    for (const s of sizes) {
+      const esc = String(s).replace(".", "\\.");
+      rules.push(`.text-\\[${esc}px\\] { font-size: ${(s * mult).toFixed(2)}px !important; }`);
+    }
+    for (const [cls, px] of Object.entries(named)) {
+      rules.push(`.${cls} { font-size: ${(px * mult).toFixed(2)}px !important; }`);
+    }
+    tag.textContent = rules.join("\n");
+  }, [state.textScale]);
+
+  // Inject runtime overrides for the Customer File slide-out accent colors
+  useEffect(() => {
+    const id = "__customer-file-accent-override";
+    let tag = document.getElementById(id);
+    if (!tag) { tag = document.createElement("style"); tag.id = id; document.head.appendChild(tag); }
+    const a1 = state.customerFileAccent  || "#003b80";
+    const a2 = state.customerFileAccent2 || "#005bb5";
+    tag.textContent = `
+      .bg-\\[\\#003b80\\] { background-color: ${a1} !important; }
+      .hover\\:bg-\\[\\#002a5c\\]:hover { background-color: ${a1} !important; filter: brightness(0.85); }
+      .text-\\[\\#003b80\\] { color: ${a1} !important; }
+      .from-\\[\\#003b80\\] { --tw-gradient-from: ${a1} !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgb(0 0 0 / 0)) !important; }
+      .to-\\[\\#005bb5\\]   { --tw-gradient-to:   ${a2} !important; }
+      [data-customer-header] { background: linear-gradient(to right, ${a1} 0%, ${a2} 100%) !important; }
+    `;
+  }, [state.customerFileAccent, state.customerFileAccent2]);
+
+  // Build the alert count for the header bell
+  const alertCount = useMemo(() => {
+    return [state.showArrivedBanner, state.showOnTheWay, state.showHotLead, state.showSlaBreach].filter(Boolean).length;
+  }, [state]);
+
+  const legacy = !state.killSwitch;
+  // Effective main-content scale: global (super-admin) override wins when not 100.
+  const mainScaleEffective = (state.mainScaleGlobal && state.mainScaleGlobal !== 100)
+    ? state.mainScaleGlobal
+    : (state.mainScale ?? 100);
+  const mainScaleStyle = mainScaleEffective !== 100 ? { zoom: mainScaleEffective / 100 } : undefined;
+
+  // Pick the right home/page
+  const renderContent = () => {
+    if (legacy) return <LegacyLeadsTable />;
+    if (active === "today") return <TodayHome role={state.role} setActive={setActive} onOpen={setOpenLead} />;
+    if (active === "accepted-appts") return <ReceptionHome onOpen={setOpenLead} />;
+    if (active === "bdc-queue") return <BdcHome onOpen={setOpenLead} />;
+    if (active === "appraiser-queue") return <AppraiserHome onOpen={setOpenLead} />;
+    if (active === "tenants") return <PlatformHome />;
+    if (active === "appearance") return <AppearancePage state={state} set={set} role={state.role} />;
+    if (active === "channels") return <ChannelsPage state={state} set={set} role={state.role} />;
+    if (active === "submissions") return (
+      <LeadsTable
+        alertIntensity={state.alertIntensity}
+        showArrivedBanner={state.showArrivedBanner}
+        showHotLead={state.showHotLead}
+        showSlaBreach={state.showSlaBreach}
+        compact={state.compactTable}
+        secondaryLine={state.secondaryLine}
+        onOpen={setOpenLead}
+      />
+    );
+    // Fallback: scaffold showing the real section name + "coming soon" state.
+    // Uses the sidebar item map to look up the current label.
+    const allItems = Object.values(sidebarForRole(state.role) || {}).flat();
+    const current = allItems.find(i => i.id === active);
+    const label = current?.label || "Section";
+    return (
+      <div className="max-w-[1100px] mx-auto px-6 py-6">
+        <div className="mb-5">
+          <div className="text-[11px] uppercase tracking-[0.15em] ink-faint font-semibold">Section</div>
+          <h1 className="text-[24px] font-bold leading-tight mt-0.5">{label}</h1>
+          <div className="text-[13px] ink-soft mt-1">Live mock coming next — the shell, routing, and sidebar are wired.</div>
+        </div>
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="card p-4">
+              <div className="h-3 w-20 rounded bg-slate-200 mb-2"></div>
+              <div className="h-7 w-24 rounded bg-slate-100 mb-1"></div>
+              <div className="h-3 w-32 rounded bg-slate-100"></div>
+            </div>
+          ))}
+        </div>
+        <div className="card p-0 overflow-hidden">
+          <div className="px-4 py-3 border-b hair">
+            <div className="text-[12px] font-semibold">{label} — list</div>
+          </div>
+          <div className="divide-y hair-soft">
+            {[1,2,3,4,5].map((i) => (
+              <div key={i} className="flex items-center gap-4 px-4 py-3">
+                <div className="w-8 h-8 rounded-full bg-slate-200"></div>
+                <div className="flex-1">
+                  <div className="h-3 w-40 rounded bg-slate-200 mb-1.5"></div>
+                  <div className="h-2.5 w-56 rounded bg-slate-100"></div>
+                </div>
+                <div className="h-7 w-20 rounded bg-slate-100"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="mt-4 text-[11px] ink-faint text-center">
+          This page is a placeholder — design iterations for {label} happen separately.
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div data-legacy={legacy} className="h-screen flex flex-col overflow-hidden">
+      {legacy ? (
+        <>
+          <LegacyHeader role={state.role} setRole={(r) => set("role", r)} />
+          <div className="flex-1 flex min-h-0">
+            <LegacySidebar role={state.role} active={active} setActive={setActive} />
+            <main className="flex-1 min-w-0 overflow-auto bg-gray-50">
+              <div style={mainScaleStyle}>{renderContent()}</div>
+            </main>
+          </div>
+        </>
+      ) : (
+        <>
+          <AppHeader role={state.role} setRole={(r) => set("role", r)} setActive={setActive} alertCount={alertCount} topBarHeight={state.topBarHeight} topBarBg={state.topBarBg} topBarText={state.topBarText} topBarStyle={state.topBarStyle} topBarBg2={state.topBarBg2} topBarShimmer={state.topBarShimmer} topBarShimmerSpeed={state.topBarShimmerSpeed} topBarShimmerStyle={state.topBarShimmerStyle} darkMode={darkMode} />
+          <div className="flex-1 flex min-h-0">
+            <Sidebar role={state.role} active={active} setActive={setActive} collapsed={sidebarCollapsed} sidebarAccess={state.sidebarAccess} />
+            <main className="flex-1 min-w-0 overflow-auto">
+              <div style={mainScaleStyle}>{renderContent()}</div>
+            </main>
+          </div>
+        </>
+      )}
+
+      <TweaksPanel state={state} set={set} open={tweaksOpen} setOpen={setTweaksOpen} />
+      {openLead && (window.CustomerFile || window.CustomerFileV2) && (() => {
+        const useV2 = (state.fileLayout === "v2_conversation_first" || state.fileLayout === "conversation") && window.CustomerFileV2;
+        const Component = useV2 ? window.CustomerFileV2 : window.CustomerFile;
+        const panelMax = useV2 ? "max-w-[1320px]" : "max-w-[1180px]";
+        return (
+        <div
+          className="fixed inset-y-0 right-0 left-0 z-50 bg-black/35 flex justify-end"
+          style={{ paddingLeft: legacy ? 0 : 220 }}
+          onClick={() => setOpenLead(null)}
+        >
+          <div
+            className={`w-full ${panelMax} h-full bg-slate-50 shadow-2xl sheet-enter overflow-hidden flex flex-col`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Component
+              sub={window.leadToSubmission(openLead)}
+              onClose={() => setOpenLead(null)}
+              messagingLayout={state.messagingLayout}
+            />
+          </div>
+        </div>
+        );
+      })()}
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App />);
+</script>
+</body>
+</html>
