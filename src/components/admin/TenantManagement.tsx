@@ -405,6 +405,17 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
+                      {t.dealership_id !== "default" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 gap-1.5"
+                          onClick={() => setViewTarget({ dealership_id: t.dealership_id, display_name: t.display_name || t.slug })}
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          View As
+                        </Button>
+                      )}
                       {onSetupDealer && (
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => onSetupDealer(t.dealership_id)} title="Setup">
                           <Rocket className="w-3.5 h-3.5" />
