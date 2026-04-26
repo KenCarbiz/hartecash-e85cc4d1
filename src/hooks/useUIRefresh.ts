@@ -1,24 +1,37 @@
-import { useSiteConfig } from "./useSiteConfig";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useTenant } from "@/contexts/TenantContext";
 
 /**
  * Per-tenant kill switch for the refreshed admin UI.
  *
- * Reads `site_config.ui_refresh_enabled` (added in
- * supabase/migrations/20260425120000_ui_refresh_flag.sql) and returns a
- * single boolean that refreshed components consult at the top of their
- * render to decide whether to delegate to the legacy implementation.
- *
- * Defaults to false: dealers opt in. Toggled by platform admins from
- * System Settings while tenant-overriding into the dealer.
- *
- * The cast to `any` is intentional — the SiteConfig interface in
- * useSiteConfig.ts predates this column and we don't want to widen the
- * shared type from inside a feature-flag hook. The DEFAULTS object in
- * useSiteConfig.ts also doesn't seed this key, so an undefined value
- * (legacy tenants whose row pre-dates the migration) coerces to false
- * via Boolean(...), which matches the migration's DEFAULT false.
+ * This intentionally reads the single flag directly instead of piggybacking
+ * on useSiteConfig's longer-lived cache, so platform-admin data flips are
+ * picked up on mount/focus without waiting for the full site config cache to
+ * expire.
  */
 export const useUIRefresh = (): boolean => {
-  const { config } = useSiteConfig();
-  return Boolean((config as any).ui_refresh_enabled);
+  const { tenant } = useTenant();
+  const dealershipId = tenant.dealership_id;
+
+  const { data } = useQuery({
+    queryKey: ["ui_refresh_enabled", dealershipId],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("site_config")
+        .select("ui_refresh_enabled")
+        .eq("dealership_id", dealershipId)
+        .maybeSingle();
+
+      if (error) throw error;
+      return Boolean(data?.ui_refresh_enabled);
+    },
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+  });
+
+  return Boolean(data);
 };
