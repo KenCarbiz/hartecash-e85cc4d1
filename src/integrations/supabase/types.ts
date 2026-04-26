@@ -2665,6 +2665,45 @@ export type Database = {
         }
         Relationships: []
       }
+      tenant_view_log: {
+        Row: {
+          ended_at: string | null
+          ended_reason: string | null
+          id: string
+          reason: string
+          started_at: string
+          super_admin_email: string
+          super_admin_user_id: string
+          target_dealership_id: string
+          target_display_name: string
+          user_agent: string | null
+        }
+        Insert: {
+          ended_at?: string | null
+          ended_reason?: string | null
+          id?: string
+          reason: string
+          started_at?: string
+          super_admin_email: string
+          super_admin_user_id: string
+          target_dealership_id: string
+          target_display_name: string
+          user_agent?: string | null
+        }
+        Update: {
+          ended_at?: string | null
+          ended_reason?: string | null
+          id?: string
+          reason?: string
+          started_at?: string
+          super_admin_email?: string
+          super_admin_user_id?: string
+          target_dealership_id?: string
+          target_display_name?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       tenants: {
         Row: {
           created_at: string
