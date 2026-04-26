@@ -18,6 +18,7 @@ import SubmissionsTable from "./SubmissionsTable";
 import AllLeadsPage from "./AllLeadsPage";
 import AdminLoadingSkeleton from "./AdminLoadingSkeleton";
 import AdminEmptyState from "./AdminEmptyState";
+import TodayHome from "./home/TodayHome";
 import { UserCheck as UserCheckIcon } from "lucide-react";
 
 // All other sections are lazy — most admins only ever touch a handful
@@ -202,29 +203,44 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
   const activeSection = colonIdx > -1 ? rawActiveSection.slice(0, colonIdx) : rawActiveSection;
   const focusField = colonIdx > -1 ? rawActiveSection.slice(colonIdx + 1) : undefined;
 
-  // ── Pipeline sections ──
-  if (activeSection === "submissions") {
+  // ── Today home ── Manager landing. Wired from the sidebar's
+  // Work → Today entry and the default-home routing in AdminDashboard.
+  // See CLAUDE_CODE_BRIEF.md §2.
+  if (activeSection === "today") {
     if (props.loading) return <AdminLoadingSkeleton />;
     return (
-      <>
-        <TodayActionSummary submissions={submissions} appointments={appointments} onNavigate={setActiveSection} />
-        <AllLeadsPage
-          submissions={submissions}
-          loading={props.loading}
-          search={props.search}
-          onSearchChange={props.setSearch}
-          page={props.page}
-          total={props.total}
-          pageSize={PAGE_SIZE}
-          onPageChange={props.setPage}
-          dealerLocations={props.dealerLocations}
-          onView={props.handleView}
-        />
-      </>
+      <TodayHome
+        submissions={submissions}
+        appointments={appointments}
+        userName={props.userName}
+        onView={handleView}
+        onNavigate={setActiveSection}
+      />
     );
   }
 
-  // Legacy classic table — kept as fallback per brief.
+  // ── All Leads ── refreshed 6-col view with filter chips + arrival
+  // banner. See CLAUDE_CODE_BRIEF.md §3.
+  if (activeSection === "submissions") {
+    if (props.loading) return <AdminLoadingSkeleton />;
+    return (
+      <AllLeadsPage
+        submissions={submissions}
+        loading={props.loading}
+        search={props.search}
+        onSearchChange={props.setSearch}
+        page={props.page}
+        total={props.total}
+        pageSize={PAGE_SIZE}
+        onPageChange={props.setPage}
+        dealerLocations={props.dealerLocations}
+        onView={props.handleView}
+      />
+    );
+  }
+
+  // Classic dense table — opt-in escape hatch via the "submissions-classic"
+  // section key for users who prefer the older 7-col view.
   if (activeSection === "submissions-classic") {
     if (props.loading) return <AdminLoadingSkeleton />;
     return (

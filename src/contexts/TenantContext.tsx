@@ -219,10 +219,12 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
       // this on insert but we check it client-side for a cleaner error.
       const { data: roleRow } = await supabase
         .from("user_roles")
-        .select("role")
+        .select("role, dealership_id")
         .eq("user_id", session.user.id)
+        .eq("role", "admin")
+        .eq("dealership_id", "default")
         .maybeSingle();
-      if ((roleRow as { role?: string } | null)?.role !== "admin") {
+      if (!roleRow) {
         return false;
       }
 
