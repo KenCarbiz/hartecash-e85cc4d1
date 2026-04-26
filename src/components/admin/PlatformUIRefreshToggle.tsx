@@ -13,7 +13,7 @@
 // uses submission_id = null, which the migration in
 // supabase/migrations/20260425120000_ui_refresh_flag.sql made nullable.
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -41,6 +41,14 @@ const PlatformUIRefreshToggle = ({ auditLabel }: PlatformUIRefreshToggleProps) =
   );
   const [localEnabled, setLocalEnabled] = useState<boolean>(currentEnabled);
   const [saving, setSaving] = useState(false);
+
+  // Keep local toggle state in sync when the cached config changes
+  // (tenant switch, external invalidation, or another admin toggling
+  // for the same tenant). Without this, dirty-state can lie after a
+  // view-as switch and the Save button appears active for no reason.
+  useEffect(() => {
+    setLocalEnabled(currentEnabled);
+  }, [currentEnabled, tenant.dealership_id]);
 
   // Hide entirely outside of a tenant view-as session. The
   // system-settings section is already canManageAccess-gated upstream;
@@ -97,7 +105,9 @@ const PlatformUIRefreshToggle = ({ auditLabel }: PlatformUIRefreshToggleProps) =
 
       toast({
         title: newValue ? "Refresh enabled" : "Refresh disabled",
-        description: `${tenant.display_name} now uses the ${newValue ? "refreshed" : "legacy"} UI.`,
+        description: newValue
+          ? `${tenant.display_name} now uses the refreshed UI. Check the sidebar (5 groups), Today home, lead table, appraiser queue, and appointments — all should switch on next render.`
+          : `${tenant.display_name} reverted to the legacy UI.`,
       });
     } finally {
       setSaving(false);
