@@ -1,15 +1,9 @@
-// AppointmentManager — kill-switch wrapper.
+// AppointmentManager — front-desk-style layout with date header,
+// KPI mini-row, and Right Now / Today / Upcoming / Past buckets.
+// See frontend-redesign/CLAUDE_CODE_BRIEF.md §5.
 //
-// When site_config.ui_refresh_enabled is false (the default), this
-// component delegates to LegacyAppointmentManager (verbatim current
-// behavior). When the flag is true, it renders the front-desk-style
-// layout below: date header + KPI mini-row + Right Now / Today /
-// Upcoming / Past buckets.
-//
-// All data handlers (handleCreate, handleStatusUpdate, handleReschedule,
-// the location filter, the Reschedule + Create dialogs) are duplicated
-// between this file and the legacy on purpose — the brief explicitly
-// forbids "while-I'm-here cleanups."
+// The legacy 7-col table view and the kill-switch wrapper have been
+// removed. This is now the only AppointmentManager.
 
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,13 +17,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus, Eye, CalendarClock, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { Appointment, Submission } from "@/lib/adminConstants";
+import type { Appointment, Submission, DealerLocation } from "@/lib/adminConstants";
 import { getTimeSlotsForDate, APPT_TIME_SLOTS_WEEKDAY, APPT_TIME_SLOTS_FRISSAT } from "@/lib/adminConstants";
-import { useUIRefresh } from "@/hooks/useUIRefresh";
-import {
-  LegacyAppointmentManager,
-  type AppointmentManagerProps,
-} from "./AppointmentManager.legacy";
+
+interface AppointmentManagerProps {
+  appointments: Appointment[];
+  setAppointments: React.Dispatch<React.SetStateAction<Appointment[]>>;
+  submissions: Submission[];
+  dealerLocations: DealerLocation[];
+  onViewSubmission: (appt: Appointment) => void;
+  fetchSubmissions: () => void;
+  fetchAppointments: () => void;
+}
 
 // ── Helpers shared with RightNowStrip in spirit; kept local because
 // the brief forbids cross-file refactor in this pass. ─────────────
@@ -59,7 +58,7 @@ const ON_THE_WAY_STATUS = "on_the_way";
 const SOON_WINDOW_MS = 60 * 60 * 1000;
 const NOW_WINDOW_MS = 15 * 60 * 1000;
 
-const RefreshedAppointmentManager = ({
+const AppointmentManager = ({
   appointments,
   setAppointments,
   submissions,
@@ -584,13 +583,6 @@ const RefreshedAppointmentManager = ({
       </Dialog>
     </div>
   );
-};
-
-// Public component — kill-switch wrapper. Default `false` keeps every
-// dealer on the legacy view until they're explicitly opted in.
-const AppointmentManager = (props: AppointmentManagerProps) => {
-  const refreshed = useUIRefresh();
-  return refreshed ? <RefreshedAppointmentManager {...props} /> : <LegacyAppointmentManager {...props} />;
 };
 
 export default AppointmentManager;

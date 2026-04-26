@@ -1,18 +1,9 @@
-// AdminSidebar — kill-switch wrapper.
-//
-// When site_config.ui_refresh_enabled is false (the default), this
-// component delegates to LegacyAdminSidebar (AdminSidebar.legacy.tsx),
-// which is the verbatim sidebar dealers see today.
-//
-// When the flag is true, it renders RefreshedAdminSidebar below: the
-// consolidated 5-group structure (Work · Grow · Measure · Setup ·
-// Account, plus Platform for super-admins) defined in
+// AdminSidebar — consolidated 5-group sidebar (Work · Grow · Measure ·
+// Setup · Account, plus Platform for super-admins). See
 // frontend-redesign/CLAUDE_CODE_BRIEF.md §1.
 //
-// Every section `key` string is preserved across both variants so
-// AdminSectionRenderer.tsx and the rest of the dashboard plumbing
-// continue to work unchanged. Role gates also match the legacy
-// component verbatim — the refresh consolidates *layout*, not access.
+// The legacy 9-group sidebar and the kill-switch wrapper have been
+// removed. This is now the only admin sidebar.
 
 import { useState, useEffect } from "react";
 import {
@@ -36,8 +27,29 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { isManagerRole, canViewExecutiveHUD } from "@/lib/adminConstants";
-import { useUIRefresh } from "@/hooks/useUIRefresh";
-import { LegacyAdminSidebar, type AdminSidebarProps } from "./AdminSidebar.legacy";
+
+interface AdminSidebarProps {
+  activeSection: string;
+  onSectionChange: (section: string) => void;
+  canManageAccess: boolean;
+  submissionCount: number;
+  appointmentCount: number;
+  pendingRequestCount: number;
+  permissionRequestCount?: number;
+  pricingAccessRequestCount?: number;
+  appraiserQueueCount?: number;
+  allowedSections?: string[] | null;
+  showRequestAccess?: boolean;
+  onRequestAccess?: (sectionKey: string) => void;
+  locationCount?: number;
+  userRole?: string;
+  isAppraiser?: boolean;
+  dealershipId?: string;
+  /** Enterprise beta program enrollment. Hides the enterprise-only
+   *  items (API Access, vAuto, White Label, Wholesale Marketplace) by
+   *  default. Flipped on per-dealer by Super Admin. */
+  enterpriseBetaEnabled?: boolean;
+}
 
 type SidebarItem = {
   key: string;
@@ -50,7 +62,7 @@ type SidebarItem = {
 
 const STORAGE_KEY = "admin-sidebar-collapsed";
 
-const RefreshedAdminSidebar = ({
+const AdminSidebar = ({
   activeSection,
   onSectionChange,
   canManageAccess,
@@ -415,13 +427,6 @@ const RefreshedAdminSidebar = ({
       </SidebarFooter>
     </Sidebar>
   );
-};
-
-// Public component — kill-switch wrapper. Default `false` keeps every
-// dealer on the legacy sidebar until they're explicitly opted in.
-const AdminSidebar = (props: AdminSidebarProps) => {
-  const refreshed = useUIRefresh();
-  return refreshed ? <RefreshedAdminSidebar {...props} /> : <LegacyAdminSidebar {...props} />;
 };
 
 export default AdminSidebar;
