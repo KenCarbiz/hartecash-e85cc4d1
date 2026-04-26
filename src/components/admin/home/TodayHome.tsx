@@ -16,6 +16,7 @@
 
 import { useMemo } from "react";
 import type { Submission, Appointment } from "@/lib/adminConstants";
+import { getStatusLabel } from "@/lib/adminConstants";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Phone, DollarSign, Calendar, CheckCircle2, Eye } from "lucide-react";
@@ -28,6 +29,9 @@ interface TodayHomeProps {
   appointments: Appointment[];
   userName: string;
   onView: (sub: Submission) => void;
+  /** Optional — when supplied, the "View all leads →" link in the
+   *  Do Next section header navigates to it. */
+  onNavigate?: (section: string) => void;
 }
 
 const greetingForHour = (h: number) => {
@@ -136,7 +140,7 @@ const fmtApptTime = (t: string | null): string => {
   return t;
 };
 
-const TodayHome = ({ submissions, appointments, userName, onView }: TodayHomeProps) => {
+const TodayHome = ({ submissions, appointments, userName, onView, onNavigate }: TodayHomeProps) => {
   const now = new Date();
   const greeting = greetingForHour(now.getHours());
   const fn = firstName(userName);
@@ -216,10 +220,10 @@ const TodayHome = ({ submissions, appointments, userName, onView }: TodayHomePro
   return (
     <div className="space-y-6">
       <header className="space-y-1">
-        <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+        <p className="text-[12px] font-medium tracking-[0.05em] text-muted-foreground">
           {fmtDateHeader(now)}
         </p>
-        <h1 className="text-2xl font-bold text-foreground">
+        <h1 className="text-[28px] leading-tight font-bold tracking-tight text-foreground">
           {greeting}{fn ? `, ${fn}` : ""}.
         </h1>
         <p className="text-sm text-muted-foreground">
@@ -238,18 +242,30 @@ const TodayHome = ({ submissions, appointments, userName, onView }: TodayHomePro
       {/* ── Do Next ── concatenated action list across SLA / offer / call buckets */}
       {doNextRows.length > 0 && (
         <section aria-labelledby="do-next-heading" className="space-y-2">
-          <div className="flex items-end justify-between">
+          <div className="flex items-end justify-between gap-3">
             <h2
               id="do-next-heading"
               className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground"
             >
               Do next
             </h2>
-            {doNextTotal > doNextRows.length && (
-              <span className="text-[11px] text-muted-foreground">
-                Showing {doNextRows.length} of {doNextTotal}
-              </span>
-            )}
+            <div className="flex items-center gap-3">
+              {doNextTotal > doNextRows.length && (
+                <span className="text-[11px] text-muted-foreground">
+                  Showing {doNextRows.length} of {doNextTotal}
+                </span>
+              )}
+              {onNavigate && (
+                <button
+                  type="button"
+                  onClick={() => onNavigate("submissions")}
+                  className="inline-flex items-center gap-1 text-[12px] font-medium text-foreground/80 hover:text-foreground transition-colors"
+                >
+                  View all leads
+                  <ArrowRight className="w-3 h-3" />
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="rounded-xl border border-border bg-card divide-y divide-border/60">
@@ -288,13 +304,19 @@ const TodayHome = ({ submissions, appointments, userName, onView }: TodayHomePro
                       <span className="text-sm font-semibold text-foreground truncate">
                         {s.name || "Unknown"}
                       </span>
+                      {/* Status pill — labels the lead's current pipeline state
+                          (Inspected / Contacted / New / etc.) so operators can
+                          tell at a glance why this row is in the action list. */}
+                      <span className="inline-flex items-center text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">
+                        {getStatusLabel(s.progress_status)}
+                      </span>
                       {isSla && (
                         <span className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-red-500/10 text-red-700 dark:text-red-300 border border-red-500/30">
                           SLA · {formatAge(s.created_at)}
                         </span>
                       )}
                       {kind === "offer" && (
-                        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-300">
                           Needs offer
                         </span>
                       )}

@@ -214,6 +214,7 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
         appointments={appointments}
         userName={props.userName}
         onView={handleView}
+        onNavigate={setActiveSection}
       />
     );
   }

@@ -14,7 +14,7 @@
 
 import type { Submission, Appointment } from "@/lib/adminConstants";
 import { Button } from "@/components/ui/button";
-import { Phone } from "lucide-react";
+import { Phone, ArrowRight, Clock } from "lucide-react";
 
 interface RightNowStripProps {
   submissions: Submission[];
@@ -37,9 +37,6 @@ const parseApptDate = (appt: Appointment): Date | null => {
   return new Date(t);
 };
 
-const fmtTime = (d: Date) =>
-  d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-
 const vehicleLine = (s: Submission) => {
   const yr = s.vehicle_year || "";
   const mk = s.vehicle_make || "";
@@ -55,6 +52,33 @@ const vehicleLine = (s: Submission) => {
 const telLink = (phone: string | null | undefined) => {
   const digits = phone?.replace(/\D/g, "");
   return digits ? `tel:+1${digits}` : undefined;
+};
+
+// Compact "time since" formatter for arrival/on-the-way card timestamps.
+// Pulls from on_the_way_at / arrived_at when present, else falls back to
+// status_updated_at, else hides. Output: "2m ago" / "12m ago" / "1h ago".
+const fmtAgo = (iso: string | null | undefined): string | null => {
+  if (!iso) return null;
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return null;
+  const mins = Math.max(0, Math.floor((Date.now() - t) / 60000));
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  return `${hours}h ago`;
+};
+
+const offerOrApptText = (s: Submission, apptAt?: Date): string | null => {
+  if (s.offered_price && s.offered_price > 0) {
+    return `$${s.offered_price.toLocaleString()}`;
+  }
+  if (apptAt) {
+    return `Appt ${apptAt.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+  }
+  if (s.estimated_offer_high && s.estimated_offer_high > 0) {
+    return `~$${s.estimated_offer_high.toLocaleString()}`;
+  }
+  return null;
 };
 
 const RightNowStrip = ({ submissions, appointments, onView }: RightNowStripProps) => {
@@ -106,72 +130,97 @@ const RightNowStrip = ({ submissions, appointments, onView }: RightNowStripProps
       >
         Right now
       </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {cards.map(({ sub, kind, apptAt }) => {
           const isArrival = kind === "arrived";
-          const accentBg = isArrival
-            ? "bg-[hsl(4_72%_95%)] dark:bg-[hsl(4_72%_18%)]"
-            : "bg-[hsl(32_85%_94%)] dark:bg-[hsl(32_85%_16%)]";
-          const accentBorder = isArrival
-            ? "border-l-[hsl(4_72%_52%)]"
-            : "border-l-[hsl(32_85%_48%)]";
+          const tagText = isArrival ? "JUST ARRIVED" : "ON THE WAY";
+          const tagColor = isArrival
+            ? "text-red-600 dark:text-red-400"
+            : "text-amber-600 dark:text-amber-400";
           const dotColor = isArrival
-            ? "bg-[hsl(4_72%_52%)] animate-pulse"
-            : "bg-[hsl(32_85%_48%)]";
-          const tagText = isArrival
-            ? "Just arrived on the lot"
-            : apptAt
-            ? `On the way · Appt ${fmtTime(apptAt)}`
-            : "On the way";
-
+            ? "bg-red-500 animate-pulse"
+            : "bg-amber-500";
+          const railColor = isArrival ? "border-l-red-500" : "border-l-amber-500";
+          // Right-aligned age timestamp pulls from arrived_at / on_the_way_at
+          // when populated by the customer-checkin edge function; otherwise
+          // falls back to status_updated_at or created_at.
+          const agoIso = isArrival
+            ? ((sub as any).arrived_at ?? sub.status_updated_at ?? sub.created_at)
+            : ((sub as any).on_the_way_at ?? sub.status_updated_at ?? sub.created_at);
+          const ago = fmtAgo(agoIso);
+          const subtext = offerOrApptText(sub, apptAt);
+          const veh = vehicleLine(sub) || "Vehicle details pending";
           const primaryLabel = isArrival ? "Greet now" : "Prep file";
-          const secondary = isArrival ? null : telLink(sub.phone);
+          const tel = telLink(sub.phone);
 
           return (
             <article
               key={sub.id}
-              className={`rounded-xl border border-border ${accentBg} border-l-4 ${accentBorder} p-4 flex flex-col gap-3`}
+              className={`rounded-xl border border-border bg-card border-l-4 ${railColor} p-4 flex flex-col gap-3 shadow-sm`}
             >
-              <div className="flex items-start gap-2">
-                <span className={`mt-1 w-2 h-2 rounded-full ${dotColor}`} aria-hidden />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-foreground truncate">
-                    {sub.name || "Unknown customer"}
-                  </p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {vehicleLine(sub) || "Vehicle details pending"}
-                  </p>
-                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground/70 mt-1">
-                    {tagText}
-                  </p>
-                </div>
-              </div>
+              {/* Header row — colored uppercase tag + dot, age on the right */}
               <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${dotColor} shrink-0`} aria-hidden />
+                <span className={`text-[11px] font-bold uppercase tracking-[0.12em] ${tagColor}`}>
+                  {tagText}
+                </span>
+                {ago && (
+                  <span className="ml-auto inline-flex items-center gap-1 text-[11px] font-mono text-muted-foreground">
+                    <Clock className="w-3 h-3" />
+                    {ago}
+                  </span>
+                )}
+              </div>
+
+              {/* Customer name + vehicle/offer subline */}
+              <div className="min-w-0">
+                <p className="text-base font-semibold text-foreground truncate">
+                  {sub.name || "Unknown customer"}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {veh}
+                  {subtext ? ` · ${subtext}` : ""}
+                </p>
+              </div>
+
+              {/* Action buttons — full-width primary + secondary */}
+              <div className="flex items-center gap-2 mt-auto">
                 <Button
                   size="sm"
-                  className="h-8 text-xs flex-1"
+                  className="h-9 text-[12px] font-semibold flex-1 gap-1"
                   variant={isArrival ? "destructive" : "default"}
                   onClick={() => onView(sub)}
                 >
+                  <ArrowRight className="w-3.5 h-3.5" />
                   {primaryLabel}
                 </Button>
-                {secondary ? (
+                {isArrival ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-9 text-[12px]"
+                    onClick={() => onView(sub)}
+                  >
+                    Open file
+                  </Button>
+                ) : tel ? (
                   <Button
                     asChild
                     size="sm"
                     variant="outline"
-                    className="h-8 text-xs"
-                    aria-label={`Call ${sub.name}`}
+                    className="h-9 text-[12px] gap-1"
+                    aria-label={`Call ${sub.name || "customer"}`}
                   >
-                    <a href={secondary}>
+                    <a href={tel}>
                       <Phone className="w-3.5 h-3.5" />
+                      Call
                     </a>
                   </Button>
                 ) : (
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-8 text-xs"
+                    className="h-9 text-[12px]"
                     onClick={() => onView(sub)}
                   >
                     Open
