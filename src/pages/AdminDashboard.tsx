@@ -10,12 +10,10 @@ import TenantViewBanner from "@/components/admin/TenantViewBanner";
 import { PlatformProvider } from "@/contexts/PlatformContext";
 import { useAdminDashboard } from "@/hooks/useAdminDashboard";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
-import { useUIRefresh } from "@/hooks/useUIRefresh";
 import { lazy, Suspense, useRef, useEffect, useState } from "react";
 
-// Per CLAUDE_CODE_BRIEF.md §2: when ui_refresh_enabled is true, route
-// each role to its appropriate landing surface on first mount. This
-// runs only once, only when refresh is enabled, and never overwrites
+// Per CLAUDE_CODE_BRIEF.md §2: route each role to its appropriate
+// landing surface on first mount. Runs only once and never overwrites
 // the user's choice after they've navigated.
 const computeDefaultHome = (
   userRole: string,
@@ -68,26 +66,23 @@ import {
 const AdminDashboard = () => {
   const db = useAdminDashboard();
   const { config: siteConfig } = useSiteConfig();
-  const refreshed = useUIRefresh();
   const contentRef = useRef<HTMLDivElement>(null);
   const [pendingPhotoDelete, setPendingPhotoDelete] = useState<string | null>(null);
   const [pendingDocDelete, setPendingDocDelete] = useState<{ docType: string; fileName: string } | null>(null);
   // Strip ":fieldHint" for sidebar/breadcrumb matching
   const baseSectionId = db.activeSection.includes(":") ? db.activeSection.split(":")[0] : db.activeSection;
 
-  // Default-landing routing for the refreshed UI. Only fires once per
-  // mount, only when the flag is on, and only if the user hasn't
-  // navigated yet (still on the seed value "submissions").
+  // Default-landing routing. Fires once per mount and never overwrites
+  // a user's own navigation after the first render.
   const hasSetDefaultRef = useRef(false);
   useEffect(() => {
-    if (!refreshed) return;
     if (hasSetDefaultRef.current) return;
     if (!db.userRole) return;
     if (db.activeSection !== "submissions") return;
     const home = computeDefaultHome(db.userRole, !!db.isAppraiser, db.allowedSections);
     if (home && home !== "submissions") db.setActiveSection(home);
     hasSetDefaultRef.current = true;
-  }, [refreshed, db.userRole, db.isAppraiser, db.allowedSections, db.activeSection, db.setActiveSection]);
+  }, [db.userRole, db.isAppraiser, db.allowedSections, db.activeSection, db.setActiveSection]);
 
   useEffect(() => {
     contentRef.current?.scrollTo({ top: 0, behavior: "instant" });

@@ -1,19 +1,8 @@
-// AppraiserQueue — kill-switch wrapper.
+// AppraiserQueue — calmer 4-card KPI row + pill AI banner + clean card
+// rows. See frontend-redesign/CLAUDE_CODE_BRIEF.md §4.
 //
-// When site_config.ui_refresh_enabled is false (the default), this
-// component delegates to LegacyAppraiserQueue (AppraiserQueue.legacy.tsx),
-// which is the verbatim queue dealers see today.
-//
-// When the flag is true, it renders RefreshedAppraiserQueue below: the
-// calmer 4-card KPI row + pill AI banner + clean card rows defined in
-// frontend-redesign/CLAUDE_CODE_BRIEF.md §4.
-//
-// Per the brief, all data fetching, classifyRow, sort order,
-// schema-fallback, acceptSuggestion / dismissSuggestion / dismissFromQueue,
-// and the canAccess gate are preserved verbatim from the legacy. The
-// refresh consolidates *layout*, not access or behavior. The handlers
-// are duplicated between this file and the legacy on purpose — the
-// brief calls out "no while-I'm-here cleanups."
+// The legacy dense-queue view and the kill-switch wrapper have been
+// removed. This is now the only AppraiserQueue.
 
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -21,17 +10,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { safeInvoke } from "@/lib/safeInvoke";
 import { useTenant } from "@/contexts/TenantContext";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
-import { useUIRefresh } from "@/hooks/useUIRefresh";
 import { isManagerRole } from "@/lib/adminConstants";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import {
   Gauge, Car, ArrowRight, Sparkles, ShieldAlert, Loader2, X,
 } from "lucide-react";
-import {
-  LegacyAppraiserQueue,
-  type AppraiserQueueProps,
-} from "./AppraiserQueue.legacy";
+
+interface AppraiserQueueProps {
+  /** Passed down from AdminSectionRenderer so we know who's looking. */
+  userRole?: string;
+  isAppraiser?: boolean;
+}
 
 interface QueueRow {
   id: string;
@@ -107,7 +97,7 @@ interface AIReappraisalSuggestion {
   created_at: string;
 }
 
-const RefreshedAppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueueProps) => {
+const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueueProps) => {
   const { tenant } = useTenant();
   const { config } = useSiteConfig();
   const { toast } = useToast();
@@ -542,13 +532,6 @@ const RefreshedAppraiserQueue = ({ userRole = "", isAppraiser = false }: Apprais
       )}
     </div>
   );
-};
-
-// Public component — kill-switch wrapper. Default `false` keeps every
-// dealer on the legacy queue until they're explicitly opted in.
-const AppraiserQueue = (props: AppraiserQueueProps) => {
-  const refreshed = useUIRefresh();
-  return refreshed ? <RefreshedAppraiserQueue {...props} /> : <LegacyAppraiserQueue {...props} />;
 };
 
 export default AppraiserQueue;

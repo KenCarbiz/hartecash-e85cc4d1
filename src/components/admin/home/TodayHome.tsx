@@ -1,5 +1,4 @@
-// Today home page — landing surface for managers under
-// site_config.ui_refresh_enabled. See
+// Today home page — landing surface for managers. See
 // frontend-redesign/CLAUDE_CODE_BRIEF.md §2.
 //
 // Composition:
