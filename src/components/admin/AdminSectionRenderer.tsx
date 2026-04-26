@@ -19,6 +19,7 @@ import AllLeadsPage from "./AllLeadsPage";
 import AdminLoadingSkeleton from "./AdminLoadingSkeleton";
 import AdminEmptyState from "./AdminEmptyState";
 import TodayHome from "./home/TodayHome";
+import { useUIRefresh } from "@/hooks/useUIRefresh";
 import { UserCheck as UserCheckIcon } from "lucide-react";
 
 // All other sections are lazy — most admins only ever touch a handful
@@ -197,6 +198,9 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
     dealerLocations,
   } = props;
   const navigate = useNavigate();
+  // Per CLAUDE_CODE_BRIEF.md §3 + §6C — when ui_refresh_enabled is OFF
+  // the All Leads section falls back to the legacy SubmissionsTable.
+  const refreshed = useUIRefresh();
 
   // Parse compound section keys like "site-config:logos"
   const colonIdx = rawActiveSection.indexOf(":");
@@ -219,11 +223,12 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
   }
 
   // ── Pipeline sections ──
+  // Refresh ON  → AllLeadsPage  (6-col + chips + arrival banner)
+  // Refresh OFF → legacy SubmissionsTable below TodayActionSummary
   if (activeSection === "submissions") {
     if (props.loading) return <AdminLoadingSkeleton />;
-    return (
-      <>
-        <TodayActionSummary submissions={submissions} appointments={appointments} onNavigate={setActiveSection} />
+    if (refreshed) {
+      return (
         <AllLeadsPage
           submissions={submissions}
           loading={props.loading}
@@ -236,6 +241,12 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
           dealerLocations={props.dealerLocations}
           onView={props.handleView}
         />
+      );
+    }
+    return (
+      <>
+        <TodayActionSummary submissions={submissions} appointments={appointments} onNavigate={setActiveSection} />
+        <SubmissionsTable {...submissionsTableProps(props, submissions, true)} />
       </>
     );
   }
