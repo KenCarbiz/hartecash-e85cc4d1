@@ -94,6 +94,7 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Tenant | null>(null);
   const [form, setForm] = useState<TenantForm>({ ...EMPTY_FORM });
+  const [viewTarget, setViewTarget] = useState<{ dealership_id: string; display_name: string } | null>(null);
 
   const [confirmDeleteTenant, setConfirmDeleteTenant] = useState<Tenant | null>(null);
 
