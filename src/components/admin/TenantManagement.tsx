@@ -618,6 +618,14 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
         </DialogContent>
       </Dialog>
 
+      <TenantViewPickerDialog
+        open={!!viewTarget}
+        onOpenChange={(open) => {
+          if (!open) setViewTarget(null);
+        }}
+        tenant={viewTarget}
+      />
+
       <AlertDialog open={!!confirmDeleteTenant} onOpenChange={(open) => { if (!open) setConfirmDeleteTenant(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
