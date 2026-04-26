@@ -19,6 +19,7 @@ import AllLeadsPage from "./AllLeadsPage";
 import AdminLoadingSkeleton from "./AdminLoadingSkeleton";
 import AdminEmptyState from "./AdminEmptyState";
 import TodayHome from "./home/TodayHome";
+import PlatformUIRefreshToggle from "./PlatformUIRefreshToggle";
 import { useUIRefresh } from "@/hooks/useUIRefresh";
 import { UserCheck as UserCheckIcon } from "lucide-react";
 
@@ -523,6 +524,10 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
       {activeSection === "system-settings" && canManageAccess && (
         <div className="space-y-8">
           <h2 className="text-lg font-semibold text-card-foreground">System Settings</h2>
+          {/* Platform-only kill switch for the UI Refresh program.
+              Renders only when viewing-as another tenant — see the
+              component for the gate. CLAUDE_CODE_BRIEF.md §6D. */}
+          <PlatformUIRefreshToggle auditLabel={props.auditLabel} />
           <React.Suspense fallback={<AdminLoadingSkeleton />}>
             <PlatformCatalogManager />
           </React.Suspense>
