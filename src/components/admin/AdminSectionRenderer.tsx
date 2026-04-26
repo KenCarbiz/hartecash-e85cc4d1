@@ -18,6 +18,7 @@ import SubmissionsTable from "./SubmissionsTable";
 import AllLeadsPage from "./AllLeadsPage";
 import AdminLoadingSkeleton from "./AdminLoadingSkeleton";
 import AdminEmptyState from "./AdminEmptyState";
+import TodayHome from "./home/TodayHome";
 import { UserCheck as UserCheckIcon } from "lucide-react";
 
 // All other sections are lazy — most admins only ever touch a handful
@@ -201,6 +202,21 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
   const colonIdx = rawActiveSection.indexOf(":");
   const activeSection = colonIdx > -1 ? rawActiveSection.slice(0, colonIdx) : rawActiveSection;
   const focusField = colonIdx > -1 ? rawActiveSection.slice(colonIdx + 1) : undefined;
+
+  // ── Today home ── Manager landing under ui_refresh_enabled. Wired
+  // from the new sidebar's Work → Today entry and the default-home
+  // routing in AdminDashboard.tsx. See CLAUDE_CODE_BRIEF.md §2.
+  if (activeSection === "today") {
+    if (props.loading) return <AdminLoadingSkeleton />;
+    return (
+      <TodayHome
+        submissions={submissions}
+        appointments={appointments}
+        userName={props.userName}
+        onView={handleView}
+      />
+    );
+  }
 
   // ── Pipeline sections ──
   if (activeSection === "submissions") {
