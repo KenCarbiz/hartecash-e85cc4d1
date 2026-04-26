@@ -21,6 +21,7 @@ const ScheduleVisit = lazy(() => import("./pages/ScheduleVisit"));
 const WatchMyCar = lazy(() => import("./pages/WatchMyCar"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const AdminDashboardRefresh = lazy(() => import("./pages/AdminDashboardRefresh"));
 const RescheduleAppointment = lazy(() => import("./pages/RescheduleAppointment"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const PitchDeck = lazy(() => import("./pages/PitchDeck"));
@@ -128,6 +129,10 @@ const AnimatedRoutes = () => {
         <Route path="/watch-my-car/:token" element={<WatchMyCar />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+        {/* /admin2 — refreshed-UI bypass route. Identical to /admin except
+            UIRefreshOverrideProvider forces every kill-switch wrapper to
+            render its refreshed variant, regardless of site_config. */}
+        <Route path="/admin2" element={<ProtectedRoute><AdminDashboardRefresh /></ProtectedRoute>} />
         <Route path="/service" element={<ServiceLanding />} />
         <Route path="/pitch" element={<PitchDeck />} />
         <Route path="/platform" element={<PlatformPitch />} />
