@@ -17,14 +17,6 @@ export function nextActionForLead(s: Submission): LeadAction {
   const tel = digits ? `tel:+1${digits}` : undefined;
 
   switch (s.progress_status) {
-    // ── Customer self check-in (CLAUDE_CODE_BRIEF.md §5 + §7) ──
-    // These two states are stamped by /check-in/:token taps and need
-    // bespoke contextual actions on every lead surface (Today,
-    // SubmissionsTable, AllLeadsPage, BDCPriorityQueue).
-    case "arrived":
-      return { label: "Greet now", variant: "destructive", icon: null, actionKey: "open" };
-    case "on_the_way":
-      return { label: "Prep file", variant: "primary", icon: "eye", actionKey: "open" };
     case "new":
       return { label: "Call", variant: "primary", icon: "phone", href: tel, actionKey: "call" };
     case "contacted":

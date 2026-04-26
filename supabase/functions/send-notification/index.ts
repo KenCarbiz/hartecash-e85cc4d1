@@ -54,22 +54,6 @@ const DEFAULT_TEMPLATES: Record<string, { email_subject: string; email_body: str
     email_body: "Hi {{customer_name}},\n\nYour inspection appointment has been confirmed.\n\nDate: {{appointment_date}}\nTime: {{appointment_time}}\nLocation: {{location}}\n\nRemember to bring title, ID, registration, and all keys.\n\nSee you soon!\n{{dealership_name}}",
     sms_body: "Appointment confirmed for {{appointment_date}} at {{appointment_time}} at {{location}}. Bring title, ID & keys. — {{dealership_name}}",
   },
-  // Customer self check-in (CLAUDE_CODE_BRIEF.md §7). These trigger
-  // keys are staff-targeted — they go to the assigned salesperson /
-  // BDC rep so the front desk knows the customer is on the lot or en
-  // route. Routing to "assigned staff" is the responsibility of the
-  // recipient-resolver further down in this function; the keys just
-  // need to exist here so the dispatcher doesn't 404.
-  customer_on_the_way: {
-    email_subject: "🚗 {{customer_name}} is on the way",
-    email_body: "{{customer_name}} just tapped \"I'm on my way\" for their {{vehicle}}.\n\nGet the file ready — they should arrive shortly.",
-    sms_body: "🚗 {{customer_name}} is on the way for their {{vehicle}}. Prep the file.",
-  },
-  customer_arrived: {
-    email_subject: "🚨 {{customer_name}} just arrived on the lot",
-    email_body: "{{customer_name}} is here for their {{vehicle}} appointment.\n\nGo greet them now.",
-    sms_body: "🚨 {{customer_name}} just arrived for their {{vehicle}}. Greet now.",
-  },
   staff_customer_accepted: {
     email_subject: "🎉 Customer Accepted Offer — {{customer_name}}",
     email_body: "Great news! {{customer_name}} has accepted the offer on their {{vehicle}}.\n\nOffer Amount: {{offer_amount}}\n\nFollow up to schedule their inspection visit.",

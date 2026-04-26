@@ -54,7 +54,7 @@ const Testimonials = () => {
       setCurrent((c) => (c + 1) % testimonials.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, [testimonials?.length]);
+  }, [testimonials.length]);
 
   // Hide the section entirely while loading or when the dealer has no reviews
   if (testimonials === null || testimonials.length === 0) return null;

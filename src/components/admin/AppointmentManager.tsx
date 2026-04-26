@@ -1,11 +1,4 @@
-// AppointmentManager — front-desk-style layout with date header,
-// KPI mini-row, and Right Now / Today / Upcoming / Past buckets.
-// See frontend-redesign/CLAUDE_CODE_BRIEF.md §5.
-//
-// The legacy 7-col table view and the kill-switch wrapper have been
-// removed. This is now the only AppointmentManager.
-
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { safeInvoke } from "@/lib/safeInvoke";
 import { Button } from "@/components/ui/button";
@@ -15,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Eye, CalendarClock, ChevronRight } from "lucide-react";
+import { Plus, Eye, CalendarClock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Appointment, Submission, DealerLocation } from "@/lib/adminConstants";
 import { getTimeSlotsForDate, APPT_TIME_SLOTS_WEEKDAY, APPT_TIME_SLOTS_FRISSAT } from "@/lib/adminConstants";
@@ -30,34 +23,6 @@ interface AppointmentManagerProps {
   fetchAppointments: () => void;
 }
 
-// ── Helpers shared with RightNowStrip in spirit; kept local because
-// the brief forbids cross-file refactor in this pass. ─────────────
-const parseApptDate = (a: Appointment): Date | null => {
-  if (!a.preferred_date || !a.preferred_time) return null;
-  const t = new Date(`${a.preferred_date} ${a.preferred_time}`).getTime();
-  if (Number.isNaN(t)) return null;
-  return new Date(t);
-};
-
-const todayLocalISO = (): string => {
-  const d = new Date();
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-};
-
-const fmtDateHeader = (d: Date): string =>
-  d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
-
-const fmtDateLabel = (iso: string): string =>
-  new Date(`${iso}T12:00:00`).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
-
-const ARRIVED_STATUS = "arrived";
-const ON_THE_WAY_STATUS = "on_the_way";
-const SOON_WINDOW_MS = 60 * 60 * 1000;
-const NOW_WINDOW_MS = 15 * 60 * 1000;
-
 const AppointmentManager = ({
   appointments,
   setAppointments,
@@ -70,7 +35,6 @@ const AppointmentManager = ({
   const { toast } = useToast();
   const [locationFilter, setLocationFilter] = useState("all");
   const [showCreate, setShowCreate] = useState(false);
-  const [showPast, setShowPast] = useState(false);
   const [rescheduleAppt, setRescheduleAppt] = useState<Appointment | null>(null);
   const [rescheduleForm, setRescheduleForm] = useState({ preferred_date: "", preferred_time: "" });
   const [creating, setCreating] = useState(false);
@@ -80,7 +44,6 @@ const AppointmentManager = ({
     vehicle_info: "", notes: "", submission_token: "",
   });
 
-  // ── Handlers ── identical to legacy (copied per brief). ─────────
   const handleCreate = async () => {
     if (!form.customer_name || !form.customer_email || !form.customer_phone || !form.preferred_date || !form.preferred_time) {
       toast({ title: "Missing fields", description: "Please fill in all required fields.", variant: "destructive" });
@@ -157,348 +120,89 @@ const AppointmentManager = ({
     }
   };
 
-  const filteredAppointments = useMemo(
-    () => locationFilter === "all" ? appointments : appointments.filter(a => a.store_location === locationFilter),
-    [appointments, locationFilter],
-  );
-
-  // Submission lookup by token — used to overlay arrived / on_the_way
-  // status from the customer self check-in flow (Step 7) onto today's
-  // appointment cards.
-  const subByToken = useMemo(() => {
-    const m = new Map<string, Submission>();
-    for (const s of submissions) m.set(s.token, s);
-    return m;
-  }, [submissions]);
-
-  // ── Bucket sort ── group filtered appts into Right Now / Today /
-  // Upcoming / Past based on parsed date+time. Walk-ins (token-less)
-  // still bucket correctly because we only need preferred_date.
-  const buckets = useMemo(() => {
-    const now = Date.now();
-    const today = todayLocalISO();
-    const rightNow: Appointment[] = [];
-    const todayList: Appointment[] = [];
-    const upcoming: Appointment[] = [];
-    const past: Appointment[] = [];
-
-    for (const a of filteredAppointments) {
-      const d = a.preferred_date;
-      const when = parseApptDate(a);
-      const isArrived = a.submission_token
-        ? subByToken.get(a.submission_token)?.progress_status === ARRIVED_STATUS
-        : false;
-      const withinNow = when ? Math.abs(when.getTime() - now) < NOW_WINDOW_MS : false;
-
-      if (isArrived || (d === today && withinNow)) {
-        rightNow.push(a);
-        continue;
-      }
-      if (d === today) { todayList.push(a); continue; }
-      if (d > today) { upcoming.push(a); continue; }
-      past.push(a);
-    }
-
-    // Sort: parsed time ascending where available, falling back to the
-    // raw preferred_time string so we still get something sensible when
-    // the time string doesn't parse.
-    const byTime = (a: Appointment, b: Appointment) => {
-      const ta = parseApptDate(a)?.getTime() ?? 0;
-      const tb = parseApptDate(b)?.getTime() ?? 0;
-      if (ta !== tb) return ta - tb;
-      return (a.preferred_time || "").localeCompare(b.preferred_time || "");
-    };
-    rightNow.sort(byTime);
-    todayList.sort(byTime);
-    upcoming.sort(byTime);
-    past.sort((a, b) => byTime(b, a)); // most recent past first
-
-    return { rightNow, todayList, upcoming, past };
-  }, [filteredAppointments, subByToken]);
-
-  // Group "upcoming" by date for the date subhead
-  const upcomingByDate = useMemo(() => {
-    const groups: { date: string; rows: Appointment[] }[] = [];
-    let current: { date: string; rows: Appointment[] } | null = null;
-    for (const a of buckets.upcoming) {
-      if (!current || current.date !== a.preferred_date) {
-        current = { date: a.preferred_date, rows: [] };
-        groups.push(current);
-      }
-      current.rows.push(a);
-    }
-    return groups;
-  }, [buckets.upcoming]);
-
-  // ── KPI mini-row counts ──────────────────────────────────────────
-  const kpis = useMemo(() => {
-    const todayISO = todayLocalISO();
-    const now = Date.now();
-    let todayCount = 0;
-    let confirmed = 0;
-    let arrived = 0;
-    let next60 = 0;
-    for (const a of filteredAppointments) {
-      const isToday = a.preferred_date === todayISO;
-      if (isToday) todayCount++;
-      if (isToday && a.status === "Confirmed") confirmed++;
-      if (
-        isToday &&
-        a.submission_token &&
-        subByToken.get(a.submission_token)?.progress_status === ARRIVED_STATUS
-      ) {
-        arrived++;
-      }
-      const when = parseApptDate(a);
-      if (when && when.getTime() - now > 0 && when.getTime() - now <= SOON_WINDOW_MS) {
-        next60++;
-      }
-    }
-    return { todayCount, confirmed, arrived, next60 };
-  }, [filteredAppointments, subByToken]);
-
+  const filteredAppointments = locationFilter === "all" ? appointments : appointments.filter(a => a.store_location === locationFilter);
   const getCreateTimeSlots = () => getTimeSlotsForDate(form.preferred_date);
   const getRescheduleTimeSlots = () => getTimeSlotsForDate(rescheduleForm.preferred_date);
 
-  // ── Row renderer — used by all four buckets ──────────────────────
-  const renderRow = (appt: Appointment, opts: { highlight?: "arrived" | "now" } = {}) => {
-    const linkedSub = appt.submission_token ? subByToken.get(appt.submission_token) : undefined;
-    const isArrived = linkedSub?.progress_status === ARRIVED_STATUS;
-    const isOnTheWay = linkedSub?.progress_status === ON_THE_WAY_STATUS;
-    const highlight =
-      opts.highlight === "arrived" || isArrived
-        ? "border-l-4 border-l-red-500 bg-red-500/5"
-        : opts.highlight === "now"
-        ? "border-l-4 border-l-amber-500 bg-amber-500/5"
-        : isOnTheWay
-        ? "border-l-4 border-l-amber-500"
-        : "";
-    return (
-      <article
-        key={appt.id}
-        className={`rounded-xl border border-border bg-card p-3 ${highlight}`}
-      >
-        <div className="flex items-center gap-3">
-          {/* Time chip */}
-          <div className="shrink-0 w-16 text-center">
-            <div className="text-[14px] font-bold text-foreground leading-tight">
-              {appt.preferred_time || "—"}
-            </div>
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">
-              {new Date(`${appt.preferred_date}T12:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-            </div>
-          </div>
-
-          {/* Customer + vehicle */}
-          <div className="flex-1 min-w-0">
-            <div className="text-[14px] font-semibold text-foreground truncate">
-              {appt.customer_name}
-              {isArrived && (
-                <span className="ml-2 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-red-700 dark:text-red-300">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                  Arrived
-                </span>
-              )}
-              {!isArrived && isOnTheWay && (
-                <span className="ml-2 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                  On the way
-                </span>
-              )}
-            </div>
-            <div className="text-[12px] text-muted-foreground truncate">
-              {appt.vehicle_info || "—"}
-              {appt.customer_phone ? ` · ${appt.customer_phone}` : ""}
-            </div>
-          </div>
-
-          {/* Status pill */}
-          <Badge
-            variant={appt.status === "Confirmed" ? "default" : appt.status === "Completed" ? "secondary" : "outline"}
-            className="text-[10px] shrink-0"
-          >
-            {appt.status}
-          </Badge>
-
-          {/* Actions */}
-          <div className="flex items-center gap-1 shrink-0">
-            {appt.submission_token && (
-              <Button size="sm" variant="ghost" className="h-8 w-8 p-0" title="View customer" aria-label="View customer" onClick={() => onViewSubmission(appt)}>
-                <Eye className="w-4 h-4" />
-              </Button>
-            )}
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-8 w-8 p-0"
-              title="Reschedule"
-              aria-label="Reschedule"
-              onClick={() => {
-                setRescheduleAppt(appt);
-                setRescheduleForm({ preferred_date: appt.preferred_date, preferred_time: appt.preferred_time });
-              }}
-            >
-              <CalendarClock className="w-4 h-4" />
-            </Button>
-            {appt.status === "pending" && (
-              <Button size="sm" variant="outline" className="h-8 text-[12px]" onClick={() => handleStatusUpdate(appt.id, "Confirmed")}>
-                Confirm
-              </Button>
-            )}
-            {appt.status === "Confirmed" && (
-              <Button size="sm" variant="outline" className="h-8 text-[12px]" onClick={() => handleStatusUpdate(appt.id, "Completed")}>
-                Complete
-              </Button>
-            )}
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-8 text-[12px] text-destructive hover:text-destructive"
-              onClick={() => handleStatusUpdate(appt.id, "Cancelled")}
-            >
-              Cancel
-            </Button>
-          </div>
-        </div>
-      </article>
-    );
-  };
-
-  const sectionLabel = (label: string, count: number) => (
-    <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-      {label} <span className="text-foreground/60 font-bold">· {count}</span>
-    </h3>
-  );
-
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="flex items-end justify-between gap-4 flex-wrap">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-            {fmtDateHeader(new Date())}
-          </p>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground mt-0.5">
-            Appointments
-          </h1>
-        </div>
+    <div>
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+        <h2 className="text-lg font-semibold text-card-foreground">Scheduled Appointments</h2>
         <div className="flex items-center gap-2">
           <Select value={locationFilter} onValueChange={setLocationFilter}>
-            <SelectTrigger className="w-[200px] h-9 text-sm">
-              <SelectValue placeholder="All locations" />
-            </SelectTrigger>
+            <SelectTrigger className="w-[220px] h-9 text-sm"><SelectValue placeholder="All Locations" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All locations</SelectItem>
-              {dealerLocations.map(loc => (
-                <SelectItem key={loc.id} value={loc.id}>{loc.name} — {loc.city}, {loc.state}</SelectItem>
-              ))}
+              <SelectItem value="all">All Locations</SelectItem>
+              {dealerLocations.map(loc => <SelectItem key={loc.id} value={loc.id}>{loc.name} — {loc.city}, {loc.state}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Button size="sm" className="h-9" onClick={() => setShowCreate(true)}>
-            <Plus className="w-4 h-4 mr-1" /> New
-          </Button>
+          <Button size="sm" onClick={() => setShowCreate(true)}><Plus className="w-4 h-4 mr-1" /> New Appointment</Button>
         </div>
       </div>
 
-      {/* KPI mini-row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="rounded-xl border border-border bg-card p-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Today</p>
-          <p className="text-2xl font-bold text-foreground mt-1">{kpis.todayCount}</p>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Confirmed</p>
-          <p className="text-2xl font-bold text-foreground mt-1">{kpis.confirmed}</p>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Arrived</p>
-          <p className="text-2xl font-bold text-foreground mt-1">{kpis.arrived}</p>
-          {kpis.arrived > 0 && (
-            <p className="text-[11px] text-red-600 dark:text-red-400 font-semibold mt-0.5">on the lot</p>
-          )}
-        </div>
-        <div className="rounded-xl border border-border bg-card p-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Next 60m</p>
-          <p className="text-2xl font-bold text-foreground mt-1">{kpis.next60}</p>
-        </div>
-      </div>
-
-      {/* Right Now */}
-      {buckets.rightNow.length > 0 && (
-        <section className="space-y-2">
-          {sectionLabel("Right now", buckets.rightNow.length)}
-          <div className="space-y-2">
-            {buckets.rightNow.map(a => renderRow(a, { highlight: "arrived" }))}
+      {filteredAppointments.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">{appointments.length === 0 ? "No appointments scheduled yet." : "No appointments at this location."}</div>
+      ) : (
+        <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-muted/50">
+                  <th className="text-left px-3 py-2 font-semibold text-muted-foreground">Date</th>
+                  <th className="text-left px-3 py-2 font-semibold text-muted-foreground">Time</th>
+                  <th className="text-left px-3 py-2 font-semibold text-muted-foreground">Customer</th>
+                  <th className="text-left px-3 py-2 font-semibold text-muted-foreground">Vehicle</th>
+                  <th className="text-left px-3 py-2 font-semibold text-muted-foreground">Location</th>
+                  <th className="text-left px-3 py-2 font-semibold text-muted-foreground">Status</th>
+                  <th className="text-right px-3 py-2 font-semibold text-muted-foreground">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredAppointments.map((appt) => (
+                  <tr key={appt.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+                    <td className="px-3 py-2 text-sm">{new Date(appt.preferred_date + "T12:00:00").toLocaleDateString()}</td>
+                    <td className="px-3 py-2 text-sm">{appt.preferred_time}</td>
+                    <td className="px-3 py-2">
+                      <div className="font-medium text-sm">{appt.customer_name}</div>
+                      <div className="text-xs text-muted-foreground">{appt.customer_email}</div>
+                    </td>
+                    <td className="px-3 py-2 text-sm">{appt.vehicle_info || "—"}</td>
+                    <td className="px-3 py-2 text-sm">
+                      <Select value={appt.store_location || "unset"} onValueChange={async (val) => {
+                        const newLoc = val === "unset" ? null : val;
+                        await supabase.from("appointments").update({ store_location: newLoc }).eq("id", appt.id);
+                        setAppointments(prev => prev.map(a => a.id === appt.id ? { ...a, store_location: newLoc } : a));
+                      }}>
+                        <SelectTrigger className="h-8 w-[200px] text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="unset">Not Set</SelectItem>
+                          {dealerLocations.map(loc => <SelectItem key={loc.id} value={loc.id}>{loc.name} — {loc.city}, {loc.state}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </td>
+                    <td className="px-3 py-2">
+                      <Badge variant={appt.status === "Confirmed" ? "default" : appt.status === "Completed" ? "secondary" : "outline"} className="text-xs">{appt.status}</Badge>
+                    </td>
+                    <td className="px-3 py-2 text-right">
+                      <div className="flex justify-end gap-1">
+                        {appt.submission_token && <Button size="sm" variant="ghost" title="View Customer" onClick={() => onViewSubmission(appt)}><Eye className="w-4 h-4" /></Button>}
+                        <Button size="sm" variant="ghost" title="Reschedule" onClick={() => { setRescheduleAppt(appt); setRescheduleForm({ preferred_date: appt.preferred_date, preferred_time: appt.preferred_time }); }}>
+                          <CalendarClock className="w-4 h-4" />
+                        </Button>
+                        {appt.status === "pending" && <Button size="sm" variant="outline" onClick={() => handleStatusUpdate(appt.id, "Confirmed")}>Confirm</Button>}
+                        {appt.status === "Confirmed" && <Button size="sm" variant="outline" onClick={() => handleStatusUpdate(appt.id, "Completed")}>Complete</Button>}
+                        <Button size="sm" variant="ghost" onClick={() => handleStatusUpdate(appt.id, "Cancelled")} className="text-destructive">Cancel</Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </section>
+        </div>
       )}
 
-      {/* Today */}
-      <section className="space-y-2">
-        {sectionLabel("Today", buckets.todayList.length)}
-        {buckets.todayList.length === 0 ? (
-          <p className="text-sm text-muted-foreground italic px-1">Nothing scheduled today.</p>
-        ) : (
-          <div className="space-y-2">
-            {buckets.todayList.map(a => renderRow(a))}
-          </div>
-        )}
-      </section>
-
-      {/* Upcoming */}
-      {buckets.upcoming.length > 0 && (
-        <section className="space-y-2">
-          {sectionLabel("Upcoming", buckets.upcoming.length)}
-          <div className="space-y-3">
-            {upcomingByDate.map(group => (
-              <div key={group.date} className="space-y-2">
-                <p className="text-[11px] font-semibold text-muted-foreground/80">
-                  {fmtDateLabel(group.date)} · {group.rows.length}
-                </p>
-                <div className="space-y-2">
-                  {group.rows.map(a => renderRow(a))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Past — collapsed by default */}
-      {buckets.past.length > 0 && (
-        <section className="space-y-2">
-          <button
-            type="button"
-            onClick={() => setShowPast(p => !p)}
-            className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground hover:text-foreground"
-          >
-            <ChevronRight className={`w-3 h-3 transition-transform ${showPast ? "rotate-90" : ""}`} />
-            Past <span className="text-foreground/60 font-bold">· {buckets.past.length}</span>
-          </button>
-          {showPast && (
-            <div className="space-y-2">
-              {buckets.past.map(a => renderRow(a))}
-            </div>
-          )}
-        </section>
-      )}
-
-      {/* Empty-state if every bucket is empty */}
-      {buckets.rightNow.length === 0 &&
-        buckets.todayList.length === 0 &&
-        buckets.upcoming.length === 0 &&
-        buckets.past.length === 0 && (
-          <div className="text-center py-12 border border-dashed border-border rounded-xl">
-            <p className="text-sm font-semibold text-foreground">No appointments</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {locationFilter === "all"
-                ? "Click \"New\" to schedule one, or wait for a customer to book online."
-                : "No appointments at this location. Try \"All locations.\""}
-            </p>
-          </div>
-        )}
-
-      {/* Reschedule Dialog — preserved verbatim from legacy */}
+      {/* Reschedule Dialog */}
       <Dialog open={!!rescheduleAppt} onOpenChange={(open) => { if (!open) setRescheduleAppt(null); }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader><DialogTitle>Reschedule Appointment</DialogTitle></DialogHeader>
@@ -534,7 +238,7 @@ const AppointmentManager = ({
         </DialogContent>
       </Dialog>
 
-      {/* Create Appointment Dialog — preserved verbatim from legacy */}
+      {/* Create Appointment Dialog */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>Schedule an Appointment</DialogTitle></DialogHeader>

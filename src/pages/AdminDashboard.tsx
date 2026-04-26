@@ -12,46 +12,6 @@ import { useAdminDashboard } from "@/hooks/useAdminDashboard";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { lazy, Suspense, useRef, useEffect, useState } from "react";
 
-// Per CLAUDE_CODE_BRIEF.md §2: route each role to its appropriate
-// landing surface on first mount. Runs only once and never overwrites
-// the user's choice after they've navigated.
-const computeDefaultHome = (
-  userRole: string,
-  isAppraiser: boolean,
-  allowedSections: string[] | null,
-): string => {
-  // Appraiser flag wins over role string — an admin-flagged appraiser
-  // should still land in the queue.
-  let candidate: string;
-  if (isAppraiser) {
-    candidate = "appraiser-queue";
-  } else if (
-    userRole === "admin" ||
-    userRole === "gsm_gm" ||
-    userRole === "used_car_manager" ||
-    userRole === "new_car_manager"
-  ) {
-    candidate = "today";
-  } else if (
-    userRole === "sales_bdc" ||
-    userRole === "sales" ||
-    userRole === "internet_manager"
-  ) {
-    candidate = "bdc-queue";
-  } else if (userRole === "receptionist") {
-    candidate = "accepted-appts";
-  } else {
-    candidate = "submissions";
-  }
-
-  // Honor allowedSections — if the candidate isn't allowed, fall back
-  // to the first entry the user can reach. allowedSections === null
-  // means unrestricted.
-  if (allowedSections === null) return candidate;
-  if (allowedSections.includes(candidate)) return candidate;
-  return allowedSections[0] ?? "submissions";
-};
-
 // SubmissionDetailSheet is the largest component in the codebase (~1.6k lines).
 // It only renders when a row is clicked, so lazy-loading it keeps it out of
 // the AdminDashboard initial paint chunk. CustomerFileV2 is the
@@ -72,29 +32,17 @@ const AdminDashboard = () => {
   // Strip ":fieldHint" for sidebar/breadcrumb matching
   const baseSectionId = db.activeSection.includes(":") ? db.activeSection.split(":")[0] : db.activeSection;
 
-  // Default-landing routing. Fires once per mount and never overwrites
-  // a user's own navigation after the first render.
-  const hasSetDefaultRef = useRef(false);
-  useEffect(() => {
-    if (hasSetDefaultRef.current) return;
-    if (!db.userRole) return;
-    if (db.activeSection !== "submissions") return;
-    const home = computeDefaultHome(db.userRole, !!db.isAppraiser, db.allowedSections);
-    if (home && home !== "submissions") db.setActiveSection(home);
-    hasSetDefaultRef.current = true;
-  }, [db.userRole, db.isAppraiser, db.allowedSections, db.activeSection, db.setActiveSection]);
-
   useEffect(() => {
     contentRef.current?.scrollTo({ top: 0, behavior: "instant" });
   }, [db.activeSection]);
   return (
     <PlatformProvider>
+    <SidebarProvider>
       {/* Tenant View banner — non-dismissible red banner that shows whenever
-          a Super Admin is viewing another tenant's data. Kept outside the
-          sidebar provider's flex wrapper so it spans the full viewport width
-          instead of becoming a left-side flex column. */}
+          a Super Admin is viewing another tenant's data. Lives outside the
+          flex container so it spans the full viewport width above the
+          sidebar and main content. */}
       <TenantViewBanner />
-      <SidebarProvider>
         <div className="min-h-screen bg-background transition-colors duration-300 flex w-full relative">
           {/* Subtle grid pattern for premium depth */}
           <div className="absolute inset-0 bg-[radial-gradient(hsl(var(--border)/0.5)_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none opacity-30 dark:opacity-10" />

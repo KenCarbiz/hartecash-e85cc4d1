@@ -22,7 +22,7 @@ export type Database = {
           new_value: string | null
           old_value: string | null
           performed_by: string | null
-          submission_id: string | null
+          submission_id: string
         }
         Insert: {
           action: string
@@ -31,7 +31,7 @@ export type Database = {
           new_value?: string | null
           old_value?: string | null
           performed_by?: string | null
-          submission_id?: string | null
+          submission_id: string
         }
         Update: {
           action?: string
@@ -40,7 +40,7 @@ export type Database = {
           new_value?: string | null
           old_value?: string | null
           performed_by?: string | null
-          submission_id?: string | null
+          submission_id?: string
         }
         Relationships: [
           {
@@ -2073,7 +2073,6 @@ export type Database = {
           track_abandoned_leads: boolean
           trade_hero_headline: string
           trade_hero_subtext: string
-          ui_refresh_enabled: boolean
           ui_scale: number | null
           updated_at: string
           use_animated_calculating: boolean
@@ -2160,7 +2159,6 @@ export type Database = {
           track_abandoned_leads?: boolean
           trade_hero_headline?: string
           trade_hero_subtext?: string
-          ui_refresh_enabled?: boolean
           ui_scale?: number | null
           updated_at?: string
           use_animated_calculating?: boolean
@@ -2247,7 +2245,6 @@ export type Database = {
           track_abandoned_leads?: boolean
           trade_hero_headline?: string
           trade_hero_subtext?: string
-          ui_refresh_enabled?: boolean
           ui_scale?: number | null
           updated_at?: string
           use_animated_calculating?: boolean
@@ -2315,7 +2312,6 @@ export type Database = {
           appraisal_finalized_at: string | null
           appraisal_finalized_by: string | null
           appraised_by: string | null
-          arrived_at: string | null
           assigned_rep_email: string | null
           bb_add_deducts: Json | null
           bb_base_whole_avg: number | null
@@ -2372,7 +2368,6 @@ export type Database = {
           next_step: string | null
           num_keys: string | null
           offered_price: number | null
-          on_the_way_at: string | null
           outcome_accepted: boolean | null
           outcome_days_to_sale: number | null
           outcome_entered_at: string | null
@@ -2425,7 +2420,6 @@ export type Database = {
           appraisal_finalized_at?: string | null
           appraisal_finalized_by?: string | null
           appraised_by?: string | null
-          arrived_at?: string | null
           assigned_rep_email?: string | null
           bb_add_deducts?: Json | null
           bb_base_whole_avg?: number | null
@@ -2482,7 +2476,6 @@ export type Database = {
           next_step?: string | null
           num_keys?: string | null
           offered_price?: number | null
-          on_the_way_at?: string | null
           outcome_accepted?: boolean | null
           outcome_days_to_sale?: number | null
           outcome_entered_at?: string | null
@@ -2535,7 +2528,6 @@ export type Database = {
           appraisal_finalized_at?: string | null
           appraisal_finalized_by?: string | null
           appraised_by?: string | null
-          arrived_at?: string | null
           assigned_rep_email?: string | null
           bb_add_deducts?: Json | null
           bb_base_whole_avg?: number | null
@@ -2592,7 +2584,6 @@ export type Database = {
           next_step?: string | null
           num_keys?: string | null
           offered_price?: number | null
-          on_the_way_at?: string | null
           outcome_accepted?: boolean | null
           outcome_days_to_sale?: number | null
           outcome_entered_at?: string | null
@@ -2662,45 +2653,6 @@ export type Database = {
           id?: string
           metadata?: Json | null
           reason?: string
-        }
-        Relationships: []
-      }
-      tenant_view_log: {
-        Row: {
-          ended_at: string | null
-          ended_reason: string | null
-          id: string
-          reason: string
-          started_at: string
-          super_admin_email: string
-          super_admin_user_id: string
-          target_dealership_id: string
-          target_display_name: string
-          user_agent: string | null
-        }
-        Insert: {
-          ended_at?: string | null
-          ended_reason?: string | null
-          id?: string
-          reason: string
-          started_at?: string
-          super_admin_email: string
-          super_admin_user_id: string
-          target_dealership_id: string
-          target_display_name: string
-          user_agent?: string | null
-        }
-        Update: {
-          ended_at?: string | null
-          ended_reason?: string | null
-          id?: string
-          reason?: string
-          started_at?: string
-          super_admin_email?: string
-          super_admin_user_id?: string
-          target_dealership_id?: string
-          target_display_name?: string
-          user_agent?: string | null
         }
         Relationships: []
       }

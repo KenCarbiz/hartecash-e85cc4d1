@@ -48,7 +48,6 @@ interface AllLeadsPageProps {
 
 type ChipKey =
   | "all"
-  | "arrived"
   | "new"
   | "hot"
   | "today"
@@ -107,15 +106,6 @@ type StatusTone = "red" | "orange" | "green" | "purple" | "gray" | "blue" | "yel
 const statusMeta = (
   s: Submission
 ): { label: string; tone: StatusTone; pulse?: boolean } => {
-  // Customer self check-in states win over everything else — a customer
-  // physically on the lot is the most pressing signal an admin can see.
-  // See CLAUDE_CODE_BRIEF.md §3B + §7.
-  if (s.progress_status === "arrived") {
-    return { label: "Arrived", tone: "red", pulse: true };
-  }
-  if (s.progress_status === "on_the_way") {
-    return { label: "On the way", tone: "orange" };
-  }
   // Arrival / hot states first
   if (s.is_hot_lead && !isAcceptedWithAppointment(s)) {
     return { label: "Hot lead", tone: "red", pulse: true };
@@ -235,7 +225,6 @@ const AllLeadsPage = ({
     startOfDay.setHours(0, 0, 0, 0);
     const todayStart = startOfDay.getTime();
 
-    let arrived = 0;
     let newCount = 0;
     let hot = 0;
     let today = 0;
@@ -244,7 +233,6 @@ const AllLeadsPage = ({
     let stuck = 0;
 
     for (const s of submissions) {
-      if (s.progress_status === "arrived") arrived++;
       if (s.progress_status === "new") newCount++;
       if (s.is_hot_lead) hot++;
       if (new Date(s.created_at).getTime() >= todayStart) today++;
@@ -253,7 +241,7 @@ const AllLeadsPage = ({
       const age = formatAge(s.created_at).hours;
       if (age > 24 && !isAcceptedWithAppointment(s) && s.progress_status !== "purchase_complete") stuck++;
     }
-    return { all: submissions.length, arrived, new: newCount, hot, today, appts, accepted, stuck };
+    return { all: submissions.length, new: newCount, hot, today, appts, accepted, stuck };
   }, [submissions]);
 
   // ── Chip-filtered rows ───────────────────────────────────────
@@ -264,8 +252,6 @@ const AllLeadsPage = ({
 
     return submissions.filter((s) => {
       switch (chip) {
-        case "arrived":
-          return s.progress_status === "arrived";
         case "new":
           return s.progress_status === "new";
         case "hot":
@@ -289,31 +275,24 @@ const AllLeadsPage = ({
   }, [submissions, chip]);
 
   // ── Banner: pick the most-pressing alert from current rows ───
-  // Priority order:
-  //   1. progress_status === "arrived" — customer is physically here
-  //      (set by /check-in/:token tap of "I'm here"). Per
-  //      CLAUDE_CODE_BRIEF.md §3B this trumps every other alert.
-  //   2. Hot new leads — high intent, time-sensitive
-  //   3. SLA breach — old "new" with no contact
   const banner = useMemo(() => {
     if (bannerDismissed) return null;
-    const arrivals = submissions.filter((s) => s.progress_status === "arrived");
-    if (arrivals.length > 0) {
-      const a = arrivals[0];
-      const veh = [a.vehicle_year, a.vehicle_make, a.vehicle_model]
-        .filter(Boolean)
-        .join(" ");
-      const extra = arrivals.length > 1 ? ` · +${arrivals.length - 1} more` : "";
+    // Arrival = accepted with appointment whose appointment date is today
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const arrived = submissions.find(
+      (s) =>
+        isAcceptedWithAppointment(s) &&
+        s.appointment_date &&
+        s.appointment_date.startsWith(todayStr)
+    );
+    if (arrived) {
       return {
         kind: "arrived" as const,
-        title: `${a.name || "A customer"} just arrived on the lot${extra}`,
-        subtitle: veh
-          ? `${veh} · go greet now`
-          : "Customer waiting on the lot",
+        title: `${arrived.name || "A customer"} just arrived on the lot`,
+        subtitle: `${arrived.vehicle_year || ""} ${arrived.vehicle_make || ""} ${arrived.vehicle_model || ""} · today`,
         action: "Greet now",
-        sub: a,
+        sub: arrived,
         tone: "red" as StatusTone,
-        moreCount: arrivals.length - 1,
       };
     }
     const hot = submissions.find((s) => s.is_hot_lead && s.progress_status === "new");
@@ -414,16 +393,6 @@ const AllLeadsPage = ({
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            {banner.kind === "arrived" && (banner.moreCount ?? 0) > 0 && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-8 border-red-500/40 text-red-700 dark:text-red-300 hover:bg-red-500/10"
-                onClick={() => setChip("arrived")}
-              >
-                +{banner.moreCount} more
-              </Button>
-            )}
             <Button
               size="sm"
               className={cn(
@@ -453,13 +422,6 @@ const AllLeadsPage = ({
         {(
           [
             { k: "all" as ChipKey, label: "All", n: counts.all },
-            // Arrived chip is conditionally inserted just-after All so
-            // it sits closest to the eye when it matters. Suppressed
-            // entirely at zero to avoid showing a perpetual "Arrived · 0"
-            // chip on quiet days.
-            ...(counts.arrived > 0
-              ? [{ k: "arrived" as ChipKey, label: "Arrived", n: counts.arrived }]
-              : []),
             { k: "new" as ChipKey, label: "New", n: counts.new },
             { k: "hot" as ChipKey, label: "Hot", n: counts.hot },
             { k: "today" as ChipKey, label: "Today", n: counts.today },
@@ -469,7 +431,6 @@ const AllLeadsPage = ({
           ] as { k: ChipKey; label: string; n: number }[]
         ).map((c) => {
           const active = chip === c.k;
-          const isArrived = c.k === "arrived";
           return (
             <button
               key={c.k}
@@ -479,8 +440,6 @@ const AllLeadsPage = ({
                 "h-7 px-2.5 rounded-full text-[12px] font-semibold border transition-colors",
                 active
                   ? "bg-foreground text-background border-foreground"
-                  : isArrived
-                  ? "bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/30 hover:bg-red-500/15"
                   : "bg-card text-foreground/80 border-border hover:bg-muted"
               )}
             >
@@ -525,15 +484,10 @@ const AllLeadsPage = ({
                   const score = scoreFor(s);
                   const offer = s.offered_price ?? null;
                   const est = s.estimated_offer_high ?? null;
-                  // Hard arrival = customer tapped "I'm here". Soft
-                  // arrival = appointment is today via legacy
-                  // appointment_set + appointment_date. Hard wins.
-                  const isHardArrived = s.progress_status === "arrived";
                   const isArrived =
-                    isHardArrived ||
-                    (isAcceptedWithAppointment(s) &&
-                      !!s.appointment_date &&
-                      s.appointment_date.startsWith(new Date().toISOString().slice(0, 10)));
+                    isAcceptedWithAppointment(s) &&
+                    !!s.appointment_date &&
+                    s.appointment_date.startsWith(new Date().toISOString().slice(0, 10));
 
                   return (
                     <tr
@@ -541,9 +495,7 @@ const AllLeadsPage = ({
                       onClick={() => onView(s)}
                       className={cn(
                         "border-b border-border/60 last:border-b-0 cursor-pointer transition-colors",
-                        isHardArrived
-                          ? "bg-red-500/10 hover:bg-red-500/15 border-l-4 border-l-red-500"
-                          : isArrived
+                        isArrived
                           ? "bg-red-500/5 hover:bg-red-500/10"
                           : "hover:bg-muted/40"
                       )}

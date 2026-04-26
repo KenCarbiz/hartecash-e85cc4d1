@@ -15,9 +15,8 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-import { Plus, Loader2, Globe, Pencil, Trash2, Copy, Rocket, CalendarClock, ArrowUpCircle, Eye } from "lucide-react";
+import { Plus, Loader2, Globe, Pencil, Trash2, Copy, Rocket, CalendarClock, ArrowUpCircle } from "lucide-react";
 import ArchitectureSelector from "./onboarding/ArchitectureSelector";
-import TenantViewPickerDialog from "./TenantViewPickerDialog";
 import { architectureToplanTier, architectureToDbValue } from "./onboarding/types";
 import type { ArchitectureType } from "./onboarding/types";
 
@@ -94,7 +93,6 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Tenant | null>(null);
   const [form, setForm] = useState<TenantForm>({ ...EMPTY_FORM });
-  const [viewTarget, setViewTarget] = useState<{ dealership_id: string; display_name: string } | null>(null);
 
   const [confirmDeleteTenant, setConfirmDeleteTenant] = useState<Tenant | null>(null);
 
@@ -405,17 +403,6 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
-                      {t.dealership_id !== "default" && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 gap-1.5"
-                          onClick={() => setViewTarget({ dealership_id: t.dealership_id, display_name: t.display_name || t.slug })}
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          View As
-                        </Button>
-                      )}
                       {onSetupDealer && (
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => onSetupDealer(t.dealership_id)} title="Setup">
                           <Rocket className="w-3.5 h-3.5" />
@@ -617,14 +604,6 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <TenantViewPickerDialog
-        open={!!viewTarget}
-        onOpenChange={(open) => {
-          if (!open) setViewTarget(null);
-        }}
-        tenant={viewTarget}
-      />
 
       <AlertDialog open={!!confirmDeleteTenant} onOpenChange={(open) => { if (!open) setConfirmDeleteTenant(null); }}>
         <AlertDialogContent>

@@ -255,25 +255,6 @@ export function useAdminDashboard() {
     }
   }, [page, userRole]);
 
-  // ── Page-state clamp ──
-  // Supabase's .range(from, to) returns [] (with the correct `count`) when
-  // `from` is past the last row. That can leave the table looking empty
-  // while the sidebar "All Leads · N" badge still shows N. This happens
-  // when a row is deleted from a non-zero page, or when the user switches
-  // tenants while a stale page index lingers. Snap page back to 0
-  // whenever it's pointing at a non-existent range.
-  useEffect(() => {
-    if (total > 0 && page * PAGE_SIZE >= total && page !== 0) {
-      setPage(0);
-    }
-  }, [total, page]);
-
-  // Reset pagination when the tenant changes — view-as switch shouldn't
-  // inherit a previous tenant's page index.
-  useEffect(() => {
-    setPage(0);
-  }, [tenant.dealership_id]);
-
   // ── Handlers ──
 
   const handleView = useCallback(

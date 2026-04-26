@@ -16,7 +16,6 @@ const UploadPhotos = lazy(() => import("./pages/UploadPhotos"));
 const UploadDocs = lazy(() => import("./pages/UploadDocs"));
 const CustomerPortal = lazy(() => import("./pages/CustomerPortal"));
 const CustomerLookup = lazy(() => import("./pages/CustomerLookup"));
-const CustomerCheckIn = lazy(() => import("./pages/CustomerCheckIn"));
 const ScheduleVisit = lazy(() => import("./pages/ScheduleVisit"));
 const WatchMyCar = lazy(() => import("./pages/WatchMyCar"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
@@ -118,10 +117,6 @@ const AnimatedRoutes = () => {
         <Route path="/docs/:token" element={<UploadDocs />} />
         <Route path="/my-submission" element={<CustomerLookup />} />
         <Route path="/my-submission/:token" element={<CustomerPortal />} />
-        {/* Self check-in flow (CLAUDE_CODE_BRIEF.md §7) — token-authenticated,
-            two-button mobile screen that stamps progress_status to
-            on_the_way / arrived via the customer-checkin edge function. */}
-        <Route path="/check-in/:token" element={<CustomerCheckIn />} />
         <Route path="/reschedule/:token" element={<RescheduleAppointment />} />
         <Route path="/schedule" element={<ScheduleVisit />} />
         {/* Customer-facing vehicle value tracker (Watch My Car's Worth). */}
