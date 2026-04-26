@@ -10,7 +10,49 @@ import TenantViewBanner from "@/components/admin/TenantViewBanner";
 import { PlatformProvider } from "@/contexts/PlatformContext";
 import { useAdminDashboard } from "@/hooks/useAdminDashboard";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useUIRefresh } from "@/hooks/useUIRefresh";
 import { lazy, Suspense, useRef, useEffect, useState } from "react";
+
+// Per CLAUDE_CODE_BRIEF.md §2: when ui_refresh_enabled is true, route
+// each role to its appropriate landing surface on first mount. This
+// runs only once, only when refresh is enabled, and never overwrites
+// the user's choice after they've navigated.
+const computeDefaultHome = (
+  userRole: string,
+  isAppraiser: boolean,
+  allowedSections: string[] | null,
+): string => {
+  // Appraiser flag wins over role string — an admin-flagged appraiser
+  // should still land in the queue.
+  let candidate: string;
+  if (isAppraiser) {
+    candidate = "appraiser-queue";
+  } else if (
+    userRole === "admin" ||
+    userRole === "gsm_gm" ||
+    userRole === "used_car_manager" ||
+    userRole === "new_car_manager"
+  ) {
+    candidate = "today";
+  } else if (
+    userRole === "sales_bdc" ||
+    userRole === "sales" ||
+    userRole === "internet_manager"
+  ) {
+    candidate = "bdc-queue";
+  } else if (userRole === "receptionist") {
+    candidate = "accepted-appts";
+  } else {
+    candidate = "submissions";
+  }
+
+  // Honor allowedSections — if the candidate isn't allowed, fall back
+  // to the first entry the user can reach. allowedSections === null
+  // means unrestricted.
+  if (allowedSections === null) return candidate;
+  if (allowedSections.includes(candidate)) return candidate;
+  return allowedSections[0] ?? "submissions";
+};
 
 // SubmissionDetailSheet is the largest component in the codebase (~1.6k lines).
 // It only renders when a row is clicked, so lazy-loading it keeps it out of
@@ -26,11 +68,26 @@ import {
 const AdminDashboard = () => {
   const db = useAdminDashboard();
   const { config: siteConfig } = useSiteConfig();
+  const refreshed = useUIRefresh();
   const contentRef = useRef<HTMLDivElement>(null);
   const [pendingPhotoDelete, setPendingPhotoDelete] = useState<string | null>(null);
   const [pendingDocDelete, setPendingDocDelete] = useState<{ docType: string; fileName: string } | null>(null);
   // Strip ":fieldHint" for sidebar/breadcrumb matching
   const baseSectionId = db.activeSection.includes(":") ? db.activeSection.split(":")[0] : db.activeSection;
+
+  // Default-landing routing for the refreshed UI. Only fires once per
+  // mount, only when the flag is on, and only if the user hasn't
+  // navigated yet (still on the seed value "submissions").
+  const hasSetDefaultRef = useRef(false);
+  useEffect(() => {
+    if (!refreshed) return;
+    if (hasSetDefaultRef.current) return;
+    if (!db.userRole) return;
+    if (db.activeSection !== "submissions") return;
+    const home = computeDefaultHome(db.userRole, !!db.isAppraiser, db.allowedSections);
+    if (home && home !== "submissions") db.setActiveSection(home);
+    hasSetDefaultRef.current = true;
+  }, [refreshed, db.userRole, db.isAppraiser, db.allowedSections, db.activeSection, db.setActiveSection]);
 
   useEffect(() => {
     contentRef.current?.scrollTo({ top: 0, behavior: "instant" });

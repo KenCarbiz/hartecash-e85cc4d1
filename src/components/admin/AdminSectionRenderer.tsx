@@ -18,6 +18,9 @@ import SubmissionsTable from "./SubmissionsTable";
 import AllLeadsPage from "./AllLeadsPage";
 import AdminLoadingSkeleton from "./AdminLoadingSkeleton";
 import AdminEmptyState from "./AdminEmptyState";
+import TodayHome from "./home/TodayHome";
+import PlatformUIRefreshToggle from "./PlatformUIRefreshToggle";
+import { useUIRefresh } from "@/hooks/useUIRefresh";
 import { UserCheck as UserCheckIcon } from "lucide-react";
 
 // All other sections are lazy — most admins only ever touch a handful
@@ -196,18 +199,37 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
     dealerLocations,
   } = props;
   const navigate = useNavigate();
+  // Per CLAUDE_CODE_BRIEF.md §3 + §6C — when ui_refresh_enabled is OFF
+  // the All Leads section falls back to the legacy SubmissionsTable.
+  const refreshed = useUIRefresh();
 
   // Parse compound section keys like "site-config:logos"
   const colonIdx = rawActiveSection.indexOf(":");
   const activeSection = colonIdx > -1 ? rawActiveSection.slice(0, colonIdx) : rawActiveSection;
   const focusField = colonIdx > -1 ? rawActiveSection.slice(colonIdx + 1) : undefined;
 
-  // ── Pipeline sections ──
-  if (activeSection === "submissions") {
+  // ── Today home ── Manager landing under ui_refresh_enabled. Wired
+  // from the new sidebar's Work → Today entry and the default-home
+  // routing in AdminDashboard.tsx. See CLAUDE_CODE_BRIEF.md §2.
+  if (activeSection === "today") {
     if (props.loading) return <AdminLoadingSkeleton />;
     return (
-      <>
-        <TodayActionSummary submissions={submissions} appointments={appointments} onNavigate={setActiveSection} />
+      <TodayHome
+        submissions={submissions}
+        appointments={appointments}
+        userName={props.userName}
+        onView={handleView}
+      />
+    );
+  }
+
+  // ── Pipeline sections ──
+  // Refresh ON  → AllLeadsPage  (6-col + chips + arrival banner)
+  // Refresh OFF → legacy SubmissionsTable below TodayActionSummary
+  if (activeSection === "submissions") {
+    if (props.loading) return <AdminLoadingSkeleton />;
+    if (refreshed) {
+      return (
         <AllLeadsPage
           submissions={submissions}
           loading={props.loading}
@@ -220,6 +242,12 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
           dealerLocations={props.dealerLocations}
           onView={props.handleView}
         />
+      );
+    }
+    return (
+      <>
+        <TodayActionSummary submissions={submissions} appointments={appointments} onNavigate={setActiveSection} />
+        <SubmissionsTable {...submissionsTableProps(props, submissions, true)} />
       </>
     );
   }
@@ -496,6 +524,10 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
       {activeSection === "system-settings" && canManageAccess && (
         <div className="space-y-8">
           <h2 className="text-lg font-semibold text-card-foreground">System Settings</h2>
+          {/* Platform-only kill switch for the UI Refresh program.
+              Renders only when viewing-as another tenant — see the
+              component for the gate. CLAUDE_CODE_BRIEF.md §6D. */}
+          <PlatformUIRefreshToggle auditLabel={props.auditLabel} />
           <React.Suspense fallback={<AdminLoadingSkeleton />}>
             <PlatformCatalogManager />
           </React.Suspense>
