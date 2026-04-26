@@ -15,8 +15,9 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-import { Plus, Loader2, Globe, Pencil, Trash2, Copy, Rocket, CalendarClock, ArrowUpCircle } from "lucide-react";
+import { Plus, Loader2, Globe, Pencil, Trash2, Copy, Rocket, CalendarClock, ArrowUpCircle, Eye } from "lucide-react";
 import ArchitectureSelector from "./onboarding/ArchitectureSelector";
+import TenantViewPickerDialog from "./TenantViewPickerDialog";
 import { architectureToplanTier, architectureToDbValue } from "./onboarding/types";
 import type { ArchitectureType } from "./onboarding/types";
 
