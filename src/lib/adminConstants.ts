@@ -60,6 +60,11 @@ export const ALL_STATUS_OPTIONS = [
   { key: "offer_accepted", label: "Offer Accepted" },
   { key: "no_contact", label: "Unable to Reach" },
   { key: "inspection_scheduled", label: "Inspection Scheduled" },
+  // Customer self check-in states (CLAUDE_CODE_BRIEF.md §7). Stamped by
+  // the customer-checkin edge function when the customer taps the
+  // matching button on /check-in/:token.
+  { key: "on_the_way", label: "On the way" },
+  { key: "arrived", label: "Arrived" },
   { key: "inspection_completed", label: "Inspection Completed" },
   { key: "appraisal_completed", label: "Final Appraisal Completed" },
   { key: "price_agreed", label: "Price Agreed" },
