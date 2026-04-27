@@ -560,44 +560,92 @@ function ConversationTab({
   );
 }
 
-/* ─────────────── TAB: ACTIVITY ─────────────── */
+/* ─────────────── TAB: ACTIVITY (matches design screenshot 2) ─────────────── */
+type ActivityKind = "all" | "messages" | "calls" | "status" | "notes";
+
+const activityKindOf = (action: string): { kind: ActivityKind; label: string; cls: string } => {
+  const a = action.toLowerCase();
+  if (a.includes("sms") && a.includes("in")) return { kind: "messages", label: "SMS IN", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+  if (a.includes("sms") && a.includes("out")) return { kind: "messages", label: "SMS OUT", cls: "bg-blue-50 text-blue-700 border-blue-200" };
+  if (a.includes("sms")) return { kind: "messages", label: "SMS", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+  if (a.includes("email") && a.includes("in")) return { kind: "messages", label: "EMAIL IN", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+  if (a.includes("email") && a.includes("out")) return { kind: "messages", label: "EMAIL OUT", cls: "bg-blue-50 text-blue-700 border-blue-200" };
+  if (a.includes("email")) return { kind: "messages", label: "EMAIL", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+  if (a.includes("call")) return { kind: "calls", label: "CALL", cls: "bg-purple-50 text-purple-700 border-purple-200" };
+  if (a.includes("note")) return { kind: "notes", label: "NOTE", cls: "bg-amber-50 text-amber-700 border-amber-200" };
+  if (a.includes("status")) return { kind: "status", label: "STATUS", cls: "bg-slate-100 text-slate-600 border-slate-200" };
+  return { kind: "status", label: action.toUpperCase().slice(0, 12), cls: "bg-slate-100 text-slate-600 border-slate-200" };
+};
+
 function ActivityTab({
   activityLog,
 }: {
   activityLog: CustomerFileV2Props["activityLog"];
 }) {
-  if (!activityLog?.length) {
-    return (
-      <div className="p-6">
-        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 text-center text-sm text-slate-500">
-          No activity yet.
+  const [filter, setFilter] = useState<ActivityKind>("all");
+
+  const filters: { k: ActivityKind; label: string }[] = [
+    { k: "all", label: "All" },
+    { k: "messages", label: "Messages" },
+    { k: "calls", label: "Calls" },
+    { k: "status", label: "Status" },
+    { k: "notes", label: "Notes" },
+  ];
+
+  const enriched = (activityLog || []).map((a) => ({ ...a, _kind: activityKindOf(a.action) }));
+  const visible = filter === "all" ? enriched : enriched.filter((a) => a._kind.kind === filter);
+
+  return (
+    <div className="p-6 space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-700 dark:text-slate-300">Activity Timeline</h3>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {filters.map((f) => {
+            const active = filter === f.k;
+            return (
+              <button
+                key={f.k}
+                onClick={() => setFilter(f.k)}
+                className={`text-[11px] font-semibold px-2.5 h-7 rounded-md border transition ${
+                  active
+                    ? "bg-slate-900 text-white border-slate-900"
+                    : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
+                }`}
+              >
+                {f.label}
+              </button>
+            );
+          })}
         </div>
       </div>
-    );
-  }
-  return (
-    <div className="p-6">
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 divide-y divide-slate-100 dark:divide-slate-800">
-        {activityLog.map((a) => (
-          <div key={a.id} className="px-4 py-3 flex items-start gap-3">
-            <div className="w-1.5 h-1.5 mt-2 rounded-full bg-[var(--customer-file-accent,#003b80)]" />
-            <div className="flex-1 min-w-0">
-              <div className="text-[13px] text-slate-900 dark:text-slate-100">
-                <span className="font-semibold">{a.action.replace(/_/g, " ")}</span>
-                {a.old_value && a.new_value && (
-                  <span className="text-slate-500">
-                    {" "}
-                    — {a.old_value} → <span className="text-slate-900 dark:text-slate-100 font-medium">{a.new_value}</span>
-                  </span>
-                )}
-              </div>
-              <div className="text-[11px] text-slate-500 mt-0.5">
-                {a.performed_by || "System"} · {fmtTime(a.created_at)}
+
+      {visible.length === 0 ? (
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 text-center text-sm text-slate-500">
+          {activityLog?.length ? "No activity matches this filter." : "No activity yet."}
+        </div>
+      ) : (
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 divide-y divide-slate-100 dark:divide-slate-800">
+          {visible.map((a) => (
+            <div key={a.id} className="px-4 py-3 flex items-start gap-3">
+              <span className={`shrink-0 inline-flex items-center text-[10px] font-bold uppercase tracking-wider rounded-md px-2 py-0.5 border ${a._kind.cls}`}>
+                {a._kind.label}
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="text-[13px] text-slate-900 dark:text-slate-100 leading-snug">
+                  <span className="font-semibold">{(a.performed_by || "System")}</span>
+                  <span className="text-slate-400"> · </span>
+                  <span className="text-slate-500">{fmtTime(a.created_at)}</span>
+                </div>
+                <div className="text-[12.5px] text-slate-700 dark:text-slate-300 mt-0.5 leading-snug">
+                  {a.old_value && a.new_value
+                    ? <>{a.action.replace(/_/g, " ")}: <span className="text-slate-500">{a.old_value}</span> → <span className="font-semibold">{a.new_value}</span></>
+                    : a.new_value || a.action.replace(/_/g, " ")}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
