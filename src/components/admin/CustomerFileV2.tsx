@@ -365,197 +365,359 @@ function statusTone(status?: string): { icon: React.ElementType; cls: string } {
   return { icon: Clock, cls: "text-amber-500" };
 }
 
+/* ─────────────── TAB: CONVERSATION (full SMS / Email / Calls / Unified threads) ─────────────── */
+
+type ConvChannel = "sms" | "email" | "calls" | "unified";
+
+interface ConvMessage {
+  id: string;
+  channel: "sms" | "email";
+  direction: "in" | "out";
+  actor_label: string | null;
+  body_text: string | null;
+  occurred_at: string;
+}
+
+interface ConvCall {
+  id: string;
+  status: string | null;
+  outcome: string | null;
+  duration_seconds: number | null;
+  summary: string | null;
+  created_at: string;
+}
+
+const fmtConvTime = (iso: string) => {
+  const d = new Date(iso);
+  const diffMin = Math.floor((Date.now() - d.getTime()) / 60000);
+  if (diffMin < 1) return "just now";
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const h = Math.floor(diffMin / 60);
+  if (h < 24) return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  if (h < 48) return "Yesterday " + d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+};
+
+const fmtConvDuration = (s: number | null) => {
+  if (!s) return "—";
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+};
+
+const AI_TONES = [
+  { k: "friendly",     label: "Friendly" },
+  { k: "professional", label: "Professional" },
+  { k: "urgent",       label: "Urgent" },
+  { k: "brief",        label: "Brief" },
+] as const;
+
+const SMS_TEMPLATES = [
+  { k: "follow_up",          label: "Follow up on offer",   body: "Hi {first}, just checking in on the offer we sent — happy to talk through any questions." },
+  { k: "confirm_appointment",label: "Confirm appointment",  body: "Hi {first}, confirming we're set for your appointment — see you then!" },
+  { k: "nudge",              label: "Nudge (no response)",  body: "Hi {first}, didn't want to lose you in the shuffle — does the offer still work, or want to talk through it?" },
+  { k: "they_arrived",       label: "They just arrived",    body: "Walking out to meet you now — give me 60 seconds." },
+  { k: "ask_loan_payoff",    label: "Ask about loan payoff",body: "Hi {first}, quick one — do you have the current payoff amount on the loan? Helps us finalize numbers." },
+] as const;
+
 function ConversationTab({
   sub,
-  activityLog,
+  activityLog: _activityLog,
 }: {
   sub: Submission;
   activityLog: CustomerFileV2Props["activityLog"];
 }) {
-  const [events, setEvents] = useState<TimelineEvent[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+  const [channel, setChannel] = useState<ConvChannel>("sms");
+  const [messages, setMessages] = useState<ConvMessage[]>([]);
+  const [calls, setCalls] = useState<ConvCall[]>([]);
+  const [draft, setDraft] = useState("");
+  const [tone, setTone] = useState<typeof AI_TONES[number]["k"]>("friendly");
+  const [sending, setSending] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      setLoading(true);
-      const [{ data: followUps }, { data: notifs }] = await Promise.all([
-        supabase
-          .from("follow_ups")
-          .select("id, channel, status, touch_number, error_message, triggered_by, created_at")
-          .eq("submission_id", sub.id)
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("notification_log")
-          .select("id, channel, status, recipient, trigger_key, error_message, created_at")
-          .eq("submission_id", sub.id)
-          .order("created_at", { ascending: false }),
-      ]);
+  const load = useCallback(async () => {
+    const [{ data: convData }, { data: callData }] = await Promise.all([
+      (supabase as never as { from: (t: string) => { select: (s: string) => { eq: (k: string, v: string) => { order: (c: string, o: { ascending: boolean }) => { limit: (n: number) => Promise<{ data: ConvMessage[] | null }> } } } } })
+        .from("conversation_events")
+        .select("id, channel, direction, actor_label, body_text, occurred_at")
+        .eq("submission_id", sub.id)
+        .order("occurred_at", { ascending: true })
+        .limit(200),
+      (supabase as never as { from: (t: string) => { select: (s: string) => { eq: (k: string, v: string) => { order: (c: string, o: { ascending: boolean }) => { limit: (n: number) => Promise<{ data: ConvCall[] | null }> } } } } })
+        .from("voice_call_log")
+        .select("id, status, outcome, duration_seconds, summary, created_at")
+        .eq("submission_id", sub.id)
+        .order("created_at", { ascending: false })
+        .limit(50),
+    ]);
+    setMessages((convData || []).filter((m) => m.channel === "sms" || m.channel === "email"));
+    setCalls(callData || []);
+  }, [sub.id]);
 
-      if (cancelled) return;
+  useEffect(() => { void load(); }, [load]);
 
-      const merged: TimelineEvent[] = [];
+  const smsMessages   = messages.filter((m) => m.channel === "sms");
+  const emailMessages = messages.filter((m) => m.channel === "email");
 
-      for (const f of followUps || []) {
-        const touch = f.touch_number === 1 ? "Gentle Nudge" : f.touch_number === 2 ? "Value Add" : "Last Chance";
-        merged.push({
-          id: `f-${f.id}`,
-          ts: f.created_at,
-          kind: "follow_up",
-          channel: f.channel,
-          status: f.status,
-          title: `Follow-up #${f.touch_number} · ${touch}`,
-          detail: f.error_message || `Sent via ${f.channel}`,
-          who: f.triggered_by || "System",
-        });
-      }
+  const counts: Record<ConvChannel, number> = {
+    sms: smsMessages.length,
+    email: emailMessages.length,
+    calls: calls.length,
+    unified: smsMessages.length + emailMessages.length + calls.length,
+  };
 
-      for (const n of notifs || []) {
-        merged.push({
-          id: `n-${n.id}`,
-          ts: n.created_at,
-          kind: "notification",
-          channel: n.channel,
-          status: n.status,
-          title: (n.trigger_key || "Notification").replace(/_/g, " "),
-          detail: n.error_message || `${n.channel} → ${n.recipient}`,
-          who: "System",
-        });
-      }
+  const charLimit = channel === "sms" ? 160 : 1000;
+  const composerDisabled = channel === "calls"
+    || (channel === "sms" && !sub.phone)
+    || (channel === "email" && !sub.email);
 
-      for (const a of activityLog || []) {
-        merged.push({
-          id: `a-${a.id}`,
-          ts: a.created_at,
-          kind: "activity",
-          title: a.action.replace(/_/g, " "),
-          detail:
-            a.old_value && a.new_value
-              ? `${a.old_value} → ${a.new_value}`
-              : a.new_value || undefined,
-          who: a.performed_by || "System",
-        });
-      }
+  const applyTemplate = (t: typeof SMS_TEMPLATES[number]) => {
+    const first = (sub.name || "there").split(/\s+/)[0];
+    setDraft(t.body.replace("{first}", first));
+  };
 
-      merged.sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
-      setEvents(merged);
-      setLoading(false);
+  const refineWithAi = () => {
+    // UI-only stub for now — future: call edge function with current draft + tone.
+    toast({ title: "AI refine not wired yet", description: `Tone: ${tone}. Draft will be polished here.` });
+  };
+
+  const send = async () => {
+    const body = draft.trim();
+    if (!body || composerDisabled || sending) return;
+    setSending(true);
+    const { error } = await (supabase as never as {
+      from: (t: string) => { insert: (rows: unknown) => Promise<{ error: { message: string } | null }> };
+    })
+      .from("conversation_events")
+      .insert({
+        submission_id: sub.id,
+        channel: channel === "calls" ? "sms" : channel,
+        direction: "out",
+        actor_type: "staff",
+        actor_label: "You",
+        body_text: body,
+        occurred_at: new Date().toISOString(),
+      });
+    setSending(false);
+    if (error) {
+      toast({ title: "Send failed", description: error.message, variant: "destructive" });
+      return;
     }
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [sub.id, activityLog]);
+    setDraft("");
+    void load();
+  };
 
   return (
-    <div className="p-6 space-y-4">
-      {/* Quick send card */}
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="min-w-0">
-            <h3 className="text-[15px] font-semibold text-slate-900 dark:text-slate-100">
-              Reach out to {sub.name?.split(" ")[0] || "customer"}
-            </h3>
-            <p className="text-[12px] text-slate-500 mt-0.5">
-              Send a follow-up via {sub.email ? "email" : ""}{sub.email && sub.phone ? ", SMS, or call" : sub.phone ? "SMS or call" : ""}.
-            </p>
-          </div>
-          <div className="flex items-center gap-2.5">
-            {sub.email && (
-              <a
-                href={`mailto:${sub.email}`}
-                aria-label="Send email"
-                className="group flex flex-col items-center gap-1"
-              >
-                <span className="w-11 h-11 rounded-full bg-[var(--customer-file-accent,#003b80)] text-white flex items-center justify-center shadow-sm transition-transform group-hover:scale-105 group-active:scale-95">
-                  <Mail className="w-4 h-4" />
-                </span>
-                <span className="text-[10.5px] font-semibold text-slate-600 dark:text-slate-300">Email</span>
-              </a>
-            )}
-            {sub.phone && (
-              <a
-                href={`sms:${sub.phone}`}
-                aria-label="Send SMS"
-                className="group flex flex-col items-center gap-1"
-              >
-                <span className="w-11 h-11 rounded-full bg-[var(--customer-file-accent,#003b80)] text-white flex items-center justify-center shadow-sm transition-transform group-hover:scale-105 group-active:scale-95">
-                  <MessageSquare className="w-4 h-4" />
-                </span>
-                <span className="text-[10.5px] font-semibold text-slate-600 dark:text-slate-300">SMS</span>
-              </a>
-            )}
-            {sub.phone && (
-              <a
-                href={`tel:${sub.phone}`}
-                aria-label="Call customer"
-                className="group flex flex-col items-center gap-1"
-              >
-                <span className="w-11 h-11 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-sm transition-transform group-hover:scale-105 group-active:scale-95">
-                  <Phone className="w-4 h-4" />
-                </span>
-                <span className="text-[10.5px] font-semibold text-slate-600 dark:text-slate-300">Call</span>
-              </a>
-            )}
-          </div>
-        </div>
+    <div className="flex flex-col h-full">
+      {/* Sub-tabs: SMS / Email / Calls / Unified */}
+      <div className="shrink-0 flex items-center border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-4">
+        {(["sms", "email", "calls", "unified"] as ConvChannel[]).map((c) => {
+          const active = c === channel;
+          return (
+            <button
+              key={c}
+              onClick={() => setChannel(c)}
+              className={`h-10 px-4 text-[12px] font-bold uppercase tracking-[0.08em] flex items-center gap-1.5 transition border-b-2 ${
+                active
+                  ? "text-slate-900 dark:text-slate-100 border-[var(--customer-file-accent,#003b80)]"
+                  : "text-slate-500 border-transparent hover:text-slate-700 dark:hover:text-slate-300"
+              }`}
+            >
+              {c === "calls" ? "Calls" : c === "unified" ? "Unified" : c.toUpperCase()}
+              {counts[c] > 0 && (
+                <span className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] font-bold ${
+                  active ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                }`}>{counts[c]}</span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Timeline */}
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
-        <div className="px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-          <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-            Communication Timeline
-          </h3>
-          <span className="text-[11px] text-slate-400">{events.length} events</span>
-        </div>
-        {loading ? (
-          <div className="p-6 text-center text-sm text-slate-500">Loading…</div>
-        ) : events.length === 0 ? (
-          <div className="p-8 text-center">
-            <MessageSquare className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-            <p className="text-xs text-slate-500">
-              No outreach yet. Send the first follow-up above.
-            </p>
-          </div>
-        ) : (
-          <ol className="divide-y divide-slate-100 dark:divide-slate-800">
-            {events.map((e) => {
-              const ChIcon = e.channel ? CHANNEL_ICON[e.channel] || Send : Activity;
-              const tone = statusTone(e.status);
-              const StatusIcon = tone.icon;
-              return (
-                <li key={e.id} className="px-4 py-3 flex items-start gap-3">
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
-                    style={{ background: "color-mix(in srgb, var(--customer-file-accent, #003b80) 10%, transparent)" }}
-                  >
-                    <ChIcon className="w-4 h-4 text-[var(--customer-file-accent,#003b80)]" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[13px] font-semibold text-slate-900 dark:text-slate-100 truncate">
-                        {e.title}
-                      </span>
-                      {e.status && (
-                        <StatusIcon className={`w-3.5 h-3.5 ${tone.cls}`} />
-                      )}
+      {/* Body — thread for active channel */}
+      <div className="flex-1 overflow-y-auto px-6 py-5 bg-slate-50 dark:bg-slate-950">
+        {channel === "sms" && (
+          smsMessages.length === 0 ? (
+            <div className="text-center text-[13px] text-slate-400 italic py-12">
+              {sub.phone ? `No SMS yet — start a thread with ${(sub.name || "the customer").split(/\s+/)[0]} below.` : "No phone number on file."}
+            </div>
+          ) : (
+            <div className="space-y-3 max-w-[640px] mx-auto">
+              {smsMessages.map((m) => (
+                <div key={m.id} className={`flex ${m.direction === "out" ? "justify-end" : "justify-start"}`}>
+                  <div className="max-w-[75%]">
+                    <div className={`px-4 py-2 rounded-2xl text-[13.5px] leading-snug ${
+                      m.direction === "out"
+                        ? "bg-[var(--customer-file-accent,#003b80)] text-white rounded-br-sm"
+                        : "bg-white border border-slate-200 text-slate-900 rounded-bl-sm shadow-sm"
+                    }`}>
+                      {m.body_text}
                     </div>
-                    {e.detail && (
-                      <div className="text-[12px] text-slate-600 dark:text-slate-400 mt-0.5 truncate">
-                        {e.detail}
+                    <div className={`text-[11px] text-slate-400 mt-1 ${m.direction === "out" ? "text-right" : "text-left"}`}>
+                      {fmtConvTime(m.occurred_at)}{m.actor_label && m.direction === "out" ? ` · ${m.actor_label}` : ""}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        )}
+
+        {channel === "email" && (
+          emailMessages.length === 0 ? (
+            <div className="text-center text-[13px] text-slate-400 italic py-12">
+              {sub.email ? "No email threads yet." : "No email on file."}
+            </div>
+          ) : (
+            <div className="space-y-3 max-w-[760px] mx-auto">
+              {emailMessages.map((m) => (
+                <div key={m.id} className="rounded-lg border border-slate-200 bg-white p-4">
+                  <div className="flex items-baseline justify-between gap-2 mb-1">
+                    <span className="text-[12.5px] font-bold text-slate-900">{m.actor_label || (m.direction === "in" ? "Customer" : "You")}</span>
+                    <span className="text-[11px] text-slate-400">{fmtConvTime(m.occurred_at)}</span>
+                  </div>
+                  <p className="text-[13px] text-slate-700 leading-relaxed whitespace-pre-wrap">{m.body_text}</p>
+                </div>
+              ))}
+            </div>
+          )
+        )}
+
+        {channel === "calls" && (
+          calls.length === 0 ? (
+            <div className="text-center text-[13px] text-slate-400 italic py-12">No call history.</div>
+          ) : (
+            <div className="space-y-2 max-w-[760px] mx-auto">
+              {calls.map((c) => (
+                <div key={c.id} className="rounded-lg border border-slate-200 bg-white p-4 flex items-baseline justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[13px] font-bold text-slate-900 capitalize">
+                      {(c.outcome || c.status || "Call").replace(/_/g, " ")}
+                    </div>
+                    {c.summary && <p className="text-[12px] text-slate-600 mt-0.5 line-clamp-2">{c.summary}</p>}
+                  </div>
+                  <div className="text-right text-[11px] text-slate-400 shrink-0">
+                    <div className="font-semibold text-slate-700">{fmtConvDuration(c.duration_seconds)}</div>
+                    <div>{fmtConvTime(c.created_at)}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        )}
+
+        {channel === "unified" && (
+          (() => {
+            const merged = [
+              ...smsMessages.map((m) => ({ k: "sms" as const, ts: m.occurred_at, m })),
+              ...emailMessages.map((m) => ({ k: "email" as const, ts: m.occurred_at, m })),
+              ...calls.map((c) => ({ k: "call" as const, ts: c.created_at, c })),
+            ].sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
+            if (merged.length === 0) {
+              return <div className="text-center text-[13px] text-slate-400 italic py-12">No communication yet.</div>;
+            }
+            return (
+              <div className="space-y-2 max-w-[760px] mx-auto">
+                {merged.map((row) => (
+                  <div key={`${row.k}-${row.k === "call" ? row.c.id : row.m.id}`} className="rounded-lg border border-slate-200 bg-white p-3 flex items-start gap-3">
+                    <span className={`shrink-0 inline-flex items-center text-[10px] font-bold uppercase tracking-wider rounded-md px-2 py-0.5 border ${
+                      row.k === "sms" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                      row.k === "email" ? "bg-blue-50 text-blue-700 border-blue-200" :
+                      "bg-purple-50 text-purple-700 border-purple-200"
+                    }`}>{row.k}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <span className="text-[12px] font-semibold text-slate-900">
+                          {row.k === "call"
+                            ? (row.c.outcome || row.c.status || "Call").replace(/_/g, " ")
+                            : (row.m.actor_label || (row.m.direction === "in" ? "Customer" : "You"))}
+                        </span>
+                        <span className="text-[11px] text-slate-400">{fmtConvTime(row.ts)}</span>
                       </div>
-                    )}
-                    <div className="text-[11px] text-slate-400 mt-0.5">
-                      {e.who} · {fmtTime(e.ts)}
+                      <p className="text-[12.5px] text-slate-700 leading-snug line-clamp-2 mt-0.5">
+                        {row.k === "call" ? (row.c.summary || "—") : row.m.body_text}
+                      </p>
                     </div>
                   </div>
-                </li>
-              );
-            })}
-          </ol>
+                ))}
+              </div>
+            );
+          })()
         )}
       </div>
+
+      {/* AI Assist + Templates + Composer */}
+      {channel !== "calls" && (
+        <div className="shrink-0 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-5 py-3 space-y-2.5">
+          {/* AI Assist tone strip */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 mr-1">⚡ AI Assist</span>
+            {AI_TONES.map((t) => (
+              <button
+                key={t.k}
+                onClick={() => setTone(t.k)}
+                className={`text-[11px] font-semibold px-2.5 h-6 rounded-md border transition ${
+                  tone === t.k
+                    ? "bg-slate-900 text-white border-slate-900"
+                    : "bg-white text-slate-600 border-slate-200 hover:border-slate-400"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Templates */}
+          {channel === "sms" && (
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mr-1">Templates</span>
+              {SMS_TEMPLATES.map((t) => (
+                <button
+                  key={t.k}
+                  onClick={() => applyTemplate(t)}
+                  className="text-[11px] font-semibold px-2.5 h-6 rounded-md border border-slate-200 bg-white text-slate-600 hover:border-slate-400 transition"
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Composer */}
+          <textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); void send(); }
+            }}
+            placeholder={composerDisabled
+              ? (channel === "sms" ? "No phone number on file." : "No email on file.")
+              : "Type your message… or use AI Assist above"}
+            rows={2}
+            disabled={composerDisabled}
+            className="w-full text-[13px] rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 resize-none disabled:opacity-60 disabled:cursor-not-allowed"
+          />
+          <div className="flex items-center justify-between gap-2">
+            <span className={`text-[11px] ${draft.length > charLimit ? "text-red-600 font-bold" : "text-slate-400"}`}>
+              {draft.length}/{charLimit} chars
+            </span>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={refineWithAi}
+                disabled={!draft.trim()}
+                className="text-[11px] font-semibold px-3 h-8 rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition"
+              >
+                Refine
+              </button>
+              <button
+                onClick={() => void send()}
+                disabled={!draft.trim() || sending || composerDisabled || draft.length > charLimit}
+                className="text-[12px] font-bold px-3.5 h-8 rounded-md bg-[var(--customer-file-accent,#003b80)] hover:opacity-90 disabled:bg-slate-300 text-white transition"
+              >
+                {sending ? "Sending…" : `Send ${channel === "sms" ? "SMS" : "Email"}`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
