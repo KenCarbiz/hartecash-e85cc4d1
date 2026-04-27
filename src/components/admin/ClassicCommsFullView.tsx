@@ -96,6 +96,9 @@ const ClassicCommsFullView = ({
   const [draft, setDraft] = useState("");
   const [emailSubject, setEmailSubject] = useState("");
   const [tone, setTone] = useState<Tone>("friendly");
+  // Unified composer needs an explicit channel selector since the thread
+  // mixes both. Defaults to SMS, mirrors whatever channel the user picks.
+  const [unifiedSendVia, setUnifiedSendVia] = useState<"sms" | "email">("sms");
   const [busy, setBusy] = useState<"none" | "ai" | "sending" | "logging">("none");
   const [logFormOpen, setLogFormOpen] = useState(false);
   const [logDirection, setLogDirection] = useState<"outbound" | "inbound">("outbound");
@@ -141,9 +144,17 @@ const ClassicCommsFullView = ({
     unified: smsMessages.length + emailMessages.length + calls.length,
   };
 
-  const isComposerChannel = tab === "sms" || tab === "email";
-  const composerDisabled = (tab === "sms" && !customerPhone) || (tab === "email" && !customerEmail);
-  const charLimit = tab === "sms" ? 320 : 1200;
+  // Effective channel that the composer + AI calls operate on. SMS/Email
+  // tabs are obvious; Unified uses the explicit Send via toggle.
+  const effectiveSendChannel: "sms" | "email" =
+    tab === "unified" ? unifiedSendVia : (tab === "email" ? "email" : "sms");
+  const isComposerChannel = tab !== "calls"; // SMS, Email, Unified all show composer
+  const composerDisabled =
+    (effectiveSendChannel === "sms" && !customerPhone) ||
+    (effectiveSendChannel === "email" && !customerEmail);
+  const charLimit = effectiveSendChannel === "sms" ? 320 : 1200;
+  const showAttachFile = effectiveSendChannel === "email";
+  const showSubject = effectiveSendChannel === "email";
 
   // ── AI: apply a template (server picks message based on tone + ctx) ──
   const applyTemplate = async (templateKey: typeof TEMPLATES[number]["k"]) => {
@@ -156,7 +167,7 @@ const ClassicCommsFullView = ({
           submission_id: submissionId,
           tone,
           template_key: templateKey,
-          channel: tab === "email" ? "email" : "sms",
+          channel: effectiveSendChannel,
         },
       });
       if (error) throw error;
@@ -181,7 +192,7 @@ const ClassicCommsFullView = ({
           submission_id: submissionId,
           tone,
           draft,
-          channel: tab === "email" ? "email" : "sms",
+          channel: effectiveSendChannel,
         },
       });
       if (error) throw error;
@@ -244,7 +255,7 @@ const ClassicCommsFullView = ({
     if (!body || composerDisabled || busy !== "none") return;
     setBusy("sending");
     try {
-      const isEmail = tab === "email";
+      const isEmail = effectiveSendChannel === "email";
       const metadata = isEmail
         ? { subject: emailSubject.trim() || "Re: Your trade-in offer" }
         : null;
@@ -254,7 +265,7 @@ const ClassicCommsFullView = ({
         .from("conversation_events")
         .insert({
           submission_id: submissionId,
-          channel: isEmail ? "email" : "sms",
+          channel: effectiveSendChannel,
           direction: "out",
           actor_type: "staff",
           actor_label: "You",
@@ -496,43 +507,141 @@ const ClassicCommsFullView = ({
               ...smsMessages.map((m) => ({ k: "sms" as const, ts: m.occurred_at, m })),
               ...emailMessages.map((m) => ({ k: "email" as const, ts: m.occurred_at, m })),
               ...calls.map((c) => ({ k: "call" as const, ts: c.created_at, c })),
-            ].sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
+            ].sort((a, b) => new Date(a.ts).getTime() - new Date(b.ts).getTime());
             if (merged.length === 0) {
               return <div className="text-center text-[13px] text-slate-400 italic py-12">No communication yet.</div>;
             }
             return (
-              <div className="space-y-2 max-w-[760px] mx-auto">
-                {merged.map((row) => (
-                  <div key={`${row.k}-${row.k === "call" ? row.c.id : row.m.id}`} className="rounded-lg border border-slate-200 bg-white p-3 flex items-start gap-3">
-                    <span className={`shrink-0 inline-flex items-center text-[10px] font-bold uppercase tracking-wider rounded-md px-2 py-0.5 border ${
-                      row.k === "sms" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
-                      row.k === "email" ? "bg-blue-50 text-blue-700 border-blue-200" :
-                      "bg-purple-50 text-purple-700 border-purple-200"
-                    }`}>{row.k}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-baseline justify-between gap-2">
-                        <span className="text-[12px] font-semibold text-slate-900">
-                          {row.k === "call"
-                            ? (row.c.outcome || row.c.status || "Call").replace(/_/g, " ")
-                            : (row.m.actor_label || (row.m.direction === "in" ? "Customer" : "You"))}
-                        </span>
-                        <span className="text-[11px] text-slate-400">{fmtTime(row.ts)}</span>
+              <div className="space-y-3 max-w-[760px] mx-auto">
+                {merged.map((row) => {
+                  const key = `${row.k}-${row.k === "call" ? row.c.id : row.m.id}`;
+
+                  // CALL card — direction-aware icon + summary
+                  if (row.k === "call") {
+                    const c = row.c;
+                    const direction = (c.direction || "").toLowerCase();
+                    const outcome = (c.outcome || c.status || "call").toLowerCase();
+                    const isInbound = direction === "inbound" || direction === "in" || outcome.includes("voicemail");
+                    const isVoicemail = outcome.includes("voicemail");
+                    const iconBg = isInbound ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700";
+                    const borderColor = isInbound ? "border-amber-200" : "border-emerald-200";
+                    const dirLabel = isInbound ? "Inbound" : "Outbound";
+                    const outcomeLabel = (c.outcome || c.status || "Call").replace(/_/g, " ").replace(/\b\w/g, (s) => s.toUpperCase());
+                    return (
+                      <div key={key} className={`rounded-lg border ${borderColor} bg-white p-4 flex items-start gap-3`}>
+                        <div className={`w-9 h-9 rounded-full ${iconBg} flex items-center justify-center shrink-0 mt-0.5`}>
+                          <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                            {isVoicemail
+                              ? <path d="M3 11a3 3 0 116 0 3 3 0 01-6 0zm8 0a3 3 0 116 0 3 3 0 01-6 0zm-3 3h4v2H8v-2z"/>
+                              : <path d="M2 3.5A1.5 1.5 0 013.5 2h2.6a1.5 1.5 0 011.4 1l.8 2.1a1.5 1.5 0 01-.4 1.7L6.5 8.1a11 11 0 005.4 5.4l1.3-1.4a1.5 1.5 0 011.7-.4l2.1.8a1.5 1.5 0 011 1.4v2.6a1.5 1.5 0 01-1.5 1.5C8.5 18 2 11.5 2 3.5z"/>}
+                          </svg>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-baseline justify-between gap-2">
+                            <div>
+                              <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 mb-0.5">Call</div>
+                              <div className="text-[13.5px] font-bold text-slate-900">{dirLabel} · {outcomeLabel}</div>
+                              {c.performed_by && <div className="text-[12px] text-slate-500 mt-0.5">by {c.performed_by}</div>}
+                            </div>
+                            <span className="text-[11px] text-slate-400 shrink-0">
+                              {fmtTime(c.created_at)}{c.duration_seconds ? ` · ${fmtDuration(c.duration_seconds)}` : ""}
+                            </span>
+                          </div>
+                          {c.summary && <p className="text-[13px] italic text-slate-700 mt-1.5">"{c.summary}"</p>}
+                        </div>
                       </div>
-                      <p className="text-[12.5px] text-slate-700 leading-snug line-clamp-2 mt-0.5">
-                        {row.k === "call" ? (row.c.summary || "—") : row.m.body_text}
-                      </p>
+                    );
+                  }
+
+                  // EMAIL card
+                  if (row.k === "email") {
+                    const m = row.m;
+                    const subject = m.metadata?.subject || (m.direction === "out" ? "Your trade-in offer" : "Re: Your trade-in offer");
+                    const addressLine = m.direction === "out"
+                      ? `To: ${customerEmail || "customer"}`
+                      : `From: ${m.actor_label || "Customer"}${customerEmail ? ` <${customerEmail}>` : ""}`;
+                    return (
+                      <div key={key} className="rounded-lg border border-purple-200 bg-white p-4">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <div className="text-[10px] font-bold uppercase tracking-wider text-purple-700 inline-flex items-center gap-1">
+                            <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor"><path d="M2 5.5A1.5 1.5 0 013.5 4h13A1.5 1.5 0 0118 5.5v9a1.5 1.5 0 01-1.5 1.5h-13A1.5 1.5 0 012 14.5v-9zm2.2.5L10 10.2 15.8 6H4.2z"/></svg>
+                            Email
+                          </div>
+                          <span className="text-[11px] text-slate-400">{fmtTime(m.occurred_at)}</span>
+                        </div>
+                        <div className="text-[12px] text-slate-500 mt-1">{addressLine}</div>
+                        <div className="text-[13.5px] font-bold text-slate-900 mt-0.5">{subject}</div>
+                        <p className="text-[13px] text-slate-700 leading-relaxed mt-1 whitespace-pre-wrap line-clamp-3">{m.body_text}</p>
+                      </div>
+                    );
+                  }
+
+                  // SMS — render as chat bubbles inline (matches design)
+                  const m = row.m;
+                  return (
+                    <div key={key} className={`flex flex-col ${m.direction === "out" ? "items-end" : "items-start"}`}>
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-blue-700 inline-flex items-center gap-1 mb-1">
+                        <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        SMS
+                      </div>
+                      <div className="max-w-[75%]">
+                        <div className={`px-4 py-2 rounded-2xl text-[13.5px] leading-snug ${
+                          m.direction === "out"
+                            ? "bg-[#003b80] text-white rounded-br-sm"
+                            : "bg-white border border-slate-200 text-slate-900 rounded-bl-sm shadow-sm"
+                        }`}>
+                          {m.body_text}
+                        </div>
+                        <div className={`text-[11px] text-slate-400 mt-1 ${m.direction === "out" ? "text-right" : "text-left"}`}>
+                          {fmtTime(m.occurred_at)}
+                          {m.direction === "out" && m.actor_label ? ` · ${m.actor_label}` : ""}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             );
           })()
         )}
       </div>
 
-      {/* AI Assist + Templates + Composer (SMS/Email only) */}
+      {/* AI Assist + Templates + Composer (SMS/Email/Unified — not Calls) */}
       {isComposerChannel && (
         <div className="shrink-0 border-t border-slate-200 bg-white px-5 py-3 space-y-2.5">
+          {/* Send via toggle — only on Unified tab */}
+          {tab === "unified" && (
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-semibold text-slate-500">Send via:</span>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setUnifiedSendVia("sms")}
+                  disabled={!customerPhone}
+                  className={`text-[11px] font-bold px-2.5 h-7 rounded-md inline-flex items-center gap-1 transition disabled:opacity-50 ${
+                    unifiedSendVia === "sms"
+                      ? "bg-blue-50 text-blue-700 border border-blue-200"
+                      : "bg-white text-slate-500 border border-slate-200 hover:border-slate-400"
+                  }`}
+                >
+                  <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  SMS
+                </button>
+                <button
+                  onClick={() => setUnifiedSendVia("email")}
+                  disabled={!customerEmail}
+                  className={`text-[11px] font-bold px-2.5 h-7 rounded-md inline-flex items-center gap-1 transition disabled:opacity-50 ${
+                    unifiedSendVia === "email"
+                      ? "bg-purple-50 text-purple-700 border border-purple-200"
+                      : "bg-white text-slate-500 border border-slate-200 hover:border-slate-400"
+                  }`}
+                >
+                  <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor"><path d="M2 5.5A1.5 1.5 0 013.5 4h13A1.5 1.5 0 0118 5.5v9a1.5 1.5 0 01-1.5 1.5h-13A1.5 1.5 0 012 14.5v-9zm2.2.5L10 10.2 15.8 6H4.2z"/></svg>
+                  Email
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Tone strip */}
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 mr-1 inline-flex items-center gap-1">
@@ -569,8 +678,8 @@ const ClassicCommsFullView = ({
             ))}
           </div>
 
-          {/* Email-only: Subject input */}
-          {tab === "email" && (
+          {/* Email subject input — Email tab or Unified+Email */}
+          {showSubject && (
             <input
               type="text"
               value={emailSubject}
@@ -589,16 +698,16 @@ const ClassicCommsFullView = ({
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); void send(); }
             }}
             placeholder={composerDisabled
-              ? (tab === "sms" ? "No phone number on file." : "No email on file.")
+              ? (effectiveSendChannel === "sms" ? "No phone number on file." : "No email on file.")
               : "Type your message… or use AI Assist above"}
-            rows={tab === "email" ? 5 : 2}
+            rows={effectiveSendChannel === "email" ? 5 : 2}
             disabled={composerDisabled}
             className="w-full text-[13px] rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 resize-none disabled:opacity-60 disabled:cursor-not-allowed"
           />
 
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              {tab === "email" && (
+              {showAttachFile && (
                 <button
                   onClick={() => toast({ title: "Attachments coming soon", description: "Wire-up requires storage bucket access." })}
                   disabled={composerDisabled}
@@ -608,7 +717,7 @@ const ClassicCommsFullView = ({
                   Attach file
                 </button>
               )}
-              {tab === "sms" && (
+              {effectiveSendChannel === "sms" && (
                 <span className={`text-[11px] ${draft.length > charLimit ? "text-red-600 font-bold" : "text-slate-400"}`}>
                   {draft.length}/{charLimit} chars
                 </span>
@@ -625,11 +734,11 @@ const ClassicCommsFullView = ({
               </button>
               <button
                 onClick={() => void send()}
-                disabled={!draft.trim() || busy !== "none" || composerDisabled || (tab === "sms" && draft.length > charLimit)}
+                disabled={!draft.trim() || busy !== "none" || composerDisabled || (effectiveSendChannel === "sms" && draft.length > charLimit)}
                 className="text-[12px] font-bold px-3.5 h-8 rounded-md bg-[#003b80] hover:bg-[#002a5c] disabled:bg-slate-300 text-white inline-flex items-center gap-1.5 transition"
               >
                 <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M2.5 2.4a1 1 0 011-.4l13.5 4.8a1 1 0 010 1.9L4.5 13.5a1 1 0 01-1.4-1.2l1.6-3.8L3 4.6a1 1 0 01-.5-2.2z"/></svg>
-                {busy === "sending" ? "Sending…" : `Send ${tab === "sms" ? "SMS" : "email"}`}
+                {busy === "sending" ? "Sending…" : `Send ${effectiveSendChannel === "sms" ? "SMS" : "email"}`}
               </button>
             </div>
           </div>
