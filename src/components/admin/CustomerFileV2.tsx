@@ -120,7 +120,13 @@ export default function CustomerFileV2(props: CustomerFileV2Props) {
         >
           {sub && (
             <>
-              <V2Header sub={sub} dealValue={dealValue} dealKind={dealKind} onClose={onClose} />
+              <V2Header
+                sub={sub}
+                dealValue={dealValue}
+                dealKind={dealKind}
+                onClose={onClose}
+                headerLayout={(((config as { customer_file_header_layout?: string }).customer_file_header_layout) as "a" | "b" | "c" | undefined) || "b"}
+              />
               <V2Tabs tab={tab} onChange={setTab} unread={0} />
               <div className="flex-1 min-h-0 flex">
                 <main className="flex-1 min-w-0 overflow-y-auto">
@@ -149,17 +155,140 @@ export default function CustomerFileV2(props: CustomerFileV2Props) {
   );
 }
 
+/* ─────────────── HEADER IDENTITY ROWS (A / B / C) ─────────────── */
+function V2Identity({
+  sub, dealValue, dealKind, layout,
+}: {
+  sub: Submission;
+  dealValue: number | null;
+  dealKind: string;
+  layout: "a" | "b" | "c";
+}) {
+  const vehicleTitle = [sub.vehicle_year, sub.vehicle_make, sub.vehicle_model].filter(Boolean).join(" ") || "—";
+
+  const Money = (
+    <div className="text-left md:text-right">
+      <div className="text-[11px] uppercase tracking-[0.15em] text-white/55 font-bold">{dealKind}</div>
+      <div className="text-[36px] font-bold leading-none mt-0.5 font-mono">{fmtMoney(dealValue)}</div>
+      {sub.acv_value != null && dealValue != null && (
+        <div className="text-[11px] text-white/70 mt-1">
+          ACV {fmtMoney(sub.acv_value)} ·{" "}
+          <span className="text-emerald-300 font-semibold">
+            +{fmtMoney(dealValue - Number(sub.acv_value))}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+
+  const VehicleStrip = (
+    <div className="flex items-center gap-2 flex-wrap text-[12px] text-white/80 mt-1">
+      {sub.vin && <span className="font-mono bg-white/10 rounded px-2 py-0.5 tracking-wider">{sub.vin}</span>}
+      {sub.mileage != null && (<><span>·</span><span>{Number(sub.mileage).toLocaleString()} mi</span></>)}
+      {sub.exterior_color && (<><span>·</span><span>{sub.exterior_color}</span></>)}
+    </div>
+  );
+
+  const Contact = (
+    <div className="space-y-0.5 text-[13px] text-white/85 mt-1">
+      {sub.phone ? (
+        <div className="flex items-center gap-1.5">
+          <Phone className="w-3 h-3 shrink-0" />
+          <a href={`tel:${sub.phone}`} className="hover:underline">{sub.phone}</a>
+        </div>
+      ) : (
+        <div className="text-white/40 text-[12px] italic">No phone on file</div>
+      )}
+      {sub.email ? (
+        <div className="flex items-center gap-1.5 truncate">
+          <Mail className="w-3 h-3 shrink-0" />
+          <a href={`mailto:${sub.email}`} className="truncate hover:underline">{sub.email}</a>
+        </div>
+      ) : (
+        <div className="text-white/40 text-[12px] italic">No email on file</div>
+      )}
+    </div>
+  );
+
+  // ── A: Vehicle-first
+  if (layout === "a") {
+    return (
+      <div className="flex items-end gap-4 flex-wrap">
+        <div className="flex-1 min-w-[260px]">
+          <div className="text-[11px] uppercase tracking-[0.15em] text-white/55 font-bold">
+            {sub.vehicle_year}{sub.mileage ? ` · ${Number(sub.mileage).toLocaleString()} mi` : ""}
+          </div>
+          <div className="text-[28px] font-bold leading-tight mt-0.5">
+            {[sub.vehicle_make, sub.vehicle_model].filter(Boolean).join(" ") || "—"}
+          </div>
+          {VehicleStrip}
+        </div>
+        {Money}
+      </div>
+    );
+  }
+
+  // ── C: Stacked
+  if (layout === "c") {
+    return (
+      <>
+        <div className="flex items-end gap-4 flex-wrap">
+          <div className="flex-1 min-w-[260px]">
+            <div className="text-[11px] uppercase tracking-[0.15em] text-white/55 font-bold">Customer</div>
+            <div className={`text-[24px] font-bold leading-tight mt-0.5 ${!sub.name ? "text-white/60 italic" : ""}`}>
+              {sub.name || "Unknown customer"}
+            </div>
+            <div className="text-[12px] text-white/80 mt-1 flex items-center gap-3 flex-wrap">
+              {sub.phone && <a href={`tel:${sub.phone}`} className="hover:underline">{sub.phone}</a>}
+              {sub.phone && sub.email && <span className="text-white/50">·</span>}
+              {sub.email && <a href={`mailto:${sub.email}`} className="hover:underline truncate">{sub.email}</a>}
+            </div>
+          </div>
+          {Money}
+        </div>
+        <div className="h-px bg-white/15 my-3" />
+        <div>
+          <div className="text-[11px] uppercase tracking-[0.15em] text-white/55 font-bold">Vehicle</div>
+          <div className="text-[20px] font-bold leading-tight mt-0.5">{vehicleTitle}</div>
+          {VehicleStrip}
+        </div>
+      </>
+    );
+  }
+
+  // ── B (default): Customer-first, vehicle-right — 12-col grid
+  return (
+    <div className="grid grid-cols-12 gap-6 items-start">
+      <div className="col-span-12 md:col-span-4 min-w-0">
+        <div className="text-[11px] uppercase tracking-[0.15em] text-white/55 font-bold">Customer</div>
+        <div className={`text-[26px] font-bold leading-tight mt-0.5 truncate ${!sub.name ? "text-white/60 italic" : ""}`}>
+          {sub.name || "Unknown customer"}
+        </div>
+        {Contact}
+      </div>
+      <div className="col-span-12 md:col-span-5 min-w-0">
+        <div className="text-[11px] uppercase tracking-[0.15em] text-white/55 font-bold">Vehicle</div>
+        <div className="text-[22px] font-bold leading-tight mt-0.5 truncate">{vehicleTitle}</div>
+        {VehicleStrip}
+      </div>
+      <div className="col-span-12 md:col-span-3">{Money}</div>
+    </div>
+  );
+}
+
 /* ─────────────── HEADER ─────────────── */
 function V2Header({
   sub,
   dealValue,
   dealKind,
   onClose,
+  headerLayout = "b",
 }: {
   sub: Submission;
   dealValue: number | null;
   dealKind: string;
   onClose: () => void;
+  headerLayout?: "a" | "b" | "c";
 }) {
   return (
     <header
@@ -200,79 +329,7 @@ function V2Header({
           </div>
         </div>
 
-        <div className="grid grid-cols-12 gap-6 items-start">
-          <div className="col-span-12 md:col-span-4 min-w-0">
-            <div className="text-[11px] uppercase tracking-[0.15em] text-white/55 font-bold">
-              Customer
-            </div>
-            <div className={`text-[26px] font-bold leading-tight mt-0.5 truncate ${!sub.name ? "text-white/60 italic" : ""}`}>
-              {sub.name || "Unknown customer"}
-            </div>
-            <div className="space-y-0.5 text-[13px] text-white/85 mt-1">
-              {sub.phone ? (
-                <div className="flex items-center gap-1.5">
-                  <Phone className="w-3 h-3 shrink-0" />
-                  <a href={`tel:${sub.phone}`} className="hover:underline">{sub.phone}</a>
-                </div>
-              ) : (
-                <div className="text-white/40 text-[12px] italic">No phone on file</div>
-              )}
-              {sub.email ? (
-                <div className="flex items-center gap-1.5 truncate">
-                  <Mail className="w-3 h-3 shrink-0" />
-                  <a href={`mailto:${sub.email}`} className="truncate hover:underline">{sub.email}</a>
-                </div>
-              ) : (
-                <div className="text-white/40 text-[12px] italic">No email on file</div>
-              )}
-            </div>
-          </div>
-
-          <div className="col-span-12 md:col-span-5 min-w-0">
-            <div className="text-[11px] uppercase tracking-[0.15em] text-white/55 font-bold">
-              Vehicle
-            </div>
-            <div className="text-[22px] font-bold leading-tight mt-0.5 truncate">
-              {[sub.vehicle_year, sub.vehicle_make, sub.vehicle_model].filter(Boolean).join(" ") || "—"}
-            </div>
-            <div className="flex items-center gap-2 flex-wrap text-[12px] text-white/80 mt-1">
-              {sub.vin && (
-                <span className="font-mono bg-white/10 rounded px-2 py-0.5 tracking-wider">
-                  {sub.vin}
-                </span>
-              )}
-              {sub.mileage != null && (
-                <>
-                  <span>·</span>
-                  <span>{Number(sub.mileage).toLocaleString()} mi</span>
-                </>
-              )}
-              {sub.exterior_color && (
-                <>
-                  <span>·</span>
-                  <span>{sub.exterior_color}</span>
-                </>
-              )}
-            </div>
-          </div>
-
-          <div className="col-span-12 md:col-span-3 text-left md:text-right">
-            <div className="text-[11px] uppercase tracking-[0.15em] text-white/55 font-bold">
-              {dealKind}
-            </div>
-            <div className="text-[36px] font-bold leading-none mt-0.5 font-mono">
-              {fmtMoney(dealValue)}
-            </div>
-            {sub.acv_value != null && dealValue != null && (
-              <div className="text-[11px] text-white/70 mt-1">
-                ACV {fmtMoney(sub.acv_value)} ·{" "}
-                <span className="text-emerald-300 font-semibold">
-                  +{fmtMoney(dealValue - Number(sub.acv_value))}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
+        <V2Identity sub={sub} dealValue={dealValue} dealKind={dealKind} layout={headerLayout} />
 
         <div className="flex items-center gap-2 mt-3 flex-wrap">
           {sub.progress_status && (

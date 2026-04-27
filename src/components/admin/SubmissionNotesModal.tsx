@@ -23,12 +23,26 @@ const fmtNoteTime = (iso: string): string => {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 };
 
+// True when the supabase error indicates the submission_notes table itself
+// is missing on this database. We treat that as "feature not provisioned"
+// (return [] for reads, friendlier toast for writes) instead of crashing.
+const isMissingTableError = (err: { message?: string; code?: string } | null): boolean => {
+  if (!err) return false;
+  const msg = (err.message || "").toLowerCase();
+  return msg.includes("submission_notes") && (
+    msg.includes("could not find") ||
+    msg.includes("does not exist") ||
+    msg.includes("schema cache") ||
+    err.code === "42P01" || err.code === "PGRST205"
+  );
+};
+
 export const fetchSubmissionNotes = async (submissionId: string): Promise<SubmissionNote[]> => {
   const { data, error } = await (supabase as never as {
     from: (t: string) => {
       select: (s: string) => {
         eq: (k: string, v: string) => {
-          order: (c: string, o: { ascending: boolean }) => Promise<{ data: SubmissionNote[] | null; error: { message: string } | null }>;
+          order: (c: string, o: { ascending: boolean }) => Promise<{ data: SubmissionNote[] | null; error: { message: string; code?: string } | null }>;
         };
       };
     };
@@ -37,7 +51,15 @@ export const fetchSubmissionNotes = async (submissionId: string): Promise<Submis
     .select("id, submission_id, body, author, created_at")
     .eq("submission_id", submissionId)
     .order("created_at", { ascending: false });
-  if (error) throw new Error(error.message);
+  if (error) {
+    if (isMissingTableError(error)) {
+      // Migration not applied yet on this database — fail soft.
+      // eslint-disable-next-line no-console
+      console.warn("[notes] submission_notes table missing — apply migration 20260427100000_add_submission_notes.sql");
+      return [];
+    }
+    throw new Error(error.message);
+  }
   return data || [];
 };
 
@@ -76,7 +98,7 @@ const SubmissionNotesModal = ({ submissionId, customerName, open, onClose, autho
       from: (t: string) => {
         insert: (rows: unknown) => {
           select: (s: string) => {
-            single: () => Promise<{ data: SubmissionNote | null; error: { message: string } | null }>;
+            single: () => Promise<{ data: SubmissionNote | null; error: { message: string; code?: string } | null }>;
           };
         };
       };
@@ -87,7 +109,15 @@ const SubmissionNotesModal = ({ submissionId, customerName, open, onClose, autho
       .single();
     setSaving(false);
     if (error || !data) {
-      toast({ title: "Couldn't save note", description: error?.message ?? "Unknown error", variant: "destructive" });
+      if (isMissingTableError(error)) {
+        toast({
+          title: "Notes feature isn't ready yet",
+          description: "The submission_notes table hasn't been created on this database. Run the pending migration in Supabase Studio → SQL Editor: 20260427100000_add_submission_notes.sql",
+          variant: "destructive",
+        });
+      } else {
+        toast({ title: "Couldn't save note", description: error?.message ?? "Unknown error", variant: "destructive" });
+      }
       return;
     }
     setNotes((prev) => [data, ...prev]);
