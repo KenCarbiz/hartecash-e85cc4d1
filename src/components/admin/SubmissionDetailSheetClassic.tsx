@@ -706,19 +706,8 @@ export default function SubmissionDetailSheetClassic({
     onUpdate(next);
   }
 
-  // ── Diagnostic console logs (Classic slide-out blank issue) ─────────
-  // eslint-disable-next-line no-console
-  console.log("[Classic] render", {
-    selectedId: selected?.id ?? null,
-    subId: sub?.id ?? null,
-    headerLayout,
-    fileLayout: (config as { file_layout?: string }).file_layout,
-  });
-
   // ── Derived state (only valid when sub != null; guarded below) ─────
   if (!selected || !sub) {
-    // eslint-disable-next-line no-console
-    console.log("[Classic] early-return: empty SheetContent (selected =", selected, ", sub =", sub, ")");
     return (
       <Sheet open={!!selected} onOpenChange={(o) => { if (!o) onClose(); }}>
         <SheetContent side="right" className="w-full sm:max-w-5xl lg:max-w-6xl p-0 [&>button]:hidden flex items-center justify-center">

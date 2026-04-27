@@ -203,6 +203,17 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
   const focusField = colonIdx > -1 ? rawActiveSection.slice(colonIdx + 1) : undefined;
 
   // ── Pipeline sections ──
+  if (activeSection === "today") {
+    if (props.loading) return <AdminLoadingSkeleton />;
+    return (
+      <TodayActionSummary
+        submissions={submissions}
+        appointments={appointments}
+        onNavigate={setActiveSection}
+      />
+    );
+  }
+
   if (activeSection === "submissions") {
     if (props.loading) return <AdminLoadingSkeleton />;
     return (
