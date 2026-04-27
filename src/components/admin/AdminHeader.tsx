@@ -115,6 +115,7 @@ const AdminHeader = ({ darkMode, setDarkMode, userRole, onLogout, userName, isPl
 
   return (
     <header
+      data-admin-topbar
       className="sticky top-0 z-50 shadow-lg overflow-hidden"
       style={{
         background: headerBackground,
