@@ -33,13 +33,13 @@ interface AppearanceSettingsProps {
   canManageAccess?: boolean;
 }
 
-const PRESET_THEMES = [
-  { name: "Hartecash", bg: "#00407f", accent: "#005bb5" },
-  { name: "Classic Blue", bg: "#1e40af", accent: "#3b82f6" },
-  { name: "Forest", bg: "#065f46", accent: "#10b981" },
-  { name: "Oxblood", bg: "#7f1d1d", accent: "#dc2626" },
-  { name: "Ink", bg: "#0f172a", accent: "#334155" },
-  { name: "Terracotta", bg: "#c2410c", accent: "#f97316" },
+const PRESET_THEMES: { name: string; bg: string; accent: string; sub: string; recommended?: boolean }[] = [
+  { name: "Hartecash",   bg: "#00407f", accent: "#005bb5", sub: "Default. Calm, confident, dealership-grade." },
+  { name: "Classic Blue", bg: "#1e40af", accent: "#3b82f6", sub: "Same navy as Dealertrack, VinSolutions, every credit-union portal. Safe, forgettable.", recommended: true },
+  { name: "Ink + Amber", bg: "#0f172a", accent: "#e8a33d", sub: "Editorial, Bloomberg-adjacent. Warmest premium. Stands out at the dealer-lot dusk." },
+  { name: "Forest",      bg: "#065f46", accent: "#10b981", sub: "AutoNation-adjacent trust. Country-club energy." },
+  { name: "Oxblood",     bg: "#7f1d1d", accent: "#dc2626", sub: "Heritage, Hertz-ish. Polarizing on purpose." },
+  { name: "Terracotta",  bg: "#c2410c", accent: "#f97316", sub: "Aesop / Rivian interior. Softer, more hospitable." },
 ];
 
 const TOP_BAR_STYLES = [
@@ -427,23 +427,77 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
             </div>
 
             <div>
-              <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">
-                Preset themes
+              <div className="flex items-baseline justify-between mb-2">
+                <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
+                  Choose a direction
+                </div>
+                <button
+                  onClick={() => applyPreset({ bg: "#00407f", accent: "#005bb5" })}
+                  className="text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Reset to default
+                </button>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {PRESET_THEMES.map((p) => (
-                  <button
-                    key={p.name}
-                    onClick={() => applyPreset(p)}
-                    className="border border-border rounded-lg p-2 hover:bg-muted/50 text-left transition-colors"
-                  >
-                    <div className="flex gap-0.5 mb-1.5">
-                      <div className="h-6 flex-1 rounded-sm" style={{ background: p.bg }} />
-                      <div className="h-6 flex-1 rounded-sm" style={{ background: p.accent }} />
-                    </div>
-                    <div className="text-[11px] font-medium">{p.name}</div>
-                  </button>
-                ))}
+              <div className="space-y-2">
+                {PRESET_THEMES.map((p) => {
+                  const active = draft.top_bar_bg.toLowerCase() === p.bg.toLowerCase();
+                  return (
+                    <button
+                      key={p.name}
+                      onClick={() => applyPreset(p)}
+                      className={`w-full border rounded-lg p-3 text-left transition-colors flex items-center gap-3 ${
+                        active ? "bg-muted/60 border-foreground" : "border-border hover:bg-muted/50"
+                      }`}
+                    >
+                      <div className="flex gap-0.5 shrink-0">
+                        <div className="w-6 h-10 rounded-sm" style={{ background: p.bg }} />
+                        <div className="w-6 h-10 rounded-sm" style={{ background: p.accent }} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-sm font-semibold">{p.name}</span>
+                          {p.recommended && (
+                            <span className="text-[9px] uppercase tracking-wider font-bold text-emerald-700 bg-emerald-500/10 border border-emerald-500/20 rounded px-1.5 py-0.5">
+                              Rec
+                            </span>
+                          )}
+                          {active && (
+                            <span className="text-[9px] uppercase tracking-wider font-bold text-foreground bg-foreground/10 rounded px-1.5 py-0.5 ml-auto">
+                              Active
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11.5px] text-muted-foreground mt-0.5 leading-snug">{p.sub}</p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Custom accent override card */}
+            <div className="rounded-lg border border-dashed border-border p-3">
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Custom accent</div>
+              <p className="text-[11.5px] text-muted-foreground mt-1 mb-2">
+                Override the selected theme&apos;s accent with your own brand color. Only applies if you've picked a theme that uses an accent.
+              </p>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={draft.customer_file_accent}
+                  onChange={(e) => set("customer_file_accent", e.target.value)}
+                  className="w-10 h-10 rounded cursor-pointer border border-border bg-transparent"
+                />
+                <div className="text-[11px] font-mono text-muted-foreground">{draft.customer_file_accent}</div>
+                <button
+                  onClick={() => {
+                    const matching = PRESET_THEMES.find((t) => t.bg.toLowerCase() === draft.top_bar_bg.toLowerCase());
+                    if (matching) set("customer_file_accent", matching.accent);
+                  }}
+                  className="ml-auto text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Reset
+                </button>
               </div>
             </div>
           </Card>
