@@ -11,7 +11,7 @@ import TenantViewBanner from "@/components/admin/TenantViewBanner";
 import { PlatformProvider } from "@/contexts/PlatformContext";
 import { useAdminDashboard } from "@/hooks/useAdminDashboard";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
-import { lazy, Suspense, useRef, useEffect, useState } from "react";
+import { lazy, Suspense, useRef, useEffect, useState, Component, type ReactNode, type ErrorInfo } from "react";
 
 // SubmissionDetailSheet is the largest component in the codebase (~1.6k lines).
 // It only renders when a row is clicked, so lazy-loading it keeps it out of
@@ -23,6 +23,40 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
 } from "@/components/ui/alert-dialog";
+
+// Catches lazy-import failures + render errors in the customer file slide-out
+// so we don't end up with an invisible SheetContent. Shows a visible fallback
+// inside a positioned panel (matches the slide-out's footprint).
+class CustomerFileChunkBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+  state = { error: null as Error | null };
+  static getDerivedStateFromError(error: Error) { return { error }; }
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    // eslint-disable-next-line no-console
+    console.error("[CustomerFile] chunk/render error:", error, info);
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="fixed inset-y-0 right-0 z-[60] w-full sm:max-w-5xl lg:max-w-6xl bg-white p-6 shadow-2xl flex flex-col gap-3 overflow-auto">
+          <div className="text-base font-bold text-red-700">Customer file failed to load</div>
+          <div className="text-xs font-mono text-slate-700 whitespace-pre-wrap break-words bg-red-50 border border-red-200 rounded p-3">
+            {this.state.error.message}
+          </div>
+          <p className="text-sm text-slate-600">
+            This is usually a stale browser cache after a deploy. Try a hard refresh (Cmd/Ctrl + Shift + R).
+          </p>
+          <button
+            onClick={() => { this.setState({ error: null }); window.location.reload(); }}
+            className="self-start text-xs font-semibold px-3 h-8 rounded-md bg-slate-900 text-white hover:bg-slate-800 transition"
+          >
+            Reload page
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const AdminDashboard = () => {
   const db = useAdminDashboard();
@@ -169,7 +203,16 @@ const AdminDashboard = () => {
             open. The site_config.file_layout flag chooses Classic vs
             Conversation-first per tenant; both consume the identical
             prop shape. */}
-        <Suspense fallback={null}>
+        <CustomerFileChunkBoundary key={db.selected?.id || "no-lead"}>
+        <Suspense
+          fallback={
+            db.selected ? (
+              <div className="fixed inset-y-0 right-0 z-[55] w-full sm:max-w-5xl lg:max-w-6xl bg-slate-50 shadow-2xl flex items-center justify-center">
+                <div className="text-sm text-slate-500">Loading customer file…</div>
+              </div>
+            ) : null
+          }
+        >
           {siteConfig.file_layout === "conversation" ? (
             <CustomerFileV2
               selected={db.selected}
@@ -250,6 +293,7 @@ const AdminDashboard = () => {
             />
           )}
         </Suspense>
+        </CustomerFileChunkBoundary>
         {/* Tweaks floating panel — bottom-right black button, only on All
             Leads. Lets admin/GSM tune file_layout, header layout, and
             preset theme without leaving the page; changes route to the
