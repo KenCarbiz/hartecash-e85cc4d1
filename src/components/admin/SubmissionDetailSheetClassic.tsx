@@ -335,6 +335,145 @@ const PhotoCarousel = ({ items }: { items: { url: string; name: string }[] }) =>
   );
 };
 
+// ── DL at-a-glance (front by default, click "Back" to flip) ──────────
+const DLAtGlance = ({
+  front, back,
+}: {
+  front: { url: string; name: string } | null;
+  back: { url: string; name: string } | null;
+}) => {
+  const [open, setOpen] = useState(false);
+  const [side, setSide] = useState<"front" | "back">("front");
+  const cur = side === "back" && back ? back : front;
+
+  if (!front && !back) {
+    return (
+      <div className="rounded-lg border-2 border-dashed border-slate-200 bg-slate-50 p-3 flex items-center gap-3">
+        <div className="w-14 h-9 rounded bg-slate-200 flex items-center justify-center">
+          <svg className="w-5 h-5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v8H4V6z"/></svg>
+        </div>
+        <div>
+          <div className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Driver's License</div>
+          <div className="text-xs text-slate-500">Not uploaded</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white overflow-hidden">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 transition text-left"
+      >
+        <div className="w-14 h-9 rounded overflow-hidden shrink-0 bg-slate-100 border border-slate-200">
+          {cur && /\.(jpg|jpeg|png|gif|webp)$/i.test(cur.name)
+            ? <img src={cur.url} alt={`Driver's license — ${side}`} className="w-full h-full object-cover" />
+            : <div className="w-full h-full flex items-center justify-center text-slate-400 text-[10px] font-bold">DL</div>}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Driver's License</div>
+          <div className="text-xs text-emerald-700 font-semibold flex items-center gap-1">
+            <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor"><path d="M16.7 5.3a1 1 0 010 1.4l-8 8a1 1 0 01-1.4 0l-4-4a1 1 0 011.4-1.4L8 12.6l7.3-7.3a1 1 0 011.4 0z"/></svg>
+            Verified on file
+          </div>
+        </div>
+        <span className="text-xs text-blue-700 font-semibold">{open ? "Hide" : "View"}</span>
+      </button>
+      {open && cur && (
+        <div className="p-3 pt-0 space-y-2">
+          <img src={cur.url} alt={`Driver's license — ${side}`} className="w-full rounded-md border border-slate-200" />
+          {back && (
+            <div className="flex gap-1.5 text-[11px] font-semibold">
+              <button
+                onClick={(e) => { e.stopPropagation(); setSide("front"); }}
+                className={`flex-1 py-1.5 rounded-md border transition ${side === "front" ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"}`}
+              >Front</button>
+              <button
+                onClick={(e) => { e.stopPropagation(); setSide("back"); }}
+                className={`flex-1 py-1.5 rounded-md border transition ${side === "back" ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"}`}
+              >Back</button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── QR handoff modal (shown when customer has arrived) ───────────────
+const QRInspectionModal = ({
+  open, onClose, sub,
+}: {
+  open: boolean;
+  onClose: () => void;
+  sub: Submission;
+}) => {
+  if (!open) return null;
+  const inspectionUrl = `${window.location.origin}/inspection/${sub.id}`;
+  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=360x360&margin=8&ecc=M&data=${encodeURIComponent(inspectionUrl)}`;
+  const initials = (sub.name || "?").split(" ").filter(Boolean).map(p => p[0]).slice(0, 2).join("").toUpperCase();
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-[480px] overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="bg-gradient-to-r from-[#003b80] to-[#005bb5] text-white px-5 py-4 flex items-center justify-between">
+          <div>
+            <div className="text-[11px] font-bold uppercase tracking-[0.15em] text-white/70">Walk to the Car</div>
+            <div className="font-display text-[20px] leading-tight mt-0.5">Scan to open on your phone</div>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center" aria-label="Close">
+            <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 4.9a1 1 0 011.4 0L10 7.2l2.3-2.3a1 1 0 011.4 1.4L11.4 8.6l2.3 2.3a1 1 0 01-1.4 1.4L10 10l-2.3 2.3a1 1 0 01-1.4-1.4L8.6 8.6 6.3 6.3a1 1 0 010-1.4z"/></svg>
+          </button>
+        </div>
+
+        <div className="px-5 py-3 bg-slate-50 border-b border-slate-200 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-[#003b80] text-white text-[13px] font-bold flex items-center justify-center">
+            {initials}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-[14px] font-bold text-slate-900 truncate">{sub.name || "Unknown customer"}</div>
+            <div className="text-[12px] text-slate-500 truncate">
+              {[sub.vehicle_year, sub.vehicle_make, sub.vehicle_model].filter(Boolean).join(" ")}
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6 flex flex-col items-center">
+          <div className="relative p-4 bg-white rounded-xl border-2 border-slate-200">
+            <img src={qrSrc} alt="QR code to open inspection on phone" className="w-[260px] h-[260px] block" />
+          </div>
+          <p className="text-[12.5px] text-slate-500 mt-4 text-center max-w-[320px] leading-snug">
+            Point your phone or iPad camera at the code. The inspection will open
+            pre-loaded with <span className="font-semibold text-slate-700">{sub.name || "this customer"}</span>'s car.
+          </p>
+        </div>
+
+        <div className="px-5 pb-5 space-y-2">
+          <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1">Short Link</div>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 font-mono text-[11.5px] text-slate-700 bg-slate-100 rounded px-2 py-1.5 truncate">
+              {inspectionUrl.replace(/^https?:\/\//, "")}
+            </code>
+            <button
+              onClick={() => navigator.clipboard?.writeText(inspectionUrl)}
+              className="h-7 px-2.5 rounded bg-slate-100 hover:bg-slate-200 text-[11px] font-semibold text-slate-700"
+            >
+              Copy
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function SubmissionDetailSheetClassic(_props: ClassicProps) {
   // Shell + body to be filled in subsequent increments.
   return null;
