@@ -27,6 +27,7 @@ import {
   type Submission, type DealerLocation,
 } from "@/lib/adminConstants";
 import SubmissionNotesModal, { fetchSubmissionNotes, type SubmissionNote } from "./SubmissionNotesModal";
+import ClassicCommsCard from "./ClassicCommsCard";
 
 // ── Props ────────────────────────────────────────────────────────────
 // Matches the existing SubmissionDetailSheetProps so the entry export can
@@ -938,6 +939,13 @@ export default function SubmissionDetailSheetClassic({
                     </section>
                   );
                 })()}
+
+                {/* Comms tabs — SMS / Email / Calls preview + composer */}
+                <ClassicCommsCard
+                  submissionId={sub.id}
+                  customerPhone={sub.phone}
+                  customerEmail={sub.email}
+                />
 
                 {/* Internal Notes — last 3 in a timeline + Add link → modal */}
                 <Card
