@@ -54,11 +54,13 @@ const fmtDuration = (s: number | null) => {
 
 interface ClassicCommsCardProps {
   submissionId: string;
+  customerName: string | null;
   customerPhone: string | null;
   customerEmail: string | null;
+  onOpenFull: () => void;
 }
 
-const ClassicCommsCard = ({ submissionId, customerPhone, customerEmail }: ClassicCommsCardProps) => {
+const ClassicCommsCard = ({ submissionId, customerPhone, customerEmail, onOpenFull }: ClassicCommsCardProps) => {
   const { toast } = useToast();
   const [tab, setTab] = useState<Channel>("sms");
   const [events, setEvents] = useState<ConvEvent[]>([]);
@@ -157,7 +159,7 @@ const ClassicCommsCard = ({ submissionId, customerPhone, customerEmail }: Classi
           );
         })}
         <button
-          onClick={() => { /* TODO: jump to full thread view */ }}
+          onClick={onOpenFull}
           className="text-[10.5px] font-bold text-slate-500 hover:text-slate-900 px-3 h-9 flex items-center gap-0.5 transition"
         >
           See all

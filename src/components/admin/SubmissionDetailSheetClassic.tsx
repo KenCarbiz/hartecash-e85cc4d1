@@ -28,6 +28,7 @@ import {
 } from "@/lib/adminConstants";
 import SubmissionNotesModal, { fetchSubmissionNotes, type SubmissionNote } from "./SubmissionNotesModal";
 import ClassicCommsCard from "./ClassicCommsCard";
+import ClassicCommsFullView from "./ClassicCommsFullView";
 
 // ── Props ────────────────────────────────────────────────────────────
 // Matches the existing SubmissionDetailSheetProps so the entry export can
@@ -492,6 +493,7 @@ export default function SubmissionDetailSheetClassic({
   const [editState, setEditState] = useState<Submission | null>(null);
   const [qrOpen, setQrOpen] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
+  const [commsFullOpen, setCommsFullOpen] = useState(false);
   const [notes, setNotes] = useState<SubmissionNote[]>([]);
 
   // Refresh notes — called on open and after add.
@@ -555,7 +557,7 @@ export default function SubmissionDetailSheetClassic({
     <Sheet open={!!selected} onOpenChange={(o) => { if (!o) { setEditState(null); onClose(); } }}>
       <SheetContent
         side="right"
-        className="w-full sm:max-w-5xl lg:max-w-6xl p-0 flex flex-col overflow-hidden [&>button]:hidden"
+        className="w-full sm:max-w-5xl lg:max-w-6xl p-0 flex flex-col overflow-hidden relative [&>button]:hidden"
       >
         <div className="flex flex-col h-full bg-slate-50">
 
@@ -943,8 +945,10 @@ export default function SubmissionDetailSheetClassic({
                 {/* Comms tabs — SMS / Email / Calls preview + composer */}
                 <ClassicCommsCard
                   submissionId={sub.id}
+                  customerName={sub.name}
                   customerPhone={sub.phone}
                   customerEmail={sub.email}
+                  onOpenFull={() => setCommsFullOpen(true)}
                 />
 
                 {/* Internal Notes — last 3 in a timeline + Add link → modal */}
@@ -1092,6 +1096,16 @@ export default function SubmissionDetailSheetClassic({
             </div>
           </div>
         </div>
+
+        {/* Full-screen comms overlay — covers the slider when "See all" is clicked */}
+        <ClassicCommsFullView
+          open={commsFullOpen}
+          onClose={() => setCommsFullOpen(false)}
+          submissionId={sub.id}
+          customerName={sub.name}
+          customerPhone={sub.phone}
+          customerEmail={sub.email}
+        />
 
         <QRInspectionModal open={qrOpen} onClose={() => setQrOpen(false)} sub={sub} />
 
