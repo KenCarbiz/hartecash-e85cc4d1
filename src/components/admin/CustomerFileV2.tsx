@@ -205,20 +205,25 @@ function V2Header({
             <div className="text-[11px] uppercase tracking-[0.15em] text-white/55 font-bold">
               Customer
             </div>
-            <div className="text-[26px] font-bold leading-tight mt-0.5 truncate">
-              {sub.name}
+            <div className={`text-[26px] font-bold leading-tight mt-0.5 truncate ${!sub.name ? "text-white/60 italic" : ""}`}>
+              {sub.name || "Unknown customer"}
             </div>
             <div className="space-y-0.5 text-[13px] text-white/85 mt-1">
-              {sub.phone && (
+              {sub.phone ? (
                 <div className="flex items-center gap-1.5">
-                  <Phone className="w-3 h-3" /> {sub.phone}
+                  <Phone className="w-3 h-3 shrink-0" />
+                  <a href={`tel:${sub.phone}`} className="hover:underline">{sub.phone}</a>
                 </div>
+              ) : (
+                <div className="text-white/40 text-[12px] italic">No phone on file</div>
               )}
-              {sub.email && (
+              {sub.email ? (
                 <div className="flex items-center gap-1.5 truncate">
-                  <Mail className="w-3 h-3 shrink-0" />{" "}
-                  <span className="truncate">{sub.email}</span>
+                  <Mail className="w-3 h-3 shrink-0" />
+                  <a href={`mailto:${sub.email}`} className="truncate hover:underline">{sub.email}</a>
                 </div>
+              ) : (
+                <div className="text-white/40 text-[12px] italic">No email on file</div>
               )}
             </div>
           </div>
@@ -228,7 +233,7 @@ function V2Header({
               Vehicle
             </div>
             <div className="text-[22px] font-bold leading-tight mt-0.5 truncate">
-              {sub.vehicle_year} {sub.vehicle_make} {sub.vehicle_model}
+              {[sub.vehicle_year, sub.vehicle_make, sub.vehicle_model].filter(Boolean).join(" ") || "—"}
             </div>
             <div className="flex items-center gap-2 flex-wrap text-[12px] text-white/80 mt-1">
               {sub.vin && (
@@ -270,6 +275,25 @@ function V2Header({
         </div>
 
         <div className="flex items-center gap-2 mt-3 flex-wrap">
+          {sub.progress_status && (
+            <Badge className="bg-white/15 text-white border-0 text-[11px] uppercase tracking-wider font-bold inline-flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-white" />
+              {sub.progress_status.replace(/_/g, " ")}
+            </Badge>
+          )}
+          {(() => {
+            const intent = intentFromSource(sub.lead_source);
+            const intentLabel = intent === "trade" ? "Trade-In" : intent === "unsure" ? "Unsure" : "Sell";
+            const intentCls =
+              intent === "trade"  ? "bg-sky-400/25 text-sky-100 border border-sky-300/40" :
+              intent === "unsure" ? "bg-amber-400/25 text-amber-100 border border-amber-300/40" :
+                                    "bg-emerald-400/25 text-emerald-100 border border-emerald-300/40";
+            return (
+              <Badge className={`${intentCls} text-[11px] uppercase tracking-wider font-bold`}>
+                {intentLabel}
+              </Badge>
+            );
+          })()}
           {sub.offered_price != null && sub.offered_price > 0 && (
             <Badge className="bg-emerald-400/90 text-emerald-950 border-0 text-[11px] uppercase tracking-wider font-bold">
               <CheckCircle2 className="w-3 h-3 mr-1" /> Offer Accepted
@@ -280,10 +304,10 @@ function V2Header({
               <Flame className="w-3 h-3 mr-1" /> Hot Lead
             </Badge>
           )}
-          {sub.progress_status && (
-            <Badge className="bg-white/15 text-white border-0 text-[11px] uppercase tracking-wider font-bold">
-              {sub.progress_status.replace(/_/g, " ")}
-            </Badge>
+          {sub.created_at && (
+            <span className="text-[11px] text-white/60 ml-auto">
+              Submitted {new Date(sub.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+            </span>
           )}
         </div>
       </div>

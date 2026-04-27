@@ -29,6 +29,7 @@ import {
 import SubmissionNotesModal, { fetchSubmissionNotes, type SubmissionNote } from "./SubmissionNotesModal";
 import ClassicCommsCard from "./ClassicCommsCard";
 import ClassicCommsFullView from "./ClassicCommsFullView";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 // ── Props ────────────────────────────────────────────────────────────
 // Matches the existing SubmissionDetailSheetProps so the entry export can
@@ -485,11 +486,155 @@ const CAROUSEL_DOC_TYPES = new Set([
 
 const DL_IMAGE_RE = /\.(jpg|jpeg|png|gif|webp)$/i;
 
+// ── Header identity row (A / B / C) ────────────────────────────────
+// Three arrangements of the blue identity bar — same data, same width,
+// different hierarchy. Picked at runtime from
+// site_config.customer_file_header_layout (or per-location override).
+const MoneyBlock = ({
+  dealKind, dealValue, sub, align = "right",
+}: {
+  dealKind: string;
+  dealValue: number | null;
+  sub: Submission;
+  align?: "left" | "right";
+}) => {
+  if (dealValue == null) return null;
+  return (
+    <div className={`text-left ${align === "right" ? "md:text-right" : ""}`}>
+      <div className="text-[11px] uppercase tracking-[0.15em] text-white/55 font-bold">{dealKind}</div>
+      <div className="font-display text-[40px] leading-none tracking-tight mt-0.5">{fmtMoney(dealValue, true)}</div>
+      {sub.acv_value != null && (
+        <div className="text-[11px] text-white/60 mt-1">
+          ACV {fmtMoney(sub.acv_value)}
+          {sub.offered_price != null && (
+            <span className={`ml-1 font-semibold ${sub.offered_price > sub.acv_value ? "text-emerald-300" : "text-red-300"}`}>
+              {sub.offered_price > sub.acv_value ? "+" : ""}{fmtMoney(sub.offered_price - sub.acv_value)}
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const VehicleStrip = ({ sub }: { sub: Submission }) => (
+  <div className="flex items-center gap-2 flex-wrap text-[12px] text-white/80">
+    {sub.vin && <span className="font-mono bg-white/10 rounded px-2 py-0.5 tracking-wider">{sub.vin}</span>}
+    {sub.mileage && <span>{fmtNumber(sub.mileage)} mi</span>}
+    {sub.exterior_color && (<><span className="text-white/55">·</span><span>{sub.exterior_color}</span></>)}
+    {sub.plate && (<><span className="text-white/55">·</span><span>Plate {sub.plate}</span></>)}
+  </div>
+);
+
+const CustomerContact = ({ sub }: { sub: Submission }) => (
+  <div className="space-y-0.5 text-[13px] text-white/85">
+    {sub.phone && (
+      <div className="flex items-center gap-1.5">
+        <svg className="w-3.5 h-3.5 text-white/60 shrink-0" viewBox="0 0 20 20" fill="currentColor"><path d="M2 3.5A1.5 1.5 0 013.5 2h2.6a1.5 1.5 0 011.4 1l.8 2.1a1.5 1.5 0 01-.4 1.7L6.5 8.1a11 11 0 005.4 5.4l1.3-1.4a1.5 1.5 0 011.7-.4l2.1.8a1.5 1.5 0 011 1.4v2.6a1.5 1.5 0 01-1.5 1.5C8.5 18 2 11.5 2 3.5z"/></svg>
+        <a href={`tel:${sub.phone}`} className="font-mono hover:underline">{formatPhone(sub.phone)}</a>
+      </div>
+    )}
+    {sub.email && (
+      <div className="flex items-center gap-1.5 text-white/75">
+        <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor"><path d="M2 5.5A1.5 1.5 0 013.5 4h13A1.5 1.5 0 0118 5.5v9a1.5 1.5 0 01-1.5 1.5h-13A1.5 1.5 0 012 14.5v-9zm2.2.5L10 10.2 15.8 6H4.2z"/></svg>
+        <a href={`mailto:${sub.email}`} className="truncate hover:underline">{sub.email}</a>
+      </div>
+    )}
+  </div>
+);
+
+const ClassicHeaderIdentity = ({
+  layout, sub, dealValue, dealKind,
+}: {
+  layout: "a" | "b" | "c";
+  sub: Submission;
+  dealValue: number | null;
+  dealKind: string;
+}) => {
+  const vehicleTitle = [sub.vehicle_year, sub.vehicle_make, sub.vehicle_model].filter(Boolean).join(" ") || "—";
+
+  // ── A: Vehicle-first — big YEAR · MAKE · MODEL dominates, no customer name in header
+  if (layout === "a") {
+    return (
+      <div className="flex items-end gap-4 flex-wrap">
+        <div className="flex-1 min-w-[260px]">
+          <div className="text-[11px] uppercase tracking-[0.15em] text-white/60 font-semibold mb-1">
+            {sub.vehicle_year}{sub.mileage ? ` · ${fmtNumber(sub.mileage)} mi` : ""}
+          </div>
+          <h1 className="font-display text-[34px] leading-[1.05] tracking-tight">
+            {[sub.vehicle_make, sub.vehicle_model].filter(Boolean).join(" ") || "—"}
+          </h1>
+          <div className="flex items-center gap-3 mt-2 text-[13px] text-white/80">
+            {sub.vin && <span className="font-mono bg-white/10 rounded px-2 py-0.5 tracking-wider">{sub.vin}</span>}
+            {sub.plate && <span>Plate · {sub.plate}</span>}
+            {sub.exterior_color && <span className="text-white/60">· {sub.exterior_color}</span>}
+          </div>
+        </div>
+        <MoneyBlock dealKind={dealKind} dealValue={dealValue} sub={sub} />
+      </div>
+    );
+  }
+
+  // ── C: Stacked — customer + money on top, divider, vehicle below
+  if (layout === "c") {
+    return (
+      <>
+        <div className="flex items-end gap-4 flex-wrap">
+          <div className="flex-1 min-w-[260px]">
+            <div className="text-[11px] uppercase tracking-[0.15em] text-white/55 font-bold mb-1">Customer</div>
+            <h1 className="font-display text-[32px] leading-[1.05] tracking-tight">
+              {sub.name || "Unknown customer"}
+            </h1>
+            <div className="mt-1.5 text-[13px] text-white/80 flex items-center gap-3 flex-wrap">
+              {sub.phone && <a href={`tel:${sub.phone}`} className="font-mono hover:underline">{formatPhone(sub.phone)}</a>}
+              {sub.phone && sub.email && <span className="text-white/50">·</span>}
+              {sub.email && <a href={`mailto:${sub.email}`} className="hover:underline">{sub.email}</a>}
+            </div>
+          </div>
+          <MoneyBlock dealKind={dealKind} dealValue={dealValue} sub={sub} />
+        </div>
+        <div className="h-px bg-white/15 my-4" />
+        <div>
+          <div className="text-[11px] uppercase tracking-[0.15em] text-white/55 font-bold mb-1">Vehicle</div>
+          <h2 className="font-display text-[24px] leading-[1.1] tracking-tight">{vehicleTitle}</h2>
+          <div className="mt-1.5"><VehicleStrip sub={sub} /></div>
+        </div>
+      </>
+    );
+  }
+
+  // ── B (default): Customer-first, vehicle-right — 12-col grid
+  return (
+    <div className="grid grid-cols-12 gap-6 items-start">
+      <div className="col-span-12 md:col-span-4 min-w-0">
+        <div className="text-[11px] uppercase tracking-[0.15em] text-white/55 font-bold mb-1">Customer</div>
+        <h1 className="font-display text-[30px] leading-[1.1] tracking-tight truncate">
+          {sub.name || "Unknown customer"}
+        </h1>
+        <div className="mt-2"><CustomerContact sub={sub} /></div>
+      </div>
+      <div className={`col-span-12 ${dealValue != null ? "md:col-span-5" : "md:col-span-8"} min-w-0 md:border-l md:border-white/15 md:pl-6`}>
+        <div className="text-[11px] uppercase tracking-[0.15em] text-white/55 font-bold mb-1">Vehicle</div>
+        <h2 className="font-display text-[30px] leading-[1.1] tracking-tight">{vehicleTitle}</h2>
+        <div className="mt-2"><VehicleStrip sub={sub} /></div>
+      </div>
+      {dealValue != null && (
+        <div className="col-span-12 md:col-span-3 md:border-l md:border-white/15 md:pl-6">
+          <MoneyBlock dealKind={dealKind} dealValue={dealValue} sub={sub} />
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function SubmissionDetailSheetClassic({
   selected, onClose, photos, docs, auditLabel,
   onUpdate, onScheduleAppointment,
 }: ClassicProps) {
   const { toast } = useToast();
+  const { config } = useSiteConfig();
+  const headerLayout: "a" | "b" | "c" =
+    ((config as { customer_file_header_layout?: string }).customer_file_header_layout as "a" | "b" | "c") || "b";
   const [editState, setEditState] = useState<Submission | null>(null);
   const [qrOpen, setQrOpen] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
@@ -606,63 +751,15 @@ export default function SubmissionDetailSheetClassic({
                 </div>
               </div>
 
-              {/* Identity row — Layout B (Customer | Vehicle | Money), the design default */}
-              <div className="grid grid-cols-12 gap-6 items-start">
-                <div className="col-span-12 md:col-span-4 min-w-0">
-                  <div className="text-[11px] uppercase tracking-[0.15em] text-white/55 font-bold mb-1">Customer</div>
-                  <h1 className="font-display text-[30px] leading-[1.1] tracking-tight truncate">
-                    {sub.name || "Unknown customer"}
-                  </h1>
-                  <div className="space-y-0.5 text-[13px] text-white/85 mt-2">
-                    {sub.phone && (
-                      <div className="flex items-center gap-1.5">
-                        <svg className="w-3.5 h-3.5 text-white/60 shrink-0" viewBox="0 0 20 20" fill="currentColor"><path d="M2 3.5A1.5 1.5 0 013.5 2h2.6a1.5 1.5 0 011.4 1l.8 2.1a1.5 1.5 0 01-.4 1.7L6.5 8.1a11 11 0 005.4 5.4l1.3-1.4a1.5 1.5 0 011.7-.4l2.1.8a1.5 1.5 0 011 1.4v2.6a1.5 1.5 0 01-1.5 1.5C8.5 18 2 11.5 2 3.5z"/></svg>
-                        <a href={`tel:${sub.phone}`} className="font-mono hover:underline">{formatPhone(sub.phone)}</a>
-                      </div>
-                    )}
-                    {sub.email && (
-                      <div className="flex items-center gap-1.5 text-white/75">
-                        <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor"><path d="M2 5.5A1.5 1.5 0 013.5 4h13A1.5 1.5 0 0118 5.5v9a1.5 1.5 0 01-1.5 1.5h-13A1.5 1.5 0 012 14.5v-9zm2.2.5L10 10.2 15.8 6H4.2z"/></svg>
-                        <a href={`mailto:${sub.email}`} className="truncate hover:underline">{sub.email}</a>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className={`col-span-12 ${dealValue != null ? "md:col-span-5" : "md:col-span-8"} min-w-0 md:border-l md:border-white/15 md:pl-6`}>
-                  <div className="text-[11px] uppercase tracking-[0.15em] text-white/55 font-bold mb-1">Vehicle</div>
-                  <h2 className="font-display text-[30px] leading-[1.1] tracking-tight">
-                    {[sub.vehicle_year, sub.vehicle_make, sub.vehicle_model].filter(Boolean).join(" ") || "—"}
-                  </h2>
-                  <div className="flex items-center gap-2 flex-wrap text-[12px] text-white/80 mt-2">
-                    {sub.vin && <span className="font-mono bg-white/10 rounded px-2 py-0.5 tracking-wider">{sub.vin}</span>}
-                    {sub.mileage && <span>{fmtNumber(sub.mileage)} mi</span>}
-                    {sub.exterior_color && (<><span className="text-white/55">·</span><span>{sub.exterior_color}</span></>)}
-                    {sub.plate && (<><span className="text-white/55">·</span><span>Plate {sub.plate}</span></>)}
-                  </div>
-                </div>
-
-                {dealValue != null && (
-                  <div className="col-span-12 md:col-span-3 md:border-l md:border-white/15 md:pl-6">
-                    <div className="text-left md:text-right">
-                      <div className="text-[11px] uppercase tracking-[0.15em] text-white/55 font-bold">{dealKind}</div>
-                      <div className="font-display text-[40px] leading-none tracking-tight mt-0.5">
-                        {fmtMoney(dealValue, true)}
-                      </div>
-                      {sub.acv_value != null && (
-                        <div className="text-[11px] text-white/60 mt-1">
-                          ACV {fmtMoney(sub.acv_value)}
-                          {sub.offered_price != null && (
-                            <span className={`ml-1 font-semibold ${sub.offered_price > sub.acv_value ? "text-emerald-300" : "text-red-300"}`}>
-                              {sub.offered_price > sub.acv_value ? "+" : ""}{fmtMoney(sub.offered_price - sub.acv_value)}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+              {/* Identity row — switches between A / B / C based on
+                  site_config.customer_file_header_layout (per tenant or
+                  per location). Default: B (Customer-first, vehicle-right). */}
+              <ClassicHeaderIdentity
+                layout={headerLayout}
+                sub={sub}
+                dealValue={dealValue}
+                dealKind={dealKind}
+              />
 
               {/* Status / intent / hot lead chips + submitted date */}
               <div className="flex items-center gap-2 mt-4 flex-wrap">
