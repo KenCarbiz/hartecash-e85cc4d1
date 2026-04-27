@@ -426,6 +426,55 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
               </div>
             </div>
 
+            {/* Top bar colors — moved here from Layout tab per Apr 27 feedback */}
+            <div>
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">
+                Top bar colors
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <label className="flex items-center gap-2 p-2 border border-border rounded-md cursor-pointer hover:bg-muted/50 transition-colors">
+                  <input
+                    type="color"
+                    value={draft.top_bar_bg}
+                    onChange={(e) => set("top_bar_bg", e.target.value)}
+                    className="w-8 h-8 rounded cursor-pointer border-none bg-transparent"
+                  />
+                  <div>
+                    <div className="text-xs font-medium">
+                      {draft.top_bar_style === "solid" ? "Background" : "Start"}
+                    </div>
+                    <div className="text-[10px] font-mono text-muted-foreground">{draft.top_bar_bg}</div>
+                  </div>
+                </label>
+                {draft.top_bar_style !== "solid" && (
+                  <label className="flex items-center gap-2 p-2 border border-border rounded-md cursor-pointer hover:bg-muted/50 transition-colors">
+                    <input
+                      type="color"
+                      value={draft.top_bar_bg_2}
+                      onChange={(e) => set("top_bar_bg_2", e.target.value)}
+                      className="w-8 h-8 rounded cursor-pointer border-none bg-transparent"
+                    />
+                    <div>
+                      <div className="text-xs font-medium">End</div>
+                      <div className="text-[10px] font-mono text-muted-foreground">{draft.top_bar_bg_2}</div>
+                    </div>
+                  </label>
+                )}
+                <label className="flex items-center gap-2 p-2 border border-border rounded-md cursor-pointer hover:bg-muted/50 transition-colors">
+                  <input
+                    type="color"
+                    value={draft.top_bar_text}
+                    onChange={(e) => set("top_bar_text", e.target.value)}
+                    className="w-8 h-8 rounded cursor-pointer border-none bg-transparent"
+                  />
+                  <div>
+                    <div className="text-xs font-medium">Text</div>
+                    <div className="text-[10px] font-mono text-muted-foreground">{draft.top_bar_text}</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
             <div>
               <div className="flex items-baseline justify-between mb-2">
                 <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
@@ -570,42 +619,9 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
                 );
               })}
             </div>
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <label className="text-[11px] text-muted-foreground flex items-center gap-2">
-                <span className="w-24">
-                  {draft.top_bar_style === "solid" ? "Background" : "Start color"}
-                </span>
-                <input
-                  type="color"
-                  value={draft.top_bar_bg}
-                  onChange={(e) => set("top_bar_bg", e.target.value)}
-                  className="w-10 h-8 rounded border border-border bg-transparent"
-                />
-                <span className="font-mono text-[11px]">{draft.top_bar_bg}</span>
-              </label>
-              {draft.top_bar_style !== "solid" && (
-                <label className="text-[11px] text-muted-foreground flex items-center gap-2">
-                  <span className="w-24">End color</span>
-                  <input
-                    type="color"
-                    value={draft.top_bar_bg_2}
-                    onChange={(e) => set("top_bar_bg_2", e.target.value)}
-                    className="w-10 h-8 rounded border border-border bg-transparent"
-                  />
-                  <span className="font-mono text-[11px]">{draft.top_bar_bg_2}</span>
-                </label>
-              )}
-              <label className="text-[11px] text-muted-foreground flex items-center gap-2">
-                <span className="w-24">Text color</span>
-                <input
-                  type="color"
-                  value={draft.top_bar_text}
-                  onChange={(e) => set("top_bar_text", e.target.value)}
-                  className="w-10 h-8 rounded border border-border bg-transparent"
-                />
-                <span className="font-mono text-[11px]">{draft.top_bar_text}</span>
-              </label>
-            </div>
+            <p className="mt-3 text-[11px] text-muted-foreground italic">
+              Top bar colors (start / end / text) live on the <span className="font-semibold">Theme</span> tab.
+            </p>
           </Card>
 
           {/* UI scale */}
@@ -616,7 +632,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
                   UI scale
                 </div>
                 <div className="text-[11px] text-muted-foreground mt-0.5">
-                  Scale all text & controls proportionally. Baseline is 100%.
+                  Main content area only — sidebar &amp; top bar stay fixed. Baseline 100%.
                 </div>
               </div>
               <span className="text-sm font-mono text-muted-foreground">{draft.ui_scale}%</span>
@@ -657,7 +673,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
                   Text size
                 </div>
                 <div className="text-[11px] text-muted-foreground mt-0.5">
-                  Scale text only — layout & icons stay the same.
+                  Top bar text only. Increases or decreases every label in the blue bar proportionally.
                 </div>
               </div>
               <span className="text-sm font-mono text-muted-foreground">{draft.text_scale}%</span>

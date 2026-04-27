@@ -29,31 +29,40 @@ const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     root.style.setProperty("--cta-offer", ctaOffer);
     root.style.setProperty("--cta-accept", ctaAccept);
 
-    // ── Admin Refresh: UI scale + text scale (Wiring Brief §5) ──
+    // ── Admin Refresh: UI scale + text scale ──
     // Only applied on the authenticated admin shell so consumer routes
     // (landing, offer, portal) stay pixel-stable.
+    //
+    // ui_scale → only scales the MAIN CONTENT AREA where sections render
+    //   (data-admin-main element). Top bar + sidebar stay fixed.
+    // text_scale → only scales TEXT IN THE TOP BAR (data-admin-topbar
+    //   element). Body text everywhere else stays its base size.
     const isAdminRoute =
       typeof window !== "undefined" &&
       /^\/(admin|super-admin|setup|appraisal|inspect)/.test(window.location.pathname);
 
-    const TEXT_TAG_ID = "__text-scale-override";
+    const TEXT_TAG_ID = "__topbar-text-scale-override";
     const existingTag = document.getElementById(TEXT_TAG_ID);
 
     if (!isAdminRoute) {
-      // Restore defaults on consumer routes
       (root.style as any).zoom = "";
+      const main = document.querySelector("[data-admin-main]") as HTMLElement | null;
+      if (main) (main.style as any).zoom = "";
       if (existingTag) existingTag.textContent = "";
       return;
     }
 
-    // UI scale — zooms everything (whole admin app, including modals + slide-outs)
-    const uiScale = Math.min(1.5, Math.max(0.75, Number(config.ui_scale ?? 100) / 100));
-    (root.style as any).zoom = String(uiScale);
+    // Reset any legacy global zoom that older builds applied to the root.
+    (root.style as any).zoom = "";
 
-    // Text scale — inject !important overrides for every text-[NNpx] utility
-    // and the named Tailwind text-* classes. The codebase uses arbitrary
-    // px sizes (text-[14px]), so a single html { font-size: X% } can't
-    // scale them; rewriting each used size is the only reliable path.
+    // UI scale → apply zoom to [data-admin-main] only.
+    const uiScale = Math.min(1.5, Math.max(0.75, Number(config.ui_scale ?? 100) / 100));
+    const main = document.querySelector("[data-admin-main]") as HTMLElement | null;
+    if (main) (main.style as any).zoom = String(uiScale);
+
+    // Text scale → scoped to [data-admin-topbar] descendants. Rewrites
+    // text-[Npx] arbitrary sizes and named Tailwind text-* classes only
+    // when nested under the top bar element.
     const textScale = Math.min(1.5, Math.max(0.75, Number(config.text_scale ?? 100) / 100));
     let tag = existingTag as HTMLStyleElement | null;
     if (!tag) {
@@ -73,10 +82,10 @@ const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
       const rules: string[] = [];
       for (const s of sizes) {
         const esc = String(s).replace(".", "\\.");
-        rules.push(`.text-\\[${esc}px\\] { font-size: ${(s * textScale).toFixed(2)}px !important; }`);
+        rules.push(`[data-admin-topbar] .text-\\[${esc}px\\] { font-size: ${(s * textScale).toFixed(2)}px !important; }`);
       }
       for (const [cls, px] of Object.entries(named)) {
-        rules.push(`.${cls} { font-size: ${(px * textScale).toFixed(2)}px !important; }`);
+        rules.push(`[data-admin-topbar] .${cls} { font-size: ${(px * textScale).toFixed(2)}px !important; }`);
       }
       tag.textContent = rules.join("\n");
     }
