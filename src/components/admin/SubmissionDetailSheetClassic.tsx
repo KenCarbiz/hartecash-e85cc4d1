@@ -733,7 +733,7 @@ export default function SubmissionDetailSheetClassic({
     <Sheet open={!!selected} onOpenChange={(o) => { if (!o) { setEditState(null); onClose(); } }}>
       <SheetContent
         side="right"
-        className="w-full sm:max-w-5xl lg:max-w-6xl p-0 flex flex-col overflow-hidden relative [&>button]:hidden"
+        className="w-full sm:max-w-5xl lg:max-w-6xl p-0 flex flex-col overflow-hidden [&>button]:hidden"
       >
         <ClassicErrorBoundary>
         <div className="flex flex-col h-full bg-slate-50">
