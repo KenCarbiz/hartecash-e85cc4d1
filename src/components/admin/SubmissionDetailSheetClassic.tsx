@@ -939,14 +939,27 @@ export default function SubmissionDetailSheetClassic({
                   <Card title="Vehicle">
                     <div className="space-y-0">
                       <EditableRow label="Year" value={sub.vehicle_year} onSave={(v) => saveField("vehicle_year", v)} />
-                      <EditableRow label="Make" value={sub.vehicle_make} onSave={(v) => saveField("vehicle_make", v)} />
-                      <EditableRow label="Model" value={sub.vehicle_model} onSave={(v) => saveField("vehicle_model", v)} />
-                      <EditableRow label="Trim" value={sub.vehicle_trim} onSave={(v) => saveField("vehicle_trim", v)} />
+                      <Row
+                        label="Make / Model"
+                        value={[sub.vehicle_make, sub.vehicle_model].filter(Boolean).join(" ") || null}
+                      />
+                      {sub.vehicle_trim && (
+                        <EditableRow label="Trim" value={sub.vehicle_trim} onSave={(v) => saveField("vehicle_trim", v)} />
+                      )}
                       <EditableRow label="VIN" value={sub.vin} onSave={(v) => saveField("vin", v)} mono />
                       <EditableRow label="Plate" value={sub.plate} onSave={(v) => saveField("plate", v)} mono />
                       <EditableRow label="Mileage" value={sub.mileage} onSave={(v) => saveField("mileage", v)} />
                       <EditableRow label="Color" value={sub.exterior_color} onSave={(v) => saveField("exterior_color", v)} />
-                      <Row label="Drivable" value={sub.drivable} />
+                      <Row
+                        label="Drivable"
+                        value={
+                          sub.drivable == null || sub.drivable === ""
+                            ? null
+                            : /not/i.test(sub.drivable)
+                              ? "No"
+                              : "Yes"
+                        }
+                      />
                     </div>
                   </Card>
                 </div>
@@ -1232,39 +1245,46 @@ export default function SubmissionDetailSheetClassic({
                   </div>
                 </Card>
 
-                {/* Offer Breakdown — only when there is an offer or estimate */}
-                {dealValue != null && (
-                  <Card title="Offer Breakdown">
-                    <div className="space-y-2.5">
-                      <div className="flex items-baseline justify-between">
-                        <span className="text-[13px] text-slate-600">{dealKind}</span>
-                        <span className="font-display text-[22px] text-slate-900 leading-none">{fmtMoney(dealValue, true)}</span>
-                      </div>
-                      {sub.acv_value != null && (
-                        <div className="flex items-baseline justify-between text-[13px]">
-                          <span className="text-slate-600">ACV</span>
-                          <span className="font-semibold text-slate-800">{fmtMoney(sub.acv_value)}</span>
-                        </div>
-                      )}
-                      {sub.loan_payoff_amount != null && (
-                        <div className="flex items-baseline justify-between text-[13px]">
-                          <span className="text-slate-600">Loan Payoff</span>
-                          <span className="font-semibold text-slate-800">−{fmtMoney(sub.loan_payoff_amount)}</span>
-                        </div>
-                      )}
-                      {sub.loan_payoff_amount != null && (
-                        <div className="flex items-baseline justify-between pt-2 border-t border-slate-100">
-                          <span className="text-[12px] uppercase tracking-wider text-slate-500 font-semibold">Customer Equity</span>
-                          <span className={`font-bold text-[15px] ${
-                            (dealValue - sub.loan_payoff_amount) >= 0 ? "text-emerald-700" : "text-red-700"
-                          }`}>
-                            {(dealValue - sub.loan_payoff_amount) >= 0 ? "+" : ""}{fmtMoney(dealValue - sub.loan_payoff_amount)}
-                          </span>
-                        </div>
+                {/* Offer Breakdown — always rendered. Shows real numbers
+                    where they exist and a muted "—" placeholder where
+                    they don't, so the right-rail layout stays stable
+                    between leads with vs. without an offer/loan. */}
+                <Card title="Offer Breakdown">
+                  <div className="space-y-2.5">
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-[13px] text-slate-600">{dealValue != null ? dealKind : "Offer Given"}</span>
+                      <span className="font-display text-[22px] text-slate-900 leading-none">
+                        {dealValue != null ? fmtMoney(dealValue, true) : <span className="text-slate-400">—</span>}
+                      </span>
+                    </div>
+                    <div className="flex items-baseline justify-between text-[13px]">
+                      <span className="text-slate-600">ACV</span>
+                      <span className="font-semibold text-slate-800">
+                        {sub.acv_value != null ? fmtMoney(sub.acv_value) : <span className="text-slate-400">—</span>}
+                      </span>
+                    </div>
+                    <div className="flex items-baseline justify-between text-[13px]">
+                      <span className="text-slate-600">Loan Payoff</span>
+                      <span className="font-semibold text-slate-800">
+                        {sub.loan_payoff_amount != null
+                          ? `−${fmtMoney(sub.loan_payoff_amount)}`
+                          : <span className="text-slate-400">—</span>}
+                      </span>
+                    </div>
+                    <div className="flex items-baseline justify-between pt-2 border-t border-slate-100">
+                      <span className="text-[12px] uppercase tracking-wider text-slate-500 font-semibold">Customer Equity</span>
+                      {dealValue != null ? (
+                        <span className={`font-bold text-[15px] ${
+                          (dealValue - (sub.loan_payoff_amount ?? 0)) >= 0 ? "text-emerald-700" : "text-red-700"
+                        }`}>
+                          {(dealValue - (sub.loan_payoff_amount ?? 0)) >= 0 ? "+" : ""}{fmtMoney(dealValue - (sub.loan_payoff_amount ?? 0))}
+                        </span>
+                      ) : (
+                        <span className="text-slate-400 font-bold text-[15px]">—</span>
                       )}
                     </div>
-                  </Card>
-                )}
+                  </div>
+                </Card>
 
                 {/* Loan card — only when loan info exists */}
                 {(sub.loan_status || sub.loan_company) && (
