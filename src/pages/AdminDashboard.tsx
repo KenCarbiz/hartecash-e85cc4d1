@@ -165,11 +165,11 @@ const AdminDashboard = () => {
             the first time admin renders), but the Sheet itself is mounted
             and driven by `open={!!selected}` internally — unmounting it
             on close breaks the slide-out animation and can race the first
-            open. Always renders the Classic photos-led layout — the
-            Conversation-first variant is paused until its design port
-            ships and `file_layout` is wired back in. */}
+            open. The site_config.file_layout flag chooses Classic vs
+            Conversation-first per tenant; both consume the identical
+            prop shape. */}
         <Suspense fallback={null}>
-          {false && siteConfig.file_layout === "conversation" ? (
+          {siteConfig.file_layout === "conversation" ? (
             <CustomerFileV2
               selected={db.selected}
               onClose={() => {

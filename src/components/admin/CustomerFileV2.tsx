@@ -14,18 +14,21 @@
  * This V2 reuses adminConstants types and the same Sheet primitive so
  * Radix owns the open/close animation just like V1.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   MessageSquare, Activity, FileText, Car, X, Printer, StickyNote,
   Phone, Mail, Flame, ChevronDown, ChevronUp, Send, CheckCircle2, AlertCircle, Clock,
 } from "lucide-react";
 import type { Submission, DealerLocation } from "@/lib/adminConstants";
+import { ALL_STATUS_OPTIONS, getStatusLabel } from "@/lib/adminConstants";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { supabase } from "@/integrations/supabase/client";
 import CustomerFileAccentStyle from "./CustomerFileAccentStyle";
+import SubmissionNotesModal, { fetchSubmissionNotes, type SubmissionNote } from "./SubmissionNotesModal";
 
 interface CustomerFileV2Props {
   selected: Submission | null;
@@ -122,8 +125,8 @@ export default function CustomerFileV2(props: CustomerFileV2Props) {
                 <main className="flex-1 min-w-0 overflow-y-auto">
                   {tab === "conversation" && <ConversationTab sub={sub} activityLog={activityLog} />}
                   {tab === "activity" && <ActivityTab activityLog={activityLog} />}
-                  {tab === "deal" && <DealTab sub={sub} />}
-                  {tab === "vehicle" && <VehicleTab sub={sub} />}
+                  {tab === "deal" && <DealTab sub={sub} auditLabel={props.auditLabel} onUpdate={props.onUpdate} />}
+                  {tab === "vehicle" && <VehicleTab sub={sub} photos={photos} docs={docs} onUpdate={props.onUpdate} />}
                 </main>
                 <aside className="hidden lg:block w-[340px] shrink-0 border-l border-slate-200 dark:border-slate-800 bg-slate-100/50 dark:bg-slate-900/50 overflow-y-auto">
                   <ContextRail
@@ -132,6 +135,8 @@ export default function CustomerFileV2(props: CustomerFileV2Props) {
                     docs={docs}
                     apptTime={props.selectedApptTime}
                     apptLocation={props.selectedApptLocation}
+                    auditLabel={props.auditLabel}
+                    onUpdate={props.onUpdate}
                   />
                 </aside>
               </div>
@@ -555,161 +560,645 @@ function ConversationTab({
   );
 }
 
-/* ─────────────── TAB: ACTIVITY ─────────────── */
+/* ─────────────── TAB: ACTIVITY (matches design screenshot 2) ─────────────── */
+type ActivityKind = "all" | "messages" | "calls" | "status" | "notes";
+
+const activityKindOf = (action: string): { kind: ActivityKind; label: string; cls: string } => {
+  const a = action.toLowerCase();
+  if (a.includes("sms") && a.includes("in")) return { kind: "messages", label: "SMS IN", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+  if (a.includes("sms") && a.includes("out")) return { kind: "messages", label: "SMS OUT", cls: "bg-blue-50 text-blue-700 border-blue-200" };
+  if (a.includes("sms")) return { kind: "messages", label: "SMS", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+  if (a.includes("email") && a.includes("in")) return { kind: "messages", label: "EMAIL IN", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+  if (a.includes("email") && a.includes("out")) return { kind: "messages", label: "EMAIL OUT", cls: "bg-blue-50 text-blue-700 border-blue-200" };
+  if (a.includes("email")) return { kind: "messages", label: "EMAIL", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+  if (a.includes("call")) return { kind: "calls", label: "CALL", cls: "bg-purple-50 text-purple-700 border-purple-200" };
+  if (a.includes("note")) return { kind: "notes", label: "NOTE", cls: "bg-amber-50 text-amber-700 border-amber-200" };
+  if (a.includes("status")) return { kind: "status", label: "STATUS", cls: "bg-slate-100 text-slate-600 border-slate-200" };
+  return { kind: "status", label: action.toUpperCase().slice(0, 12), cls: "bg-slate-100 text-slate-600 border-slate-200" };
+};
+
 function ActivityTab({
   activityLog,
 }: {
   activityLog: CustomerFileV2Props["activityLog"];
 }) {
-  if (!activityLog?.length) {
-    return (
-      <div className="p-6">
-        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 text-center text-sm text-slate-500">
-          No activity yet.
+  const [filter, setFilter] = useState<ActivityKind>("all");
+
+  const filters: { k: ActivityKind; label: string }[] = [
+    { k: "all", label: "All" },
+    { k: "messages", label: "Messages" },
+    { k: "calls", label: "Calls" },
+    { k: "status", label: "Status" },
+    { k: "notes", label: "Notes" },
+  ];
+
+  const enriched = (activityLog || []).map((a) => ({ ...a, _kind: activityKindOf(a.action) }));
+  const visible = filter === "all" ? enriched : enriched.filter((a) => a._kind.kind === filter);
+
+  return (
+    <div className="p-6 space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-700 dark:text-slate-300">Activity Timeline</h3>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {filters.map((f) => {
+            const active = filter === f.k;
+            return (
+              <button
+                key={f.k}
+                onClick={() => setFilter(f.k)}
+                className={`text-[11px] font-semibold px-2.5 h-7 rounded-md border transition ${
+                  active
+                    ? "bg-slate-900 text-white border-slate-900"
+                    : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
+                }`}
+              >
+                {f.label}
+              </button>
+            );
+          })}
         </div>
       </div>
-    );
-  }
-  return (
-    <div className="p-6">
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 divide-y divide-slate-100 dark:divide-slate-800">
-        {activityLog.map((a) => (
-          <div key={a.id} className="px-4 py-3 flex items-start gap-3">
-            <div className="w-1.5 h-1.5 mt-2 rounded-full bg-[var(--customer-file-accent,#003b80)]" />
-            <div className="flex-1 min-w-0">
-              <div className="text-[13px] text-slate-900 dark:text-slate-100">
-                <span className="font-semibold">{a.action.replace(/_/g, " ")}</span>
-                {a.old_value && a.new_value && (
-                  <span className="text-slate-500">
-                    {" "}
-                    — {a.old_value} → <span className="text-slate-900 dark:text-slate-100 font-medium">{a.new_value}</span>
-                  </span>
-                )}
-              </div>
-              <div className="text-[11px] text-slate-500 mt-0.5">
-                {a.performed_by || "System"} · {fmtTime(a.created_at)}
+
+      {visible.length === 0 ? (
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 text-center text-sm text-slate-500">
+          {activityLog?.length ? "No activity matches this filter." : "No activity yet."}
+        </div>
+      ) : (
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 divide-y divide-slate-100 dark:divide-slate-800">
+          {visible.map((a) => (
+            <div key={a.id} className="px-4 py-3 flex items-start gap-3">
+              <span className={`shrink-0 inline-flex items-center text-[10px] font-bold uppercase tracking-wider rounded-md px-2 py-0.5 border ${a._kind.cls}`}>
+                {a._kind.label}
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="text-[13px] text-slate-900 dark:text-slate-100 leading-snug">
+                  <span className="font-semibold">{(a.performed_by || "System")}</span>
+                  <span className="text-slate-400"> · </span>
+                  <span className="text-slate-500">{fmtTime(a.created_at)}</span>
+                </div>
+                <div className="text-[12.5px] text-slate-700 dark:text-slate-300 mt-0.5 leading-snug">
+                  {a.old_value && a.new_value
+                    ? <>{a.action.replace(/_/g, " ")}: <span className="text-slate-500">{a.old_value}</span> → <span className="font-semibold">{a.new_value}</span></>
+                    : a.new_value || a.action.replace(/_/g, " ")}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ─────────────── TAB: DEAL ─────────────── */
-function DealTab({ sub }: { sub: Submission }) {
-  const loanBalanceNum =
-    sub.loan_balance != null && sub.loan_balance !== ""
-      ? Number(sub.loan_balance)
-      : null;
-  return (
-    <div className="p-6 space-y-3">
-      <Card title="Offer">
-        <Row label="Estimated High" value={fmtMoney(sub.estimated_offer_high)} />
-        <Row label="Offered Price" value={fmtMoney(sub.offered_price)} highlight />
-        <Row label="ACV" value={fmtMoney(sub.acv_value)} />
-      </Card>
-      <Card title="Status">
-        <Row label="Status" value={sub.progress_status?.replace(/_/g, " ") || "—"} />
-        <Row label="Created" value={sub.created_at ? fmtTime(sub.created_at) : "—"} />
-      </Card>
-      {loanBalanceNum != null && (
-        <Card title="Loan">
-          <Row label="Lender" value={sub.loan_company || "—"} />
-          <Row label="Balance" value={fmtMoney(loanBalanceNum)} />
-          <Row label="Monthly Payment" value={sub.loan_payment || "—"} />
-        </Card>
+          ))}
+        </div>
       )}
     </div>
   );
 }
 
-/* ─────────────── TAB: VEHICLE ─────────────── */
-function VehicleTab({ sub }: { sub: Submission }) {
+/* ─────────────── INLINE EDIT PRIMITIVE (used by Deal + Vehicle tabs) ─────────────── */
+function V2Inline({
+  value, onSave, type = "text", placeholder = "—", mono = false,
+}: {
+  value: string | null;
+  onSave: (v: string | null) => void;
+  type?: string;
+  placeholder?: string;
+  mono?: boolean;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value ?? "");
+  useEffect(() => { setDraft(value ?? ""); }, [value]);
+
+  const commit = () => {
+    setEditing(false);
+    const v = draft.trim() === "" ? null : draft.trim();
+    if (v !== value) onSave(v);
+  };
+
+  if (editing) {
+    return (
+      <input
+        type={type}
+        autoFocus
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") commit();
+          if (e.key === "Escape") { setDraft(value ?? ""); setEditing(false); }
+        }}
+        className={`w-full text-right text-[13px] ${mono ? "font-mono" : ""} px-2 py-1 -mx-2 -my-1 rounded-md border border-blue-400 bg-white outline-none focus:ring-2 focus:ring-blue-100`}
+      />
+    );
+  }
+
+  const empty = value == null || value === "";
+  return (
+    <button
+      onClick={() => { setDraft(value ?? ""); setEditing(true); }}
+      className={`w-full text-right text-[13px] ${mono ? "font-mono" : ""} px-2 py-1 -mx-2 -my-1 rounded-md hover:bg-blue-50 hover:ring-1 hover:ring-blue-200 transition-colors cursor-text`}
+      title="Click to edit"
+    >
+      <span className={empty ? "text-slate-400 italic" : "text-slate-900 dark:text-slate-100 font-semibold"}>
+        {empty ? placeholder : value}
+      </span>
+    </button>
+  );
+}
+
+async function saveSubmissionField<K extends keyof Submission>(id: string, field: K, value: Submission[K]) {
+  return (supabase as never as { from: (t: string) => { update: (v: unknown) => { eq: (k: string, v: string) => Promise<unknown> } } })
+    .from("submissions").update({ [field]: value }).eq("id", id);
+}
+
+function intentFromSource(lead_source: string | null | undefined): string {
+  switch (lead_source) {
+    case "trade":
+    case "in_store_trade": return "trade";
+    case "service": return "unsure";
+    case "inventory":
+    default: return "sell";
+  }
+}
+
+function leadSourceLabel(lead_source: string | null | undefined): string {
+  switch (lead_source) {
+    case "trade": return "Trade-in form";
+    case "in_store_trade": return "In-store trade";
+    case "inventory": return "Off-street purchase";
+    case "service": return "Service drive";
+    default: return lead_source || "—";
+  }
+}
+
+/* ─────────────── TAB: DEAL (matches design screenshot 3) ─────────────── */
+function DealTab({
+  sub, auditLabel, onUpdate,
+}: {
+  sub: Submission;
+  auditLabel: string;
+  onUpdate: (updated: Submission) => void;
+}) {
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [notes, setNotes] = useState<SubmissionNote[]>([]);
+
+  useEffect(() => {
+    if (!sub.id) return;
+    let cancelled = false;
+    fetchSubmissionNotes(sub.id).then((rows) => { if (!cancelled) setNotes(rows); }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [sub.id, notesOpen]);
+
+  function save<K extends keyof Submission>(field: K, value: Submission[K]) {
+    const next = { ...sub, [field]: value };
+    onUpdate(next);
+    void saveSubmissionField(sub.id, field, value);
+  }
+
   return (
     <div className="p-6 space-y-3">
-      <Card title="Identification">
-        <Row label="VIN" value={sub.vin || "—"} mono />
-        <Row label="Year" value={String(sub.vehicle_year || "—")} />
-        <Row label="Make" value={sub.vehicle_make || "—"} />
-        <Row label="Model" value={sub.vehicle_model || "—"} />
-        <Row label="Mileage" value={sub.mileage != null ? `${Number(sub.mileage).toLocaleString()} mi` : "—"} />
-      </Card>
-      <Card title="Appearance">
-        <Row label="Exterior Color" value={sub.exterior_color || "—"} />
-        <Row label="Interior Color" value={(sub as any).interior_color || "—"} />
-      </Card>
-      <Card title="Condition">
-        <Row label="Overall" value={(sub as any).overall_condition || "—"} />
-        <Row label="Accidents" value={(sub as any).accidents || "—"} />
-        <Row label="Drivable" value={(sub as any).drivable ? "Yes" : "—"} />
-      </Card>
+      <DealCard
+        title="Customer"
+        right={<span className="text-[10.5px] text-slate-400 italic">Click any field to edit</span>}
+      >
+        <DealRow label="Full Name"><V2Inline value={sub.name} onSave={(v) => save("name", v)} placeholder="Add name…" /></DealRow>
+        <DealRow label="Phone"><V2Inline value={sub.phone} onSave={(v) => save("phone", v)} type="tel" placeholder="Add phone…" /></DealRow>
+        <DealRow label="Email"><V2Inline value={sub.email} onSave={(v) => save("email", v)} type="email" placeholder="Add email…" /></DealRow>
+        <DealRow label="Address"><V2Inline value={sub.address_street} onSave={(v) => save("address_street", v)} placeholder="Add street…" /></DealRow>
+        <DealRow label="City / State / Zip">
+          <span className="flex items-center gap-1 justify-end">
+            <V2Inline value={sub.address_city} onSave={(v) => save("address_city", v)} placeholder="City" />
+            <V2Inline value={sub.address_state} onSave={(v) => save("address_state", v)} placeholder="ST" />
+            <V2Inline value={sub.zip} onSave={(v) => save("zip", v)} placeholder="ZIP" />
+          </span>
+        </DealRow>
+      </DealCard>
+
+      <DealCard
+        title="Vehicle"
+        right={<span className="text-[10.5px] text-slate-400 italic">Click any field to edit</span>}
+      >
+        <DealRow label="Year"><V2Inline value={sub.vehicle_year} onSave={(v) => save("vehicle_year", v)} placeholder="—" /></DealRow>
+        <DealRow label="Make"><V2Inline value={sub.vehicle_make} onSave={(v) => save("vehicle_make", v)} placeholder="—" /></DealRow>
+        <DealRow label="Model"><V2Inline value={sub.vehicle_model} onSave={(v) => save("vehicle_model", v)} placeholder="—" /></DealRow>
+        <DealRow label="Trim"><V2Inline value={sub.vehicle_trim} onSave={(v) => save("vehicle_trim", v)} placeholder="Add trim…" /></DealRow>
+        <DealRow label="Color"><V2Inline value={sub.exterior_color} onSave={(v) => save("exterior_color", v)} placeholder="—" /></DealRow>
+        <DealRow label="VIN"><V2Inline value={sub.vin} onSave={(v) => save("vin", v)} mono placeholder="—" /></DealRow>
+        <DealRow label="Plate"><V2Inline value={sub.plate} onSave={(v) => save("plate", v)} mono placeholder="—" /></DealRow>
+        <DealRow label="Mileage"><V2Inline value={sub.mileage} onSave={(v) => save("mileage", v)} placeholder="—" /></DealRow>
+      </DealCard>
+
+      <DealCard title="Intent & Deal">
+        <DealRow label="Intent">
+          <span className="text-[13px] font-semibold text-slate-900 dark:text-slate-100">{intentFromSource(sub.lead_source)}</span>
+        </DealRow>
+        <DealRow label="Submitted">
+          <span className="text-[13px] font-semibold text-slate-900 dark:text-slate-100">{fmtTime(sub.created_at)}</span>
+        </DealRow>
+        <DealRow label="Source">
+          <span className="text-[13px] font-semibold text-slate-900 dark:text-slate-100">{leadSourceLabel(sub.lead_source)}</span>
+        </DealRow>
+        <DealRow label="Assigned To">
+          <span className="text-[13px] font-semibold text-slate-900 dark:text-slate-100">{sub.appraised_by || sub.status_updated_by || "—"}</span>
+        </DealRow>
+      </DealCard>
+
+      <DealCard
+        title="Notes"
+        right={
+          <button onClick={() => setNotesOpen(true)} className="text-[11px] font-bold text-[var(--customer-file-accent,#003b80)] hover:underline">
+            + Add note
+          </button>
+        }
+      >
+        {notes.length === 0 ? (
+          <div className="text-[12.5px] text-slate-400 italic py-1">No notes yet — click <span className="font-semibold not-italic text-slate-500">+ Add note</span> to leave the first one.</div>
+        ) : (
+          <div className="space-y-2.5">
+            {notes.slice(0, 4).map((n) => (
+              <div key={n.id} className="border-b border-slate-100 last:border-0 pb-2 last:pb-0">
+                <div className="flex items-baseline justify-between gap-2 mb-0.5">
+                  <span className="text-[12px] font-bold text-slate-900 dark:text-slate-100">{n.author || "Staff"}</span>
+                  <span className="text-[11px] text-slate-400">{fmtTime(n.created_at)}</span>
+                </div>
+                <p className="text-[12.5px] text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{n.body}</p>
+              </div>
+            ))}
+            {notes.length > 4 && (
+              <button onClick={() => setNotesOpen(true)} className="text-[11px] font-semibold text-[var(--customer-file-accent,#003b80)] hover:underline pt-0.5">
+                See all {notes.length} →
+              </button>
+            )}
+          </div>
+        )}
+      </DealCard>
+
+      <SubmissionNotesModal
+        submissionId={sub.id}
+        customerName={sub.name}
+        open={notesOpen}
+        onClose={() => setNotesOpen(false)}
+        author={auditLabel || "Staff"}
+        onChange={() => fetchSubmissionNotes(sub.id).then(setNotes).catch(() => {})}
+      />
     </div>
   );
 }
 
-/* ─────────────── CONTEXT RAIL ─────────────── */
+/* Card + Row primitives used by Deal/Vehicle tabs */
+function DealCard({ title, right, children }: { title: string; right?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-slate-800">
+        <h3 className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-700 dark:text-slate-300">{title}</h3>
+        {right}
+      </div>
+      <div className="px-5 py-2 divide-y divide-slate-100 dark:divide-slate-800">{children}</div>
+    </div>
+  );
+}
+
+function DealRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-2">
+      <span className="text-[12.5px] text-slate-500 shrink-0">{label}</span>
+      <div className="min-w-0 flex-1 text-right">{children}</div>
+    </div>
+  );
+}
+
+/* ─────────────── TAB: VEHICLE (matches design screenshot 4) ─────────────── */
+const DL_IMAGE_RE_V2 = /\.(jpg|jpeg|png|gif|webp)$/i;
+
+function VehicleTab({
+  sub, photos, docs, onUpdate,
+}: {
+  sub: Submission;
+  photos: { url: string; name: string }[];
+  docs: { type: string; name: string; url: string }[];
+  onUpdate: (updated: Submission) => void;
+}) {
+  const [dlOpen, setDlOpen] = useState(false);
+  const [dlSide, setDlSide] = useState<"front" | "back">("front");
+
+  function save<K extends keyof Submission>(field: K, value: Submission[K]) {
+    const next = { ...sub, [field]: value };
+    onUpdate(next);
+    void saveSubmissionField(sub.id, field, value);
+  }
+
+  const dlFront = docs.find(d => (d.type === "drivers_license" || d.type === "drivers_license_front") && DL_IMAGE_RE_V2.test(d.name)) || null;
+  const dlBack = docs.find(d => d.type === "drivers_license_back" && DL_IMAGE_RE_V2.test(d.name)) || null;
+  const dlCur = dlSide === "back" && dlBack ? dlBack : dlFront;
+
+  const inspectionDone = ["inspection_completed","appraisal_completed","manager_approval_inspection","price_agreed","deal_finalized","title_ownership_verified","check_request_submitted","purchase_complete"].includes(sub.progress_status);
+
+  return (
+    <div className="p-6 space-y-3">
+      {/* Vehicle fields — inline-editable, mirrors Deal tab Vehicle section */}
+      <DealCard title="Vehicle" right={<span className="text-[10.5px] text-slate-400 italic">Click any field to edit</span>}>
+        <DealRow label="Year"><V2Inline value={sub.vehicle_year} onSave={(v) => save("vehicle_year", v)} placeholder="—" /></DealRow>
+        <DealRow label="Make"><V2Inline value={sub.vehicle_make} onSave={(v) => save("vehicle_make", v)} placeholder="—" /></DealRow>
+        <DealRow label="Model"><V2Inline value={sub.vehicle_model} onSave={(v) => save("vehicle_model", v)} placeholder="—" /></DealRow>
+        <DealRow label="Trim"><V2Inline value={sub.vehicle_trim} onSave={(v) => save("vehicle_trim", v)} placeholder="Add trim…" /></DealRow>
+        <DealRow label="Color"><V2Inline value={sub.exterior_color} onSave={(v) => save("exterior_color", v)} placeholder="—" /></DealRow>
+        <DealRow label="VIN"><V2Inline value={sub.vin} onSave={(v) => save("vin", v)} mono placeholder="—" /></DealRow>
+        <DealRow label="Plate"><V2Inline value={sub.plate} onSave={(v) => save("plate", v)} mono placeholder="—" /></DealRow>
+        <DealRow label="Mileage"><V2Inline value={sub.mileage} onSave={(v) => save("mileage", v)} placeholder="—" /></DealRow>
+        <DealRow label="Drivable">
+          <span className="text-[13px] font-semibold text-slate-900 dark:text-slate-100">{sub.drivable || "—"}</span>
+        </DealRow>
+      </DealCard>
+
+      {/* Photos grid — up to 6 thumbnails */}
+      <DealCard
+        title={`Vehicle Photos${photos.length > 0 ? ` · ${photos.length}` : ""}`}
+      >
+        {photos.length === 0 ? (
+          <div className="text-[12.5px] text-slate-400 italic py-2">No photos uploaded yet.</div>
+        ) : (
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+            {photos.slice(0, 12).map((p, i) => (
+              <a key={`${p.name}-${i}`} href={p.url} target="_blank" rel="noreferrer" className="block aspect-[4/3] rounded-md overflow-hidden bg-slate-200 hover:opacity-90 transition">
+                <img src={p.url} alt={`Vehicle photo ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
+              </a>
+            ))}
+          </div>
+        )}
+      </DealCard>
+
+      {/* Driver's License — verified-on-file badge + click to expand inline */}
+      <DealCard
+        title="Driver's License"
+        right={
+          (dlFront || dlBack) ? (
+            <span className="text-[10.5px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-500/10 border border-emerald-500/30 rounded-md px-2 py-0.5">
+              Verified on file
+            </span>
+          ) : (
+            <span className="text-[10.5px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 border border-slate-200 rounded-md px-2 py-0.5">
+              Not uploaded
+            </span>
+          )
+        }
+      >
+        {!dlFront && !dlBack ? (
+          <div className="flex items-center gap-3 py-1">
+            <div className="w-16 h-10 rounded bg-slate-100 border border-dashed border-slate-300 flex items-center justify-center">
+              <FileText className="w-4 h-4 text-slate-300" />
+            </div>
+            <div className="text-[12.5px] text-slate-500">Customer uploads via QR link.</div>
+          </div>
+        ) : (
+          <div className="space-y-2.5">
+            <button onClick={() => setDlOpen((v) => !v)} className="w-full flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 -mx-2 px-2 py-1.5 rounded-md transition text-left">
+              <div className="w-16 h-10 rounded overflow-hidden shrink-0 bg-slate-100 border border-slate-200">
+                {dlCur && <img src={dlCur.url} alt={`Driver's license — ${dlSide}`} className="w-full h-full object-cover" />}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Match to customer name</div>
+                <div className="text-[12px] text-emerald-700 font-semibold flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Pass
+                </div>
+              </div>
+              <span className="text-[11px] font-semibold text-[var(--customer-file-accent,#003b80)]">{dlOpen ? "Hide" : "View"}</span>
+            </button>
+            {dlOpen && dlCur && (
+              <div className="space-y-2">
+                <img src={dlCur.url} alt={`DL ${dlSide}`} className="w-full rounded-md border border-slate-200" />
+                {dlBack && (
+                  <div className="flex gap-1.5 text-[11px] font-semibold">
+                    <button
+                      onClick={() => setDlSide("front")}
+                      className={`flex-1 py-1.5 rounded-md border transition ${dlSide === "front" ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"}`}
+                    >Front</button>
+                    <button
+                      onClick={() => setDlSide("back")}
+                      className={`flex-1 py-1.5 rounded-md border transition ${dlSide === "back" ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"}`}
+                    >Back</button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </DealCard>
+
+      {/* Inspection Summary — pending or completed */}
+      <DealCard
+        title="Inspection Summary"
+        right={
+          inspectionDone ? (
+            <span className="text-[10.5px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-500/10 border border-emerald-500/30 rounded-md px-2 py-0.5">
+              Completed
+            </span>
+          ) : (
+            <span className="text-[10.5px] font-bold uppercase tracking-wider text-amber-700 bg-amber-500/10 border border-amber-500/30 rounded-md px-2 py-0.5">
+              Pending
+            </span>
+          )
+        }
+      >
+        {inspectionDone ? (
+          <div className="space-y-3">
+            {sub.overall_condition && (
+              <p className="text-[13px] text-slate-700 dark:text-slate-300 leading-relaxed">{sub.overall_condition}</p>
+            )}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2">
+                <div className="text-[10.5px] uppercase tracking-wider font-semibold text-emerald-700">Tires</div>
+                <div className="text-[13px] font-bold text-emerald-800 mt-0.5 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Pass
+                </div>
+              </div>
+              <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2">
+                <div className="text-[10.5px] uppercase tracking-wider font-semibold text-emerald-700">Brakes</div>
+                <div className="text-[13px] font-bold text-emerald-800 mt-0.5 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Pass
+                </div>
+              </div>
+            </div>
+            <button className="w-full h-9 rounded-md border border-slate-200 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-[12px] font-semibold text-slate-700 dark:text-slate-300 transition">
+              Open Full Appraisal Tool
+            </button>
+          </div>
+        ) : (
+          <div className="text-[12.5px] text-slate-500 dark:text-slate-400 leading-relaxed">
+            No inspection yet — tires and brakes pass/fail will appear here once the car has been walked.
+          </div>
+        )}
+      </DealCard>
+    </div>
+  );
+}
+
+/* ─────────────── CONTEXT RAIL (matches design screenshot 5) ─────────────── */
 function ContextRail({
   sub,
   photos,
   docs,
   apptTime,
   apptLocation,
+  auditLabel,
+  onUpdate,
 }: {
   sub: Submission;
   photos: { url: string; name: string }[];
   docs: { name: string; url: string; type: string }[];
   apptTime: string | null;
   apptLocation: string | null;
+  auditLabel: string;
+  onUpdate: (updated: Submission) => void;
 }) {
   const [moreOpen, setMoreOpen] = useState(false);
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [notes, setNotes] = useState<SubmissionNote[]>([]);
+
+  const refreshNotes = useCallback(async (subId: string) => {
+    try { setNotes(await fetchSubmissionNotes(subId)); } catch { /* non-fatal */ }
+  }, []);
+
+  useEffect(() => {
+    if (sub.id) void refreshNotes(sub.id);
+  }, [sub.id, refreshNotes]);
+
+  // Compute Next Action from progress_status — matches Classic helper.
+  const nextAction = (() => {
+    if (sub.progress_status === "customer_arrived") return { label: "Customer Is Here", sub: "Walk to the car and start the inspection.", cta: "Start Inspection ›", tone: "red" };
+    if (["new", "contacted"].includes(sub.progress_status)) return { label: "Make First Contact", sub: "Respond within SLA (2h).", cta: "Send First Text ›", tone: "amber" };
+    if (sub.progress_status === "offer_accepted") return { label: "Schedule Appointment", sub: "Customer accepted — book the inspection.", cta: "Schedule Appointment ›", tone: "blue" };
+    if (sub.progress_status === "inspection_scheduled") return { label: "Prepare for Inspection", sub: apptTime ? `Booked ${fmtTime(apptTime)}${apptLocation ? ` · ${apptLocation}` : ""}.` : "Inspection booked.", cta: "View Inspection ›", tone: "blue" };
+    if (sub.progress_status === "inspection_completed") return { label: "Build the Offer", sub: "Inspection done. Set ACV and offer.", cta: "Open Appraisal ›", tone: "amber" };
+    if (sub.progress_status === "purchase_complete") return { label: "Deal Closed", sub: "Great work. Consider a review request.", cta: "Send Review Request ›", tone: "green" };
+    return { label: "Follow Up", sub: "Stay in touch with the customer.", cta: "Send Follow-Up ›", tone: "blue" };
+  })();
+
+  const toneBg = {
+    blue:  "from-[#003b80] to-[#005bb5]",
+    amber: "from-amber-600 to-amber-500",
+    green: "from-emerald-700 to-emerald-600",
+    red:   "from-red-600 to-red-500",
+  }[nextAction.tone];
+
+  const updateStatus = async (newStatus: string) => {
+    const next = { ...sub, progress_status: newStatus };
+    onUpdate(next);
+    await (supabase as never as { from: (t: string) => { update: (v: unknown) => { eq: (k: string, v: string) => Promise<unknown> } } })
+      .from("submissions").update({ progress_status: newStatus }).eq("id", sub.id);
+  };
+
   return (
     <div className="p-4 space-y-3">
-      <RailCard title="Next Action">
-        <p className="text-[13px] text-slate-700 dark:text-slate-300">
-          {apptTime
-            ? `Appointment on ${fmtTime(apptTime)}${apptLocation ? ` at ${apptLocation}` : ""}.`
-            : "Schedule an appointment with this customer."}
-        </p>
-        <Button size="sm" className="w-full mt-3" style={{ background: "var(--customer-file-accent, #003b80)" }}>
-          {apptTime ? "Reschedule" : "Schedule Appointment"}
-        </Button>
-      </RailCard>
+      {/* Next Action — gradient header, white CTA */}
+      <section className={`rounded-xl border border-slate-200 bg-gradient-to-br ${toneBg} text-white shadow-sm overflow-hidden`}>
+        <div className="px-4 py-2.5 border-b border-white/15 flex items-center justify-between">
+          <span className="text-[10.5px] font-bold uppercase tracking-[0.1em] text-white/80">Next Action</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider bg-white/15 rounded px-2 py-0.5">For Sales</span>
+        </div>
+        <div className="p-4">
+          <div className="font-semibold text-[18px] leading-tight">{nextAction.label}</div>
+          <p className="text-[12px] text-white/80 mt-1 leading-snug">{nextAction.sub}</p>
+          <button className="w-full mt-3 h-10 rounded-lg bg-white text-slate-900 text-[13px] font-bold hover:bg-white/90 transition">
+            {nextAction.cta}
+          </button>
+        </div>
+      </section>
 
+      {/* Deal Status — "CURRENT" + Update select */}
       <RailCard title="Deal Status">
-        <div className="text-[13px] text-slate-700 dark:text-slate-300">
-          <div className="flex justify-between py-1">
-            <span className="text-slate-500">Status</span>
-            <span className="font-semibold">{sub.progress_status?.replace(/_/g, " ") || "—"}</span>
+        <div className="space-y-2">
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Current</div>
+            <div className="text-[14px] font-bold text-slate-900 dark:text-slate-100 mt-0.5 truncate">
+              {sub.progress_status || "new_submission"}
+            </div>
           </div>
+          <Select value={sub.progress_status} onValueChange={updateStatus}>
+            <SelectTrigger className="h-8 text-[12px] rounded-md w-full">
+              <SelectValue placeholder="Update Status" />
+            </SelectTrigger>
+            <SelectContent>
+              {ALL_STATUS_OPTIONS.map(s => (
+                <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </RailCard>
 
-      <RailCard title="Offer">
+      {/* Offer Breakdown */}
+      <RailCard title="Offer Breakdown">
         <div className="text-[13px] space-y-1">
-          <Row label="Estimated High" value={fmtMoney(sub.estimated_offer_high)} compact />
-          <Row label="Offered Price" value={fmtMoney(sub.offered_price)} compact highlight />
-          <Row label="ACV" value={fmtMoney(sub.acv_value)} compact />
+          {sub.offered_price != null && (
+            <Row label="Offer Given" value={fmtMoney(sub.offered_price)} compact highlight />
+          )}
+          {sub.estimated_offer_high != null && sub.offered_price == null && (
+            <Row label="Estimated" value={fmtMoney(sub.estimated_offer_high)} compact />
+          )}
+          {sub.acv_value != null && (
+            <Row label="ACV" value={fmtMoney(sub.acv_value)} compact />
+          )}
+          {sub.offered_price == null && sub.estimated_offer_high == null && sub.acv_value == null && (
+            <span className="text-[12px] text-slate-400 italic">No offer yet.</span>
+          )}
         </div>
       </RailCard>
 
-      {sub.loan_balance != null && sub.loan_balance !== "" && (
-        <RailCard title="Loan">
-          <div className="text-[13px] space-y-1">
-            <Row label="Lender" value={sub.loan_company || "—"} compact />
-            <Row label="Balance" value={fmtMoney(Number(sub.loan_balance))} compact />
-          </div>
-        </RailCard>
-      )}
+      {/* Internal Notes — wires to submission_notes table */}
+      <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+        <div className="flex items-center justify-between px-3.5 py-2 border-b border-slate-100 dark:border-slate-800">
+          <h3 className="text-[10.5px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+            Internal Notes
+            {notes.length > 0 && (
+              <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-slate-200 text-slate-700 text-[10px] font-bold">
+                {notes.length}
+              </span>
+            )}
+          </h3>
+          <button onClick={() => setNotesOpen(true)} className="text-[11px] font-bold text-[var(--customer-file-accent,#003b80)] hover:underline">
+            + Add
+          </button>
+        </div>
+        <div className="px-3.5 py-2.5">
+          {notes.length === 0 ? (
+            <span className="text-[12px] text-slate-400 italic">No notes yet.</span>
+          ) : (
+            <div className="space-y-2.5">
+              {notes.slice(0, 2).map((n) => (
+                <div key={n.id} className="border-b border-slate-100 last:border-0 pb-2 last:pb-0">
+                  <div className="flex items-baseline justify-between gap-2 mb-0.5">
+                    <span className="text-[11.5px] font-bold text-slate-900">{n.author || "Staff"}</span>
+                    <span className="text-[10.5px] text-slate-400">
+                      {(() => {
+                        const d = new Date(n.created_at);
+                        const diffMin = Math.floor((Date.now() - d.getTime()) / 60000);
+                        if (diffMin < 1) return "just now";
+                        if (diffMin < 60) return `${diffMin}m`;
+                        const h = Math.floor(diffMin / 60);
+                        if (h < 24) return `${h}h`;
+                        return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                      })()}
+                    </span>
+                  </div>
+                  <p className="text-[12px] text-slate-700 leading-snug line-clamp-2">{n.body}</p>
+                </div>
+              ))}
+              {notes.length > 2 && (
+                <button onClick={() => setNotesOpen(true)} className="text-[11px] font-semibold text-[var(--customer-file-accent,#003b80)] hover:underline pt-0.5">
+                  See all {notes.length} →
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
 
+      {/* More details — collapsed, with caption */}
       <button
         type="button"
         onClick={() => setMoreOpen((v) => !v)}
         className="w-full flex items-center justify-between px-3 py-2 text-[12px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800/60 rounded-md transition"
       >
-        <span>More</span>
-        {moreOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+        <span className="flex items-center gap-1.5">
+          {moreOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          More details
+        </span>
+        <span className="text-[10.5px] font-normal text-slate-400">Photos · DL · Inspection</span>
       </button>
 
       {moreOpen && (
@@ -744,6 +1233,15 @@ function ContextRail({
           </RailCard>
         </>
       )}
+
+      <SubmissionNotesModal
+        submissionId={sub.id}
+        customerName={sub.name}
+        open={notesOpen}
+        onClose={() => setNotesOpen(false)}
+        author={auditLabel || "Staff"}
+        onChange={() => void refreshNotes(sub.id)}
+      />
     </div>
   );
 }
