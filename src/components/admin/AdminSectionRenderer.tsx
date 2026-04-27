@@ -211,6 +211,7 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
         submissions={submissions}
         appointments={appointments}
         dealerLocations={props.dealerLocations}
+        userName={props.userName}
         onNavigate={setActiveSection}
         onView={props.handleView}
       />
