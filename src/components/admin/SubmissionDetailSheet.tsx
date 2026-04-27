@@ -3032,6 +3032,11 @@ const SubmissionDetailSheetV2 = ({
   );
 };
 
+import SubmissionDetailSheetClassic from "./SubmissionDetailSheetClassic";
+
 export default function SubmissionDetailSheet(props: SubmissionDetailSheetProps) {
-  return <SubmissionDetailSheetV2 {...props} />;
+  // Renders the new Classic port as the active customer file.
+  // V2 conversation-first variant ships in a follow-up PR; the legacy
+  // SubmissionDetailSheetV2 above is retained as fallback for one release.
+  return <SubmissionDetailSheetClassic {...props} />;
 }
