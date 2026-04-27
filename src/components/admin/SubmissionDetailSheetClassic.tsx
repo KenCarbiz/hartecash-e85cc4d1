@@ -754,10 +754,40 @@ export default function SubmissionDetailSheetClassic({
                       <EditableRow label="Name" value={sub.name} onSave={(v) => saveField("name", v)} placeholder="Unknown" />
                       <EditableRow label="Phone" value={sub.phone} onSave={(v) => saveField("phone", v)} type="tel" />
                       <EditableRow label="Email" value={sub.email} onSave={(v) => saveField("email", v)} type="email" />
-                      <EditableRow label="Street" value={sub.address_street} onSave={(v) => saveField("address_street", v)} />
-                      <EditableRow label="City" value={sub.address_city} onSave={(v) => saveField("address_city", v)} />
-                      <EditableRow label="State" value={sub.address_state} onSave={(v) => saveField("address_state", v)} />
-                      <EditableRow label="Zip" value={sub.zip} onSave={(v) => saveField("zip", v)} />
+                      <div className="flex items-start justify-between gap-3 py-1.5 border-b border-slate-100 last:border-0">
+                        <span className="text-[13px] text-slate-500 shrink-0 pt-1">Address</span>
+                        <div className="min-w-0 flex-1 max-w-[60%] space-y-0.5">
+                          <InlineEdit
+                            value={sub.address_street}
+                            onSave={(v) => saveField("address_street", v)}
+                            placeholder="Add street…"
+                          />
+                          <div className="flex items-baseline justify-end gap-1 -mt-0.5">
+                            <div className="flex-1 max-w-[55%]">
+                              <InlineEdit
+                                value={sub.address_city}
+                                onSave={(v) => saveField("address_city", v)}
+                                placeholder="City"
+                              />
+                            </div>
+                            <span className="text-[13px] text-slate-400">,</span>
+                            <div className="w-[44px]">
+                              <InlineEdit
+                                value={sub.address_state}
+                                onSave={(v) => saveField("address_state", v)}
+                                placeholder="ST"
+                              />
+                            </div>
+                            <div className="w-[68px]">
+                              <InlineEdit
+                                value={sub.zip}
+                                onSave={(v) => saveField("zip", v)}
+                                placeholder="ZIP"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </Card>
 
