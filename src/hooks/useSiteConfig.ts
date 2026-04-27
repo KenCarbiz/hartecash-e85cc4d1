@@ -128,6 +128,7 @@ export interface SiteConfig {
   // ── Admin Refresh: appearance + layout ──
   ui_scale: number;
   text_scale: number;
+  main_content_scale: number;
   top_bar_style: "solid" | "gradient" | "gradient-diagonal" | "gradient-3stop";
   top_bar_bg: string;
   top_bar_bg_2: string;
@@ -137,6 +138,8 @@ export interface SiteConfig {
   top_bar_shimmer_style: string;
   top_bar_shimmer_speed: number;
   file_layout: "classic" | "conversation";
+  customer_file_header_layout: "a" | "b" | "c";
+  customer_file_messaging: "tabs" | "unified";
   customer_file_accent: string;
   customer_file_accent_2: string;
 }
@@ -216,6 +219,7 @@ const DEFAULTS: SiteConfig = {
   // ── Admin Refresh: appearance + layout ──
   ui_scale: 100,
   text_scale: 100,
+  main_content_scale: 100,
   top_bar_style: "solid",
   top_bar_bg: "#00407f",
   top_bar_bg_2: "#005bb5",
@@ -225,6 +229,8 @@ const DEFAULTS: SiteConfig = {
   top_bar_shimmer_style: "sheen",
   top_bar_shimmer_speed: 3.2,
   file_layout: "classic",
+  customer_file_header_layout: "b",
+  customer_file_messaging: "tabs",
   customer_file_accent: "#003b80",
   customer_file_accent_2: "#005bb5",
 };
@@ -272,6 +278,25 @@ const LOCATION_OVERRIDE_KEYS: (keyof SiteConfig)[] = [
   "stats_reviews_count",
   "price_guarantee_days",
   "established_year",
+  // Customer-file / Tweaks branding (per location)
+  "file_layout",
+  "customer_file_header_layout",
+  "customer_file_accent",
+  "customer_file_accent_2",
+  "customer_file_messaging",
+  // Top-bar / shell branding (per location)
+  "top_bar_style",
+  "top_bar_bg",
+  "top_bar_bg_2",
+  "top_bar_text",
+  "top_bar_height",
+  "top_bar_shimmer",
+  "top_bar_shimmer_style",
+  "top_bar_shimmer_speed",
+  // UI / text / content scale (per location)
+  "ui_scale",
+  "text_scale",
+  "main_content_scale",
 ];
 
 async function fetchSiteConfig(

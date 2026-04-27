@@ -1,39 +1,69 @@
 -- Multi-location branding foundation
 --
--- Each tenant (`dealership_id`) can have one tenant-default `site_config` row
--- (with `location_id IS NULL`) plus zero-or-more per-location override rows
--- (one per `dealer_locations.id`). Resolution at read time: try the location
--- row first, fall back to the tenant default, fall back to the system
--- defaults baked into `useSiteConfig`.
+-- The per-location override pattern already exists: `useSiteConfig` reads the
+-- corporate row from `site_config`, then merges any non-null fields from the
+-- matching `dealership_locations` row. This migration extends that override
+-- surface with the customer-file and Tweaks-panel branding fields that were
+-- added after the initial multi-location work, so each location can carry its
+-- own customer-file layout / theme / top-bar look.
 --
--- Tenant types (already captured in the onboarding wizard) drive UI
--- affordances elsewhere (location selector visibility, "Apply to all"
--- button, etc.) but no schema change is required here — `tenants.architecture`
--- already holds the type.
+-- Tenant types (single_store / single_store_secondary / multi_location /
+-- dealer_group / enterprise) are already captured during onboarding via
+-- `tenants.architecture` — no schema change needed there. UI affordances
+-- (location selector visibility, "Apply to all" button, bulk-apply across
+-- rooftops) read that field at render time.
 
--- 1. Add the per-location override key.
-ALTER TABLE public.site_config
-  ADD COLUMN IF NOT EXISTS location_id text NULL;
+-- Customer-file branding overrides (per location)
+ALTER TABLE public.dealership_locations
+  ADD COLUMN IF NOT EXISTS file_layout TEXT NULL
+    CHECK (file_layout IS NULL OR file_layout IN ('classic', 'conversation'));
 
--- 2. Replace the unique-on-dealership constraint with a composite one that
---    treats NULL location_id as the tenant default. Postgres treats NULLs as
---    distinct in unique indexes by default, so we coalesce to a sentinel
---    string to enforce one tenant-default row per tenant.
-DO $$
-BEGIN
-  IF EXISTS (
-    SELECT 1 FROM pg_constraint
-    WHERE conname = 'site_config_dealership_id_key'
-      AND conrelid = 'public.site_config'::regclass
-  ) THEN
-    ALTER TABLE public.site_config DROP CONSTRAINT site_config_dealership_id_key;
-  END IF;
-END $$;
+ALTER TABLE public.dealership_locations
+  ADD COLUMN IF NOT EXISTS customer_file_header_layout TEXT NULL
+    CHECK (customer_file_header_layout IS NULL OR customer_file_header_layout IN ('a', 'b', 'c'));
 
-CREATE UNIQUE INDEX IF NOT EXISTS site_config_tenant_location_unique_idx
-  ON public.site_config (dealership_id, COALESCE(location_id, '__tenant__'));
+ALTER TABLE public.dealership_locations
+  ADD COLUMN IF NOT EXISTS customer_file_accent TEXT NULL;
 
--- 3. Helpful index for the fallback lookup pattern (location row first,
---    tenant default second).
-CREATE INDEX IF NOT EXISTS site_config_dealership_id_idx
-  ON public.site_config (dealership_id);
+ALTER TABLE public.dealership_locations
+  ADD COLUMN IF NOT EXISTS customer_file_accent_2 TEXT NULL;
+
+ALTER TABLE public.dealership_locations
+  ADD COLUMN IF NOT EXISTS customer_file_messaging TEXT NULL
+    CHECK (customer_file_messaging IS NULL OR customer_file_messaging IN ('tabs', 'unified'));
+
+-- Top-bar / shell branding overrides (per location)
+ALTER TABLE public.dealership_locations
+  ADD COLUMN IF NOT EXISTS top_bar_style TEXT NULL
+    CHECK (top_bar_style IS NULL OR top_bar_style IN ('solid', 'gradient', 'gradient-diagonal', 'gradient-3stop'));
+
+ALTER TABLE public.dealership_locations
+  ADD COLUMN IF NOT EXISTS top_bar_bg TEXT NULL;
+
+ALTER TABLE public.dealership_locations
+  ADD COLUMN IF NOT EXISTS top_bar_bg_2 TEXT NULL;
+
+ALTER TABLE public.dealership_locations
+  ADD COLUMN IF NOT EXISTS top_bar_text TEXT NULL;
+
+ALTER TABLE public.dealership_locations
+  ADD COLUMN IF NOT EXISTS top_bar_height INTEGER NULL;
+
+ALTER TABLE public.dealership_locations
+  ADD COLUMN IF NOT EXISTS top_bar_shimmer BOOLEAN NULL;
+
+ALTER TABLE public.dealership_locations
+  ADD COLUMN IF NOT EXISTS top_bar_shimmer_style TEXT NULL;
+
+ALTER TABLE public.dealership_locations
+  ADD COLUMN IF NOT EXISTS top_bar_shimmer_speed NUMERIC NULL;
+
+-- UI / text / content scale overrides (per location)
+ALTER TABLE public.dealership_locations
+  ADD COLUMN IF NOT EXISTS ui_scale INTEGER NULL;
+
+ALTER TABLE public.dealership_locations
+  ADD COLUMN IF NOT EXISTS text_scale INTEGER NULL;
+
+ALTER TABLE public.dealership_locations
+  ADD COLUMN IF NOT EXISTS main_content_scale INTEGER NULL;
