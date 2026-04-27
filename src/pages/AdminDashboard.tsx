@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminHeader from "@/components/admin/AdminHeader";
 import AdminBreadcrumbNav from "@/components/admin/AdminBreadcrumb";
+import TweaksFloatingPanel from "@/components/admin/TweaksFloatingPanel";
 import AdminCommandPalette from "@/components/admin/AdminCommandPalette";
 import AdminSectionRenderer from "@/components/admin/AdminSectionRenderer";
 import RequestAccessDialog from "@/components/admin/RequestAccessDialog";
@@ -249,6 +250,13 @@ const AdminDashboard = () => {
             />
           )}
         </Suspense>
+        {/* Tweaks floating panel — bottom-right black button, only on All
+            Leads. Lets admin/GSM tune file_layout, header layout, and
+            preset theme without leaving the page; changes route to the
+            location row when a location is selected, tenant default
+            otherwise. */}
+        {baseSectionId === "submissions" && <TweaksFloatingPanel userRole={db.userRole} />}
+
         {/* Delete submission confirmation */}
         <AlertDialog open={!!db.pendingDeleteId} onOpenChange={(open) => { if (!open) db.cancelDelete(); }}>
           <AlertDialogContent>
