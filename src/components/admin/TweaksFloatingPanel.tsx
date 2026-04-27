@@ -14,6 +14,7 @@
 
 import { useState } from "react";
 import { Settings2, X } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useTenant } from "@/contexts/TenantContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,6 +50,7 @@ const TweaksFloatingPanel = ({ userRole }: TweaksFloatingPanelProps) => {
   const { config } = useSiteConfig();
   const { tenant } = useTenant();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -86,12 +88,10 @@ const TweaksFloatingPanel = ({ userRole }: TweaksFloatingPanelProps) => {
       toast({ title: "Save failed", description: error.message, variant: "destructive" });
       return;
     }
-    // Trigger a re-fetch — useSiteConfig caches by tenantId/locationId, so we
-    // need React Query to invalidate. The hook's queryKey will pick up on
-    // next mount; for live preview we rely on the user re-opening the panel
-    // OR pressing the toggle again. A future iteration can wire the
-    // queryClient invalidation here.
-    toast({ title: editingLocation ? "Location updated" : "Tenant defaults updated" });
+    // Invalidate the site_config query so useSiteConfig refetches and the
+    // rest of the admin shell + open customer file slide-out re-render
+    // with the new values immediately.
+    await queryClient.invalidateQueries({ queryKey: ["site_config"] });
   };
 
   const applyPreset = (p: typeof PRESET_THEMES[number]) => {
