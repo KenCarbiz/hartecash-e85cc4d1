@@ -101,6 +101,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
     ui_scale: Number((config as any).ui_scale ?? 100),
     text_scale: Number((config as any).text_scale ?? 100),
     file_layout: (config as any).file_layout || "classic",
+    customer_file_header_layout: ((config as any).customer_file_header_layout || "b") as "a" | "b" | "c",
     customer_file_accent: (config as any).customer_file_accent || "#003b80",
     customer_file_accent_2: (config as any).customer_file_accent_2 || "#005bb5",
   });
@@ -134,7 +135,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
     (async () => {
       const { data } = await (supabase as any)
         .from("dealership_locations")
-        .select("top_bar_style, top_bar_bg, top_bar_bg_2, top_bar_text, top_bar_height, top_bar_shimmer, top_bar_shimmer_style, top_bar_shimmer_speed, ui_scale, text_scale, file_layout, customer_file_accent, customer_file_accent_2")
+        .select("top_bar_style, top_bar_bg, top_bar_bg_2, top_bar_text, top_bar_height, top_bar_shimmer, top_bar_shimmer_style, top_bar_shimmer_speed, ui_scale, text_scale, file_layout, customer_file_header_layout, customer_file_accent, customer_file_accent_2")
         .eq("id", selectedLocationId)
         .maybeSingle();
       if (cancelled) return;
@@ -153,6 +154,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
         ui_scale: data.ui_scale ?? corp.ui_scale,
         text_scale: data.text_scale ?? corp.text_scale,
         file_layout: data.file_layout ?? corp.file_layout,
+        customer_file_header_layout: (data.customer_file_header_layout ?? corp.customer_file_header_layout) as "a" | "b" | "c",
         customer_file_accent: data.customer_file_accent ?? corp.customer_file_accent,
         customer_file_accent_2: data.customer_file_accent_2 ?? corp.customer_file_accent_2,
       });
@@ -673,6 +675,162 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
                   <div className="text-[11px] text-muted-foreground mt-0.5">{o.sub}</div>
                 </button>
               ))}
+            </div>
+          </Card>
+
+          {/* Header Layout Options visualizer + picker (Classic only) */}
+          <Card className="p-5">
+            <div className="flex items-baseline justify-between mb-1">
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
+                Customer file header layout
+              </div>
+              <span className="text-[10px] text-muted-foreground/70">
+                Classic only — Conversation-first uses its own header
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">
+              Three arrangements of the blue identity bar. Same data, same width, different hierarchy.
+            </p>
+
+            <div className="space-y-3">
+              {[
+                {
+                  k: "a" as const,
+                  label: "Vehicle-first",
+                  sub: "Big YEAR · MAKE · MODEL dominates. Customer name isn't in the header at all.",
+                  best: "Appraisal-only workflow",
+                },
+                {
+                  k: "b" as const,
+                  label: "Customer-first, vehicle-right",
+                  sub: "Three-column identity: person on the left, vehicle in the middle, money on the right. Mirrors how every CRM anchors a record.",
+                  best: "Mixed CRM + appraisal (recommended)",
+                  recommended: true,
+                },
+                {
+                  k: "c" as const,
+                  label: "Stacked, full hierarchy",
+                  sub: "Person on top, divider, vehicle below. Cleanest reading order; costs ~60px more vertical space.",
+                  best: "Long-form documents, print",
+                },
+              ].map((opt) => {
+                const active = draft.customer_file_header_layout === opt.k;
+                return (
+                  <button
+                    key={opt.k}
+                    onClick={() => set("customer_file_header_layout", opt.k)}
+                    className={`w-full text-left border rounded-md px-4 py-3 transition-colors ${
+                      active ? "bg-muted/60 border-foreground" : "border-border hover:bg-muted/50"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-semibold text-sm">{opt.label}</span>
+                        {opt.recommended && (
+                          <span className="text-[10px] uppercase tracking-wider font-bold text-emerald-700 bg-emerald-500/10 border border-emerald-500/20 rounded px-1.5 py-0.5">
+                            Recommended
+                          </span>
+                        )}
+                      </div>
+                      {active && (
+                        <span className="text-[10px] uppercase tracking-wider font-bold text-foreground bg-foreground/10 rounded px-2 py-0.5">
+                          Active
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[12px] text-muted-foreground mt-1 leading-snug">{opt.sub}</p>
+                    <div className="text-[11px] text-muted-foreground/80 mt-1">
+                      Best when: <span className="text-foreground/80">{opt.best}</span>
+                    </div>
+
+                    {/* Mini visual mock */}
+                    <div className="mt-3 rounded-md p-3 text-white text-[10px]" style={{
+                      background: `linear-gradient(to right, ${draft.top_bar_bg}, ${draft.top_bar_bg_2 || draft.top_bar_bg})`,
+                    }}>
+                      {opt.k === "a" && (
+                        <div className="flex items-end justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="text-[8px] uppercase tracking-wider text-white/55 font-bold">2021 · 42,000 mi</div>
+                            <div className="text-[16px] font-bold leading-none mt-0.5 truncate">Ford F-150</div>
+                            <div className="text-[9px] text-white/80 mt-1">1FTFW1E50MFA12345 · ABC-123 · Oxford White</div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <div className="text-[8px] uppercase tracking-wider text-white/55 font-bold">Offer Given</div>
+                            <div className="text-[18px] font-bold leading-none mt-0.5">$42,500</div>
+                          </div>
+                        </div>
+                      )}
+                      {opt.k === "b" && (
+                        <div className="grid grid-cols-12 gap-2 items-start">
+                          <div className="col-span-4 min-w-0">
+                            <div className="text-[8px] uppercase tracking-wider text-white/55 font-bold">Customer</div>
+                            <div className="text-[14px] font-bold leading-none mt-0.5 truncate">John Smith</div>
+                            <div className="text-[9px] text-white/80 mt-1">(555) 123-4567</div>
+                          </div>
+                          <div className="col-span-5 min-w-0">
+                            <div className="text-[8px] uppercase tracking-wider text-white/55 font-bold">Vehicle</div>
+                            <div className="text-[14px] font-bold leading-none mt-0.5 truncate">2021 Ford F-150 XLT</div>
+                            <div className="text-[9px] text-white/80 mt-1">42,000 mi · Oxford White</div>
+                          </div>
+                          <div className="col-span-3 text-right">
+                            <div className="text-[8px] uppercase tracking-wider text-white/55 font-bold">Offer Given</div>
+                            <div className="text-[15px] font-bold leading-none mt-0.5">$42,500</div>
+                          </div>
+                        </div>
+                      )}
+                      {opt.k === "c" && (
+                        <>
+                          <div className="flex items-end justify-between gap-2">
+                            <div className="min-w-0">
+                              <div className="text-[8px] uppercase tracking-wider text-white/55 font-bold">Customer</div>
+                              <div className="text-[14px] font-bold leading-none mt-0.5 truncate">John Smith</div>
+                              <div className="text-[9px] text-white/80 mt-1">(555) 123-4567 · john.smith@email.com</div>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <div className="text-[8px] uppercase tracking-wider text-white/55 font-bold">Offer</div>
+                              <div className="text-[15px] font-bold leading-none mt-0.5">$42,500</div>
+                            </div>
+                          </div>
+                          <div className="h-px bg-white/15 my-2" />
+                          <div>
+                            <div className="text-[8px] uppercase tracking-wider text-white/55 font-bold">Vehicle</div>
+                            <div className="text-[12px] font-bold leading-none mt-0.5">2021 Ford F-150 XLT</div>
+                            <div className="text-[9px] text-white/80 mt-1">42,000 mi · ABC-123 · Oxford White</div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Quick compare table */}
+            <div className="mt-5 rounded-md border border-border overflow-hidden">
+              <div className="px-4 py-2 bg-muted/40 text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
+                Quick compare
+              </div>
+              <div className="grid grid-cols-4 text-[11.5px] divide-x divide-border">
+                <div className="px-3 py-2 font-semibold text-muted-foreground">Trait</div>
+                <div className={`px-3 py-2 font-semibold ${draft.customer_file_header_layout === "a" ? "bg-muted" : ""}`}>A — Vehicle-first</div>
+                <div className={`px-3 py-2 font-semibold ${draft.customer_file_header_layout === "b" ? "bg-muted" : ""}`}>B — Customer-first</div>
+                <div className={`px-3 py-2 font-semibold ${draft.customer_file_header_layout === "c" ? "bg-muted" : ""}`}>C — Stacked</div>
+
+                {[
+                  { trait: "Customer name", a: "Not visible", b: "Left column, 30px serif", c: "Top row, 32px serif" },
+                  { trait: "Phone number", a: "Not visible", b: "Always visible + click-to-call", c: "Visible inline" },
+                  { trait: "Vehicle prominence", a: "Hero (34px)", b: "Co-hero (30px)", c: "Secondary (24px)" },
+                  { trait: "Header height", a: "~170 px", b: "~180 px", c: "~230 px" },
+                  { trait: "Best when", a: "Appraisal-only workflow", b: "Mixed CRM + appraisal (you)", c: "Long-form documents, print" },
+                ].map((row) => (
+                  <>
+                    <div className="px-3 py-2 border-t border-border text-muted-foreground">{row.trait}</div>
+                    <div className={`px-3 py-2 border-t border-border ${draft.customer_file_header_layout === "a" ? "bg-muted" : ""}`}>{row.a}</div>
+                    <div className={`px-3 py-2 border-t border-border ${draft.customer_file_header_layout === "b" ? "bg-muted" : ""}`}>{row.b}</div>
+                    <div className={`px-3 py-2 border-t border-border ${draft.customer_file_header_layout === "c" ? "bg-muted" : ""}`}>{row.c}</div>
+                  </>
+                ))}
+              </div>
             </div>
           </Card>
         </div>
