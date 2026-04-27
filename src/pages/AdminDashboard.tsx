@@ -202,8 +202,11 @@ const AdminDashboard = () => {
             on close breaks the slide-out animation and can race the first
             open. The site_config.file_layout flag chooses Classic vs
             Conversation-first per tenant; both consume the identical
-            prop shape. */}
-        <CustomerFileChunkBoundary key={db.selected?.id || "no-lead"}>
+            prop shape. The boundary stays mounted across selections so
+            the Radix slide-in-from-right animation fires; remounting it
+            via a `key` prop made the panel mount with data-state=open
+            and skip the slide-in transform (showing only the overlay). */}
+        <CustomerFileChunkBoundary>
         <Suspense
           fallback={
             db.selected ? (
