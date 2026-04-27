@@ -1,10 +1,16 @@
-import { useState } from "react";
-import { Crown, Lock } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Crown, Lock, Check, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useTenant } from "@/contexts/TenantContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -62,15 +68,28 @@ const lightenHex = (hex: string, amount: number): string => {
   return `#${toHex(lr)}${toHex(lg)}${toHex(lb)}`;
 };
 
+interface LocationRow {
+  id: string;
+  name: string | null;
+  city: string | null;
+  state: string | null;
+}
+
 const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsProps) => {
   const { config } = useSiteConfig();
+  const { tenant } = useTenant();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [tab, setTab] = useState<"theme" | "layout" | "finetune">("theme");
   const [saving, setSaving] = useState(false);
 
-  // Local draft mirrors site_config so live preview updates without round-trip
-  const [draft, setDraft] = useState({
+  // Multi-location: null = tenant default (write to site_config); a string id =
+  // per-location override (write to dealership_locations row).
+  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
+  const [locations, setLocations] = useState<LocationRow[]>([]);
+  const [applyToAllOpen, setApplyToAllOpen] = useState(false);
+
+  const fromConfigDefaults = () => ({
     top_bar_style: (config as any).top_bar_style || "solid",
     top_bar_bg: (config as any).top_bar_bg || "#00407f",
     top_bar_bg_2: (config as any).top_bar_bg_2 || "#005bb5",
@@ -85,6 +104,64 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
     customer_file_accent: (config as any).customer_file_accent || "#003b80",
     customer_file_accent_2: (config as any).customer_file_accent_2 || "#005bb5",
   });
+
+  // Local draft mirrors site_config so live preview updates without round-trip
+  const [draft, setDraft] = useState(fromConfigDefaults());
+
+  // Load locations for the tenant once, so the selector can list them.
+  useEffect(() => {
+    if (!tenant?.dealership_id) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await (supabase as any)
+        .from("dealership_locations")
+        .select("id, name, city, state")
+        .eq("dealership_id", tenant.dealership_id)
+        .order("name", { ascending: true });
+      if (!cancelled && data) setLocations(data as LocationRow[]);
+    })();
+    return () => { cancelled = true; };
+  }, [tenant?.dealership_id]);
+
+  // When the selection changes, reload the draft from the appropriate row.
+  useEffect(() => {
+    if (selectedLocationId == null) {
+      // Tenant default — populate from corporate config
+      setDraft(fromConfigDefaults());
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data } = await (supabase as any)
+        .from("dealership_locations")
+        .select("top_bar_style, top_bar_bg, top_bar_bg_2, top_bar_text, top_bar_height, top_bar_shimmer, top_bar_shimmer_style, top_bar_shimmer_speed, ui_scale, text_scale, file_layout, customer_file_accent, customer_file_accent_2")
+        .eq("id", selectedLocationId)
+        .maybeSingle();
+      if (cancelled) return;
+      const corp = fromConfigDefaults();
+      if (!data) { setDraft(corp); return; }
+      // Per-location: a NULL field means "inherit from corporate", so fall back.
+      setDraft({
+        top_bar_style: data.top_bar_style ?? corp.top_bar_style,
+        top_bar_bg: data.top_bar_bg ?? corp.top_bar_bg,
+        top_bar_bg_2: data.top_bar_bg_2 ?? corp.top_bar_bg_2,
+        top_bar_text: data.top_bar_text ?? corp.top_bar_text,
+        top_bar_height: data.top_bar_height ?? corp.top_bar_height,
+        top_bar_shimmer: data.top_bar_shimmer ?? corp.top_bar_shimmer,
+        top_bar_shimmer_style: data.top_bar_shimmer_style ?? corp.top_bar_shimmer_style,
+        top_bar_shimmer_speed: data.top_bar_shimmer_speed ?? corp.top_bar_shimmer_speed,
+        ui_scale: data.ui_scale ?? corp.ui_scale,
+        text_scale: data.text_scale ?? corp.text_scale,
+        file_layout: data.file_layout ?? corp.file_layout,
+        customer_file_accent: data.customer_file_accent ?? corp.customer_file_accent,
+        customer_file_accent_2: data.customer_file_accent_2 ?? corp.customer_file_accent_2,
+      });
+    })();
+    return () => { cancelled = true; };
+  // We intentionally exclude `config` so changing tenant default doesn't
+  // re-stomp the per-location draft mid-edit.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedLocationId]);
 
   const isAdmin = canManageAccess || userRole === "admin" || userRole === "gsm_gm";
 
@@ -129,14 +206,29 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
   const handleSave = async () => {
     setSaving(true);
     try {
-      const { error } = await (supabase as any)
-        .from("site_config")
-        .update(draft)
-        .eq("dealership_id", (config as any).dealership_id || "default");
+      let error;
+      if (selectedLocationId == null) {
+        // Tenant default → site_config
+        const result = await (supabase as any)
+          .from("site_config")
+          .update(draft)
+          .eq("dealership_id", (config as any).dealership_id || tenant.dealership_id || "default");
+        error = result.error;
+      } else {
+        // Per-location override → dealership_locations
+        const result = await (supabase as any)
+          .from("dealership_locations")
+          .update(draft)
+          .eq("id", selectedLocationId);
+        error = result.error;
+      }
 
       if (error) throw error;
 
-      toast({ title: "Appearance saved", description: "Changes applied to this tenant." });
+      const where = selectedLocationId == null
+        ? "tenant default"
+        : (locations.find((l) => l.id === selectedLocationId)?.name || "this location");
+      toast({ title: "Appearance saved", description: `Changes applied to ${where}.` });
       await queryClient.invalidateQueries({ queryKey: ["site_config"] });
     } catch (err: any) {
       toast({
@@ -146,6 +238,37 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Push the current draft to every location for this tenant. Useful for
+  // multi-rooftop dealers who want one push to update all stores at once.
+  const handleApplyToAll = async () => {
+    if (locations.length === 0) {
+      toast({ title: "No other locations", description: "There are no additional locations to apply to." });
+      return;
+    }
+    setSaving(true);
+    try {
+      const { error } = await (supabase as any)
+        .from("dealership_locations")
+        .update(draft)
+        .eq("dealership_id", tenant.dealership_id);
+      if (error) throw error;
+      toast({
+        title: `Applied to ${locations.length} ${locations.length === 1 ? "location" : "locations"}`,
+        description: "Every store under this tenant now uses these settings (unless they're inherited).",
+      });
+      await queryClient.invalidateQueries({ queryKey: ["site_config"] });
+    } catch (err: any) {
+      toast({
+        title: "Bulk apply failed",
+        description: err.message || "Could not push to all locations.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+      setApplyToAllOpen(false);
     }
   };
 
@@ -177,6 +300,69 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
           </span>
         </div>
       </div>
+
+      {/* Multi-location selector + Apply to all */}
+      {locations.length > 0 && (
+        <div className="mb-4 rounded-lg border border-border bg-muted/40 px-4 py-3 flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2 min-w-0">
+            <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Editing
+            </span>
+          </div>
+          <Select
+            value={selectedLocationId ?? "__tenant__"}
+            onValueChange={(v) => setSelectedLocationId(v === "__tenant__" ? null : v)}
+          >
+            <SelectTrigger className="w-[300px] h-9 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__tenant__">
+                <span className="font-semibold">Tenant default</span>
+                <span className="text-xs text-muted-foreground ml-1">— covers all locations that don&apos;t have their own override</span>
+              </SelectItem>
+              {locations.map((loc) => (
+                <SelectItem key={loc.id} value={loc.id}>
+                  {loc.name || "Unnamed location"}
+                  {loc.city ? ` — ${loc.city}${loc.state ? `, ${loc.state}` : ""}` : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <span className="text-[11px] text-muted-foreground italic">
+            {selectedLocationId == null
+              ? "Changes apply to all locations that don't override."
+              : "Changes apply only to this location."}
+          </span>
+          <div className="ml-auto flex items-center gap-2">
+            <AlertDialog open={applyToAllOpen} onOpenChange={setApplyToAllOpen}>
+              <AlertDialogTrigger asChild>
+                <Button size="sm" variant="outline" disabled={saving || locations.length === 0}>
+                  <Check className="w-3.5 h-3.5 mr-1.5" />
+                  Apply to all locations
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Apply to all {locations.length} locations?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Pushes the current settings to every location row under this tenant.
+                    Each store will adopt these values as overrides — overwriting any
+                    previously customized per-location settings. This cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={saving}>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleApplyToAll} disabled={saving}>
+                    {saving ? "Applying…" : "Apply to all"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </div>
+      )}
 
       <div className="flex gap-1 border-b border-border mb-4">
         {tabs.map((t) => (
