@@ -125,8 +125,8 @@ export default function CustomerFileV2(props: CustomerFileV2Props) {
                 <main className="flex-1 min-w-0 overflow-y-auto">
                   {tab === "conversation" && <ConversationTab sub={sub} activityLog={activityLog} />}
                   {tab === "activity" && <ActivityTab activityLog={activityLog} />}
-                  {tab === "deal" && <DealTab sub={sub} />}
-                  {tab === "vehicle" && <VehicleTab sub={sub} />}
+                  {tab === "deal" && <DealTab sub={sub} auditLabel={props.auditLabel} onUpdate={props.onUpdate} />}
+                  {tab === "vehicle" && <VehicleTab sub={sub} photos={photos} docs={docs} onUpdate={props.onUpdate} />}
                 </main>
                 <aside className="hidden lg:block w-[340px] shrink-0 border-l border-slate-200 dark:border-slate-800 bg-slate-100/50 dark:bg-slate-900/50 overflow-y-auto">
                   <ContextRail
@@ -602,30 +602,214 @@ function ActivityTab({
   );
 }
 
-/* ─────────────── TAB: DEAL ─────────────── */
-function DealTab({ sub }: { sub: Submission }) {
-  const loanBalanceNum =
-    sub.loan_balance != null && sub.loan_balance !== ""
-      ? Number(sub.loan_balance)
-      : null;
+/* ─────────────── INLINE EDIT PRIMITIVE (used by Deal + Vehicle tabs) ─────────────── */
+function V2Inline({
+  value, onSave, type = "text", placeholder = "—", mono = false,
+}: {
+  value: string | null;
+  onSave: (v: string | null) => void;
+  type?: string;
+  placeholder?: string;
+  mono?: boolean;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value ?? "");
+  useEffect(() => { setDraft(value ?? ""); }, [value]);
+
+  const commit = () => {
+    setEditing(false);
+    const v = draft.trim() === "" ? null : draft.trim();
+    if (v !== value) onSave(v);
+  };
+
+  if (editing) {
+    return (
+      <input
+        type={type}
+        autoFocus
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") commit();
+          if (e.key === "Escape") { setDraft(value ?? ""); setEditing(false); }
+        }}
+        className={`w-full text-right text-[13px] ${mono ? "font-mono" : ""} px-2 py-1 -mx-2 -my-1 rounded-md border border-blue-400 bg-white outline-none focus:ring-2 focus:ring-blue-100`}
+      />
+    );
+  }
+
+  const empty = value == null || value === "";
+  return (
+    <button
+      onClick={() => { setDraft(value ?? ""); setEditing(true); }}
+      className={`w-full text-right text-[13px] ${mono ? "font-mono" : ""} px-2 py-1 -mx-2 -my-1 rounded-md hover:bg-blue-50 hover:ring-1 hover:ring-blue-200 transition-colors cursor-text`}
+      title="Click to edit"
+    >
+      <span className={empty ? "text-slate-400 italic" : "text-slate-900 dark:text-slate-100 font-semibold"}>
+        {empty ? placeholder : value}
+      </span>
+    </button>
+  );
+}
+
+async function saveSubmissionField<K extends keyof Submission>(id: string, field: K, value: Submission[K]) {
+  return (supabase as never as { from: (t: string) => { update: (v: unknown) => { eq: (k: string, v: string) => Promise<unknown> } } })
+    .from("submissions").update({ [field]: value }).eq("id", id);
+}
+
+function intentFromSource(lead_source: string | null | undefined): string {
+  switch (lead_source) {
+    case "trade":
+    case "in_store_trade": return "trade";
+    case "service": return "unsure";
+    case "inventory":
+    default: return "sell";
+  }
+}
+
+function leadSourceLabel(lead_source: string | null | undefined): string {
+  switch (lead_source) {
+    case "trade": return "Trade-in form";
+    case "in_store_trade": return "In-store trade";
+    case "inventory": return "Off-street purchase";
+    case "service": return "Service drive";
+    default: return lead_source || "—";
+  }
+}
+
+/* ─────────────── TAB: DEAL (matches design screenshot 3) ─────────────── */
+function DealTab({
+  sub, auditLabel, onUpdate,
+}: {
+  sub: Submission;
+  auditLabel: string;
+  onUpdate: (updated: Submission) => void;
+}) {
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [notes, setNotes] = useState<SubmissionNote[]>([]);
+
+  useEffect(() => {
+    if (!sub.id) return;
+    let cancelled = false;
+    fetchSubmissionNotes(sub.id).then((rows) => { if (!cancelled) setNotes(rows); }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [sub.id, notesOpen]);
+
+  function save<K extends keyof Submission>(field: K, value: Submission[K]) {
+    const next = { ...sub, [field]: value };
+    onUpdate(next);
+    void saveSubmissionField(sub.id, field, value);
+  }
+
   return (
     <div className="p-6 space-y-3">
-      <Card title="Offer">
-        <Row label="Estimated High" value={fmtMoney(sub.estimated_offer_high)} />
-        <Row label="Offered Price" value={fmtMoney(sub.offered_price)} highlight />
-        <Row label="ACV" value={fmtMoney(sub.acv_value)} />
-      </Card>
-      <Card title="Status">
-        <Row label="Status" value={sub.progress_status?.replace(/_/g, " ") || "—"} />
-        <Row label="Created" value={sub.created_at ? fmtTime(sub.created_at) : "—"} />
-      </Card>
-      {loanBalanceNum != null && (
-        <Card title="Loan">
-          <Row label="Lender" value={sub.loan_company || "—"} />
-          <Row label="Balance" value={fmtMoney(loanBalanceNum)} />
-          <Row label="Monthly Payment" value={sub.loan_payment || "—"} />
-        </Card>
-      )}
+      <DealCard
+        title="Customer"
+        right={<span className="text-[10.5px] text-slate-400 italic">Click any field to edit</span>}
+      >
+        <DealRow label="Full Name"><V2Inline value={sub.name} onSave={(v) => save("name", v)} placeholder="Add name…" /></DealRow>
+        <DealRow label="Phone"><V2Inline value={sub.phone} onSave={(v) => save("phone", v)} type="tel" placeholder="Add phone…" /></DealRow>
+        <DealRow label="Email"><V2Inline value={sub.email} onSave={(v) => save("email", v)} type="email" placeholder="Add email…" /></DealRow>
+        <DealRow label="Address"><V2Inline value={sub.address_street} onSave={(v) => save("address_street", v)} placeholder="Add street…" /></DealRow>
+        <DealRow label="City / State / Zip">
+          <span className="flex items-center gap-1 justify-end">
+            <V2Inline value={sub.address_city} onSave={(v) => save("address_city", v)} placeholder="City" />
+            <V2Inline value={sub.address_state} onSave={(v) => save("address_state", v)} placeholder="ST" />
+            <V2Inline value={sub.zip} onSave={(v) => save("zip", v)} placeholder="ZIP" />
+          </span>
+        </DealRow>
+      </DealCard>
+
+      <DealCard
+        title="Vehicle"
+        right={<span className="text-[10.5px] text-slate-400 italic">Click any field to edit</span>}
+      >
+        <DealRow label="Year"><V2Inline value={sub.vehicle_year} onSave={(v) => save("vehicle_year", v)} placeholder="—" /></DealRow>
+        <DealRow label="Make"><V2Inline value={sub.vehicle_make} onSave={(v) => save("vehicle_make", v)} placeholder="—" /></DealRow>
+        <DealRow label="Model"><V2Inline value={sub.vehicle_model} onSave={(v) => save("vehicle_model", v)} placeholder="—" /></DealRow>
+        <DealRow label="Trim"><V2Inline value={sub.vehicle_trim} onSave={(v) => save("vehicle_trim", v)} placeholder="Add trim…" /></DealRow>
+        <DealRow label="Color"><V2Inline value={sub.exterior_color} onSave={(v) => save("exterior_color", v)} placeholder="—" /></DealRow>
+        <DealRow label="VIN"><V2Inline value={sub.vin} onSave={(v) => save("vin", v)} mono placeholder="—" /></DealRow>
+        <DealRow label="Plate"><V2Inline value={sub.plate} onSave={(v) => save("plate", v)} mono placeholder="—" /></DealRow>
+        <DealRow label="Mileage"><V2Inline value={sub.mileage} onSave={(v) => save("mileage", v)} placeholder="—" /></DealRow>
+      </DealCard>
+
+      <DealCard title="Intent & Deal">
+        <DealRow label="Intent">
+          <span className="text-[13px] font-semibold text-slate-900 dark:text-slate-100">{intentFromSource(sub.lead_source)}</span>
+        </DealRow>
+        <DealRow label="Submitted">
+          <span className="text-[13px] font-semibold text-slate-900 dark:text-slate-100">{fmtTime(sub.created_at)}</span>
+        </DealRow>
+        <DealRow label="Source">
+          <span className="text-[13px] font-semibold text-slate-900 dark:text-slate-100">{leadSourceLabel(sub.lead_source)}</span>
+        </DealRow>
+        <DealRow label="Assigned To">
+          <span className="text-[13px] font-semibold text-slate-900 dark:text-slate-100">{sub.appraised_by || sub.status_updated_by || "—"}</span>
+        </DealRow>
+      </DealCard>
+
+      <DealCard
+        title="Notes"
+        right={
+          <button onClick={() => setNotesOpen(true)} className="text-[11px] font-bold text-[var(--customer-file-accent,#003b80)] hover:underline">
+            + Add note
+          </button>
+        }
+      >
+        {notes.length === 0 ? (
+          <div className="text-[12.5px] text-slate-400 italic py-1">No notes yet — click <span className="font-semibold not-italic text-slate-500">+ Add note</span> to leave the first one.</div>
+        ) : (
+          <div className="space-y-2.5">
+            {notes.slice(0, 4).map((n) => (
+              <div key={n.id} className="border-b border-slate-100 last:border-0 pb-2 last:pb-0">
+                <div className="flex items-baseline justify-between gap-2 mb-0.5">
+                  <span className="text-[12px] font-bold text-slate-900 dark:text-slate-100">{n.author || "Staff"}</span>
+                  <span className="text-[11px] text-slate-400">{fmtTime(n.created_at)}</span>
+                </div>
+                <p className="text-[12.5px] text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{n.body}</p>
+              </div>
+            ))}
+            {notes.length > 4 && (
+              <button onClick={() => setNotesOpen(true)} className="text-[11px] font-semibold text-[var(--customer-file-accent,#003b80)] hover:underline pt-0.5">
+                See all {notes.length} →
+              </button>
+            )}
+          </div>
+        )}
+      </DealCard>
+
+      <SubmissionNotesModal
+        submissionId={sub.id}
+        customerName={sub.name}
+        open={notesOpen}
+        onClose={() => setNotesOpen(false)}
+        author={auditLabel || "Staff"}
+        onChange={() => fetchSubmissionNotes(sub.id).then(setNotes).catch(() => {})}
+      />
+    </div>
+  );
+}
+
+/* Card + Row primitives used by Deal/Vehicle tabs */
+function DealCard({ title, right, children }: { title: string; right?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-slate-800">
+        <h3 className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-700 dark:text-slate-300">{title}</h3>
+        {right}
+      </div>
+      <div className="px-5 py-2 divide-y divide-slate-100 dark:divide-slate-800">{children}</div>
+    </div>
+  );
+}
+
+function DealRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-2">
+      <span className="text-[12.5px] text-slate-500 shrink-0">{label}</span>
+      <div className="min-w-0 flex-1 text-right">{children}</div>
     </div>
   );
 }
