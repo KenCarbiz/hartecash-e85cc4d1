@@ -14,18 +14,21 @@
  * This V2 reuses adminConstants types and the same Sheet primitive so
  * Radix owns the open/close animation just like V1.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   MessageSquare, Activity, FileText, Car, X, Printer, StickyNote,
   Phone, Mail, Flame, ChevronDown, ChevronUp, Send, CheckCircle2, AlertCircle, Clock,
 } from "lucide-react";
 import type { Submission, DealerLocation } from "@/lib/adminConstants";
+import { ALL_STATUS_OPTIONS, getStatusLabel } from "@/lib/adminConstants";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { supabase } from "@/integrations/supabase/client";
 import CustomerFileAccentStyle from "./CustomerFileAccentStyle";
+import SubmissionNotesModal, { fetchSubmissionNotes, type SubmissionNote } from "./SubmissionNotesModal";
 
 interface CustomerFileV2Props {
   selected: Submission | null;
@@ -132,6 +135,8 @@ export default function CustomerFileV2(props: CustomerFileV2Props) {
                     docs={docs}
                     apptTime={props.selectedApptTime}
                     apptLocation={props.selectedApptLocation}
+                    auditLabel={props.auditLabel}
+                    onUpdate={props.onUpdate}
                   />
                 </aside>
               </div>
@@ -649,67 +654,178 @@ function VehicleTab({ sub }: { sub: Submission }) {
   );
 }
 
-/* ─────────────── CONTEXT RAIL ─────────────── */
+/* ─────────────── CONTEXT RAIL (matches design screenshot 5) ─────────────── */
 function ContextRail({
   sub,
   photos,
   docs,
   apptTime,
   apptLocation,
+  auditLabel,
+  onUpdate,
 }: {
   sub: Submission;
   photos: { url: string; name: string }[];
   docs: { name: string; url: string; type: string }[];
   apptTime: string | null;
   apptLocation: string | null;
+  auditLabel: string;
+  onUpdate: (updated: Submission) => void;
 }) {
   const [moreOpen, setMoreOpen] = useState(false);
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [notes, setNotes] = useState<SubmissionNote[]>([]);
+
+  const refreshNotes = useCallback(async (subId: string) => {
+    try { setNotes(await fetchSubmissionNotes(subId)); } catch { /* non-fatal */ }
+  }, []);
+
+  useEffect(() => {
+    if (sub.id) void refreshNotes(sub.id);
+  }, [sub.id, refreshNotes]);
+
+  // Compute Next Action from progress_status — matches Classic helper.
+  const nextAction = (() => {
+    if (sub.progress_status === "customer_arrived") return { label: "Customer Is Here", sub: "Walk to the car and start the inspection.", cta: "Start Inspection ›", tone: "red" };
+    if (["new", "contacted"].includes(sub.progress_status)) return { label: "Make First Contact", sub: "Respond within SLA (2h).", cta: "Send First Text ›", tone: "amber" };
+    if (sub.progress_status === "offer_accepted") return { label: "Schedule Appointment", sub: "Customer accepted — book the inspection.", cta: "Schedule Appointment ›", tone: "blue" };
+    if (sub.progress_status === "inspection_scheduled") return { label: "Prepare for Inspection", sub: apptTime ? `Booked ${fmtTime(apptTime)}${apptLocation ? ` · ${apptLocation}` : ""}.` : "Inspection booked.", cta: "View Inspection ›", tone: "blue" };
+    if (sub.progress_status === "inspection_completed") return { label: "Build the Offer", sub: "Inspection done. Set ACV and offer.", cta: "Open Appraisal ›", tone: "amber" };
+    if (sub.progress_status === "purchase_complete") return { label: "Deal Closed", sub: "Great work. Consider a review request.", cta: "Send Review Request ›", tone: "green" };
+    return { label: "Follow Up", sub: "Stay in touch with the customer.", cta: "Send Follow-Up ›", tone: "blue" };
+  })();
+
+  const toneBg = {
+    blue:  "from-[#003b80] to-[#005bb5]",
+    amber: "from-amber-600 to-amber-500",
+    green: "from-emerald-700 to-emerald-600",
+    red:   "from-red-600 to-red-500",
+  }[nextAction.tone];
+
+  const updateStatus = async (newStatus: string) => {
+    const next = { ...sub, progress_status: newStatus };
+    onUpdate(next);
+    await (supabase as never as { from: (t: string) => { update: (v: unknown) => { eq: (k: string, v: string) => Promise<unknown> } } })
+      .from("submissions").update({ progress_status: newStatus }).eq("id", sub.id);
+  };
+
   return (
     <div className="p-4 space-y-3">
-      <RailCard title="Next Action">
-        <p className="text-[13px] text-slate-700 dark:text-slate-300">
-          {apptTime
-            ? `Appointment on ${fmtTime(apptTime)}${apptLocation ? ` at ${apptLocation}` : ""}.`
-            : "Schedule an appointment with this customer."}
-        </p>
-        <Button size="sm" className="w-full mt-3" style={{ background: "var(--customer-file-accent, #003b80)" }}>
-          {apptTime ? "Reschedule" : "Schedule Appointment"}
-        </Button>
-      </RailCard>
+      {/* Next Action — gradient header, white CTA */}
+      <section className={`rounded-xl border border-slate-200 bg-gradient-to-br ${toneBg} text-white shadow-sm overflow-hidden`}>
+        <div className="px-4 py-2.5 border-b border-white/15 flex items-center justify-between">
+          <span className="text-[10.5px] font-bold uppercase tracking-[0.1em] text-white/80">Next Action</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider bg-white/15 rounded px-2 py-0.5">For Sales</span>
+        </div>
+        <div className="p-4">
+          <div className="font-semibold text-[18px] leading-tight">{nextAction.label}</div>
+          <p className="text-[12px] text-white/80 mt-1 leading-snug">{nextAction.sub}</p>
+          <button className="w-full mt-3 h-10 rounded-lg bg-white text-slate-900 text-[13px] font-bold hover:bg-white/90 transition">
+            {nextAction.cta}
+          </button>
+        </div>
+      </section>
 
+      {/* Deal Status — "CURRENT" + Update select */}
       <RailCard title="Deal Status">
-        <div className="text-[13px] text-slate-700 dark:text-slate-300">
-          <div className="flex justify-between py-1">
-            <span className="text-slate-500">Status</span>
-            <span className="font-semibold">{sub.progress_status?.replace(/_/g, " ") || "—"}</span>
+        <div className="space-y-2">
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Current</div>
+            <div className="text-[14px] font-bold text-slate-900 dark:text-slate-100 mt-0.5 truncate">
+              {sub.progress_status || "new_submission"}
+            </div>
           </div>
+          <Select value={sub.progress_status} onValueChange={updateStatus}>
+            <SelectTrigger className="h-8 text-[12px] rounded-md w-full">
+              <SelectValue placeholder="Update Status" />
+            </SelectTrigger>
+            <SelectContent>
+              {ALL_STATUS_OPTIONS.map(s => (
+                <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </RailCard>
 
-      <RailCard title="Offer">
+      {/* Offer Breakdown */}
+      <RailCard title="Offer Breakdown">
         <div className="text-[13px] space-y-1">
-          <Row label="Estimated High" value={fmtMoney(sub.estimated_offer_high)} compact />
-          <Row label="Offered Price" value={fmtMoney(sub.offered_price)} compact highlight />
-          <Row label="ACV" value={fmtMoney(sub.acv_value)} compact />
+          {sub.offered_price != null && (
+            <Row label="Offer Given" value={fmtMoney(sub.offered_price)} compact highlight />
+          )}
+          {sub.estimated_offer_high != null && sub.offered_price == null && (
+            <Row label="Estimated" value={fmtMoney(sub.estimated_offer_high)} compact />
+          )}
+          {sub.acv_value != null && (
+            <Row label="ACV" value={fmtMoney(sub.acv_value)} compact />
+          )}
+          {sub.offered_price == null && sub.estimated_offer_high == null && sub.acv_value == null && (
+            <span className="text-[12px] text-slate-400 italic">No offer yet.</span>
+          )}
         </div>
       </RailCard>
 
-      {sub.loan_balance != null && sub.loan_balance !== "" && (
-        <RailCard title="Loan">
-          <div className="text-[13px] space-y-1">
-            <Row label="Lender" value={sub.loan_company || "—"} compact />
-            <Row label="Balance" value={fmtMoney(Number(sub.loan_balance))} compact />
-          </div>
-        </RailCard>
-      )}
+      {/* Internal Notes — wires to submission_notes table */}
+      <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+        <div className="flex items-center justify-between px-3.5 py-2 border-b border-slate-100 dark:border-slate-800">
+          <h3 className="text-[10.5px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+            Internal Notes
+            {notes.length > 0 && (
+              <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-slate-200 text-slate-700 text-[10px] font-bold">
+                {notes.length}
+              </span>
+            )}
+          </h3>
+          <button onClick={() => setNotesOpen(true)} className="text-[11px] font-bold text-[var(--customer-file-accent,#003b80)] hover:underline">
+            + Add
+          </button>
+        </div>
+        <div className="px-3.5 py-2.5">
+          {notes.length === 0 ? (
+            <span className="text-[12px] text-slate-400 italic">No notes yet.</span>
+          ) : (
+            <div className="space-y-2.5">
+              {notes.slice(0, 2).map((n) => (
+                <div key={n.id} className="border-b border-slate-100 last:border-0 pb-2 last:pb-0">
+                  <div className="flex items-baseline justify-between gap-2 mb-0.5">
+                    <span className="text-[11.5px] font-bold text-slate-900">{n.author || "Staff"}</span>
+                    <span className="text-[10.5px] text-slate-400">
+                      {(() => {
+                        const d = new Date(n.created_at);
+                        const diffMin = Math.floor((Date.now() - d.getTime()) / 60000);
+                        if (diffMin < 1) return "just now";
+                        if (diffMin < 60) return `${diffMin}m`;
+                        const h = Math.floor(diffMin / 60);
+                        if (h < 24) return `${h}h`;
+                        return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                      })()}
+                    </span>
+                  </div>
+                  <p className="text-[12px] text-slate-700 leading-snug line-clamp-2">{n.body}</p>
+                </div>
+              ))}
+              {notes.length > 2 && (
+                <button onClick={() => setNotesOpen(true)} className="text-[11px] font-semibold text-[var(--customer-file-accent,#003b80)] hover:underline pt-0.5">
+                  See all {notes.length} →
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
 
+      {/* More details — collapsed, with caption */}
       <button
         type="button"
         onClick={() => setMoreOpen((v) => !v)}
         className="w-full flex items-center justify-between px-3 py-2 text-[12px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800/60 rounded-md transition"
       >
-        <span>More</span>
-        {moreOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+        <span className="flex items-center gap-1.5">
+          {moreOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          More details
+        </span>
+        <span className="text-[10.5px] font-normal text-slate-400">Photos · DL · Inspection</span>
       </button>
 
       {moreOpen && (
@@ -744,6 +860,15 @@ function ContextRail({
           </RailCard>
         </>
       )}
+
+      <SubmissionNotesModal
+        submissionId={sub.id}
+        customerName={sub.name}
+        open={notesOpen}
+        onClose={() => setNotesOpen(false)}
+        author={auditLabel || "Staff"}
+        onChange={() => void refreshNotes(sub.id)}
+      />
     </div>
   );
 }
