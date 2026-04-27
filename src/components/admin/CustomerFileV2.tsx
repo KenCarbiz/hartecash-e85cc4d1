@@ -814,26 +814,167 @@ function DealRow({ label, children }: { label: string; children: React.ReactNode
   );
 }
 
-/* ─────────────── TAB: VEHICLE ─────────────── */
-function VehicleTab({ sub }: { sub: Submission }) {
+/* ─────────────── TAB: VEHICLE (matches design screenshot 4) ─────────────── */
+const DL_IMAGE_RE_V2 = /\.(jpg|jpeg|png|gif|webp)$/i;
+
+function VehicleTab({
+  sub, photos, docs, onUpdate,
+}: {
+  sub: Submission;
+  photos: { url: string; name: string }[];
+  docs: { type: string; name: string; url: string }[];
+  onUpdate: (updated: Submission) => void;
+}) {
+  const [dlOpen, setDlOpen] = useState(false);
+  const [dlSide, setDlSide] = useState<"front" | "back">("front");
+
+  function save<K extends keyof Submission>(field: K, value: Submission[K]) {
+    const next = { ...sub, [field]: value };
+    onUpdate(next);
+    void saveSubmissionField(sub.id, field, value);
+  }
+
+  const dlFront = docs.find(d => (d.type === "drivers_license" || d.type === "drivers_license_front") && DL_IMAGE_RE_V2.test(d.name)) || null;
+  const dlBack = docs.find(d => d.type === "drivers_license_back" && DL_IMAGE_RE_V2.test(d.name)) || null;
+  const dlCur = dlSide === "back" && dlBack ? dlBack : dlFront;
+
+  const inspectionDone = ["inspection_completed","appraisal_completed","manager_approval_inspection","price_agreed","deal_finalized","title_ownership_verified","check_request_submitted","purchase_complete"].includes(sub.progress_status);
+
   return (
     <div className="p-6 space-y-3">
-      <Card title="Identification">
-        <Row label="VIN" value={sub.vin || "—"} mono />
-        <Row label="Year" value={String(sub.vehicle_year || "—")} />
-        <Row label="Make" value={sub.vehicle_make || "—"} />
-        <Row label="Model" value={sub.vehicle_model || "—"} />
-        <Row label="Mileage" value={sub.mileage != null ? `${Number(sub.mileage).toLocaleString()} mi` : "—"} />
-      </Card>
-      <Card title="Appearance">
-        <Row label="Exterior Color" value={sub.exterior_color || "—"} />
-        <Row label="Interior Color" value={(sub as any).interior_color || "—"} />
-      </Card>
-      <Card title="Condition">
-        <Row label="Overall" value={(sub as any).overall_condition || "—"} />
-        <Row label="Accidents" value={(sub as any).accidents || "—"} />
-        <Row label="Drivable" value={(sub as any).drivable ? "Yes" : "—"} />
-      </Card>
+      {/* Vehicle fields — inline-editable, mirrors Deal tab Vehicle section */}
+      <DealCard title="Vehicle" right={<span className="text-[10.5px] text-slate-400 italic">Click any field to edit</span>}>
+        <DealRow label="Year"><V2Inline value={sub.vehicle_year} onSave={(v) => save("vehicle_year", v)} placeholder="—" /></DealRow>
+        <DealRow label="Make"><V2Inline value={sub.vehicle_make} onSave={(v) => save("vehicle_make", v)} placeholder="—" /></DealRow>
+        <DealRow label="Model"><V2Inline value={sub.vehicle_model} onSave={(v) => save("vehicle_model", v)} placeholder="—" /></DealRow>
+        <DealRow label="Trim"><V2Inline value={sub.vehicle_trim} onSave={(v) => save("vehicle_trim", v)} placeholder="Add trim…" /></DealRow>
+        <DealRow label="Color"><V2Inline value={sub.exterior_color} onSave={(v) => save("exterior_color", v)} placeholder="—" /></DealRow>
+        <DealRow label="VIN"><V2Inline value={sub.vin} onSave={(v) => save("vin", v)} mono placeholder="—" /></DealRow>
+        <DealRow label="Plate"><V2Inline value={sub.plate} onSave={(v) => save("plate", v)} mono placeholder="—" /></DealRow>
+        <DealRow label="Mileage"><V2Inline value={sub.mileage} onSave={(v) => save("mileage", v)} placeholder="—" /></DealRow>
+        <DealRow label="Drivable">
+          <span className="text-[13px] font-semibold text-slate-900 dark:text-slate-100">{sub.drivable || "—"}</span>
+        </DealRow>
+      </DealCard>
+
+      {/* Photos grid — up to 6 thumbnails */}
+      <DealCard
+        title={`Vehicle Photos${photos.length > 0 ? ` · ${photos.length}` : ""}`}
+      >
+        {photos.length === 0 ? (
+          <div className="text-[12.5px] text-slate-400 italic py-2">No photos uploaded yet.</div>
+        ) : (
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+            {photos.slice(0, 12).map((p, i) => (
+              <a key={`${p.name}-${i}`} href={p.url} target="_blank" rel="noreferrer" className="block aspect-[4/3] rounded-md overflow-hidden bg-slate-200 hover:opacity-90 transition">
+                <img src={p.url} alt={`Vehicle photo ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
+              </a>
+            ))}
+          </div>
+        )}
+      </DealCard>
+
+      {/* Driver's License — verified-on-file badge + click to expand inline */}
+      <DealCard
+        title="Driver's License"
+        right={
+          (dlFront || dlBack) ? (
+            <span className="text-[10.5px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-500/10 border border-emerald-500/30 rounded-md px-2 py-0.5">
+              Verified on file
+            </span>
+          ) : (
+            <span className="text-[10.5px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 border border-slate-200 rounded-md px-2 py-0.5">
+              Not uploaded
+            </span>
+          )
+        }
+      >
+        {!dlFront && !dlBack ? (
+          <div className="flex items-center gap-3 py-1">
+            <div className="w-16 h-10 rounded bg-slate-100 border border-dashed border-slate-300 flex items-center justify-center">
+              <FileText className="w-4 h-4 text-slate-300" />
+            </div>
+            <div className="text-[12.5px] text-slate-500">Customer uploads via QR link.</div>
+          </div>
+        ) : (
+          <div className="space-y-2.5">
+            <button onClick={() => setDlOpen((v) => !v)} className="w-full flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 -mx-2 px-2 py-1.5 rounded-md transition text-left">
+              <div className="w-16 h-10 rounded overflow-hidden shrink-0 bg-slate-100 border border-slate-200">
+                {dlCur && <img src={dlCur.url} alt={`Driver's license — ${dlSide}`} className="w-full h-full object-cover" />}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Match to customer name</div>
+                <div className="text-[12px] text-emerald-700 font-semibold flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Pass
+                </div>
+              </div>
+              <span className="text-[11px] font-semibold text-[var(--customer-file-accent,#003b80)]">{dlOpen ? "Hide" : "View"}</span>
+            </button>
+            {dlOpen && dlCur && (
+              <div className="space-y-2">
+                <img src={dlCur.url} alt={`DL ${dlSide}`} className="w-full rounded-md border border-slate-200" />
+                {dlBack && (
+                  <div className="flex gap-1.5 text-[11px] font-semibold">
+                    <button
+                      onClick={() => setDlSide("front")}
+                      className={`flex-1 py-1.5 rounded-md border transition ${dlSide === "front" ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"}`}
+                    >Front</button>
+                    <button
+                      onClick={() => setDlSide("back")}
+                      className={`flex-1 py-1.5 rounded-md border transition ${dlSide === "back" ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"}`}
+                    >Back</button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </DealCard>
+
+      {/* Inspection Summary — pending or completed */}
+      <DealCard
+        title="Inspection Summary"
+        right={
+          inspectionDone ? (
+            <span className="text-[10.5px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-500/10 border border-emerald-500/30 rounded-md px-2 py-0.5">
+              Completed
+            </span>
+          ) : (
+            <span className="text-[10.5px] font-bold uppercase tracking-wider text-amber-700 bg-amber-500/10 border border-amber-500/30 rounded-md px-2 py-0.5">
+              Pending
+            </span>
+          )
+        }
+      >
+        {inspectionDone ? (
+          <div className="space-y-3">
+            {sub.overall_condition && (
+              <p className="text-[13px] text-slate-700 dark:text-slate-300 leading-relaxed">{sub.overall_condition}</p>
+            )}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2">
+                <div className="text-[10.5px] uppercase tracking-wider font-semibold text-emerald-700">Tires</div>
+                <div className="text-[13px] font-bold text-emerald-800 mt-0.5 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Pass
+                </div>
+              </div>
+              <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2">
+                <div className="text-[10.5px] uppercase tracking-wider font-semibold text-emerald-700">Brakes</div>
+                <div className="text-[13px] font-bold text-emerald-800 mt-0.5 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Pass
+                </div>
+              </div>
+            </div>
+            <button className="w-full h-9 rounded-md border border-slate-200 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-[12px] font-semibold text-slate-700 dark:text-slate-300 transition">
+              Open Full Appraisal Tool
+            </button>
+          </div>
+        ) : (
+          <div className="text-[12.5px] text-slate-500 dark:text-slate-400 leading-relaxed">
+            No inspection yet — tires and brakes pass/fail will appear here once the car has been walked.
+          </div>
+        )}
+      </DealCard>
     </div>
   );
 }
