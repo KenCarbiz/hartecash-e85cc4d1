@@ -474,7 +474,219 @@ const QRInspectionModal = ({
   );
 };
 
-export default function SubmissionDetailSheetClassic(_props: ClassicProps) {
-  // Shell + body to be filled in subsequent increments.
-  return null;
+// ── Document types that go into the photo carousel (DL excluded) ────
+const CAROUSEL_DOC_TYPES = new Set([
+  "title", "title_front", "title_back", "title_inquiry",
+  "registration", "payoff_verification", "appraisal", "carfax",
+]);
+
+const DL_IMAGE_RE = /\.(jpg|jpeg|png|gif|webp)$/i;
+
+export default function SubmissionDetailSheetClassic({
+  selected, onClose, photos, docs,
+  onUpdate, onScheduleAppointment,
+}: ClassicProps) {
+  const { toast } = useToast();
+  const [editState, setEditState] = useState<Submission | null>(null);
+  const [qrOpen, setQrOpen] = useState(false);
+
+  const sub = editState?.id === selected?.id ? editState : selected;
+
+  // Reset local edit state whenever the parent opens a different submission.
+  useEffect(() => { setEditState(null); }, [selected?.id]);
+
+  // ── Single-field save (optimistic local + supabase write) ──────────
+  async function saveField<K extends keyof Submission>(field: K, value: Submission[K]) {
+    if (!sub) return;
+    const next = { ...sub, [field]: value } as Submission;
+    setEditState(next);
+    const { error } = await supabase
+      .from("submissions")
+      .update({ [field]: value } as never)
+      .eq("id", sub.id);
+    if (error) {
+      toast({ title: "Save failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    onUpdate(next);
+  }
+
+  // ── Derived state (only valid when sub != null; guarded below) ─────
+  if (!selected || !sub) {
+    return (
+      <Sheet open={!!selected} onOpenChange={(o) => { if (!o) onClose(); }}>
+        <SheetContent side="right" className="w-full sm:max-w-5xl lg:max-w-6xl p-0 [&>button]:hidden" />
+      </Sheet>
+    );
+  }
+
+  const intent = intentMeta[intentFromSource(sub.lead_source)];
+  const tone = statusToneFor(sub.progress_status);
+  const inspectionCompleted = isInspectionCompleted(sub.progress_status);
+  const offerAccepted = isOfferAccepted(sub.progress_status);
+  const customerArrived = sub.progress_status === "customer_arrived";
+  const manualAppraisalNeeded = !offerAccepted && !inspectionCompleted;
+  const dealValue = sub.offered_price ?? sub.estimated_offer_high;
+  const dealKind = sub.offered_price != null ? "Offer Given" : "Estimated Offer";
+  const arrivedAt = customerArrived ? sub.status_updated_at : null;
+  const statusLabel = getStatusLabel(sub.progress_status);
+  const firstName = (sub.name || "Customer").split(/\s+/)[0];
+
+  return (
+    <Sheet open={!!selected} onOpenChange={(o) => { if (!o) { setEditState(null); onClose(); } }}>
+      <SheetContent
+        side="right"
+        className="w-full sm:max-w-5xl lg:max-w-6xl p-0 flex flex-col overflow-hidden [&>button]:hidden"
+      >
+        <div className="flex flex-col h-full bg-slate-50">
+
+          {/* ═══ BLUE HEADER ═══════════════════════════════════════════ */}
+          <header className="shrink-0 bg-gradient-to-r from-[#003b80] to-[#005bb5] text-white">
+            <div className="px-6 pt-4 pb-5">
+
+              {/* Top row: close + Customer File label | Notes / Print / Open Appraisal */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => { setEditState(null); onClose(); }}
+                    className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition"
+                    aria-label="Close"
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 4.9a1 1 0 011.4 0L10 7.2l2.3-2.3a1 1 0 011.4 1.4L11.4 8.6l2.3 2.3a1 1 0 01-1.4 1.4L10 10l-2.3 2.3a1 1 0 01-1.4-1.4L8.6 8.6 6.3 6.3a1 1 0 010-1.4z"/></svg>
+                  </button>
+                  <span className="text-white/70 text-xs">Customer File</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <button className="px-3 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-[12px] font-semibold flex items-center gap-1.5 transition">
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M2 3a1 1 0 011-1h3.5a1 1 0 01.9.55l.7 1.4H17a1 1 0 011 1V16a1 1 0 01-1 1H3a1 1 0 01-1-1V3z"/></svg>
+                    Notes
+                  </button>
+                  <button
+                    onClick={() => window.print()}
+                    className="px-3 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-[12px] font-semibold flex items-center gap-1.5 transition"
+                  >
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M5 4a2 2 0 00-2 2v1h14V6a2 2 0 00-2-2H5zM17 9H3v5a2 2 0 002 2h10a2 2 0 002-2V9z"/></svg>
+                    Print
+                  </button>
+                  {manualAppraisalNeeded && (
+                    <button className="px-3 h-8 rounded-lg bg-white text-[#003b80] hover:bg-white/90 text-[12px] font-bold flex items-center gap-1.5 transition">
+                      <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3.5a.5.5 0 01.5.5v5.5H16a.5.5 0 010 1h-5.5V16a.5.5 0 01-1 0v-5.5H4a.5.5 0 010-1h5.5V4a.5.5 0 01.5-.5z"/></svg>
+                      Open Appraisal
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Identity row — Layout B (Customer | Vehicle | Money), the design default */}
+              <div className="grid grid-cols-12 gap-6 items-start">
+                <div className="col-span-12 md:col-span-4 min-w-0">
+                  <div className="text-[11px] uppercase tracking-[0.15em] text-white/55 font-bold mb-1">Customer</div>
+                  <h1 className="font-display text-[30px] leading-[1.1] tracking-tight truncate">
+                    {sub.name || "Unknown customer"}
+                  </h1>
+                  <div className="space-y-0.5 text-[13px] text-white/85 mt-2">
+                    {sub.phone && (
+                      <div className="flex items-center gap-1.5">
+                        <svg className="w-3.5 h-3.5 text-white/60 shrink-0" viewBox="0 0 20 20" fill="currentColor"><path d="M2 3.5A1.5 1.5 0 013.5 2h2.6a1.5 1.5 0 011.4 1l.8 2.1a1.5 1.5 0 01-.4 1.7L6.5 8.1a11 11 0 005.4 5.4l1.3-1.4a1.5 1.5 0 011.7-.4l2.1.8a1.5 1.5 0 011 1.4v2.6a1.5 1.5 0 01-1.5 1.5C8.5 18 2 11.5 2 3.5z"/></svg>
+                        <a href={`tel:${sub.phone}`} className="font-mono hover:underline">{formatPhone(sub.phone)}</a>
+                      </div>
+                    )}
+                    {sub.email && (
+                      <div className="flex items-center gap-1.5 text-white/75">
+                        <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor"><path d="M2 5.5A1.5 1.5 0 013.5 4h13A1.5 1.5 0 0118 5.5v9a1.5 1.5 0 01-1.5 1.5h-13A1.5 1.5 0 012 14.5v-9zm2.2.5L10 10.2 15.8 6H4.2z"/></svg>
+                        <a href={`mailto:${sub.email}`} className="truncate hover:underline">{sub.email}</a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className={`col-span-12 ${dealValue != null ? "md:col-span-5" : "md:col-span-8"} min-w-0 md:border-l md:border-white/15 md:pl-6`}>
+                  <div className="text-[11px] uppercase tracking-[0.15em] text-white/55 font-bold mb-1">Vehicle</div>
+                  <h2 className="font-display text-[30px] leading-[1.1] tracking-tight">
+                    {[sub.vehicle_year, sub.vehicle_make, sub.vehicle_model].filter(Boolean).join(" ") || "—"}
+                  </h2>
+                  <div className="flex items-center gap-2 flex-wrap text-[12px] text-white/80 mt-2">
+                    {sub.vin && <span className="font-mono bg-white/10 rounded px-2 py-0.5 tracking-wider">{sub.vin}</span>}
+                    {sub.mileage && <span>{fmtNumber(sub.mileage)} mi</span>}
+                    {sub.exterior_color && (<><span className="text-white/55">·</span><span>{sub.exterior_color}</span></>)}
+                    {sub.plate && (<><span className="text-white/55">·</span><span>Plate {sub.plate}</span></>)}
+                  </div>
+                </div>
+
+                {dealValue != null && (
+                  <div className="col-span-12 md:col-span-3 md:border-l md:border-white/15 md:pl-6">
+                    <div className="text-left md:text-right">
+                      <div className="text-[11px] uppercase tracking-[0.15em] text-white/55 font-bold">{dealKind}</div>
+                      <div className="font-display text-[40px] leading-none tracking-tight mt-0.5">
+                        {fmtMoney(dealValue, true)}
+                      </div>
+                      {sub.acv_value != null && (
+                        <div className="text-[11px] text-white/60 mt-1">
+                          ACV {fmtMoney(sub.acv_value)}
+                          {sub.offered_price != null && (
+                            <span className={`ml-1 font-semibold ${sub.offered_price > sub.acv_value ? "text-emerald-300" : "text-red-300"}`}>
+                              {sub.offered_price > sub.acv_value ? "+" : ""}{fmtMoney(sub.offered_price - sub.acv_value)}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Status / intent / hot lead chips + submitted date */}
+              <div className="flex items-center gap-2 mt-4 flex-wrap">
+                <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider rounded-md px-2.5 py-1 border whitespace-nowrap ${statusBadgeOnDark(tone)}`}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                  {statusLabel}
+                </span>
+                <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider rounded-md px-2.5 py-1 border whitespace-nowrap ${intent.onDark}`}>
+                  {intent.label}
+                </span>
+                {sub.is_hot_lead && (
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider rounded-md px-2.5 py-1 bg-orange-400/25 text-orange-100 border border-orange-300/50 whitespace-nowrap">
+                    🔥 Hot Lead
+                  </span>
+                )}
+                <span className="text-[11px] text-white/60 ml-auto">
+                  Submitted {fmtDate(sub.created_at)}
+                </span>
+              </div>
+            </div>
+
+            {/* Arrival strip — only when customer has physically arrived */}
+            {customerArrived && (
+              <div className="bg-gradient-to-r from-red-600 to-red-500 border-t border-red-800/30">
+                <div className="px-6 py-3 flex items-center gap-4 flex-wrap">
+                  <div className="relative flex items-center justify-center shrink-0">
+                    <span className="absolute inline-flex h-3 w-3 rounded-full bg-white/60 animate-ping" />
+                    <span className="relative inline-flex h-3 w-3 rounded-full bg-white" />
+                  </div>
+                  <div className="flex-1 min-w-[220px]">
+                    <div className="text-[11px] font-bold uppercase tracking-[0.15em] text-white/80">Customer Is Here Now</div>
+                    <div className="text-[15px] font-bold text-white leading-tight">
+                      {firstName} arrived {arrivedAt ? timeAgo(arrivedAt) : "moments ago"} · Car in Service Bay
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setQrOpen(true)}
+                    className="h-10 px-4 rounded-lg bg-white text-red-700 text-[13px] font-bold inline-flex items-center justify-center gap-2 hover:bg-white/95 transition shadow-lg shadow-red-900/20"
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path d="M3 3h5v5H3V3zm1 1v3h3V4H4zm8-1h5v5h-5V3zm1 1v3h3V4h-3zM3 12h5v5H3v-5zm1 1v3h3v-3H4zm8-1h2v2h-2v-2zm3 0h2v2h-2v-2zm-3 3h2v2h-2v-2zm3 0h2v2h-2v-2z"/></svg>
+                    Send QR to My Phone
+                  </button>
+                </div>
+              </div>
+            )}
+          </header>
+
+          {/* ═══ BODY (filled in next increment) ════════════════════════ */}
+          <div className="flex-1 overflow-y-auto" />
+        </div>
+
+        <QRInspectionModal open={qrOpen} onClose={() => setQrOpen(false)} sub={sub} />
+      </SheetContent>
+    </Sheet>
+  );
 }
