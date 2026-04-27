@@ -142,6 +142,10 @@ export interface SiteConfig {
   customer_file_messaging: "tabs" | "unified";
   customer_file_accent: string;
   customer_file_accent_2: string;
+  // Background color of the currently-active sidebar item in the admin
+  // shell. Stored as a hex string so AppearanceSettings can offer a
+  // straight color picker without HSL conversion. Default is near-black.
+  sidebar_active_color: string;
 }
 
 const DEFAULTS: SiteConfig = {
@@ -233,6 +237,7 @@ const DEFAULTS: SiteConfig = {
   customer_file_messaging: "tabs",
   customer_file_accent: "#003b80",
   customer_file_accent_2: "#005bb5",
+  sidebar_active_color: "#0f172a",
 };
 
 /**
@@ -297,6 +302,7 @@ const LOCATION_OVERRIDE_KEYS: (keyof SiteConfig)[] = [
   "ui_scale",
   "text_scale",
   "main_content_scale",
+  "sidebar_active_color",
 ];
 
 async function fetchSiteConfig(
