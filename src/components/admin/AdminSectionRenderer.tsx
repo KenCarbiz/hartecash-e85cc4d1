@@ -14,6 +14,7 @@ import type { PendingRequest, ActivityLogEntry } from "@/hooks/useAdminDashboard
 // Hot-path sections stay eager so the first paint of the admin home
 // (today summary + submissions) isn't blocked on chunk downloads.
 import TodayActionSummary from "./TodayActionSummary";
+import TodayHome from "./TodayHome";
 import SubmissionsTable from "./SubmissionsTable";
 import AllLeadsPage from "./AllLeadsPage";
 import AdminLoadingSkeleton from "./AdminLoadingSkeleton";
@@ -206,10 +207,12 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
   if (activeSection === "today") {
     if (props.loading) return <AdminLoadingSkeleton />;
     return (
-      <TodayActionSummary
+      <TodayHome
         submissions={submissions}
         appointments={appointments}
+        dealerLocations={props.dealerLocations}
         onNavigate={setActiveSection}
+        onView={props.handleView}
       />
     );
   }
