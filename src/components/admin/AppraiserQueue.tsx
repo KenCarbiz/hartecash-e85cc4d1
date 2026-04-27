@@ -347,91 +347,54 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
     );
   }
 
+  // Tile counts roll manual_entry into walk-ins so the dashboard shows
+  // four buckets (WALK-INS / SERVICE DRIVE / FLAGGED / DECLINED) per
+  // the approved design. Internal sort still uses the 5-way classify.
+  const tileCounts = {
+    walk_ins: counts.walk_in + counts.manual_entry,
+    service: counts.service,
+    flagged: counts.flagged,
+    declined: counts.declined,
+  };
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-6 max-w-6xl">
       {/* Header */}
-      <div className="flex items-start justify-between flex-wrap gap-3">
+      <header className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <div className="flex items-center gap-2">
-            <Gauge className="w-5 h-5 text-primary" />
-            <h2 className="text-2xl font-black text-card-foreground tracking-tight">
-              Appraiser Queue
-            </h2>
-            <Badge variant="outline" className="text-[10px]">
-              {rows.length} {rows.length === 1 ? "lead" : "leads"}
-            </Badge>
-          </div>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Vehicles that need a human touch on price — walk-ins, service-drive
-            captures, declined offers, and manager-flagged leads.
+          <h1 className="text-3xl font-bold tracking-tight text-card-foreground">
+            Appraiser queue
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {rows.length} {rows.length === 1 ? "vehicle needs" : "vehicles need"} a number.
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={fetchQueue}>
           Refresh
         </Button>
-      </div>
+      </header>
 
-      {/* AI auto-route status chip */}
-      {autoRoute ? (
-        <div className="flex items-start gap-2 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-          <Sparkles className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-          <div className="text-xs text-emerald-700 dark:text-emerald-400">
-            <strong>AI auto-route is ON.</strong> Declined offers, walk-ins,
-            service-drive captures, and manual entries without an ACV are
-            automatically added to this queue.
-          </div>
-        </div>
-      ) : (
-        <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/40 border border-border">
-          <Sparkles className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
-          <div className="text-xs text-muted-foreground">
-            <strong>AI auto-route is OFF.</strong> This queue shows only
-            submissions a manager explicitly flagged with "Send to Appraiser".
-            Enable auto-route in <em>Branding → AI & Automation</em> to let
-            the system populate the queue automatically.
-          </div>
-        </div>
-      )}
-
-      {/* Schema provisioning banner — shown only when the needs_appraisal
-          column is missing from the database (e.g. migration hasn't run
-          yet on this environment). Non-blocking: the queue still shows
-          auto-route results below if that toggle is on. */}
+      {/* Schema provisioning banner — only when needs_appraisal column
+          hasn't migrated yet. Non-blocking: queue still shows auto-route
+          rows below. */}
       {!schemaReady && (
         <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
           <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
           <div className="text-xs text-amber-700 dark:text-amber-400">
             <strong>Queue provisioning in progress.</strong> The manager-flag
-            column hasn't finished provisioning on your database yet. This is
-            usually a few-minute window after a platform update. Refresh this
-            page in 2-3 minutes, or contact support if you still see this after
-            10 minutes. Auto-routed queue entries (walk-ins, service drive,
-            declined offers) will still appear below if AI auto-route is on.
+            column hasn't finished provisioning on your database yet. Refresh
+            in 2-3 minutes; auto-routed queue entries still appear below.
           </div>
         </div>
       )}
 
-      {/* Summary strip — counts per reason */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-        {(Object.keys(REASON_META) as QueueReason[]).map(reason => {
-          const meta = REASON_META[reason];
-          const Icon = meta.icon;
-          return (
-            <div
-              key={reason}
-              className={`rounded-lg border p-3 flex items-center gap-2 ${meta.color}`}
-            >
-              <Icon className="w-4 h-4 shrink-0" />
-              <div className="min-w-0">
-                <div className="text-[10px] uppercase tracking-wider font-bold truncate">
-                  {meta.label}
-                </div>
-                <div className="text-lg font-black leading-none">{counts[reason]}</div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      {/* KPI tiles */}
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <QueueTile label="Walk-ins" value={tileCounts.walk_ins} valueClass="text-red-600" />
+        <QueueTile label="Service drive" value={tileCounts.service} valueClass="text-orange-500" />
+        <QueueTile label="Flagged" value={tileCounts.flagged} valueClass="text-blue-600" />
+        <QueueTile label="Declined" value={tileCounts.declined} valueClass="text-foreground" />
+      </section>
 
       {/* Rows */}
       {loading ? (
@@ -450,132 +413,167 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
           </p>
         </div>
       ) : (
-        <div className="space-y-2">
-          {sorted.map(row => {
-            const reason = classifyRow(row);
-            const meta = REASON_META[reason];
-            const Icon = meta.icon;
-            const customerExpected = row.offered_price || row.estimated_offer_high || 0;
-            return (
-              <div
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-[11px] font-bold tracking-[0.1em] text-muted-foreground uppercase">Queue</h2>
+            {autoRoute && (
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-500/10 border border-emerald-500/20 rounded px-2 py-0.5 inline-flex items-center gap-1">
+                <Sparkles className="w-3 h-3" />
+                AI auto-route on
+              </span>
+            )}
+          </div>
+          <div className="space-y-2">
+            {sorted.map((row) => (
+              <QueueRowItem
                 key={row.id}
-                className="bg-card border border-border rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-start justify-between gap-4 flex-wrap">
-                  <div className="flex-1 min-w-[240px]">
-                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                      <Badge className={`text-[10px] gap-1 ${meta.color}`}>
-                        <Icon className="w-3 h-3" />
-                        {meta.label}
-                      </Badge>
-                      <h3 className="text-base font-bold text-card-foreground">
-                        {vehicleTitle(row)}
-                      </h3>
-                      <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {formatAge(row.created_at)}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
-                      {row.name && <span className="font-semibold text-card-foreground">{row.name}</span>}
-                      {row.vin && <span className="font-mono">VIN {row.vin.slice(-8)}</span>}
-                      {row.mileage && <span>{row.mileage} mi</span>}
-                      {row.phone && <span>{row.phone}</span>}
-                    </div>
-                    {customerExpected > 0 && reason === "declined" && (
-                      <p className="text-[11px] text-muted-foreground mt-1.5">
-                        Customer saw {formatCurrency(customerExpected)} — consider a bump or a manual re-val.
-                      </p>
-                    )}
-                    {/* AI re-appraisal suggestion row */}
-                    {(() => {
-                      const suggestion = suggestions[row.id];
-                      if (!suggestion) return null;
-                      const isBump = suggestion.delta > 0;
-                      const isAutoApplied = suggestion.status === "auto_applied";
-                      const chipClass = isAutoApplied
-                        ? "bg-emerald-500/15 text-emerald-600 border-emerald-500/30"
-                        : isBump
-                        ? "bg-violet-500/15 text-violet-600 border-violet-500/30"
-                        : "bg-amber-500/15 text-amber-600 border-amber-500/30";
-                      return (
-                        <div className={`mt-2 rounded-lg border p-2.5 ${chipClass}`}>
-                          <div className="flex items-center gap-2 mb-1">
-                            <Sparkles className="w-3.5 h-3.5" />
-                            <span className="text-[10px] font-bold uppercase tracking-wider">
-                              {isAutoApplied ? "AI Auto-Applied" : "AI Recommends"}
-                            </span>
-                            <span className="text-[10px] opacity-70">
-                              · {suggestion.photos_analyzed} {suggestion.photos_analyzed === 1 ? "photo" : "photos"}
-                              · {suggestion.ai_confidence ?? "—"}% confidence
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-[11px] line-through opacity-60">
-                              {suggestion.old_offer ? formatCurrency(suggestion.old_offer) : "—"}
-                            </span>
-                            <ArrowRight className="w-3 h-3 opacity-60" />
-                            <span className="text-sm font-black">
-                              {formatCurrency(suggestion.suggested_offer)}
-                            </span>
-                            <span className={`text-[11px] font-semibold ${isBump ? "text-emerald-600" : "text-amber-600"}`}>
-                              {isBump ? "+" : ""}{formatCurrency(suggestion.delta)}
-                            </span>
-                          </div>
-                          <p className="text-[11px] mt-1 leading-relaxed">{suggestion.reason}</p>
-                          {suggestion.status === "suggested" && (
-                            <div className="flex gap-1.5 mt-2">
-                              <Button
-                                size="sm"
-                                className="h-7 text-[11px]"
-                                onClick={() => acceptSuggestion(row, suggestion)}
-                              >
-                                Accept Bump
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-7 text-[11px]"
-                                onClick={() => dismissSuggestion(suggestion)}
-                              >
-                                Dismiss
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })()}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      onClick={() => navigate(`/appraisal/${row.token}`)}
-                      className="gap-1"
-                    >
-                      <Gauge className="w-3.5 h-3.5" />
-                      Open Appraisal
-                      <ArrowRight className="w-3.5 h-3.5 ml-0.5" />
-                    </Button>
-                    {row.needs_appraisal && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => dismissFromQueue(row)}
-                        className="text-muted-foreground hover:text-destructive"
-                        title="Dismiss from queue"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                row={row}
+                reason={classifyRow(row)}
+                suggestion={suggestions[row.id]}
+                onOpen={() => navigate(`/appraisal/${row.token}`)}
+                onDismiss={row.needs_appraisal ? () => dismissFromQueue(row) : undefined}
+                onAcceptSuggestion={(s) => acceptSuggestion(row, s)}
+                onDismissSuggestion={(s) => dismissSuggestion(s)}
+              />
+            ))}
+          </div>
+        </section>
       )}
     </div>
   );
 };
+
+/* ─────────────── Sub-components ─────────────── */
+
+function QueueTile({ label, value, valueClass }: { label: string; value: number; valueClass: string }) {
+  return (
+    <div className="rounded-lg border bg-card p-5">
+      <div className="text-[11px] font-bold tracking-wider uppercase text-muted-foreground">{label}</div>
+      <div className={`text-3xl font-bold mt-2 ${valueClass}`}>{value}</div>
+    </div>
+  );
+}
+
+function QueueRowItem({
+  row, reason, suggestion, onOpen, onDismiss, onAcceptSuggestion, onDismissSuggestion,
+}: {
+  row: QueueRow;
+  reason: QueueReason;
+  suggestion: AIReappraisalSuggestion | undefined;
+  onOpen: () => void;
+  onDismiss?: () => void;
+  onAcceptSuggestion: (s: AIReappraisalSuggestion) => void;
+  onDismissSuggestion: (s: AIReappraisalSuggestion) => void;
+}) {
+  // Status pill: shows where the customer is in the journey, not just
+  // the queue reason. Falls back to the queue reason label when there's
+  // no journey signal we can show distinctly.
+  const pill = (() => {
+    if (row.progress_status === "customer_arrived") return { label: "Arrived", cls: "bg-red-100 text-red-700", dot: "bg-red-500" };
+    if (row.progress_status === "on_the_way") return { label: "On the way", cls: "bg-amber-100 text-amber-700", dot: "bg-amber-500" };
+    if (row.progress_status === "inspection_completed") return { label: "Inspected", cls: "bg-blue-100 text-blue-700", dot: "bg-blue-500" };
+    if (row.progress_status === "offer_declined") return { label: "Declined", cls: "bg-slate-200 text-slate-700", dot: "bg-slate-500" };
+    const m = REASON_META[reason];
+    return { label: m.label, cls: m.color, dot: "" };
+  })();
+
+  const customerExpected = row.offered_price || row.estimated_offer_high || 0;
+
+  return (
+    <div className="rounded-lg border bg-card hover:bg-muted/30 transition-colors">
+      <div className="flex items-center gap-3 p-3">
+        <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center shrink-0">
+          <Car className="w-5 h-5 text-muted-foreground" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={`text-[10px] font-bold rounded px-2 py-0.5 inline-flex items-center gap-1.5 ${pill.cls}`}>
+              {pill.dot && <span className={`w-1.5 h-1.5 rounded-full ${pill.dot}`} />}
+              {pill.label}
+            </span>
+            <span className="text-sm font-bold text-card-foreground truncate">{vehicleTitle(row)}</span>
+            {row.mileage && <span className="text-xs text-muted-foreground">· {row.mileage} mi</span>}
+          </div>
+          <div className="text-xs text-muted-foreground truncate mt-0.5">
+            {row.name || "Unnamed"}
+            {row.phone && <> · {row.phone}</>}
+            {customerExpected > 0 && reason === "declined" && (
+              <> · saw {formatCurrency(customerExpected)}</>
+            )}
+            <> · {formatAge(row.created_at)}</>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            size="sm"
+            onClick={onOpen}
+            className="bg-slate-900 hover:bg-slate-800 text-white gap-1.5"
+          >
+            <Gauge className="w-3.5 h-3.5" />
+            Open appraisal
+          </Button>
+          {onDismiss && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onDismiss}
+              className="text-muted-foreground hover:text-destructive"
+              title="Dismiss from queue"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
+      </div>
+      {/* AI re-appraisal suggestion — when present, sits inline beneath
+          the row so the appraiser sees the recommended bump without
+          opening the file. */}
+      {suggestion && (() => {
+        const isBump = suggestion.delta > 0;
+        const isAutoApplied = suggestion.status === "auto_applied";
+        const chipClass = isAutoApplied
+          ? "bg-emerald-500/10 text-emerald-700 border-emerald-500/20"
+          : isBump
+            ? "bg-violet-500/10 text-violet-700 border-violet-500/20"
+            : "bg-amber-500/10 text-amber-700 border-amber-500/20";
+        return (
+          <div className={`mx-3 mb-3 rounded-md border p-2.5 ${chipClass}`}>
+            <div className="flex items-center gap-2 mb-1">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span className="text-[10px] font-bold uppercase tracking-wider">
+                {isAutoApplied ? "AI Auto-Applied" : "AI Recommends"}
+              </span>
+              <span className="text-[10px] opacity-70">
+                · {suggestion.photos_analyzed} {suggestion.photos_analyzed === 1 ? "photo" : "photos"}
+                · {suggestion.ai_confidence ?? "—"}% confidence
+              </span>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[11px] line-through opacity-60">
+                {suggestion.old_offer ? formatCurrency(suggestion.old_offer) : "—"}
+              </span>
+              <ArrowRight className="w-3 h-3 opacity-60" />
+              <span className="text-sm font-black">{formatCurrency(suggestion.suggested_offer)}</span>
+              <span className={`text-[11px] font-semibold ${isBump ? "text-emerald-700" : "text-amber-700"}`}>
+                {isBump ? "+" : ""}{formatCurrency(suggestion.delta)}
+              </span>
+            </div>
+            <p className="text-[11px] mt-1 leading-relaxed">{suggestion.reason}</p>
+            {suggestion.status === "suggested" && (
+              <div className="flex gap-1.5 mt-2">
+                <Button size="sm" className="h-7 text-[11px]" onClick={() => onAcceptSuggestion(suggestion)}>
+                  Accept Bump
+                </Button>
+                <Button size="sm" variant="ghost" className="h-7 text-[11px]" onClick={() => onDismissSuggestion(suggestion)}>
+                  Dismiss
+                </Button>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+    </div>
+  );
+}
 
 export default AppraiserQueue;
