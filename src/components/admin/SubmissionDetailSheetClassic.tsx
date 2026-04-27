@@ -838,8 +838,173 @@ export default function SubmissionDetailSheetClassic({
 
               </div>
 
-              {/* ── RIGHT / SECONDARY (filled in next increment) ────── */}
-              <aside className="space-y-5 min-w-0" />
+              {/* ── RIGHT / SECONDARY rail ──────────────────────────── */}
+              <aside className="space-y-5 min-w-0">
+
+                {/* Next Action card — tone changes by state */}
+                {(() => {
+                  let nextLabel: string;
+                  let nextSub: string;
+                  let nextBtn: string;
+                  let nextTone: "blue" | "amber" | "green" | "red" = "blue";
+                  let nextOnClick: (() => void) | null = null;
+
+                  if (customerArrived) {
+                    nextLabel = "Walk to the Car";
+                    nextSub = `${firstName} is here. Scan the QR on your phone and start the inspection.`;
+                    nextBtn = "Send QR to My Phone";
+                    nextTone = "red";
+                    nextOnClick = () => setQrOpen(true);
+                  } else if (!inspectionCompleted) {
+                    nextLabel = "Start Inspection";
+                    nextSub = "Walk the car — tires, brakes, photos, docs.";
+                    nextBtn = "Start Inspection";
+                  } else if (manualAppraisalNeeded) {
+                    nextLabel = "Appraise Vehicle";
+                    nextSub = "Customer declined auto-offer. Manual appraisal required.";
+                    nextBtn = "Open Appraisal";
+                    nextTone = "amber";
+                  } else if (sub.progress_status === "offer_accepted") {
+                    nextLabel = "Review Offer";
+                    nextSub = "Customer has an offer. Follow up to close.";
+                    nextBtn = "Send Follow-Up";
+                    nextTone = "green";
+                  } else if (sub.progress_status === "inspection_scheduled") {
+                    nextLabel = "Inspection Scheduled";
+                    nextSub = "Customer is booked. Check in when they arrive.";
+                    nextBtn = "Check In Customer";
+                  } else {
+                    nextLabel = "Finalize Deal";
+                    nextSub = "Paperwork and check request.";
+                    nextBtn = "Open Check Request";
+                    nextTone = "green";
+                  }
+
+                  const toneBg = {
+                    blue:  "from-[#003b80] to-[#005bb5]",
+                    amber: "from-amber-600 to-amber-500",
+                    green: "from-emerald-700 to-emerald-600",
+                    red:   "from-red-600 to-red-500",
+                  }[nextTone];
+
+                  return (
+                    <section className={`rounded-xl border border-slate-200 bg-gradient-to-br ${toneBg} text-white shadow-sm overflow-hidden`}>
+                      <div className="px-4 py-2.5 border-b border-white/15 flex items-center justify-between">
+                        <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-white/80">Next Action</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider bg-white/15 rounded px-2 py-0.5">For Sales</span>
+                      </div>
+                      <div className="p-4">
+                        <div className="font-display text-[20px] leading-tight">{nextLabel}</div>
+                        <p className="text-[12.5px] text-white/80 mt-1 leading-snug">{nextSub}</p>
+                        <button
+                          onClick={nextOnClick || undefined}
+                          className="w-full mt-3 h-10 rounded-lg bg-white text-slate-900 text-[13px] font-bold hover:bg-white/90 transition inline-flex items-center justify-center gap-1.5"
+                        >
+                          {customerArrived && (
+                            <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path d="M3 3h5v5H3V3zm1 1v3h3V4H4zm8-1h5v5h-5V3zm1 1v3h3V4h-3zM3 12h5v5H3v-5zm1 1v3h3v-3H4zm8-1h2v2h-2v-2zm3 0h2v2h-2v-2zm-3 3h2v2h-2v-2zm3 0h2v2h-2v-2z"/></svg>
+                          )}
+                          {nextBtn}
+                          {!customerArrived && (
+                            <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path d="M7.3 4.3a1 1 0 011.4 0l5 5a1 1 0 010 1.4l-5 5a1 1 0 01-1.4-1.4L11.6 10 7.3 5.7a1 1 0 010-1.4z"/></svg>
+                          )}
+                        </button>
+                      </div>
+                    </section>
+                  );
+                })()}
+
+                {/* Deal Status — current step + appointment + status select + schedule */}
+                <Card title="Deal Status">
+                  <div className="space-y-3">
+                    <div>
+                      <div className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Current Step</div>
+                      <div className={`text-sm font-bold mt-0.5 ${
+                        tone === "emerald" ? "text-emerald-700" :
+                        tone === "amber"   ? "text-amber-700" :
+                        tone === "red"     ? "text-red-700" : "text-slate-900"
+                      }`}>{statusLabel}</div>
+                    </div>
+
+                    {sub.appointment_set && sub.appointment_date && (
+                      <div className="rounded-lg bg-sky-50 border border-sky-200 p-3">
+                        <div className="text-[11px] uppercase tracking-wider text-sky-700 font-semibold">Appointment</div>
+                        <div className="text-sm font-bold text-sky-900 mt-0.5">
+                          {new Date(sub.appointment_date + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex gap-2 pt-1">
+                      <Select
+                        value={sub.progress_status}
+                        onValueChange={(v) => saveField("progress_status", v)}
+                      >
+                        <SelectTrigger className="flex-1 h-9 text-xs rounded-lg">
+                          <SelectValue placeholder="Update Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ALL_STATUS_OPTIONS.map(s => (
+                            <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <button
+                        onClick={() => onScheduleAppointment(sub)}
+                        className="h-9 px-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-[12px] font-semibold transition"
+                      >
+                        Schedule
+                      </button>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Offer Breakdown — only when there is an offer or estimate */}
+                {dealValue != null && (
+                  <Card title="Offer Breakdown">
+                    <div className="space-y-2.5">
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-[13px] text-slate-600">{dealKind}</span>
+                        <span className="font-display text-[22px] text-slate-900 leading-none">{fmtMoney(dealValue, true)}</span>
+                      </div>
+                      {sub.acv_value != null && (
+                        <div className="flex items-baseline justify-between text-[13px]">
+                          <span className="text-slate-600">ACV</span>
+                          <span className="font-semibold text-slate-800">{fmtMoney(sub.acv_value)}</span>
+                        </div>
+                      )}
+                      {sub.loan_payoff_amount != null && (
+                        <div className="flex items-baseline justify-between text-[13px]">
+                          <span className="text-slate-600">Loan Payoff</span>
+                          <span className="font-semibold text-slate-800">−{fmtMoney(sub.loan_payoff_amount)}</span>
+                        </div>
+                      )}
+                      {sub.loan_payoff_amount != null && (
+                        <div className="flex items-baseline justify-between pt-2 border-t border-slate-100">
+                          <span className="text-[12px] uppercase tracking-wider text-slate-500 font-semibold">Customer Equity</span>
+                          <span className={`font-bold text-[15px] ${
+                            (dealValue - sub.loan_payoff_amount) >= 0 ? "text-emerald-700" : "text-red-700"
+                          }`}>
+                            {(dealValue - sub.loan_payoff_amount) >= 0 ? "+" : ""}{fmtMoney(dealValue - sub.loan_payoff_amount)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                )}
+
+                {/* Loan card — only when loan info exists */}
+                {(sub.loan_status || sub.loan_company) && (
+                  <Card title="Loan">
+                    <div className="space-y-0">
+                      <Row label="Status" value={sub.loan_status} />
+                      <Row label="Lender" value={sub.loan_company} />
+                      <Row label="Balance" value={sub.loan_balance ? fmtMoney(sub.loan_balance) : null} />
+                      <Row label="Verified Payoff" value={sub.loan_payoff_amount != null ? fmtMoney(sub.loan_payoff_amount) : null} />
+                    </div>
+                  </Card>
+                )}
+
+              </aside>
 
             </div>
           </div>
