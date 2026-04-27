@@ -14,7 +14,7 @@
  * our schema — see the adapter helpers at the top.
  */
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
@@ -26,6 +26,7 @@ import {
   ACCEPTED_NO_APPOINTMENT_STATUSES, ACCEPTED_WITH_APPOINTMENT_STATUSES,
   type Submission, type DealerLocation,
 } from "@/lib/adminConstants";
+import SubmissionNotesModal, { fetchSubmissionNotes, type SubmissionNote } from "./SubmissionNotesModal";
 
 // ── Props ────────────────────────────────────────────────────────────
 // Matches the existing SubmissionDetailSheetProps so the entry export can
@@ -483,12 +484,29 @@ const CAROUSEL_DOC_TYPES = new Set([
 const DL_IMAGE_RE = /\.(jpg|jpeg|png|gif|webp)$/i;
 
 export default function SubmissionDetailSheetClassic({
-  selected, onClose, photos, docs,
+  selected, onClose, photos, docs, auditLabel,
   onUpdate, onScheduleAppointment,
 }: ClassicProps) {
   const { toast } = useToast();
   const [editState, setEditState] = useState<Submission | null>(null);
   const [qrOpen, setQrOpen] = useState(false);
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [notes, setNotes] = useState<SubmissionNote[]>([]);
+
+  // Refresh notes — called on open and after add.
+  const refreshNotes = useCallback(async (subId: string) => {
+    try {
+      const rows = await fetchSubmissionNotes(subId);
+      setNotes(rows);
+    } catch {
+      // Non-fatal — modal surfaces its own load error.
+    }
+  }, []);
+
+  useEffect(() => {
+    if (selected?.id) void refreshNotes(selected.id);
+    else setNotes([]);
+  }, [selected?.id, refreshNotes]);
 
   const sub = editState?.id === selected?.id ? editState : selected;
 
@@ -557,9 +575,17 @@ export default function SubmissionDetailSheetClassic({
                   <span className="text-white/70 text-xs">Customer File</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <button className="px-3 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-[12px] font-semibold flex items-center gap-1.5 transition">
+                  <button
+                    onClick={() => setNotesOpen(true)}
+                    className="px-3 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-[12px] font-semibold flex items-center gap-1.5 transition relative"
+                  >
                     <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M2 3a1 1 0 011-1h3.5a1 1 0 01.9.55l.7 1.4H17a1 1 0 011 1V16a1 1 0 01-1 1H3a1 1 0 01-1-1V3z"/></svg>
                     Notes
+                    {notes.length > 0 && (
+                      <span className="ml-0.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full bg-white/25 text-white text-[10px] font-bold">
+                        {notes.length}
+                      </span>
+                    )}
                   </button>
                   <button
                     onClick={() => window.print()}
@@ -913,6 +939,55 @@ export default function SubmissionDetailSheetClassic({
                   );
                 })()}
 
+                {/* Internal Notes — last 3 in a timeline + Add link → modal */}
+                <Card
+                  title={`Internal Notes${notes.length > 0 ? "  ·  " + notes.length : ""}`}
+                  right={
+                    <button
+                      onClick={() => setNotesOpen(true)}
+                      className="text-[11px] font-bold text-[#003b80] hover:underline"
+                    >
+                      + Add
+                    </button>
+                  }
+                >
+                  {notes.length === 0 ? (
+                    <div className="text-[12.5px] text-slate-400 italic py-2">
+                      No notes yet — click <span className="font-semibold not-italic text-slate-500">+ Add</span> to leave the first one.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {notes.slice(0, 3).map((n) => (
+                        <div key={n.id} className="border-b border-slate-100 last:border-0 pb-2.5 last:pb-0">
+                          <div className="flex items-baseline justify-between gap-2 mb-0.5">
+                            <span className="text-[12px] font-bold text-slate-900">{n.author || "Staff"}</span>
+                            <span className="text-[11px] text-slate-400">
+                              {(() => {
+                                const d = new Date(n.created_at);
+                                const diffMin = Math.floor((Date.now() - d.getTime()) / 60000);
+                                if (diffMin < 1) return "just now";
+                                if (diffMin < 60) return `${diffMin}m`;
+                                const h = Math.floor(diffMin / 60);
+                                if (h < 24) return `${h}h`;
+                                return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                              })()}
+                            </span>
+                          </div>
+                          <p className="text-[12.5px] text-slate-700 leading-relaxed line-clamp-3 whitespace-pre-wrap">{n.body}</p>
+                        </div>
+                      ))}
+                      {notes.length > 3 && (
+                        <button
+                          onClick={() => setNotesOpen(true)}
+                          className="text-[11px] font-semibold text-[#003b80] hover:underline pt-1"
+                        >
+                          See all {notes.length} notes →
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </Card>
+
                 {/* Deal Status — current step + appointment + status select + schedule */}
                 <Card title="Deal Status">
                   <div className="space-y-3">
@@ -1011,6 +1086,15 @@ export default function SubmissionDetailSheetClassic({
         </div>
 
         <QRInspectionModal open={qrOpen} onClose={() => setQrOpen(false)} sub={sub} />
+
+        <SubmissionNotesModal
+          submissionId={sub.id}
+          customerName={sub.name}
+          open={notesOpen}
+          onClose={() => setNotesOpen(false)}
+          author={auditLabel || "Staff"}
+          onChange={() => void refreshNotes(sub.id)}
+        />
       </SheetContent>
     </Sheet>
   );
