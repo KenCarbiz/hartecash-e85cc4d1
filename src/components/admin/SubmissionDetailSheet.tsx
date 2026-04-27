@@ -134,6 +134,59 @@ const ArrayDetail = ({ label, value, icon }: { label: string; value: string[] | 
   return <DetailRow label={label} value={value.join(", ")} icon={icon} />;
 };
 
+// ── InlineEdit ────────────────────────────────────────────────────────
+// Click the value, it becomes an input. Save on blur or Enter, cancel on Esc.
+// Used in the Customer File for fields the customer landing page or DL OCR
+// captured — name, phone, email, address, and the vehicle row — so a sales
+// manager can correct stale or mis-OCR'd data without leaving the sheet.
+const InlineEdit = ({
+  value, onSave, placeholder = "—", mono = false, type = "text", inputClass = "",
+}: {
+  value: string | null;
+  onSave: (next: string | null) => void;
+  placeholder?: string;
+  mono?: boolean;
+  type?: "text" | "email" | "tel";
+  inputClass?: string;
+}) => {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value ?? "");
+
+  if (!editing) {
+    return (
+      <button
+        type="button"
+        onClick={() => { setDraft(value ?? ""); setEditing(true); }}
+        className={`text-sm font-semibold text-right min-w-0 break-words [overflow-wrap:anywhere] hover:bg-slate-100 rounded px-1 -mr-1 transition-colors ${value ? "text-slate-900" : "text-slate-400"} ${mono ? "font-mono text-xs" : ""}`}
+        title="Click to edit"
+      >
+        {value || placeholder}
+      </button>
+    );
+  }
+
+  const commit = () => {
+    setEditing(false);
+    const next = draft.trim() === "" ? null : draft.trim();
+    if (next !== value) onSave(next);
+  };
+
+  return (
+    <input
+      type={type}
+      autoFocus
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") { e.preventDefault(); commit(); }
+        if (e.key === "Escape") { e.preventDefault(); setEditing(false); }
+      }}
+      className={`text-sm font-semibold text-slate-900 text-right bg-white border border-[#003b80]/40 rounded px-1.5 py-0.5 outline-none focus:ring-2 focus:ring-[#003b80]/20 min-w-0 ${mono ? "font-mono text-xs" : ""} ${inputClass}`}
+    />
+  );
+};
+
 // ── Compact OBD indicator — fetches latest scan for a submission ──
 // ── InspectionVitals ─────────────────────────────────────────────────
 // Compact traffic-light view of tires + brakes as recorded by the
@@ -2046,6 +2099,20 @@ const SubmissionDetailSheetV2 = ({
     setEditState({ ...sub, ...updates });
   };
 
+  // Single-field optimistic save used by the inline-edit cells in the
+  // Customer + Vehicle cards. Updates local state immediately, then writes
+  // through to Supabase. Toasts only on failure to keep the UX quiet.
+  const saveField = async <K extends keyof Submission>(field: K, value: Submission[K]) => {
+    if (!sub) return;
+    setEditState({ ...sub, [field]: value } as Submission);
+    const { error } = await (supabase.from("submissions") as any)
+      .update({ [field]: value, status_updated_at: new Date().toISOString() })
+      .eq("id", sub.id);
+    if (error) {
+      toast({ title: "Save failed", description: error.message, variant: "destructive" });
+    }
+  };
+
   const getDocsUrl = (token: string) => `${window.location.origin}/docs/${token}`;
 
   const getLocationLabel = (loc: string | null) => {
@@ -2076,6 +2143,14 @@ const SubmissionDetailSheetV2 = ({
       address_street: sub.address_street,
       address_city: sub.address_city,
       address_state: sub.address_state,
+      vehicle_year: sub.vehicle_year,
+      vehicle_make: sub.vehicle_make,
+      vehicle_model: sub.vehicle_model,
+      vehicle_trim: sub.vehicle_trim,
+      vin: sub.vin,
+      plate: sub.plate,
+      mileage: sub.mileage,
+      exterior_color: sub.exterior_color,
       store_location_id: sub.store_location_id || null,
       drivable: sub.drivable ?? null,
       status_updated_at: new Date().toISOString(),
@@ -2141,6 +2216,7 @@ const SubmissionDetailSheetV2 = ({
   const [photoIdx, setPhotoIdx] = useState(0);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [dlExpanded, setDlExpanded] = useState(false);
+  const [dlSide, setDlSide] = useState<"front" | "back">("front");
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   const handlePhotoUpload = async (files: FileList | null) => {
@@ -2162,8 +2238,8 @@ const SubmissionDetailSheetV2 = ({
     setPhotoUploading(false);
   };
 
-  // Reset carousel + DL expanded state when a different submission is opened
-  useEffect(() => { setPhotoIdx(0); setDlExpanded(false); }, [selected?.id]);
+  // Reset carousel + DL state when a different submission is opened
+  useEffect(() => { setPhotoIdx(0); setDlExpanded(false); setDlSide("front"); }, [selected?.id]);
 
   if (!sub) return null;
 
@@ -2387,8 +2463,8 @@ const SubmissionDetailSheetV2 = ({
               </div>
             )}
 
-            {/* ── TOP ROW: Photos carousel (left) + ID/Intent (right) ── */}
-            <div className="flex gap-3 items-stretch">
+            {/* ── TOP ROW: Photos carousel (left) + ID/Intent (right column, 280px) ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-3 items-stretch">
 
               {/* Vehicle Photos + Doc Images — Carousel */}
               <div className="flex-1 rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden min-w-0">
@@ -2472,7 +2548,7 @@ const SubmissionDetailSheetV2 = ({
               </div>
 
               {/* ID + Intent stacked */}
-              <div className="w-[44%] flex flex-col gap-3 shrink-0">
+              <div className="flex flex-col gap-3 min-w-0">
 
                 {/* ID / Driver's License */}
                 <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
@@ -2480,28 +2556,46 @@ const SubmissionDetailSheetV2 = ({
                     <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">ID</h3>
                   </div>
                   <div className="p-3">
-                    {dlDocs.length > 0 ? (
-                      <div className="space-y-2">
-                        {/* Thumbnail — click to expand, View to open in new tab */}
-                        <div className="flex items-center gap-3">
-                          <button onClick={() => setDlExpanded(e => !e)}
-                            className={`flex-shrink-0 rounded-md overflow-hidden border border-slate-200 bg-slate-100 hover:opacity-80 transition-all duration-200 ${dlExpanded ? "w-32 h-[88px]" : "w-16 h-11"}`}>
-                            {/\.(jpg|jpeg|png|gif|webp)$/i.test(dlDocs[0].name)
-                              ? <img src={dlDocs[0].url} alt="DL" className="w-full h-full object-cover" />
-                              : <div className="w-full h-full flex items-center justify-center"><FileText className="w-5 h-5 text-slate-300" /></div>
-                            }
-                          </button>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-0.5">Driver's License</p>
-                            <p className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
-                              <CheckCircle2 className="w-3 h-3 shrink-0" /> Verified on file
-                            </p>
+                    {dlDocs.length > 0 ? (() => {
+                      // Pick front and back when both are uploaded. Show front by default;
+                      // user clicks "Show Back" / thumbnail to flip.
+                      const frontDoc = dlDocs.find(d => d.type === "drivers_license_front" || d.type === "drivers_license") || dlDocs[0];
+                      const backDoc = dlDocs.find(d => d.type === "drivers_license_back");
+                      const activeDoc = dlSide === "back" && backDoc ? backDoc : frontDoc;
+                      const hasBack = !!backDoc;
+                      const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(activeDoc.name);
+                      return (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-3">
+                            <button onClick={() => setDlExpanded(e => !e)}
+                              className={`flex-shrink-0 rounded-md overflow-hidden border border-slate-200 bg-slate-100 hover:opacity-80 transition-all duration-200 ${dlExpanded ? "w-32 h-[88px]" : "w-16 h-11"}`}>
+                              {isImage
+                                ? <img src={activeDoc.url} alt={`DL ${dlSide}`} className="w-full h-full object-cover" />
+                                : <div className="w-full h-full flex items-center justify-center"><FileText className="w-5 h-5 text-slate-300" /></div>
+                              }
+                            </button>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-0.5">
+                                Driver's License{hasBack ? ` · ${dlSide === "back" ? "Back" : "Front"}` : ""}
+                              </p>
+                              <p className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
+                                <CheckCircle2 className="w-3 h-3 shrink-0" /> Verified on file
+                              </p>
+                            </div>
+                            <a href={activeDoc.url} target="_blank" rel="noopener noreferrer"
+                              className="text-[11px] font-bold text-[#003b80] hover:underline shrink-0">View</a>
                           </div>
-                          <a href={dlDocs[0].url} target="_blank" rel="noopener noreferrer"
-                            className="text-[11px] font-bold text-[#003b80] hover:underline shrink-0">View</a>
+                          {hasBack && (
+                            <button
+                              onClick={() => setDlSide(s => s === "front" ? "back" : "front")}
+                              className="w-full text-[11px] font-semibold text-[#003b80] hover:bg-slate-50 border border-slate-200 rounded-md py-1 transition-colors"
+                            >
+                              {dlSide === "front" ? "Show Back" : "Show Front"}
+                            </button>
+                          )}
                         </div>
-                      </div>
-                    ) : (
+                      );
+                    })() : (
                       <div className="flex items-center gap-3 py-1">
                         <FileText className="w-7 h-7 shrink-0 text-slate-300" />
                         <div>
@@ -2513,14 +2607,14 @@ const SubmissionDetailSheetV2 = ({
                   </div>
                 </div>
 
-                {/* Intent — compact */}
+                {/* Intent — dense */}
                 <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
                   <div className="px-4 py-2 border-b border-slate-100">
                     <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Intent</h3>
                   </div>
-                  <div className="px-4 py-3">
-                    <p className="text-[17px] font-bold text-slate-900 leading-tight">{intentLabel.label}</p>
-                    <p className="text-[11px] text-slate-500 mt-0.5">{intentLabel.sub}</p>
+                  <div className="p-3">
+                    <p className="text-base font-bold text-slate-900 leading-tight">{intentLabel.label}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">{intentLabel.sub}</p>
                   </div>
                 </div>
 
@@ -2531,7 +2625,7 @@ const SubmissionDetailSheetV2 = ({
             {/* ── CUSTOMER + VEHICLE ROW ── */}
             <div className="grid grid-cols-2 gap-3">
 
-              {/* Customer */}
+              {/* Customer — click any value to edit */}
               <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-slate-100">
                   <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Customer</h3>
@@ -2539,70 +2633,74 @@ const SubmissionDetailSheetV2 = ({
                 <div className="divide-y divide-slate-100">
                   <div className="flex items-baseline justify-between gap-2 px-4 py-2">
                     <span className="text-[11px] uppercase tracking-wide text-slate-400 shrink-0">Name</span>
-                    <span className="text-sm font-semibold text-slate-900 text-right min-w-0 break-words">
-                      {sub.name || "Unknown"}
-                    </span>
+                    <InlineEdit value={sub.name} onSave={(v) => saveField("name", v)} placeholder="Unknown" />
                   </div>
                   <div className="flex items-baseline justify-between gap-2 px-4 py-2">
                     <span className="text-[11px] uppercase tracking-wide text-slate-400 shrink-0">Phone</span>
-                    {sub.phone ? (
-                      <a href={`tel:${sub.phone}`} className="text-sm font-semibold text-[#003b80] hover:underline text-right min-w-0 break-words">
-                        {formatPhone(sub.phone)}
-                      </a>
-                    ) : (
-                      <span className="text-sm font-semibold text-slate-900 text-right">—</span>
-                    )}
+                    <InlineEdit value={sub.phone} onSave={(v) => saveField("phone", v)} type="tel" />
                   </div>
                   <div className="flex items-baseline justify-between gap-2 px-4 py-2">
                     <span className="text-[11px] uppercase tracking-wide text-slate-400 shrink-0">Email</span>
-                    {sub.email ? (
-                      <a href={`mailto:${sub.email}`} className="text-sm font-semibold text-[#003b80] hover:underline text-right min-w-0 break-all">
-                        {sub.email}
-                      </a>
-                    ) : (
-                      <span className="text-sm font-semibold text-slate-900 text-right">—</span>
-                    )}
+                    <InlineEdit value={sub.email} onSave={(v) => saveField("email", v)} type="email" />
                   </div>
-                  {(() => {
-                    const line2 = [sub.address_city, sub.address_state, sub.zip].filter(Boolean).join(", ");
-                    const hasAny = sub.address_street || line2;
-                    return (
-                      <div className="flex items-baseline justify-between gap-2 px-4 py-2">
-                        <span className="text-[11px] uppercase tracking-wide text-slate-400 shrink-0">Address</span>
-                        {hasAny ? (
-                          <span className="text-sm font-semibold text-slate-900 text-right min-w-0 break-words leading-relaxed">
-                            {sub.address_street && <span className="block">{sub.address_street}</span>}
-                            {line2 && <span className="block">{line2}</span>}
-                          </span>
-                        ) : (
-                          <span className="text-sm font-semibold text-slate-900 text-right">—</span>
-                        )}
-                      </div>
-                    );
-                  })()}
+                  <div className="flex items-baseline justify-between gap-2 px-4 py-2">
+                    <span className="text-[11px] uppercase tracking-wide text-slate-400 shrink-0">Street</span>
+                    <InlineEdit value={sub.address_street} onSave={(v) => saveField("address_street", v)} />
+                  </div>
+                  <div className="flex items-baseline justify-between gap-2 px-4 py-2">
+                    <span className="text-[11px] uppercase tracking-wide text-slate-400 shrink-0">City</span>
+                    <InlineEdit value={sub.address_city} onSave={(v) => saveField("address_city", v)} />
+                  </div>
+                  <div className="flex items-baseline justify-between gap-2 px-4 py-2">
+                    <span className="text-[11px] uppercase tracking-wide text-slate-400 shrink-0">State / ZIP</span>
+                    <span className="flex items-center gap-1 min-w-0">
+                      <InlineEdit value={sub.address_state} onSave={(v) => saveField("address_state", v)} inputClass="w-12" />
+                      <span className="text-slate-300">·</span>
+                      <InlineEdit value={sub.zip} onSave={(v) => saveField("zip", v)} inputClass="w-20" />
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              {/* Vehicle */}
+              {/* Vehicle — click any value to edit */}
               <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-slate-100">
                   <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Vehicle</h3>
                 </div>
                 <div className="divide-y divide-slate-100">
-                  {[
-                    { label: "Year", value: sub.vehicle_year?.toString() || null },
-                    { label: "Make / Model", value: [sub.vehicle_make, sub.vehicle_model].filter(Boolean).join(" ") || null },
-                    { label: "VIN", value: sub.vin || null, mono: true },
-                    { label: "Plate", value: [sub.address_state, sub.plate].filter(Boolean).join(" ") || null, mono: true },
-                    { label: "Miles", value: sub.mileage ? `${Number(sub.mileage).toLocaleString()} mi` : null },
-                    { label: "Color", value: sub.exterior_color || null },
-                  ].map(row => (
-                    <div key={row.label} className="flex items-baseline justify-between gap-2 px-4 py-2">
-                      <span className="text-[11px] uppercase tracking-wide text-slate-400 shrink-0">{row.label}</span>
-                      <span className={`text-sm font-semibold text-slate-900 text-right min-w-0 break-words [overflow-wrap:anywhere] ${(row as any).mono ? "font-mono text-xs" : ""}`}>{row.value ?? "—"}</span>
-                    </div>
-                  ))}
-                  {/* Drivable — inline radio */}
+                  <div className="flex items-baseline justify-between gap-2 px-4 py-2">
+                    <span className="text-[11px] uppercase tracking-wide text-slate-400 shrink-0">Year</span>
+                    <InlineEdit value={sub.vehicle_year} onSave={(v) => saveField("vehicle_year", v)} inputClass="w-20" />
+                  </div>
+                  <div className="flex items-baseline justify-between gap-2 px-4 py-2">
+                    <span className="text-[11px] uppercase tracking-wide text-slate-400 shrink-0">Make</span>
+                    <InlineEdit value={sub.vehicle_make} onSave={(v) => saveField("vehicle_make", v)} />
+                  </div>
+                  <div className="flex items-baseline justify-between gap-2 px-4 py-2">
+                    <span className="text-[11px] uppercase tracking-wide text-slate-400 shrink-0">Model</span>
+                    <InlineEdit value={sub.vehicle_model} onSave={(v) => saveField("vehicle_model", v)} />
+                  </div>
+                  <div className="flex items-baseline justify-between gap-2 px-4 py-2">
+                    <span className="text-[11px] uppercase tracking-wide text-slate-400 shrink-0">Trim</span>
+                    <InlineEdit value={sub.vehicle_trim} onSave={(v) => saveField("vehicle_trim", v)} />
+                  </div>
+                  <div className="flex items-baseline justify-between gap-2 px-4 py-2">
+                    <span className="text-[11px] uppercase tracking-wide text-slate-400 shrink-0">VIN</span>
+                    <InlineEdit value={sub.vin} onSave={(v) => saveField("vin", v)} mono inputClass="w-44" />
+                  </div>
+                  <div className="flex items-baseline justify-between gap-2 px-4 py-2">
+                    <span className="text-[11px] uppercase tracking-wide text-slate-400 shrink-0">Plate</span>
+                    <InlineEdit value={sub.plate} onSave={(v) => saveField("plate", v)} mono inputClass="w-28" />
+                  </div>
+                  <div className="flex items-baseline justify-between gap-2 px-4 py-2">
+                    <span className="text-[11px] uppercase tracking-wide text-slate-400 shrink-0">Miles</span>
+                    <InlineEdit value={sub.mileage} onSave={(v) => saveField("mileage", v)} inputClass="w-24" />
+                  </div>
+                  <div className="flex items-baseline justify-between gap-2 px-4 py-2">
+                    <span className="text-[11px] uppercase tracking-wide text-slate-400 shrink-0">Color</span>
+                    <InlineEdit value={sub.exterior_color} onSave={(v) => saveField("exterior_color", v)} />
+                  </div>
+                  {/* Drivable — inline radio (was already wired) */}
                   <div className="flex items-center justify-between gap-2 px-4 py-2">
                     <span className="text-[11px] uppercase tracking-wide text-slate-400 shrink-0">Drivable</span>
                     <div className="flex gap-1">
@@ -2612,7 +2710,7 @@ const SubmissionDetailSheetV2 = ({
                         return (
                           <button
                             key={opt}
-                            onClick={() => updateField({ drivable: opt === "Unknown" ? null : opt.toLowerCase() })}
+                            onClick={() => saveField("drivable", opt === "Unknown" ? null : opt.toLowerCase())}
                             className={`text-[11px] font-semibold px-2 py-0.5 rounded-md border transition-colors ${active ? "bg-slate-800 text-white border-slate-800" : "bg-white text-slate-500 border-slate-200 hover:border-slate-400"}`}
                           >{opt}</button>
                         );

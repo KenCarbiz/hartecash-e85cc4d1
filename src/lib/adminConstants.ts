@@ -117,6 +117,7 @@ export interface Submission {
   vehicle_year: string | null;
   vehicle_make: string | null;
   vehicle_model: string | null;
+  vehicle_trim: string | null;
   mileage: string | null;
   overall_condition: string | null;
   next_step: string | null;
