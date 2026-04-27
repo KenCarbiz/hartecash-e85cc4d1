@@ -70,6 +70,23 @@ const AdminDashboard = () => {
   useEffect(() => {
     contentRef.current?.scrollTo({ top: 0, behavior: "instant" });
   }, [db.activeSection]);
+
+  // Re-open the customer file slide-out when the user returns from
+  // the inspection/appraisal pages via the back button. The customer
+  // file stashes the submission id in sessionStorage before navigating
+  // away; once submissions hydrate here we look it up and call
+  // handleView, then clear the key so subsequent /admin visits don't
+  // re-open it.
+  useEffect(() => {
+    if (db.selected || db.submissions.length === 0) return;
+    const id = sessionStorage.getItem("autocurb:reopenSubmissionId");
+    if (!id) return;
+    const sub = db.submissions.find((s) => s.id === id);
+    if (sub) {
+      sessionStorage.removeItem("autocurb:reopenSubmissionId");
+      db.handleView(sub);
+    }
+  }, [db.submissions, db.selected, db.handleView]);
   return (
     <PlatformProvider>
     <SidebarProvider>

@@ -1419,19 +1419,14 @@ const InspectionSheet = () => {
           </Card>
         </div>
 
-        {/* OBD-II Diagnostic Scan — premium section */}
+        {/* OBD-II Diagnostic Scan — premium section. The full card (rendered
+            via OBDScanResults) owns the Start/Scan button so we don't duplicate
+            it in the section header. */}
         <div className="space-y-2 print:hidden">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5" />
-              Optional Premium Diagnostics
-            </p>
-            <OBDScanButton
-              submissionId={submission.id}
-              submissionToken={submission.token}
-              vehicleStr={vehicleTitle}
-            />
-          </div>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+            <Zap className="w-3.5 h-3.5" />
+            Optional Premium Diagnostics
+          </p>
           <OBDScanResults submissionId={submission.id} />
         </div>
 

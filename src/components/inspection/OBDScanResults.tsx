@@ -258,7 +258,6 @@ export default function OBDScanResults({ submissionId, showHistory = false }: OB
               submissionId={submissionId}
               submissionToken={submissionMeta?.token || submissionId}
               vehicleStr={submissionMeta?.vehicleStr || ""}
-              variant="compact"
               label="Start OBD Scan"
             />
           </div>

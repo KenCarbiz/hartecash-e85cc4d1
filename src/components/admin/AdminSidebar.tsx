@@ -20,6 +20,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { isManagerRole, canViewExecutiveHUD } from "@/lib/adminConstants";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 interface AdminSidebarProps {
   activeSection: string;
@@ -92,6 +93,8 @@ const AdminSidebar = ({
   const { state, isMobile, setOpenMobile } = useSidebar();
   const collapsed = isMobile ? false : state === "collapsed";
   const navigate = useNavigate();
+  const { config: siteConfig } = useSiteConfig();
+  const sidebarActiveColor = siteConfig.sidebar_active_color || "#0f172a";
 
   const handleItemClick = (item: { key: string; href?: string }) => {
     if (item.href) {
@@ -341,12 +344,19 @@ const AdminSidebar = ({
                 {items.map((item) => {
                   const isActive = activeSection === item.key;
                   const Icon = item.icon;
+                  // Inline style on the active item so the dealer's
+                  // chosen sidebar_active_color from Appearance overrides
+                  // shadcn's default --sidebar-accent class binding.
+                  const activeStyle = isActive
+                    ? { backgroundColor: sidebarActiveColor, color: "#ffffff" }
+                    : undefined;
                   return (
                     <SidebarMenuItem key={item.key}>
                       <SidebarMenuButton
                         onClick={() => handleItemClick(item)}
                         isActive={isActive}
                         tooltip={collapsed ? item.label : undefined}
+                        style={activeStyle}
                         className="h-7 text-[13px] transition-all duration-200 dark:hover:bg-white/8 dark:hover:shadow-[0_0_12px_rgba(255,255,255,0.06)] dark:data-[active=true]:shadow-[0_0_16px_rgba(100,160,255,0.12)]"
                       >
                         <Icon className="w-4 h-4 shrink-0" />

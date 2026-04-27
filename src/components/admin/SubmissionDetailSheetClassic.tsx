@@ -666,16 +666,19 @@ export default function SubmissionDetailSheetClassic({
 
   // Inspection page: /inspection/:id (uses submission id)
   // Appraisal page:  /appraisal/:token (uses submission token)
+  // Stash the submission id so AdminDashboard can re-open the slide-out
+  // when the user clicks the inspection/appraisal page's back arrow
+  // (navigate(-1) → /admin, AdminDashboard mount reads the key).
   const goInspect = useCallback(() => {
     if (!selected?.id) return;
-    onClose();
+    sessionStorage.setItem("autocurb:reopenSubmissionId", selected.id);
     navigate(`/inspection/${selected.id}`);
-  }, [navigate, onClose, selected?.id]);
+  }, [navigate, selected?.id]);
   const goAppraise = useCallback(() => {
-    if (!selected?.token) return;
-    onClose();
+    if (!selected?.token || !selected?.id) return;
+    sessionStorage.setItem("autocurb:reopenSubmissionId", selected.id);
     navigate(`/appraisal/${selected.token}`);
-  }, [navigate, onClose, selected?.token]);
+  }, [navigate, selected?.token, selected?.id]);
   const headerLayout: "a" | "b" | "c" =
     ((config as { customer_file_header_layout?: string }).customer_file_header_layout as "a" | "b" | "c") || "b";
   const [editState, setEditState] = useState<Submission | null>(null);

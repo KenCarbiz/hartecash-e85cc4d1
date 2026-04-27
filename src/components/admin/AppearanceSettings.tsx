@@ -104,6 +104,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
     customer_file_header_layout: ((config as any).customer_file_header_layout || "b") as "a" | "b" | "c",
     customer_file_accent: (config as any).customer_file_accent || "#003b80",
     customer_file_accent_2: (config as any).customer_file_accent_2 || "#005bb5",
+    sidebar_active_color: (config as any).sidebar_active_color || "#0f172a",
   });
 
   // Local draft mirrors site_config so live preview updates without round-trip
@@ -135,7 +136,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
     (async () => {
       const { data } = await (supabase as any)
         .from("dealership_locations")
-        .select("top_bar_style, top_bar_bg, top_bar_bg_2, top_bar_text, top_bar_height, top_bar_shimmer, top_bar_shimmer_style, top_bar_shimmer_speed, ui_scale, text_scale, file_layout, customer_file_header_layout, customer_file_accent, customer_file_accent_2")
+        .select("top_bar_style, top_bar_bg, top_bar_bg_2, top_bar_text, top_bar_height, top_bar_shimmer, top_bar_shimmer_style, top_bar_shimmer_speed, ui_scale, text_scale, file_layout, customer_file_header_layout, customer_file_accent, customer_file_accent_2, sidebar_active_color")
         .eq("id", selectedLocationId)
         .maybeSingle();
       if (cancelled) return;
@@ -157,6 +158,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
         customer_file_header_layout: (data.customer_file_header_layout ?? corp.customer_file_header_layout) as "a" | "b" | "c",
         customer_file_accent: data.customer_file_accent ?? corp.customer_file_accent,
         customer_file_accent_2: data.customer_file_accent_2 ?? corp.customer_file_accent_2,
+        sidebar_active_color: data.sidebar_active_color ?? corp.sidebar_active_color,
       });
     })();
     return () => { cancelled = true; };
@@ -544,6 +546,52 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
                     if (matching) set("customer_file_accent", matching.accent);
                   }}
                   className="ml-auto text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+
+            {/* Sidebar active item color */}
+            <div className="rounded-lg border border-dashed border-border p-3">
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Sidebar active item</div>
+              <p className="text-[11.5px] text-muted-foreground mt-1 mb-2">
+                Background color for the currently-selected item in the left sidebar (admin shell). Defaults to near-black.
+              </p>
+              <div className="flex items-center gap-2 flex-wrap">
+                <input
+                  type="color"
+                  value={draft.sidebar_active_color}
+                  onChange={(e) => set("sidebar_active_color", e.target.value)}
+                  className="w-10 h-10 rounded cursor-pointer border border-border bg-transparent"
+                />
+                <div className="text-[11px] font-mono text-muted-foreground">{draft.sidebar_active_color}</div>
+                <div className="ml-auto flex items-center gap-1">
+                  {[
+                    { hex: "#0f172a", label: "Black" },
+                    { hex: "#1e293b", label: "Slate" },
+                    { hex: "#003b80", label: "Blue" },
+                    { hex: "#7f1d1d", label: "Red" },
+                    { hex: "#14532d", label: "Green" },
+                  ].map((s) => {
+                    const active = draft.sidebar_active_color.toLowerCase() === s.hex.toLowerCase();
+                    return (
+                      <button
+                        key={s.hex}
+                        type="button"
+                        onClick={() => set("sidebar_active_color", s.hex)}
+                        title={s.label}
+                        aria-label={s.label}
+                        className={`w-5 h-5 rounded border-2 transition ${active ? "border-foreground scale-110" : "border-border"}`}
+                        style={{ backgroundColor: s.hex }}
+                      />
+                    );
+                  })}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => set("sidebar_active_color", "#0f172a")}
+                  className="text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Reset
                 </button>

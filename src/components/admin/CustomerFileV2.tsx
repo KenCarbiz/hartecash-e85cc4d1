@@ -1122,12 +1122,17 @@ function VehicleTab({
   const [dlOpen, setDlOpen] = useState(false);
   const [dlSide, setDlSide] = useState<"front" | "back">("front");
 
+  // Stash the submission id so AdminDashboard's reopen-on-return
+  // effect can restore the slide-out when the user clicks back from
+  // the inspection/appraisal page.
   const goAppraise = () => {
-    if (!sub.token) return;
+    if (!sub.token || !sub.id) return;
+    sessionStorage.setItem("autocurb:reopenSubmissionId", sub.id);
     navigate(`/appraisal/${sub.token}`);
   };
   const goInspect = () => {
     if (!sub.id) return;
+    sessionStorage.setItem("autocurb:reopenSubmissionId", sub.id);
     navigate(`/inspection/${sub.id}`);
   };
 
@@ -1332,8 +1337,16 @@ function ContextRail({
     if (sub.id) void refreshNotes(sub.id);
   }, [sub.id, refreshNotes]);
 
-  const goInspect = () => sub.id && navigate(`/inspection/${sub.id}`);
-  const goAppraise = () => sub.token && navigate(`/appraisal/${sub.token}`);
+  const goInspect = () => {
+    if (!sub.id) return;
+    sessionStorage.setItem("autocurb:reopenSubmissionId", sub.id);
+    navigate(`/inspection/${sub.id}`);
+  };
+  const goAppraise = () => {
+    if (!sub.token || !sub.id) return;
+    sessionStorage.setItem("autocurb:reopenSubmissionId", sub.id);
+    navigate(`/appraisal/${sub.token}`);
+  };
 
   // Compute Next Action from progress_status — matches Classic helper.
   // `onClick` (when set) wires the white CTA to its destination.
