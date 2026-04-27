@@ -14,7 +14,7 @@
  * our schema — see the adapter helpers at the top.
  */
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, Component, type ReactNode, type ErrorInfo } from "react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
@@ -490,6 +490,35 @@ const DL_IMAGE_RE = /\.(jpg|jpeg|png|gif|webp)$/i;
 // Three arrangements of the blue identity bar — same data, same width,
 // different hierarchy. Picked at runtime from
 // site_config.customer_file_header_layout (or per-location override).
+// ── Error boundary so a render bug inside the slide-out renders a visible
+// fallback instead of an empty SheetContent (which looks like a "screen
+// dim, no slider" bug). Uncomment console.error during dev as needed.
+class ClassicErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+  state = { error: null as Error | null };
+  static getDerivedStateFromError(error: Error) { return { error }; }
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    // eslint-disable-next-line no-console
+    console.error("[ClassicSlideOut] render error:", error, info);
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="p-6 text-sm text-red-700 bg-red-50 h-full overflow-auto">
+          <div className="font-bold text-base mb-2">Slide-out failed to render</div>
+          <div className="font-mono text-xs whitespace-pre-wrap break-words">{this.state.error.message}</div>
+          <button
+            onClick={() => this.setState({ error: null })}
+            className="mt-3 text-xs font-semibold underline"
+          >
+            Try again
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 const MoneyBlock = ({
   dealKind, dealValue, sub, align = "right",
 }: {
@@ -681,7 +710,9 @@ export default function SubmissionDetailSheetClassic({
   if (!selected || !sub) {
     return (
       <Sheet open={!!selected} onOpenChange={(o) => { if (!o) onClose(); }}>
-        <SheetContent side="right" className="w-full sm:max-w-5xl lg:max-w-6xl p-0 [&>button]:hidden" />
+        <SheetContent side="right" className="w-full sm:max-w-5xl lg:max-w-6xl p-0 [&>button]:hidden flex items-center justify-center">
+          <div className="text-sm text-slate-500">Loading customer file…</div>
+        </SheetContent>
       </Sheet>
     );
   }
@@ -704,6 +735,7 @@ export default function SubmissionDetailSheetClassic({
         side="right"
         className="w-full sm:max-w-5xl lg:max-w-6xl p-0 flex flex-col overflow-hidden relative [&>button]:hidden"
       >
+        <ClassicErrorBoundary>
         <div className="flex flex-col h-full bg-slate-50">
 
           {/* ═══ BLUE HEADER ═══════════════════════════════════════════ */}
@@ -1244,6 +1276,7 @@ export default function SubmissionDetailSheetClassic({
           author={auditLabel || "Staff"}
           onChange={() => void refreshNotes(sub.id)}
         />
+        </ClassicErrorBoundary>
       </SheetContent>
     </Sheet>
   );
