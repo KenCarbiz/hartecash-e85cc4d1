@@ -681,8 +681,168 @@ export default function SubmissionDetailSheetClassic({
             )}
           </header>
 
-          {/* ═══ BODY (filled in next increment) ════════════════════════ */}
-          <div className="flex-1 overflow-y-auto" />
+          {/* ═══ BODY ═══════════════════════════════════════════════════ */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-5 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-5 max-w-[1400px] mx-auto">
+
+              {/* ── LEFT / PRIMARY ──────────────────────────────────── */}
+              <div className="space-y-5 min-w-0">
+
+                {/* Photos + ID/Intent row */}
+                <div className="grid grid-cols-1 md:grid-cols-[1fr_280px] gap-4">
+                  <Card title="Vehicle Photos" right={
+                    <span className="text-[11px] text-slate-500">
+                      {(() => {
+                        const total = photos.length + docs.filter(d => CAROUSEL_DOC_TYPES.has(d.type)).length;
+                        return `${total} ${total === 1 ? "photo" : "photos"}`;
+                      })()}
+                    </span>
+                  }>
+                    <PhotoCarousel items={[
+                      ...photos.map(p => ({ url: p.url, name: p.name })),
+                      ...docs.filter(d => CAROUSEL_DOC_TYPES.has(d.type)).map(d => ({ url: d.url, name: d.name })),
+                    ]} />
+                  </Card>
+
+                  <div className="space-y-4">
+                    <Card title="ID" dense>
+                      <DLAtGlance
+                        front={docs.find(d => (d.type === "drivers_license" || d.type === "drivers_license_front") && DL_IMAGE_RE.test(d.name)) || null}
+                        back={docs.find(d => d.type === "drivers_license_back" && DL_IMAGE_RE.test(d.name)) || null}
+                      />
+                    </Card>
+                    <Card title="Intent" dense>
+                      <div className="px-1 py-1">
+                        <div className="text-base font-bold text-slate-900">{intent.label}</div>
+                        <div className="text-xs text-slate-500 mt-0.5">{intent.sub}</div>
+                      </div>
+                    </Card>
+                  </div>
+                </div>
+
+                {/* Customer + Vehicle (editable) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <Card title="Customer">
+                    <div className="space-y-0">
+                      <EditableRow label="Name" value={sub.name} onSave={(v) => saveField("name", v)} placeholder="Unknown" />
+                      <EditableRow label="Phone" value={sub.phone} onSave={(v) => saveField("phone", v)} type="tel" />
+                      <EditableRow label="Email" value={sub.email} onSave={(v) => saveField("email", v)} type="email" />
+                      <EditableRow label="Street" value={sub.address_street} onSave={(v) => saveField("address_street", v)} />
+                      <EditableRow label="City" value={sub.address_city} onSave={(v) => saveField("address_city", v)} />
+                      <EditableRow label="State" value={sub.address_state} onSave={(v) => saveField("address_state", v)} />
+                      <EditableRow label="Zip" value={sub.zip} onSave={(v) => saveField("zip", v)} />
+                    </div>
+                  </Card>
+
+                  <Card title="Vehicle">
+                    <div className="space-y-0">
+                      <EditableRow label="Year" value={sub.vehicle_year} onSave={(v) => saveField("vehicle_year", v)} />
+                      <EditableRow label="Make" value={sub.vehicle_make} onSave={(v) => saveField("vehicle_make", v)} />
+                      <EditableRow label="Model" value={sub.vehicle_model} onSave={(v) => saveField("vehicle_model", v)} />
+                      <EditableRow label="Trim" value={sub.vehicle_trim} onSave={(v) => saveField("vehicle_trim", v)} />
+                      <EditableRow label="VIN" value={sub.vin} onSave={(v) => saveField("vin", v)} mono />
+                      <EditableRow label="Plate" value={sub.plate} onSave={(v) => saveField("plate", v)} mono />
+                      <EditableRow label="Mileage" value={sub.mileage} onSave={(v) => saveField("mileage", v)} />
+                      <EditableRow label="Color" value={sub.exterior_color} onSave={(v) => saveField("exterior_color", v)} />
+                      <Row label="Drivable" value={sub.drivable} />
+                    </div>
+                  </Card>
+                </div>
+
+                {/* Inspection card — three states: completed / arrived / pending */}
+                <Card
+                  title={inspectionCompleted ? "Inspection Summary" : customerArrived ? "Inspection · Customer Here" : "Inspection"}
+                  right={
+                    inspectionCompleted ? (
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-500/10 border border-emerald-500/20 rounded-md px-2 py-0.5">Completed</span>
+                    ) : customerArrived ? (
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-red-700 bg-red-500/10 border border-red-500/30 rounded-md px-2 py-0.5">
+                        <span className="relative flex items-center justify-center">
+                          <span className="absolute inline-flex h-1.5 w-1.5 rounded-full bg-red-500 opacity-60 animate-ping" />
+                          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-red-600" />
+                        </span>
+                        Ready to Start
+                      </span>
+                    ) : (
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700 bg-amber-500/10 border border-amber-500/20 rounded-md px-2 py-0.5">Pending</span>
+                    )
+                  }
+                >
+                  {inspectionCompleted ? (
+                    <div className="space-y-4">
+                      {sub.overall_condition && (
+                        <p className="text-[14px] leading-relaxed text-slate-700">{sub.overall_condition}</p>
+                      )}
+                      <div className="flex gap-3">
+                        <PassFail label="Tires" pass={null} />
+                        <PassFail label="Brakes" pass={null} />
+                      </div>
+                      <div className="flex items-center gap-2 pt-1 flex-wrap">
+                        <button className="h-9 px-3.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-[12px] font-semibold text-slate-700 inline-flex items-center gap-1.5 transition">
+                          <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M2 4a2 2 0 012-2h9l5 5v9a2 2 0 01-2 2H4a2 2 0 01-2-2V4z"/></svg>
+                          View Full Inspection
+                        </button>
+                        {manualAppraisalNeeded ? (
+                          <button className="h-9 px-3.5 rounded-lg bg-[#003b80] hover:bg-[#002a5c] text-white text-[12px] font-bold inline-flex items-center gap-1.5 transition">
+                            <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3a7 7 0 100 14 7 7 0 000-14zm0 3a1 1 0 011 1v3h2a1 1 0 110 2h-2v2a1 1 0 11-2 0v-2H7a1 1 0 110-2h2V7a1 1 0 011-1z"/></svg>
+                            Appraise Vehicle
+                          </button>
+                        ) : (
+                          <button className="h-9 px-3 rounded-lg text-[12px] font-semibold text-slate-500 hover:text-slate-800 inline-flex items-center gap-1 transition">
+                            Re-Appraise
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ) : customerArrived ? (
+                    <div className="space-y-3">
+                      <div className="rounded-lg bg-gradient-to-br from-red-50 to-red-100 border border-red-300 p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="relative flex items-center justify-center shrink-0 mt-0.5">
+                            <span className="absolute inline-flex h-3 w-3 rounded-full bg-red-400 opacity-60 animate-ping" />
+                            <span className="relative inline-flex h-3 w-3 rounded-full bg-red-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-bold text-red-900 text-sm">Customer is at the car</div>
+                            <div className="text-[13px] text-red-800/90 mt-0.5 leading-snug">
+                              Scan the QR on your phone or iPad and walk out to start the inspection.
+                              Tires &amp; brakes will sync back here when you're done.
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setQrOpen(true)}
+                        className="w-full h-11 rounded-lg bg-red-600 hover:bg-red-700 text-white text-[13px] font-bold inline-flex items-center justify-center gap-2 transition shadow-sm"
+                      >
+                        <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path d="M3 3h5v5H3V3zm1 1v3h3V4H4zm8-1h5v5h-5V3zm1 1v3h3V4h-3zM3 12h5v5H3v-5zm1 1v3h3v-3H4zm8-1h2v2h-2v-2zm3 0h2v2h-2v-2zm-3 3h2v2h-2v-2zm3 0h2v2h-2v-2z"/></svg>
+                        Send QR to My Phone
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 flex items-start gap-3">
+                        <svg className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm.75 11.5a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM10 6a.75.75 0 00-.75.75v4a.75.75 0 001.5 0v-4A.75.75 0 0010 6z"/></svg>
+                        <div className="flex-1">
+                          <div className="font-semibold text-amber-900 text-sm">No inspection completed yet</div>
+                          <div className="text-[13px] text-amber-800/80 mt-0.5">Tires and brakes pass/fail will appear here once the car is inspected.</div>
+                        </div>
+                      </div>
+                      <button className="w-full h-10 rounded-lg bg-[#003b80] hover:bg-[#002a5c] text-white text-[13px] font-bold inline-flex items-center justify-center gap-1.5 transition">
+                        <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path d="M4 3a1 1 0 011-1h10a1 1 0 011 1v14l-5-3-5 3-1-.6V3z"/></svg>
+                        Start Inspection
+                      </button>
+                    </div>
+                  )}
+                </Card>
+
+              </div>
+
+              {/* ── RIGHT / SECONDARY (filled in next increment) ────── */}
+              <aside className="space-y-5 min-w-0" />
+
+            </div>
+          </div>
         </div>
 
         <QRInspectionModal open={qrOpen} onClose={() => setQrOpen(false)} sub={sub} />
