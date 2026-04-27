@@ -15,6 +15,7 @@
  * Radix owns the open/close animation just like V1.
  */
 import { useEffect, useMemo, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -1117,8 +1118,18 @@ function VehicleTab({
   docs: { type: string; name: string; url: string }[];
   onUpdate: (updated: Submission) => void;
 }) {
+  const navigate = useNavigate();
   const [dlOpen, setDlOpen] = useState(false);
   const [dlSide, setDlSide] = useState<"front" | "back">("front");
+
+  const goAppraise = () => {
+    if (!sub.token) return;
+    navigate(`/appraisal/${sub.token}`);
+  };
+  const goInspect = () => {
+    if (!sub.id) return;
+    navigate(`/inspection/${sub.id}`);
+  };
 
   function save<K extends keyof Submission>(field: K, value: Submission[K]) {
     const next = { ...sub, [field]: value };
@@ -1257,13 +1268,32 @@ function VehicleTab({
                 </div>
               </div>
             </div>
-            <button className="w-full h-9 rounded-md border border-slate-200 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-[12px] font-semibold text-slate-700 dark:text-slate-300 transition">
-              Open Full Appraisal Tool
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={goInspect}
+                className="flex-1 h-9 rounded-md border border-slate-200 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-[12px] font-semibold text-slate-700 dark:text-slate-300 transition"
+              >
+                View Full Inspection
+              </button>
+              <button
+                onClick={goAppraise}
+                className="flex-1 h-9 rounded-md bg-[#003b80] hover:bg-[#002a5c] text-white text-[12px] font-bold transition"
+              >
+                Open Appraisal Tool
+              </button>
+            </div>
           </div>
         ) : (
-          <div className="text-[12.5px] text-slate-500 dark:text-slate-400 leading-relaxed">
-            No inspection yet — tires and brakes pass/fail will appear here once the car has been walked.
+          <div className="space-y-3">
+            <div className="text-[12.5px] text-slate-500 dark:text-slate-400 leading-relaxed">
+              No inspection yet — tires and brakes pass/fail will appear here once the car has been walked.
+            </div>
+            <button
+              onClick={goInspect}
+              className="w-full h-9 rounded-md bg-[#003b80] hover:bg-[#002a5c] text-white text-[12px] font-bold transition"
+            >
+              Start Inspection
+            </button>
           </div>
         )}
       </DealCard>
@@ -1289,6 +1319,7 @@ function ContextRail({
   auditLabel: string;
   onUpdate: (updated: Submission) => void;
 }) {
+  const navigate = useNavigate();
   const [moreOpen, setMoreOpen] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
   const [notes, setNotes] = useState<SubmissionNote[]>([]);
@@ -1301,15 +1332,19 @@ function ContextRail({
     if (sub.id) void refreshNotes(sub.id);
   }, [sub.id, refreshNotes]);
 
+  const goInspect = () => sub.id && navigate(`/inspection/${sub.id}`);
+  const goAppraise = () => sub.token && navigate(`/appraisal/${sub.token}`);
+
   // Compute Next Action from progress_status — matches Classic helper.
+  // `onClick` (when set) wires the white CTA to its destination.
   const nextAction = (() => {
-    if (sub.progress_status === "customer_arrived") return { label: "Customer Is Here", sub: "Walk to the car and start the inspection.", cta: "Start Inspection ›", tone: "red" };
-    if (["new", "contacted"].includes(sub.progress_status)) return { label: "Make First Contact", sub: "Respond within SLA (2h).", cta: "Send First Text ›", tone: "amber" };
-    if (sub.progress_status === "offer_accepted") return { label: "Schedule Appointment", sub: "Customer accepted — book the inspection.", cta: "Schedule Appointment ›", tone: "blue" };
-    if (sub.progress_status === "inspection_scheduled") return { label: "Prepare for Inspection", sub: apptTime ? `Booked ${fmtTime(apptTime)}${apptLocation ? ` · ${apptLocation}` : ""}.` : "Inspection booked.", cta: "View Inspection ›", tone: "blue" };
-    if (sub.progress_status === "inspection_completed") return { label: "Build the Offer", sub: "Inspection done. Set ACV and offer.", cta: "Open Appraisal ›", tone: "amber" };
-    if (sub.progress_status === "purchase_complete") return { label: "Deal Closed", sub: "Great work. Consider a review request.", cta: "Send Review Request ›", tone: "green" };
-    return { label: "Follow Up", sub: "Stay in touch with the customer.", cta: "Send Follow-Up ›", tone: "blue" };
+    if (sub.progress_status === "customer_arrived") return { label: "Customer Is Here", sub: "Walk to the car and start the inspection.", cta: "Start Inspection ›", tone: "red", onClick: goInspect };
+    if (["new", "contacted"].includes(sub.progress_status)) return { label: "Make First Contact", sub: "Respond within SLA (2h).", cta: "Send First Text ›", tone: "amber", onClick: null };
+    if (sub.progress_status === "offer_accepted") return { label: "Schedule Appointment", sub: "Customer accepted — book the inspection.", cta: "Schedule Appointment ›", tone: "blue", onClick: null };
+    if (sub.progress_status === "inspection_scheduled") return { label: "Prepare for Inspection", sub: apptTime ? `Booked ${fmtTime(apptTime)}${apptLocation ? ` · ${apptLocation}` : ""}.` : "Inspection booked.", cta: "View Inspection ›", tone: "blue", onClick: goInspect };
+    if (sub.progress_status === "inspection_completed") return { label: "Build the Offer", sub: "Inspection done. Set ACV and offer.", cta: "Open Appraisal ›", tone: "amber", onClick: goAppraise };
+    if (sub.progress_status === "purchase_complete") return { label: "Deal Closed", sub: "Great work. Consider a review request.", cta: "Send Review Request ›", tone: "green", onClick: null };
+    return { label: "Follow Up", sub: "Stay in touch with the customer.", cta: "Send Follow-Up ›", tone: "blue", onClick: null };
   })();
 
   const toneBg = {
@@ -1337,7 +1372,10 @@ function ContextRail({
         <div className="p-4">
           <div className="font-semibold text-[18px] leading-tight">{nextAction.label}</div>
           <p className="text-[12px] text-white/80 mt-1 leading-snug">{nextAction.sub}</p>
-          <button className="w-full mt-3 h-10 rounded-lg bg-white text-slate-900 text-[13px] font-bold hover:bg-white/90 transition">
+          <button
+            onClick={nextAction.onClick || undefined}
+            className="w-full mt-3 h-10 rounded-lg bg-white text-slate-900 text-[13px] font-bold hover:bg-white/90 transition"
+          >
             {nextAction.cta}
           </button>
         </div>

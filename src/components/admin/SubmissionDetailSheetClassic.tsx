@@ -661,7 +661,21 @@ export default function SubmissionDetailSheetClassic({
   onUpdate, onScheduleAppointment,
 }: ClassicProps) {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const { config } = useSiteConfig();
+
+  // Inspection page: /inspection/:id (uses submission id)
+  // Appraisal page:  /appraisal/:token (uses submission token)
+  const goInspect = useCallback(() => {
+    if (!selected?.id) return;
+    onClose();
+    navigate(`/inspection/${selected.id}`);
+  }, [navigate, onClose, selected?.id]);
+  const goAppraise = useCallback(() => {
+    if (!selected?.token) return;
+    onClose();
+    navigate(`/appraisal/${selected.token}`);
+  }, [navigate, onClose, selected?.token]);
   const headerLayout: "a" | "b" | "c" =
     ((config as { customer_file_header_layout?: string }).customer_file_header_layout as "a" | "b" | "c") || "b";
   const [editState, setEditState] = useState<Submission | null>(null);
@@ -966,17 +980,26 @@ export default function SubmissionDetailSheetClassic({
                         <PassFail label="Brakes" pass={null} />
                       </div>
                       <div className="flex items-center gap-2 pt-1 flex-wrap">
-                        <button className="h-9 px-3.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-[12px] font-semibold text-slate-700 inline-flex items-center gap-1.5 transition">
+                        <button
+                          onClick={goInspect}
+                          className="h-9 px-3.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-[12px] font-semibold text-slate-700 inline-flex items-center gap-1.5 transition"
+                        >
                           <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M2 4a2 2 0 012-2h9l5 5v9a2 2 0 01-2 2H4a2 2 0 01-2-2V4z"/></svg>
                           View Full Inspection
                         </button>
                         {manualAppraisalNeeded ? (
-                          <button className="h-9 px-3.5 rounded-lg bg-[#003b80] hover:bg-[#002a5c] text-white text-[12px] font-bold inline-flex items-center gap-1.5 transition">
+                          <button
+                            onClick={goAppraise}
+                            className="h-9 px-3.5 rounded-lg bg-[#003b80] hover:bg-[#002a5c] text-white text-[12px] font-bold inline-flex items-center gap-1.5 transition"
+                          >
                             <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3a7 7 0 100 14 7 7 0 000-14zm0 3a1 1 0 011 1v3h2a1 1 0 110 2h-2v2a1 1 0 11-2 0v-2H7a1 1 0 110-2h2V7a1 1 0 011-1z"/></svg>
                             Appraise Vehicle
                           </button>
                         ) : (
-                          <button className="h-9 px-3 rounded-lg text-[12px] font-semibold text-slate-500 hover:text-slate-800 inline-flex items-center gap-1 transition">
+                          <button
+                            onClick={goAppraise}
+                            className="h-9 px-3 rounded-lg text-[12px] font-semibold text-slate-500 hover:text-slate-800 inline-flex items-center gap-1 transition"
+                          >
                             Re-Appraise
                           </button>
                         )}
@@ -1016,7 +1039,10 @@ export default function SubmissionDetailSheetClassic({
                           <div className="text-[13px] text-amber-800/80 mt-0.5">Tires and brakes pass/fail will appear here once the car is inspected.</div>
                         </div>
                       </div>
-                      <button className="w-full h-10 rounded-lg bg-[#003b80] hover:bg-[#002a5c] text-white text-[13px] font-bold inline-flex items-center justify-center gap-1.5 transition">
+                      <button
+                        onClick={goInspect}
+                        className="w-full h-10 rounded-lg bg-[#003b80] hover:bg-[#002a5c] text-white text-[13px] font-bold inline-flex items-center justify-center gap-1.5 transition"
+                      >
                         <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path d="M4 3a1 1 0 011-1h10a1 1 0 011 1v14l-5-3-5 3-1-.6V3z"/></svg>
                         Start Inspection
                       </button>
@@ -1047,11 +1073,13 @@ export default function SubmissionDetailSheetClassic({
                     nextLabel = "Start Inspection";
                     nextSub = "Walk the car — tires, brakes, photos, docs.";
                     nextBtn = "Start Inspection";
+                    nextOnClick = goInspect;
                   } else if (manualAppraisalNeeded) {
                     nextLabel = "Appraise Vehicle";
                     nextSub = "Customer declined auto-offer. Manual appraisal required.";
                     nextBtn = "Open Appraisal";
                     nextTone = "amber";
+                    nextOnClick = goAppraise;
                   } else if (sub.progress_status === "offer_accepted") {
                     nextLabel = "Review Offer";
                     nextSub = "Customer has an offer. Follow up to close.";
