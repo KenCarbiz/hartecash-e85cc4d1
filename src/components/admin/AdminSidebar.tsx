@@ -213,7 +213,7 @@ const AdminSidebar = ({
     ...(canViewExecutiveHUD(userRole)
       ? [{ key: "gm-hud", label: "GM HUD", icon: DollarSign }]
       : []),
-    ...(isManager ? [{ key: "reports", label: "Reports", icon: LineChart }] : []),
+    ...(isManager ? [{ key: "reports", label: "Reports", icon: BarChart3 }] : []),
     { key: "compliance", label: "Compliance", icon: ShieldCheck },
   ].filter((item) => isAllowed(item.key));
 
@@ -230,7 +230,7 @@ const AdminSidebar = ({
     ...(isManager ? [{ key: "offer-settings", label: "Offer Logic", icon: Settings, badge: pricingAccessRequestCount > 0 ? String(pricingAccessRequestCount) : undefined, badgeVariant: "destructive" as const }] : []),
     ...(canManageAccess ? [
       { key: "form-config", label: "Lead Form", icon: FileText },
-      { key: "inspection-config", label: "Inspection Sheet", icon: FileText },
+      { key: "inspection-config", label: "Inspection Sheet", icon: ListChecks },
       { key: "photo-config", label: "Photo Requirements", icon: Camera },
       { key: "depth-policies", label: "Inspection Standards", icon: Gauge },
     ] : []),
