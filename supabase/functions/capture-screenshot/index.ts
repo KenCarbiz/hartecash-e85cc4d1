@@ -193,7 +193,75 @@ function generateVariants(raw: string): string[] {
   return Array.from(variants);
 }
 
+// Pre-flight check the URL with Deno's fetch before burning a microlink
+// call. Catches the fail modes that microlink "succeeds" on but renders
+// the wrong page for: invalid cert (renders Chrome SSL interstitial),
+// DNS failure, connection refused, slow / unreachable sites.
+//
+// Title-pattern matching on microlink's response is fragile — Chrome's
+// SSL warning page sometimes emits an empty <title>, sometimes the URL,
+// sometimes "Privacy error", and microlink still returns status:success
+// with a screenshot of the warning. Pre-flighting at the TLS layer
+// catches the cert-error case at the source.
+//
+// We send a realistic User-Agent so bot-blockers (CF, Akamai) don't
+// reject the HEAD request and trick us into thinking the site is dead.
+async function preflightCheck(
+  url: string,
+): Promise<{ ok: true } | { ok: false; reason: string }> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10_000);
+  try {
+    // HEAD first — most servers honor it and it's cheaper than GET.
+    // Some misconfigured servers return 405 for HEAD; we don't care
+    // about the status, only that TCP+TLS handshake succeeded.
+    await fetch(url, {
+      method: "HEAD",
+      redirect: "follow",
+      signal: controller.signal,
+      headers: {
+        "user-agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 " +
+          "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+      },
+    });
+    return { ok: true };
+  } catch (e) {
+    const msg = (e as Error).message || String(e);
+    // Deno surfaces TLS errors as messages mentioning "certificate",
+    // "tls", "invalid peer certificate", etc. Classify so the rep gets
+    // an actionable diagnostic instead of a raw stack-trace string.
+    if (/cert|tls|ssl|trust|handshake/i.test(msg)) {
+      return {
+        ok: false,
+        reason: `Site has an invalid SSL certificate (${msg.slice(0, 120)})`,
+      };
+    }
+    if (/dns|name.*resolv|notfound/i.test(msg)) {
+      return { ok: false, reason: `DNS lookup failed for this URL` };
+    }
+    if (/connection.*(refused|reset|aborted|closed)/i.test(msg)) {
+      return { ok: false, reason: `Site refused the connection` };
+    }
+    if (/abort|timeout|timed.?out/i.test(msg)) {
+      return { ok: false, reason: `Site didn't respond within 10s` };
+    }
+    return { ok: false, reason: `Site unreachable: ${msg.slice(0, 120)}` };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function tryCapture(url: string): Promise<CaptureAttempt> {
+  // Pre-flight: if the site has a cert error, is unreachable, or DNS
+  // fails, microlink would either time out OR (worse) render Chrome's
+  // SSL warning page and return it as a "successful" screenshot. Catch
+  // those at the TLS layer before spending a microlink quota call.
+  const preflight = await preflightCheck(url);
+  if (!preflight.ok) {
+    return { url, ok: false, reason: preflight.reason };
+  }
+
   // Hit microlink with metadata mode so we get JSON back with the page
   // title — used to detect junk pages (SSL warnings, CF challenges, etc.)
   const params = new URLSearchParams({
