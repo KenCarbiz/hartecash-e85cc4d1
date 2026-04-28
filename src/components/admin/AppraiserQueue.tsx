@@ -24,17 +24,29 @@ import {
  *   - ALWAYS: needs_appraisal = true AND acv_value IS NULL
  *     (manager explicitly flagged it via "Send to Appraiser")
  *   - IF site_config.auto_route_appraiser_queue = true, ALSO include:
- *     - progress_status = offer_declined AND acv_value IS NULL
+ *     - progress_status = offer_declined  (customer told us no on the phone)
  *     - lead_source IN (walk_in, service, manual_entry) AND acv_value IS NULL
+ *       (showroom + service-drive captures awaiting an initial number)
+ *     - Stale offers: offered_price > 0 AND status_updated_at older than
+ *       STALE_OFFER_HOURS AND status not in any accepted/final state.
+ *       The customer got a number but hasn't moved — appraiser should
+ *       reappraise and send a counteroffer; BDC then re-engages.
  *
  * Sort order reflects operational urgency:
  *   1. Walk-ins (red)    — customer physically on the lot right now
  *   2. Service-drive (orange) — customer at the dealership but not at sales
  *   3. Manual entry (amber)   — staff-entered lead awaiting a number
- *   4. Manager-flagged (purple) — explicit "please review" queue
+ *   4. Manager-flagged + stale offers (purple) — explicit + auto re-review
  *   5. Declined offers (blue) — recoverable, not urgent
  *   Within each group, oldest first.
  */
+
+const STALE_OFFER_HOURS = 1;
+const ACCEPTED_OR_FINAL_STATUSES = [
+  "offer_accepted", "price_agreed", "deal_finalized",
+  "title_ownership_verified", "check_request_submitted",
+  "purchase_complete", "dead_lead", "partial",
+];
 
 interface QueueRow {
   id: string;
@@ -74,13 +86,27 @@ const REASON_META: Record<QueueReason, { label: string; color: string; icon: Rea
   declined:    { label: "Declined",    color: "bg-blue-500/15 text-blue-600 border-blue-500/30 dark:text-blue-400", icon: UserX, priority: 5 },
 };
 
+const isStaleOffer = (row: QueueRow): boolean => {
+  if (!row.offered_price || row.offered_price <= 0) return false;
+  if (ACCEPTED_OR_FINAL_STATUSES.includes(row.progress_status)) return false;
+  // Use status_updated_at when available (last journey-change timestamp)
+  // and fall back to created_at so newer leads still surface eventually.
+  const ts = row.status_updated_at || row.created_at;
+  if (!ts) return false;
+  const ageMs = Date.now() - new Date(ts).getTime();
+  return ageMs >= STALE_OFFER_HOURS * 60 * 60 * 1000;
+};
+
 const classifyRow = (row: QueueRow): QueueReason => {
-  // Priority order: explicit manager flag wins over auto-route reasons so
-  // a flagged walk-in shows up as "Flagged" (operator intent).
+  // Priority order: lead-source bucketing wins so a walk-in with a
+  // stale offer still shows under Walk-ins (operator intent — they
+  // walked in). Manager flag and stale-offer both fall under "flagged"
+  // for the count tile.
   if (row.lead_source === "walk_in") return "walk_in";
   if (row.lead_source === "service") return "service";
   if (row.lead_source === "manual_entry") return "manual_entry";
   if (row.needs_appraisal) return "flagged";
+  if (isStaleOffer(row)) return "flagged";
   return "declined";
 };
 
@@ -150,19 +176,30 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
     const columnsWithoutFlag =
       "id, token, created_at, status_updated_at, name, phone, email, vehicle_year, vehicle_make, vehicle_model, vin, mileage, lead_source, progress_status, offered_price, estimated_offer_high, estimated_offer_low, acv_value, internal_notes";
 
-    // Try the full query first (columns + needs_appraisal filter). If it
-    // comes back with a "column does not exist" error, fall back to the
-    // auto-route criteria only and flag the UI as pre-migration.
-    const orParts = ["needs_appraisal.eq.true"];
+    // OR-clause inclusion. Using PostgREST's nested and(...) groups so
+    // each rule carries its own AND-conditions (acv_value scope, status
+    // gates) and we don't need a global .is("acv_value", null) outside
+    // the OR — that filter would have hidden stale-offer leads, which
+    // by definition already have a number.
+    const cutoffIso = new Date(Date.now() - STALE_OFFER_HOURS * 60 * 60 * 1000).toISOString();
+    const acceptedFinalCsv = ACCEPTED_OR_FINAL_STATUSES.join(",");
+    const orParts = [
+      "and(needs_appraisal.eq.true,acv_value.is.null)",
+    ];
     if (autoRoute) {
+      // Phone/in-person decline — already had a number, customer said no.
       orParts.push("progress_status.eq.offer_declined");
-      orParts.push("lead_source.in.(walk_in,service,manual_entry)");
+      // Showroom + service-drive captures awaiting an initial number.
+      orParts.push("and(lead_source.in.(walk_in,service,manual_entry),acv_value.is.null)");
+      // Stale offers — got a number but no movement after STALE_OFFER_HOURS.
+      orParts.push(
+        `and(offered_price.gt.0,status_updated_at.lt.${cutoffIso},progress_status.not.in.(${acceptedFinalCsv}))`,
+      );
     }
     let { data, error } = await (supabase as any)
       .from("submissions")
       .select(columnsWithFlag)
       .or(orParts.join(","))
-      .is("acv_value", null)
       .order("created_at", { ascending: false });
 
     // Graceful degradation — the needs_appraisal column hasn't been
