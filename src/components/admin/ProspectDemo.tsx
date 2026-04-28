@@ -38,7 +38,7 @@ import {
   recommendAttentionColors,
 } from "@/lib/colorAnalysis";
 import { supabase } from "@/integrations/supabase/client";
-import { Brain, ArrowLeftRight, Wand2 } from "lucide-react";
+import { Brain, ArrowLeftRight, Wand2, Share2, Copy, Check, ExternalLink as ExternalLinkIcon } from "lucide-react";
 import BeforeAfterSlider from "./embed/BeforeAfterSlider";
 
 /**
@@ -198,6 +198,19 @@ const ProspectDemo = () => {
   // salesperson having to hunt around the site.
   const [detectingPages, setDetectingPages] = useState(false);
 
+  // ── Shareable demo URL (Phase 5) ──
+  const [savingDemo, setSavingDemo] = useState(false);
+  const [savedDemo, setSavedDemo] = useState<{ id: string; shareToken: string; expiresAt: string } | null>(() =>
+    readPersisted<{ id: string; shareToken: string; expiresAt: string } | null>("savedDemo", null),
+  );
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  useEffect(() => writePersisted("savedDemo", savedDemo), [savedDemo]);
+
+  const shareUrl = savedDemo
+    ? `${typeof window !== "undefined" ? window.location.origin : ""}/demo/${savedDemo.shareToken}`
+    : null;
+
   // ── Persistence ──
   useEffect(() => writePersisted("dealerName", dealerName), [dealerName]);
   useEffect(() => writePersisted("buttonColor", buttonColor), [buttonColor]);
@@ -283,6 +296,86 @@ const ProspectDemo = () => {
       else next.add(id);
       return next;
     });
+  };
+
+  // Persist the current demo state and get a shareable /demo/:token URL.
+  // If we've already saved this demo this session, re-saving updates the
+  // existing row and bumps the expiry instead of creating a new token.
+  const handleSaveAndShare = async () => {
+    if (!hasAnyCapture) {
+      toast({
+        title: "Capture screenshots first",
+        description: "We need at least one screenshot before saving a demo.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setSavingDemo(true);
+    try {
+      const { data, error } = await supabase.functions.invoke<{
+        id: string;
+        shareToken: string;
+        expiresAt: string;
+      }>("save-prospect-demo", {
+        body: {
+          existingId: savedDemo?.id,
+          dealerName,
+          homeUrl,
+          listingUrl,
+          vdpUrl,
+          screenshots: {
+            home: captures.home,
+            listing: captures.listing,
+            vdp: captures.vdp,
+          },
+          config: {
+            buttonColor,
+            buttonText,
+            bannerHeadline,
+            bannerText,
+            bannerCtaText,
+            stickyText,
+            stickyCtaText,
+            pptButtonText,
+            pptEnabled,
+            activeAssets: Array.from(activeAssets),
+          },
+          pitchLine: llmResult?.pitchLine,
+        },
+      });
+      if (error) throw new Error(error.message);
+      if (!data) throw new Error("Empty response from save-prospect-demo");
+      setSavedDemo(data);
+      toast({
+        title: savedDemo ? "Demo updated" : "Demo saved",
+        description: savedDemo
+          ? "The same shareable link now points to your latest changes."
+          : "Copy the link below and send it to the prospect.",
+      });
+    } catch (e) {
+      toast({
+        title: "Couldn't save demo",
+        description: e instanceof Error ? e.message : "Unknown error",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingDemo(false);
+    }
+  };
+
+  const handleCopyShareUrl = async () => {
+    if (!shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setLinkCopied(true);
+      window.setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      toast({
+        title: "Couldn't copy link",
+        description: "Select the URL above and copy manually.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Hits detect-dealer-pages with the homepage URL and fills in the
@@ -649,6 +742,18 @@ const ProspectDemo = () => {
         </div>
       </div>
 
+      {/* Share with prospect (Phase 5) */}
+      {hasAnyCapture && (
+        <SharePanel
+          shareUrl={shareUrl}
+          savedAt={savedDemo?.expiresAt}
+          saving={savingDemo}
+          copied={linkCopied}
+          onSave={handleSaveAndShare}
+          onCopy={handleCopyShareUrl}
+        />
+      )}
+
       {/* AI color recommendations (algorithmic, client-side) */}
       {captures.home && (
         <ColorRecommendationsPanel
@@ -864,6 +969,119 @@ const PageScreenshot = ({
     {children}
   </div>
 );
+
+// ── Save & Share panel ────────────────────────────────────────────────
+// Persists the demo to Supabase and surfaces a /demo/:token link the
+// salesperson can text/email to the prospect. Re-saving updates the
+// same token (so a sent link doesn't break when copy is tweaked).
+const SharePanel = ({
+  shareUrl,
+  savedAt,
+  saving,
+  copied,
+  onSave,
+  onCopy,
+}: {
+  shareUrl: string | null;
+  savedAt?: string;
+  saving: boolean;
+  copied: boolean;
+  onSave: () => void;
+  onCopy: () => void;
+}) => {
+  const expiresLabel = savedAt
+    ? new Date(savedAt).toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : null;
+  return (
+    <div className="rounded-lg border border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-4 space-y-3">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <Share2 className="w-4 h-4 text-emerald-700" />
+          <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-emerald-700">
+            Share This Demo with the Prospect
+          </div>
+        </div>
+        <Button
+          onClick={onSave}
+          disabled={saving}
+          variant="default"
+          size="sm"
+          className="gap-1.5 bg-emerald-600 hover:bg-emerald-700"
+        >
+          {saving ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <Share2 className="w-3.5 h-3.5" />
+          )}
+          {saving
+            ? "Saving…"
+            : shareUrl
+              ? "Re-save (update link)"
+              : "Save & generate link"}
+        </Button>
+      </div>
+
+      {!shareUrl && !saving && (
+        <p className="text-xs text-slate-700 leading-relaxed">
+          Save the current demo to get a shareable URL. Text or email it
+          to the prospect — they'll see this exact preview without needing
+          a login. The link tracks views, so you'll know when they open it.
+        </p>
+      )}
+
+      {shareUrl && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <div className="flex-1 flex items-center gap-1.5 bg-white border border-slate-300 rounded-md px-3 py-2">
+              <ExternalLinkIcon className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              <code className="text-xs text-slate-800 truncate flex-1">
+                {shareUrl}
+              </code>
+            </div>
+            <Button
+              onClick={onCopy}
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3.5 h-3.5" />
+                  Copy
+                </>
+              )}
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+            >
+              <a href={shareUrl} target="_blank" rel="noopener noreferrer">
+                <ExternalLinkIcon className="w-3.5 h-3.5" />
+                Open
+              </a>
+            </Button>
+          </div>
+          {expiresLabel && (
+            <div className="text-[11px] text-slate-600">
+              Link expires {expiresLabel}. Re-save to extend by another 30 days.
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 // ── AI color recommendations panel ────────────────────────────────────
 // Surfaces the dealer's extracted palette + 2-3 attention-color picks.

@@ -46,6 +46,7 @@ const MobileInspection = lazy(() => import("./pages/MobileInspection"));
 const AppraisalTool = lazy(() => import("./pages/AppraisalTool"));
 const SuperAdminDashboard = lazy(() => import("./pages/SuperAdminDashboard"));
 const OnboardingMobile = lazy(() => import("./pages/OnboardingMobile"));
+const PublicDemo = lazy(() => import("./pages/PublicDemo"));
 const EmailUnsubscribe = lazy(() => import("./pages/EmailUnsubscribe"));
 const ReferralPage = lazy(() => import("./pages/ReferralPage"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
@@ -147,6 +148,7 @@ const AnimatedRoutes = () => {
         <Route path="/appraisal/:token" element={<AppraisalTool />} />
         <Route path="/super-admin" element={<ProtectedRoute><SuperAdminDashboard /></ProtectedRoute>} />
         <Route path="/onboard/:dealershipId" element={<OnboardingMobile />} />
+        <Route path="/demo/:token" element={<PublicDemo />} />
         <Route path="/email-unsubscribe" element={<EmailUnsubscribe />} />
         <Route path="/referral" element={<ReferralPage />} />
         <Route path="/reset-password" element={<ResetPassword />} />
