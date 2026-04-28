@@ -31,6 +31,12 @@ import {
   readPersisted as readPersistedShared,
   writePersisted as writePersistedShared,
 } from "@/lib/embedDemo";
+import {
+  type PaletteColor,
+  type AttentionRecommendation,
+  extractPalette,
+  recommendAttentionColors,
+} from "@/lib/colorAnalysis";
 
 /**
  * ProspectDemo — standalone sales-pitch generator for Autocurb staff
@@ -142,6 +148,15 @@ const ProspectDemo = () => {
     return new Set(stored);
   });
 
+  // ── AI color recommendations ──
+  // Populated client-side from the homepage screenshot using
+  // colorAnalysis.ts (zero API cost). Re-runs whenever a new homepage
+  // capture lands. Phase 3 layers vision-LLM placement reasoning on top.
+  const [palette, setPalette] = useState<PaletteColor[] | null>(null);
+  const [recommendations, setRecommendations] = useState<AttentionRecommendation[] | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
+
   // ── Persistence ──
   useEffect(() => writePersisted("dealerName", dealerName), [dealerName]);
   useEffect(() => writePersisted("buttonColor", buttonColor), [buttonColor]);
@@ -171,6 +186,38 @@ const ProspectDemo = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [homeUrl]);
+
+  // ── Auto-analyze palette when homepage screenshot arrives ──
+  // Runs entirely client-side (canvas pixel sampling). No quota burn.
+  useEffect(() => {
+    if (!captures.home) {
+      setPalette(null);
+      setRecommendations(null);
+      return;
+    }
+    let cancelled = false;
+    setAnalyzing(true);
+    setAnalysisError(null);
+    extractPalette(captures.home, { topN: 5 })
+      .then((p) => {
+        if (cancelled) return;
+        setPalette(p);
+        setRecommendations(recommendAttentionColors(p, { count: 3 }));
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        console.warn("Palette extraction failed:", e);
+        setAnalysisError(
+          e instanceof Error ? e.message : "Couldn't analyze the screenshot",
+        );
+      })
+      .finally(() => {
+        if (!cancelled) setAnalyzing(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [captures.home]);
 
   // ── Cooldown ticker ──
   useEffect(() => {
@@ -450,6 +497,18 @@ const ProspectDemo = () => {
         </div>
       </div>
 
+      {/* AI color recommendations (algorithmic, client-side) */}
+      {captures.home && (
+        <ColorRecommendationsPanel
+          palette={palette}
+          recommendations={recommendations}
+          analyzing={analyzing}
+          error={analysisError}
+          activeColor={buttonColor}
+          onApply={setButtonColor}
+        />
+      )}
+
       {/* Asset toggles */}
       {hasAnyCapture && (
         <div className="rounded-lg border border-slate-200 bg-white p-4">
@@ -605,6 +664,129 @@ const PageScreenshot = ({
     {children}
   </div>
 );
+
+// ── AI color recommendations panel ────────────────────────────────────
+// Surfaces the dealer's extracted palette + 2-3 attention-color picks.
+// Algorithmic only — Phase 3 layers vision-LLM placement reasoning on top.
+const ColorRecommendationsPanel = ({
+  palette,
+  recommendations,
+  analyzing,
+  error,
+  activeColor,
+  onApply,
+}: {
+  palette: PaletteColor[] | null;
+  recommendations: AttentionRecommendation[] | null;
+  analyzing: boolean;
+  error: string | null;
+  activeColor: string;
+  onApply: (hex: string) => void;
+}) => {
+  const matchingActive = (hex: string) =>
+    hex.toUpperCase() === activeColor.toUpperCase();
+
+  if (analyzing) {
+    return (
+      <div className="rounded-lg border border-slate-200 bg-white p-4 flex items-center gap-3">
+        <Loader2 className="w-4 h-4 animate-spin text-slate-500" />
+        <span className="text-sm text-slate-600">Analyzing dealer's palette…</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 flex items-start gap-2">
+        <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+        <div className="text-xs text-amber-800">
+          Couldn't analyze the screenshot for color recommendations: {error}
+        </div>
+      </div>
+    );
+  }
+
+  if (!palette || !recommendations) return null;
+
+  return (
+    <div className="rounded-lg border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4 space-y-4">
+      <div className="flex items-center gap-2">
+        <Sparkles className="w-4 h-4 text-blue-600" />
+        <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500">
+          AI Color Recommendations
+        </div>
+      </div>
+
+      {/* Dealer's existing palette */}
+      <div>
+        <div className="text-[11px] text-slate-600 mb-1.5">Dealer's site palette</div>
+        <div className="flex gap-1.5">
+          {palette.map((p) => (
+            <div
+              key={p.hex}
+              className="group relative"
+              title={`${p.hex} — ${Math.round(p.weight * 100)}% of analyzed pixels`}
+            >
+              <div
+                className="w-10 h-10 rounded-md border border-slate-200 shadow-sm"
+                style={{ backgroundColor: p.hex }}
+              />
+              <div className="text-[9px] font-mono text-slate-500 mt-0.5 text-center">
+                {p.hex}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Attention-color recommendations */}
+      <div>
+        <div className="text-[11px] text-slate-600 mb-2">
+          Recommended CTA colors that pop against this site
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+          {recommendations.map((r) => {
+            const isActive = matchingActive(r.hex);
+            return (
+              <button
+                key={r.hex}
+                onClick={() => onApply(r.hex)}
+                className={`text-left rounded-lg border p-3 transition ${
+                  isActive
+                    ? "border-blue-500 bg-blue-50 ring-2 ring-blue-200"
+                    : "border-slate-200 bg-white hover:border-slate-400"
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <div
+                    className="w-6 h-6 rounded-md border border-slate-300 shrink-0"
+                    style={{ backgroundColor: r.hex }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-bold text-slate-800 truncate">
+                      {r.name}
+                    </div>
+                    <div className="text-[10px] font-mono text-slate-500">{r.hex}</div>
+                  </div>
+                  {isActive && (
+                    <div className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">
+                      Applied
+                    </div>
+                  )}
+                </div>
+                <div className="text-[10px] text-slate-600 leading-snug">{r.reasoning}</div>
+                <div className="flex gap-3 mt-1.5 text-[9px] text-slate-500">
+                  <span>{r.contrastVsWhite}:1 vs white</span>
+                  <span>{r.contrastVsPrimary}:1 vs primary</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const CaptureFailurePanel = ({ reason, url }: { reason: string; url: string }) => (
   <div
