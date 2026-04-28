@@ -266,10 +266,15 @@ const ProspectDemo = () => {
       })
       .catch((e) => {
         if (cancelled) return;
-        console.warn("Palette extraction failed:", e);
-        setAnalysisError(
-          e instanceof Error ? e.message : "Couldn't analyze the screenshot",
-        );
+        console.warn("Palette extraction failed (non-fatal):", e);
+        // Don't surface this as an error to the user — it doesn't affect
+        // the screenshot display, only the algorithmic color recommender.
+        // The user might think the whole capture failed otherwise. The
+        // vision-LLM (Phase 3) already returns its own accent color which
+        // works fine without CORS-readable pixels.
+        setAnalysisError(null);
+        setPalette(null);
+        setRecommendations(null);
       })
       .finally(() => {
         if (!cancelled) setAnalyzing(false);
@@ -794,43 +799,11 @@ const ProspectDemo = () => {
         </div>
       </div>
 
-      {/* Share with prospect (Phase 5) */}
-      {hasAnyCapture && (
-        <SharePanel
-          shareUrl={shareUrl}
-          savedAt={savedDemo?.expiresAt}
-          saving={savingDemo}
-          copied={linkCopied}
-          onSave={handleSaveAndShare}
-          onCopy={handleCopyShareUrl}
-        />
-      )}
+      {/* ── Demos render IMMEDIATELY after the capture form ──
+           Screenshots are the primary thing the user wants to see; AI
+           panels and Share come AFTER the visual proof. */}
 
-      {/* AI color recommendations (algorithmic, client-side) */}
-      {captures.home && (
-        <ColorRecommendationsPanel
-          palette={palette}
-          recommendations={recommendations}
-          analyzing={analyzing}
-          error={analysisError}
-          activeColor={buttonColor}
-          onApply={setButtonColor}
-        />
-      )}
-
-      {/* Vision-LLM senior-rep recommendations (~$0.05 per click) */}
-      {hasAnyCapture && (
-        <LlmRecommendationsPanel
-          running={llmRunning}
-          result={llmResult}
-          error={llmError}
-          onRun={handleRunLlmAnalysis}
-          onApplyAccent={setButtonColor}
-          activeColor={buttonColor}
-        />
-      )}
-
-      {/* Asset toggles */}
+      {/* Asset toggles — paired with the screenshots they control. */}
       {hasAnyCapture && (
         <div className="rounded-lg border border-slate-200 bg-white p-4 space-y-3">
           <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500">
@@ -927,6 +900,43 @@ const ProspectDemo = () => {
             );
           })}
         </div>
+      )}
+
+      {/* AI color recommendations (algorithmic, client-side, free) */}
+      {captures.home && (
+        <ColorRecommendationsPanel
+          palette={palette}
+          recommendations={recommendations}
+          analyzing={analyzing}
+          error={analysisError}
+          activeColor={buttonColor}
+          onApply={setButtonColor}
+        />
+      )}
+
+      {/* Vision-LLM senior-rep recommendations (~$0.05 per click).
+          Auto-applies asset placements + accent color when run. */}
+      {hasAnyCapture && (
+        <LlmRecommendationsPanel
+          running={llmRunning}
+          result={llmResult}
+          error={llmError}
+          onRun={handleRunLlmAnalysis}
+          onApplyAccent={setButtonColor}
+          activeColor={buttonColor}
+        />
+      )}
+
+      {/* Share with prospect (Phase 5) */}
+      {hasAnyCapture && (
+        <SharePanel
+          shareUrl={shareUrl}
+          savedAt={savedDemo?.expiresAt}
+          saving={savingDemo}
+          copied={linkCopied}
+          onSave={handleSaveAndShare}
+          onCopy={handleCopyShareUrl}
+        />
       )}
     </div>
   );

@@ -219,6 +219,10 @@ const isNeutral = (r: number, g: number, b: number): boolean => {
 
 const loadImage = (url: string): Promise<HTMLImageElement> =>
   new Promise((resolve, reject) => {
+    // Try with CORS first (required for canvas pixel reads). If microlink
+    // or another provider doesn't send Access-Control-Allow-Origin, fall
+    // back to a non-CORS load — we won't be able to extract colors from
+    // the canvas (it'll be tainted), but the caller can detect that.
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => resolve(img);
