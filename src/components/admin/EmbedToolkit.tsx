@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { LANDING_TEMPLATES, type LandingTemplate } from "@/hooks/useSiteConfig";
 import TemplateThumbnail from "@/components/landing/TemplateThumbnail";
 import LivePreview from "./embed/LivePreview";
+import InstallSnippet from "./embed/InstallSnippet";
 
 interface DealerLocation {
   id: string;
@@ -635,7 +636,7 @@ window.addEventListener("message", function(e) {
 
       {/* ── Code Snippets ── */}
       <Tabs defaultValue="iframe" className="w-full">
-        <TabsList className={`grid w-full ${pptEnabled ? "grid-cols-8" : "grid-cols-7"}`}>
+        <TabsList className={`grid w-full ${pptEnabled ? "grid-cols-9" : "grid-cols-8"}`}>
           <TabsTrigger value="iframe" className="gap-1.5 text-xs">
             <Monitor className="w-3.5 h-3.5" /> Trade iFrame
           </TabsTrigger>
@@ -661,6 +662,9 @@ window.addEventListener("message", function(e) {
           </TabsTrigger>
           <TabsTrigger value="livepreview" className="gap-1.5 text-xs">
             <Eye className="w-3.5 h-3.5" /> Live Preview
+          </TabsTrigger>
+          <TabsTrigger value="install" className="gap-1.5 text-xs">
+            <Code2 className="w-3.5 h-3.5" /> Install
           </TabsTrigger>
         </TabsList>
 
@@ -1082,6 +1086,24 @@ window.addEventListener("message", function(e) {
             pptButtonText={pptButtonText}
             pptEnabled={pptEnabled}
             dealerDisplayName={tenant.display_name}
+          />
+        </TabsContent>
+
+        <TabsContent value="install" className="mt-4">
+          <InstallSnippet
+            tenant={tenant}
+            buttonColor={buttonColor}
+            buttonText={buttonText}
+            openMode={openMode}
+            widgetPosition={widgetPosition}
+            stickyText={stickyText}
+            stickyCtaText={stickyCtaText}
+            stickyPosition={stickyPosition}
+            bannerHeadline={bannerHeadline}
+            bannerText={bannerText}
+            bannerCtaText={bannerCtaText}
+            pptEnabled={pptEnabled}
+            pptButtonText={pptButtonText}
           />
         </TabsContent>
       </Tabs>
