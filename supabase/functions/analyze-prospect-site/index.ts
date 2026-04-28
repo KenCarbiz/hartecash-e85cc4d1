@@ -123,11 +123,21 @@ serve(async (req) => {
         `    "reasoning": "1–2 sentences explaining contrast vs the dealer's primary color, with a WCAG-flavored justification."\n` +
         `  },\n` +
         `  "pages": {\n` +
-        `    "home"?:    { "placements": ["asset_id with brief 'where + why' reasoning", ...], "skipAssets": ["asset_id: why we'd skip", ...], "notes": "1-2 sentence overall observation" },\n` +
-        `    "listing"?: { ... same shape ... },\n` +
-        `    "vdp"?:     { ... same shape ... }\n` +
+        `    "home"?: {\n` +
+        `      "use":   ["asset_id_1", "asset_id_2", ...]   // ARRAY of asset IDs from the catalog (machine-readable, no extra text)\n` +
+        `      "skip":  ["asset_id_1", ...]                  // ARRAY of asset IDs we should NOT show on this page\n` +
+        `      "placements": ["asset_id: where + why",  ...] // human-readable reasoning for each USE entry\n` +
+        `      "skipReasons": ["asset_id: why",        ...] // human-readable reasoning for each SKIP entry\n` +
+        `      "notes":  "1-2 sentence overall observation"\n` +
+        `    },\n` +
+        `    "listing"?: { ...same shape... },\n` +
+        `    "vdp"?:     { ...same shape... }\n` +
         `  }\n` +
         `}\n\n` +
+        `CRITICAL: the "use" and "skip" arrays MUST contain ONLY raw asset IDs from the\n` +
+        `catalog below — exact strings like "iframe", "widget", "vdp", etc. — no extra\n` +
+        `prose or descriptions. The "placements" and "skipReasons" arrays carry the\n` +
+        `human-readable reasoning. We auto-apply the "use" array to the live demo.\n\n` +
         ASSET_CATALOG +
         `\n\n` +
         `Context:\n` +

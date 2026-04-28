@@ -31,20 +31,58 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Page titles that mean microlink hit an error page. Case-insensitive.
+// Page titles that mean microlink hit a Chrome interstitial / error /
+// challenge page instead of the actual dealer site. Case-insensitive.
+//
+// Updated for cert-error variants observed in the wild — Chrome's
+// "Your connection is not private" interstitial sometimes ends up
+// with title "Privacy error", sometimes with the bare URL, sometimes
+// with NET::ERR_CERT_AUTHORITY_INVALID.
 const ERROR_TITLE_PATTERNS = [
+  // SSL / cert warnings
   /your connection is not private/i,
+  /your connection isn'?t private/i,
   /privacy error/i,
-  /this site can't be reached/i,
-  /404\b/,
-  /not found/i,
-  /access denied/i,
-  /forbidden/i,
-  /server error/i,
-  /cloudflare/i, // CF challenge / "Just a moment..."
+  /privacy warning/i,
+  /connection is not secure/i,
+  /not secure/i,
+  /\bERR_CERT_/i,
+  /\bSSL_ERROR/i,
+  /\bNET::ERR_/i,
+  /certificate (?:error|invalid|expired)/i,
+  // Network / DNS / unreachable
+  /this site can'?t be reached/i,
+  /this page isn'?t working/i,
+  /\bDNS_PROBE/i,
+  /\bERR_NAME_NOT_RESOLVED/i,
+  /\bERR_CONNECTION_/i,
+  // Cloudflare / WAF challenge
+  /cloudflare/i,
   /attention required/i,
   /just a moment/i,
+  /please wait/i,
+  /checking your browser/i,
+  /access denied/i,
+  /\b403\b/,
+  /forbidden/i,
+  // 404s and server errors
+  /\b404\b/,
+  /\b500\b/,
+  /\b502\b/,
+  /\b503\b/,
+  /not found/i,
+  /server error/i,
+  /something went wrong/i,
 ];
+
+// True if the page title is suspiciously "just the URL" — Chrome
+// interstitials sometimes leave the title as the bare hostname when
+// rendering an error page that has no <title>.
+const titleIsJustHost = (title: string, sourceHost: string): boolean => {
+  const t = title.trim().toLowerCase();
+  const h = sourceHost.toLowerCase().replace(/^www\./, "");
+  return t === h || t === `www.${h}` || t === `https://${h}` || t === `https://www.${h}`;
+};
 
 interface CaptureAttempt {
   url: string;
@@ -221,6 +259,22 @@ async function tryCapture(url: string): Promise<CaptureAttempt> {
       reason: `Page rendered as error: "${pageTitle}"`,
       pageTitle,
     };
+  }
+
+  // Also reject when the title is suspiciously "just the URL" — Chrome
+  // SSL interstitials and hard 404s often emit only the hostname as title.
+  try {
+    const sourceHost = new URL(url).hostname;
+    if (pageTitle && titleIsJustHost(pageTitle, sourceHost)) {
+      return {
+        url,
+        ok: false,
+        reason: `Page title is just the hostname ("${pageTitle}") — likely an SSL interstitial or 404`,
+        pageTitle,
+      };
+    }
+  } catch {
+    // ignore — bad URL parsing isn't a junk-page signal
   }
 
   return { url, ok: true, screenshotUrl, pageTitle };

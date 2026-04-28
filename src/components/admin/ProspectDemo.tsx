@@ -82,7 +82,14 @@ type AssetId = typeof ASSETS[number]["id"];
 // JSON schema we ask Claude to produce. All fields optional because the
 // LLM occasionally omits per-page sections when there's no useful signal.
 interface LlmPageAnalysis {
+  // Machine-readable asset IDs the AI says to USE / SKIP on this page.
+  // Used for auto-applying the AI's recommendation to the live demo.
+  use?: string[];
+  skip?: string[];
+  // Human-readable reasoning surfaced in the UI alongside each ID.
   placements?: string[];
+  skipReasons?: string[];
+  // Older field kept for back-compat with prior LLM responses.
   skipAssets?: string[];
   notes?: string;
 }
@@ -452,10 +459,48 @@ const ProspectDemo = () => {
       if (error) throw new Error(error.message);
       if (!data) throw new Error("Empty response from analyze-prospect-site");
       setLlmResult(data);
-      toast({
-        title: "AI analysis complete",
-        description: "Senior-rep recommendations are below the screenshots.",
-      });
+
+      // Auto-apply the AI's recommendations to the live demo.
+      // The "use" arrays per-page are unioned into the single global
+      // activeAssets set. Asset definitions already filter by page so
+      // e.g. "vdp" only renders on the VDP screenshot.
+      const useUnion = new Set<AssetId>();
+      const validIds = new Set(ASSETS.map((a) => a.id));
+      const collect = (arr: string[] | undefined) => {
+        if (!arr) return;
+        for (const id of arr) {
+          // Tolerate legacy strings that include reasoning ("iframe: at top right")
+          // by trimming on the first non-id char.
+          const slug = id.trim().split(/[\s:,(]/)[0].toLowerCase();
+          if (validIds.has(slug as AssetId)) useUnion.add(slug as AssetId);
+        }
+      };
+      collect(data.pages?.home?.use);
+      collect(data.pages?.listing?.use);
+      collect(data.pages?.vdp?.use);
+
+      // Apply the AI's accent color too if it returned one.
+      if (data.accentColor?.hex && /^#[0-9a-f]{6}$/i.test(data.accentColor.hex)) {
+        setButtonColor(data.accentColor.hex);
+      }
+
+      // If the AI gave us no recommendations at all, leave the rep's
+      // current toggles alone — better than wiping everything.
+      if (useUnion.size > 0) {
+        setActiveAssets(useUnion);
+        toast({
+          title: "AI recommendations applied",
+          description:
+            `Layered ${useUnion.size} ${useUnion.size === 1 ? "asset" : "assets"} on the demo + ` +
+            (data.accentColor?.hex ? "applied accent color." : "kept current accent."),
+        });
+      } else {
+        toast({
+          title: "AI analysis complete",
+          description:
+            "AI didn't return structured placements — showing free-text recommendations below.",
+        });
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Unknown error";
       setLlmError(msg);
@@ -1358,25 +1403,39 @@ const LlmRecommendationsPanel = ({
                         {p.notes}
                       </div>
                     )}
-                    {!!p.placements?.length && (
+                    {/* Render USE list — prefer the new placements text but
+                        fall back to bare asset IDs if placements weren't
+                        provided. The "(applied)" tag confirms auto-apply. */}
+                    {(!!p.placements?.length || !!p.use?.length) && (
                       <div className="mb-1.5">
                         <div className="text-[9px] font-bold uppercase tracking-wider text-emerald-700 mb-0.5">
-                          Use
+                          Use {p.use?.length ? `(${p.use.length} applied)` : ""}
                         </div>
                         <ul className="text-[11px] text-slate-700 leading-snug space-y-0.5 list-disc list-inside">
-                          {p.placements.map((line, i) => (
-                            <li key={i}>{line}</li>
-                          ))}
+                          {(p.placements?.length ? p.placements : p.use || []).map(
+                            (line, i) => (
+                              <li key={i}>{line}</li>
+                            ),
+                          )}
                         </ul>
                       </div>
                     )}
-                    {!!p.skipAssets?.length && (
+                    {/* Render SKIP list — prefer skipReasons, fall back to
+                        skipAssets (legacy field) or skip. */}
+                    {(!!p.skipReasons?.length ||
+                      !!p.skipAssets?.length ||
+                      !!p.skip?.length) && (
                       <div>
                         <div className="text-[9px] font-bold uppercase tracking-wider text-rose-700 mb-0.5">
                           Skip
                         </div>
                         <ul className="text-[11px] text-slate-600 leading-snug space-y-0.5 list-disc list-inside">
-                          {p.skipAssets.map((line, i) => (
+                          {(p.skipReasons?.length
+                            ? p.skipReasons
+                            : p.skipAssets?.length
+                              ? p.skipAssets
+                              : p.skip || []
+                          ).map((line, i) => (
                             <li key={i}>{line}</li>
                           ))}
                         </ul>
