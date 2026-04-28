@@ -31,6 +31,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import CustomerFileAccentStyle from "./CustomerFileAccentStyle";
 import SubmissionNotesModal, { fetchSubmissionNotes, type SubmissionNote } from "./SubmissionNotesModal";
+import { printCheckRequest } from "@/lib/printUtils";
+import logoFallback from "@/assets/logo-placeholder.png";
 
 interface CustomerFileV2Props {
   selected: Submission | null;
@@ -1337,6 +1339,8 @@ function ContextRail({
     if (sub.id) void refreshNotes(sub.id);
   }, [sub.id, refreshNotes]);
 
+  const { toast } = useToast();
+
   const goInspect = () => {
     if (!sub.id) return;
     sessionStorage.setItem("autocurb:reopenSubmissionId", sub.id);
@@ -1348,6 +1352,96 @@ function ContextRail({
     navigate(`/appraisal/${sub.token}`);
   };
 
+  const handleGenerateCheckRequest = useCallback(async () => {
+    if (!sub || !sub.offered_price) return;
+    const hasAddress = sub.address_street && (sub.address_city || sub.address_state || sub.zip);
+    if (!hasAddress) {
+      toast({ title: "Missing Address", description: "Customer street address must be entered.", variant: "destructive" });
+      return;
+    }
+    const { data: appraisalCheck } = await supabase.storage.from("customer-documents").list(`${sub.token}/appraisal`);
+    if (!appraisalCheck || appraisalCheck.length === 0) {
+      toast({ title: "Missing Appraisal", description: "An ACV appraisal document must be uploaded.", variant: "destructive" });
+      return;
+    }
+    const [dlLegacy, dlFront] = await Promise.all([
+      supabase.storage.from("customer-documents").list(`${sub.token}/drivers_license`),
+      supabase.storage.from("customer-documents").list(`${sub.token}/drivers_license_front`),
+    ]);
+    const hasDL = (dlLegacy.data && dlLegacy.data.length > 0) || (dlFront.data && dlFront.data.length > 0);
+    if (!hasDL) {
+      toast({ title: "Missing Driver's License", description: "Customer driver's license must be uploaded.", variant: "destructive" });
+      return;
+    }
+    let logoBase64 = "";
+    try {
+      const resp = await fetch(logoFallback);
+      const blob = await resp.blob();
+      logoBase64 = await new Promise<string>((resolve) => {
+        const r = new FileReader();
+        r.onloadend = () => resolve(r.result as string);
+        r.readAsDataURL(blob);
+      });
+    } catch { logoBase64 = ""; }
+    const fetchDocImages = async (folder: string): Promise<string[]> => {
+      const urls: string[] = [];
+      const { data: files } = await supabase.storage.from("customer-documents").list(`${sub.token}/${folder}`);
+      if (files && files.length > 0) {
+        for (const f of files) {
+          const { data } = await supabase.storage.from("customer-documents").createSignedUrl(`${sub.token}/${folder}/${f.name}`, 3600);
+          if (data?.signedUrl) urls.push(data.signedUrl);
+        }
+      }
+      return urls;
+    };
+    const [apprImg, dlImg, dlFImg, dlBImg, titleImg, payoffImg] = await Promise.all([
+      fetchDocImages("appraisal"),
+      fetchDocImages("drivers_license"),
+      fetchDocImages("drivers_license_front"),
+      fetchDocImages("drivers_license_back"),
+      fetchDocImages("title"),
+      fetchDocImages("payoff_verification"),
+    ]);
+    const inspectionTextSections: { title: string; text: string }[] = [];
+    if (sub.internal_notes && sub.internal_notes.includes("[INSPECTION")) {
+      inspectionTextSections.push({ title: "Inspection Report", text: sub.internal_notes });
+    }
+    const html = printCheckRequest(sub, logoBase64, [
+      { title: "Appraisal Document", images: apprImg },
+      { title: "Driver's License", images: [...dlImg, ...dlFImg, ...dlBImg] },
+      { title: "Title", images: titleImg },
+      { title: "Payoff Documentation", images: payoffImg },
+    ], inspectionTextSections);
+    if (html) {
+      try {
+        const blob = new Blob([html], { type: "text/html" });
+        const fileName = `check-request-${new Date().toISOString().slice(0, 10)}.html`;
+        await supabase.storage.from("customer-documents").upload(
+          `${sub.token}/check_request/${fileName}`,
+          blob,
+          { contentType: "text/html", upsert: true },
+        );
+        toast({ title: "Check Request Generated", description: "Printed and saved to documents." });
+        supabase.from("activity_log").insert({
+          submission_id: sub.id,
+          action: "Check Request Generated",
+          old_value: null,
+          new_value: sub.offered_price ? `$${Number(sub.offered_price).toLocaleString()}` : null,
+          performed_by: auditLabel,
+        });
+      } catch {
+        toast({ title: "Check request printed", description: "But failed to save a copy.", variant: "destructive" });
+        supabase.from("activity_log").insert({
+          submission_id: sub.id,
+          action: "Check Request Save Failed",
+          old_value: null,
+          new_value: "Print succeeded but upload to customer-documents bucket failed",
+          performed_by: auditLabel,
+        });
+      }
+    }
+  }, [sub, toast, auditLabel]);
+
   // Compute Next Action from progress_status — matches Classic helper.
   // `onClick` (when set) wires the white CTA to its destination.
   const nextAction = (() => {
@@ -1356,6 +1450,7 @@ function ContextRail({
     if (sub.progress_status === "offer_accepted") return { label: "Schedule Appointment", sub: "Customer accepted — book the inspection.", cta: "Schedule Appointment ›", tone: "blue", onClick: null };
     if (sub.progress_status === "inspection_scheduled") return { label: "Prepare for Inspection", sub: apptTime ? `Booked ${fmtTime(apptTime)}${apptLocation ? ` · ${apptLocation}` : ""}.` : "Inspection booked.", cta: "View Inspection ›", tone: "blue", onClick: goInspect };
     if (sub.progress_status === "inspection_completed") return { label: "Build the Offer", sub: "Inspection done. Set ACV and offer.", cta: "Open Appraisal ›", tone: "amber", onClick: goAppraise };
+    if (["price_agreed", "deal_finalized", "title_ownership_verified"].includes(sub.progress_status)) return { label: "Finalize Deal", sub: "Paperwork and check request.", cta: "Open Check Request ›", tone: "green", onClick: handleGenerateCheckRequest };
     if (sub.progress_status === "purchase_complete") return { label: "Deal Closed", sub: "Great work. Consider a review request.", cta: "Send Review Request ›", tone: "green", onClick: null };
     return { label: "Follow Up", sub: "Stay in touch with the customer.", cta: "Send Follow-Up ›", tone: "blue", onClick: null };
   })();
