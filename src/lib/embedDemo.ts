@@ -138,7 +138,29 @@ export const captureOne = async (target: string): Promise<CaptureResult> => {
     }>("capture-screenshot", { body: { url: normalized } });
 
     if (error) {
-      return { url: null, error: error.message || "Capture failed" };
+      // Try to pull a useful diagnostic out of the FunctionsError. Common
+      // shapes:
+      //   FunctionsHttpError  — function ran, returned 4xx/5xx (auth fail,
+      //                         crashed handler, etc.); response body has
+      //                         the actual reason.
+      //   FunctionsRelayError — couldn't reach the function (not deployed,
+      //                         network error).
+      //   FunctionsFetchError — fetch-level failure.
+      let detail = error.message || "Capture failed";
+      // supabase-js attaches the Response on the FunctionsHttpError.
+      const ctx = (error as unknown as { context?: { status?: number } }).context;
+      if (ctx?.status) {
+        detail = `${detail} (HTTP ${ctx.status})`;
+      }
+      // If the error name says relay/fetch, the function probably isn't
+      // deployed yet — surface that hint directly.
+      if (/relay|fetch/i.test(error.name || "")) {
+        detail =
+          `${detail} — the capture-screenshot edge function isn't reachable. ` +
+          `Likely Lovable hasn't deployed it yet. Wait 1–2 minutes and retry.`;
+      }
+      console.warn(`captureOne edge-function error for ${normalized}:`, error, ctx);
+      return { url: null, error: detail };
     }
     if (data?.screenshotUrl) {
       return { url: data.screenshotUrl, error: null, attempts: data.attempts };
