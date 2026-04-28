@@ -37,6 +37,8 @@ import {
   extractPalette,
   recommendAttentionColors,
 } from "@/lib/colorAnalysis";
+import { supabase } from "@/integrations/supabase/client";
+import { Brain } from "lucide-react";
 
 /**
  * ProspectDemo — standalone sales-pitch generator for Autocurb staff
@@ -74,6 +76,24 @@ const ASSETS = [
 ] as const;
 
 type AssetId = typeof ASSETS[number]["id"];
+
+// Shape returned by the analyze-prospect-site edge function. Mirrors the
+// JSON schema we ask Claude to produce. All fields optional because the
+// LLM occasionally omits per-page sections when there's no useful signal.
+interface LlmPageAnalysis {
+  placements?: string[];
+  skipAssets?: string[];
+  notes?: string;
+}
+interface LlmAnalysis {
+  pitchLine?: string;
+  accentColor?: { hex?: string; name?: string; reasoning?: string };
+  pages?: {
+    home?: LlmPageAnalysis;
+    listing?: LlmPageAnalysis;
+    vdp?: LlmPageAnalysis;
+  };
+}
 
 // Reasonable defaults that look credible on any dealer site without
 // the rep having to write fresh copy from scratch. Sales rep can edit
@@ -156,6 +176,13 @@ const ProspectDemo = () => {
   const [recommendations, setRecommendations] = useState<AttentionRecommendation[] | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
+
+  // ── Vision-LLM recommendations (Phase 3) ──
+  // Costs ~$0.03–0.05 per click. Surfaces a "senior sales rep" opinion:
+  // per-page placement reasoning, accent-color override, pitch line.
+  const [llmRunning, setLlmRunning] = useState(false);
+  const [llmResult, setLlmResult] = useState<LlmAnalysis | null>(null);
+  const [llmError, setLlmError] = useState<string | null>(null);
 
   // ── Persistence ──
   useEffect(() => writePersisted("dealerName", dealerName), [dealerName]);
@@ -241,6 +268,48 @@ const ProspectDemo = () => {
       else next.add(id);
       return next;
     });
+  };
+
+  // Kick off the vision-LLM analysis. Runs over whichever screenshots
+  // are present (some prospects have only a homepage to analyze).
+  const handleRunLlmAnalysis = async () => {
+    if (!hasAnyCapture) return;
+    setLlmRunning(true);
+    setLlmError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke<LlmAnalysis>(
+        "analyze-prospect-site",
+        {
+          body: {
+            dealerName: dealerName || undefined,
+            screenshots: {
+              home: captures.home || undefined,
+              listing: captures.listing || undefined,
+              vdp: captures.vdp || undefined,
+            },
+            palette: palette?.map((p) => p.hex),
+            buttonColor,
+          },
+        },
+      );
+      if (error) throw new Error(error.message);
+      if (!data) throw new Error("Empty response from analyze-prospect-site");
+      setLlmResult(data);
+      toast({
+        title: "AI analysis complete",
+        description: "Senior-rep recommendations are below the screenshots.",
+      });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Unknown error";
+      setLlmError(msg);
+      toast({
+        title: "AI analysis failed",
+        description: msg,
+        variant: "destructive",
+      });
+    } finally {
+      setLlmRunning(false);
+    }
   };
 
   const handleCapture = async () => {
@@ -506,6 +575,18 @@ const ProspectDemo = () => {
           error={analysisError}
           activeColor={buttonColor}
           onApply={setButtonColor}
+        />
+      )}
+
+      {/* Vision-LLM senior-rep recommendations (~$0.05 per click) */}
+      {hasAnyCapture && (
+        <LlmRecommendationsPanel
+          running={llmRunning}
+          result={llmResult}
+          error={llmError}
+          onRun={handleRunLlmAnalysis}
+          onApplyAccent={setButtonColor}
+          activeColor={buttonColor}
         />
       )}
 
@@ -784,6 +865,181 @@ const ColorRecommendationsPanel = ({
           })}
         </div>
       </div>
+    </div>
+  );
+};
+
+// ── Vision-LLM senior-rep panel ───────────────────────────────────────
+// Single click → analyze-prospect-site edge function → Claude Sonnet 4.5
+// vision → structured JSON (pitchLine, accentColor, per-page placements).
+// The button costs real money each press, so we don't auto-run.
+const LlmRecommendationsPanel = ({
+  running,
+  result,
+  error,
+  onRun,
+  onApplyAccent,
+  activeColor,
+}: {
+  running: boolean;
+  result: LlmAnalysis | null;
+  error: string | null;
+  onRun: () => void;
+  onApplyAccent: (hex: string) => void;
+  activeColor: string;
+}) => {
+  const accent = result?.accentColor;
+  const accentApplied =
+    accent?.hex && accent.hex.toUpperCase() === activeColor.toUpperCase();
+
+  return (
+    <div className="rounded-lg border border-blue-200 bg-gradient-to-br from-blue-50 to-violet-50 p-4 space-y-3">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <Brain className="w-4 h-4 text-violet-700" />
+          <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-violet-700">
+            Senior-Rep AI Recommendations
+          </div>
+        </div>
+        <Button
+          onClick={onRun}
+          disabled={running}
+          variant="default"
+          size="sm"
+          className="gap-1.5 bg-violet-700 hover:bg-violet-800"
+        >
+          {running ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <Sparkles className="w-3.5 h-3.5" />
+          )}
+          {running
+            ? "Analyzing screenshots…"
+            : result
+              ? "Re-run analysis"
+              : "Get AI Recommendations"}
+        </Button>
+      </div>
+
+      {!result && !running && !error && (
+        <p className="text-xs text-slate-600 leading-relaxed">
+          Claude Sonnet will look at the captured screenshots and tell you
+          where each embed asset would have the most impact, recommend an
+          accent color tuned to this dealer's brand, and write a one-line
+          opening pitch. Runs ~$0.05 per click.
+        </p>
+      )}
+
+      {error && (
+        <div className="rounded-md border border-amber-200 bg-amber-50 p-3 flex items-start gap-2">
+          <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+          <div className="text-xs text-amber-800">{error}</div>
+        </div>
+      )}
+
+      {result && (
+        <div className="space-y-3">
+          {result.pitchLine && (
+            <div className="rounded-md border border-violet-200 bg-white p-3">
+              <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-violet-700 mb-1">
+                Opening pitch
+              </div>
+              <div className="text-sm text-slate-800 italic leading-relaxed">
+                "{result.pitchLine}"
+              </div>
+            </div>
+          )}
+
+          {accent?.hex && (
+            <div className="rounded-md border border-slate-200 bg-white p-3">
+              <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500 mb-2">
+                Recommended accent color
+              </div>
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-10 h-10 rounded-md border border-slate-300 shrink-0"
+                  style={{ backgroundColor: accent.hex }}
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-sm font-bold text-slate-800">
+                      {accent.name || "AI accent"}
+                    </span>
+                    <span className="text-[11px] font-mono text-slate-500">
+                      {accent.hex}
+                    </span>
+                  </div>
+                  {accent.reasoning && (
+                    <div className="text-[11px] text-slate-600 mt-0.5 leading-snug">
+                      {accent.reasoning}
+                    </div>
+                  )}
+                </div>
+                <Button
+                  size="sm"
+                  variant={accentApplied ? "secondary" : "default"}
+                  onClick={() => onApplyAccent(accent.hex!)}
+                  disabled={accentApplied}
+                >
+                  {accentApplied ? "Applied" : "Apply"}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {result.pages && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+              {(["home", "listing", "vdp"] as const).map((pageKey) => {
+                const p = result.pages?.[pageKey];
+                if (!p) return null;
+                return (
+                  <div
+                    key={pageKey}
+                    className="rounded-md border border-slate-200 bg-white p-3"
+                  >
+                    <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500 mb-1.5">
+                      {pageKey === "home"
+                        ? "Homepage"
+                        : pageKey === "listing"
+                          ? "Listing"
+                          : "VDP"}
+                    </div>
+                    {p.notes && (
+                      <div className="text-[11px] text-slate-700 leading-snug mb-2">
+                        {p.notes}
+                      </div>
+                    )}
+                    {!!p.placements?.length && (
+                      <div className="mb-1.5">
+                        <div className="text-[9px] font-bold uppercase tracking-wider text-emerald-700 mb-0.5">
+                          Use
+                        </div>
+                        <ul className="text-[11px] text-slate-700 leading-snug space-y-0.5 list-disc list-inside">
+                          {p.placements.map((line, i) => (
+                            <li key={i}>{line}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {!!p.skipAssets?.length && (
+                      <div>
+                        <div className="text-[9px] font-bold uppercase tracking-wider text-rose-700 mb-0.5">
+                          Skip
+                        </div>
+                        <ul className="text-[11px] text-slate-600 leading-snug space-y-0.5 list-disc list-inside">
+                          {p.skipAssets.map((line, i) => (
+                            <li key={i}>{line}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
