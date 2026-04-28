@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { LANDING_TEMPLATES, type LandingTemplate } from "@/hooks/useSiteConfig";
 import TemplateThumbnail from "@/components/landing/TemplateThumbnail";
+import LivePreview from "./embed/LivePreview";
 
 interface DealerLocation {
   id: string;
@@ -634,7 +635,7 @@ window.addEventListener("message", function(e) {
 
       {/* ── Code Snippets ── */}
       <Tabs defaultValue="iframe" className="w-full">
-        <TabsList className={`grid w-full ${pptEnabled ? "grid-cols-7" : "grid-cols-6"}`}>
+        <TabsList className={`grid w-full ${pptEnabled ? "grid-cols-8" : "grid-cols-7"}`}>
           <TabsTrigger value="iframe" className="gap-1.5 text-xs">
             <Monitor className="w-3.5 h-3.5" /> Trade iFrame
           </TabsTrigger>
@@ -657,6 +658,9 @@ window.addEventListener("message", function(e) {
           )}
           <TabsTrigger value="button" className="gap-1.5 text-xs">
             <ExternalLink className="w-3.5 h-3.5" /> Button
+          </TabsTrigger>
+          <TabsTrigger value="livepreview" className="gap-1.5 text-xs">
+            <Eye className="w-3.5 h-3.5" /> Live Preview
           </TabsTrigger>
         </TabsList>
 
@@ -1063,6 +1067,22 @@ window.addEventListener("message", function(e) {
               </p>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ── Live Preview tab — sales-pitch demo on a dealer's actual site ── */}
+        <TabsContent value="livepreview" className="mt-4">
+          <LivePreview
+            buttonColor={buttonColor}
+            buttonText={buttonText}
+            bannerHeadline={bannerHeadline}
+            bannerText={bannerText}
+            bannerCtaText={bannerCtaText}
+            stickyText={stickyText}
+            stickyCtaText={stickyCtaText}
+            pptButtonText={pptButtonText}
+            pptEnabled={pptEnabled}
+            dealerDisplayName={tenant.display_name}
+          />
         </TabsContent>
       </Tabs>
 
