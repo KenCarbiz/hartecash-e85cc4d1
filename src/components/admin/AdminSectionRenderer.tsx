@@ -262,18 +262,16 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
   if (activeSection === "accepted-appts") {
     return (
       <div className="space-y-8">
-        {/* Front desk: reception-friendly check-in panel sits at the top
-            so a greeter can land on Appointments and immediately see
-            who's here / on the way. The fuller manager view below is
-            kept for sales/managers who need to create appointments,
-            reschedule, or filter by location. */}
+        {/* Front desk: reception-friendly check-in panel — Today / Right
+            now / On the way + today's schedule with check-in. The
+            AppointmentManager below covers full appointment ops
+            (cancel, confirm, complete, filter by location, create new). */}
         <FrontDesk
           appointments={appointments}
           submissions={submissions}
           fetchSubmissions={fetchSubmissions}
           onView={handleView}
         />
-        <SubmissionsTable {...submissionsTableProps(props, submissions.filter(isAcceptedWithAppointment), false)} />
         <AppointmentManager
           appointments={appointments}
           setAppointments={setAppointments}

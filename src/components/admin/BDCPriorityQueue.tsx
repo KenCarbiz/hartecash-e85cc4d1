@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
 import { Button } from "@/components/ui/button";
-import { Loader2, Phone, MessageSquare, RefreshCw } from "lucide-react";
+import { Loader2, Phone, MessageSquare } from "lucide-react";
 import { scoreBdcLead, type ScoreInputs } from "@/lib/bdcLeadScore";
 import { formatPhone, cn } from "@/lib/utils";
 
@@ -104,7 +104,6 @@ const BDCPriorityQueue = ({ onOpenSubmission }: { onOpenSubmission?: (id: string
   const { tenant } = useTenant();
   const [rows, setRows] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshTick, setRefreshTick] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -126,7 +125,7 @@ const BDCPriorityQueue = ({ onOpenSubmission }: { onOpenSubmission?: (id: string
     return () => {
       cancelled = true;
     };
-  }, [tenant.dealership_id, refreshTick]);
+  }, [tenant.dealership_id]);
 
   // Filter to BDC-relevant rows + score them.
   const scored = useMemo(() => {
@@ -177,16 +176,11 @@ const BDCPriorityQueue = ({ onOpenSubmission }: { onOpenSubmission?: (id: string
   return (
     <div className="space-y-6 max-w-6xl">
       {/* Header */}
-      <header className="flex items-start justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-card-foreground">BDC priority queue</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {scored.length} {scored.length === 1 ? "lead" : "leads"} ranked by urgency. Work top to bottom.
-          </p>
-        </div>
-        <Button variant="outline" size="sm" onClick={() => setRefreshTick((n) => n + 1)}>
-          <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> Refresh
-        </Button>
+      <header>
+        <h1 className="text-3xl font-bold tracking-tight text-card-foreground">BDC priority queue</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          {scored.length} {scored.length === 1 ? "lead" : "leads"} ranked by urgency. Work top to bottom.
+        </p>
       </header>
 
       {/* KPI tiles */}
@@ -285,7 +279,7 @@ const BDCPriorityQueue = ({ onOpenSubmission }: { onOpenSubmission?: (id: string
 
 function Tile({ label, value, sub, valueClass = "" }: { label: string; value: number; sub: string; valueClass?: string }) {
   return (
-    <div className="rounded-lg border bg-card p-5">
+    <div className="rounded-lg border border-border/60 p-5">
       <div className="text-[11px] font-bold tracking-wider uppercase text-muted-foreground">{label}</div>
       <div className={cn("text-3xl font-bold mt-2", valueClass)}>{value}</div>
       <div className="text-xs text-muted-foreground mt-1">{sub}</div>
