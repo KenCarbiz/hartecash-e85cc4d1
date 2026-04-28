@@ -159,7 +159,7 @@ serve(async (req) => {
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-5-20250929",
+        model: "claude-sonnet-4-6",
         max_tokens: 400,
         system: "You write short, natural-sounding outreach messages for car-dealership salespeople. " +
                 "Never invent facts not provided in the context. " +
