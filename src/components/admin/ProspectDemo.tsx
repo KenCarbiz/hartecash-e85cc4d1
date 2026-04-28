@@ -38,7 +38,7 @@ import {
   recommendAttentionColors,
 } from "@/lib/colorAnalysis";
 import { supabase } from "@/integrations/supabase/client";
-import { Brain, ArrowLeftRight, Wand2, Share2, Copy, Check, ExternalLink as ExternalLinkIcon } from "lucide-react";
+import { Brain, ArrowLeftRight, Wand2, Share2, Copy, Check } from "lucide-react";
 import BeforeAfterSlider from "./embed/BeforeAfterSlider";
 
 /**
@@ -165,15 +165,20 @@ const ProspectDemo = () => {
     vdp: null,
   });
   const [activeAssets, setActiveAssets] = useState<Set<AssetId>>(() => {
-    const stored = readPersisted<AssetId[]>("activeAssets", ["iframe", "widget", "vdp"]);
+    // Default to ALL relevant assets so a fresh capture shows the full
+    // value-add immediately. Reps can toggle individual assets off but
+    // shouldn't have to discover them to see the killer demo.
+    const defaults: AssetId[] = [
+      "iframe", "homepage", "widget", "sticky", "vdp", "listing", "button", "ppt",
+    ];
+    const stored = readPersisted<AssetId[]>("activeAssets", defaults);
     return new Set(stored);
   });
   // When true, each browser-frame becomes a draggable Before/After
-  // slider instead of just showing the "after" demo. This is the most
-  // visually compelling way to show the dealer the value-add — they
-  // see their bare site and our enhanced version side by side.
+  // slider instead of just showing the "after" demo. Defaulted ON so
+  // the most persuasive feature isn't buried behind a toggle.
   const [compareMode, setCompareMode] = useState<boolean>(() =>
-    readPersisted("compareMode", false),
+    readPersisted("compareMode", true),
   );
 
   // ── AI color recommendations ──
@@ -522,7 +527,12 @@ const ProspectDemo = () => {
           description: "Toggle assets below to layer them on the screenshots.",
         });
       }
-      setLastCapturedAt(Date.now());
+      // Only burn cooldown if at least one capture actually consumed
+      // microlink quota. Total-failure runs (typo URL, network error)
+      // shouldn't lock the rep out for 30s.
+      if (successCount > 0) {
+        setLastCapturedAt(Date.now());
+      }
     } finally {
       setCapturing(false);
     }
@@ -1037,7 +1047,7 @@ const SharePanel = ({
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <div className="flex-1 flex items-center gap-1.5 bg-white border border-slate-300 rounded-md px-3 py-2">
-              <ExternalLinkIcon className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              <ExternalLink className="w-3.5 h-3.5 text-slate-400 shrink-0" />
               <code className="text-xs text-slate-800 truncate flex-1">
                 {shareUrl}
               </code>
@@ -1067,7 +1077,7 @@ const SharePanel = ({
               className="gap-1.5"
             >
               <a href={shareUrl} target="_blank" rel="noopener noreferrer">
-                <ExternalLinkIcon className="w-3.5 h-3.5" />
+                <ExternalLink className="w-3.5 h-3.5" />
                 Open
               </a>
             </Button>
