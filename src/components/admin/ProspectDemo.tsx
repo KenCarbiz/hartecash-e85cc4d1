@@ -38,7 +38,8 @@ import {
   recommendAttentionColors,
 } from "@/lib/colorAnalysis";
 import { supabase } from "@/integrations/supabase/client";
-import { Brain } from "lucide-react";
+import { Brain, ArrowLeftRight, Wand2 } from "lucide-react";
+import BeforeAfterSlider from "./embed/BeforeAfterSlider";
 
 /**
  * ProspectDemo — standalone sales-pitch generator for Autocurb staff
@@ -167,6 +168,13 @@ const ProspectDemo = () => {
     const stored = readPersisted<AssetId[]>("activeAssets", ["iframe", "widget", "vdp"]);
     return new Set(stored);
   });
+  // When true, each browser-frame becomes a draggable Before/After
+  // slider instead of just showing the "after" demo. This is the most
+  // visually compelling way to show the dealer the value-add — they
+  // see their bare site and our enhanced version side by side.
+  const [compareMode, setCompareMode] = useState<boolean>(() =>
+    readPersisted("compareMode", false),
+  );
 
   // ── AI color recommendations ──
   // Populated client-side from the homepage screenshot using
@@ -183,6 +191,12 @@ const ProspectDemo = () => {
   const [llmRunning, setLlmRunning] = useState(false);
   const [llmResult, setLlmResult] = useState<LlmAnalysis | null>(null);
   const [llmError, setLlmError] = useState<string | null>(null);
+
+  // ── Auto-detect listing/VDP URLs (Phase 4) ──
+  // Server-side fetch the dealer's homepage HTML, sniff the CMS, and
+  // pull a real listing URL + sample VDP from anchor hrefs. Saves the
+  // salesperson having to hunt around the site.
+  const [detectingPages, setDetectingPages] = useState(false);
 
   // ── Persistence ──
   useEffect(() => writePersisted("dealerName", dealerName), [dealerName]);
@@ -204,6 +218,7 @@ const ProspectDemo = () => {
     () => writePersisted("activeAssets", Array.from(activeAssets)),
     [activeAssets],
   );
+  useEffect(() => writePersisted("compareMode", compareMode), [compareMode]);
 
   // ── Auto-fill listing URL when homepage changes and listing is blank ──
   useEffect(() => {
@@ -268,6 +283,57 @@ const ProspectDemo = () => {
       else next.add(id);
       return next;
     });
+  };
+
+  // Hits detect-dealer-pages with the homepage URL and fills in the
+  // listing + VDP fields with what the CMS-sniffer finds.
+  const handleAutoDetectPages = async () => {
+    if (!normalizeUrl(homeUrl)) {
+      toast({
+        title: "Need a homepage URL",
+        description: "Enter a real domain first.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setDetectingPages(true);
+    try {
+      const { data, error } = await supabase.functions.invoke<{
+        listing: string | null;
+        vdp: string | null;
+        cms: string | null;
+      }>("detect-dealer-pages", {
+        body: { homepage: homeUrl },
+      });
+      if (error) throw new Error(error.message);
+      if (!data) throw new Error("Empty response from detect-dealer-pages");
+      let filled = 0;
+      if (data.listing) {
+        setListingUrl(data.listing);
+        filled++;
+      }
+      if (data.vdp) {
+        setVdpUrl(data.vdp);
+        filled++;
+      }
+      toast({
+        title:
+          filled === 0
+            ? "No pages auto-detected"
+            : `Auto-detected ${filled} ${filled === 1 ? "page" : "pages"}`,
+        description: data.cms
+          ? `Detected CMS: ${data.cms}. Edit the URLs if anything looks off.`
+          : "Edit the URLs if anything looks off, then click Capture.",
+      });
+    } catch (e) {
+      toast({
+        title: "Auto-detect failed",
+        description: e instanceof Error ? e.message : "Unknown error",
+        variant: "destructive",
+      });
+    } finally {
+      setDetectingPages(false);
+    }
   };
 
   // Kick off the vision-LLM analysis. Runs over whichever screenshots
@@ -540,29 +606,46 @@ const ProspectDemo = () => {
             />
           </div>
         </div>
-        <div className="flex items-center justify-between pt-1">
-          <p className="text-[11px] text-slate-500">
-            Listing and VDP URLs are optional — leave blank for a homepage-only demo.
+        <div className="flex items-center justify-between pt-1 gap-3 flex-wrap">
+          <p className="text-[11px] text-slate-500 flex-1 min-w-[180px]">
+            Listing and VDP URLs are optional — or click <strong>Auto-detect</strong>
+            {" "}to fill them from the homepage.
           </p>
-          <Button
-            onClick={handleCapture}
-            disabled={capturing || inCooldown}
-            className="gap-1.5"
-            title={inCooldown ? "Cooldown — protects the microlink quota" : undefined}
-          >
-            {capturing ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : inCooldown ? (
-              <RefreshCw className="w-4 h-4" />
-            ) : (
-              <Camera className="w-4 h-4" />
-            )}
-            {capturing
-              ? "Capturing…"
-              : inCooldown
-                ? `Wait ${Math.ceil(cooldownRemainingMs / 1000)}s`
-                : "Capture screenshots"}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={handleAutoDetectPages}
+              disabled={detectingPages || !homeUrl.trim()}
+              variant="outline"
+              className="gap-1.5"
+              title="Fetch the homepage and find the listing + a sample VDP URL automatically"
+            >
+              {detectingPages ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Wand2 className="w-4 h-4" />
+              )}
+              {detectingPages ? "Detecting…" : "Auto-detect pages"}
+            </Button>
+            <Button
+              onClick={handleCapture}
+              disabled={capturing || inCooldown}
+              className="gap-1.5"
+              title={inCooldown ? "Cooldown — protects the microlink quota" : undefined}
+            >
+              {capturing ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : inCooldown ? (
+                <RefreshCw className="w-4 h-4" />
+              ) : (
+                <Camera className="w-4 h-4" />
+              )}
+              {capturing
+                ? "Capturing…"
+                : inCooldown
+                  ? `Wait ${Math.ceil(cooldownRemainingMs / 1000)}s`
+                  : "Capture screenshots"}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -590,11 +673,25 @@ const ProspectDemo = () => {
         />
       )}
 
-      {/* Asset toggles */}
+      {/* Asset toggles + Before/After mode */}
       {hasAnyCapture && (
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
-          <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500 mb-2">
-            Toggle assets to layer on the screenshots
+        <div className="rounded-lg border border-slate-200 bg-white p-4 space-y-3">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500">
+              Toggle assets to layer on the screenshots
+            </div>
+            <button
+              onClick={() => setCompareMode((m) => !m)}
+              className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1.5 rounded-md border transition ${
+                compareMode
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "bg-white text-slate-700 border-slate-300 hover:border-slate-400"
+              }`}
+              title="Drag the divider to compare the dealer's bare site with the Autocurb-enhanced version"
+            >
+              <ArrowLeftRight className="w-3.5 h-3.5" />
+              {compareMode ? "Compare mode ON" : "Compare mode OFF"}
+            </button>
           </div>
           <div className="flex flex-wrap gap-2">
             {visibleAssets.map((a) => {
@@ -625,7 +722,7 @@ const ProspectDemo = () => {
           {(captures.home || failures.home) && (
             <BrowserFrame label="Homepage" url={homeUrl}>
               {captures.home ? (
-                <PageScreenshot src={captures.home}>
+                <DemoFrame src={captures.home} compareMode={compareMode}>
                   {activeAssets.has("homepage") && <HomepageBannerOverlay {...commonOverlayProps} />}
                   {activeAssets.has("widget") && <RightWidgetOverlay {...commonOverlayProps} />}
                   {activeAssets.has("sticky") && (
@@ -636,7 +733,7 @@ const ProspectDemo = () => {
                     <PptOverlay {...commonOverlayProps} pptButtonText={pptButtonText} />
                   )}
                   {activeAssets.has("iframe") && <IframeModalOverlay {...commonOverlayProps} />}
-                </PageScreenshot>
+                </DemoFrame>
               ) : (
                 <CaptureFailurePanel reason={failures.home!} url={homeUrl} />
               )}
@@ -646,7 +743,7 @@ const ProspectDemo = () => {
           {(captures.listing || failures.listing) && (
             <BrowserFrame label="Listing / Inventory Page" url={listingUrl}>
               {captures.listing ? (
-                <PageScreenshot src={captures.listing}>
+                <DemoFrame src={captures.listing} compareMode={compareMode}>
                   {activeAssets.has("listing") && (
                     <ListingGhostOverlay
                       {...commonOverlayProps}
@@ -659,7 +756,7 @@ const ProspectDemo = () => {
                     <StickyBarOverlay {...commonOverlayProps} stickyText={stickyText} stickyCtaText={stickyCtaText} />
                   )}
                   {activeAssets.has("button") && <ButtonCtaOverlay {...commonOverlayProps} />}
-                </PageScreenshot>
+                </DemoFrame>
               ) : (
                 <CaptureFailurePanel reason={failures.listing!} url={listingUrl} />
               )}
@@ -669,7 +766,7 @@ const ProspectDemo = () => {
           {(captures.vdp || failures.vdp) && (
             <BrowserFrame label="VDP — Vehicle Detail Page" url={vdpUrl}>
               {captures.vdp ? (
-                <PageScreenshot src={captures.vdp}>
+                <DemoFrame src={captures.vdp} compareMode={compareMode}>
                   {activeAssets.has("vdp") && (
                     <VdpGhostOverlay
                       {...commonOverlayProps}
@@ -686,7 +783,7 @@ const ProspectDemo = () => {
                   {activeAssets.has("ppt") && pptEnabled && (
                     <PptOverlay {...commonOverlayProps} pptButtonText={pptButtonText} />
                   )}
-                </PageScreenshot>
+                </DemoFrame>
               ) : (
                 <CaptureFailurePanel reason={failures.vdp!} url={vdpUrl} />
               )}
@@ -725,6 +822,28 @@ const BrowserFrame = ({
     {children}
   </div>
 );
+
+// Single-page demo body. Either renders the screenshot with overlays
+// directly, or wraps it in BeforeAfterSlider when compareMode is on.
+const DemoFrame = ({
+  src,
+  compareMode,
+  children,
+}: {
+  src: string;
+  compareMode: boolean;
+  children: React.ReactNode;
+}) => {
+  if (!compareMode) {
+    return <PageScreenshot src={src}>{children}</PageScreenshot>;
+  }
+  return (
+    <BeforeAfterSlider
+      beforeImageSrc={src}
+      afterContent={<PageScreenshot src={src}>{children}</PageScreenshot>}
+    />
+  );
+};
 
 const PageScreenshot = ({
   src,
