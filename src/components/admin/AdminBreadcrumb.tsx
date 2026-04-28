@@ -43,6 +43,7 @@ const SECTION_GROUPS: Record<string, string> = {
   "onboarding-script": "Account",
   "system-settings": "Account",
   tenants: "Platform",
+  "prospect-demo": "Platform",
 };
 
 const SECTION_LABELS: Record<string, string> = {
@@ -81,6 +82,7 @@ const SECTION_LABELS: Record<string, string> = {
   "onboarding-script": "Onboarding Script",
   "system-settings": "System Settings",
   tenants: "Dealer Tenants",
+  "prospect-demo": "Prospect Demo",
 };
 
 interface AdminBreadcrumbProps {

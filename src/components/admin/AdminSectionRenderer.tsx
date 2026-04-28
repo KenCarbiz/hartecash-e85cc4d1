@@ -55,6 +55,7 @@ const ReferralManagement = React.lazy(() => import("./ReferralManagement"));
 const MyReferrals = React.lazy(() => import("./MyReferrals"));
 const MyLeadLink = React.lazy(() => import("./MyLeadLink"));
 const EmbedToolkit = React.lazy(() => import("./EmbedToolkit"));
+const ProspectDemo = React.lazy(() => import("./ProspectDemo"));
 const PromotionManagement = React.lazy(() => import("./PromotionManagement"));
 
 const ApiAccessPanel = React.lazy(() => import("./ApiAccessPanel"));
@@ -571,6 +572,11 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
       )}
       {activeSection === "my-lead-link" && <MyLeadLink />}
       {activeSection === "embed-toolkit" && canManageAccess && <EmbedToolkit />}
+      {activeSection === "prospect-demo" && canManageAccess && props.tenant.dealership_id === "default" && (
+        <React.Suspense fallback={<AdminLoadingSkeleton />}>
+          <ProspectDemo />
+        </React.Suspense>
+      )}
       {activeSection === "equity-mining" && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <EquityMining />

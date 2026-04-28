@@ -11,7 +11,7 @@ import {
   Inbox, CalendarDays, Users, SlidersHorizontal, Settings, Bell,
   ListChecks, MessageSquareQuote, BarChart3, Send, ShieldCheck,
   Car, Wrench, Rocket, ScrollText, Gauge, Camera, Network, MapPin, Search, Shield,
-  Megaphone, Gift, Link2,
+  Megaphone, Gift, Link2, Target,
 } from "lucide-react";
 import type { Submission } from "@/lib/adminConstants";
 
@@ -47,6 +47,7 @@ const SECTION_MAP: { key: string; label: string; icon: React.ElementType; group:
   { key: "onboarding", label: "Dealer Setup", icon: Rocket, group: "Team & Admin" },
   { key: "system-settings", label: "System Settings", icon: Wrench, group: "Team & Admin" },
   { key: "tenants", label: "Dealer Tenants", icon: Network, group: "Team & Admin" },
+  { key: "prospect-demo", label: "Prospect Demo", icon: Target, group: "Team & Admin" },
 ];
 
 const AdminCommandPalette = ({ onNavigate, onViewSubmission, submissions, allowedSections }: AdminCommandPaletteProps) => {

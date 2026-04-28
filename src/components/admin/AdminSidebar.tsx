@@ -24,6 +24,7 @@ import {
   // Form & Inspection Sheet, LogIn replaces ScanLine on Inspection
   // Check-In.
   RotateCcw, Image as ImageIcon, Mic, LineChart, Sparkles, FileText, LogIn,
+  Target,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
@@ -284,6 +285,7 @@ const AdminSidebar = ({
   // ── PLATFORM ── Super-admin only, cross-tenant operations
   const platformItems: SidebarItem[] = [
     ...(isPlatformAdmin ? [{ key: "tenants", label: "Dealer Tenants", icon: Network }] : []),
+    ...(isPlatformAdmin ? [{ key: "prospect-demo", label: "Prospect Demo", icon: Target }] : []),
     ...(isPlatformAdmin ? [{ key: "pricing-model", label: "Pricing Model", icon: Tag }] : []),
     ...(canManageAccess && (enterpriseBetaEnabled || isPlatformAdmin)
       ? [{ key: "platform-billing", label: "Platform & Billing", icon: Receipt }]
@@ -298,7 +300,7 @@ const AdminSidebar = ({
     "my-lead-link", "my-referrals",
     "staff", "referrals", "compliance", "reports", "image-inventory", "changelog",
     "onboarding", "system-settings", "pricing-model",
-    "platform-billing", "integrations-status", "api-access", "vauto-integration", "white-label",
+    "platform-billing", "integrations-status", "api-access", "vauto-integration", "white-label", "prospect-demo",
     "equity-mining", "voice-ai", "wholesale-marketplace", "service-quick-entry", "inspection-checkin",
   ];
   const lockedSections = showRequestAccess && allowedSections !== null

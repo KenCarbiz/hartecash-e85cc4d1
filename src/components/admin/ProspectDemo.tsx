@@ -2,10 +2,13 @@ import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import {
   Camera, Loader2, MousePointerClick, PanelRightOpen, LayoutList,
   MapPin, Lightbulb, Award, ExternalLink, AlertCircle, RefreshCw,
+  Target, Sparkles,
 } from "lucide-react";
 import {
   IframeModalOverlay,
@@ -16,7 +19,7 @@ import {
   StickyBarOverlay,
   ButtonCtaOverlay,
   PptOverlay,
-} from "./AssetOverlays";
+} from "./embed/AssetOverlays";
 import {
   type PageType,
   type CaptureSet,
@@ -30,16 +33,23 @@ import {
 } from "@/lib/embedDemo";
 
 /**
- * LivePreview — sales-pitch demo for the dealer who's currently logged in.
+ * ProspectDemo — standalone sales-pitch generator for Autocurb staff
+ * pitching dealers who aren't customers yet.
  *
- * Reads buttonColor / banner copy / sticky text etc. from the parent
- * EmbedToolkit so what shows in the demo matches what they configured in
- * the earlier customize tabs. Screenshot pipeline + URL helpers live in
- * src/lib/embedDemo.ts so the standalone Prospect Demo page (for pitching
- * non-customers) shares the exact same capture logic.
+ * Differs from EmbedToolkit's Live Preview in three ways:
+ *   1. No tenant context — sales reps configure the prospect's brand colors,
+ *      copy, logo here in this page, not by being logged into their tenant.
+ *   2. Internal-staff-only access — gated to platform admins so individual
+ *      tenants can't accidentally pitch their own competitors.
+ *   3. Becomes the home for AI-driven recommendations (Phase 2+),
+ *      shareable demo URLs (Phase 5), and export-to-provider snippet
+ *      (Phase 6) since prospects don't have an EmbedToolkit yet.
+ *
+ * Phase 1 scope: form + capture + overlay rendering. AI, before/after slider,
+ * shareable URL, ROI overlay, and snippet export land in subsequent phases.
  */
 
-const SESSION_KEY = "autocurb:embed-live-preview";
+const SESSION_KEY = "autocurb:prospect-demo";
 
 const readPersisted = <T,>(key: string, fallback: T): T =>
   readPersistedShared<T>(SESSION_KEY, key, fallback);
@@ -47,76 +57,102 @@ const writePersisted = (key: string, value: unknown) =>
   writePersistedShared(SESSION_KEY, key, value);
 
 const ASSETS = [
-  { id: "iframe",   label: "Iframe Modal",     icon: PanelRightOpen, pages: ["home"] as PageType[] },
-  { id: "homepage", label: "Hero Banner",      icon: Lightbulb,      pages: ["home"] as PageType[] },
+  { id: "iframe",   label: "Iframe Modal",     icon: PanelRightOpen,    pages: ["home"] as PageType[] },
+  { id: "homepage", label: "Hero Banner",      icon: Lightbulb,         pages: ["home"] as PageType[] },
   { id: "widget",   label: "Widget Tab",       icon: MousePointerClick, pages: ["home", "listing", "vdp"] as PageType[] },
-  { id: "sticky",   label: "Sticky Bar",       icon: LayoutList,     pages: ["home", "listing", "vdp"] as PageType[] },
-  { id: "vdp",      label: "VDP Ghost",        icon: MapPin,         pages: ["vdp"] as PageType[] },
-  { id: "listing",  label: "Listing Ghost",    icon: LayoutList,     pages: ["listing"] as PageType[] },
+  { id: "sticky",   label: "Sticky Bar",       icon: LayoutList,        pages: ["home", "listing", "vdp"] as PageType[] },
+  { id: "vdp",      label: "VDP Ghost",        icon: MapPin,            pages: ["vdp"] as PageType[] },
+  { id: "listing",  label: "Listing Ghost",    icon: LayoutList,        pages: ["listing"] as PageType[] },
   { id: "button",   label: "Button CTA",       icon: MousePointerClick, pages: ["home", "listing", "vdp"] as PageType[] },
-  { id: "ppt",      label: "PPT Badge",        icon: Award,          pages: ["home", "vdp"] as PageType[] },
+  { id: "ppt",      label: "PPT Badge",        icon: Award,             pages: ["home", "vdp"] as PageType[] },
 ] as const;
 
 type AssetId = typeof ASSETS[number]["id"];
 
-interface Props {
-  buttonColor: string;
-  buttonText: string;
-  bannerHeadline: string;
-  bannerText: string;
-  bannerCtaText: string;
-  stickyText: string;
-  stickyCtaText: string;
-  pptButtonText: string;
-  pptEnabled: boolean;
-  dealerDisplayName?: string;
-}
+// Reasonable defaults that look credible on any dealer site without
+// the rep having to write fresh copy from scratch. Sales rep can edit
+// per-prospect in the form below.
+const DEFAULT_CONFIG = {
+  dealerName: "",
+  buttonColor: "#003B80",
+  buttonText: "Get Cash Offer",
+  bannerHeadline: "Sell Your Car For Cash — In Minutes",
+  bannerText: "Get an instant offer good for 7 days. No appointment, no hassle.",
+  bannerCtaText: "Get My Offer",
+  stickyText: "Want to know what your car is worth?",
+  stickyCtaText: "Get Cash Offer",
+  pptButtonText: "Push, Pull, or Tow",
+  pptEnabled: true,
+};
 
-const LivePreview = ({
-  buttonColor,
-  buttonText,
-  bannerHeadline,
-  bannerText,
-  bannerCtaText,
-  stickyText,
-  stickyCtaText,
-  pptButtonText,
-  pptEnabled,
-  dealerDisplayName,
-}: Props) => {
+const ProspectDemo = () => {
   const { toast } = useToast();
 
-  // Capture form — hydrated from sessionStorage so the form survives
-  // tab switches within the EmbedToolkit. State is per-session, not
-  // permanent (full reload clears it).
-  const [homeUrl, setHomeUrl] = useState<string>(() =>
-    readPersisted("homeUrl", "https://harteinfiniti.com")
+  // ── Prospect-config form (replaces tenant prop-drilling) ──
+  const [dealerName, setDealerName] = useState(() =>
+    readPersisted("dealerName", DEFAULT_CONFIG.dealerName),
   );
-  const [listingUrl, setListingUrl] = useState<string>(() =>
-    readPersisted("listingUrl", "")
+  const [buttonColor, setButtonColor] = useState(() =>
+    readPersisted("buttonColor", DEFAULT_CONFIG.buttonColor),
   );
-  const [vdpUrl, setVdpUrl] = useState<string>(() => readPersisted("vdpUrl", ""));
+  const [buttonText, setButtonText] = useState(() =>
+    readPersisted("buttonText", DEFAULT_CONFIG.buttonText),
+  );
+  const [bannerHeadline, setBannerHeadline] = useState(() =>
+    readPersisted("bannerHeadline", DEFAULT_CONFIG.bannerHeadline),
+  );
+  const [bannerText, setBannerText] = useState(() =>
+    readPersisted("bannerText", DEFAULT_CONFIG.bannerText),
+  );
+  const [bannerCtaText, setBannerCtaText] = useState(() =>
+    readPersisted("bannerCtaText", DEFAULT_CONFIG.bannerCtaText),
+  );
+  const [stickyText, setStickyText] = useState(() =>
+    readPersisted("stickyText", DEFAULT_CONFIG.stickyText),
+  );
+  const [stickyCtaText, setStickyCtaText] = useState(() =>
+    readPersisted("stickyCtaText", DEFAULT_CONFIG.stickyCtaText),
+  );
+  const [pptButtonText, setPptButtonText] = useState(() =>
+    readPersisted("pptButtonText", DEFAULT_CONFIG.pptButtonText),
+  );
+  const [pptEnabled, setPptEnabled] = useState(() =>
+    readPersisted("pptEnabled", DEFAULT_CONFIG.pptEnabled),
+  );
+
+  // ── Capture form (URLs + screenshot state) ──
+  const [homeUrl, setHomeUrl] = useState(() => readPersisted("homeUrl", ""));
+  const [listingUrl, setListingUrl] = useState(() => readPersisted("listingUrl", ""));
+  const [vdpUrl, setVdpUrl] = useState(() => readPersisted("vdpUrl", ""));
   const [capturing, setCapturing] = useState(false);
   const [lastCapturedAt, setLastCapturedAt] = useState<number | null>(() =>
-    readPersisted<number | null>("lastCapturedAt", null)
+    readPersisted<number | null>("lastCapturedAt", null),
   );
   const [now, setNow] = useState(() => Date.now());
   const [captures, setCaptures] = useState<CaptureSet>(() =>
-    readPersisted<CaptureSet>("captures", { home: null, listing: null, vdp: null })
+    readPersisted<CaptureSet>("captures", { home: null, listing: null, vdp: null }),
   );
   const [failures, setFailures] = useState<FailureSet>({
     home: null,
     listing: null,
     vdp: null,
   });
-
-  // Toggleable assets — persist across tab switches too.
   const [activeAssets, setActiveAssets] = useState<Set<AssetId>>(() => {
     const stored = readPersisted<AssetId[]>("activeAssets", ["iframe", "widget", "vdp"]);
     return new Set(stored);
   });
 
-  // ── Persistence side-effects ──
+  // ── Persistence ──
+  useEffect(() => writePersisted("dealerName", dealerName), [dealerName]);
+  useEffect(() => writePersisted("buttonColor", buttonColor), [buttonColor]);
+  useEffect(() => writePersisted("buttonText", buttonText), [buttonText]);
+  useEffect(() => writePersisted("bannerHeadline", bannerHeadline), [bannerHeadline]);
+  useEffect(() => writePersisted("bannerText", bannerText), [bannerText]);
+  useEffect(() => writePersisted("bannerCtaText", bannerCtaText), [bannerCtaText]);
+  useEffect(() => writePersisted("stickyText", stickyText), [stickyText]);
+  useEffect(() => writePersisted("stickyCtaText", stickyCtaText), [stickyCtaText]);
+  useEffect(() => writePersisted("pptButtonText", pptButtonText), [pptButtonText]);
+  useEffect(() => writePersisted("pptEnabled", pptEnabled), [pptEnabled]);
   useEffect(() => writePersisted("homeUrl", homeUrl), [homeUrl]);
   useEffect(() => writePersisted("listingUrl", listingUrl), [listingUrl]);
   useEffect(() => writePersisted("vdpUrl", vdpUrl), [vdpUrl]);
@@ -124,24 +160,19 @@ const LivePreview = ({
   useEffect(() => writePersisted("lastCapturedAt", lastCapturedAt), [lastCapturedAt]);
   useEffect(
     () => writePersisted("activeAssets", Array.from(activeAssets)),
-    [activeAssets]
+    [activeAssets],
   );
 
-  // ── Auto-fill listing URL when homepage changes and listing is empty ──
-  // Salespeople usually want a "good enough" guess so they can hit
-  // Capture immediately. They can still override before hitting it.
+  // ── Auto-fill listing URL when homepage changes and listing is blank ──
   useEffect(() => {
     if (!listingUrl.trim() && homeUrl.trim()) {
       const guess = guessListingUrl(homeUrl);
       if (guess) setListingUrl(guess);
     }
-    // Intentionally only react to homeUrl — we don't want to overwrite
-    // the user's manual edits to the listing field.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [homeUrl]);
 
-  // ── Cooldown ticker — re-render once a second while a cooldown is active ──
-  // Avoids the user mashing Capture and burning quota.
+  // ── Cooldown ticker ──
   useEffect(() => {
     if (!lastCapturedAt) return;
     const remaining = lastCapturedAt + CAPTURE_COOLDOWN_MS - Date.now();
@@ -170,7 +201,7 @@ const LivePreview = ({
     if (!homeUrl.trim()) {
       toast({
         title: "Need a homepage URL",
-        description: "Paste the dealer's homepage URL to start.",
+        description: "Paste the prospect's homepage URL to start.",
         variant: "destructive",
       });
       return;
@@ -201,7 +232,7 @@ const LivePreview = ({
       if (rateLimited) {
         toast({
           title: "Microlink rate limit hit",
-          description: "Free tier is 50 captures/day per IP. Try again later or upgrade.",
+          description: "Free tier is 50 captures/day per IP. Try again later.",
           variant: "destructive",
         });
       } else if (successCount === 0) {
@@ -225,10 +256,9 @@ const LivePreview = ({
   const commonOverlayProps = {
     buttonColor,
     buttonText,
-    dealerName: dealerDisplayName,
+    dealerName: dealerName || undefined,
   };
 
-  // Filter the asset chips to only those that apply to at least one captured page.
   const visibleAssets = ASSETS.filter((a) => {
     if (a.id === "ppt" && !pptEnabled) return false;
     return a.pages.some((p) => captures[p]);
@@ -238,19 +268,133 @@ const LivePreview = ({
   const hasAnyFailure = !!(failures.home || failures.listing || failures.vdp);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 max-w-[1400px]">
       {/* Header explainer */}
-      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 flex items-start gap-3">
-        <Camera className="w-5 h-5 text-slate-500 shrink-0 mt-0.5" />
+      <div className="rounded-lg border border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50 p-4 flex items-start gap-3">
+        <Target className="w-5 h-5 text-blue-700 shrink-0 mt-0.5" />
         <div className="text-sm text-slate-700 leading-relaxed">
-          <strong>Live Preview</strong> — paste a prospect's homepage, listing, and VDP URLs. We'll screenshot each page
-          and let you layer Autocurb's embed assets on top so the prospect can visualize the integration on their actual site.
-          Powered by microlink.io (free, 50 captures/day).
+          <strong>Prospect Demo Builder</strong> — for pitching dealers who aren't customers yet.
+          Configure the prospect's brand below, paste their site URLs, and we'll generate a
+          screenshot demo showing exactly how Autocurb assets would look on their site. Use it
+          on cold calls, in emails, or in the showroom. Powered by microlink.io (free, 50/day).
+        </div>
+      </div>
+
+      {/* Prospect config form */}
+      <div className="rounded-lg border border-slate-200 bg-white p-4 space-y-4">
+        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500">
+          <Sparkles className="w-3.5 h-3.5" />
+          Prospect Brand &amp; Copy
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div>
+            <Label className="text-xs font-semibold text-slate-700">Dealer Name</Label>
+            <Input
+              value={dealerName}
+              onChange={(e) => setDealerName(e.target.value)}
+              placeholder="Harte INFINITI"
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label className="text-xs font-semibold text-slate-700">Button Color</Label>
+            <div className="mt-1 flex gap-2">
+              <input
+                type="color"
+                value={buttonColor}
+                onChange={(e) => setButtonColor(e.target.value)}
+                className="h-9 w-12 rounded border border-slate-200 cursor-pointer"
+              />
+              <Input
+                value={buttonColor}
+                onChange={(e) => setButtonColor(e.target.value)}
+                placeholder="#003B80"
+                className="flex-1 font-mono text-xs"
+              />
+            </div>
+          </div>
+          <div>
+            <Label className="text-xs font-semibold text-slate-700">Primary CTA Text</Label>
+            <Input
+              value={buttonText}
+              onChange={(e) => setButtonText(e.target.value)}
+              placeholder="Get Cash Offer"
+              className="mt-1"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs font-semibold text-slate-700">Banner Headline</Label>
+            <Input
+              value={bannerHeadline}
+              onChange={(e) => setBannerHeadline(e.target.value)}
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label className="text-xs font-semibold text-slate-700">Banner CTA Text</Label>
+            <Input
+              value={bannerCtaText}
+              onChange={(e) => setBannerCtaText(e.target.value)}
+              className="mt-1"
+            />
+          </div>
+        </div>
+
+        <div>
+          <Label className="text-xs font-semibold text-slate-700">Banner Body Text</Label>
+          <Textarea
+            value={bannerText}
+            onChange={(e) => setBannerText(e.target.value)}
+            rows={2}
+            className="mt-1"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs font-semibold text-slate-700">Sticky Bar Text</Label>
+            <Input
+              value={stickyText}
+              onChange={(e) => setStickyText(e.target.value)}
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label className="text-xs font-semibold text-slate-700">Sticky Bar CTA</Label>
+            <Input
+              value={stickyCtaText}
+              onChange={(e) => setStickyCtaText(e.target.value)}
+              className="mt-1"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+          <div className="flex items-center gap-3">
+            <Switch checked={pptEnabled} onCheckedChange={setPptEnabled} id="ppt-enabled" />
+            <Label htmlFor="ppt-enabled" className="text-xs font-semibold text-slate-700 cursor-pointer">
+              Enable Push-Pull-Tow badge
+            </Label>
+          </div>
+          <Input
+            value={pptButtonText}
+            onChange={(e) => setPptButtonText(e.target.value)}
+            placeholder="Push, Pull, or Tow"
+            disabled={!pptEnabled}
+            className="max-w-xs text-xs"
+          />
         </div>
       </div>
 
       {/* Capture form */}
       <div className="rounded-lg border border-slate-200 bg-white p-4 space-y-3">
+        <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500">
+          Prospect Site URLs
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
             <Label className="text-xs font-semibold text-slate-700">Homepage URL *</Label>
@@ -282,7 +426,7 @@ const LivePreview = ({
         </div>
         <div className="flex items-center justify-between pt-1">
           <p className="text-[11px] text-slate-500">
-            Listing and VDP URLs are optional — leave blank if you only want the homepage demo.
+            Listing and VDP URLs are optional — leave blank for a homepage-only demo.
           </p>
           <Button
             onClick={handleCapture}
@@ -306,7 +450,7 @@ const LivePreview = ({
         </div>
       </div>
 
-      {/* Asset toggle chips — show as soon as a successful capture exists */}
+      {/* Asset toggles */}
       {hasAnyCapture && (
         <div className="rounded-lg border border-slate-200 bg-white p-4">
           <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500 mb-2">
@@ -335,10 +479,7 @@ const LivePreview = ({
         </div>
       )}
 
-      {/* Three browser-frame cards. Each renders independently — a frame
-          shows up if EITHER the capture succeeded OR the capture failed
-          (so the salesperson can see "this URL didn't work" inline
-          instead of staring at an empty space). */}
+      {/* Browser-frame demo cards */}
       {(hasAnyCapture || hasAnyFailure) && (
         <div className="space-y-5">
           {(captures.home || failures.home) && (
@@ -354,7 +495,6 @@ const LivePreview = ({
                   {activeAssets.has("ppt") && pptEnabled && (
                     <PptOverlay {...commonOverlayProps} pptButtonText={pptButtonText} />
                   )}
-                  {/* Iframe modal renders LAST so it sits on top */}
                   {activeAssets.has("iframe") && <IframeModalOverlay {...commonOverlayProps} />}
                 </PageScreenshot>
               ) : (
@@ -418,7 +558,6 @@ const LivePreview = ({
   );
 };
 
-// ── Browser chrome wrapper for each captured page ─────────────────────
 const BrowserFrame = ({
   label,
   url,
@@ -447,7 +586,6 @@ const BrowserFrame = ({
   </div>
 );
 
-// ── Screenshot viewport — overlays positioned absolutely inside ───────
 const PageScreenshot = ({
   src,
   children,
@@ -468,7 +606,6 @@ const PageScreenshot = ({
   </div>
 );
 
-// ── Inline failure panel — replaces the screenshot when a capture errors ──
 const CaptureFailurePanel = ({ reason, url }: { reason: string; url: string }) => (
   <div
     className="relative bg-slate-50 flex flex-col items-center justify-center text-center p-8"
@@ -486,4 +623,4 @@ const CaptureFailurePanel = ({ reason, url }: { reason: string; url: string }) =
   </div>
 );
 
-export default LivePreview;
+export default ProspectDemo;
