@@ -13,7 +13,17 @@ import {
 } from "@/components/ui/sidebar";
 import {
   Inbox, CalendarDays, Users, ShieldCheck, SlidersHorizontal,
-  Settings, Bell, ListChecks, MessageSquareQuote, BarChart3, Send, MapPin, Car, ScrollText, Shield, Lock, Wrench, Rocket, Gauge, Network, Camera, Gift, Megaphone, ChevronDown, Link2, Code2, Paintbrush, TrendingUp, Store, Truck, Zap, Activity, ScanLine, CreditCard, Phone, DollarSign, Layout, Globe, Palette, UserCheck, Award, Flame, Home
+  Settings, Bell, ListChecks, MessageSquareQuote, BarChart3, Send, MapPin, Car, ScrollText, Shield, Lock, Wrench, Rocket, Gauge, Network, Camera, Gift, Megaphone, ChevronDown, Link2, Code2, Paintbrush, TrendingUp, Store, Truck, Zap, Activity, ScanLine, CreditCard, Phone, DollarSign, Layout, Globe, Palette, UserCheck, Award, Flame, Home,
+  // Icons added to bring the left-bar in line with the approved
+  // Claude Design reference. RotateCcw replaces UserCheck on the
+  // Appraiser Queue (circular re-appraise glyph), Wrench replaces
+  // Zap on Service Quick Entry, Image replaces Car on Vehicle Images,
+  // Mic replaces Phone on Voice AI, LineChart replaces BarChart3/Send
+  // on Performance & Reports, Sparkles replaces Paintbrush on
+  // Appearance & Access, FileText replaces ListChecks/Shield on Lead
+  // Form & Inspection Sheet, LogIn replaces ScanLine on Inspection
+  // Check-In.
+  RotateCcw, Image as ImageIcon, Mic, LineChart, Sparkles, FileText, LogIn,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
@@ -139,19 +149,24 @@ const AdminSidebar = ({
   const canSeeAppraiserQueue = isManager || isAppraiser;
   const isReceptionist = userRole === "receptionist";
 
-  // ── TODAY ── Dashboard landing (its own group per design)
-  const todayItems: SidebarItem[] = [
+  // ── WORK ── Personal dashboard. Today is the landing card.
+  // My Lead Link / My Referrals moved to their own MY group at the
+  // bottom per the approved design.
+  const workItems: SidebarItem[] = [
     { key: "today", label: "Today", icon: Home },
   ].filter((item) => isAllowed(item.key));
 
-  // ── WORK ── Daily tasks: leads, queues, appointments
-  const workItems: SidebarItem[] = [
+  // ── QUEUES ── Shared inboxes. The sidebar order matches the daily
+  // workflow: greet customers → triage leads → price re-appraisals →
+  // outbound BDC. All-Leads and Appointments fan out to most roles;
+  // Appraiser Queue and BDC Priority Queue gate by role helpers.
+  const queueItems: SidebarItem[] = [
     { key: "submissions", label: "All Leads", icon: Inbox, badge: submissionCount > 0 ? String(submissionCount) : undefined },
     ...(canSeeAppraiserQueue
       ? [{
           key: "appraiser-queue",
           label: "Appraiser Queue",
-          icon: UserCheck,
+          icon: RotateCcw,
           badge: appraiserQueueCount > 0 ? String(appraiserQueueCount) : undefined,
           badgeVariant: "destructive" as const,
         }]
@@ -164,8 +179,6 @@ const AdminSidebar = ({
          canManageAccess)
       ? [{ key: "bdc-queue", label: "BDC Priority Queue", icon: Flame }]
       : []),
-    { key: "my-lead-link", label: "My Lead Link", icon: Link2 },
-    { key: "my-referrals", label: "My Referrals", icon: Award },
   ].filter((item) => isAllowed(item.key));
 
   // ── FLOOR TOOLS ── Hands-on lot/service tooling. Split out of WORK
@@ -173,12 +186,12 @@ const AdminSidebar = ({
   // their tools as a distinct surface rather than buried in a long list.
   const floorToolsItems: SidebarItem[] = [
     ...(isCheckInStaff
-      ? [{ key: "inspection-checkin", label: "Inspection Check-In", icon: ScanLine }]
+      ? [{ key: "inspection-checkin", label: "Inspection Check-In", icon: LogIn }]
       : []),
     ...(isAcquisitionStaff
-      ? [{ key: "service-quick-entry", label: "Service Quick Entry", icon: Zap }]
+      ? [{ key: "service-quick-entry", label: "Service Quick Entry", icon: Wrench }]
       : []),
-    ...(canManageAccess ? [{ key: "image-inventory", label: "Vehicle Images", icon: Car }] : []),
+    ...(canManageAccess ? [{ key: "image-inventory", label: "Vehicle Images", icon: ImageIcon }] : []),
   ].filter((item) => isAllowed(item.key));
 
   // ── GROW ── Revenue-driving tools (manager+)
@@ -187,7 +200,7 @@ const AdminSidebar = ({
       ? [{ key: "equity-mining", label: "Equity Mining", icon: TrendingUp }]
       : []),
     ...(isManager
-      ? [{ key: "voice-ai", label: "Voice AI", icon: Phone }]
+      ? [{ key: "voice-ai", label: "Voice AI", icon: Mic }]
       : []),
     ...(isManager && (enterpriseBetaEnabled || isPlatformAdmin)
       ? [{ key: "wholesale-marketplace", label: "Wholesale", icon: Store }]
@@ -196,29 +209,39 @@ const AdminSidebar = ({
 
   // ── MEASURE ── Performance, HUD, reports, compliance
   const measureItems: SidebarItem[] = [
-    ...(isManager ? [{ key: "executive", label: "Performance", icon: BarChart3 }] : []),
+    ...(isManager ? [{ key: "executive", label: "Performance", icon: LineChart }] : []),
     ...(canViewExecutiveHUD(userRole)
       ? [{ key: "gm-hud", label: "GM HUD", icon: DollarSign }]
       : []),
-    ...(isManager ? [{ key: "reports", label: "Reports", icon: Send }] : []),
+    ...(isManager ? [{ key: "reports", label: "Reports", icon: LineChart }] : []),
     { key: "compliance", label: "Compliance", icon: ShieldCheck },
   ].filter((item) => isAllowed(item.key));
 
   // ── SETUP · DEALER ── Identity, branding, locations, and core data-capture
   // configuration (Offer Logic, Lead Form, Inspection, Photos, Standards).
   // Offer Logic is the manager+ entry point for pricing and unlocks the
-  // approval-request badge; everything else is admin-only.
+  // approval-request badge; everything else is admin-only. "Appearance"
+  // renamed to "Appearance & Access" per design — the page already covers
+  // both sidebar/theme styling and the role-based visibility toggles.
   const setupDealerItems: SidebarItem[] = [
-    ...(isManager ? [{ key: "offer-settings", label: "Offer Logic", icon: SlidersHorizontal, badge: pricingAccessRequestCount > 0 ? String(pricingAccessRequestCount) : undefined, badgeVariant: "destructive" as const }] : []),
+    ...(canManageAccess ? [{ key: "appearance", label: "Appearance & Access", icon: Sparkles }] : []),
     ...(canManageAccess ? [{ key: "site-config", label: "Branding", icon: Palette }] : []),
-    ...(canManageAccess ? [{ key: "appearance", label: "Appearance", icon: Paintbrush }] : []),
     ...(canManageAccess && locationCount > 1 ? [{ key: "locations", label: "Locations", icon: MapPin }] : []),
+    ...(isManager ? [{ key: "offer-settings", label: "Offer Logic", icon: Settings, badge: pricingAccessRequestCount > 0 ? String(pricingAccessRequestCount) : undefined, badgeVariant: "destructive" as const }] : []),
     ...(canManageAccess ? [
-      { key: "form-config", label: "Lead Form", icon: ListChecks },
-      { key: "inspection-config", label: "Inspection Sheet", icon: Shield },
+      { key: "form-config", label: "Lead Form", icon: FileText },
+      { key: "inspection-config", label: "Inspection Sheet", icon: FileText },
       { key: "photo-config", label: "Photo Requirements", icon: Camera },
       { key: "depth-policies", label: "Inspection Standards", icon: Gauge },
     ] : []),
+  ].filter((item) => isAllowed(item.key));
+
+  // ── MY ── Per-user surfaces every staff member benefits from
+  // regardless of role. Sits at the bottom of the navigable groups
+  // per the approved design, just above Account.
+  const myItems: SidebarItem[] = [
+    { key: "my-lead-link", label: "My Lead Link", icon: Link2 },
+    { key: "my-referrals", label: "My Referrals", icon: Gift },
   ].filter((item) => isAllowed(item.key));
 
   // ── SETUP · PROCESS ── Customer-facing flow, marketing, comms, and
@@ -284,20 +307,26 @@ const AdminSidebar = ({
 
   const groupContainsActive = (items: { key: string }[]) => items.some((item) => item.key === activeSection);
 
-  // Receptionist nav is intentionally minimal — check-in + today's appointments only
+  // Receptionist nav is intentionally minimal — check-in + today's
+  // appointments only. Work keeps Today, Queues collapses to just
+  // Appointments, Floor Tools to just Inspection Check-In, and the
+  // personal "My" links stay accessible at the bottom.
   const groupEntries: [string, SidebarItem[]][] = isReceptionist
     ? [
-        ["Today", todayItems],
-        ["Work", workItems.filter((i) => i.key === "accepted-appts" || i.key === "inspection-checkin" || i.key === "my-lead-link" || i.key === "my-referrals")],
+        ["Work", workItems],
+        ["Queues", queueItems.filter((i) => i.key === "accepted-appts")],
+        ["Floor Tools", floorToolsItems.filter((i) => i.key === "inspection-checkin")],
+        ["My", myItems],
       ]
     : [
-        ["Today", todayItems],
         ["Work", workItems],
+        ["Queues", queueItems],
         ["Floor Tools", floorToolsItems],
         ["Grow", growItems],
         ["Measure", measureItems],
         ["Setup · Dealer", setupDealerItems],
         ["Setup · Process", setupProcessItems],
+        ["My", myItems],
         ["Account", accountItems],
         ["Platform", platformItems],
       ];
