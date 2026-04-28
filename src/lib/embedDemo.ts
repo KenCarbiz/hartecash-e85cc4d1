@@ -24,9 +24,21 @@ export interface FailureSet {
   vdp: string | null;
 }
 
+export interface CaptureAttempt {
+  url: string;
+  ok: boolean;
+  reason?: string;
+  pageTitle?: string;
+  screenshotUrl?: string;
+}
+
 export interface CaptureResult {
   url: string | null;
   error: string | null;
+  /** Per-variant diagnostic from the capture-screenshot edge function.
+   *  Useful when both www and bare-domain attempts fail — surfaces what
+   *  microlink actually saw at each. */
+  attempts?: CaptureAttempt[];
 }
 
 // 30s between captures — protects the microlink free quota (50/day per IP)
@@ -122,22 +134,20 @@ export const captureOne = async (target: string): Promise<CaptureResult> => {
     const { data, error } = await supabase.functions.invoke<{
       screenshotUrl?: string;
       error?: string;
-      attempts?: { url: string; ok: boolean; reason?: string; pageTitle?: string }[];
+      attempts?: CaptureAttempt[];
     }>("capture-screenshot", { body: { url: normalized } });
 
     if (error) {
       return { url: null, error: error.message || "Capture failed" };
     }
     if (data?.screenshotUrl) {
-      return { url: data.screenshotUrl, error: null };
+      return { url: data.screenshotUrl, error: null, attempts: data.attempts };
     }
-    // Surface the most informative attempt reason if the edge function
-    // returned a structured failure list.
     const lastReason =
       data?.attempts?.find((a) => a.reason)?.reason ||
       data?.error ||
       "All capture attempts failed";
-    return { url: null, error: lastReason };
+    return { url: null, error: lastReason, attempts: data?.attempts };
   } catch (e) {
     console.warn(`Capture failed for ${normalized}:`, e);
     return {
@@ -145,6 +155,23 @@ export const captureOne = async (target: string): Promise<CaptureResult> => {
       error: e instanceof Error ? e.message : "Network error",
     };
   }
+};
+
+// Format a CaptureResult's error + attempts into a multi-line string the
+// CaptureFailurePanel can display. Surfaces what microlink saw at each
+// URL variant so the rep knows whether the dealer's site is the problem
+// (cert / Cloudflare / 404) vs. a microlink-side problem (rate limit).
+export const formatCaptureError = (result: CaptureResult): string | null => {
+  if (!result.error && (result.url || !result.attempts?.length)) return null;
+  if (!result.attempts || result.attempts.length <= 1) {
+    return result.error || "Capture failed";
+  }
+  const lines = result.attempts.map((a) => {
+    const tag = a.ok ? "✓" : "✗";
+    const titleHint = a.pageTitle ? ` (microlink saw page titled: "${a.pageTitle}")` : "";
+    return `${tag} ${a.url} → ${a.ok ? "OK" : a.reason || "failed"}${titleHint}`;
+  });
+  return `Tried ${result.attempts.length} URL variants:\n${lines.join("\n")}`;
 };
 
 // sessionStorage helpers — used by both Live Preview and Prospect Demo so

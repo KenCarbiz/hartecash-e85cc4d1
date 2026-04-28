@@ -82,9 +82,16 @@ serve(async (req) => {
       return json({ error: "Invalid URL" }, 400);
     }
 
+    console.log(`[capture-screenshot] Trying ${variants.length} variants for "${url}":`, variants);
     const attempts: CaptureAttempt[] = [];
     for (const v of variants) {
       const a = await tryCapture(v);
+      console.log(`[capture-screenshot] Attempt ${v}:`, {
+        ok: a.ok,
+        reason: a.reason,
+        pageTitle: a.pageTitle,
+        screenshotUrl: a.screenshotUrl,
+      });
       attempts.push(a);
       if (a.ok) {
         return json({
@@ -100,6 +107,7 @@ serve(async (req) => {
       }
     }
 
+    console.warn(`[capture-screenshot] All attempts failed for "${url}":`, attempts);
     return json(
       {
         error: "All capture attempts failed",
@@ -108,6 +116,9 @@ serve(async (req) => {
           ok: x.ok,
           reason: x.reason,
           pageTitle: x.pageTitle,
+          // Include the screenshot URL even on failure — sometimes the
+          // junk page (SSL warning) is still informative for debugging.
+          screenshotUrl: x.screenshotUrl,
         })),
       },
       502,

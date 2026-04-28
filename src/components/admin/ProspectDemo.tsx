@@ -28,6 +28,7 @@ import {
   normalizeUrl,
   guessListingUrl,
   captureOne,
+  formatCaptureError,
   readPersisted as readPersistedShared,
   writePersisted as writePersistedShared,
 } from "@/lib/embedDemo";
@@ -504,7 +505,11 @@ const ProspectDemo = () => {
         captureOne(vdpUrl),
       ]);
       setCaptures({ home: home.url, listing: listing.url, vdp: vdp.url });
-      setFailures({ home: home.error, listing: listing.error, vdp: vdp.error });
+      setFailures({
+        home: formatCaptureError(home),
+        listing: formatCaptureError(listing),
+        vdp: formatCaptureError(vdp),
+      });
       const successCount = [home.url, listing.url, vdp.url].filter(Boolean).length;
       const rateLimited = [home, listing, vdp].some(
         (r) => r.error?.includes("rate limit"),
@@ -1439,7 +1444,7 @@ const CaptureFailurePanel = ({ reason, url }: { reason: string; url: string }) =
   >
     <AlertCircle className="w-10 h-10 text-amber-500 mb-3" />
     <div className="text-sm font-bold text-slate-800">Couldn't capture this page</div>
-    <div className="text-xs text-slate-600 mt-1 max-w-md">{reason}</div>
+    <div className="text-xs text-slate-600 mt-1 max-w-2xl whitespace-pre-line text-left font-mono leading-relaxed">{reason}</div>
     {url && (
       <div className="text-[11px] font-mono text-slate-400 mt-3 max-w-md truncate">{url}</div>
     )}
