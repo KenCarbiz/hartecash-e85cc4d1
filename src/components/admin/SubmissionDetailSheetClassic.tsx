@@ -30,6 +30,8 @@ import SubmissionNotesModal, { fetchSubmissionNotes, type SubmissionNote } from 
 import ClassicCommsCard from "./ClassicCommsCard";
 import ClassicCommsFullView from "./ClassicCommsFullView";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { printCheckRequest } from "@/lib/printUtils";
+import logoFallback from "@/assets/logo-placeholder.png";
 
 // ── Props ────────────────────────────────────────────────────────────
 // Matches the existing SubmissionDetailSheetProps so the entry export can
@@ -679,6 +681,97 @@ export default function SubmissionDetailSheetClassic({
     sessionStorage.setItem("autocurb:reopenSubmissionId", selected.id);
     navigate(`/appraisal/${selected.token}`);
   }, [navigate, selected?.token, selected?.id]);
+
+  const handleGenerateCheckRequest = useCallback(async () => {
+    const sub = selected;
+    if (!sub || !sub.offered_price) return;
+    const hasAddress = sub.address_street && (sub.address_city || sub.address_state || sub.zip);
+    if (!hasAddress) {
+      toast({ title: "Missing Address", description: "Customer street address must be entered.", variant: "destructive" });
+      return;
+    }
+    const { data: appraisalCheck } = await supabase.storage.from("customer-documents").list(`${sub.token}/appraisal`);
+    if (!appraisalCheck || appraisalCheck.length === 0) {
+      toast({ title: "Missing Appraisal", description: "An ACV appraisal document must be uploaded.", variant: "destructive" });
+      return;
+    }
+    const [dlLegacy, dlFront] = await Promise.all([
+      supabase.storage.from("customer-documents").list(`${sub.token}/drivers_license`),
+      supabase.storage.from("customer-documents").list(`${sub.token}/drivers_license_front`),
+    ]);
+    const hasDL = (dlLegacy.data && dlLegacy.data.length > 0) || (dlFront.data && dlFront.data.length > 0);
+    if (!hasDL) {
+      toast({ title: "Missing Driver's License", description: "Customer driver's license must be uploaded.", variant: "destructive" });
+      return;
+    }
+    let logoBase64 = "";
+    try {
+      const resp = await fetch(logoFallback);
+      const blob = await resp.blob();
+      logoBase64 = await new Promise<string>((resolve) => {
+        const r = new FileReader();
+        r.onloadend = () => resolve(r.result as string);
+        r.readAsDataURL(blob);
+      });
+    } catch { logoBase64 = ""; }
+    const fetchDocImages = async (folder: string): Promise<string[]> => {
+      const urls: string[] = [];
+      const { data: files } = await supabase.storage.from("customer-documents").list(`${sub.token}/${folder}`);
+      if (files && files.length > 0) {
+        for (const f of files) {
+          const { data } = await supabase.storage.from("customer-documents").createSignedUrl(`${sub.token}/${folder}/${f.name}`, 3600);
+          if (data?.signedUrl) urls.push(data.signedUrl);
+        }
+      }
+      return urls;
+    };
+    const [apprImg, dlImg, dlFImg, dlBImg, titleImg, payoffImg] = await Promise.all([
+      fetchDocImages("appraisal"),
+      fetchDocImages("drivers_license"),
+      fetchDocImages("drivers_license_front"),
+      fetchDocImages("drivers_license_back"),
+      fetchDocImages("title"),
+      fetchDocImages("payoff_verification"),
+    ]);
+    const inspectionTextSections: { title: string; text: string }[] = [];
+    if (sub.internal_notes && sub.internal_notes.includes("[INSPECTION")) {
+      inspectionTextSections.push({ title: "Inspection Report", text: sub.internal_notes });
+    }
+    const html = printCheckRequest(sub, logoBase64, [
+      { title: "Appraisal Document", images: apprImg },
+      { title: "Driver's License", images: [...dlImg, ...dlFImg, ...dlBImg] },
+      { title: "Title", images: titleImg },
+      { title: "Payoff Documentation", images: payoffImg },
+    ], inspectionTextSections);
+    if (html) {
+      try {
+        const blob = new Blob([html], { type: "text/html" });
+        const fileName = `check-request-${new Date().toISOString().slice(0, 10)}.html`;
+        await supabase.storage.from("customer-documents").upload(
+          `${sub.token}/check_request/${fileName}`,
+          blob,
+          { contentType: "text/html", upsert: true },
+        );
+        toast({ title: "Check Request Generated", description: "Printed and saved to documents." });
+        supabase.from("activity_log").insert({
+          submission_id: sub.id,
+          action: "Check Request Generated",
+          old_value: null,
+          new_value: sub.offered_price ? `$${Number(sub.offered_price).toLocaleString()}` : null,
+          performed_by: auditLabel,
+        });
+      } catch {
+        toast({ title: "Check request printed", description: "But failed to save a copy.", variant: "destructive" });
+        supabase.from("activity_log").insert({
+          submission_id: sub.id,
+          action: "Check Request Save Failed",
+          old_value: null,
+          new_value: "Print succeeded but upload to customer-documents bucket failed",
+          performed_by: auditLabel,
+        });
+      }
+    }
+  }, [selected, toast, auditLabel]);
   const headerLayout: "a" | "b" | "c" =
     ((config as { customer_file_header_layout?: string }).customer_file_header_layout as "a" | "b" | "c") || "b";
   const [editState, setEditState] = useState<Submission | null>(null);
@@ -1110,6 +1203,7 @@ export default function SubmissionDetailSheetClassic({
                     nextSub = "Paperwork and check request.";
                     nextBtn = "Open Check Request";
                     nextTone = "green";
+                    nextOnClick = handleGenerateCheckRequest;
                   }
 
                   const toneBg = {

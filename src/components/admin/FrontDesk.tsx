@@ -162,7 +162,7 @@ const FrontDesk = ({ appointments, submissions, fetchSubmissions, onView }: Fron
 
 function Tile({ label, value, sub, valueClass = "" }: { label: string; value: number; sub: string; valueClass?: string }) {
   return (
-    <div className="rounded-lg border bg-card p-5">
+    <div className="rounded-lg border border-border/60 p-5">
       <div className="text-[11px] font-bold tracking-wider uppercase text-muted-foreground">{label}</div>
       <div className={`text-3xl font-bold mt-2 ${valueClass}`}>{value}</div>
       <div className="text-xs text-muted-foreground mt-1">{sub}</div>

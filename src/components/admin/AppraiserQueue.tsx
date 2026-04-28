@@ -19,11 +19,25 @@ import {
  * Appraiser credential) showing every submission that needs a human
  * touch on price.
  *
+ * The four tile buckets:
+ *   - WALK-INS — manually-added customers (lead_source IN (walk_in,
+ *     manual_entry)) sitting in the queue waiting for a number
+ *   - SERVICE DRIVE — customer at a service appointment OR scheduled
+ *     for service today who opted in to a sell/trade appraisal
+ *     (lead_source = service)
+ *   - FLAGGED — unaccepted website offers, manager-flagged leads,
+ *     and customers who abandoned the form before an offer generated
+ *     (progress_status = partial)
+ *   - DECLINED — customer told an agent no via SMS / email / phone;
+ *     appraiser bumps the number and sends a counter
+ *
  * Inclusion rules:
  *   - ALWAYS: needs_appraisal = true AND acv_value IS NULL
  *     (manager explicitly flagged it via "Send to Appraiser")
  *   - IF site_config.auto_route_appraiser_queue = true, ALSO include:
  *     - progress_status = offer_declined  (customer told us no on the phone)
+ *     - progress_status = partial AND acv_value IS NULL
+ *       (abandoned the form before an offer generated)
  *     - lead_source IN (walk_in, service, manual_entry) AND acv_value IS NULL
  *       (showroom + service-drive captures awaiting an initial number)
  *     - Stale offers: offered_price > 0 AND status_updated_at older than
@@ -35,7 +49,7 @@ import {
  *   1. Walk-ins (red)    — customer physically on the lot right now
  *   2. Service-drive (orange) — customer at the dealership but not at sales
  *   3. Manual entry (amber)   — staff-entered lead awaiting a number
- *   4. Manager-flagged + stale offers (purple) — explicit + auto re-review
+ *   4. Manager-flagged + stale + abandoned (purple) — needs review
  *   5. Declined offers (blue) — recoverable, not urgent
  *   Within each group, oldest first.
  */
@@ -97,13 +111,16 @@ const isStaleOffer = (row: QueueRow): boolean => {
 };
 
 const classifyRow = (row: QueueRow): QueueReason => {
-  // Priority order: lead-source bucketing wins so a walk-in with a
-  // stale offer still shows under Walk-ins (operator intent — they
-  // walked in). Manager flag and stale-offer both fall under "flagged"
-  // for the count tile.
+  // Phone/SMS/email decline takes precedence — the appraiser's job is
+  // to bump and counter, regardless of how the lead originally arrived.
+  if (row.progress_status === "offer_declined") return "declined";
+  // Lead-source bucketing wins next so a walk-in with a stale offer
+  // still shows under Walk-ins (operator intent — they walked in).
   if (row.lead_source === "walk_in") return "walk_in";
   if (row.lead_source === "service") return "service";
   if (row.lead_source === "manual_entry") return "manual_entry";
+  // Abandoned-before-offer lands in Flagged — needs a manual touch.
+  if (row.progress_status === "partial") return "flagged";
   if (row.needs_appraisal) return "flagged";
   if (isStaleOffer(row)) return "flagged";
   return "declined";
@@ -186,6 +203,8 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
     if (autoRoute) {
       // Phone/in-person decline — already had a number, customer said no.
       orParts.push("progress_status.eq.offer_declined");
+      // Abandoned the form before the website generated an offer.
+      orParts.push("and(progress_status.eq.partial,acv_value.is.null)");
       // Showroom + service-drive captures awaiting an initial number.
       orParts.push("and(lead_source.in.(walk_in,service,manual_entry),acv_value.is.null)");
       // Stale offers — got a number but no movement after STALE_OFFER_HOURS.
@@ -211,7 +230,7 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
         const fallback = await (supabase as any)
           .from("submissions")
           .select(columnsWithoutFlag)
-          .or("progress_status.eq.offer_declined,lead_source.in.(walk_in,service,manual_entry)")
+          .or("progress_status.eq.offer_declined,progress_status.eq.partial,lead_source.in.(walk_in,service,manual_entry)")
           .is("acv_value", null)
           .order("created_at", { ascending: false });
         data = fallback.data;
