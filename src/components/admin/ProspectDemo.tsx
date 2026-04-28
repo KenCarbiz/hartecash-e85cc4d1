@@ -39,8 +39,7 @@ import {
   recommendAttentionColors,
 } from "@/lib/colorAnalysis";
 import { supabase } from "@/integrations/supabase/client";
-import { Brain, ArrowLeftRight, Wand2, Share2, Copy, Check } from "lucide-react";
-import BeforeAfterSlider from "./embed/BeforeAfterSlider";
+import { Brain, Wand2, Share2, Copy, Check } from "lucide-react";
 
 /**
  * ProspectDemo — standalone sales-pitch generator for Autocurb staff
@@ -175,12 +174,6 @@ const ProspectDemo = () => {
     const stored = readPersisted<AssetId[]>("activeAssets", defaults);
     return new Set(stored);
   });
-  // When true, each browser-frame becomes a draggable Before/After
-  // slider instead of just showing the "after" demo. Defaulted ON so
-  // the most persuasive feature isn't buried behind a toggle.
-  const [compareMode, setCompareMode] = useState<boolean>(() =>
-    readPersisted("compareMode", true),
-  );
 
   // ── AI color recommendations ──
   // Populated client-side from the homepage screenshot using
@@ -237,7 +230,6 @@ const ProspectDemo = () => {
     () => writePersisted("activeAssets", Array.from(activeAssets)),
     [activeAssets],
   );
-  useEffect(() => writePersisted("compareMode", compareMode), [compareMode]);
 
   // ── Auto-fill listing URL when homepage changes and listing is blank ──
   useEffect(() => {
@@ -793,25 +785,11 @@ const ProspectDemo = () => {
         />
       )}
 
-      {/* Asset toggles + Before/After mode */}
+      {/* Asset toggles */}
       {hasAnyCapture && (
         <div className="rounded-lg border border-slate-200 bg-white p-4 space-y-3">
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500">
-              Toggle assets to layer on the screenshots
-            </div>
-            <button
-              onClick={() => setCompareMode((m) => !m)}
-              className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1.5 rounded-md border transition ${
-                compareMode
-                  ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-white text-slate-700 border-slate-300 hover:border-slate-400"
-              }`}
-              title="Drag the divider to compare the dealer's bare site with the Autocurb-enhanced version"
-            >
-              <ArrowLeftRight className="w-3.5 h-3.5" />
-              {compareMode ? "Compare mode ON" : "Compare mode OFF"}
-            </button>
+          <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500">
+            Toggle assets to layer on the screenshots
           </div>
           <div className="flex flex-wrap gap-2">
             {visibleAssets.map((a) => {
@@ -870,7 +848,7 @@ const ProspectDemo = () => {
                 url={sourceUrl}
               >
                 {screenshot ? (
-                  <DemoFrame src={screenshot} compareMode={compareMode}>
+                  <PageScreenshot src={screenshot}>
                     {asset.id === "iframe" && <IframeModalOverlay {...commonOverlayProps} />}
                     {asset.id === "homepage" && <HomepageBannerOverlay {...commonOverlayProps} />}
                     {asset.id === "widget" && <RightWidgetOverlay {...commonOverlayProps} />}
@@ -896,7 +874,7 @@ const ProspectDemo = () => {
                     {asset.id === "ppt" && pptEnabled && (
                       <PptOverlay {...commonOverlayProps} pptButtonText={pptButtonText} />
                     )}
-                  </DemoFrame>
+                  </PageScreenshot>
                 ) : (
                   <CaptureFailurePanel reason={failure!} url={sourceUrl} />
                 )}
@@ -936,28 +914,6 @@ const BrowserFrame = ({
     {children}
   </div>
 );
-
-// Single-page demo body. Either renders the screenshot with overlays
-// directly, or wraps it in BeforeAfterSlider when compareMode is on.
-const DemoFrame = ({
-  src,
-  compareMode,
-  children,
-}: {
-  src: string;
-  compareMode: boolean;
-  children: React.ReactNode;
-}) => {
-  if (!compareMode) {
-    return <PageScreenshot src={src}>{children}</PageScreenshot>;
-  }
-  return (
-    <BeforeAfterSlider
-      beforeImageSrc={src}
-      afterContent={<PageScreenshot src={src}>{children}</PageScreenshot>}
-    />
-  );
-};
 
 const PageScreenshot = ({
   src,

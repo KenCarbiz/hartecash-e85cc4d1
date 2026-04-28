@@ -12,7 +12,6 @@ import {
   ButtonCtaOverlay,
   PptOverlay,
 } from "@/components/admin/embed/AssetOverlays";
-import BeforeAfterSlider from "@/components/admin/embed/BeforeAfterSlider";
 
 /**
  * PublicDemo — read-only view of a saved Prospect Demo, by share_token.
@@ -148,9 +147,6 @@ const PublicDemo = () => {
               {demo.pitchLine}
             </p>
           )}
-          <div className="mt-4 inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-white/70 bg-white/10 rounded-full px-3 py-1">
-            Drag the slider on each page to compare before / after
-          </div>
         </div>
       </div>
 
@@ -158,87 +154,72 @@ const PublicDemo = () => {
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
         {demo.screenshots.home && (
           <PublicBrowserFrame label="Homepage" url={demo.homeUrl}>
-            <BeforeAfterSlider
-              beforeImageSrc={demo.screenshots.home}
-              afterContent={
-                <PublicScreenshot src={demo.screenshots.home}>
-                  {activeSet.has("homepage") && <HomepageBannerOverlay {...commonOverlayProps} />}
-                  {activeSet.has("widget") && <RightWidgetOverlay {...commonOverlayProps} />}
-                  {activeSet.has("sticky") && (
-                    <StickyBarOverlay
-                      {...commonOverlayProps}
-                      stickyText={config.stickyText}
-                      stickyCtaText={config.stickyCtaText}
-                    />
-                  )}
-                  {activeSet.has("button") && <ButtonCtaOverlay {...commonOverlayProps} />}
-                  {activeSet.has("ppt") && config.pptEnabled && (
-                    <PptOverlay {...commonOverlayProps} pptButtonText={config.pptButtonText} />
-                  )}
-                  {activeSet.has("iframe") && <IframeModalOverlay {...commonOverlayProps} />}
-                </PublicScreenshot>
-              }
-            />
+            <PublicScreenshot src={demo.screenshots.home}>
+              {activeSet.has("homepage") && <HomepageBannerOverlay {...commonOverlayProps} />}
+              {activeSet.has("widget") && <RightWidgetOverlay {...commonOverlayProps} />}
+              {activeSet.has("sticky") && (
+                <StickyBarOverlay
+                  {...commonOverlayProps}
+                  stickyText={config.stickyText}
+                  stickyCtaText={config.stickyCtaText}
+                />
+              )}
+              {activeSet.has("button") && <ButtonCtaOverlay {...commonOverlayProps} />}
+              {activeSet.has("ppt") && config.pptEnabled && (
+                <PptOverlay {...commonOverlayProps} pptButtonText={config.pptButtonText} />
+              )}
+              {activeSet.has("iframe") && <IframeModalOverlay {...commonOverlayProps} />}
+            </PublicScreenshot>
           </PublicBrowserFrame>
         )}
 
         {demo.screenshots.listing && (
           <PublicBrowserFrame label="Listing / Inventory Page" url={demo.listingUrl}>
-            <BeforeAfterSlider
-              beforeImageSrc={demo.screenshots.listing}
-              afterContent={
-                <PublicScreenshot src={demo.screenshots.listing}>
-                  {activeSet.has("listing") && (
-                    <ListingGhostOverlay
-                      {...commonOverlayProps}
-                      bannerHeadline={config.bannerHeadline}
-                      bannerCtaText={config.bannerCtaText}
-                    />
-                  )}
-                  {activeSet.has("widget") && <RightWidgetOverlay {...commonOverlayProps} />}
-                  {activeSet.has("sticky") && (
-                    <StickyBarOverlay
-                      {...commonOverlayProps}
-                      stickyText={config.stickyText}
-                      stickyCtaText={config.stickyCtaText}
-                    />
-                  )}
-                  {activeSet.has("button") && <ButtonCtaOverlay {...commonOverlayProps} />}
-                </PublicScreenshot>
-              }
-            />
+            <PublicScreenshot src={demo.screenshots.listing}>
+              {activeSet.has("listing") && (
+                <ListingGhostOverlay
+                  {...commonOverlayProps}
+                  bannerHeadline={config.bannerHeadline}
+                  bannerCtaText={config.bannerCtaText}
+                />
+              )}
+              {activeSet.has("widget") && <RightWidgetOverlay {...commonOverlayProps} />}
+              {activeSet.has("sticky") && (
+                <StickyBarOverlay
+                  {...commonOverlayProps}
+                  stickyText={config.stickyText}
+                  stickyCtaText={config.stickyCtaText}
+                />
+              )}
+              {activeSet.has("button") && <ButtonCtaOverlay {...commonOverlayProps} />}
+            </PublicScreenshot>
           </PublicBrowserFrame>
         )}
 
         {demo.screenshots.vdp && (
           <PublicBrowserFrame label="Vehicle Detail Page" url={demo.vdpUrl}>
-            <BeforeAfterSlider
-              beforeImageSrc={demo.screenshots.vdp}
-              afterContent={
-                <PublicScreenshot src={demo.screenshots.vdp}>
-                  {activeSet.has("vdp") && (
-                    <VdpGhostOverlay
-                      {...commonOverlayProps}
-                      bannerHeadline={config.bannerHeadline}
-                      bannerText={config.bannerText}
-                      bannerCtaText={config.bannerCtaText}
-                    />
-                  )}
-                  {activeSet.has("widget") && <RightWidgetOverlay {...commonOverlayProps} />}
-                  {activeSet.has("sticky") && (
-                    <StickyBarOverlay
-                      {...commonOverlayProps}
-                      stickyText={config.stickyText}
-                      stickyCtaText={config.stickyCtaText}
-                    />
-                  )}
-                  {activeSet.has("button") && <ButtonCtaOverlay {...commonOverlayProps} />}
-                  {activeSet.has("ppt") && config.pptEnabled && (
-                    <PptOverlay {...commonOverlayProps} pptButtonText={config.pptButtonText} />
-                  )}
-                </PublicScreenshot>
-              }
-            />
+            <PublicScreenshot src={demo.screenshots.vdp}>
+              {activeSet.has("vdp") && (
+                <VdpGhostOverlay
+                  {...commonOverlayProps}
+                  bannerHeadline={config.bannerHeadline}
+                  bannerText={config.bannerText}
+                  bannerCtaText={config.bannerCtaText}
+                />
+              )}
+              {activeSet.has("widget") && <RightWidgetOverlay {...commonOverlayProps} />}
+              {activeSet.has("sticky") && (
+                <StickyBarOverlay
+                  {...commonOverlayProps}
+                  stickyText={config.stickyText}
+                  stickyCtaText={config.stickyCtaText}
+                />
+              )}
+              {activeSet.has("button") && <ButtonCtaOverlay {...commonOverlayProps} />}
+              {activeSet.has("ppt") && config.pptEnabled && (
+                <PptOverlay {...commonOverlayProps} pptButtonText={config.pptButtonText} />
+              )}
+            </PublicScreenshot>
           </PublicBrowserFrame>
         )}
 
