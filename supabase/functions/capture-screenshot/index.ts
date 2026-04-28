@@ -270,7 +270,16 @@ async function tryCapture(url: string): Promise<CaptureAttempt> {
     "viewport.width": "1280",
     "viewport.height": "800",
     type: "png",
-    waitUntil: "load",
+    // networkidle2 = wait until ≤2 in-flight network requests for 500ms.
+    // Better than `load` (fires before lazy hero images paint, leaving
+    // dealer sites looking blank) and better than `networkidle0` (never
+    // fires when chat widgets long-poll forever). With the `hide`
+    // selectors below killing chat iframes, networkidle2 settles cleanly.
+    waitUntil: "networkidle2",
+    // Belt-and-suspenders: even after networkidle2, give lazy-loaded
+    // hero images and CMS-injected content one more second to paint
+    // before snapping the PNG. Most dealer sites have a 1–2s hero swap.
+    waitForTimeout: "1500",
     "screenshot.fullPage": "false",
     hide:
       "[id*='cookie'],[class*='cookie-banner'],[class*='consent']," +
