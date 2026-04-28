@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import {
   Camera, Loader2, MousePointerClick, PanelRightOpen, LayoutList,
-  MapPin, Lightbulb, Award, ExternalLink,
+  MapPin, Lightbulb, Award, ExternalLink, AlertCircle, RefreshCw,
 } from "lucide-react";
 import {
   IframeModalOverlay,
@@ -42,6 +42,73 @@ interface CaptureSet {
   listing: string | null;
   vdp: string | null;
 }
+
+// Tracks per-page failure so the browser-frame can show an inline
+// "couldn't capture" panel instead of an invisible empty box.
+interface FailureSet {
+  home: string | null;     // human-readable failure reason, null if OK
+  listing: string | null;
+  vdp: string | null;
+}
+
+// sessionStorage key prefix — survives tab switches inside the same
+// admin session but not full reloads. The user's intent here is
+// "remember my work while I bounce between Customize and Live Preview"
+// not "permanently save demos" (that's v0.2).
+const SESSION_KEY = "autocurb:embed-live-preview";
+
+const COOLDOWN_MS = 30_000;
+
+// Lazy initial-state helpers — read sessionStorage exactly once on mount.
+const readPersisted = <T,>(key: string, fallback: T): T => {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const raw = sessionStorage.getItem(`${SESSION_KEY}:${key}`);
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+const writePersisted = (key: string, value: unknown) => {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(`${SESSION_KEY}:${key}`, JSON.stringify(value));
+  } catch {
+    // sessionStorage can throw QuotaExceededError on very large
+    // values or in privacy modes — swallow silently, the in-memory
+    // state still works.
+  }
+};
+
+// Best-guess listing-page URL from a homepage. Most dealer sites
+// expose inventory at one of these paths. We try the first match —
+// salespeople can override by typing a different URL.
+const guessListingUrl = (homepage: string): string => {
+  try {
+    const u = new URL(homepage.trim().match(/^https?:\/\//i) ? homepage.trim() : `https://${homepage.trim()}`);
+    return `${u.origin}/used-vehicles`;
+  } catch {
+    return "";
+  }
+};
+
+// Validate user input early so we don't burn microlink quota on
+// obviously-bad URLs. Returns the normalized URL string or null.
+const normalizeUrl = (raw: string): string | null => {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const candidate = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  try {
+    const parsed = new URL(candidate);
+    // Reject URLs with no host or obviously-local addresses.
+    if (!parsed.hostname || parsed.hostname === "localhost") return null;
+    if (!/\./.test(parsed.hostname)) return null; // need at least a tld
+    return parsed.toString();
+  } catch {
+    return null;
+  }
+};
 
 const ASSETS = [
   { id: "iframe",   label: "Iframe Modal",     icon: PanelRightOpen, pages: ["home"] as PageType[] },
@@ -83,19 +150,75 @@ const LivePreview = ({
 }: Props) => {
   const { toast } = useToast();
 
-  // Capture form
-  const [homeUrl, setHomeUrl] = useState("https://harteinfiniti.com");
-  const [listingUrl, setListingUrl] = useState("");
-  const [vdpUrl, setVdpUrl] = useState("");
+  // Capture form — hydrated from sessionStorage so the form survives
+  // tab switches within the EmbedToolkit. State is per-session, not
+  // permanent (full reload clears it).
+  const [homeUrl, setHomeUrl] = useState<string>(() =>
+    readPersisted("homeUrl", "https://harteinfiniti.com")
+  );
+  const [listingUrl, setListingUrl] = useState<string>(() =>
+    readPersisted("listingUrl", "")
+  );
+  const [vdpUrl, setVdpUrl] = useState<string>(() => readPersisted("vdpUrl", ""));
   const [capturing, setCapturing] = useState(false);
-  const [captures, setCaptures] = useState<CaptureSet>({
+  const [lastCapturedAt, setLastCapturedAt] = useState<number | null>(() =>
+    readPersisted<number | null>("lastCapturedAt", null)
+  );
+  const [now, setNow] = useState(() => Date.now());
+  const [captures, setCaptures] = useState<CaptureSet>(() =>
+    readPersisted<CaptureSet>("captures", { home: null, listing: null, vdp: null })
+  );
+  const [failures, setFailures] = useState<FailureSet>({
     home: null,
     listing: null,
     vdp: null,
   });
 
-  // Toggleable assets
-  const [activeAssets, setActiveAssets] = useState<Set<AssetId>>(new Set(["iframe", "widget", "vdp"]));
+  // Toggleable assets — persist across tab switches too.
+  const [activeAssets, setActiveAssets] = useState<Set<AssetId>>(() => {
+    const stored = readPersisted<AssetId[]>("activeAssets", ["iframe", "widget", "vdp"]);
+    return new Set(stored);
+  });
+
+  // ── Persistence side-effects ──
+  useEffect(() => writePersisted("homeUrl", homeUrl), [homeUrl]);
+  useEffect(() => writePersisted("listingUrl", listingUrl), [listingUrl]);
+  useEffect(() => writePersisted("vdpUrl", vdpUrl), [vdpUrl]);
+  useEffect(() => writePersisted("captures", captures), [captures]);
+  useEffect(() => writePersisted("lastCapturedAt", lastCapturedAt), [lastCapturedAt]);
+  useEffect(
+    () => writePersisted("activeAssets", Array.from(activeAssets)),
+    [activeAssets]
+  );
+
+  // ── Auto-fill listing URL when homepage changes and listing is empty ──
+  // Salespeople usually want a "good enough" guess so they can hit
+  // Capture immediately. They can still override before hitting it.
+  useEffect(() => {
+    if (!listingUrl.trim() && homeUrl.trim()) {
+      const guess = guessListingUrl(homeUrl);
+      if (guess) setListingUrl(guess);
+    }
+    // Intentionally only react to homeUrl — we don't want to overwrite
+    // the user's manual edits to the listing field.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [homeUrl]);
+
+  // ── Cooldown ticker — re-render once a second while a cooldown is active ──
+  // Avoids the user mashing Capture and burning quota.
+  useEffect(() => {
+    if (!lastCapturedAt) return;
+    const remaining = lastCapturedAt + COOLDOWN_MS - Date.now();
+    if (remaining <= 0) return;
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [lastCapturedAt]);
+
+  const cooldownRemainingMs = useMemo(() => {
+    if (!lastCapturedAt) return 0;
+    return Math.max(0, lastCapturedAt + COOLDOWN_MS - now);
+  }, [lastCapturedAt, now]);
+  const inCooldown = cooldownRemainingMs > 0;
 
   const toggleAsset = (id: AssetId) => {
     setActiveAssets((prev) => {
@@ -121,58 +244,93 @@ const LivePreview = ({
     return `https://api.microlink.io?${params.toString()}`;
   };
 
-  const captureOne = async (target: string): Promise<string | null> => {
-    if (!target.trim()) return null;
-    let normalized = target.trim();
-    if (!/^https?:\/\//i.test(normalized)) normalized = `https://${normalized}`;
+  // Result tuple from captureOne: { url } on success or { error } on
+  // failure. Lets handleCapture surface a per-page reason in the UI
+  // instead of swallowing failures.
+  type CaptureResult = { url: string | null; error: string | null };
+
+  const captureOne = async (target: string): Promise<CaptureResult> => {
+    if (!target.trim()) return { url: null, error: null };
+    const normalized = normalizeUrl(target);
+    if (!normalized) {
+      return { url: null, error: "Invalid URL — needs a real domain like dealer.com" };
+    }
     try {
       const res = await fetch(buildMicrolinkUrl(normalized), { redirect: "follow" });
       if (!res.ok) {
-        // microlink redirects the embed=screenshot.url request to the PNG
-        // directly — most browsers follow it transparently. If we got an
-        // explicit JSON instead (free-tier rate-limit etc.), fall through.
         if (res.status === 429) {
-          toast({
-            title: "Rate limit hit",
-            description: "microlink.io free tier is 50/day. Try again later or upgrade.",
-            variant: "destructive",
-          });
-          return null;
+          return {
+            url: null,
+            error: "Microlink rate limit (50/day per IP) — try again later",
+          };
         }
-        throw new Error(`microlink ${res.status}`);
+        if (res.status === 422 || res.status === 400) {
+          return { url: null, error: "Microlink couldn't render this URL" };
+        }
+        return { url: null, error: `Microlink returned ${res.status}` };
       }
-      // The embed param makes microlink redirect to the screenshot URL
-      // directly; res.url after redirect is the CDN URL we want.
-      return res.url;
+      return { url: res.url, error: null };
     } catch (e) {
       console.warn(`Capture failed for ${normalized}:`, e);
-      return null;
+      return {
+        url: null,
+        error: e instanceof Error ? e.message : "Network error",
+      };
     }
   };
 
   const handleCapture = async () => {
+    if (inCooldown) return;
     if (!homeUrl.trim()) {
-      toast({ title: "Need a homepage URL", description: "Paste the dealer's homepage URL to start.", variant: "destructive" });
+      toast({
+        title: "Need a homepage URL",
+        description: "Paste the dealer's homepage URL to start.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!normalizeUrl(homeUrl)) {
+      toast({
+        title: "Invalid homepage URL",
+        description: "Use a real domain like harteinfiniti.com",
+        variant: "destructive",
+      });
       return;
     }
     setCapturing(true);
     setCaptures({ home: null, listing: null, vdp: null });
+    setFailures({ home: null, listing: null, vdp: null });
     try {
       const [home, listing, vdp] = await Promise.all([
         captureOne(homeUrl),
         captureOne(listingUrl),
         captureOne(vdpUrl),
       ]);
-      setCaptures({ home, listing, vdp });
-      const successCount = [home, listing, vdp].filter(Boolean).length;
-      if (successCount === 0) {
-        toast({ title: "All captures failed", description: "Check the URLs and try again.", variant: "destructive" });
+      setCaptures({ home: home.url, listing: listing.url, vdp: vdp.url });
+      setFailures({ home: home.error, listing: listing.error, vdp: vdp.error });
+      const successCount = [home.url, listing.url, vdp.url].filter(Boolean).length;
+      const rateLimited = [home, listing, vdp].some(
+        (r) => r.error?.includes("rate limit"),
+      );
+      if (rateLimited) {
+        toast({
+          title: "Microlink rate limit hit",
+          description: "Free tier is 50 captures/day per IP. Try again later or upgrade.",
+          variant: "destructive",
+        });
+      } else if (successCount === 0) {
+        toast({
+          title: "All captures failed",
+          description: "Check the URLs and try again — see the error panels below.",
+          variant: "destructive",
+        });
       } else {
         toast({
           title: `Captured ${successCount} ${successCount === 1 ? "page" : "pages"}`,
           description: "Toggle assets below to layer them on the screenshots.",
         });
       }
+      setLastCapturedAt(Date.now());
     } finally {
       setCapturing(false);
     }
@@ -191,6 +349,7 @@ const LivePreview = ({
   });
 
   const hasAnyCapture = !!(captures.home || captures.listing || captures.vdp);
+  const hasAnyFailure = !!(failures.home || failures.listing || failures.vdp);
 
   return (
     <div className="space-y-5">
@@ -239,14 +398,29 @@ const LivePreview = ({
           <p className="text-[11px] text-slate-500">
             Listing and VDP URLs are optional — leave blank if you only want the homepage demo.
           </p>
-          <Button onClick={handleCapture} disabled={capturing} className="gap-1.5">
-            {capturing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
-            {capturing ? "Capturing…" : "Capture screenshots"}
+          <Button
+            onClick={handleCapture}
+            disabled={capturing || inCooldown}
+            className="gap-1.5"
+            title={inCooldown ? "Cooldown — protects the microlink quota" : undefined}
+          >
+            {capturing ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : inCooldown ? (
+              <RefreshCw className="w-4 h-4" />
+            ) : (
+              <Camera className="w-4 h-4" />
+            )}
+            {capturing
+              ? "Capturing…"
+              : inCooldown
+                ? `Wait ${Math.ceil(cooldownRemainingMs / 1000)}s`
+                : "Capture screenshots"}
           </Button>
         </div>
       </div>
 
-      {/* Asset toggle chips */}
+      {/* Asset toggle chips — show as soon as a successful capture exists */}
       {hasAnyCapture && (
         <div className="rounded-lg border border-slate-200 bg-white p-4">
           <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500 mb-2">
@@ -275,66 +449,81 @@ const LivePreview = ({
         </div>
       )}
 
-      {/* Three browser-frame cards: Homepage, Listing, VDP */}
-      {hasAnyCapture && (
+      {/* Three browser-frame cards. Each renders independently — a frame
+          shows up if EITHER the capture succeeded OR the capture failed
+          (so the salesperson can see "this URL didn't work" inline
+          instead of staring at an empty space). */}
+      {(hasAnyCapture || hasAnyFailure) && (
         <div className="space-y-5">
-          {captures.home && (
+          {(captures.home || failures.home) && (
             <BrowserFrame label="Homepage" url={homeUrl}>
-              <PageScreenshot src={captures.home}>
-                {activeAssets.has("homepage") && <HomepageBannerOverlay {...commonOverlayProps} />}
-                {activeAssets.has("widget") && <RightWidgetOverlay {...commonOverlayProps} />}
-                {activeAssets.has("sticky") && (
-                  <StickyBarOverlay {...commonOverlayProps} stickyText={stickyText} stickyCtaText={stickyCtaText} />
-                )}
-                {activeAssets.has("button") && <ButtonCtaOverlay {...commonOverlayProps} />}
-                {activeAssets.has("ppt") && pptEnabled && (
-                  <PptOverlay {...commonOverlayProps} pptButtonText={pptButtonText} />
-                )}
-                {/* Iframe modal renders LAST so it sits on top */}
-                {activeAssets.has("iframe") && <IframeModalOverlay {...commonOverlayProps} />}
-              </PageScreenshot>
+              {captures.home ? (
+                <PageScreenshot src={captures.home}>
+                  {activeAssets.has("homepage") && <HomepageBannerOverlay {...commonOverlayProps} />}
+                  {activeAssets.has("widget") && <RightWidgetOverlay {...commonOverlayProps} />}
+                  {activeAssets.has("sticky") && (
+                    <StickyBarOverlay {...commonOverlayProps} stickyText={stickyText} stickyCtaText={stickyCtaText} />
+                  )}
+                  {activeAssets.has("button") && <ButtonCtaOverlay {...commonOverlayProps} />}
+                  {activeAssets.has("ppt") && pptEnabled && (
+                    <PptOverlay {...commonOverlayProps} pptButtonText={pptButtonText} />
+                  )}
+                  {/* Iframe modal renders LAST so it sits on top */}
+                  {activeAssets.has("iframe") && <IframeModalOverlay {...commonOverlayProps} />}
+                </PageScreenshot>
+              ) : (
+                <CaptureFailurePanel reason={failures.home!} url={homeUrl} />
+              )}
             </BrowserFrame>
           )}
 
-          {captures.listing && (
+          {(captures.listing || failures.listing) && (
             <BrowserFrame label="Listing / Inventory Page" url={listingUrl}>
-              <PageScreenshot src={captures.listing}>
-                {activeAssets.has("listing") && (
-                  <ListingGhostOverlay
-                    {...commonOverlayProps}
-                    bannerHeadline={bannerHeadline}
-                    bannerCtaText={bannerCtaText}
-                  />
-                )}
-                {activeAssets.has("widget") && <RightWidgetOverlay {...commonOverlayProps} />}
-                {activeAssets.has("sticky") && (
-                  <StickyBarOverlay {...commonOverlayProps} stickyText={stickyText} stickyCtaText={stickyCtaText} />
-                )}
-                {activeAssets.has("button") && <ButtonCtaOverlay {...commonOverlayProps} />}
-              </PageScreenshot>
+              {captures.listing ? (
+                <PageScreenshot src={captures.listing}>
+                  {activeAssets.has("listing") && (
+                    <ListingGhostOverlay
+                      {...commonOverlayProps}
+                      bannerHeadline={bannerHeadline}
+                      bannerCtaText={bannerCtaText}
+                    />
+                  )}
+                  {activeAssets.has("widget") && <RightWidgetOverlay {...commonOverlayProps} />}
+                  {activeAssets.has("sticky") && (
+                    <StickyBarOverlay {...commonOverlayProps} stickyText={stickyText} stickyCtaText={stickyCtaText} />
+                  )}
+                  {activeAssets.has("button") && <ButtonCtaOverlay {...commonOverlayProps} />}
+                </PageScreenshot>
+              ) : (
+                <CaptureFailurePanel reason={failures.listing!} url={listingUrl} />
+              )}
             </BrowserFrame>
           )}
 
-          {captures.vdp && (
+          {(captures.vdp || failures.vdp) && (
             <BrowserFrame label="VDP — Vehicle Detail Page" url={vdpUrl}>
-              <PageScreenshot src={captures.vdp}>
-                {activeAssets.has("vdp") && (
-                  <VdpGhostOverlay
-                    {...commonOverlayProps}
-                    bannerHeadline={bannerHeadline}
-                    bannerText={bannerText}
-                    bannerCtaText={bannerCtaText}
-                  />
-                )}
-                {activeAssets.has("widget") && <RightWidgetOverlay {...commonOverlayProps} />}
-                {activeAssets.has("sticky") && (
-                  <StickyBarOverlay {...commonOverlayProps} stickyText={stickyText} stickyCtaText={stickyCtaText} />
-                )}
-                {activeAssets.has("button") && <ButtonCtaOverlay {...commonOverlayProps} />}
-                {activeAssets.has("ppt") && pptEnabled && (
-                  <PptOverlay {...commonOverlayProps} pptButtonText={pptButtonText} />
-                )}
-              </PageScreenshot>
+              {captures.vdp ? (
+                <PageScreenshot src={captures.vdp}>
+                  {activeAssets.has("vdp") && (
+                    <VdpGhostOverlay
+                      {...commonOverlayProps}
+                      bannerHeadline={bannerHeadline}
+                      bannerText={bannerText}
+                      bannerCtaText={bannerCtaText}
+                    />
+                  )}
+                  {activeAssets.has("widget") && <RightWidgetOverlay {...commonOverlayProps} />}
+                  {activeAssets.has("sticky") && (
+                    <StickyBarOverlay {...commonOverlayProps} stickyText={stickyText} stickyCtaText={stickyCtaText} />
+                  )}
+                  {activeAssets.has("button") && <ButtonCtaOverlay {...commonOverlayProps} />}
+                  {activeAssets.has("ppt") && pptEnabled && (
+                    <PptOverlay {...commonOverlayProps} pptButtonText={pptButtonText} />
+                  )}
+                </PageScreenshot>
+              ) : (
+                <CaptureFailurePanel reason={failures.vdp!} url={vdpUrl} />
+              )}
             </BrowserFrame>
           )}
         </div>
@@ -381,7 +570,6 @@ const PageScreenshot = ({
   children?: React.ReactNode;
 }) => (
   <div className="relative bg-slate-100" style={{ aspectRatio: "1280 / 800" }}>
-    {/* eslint-disable-next-line jsx-a11y/img-redundant-alt */}
     <img
       src={src}
       alt="Dealer site screenshot"
@@ -391,6 +579,24 @@ const PageScreenshot = ({
       }}
     />
     {children}
+  </div>
+);
+
+// ── Inline failure panel — replaces the screenshot when a capture errors ──
+const CaptureFailurePanel = ({ reason, url }: { reason: string; url: string }) => (
+  <div
+    className="relative bg-slate-50 flex flex-col items-center justify-center text-center p-8"
+    style={{ aspectRatio: "1280 / 800" }}
+  >
+    <AlertCircle className="w-10 h-10 text-amber-500 mb-3" />
+    <div className="text-sm font-bold text-slate-800">Couldn't capture this page</div>
+    <div className="text-xs text-slate-600 mt-1 max-w-md">{reason}</div>
+    {url && (
+      <div className="text-[11px] font-mono text-slate-400 mt-3 max-w-md truncate">{url}</div>
+    )}
+    <div className="text-[11px] text-slate-500 mt-4">
+      Edit the URL above and click Capture again.
+    </div>
   </div>
 );
 
