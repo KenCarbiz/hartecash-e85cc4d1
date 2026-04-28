@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 import {
   Inbox, CalendarDays, Users, ShieldCheck, SlidersHorizontal,
-  Settings, Bell, ListChecks, MessageSquareQuote, BarChart3, Send, MapPin, Car, ScrollText, Shield, Lock, Wrench, Rocket, Gauge, Network, Camera, Gift, Megaphone, ChevronDown, Link2, Code2, Paintbrush, TrendingUp, Store, Truck, Zap, Activity, ScanLine, CreditCard, Phone, DollarSign, Layout, Globe, Palette, UserCheck, Award, Flame, Home,
+  Settings, Bell, ListChecks, MessageSquareQuote, BarChart3, Send, MapPin, Car, ScrollText, Shield, Lock, Wrench, Rocket, Gauge, Network, Camera, Gift, Megaphone, ChevronDown, Link2, Code2, Paintbrush, TrendingUp, Store, Truck, Zap, Activity, ScanLine, CreditCard, Phone, DollarSign, Layout, Globe, Palette, UserCheck, Award, Flame, Home, Tag, Receipt, Key,
   // Icons added to bring the left-bar in line with the approved
   // Claude Design reference. RotateCcw replaces UserCheck on the
   // Appraiser Queue (circular re-appraise glyph), Wrench replaces
@@ -252,7 +252,7 @@ const AdminSidebar = ({
   const setupProcessItems: SidebarItem[] = [
     ...(canManageAccess ? [
       { key: "promotions", label: "Promotions", icon: Megaphone },
-      { key: "referrals", label: "Referral Program", icon: Gift },
+      { key: "referrals", label: "Referral Program", icon: Award },
       { key: "notifications", label: "Notifications", icon: Bell },
       { key: "landing-flow", label: "Landing & Flow", icon: Layout },
       ...(locationCount > 1 ? [{ key: "rooftop-websites", label: "Rooftop Websites", icon: Globe }] : []),
@@ -263,7 +263,7 @@ const AdminSidebar = ({
       ? [
           { key: "white-label", label: "White Label", icon: Paintbrush },
           { key: "integrations-status", label: "Integrations", icon: Activity },
-          { key: "api-access", label: "API Access", icon: Code2 },
+          { key: "api-access", label: "API Access", icon: Key },
           { key: "vauto-integration", label: "vAuto Integration", icon: Truck },
         ]
       : []),
@@ -277,16 +277,16 @@ const AdminSidebar = ({
       ? [{ key: "my-plan", label: "Plan", icon: CreditCard, href: "/plan" }]
       : []),
     ...(canManageAccess ? [{ key: "onboarding", label: "Dealer Setup", icon: Rocket }] : []),
-    ...(canManageAccess ? [{ key: "system-settings", label: "System Settings", icon: Wrench }] : []),
+    ...(canManageAccess ? [{ key: "system-settings", label: "System Settings", icon: SlidersHorizontal }] : []),
     ...(canManageAccess ? [{ key: "changelog", label: "Platform Updates", icon: ScrollText }] : []),
   ].filter((item) => isAllowed(item.key));
 
   // ── PLATFORM ── Super-admin only, cross-tenant operations
   const platformItems: SidebarItem[] = [
     ...(isPlatformAdmin ? [{ key: "tenants", label: "Dealer Tenants", icon: Network }] : []),
-    ...(isPlatformAdmin ? [{ key: "pricing-model", label: "Pricing Model", icon: DollarSign }] : []),
+    ...(isPlatformAdmin ? [{ key: "pricing-model", label: "Pricing Model", icon: Tag }] : []),
     ...(canManageAccess && (enterpriseBetaEnabled || isPlatformAdmin)
-      ? [{ key: "platform-billing", label: "Platform & Billing", icon: CreditCard }]
+      ? [{ key: "platform-billing", label: "Platform & Billing", icon: Receipt }]
       : []),
   ].filter((item) => isAllowed(item.key));
 
