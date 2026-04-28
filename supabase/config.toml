@@ -80,3 +80,36 @@ project_id = "ptiwdwfdckfqivoocyvp"
   # SUPABASE_SERVICE_ROLE_KEY — no user JWT flow.
   [functions.billing-replay]
     verify_jwt = false
+
+  # ── Prospect Demo + Live Preview tooling ──
+  # Internal sales tool for pitching dealers + per-tenant embed preview.
+
+  # Admin-only: server-side wrapper around microlink.io that screenshots
+  # a dealer site, retries with www/bare-domain variants, and rejects
+  # SSL-warning / 404 / Cloudflare-challenge pages by inspecting the
+  # rendered page title.
+  [functions.capture-screenshot]
+    verify_jwt = true
+  # Admin-only: fetches a dealer homepage, sniffs the CMS (Dealer.com,
+  # DealerOn, DealerInspire, etc.), and returns a likely listing-page
+  # URL plus a sample VDP URL. Platform-admin gated; SSRF-hardened.
+  [functions.detect-dealer-pages]
+    verify_jwt = true
+  # Platform-admin only: vision LLM (Claude Sonnet 4.5) analyzes the
+  # captured prospect screenshots and returns per-page placement
+  # recommendations + accent color + opening pitch line.
+  [functions.analyze-prospect-site]
+    verify_jwt = true
+  # Platform-admin only: persists a saved Prospect Demo + returns a
+  # public share_token the rep can text/email to the prospect.
+  [functions.save-prospect-demo]
+    verify_jwt = true
+  # PUBLIC: prospect dealers click /demo/<token> with no login. Returns
+  # the demo snapshot by share_token and logs the view (best-effort).
+  [functions.get-prospect-demo]
+    verify_jwt = false
+  # PUBLIC: serves runtime embed config to dealer websites. The dynamic
+  # embed-loader.js fetches this on every dealer pageview to pick up
+  # latest button color / copy / sale banner without re-installing.
+  [functions.embed-config]
+    verify_jwt = false
