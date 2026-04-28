@@ -454,19 +454,71 @@ const PageScreenshot = ({
 }: {
   src: string;
   children?: React.ReactNode;
-}) => (
-  <div className="relative bg-slate-100" style={{ aspectRatio: "1280 / 800" }}>
-    <img
-      src={src}
-      alt="Dealer site screenshot"
-      className="w-full h-full object-cover object-top"
-      onError={(e) => {
-        (e.currentTarget as HTMLImageElement).style.display = "none";
-      }}
-    />
-    {children}
-  </div>
-);
+}) => {
+  // Three states: loading (default), loaded, errored. Critical for UX
+  // because microlink can take 5–10s and a silent gray frame with
+  // overlays floating over nothing reads as "broken." On error we keep
+  // the area rendered + show the URL so the rep knows which page failed.
+  const [status, setStatus] = useState<"loading" | "loaded" | "errored">(
+    "loading",
+  );
+
+  useEffect(() => {
+    setStatus("loading");
+  }, [src]);
+
+  return (
+    <div
+      className="relative bg-slate-100 overflow-hidden"
+      style={{ aspectRatio: "1280 / 800" }}
+    >
+      {/* Loading skeleton — pulse + label so user knows it's working */}
+      {status === "loading" && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center bg-slate-100">
+          <Loader2 className="w-8 h-8 text-slate-400 animate-spin mb-2" />
+          <div className="text-xs text-slate-500 font-medium">
+            Loading screenshot…
+          </div>
+          <div className="text-[10px] text-slate-400 mt-1 max-w-md truncate px-4">
+            {src}
+          </div>
+        </div>
+      )}
+
+      {/* Error fallback — visible message with the URL that failed */}
+      {status === "errored" && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center bg-slate-50 p-6">
+          <AlertCircle className="w-10 h-10 text-amber-500 mb-3" />
+          <div className="text-sm font-bold text-slate-800">
+            Screenshot didn't load
+          </div>
+          <div className="text-xs text-slate-600 mt-1 max-w-md">
+            The image returned by microlink couldn't be displayed. The site
+            may have a cert issue, blocked the capture, or hit microlink's
+            free-tier rate limit.
+          </div>
+          <div className="text-[10px] font-mono text-slate-400 mt-3 max-w-md truncate px-4">
+            {src}
+          </div>
+        </div>
+      )}
+
+      <img
+        src={src}
+        alt="Dealer site screenshot"
+        className={`w-full h-full object-cover object-top transition-opacity ${
+          status === "loaded" ? "opacity-100" : "opacity-0"
+        }`}
+        onLoad={() => setStatus("loaded")}
+        onError={() => setStatus("errored")}
+      />
+
+      {/* Overlays render on top regardless of status so reps can see the
+          intended mockup even while the screenshot is still loading. */}
+      {children}
+    </div>
+  );
+};
 
 // ── Inline failure panel — replaces the screenshot when a capture errors ──
 const CaptureFailurePanel = ({ reason, url }: { reason: string; url: string }) => (

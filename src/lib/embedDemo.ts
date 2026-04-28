@@ -63,6 +63,18 @@ export const guessListingUrl = (homepage: string): string => {
 
 // Build a microlink screenshot URL. We use the embed=screenshot.url shortcut
 // so the response IS the image (no JSON parsing on the client).
+//
+// Tuning notes:
+// - waitUntil=load (not networkidle0) — many dealer sites have long-polling
+//   chat widgets that NEVER hit network-idle, causing microlink to time out
+//   after 30s and return a black/blank screenshot. "load" fires when the
+//   page's main resources are done.
+// - hide=[selector list] — kill cookie banners and chat widgets that ruin
+//   the visual demo. Microlink supports running a small CSS rule before
+//   the screenshot to set display:none on these elements.
+// - fullPage=false — capture the viewport only. Dealer sites can be 30k+
+//   pixels tall and most of that is footer/related-cars filler that hurts
+//   the demo more than it helps.
 export const buildMicrolinkUrl = (target: string): string => {
   const params = new URLSearchParams({
     url: target,
@@ -72,7 +84,14 @@ export const buildMicrolinkUrl = (target: string): string => {
     "viewport.width": "1280",
     "viewport.height": "800",
     type: "png",
-    waitUntil: "networkidle0",
+    waitUntil: "load",
+    "screenshot.fullPage": "false",
+    // Best-effort cookie/chat banner suppression. Microlink supports a
+    // hide= param; multiple selectors comma-separated.
+    hide:
+      "[id*='cookie'],[class*='cookie-banner'],[class*='consent'],[id*='onetrust']," +
+      "[class*='tcf-banner'],iframe[src*='intercom'],iframe[src*='drift']," +
+      "[id*='hubspot-messages'],[class*='livechat']",
   });
   return `https://api.microlink.io?${params.toString()}`;
 };

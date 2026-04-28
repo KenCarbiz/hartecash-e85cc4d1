@@ -298,18 +298,51 @@ const PublicScreenshot = ({
 }: {
   src: string;
   children?: React.ReactNode;
-}) => (
-  <div className="relative bg-slate-100" style={{ aspectRatio: "1280 / 800" }}>
-    <img
-      src={src}
-      alt="Dealer site screenshot"
-      className="w-full h-full object-cover object-top"
-      onError={(e) => {
-        (e.currentTarget as HTMLImageElement).style.display = "none";
-      }}
-    />
-    {children}
-  </div>
-);
+}) => {
+  const [status, setStatus] = useState<"loading" | "loaded" | "errored">(
+    "loading",
+  );
+
+  useEffect(() => {
+    setStatus("loading");
+  }, [src]);
+
+  return (
+    <div
+      className="relative bg-slate-100 overflow-hidden"
+      style={{ aspectRatio: "1280 / 800" }}
+    >
+      {status === "loading" && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-100">
+          <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
+        </div>
+      )}
+
+      {status === "errored" && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center bg-slate-50 p-6">
+          <AlertCircle className="w-10 h-10 text-amber-500 mb-3" />
+          <div className="text-sm font-bold text-slate-800">
+            Preview unavailable
+          </div>
+          <div className="text-xs text-slate-600 mt-1 max-w-md">
+            We couldn't load the screenshot of this page.
+          </div>
+        </div>
+      )}
+
+      <img
+        src={src}
+        alt="Dealer site screenshot"
+        className={`w-full h-full object-cover object-top transition-opacity ${
+          status === "loaded" ? "opacity-100" : "opacity-0"
+        }`}
+        onLoad={() => setStatus("loaded")}
+        onError={() => setStatus("errored")}
+      />
+
+      {children}
+    </div>
+  );
+};
 
 export default PublicDemo;
