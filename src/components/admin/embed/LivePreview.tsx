@@ -335,83 +335,76 @@ const LivePreview = ({
         </div>
       )}
 
-      {/* Three browser-frame cards. Each renders independently — a frame
-          shows up if EITHER the capture succeeded OR the capture failed
-          (so the salesperson can see "this URL didn't work" inline
-          instead of staring at an empty space). */}
+      {/* One demo frame per active asset toggle. Each asset gets its own
+          dedicated screenshot so the salesperson can show the prospect
+          "here's the iframe modal," then "here's the hero banner," then
+          "here's the widget tab" — one at a time. The asset's `pages`
+          array tells us which captured page to use as the canvas. */}
       {(hasAnyCapture || hasAnyFailure) && (
         <div className="space-y-5">
-          {(captures.home || failures.home) && (
-            <BrowserFrame label="Homepage" url={homeUrl}>
-              {captures.home ? (
-                <PageScreenshot src={captures.home}>
-                  {activeAssets.has("homepage") && <HomepageBannerOverlay {...commonOverlayProps} />}
-                  {activeAssets.has("widget") && <RightWidgetOverlay {...commonOverlayProps} />}
-                  {activeAssets.has("sticky") && (
-                    <StickyBarOverlay {...commonOverlayProps} stickyText={stickyText} stickyCtaText={stickyCtaText} />
-                  )}
-                  {activeAssets.has("button") && <ButtonCtaOverlay {...commonOverlayProps} />}
-                  {activeAssets.has("ppt") && pptEnabled && (
-                    <PptOverlay {...commonOverlayProps} pptButtonText={pptButtonText} />
-                  )}
-                  {/* Iframe modal renders LAST so it sits on top */}
-                  {activeAssets.has("iframe") && <IframeModalOverlay {...commonOverlayProps} />}
-                </PageScreenshot>
-              ) : (
-                <CaptureFailurePanel reason={failures.home!} url={homeUrl} />
-              )}
-            </BrowserFrame>
-          )}
-
-          {(captures.listing || failures.listing) && (
-            <BrowserFrame label="Listing / Inventory Page" url={listingUrl}>
-              {captures.listing ? (
-                <PageScreenshot src={captures.listing}>
-                  {activeAssets.has("listing") && (
-                    <ListingGhostOverlay
-                      {...commonOverlayProps}
-                      bannerHeadline={bannerHeadline}
-                      bannerCtaText={bannerCtaText}
-                    />
-                  )}
-                  {activeAssets.has("widget") && <RightWidgetOverlay {...commonOverlayProps} />}
-                  {activeAssets.has("sticky") && (
-                    <StickyBarOverlay {...commonOverlayProps} stickyText={stickyText} stickyCtaText={stickyCtaText} />
-                  )}
-                  {activeAssets.has("button") && <ButtonCtaOverlay {...commonOverlayProps} />}
-                </PageScreenshot>
-              ) : (
-                <CaptureFailurePanel reason={failures.listing!} url={listingUrl} />
-              )}
-            </BrowserFrame>
-          )}
-
-          {(captures.vdp || failures.vdp) && (
-            <BrowserFrame label="VDP — Vehicle Detail Page" url={vdpUrl}>
-              {captures.vdp ? (
-                <PageScreenshot src={captures.vdp}>
-                  {activeAssets.has("vdp") && (
-                    <VdpGhostOverlay
-                      {...commonOverlayProps}
-                      bannerHeadline={bannerHeadline}
-                      bannerText={bannerText}
-                      bannerCtaText={bannerCtaText}
-                    />
-                  )}
-                  {activeAssets.has("widget") && <RightWidgetOverlay {...commonOverlayProps} />}
-                  {activeAssets.has("sticky") && (
-                    <StickyBarOverlay {...commonOverlayProps} stickyText={stickyText} stickyCtaText={stickyCtaText} />
-                  )}
-                  {activeAssets.has("button") && <ButtonCtaOverlay {...commonOverlayProps} />}
-                  {activeAssets.has("ppt") && pptEnabled && (
-                    <PptOverlay {...commonOverlayProps} pptButtonText={pptButtonText} />
-                  )}
-                </PageScreenshot>
-              ) : (
-                <CaptureFailurePanel reason={failures.vdp!} url={vdpUrl} />
-              )}
-            </BrowserFrame>
-          )}
+          {ASSETS.filter((a) => {
+            if (a.id === "ppt" && !pptEnabled) return false;
+            if (!activeAssets.has(a.id)) return false;
+            // Show the frame as long as at least one of the asset's pages
+            // either succeeded or failed (failure panel renders inline).
+            return a.pages.some((p) => captures[p] || failures[p]);
+          }).map((asset) => {
+            // Pick the first page that successfully captured, falling back
+            // to the first failed page (so we still render an error panel).
+            const pageKey: PageType =
+              (asset.pages.find((p) => captures[p]) as PageType | undefined) ||
+              (asset.pages.find((p) => failures[p]) as PageType | undefined) ||
+              asset.pages[0];
+            const screenshot = captures[pageKey];
+            const failure = failures[pageKey];
+            const sourceUrl =
+              pageKey === "home" ? homeUrl :
+              pageKey === "listing" ? listingUrl :
+              vdpUrl;
+            const pageLabel =
+              pageKey === "home" ? "Homepage" :
+              pageKey === "listing" ? "Listing Page" :
+              "Vehicle Detail Page";
+            return (
+              <BrowserFrame
+                key={asset.id}
+                label={`${asset.label} — on ${pageLabel}`}
+                url={sourceUrl}
+              >
+                {screenshot ? (
+                  <PageScreenshot src={screenshot}>
+                    {asset.id === "iframe" && <IframeModalOverlay {...commonOverlayProps} />}
+                    {asset.id === "homepage" && <HomepageBannerOverlay {...commonOverlayProps} />}
+                    {asset.id === "widget" && <RightWidgetOverlay {...commonOverlayProps} />}
+                    {asset.id === "sticky" && (
+                      <StickyBarOverlay {...commonOverlayProps} stickyText={stickyText} stickyCtaText={stickyCtaText} />
+                    )}
+                    {asset.id === "vdp" && (
+                      <VdpGhostOverlay
+                        {...commonOverlayProps}
+                        bannerHeadline={bannerHeadline}
+                        bannerText={bannerText}
+                        bannerCtaText={bannerCtaText}
+                      />
+                    )}
+                    {asset.id === "listing" && (
+                      <ListingGhostOverlay
+                        {...commonOverlayProps}
+                        bannerHeadline={bannerHeadline}
+                        bannerCtaText={bannerCtaText}
+                      />
+                    )}
+                    {asset.id === "button" && <ButtonCtaOverlay {...commonOverlayProps} />}
+                    {asset.id === "ppt" && pptEnabled && (
+                      <PptOverlay {...commonOverlayProps} pptButtonText={pptButtonText} />
+                    )}
+                  </PageScreenshot>
+                ) : (
+                  <CaptureFailurePanel reason={failure!} url={sourceUrl} />
+                )}
+              </BrowserFrame>
+            );
+          })}
         </div>
       )}
     </div>

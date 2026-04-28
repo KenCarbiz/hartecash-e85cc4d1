@@ -8,6 +8,8 @@
  * lands in one place.
  */
 
+import { supabase } from "@/integrations/supabase/client";
+
 export type PageType = "home" | "listing" | "vdp";
 
 export interface CaptureSet {
@@ -96,8 +98,17 @@ export const buildMicrolinkUrl = (target: string): string => {
   return `https://api.microlink.io?${params.toString()}`;
 };
 
-// Capture a single page. Returns { url } on success or { error } on failure
-// so the caller can render an inline failure panel instead of an empty box.
+// Capture a single page through the server-side capture-screenshot edge
+// function. The edge function:
+//   - Tries URL variants (with/without www) in case the dealer's site
+//     canonicalizes one way and rejects the other.
+//   - Detects junk responses (Chrome SSL warnings, Cloudflare challenges,
+//     404 / forbidden pages) by reading microlink's metadata and rejecting
+//     them, instead of returning an "ok" image of a warning page.
+//   - Returns a clear, actionable error if every attempt fails.
+//
+// Caller still gets the same { url, error } shape so the existing
+// failure-panel UI keeps working.
 export const captureOne = async (target: string): Promise<CaptureResult> => {
   if (!target.trim()) return { url: null, error: null };
   const normalized = normalizeUrl(target);
@@ -108,20 +119,25 @@ export const captureOne = async (target: string): Promise<CaptureResult> => {
     };
   }
   try {
-    const res = await fetch(buildMicrolinkUrl(normalized), { redirect: "follow" });
-    if (!res.ok) {
-      if (res.status === 429) {
-        return {
-          url: null,
-          error: "Microlink rate limit (50/day per IP) — try again later",
-        };
-      }
-      if (res.status === 422 || res.status === 400) {
-        return { url: null, error: "Microlink couldn't render this URL" };
-      }
-      return { url: null, error: `Microlink returned ${res.status}` };
+    const { data, error } = await supabase.functions.invoke<{
+      screenshotUrl?: string;
+      error?: string;
+      attempts?: { url: string; ok: boolean; reason?: string; pageTitle?: string }[];
+    }>("capture-screenshot", { body: { url: normalized } });
+
+    if (error) {
+      return { url: null, error: error.message || "Capture failed" };
     }
-    return { url: res.url, error: null };
+    if (data?.screenshotUrl) {
+      return { url: data.screenshotUrl, error: null };
+    }
+    // Surface the most informative attempt reason if the edge function
+    // returned a structured failure list.
+    const lastReason =
+      data?.attempts?.find((a) => a.reason)?.reason ||
+      data?.error ||
+      "All capture attempts failed";
+    return { url: null, error: lastReason };
   } catch (e) {
     console.warn(`Capture failed for ${normalized}:`, e);
     return {
