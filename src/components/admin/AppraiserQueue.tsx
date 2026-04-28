@@ -7,9 +7,8 @@ import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { isManagerRole } from "@/lib/adminConstants";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
-  Gauge, Flame, Wrench, Car, UserX, ArrowRight, Clock,
+  Gauge, Flame, Wrench, Car, UserX, ArrowRight,
   Sparkles, ShieldAlert, Loader2, Plus, X,
 } from "lucide-react";
 
@@ -163,8 +162,6 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
   const canAccess =
     userRole === "admin" || isManagerRole(userRole) || isAppraiser;
 
-  const [schemaReady, setSchemaReady] = useState<boolean>(true);
-
   const fetchQueue = async () => {
     setLoading(true);
     // Column list — only include needs_appraisal if we've confirmed the
@@ -204,16 +201,13 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
 
     // Graceful degradation — the needs_appraisal column hasn't been
     // provisioned yet. Fall back to a column-free query so the page
-    // still renders something useful, and set a flag so the UI can
-    // explain the situation instead of showing an empty red toast.
+    // still renders something useful.
     const columnMissing =
       error?.message?.includes("needs_appraisal") ||
       error?.message?.includes("column") && error?.message?.includes("does not exist");
 
     if (columnMissing) {
-      setSchemaReady(false);
       if (autoRoute) {
-        // Still run the auto-route path — it doesn't depend on the flag
         const fallback = await (supabase as any)
           .from("submissions")
           .select(columnsWithoutFlag)
@@ -223,19 +217,13 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
         data = fallback.data;
         error = fallback.error;
       } else {
-        // No auto-route and no column → nothing to show yet
         data = [];
         error = null;
       }
-    } else {
-      setSchemaReady(true);
     }
 
     if (error) {
       console.error("[AppraiserQueue] fetch failed:", error);
-      // Silent fail — don't toast. Empty state below will communicate
-      // that the queue is clear, and schemaReady === false banner
-      // will explain if it's actually a schema provisioning gap.
       setRows([]);
       setLoading(false);
       return;
@@ -397,33 +385,14 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
   return (
     <div className="space-y-6 max-w-6xl">
       {/* Header */}
-      <header className="flex items-start justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-card-foreground">
-            Appraiser queue
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {rows.length} {rows.length === 1 ? "vehicle needs" : "vehicles need"} a number.
-          </p>
-        </div>
-        <Button variant="outline" size="sm" onClick={fetchQueue}>
-          Refresh
-        </Button>
+      <header>
+        <h1 className="text-3xl font-bold tracking-tight text-card-foreground">
+          Appraiser queue
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          {rows.length} {rows.length === 1 ? "vehicle needs" : "vehicles need"} a number.
+        </p>
       </header>
-
-      {/* Schema provisioning banner — only when needs_appraisal column
-          hasn't migrated yet. Non-blocking: queue still shows auto-route
-          rows below. */}
-      {!schemaReady && (
-        <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-          <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-          <div className="text-xs text-amber-700 dark:text-amber-400">
-            <strong>Queue provisioning in progress.</strong> The manager-flag
-            column hasn't finished provisioning on your database yet. Refresh
-            in 2-3 minutes; auto-routed queue entries still appear below.
-          </div>
-        </div>
-      )}
 
       {/* KPI tiles */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -484,7 +453,7 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
 
 function QueueTile({ label, value, valueClass }: { label: string; value: number; valueClass: string }) {
   return (
-    <div className="rounded-lg border bg-card p-5">
+    <div className="rounded-lg border border-border/60 p-5">
       <div className="text-[11px] font-bold tracking-wider uppercase text-muted-foreground">{label}</div>
       <div className={`text-3xl font-bold mt-2 ${valueClass}`}>{value}</div>
     </div>
