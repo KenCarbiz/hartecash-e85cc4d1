@@ -171,6 +171,14 @@ const ProspectDemo = () => {
     listing: null,
     vdp: null,
   });
+  // True when the listing/vdp slot is showing the homepage screenshot
+  // because the real listing/VDP URL failed to capture (cert error, etc.)
+  // — so the demo cards still render with overlays instead of a sad
+  // error panel. Surfaced in the BrowserFrame label so reps know.
+  const [fallbacks, setFallbacks] = useState<{ listing: boolean; vdp: boolean }>({
+    listing: false,
+    vdp: false,
+  });
   const [activeAssets, setActiveAssets] = useState<Set<AssetId>>(() => {
     // Default to ALL relevant assets so a fresh capture shows the full
     // value-add immediately. Reps can toggle individual assets off but
@@ -540,17 +548,37 @@ const ProspectDemo = () => {
     setCapturing(true);
     setCaptures({ home: null, listing: null, vdp: null });
     setFailures({ home: null, listing: null, vdp: null });
+    setFallbacks({ listing: false, vdp: false });
     try {
       const [home, listing, vdp] = await Promise.all([
         captureOne(homeUrl),
         captureOne(listingUrl),
         captureOne(vdpUrl),
       ]);
-      setCaptures({ home: home.url, listing: listing.url, vdp: vdp.url });
+      // If the homepage captured cleanly but listing or VDP failed (cert
+      // error, 404, slow site, etc.) reuse the homepage screenshot as
+      // the canvas for those slots so every asset card still renders
+      // with overlays. The pitch is "here's how Autocurb looks layered
+      // on your site" — a generic homepage canvas serves that better
+      // than a "Couldn't capture this page" error panel.
+      const useFallback = !!home.url;
+      const listingFellBack = useFallback && !listing.url;
+      const vdpFellBack = useFallback && !vdp.url;
+      setCaptures({
+        home: home.url,
+        listing: listing.url || (listingFellBack ? home.url : null),
+        vdp: vdp.url || (vdpFellBack ? home.url : null),
+      });
+      setFallbacks({ listing: listingFellBack, vdp: vdpFellBack });
+      // Only surface a failure for slots that have NO fallback to render
+      // — when we backfill with the homepage the rep doesn't need an
+      // error panel cluttering the UI. Original failure reasons are
+      // still printed in the toast description below if all three
+      // captures failed.
       setFailures({
         home: formatCaptureError(home),
-        listing: formatCaptureError(listing),
-        vdp: formatCaptureError(vdp),
+        listing: listingFellBack ? null : formatCaptureError(listing),
+        vdp: vdpFellBack ? null : formatCaptureError(vdp),
       });
       const successCount = [home.url, listing.url, vdp.url].filter(Boolean).length;
       const rateLimited = [home, listing, vdp].some(
@@ -569,9 +597,12 @@ const ProspectDemo = () => {
           variant: "destructive",
         });
       } else {
+        const fallbackCount = (listingFellBack ? 1 : 0) + (vdpFellBack ? 1 : 0);
         toast({
           title: `Captured ${successCount} ${successCount === 1 ? "page" : "pages"}`,
-          description: "Toggle assets below to layer them on the screenshots.",
+          description: fallbackCount > 0
+            ? `Used homepage as fallback for ${fallbackCount} slot${fallbackCount === 1 ? "" : "s"} that couldn't be captured.`
+            : "Toggle assets below to layer them on the screenshots.",
         });
       }
       // Only burn cooldown if at least one capture actually consumed
@@ -851,18 +882,27 @@ const ProspectDemo = () => {
               asset.pages[0];
             const screenshot = captures[pageKey];
             const failure = failures[pageKey];
-            const sourceUrl =
-              pageKey === "home" ? homeUrl :
-              pageKey === "listing" ? listingUrl :
-              vdpUrl;
+            // When listing/vdp fell back to the homepage capture, show
+            // the homepage URL in the address bar — otherwise the rep
+            // sees a VDP URL above an obviously-homepage screenshot,
+            // which is jarring on a sales call.
+            const isFallback =
+              (pageKey === "listing" && fallbacks.listing) ||
+              (pageKey === "vdp" && fallbacks.vdp);
+            const sourceUrl = isFallback
+              ? homeUrl
+              : pageKey === "home" ? homeUrl
+              : pageKey === "listing" ? listingUrl
+              : vdpUrl;
             const pageLabel =
               pageKey === "home" ? "Homepage" :
               pageKey === "listing" ? "Listing Page" :
               "Vehicle Detail Page";
+            const labelSuffix = isFallback ? " (homepage fallback)" : "";
             return (
               <BrowserFrame
                 key={asset.id}
-                label={`${asset.label} — on ${pageLabel}`}
+                label={`${asset.label} — on ${pageLabel}${labelSuffix}`}
                 url={sourceUrl}
               >
                 {screenshot ? (
