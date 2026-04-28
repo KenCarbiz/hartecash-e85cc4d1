@@ -264,22 +264,19 @@ async function tryCapture(url: string): Promise<CaptureAttempt> {
 
   // Hit microlink with metadata mode so we get JSON back with the page
   // title — used to detect junk pages (SSL warnings, CF challenges, etc.)
+  //
+  // waitUntil=load is what the rest of the pipeline (embedDemo.ts) uses
+  // and what was working in production before this fix landed. Don't
+  // change it without testing — networkidle2 sounds nicer in theory but
+  // many dealer sites have analytics beacons and chat widgets that keep
+  // the network busy past the 30s microlink timeout, returning blanks.
   const params = new URLSearchParams({
     url,
     screenshot: "true",
     "viewport.width": "1280",
     "viewport.height": "800",
     type: "png",
-    // networkidle2 = wait until ≤2 in-flight network requests for 500ms.
-    // Better than `load` (fires before lazy hero images paint, leaving
-    // dealer sites looking blank) and better than `networkidle0` (never
-    // fires when chat widgets long-poll forever). With the `hide`
-    // selectors below killing chat iframes, networkidle2 settles cleanly.
-    waitUntil: "networkidle2",
-    // Belt-and-suspenders: even after networkidle2, give lazy-loaded
-    // hero images and CMS-injected content one more second to paint
-    // before snapping the PNG. Most dealer sites have a 1–2s hero swap.
-    waitForTimeout: "1500",
+    waitUntil: "load",
     "screenshot.fullPage": "false",
     hide:
       "[id*='cookie'],[class*='cookie-banner'],[class*='consent']," +
