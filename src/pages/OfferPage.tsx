@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import InspectionDisclosure from "@/components/portal/InspectionDisclosure";
+import VehiclePhotos from "@/components/portal/VehiclePhotos";
 import logoFallback from "@/assets/logo-placeholder-white.png";
 import PortalSkeleton from "@/components/PortalSkeleton";
 import CalculatingOffer from "@/components/CalculatingOffer";
@@ -880,6 +881,14 @@ const OfferPage = () => {
     </motion.div>
   );
 
+  // Render the gallery when photos are uploaded, the upload-CTA when
+  // they're not. Customers asked "did my pics actually arrive?" — the
+  // gallery answers that visually + adds trust before they accept the
+  // offer (since the dealer's offer reflects what the photos showed).
+  const PhotoSection = s.photos_uploaded
+    ? token && <VehiclePhotos token={token} photosUploaded />
+    : PhotoUploadCallout;
+
   const conditionItems = buildConditionItems(condition);
 
   const ConditionBlock = (
@@ -1158,7 +1167,7 @@ const OfferPage = () => {
                 vehicleStr={vehicleStr}
               />
 
-              {PhotoUploadCallout}
+              {PhotoSection}
               {TradeInExplanation}
               {NoTaxBlock}
               {ConditionBlock}
@@ -1243,7 +1252,7 @@ const OfferPage = () => {
             vehicleStr={vehicleStr}
           />
 
-          {PhotoUploadCallout}
+          {PhotoSection}
           {TradeInExplanation}
           {NoTaxBlock}
           {ConditionBlock}
