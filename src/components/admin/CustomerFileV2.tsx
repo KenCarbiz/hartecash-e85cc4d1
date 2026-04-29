@@ -33,6 +33,7 @@ import CustomerFileAccentStyle from "./CustomerFileAccentStyle";
 import SubmissionNotesModal, { fetchSubmissionNotes, type SubmissionNote } from "./SubmissionNotesModal";
 import ClickToDialButton from "./ClickToDialButton";
 import { useChannelState } from "@/hooks/useChannelState";
+import VoiceCallCard from "./VoiceCallCard";
 import { useConversationRealtime } from "@/hooks/useConversationRealtime";
 import { printCheckRequest } from "@/lib/printUtils";
 import logoFallback from "@/assets/logo-placeholder.png";
@@ -478,6 +479,11 @@ interface ConvCall {
   duration_seconds: number | null;
   summary: string | null;
   created_at: string;
+  transcript?: string | null;
+  recording_url?: string | null;
+  direction?: string | null;
+  phone_number?: string | null;
+  performed_by?: string | null;
 }
 
 const fmtConvTime = (iso: string) => {
@@ -537,7 +543,7 @@ function ConversationTab({
         .limit(200),
       (supabase as never as { from: (t: string) => { select: (s: string) => { eq: (k: string, v: string) => { order: (c: string, o: { ascending: boolean }) => { limit: (n: number) => Promise<{ data: ConvCall[] | null }> } } } } })
         .from("voice_call_log")
-        .select("id, status, outcome, duration_seconds, summary, created_at")
+        .select("id, status, outcome, duration_seconds, summary, created_at, transcript, recording_url, direction, phone_number")
         .eq("submission_id", sub.id)
         .order("created_at", { ascending: false })
         .limit(50),
@@ -722,18 +728,7 @@ function ConversationTab({
           ) : (
             <div className="space-y-2 max-w-[760px] mx-auto">
               {calls.map((c) => (
-                <div key={c.id} className="rounded-lg border border-slate-200 bg-white p-4 flex items-baseline justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="text-[13px] font-bold text-slate-900 capitalize">
-                      {(c.outcome || c.status || "Call").replace(/_/g, " ")}
-                    </div>
-                    {c.summary && <p className="text-[12px] text-slate-600 mt-0.5 line-clamp-2">{c.summary}</p>}
-                  </div>
-                  <div className="text-right text-[11px] text-slate-400 shrink-0">
-                    <div className="font-semibold text-slate-700">{fmtConvDuration(c.duration_seconds)}</div>
-                    <div>{fmtConvTime(c.created_at)}</div>
-                  </div>
-                </div>
+                <VoiceCallCard key={c.id} call={c} />
               ))}
             </div>
           )
