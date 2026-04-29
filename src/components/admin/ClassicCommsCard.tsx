@@ -14,6 +14,7 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useChannelState } from "@/hooks/useChannelState";
+import { useConversationRealtime } from "@/hooks/useConversationRealtime";
 
 type Channel = "sms" | "email" | "calls";
 
@@ -93,6 +94,7 @@ const ClassicCommsCard = ({ submissionId, customerPhone, customerEmail, onOpenFu
   }, [submissionId]);
 
   useEffect(() => { void load(); }, [load]);
+  useConversationRealtime(submissionId, () => { void load(); });
 
   const smsEvents = events.filter((e) => e.channel === "sms").slice(0, 3);
   const emailEvents = events.filter((e) => e.channel === "email").slice(0, 3);

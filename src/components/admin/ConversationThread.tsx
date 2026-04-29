@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useChannelState } from "@/hooks/useChannelState";
+import { useConversationRealtime } from "@/hooks/useConversationRealtime";
 import {
   Phone, MessageSquare, Mail, FileText, Activity, ChevronDown, ChevronUp,
   Loader2, Play, Clock, Send, StickyNote,
@@ -98,6 +99,11 @@ const ConversationThread = ({
   useEffect(() => {
     load();
   }, [load]);
+
+  // Live updates: when sms-webhook (or any other writer) inserts a new
+  // conversation_events row for this submission, refresh the thread so
+  // the rep sees inbound replies without hitting refresh.
+  useConversationRealtime(submissionId, () => { void load(); });
 
   const handleSendReply = async () => {
     const text = replyBody.trim();

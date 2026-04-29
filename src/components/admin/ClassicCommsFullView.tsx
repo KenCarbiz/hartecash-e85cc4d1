@@ -22,6 +22,7 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useChannelState } from "@/hooks/useChannelState";
+import { useConversationRealtime } from "@/hooks/useConversationRealtime";
 
 type Channel = "sms" | "email" | "calls" | "unified";
 type Tone = "friendly" | "professional" | "urgent" | "brief";
@@ -131,6 +132,10 @@ const ClassicCommsFullView = ({
   useEffect(() => {
     if (open) void load();
   }, [open, load]);
+
+  // Live updates while the full-screen view is open — inbound SMS /
+  // email arrives without the rep refreshing the page.
+  useConversationRealtime(open ? submissionId : null, () => { void load(); });
 
   // Reset composer when switching tabs
   useEffect(() => { setDraft(""); setEmailSubject(""); }, [tab]);

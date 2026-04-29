@@ -33,6 +33,7 @@ import CustomerFileAccentStyle from "./CustomerFileAccentStyle";
 import SubmissionNotesModal, { fetchSubmissionNotes, type SubmissionNote } from "./SubmissionNotesModal";
 import ClickToDialButton from "./ClickToDialButton";
 import { useChannelState } from "@/hooks/useChannelState";
+import { useConversationRealtime } from "@/hooks/useConversationRealtime";
 import { printCheckRequest } from "@/lib/printUtils";
 import logoFallback from "@/assets/logo-placeholder.png";
 
@@ -546,6 +547,7 @@ function ConversationTab({
   }, [sub.id]);
 
   useEffect(() => { void load(); }, [load]);
+  useConversationRealtime(sub.id, () => { void load(); });
 
   const smsMessages   = messages.filter((m) => m.channel === "sms");
   const emailMessages = messages.filter((m) => m.channel === "email");
