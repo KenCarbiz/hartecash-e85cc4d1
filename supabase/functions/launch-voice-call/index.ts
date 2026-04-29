@@ -88,6 +88,56 @@ serve(async (req) => {
       phone: requestedPhone,
     } = await req.json();
 
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // ── Test-call shortcut ────────────────────────────────────────
+    // When campaign_type === "test" we're sanity-checking the Bland.ai
+    // integration on the rep's own number. Skip the submission +
+    // TCPA path; the rep is consenting by clicking the button.
+    if (campaign_type === "test") {
+      if (!requestedPhone) {
+        return new Response(
+          JSON.stringify({ error: "phone is required for a test call" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      const apiKey = Deno.env.get("BLAND_API_KEY");
+      if (!apiKey) {
+        return new Response(
+          JSON.stringify({ error: "BLAND_API_KEY not configured" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      const blandRes = await fetch("https://api.bland.ai/v1/calls", {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: apiKey },
+        body: JSON.stringify({
+          phone_number: requestedPhone,
+          task: "Hi! This is a test call from AutoCurb. Your Bland.ai integration is working. Goodbye.",
+          voice: "nat",
+          max_duration: 1,
+          metadata: { test_call: true, requested_at: new Date().toISOString() },
+        }),
+      });
+      const blandData = await blandRes.json().catch(() => ({}));
+      if (!blandRes.ok) {
+        return new Response(
+          JSON.stringify({
+            error: "bland_error",
+            message: (blandData as { message?: string })?.message || "Bland.ai rejected the test call.",
+            detail: blandData,
+          }),
+          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      return new Response(
+        JSON.stringify({ success: true, test: true, call_id: (blandData as { call_id?: string })?.call_id || null }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     if (!submission_id) {
       return new Response(
         JSON.stringify({ error: "submission_id is required" }),
@@ -97,10 +147,6 @@ serve(async (req) => {
         }
       );
     }
-
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // ── Fetch submission ──
     const { data: submission, error: subErr } = await supabase
