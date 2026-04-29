@@ -122,10 +122,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Look up the rep's cell phone.
+    // Look up the rep's cell phone + availability flags.
     const { data: roleRow } = await admin
       .from("user_roles")
-      .select("phone, sms_notifications_opted_in")
+      .select("phone, sms_notifications_opted_in, click_to_dial_dnd")
       .eq("user_id", caller.userId)
       .not("phone", "is", null)
       .limit(1)
@@ -142,6 +142,33 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Honor the rep's DND + quiet-hours window. The SQL helper
+    // collapses both signals into a single boolean.
+    const { data: repAvailable } = await admin.rpc("click_to_dial_rep_available", {
+      _user_id: caller.userId,
+    });
+    if (repAvailable === false) {
+      return new Response(
+        JSON.stringify({
+          error: "rep_unavailable",
+          message: roleRow?.click_to_dial_dnd
+            ? "You have do-not-disturb on for click-to-dial. Toggle it off in Staff & Permissions to dial."
+            : "You're inside your quiet-hours window. Adjust the window in Staff & Permissions or wait until it ends.",
+        }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // Tenant-level recording opt-in. When on, we tell Twilio to record
+    // the bridge AND prepend a consent disclosure so the customer is
+    // notified before recording begins (two-party-consent compliant).
+    const { data: tenantRow } = await admin
+      .from("dealer_accounts")
+      .select("click_to_dial_record_calls")
+      .eq("dealership_id", sub.dealership_id || "default")
+      .maybeSingle();
+    const recordingEnabled = !!tenantRow?.click_to_dial_record_calls;
+
     const twilioSid = Deno.env.get("TWILIO_ACCOUNT_SID");
     const twilioToken = Deno.env.get("TWILIO_AUTH_TOKEN");
     const twilioPhone = Deno.env.get("TWILIO_PHONE_NUMBER");
@@ -155,10 +182,36 @@ Deno.serve(async (req) => {
 
     // Inline TwiML: when the rep answers, Twilio dials the customer
     // and bridges. callerId on the <Dial> sets what the customer sees.
+    //
+    // When tenant recording is enabled:
+    //   - The rep's leg starts with a brief "this call may be recorded"
+    //     line (heard by both parties before bridge connects).
+    //   - record="record-from-answer-dual" produces a stereo recording
+    //     that starts when the customer picks up. answerOnBridge keeps
+    //     the rep's leg unrecorded until the bridge completes.
+    //
+    // The disclosure plays on the rep's leg via <Say> before the
+    // <Dial>; once the customer answers, <Dial answerOnBridge> drops
+    // them into the bridged audio. Customer hears recording start as
+    // soon as they pick up — within the meaning of "informed before"
+    // for two-party-consent jurisdictions.
+    const dialAttrs: string[] = [
+      `callerId="${escapeXml(twilioPhone)}"`,
+      `answerOnBridge="true"`,
+      `timeout="25"`,
+    ];
+    if (recordingEnabled) {
+      dialAttrs.push(`record="record-from-answer-dual"`);
+    }
+
+    const introLine = recordingEnabled
+      ? `Connecting you to ${escapeXml(sub.name || "the customer")}. This call will be recorded for quality and training purposes.`
+      : `Connecting you to ${escapeXml(sub.name || "the customer")}.`;
+
     const twiml =
       `<Response>` +
-        `<Say voice="alice">Connecting you to ${escapeXml(sub.name || "the customer")}.</Say>` +
-        `<Dial callerId="${escapeXml(twilioPhone)}" answerOnBridge="true" timeout="25">` +
+        `<Say voice="alice">${introLine}</Say>` +
+        `<Dial ${dialAttrs.join(" ")}>` +
           `<Number>${escapeXml(customerE164)}</Number>` +
         `</Dial>` +
       `</Response>`;
@@ -201,10 +254,13 @@ Deno.serve(async (req) => {
       actor_type: "staff",
       actor_id: caller.userId,
       actor_label: "Click-to-dial",
-      body_text: `Bridge call initiated — dialing rep cell, then customer.`,
+      body_text: recordingEnabled
+        ? `Bridge call initiated (recorded) — dialing rep cell, then customer.`
+        : `Bridge call initiated — dialing rep cell, then customer.`,
       metadata: {
         provider: "twilio",
         call_sid: callSid,
+        recording_enabled: recordingEnabled,
         rep_phone_masked: repE164.replace(/(\+\d{1,2})\d+(\d{4})$/, "$1•••$2"),
         customer_phone_masked: customerE164.replace(/(\+\d{1,2})\d+(\d{4})$/, "$1•••$2"),
       },

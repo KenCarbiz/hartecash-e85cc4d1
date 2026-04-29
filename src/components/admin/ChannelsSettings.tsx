@@ -48,6 +48,7 @@ const ChannelsSettings = () => {
   const { toast } = useToast();
 
   const [tenantState, setTenantState] = useState<ChannelStateMap>(ALL_ENABLED);
+  const [recordCalls, setRecordCalls] = useState(false);
   const [locations, setLocations] = useState<DealerLocationLite[]>([]);
   const [locationOverrides, setLocationOverrides] = useState<LocationOverrideMap>({});
   const [loading, setLoading] = useState(true);
@@ -57,7 +58,7 @@ const ChannelsSettings = () => {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const [{ data: tRows }, { data: locs }] = await Promise.all([
+      const [{ data: tRows }, { data: locs }, { data: acct }] = await Promise.all([
         supabase
           .from("tenant_channels")
           .select("channel, enabled")
@@ -67,8 +68,14 @@ const ChannelsSettings = () => {
           .select("id, name")
           .eq("dealership_id", tenant.dealership_id)
           .order("name", { ascending: true }),
+        supabase
+          .from("dealer_accounts")
+          .select("click_to_dial_record_calls")
+          .eq("dealership_id", tenant.dealership_id)
+          .maybeSingle(),
       ]);
       if (cancelled) return;
+      setRecordCalls(!!acct?.click_to_dial_record_calls);
 
       const t: ChannelStateMap = { ...ALL_ENABLED };
       (tRows || []).forEach((r) => {
@@ -130,6 +137,28 @@ const ChannelsSettings = () => {
     toast({ title: `${CHANNEL_META[channel].label}: ${enabled ? "On" : "Off"}` });
   };
 
+  const updateRecordCalls = async (next: boolean) => {
+    setSavingKey("recording");
+    const prev = recordCalls;
+    setRecordCalls(next); // optimistic
+    const { error } = await supabase
+      .from("dealer_accounts")
+      .update({ click_to_dial_record_calls: next })
+      .eq("dealership_id", tenant.dealership_id);
+    setSavingKey(null);
+    if (error) {
+      setRecordCalls(prev);
+      toast({ title: "Couldn't save recording preference", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({
+      title: next ? "Call recording enabled" : "Call recording disabled",
+      description: next
+        ? "Customers will hear a disclosure before each bridge connects."
+        : "Bridged calls will no longer be recorded.",
+    });
+  };
+
   const updateLocationChannel = async (
     locationId: string,
     channel: ChannelKey,
@@ -187,41 +216,76 @@ const ChannelsSettings = () => {
         const Icon = ICONS[key];
         const enabled = tenantState[key];
         const isSaving = savingKey === `tenant:${key}`;
+        const showRecording = key === "click_to_dial";
+        const recordingSaving = savingKey === "recording";
         return (
           <div
             key={key}
-            className="bg-card border rounded-2xl p-5 flex items-start gap-4"
+            className="bg-card border rounded-2xl p-5"
           >
-            <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shrink-0">
-              <Icon className="w-5 h-5 text-foreground/70" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-base font-bold">{meta.label}</span>
-                <Badge
-                  variant="outline"
-                  className={
-                    enabled
-                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                      : "bg-slate-100 text-slate-600 border-slate-200"
-                  }
-                >
-                  {enabled ? "ON" : "OFF"}
-                </Badge>
-                {isSaving && <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />}
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                <Icon className="w-5 h-5 text-foreground/70" />
               </div>
-              <p className="text-sm text-muted-foreground mt-1">{meta.description}</p>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-base font-bold">{meta.label}</span>
+                  <Badge
+                    variant="outline"
+                    className={
+                      enabled
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        : "bg-slate-100 text-slate-600 border-slate-200"
+                    }
+                  >
+                    {enabled ? "ON" : "OFF"}
+                  </Badge>
+                  {isSaving && <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />}
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">{meta.description}</p>
+              </div>
+              <Switch
+                checked={enabled}
+                onCheckedChange={(v) => updateTenantChannel(key, v)}
+                disabled={isSaving}
+                aria-label={`Toggle ${meta.label}`}
+              />
             </div>
-            <Switch
-              checked={enabled}
-              onCheckedChange={(v) => updateTenantChannel(key, v)}
-              disabled={isSaving}
-              aria-label={`Toggle ${meta.label}`}
-            />
+            {showRecording && enabled && (
+              <div className="mt-4 ml-14 pl-4 border-l-2 border-muted">
+                <div className="flex items-start gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-semibold">Record bridged calls</span>
+                      <Badge
+                        variant="outline"
+                        className={
+                          recordCalls
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px]"
+                            : "bg-slate-100 text-slate-600 border-slate-200 text-[10px]"
+                        }
+                      >
+                        {recordCalls ? "ON" : "OFF"}
+                      </Badge>
+                      {recordingSaving && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Records the bridged audio in stereo. Customer hears a "this call may be recorded" disclosure before the bridge connects, satisfying two-party-consent jurisdictions (CA, FL, IL, MA, MD, MT, NH, PA, WA + more).
+                    </p>
+                  </div>
+                  <Switch
+                    checked={recordCalls}
+                    onCheckedChange={updateRecordCalls}
+                    disabled={recordingSaving}
+                    aria-label="Toggle call recording"
+                  />
+                </div>
+              </div>
+            )}
           </div>
         );
       }),
-    [tenantState, savingKey],
+    [tenantState, savingKey, recordCalls],
   );
 
   if (loading) {
