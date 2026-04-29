@@ -16,6 +16,11 @@ export async function clickToDial(submissionId: string): Promise<void> {
   });
 
   if (error) {
+    const name = (error as { name?: string }).name || "";
+    const msg = error.message || "";
+    const isFetchError =
+      name === "FunctionsFetchError" ||
+      /failed to send a request|failed to fetch|networkerror/i.test(msg);
     let detail = error.message;
     try {
       const ctx = (error as unknown as { context?: Response }).context;
@@ -25,6 +30,16 @@ export async function clickToDial(submissionId: string): Promise<void> {
       }
     } catch {
       /* keep default */
+    }
+    if (isFetchError) {
+      // Bridge function unreachable (not deployed / CORS / network).
+      // Tell the rep clearly so they can still pick up their phone.
+      toast({
+        title: "Click-to-dial unavailable",
+        description: "The Twilio bridge isn't deployed yet. Ask your admin to deploy the twilio-click-to-dial edge function.",
+        variant: "destructive",
+      });
+      return;
     }
     toast({ title: "Couldn't start call", description: detail, variant: "destructive" });
     return;

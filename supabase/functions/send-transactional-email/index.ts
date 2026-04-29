@@ -60,6 +60,7 @@ Deno.serve(async (req) => {
   let idempotencyKey: string
   let messageId: string
   let templateData: Record<string, any> = {}
+  let submissionId: string | null = null
   try {
     const body = await req.json()
     templateName = body.templateName || body.template_name
@@ -69,6 +70,14 @@ Deno.serve(async (req) => {
     if (body.templateData && typeof body.templateData === 'object') {
       templateData = body.templateData
     }
+    // Accept submission_id from caller OR templateData.submission_id —
+    // populating email_send_log.submission_id powers the inbound
+    // email webhook's In-Reply-To fallback.
+    submissionId =
+      body.submissionId ||
+      body.submission_id ||
+      (templateData && typeof templateData.submission_id === 'string' ? templateData.submission_id : null) ||
+      null
   } catch {
     return new Response(
       JSON.stringify({ error: 'Invalid JSON in request body' }),
@@ -167,6 +176,7 @@ Deno.serve(async (req) => {
       template_name: templateName,
       recipient_email: effectiveRecipient,
       status: 'suppressed',
+      submission_id: submissionId,
     })
 
     console.log('Email suppressed', { effectiveRecipient, templateName })
@@ -201,6 +211,7 @@ Deno.serve(async (req) => {
       recipient_email: effectiveRecipient,
       status: 'failed',
       error_message: 'Failed to look up unsubscribe token',
+      submission_id: submissionId,
     })
     return new Response(
       JSON.stringify({ error: 'Failed to prepare email' }),
@@ -234,6 +245,7 @@ Deno.serve(async (req) => {
         recipient_email: effectiveRecipient,
         status: 'failed',
         error_message: 'Failed to create unsubscribe token',
+        submission_id: submissionId,
       })
       return new Response(
         JSON.stringify({ error: 'Failed to prepare email' }),
@@ -263,6 +275,7 @@ Deno.serve(async (req) => {
         recipient_email: effectiveRecipient,
         status: 'failed',
         error_message: 'Failed to confirm unsubscribe token storage',
+        submission_id: submissionId,
       })
       return new Response(
         JSON.stringify({ error: 'Failed to prepare email' }),
@@ -286,6 +299,7 @@ Deno.serve(async (req) => {
       status: 'suppressed',
       error_message:
         'Unsubscribe token used but email missing from suppressed list',
+      submission_id: submissionId,
     })
     return new Response(
       JSON.stringify({ success: false, reason: 'email_suppressed' }),
@@ -320,6 +334,7 @@ Deno.serve(async (req) => {
     template_name: templateName,
     recipient_email: effectiveRecipient,
     status: 'pending',
+    submission_id: submissionId,
   })
 
   const { error: enqueueError } = await supabase.rpc('enqueue_email', {
@@ -337,6 +352,7 @@ Deno.serve(async (req) => {
       idempotency_key: idempotencyKey,
       unsubscribe_token: unsubscribeToken,
       queued_at: new Date().toISOString(),
+      submission_id: submissionId,
     },
   })
 
@@ -353,6 +369,7 @@ Deno.serve(async (req) => {
       recipient_email: effectiveRecipient,
       status: 'failed',
       error_message: 'Failed to enqueue email',
+      submission_id: submissionId,
     })
 
     return new Response(JSON.stringify({ error: 'Failed to enqueue email' }), {
