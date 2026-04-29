@@ -75,7 +75,12 @@ const VoiceAICampaigns = () => {
 
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [showNewCampaign, setShowNewCampaign] = useState(false);
-  const [newCampaign, setNewCampaign] = useState({ name: "", target: "", max_calls_per_day: 25 });
+  const [newCampaign, setNewCampaign] = useState({
+    name: "",
+    target: "",
+    max_calls_per_day: 25,
+    voicemail_message: "",
+  });
   const [callLog, setCallLog] = useState<any[]>([]);
   const [expandedCall, setExpandedCall] = useState<string | null>(null);
 
@@ -175,10 +180,11 @@ const VoiceAICampaigns = () => {
     const { data, error } = await (supabase as any).from("voice_campaigns").insert({
       dealership_id: dealershipId, name: newCampaign.name, target: newCampaign.target,
       max_calls_per_day: newCampaign.max_calls_per_day, status: "draft",
+      voicemail_message: newCampaign.voicemail_message?.trim() || null,
     }).select().single();
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     setCampaigns((prev) => [data, ...prev]);
-    setNewCampaign({ name: "", target: "", max_calls_per_day: 25 });
+    setNewCampaign({ name: "", target: "", max_calls_per_day: 25, voicemail_message: "" });
     setShowNewCampaign(false);
     toast({ title: "Campaign created", description: `"${data.name}" is ready to activate.` });
   };
@@ -584,6 +590,18 @@ const VoiceAICampaigns = () => {
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Max Calls Per Day</label>
               <Input type="number" min={1} max={200} value={newCampaign.max_calls_per_day} onChange={(e) => setNewCampaign((p) => ({ ...p, max_calls_per_day: Number(e.target.value) }))} />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Voicemail Drop <span className="text-muted-foreground font-normal">(optional)</span></label>
+              <textarea
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px]"
+                placeholder={`Hi {customer_name}, this is {dealer_name} calling about your ${"{vehicle}"} trade-in offer. Give us a call back at {transfer_phone} when you have a minute. Thanks!`}
+                value={newCampaign.voicemail_message}
+                onChange={(e) => setNewCampaign((p) => ({ ...p, voicemail_message: e.target.value }))}
+              />
+              <p className="text-xs text-muted-foreground">
+                Bland.ai will read this when the call hits voicemail. Leave blank to hang up silently.
+              </p>
             </div>
           </div>
           <DialogFooter>

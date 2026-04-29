@@ -571,6 +571,20 @@ serve(async (req) => {
       },
     };
 
+    // Voicemail drop — when Bland.ai's answering-machine detection
+    // fires, it will read this script instead of hanging up silently.
+    // Template-render with the same vars as the main task so the
+    // voicemail says the right name/dealer/vehicle.
+    if (campaignData?.voicemail_message) {
+      const renderedVoicemail = renderTemplate(
+        campaignData.voicemail_message as string,
+        templateVars,
+      );
+      blandPayload.voicemail_message = renderedVoicemail;
+      // Hint to Bland's voice-detection so we hit the voicemail branch.
+      blandPayload.answered_by_enabled = true;
+    }
+
     if (transferPhone) {
       blandPayload.transfer_phone_number = transferPhone;
     }
