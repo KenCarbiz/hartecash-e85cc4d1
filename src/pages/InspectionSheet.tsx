@@ -553,6 +553,70 @@ const InspectionSheet = () => {
     });
   }, []);
 
+  // ── Autosave to localStorage ─────────────────────────────────
+  // The inspection sheet is the desktop/iPad version of the mobile
+  // walkaround flow — long form, easy to lose work to a tab close
+  // or browser crash. Mirror the MobileInspection autosave (PR #84):
+  // serialize on debounce to localStorage keyed by submission_id;
+  // restore on mount; clear after a successful save_mobile_inspection.
+  const draftKey = id ? `inspection-sheet-draft:${id}` : null;
+  const [draftRestored, setDraftRestored] = useState(false);
+
+  useEffect(() => {
+    if (!draftKey || draftRestored) return;
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (!raw) { setDraftRestored(true); return; }
+      const d = JSON.parse(raw) as Record<string, unknown>;
+      if (d.tireDepth && typeof d.tireDepth === "object") setTireDepth(d.tireDepth as typeof tireDepth);
+      if (d.brakeDepth && typeof d.brakeDepth === "object") setBrakeDepth(d.brakeDepth as typeof brakeDepth);
+      if (typeof d.inspectorNotes === "string") setInspectorNotes(d.inspectorNotes);
+      if (typeof d.paintReading === "string") setPaintReading(d.paintReading);
+      if (typeof d.oilLife === "string") setOilLife(d.oilLife);
+      if (typeof d.batteryHealth === "string") setBatteryHealth(d.batteryHealth);
+      if (typeof d.overallGrade === "string") setOverallGrade(d.overallGrade);
+      if (typeof d.inspectorGrade === "string") setInspectorGrade(d.inspectorGrade);
+      if (typeof d.customerGrade === "string") setCustomerGrade(d.customerGrade);
+      if (d.allGrades && typeof d.allGrades === "object") setAllGrades(d.allGrades as typeof allGrades);
+      if (d.allNotes && typeof d.allNotes === "object") setAllNotes(d.allNotes as typeof allNotes);
+      toast({
+        title: "Draft restored",
+        description: "Picked up where you left off. Submit when you're done.",
+      });
+    } catch {
+      /* corrupted draft — ignore */
+    }
+    setDraftRestored(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftKey]);
+
+  useEffect(() => {
+    if (!draftKey || !draftRestored) return;
+    const t = setTimeout(() => {
+      try {
+        localStorage.setItem(
+          draftKey,
+          JSON.stringify({
+            tireDepth, brakeDepth,
+            inspectorNotes, paintReading, oilLife, batteryHealth,
+            overallGrade, inspectorGrade, customerGrade,
+            allGrades, allNotes,
+            savedAt: new Date().toISOString(),
+          }),
+        );
+      } catch {
+        /* localStorage full or disabled — non-fatal */
+      }
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [
+    draftKey, draftRestored,
+    tireDepth, brakeDepth,
+    inspectorNotes, paintReading, oilLife, batteryHealth,
+    overallGrade, inspectorGrade, customerGrade,
+    allGrades, allNotes,
+  ]);
+
   // #10 — IntersectionObserver for sticky vehicle strip
   useEffect(() => {
     const el = vehicleCardRef.current;
@@ -807,6 +871,10 @@ const InspectionSheet = () => {
     } else {
       setSaveSuccess(true);
       setHasSavedOnce(true);
+      // Clear the autosave draft now that the canonical save landed.
+      if (draftKey) {
+        try { localStorage.removeItem(draftKey); } catch { /* ignore */ }
+      }
       const result = data as any;
       if (result && result.adjustment !== undefined && result.adjustment !== 0) {
         toast({ title: "Inspection saved", description: `Tire adjustment: ${result.adjustment >= 0 ? "+" : ""}$${Math.abs(result.adjustment).toLocaleString()}` });
