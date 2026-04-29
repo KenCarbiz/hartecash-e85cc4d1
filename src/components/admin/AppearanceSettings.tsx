@@ -210,13 +210,14 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
   const handleSave = async () => {
     setSaving(true);
     try {
-      // If the target DB is missing one of the appearance columns
-      // (e.g. customer_file_header_layout — a recent migration that
-      // hasn't reached every env yet), PostgREST returns a "Could not
-      // find the X column ... in the schema cache" error. Strip the
-      // offending column from the payload and retry once. The
+      // If the target DB is missing appearance columns (recent
+      // migrations that haven't reached every env yet), PostgREST
+      // returns "Could not find the X column ... in the schema cache".
+      // Strip every offending column from the payload and retry until
+      // we either succeed or hit a different error class. The
       // 20260429150000_site_config_heal_columns.sql migration heals
-      // the schema; this is the client-side belt-and-braces.
+      // the schema permanently; this loop is the client-side
+      // belt-and-braces so a partly-deployed env keeps saving.
       const targetTable = selectedLocationId == null ? "site_config" : "dealership_locations";
       const targetFilter = (q: any) =>
         selectedLocationId == null
@@ -228,22 +229,33 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
         return targetFilter(q);
       };
 
-      let result = await tryUpdate(draft);
-      if (result.error) {
-        const msg = String(result.error.message || "");
-        const cacheMissMatch = msg.match(/Could not find the '([^']+)' column/);
-        if (cacheMissMatch) {
-          const missingCol = cacheMissMatch[1];
-          const filteredDraft = { ...draft } as Record<string, unknown>;
-          delete filteredDraft[missingCol];
-          result = await tryUpdate(filteredDraft);
-          if (!result.error) {
-            toast({
-              title: "Saved (with caveat)",
-              description: `The "${missingCol}" preference couldn't be saved on this environment yet — ask the admin to apply the latest migration.`,
-            });
-          }
-        }
+      let payload = { ...draft } as Record<string, unknown>;
+      const stripped: string[] = [];
+      let result = await tryUpdate(payload);
+
+      // Loop: strip one missing column per attempt. Cap at the number
+      // of columns in the draft so a server bug can't infinite-loop.
+      const maxAttempts = Object.keys(draft).length;
+      let attempts = 0;
+      while (
+        result.error &&
+        attempts < maxAttempts &&
+        /Could not find the '([^']+)' column/.test(String(result.error.message || ""))
+      ) {
+        const m = String(result.error.message).match(/Could not find the '([^']+)' column/);
+        const missingCol = m?.[1];
+        if (!missingCol || !(missingCol in payload)) break;
+        delete payload[missingCol];
+        stripped.push(missingCol);
+        attempts++;
+        result = await tryUpdate(payload);
+      }
+
+      if (!result.error && stripped.length > 0) {
+        toast({
+          title: "Saved (with caveat)",
+          description: `Some preferences couldn't be saved on this environment yet — ask the admin to apply the latest migration. Skipped: ${stripped.join(", ")}.`,
+        });
       }
       const error = result.error;
 
