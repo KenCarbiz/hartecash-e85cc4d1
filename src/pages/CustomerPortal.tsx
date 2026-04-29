@@ -8,6 +8,7 @@ import { useSiteConfig } from "@/hooks/useSiteConfig";
 import PortalSkeleton from "@/components/PortalSkeleton";
 import WhatsNextCard from "@/components/portal/WhatsNextCard";
 import VehiclePhotos from "@/components/portal/VehiclePhotos";
+import AppointmentCalendarCard from "@/components/portal/AppointmentCalendarCard";
 import CompletionChecklist from "@/components/portal/CompletionChecklist";
 import DealerContactCard from "@/components/portal/DealerContactCard";
 import WhatToBringCard from "@/components/portal/WhatToBringCard";
@@ -365,6 +366,12 @@ const CustomerPortal = () => {
             {/* Right column */}
             <div className="col-span-3 space-y-5">
               <WhatsNextCard {...whatsNextProps} />
+              {s.appointment_set && (
+                <AppointmentCalendarCard
+                  token={s.token}
+                  vehicleStr={[s.vehicle_year, s.vehicle_make, s.vehicle_model].filter(Boolean).join(" ")}
+                />
+              )}
               <CompletionChecklist {...checklistProps} />
               <EquipmentValueImpact submissionId={s.id} />
               <VehiclePhotos token={s.token} photosUploaded={s.photos_uploaded} />
@@ -386,6 +393,12 @@ const CustomerPortal = () => {
       <div className="lg:hidden">
         <div className="max-w-lg mx-auto p-6 space-y-5">
           <WhatsNextCard {...whatsNextProps} />
+          {s.appointment_set && (
+            <AppointmentCalendarCard
+              token={s.token}
+              vehicleStr={[s.vehicle_year, s.vehicle_make, s.vehicle_model].filter(Boolean).join(" ")}
+            />
+          )}
           {condition?.dealership_id && <PromoBanner dealershipId={condition.dealership_id} />}
           <PortalOfferCard {...offerCardProps} />
           <CompletionChecklist {...checklistProps} />
