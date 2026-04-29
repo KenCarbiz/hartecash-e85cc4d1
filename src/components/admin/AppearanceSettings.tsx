@@ -210,22 +210,42 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
   const handleSave = async () => {
     setSaving(true);
     try {
-      let error;
-      if (selectedLocationId == null) {
-        // Tenant default → site_config
-        const result = await (supabase as any)
-          .from("site_config")
-          .update(draft)
-          .eq("dealership_id", (config as any).dealership_id || tenant.dealership_id || "default");
-        error = result.error;
-      } else {
-        // Per-location override → dealership_locations
-        const result = await (supabase as any)
-          .from("dealership_locations")
-          .update(draft)
-          .eq("id", selectedLocationId);
-        error = result.error;
+      // If the target DB is missing one of the appearance columns
+      // (e.g. customer_file_header_layout — a recent migration that
+      // hasn't reached every env yet), PostgREST returns a "Could not
+      // find the X column ... in the schema cache" error. Strip the
+      // offending column from the payload and retry once. The
+      // 20260429150000_site_config_heal_columns.sql migration heals
+      // the schema; this is the client-side belt-and-braces.
+      const targetTable = selectedLocationId == null ? "site_config" : "dealership_locations";
+      const targetFilter = (q: any) =>
+        selectedLocationId == null
+          ? q.eq("dealership_id", (config as any).dealership_id || tenant.dealership_id || "default")
+          : q.eq("id", selectedLocationId);
+
+      const tryUpdate = async (payload: Record<string, unknown>) => {
+        const q = (supabase as any).from(targetTable).update(payload);
+        return targetFilter(q);
+      };
+
+      let result = await tryUpdate(draft);
+      if (result.error) {
+        const msg = String(result.error.message || "");
+        const cacheMissMatch = msg.match(/Could not find the '([^']+)' column/);
+        if (cacheMissMatch) {
+          const missingCol = cacheMissMatch[1];
+          const filteredDraft = { ...draft } as Record<string, unknown>;
+          delete filteredDraft[missingCol];
+          result = await tryUpdate(filteredDraft);
+          if (!result.error) {
+            toast({
+              title: "Saved (with caveat)",
+              description: `The "${missingCol}" preference couldn't be saved on this environment yet — ask the admin to apply the latest migration.`,
+            });
+          }
+        }
       }
+      const error = result.error;
 
       if (error) throw error;
 
