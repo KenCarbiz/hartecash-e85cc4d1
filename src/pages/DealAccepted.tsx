@@ -640,7 +640,7 @@ const DealAccepted = () => {
               <div className="flex items-center gap-4 mt-4 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <TrendingUp className="w-3.5 h-3.5 text-success" />
-                  Photos help increase your offer
+                  Photos uploaded may increase your offer
                 </span>
                 <span className="flex items-center gap-1">
                   <Clock className="w-3.5 h-3.5 text-success" />

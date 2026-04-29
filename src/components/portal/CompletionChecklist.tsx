@@ -32,7 +32,7 @@ const CompletionChecklist = ({ photosUploaded, docsUploaded, appointmentSet, tok
       icon: Camera,
       link: `/upload/${token}`,
       actionLabel: "Upload Photos",
-      hint: "Photos help increase your offer",
+      hint: "Photos uploaded may increase your offer",
     },
   ];
 
