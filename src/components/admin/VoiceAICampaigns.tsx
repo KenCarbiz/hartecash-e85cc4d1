@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Phone, Settings, TrendingUp, Clock, DollarSign,
   PhoneCall, PhoneOff, CheckCircle, AlertTriangle, Loader2,
-  Plus, Pause, Play, ChevronDown, ChevronRight, Megaphone, List, Pencil,
+  Plus, Pause, Play, ChevronDown, ChevronRight, Megaphone, List, Pencil, Eye,
 } from "lucide-react";
 
 /* ── types & defaults ──────────────────────────────── */
@@ -36,6 +36,43 @@ const maskKey = (k: string) => {
   if (!k) return "";
   return k.length <= 8 ? "\u2022".repeat(k.length) : `${k.slice(0, 4)}${"\u2022".repeat(k.length - 8)}${k.slice(-4)}`;
 };
+
+/* \u2500\u2500 Script preview templating \u2500\u2500
+ * Mirrors renderTemplate() in supabase/functions/launch-voice-call so the
+ * preview shows what the AI will actually say. {{var}} double-brace; an
+ * unmatched var is left as-is (matching the edge function \u2014 vars come
+ * from the customer/dealer data at call time).
+ */
+const SAMPLE_TEMPLATE_VARS: Record<string, string> = {
+  agent_name: "Sarah",
+  dealer_name: "Sample Dealership",
+  dealer_phone: "(555) 123-4567",
+  customer_first_name: "Alex",
+  vehicle_year: "2021",
+  vehicle_make: "Toyota",
+  vehicle_model: "Camry",
+  offer_amount: "18,500",
+  days_remaining: "5",
+  available_days: "this week",
+  max_bump: "500",
+  bumped_amount: "19,000",
+  competitor_mode: "none",
+  competitor_response: "Let me connect you with our manager to discuss competing offers.",
+  competitor_beat_amount: "0",
+  // Single-brace fallbacks people may have typed by mistake \u2014 render
+  // them too so the preview doesn't look broken on legacy templates.
+  customer_name: "Alex",
+  vehicle: "2021 Toyota Camry",
+  transfer_phone: "(555) 123-4567",
+};
+
+function renderClientTemplate(template: string, vars: Record<string, string>): string {
+  let result = template || "";
+  for (const [key, val] of Object.entries(vars)) {
+    result = result.replaceAll(`{{${key}}}`, val).replaceAll(`{${key}}`, val);
+  }
+  return result;
+}
 
 /* ── KPI card ──────────────────────────────────────── */
 
@@ -697,14 +734,25 @@ const VoiceAICampaigns = () => {
               <label className="text-sm font-medium">Voicemail Drop <span className="text-muted-foreground font-normal">(optional)</span></label>
               <textarea
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px]"
-                placeholder={`Hi {customer_name}, this is {dealer_name} calling about your ${"{vehicle}"} trade-in offer. Give us a call back at {transfer_phone} when you have a minute. Thanks!`}
+                placeholder={`Hi {{customer_first_name}}, this is {{agent_name}} from {{dealer_name}} about your {{vehicle_year}} {{vehicle_make}} offer of ${"${{offer_amount}}"}. Call us back at {{dealer_phone}} when you have a minute. Thanks!`}
                 value={newCampaign.voicemail_message}
                 onChange={(e) => setNewCampaign((p) => ({ ...p, voicemail_message: e.target.value }))}
               />
               <p className="text-xs text-muted-foreground">
-                Bland.ai will read this when the call hits voicemail. Leave blank to hang up silently.
+                Bland.ai will read this when the call hits voicemail. Leave blank to hang up silently. Use {"{{customer_first_name}}"}, {"{{vehicle_make}}"}, etc — the same template vars as the AI script.
               </p>
+              {newCampaign.voicemail_message?.trim() && (
+                <div className="rounded-md border border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-500/5 p-2.5 text-xs">
+                  <div className="text-[10px] uppercase tracking-wider text-emerald-700 dark:text-emerald-400 font-bold mb-1 flex items-center gap-1">
+                    <Eye className="w-3 h-3" /> Preview (sample customer)
+                  </div>
+                  <div className="text-foreground/90 italic whitespace-pre-wrap">
+                    {renderClientTemplate(newCampaign.voicemail_message, SAMPLE_TEMPLATE_VARS)}
+                  </div>
+                </div>
+              )}
             </div>
+            <ScriptPreviewSection editingId={editingId} />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={closeDialog}>Cancel</Button>
@@ -769,6 +817,105 @@ const VoiceAICampaigns = () => {
     </div>
   );
 };
+
+/* ─────────────────────── ScriptPreviewSection ──────────────────── */
+/**
+ * Collapsible "Preview AI task script" inside the campaign edit
+ * dialog. Fetches the effective task script for the campaign:
+ *   1. campaignData.script_template if set on the row
+ *   2. else the default voice_script_templates row (is_default=true)
+ * and renders it with SAMPLE_TEMPLATE_VARS so the admin sees what the
+ * AI will actually say to a real customer.
+ *
+ * Lazy — only fetches when the user clicks Show. Keeps the dialog
+ * snappy on open.
+ */
+function ScriptPreviewSection({ editingId }: { editingId: string | null }) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [script, setScript] = useState<string | null>(null);
+  const [source, setSource] = useState<"campaign" | "default" | "none">("none");
+
+  const load = async () => {
+    if (script !== null) return; // cached
+    setLoading(true);
+    try {
+      let resolved: string | null = null;
+      let src: "campaign" | "default" | "none" = "none";
+
+      if (editingId) {
+        const { data: row } = await (supabase as any)
+          .from("voice_campaigns")
+          .select("script_template")
+          .eq("id", editingId)
+          .maybeSingle();
+        if (row?.script_template) {
+          resolved = row.script_template;
+          src = "campaign";
+        }
+      }
+
+      if (!resolved) {
+        const { data: tmpl } = await (supabase as any)
+          .from("voice_script_templates")
+          .select("script_template, name")
+          .eq("category", "follow_up")
+          .eq("is_default", true)
+          .limit(1)
+          .maybeSingle();
+        if (tmpl?.script_template) {
+          resolved = tmpl.script_template;
+          src = "default";
+        }
+      }
+
+      setScript(resolved);
+      setSource(src);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-1.5 border-t border-border pt-3 mt-1">
+      <button
+        type="button"
+        onClick={async () => {
+          const next = !open;
+          setOpen(next);
+          if (next) await load();
+        }}
+        className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+      >
+        {open ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+        Preview AI task script
+        <span className="text-muted-foreground font-normal">— what the AI will say on the call</span>
+      </button>
+      {open && (
+        <div className="rounded-md border border-blue-500/30 bg-blue-50/40 dark:bg-blue-500/5 p-3 text-xs">
+          {loading ? (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading…
+            </div>
+          ) : script ? (
+            <>
+              <div className="text-[10px] uppercase tracking-wider text-blue-700 dark:text-blue-400 font-bold mb-2">
+                {source === "campaign" ? "Campaign-specific script" : "Default Offer Follow-Up script"} · sample customer
+              </div>
+              <div className="text-foreground/90 whitespace-pre-wrap font-mono text-[11px] leading-relaxed max-h-[280px] overflow-y-auto">
+                {renderClientTemplate(script, SAMPLE_TEMPLATE_VARS)}
+              </div>
+            </>
+          ) : (
+            <div className="text-muted-foreground">
+              No script template found. Add a default Offer Follow-Up template in voice_script_templates.
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ─────────────────────── CampaignAnalytics ─────────────────────── */
 /**
