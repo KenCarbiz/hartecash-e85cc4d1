@@ -146,6 +146,11 @@ const OfferPage = () => {
   // Contact info gate for offer-first flow
   const [showContactGate, setShowContactGate] = useState(false);
   const [contactForm, setContactForm] = useState({ name: "", email: "", phone: "", zip: "" });
+  // Default ON — customer is in the middle of an offer flow, opting
+  // into transactional SMS (status updates, appointment confirmations)
+  // is the expected default. They can untick if they don't want it.
+  // Stored on submissions.sms_opt_in.
+  const [smsOptIn, setSmsOptIn] = useState(true);
   const [contactSaving, setContactSaving] = useState(false);
   const [contactErrors, setContactErrors] = useState<Record<string, string>>({});
 
@@ -600,8 +605,24 @@ const OfferPage = () => {
           email: contactForm.email.trim(),
           phone: contactForm.phone.trim(),
           zip: contactForm.zip.trim(),
+          sms_opt_in: smsOptIn,
         } as any)
         .eq("token", token!);
+
+      // If customer ticked SMS opt-in, also log a consent_log entry so
+      // the dealer's TCPA gate (launch-voice-call etc.) recognises it.
+      if (smsOptIn) {
+        try {
+          await supabase.from("consent_log").insert({
+            customer_phone: contactForm.phone.trim(),
+            customer_email: contactForm.email.trim(),
+            consent_type: "sms_calls_email",
+            consent_text: "Customer accepted offer and consented to receive SMS, calls, and emails about their vehicle.",
+          } as any);
+        } catch {
+          /* non-fatal — submissions row still has the flag */
+        }
+      }
       
       setShowContactGate(false);
       window.location.href = acceptUrl;
@@ -624,7 +645,7 @@ const OfferPage = () => {
           <div className="lg:hidden">
             <SlideToAccept
               onAccept={handleAcceptAttempt}
-              label="Slide to Accept Your Price"
+              label={`Slide to Accept $${cashOffer.toLocaleString("en-US", { maximumFractionDigits: 0 })}`}
             />
           </div>
           {/* Desktop: premium accept button */}
@@ -637,7 +658,10 @@ const OfferPage = () => {
               {/* Animated shine sweep */}
               <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out" />
               <CheckCircle className="w-5 h-5 relative z-10" />
-              <span className="relative z-10">Accept & Lock In Your Price</span>
+              <span className="relative z-10">
+                Accept ${cashOffer.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+                <span className="opacity-80 font-bold ml-1">— Lock In Your Price</span>
+              </span>
               <ArrowRight className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" />
             </Button>
           </div>
@@ -1020,6 +1044,25 @@ const OfferPage = () => {
         </div>
       </div>
 
+      {/* ── Urgency banner — only when guarantee is within 2 days
+          and offer isn't already accepted. Sits between the header and
+          the layout so it's the first thing the customer sees on
+          page load. */}
+      {isUrgent && !isAccepted && (
+        <div className="print:hidden bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+          <div className="max-w-5xl mx-auto px-6 py-2.5 flex items-center justify-center gap-2 text-sm font-bold">
+            <Clock className="w-4 h-4 shrink-0 animate-pulse" />
+            <span>
+              Only {daysRemaining} {daysRemaining === 1 ? "day" : "days"} left to lock in
+              <span className="font-extrabold ml-1">
+                ${cashOffer.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+              </span>
+              <span className="opacity-90 font-medium ml-1">— after that we'd need to re-quote.</span>
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* ─── DESKTOP: Two-column layout ─── */}
       <div className="hidden lg:block print:hidden">
         <div className="max-w-5xl mx-auto px-6 py-8">
@@ -1281,6 +1324,22 @@ const OfferPage = () => {
               </div>
             ))}
 
+            {/* SMS opt-in — explicit consent the dealer can rely on
+                downstream (consent_log + sms_opt_in flag) so SMS
+                appointment-reminders and follow-ups can fire. */}
+            <label className="flex items-start gap-2.5 p-3 rounded-xl border border-border/40 bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors">
+              <input
+                type="checkbox"
+                checked={smsOptIn}
+                onChange={(e) => setSmsOptIn(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded border-border accent-primary cursor-pointer"
+              />
+              <div className="flex-1 text-[11px] text-muted-foreground leading-snug">
+                <span className="font-semibold text-foreground">Text me updates about my offer.</span>
+                {" "}I agree to receive SMS messages (offer updates, appointment reminders) at the cell number above. Reply STOP to unsubscribe at any time. Msg & data rates may apply.
+              </div>
+            </label>
+
             {/* Trust signals inside dialog */}
             <div className="flex items-center justify-center gap-4 py-2 text-[10px] text-muted-foreground/50">
               <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> Secure</span>
@@ -1289,7 +1348,7 @@ const OfferPage = () => {
             </div>
 
             <p className="text-[9px] text-muted-foreground/40 leading-relaxed text-center">
-              By submitting, you consent to receive calls, texts, and emails regarding your vehicle offer.
+              By submitting, you consent to be contacted regarding your vehicle offer. SMS marketing only with the box above ticked.
             </p>
 
             <Button
@@ -1302,7 +1361,7 @@ const OfferPage = () => {
               {contactSaving ? "Saving..." : (
                 <>
                   <CheckCircle className="w-5 h-5 relative z-10" />
-                  <span className="relative z-10">Accept & Lock In My Price</span>
+                  <span className="relative z-10">Accept ${cashOffer.toLocaleString("en-US", { maximumFractionDigits: 0 })} — Lock It In</span>
                   <ArrowRight className="w-5 h-5 relative z-10" />
                 </>
               )}
