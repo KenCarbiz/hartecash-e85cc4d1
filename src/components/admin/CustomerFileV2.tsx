@@ -32,6 +32,7 @@ import { supabase } from "@/integrations/supabase/client";
 import CustomerFileAccentStyle from "./CustomerFileAccentStyle";
 import SubmissionNotesModal, { fetchSubmissionNotes, type SubmissionNote } from "./SubmissionNotesModal";
 import ClickToDialButton from "./ClickToDialButton";
+import { useChannelState } from "@/hooks/useChannelState";
 import { printCheckRequest } from "@/lib/printUtils";
 import logoFallback from "@/assets/logo-placeholder.png";
 
@@ -517,6 +518,7 @@ function ConversationTab({
   activityLog: CustomerFileV2Props["activityLog"];
 }) {
   const { toast } = useToast();
+  const { state: channelToggles } = useChannelState();
   const [channel, setChannel] = useState<ConvChannel>("sms");
   const [messages, setMessages] = useState<ConvMessage[]>([]);
   const [calls, setCalls] = useState<ConvCall[]>([]);
@@ -556,9 +558,16 @@ function ConversationTab({
   };
 
   const charLimit = channel === "sms" ? 160 : 1000;
+  const channelOff =
+    (channel === "sms" && !channelToggles.two_way_sms) ||
+    (channel === "email" && !channelToggles.two_way_email);
   const composerDisabled = channel === "calls"
+    || channelOff
     || (channel === "sms" && !sub.phone)
     || (channel === "email" && !sub.email);
+  const composerDisabledReason = channelOff
+    ? `${channel === "sms" ? "Two-way SMS" : "Two-way Email"} is off in Setup → Channels`
+    : undefined;
 
   const applyTemplate = (t: typeof SMS_TEMPLATES[number]) => {
     const first = (sub.name || "there").split(/\s+/)[0];
@@ -779,9 +788,14 @@ function ConversationTab({
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); void send(); }
             }}
-            placeholder={composerDisabled
-              ? (channel === "sms" ? "No phone number on file." : "No email on file.")
-              : "Type your message… or use AI Assist above"}
+            placeholder={
+              composerDisabledReason
+                ? composerDisabledReason
+                : composerDisabled
+                ? (channel === "sms" ? "No phone number on file." : "No email on file.")
+                : "Type your message… or use AI Assist above"
+            }
+            title={composerDisabledReason}
             rows={2}
             disabled={composerDisabled}
             className="w-full text-[13px] rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 resize-none disabled:opacity-60 disabled:cursor-not-allowed"

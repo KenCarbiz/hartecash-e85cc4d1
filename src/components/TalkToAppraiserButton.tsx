@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useChannelState } from "@/hooks/useChannelState";
 
 interface Props {
   submissionId: string;
@@ -25,10 +26,17 @@ interface Props {
  */
 const TalkToAppraiserButton = ({ submissionId, submissionToken, defaultPhone, vehicleSummary, cashOffer }: Props) => {
   const { toast } = useToast();
+  const { state: channels, loading: channelsLoading } = useChannelState();
   const [open, setOpen] = useState(false);
   const [phone, setPhone] = useState(defaultPhone || "");
   const [calling, setCalling] = useState(false);
   const [done, setDone] = useState(false);
+
+  // Dealership has turned off AI phone calls — hide the CTA entirely
+  // so the customer never sees a button that won't fulfill.
+  if (!channelsLoading && !channels.ai_phone_calls) {
+    return null;
+  }
 
   const launchCall = async () => {
     const digits = phone.replace(/\D/g, "");

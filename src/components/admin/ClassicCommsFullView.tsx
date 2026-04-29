@@ -21,6 +21,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useChannelState } from "@/hooks/useChannelState";
 
 type Channel = "sms" | "email" | "calls" | "unified";
 type Tone = "friendly" | "professional" | "urgent" | "brief";
@@ -90,6 +91,7 @@ const ClassicCommsFullView = ({
   open, onClose, submissionId, customerName, customerPhone, customerEmail,
 }: ClassicCommsFullViewProps) => {
   const { toast } = useToast();
+  const { state: channels } = useChannelState();
   const [tab, setTab] = useState<Channel>("sms");
   const [messages, setMessages] = useState<ConvMessage[]>([]);
   const [calls, setCalls] = useState<ConvCall[]>([]);
@@ -149,9 +151,16 @@ const ClassicCommsFullView = ({
   const effectiveSendChannel: "sms" | "email" =
     tab === "unified" ? unifiedSendVia : (tab === "email" ? "email" : "sms");
   const isComposerChannel = tab !== "calls"; // SMS, Email, Unified all show composer
+  const channelOff =
+    (effectiveSendChannel === "sms" && !channels.two_way_sms) ||
+    (effectiveSendChannel === "email" && !channels.two_way_email);
   const composerDisabled =
+    channelOff ||
     (effectiveSendChannel === "sms" && !customerPhone) ||
     (effectiveSendChannel === "email" && !customerEmail);
+  const composerDisabledReason = channelOff
+    ? `${effectiveSendChannel === "sms" ? "Two-way SMS" : "Two-way Email"} is off in Setup → Channels`
+    : undefined;
   const charLimit = effectiveSendChannel === "sms" ? 320 : 1200;
   const showAttachFile = effectiveSendChannel === "email";
   const showSubject = effectiveSendChannel === "email";
@@ -697,9 +706,14 @@ const ClassicCommsFullView = ({
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); void send(); }
             }}
-            placeholder={composerDisabled
-              ? (effectiveSendChannel === "sms" ? "No phone number on file." : "No email on file.")
-              : "Type your message… or use AI Assist above"}
+            placeholder={
+              composerDisabledReason
+                ? composerDisabledReason
+                : composerDisabled
+                ? (effectiveSendChannel === "sms" ? "No phone number on file." : "No email on file.")
+                : "Type your message… or use AI Assist above"
+            }
+            title={composerDisabledReason}
             rows={effectiveSendChannel === "email" ? 5 : 2}
             disabled={composerDisabled}
             className="w-full text-[13px] rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 resize-none disabled:opacity-60 disabled:cursor-not-allowed"

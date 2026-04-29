@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useChannelState } from "@/hooks/useChannelState";
 import {
   Phone, MessageSquare, Mail, FileText, Activity, ChevronDown, ChevronUp,
   Loader2, Play, Clock, Send, StickyNote,
@@ -77,6 +78,9 @@ const ConversationThread = ({
   const [replyBody, setReplyBody] = useState("");
   const [sending, setSending] = useState(false);
   const { toast } = useToast();
+  const { state: channels } = useChannelState();
+  const smsDisabled = !channels.two_way_sms;
+  const emailDisabled = !channels.two_way_email;
 
   const load = useCallback(async () => {
     if (!submissionId) return;
@@ -129,6 +133,11 @@ const ConversationThread = ({
         } as any);
         toast({ title: "Note added", description: "Saved to the conversation timeline." });
       } else if (replyChannel === "sms") {
+        if (smsDisabled) {
+          toast({ title: "Two-way SMS is off", description: "Re-enable it in Setup → Channels.", variant: "destructive" });
+          setSending(false);
+          return;
+        }
         if (!customerPhone) {
           toast({ title: "No phone on file", description: "Can't text the customer — phone number missing.", variant: "destructive" });
           setSending(false);
@@ -162,6 +171,11 @@ const ConversationThread = ({
         } as any);
         toast({ title: "SMS sent", description: `Texted ${customerPhone}` });
       } else if (replyChannel === "email") {
+        if (emailDisabled) {
+          toast({ title: "Two-way Email is off", description: "Re-enable it in Setup → Channels.", variant: "destructive" });
+          setSending(false);
+          return;
+        }
         if (!customerEmail) {
           toast({ title: "No email on file", description: "Can't email the customer — email missing.", variant: "destructive" });
           setSending(false);
@@ -269,15 +283,24 @@ const ConversationThread = ({
               { value: "sms", label: "SMS", Icon: MessageSquare },
               { value: "email", label: "Email", Icon: Mail },
             ].map(({ value, label, Icon }) => {
+              const channelOff =
+                (value === "sms" && smsDisabled) ||
+                (value === "email" && emailDisabled);
               const disabled =
                 (value === "sms" && !customerPhone) ||
-                (value === "email" && !customerEmail);
+                (value === "email" && !customerEmail) ||
+                channelOff;
+              const disabledReason = channelOff
+                ? `${value === "sms" ? "Two-way SMS" : "Two-way Email"} is off in Setup → Channels`
+                : disabled
+                ? `No ${value === "sms" ? "phone" : "email"} on file`
+                : undefined;
               return (
                 <button
                   key={value}
                   onClick={() => !disabled && setReplyChannel(value as "sms" | "email" | "note")}
                   disabled={disabled}
-                  title={disabled ? `No ${value === "sms" ? "phone" : "email"} on file` : undefined}
+                  title={disabledReason}
                   className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
                     replyChannel === value
                       ? "bg-primary text-primary-foreground border-primary"
