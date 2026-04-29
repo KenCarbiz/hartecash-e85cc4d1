@@ -12,7 +12,7 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-import { Plus, Trash2, Megaphone, Calendar, DollarSign, Edit2, Save, X } from "lucide-react";
+import { Plus, Trash2, Megaphone, Calendar, DollarSign, Edit2, Save, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface Promotion {
@@ -47,6 +47,8 @@ const PromotionManagement = () => {
   const [draft, setDraft] = useState<Omit<Promotion, "id">>(emptyPromo);
   const [showNew, setShowNew] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"all" | "active" | "scheduled" | "inactive">("all");
+  const [pausingAll, setPausingAll] = useState(false);
 
   const fetchPromos = async () => {
     const { data } = await supabase
@@ -66,6 +68,49 @@ const PromotionManagement = () => {
     if (new Date(p.starts_at) > now) return false;
     if (p.ends_at && new Date(p.ends_at) < now) return false;
     return true;
+  };
+
+  const promoStatus = (p: Promotion): "active" | "scheduled" | "inactive" => {
+    if (!p.is_active) return "inactive";
+    if (isCurrentlyActive(p)) return "active";
+    return "scheduled";
+  };
+
+  // Counts per status for the filter pills.
+  const statusCounts = {
+    active: promos.filter((p) => promoStatus(p) === "active").length,
+    scheduled: promos.filter((p) => promoStatus(p) === "scheduled").length,
+    inactive: promos.filter((p) => promoStatus(p) === "inactive").length,
+  };
+
+  const filtered = filter === "all"
+    ? promos
+    : promos.filter((p) => promoStatus(p) === filter);
+
+  // Bulk-pause every active promo. Useful kill-switch when a dealer
+  // needs to halt all bonus auto-application during a system review.
+  const pauseAllActive = async () => {
+    const activeIds = promos
+      .filter((p) => p.is_active)
+      .map((p) => p.id);
+    if (activeIds.length === 0) {
+      toast.info("No active promotions to pause.");
+      return;
+    }
+    setPausingAll(true);
+    const { error } = await supabase
+      .from("promotions")
+      .update({ is_active: false } as any)
+      .in("id", activeIds);
+    setPausingAll(false);
+    if (error) {
+      toast.error(`Couldn't pause: ${error.message}`);
+      return;
+    }
+    setPromos((prev) =>
+      prev.map((p) => (activeIds.includes(p.id) ? { ...p, is_active: false } : p)),
+    );
+    toast.success(`Paused ${activeIds.length} promotion${activeIds.length === 1 ? "" : "s"}.`);
   };
 
   const handleCreate = async () => {
@@ -186,11 +231,53 @@ const PromotionManagement = () => {
           </p>
         </div>
         {!showNew && (
-          <Button size="sm" onClick={() => { setShowNew(true); setDraft(emptyPromo); }}>
-            <Plus className="w-4 h-4 mr-1" /> New Promotion
-          </Button>
+          <div className="flex items-center gap-2">
+            {statusCounts.active > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={pauseAllActive}
+                disabled={pausingAll}
+                className="border-amber-500/40 text-amber-700 hover:bg-amber-500/10"
+                title={`Pause all ${statusCounts.active} active promotion${statusCounts.active === 1 ? "" : "s"}`}
+              >
+                {pausingAll ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : null}
+                Pause all ({statusCounts.active})
+              </Button>
+            )}
+            <Button size="sm" onClick={() => { setShowNew(true); setDraft(emptyPromo); }}>
+              <Plus className="w-4 h-4 mr-1" /> New Promotion
+            </Button>
+          </div>
         )}
       </div>
+
+      {/* Status filter pills */}
+      {promos.length > 0 && (
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {([
+            { k: "all" as const, label: "All", count: promos.length },
+            { k: "active" as const, label: "Active", count: statusCounts.active },
+            { k: "scheduled" as const, label: "Scheduled", count: statusCounts.scheduled },
+            { k: "inactive" as const, label: "Inactive", count: statusCounts.inactive },
+          ]).map((p) => {
+            const selected = filter === p.k;
+            return (
+              <button
+                key={p.k}
+                onClick={() => setFilter(p.k)}
+                className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
+                  selected
+                    ? "bg-foreground text-background border-foreground"
+                    : "border-border hover:bg-muted text-muted-foreground"
+                }`}
+              >
+                {p.label} <span className={selected ? "opacity-70" : "opacity-50"}>· {p.count}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {showNew && renderForm(true)}
 
@@ -203,9 +290,18 @@ const PromotionManagement = () => {
             <p className="text-muted-foreground">No promotions yet. Create one to boost trade-in offers.</p>
           </CardContent>
         </Card>
+      ) : filtered.length === 0 ? (
+        <Card>
+          <CardContent className="py-10 text-center text-sm text-muted-foreground">
+            No promotions match the current filter.{" "}
+            <button onClick={() => setFilter("all")} className="text-primary hover:underline font-semibold">
+              Clear filter
+            </button>
+          </CardContent>
+        </Card>
       ) : (
         <div className="space-y-3">
-          {promos.map((p) => {
+          {filtered.map((p) => {
             const active = isCurrentlyActive(p);
             if (editingId === p.id) return <div key={p.id}>{renderForm(false)}</div>;
             return (
