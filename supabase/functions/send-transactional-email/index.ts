@@ -15,6 +15,13 @@ const SENDER_DOMAIN = "notify.autocurb.io"
 // even though actual sending uses the subdomain above.
 const FROM_DOMAIN = "notify.autocurb.io"
 
+// INBOUND_EMAIL_DOMAIN gates per-submission Reply-To routing. When a
+// customer replies, the reply lands at replies+<token>@<this domain>
+// where the inbound-email-webhook parses the +tag back to the
+// originating submission. Configurable per-environment via the
+// INBOUND_EMAIL_DOMAIN secret.
+const INBOUND_EMAIL_DOMAIN = Deno.env.get('INBOUND_EMAIL_DOMAIN') || `inbound.${FROM_DOMAIN}`
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':
@@ -337,6 +344,22 @@ Deno.serve(async (req) => {
     submission_id: submissionId,
   })
 
+  // Look up the submission token so we can set Reply-To to the
+  // per-submission inbound address. Skipped when no submission_id —
+  // staff alerts and admin notifications don't need inbound routing.
+  let submissionToken: string | null = null
+  if (submissionId) {
+    const { data: subRow } = await supabase
+      .from('submissions')
+      .select('token')
+      .eq('id', submissionId)
+      .maybeSingle()
+    submissionToken = (subRow as { token?: string } | null)?.token || null
+  }
+  const replyTo = submissionToken
+    ? `${tenantName} <replies+${submissionToken}@${INBOUND_EMAIL_DOMAIN}>`
+    : undefined
+
   const { error: enqueueError } = await supabase.rpc('enqueue_email', {
     queue_name: 'transactional_emails',
     payload: {
@@ -353,6 +376,7 @@ Deno.serve(async (req) => {
       unsubscribe_token: unsubscribeToken,
       queued_at: new Date().toISOString(),
       submission_id: submissionId,
+      reply_to: replyTo,
     },
   })
 

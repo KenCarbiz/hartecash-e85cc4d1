@@ -247,21 +247,35 @@ Deno.serve(async (req) => {
       }
 
       try {
+        // Forward optional reply_to + headers to the SDK. The Lovable
+        // email-js typings don't currently document these, but the
+        // upstream service accepts them when present and ignores them
+        // when not — passing through is safe either way and enables
+        // per-submission inbound routing as soon as the service-side
+        // support lands. Customer mail clients honor Reply-To for
+        // their default reply, so the user sees no UX difference.
+        const sdkPayload: Record<string, unknown> = {
+          run_id: payload.run_id,
+          to: payload.to,
+          from: payload.from,
+          sender_domain: payload.sender_domain,
+          subject: payload.subject,
+          html: payload.html,
+          text: payload.text,
+          purpose: payload.purpose,
+          label: payload.label,
+          idempotency_key: payload.idempotency_key,
+          unsubscribe_token: payload.unsubscribe_token,
+          message_id: payload.message_id,
+        }
+        if (payload.reply_to) {
+          sdkPayload.reply_to = payload.reply_to
+          sdkPayload.replyTo = payload.reply_to // SDK alias
+          sdkPayload.headers = { ...(sdkPayload.headers as Record<string, string> | undefined), 'Reply-To': payload.reply_to }
+        }
+
         await sendLovableEmail(
-          {
-            run_id: payload.run_id,
-            to: payload.to,
-            from: payload.from,
-            sender_domain: payload.sender_domain,
-            subject: payload.subject,
-            html: payload.html,
-            text: payload.text,
-            purpose: payload.purpose,
-            label: payload.label,
-            idempotency_key: payload.idempotency_key,
-            unsubscribe_token: payload.unsubscribe_token,
-            message_id: payload.message_id,
-          },
+          sdkPayload as Parameters<typeof sendLovableEmail>[0],
           // sendUrl is optional — when LOVABLE_SEND_URL is not set, the library
           // falls back to the default Lovable API endpoint (https://api.lovable.dev).
           // Set LOVABLE_SEND_URL as a Supabase secret to override (e.g. for local dev).
