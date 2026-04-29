@@ -66,7 +66,7 @@ function getNextAction(status: string, photosUploaded: boolean, docsUploaded: bo
       title: appointmentSet ? "Upload Documents Before Your Visit" : "Upload Your Documents",
       description: appointmentSet
         ? "Getting your registration, title, and driver's license uploaded now means less paperwork at the dealership — so you can get your check faster and spend less time waiting."
-        : "We need your registration, title, and driver's license to finalize your offer.",
+        : "Upload your registration, title, and driver's license now to save time at the inspection.",
       actionLabel: "Upload Documents",
       actionIcon: FileText,
       linkType: "docs",
@@ -344,7 +344,7 @@ const WhatsNextCard = ({ mappedStatus, photosUploaded, docsUploaded, appointment
             <div className="bg-white/15 backdrop-blur-sm rounded-xl p-4 flex items-center justify-between group-hover:bg-white/25 transition-colors">
               <div className="flex items-center gap-2 text-white">
                 <Camera className="w-4 h-4" />
-                <span className="text-sm font-semibold">Photos help increase your offer</span>
+                <span className="text-sm font-semibold">Photos uploaded may increase your offer</span>
               </div>
               <div className="flex items-center gap-1.5 text-white font-bold text-sm bg-white/20 rounded-full px-3 py-1">
                 Add Photos

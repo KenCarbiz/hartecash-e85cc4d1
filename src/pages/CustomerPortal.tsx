@@ -245,7 +245,25 @@ const CustomerPortal = () => {
   const firstName = s.name?.split(" ")[0] || "";
   let mappedStatus = STAGE_MAPPING[s.progress_status] || s.progress_status;
   if (mappedStatus === "contacted" && s.offered_price) mappedStatus = "offer_made";
-  const stepIdx = mapStatusToStepIndex(mappedStatus);
+  // True acceptance — the customer has actually pressed Accept on
+  // the offer (or moved past it). Distinct from the legacy
+  // ACCEPTED_PORTAL_STATUSES set which also includes pre-acceptance
+  // states like "contacted" / "offer_made". Drives the 4-step
+  // post-acceptance progress sequence; pre-acceptance shows 5 steps
+  // (with "Offer Received" prepended).
+  const POST_ACCEPTANCE_STATUSES = new Set([
+    "offer_accepted",
+    "price_agreed",
+    "inspection_scheduled",
+    "inspection_completed",
+    "deal_finalized",
+    "title_ownership_verified",
+    "check_request_submitted",
+    "purchase_complete",
+  ]);
+  const offerAcceptedByCustomer = POST_ACCEPTANCE_STATUSES.has(s.progress_status);
+
+  const stepIdx = mapStatusToStepIndex(mappedStatus, offerAcceptedByCustomer);
   const isComplete = mappedStatus === "purchase_complete";
   const isOfferAccepted = ACCEPTED_PORTAL_STATUSES.has(s.progress_status) || !!s.offered_price;
 
@@ -343,6 +361,7 @@ const CustomerPortal = () => {
           isComplete={isComplete}
           appointmentSet={s.appointment_set}
           scheduleLink={scheduleLink}
+          isOfferAccepted={offerAcceptedByCustomer}
           inspectionStartedAt={(s as any).inspection_started_notified_at}
           checkReadyAt={(s as any).check_ready_at}
         />

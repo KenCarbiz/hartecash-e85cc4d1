@@ -8,25 +8,41 @@ interface ProgressStepsProps {
   appointmentSet: boolean;
   scheduleLink: string;
   /**
+   * Whether the customer has accepted the offer. Drives which step
+   * sequence renders:
+   *   - false (offer pending) — 5 steps:
+   *       Offer Received · Offer Accepted · Inspection Scheduled ·
+   *       Deal Finalized / Paperwork · Check Received
+   *   - true  (offer accepted) — 4 steps; the "Offer Received" step
+   *     drops off and "Offer Accepted" becomes step 0.
+   */
+  isOfferAccepted?: boolean;
+  /**
    * When set, we know the inspector has actually started the physical
-   * inspection — shifts the "Inspection Scheduled" active indicator
+   * inspection — shifts the active "Inspection Scheduled" indicator
    * into an explicit "Inspecting now" state with a live animation.
-   * Reduces the customer's "is anyone working on my car?" anxiety.
    */
   inspectionStartedAt?: string | null;
   /**
    * When set, the check is physically printed and ready for pickup.
-   * Shifts step 4 ("Paperwork Complete") into an explicit
-   * "Check Ready — pick up today" active indicator.
+   * Shifts the "Deal Finalized / Paperwork" step into an explicit
+   * "Check Ready — pick up today" indicator.
    */
   checkReadyAt?: string | null;
 }
 
-const STEPS = [
+const STEPS_PRE_ACCEPTANCE = [
+  { label: "Offer Received" },
   { label: "Offer Accepted" },
   { label: "Inspection Scheduled" },
-  { label: "Deal Finalized" },
-  { label: "Paperwork Complete" },
+  { label: "Deal Finalized / Paperwork" },
+  { label: "Check Received" },
+];
+
+const STEPS_POST_ACCEPTANCE = [
+  { label: "Offer Accepted" },
+  { label: "Inspection Scheduled" },
+  { label: "Deal Finalized / Paperwork" },
   { label: "Check Received" },
 ];
 
@@ -35,17 +51,28 @@ const ProgressSteps = ({
   isComplete,
   appointmentSet,
   scheduleLink,
+  isOfferAccepted = false,
   inspectionStartedAt,
   checkReadyAt,
 }: ProgressStepsProps) => {
-  // Live-state overrides — these upgrade the labels for the current
-  // active step so the customer sees what's ACTUALLY happening right
-  // now, not just the generic stage name.
+  const STEPS = isOfferAccepted ? STEPS_POST_ACCEPTANCE : STEPS_PRE_ACCEPTANCE;
+
+  // Index of the "Inspection Scheduled" step varies by sequence —
+  // step 1 in the post-acceptance flow, step 2 in the pre-acceptance
+  // flow. Same for "Deal Finalized / Paperwork" (the check-ready
+  // override target).
+  const inspectionStepIdx = isOfferAccepted ? 1 : 2;
+  const paperworkStepIdx = isOfferAccepted ? 2 : 3;
+
+  // Live-state overrides — upgrade the active step's label to what's
+  // actually happening right now ("Inspecting now", "Check ready
+  // for pickup").
   const liveLabel = (stageIdx: number, fallback: string): string => {
-    if (stageIdx === 1 && inspectionStartedAt) return "Inspecting now";
-    if (stageIdx === 3 && checkReadyAt) return "Check ready for pickup";
+    if (stageIdx === inspectionStepIdx && inspectionStartedAt) return "Inspecting now";
+    if (stageIdx === paperworkStepIdx && checkReadyAt) return "Check ready for pickup";
     return fallback;
   };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -59,8 +86,10 @@ const ProgressSteps = ({
           const done = isComplete || currentStageIdx > i;
           const active = currentStageIdx === i && !isComplete;
 
-          // Special: step 1 (Inspection Scheduled) — show pending yellow if active & not yet scheduled
-          const isPendingInspection = i === 1 && active && !appointmentSet;
+          // Special: when the active step is "Inspection Scheduled"
+          // but the customer hasn't actually scheduled yet, show a
+          // pending yellow indicator + click-to-schedule.
+          const isPendingInspection = i === inspectionStepIdx && active && !appointmentSet;
           const isClickable = isPendingInspection;
 
           const node = (
@@ -126,18 +155,57 @@ const ProgressSteps = ({
 
 export default ProgressSteps;
 
-/** Map the DB status to 0-4 index for the 5-step bar */
-export function mapStatusToStepIndex(mappedStatus: string): number {
+/**
+ * Map the DB status to the right step index for the active sequence.
+ * The `isOfferAccepted` flag picks between the 5-step pre-acceptance
+ * sequence and the 4-step post-acceptance sequence.
+ *
+ * Pre-acceptance (5 steps):
+ *   0 Offer Received       — new, contacted, offer_made
+ *   1 Offer Accepted       — offer_accepted, price_agreed (no inspection yet)
+ *   2 Inspection Scheduled — inspection_scheduled, inspection_completed
+ *   3 Deal Finalized       — deal_finalized, title_ownership_verified, check_request_submitted
+ *   4 Check Received       — purchase_complete
+ *
+ * Post-acceptance (4 steps):
+ *   0 Offer Accepted       — offer_accepted, price_agreed
+ *   1 Inspection Scheduled
+ *   2 Deal Finalized
+ *   3 Check Received
+ */
+export function mapStatusToStepIndex(mappedStatus: string, isOfferAccepted = false): number {
+  if (isOfferAccepted) {
+    switch (mappedStatus) {
+      case "offer_accepted":
+      case "price_agreed":
+        return 0;
+      case "inspection_scheduled":
+      case "inspection_completed":
+        return 1;
+      case "deal_finalized":
+      case "title_ownership_verified":
+      case "check_request_submitted":
+        return 2;
+      case "purchase_complete":
+        return 3;
+      default:
+        return 0;
+    }
+  }
+
+  // Pre-acceptance (5 steps)
   switch (mappedStatus) {
     case "new":
     case "contacted":
     case "offer_made":
       return 0;
+    case "offer_accepted":
+    case "price_agreed":
+      return 1;
     case "inspection_scheduled":
     case "inspection_completed":
-      return 1;
-    case "deal_finalized":
       return 2;
+    case "deal_finalized":
     case "title_ownership_verified":
     case "check_request_submitted":
       return 3;

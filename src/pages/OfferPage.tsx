@@ -865,7 +865,7 @@ const OfferPage = () => {
           <Camera className="w-5 h-5 text-primary" />
         </div>
         <div className="flex-1">
-          <h4 className="font-bold text-card-foreground text-sm">Upload photos to help increase your offer</h4>
+          <h4 className="font-bold text-card-foreground text-sm">Photos uploaded may increase your offer</h4>
           <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
             A complete set of vehicle photos allows our AI and inventory team to better assess your vehicle's real condition — which often results in a higher final offer.
           </p>
