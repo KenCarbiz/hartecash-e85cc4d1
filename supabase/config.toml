@@ -30,6 +30,13 @@ project_id = "ptiwdwfdckfqivoocyvp"
   # via X-Twilio-Signature against TWILIO_AUTH_TOKEN, NOT JWT.
   [functions.sms-webhook]
     verify_jwt = false
+  # External webhook: customer email replies (Postmark Inbound Parse or
+  # Mailgun Routes). Authenticated via shared secret in
+  # X-Webhook-Secret header (or ?secret= query param) against
+  # EMAIL_INBOUND_WEBHOOK_SECRET. Provider selected via ?provider=
+  # query param (postmark|mailgun).
+  [functions.inbound-email-webhook]
+    verify_jwt = false
   # Customer-facing: called during public sell/appraisal flow.
   # Function validates request via submission token + origin.
   [functions.bb-lookup]
