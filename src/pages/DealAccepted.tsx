@@ -16,7 +16,7 @@ import { logConsent } from "@/lib/consent";
 import logoFallback from "@/assets/logo-placeholder-white.png";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { getTaxRateFromZip, calcTradeInValue } from "@/lib/salesTax";
-import { generateICalEvent, downloadCalendarInvite, generateGoogleCalendarUrl } from "@/lib/calendarInvite";
+import { generateICalEvent, downloadCalendarInvite, generateGoogleCalendarUrl, generateOutlookCalendarUrl } from "@/lib/calendarInvite";
 
 interface DealSubmission {
   vehicle_year: string | null;
@@ -412,21 +412,38 @@ const DealAccepted = () => {
     downloadCalendarInvite(ics, "vehicle-inspection-appointment.ics");
   };
 
-  const getGoogleCalendarUrl = (): string | null => {
+  const buildCalendarParams = () => {
     const start = buildAppointmentDateForCalendar();
     if (!start) return null;
     const end = new Date(start.getTime() + 60 * 60 * 1000);
     const title = vehicleStr
       ? `Vehicle Inspection - ${vehicleStr}`
       : "Vehicle Inspection";
-    return generateGoogleCalendarUrl({
+    return {
       title,
       description: `Vehicle inspection appointment at ${appointmentLocationName}. Please bring your Driver's License, Vehicle Title/Registration, and all keys & remotes. Expected duration: 15-20 minutes.`,
       location: appointmentLocationFull,
       startDate: start,
       endDate: end,
-    });
+    };
   };
+
+  const getGoogleCalendarUrl = (): string | null => {
+    const p = buildCalendarParams();
+    return p ? generateGoogleCalendarUrl(p) : null;
+  };
+
+  const getOutlookCalendarUrl = (): string | null => {
+    const p = buildCalendarParams();
+    return p ? generateOutlookCalendarUrl(p) : null;
+  };
+
+  // Google Maps directions deep link — uses the appointment location
+  // address. Mobile users get the native Maps app handoff; desktop
+  // opens the web view.
+  const directionsUrl = appointmentLocationFull
+    ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(appointmentLocationFull)}`
+    : null;
 
   // Animation variants: dramatic spring on first visit, subtle fade on revisit
   const stagger = isFirstVisit ? 0.15 : 0.05;
@@ -718,12 +735,43 @@ const DealAccepted = () => {
                       >
                         <a href={url} target="_blank" rel="noopener noreferrer">
                           <ExternalLink className="w-4 h-4" />
-                          Add to Google Calendar
+                          Google
+                        </a>
+                      </Button>
+                    ) : null;
+                  })()}
+                  {(() => {
+                    const url = getOutlookCalendarUrl();
+                    return url ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 gap-2"
+                        asChild
+                      >
+                        <a href={url} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="w-4 h-4" />
+                          Outlook
                         </a>
                       </Button>
                     ) : null;
                   })()}
                 </div>
+                {directionsUrl && (
+                  <div className="pt-2 border-t border-border/40">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full gap-2"
+                      asChild
+                    >
+                      <a href={directionsUrl} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="w-4 h-4" />
+                        Get directions to {appointmentLocationName || "the dealership"}
+                      </a>
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>

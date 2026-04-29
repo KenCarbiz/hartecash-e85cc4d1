@@ -116,3 +116,26 @@ export function generateGoogleCalendarUrl(params: GoogleCalendarParams): string 
 
   return `${base}?${query.toString()}`;
 }
+
+/**
+ * Generates an Outlook Web "compose event" URL. Microsoft 365 / Outlook
+ * users hit this rather than Google. The query-param shape is documented
+ * at https://learn.microsoft.com/outlook/calendar — `path=/calendar/action/compose`
+ * + `rru=addevent`. Times use ISO-with-offset, not the bare UTC zulu form.
+ */
+const formatOutlookDate = (date: Date): string => date.toISOString();
+
+export function generateOutlookCalendarUrl(params: GoogleCalendarParams): string {
+  const { title, description, location, startDate, endDate } = params;
+  const base = "https://outlook.live.com/calendar/0/deeplink/compose";
+  const query = new URLSearchParams({
+    path: "/calendar/action/compose",
+    rru: "addevent",
+    subject: title,
+    body: description,
+    location: location,
+    startdt: formatOutlookDate(startDate),
+    enddt: formatOutlookDate(endDate),
+  });
+  return `${base}?${query.toString()}`;
+}
