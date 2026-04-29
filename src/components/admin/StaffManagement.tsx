@@ -9,7 +9,8 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-import { Trash2, Shield, Info, Phone, Save, UserPlus, UserCog, Gauge } from "lucide-react";
+import { Trash2, Shield, Info, Phone, Save, UserPlus, UserCog, Gauge, Moon } from "lucide-react";
+import CallAvailabilityDialog from "./CallAvailabilityDialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -88,6 +89,7 @@ const StaffManagement = () => {
   const [loading, setLoading] = useState(true);
   const [changingRole, setChangingRole] = useState<string | null>(null);
   const [editingPhone, setEditingPhone] = useState<string | null>(null);
+  const [availabilityFor, setAvailabilityFor] = useState<{ userId: string; label: string } | null>(null);
   const [phoneValue, setPhoneValue] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [addEmail, setAddEmail] = useState("");
@@ -486,16 +488,33 @@ const StaffManagement = () => {
                       </Button>
                     </div>
                   ) : (
-                    <button
-                      onClick={() => {
-                        setEditingPhone(member.user_id);
-                        setPhoneValue(member.phone_number || "");
-                      }}
-                      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-card-foreground transition-colors"
-                    >
-                      <Phone className="w-3 h-3" />
-                      {formatPhone(member.phone_number) || "Add phone"}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          setEditingPhone(member.user_id);
+                          setPhoneValue(member.phone_number || "");
+                        }}
+                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-card-foreground transition-colors"
+                      >
+                        <Phone className="w-3 h-3" />
+                        {formatPhone(member.phone_number) || "Add phone"}
+                      </button>
+                      {member.phone_number && (
+                        <button
+                          onClick={() =>
+                            setAvailabilityFor({
+                              userId: member.user_id,
+                              label: member.display_name || member.email || "this rep",
+                            })
+                          }
+                          className="text-muted-foreground hover:text-card-foreground transition-colors"
+                          title="Click-to-dial availability"
+                          aria-label="Click-to-dial availability"
+                        >
+                          <Moon className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
                   )}
                 </td>
                 <td className="px-4 py-3">
@@ -632,6 +651,15 @@ const StaffManagement = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {availabilityFor && (
+        <CallAvailabilityDialog
+          open={!!availabilityFor}
+          onOpenChange={(v) => { if (!v) setAvailabilityFor(null); }}
+          userId={availabilityFor.userId}
+          userLabel={availabilityFor.label}
+        />
+      )}
     </div>
   );
 };

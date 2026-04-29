@@ -21,6 +21,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useChannelState } from "@/hooks/useChannelState";
+import { useConversationRealtime } from "@/hooks/useConversationRealtime";
 
 type Channel = "sms" | "email" | "calls" | "unified";
 type Tone = "friendly" | "professional" | "urgent" | "brief";
@@ -90,6 +92,7 @@ const ClassicCommsFullView = ({
   open, onClose, submissionId, customerName, customerPhone, customerEmail,
 }: ClassicCommsFullViewProps) => {
   const { toast } = useToast();
+  const { state: channels } = useChannelState();
   const [tab, setTab] = useState<Channel>("sms");
   const [messages, setMessages] = useState<ConvMessage[]>([]);
   const [calls, setCalls] = useState<ConvCall[]>([]);
@@ -130,6 +133,10 @@ const ClassicCommsFullView = ({
     if (open) void load();
   }, [open, load]);
 
+  // Live updates while the full-screen view is open — inbound SMS /
+  // email arrives without the rep refreshing the page.
+  useConversationRealtime(open ? submissionId : null, () => { void load(); });
+
   // Reset composer when switching tabs
   useEffect(() => { setDraft(""); setEmailSubject(""); }, [tab]);
 
@@ -149,9 +156,16 @@ const ClassicCommsFullView = ({
   const effectiveSendChannel: "sms" | "email" =
     tab === "unified" ? unifiedSendVia : (tab === "email" ? "email" : "sms");
   const isComposerChannel = tab !== "calls"; // SMS, Email, Unified all show composer
+  const channelOff =
+    (effectiveSendChannel === "sms" && !channels.two_way_sms) ||
+    (effectiveSendChannel === "email" && !channels.two_way_email);
   const composerDisabled =
+    channelOff ||
     (effectiveSendChannel === "sms" && !customerPhone) ||
     (effectiveSendChannel === "email" && !customerEmail);
+  const composerDisabledReason = channelOff
+    ? `${effectiveSendChannel === "sms" ? "Two-way SMS" : "Two-way Email"} is off in Setup → Channels`
+    : undefined;
   const charLimit = effectiveSendChannel === "sms" ? 320 : 1200;
   const showAttachFile = effectiveSendChannel === "email";
   const showSubject = effectiveSendChannel === "email";
@@ -256,26 +270,57 @@ const ClassicCommsFullView = ({
     setBusy("sending");
     try {
       const isEmail = effectiveSendChannel === "email";
-      const metadata = isEmail
-        ? { subject: emailSubject.trim() || "Re: Your trade-in offer" }
-        : null;
-      const { error } = await (supabase as never as {
-        from: (t: string) => { insert: (rows: unknown) => Promise<{ error: { message: string } | null }> };
-      })
-        .from("conversation_events")
-        .insert({
+      const subject = isEmail ? (emailSubject.trim() || "Re: Your trade-in offer") : null;
+
+      // Route through send-notification so the message actually
+      // reaches Twilio / the email queue. Then log a richer
+      // conversation_events row so the timeline shows the typed body.
+      const trigger_key = isEmail ? "customer_staff_reply_email" : "customer_staff_reply_sms";
+      const recipientField = isEmail
+        ? { recipient_email: customerEmail!, custom_subject: subject }
+        : { recipient_phone: customerPhone! };
+
+      const { error: sendError } = await supabase.functions.invoke("send-notification", {
+        body: {
+          trigger_key,
           submission_id: submissionId,
-          channel: effectiveSendChannel,
-          direction: "out",
-          actor_type: "staff",
-          actor_label: "You",
-          body_text: body,
-          occurred_at: new Date().toISOString(),
-          metadata,
-        });
-      if (error) throw new Error(error.message);
+          custom_body: body,
+          ...recipientField,
+        },
+      });
+
+      if (sendError) {
+        let detail = sendError.message;
+        try {
+          const ctx = (sendError as unknown as { context?: Response }).context;
+          if (ctx && typeof ctx.json === "function") {
+            const j = await ctx.json();
+            detail = j?.message || j?.error || detail;
+          }
+        } catch {
+          /* keep default */
+        }
+        throw new Error(detail);
+      }
+
+      await supabase.from("conversation_events").insert({
+        submission_id: submissionId,
+        channel: effectiveSendChannel,
+        direction: "outbound",
+        actor_type: "staff",
+        actor_label: "You",
+        body_text: body,
+        occurred_at: new Date().toISOString(),
+        metadata: subject ? { subject } : {},
+        source_table: isEmail ? "manual_email" : "manual_sms",
+      });
+
       setDraft("");
       setEmailSubject("");
+      toast({
+        title: isEmail ? "Email sent" : "SMS sent",
+        description: isEmail ? `Emailed ${customerEmail}` : `Texted ${customerPhone}`,
+      });
       void load();
     } catch (e) {
       toast({ title: "Send failed", description: (e as Error).message, variant: "destructive" });
@@ -697,9 +742,14 @@ const ClassicCommsFullView = ({
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); void send(); }
             }}
-            placeholder={composerDisabled
-              ? (effectiveSendChannel === "sms" ? "No phone number on file." : "No email on file.")
-              : "Type your message… or use AI Assist above"}
+            placeholder={
+              composerDisabledReason
+                ? composerDisabledReason
+                : composerDisabled
+                ? (effectiveSendChannel === "sms" ? "No phone number on file." : "No email on file.")
+                : "Type your message… or use AI Assist above"
+            }
+            title={composerDisabledReason}
             rows={effectiveSendChannel === "email" ? 5 : 2}
             disabled={composerDisabled}
             className="w-full text-[13px] rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 resize-none disabled:opacity-60 disabled:cursor-not-allowed"

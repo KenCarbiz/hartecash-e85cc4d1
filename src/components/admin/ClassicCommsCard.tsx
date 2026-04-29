@@ -13,6 +13,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useChannelState } from "@/hooks/useChannelState";
+import { useConversationRealtime } from "@/hooks/useConversationRealtime";
 
 type Channel = "sms" | "email" | "calls";
 
@@ -62,6 +64,9 @@ interface ClassicCommsCardProps {
 
 const ClassicCommsCard = ({ submissionId, customerPhone, customerEmail, onOpenFull }: ClassicCommsCardProps) => {
   const { toast } = useToast();
+  const { state: channels } = useChannelState();
+  const channelDisabled = (tab: Channel) =>
+    (tab === "sms" && !channels.two_way_sms) || (tab === "email" && !channels.two_way_email);
   const [tab, setTab] = useState<Channel>("sms");
   const [events, setEvents] = useState<ConvEvent[]>([]);
   const [calls, setCalls] = useState<CallEvent[]>([]);
@@ -89,6 +94,7 @@ const ClassicCommsCard = ({ submissionId, customerPhone, customerEmail, onOpenFu
   }, [submissionId]);
 
   useEffect(() => { void load(); }, [load]);
+  useConversationRealtime(submissionId, () => { void load(); });
 
   const smsEvents = events.filter((e) => e.channel === "sms").slice(0, 3);
   const emailEvents = events.filter((e) => e.channel === "email").slice(0, 3);
@@ -104,26 +110,75 @@ const ClassicCommsCard = ({ submissionId, customerPhone, customerEmail, onOpenFu
   const send = async () => {
     const body = reply.trim();
     if (!body || sending) return;
-    setSending(true);
-    const { error } = await (supabase as never as {
-      from: (t: string) => { insert: (rows: unknown) => Promise<{ error: { message: string } | null }> };
-    })
-      .from("conversation_events")
-      .insert({
-        submission_id: submissionId,
-        channel: tab === "sms" ? "sms" : "email",
-        direction: "out",
-        actor_type: "staff",
-        actor_label: "You",
-        body_text: body,
-        occurred_at: new Date().toISOString(),
+    if (channelDisabled(tab)) {
+      toast({
+        title: `${tab === "sms" ? "Two-way SMS" : "Two-way Email"} is off`,
+        description: "Re-enable it in Setup → Channels.",
+        variant: "destructive",
       });
-    setSending(false);
-    if (error) {
-      toast({ title: "Send failed", description: error.message, variant: "destructive" });
       return;
     }
+    if (tab === "sms" && !customerPhone) {
+      toast({ title: "No phone on file", description: "Can't text — phone number missing.", variant: "destructive" });
+      return;
+    }
+    if (tab === "email" && !customerEmail) {
+      toast({ title: "No email on file", description: "Can't email — address missing.", variant: "destructive" });
+      return;
+    }
+    setSending(true);
+
+    // Route through send-notification so the message actually reaches
+    // Twilio / the email queue. Mirror ConversationThread's flow: send
+    // first, then log a richer conversation_events row so the timeline
+    // shows the typed body rather than the generic mirror placeholder.
+    const trigger_key = tab === "sms" ? "customer_staff_reply_sms" : "customer_staff_reply_email";
+    const recipientField = tab === "sms"
+      ? { recipient_phone: customerPhone! }
+      : { recipient_email: customerEmail! };
+
+    const { error: sendError } = await supabase.functions.invoke("send-notification", {
+      body: {
+        trigger_key,
+        submission_id: submissionId,
+        custom_body: body,
+        ...recipientField,
+      },
+    });
+
+    if (sendError) {
+      setSending(false);
+      let detail = sendError.message;
+      try {
+        const ctx = (sendError as unknown as { context?: Response }).context;
+        if (ctx && typeof ctx.json === "function") {
+          const j = await ctx.json();
+          detail = j?.message || j?.error || detail;
+        }
+      } catch {
+        /* keep default */
+      }
+      toast({ title: "Send failed", description: detail, variant: "destructive" });
+      return;
+    }
+
+    await supabase.from("conversation_events").insert({
+      submission_id: submissionId,
+      channel: tab === "sms" ? "sms" : "email",
+      direction: "outbound",
+      actor_type: "staff",
+      actor_label: "You",
+      body_text: body,
+      occurred_at: new Date().toISOString(),
+      source_table: tab === "sms" ? "manual_sms" : "manual_email",
+    });
+
+    setSending(false);
     setReply("");
+    toast({
+      title: tab === "sms" ? "SMS sent" : "Email sent",
+      description: tab === "sms" ? `Texted ${customerPhone}` : `Emailed ${customerEmail}`,
+    });
     void load();
   };
 
@@ -251,14 +306,21 @@ const ClassicCommsCard = ({ submissionId, customerPhone, customerEmail, onOpenFu
             value={reply}
             onChange={(e) => setReply(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") void send(); }}
-            placeholder={tab === "sms" ? "Quick reply via SMS…" : "Quick reply via email…"}
-            disabled={tab === "sms" ? !customerPhone : !customerEmail}
+            placeholder={
+              channelDisabled(tab)
+                ? `${tab === "sms" ? "Two-way SMS" : "Two-way Email"} is off — see Setup → Channels`
+                : tab === "sms"
+                ? "Quick reply via SMS…"
+                : "Quick reply via email…"
+            }
+            disabled={channelDisabled(tab) || (tab === "sms" ? !customerPhone : !customerEmail)}
             className="flex-1 h-8 text-[12.5px] px-3 rounded-md bg-slate-50 border border-slate-200 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 disabled:opacity-60"
           />
           <button
             onClick={() => void send()}
-            disabled={!reply.trim() || sending}
+            disabled={!reply.trim() || sending || channelDisabled(tab)}
             aria-label="Send"
+            title={channelDisabled(tab) ? `${tab === "sms" ? "Two-way SMS" : "Two-way Email"} is off in Setup → Channels` : undefined}
             className="w-8 h-8 rounded-md bg-[#003b80] hover:bg-[#002a5c] disabled:bg-slate-200 text-white flex items-center justify-center transition shrink-0"
           >
             <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M2.5 2.4a1 1 0 011-.4l13.5 4.8a1 1 0 010 1.9L4.5 13.5a1 1 0 01-1.4-1.2l1.6-3.8L3 4.6a1 1 0 01-.5-2.2zm2.6 5.6L4 11l11.5-3.3L4 4.4l1.1 3.6 6.4.5-6.4.5z"/></svg>

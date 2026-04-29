@@ -31,6 +31,9 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import CustomerFileAccentStyle from "./CustomerFileAccentStyle";
 import SubmissionNotesModal, { fetchSubmissionNotes, type SubmissionNote } from "./SubmissionNotesModal";
+import ClickToDialButton from "./ClickToDialButton";
+import { useChannelState } from "@/hooks/useChannelState";
+import { useConversationRealtime } from "@/hooks/useConversationRealtime";
 import { printCheckRequest } from "@/lib/printUtils";
 import logoFallback from "@/assets/logo-placeholder.png";
 
@@ -197,7 +200,12 @@ function V2Identity({
       {sub.phone ? (
         <div className="flex items-center gap-1.5">
           <Phone className="w-3 h-3 shrink-0" />
-          <a href={`tel:${sub.phone}`} className="hover:underline">{sub.phone}</a>
+          <ClickToDialButton
+            submissionId={sub.id}
+            customerPhone={sub.phone}
+            customerName={sub.name}
+            className="hover:underline cursor-pointer"
+          />
         </div>
       ) : (
         <div className="text-white/40 text-[12px] italic">No phone on file</div>
@@ -242,7 +250,7 @@ function V2Identity({
               {sub.name || "Unknown customer"}
             </div>
             <div className="text-[12px] text-white/80 mt-1 flex items-center gap-3 flex-wrap">
-              {sub.phone && <a href={`tel:${sub.phone}`} className="hover:underline">{sub.phone}</a>}
+              {sub.phone && <ClickToDialButton submissionId={sub.id} customerPhone={sub.phone} customerName={sub.name} className="hover:underline cursor-pointer" />}
               {sub.phone && sub.email && <span className="text-white/50">·</span>}
               {sub.email && <a href={`mailto:${sub.email}`} className="hover:underline truncate">{sub.email}</a>}
             </div>
@@ -511,6 +519,7 @@ function ConversationTab({
   activityLog: CustomerFileV2Props["activityLog"];
 }) {
   const { toast } = useToast();
+  const { state: channelToggles } = useChannelState();
   const [channel, setChannel] = useState<ConvChannel>("sms");
   const [messages, setMessages] = useState<ConvMessage[]>([]);
   const [calls, setCalls] = useState<ConvCall[]>([]);
@@ -538,6 +547,7 @@ function ConversationTab({
   }, [sub.id]);
 
   useEffect(() => { void load(); }, [load]);
+  useConversationRealtime(sub.id, () => { void load(); });
 
   const smsMessages   = messages.filter((m) => m.channel === "sms");
   const emailMessages = messages.filter((m) => m.channel === "email");
@@ -550,9 +560,16 @@ function ConversationTab({
   };
 
   const charLimit = channel === "sms" ? 160 : 1000;
+  const channelOff =
+    (channel === "sms" && !channelToggles.two_way_sms) ||
+    (channel === "email" && !channelToggles.two_way_email);
   const composerDisabled = channel === "calls"
+    || channelOff
     || (channel === "sms" && !sub.phone)
     || (channel === "email" && !sub.email);
+  const composerDisabledReason = channelOff
+    ? `${channel === "sms" ? "Two-way SMS" : "Two-way Email"} is off in Setup → Channels`
+    : undefined;
 
   const applyTemplate = (t: typeof SMS_TEMPLATES[number]) => {
     const first = (sub.name || "there").split(/\s+/)[0];
@@ -567,26 +584,59 @@ function ConversationTab({
   const send = async () => {
     const body = draft.trim();
     if (!body || composerDisabled || sending) return;
+    if (channel !== "sms" && channel !== "email") return;
     setSending(true);
-    const { error } = await (supabase as never as {
-      from: (t: string) => { insert: (rows: unknown) => Promise<{ error: { message: string } | null }> };
-    })
-      .from("conversation_events")
-      .insert({
+
+    // Route through send-notification so the message actually reaches
+    // Twilio / the email queue. Mirror ConversationThread: send first,
+    // then log a richer conversation_events row.
+    const trigger_key = channel === "sms" ? "customer_staff_reply_sms" : "customer_staff_reply_email";
+    const recipientField = channel === "sms"
+      ? { recipient_phone: sub.phone! }
+      : { recipient_email: sub.email! };
+
+    const { error: sendError } = await supabase.functions.invoke("send-notification", {
+      body: {
+        trigger_key,
         submission_id: sub.id,
-        channel: channel === "calls" ? "sms" : channel,
-        direction: "out",
-        actor_type: "staff",
-        actor_label: "You",
-        body_text: body,
-        occurred_at: new Date().toISOString(),
-      });
-    setSending(false);
-    if (error) {
-      toast({ title: "Send failed", description: error.message, variant: "destructive" });
+        custom_body: body,
+        ...recipientField,
+      },
+    });
+
+    if (sendError) {
+      setSending(false);
+      let detail = sendError.message;
+      try {
+        const ctx = (sendError as unknown as { context?: Response }).context;
+        if (ctx && typeof ctx.json === "function") {
+          const j = await ctx.json();
+          detail = j?.message || j?.error || detail;
+        }
+      } catch {
+        /* keep default */
+      }
+      toast({ title: "Send failed", description: detail, variant: "destructive" });
       return;
     }
+
+    await supabase.from("conversation_events").insert({
+      submission_id: sub.id,
+      channel,
+      direction: "outbound",
+      actor_type: "staff",
+      actor_label: "You",
+      body_text: body,
+      occurred_at: new Date().toISOString(),
+      source_table: channel === "sms" ? "manual_sms" : "manual_email",
+    });
+
+    setSending(false);
     setDraft("");
+    toast({
+      title: channel === "sms" ? "SMS sent" : "Email sent",
+      description: channel === "sms" ? `Texted ${sub.phone}` : `Emailed ${sub.email}`,
+    });
     void load();
   };
 
@@ -773,9 +823,14 @@ function ConversationTab({
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); void send(); }
             }}
-            placeholder={composerDisabled
-              ? (channel === "sms" ? "No phone number on file." : "No email on file.")
-              : "Type your message… or use AI Assist above"}
+            placeholder={
+              composerDisabledReason
+                ? composerDisabledReason
+                : composerDisabled
+                ? (channel === "sms" ? "No phone number on file." : "No email on file.")
+                : "Type your message… or use AI Assist above"
+            }
+            title={composerDisabledReason}
             rows={2}
             disabled={composerDisabled}
             className="w-full text-[13px] rounded-lg border border-slate-200 px-3 py-2 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 resize-none disabled:opacity-60 disabled:cursor-not-allowed"

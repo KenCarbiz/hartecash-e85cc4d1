@@ -34,6 +34,7 @@ const ExecutiveKPIHub = React.lazy(() => import("./ExecutiveKPIHub"));
 const OfferSettings = React.lazy(() => import("./OfferSettings"));
 const SiteConfiguration = React.lazy(() => import("./SiteConfiguration"));
 const AppearanceSettings = React.lazy(() => import("./AppearanceSettings"));
+const ChannelsSettings = React.lazy(() => import("./ChannelsSettings"));
 const LandingFlowConfig = React.lazy(() => import("./LandingFlowConfig"));
 const RooftopWebsites = React.lazy(() => import("./RooftopWebsites"));
 const PlatformCatalogManager = React.lazy(() => import("./PlatformCatalogManager"));
@@ -497,6 +498,7 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
       {activeSection === "appearance" && canManageAccess && (
         <AppearanceSettings userRole={userRole} canManageAccess={canManageAccess} />
       )}
+      {activeSection === "channels" && canManageAccess && <ChannelsSettings />}
       {activeSection === "landing-flow" && canManageAccess && <LandingFlowConfig />}
       {activeSection === "rooftop-websites" && canManageAccess && <RooftopWebsites />}
       {activeSection === "promotions" && canManageAccess && <PromotionManagement />}

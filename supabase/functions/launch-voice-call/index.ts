@@ -140,6 +140,27 @@ serve(async (req) => {
       );
     }
 
+    // Honor the Channels admin toggle. If a dealership has turned AI
+    // phone calls off, refuse — UI surfaces hide the CTA but a stale
+    // client can still try; defense in depth.
+    const { data: aiEnabled } = await supabase.rpc("channel_enabled", {
+      _dealership_id: dealershipId,
+      _location_id: null,
+      _channel: "ai_phone_calls",
+    });
+    if (aiEnabled === false) {
+      return new Response(
+        JSON.stringify({
+          error: "channel_disabled",
+          message: "AI phone calls are turned off for this dealership.",
+        }),
+        {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
     // ── Fetch dealer voice AI config ──
     const { data: dealer, error: dealerErr } = await supabase
       .from("dealer_accounts")

@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { safeInvoke } from "@/lib/safeInvoke";
 import { formatPhone } from "@/lib/utils";
+import { clickToDial } from "@/lib/clickToDial";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -316,7 +317,7 @@ const QuickSummary = ({
   statusLabel: string;
 }) => {
   const phoneDigits = (sub.phone || "").replace(/\D/g, "");
-  const phoneHref = phoneDigits ? `tel:+1${phoneDigits}` : null;
+  const hasPhone = phoneDigits.length > 0;
   const smsHref = phoneDigits ? `sms:+1${phoneDigits}` : null;
   const emailHref = sub.email ? `mailto:${sub.email}` : null;
   const leadSource = sub.lead_source || "Not set";
@@ -350,14 +351,16 @@ const QuickSummary = ({
           {sub.name || <span className="text-muted-foreground italic">Unknown customer</span>}
         </div>
         <div className="flex flex-wrap gap-2 text-xs">
-          {phoneHref && (
-            <a
-              href={phoneHref}
+          {hasPhone && (
+            <button
+              type="button"
+              onClick={() => clickToDial(sub.id)}
               className="inline-flex items-center gap-1.5 bg-muted/60 hover:bg-muted px-2.5 py-1 rounded-md text-card-foreground font-mono"
+              title="Click to dial"
             >
               <span aria-hidden>📞</span>
               {sub.phone}
-            </a>
+            </button>
           )}
           {smsHref && (
             <a
@@ -1528,9 +1531,13 @@ const RefreshedSheet = ({
                 (sub.phone || sub.email) ? (
                   <div className="flex items-center gap-1">
                     {sub.phone && (
-                      <a href={`tel:${sub.phone}`} className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors cursor-pointer">
+                      <button
+                        type="button"
+                        onClick={() => clickToDial(sub.id)}
+                        className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors cursor-pointer"
+                      >
                         <Phone className="w-3 h-3" /> Call
-                      </a>
+                      </button>
                     )}
                     {sub.email && (
                       <a href={`mailto:${sub.email}`} className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-lg bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200 transition-colors cursor-pointer">
@@ -1549,9 +1556,14 @@ const RefreshedSheet = ({
                     <Label className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider flex items-center gap-1.5">
                       Phone
                       {sub.phone && (
-                        <a href={`tel:${sub.phone}`} title="Call this number" className="text-primary/60 hover:text-primary transition-colors">
+                        <button
+                          type="button"
+                          onClick={() => clickToDial(sub.id)}
+                          title="Click to dial"
+                          className="text-primary/60 hover:text-primary transition-colors"
+                        >
                           <Phone className="w-3 h-3" />
-                        </a>
+                        </button>
                       )}
                     </Label>
                     <Input value={sub.phone || ""} onChange={(e) => updateField({ phone: e.target.value || null })} placeholder="(555) 123-4567" className="h-9 text-sm rounded-lg border-slate-200 focus:border-[#003b80]/40" />
@@ -2280,7 +2292,7 @@ const SubmissionDetailSheetV2 = ({
   const naCard = (() => {
     const hasOffer = !!(sub.offered_price || sub.estimated_offer_high);
     switch (sub.progress_status) {
-      case "new_lead": return { title: "Call the customer", desc: "They just submitted — first contact is critical.", cta: "Call Now", ctaHref: sub.phone ? `tel:${sub.phone.replace(/\D/g,"")}` : null, ctaAction: null };
+      case "new_lead": return { title: "Call the customer", desc: "They just submitted — first contact is critical.", cta: "Call Now", ctaHref: null, ctaAction: sub.phone ? "click_to_dial" : null };
       case "in_progress": return { title: "Schedule an inspection", desc: "Customer is engaged. Lock in a time.", cta: "Schedule", ctaHref: null, ctaAction: "schedule" };
       case "appointment_set": return { title: "Prepare for inspection", desc: "Inspection is booked. Review vehicle info.", cta: "View Inspection", ctaHref: null, ctaAction: "inspect" };
       case "inspection_completed": case "manager_approval_inspection": return { title: "Build the offer", desc: "Inspection is done. Set your ACV and offer.", cta: "Open Appraisal", ctaHref: null, ctaAction: "appraise" };
@@ -2782,6 +2794,7 @@ const SubmissionDetailSheetV2 = ({
                         if (naCard.ctaAction === "schedule") onScheduleAppointment(sub);
                         else if (naCard.ctaAction === "appraise") routerNavigate(`/appraisal/${sub.token}`);
                         else if (naCard.ctaAction === "inspect") routerNavigate(`/inspection/${sub.id}`);
+                        else if (naCard.ctaAction === "click_to_dial") clickToDial(sub.id);
                         // "followup" and others: wire later
                       }}
                       className="w-full py-2.5 rounded-xl bg-white hover:bg-white/90 text-slate-900 text-[13px] font-bold transition-colors text-center">

@@ -29,6 +29,7 @@ import {
 import SubmissionNotesModal, { fetchSubmissionNotes, type SubmissionNote } from "./SubmissionNotesModal";
 import ClassicCommsCard from "./ClassicCommsCard";
 import ClassicCommsFullView from "./ClassicCommsFullView";
+import ClickToDialButton from "./ClickToDialButton";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { printCheckRequest } from "@/lib/printUtils";
 import logoFallback from "@/assets/logo-placeholder.png";
@@ -562,7 +563,11 @@ const CustomerContact = ({ sub }: { sub: Submission }) => (
     {sub.phone && (
       <div className="flex items-center gap-1.5">
         <svg className="w-3.5 h-3.5 text-white/60 shrink-0" viewBox="0 0 20 20" fill="currentColor"><path d="M2 3.5A1.5 1.5 0 013.5 2h2.6a1.5 1.5 0 011.4 1l.8 2.1a1.5 1.5 0 01-.4 1.7L6.5 8.1a11 11 0 005.4 5.4l1.3-1.4a1.5 1.5 0 011.7-.4l2.1.8a1.5 1.5 0 011 1.4v2.6a1.5 1.5 0 01-1.5 1.5C8.5 18 2 11.5 2 3.5z"/></svg>
-        <a href={`tel:${sub.phone}`} className="font-mono hover:underline">{formatPhone(sub.phone)}</a>
+        <ClickToDialButton
+          submissionId={sub.id}
+          customerPhone={sub.phone}
+          customerName={sub.name}
+        />
       </div>
     )}
     {sub.email && (
@@ -617,7 +622,7 @@ const ClassicHeaderIdentity = ({
               {sub.name || "Unknown customer"}
             </h1>
             <div className="mt-1.5 text-[13px] text-white/80 flex items-center gap-3 flex-wrap">
-              {sub.phone && <a href={`tel:${sub.phone}`} className="font-mono hover:underline">{formatPhone(sub.phone)}</a>}
+              {sub.phone && <ClickToDialButton submissionId={sub.id} customerPhone={sub.phone} customerName={sub.name} />}
               {sub.phone && sub.email && <span className="text-white/50">·</span>}
               {sub.email && <a href={`mailto:${sub.email}`} className="hover:underline">{sub.email}</a>}
             </div>

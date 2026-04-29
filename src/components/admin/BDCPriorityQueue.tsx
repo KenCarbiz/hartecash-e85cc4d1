@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Phone, MessageSquare } from "lucide-react";
 import { scoreBdcLead, type ScoreInputs } from "@/lib/bdcLeadScore";
 import { formatPhone, cn } from "@/lib/utils";
+import { clickToDial } from "@/lib/clickToDial";
 
 /**
  * BDCPriorityQueue — the "who should I call NEXT?" list for BDC reps.
@@ -245,12 +246,13 @@ const BDCPriorityQueue = ({ onOpenSubmission }: { onOpenSubmission?: (id: string
                   <div className="flex items-center gap-2 shrink-0">
                     {lead.phone ? (
                       <>
-                        <a href={`tel:${lead.phone}`}>
-                          <Button className="h-9 bg-slate-900 hover:bg-slate-800 text-white gap-1.5">
-                            <Phone className="w-3.5 h-3.5" />
-                            Call
-                          </Button>
-                        </a>
+                        <Button
+                          className="h-9 bg-slate-900 hover:bg-slate-800 text-white gap-1.5"
+                          onClick={() => clickToDial(lead.id)}
+                        >
+                          <Phone className="w-3.5 h-3.5" />
+                          Call
+                        </Button>
                         <a href={`sms:${lead.phone}`} aria-label="Text">
                           <Button variant="outline" size="icon" className="h-9 w-9">
                             <MessageSquare className="w-4 h-4" />

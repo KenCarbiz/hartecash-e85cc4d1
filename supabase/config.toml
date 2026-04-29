@@ -22,6 +22,14 @@ project_id = "ptiwdwfdckfqivoocyvp"
   # ?secret= query param). Same secret as voice-call-webhook.
   [functions.bland-appointment-webhook]
     verify_jwt = false
+  # External webhook: Bland.AI per-call status updates (recording, transcript,
+  # outcome). Authenticated via BLAND_WEBHOOK_SECRET, NOT JWT.
+  [functions.voice-call-webhook]
+    verify_jwt = false
+  # External webhook: Twilio inbound SMS + delivery receipts. Authenticated
+  # via X-Twilio-Signature against TWILIO_AUTH_TOKEN, NOT JWT.
+  [functions.sms-webhook]
+    verify_jwt = false
   # Customer-facing: called during public sell/appraisal flow.
   # Function validates request via submission token + origin.
   [functions.bb-lookup]
@@ -113,3 +121,11 @@ project_id = "ptiwdwfdckfqivoocyvp"
   # latest button color / copy / sale banner without re-installing.
   [functions.embed-config]
     verify_jwt = false
+
+  # ── Telephony ──
+  # Admin-only click-to-dial bridge: dials the rep's cell first, then
+  # bridges to the customer with the dealership's Twilio number as
+  # caller-ID. Recording is OFF in v1 — re-enable only with consent
+  # capture for two-party-consent states.
+  [functions.twilio-click-to-dial]
+    verify_jwt = true
