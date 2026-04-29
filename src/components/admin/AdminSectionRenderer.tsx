@@ -55,6 +55,7 @@ const ReportsExport = React.lazy(() => import("./ReportsExport"));
 const ReferralManagement = React.lazy(() => import("./ReferralManagement"));
 const MyReferrals = React.lazy(() => import("./MyReferrals"));
 const MyLeadLink = React.lazy(() => import("./MyLeadLink"));
+const MyAvailability = React.lazy(() => import("./MyAvailability"));
 const EmbedToolkit = React.lazy(() => import("./EmbedToolkit"));
 const ProspectDemo = React.lazy(() => import("./ProspectDemo"));
 const PromotionManagement = React.lazy(() => import("./PromotionManagement"));
@@ -573,6 +574,7 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
         <MyReferrals staffName={props.userName} />
       )}
       {activeSection === "my-lead-link" && <MyLeadLink />}
+      {activeSection === "my-availability" && <MyAvailability />}
       {activeSection === "embed-toolkit" && canManageAccess && <EmbedToolkit />}
       {activeSection === "prospect-demo" && canManageAccess && props.tenant.dealership_id === "default" && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
