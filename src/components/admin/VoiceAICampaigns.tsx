@@ -189,6 +189,96 @@ const VoiceAICampaigns = () => {
     setCampaigns((prev) => prev.map((x) => (x.id === c.id ? { ...x, status: next } : x)));
   };
 
+  // Bulk pause every active campaign in this tenant. Useful as a
+  // kill-switch when a script has a problem or the dealer wants to
+  // halt all outbound voice without toggling each row.
+  const [pausingAll, setPausingAll] = useState(false);
+  const pauseAllActive = async () => {
+    const activeIds = campaigns.filter((c: any) => c.status === "active").map((c: any) => c.id);
+    if (activeIds.length === 0) {
+      toast({ title: "Nothing to pause", description: "No campaigns are currently active." });
+      return;
+    }
+    setPausingAll(true);
+    const { error } = await (supabase as any)
+      .from("voice_campaigns")
+      .update({ status: "paused" })
+      .in("id", activeIds);
+    setPausingAll(false);
+    if (error) {
+      toast({ title: "Couldn't pause", description: error.message, variant: "destructive" });
+      return;
+    }
+    setCampaigns((prev) => prev.map((x: any) => activeIds.includes(x.id) ? { ...x, status: "paused" } : x));
+    toast({
+      title: `Paused ${activeIds.length} campaign${activeIds.length === 1 ? "" : "s"}`,
+      description: "No new outbound calls will queue until you resume.",
+    });
+  };
+
+  // "Send a test call to my cell" — fires launch-voice-call with a
+  // throwaway script so admins can vet voice quality + caller-ID + the
+  // Bland.ai integration before pointing real campaigns at customers.
+  // Uses the calling rep's user_roles.phone if available, else prompts.
+  const [testingCall, setTestingCall] = useState(false);
+  const sendTestCall = async () => {
+    setTestingCall(true);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u?.user) {
+        toast({ title: "Not signed in", variant: "destructive" });
+        return;
+      }
+      const { data: role } = await supabase
+        .from("user_roles")
+        .select("phone")
+        .eq("user_id", u.user.id)
+        .not("phone", "is", null)
+        .limit(1)
+        .maybeSingle();
+      const repPhone = (role as { phone?: string } | null)?.phone;
+      if (!repPhone) {
+        toast({
+          title: "Add your cell first",
+          description: "Set your cell phone in My Availability or Staff & Permissions, then try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+      const digits = String(repPhone).replace(/\D/g, "");
+      const e164 = digits.length === 10 ? `+1${digits}` : digits.startsWith("+") ? digits : `+${digits}`;
+
+      const { error } = await supabase.functions.invoke("launch-voice-call", {
+        body: {
+          // No submission_id — the function supports a "test" path via campaign_type.
+          campaign_type: "test",
+          phone: e164,
+          context: { rep_test: true },
+        },
+      });
+      if (error) {
+        let detail = error.message;
+        try {
+          const ctx = (error as unknown as { context?: Response }).context;
+          if (ctx && typeof ctx.json === "function") {
+            const j = await ctx.json();
+            detail = j?.message || j?.error || detail;
+          }
+        } catch { /* keep default */ }
+        toast({ title: "Test call failed", description: detail, variant: "destructive" });
+        return;
+      }
+      toast({
+        title: "Test call queued",
+        description: `Bland.ai will ring ${e164.replace(/(\+\d{1,2})\d+(\d{4})$/, "$1•••$2")} in a few seconds.`,
+      });
+    } finally {
+      setTestingCall(false);
+    }
+  };
+
+  const activeCount = campaigns.filter((c: any) => c.status === "active").length;
+
   const STATUS_COLORS: Record<string, string> = {
     active: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
     paused: "bg-amber-500/10 text-amber-600 border-amber-500/20",
@@ -404,7 +494,33 @@ const VoiceAICampaigns = () => {
               <p className="text-xs text-muted-foreground mt-0.5">Manage outbound calling campaigns</p>
             </div>
           </div>
-          <Button size="sm" className="gap-1.5" onClick={() => setShowNewCampaign(true)}><Plus className="w-3.5 h-3.5" />New Campaign</Button>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5"
+              onClick={sendTestCall}
+              disabled={testingCall}
+              title="Bland.ai will dial your cell and play a short test script."
+            >
+              {testingCall ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <PhoneCall className="w-3.5 h-3.5" />}
+              Test call to my cell
+            </Button>
+            {activeCount > 0 && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5 border-amber-500/40 text-amber-700 hover:bg-amber-500/10"
+                onClick={pauseAllActive}
+                disabled={pausingAll}
+                title={`Pause ${activeCount} active campaign${activeCount === 1 ? "" : "s"}`}
+              >
+                {pausingAll ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Pause className="w-3.5 h-3.5" />}
+                Pause all ({activeCount})
+              </Button>
+            )}
+            <Button size="sm" className="gap-1.5" onClick={() => setShowNewCampaign(true)}><Plus className="w-3.5 h-3.5" />New Campaign</Button>
+          </div>
         </div>
         <div className="p-6">
           {campaigns.length === 0 ? (

@@ -54,12 +54,30 @@ serve(async (req) => {
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    const caller = await resolveCaller(req, supabaseUrl, anonKey, serviceKey);
-    if (caller.kind !== "platform_admin") {
-      return json({ error: "Forbidden — platform admin required" }, 403);
+    if (!supabaseUrl || !serviceKey) {
+      console.error("save-prospect-demo: missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+      return json({ error: "Server not configured (missing Supabase env vars)" }, 500);
     }
 
-    const body = await req.json();
+    const caller = await resolveCaller(req, supabaseUrl, anonKey, serviceKey);
+    if (caller.kind !== "platform_admin") {
+      return json(
+        {
+          error: caller.kind === "anonymous"
+            ? "Sign in as a platform admin to save demos."
+            : "Forbidden — only platform admins can save prospect demos.",
+        },
+        403,
+      );
+    }
+
+    let body: Record<string, unknown>;
+    try {
+      body = await req.json();
+    } catch {
+      return json({ error: "Request body is not valid JSON." }, 400);
+    }
+
     const {
       dealerName,
       homeUrl,
@@ -69,7 +87,16 @@ serve(async (req) => {
       config = {},
       pitchLine,
       existingId,
-    } = body;
+    } = body as {
+      dealerName?: string;
+      homeUrl?: string;
+      listingUrl?: string;
+      vdpUrl?: string;
+      screenshots?: { home?: string; listing?: string; vdp?: string };
+      config?: Record<string, unknown>;
+      pitchLine?: string;
+      existingId?: string;
+    };
 
     const supabase = createClient(supabaseUrl, serviceKey);
 
@@ -141,7 +168,12 @@ serve(async (req) => {
 
     return json({ id, shareToken, expiresAt });
   } catch (err) {
-    return json({ error: (err as Error).message || "unknown error" }, 500);
+    // Log the full error server-side so Supabase function logs show
+    // the stack/cause; return a clean message to the client.
+    console.error("save-prospect-demo error:", err);
+    const e = err as Error & { code?: string; details?: string; hint?: string };
+    const detail = [e.message, e.details, e.hint].filter(Boolean).join(" — ");
+    return json({ error: detail || "unknown error", code: e.code }, 500);
   }
 });
 

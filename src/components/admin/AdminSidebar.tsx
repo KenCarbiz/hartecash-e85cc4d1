@@ -243,6 +243,7 @@ const AdminSidebar = ({
   // per the approved design, just above Account.
   const myItems: SidebarItem[] = [
     { key: "my-lead-link", label: "My Lead Link", icon: Link2 },
+    { key: "my-availability", label: "My Availability", icon: Phone },
     { key: "my-referrals", label: "My Referrals", icon: Gift },
   ].filter((item) => isAllowed(item.key));
 
@@ -298,7 +299,7 @@ const AdminSidebar = ({
     "offer-settings", "form-config", "inspection-config", "photo-config",
     "depth-policies", "promotions", "notifications",
     "site-config", "appearance", "channels", "landing-flow", "locations", "rooftop-websites", "testimonials", "embed-toolkit",
-    "my-lead-link", "my-referrals",
+    "my-lead-link", "my-availability", "my-referrals",
     "staff", "referrals", "compliance", "reports", "image-inventory", "changelog",
     "onboarding", "system-settings", "pricing-model",
     "platform-billing", "integrations-status", "api-access", "vauto-integration", "white-label", "prospect-demo",

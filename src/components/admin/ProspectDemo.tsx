@@ -361,7 +361,24 @@ const ProspectDemo = () => {
           pitchLine: llmResult?.pitchLine,
         },
       });
-      if (error) throw new Error(error.message);
+      if (error) {
+        // The default error.message for FunctionsHttpError is the
+        // generic "Edge Function returned a non-2xx status code".
+        // Parse the actual server error from the response body so the
+        // toast tells the user what went wrong (e.g. "Forbidden —
+        // platform admin required" or a Postgres column issue).
+        let detail = error.message;
+        try {
+          const ctx = (error as unknown as { context?: Response }).context;
+          if (ctx && typeof ctx.json === "function") {
+            const j = await ctx.json();
+            detail = j?.error || j?.message || detail;
+          }
+        } catch {
+          /* keep default */
+        }
+        throw new Error(detail);
+      }
       if (!data) throw new Error("Empty response from save-prospect-demo");
       setSavedDemo(data);
       toast({
