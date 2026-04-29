@@ -30,7 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { isManagerRole, canViewExecutiveHUD } from "@/lib/adminConstants";
+import { canViewExecutiveHUD } from "@/lib/adminConstants";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 interface AdminSidebarProps {
@@ -137,18 +137,12 @@ const AdminSidebar = ({
 
   const isAllowed = (key: string) => allowedSections === null || allowedSections.includes(key);
   const isPlatformAdmin = canManageAccess && dealershipId === "default";
-  const isManager = isManagerRole(userRole) || canManageAccess;
-
-  const isAcquisitionStaff =
-    isManager ||
-    userRole === "sales_bdc" ||
-    userRole === "sales" ||
-    userRole === "internet_manager" ||
-    canManageAccess;
-  const isCheckInStaff =
-    isAcquisitionStaff || userRole === "inspector" || userRole === "receptionist";
-  const canSeeAppraiserQueue = isManager || isAppraiser;
   const isReceptionist = userRole === "receptionist";
+
+  // The cascade resolver in useEffectivePermissions is the sole
+  // authority for what items a user sees. Group-level visibility
+  // (enterprise beta, multi-rooftop, super admin) is still
+  // feature-flagged here since those aren't role-based.
 
   // ── WORK ── Personal dashboard. Today is the landing card.
   // My Lead Link / My Referrals moved to their own MY group at the
@@ -157,85 +151,66 @@ const AdminSidebar = ({
     { key: "today", label: "Today", icon: Home },
   ].filter((item) => isAllowed(item.key));
 
-  // ── QUEUES ── Shared inboxes. The sidebar order matches the daily
-  // workflow: greet customers → triage leads → price re-appraisals →
-  // outbound BDC. All-Leads and Appointments fan out to most roles;
-  // Appraiser Queue and BDC Priority Queue gate by role helpers.
+  // ── QUEUES ── Shared inboxes. Item visibility is now driven by the
+  // cascade resolver (isAllowed). Role-conditional bdc-queue/
+  // appraiser-queue gates have moved to defaultAllowedForRole +
+  // per-tenant overrides + per-user grants.
   const queueItems: SidebarItem[] = [
     { key: "submissions", label: "All Leads", icon: Inbox, badge: submissionCount > 0 ? String(submissionCount) : undefined },
-    ...(canSeeAppraiserQueue
-      ? [{
-          key: "appraiser-queue",
-          label: "Appraiser Queue",
-          icon: RotateCcw,
-          badge: appraiserQueueCount > 0 ? String(appraiserQueueCount) : undefined,
-          badgeVariant: "destructive" as const,
-        }]
-      : []),
+    {
+      key: "appraiser-queue",
+      label: "Appraiser Queue",
+      icon: RotateCcw,
+      badge: appraiserQueueCount > 0 ? String(appraiserQueueCount) : undefined,
+      badgeVariant: "destructive" as const,
+    },
     { key: "accepted-appts", label: "Appointments", icon: CalendarDays, badge: appointmentCount > 0 ? String(appointmentCount) : undefined },
-    ...((userRole === "sales_bdc" ||
-         userRole === "sales" ||
-         userRole === "internet_manager" ||
-         isManager ||
-         canManageAccess)
-      ? [{ key: "bdc-queue", label: "BDC Priority Queue", icon: Flame }]
-      : []),
+    { key: "bdc-queue", label: "BDC Priority Queue", icon: Flame },
   ].filter((item) => isAllowed(item.key));
 
   // ── FLOOR TOOLS ── Hands-on lot/service tooling. Split out of WORK
   // so floor staff (inspectors, receptionists, service writers) see
   // their tools as a distinct surface rather than buried in a long list.
   const floorToolsItems: SidebarItem[] = [
-    ...(isCheckInStaff
-      ? [{ key: "inspection-checkin", label: "Inspection Check-In", icon: LogIn }]
-      : []),
-    ...(isAcquisitionStaff
-      ? [{ key: "service-quick-entry", label: "Service Quick Entry", icon: Wrench }]
-      : []),
-    ...(canManageAccess ? [{ key: "image-inventory", label: "Vehicle Images", icon: ImageIcon }] : []),
+    { key: "inspection-checkin", label: "Inspection Check-In", icon: LogIn },
+    { key: "service-quick-entry", label: "Service Quick Entry", icon: Wrench },
+    { key: "image-inventory", label: "Vehicle Images", icon: ImageIcon },
   ].filter((item) => isAllowed(item.key));
 
-  // ── GROW ── Revenue-driving tools (manager+)
+  // ── GROW ── Revenue-driving tools. Wholesale is also gated by the
+  // enterprise-beta feature flag so it stays hidden for tenants not
+  // enrolled even if their role would otherwise allow it.
   const growItems: SidebarItem[] = [
-    ...(isManager
-      ? [{ key: "equity-mining", label: "Equity Mining", icon: TrendingUp }]
-      : []),
-    ...(isManager
-      ? [{ key: "voice-ai", label: "Voice AI", icon: Mic }]
-      : []),
-    ...(isManager && (enterpriseBetaEnabled || isPlatformAdmin)
+    { key: "equity-mining", label: "Equity Mining", icon: TrendingUp },
+    { key: "voice-ai", label: "Voice AI", icon: Mic },
+    ...(enterpriseBetaEnabled || isPlatformAdmin
       ? [{ key: "wholesale-marketplace", label: "Wholesale", icon: Store }]
       : []),
   ].filter((item) => isAllowed(item.key));
 
   // ── MEASURE ── Performance, HUD, reports, compliance
   const measureItems: SidebarItem[] = [
-    ...(isManager ? [{ key: "executive", label: "Performance", icon: LineChart }] : []),
+    { key: "executive", label: "Performance", icon: LineChart },
     ...(canViewExecutiveHUD(userRole)
       ? [{ key: "gm-hud", label: "GM HUD", icon: DollarSign }]
       : []),
-    ...(isManager ? [{ key: "reports", label: "Reports", icon: BarChart3 }] : []),
+    { key: "reports", label: "Reports", icon: BarChart3 },
     { key: "compliance", label: "Compliance", icon: ShieldCheck },
   ].filter((item) => isAllowed(item.key));
 
-  // ── SETUP · DEALER ── Identity, branding, locations, and core data-capture
-  // configuration (Offer Logic, Lead Form, Inspection, Photos, Standards).
-  // Offer Logic is the manager+ entry point for pricing and unlocks the
-  // approval-request badge; everything else is admin-only. "Appearance"
-  // renamed to "Appearance & Access" per design — the page already covers
-  // both sidebar/theme styling and the role-based visibility toggles.
+  // ── SETUP · DEALER ── Identity, branding, locations, and core
+  // data-capture configuration. The cascade resolver gates each item;
+  // multi-rooftop only items still hide when the dealer has one store.
   const setupDealerItems: SidebarItem[] = [
-    ...(canManageAccess ? [{ key: "appearance", label: "Appearance & Access", icon: Sparkles }] : []),
-    ...(canManageAccess ? [{ key: "channels", label: "Channels", icon: Phone }] : []),
-    ...(canManageAccess ? [{ key: "site-config", label: "Branding", icon: Palette }] : []),
-    ...(canManageAccess && locationCount > 1 ? [{ key: "locations", label: "Locations", icon: MapPin }] : []),
-    ...(isManager ? [{ key: "offer-settings", label: "Offer Logic", icon: Settings, badge: pricingAccessRequestCount > 0 ? String(pricingAccessRequestCount) : undefined, badgeVariant: "destructive" as const }] : []),
-    ...(canManageAccess ? [
-      { key: "form-config", label: "Lead Form", icon: FileText },
-      { key: "inspection-config", label: "Inspection Sheet", icon: ListChecks },
-      { key: "photo-config", label: "Photo Requirements", icon: Camera },
-      { key: "depth-policies", label: "Inspection Standards", icon: Gauge },
-    ] : []),
+    { key: "appearance", label: "Appearance & Access", icon: Sparkles },
+    { key: "channels", label: "Channels", icon: Phone },
+    { key: "site-config", label: "Branding", icon: Palette },
+    ...(locationCount > 1 ? [{ key: "locations", label: "Locations", icon: MapPin }] : []),
+    { key: "offer-settings", label: "Offer Logic", icon: Settings, badge: pricingAccessRequestCount > 0 ? String(pricingAccessRequestCount) : undefined, badgeVariant: "destructive" as const },
+    { key: "form-config", label: "Lead Form", icon: FileText },
+    { key: "inspection-config", label: "Inspection Sheet", icon: ListChecks },
+    { key: "photo-config", label: "Photo Requirements", icon: Camera },
+    { key: "depth-policies", label: "Inspection Standards", icon: Gauge },
   ].filter((item) => isAllowed(item.key));
 
   // ── MY ── Per-user surfaces every staff member benefits from
@@ -253,16 +228,14 @@ const AdminSidebar = ({
   // (White Label, Integrations, API, vAuto) tail this group so they
   // stay grouped with operational tooling rather than dealer identity.
   const setupProcessItems: SidebarItem[] = [
-    ...(canManageAccess ? [
-      { key: "promotions", label: "Promotions", icon: Megaphone },
-      { key: "referrals", label: "Referral Program", icon: Award },
-      { key: "notifications", label: "Notifications", icon: Bell },
-      { key: "landing-flow", label: "Landing & Flow", icon: Layout },
-      ...(locationCount > 1 ? [{ key: "rooftop-websites", label: "Rooftop Websites", icon: Globe }] : []),
-      { key: "testimonials", label: "Testimonials", icon: MessageSquareQuote },
-      { key: "embed-toolkit", label: "Website Embed", icon: Code2 },
-    ] : []),
-    ...(canManageAccess && (enterpriseBetaEnabled || isPlatformAdmin)
+    { key: "promotions", label: "Promotions", icon: Megaphone },
+    { key: "referrals", label: "Referral Program", icon: Award },
+    { key: "notifications", label: "Notifications", icon: Bell },
+    { key: "landing-flow", label: "Landing & Flow", icon: Layout },
+    ...(locationCount > 1 ? [{ key: "rooftop-websites", label: "Rooftop Websites", icon: Globe }] : []),
+    { key: "testimonials", label: "Testimonials", icon: MessageSquareQuote },
+    { key: "embed-toolkit", label: "Website Embed", icon: Code2 },
+    ...(enterpriseBetaEnabled || isPlatformAdmin
       ? [
           { key: "white-label", label: "White Label", icon: Paintbrush },
           { key: "integrations-status", label: "Integrations", icon: Activity },
@@ -272,16 +245,18 @@ const AdminSidebar = ({
       : []),
   ].filter((item) => isAllowed(item.key));
 
-  // ── ACCOUNT ── Staff & Permissions, Plan, Dealer Setup, System Settings
-  const teamBadgeCount = canManageAccess ? pendingRequestCount + permissionRequestCount : 0;
+  // ── ACCOUNT ── Staff & Permissions, Plan, Dealer Setup, System
+  // Settings. Cascade-gated. Plan is hidden on the platform tenant
+  // since the super-admin doesn't pay for itself.
+  const teamBadgeCount = pendingRequestCount + permissionRequestCount;
   const accountItems: SidebarItem[] = [
-    ...(canManageAccess ? [{ key: "staff", label: "Staff & Permissions", icon: Users, badge: teamBadgeCount > 0 ? String(teamBadgeCount) : undefined, badgeVariant: "destructive" as const }] : []),
-    ...(canManageAccess && !isPlatformAdmin
+    { key: "staff", label: "Staff & Permissions", icon: Users, badge: teamBadgeCount > 0 ? String(teamBadgeCount) : undefined, badgeVariant: "destructive" as const },
+    ...(!isPlatformAdmin
       ? [{ key: "my-plan", label: "Plan", icon: CreditCard, href: "/plan" }]
       : []),
-    ...(canManageAccess ? [{ key: "onboarding", label: "Dealer Setup", icon: Rocket }] : []),
-    ...(canManageAccess ? [{ key: "system-settings", label: "System Settings", icon: SlidersHorizontal }] : []),
-    ...(canManageAccess ? [{ key: "changelog", label: "Platform Updates", icon: ScrollText }] : []),
+    { key: "onboarding", label: "Dealer Setup", icon: Rocket },
+    { key: "system-settings", label: "System Settings", icon: SlidersHorizontal },
+    { key: "changelog", label: "Platform Updates", icon: ScrollText },
   ].filter((item) => isAllowed(item.key));
 
   // ── PLATFORM ── Super-admin only, cross-tenant operations
