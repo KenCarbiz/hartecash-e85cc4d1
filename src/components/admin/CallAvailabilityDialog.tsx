@@ -93,21 +93,55 @@ const CallAvailabilityDialog = ({ open, onOpenChange, userId, userLabel, onSaved
       return;
     }
     setSaving(true);
-    const { error } = await supabase
-      .from("user_roles")
-      .update({
-        click_to_dial_dnd: form.dnd,
-        click_to_dial_quiet_start: form.quietStart || null,
-        click_to_dial_quiet_end: form.quietEnd || null,
-        click_to_dial_quiet_tz: (form.quietStart && form.quietEnd) ? form.quietTz : null,
-      })
-      .eq("user_id", userId);
+
+    // Schema-cache resilience — same pattern as AppearanceSettings.
+    // 20260429140000_click_to_dial_v2 + the 20260429190000 heal both
+    // add the click_to_dial_* columns, but environments where the
+    // PostgREST cache is stale will reject the UPDATE with "Could
+    // not find the 'X' column of 'user_roles'". Loop and strip
+    // missing columns until either the update succeeds or we hit a
+    // different error.
+    const tryUpdate = async (payload: Record<string, unknown>) => {
+      return supabase.from("user_roles").update(payload).eq("user_id", userId);
+    };
+
+    let payload: Record<string, unknown> = {
+      click_to_dial_dnd: form.dnd,
+      click_to_dial_quiet_start: form.quietStart || null,
+      click_to_dial_quiet_end: form.quietEnd || null,
+      click_to_dial_quiet_tz: (form.quietStart && form.quietEnd) ? form.quietTz : null,
+    };
+    const stripped: string[] = [];
+    let result = await tryUpdate(payload);
+    const maxAttempts = Object.keys(payload).length;
+    let attempts = 0;
+    while (
+      result.error &&
+      attempts < maxAttempts &&
+      /Could not find the '([^']+)' column/.test(String(result.error.message || ""))
+    ) {
+      const m = String(result.error.message).match(/Could not find the '([^']+)' column/);
+      const missingCol = m?.[1];
+      if (!missingCol || !(missingCol in payload)) break;
+      delete payload[missingCol];
+      stripped.push(missingCol);
+      attempts++;
+      result = await tryUpdate(payload);
+    }
+
     setSaving(false);
-    if (error) {
-      toast({ title: "Couldn't save", description: error.message, variant: "destructive" });
+    if (result.error) {
+      toast({ title: "Couldn't save", description: result.error.message, variant: "destructive" });
       return;
     }
-    toast({ title: "Availability saved" });
+    if (stripped.length > 0) {
+      toast({
+        title: "Saved (with caveat)",
+        description: `Some availability fields couldn't be saved on this environment yet — ask the admin to apply migration 20260429190000_user_roles_heal_click_to_dial.sql. Skipped: ${stripped.join(", ")}.`,
+      });
+    } else {
+      toast({ title: "Availability saved" });
+    }
     onSaved?.();
     onOpenChange(false);
   };
