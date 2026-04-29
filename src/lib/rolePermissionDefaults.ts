@@ -9,6 +9,17 @@
  * DEFAULT_ROLES array drives column order in the matrix.
  */
 
+/**
+ * Roles that show as columns in the permissions matrix. The first
+ * 10 are values of the app_role enum; "appraiser" is the additive
+ * is_appraiser flag on user_roles, surfaced as a matrix column so
+ * admins can pick what an appraiser sees beyond their primary role.
+ *
+ * Permission resolution treats appraiser additively: a user with
+ * is_appraiser=true gets the union of their role's allowed sections
+ * AND the appraiser row's allowed sections. The other roles are
+ * mutually exclusive (a user has exactly one).
+ */
 export const DEFAULT_ROLES = [
   "admin",
   "gsm_gm",
@@ -19,9 +30,19 @@ export const DEFAULT_ROLES = [
   "sales_bdc",
   "sales",
   "receptionist",
+  "appraiser",
   "user",
 ] as const;
 export type RoleKey = (typeof DEFAULT_ROLES)[number];
+
+/**
+ * Roles that are stored in the app_role enum on user_roles.role.
+ * Excludes "appraiser" which is the additive flag user_roles.is_appraiser.
+ * Used by the resolver to know which column of the matrix to apply
+ * for the user's primary role vs which column to OR with when the
+ * appraiser flag is set.
+ */
+export const ADDITIVE_ROLES: ReadonlyArray<RoleKey> = ["appraiser"] as const;
 
 export const SECTION_GROUPS: Array<{ label: string; sections: Array<{ key: string; label: string }> }> = [
   {
@@ -139,6 +160,19 @@ const RECEPTIONIST_SET = new Set([
   "my-lead-link", "my-referrals", "my-availability",
 ]);
 
+// Appraiser is additive — these are the sections we union with
+// the user's primary-role set when is_appraiser=true. Pure
+// appraisal-workflow surfaces; nothing the role wouldn't already
+// see if they're a manager. Tenant admins can broaden via the
+// matrix.
+const APPRAISER_SET = new Set([
+  "appraiser-queue",
+  "image-inventory",
+  "depth-policies",
+  "inspection-config",
+  "photo-config",
+]);
+
 const USER_SET = new Set([
   "today",
   "my-lead-link", "my-referrals", "my-availability",
@@ -154,6 +188,7 @@ const ROLE_DEFAULT_SETS: Record<RoleKey, Set<string>> = {
   sales_bdc: SALES_SET,
   sales: SALES_SET,
   receptionist: RECEPTIONIST_SET,
+  appraiser: APPRAISER_SET,
   user: USER_SET,
 };
 

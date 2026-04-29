@@ -11,6 +11,15 @@ import {
 } from "@/lib/rolePermissionDefaults";
 import { ROLE_LABELS } from "@/lib/adminConstants";
 
+// Matrix-only label overrides. Appraiser isn't in the app_role enum
+// (it's the additive is_appraiser flag), so it's not in ROLE_LABELS.
+// Add it here so the column header reads "Appraiser" not "appraiser".
+const MATRIX_ROLE_LABELS: Record<string, string> = {
+  ...ROLE_LABELS,
+  appraiser: "Appraiser",
+  user: "User",
+};
+
 interface OverrideRow {
   role: string;
   section_key: string;
@@ -258,7 +267,7 @@ const RolePermissionsMatrix = () => {
                 </th>
                 {DEFAULT_ROLES.map((role) => (
                   <th key={role} className="px-2 py-2 font-semibold whitespace-nowrap text-center">
-                    {ROLE_LABELS[role] || role}
+                    {MATRIX_ROLE_LABELS[role] || role}
                   </th>
                 ))}
               </tr>
@@ -285,7 +294,7 @@ const RolePermissionsMatrix = () => {
                             <button
                               onClick={() => toggleCell(role, section.key)}
                               onDoubleClick={() => resetCellToDefault(role, section.key)}
-                              title={`${ROLE_LABELS[role] || role} can ${allowed ? "see" : "NOT see"} ${section.label}.${overridden ? " Overridden — double-click to reset to default." : ""}`}
+                              title={`${MATRIX_ROLE_LABELS[role] || role} can ${allowed ? "see" : "NOT see"} ${section.label}.${overridden ? " Overridden — double-click to reset to default." : ""}`}
                               className={`relative w-8 h-8 rounded-md border transition-colors ${
                                 allowed
                                   ? "bg-emerald-500/15 border-emerald-500/40 hover:bg-emerald-500/25"
@@ -313,6 +322,7 @@ const RolePermissionsMatrix = () => {
       <div className="text-[11px] text-muted-foreground space-y-1">
         <p>· Click a cell to toggle. Amber ring = the cell is overriding the built-in default.</p>
         <p>· Double-click an overridden cell to reset it to the built-in default.</p>
+        <p>· <strong>Appraiser is additive</strong> — its row is OR'd with the user's primary-role row when their <span className="font-mono">is_appraiser</span> flag is on. Other roles are mutually exclusive.</p>
         <p>· Per-store overrides ship in Phase 2 — today every change applies group-wide.</p>
       </div>
     </div>
