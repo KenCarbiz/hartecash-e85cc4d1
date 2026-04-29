@@ -28,6 +28,7 @@ import { UserCheck as UserCheckIcon } from "lucide-react";
 const AppointmentManager = React.lazy(() => import("./AppointmentManager"));
 const StaffManagement = React.lazy(() => import("./StaffManagement"));
 const PermissionManagement = React.lazy(() => import("./PermissionManagement"));
+const RolePermissionsMatrix = React.lazy(() => import("./RolePermissionsMatrix"));
 const ConsentLog = React.lazy(() => import("./ConsentLog"));
 const CommunicationLog = React.lazy(() => import("./CommunicationLog"));
 const VoiceComplianceLog = React.lazy(() => import("./VoiceComplianceLog"));
@@ -302,6 +303,10 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
         <StaffManagement />
         {canManageAccess && (
           <>
+            <div className="border-t border-border pt-6">
+              <h2 className="text-lg font-semibold text-card-foreground mb-4">Role Permissions</h2>
+              <RolePermissionsMatrix />
+            </div>
             <div className="border-t border-border pt-6">
               <h2 className="text-lg font-semibold text-card-foreground mb-4">Permission Groups</h2>
               <PermissionManagement />
