@@ -43,49 +43,132 @@ const cellKey = (role: string, section: string) => `${role}::${section}`;
  * group" / "per-store" toggle so multi-rooftop dealers can split or
  * unify their access policy.
  */
+interface DealerLocation { id: string; name: string }
+
 const RolePermissionsMatrix = () => {
   const { tenant } = useTenant();
   const { toast } = useToast();
 
+  // Scope of edits:
+  //   "tenant"       — tenant-wide rows (location_id IS NULL).
+  //   "<location_id>" — per-store override.
+  // Platform admin on the default tenant edits PLATFORM DEFAULTS in
+  // tenant scope; that's surfaced as a different banner so they
+  // don't confuse it with a regular dealer's settings.
+  const [scope, setScope] = useState<string>("tenant");
+  const [locations, setLocations] = useState<DealerLocation[]>([]);
+
+  // This-scope rows (tenant-wide OR per-store, depending on scope).
+  // The cells the admin is currently editing.
   const [overrides, setOverrides] = useState<Map<string, boolean>>(new Map());
+  // Tenant-wide rows — used as the baseline when the admin is in
+  // per-store scope so the matrix shows what the store would inherit
+  // from the tenant if it didn't override.
+  const [tenantBaseline, setTenantBaseline] = useState<Map<string, boolean>>(new Map());
+  // Platform-default rows — used as the baseline when the admin is
+  // in tenant scope on a regular dealer. Falls through to the FE
+  // builtin map when no platform default exists.
+  const [platformBaseline, setPlatformBaseline] = useState<Map<string, boolean>>(new Map());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   // Pending in-memory edits (not yet persisted). Map cell-key → bool.
   const [pending, setPending] = useState<Map<string, boolean>>(new Map());
 
+  const isPlatformDefault = tenant.dealership_id === "default";
+  const scopeLocationId = scope === "tenant" ? null : scope;
+
+  // Load locations once so the scope dropdown can offer per-store
+  // overrides for multi-rooftop dealers.
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      setLoading(true);
       const { data } = await supabase
-        .from("tenant_role_section_permissions")
-        .select("role, section_key, allowed")
+        .from("dealership_locations")
+        .select("id, name")
         .eq("dealership_id", tenant.dealership_id)
-        .is("location_id", null);
-      if (cancelled) return;
-      const m = new Map<string, boolean>();
-      ((data as OverrideRow[]) || []).forEach((r) => {
-        m.set(cellKey(r.role, r.section_key), r.allowed);
-      });
-      setOverrides(m);
-      setPending(new Map());
-      setLoading(false);
+        .order("name", { ascending: true });
+      if (!cancelled) setLocations((data || []) as DealerLocation[]);
     })();
     return () => { cancelled = true; };
   }, [tenant.dealership_id]);
 
-  // Effective cell value: pending edit > saved override > built-in default.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+
+      // 1. This-scope override rows — the cells the admin is editing.
+      let q = supabase
+        .from("tenant_role_section_permissions")
+        .select("role, section_key, allowed")
+        .eq("dealership_id", tenant.dealership_id);
+      q = scopeLocationId === null ? q.is("location_id", null) : q.eq("location_id", scopeLocationId);
+      const scopeReq = q;
+
+      // 2. Tenant-wide baseline (only matters when scope is per-store).
+      const tenantReq = scopeLocationId !== null
+        ? supabase
+            .from("tenant_role_section_permissions")
+            .select("role, section_key, allowed")
+            .eq("dealership_id", tenant.dealership_id)
+            .is("location_id", null)
+        : Promise.resolve({ data: [] as OverrideRow[] });
+
+      // 3. Platform default baseline (skip when we ARE the platform).
+      const platformReq = !isPlatformDefault
+        ? supabase
+            .from("tenant_role_section_permissions")
+            .select("role, section_key, allowed")
+            .eq("dealership_id", "default")
+            .is("location_id", null)
+        : Promise.resolve({ data: [] as OverrideRow[] });
+
+      const [{ data }, tenantRes, platformRes] = await Promise.all([scopeReq, tenantReq, platformReq]);
+      if (cancelled) return;
+
+      const m = new Map<string, boolean>();
+      ((data as OverrideRow[]) || []).forEach((r) => m.set(cellKey(r.role, r.section_key), r.allowed));
+      setOverrides(m);
+
+      const tm = new Map<string, boolean>();
+      ((tenantRes.data as OverrideRow[]) || []).forEach((r) => tm.set(cellKey(r.role, r.section_key), r.allowed));
+      setTenantBaseline(tm);
+
+      const pm = new Map<string, boolean>();
+      ((platformRes.data as OverrideRow[]) || []).forEach((r) => pm.set(cellKey(r.role, r.section_key), r.allowed));
+      setPlatformBaseline(pm);
+
+      setPending(new Map());
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [tenant.dealership_id, scopeLocationId, isPlatformDefault]);
+
+  // Cascade-aware baseline — what the cell would resolve to if THIS
+  // scope didn't override. Drives the "is this cell overriding
+  // anything?" check + the matches-default cleanup on save.
+  //   - per-store scope:  tenant override > platform default > builtin
+  //   - tenant scope:     platform default > builtin
+  //   - platform scope:   builtin
+  const baselineFor = (role: string, section: string): boolean => {
+    const k = cellKey(role, section);
+    if (scopeLocationId !== null && tenantBaseline.has(k)) return tenantBaseline.get(k)!;
+    if (!isPlatformDefault && platformBaseline.has(k)) return platformBaseline.get(k)!;
+    return defaultAllowedForRole(role, section);
+  };
+
+  // Effective cell value: pending edit > this-scope override > baseline cascade.
   const cellValue = (role: string, section: string): boolean => {
     const k = cellKey(role, section);
     if (pending.has(k)) return pending.get(k)!;
     if (overrides.has(k)) return overrides.get(k)!;
-    return defaultAllowedForRole(role, section);
+    return baselineFor(role, section);
   };
 
-  // Whether this cell currently differs from the built-in default.
+  // Whether this cell currently differs from the cascade baseline.
   const isOverridden = (role: string, section: string): boolean => {
     const k = cellKey(role, section);
-    if (pending.has(k)) return pending.get(k) !== defaultAllowedForRole(role, section);
+    if (pending.has(k)) return pending.get(k) !== baselineFor(role, section);
     return overrides.has(k);
   };
 
@@ -96,7 +179,7 @@ const RolePermissionsMatrix = () => {
     const next = !cellValue(role, section);
     setPending((prev) => {
       const m = new Map(prev);
-      const def = defaultAllowedForRole(role, section);
+      const def = baselineFor(role, section);
       const saved = overrides.has(k) ? overrides.get(k) : null;
       // If the new value matches the saved override, remove the
       // pending edit (it's a no-op).
@@ -104,7 +187,7 @@ const RolePermissionsMatrix = () => {
         m.delete(k);
         return m;
       }
-      // If the new value matches the built-in default AND there's no
+      // If the new value matches the cascade baseline AND there's no
       // saved override, also remove (also a no-op).
       if (saved === null && next === def) {
         m.delete(k);
@@ -117,7 +200,7 @@ const RolePermissionsMatrix = () => {
 
   const resetCellToDefault = (role: string, section: string) => {
     const k = cellKey(role, section);
-    const def = defaultAllowedForRole(role, section);
+    const def = baselineFor(role, section);
     setPending((prev) => {
       const m = new Map(prev);
       // If there's a saved override, queue a delete (encoded as
@@ -138,19 +221,19 @@ const RolePermissionsMatrix = () => {
     setSaving(true);
     const { data: u } = await supabase.auth.getUser();
     const userId = u?.user?.id ?? null;
-    const upserts: Array<{ dealership_id: string; role: string; section_key: string; allowed: boolean; updated_by: string | null; updated_at: string; location_id: null }> = [];
+    const upserts: Array<{ dealership_id: string; role: string; section_key: string; allowed: boolean; updated_by: string | null; updated_at: string; location_id: string | null }> = [];
     const deletes: Array<{ role: string; section_key: string }> = [];
 
     pending.forEach((v, k) => {
       const [role, section] = k.split("::");
-      const def = defaultAllowedForRole(role, section);
+      const def = baselineFor(role, section);
       if (v === def) {
-        // Matches default → drop any saved override.
+        // Matches the cascade baseline → drop any saved override at THIS scope.
         deletes.push({ role, section_key: section });
       } else {
         upserts.push({
           dealership_id: tenant.dealership_id,
-          location_id: null,
+          location_id: scopeLocationId,
           role,
           section_key: section,
           allowed: v,
@@ -168,13 +251,14 @@ const RolePermissionsMatrix = () => {
       if (error) firstError = error;
     }
     for (const d of deletes) {
-      const { error } = await supabase
+      let q = supabase
         .from("tenant_role_section_permissions")
         .delete()
         .eq("dealership_id", tenant.dealership_id)
-        .is("location_id", null)
         .eq("role", d.role)
         .eq("section_key", d.section_key);
+      q = scopeLocationId === null ? q.is("location_id", null) : q.eq("location_id", scopeLocationId);
+      const { error } = await q;
       if (!firstError && error) firstError = error;
     }
 
@@ -189,7 +273,7 @@ const RolePermissionsMatrix = () => {
       const m = new Map(prev);
       pending.forEach((v, k) => {
         const [role, section] = k.split("::");
-        const def = defaultAllowedForRole(role, section);
+        const def = baselineFor(role, section);
         if (v === def) {
           m.delete(k);
         } else {
@@ -211,7 +295,7 @@ const RolePermissionsMatrix = () => {
     pending.forEach((v, k) => {
       const [role, section] = k.split("::");
       const wasOverridden = overrides.has(k);
-      const willBeOverridden = v !== defaultAllowedForRole(role, section);
+      const willBeOverridden = v !== baselineFor(role, section);
       if (!wasOverridden && willBeOverridden) total++;
       if (wasOverridden && !willBeOverridden) total--;
     });
@@ -228,23 +312,47 @@ const RolePermissionsMatrix = () => {
 
   return (
     <div className="space-y-4">
+      {isPlatformDefault && (
+        <div className="rounded-lg border border-purple-500/40 bg-purple-500/5 px-3 py-2.5 text-xs text-purple-700 dark:text-purple-400">
+          <strong className="font-bold">Platform defaults — super admin view.</strong> Changes here become the seed for every new dealer onboarded. Existing dealers won't be affected unless they re-seed from defaults.
+        </div>
+      )}
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <h3 className="text-base font-bold flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-primary" />
-            Role permissions matrix
+            {isPlatformDefault ? "Platform default permissions" : "Role permissions matrix"}
           </h3>
           <p className="text-xs text-muted-foreground mt-1 max-w-2xl">
-            Override which sidebar sections each role can open. Cells start at the built-in default and turn into a tenant override the moment you flip them. The page-level access guard (admin) and the route-level checks still apply on top — this matrix only adjusts visibility.
+            {isPlatformDefault
+              ? "Set the default per-role section visibility every new dealer starts with. Each tenant can override these afterwards in their own Staff & Permissions page."
+              : "Override which sidebar sections each role can open. Cells resolve in order: per-store > tenant > platform default > built-in. The matrix only adjusts visibility — page-level admin guards still apply."}
           </p>
           <p className="text-[11px] text-muted-foreground mt-1">
             <Badge variant="outline" className="text-[10px] mr-1.5">{overrideCount}</Badge>
-            overrides active for this tenant ·{" "}
+            overrides at this scope ·{" "}
             <Badge variant="outline" className="text-[10px] mr-1.5">{dirtyCount}</Badge>
             unsaved
           </p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 flex-wrap">
+          {/* Scope selector — only renders for multi-rooftop dealers.
+              Platform admin view stays tenant-scoped (the "default"
+              dealer doesn't have locations). */}
+          {!isPlatformDefault && locations.length > 1 && (
+            <select
+              value={scope}
+              onChange={(e) => setScope(e.target.value)}
+              disabled={dirtyCount > 0}
+              className="h-9 px-2 text-xs rounded-md border border-border bg-background outline-none focus:border-primary/40"
+              title={dirtyCount > 0 ? "Save or discard pending edits before changing scope" : "Switch between tenant-wide and per-store overrides"}
+            >
+              <option value="tenant">Whole tenant (group default)</option>
+              {locations.map((l) => (
+                <option key={l.id} value={l.id}>Per-store: {l.name}</option>
+              ))}
+            </select>
+          )}
           {dirtyCount > 0 && (
             <Button variant="outline" size="sm" onClick={discardChanges} disabled={saving}>
               Discard
