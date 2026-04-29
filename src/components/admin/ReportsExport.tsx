@@ -333,6 +333,49 @@ const ReportsExport = () => {
               />
             </div>
           </div>
+
+          {/* Quick-range presets — populate both From + To inputs in
+              one click. Same shortcuts most CRMs offer. */}
+          <div className="flex flex-wrap items-center gap-1.5 mt-3">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mr-1">
+              Quick range:
+            </span>
+            {(() => {
+              const toIso = (d: Date) => d.toISOString().slice(0, 10);
+              const today = new Date();
+              const startOf = (d: Date) => { const x = new Date(d); x.setHours(0,0,0,0); return x; };
+              const presets: Array<{ label: string; from: () => string; to: () => string }> = [
+                { label: "Today", from: () => toIso(startOf(today)), to: () => toIso(today) },
+                { label: "7d", from: () => toIso(new Date(Date.now() - 7 * 86400000)), to: () => toIso(today) },
+                { label: "30d", from: () => toIso(new Date(Date.now() - 30 * 86400000)), to: () => toIso(today) },
+                { label: "90d", from: () => toIso(new Date(Date.now() - 90 * 86400000)), to: () => toIso(today) },
+                { label: "This month", from: () => toIso(new Date(today.getFullYear(), today.getMonth(), 1)), to: () => toIso(today) },
+                { label: "Last month", from: () => toIso(new Date(today.getFullYear(), today.getMonth() - 1, 1)), to: () => toIso(new Date(today.getFullYear(), today.getMonth(), 0)) },
+                { label: "YTD", from: () => toIso(new Date(today.getFullYear(), 0, 1)), to: () => toIso(today) },
+              ];
+              return (
+                <>
+                  {presets.map((p) => (
+                    <button
+                      key={p.label}
+                      onClick={() => { setDateFrom(p.from()); setDateTo(p.to()); }}
+                      className="text-[11px] font-semibold px-2.5 py-1 rounded-md border border-border bg-card hover:bg-muted transition-colors"
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                  {(dateFrom || dateTo) && (
+                    <button
+                      onClick={() => { setDateFrom(""); setDateTo(""); }}
+                      className="text-[11px] font-semibold px-2.5 py-1 rounded-md border border-destructive/40 bg-card hover:bg-destructive/10 text-destructive transition-colors"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </>
+              );
+            })()}
+          </div>
         </div>
       </div>
 
