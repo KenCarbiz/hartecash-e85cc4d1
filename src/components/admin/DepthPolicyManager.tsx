@@ -47,6 +47,15 @@ const COMMON_BRANDS = [
 
 const DepthPolicyManager = () => {
   const [policies, setPolicies] = useState<DepthPolicy[]>([]);
+  // Snapshot of policies as of last fetch — used to compute the
+  // "what will change" preview when an admin edits min_tire_depth or
+  // min_brake_depth before saving.
+  const [originals, setOriginals] = useState<Map<string, DepthPolicy>>(new Map());
+  // Per-policy preview: how many submissions in the current dealer's
+  // history would flip pass→fail (or fail→pass) under the new
+  // thresholds. Computed on-demand when thresholds dirty.
+  const [previews, setPreviews] = useState<Map<string, { loading: boolean; flipped: number; nowFails: number; nowPasses: number; total: number }>>(new Map());
+  const [confirmSaveId, setConfirmSaveId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -64,8 +73,80 @@ const DepthPolicyManager = () => {
       .select("*")
       .eq("dealership_id", dealershipId)
       .order("sort_order");
-    if (data) setPolicies(data as DepthPolicy[]);
+    if (data) {
+      setPolicies(data as DepthPolicy[]);
+      const m = new Map<string, DepthPolicy>();
+      (data as DepthPolicy[]).forEach((p) => m.set(p.id, { ...p }));
+      setOriginals(m);
+    }
     setLoading(false);
+  };
+
+  // Recompute the impact preview for a single policy. Pulls the
+  // dealership's submission tire/brake values once, evaluates each
+  // against old + new thresholds, counts the flips. Cached in
+  // `previews` keyed by policy id.
+  const previewImpact = async (policyId: string) => {
+    const p = policies.find((x) => x.id === policyId);
+    const orig = originals.get(policyId);
+    if (!p || !orig) return;
+    setPreviews((prev) => {
+      const m = new Map(prev);
+      m.set(policyId, { loading: true, flipped: 0, nowFails: 0, nowPasses: 0, total: 0 });
+      return m;
+    });
+    const { data } = await supabase
+      .from("submissions")
+      .select("tire_lf, tire_rf, tire_lr, tire_rr, brake_lf, brake_rf, brake_lr, brake_rr")
+      .eq("dealership_id", dealershipId)
+      .or(
+        "tire_lf.not.is.null,tire_rf.not.is.null,tire_lr.not.is.null,tire_rr.not.is.null," +
+        "brake_lf.not.is.null,brake_rf.not.is.null,brake_lr.not.is.null,brake_rr.not.is.null",
+      )
+      .limit(5000);
+
+    type Row = {
+      tire_lf: number | null; tire_rf: number | null; tire_lr: number | null; tire_rr: number | null;
+      brake_lf: number | null; brake_rf: number | null; brake_lr: number | null; brake_rr: number | null;
+    };
+    const rows = (data as Row[]) || [];
+    const evalPass = (r: Row, minTire: number, minBrake: number): boolean => {
+      const tires = [r.tire_lf, r.tire_rf, r.tire_lr, r.tire_rr].filter((v): v is number => v != null);
+      const brakes = [r.brake_lf, r.brake_rf, r.brake_lr, r.brake_rr].filter((v): v is number => v != null);
+      // If no readings, treat as "not evaluated" — no impact either way.
+      if (tires.length === 0 && brakes.length === 0) return true;
+      if (tires.length > 0 && Math.min(...tires) < minTire) return false;
+      if (brakes.length > 0 && Math.min(...brakes) < minBrake) return false;
+      return true;
+    };
+
+    let total = 0;
+    let nowFails = 0;
+    let nowPasses = 0;
+    rows.forEach((r) => {
+      const tires = [r.tire_lf, r.tire_rf, r.tire_lr, r.tire_rr].filter((v): v is number => v != null);
+      const brakes = [r.brake_lf, r.brake_rf, r.brake_lr, r.brake_rr].filter((v): v is number => v != null);
+      if (tires.length === 0 && brakes.length === 0) return;
+      total += 1;
+      const oldPass = evalPass(r, orig.min_tire_depth, orig.min_brake_depth);
+      const newPass = evalPass(r, p.min_tire_depth, p.min_brake_depth);
+      if (oldPass && !newPass) nowFails += 1;
+      if (!oldPass && newPass) nowPasses += 1;
+    });
+
+    setPreviews((prev) => {
+      const m = new Map(prev);
+      m.set(policyId, { loading: false, flipped: nowFails + nowPasses, nowFails, nowPasses, total });
+      return m;
+    });
+  };
+
+  // Has the policy's threshold changed from saved? Used to gate the
+  // preview render + the confirmation dialog.
+  const isThresholdDirty = (p: DepthPolicy): boolean => {
+    const orig = originals.get(p.id);
+    if (!orig) return false;
+    return orig.min_tire_depth !== p.min_tire_depth || orig.min_brake_depth !== p.min_brake_depth;
   };
 
   const addPolicy = async () => {
@@ -101,6 +182,10 @@ const DepthPolicyManager = () => {
     }).eq("id", policy.id);
     setSaving(null);
     if (error) { toast({ title: "Error saving", variant: "destructive" }); return; }
+    // Re-baseline the originals snapshot for this policy so the
+    // dirty-threshold UI clears immediately. Drop the cached preview.
+    setOriginals((prev) => { const m = new Map(prev); m.set(policy.id, { ...policy }); return m; });
+    setPreviews((prev) => { const m = new Map(prev); m.delete(policy.id); return m; });
     toast({ title: "Policy saved" });
   };
 
@@ -192,7 +277,21 @@ const DepthPolicyManager = () => {
                     onCheckedChange={v => updateLocal(policy.id, { is_active: v })}
                   />
                 </div>
-                <Button size="sm" variant="ghost" onClick={() => updatePolicy(policy)} disabled={saving === policy.id}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    // If the threshold changed AND we have a preview
+                    // showing impact, route through the confirmation
+                    // dialog. Otherwise save directly.
+                    const preview = previews.get(policy.id);
+                    if (isThresholdDirty(policy) && preview && !preview.loading && preview.flipped > 0) {
+                      setConfirmSaveId(policy.id);
+                    } else {
+                      updatePolicy(policy);
+                    }
+                  }}
+                  disabled={saving === policy.id}>
                   <Save className="w-3.5 h-3.5" />
                 </Button>
                 <Button size="sm" variant="ghost" className="text-destructive" onClick={() => deletePolicy(policy.id)}>
@@ -252,7 +351,14 @@ const DepthPolicyManager = () => {
                 <Input
                   type="number" min={1} max={10}
                   value={policy.min_tire_depth}
-                  onChange={e => updateLocal(policy.id, { min_tire_depth: Number(e.target.value) })}
+                  onChange={e => {
+                    updateLocal(policy.id, { min_tire_depth: Number(e.target.value) });
+                    // Invalidate preview — debounced re-fetch via the
+                    // dirty-state effect below would be cleaner, but
+                    // for this small surface a click-to-preview button
+                    // is enough.
+                    setPreviews((prev) => { const m = new Map(prev); m.delete(policy.id); return m; });
+                  }}
                   className="h-8 text-sm font-bold mt-1"
                 />
               </div>
@@ -263,7 +369,10 @@ const DepthPolicyManager = () => {
                 <Input
                   type="number" min={1} max={10}
                   value={policy.min_brake_depth}
-                  onChange={e => updateLocal(policy.id, { min_brake_depth: Number(e.target.value) })}
+                  onChange={e => {
+                    updateLocal(policy.id, { min_brake_depth: Number(e.target.value) });
+                    setPreviews((prev) => { const m = new Map(prev); m.delete(policy.id); return m; });
+                  }}
                   className="h-8 text-sm font-bold mt-1"
                 />
               </div>
@@ -299,9 +408,113 @@ const DepthPolicyManager = () => {
               {policy.max_vehicle_age_years ? ` — ≤ ${policy.max_vehicle_age_years} years old` : ""}
               {policy.max_mileage ? ` — ≤ ${policy.max_mileage.toLocaleString()} miles` : ""}
             </div>
+
+            {/* Threshold-change impact preview — appears whenever
+                the admin has edited the tire or brake minimum. The
+                preview button fetches the dealer's submission depth
+                history and counts how many vehicles would flip
+                pass→fail or fail→pass under the new thresholds. */}
+            {isThresholdDirty(policy) && (() => {
+              const orig = originals.get(policy.id);
+              const preview = previews.get(policy.id);
+              return (
+                <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 px-3 py-2.5 space-y-2">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-400">
+                      Thresholds changed:{" "}
+                      {orig && orig.min_tire_depth !== policy.min_tire_depth && (
+                        <span>tires {orig.min_tire_depth}→{policy.min_tire_depth}</span>
+                      )}
+                      {orig && orig.min_tire_depth !== policy.min_tire_depth && orig.min_brake_depth !== policy.min_brake_depth && " · "}
+                      {orig && orig.min_brake_depth !== policy.min_brake_depth && (
+                        <span>brakes {orig.min_brake_depth}→{policy.min_brake_depth}</span>
+                      )}
+                    </p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-[11px]"
+                      onClick={() => previewImpact(policy.id)}
+                      disabled={preview?.loading}
+                    >
+                      {preview?.loading ? "Calculating…" : preview ? "Recalculate" : "Preview impact"}
+                    </Button>
+                  </div>
+                  {preview && !preview.loading && (
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div className="rounded-md bg-background border border-border p-2">
+                        <div className="text-lg font-bold text-foreground">{preview.total}</div>
+                        <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-bold">Inspected</div>
+                      </div>
+                      <div className={`rounded-md border p-2 ${preview.nowFails > 0 ? "border-red-500/40 bg-red-500/5" : "border-border bg-background"}`}>
+                        <div className={`text-lg font-bold ${preview.nowFails > 0 ? "text-red-600" : "text-foreground"}`}>{preview.nowFails}</div>
+                        <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-bold">Now fails</div>
+                      </div>
+                      <div className={`rounded-md border p-2 ${preview.nowPasses > 0 ? "border-emerald-500/40 bg-emerald-500/5" : "border-border bg-background"}`}>
+                        <div className={`text-lg font-bold ${preview.nowPasses > 0 ? "text-emerald-600" : "text-foreground"}`}>{preview.nowPasses}</div>
+                        <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-bold">Now passes</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </CardContent>
         </Card>
       ))}
+
+      <AlertDialog open={!!confirmSaveId} onOpenChange={(open) => { if (!open) setConfirmSaveId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Threshold change will affect existing inspections</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                {(() => {
+                  if (!confirmSaveId) return null;
+                  const p = policies.find((x) => x.id === confirmSaveId);
+                  const orig = originals.get(confirmSaveId);
+                  const preview = previews.get(confirmSaveId);
+                  if (!p || !orig || !preview) return null;
+                  return (
+                    <>
+                      <p>
+                        <strong className="text-foreground">{p.name}</strong> — applying these new thresholds will change the pass/fail evaluation for past inspections in this dealership's history.
+                      </p>
+                      <div className="grid grid-cols-3 gap-2 text-center text-foreground">
+                        <div className="rounded-md border border-border p-2">
+                          <div className="text-lg font-bold">{preview.total}</div>
+                          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Inspected</div>
+                        </div>
+                        <div className="rounded-md border border-red-500/40 bg-red-500/5 p-2">
+                          <div className="text-lg font-bold text-red-600">{preview.nowFails}</div>
+                          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Now fails</div>
+                        </div>
+                        <div className="rounded-md border border-emerald-500/40 bg-emerald-500/5 p-2">
+                          <div className="text-lg font-bold text-emerald-600">{preview.nowPasses}</div>
+                          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Now passes</div>
+                        </div>
+                      </div>
+                      <p className="text-xs">
+                        Vehicles already acquired don't get retroactively re-graded — but new inspections + any future re-evaluations will use these thresholds. Continue?
+                      </p>
+                    </>
+                  );
+                })()}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              const p = policies.find((x) => x.id === confirmSaveId);
+              setConfirmSaveId(null);
+              if (p) updatePolicy(p);
+            }}>
+              Apply new thresholds
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={!!confirmDeleteId} onOpenChange={(open) => { if (!open) setConfirmDeleteId(null); }}>
         <AlertDialogContent>
