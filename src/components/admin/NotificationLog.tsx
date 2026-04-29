@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Search, Mail, Phone, CheckCircle, XCircle, AlertTriangle, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
+import { Loader2, Search, Mail, Phone, CheckCircle, XCircle, AlertTriangle, ChevronLeft, ChevronRight, RefreshCw, Download } from "lucide-react";
 
 interface LogEntry {
   id: string;
@@ -43,32 +43,66 @@ export default function NotificationLog() {
   const [filterTrigger, setFilterTrigger] = useState("all");
   const [filterChannel, setFilterChannel] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
+  // Full-filter stats — separate query so the "Sent / Failed / Error"
+  // numbers reflect the entire filtered set, not just the current page.
+  const [filterStats, setFilterStats] = useState<{ sent: number; failed: number; error: number }>({
+    sent: 0, failed: 0, error: 0,
+  });
+
+  // Common filter application — used by both the page query and the
+  // stats query so they always reflect the same WHERE clause.
+  const applyFilters = (q: ReturnType<typeof supabase.from>) => {
+    let r = q as ReturnType<ReturnType<typeof supabase.from>["select"]>;
+    if (filterTrigger !== "all") r = r.eq("trigger_key", filterTrigger);
+    if (filterChannel !== "all") r = r.eq("channel", filterChannel);
+    if (filterStatus !== "all") r = r.eq("status", filterStatus);
+    if (search.trim()) r = r.ilike("recipient", `%${search.trim()}%`);
+    if (dateFrom) r = r.gte("created_at", `${dateFrom}T00:00:00`);
+    if (dateTo) r = r.lte("created_at", `${dateTo}T23:59:59`);
+    return r;
+  };
 
   const fetchLogs = async () => {
     setLoading(true);
-    let query = supabase
-      .from("notification_log")
-      .select("*", { count: "exact" })
-      .order("created_at", { ascending: false });
-
-    if (filterTrigger !== "all") query = query.eq("trigger_key", filterTrigger);
-    if (filterChannel !== "all") query = query.eq("channel", filterChannel);
-    if (filterStatus !== "all") query = query.eq("status", filterStatus);
-    if (search.trim()) query = query.ilike("recipient", `%${search.trim()}%`);
-
-    query = query.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
-
-    const { data, count } = await query;
+    const base = supabase.from("notification_log").select("*", { count: "exact" }).order("created_at", { ascending: false });
+    const { data, count } = await applyFilters(base as unknown as ReturnType<typeof supabase.from>)
+      .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
     setLogs((data as LogEntry[]) || []);
     setTotalCount(count || 0);
+
+    // Stats across the FULL filtered set (status only, head-only).
+    const counts = await Promise.all(
+      (["sent", "failed", "error"] as const).map(async (s) => {
+        const q = supabase
+          .from("notification_log")
+          .select("*", { count: "exact", head: true });
+        let scoped = q as unknown as ReturnType<typeof supabase.from>;
+        // Re-apply non-status filters; force the status filter to s.
+        if (filterTrigger !== "all") scoped = (scoped as any).eq("trigger_key", filterTrigger);
+        if (filterChannel !== "all") scoped = (scoped as any).eq("channel", filterChannel);
+        if (search.trim()) scoped = (scoped as any).ilike("recipient", `%${search.trim()}%`);
+        if (dateFrom) scoped = (scoped as any).gte("created_at", `${dateFrom}T00:00:00`);
+        if (dateTo) scoped = (scoped as any).lte("created_at", `${dateTo}T23:59:59`);
+        const { count: c } = await (scoped as any).eq("status", s);
+        return [s, c || 0] as const;
+      }),
+    );
+    setFilterStats({
+      sent: counts.find(([s]) => s === "sent")?.[1] || 0,
+      failed: counts.find(([s]) => s === "failed")?.[1] || 0,
+      error: counts.find(([s]) => s === "error")?.[1] || 0,
+    });
     setLoading(false);
   };
 
   useEffect(() => {
     fetchLogs();
-  }, [filterTrigger, filterChannel, filterStatus, search, page]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterTrigger, filterChannel, filterStatus, search, dateFrom, dateTo, page]);
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
@@ -100,6 +134,52 @@ export default function NotificationLog() {
   // Get unique trigger keys from TRIGGER_LABELS
   const triggerOptions = Object.entries(TRIGGER_LABELS);
 
+  // CSV export — pulls up to 5000 rows matching the current filters
+  // (separate query because the visible page is paginated). Common
+  // ask for compliance audits and back-office reconciliation.
+  const [exporting, setExporting] = useState(false);
+  const exportCsv = async () => {
+    setExporting(true);
+    try {
+      const base = supabase
+        .from("notification_log")
+        .select("created_at, trigger_key, channel, recipient, status, error_message, submission_id")
+        .order("created_at", { ascending: false })
+        .limit(5000);
+      const { data } = await applyFilters(base as unknown as ReturnType<typeof supabase.from>);
+      const rows = (data as LogEntry[]) || [];
+      if (rows.length === 0) {
+        setExporting(false);
+        return;
+      }
+      const csvEscape = (s: string) => /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      const headers = ["When", "Trigger", "Channel", "Recipient", "Status", "Error", "Submission ID"];
+      const csv = [
+        headers.join(","),
+        ...rows.map((r) => [
+          r.created_at,
+          TRIGGER_LABELS[r.trigger_key] || r.trigger_key,
+          r.channel,
+          r.recipient,
+          r.status,
+          r.error_message || "",
+          r.submission_id || "",
+        ].map((v) => csvEscape(String(v))).join(",")),
+      ].join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `notification-log-${new Date().toISOString().slice(0, 10)}-${rows.length}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -107,9 +187,22 @@ export default function NotificationLog() {
           <h2 className="text-xl font-bold text-foreground">Notification Log</h2>
           <p className="text-sm text-muted-foreground">History of all email and SMS notifications sent</p>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchLogs} className="gap-1.5">
-          <RefreshCw className="w-3.5 h-3.5" /> Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={exportCsv}
+            disabled={exporting || totalCount === 0}
+            className="gap-1.5"
+            title="Export the filtered log as a CSV (up to 5000 rows)"
+          >
+            {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+            Export
+          </Button>
+          <Button variant="outline" size="sm" onClick={fetchLogs} className="gap-1.5">
+            <RefreshCw className="w-3.5 h-3.5" /> Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -157,23 +250,78 @@ export default function NotificationLog() {
         </Select>
       </div>
 
-      {/* Stats */}
+      {/* Date range presets — populate the From/To pickers in one
+          click. Same shortcuts as Reports (#89). */}
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mr-1">Range:</span>
+        {(() => {
+          const toIso = (d: Date) => d.toISOString().slice(0, 10);
+          const today = new Date();
+          const startOf = (d: Date) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
+          const presets: Array<{ label: string; from: () => string; to: () => string }> = [
+            { label: "Today", from: () => toIso(startOf(today)), to: () => toIso(today) },
+            { label: "7d", from: () => toIso(new Date(Date.now() - 7 * 86400000)), to: () => toIso(today) },
+            { label: "30d", from: () => toIso(new Date(Date.now() - 30 * 86400000)), to: () => toIso(today) },
+            { label: "90d", from: () => toIso(new Date(Date.now() - 90 * 86400000)), to: () => toIso(today) },
+            { label: "This month", from: () => toIso(new Date(today.getFullYear(), today.getMonth(), 1)), to: () => toIso(today) },
+            { label: "Last month", from: () => toIso(new Date(today.getFullYear(), today.getMonth() - 1, 1)), to: () => toIso(new Date(today.getFullYear(), today.getMonth(), 0)) },
+          ];
+          return (
+            <>
+              {presets.map((p) => (
+                <button
+                  key={p.label}
+                  onClick={() => { setDateFrom(p.from()); setDateTo(p.to()); setPage(0); }}
+                  className="text-[11px] font-semibold px-2 py-1 rounded-md border border-border bg-card hover:bg-muted transition-colors"
+                >
+                  {p.label}
+                </button>
+              ))}
+              <Input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => { setDateFrom(e.target.value); setPage(0); }}
+                className="h-7 text-[11px] w-[140px]"
+                aria-label="From date"
+              />
+              <Input
+                type="date"
+                value={dateTo}
+                onChange={(e) => { setDateTo(e.target.value); setPage(0); }}
+                className="h-7 text-[11px] w-[140px]"
+                aria-label="To date"
+              />
+              {(dateFrom || dateTo) && (
+                <button
+                  onClick={() => { setDateFrom(""); setDateTo(""); setPage(0); }}
+                  className="text-[11px] font-semibold px-2 py-1 rounded-md border border-destructive/40 text-destructive hover:bg-destructive/10 transition-colors"
+                >
+                  Clear
+                </button>
+              )}
+            </>
+          );
+        })()}
+      </div>
+
+      {/* Stats — full-filter totals via head-only count queries, not
+          just the visible page. */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="rounded-lg border border-border bg-card p-3 text-center">
           <p className="text-2xl font-bold text-foreground">{totalCount}</p>
           <p className="text-[11px] text-muted-foreground">Total</p>
         </div>
         <div className="rounded-lg border border-border bg-card p-3 text-center">
-          <p className="text-2xl font-bold text-green-600">{logs.filter(l => l.status === "sent").length}</p>
-          <p className="text-[11px] text-muted-foreground">Sent (page)</p>
+          <p className="text-2xl font-bold text-green-600">{filterStats.sent}</p>
+          <p className="text-[11px] text-muted-foreground">Sent</p>
         </div>
         <div className="rounded-lg border border-border bg-card p-3 text-center">
-          <p className="text-2xl font-bold text-red-600">{logs.filter(l => l.status === "failed").length}</p>
-          <p className="text-[11px] text-muted-foreground">Failed (page)</p>
+          <p className="text-2xl font-bold text-red-600">{filterStats.failed}</p>
+          <p className="text-[11px] text-muted-foreground">Failed</p>
         </div>
         <div className="rounded-lg border border-border bg-card p-3 text-center">
-          <p className="text-2xl font-bold text-orange-600">{logs.filter(l => l.status === "error").length}</p>
-          <p className="text-[11px] text-muted-foreground">Error (page)</p>
+          <p className="text-2xl font-bold text-orange-600">{filterStats.error}</p>
+          <p className="text-[11px] text-muted-foreground">Error</p>
         </div>
       </div>
 
