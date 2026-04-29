@@ -170,6 +170,8 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
   const [rows, setRows] = useState<QueueRow[]>([]);
   const [suggestions, setSuggestions] = useState<Record<string, AIReappraisalSuggestion>>({});
   const [loading, setLoading] = useState(true);
+  const [bucket, setBucket] = useState<"all" | "walk_ins" | "service" | "flagged" | "declined">("all");
+  const [search, setSearch] = useState("");
 
   const autoRoute = Boolean((config as any).auto_route_appraiser_queue);
   // Visibility: admins + any manager-tier role, OR anyone with the
@@ -353,6 +355,31 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
     });
   }, [rows]);
 
+  // Filtered list shown in the row stack — bucket from the tile +
+  // free-text search over name / vehicle / phone / email.
+  const visible = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return sorted.filter((r) => {
+      // Bucket gate
+      if (bucket !== "all") {
+        const reason = classifyRow(r);
+        const inBucket =
+          (bucket === "walk_ins" && (reason === "walk_in" || reason === "manual_entry")) ||
+          (bucket === "service" && reason === "service") ||
+          (bucket === "flagged" && reason === "flagged") ||
+          (bucket === "declined" && reason === "declined");
+        if (!inBucket) return false;
+      }
+      // Search gate
+      if (!q) return true;
+      const hay = [
+        r.name, r.email, r.phone,
+        r.vehicle_year, r.vehicle_make, r.vehicle_model, r.vin,
+      ].filter(Boolean).join(" ").toLowerCase();
+      return hay.includes(q);
+    });
+  }, [sorted, bucket, search]);
+
   // Counts per reason for the summary strip
   const counts = useMemo(() => {
     const c: Record<QueueReason, number> = {
@@ -413,12 +440,69 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
         </p>
       </header>
 
-      {/* KPI tiles */}
+      {/* KPI tiles — clickable to filter the list below to that bucket. */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <QueueTile label="Walk-ins" value={tileCounts.walk_ins} valueClass="text-red-600" />
-        <QueueTile label="Service drive" value={tileCounts.service} valueClass="text-orange-500" />
-        <QueueTile label="Flagged" value={tileCounts.flagged} valueClass="text-blue-600" />
-        <QueueTile label="Declined" value={tileCounts.declined} valueClass="text-foreground" />
+        <QueueTile
+          label="Walk-ins"
+          value={tileCounts.walk_ins}
+          valueClass="text-red-600"
+          active={bucket === "walk_ins"}
+          onClick={() => setBucket(bucket === "walk_ins" ? "all" : "walk_ins")}
+        />
+        <QueueTile
+          label="Service drive"
+          value={tileCounts.service}
+          valueClass="text-orange-500"
+          active={bucket === "service"}
+          onClick={() => setBucket(bucket === "service" ? "all" : "service")}
+        />
+        <QueueTile
+          label="Flagged"
+          value={tileCounts.flagged}
+          valueClass="text-blue-600"
+          active={bucket === "flagged"}
+          onClick={() => setBucket(bucket === "flagged" ? "all" : "flagged")}
+        />
+        <QueueTile
+          label="Declined"
+          value={tileCounts.declined}
+          valueClass="text-foreground"
+          active={bucket === "declined"}
+          onClick={() => setBucket(bucket === "declined" ? "all" : "declined")}
+        />
+      </section>
+
+      {/* Search + filter chips */}
+      <section className="flex items-center gap-3 flex-wrap">
+        <div className="relative flex-1 min-w-[240px] max-w-md">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search name, vehicle, phone, or VIN…"
+            className="w-full h-10 px-3 pr-9 text-sm rounded-lg border border-border bg-background outline-none focus:border-primary/40"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label="Clear search"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+        {(bucket !== "all" || search) && (
+          <button
+            onClick={() => { setBucket("all"); setSearch(""); }}
+            className="text-[11px] font-semibold px-3 py-1.5 rounded-md border border-destructive/40 text-destructive hover:bg-destructive/10 transition-colors"
+          >
+            Clear filters
+          </button>
+        )}
+        <span className="text-xs text-muted-foreground ml-auto">
+          {visible.length} of {sorted.length} shown
+        </span>
       </section>
 
       {/* Rows */}
@@ -449,7 +533,12 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
             )}
           </div>
           <div className="space-y-2">
-            {sorted.map((row) => (
+            {visible.length === 0 && (
+              <div className="text-center py-10 border border-dashed border-border rounded-xl text-sm text-muted-foreground">
+                No leads match your filter. <button onClick={() => { setBucket("all"); setSearch(""); }} className="underline font-semibold">Clear filters</button>.
+              </div>
+            )}
+            {visible.map((row) => (
               <QueueRowItem
                 key={row.id}
                 row={row}
@@ -470,12 +559,26 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
 
 /* ─────────────── Sub-components ─────────────── */
 
-function QueueTile({ label, value, valueClass }: { label: string; value: number; valueClass: string }) {
+function QueueTile({ label, value, valueClass, active, onClick }: {
+  label: string;
+  value: number;
+  valueClass: string;
+  active?: boolean;
+  onClick?: () => void;
+}) {
   return (
-    <div className="rounded-lg border border-border/60 p-5">
+    <button
+      onClick={onClick}
+      type="button"
+      className={`rounded-lg border p-5 text-left transition-all ${
+        active
+          ? "border-foreground/60 ring-2 ring-foreground/10 bg-muted/40"
+          : "border-border/60 hover:border-foreground/40 hover:bg-muted/20"
+      }`}
+    >
       <div className="text-[11px] font-bold tracking-wider uppercase text-muted-foreground">{label}</div>
       <div className={`text-3xl font-bold mt-2 ${valueClass}`}>{value}</div>
-    </div>
+    </button>
   );
 }
 
