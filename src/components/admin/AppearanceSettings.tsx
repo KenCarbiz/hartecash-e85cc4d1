@@ -110,6 +110,31 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
   // Local draft mirrors site_config so live preview updates without round-trip
   const [draft, setDraft] = useState(fromConfigDefaults());
 
+  // ── Live preview: overlay the draft onto the React Query cache so
+  // every consumer of useSiteConfig (top bar, sidebar, customer file
+  // slide-out) repaints as the admin edits, without persisting.
+  // On unmount we invalidate so the cache returns to the persisted
+  // values. Save also invalidates so a successful save snaps to
+  // canonical state.
+  useEffect(() => {
+    const queryKey = [
+      "site_config",
+      tenant?.dealership_id || "default",
+      tenant?.location_id ?? null,
+    ] as const;
+
+    queryClient.setQueryData(queryKey as unknown as readonly unknown[], (prev: any) => ({
+      ...(prev || {}),
+      ...draft,
+    }));
+
+    return () => {
+      // Discard any unsaved overlay so the next mount reads canonical
+      // persisted values from the DB.
+      void queryClient.invalidateQueries({ queryKey: ["site_config"] });
+    };
+  }, [draft, tenant?.dealership_id, tenant?.location_id, queryClient]);
+
   // Load locations for the tenant once, so the selector can list them.
   useEffect(() => {
     if (!tenant?.dealership_id) return;
@@ -204,6 +229,11 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
       top_bar_bg_2: preset.bg,
       customer_file_accent: preset.accent,
       customer_file_accent_2: preset.accent,
+      // Sidebar active item picks up the theme's primary BG so picking
+      // a theme repaints the whole admin shell — top bar AND left bar
+      // active highlight — in one click. Admin can still override via
+      // the Sidebar Active Item swatch below.
+      sidebar_active_color: preset.bg,
     }));
   };
 
