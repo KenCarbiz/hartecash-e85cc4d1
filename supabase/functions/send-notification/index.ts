@@ -208,6 +208,35 @@ Deno.serve(async (req) => {
       ["new_submission", "hot_lead", "appointment_booked", "photos_uploaded", "docs_uploaded", "status_change", "abandoned_lead"].includes(trigger_key);
     const isCustomerTrigger = trigger_key.startsWith("customer_");
 
+    // ── Channel gate (defense in depth) ───────────────────────────
+    // Staff-initiated trigger keys (customer_staff_reply_sms /
+    // _email) must respect the dealership's tenant_channels +
+    // location_channels toggles. Automated outbound (drips,
+    // scheduled SMS, follow-up sequences, system staff alerts)
+    // intentionally bypass — those live behind notification_settings
+    // and shouldn't be gated by the customer-comms channel toggle.
+    const STAFF_REPLY_TO_CHANNEL: Record<string, "two_way_sms" | "two_way_email"> = {
+      customer_staff_reply_sms: "two_way_sms",
+      customer_staff_reply_email: "two_way_email",
+    };
+    const channelKey = STAFF_REPLY_TO_CHANNEL[trigger_key];
+    if (channelKey) {
+      const { data: enabledRow } = await supabase.rpc("channel_enabled", {
+        _dealership_id: dealershipId,
+        _location_id: null,
+        _channel: channelKey,
+      });
+      if (enabledRow === false) {
+        return new Response(
+          JSON.stringify({
+            error: "channel_disabled",
+            message: `${channelKey === "two_way_sms" ? "Two-way SMS" : "Two-way Email"} is turned off for this dealership.`,
+          }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    }
+
     // Check if trigger enabled
     const enabledKey = `notify_${trigger_key}`;
     if (notifSettings && (notifSettings as any)[enabledKey] === false) {
