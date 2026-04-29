@@ -30,6 +30,7 @@ const StaffManagement = React.lazy(() => import("./StaffManagement"));
 const PermissionManagement = React.lazy(() => import("./PermissionManagement"));
 const ConsentLog = React.lazy(() => import("./ConsentLog"));
 const CommunicationLog = React.lazy(() => import("./CommunicationLog"));
+const VoiceComplianceLog = React.lazy(() => import("./VoiceComplianceLog"));
 const ExecutiveKPIHub = React.lazy(() => import("./ExecutiveKPIHub"));
 const OfferSettings = React.lazy(() => import("./OfferSettings"));
 const SiteConfiguration = React.lazy(() => import("./SiteConfiguration"));
@@ -456,6 +457,9 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
         <ConsentLog />
         <div className="border-t border-border pt-6">
           <CommunicationLog />
+        </div>
+        <div className="border-t border-border pt-6">
+          <VoiceComplianceLog />
         </div>
       </div>
     );
