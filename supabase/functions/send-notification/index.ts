@@ -450,6 +450,7 @@ Deno.serve(async (req) => {
               template_name: templateKey,
               recipient_email: addr,
               status: "pending",
+              submission_id: submission_id || null,
             });
 
             // Enqueue to transactional email queue
@@ -467,6 +468,7 @@ Deno.serve(async (req) => {
                 label: templateKey,
                 idempotency_key: idempotencyKey,
                 queued_at: new Date().toISOString(),
+                submission_id: submission_id || null,
               },
             });
 
@@ -514,6 +516,7 @@ Deno.serve(async (req) => {
                 label: trigger_key,
                 idempotency_key: idempotencyKey,
                 queued_at: new Date().toISOString(),
+                submission_id: submission_id || null,
               },
             });
 

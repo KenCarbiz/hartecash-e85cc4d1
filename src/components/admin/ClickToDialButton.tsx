@@ -71,7 +71,16 @@ const ClickToDialButton = ({
     setCalling(false);
 
     if (error) {
-      // FunctionsHttpError exposes the response body via context.
+      // Three distinct failure modes from supabase functions-js:
+      //   FunctionsFetchError  — JS couldn't reach the function at all
+      //                          (404 = not deployed, CORS, network).
+      //   FunctionsRelayError  — relay-layer error.
+      //   FunctionsHttpError   — function returned non-2xx; body has detail.
+      const name = (error as { name?: string }).name || "";
+      const msg = error.message || "";
+      const isFetchError =
+        name === "FunctionsFetchError" ||
+        /failed to send a request|failed to fetch|networkerror/i.test(msg);
       let detail = error.message;
       try {
         const ctx = (error as unknown as { context?: Response }).context;
@@ -81,6 +90,19 @@ const ClickToDialButton = ({
         }
       } catch {
         /* keep default message */
+      }
+      if (isFetchError) {
+        // Function isn't reachable — fall back to opening the device
+        // dialer so the rep can still call. Message points the admin
+        // at the deploy step.
+        setOpen(false);
+        toast({
+          title: "Click-to-dial unavailable",
+          description: "The Twilio bridge isn't deployed yet — opening your device dialer instead. Ask your admin to deploy the twilio-click-to-dial edge function.",
+          variant: "destructive",
+        });
+        window.location.href = `tel:${customerPhone}`;
+        return;
       }
       toast({ title: "Couldn't start call", description: detail, variant: "destructive" });
       return;
