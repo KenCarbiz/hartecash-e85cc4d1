@@ -42,10 +42,43 @@ interface Bucket {
   count: number;
 }
 
-const DAYS = 30;
+// User-selectable window. Default 30 days; GMs can switch to short
+// pulses (7d) or quarterly views (90d / YTD) without leaving the page.
+const RANGE_OPTIONS = [
+  { label: "7d", days: 7 },
+  { label: "30d", days: 30 },
+  { label: "90d", days: 90 },
+  { label: "YTD", days: 0 }, // 0 means use Jan 1 of current year
+] as const;
+type RangeKey = (typeof RANGE_OPTIONS)[number]["label"];
+
+function rangeStart(label: RangeKey): Date {
+  const opt = RANGE_OPTIONS.find((r) => r.label === label);
+  if (!opt) return new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  if (opt.days === 0) {
+    // YTD — Jan 1 of the current year, local time.
+    const now = new Date();
+    return new Date(now.getFullYear(), 0, 1);
+  }
+  return new Date(Date.now() - opt.days * 24 * 60 * 60 * 1000);
+}
 
 const ExecutiveHUD = () => {
   const { tenant } = useTenant();
+  const [range, setRange] = useState<RangeKey>("30d");
+  const DAYS = useMemo(() => {
+    const opt = RANGE_OPTIONS.find((r) => r.label === range);
+    if (!opt) return 30;
+    if (opt.days === 0) {
+      // YTD day count — used in the subtitle and the holding-cost
+      // "average days in inventory" comparison.
+      return Math.max(
+        1,
+        Math.ceil((Date.now() - rangeStart(range).getTime()) / (1000 * 60 * 60 * 24)),
+      );
+    }
+    return opt.days;
+  }, [range]);
   const [loading, setLoading] = useState(true);
   const [funnel, setFunnel] = useState<FunnelCounts>({
     submitted: 0, offerMade: 0, appointmentSet: 0, inspectionCompleted: 0, acquired: 0,
@@ -59,7 +92,7 @@ const ExecutiveHUD = () => {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const since = new Date(Date.now() - DAYS * 24 * 60 * 60 * 1000).toISOString();
+      const since = rangeStart(range).toISOString();
 
       const [subRes, tenantRes] = await Promise.all([
         supabase
@@ -148,7 +181,7 @@ const ExecutiveHUD = () => {
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [tenant.dealership_id]);
+  }, [tenant.dealership_id, range]);
 
   const holding = useMemo(() => calculateHoldingCost(aged.totalAcv, holdingConfig), [aged.totalAcv, holdingConfig]);
 
@@ -165,11 +198,34 @@ const ExecutiveHUD = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-          <BarChart3 className="w-5 h-5 text-primary" /> Executive HUD
-        </h2>
-        <p className="text-xs text-muted-foreground">Last {DAYS} days. GM + owner + admin view.</p>
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-primary" /> Executive HUD
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            {range === "YTD"
+              ? `Year-to-date — ${DAYS} day${DAYS === 1 ? "" : "s"}.`
+              : `Last ${DAYS} days.`}{" "}
+            GM + owner + admin view.
+          </p>
+        </div>
+        {/* Range toggle */}
+        <div className="inline-flex rounded-lg border border-border bg-card p-0.5 shadow-sm">
+          {RANGE_OPTIONS.map((opt) => (
+            <button
+              key={opt.label}
+              onClick={() => setRange(opt.label)}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
+                range === opt.label
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Funnel */}
