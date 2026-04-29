@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useChannelState } from "@/hooks/useChannelState";
 import { useConversationRealtime } from "@/hooks/useConversationRealtime";
+import VoiceCallCard from "./VoiceCallCard";
 
 type Channel = "sms" | "email" | "calls" | "unified";
 type Tone = "friendly" | "professional" | "urgent" | "brief";
@@ -47,6 +48,8 @@ interface ConvCall {
   direction?: string | null;
   performed_by?: string | null;
   transcript?: string | null;
+  recording_url?: string | null;
+  phone_number?: string | null;
 }
 
 const TONES: { k: Tone; label: string }[] = [
@@ -120,7 +123,7 @@ const ClassicCommsFullView = ({
         .limit(200),
       (supabase as never as { from: (t: string) => { select: (s: string) => { eq: (k: string, v: string) => { order: (c: string, o: { ascending: boolean }) => { limit: (n: number) => Promise<{ data: ConvCall[] | null }> } } } } })
         .from("voice_call_log")
-        .select("id, status, outcome, duration_seconds, summary, transcript, direction, performed_by, customer_name, created_at")
+        .select("id, status, outcome, duration_seconds, summary, transcript, direction, performed_by, customer_name, recording_url, phone_number, created_at")
         .eq("submission_id", submissionId)
         .order("created_at", { ascending: false })
         .limit(50),
@@ -433,50 +436,7 @@ const ClassicCommsFullView = ({
             {calls.length === 0 ? (
               <div className="text-center text-[13px] text-slate-400 italic py-8">No call history yet.</div>
             ) : (
-              calls.map((c) => {
-                const direction = (c.direction || "").toLowerCase();
-                const outcome = (c.outcome || c.status || "call").toLowerCase();
-                const isInbound = direction === "inbound" || direction === "in" || outcome.includes("voicemail");
-                const isVoicemail = outcome.includes("voicemail");
-                const iconBg = isInbound ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700";
-                const dirLabel = isInbound ? "Inbound" : "Outbound";
-                const outcomeLabel = (c.outcome || c.status || "Call").replace(/_/g, " ").replace(/\b\w/g, (s) => s.toUpperCase());
-                return (
-                  <div key={c.id} className="rounded-lg border border-slate-200 bg-white p-4 flex items-start gap-3">
-                    <div className={`w-9 h-9 rounded-full ${iconBg} flex items-center justify-center shrink-0 mt-0.5`}>
-                      <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-                        {isVoicemail
-                          ? <path d="M3 11a3 3 0 116 0 3 3 0 01-6 0zm8 0a3 3 0 116 0 3 3 0 01-6 0zm-3 3h4v2H8v-2z"/>
-                          : <path d="M2 3.5A1.5 1.5 0 013.5 2h2.6a1.5 1.5 0 011.4 1l.8 2.1a1.5 1.5 0 01-.4 1.7L6.5 8.1a11 11 0 005.4 5.4l1.3-1.4a1.5 1.5 0 011.7-.4l2.1.8a1.5 1.5 0 011 1.4v2.6a1.5 1.5 0 01-1.5 1.5C8.5 18 2 11.5 2 3.5z"/>}
-                      </svg>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-baseline justify-between gap-2">
-                        <span className="text-[13.5px] font-bold text-slate-900">
-                          {dirLabel} · {outcomeLabel}
-                        </span>
-                        <span className="text-[11px] text-slate-400 shrink-0">
-                          {fmtTime(c.created_at)}{c.duration_seconds ? ` · ${fmtDuration(c.duration_seconds)}` : ""}
-                        </span>
-                      </div>
-                      {c.performed_by && (
-                        <div className="text-[12px] text-slate-500 mt-0.5">by {c.performed_by}</div>
-                      )}
-                      {c.summary && (
-                        <p className="text-[13px] italic text-slate-700 mt-1.5">"{c.summary}"</p>
-                      )}
-                      {c.transcript && (
-                        <details className="mt-2">
-                          <summary className="text-[11px] font-semibold text-[#003b80] hover:underline cursor-pointer">
-                            View transcript
-                          </summary>
-                          <pre className="text-[12px] text-slate-600 mt-2 p-3 bg-slate-50 rounded-md whitespace-pre-wrap font-sans leading-relaxed">{c.transcript}</pre>
-                        </details>
-                      )}
-                    </div>
-                  </div>
-                );
-              })
+              calls.map((c) => <VoiceCallCard key={c.id} call={c} />)
             )}
 
             {/* Log a call — manual entry */}

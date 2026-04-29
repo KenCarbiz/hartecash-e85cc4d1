@@ -14,6 +14,7 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useChannelState } from "@/hooks/useChannelState";
+import VoiceCallCard from "./VoiceCallCard";
 import { useConversationRealtime } from "@/hooks/useConversationRealtime";
 
 type Channel = "sms" | "email" | "calls";
@@ -34,6 +35,10 @@ interface CallEvent {
   duration_seconds: number | null;
   summary: string | null;
   created_at: string;
+  transcript?: string | null;
+  recording_url?: string | null;
+  direction?: string | null;
+  phone_number?: string | null;
 }
 
 const fmtTime = (iso: string) => {
@@ -84,7 +89,7 @@ const ClassicCommsCard = ({ submissionId, customerPhone, customerEmail, onOpenFu
         .limit(20),
       (supabase as never as { from: (t: string) => { select: (s: string) => { eq: (k: string, v: string) => { order: (c: string, o: { ascending: boolean }) => { limit: (n: number) => Promise<{ data: CallEvent[] | null }> } } } } })
         .from("voice_call_log")
-        .select("id, status, outcome, duration_seconds, summary, created_at")
+        .select("id, status, outcome, duration_seconds, summary, created_at, transcript, recording_url, direction, phone_number")
         .eq("submission_id", submissionId)
         .order("created_at", { ascending: false })
         .limit(10),
@@ -277,22 +282,9 @@ const ClassicCommsCard = ({ submissionId, customerPhone, customerEmail, onOpenFu
           calls.length === 0 ? (
             <div className="text-[12.5px] text-slate-400 italic py-2 text-center">No call history.</div>
           ) : (
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 px-1">
               {calls.slice(0, 4).map((c) => (
-                <div key={c.id} className="flex items-baseline justify-between gap-2 px-1">
-                  <div className="min-w-0 flex-1">
-                    <div className="text-[12px] font-semibold text-slate-900">
-                      {(c.outcome || c.status || "Call").replace(/_/g, " ")}
-                    </div>
-                    {c.summary && (
-                      <div className="text-[11px] text-slate-500 truncate">{c.summary}</div>
-                    )}
-                  </div>
-                  <div className="text-[10.5px] text-slate-400 shrink-0 text-right">
-                    {fmtDuration(c.duration_seconds)}
-                    <div>{fmtTime(c.created_at)}</div>
-                  </div>
-                </div>
+                <VoiceCallCard key={c.id} call={c} compact />
               ))}
             </div>
           )
