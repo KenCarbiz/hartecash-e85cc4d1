@@ -209,6 +209,84 @@ const MobileInspection = () => {
     return { ...prev, [key]: next };
   });
 
+  // ── Autosave to localStorage ─────────────────────────────────
+  // The mobile inspection is a long form filled in over 15-30 min
+  // during a walkaround. Reps lose work if they accidentally close
+  // the tab, lose connection, or get a phone call that swaps
+  // contexts. Serialize every 1.5s to localStorage; restore on
+  // mount; clear after a successful save so the next inspection
+  // doesn't pick up stale data.
+  const draftKey = id ? `mobile-inspection-draft:${id}` : null;
+  const [draftRestored, setDraftRestored] = useState(false);
+
+  // Restore on mount once we have an id.
+  useEffect(() => {
+    if (!draftKey || draftRestored) return;
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (!raw) { setDraftRestored(true); return; }
+      const d = JSON.parse(raw) as Record<string, unknown>;
+      if (typeof d.tireLF === "number" || d.tireLF === null) setTireLF(d.tireLF as number | null);
+      if (typeof d.tireRF === "number" || d.tireRF === null) setTireRF(d.tireRF as number | null);
+      if (typeof d.tireLR === "number" || d.tireLR === null) setTireLR(d.tireLR as number | null);
+      if (typeof d.tireRR === "number" || d.tireRR === null) setTireRR(d.tireRR as number | null);
+      if (typeof d.brakeLF === "number" || d.brakeLF === null) setBrakeLF(d.brakeLF as number | null);
+      if (typeof d.brakeRF === "number" || d.brakeRF === null) setBrakeRF(d.brakeRF as number | null);
+      if (typeof d.brakeLR === "number" || d.brakeLR === null) setBrakeLR(d.brakeLR as number | null);
+      if (typeof d.brakeRR === "number" || d.brakeRR === null) setBrakeRR(d.brakeRR as number | null);
+      if (typeof d.overallGrade === "string") setOverallGrade(d.overallGrade);
+      if (typeof d.inspectorNotes === "string") setInspectorNotes(d.inspectorNotes);
+      if (typeof d.acNotes === "string") setAcNotes(d.acNotes);
+      if (typeof d.paintReading === "string") setPaintReading(d.paintReading);
+      if (typeof d.oilLife === "string") setOilLife(d.oilLife);
+      if (typeof d.batteryHealth === "string") setBatteryHealth(d.batteryHealth);
+      if (typeof d.engineNotes === "string") setEngineNotes(d.engineNotes);
+      if (typeof d.transmissionNotes === "string") setTransmissionNotes(d.transmissionNotes);
+      if (typeof d.suspensionNotes === "string") setSuspensionNotes(d.suspensionNotes);
+      if (d.checkStates && typeof d.checkStates === "object") {
+        setCheckStates(d.checkStates as Record<string, CheckState>);
+      }
+      toast({
+        title: "Draft restored",
+        description: "Picked up where you left off. Submit when you're done.",
+      });
+    } catch {
+      /* corrupted draft — ignore + start fresh */
+    }
+    setDraftRestored(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftKey]);
+
+  // Debounced serialize on any state change.
+  useEffect(() => {
+    if (!draftKey || !draftRestored) return;
+    const t = setTimeout(() => {
+      try {
+        localStorage.setItem(
+          draftKey,
+          JSON.stringify({
+            tireLF, tireRF, tireLR, tireRR,
+            brakeLF, brakeRF, brakeLR, brakeRR,
+            overallGrade, inspectorNotes, acNotes, paintReading,
+            oilLife, batteryHealth, engineNotes, transmissionNotes,
+            suspensionNotes, checkStates,
+            savedAt: new Date().toISOString(),
+          }),
+        );
+      } catch {
+        /* localStorage full or disabled — non-fatal */
+      }
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [
+    draftKey, draftRestored,
+    tireLF, tireRF, tireLR, tireRR,
+    brakeLF, brakeRF, brakeLR, brakeRR,
+    overallGrade, inspectorNotes, acNotes, paintReading,
+    oilLife, batteryHealth, engineNotes, transmissionNotes,
+    suspensionNotes, checkStates,
+  ]);
+
   const markSectionAllPass = (sectionKey: string, items: string[]) => {
     setCheckStates(prev => {
       const allPass = items.every(item => prev[`${sectionKey}::${item}`] === "pass");
@@ -361,6 +439,11 @@ const MobileInspection = () => {
     } else {
       const result = data as any;
       if (result && result.adjustment !== undefined) setLastAdjustment(result);
+
+      // Clear the autosave draft now that the canonical save landed.
+      if (draftKey) {
+        try { localStorage.removeItem(draftKey); } catch { /* ignore */ }
+      }
 
       toast({ title: "Inspection saved", description: "Data synced to the customer file." });
 
