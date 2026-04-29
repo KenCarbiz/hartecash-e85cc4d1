@@ -87,6 +87,15 @@ const ExecutiveHUD = () => {
   const [competitors, setCompetitors] = useState<Bucket[]>([]);
   const [aged, setAged] = useState<{ count: number; totalAcv: number }>({ count: 0, totalAcv: 0 });
   const [holdingConfig, setHoldingConfig] = useState<TenantHoldingConfig | null>(null);
+  // Per-rep breakdown — count of appraisals + acceptance + acquisition
+  // grouped by submissions.appraised_by (free-text staff identifier set
+  // when an offer is finalized). GMs use this to spot who's converting.
+  const [repBreakdown, setRepBreakdown] = useState<Array<{
+    rep: string;
+    appraisals: number;
+    accepted: number;
+    acquired: number;
+  }>>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -98,7 +107,7 @@ const ExecutiveHUD = () => {
         supabase
           .from("submissions")
           .select(
-            "progress_status, appointment_set, estimated_offer_high, offered_price, declined_reason, competitor_mentioned, acv_value, created_at, inspection_completed_at, check_request_done"
+            "progress_status, appointment_set, estimated_offer_high, offered_price, declined_reason, competitor_mentioned, acv_value, created_at, inspection_completed_at, check_request_done, appraised_by"
           )
           .eq("dealership_id", tenant.dealership_id)
           .gte("created_at", since),
@@ -177,6 +186,38 @@ const ExecutiveHUD = () => {
         count: agedRows.length,
         totalAcv: agedRows.reduce((sum, r) => sum + Number(r.acv_value || 0), 0),
       });
+
+      // Per-rep breakdown — group submissions with a non-null
+      // appraised_by, count their appraisals (any offer set),
+      // acceptance (price_agreed / offer_accepted forward), and
+      // acquisition (purchase_complete / check_request_submitted).
+      const ACCEPTED_STATUSES = new Set([
+        "offer_accepted",
+        "price_agreed",
+        "deal_finalized",
+        "title_ownership_verified",
+        "check_request_submitted",
+        "purchase_complete",
+      ]);
+      const ACQUIRED_STATUSES = new Set([
+        "check_request_submitted",
+        "purchase_complete",
+      ]);
+      const repMap: Record<string, { appraisals: number; accepted: number; acquired: number }> = {};
+      rows.forEach((r) => {
+        const rep = (r as { appraised_by?: string | null }).appraised_by;
+        if (!rep || typeof rep !== "string" || !rep.trim()) return;
+        const key = rep.trim();
+        if (!repMap[key]) repMap[key] = { appraisals: 0, accepted: 0, acquired: 0 };
+        repMap[key].appraisals += 1;
+        if (ACCEPTED_STATUSES.has(r.progress_status)) repMap[key].accepted += 1;
+        if (ACQUIRED_STATUSES.has(r.progress_status)) repMap[key].acquired += 1;
+      });
+      setRepBreakdown(
+        Object.entries(repMap)
+          .map(([rep, v]) => ({ rep, ...v }))
+          .sort((a, b) => b.appraisals - a.appraisals)
+      );
 
       setLoading(false);
     })();
@@ -312,6 +353,53 @@ const ExecutiveHUD = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Per-rep breakdown — appraisals → acceptance → acquisition. */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-1.5">
+            <BarChart3 className="w-4 h-4 text-primary" /> Per-rep performance
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {repBreakdown.length === 0 ? (
+            <p className="text-xs text-muted-foreground">
+              No appraisals attributed to a rep yet for this window. Reps need to set <span className="font-mono">appraised_by</span> when finalizing an offer.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="text-muted-foreground border-b border-border/40">
+                  <tr>
+                    <th className="text-left font-medium py-1.5 pr-3">Rep</th>
+                    <th className="text-right font-medium py-1.5 pr-3">Appraisals</th>
+                    <th className="text-right font-medium py-1.5 pr-3">Accepted</th>
+                    <th className="text-right font-medium py-1.5 pr-3">Accept rate</th>
+                    <th className="text-right font-medium py-1.5 pr-3">Acquired</th>
+                    <th className="text-right font-medium py-1.5">Conv. rate</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {repBreakdown.map((row) => (
+                    <tr key={row.rep} className="border-b border-border/20 last:border-0">
+                      <td className="py-1.5 pr-3 font-medium">{row.rep}</td>
+                      <td className="py-1.5 pr-3 text-right tabular-nums">{row.appraisals}</td>
+                      <td className="py-1.5 pr-3 text-right tabular-nums">{row.accepted}</td>
+                      <td className="py-1.5 pr-3 text-right tabular-nums text-muted-foreground">
+                        {pct(row.accepted, row.appraisals)}
+                      </td>
+                      <td className="py-1.5 pr-3 text-right tabular-nums">{row.acquired}</td>
+                      <td className="py-1.5 text-right tabular-nums text-emerald-600 font-semibold">
+                        {pct(row.acquired, row.appraisals)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Aged inventory holding cost */}
       <Card>
