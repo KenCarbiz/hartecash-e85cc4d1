@@ -127,6 +127,7 @@ export default function NotificationSettings() {
   const { tenant } = useTenant();
   const dealershipId = tenant.dealership_id;
   const [config, setConfig] = useState<NotificationConfig>({ ...DEFAULTS, dealership_id: dealershipId });
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [newEmail, setNewEmail] = useState("");
@@ -416,6 +417,29 @@ export default function NotificationSettings() {
     );
   };
 
+  // ── Search + bulk toggle ───────────────────────────────────────
+  const matchesSearch = (t: { key: string; label: string; desc: string }) => {
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      t.label.toLowerCase().includes(q) ||
+      t.desc.toLowerCase().includes(q) ||
+      t.key.toLowerCase().includes(q)
+    );
+  };
+  const filteredStaff = STAFF_TRIGGERS.filter(matchesSearch);
+  const filteredCustomer = CUSTOMER_TRIGGERS.filter(matchesSearch);
+
+  const setAllInGroup = (group: typeof STAFF_TRIGGERS | typeof CUSTOMER_TRIGGERS, on: boolean) => {
+    setConfig((c) => {
+      const next = { ...c } as Record<string, unknown>;
+      for (const t of group) next[`notify_${t.key}`] = on;
+      return next as NotificationConfig;
+    });
+  };
+  const staffEnabledCount = STAFF_TRIGGERS.filter((t) => (config as Record<string, unknown>)[`notify_${t.key}`]).length;
+  const customerEnabledCount = CUSTOMER_TRIGGERS.filter((t) => (config as Record<string, unknown>)[`notify_${t.key}`]).length;
+
   const renderTriggerRow = (trigger: { key: string; label: string; desc: string; channelKey: string; icon: any }) => {
     const enabled = (config as any)[`notify_${trigger.key}`] as boolean;
     const channels = (config as any)[trigger.channelKey] as string[];
@@ -455,16 +479,38 @@ export default function NotificationSettings() {
   };
 
   return (
-    <div className="space-y-4 max-w-3xl">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold">Notification Settings</h2>
-          <p className="text-sm text-muted-foreground">Configure who gets alerted and when</p>
+    <div className="space-y-4 max-w-3xl pb-20">
+      {/* Sticky save bar so the admin doesn't have to scroll back to
+          the bottom of a 15-trigger form every time they tweak a row. */}
+      <div className="sticky top-0 z-20 -mx-1 px-1 py-2 bg-background/95 backdrop-blur-sm border-b border-border/40">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className="text-xl font-semibold">Notification Settings</h2>
+            <p className="text-sm text-muted-foreground">Configure who gets alerted and when</p>
+          </div>
+          <Button onClick={handleSave} disabled={saving} size="sm" className="shrink-0">
+            {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
+            Save
+          </Button>
         </div>
-        <Button onClick={handleSave} disabled={saving} size="sm">
-          {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
-          Save
-        </Button>
+        {/* Search — filters both staff + customer trigger lists below. */}
+        <div className="mt-2 relative">
+          <Input
+            placeholder="Search triggers…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-9 pl-3 pr-8 text-sm"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label="Clear search"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Staff Recipients */}
@@ -521,38 +567,88 @@ export default function NotificationSettings() {
       </Collapsible>
 
       {/* Staff Alert Triggers */}
-      <Collapsible open={openSections.triggers} onOpenChange={() => toggle("triggers")}>
+      <Collapsible open={openSections.triggers || !!search} onOpenChange={() => toggle("triggers")}>
         <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
           <div className="flex items-center gap-2 font-medium">
             <Bell className="w-4 h-4" />
             Staff Alert Triggers
-            <Badge variant="outline" className="text-[10px] ml-1">{STAFF_TRIGGERS.length}</Badge>
+            <Badge variant="outline" className="text-[10px] ml-1">
+              {staffEnabledCount}/{STAFF_TRIGGERS.length} on
+            </Badge>
+            {search && filteredStaff.length !== STAFF_TRIGGERS.length && (
+              <Badge variant="secondary" className="text-[10px]">{filteredStaff.length} match</Badge>
+            )}
           </div>
-          <ChevronDown className={`w-4 h-4 transition-transform ${openSections.triggers ? "rotate-180" : ""}`} />
+          <ChevronDown className={`w-4 h-4 transition-transform ${(openSections.triggers || !!search) ? "rotate-180" : ""}`} />
         </CollapsibleTrigger>
         <CollapsibleContent className="pt-3 space-y-2 px-1">
-          <p className="text-xs text-muted-foreground mb-2">
-            These alerts are sent to your configured staff recipients above.
-          </p>
-          {STAFF_TRIGGERS.map(trigger => renderTriggerRow(trigger))}
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs text-muted-foreground">
+              These alerts are sent to your configured staff recipients above.
+            </p>
+            <div className="flex items-center gap-1 shrink-0">
+              <button
+                onClick={() => setAllInGroup(STAFF_TRIGGERS, true)}
+                className="text-[11px] font-semibold px-2 py-1 rounded-md border border-border hover:bg-muted transition-colors"
+              >
+                All on
+              </button>
+              <button
+                onClick={() => setAllInGroup(STAFF_TRIGGERS, false)}
+                className="text-[11px] font-semibold px-2 py-1 rounded-md border border-border hover:bg-muted transition-colors"
+              >
+                All off
+              </button>
+            </div>
+          </div>
+          {filteredStaff.length === 0 ? (
+            <div className="text-xs text-muted-foreground italic text-center py-3">No staff triggers match "{search}".</div>
+          ) : (
+            filteredStaff.map(trigger => renderTriggerRow(trigger))
+          )}
         </CollapsibleContent>
       </Collapsible>
 
       {/* Customer Notifications */}
-      <Collapsible open={openSections.customer} onOpenChange={() => toggle("customer")}>
+      <Collapsible open={openSections.customer || !!search} onOpenChange={() => toggle("customer")}>
         <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
           <div className="flex items-center gap-2 font-medium">
             <UserCheck className="w-4 h-4" />
             Customer Notifications
-            <Badge variant="outline" className="text-[10px] ml-1">{CUSTOMER_TRIGGERS.length}</Badge>
+            <Badge variant="outline" className="text-[10px] ml-1">
+              {customerEnabledCount}/{CUSTOMER_TRIGGERS.length} on
+            </Badge>
+            {search && filteredCustomer.length !== CUSTOMER_TRIGGERS.length && (
+              <Badge variant="secondary" className="text-[10px]">{filteredCustomer.length} match</Badge>
+            )}
           </div>
-          <ChevronDown className={`w-4 h-4 transition-transform ${openSections.customer ? "rotate-180" : ""}`} />
+          <ChevronDown className={`w-4 h-4 transition-transform ${(openSections.customer || !!search) ? "rotate-180" : ""}`} />
         </CollapsibleTrigger>
         <CollapsibleContent className="pt-3 space-y-2 px-1">
-          <p className="text-xs text-muted-foreground mb-2">
-            These are sent directly to the customer's email/phone on file when the event occurs.
-          </p>
-          {CUSTOMER_TRIGGERS.map(trigger => renderTriggerRow(trigger))}
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs text-muted-foreground">
+              These are sent directly to the customer's email/phone on file when the event occurs.
+            </p>
+            <div className="flex items-center gap-1 shrink-0">
+              <button
+                onClick={() => setAllInGroup(CUSTOMER_TRIGGERS, true)}
+                className="text-[11px] font-semibold px-2 py-1 rounded-md border border-border hover:bg-muted transition-colors"
+              >
+                All on
+              </button>
+              <button
+                onClick={() => setAllInGroup(CUSTOMER_TRIGGERS, false)}
+                className="text-[11px] font-semibold px-2 py-1 rounded-md border border-border hover:bg-muted transition-colors"
+              >
+                All off
+              </button>
+            </div>
+          </div>
+          {filteredCustomer.length === 0 ? (
+            <div className="text-xs text-muted-foreground italic text-center py-3">No customer triggers match "{search}".</div>
+          ) : (
+            filteredCustomer.map(trigger => renderTriggerRow(trigger))
+          )}
         </CollapsibleContent>
       </Collapsible>
 
