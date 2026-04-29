@@ -22,6 +22,26 @@ const TRIGGER_TO_TEMPLATE: Record<string, string> = {
 const SENDER_DOMAIN = "notify.autocurb.io";
 const FROM_DOMAIN = "notify.autocurb.io";
 
+/**
+ * Domain customer email replies are routed through. Configurable via
+ * the INBOUND_EMAIL_DOMAIN secret so each environment can swap MX
+ * providers without a redeploy. The inbound-email-webhook function
+ * parses the +tag from the local part to find the originating
+ * submission. Set Reply-To to "replies+<submission_token>@<this>" so
+ * customer mail clients route the reply back to us.
+ *
+ * Falls back to FROM_DOMAIN if not set — replies still land in the
+ * provider's inbound queue and the In-Reply-To fallback in the
+ * webhook still routes them by message_id.
+ */
+const INBOUND_EMAIL_DOMAIN = Deno.env.get("INBOUND_EMAIL_DOMAIN") || `inbound.${FROM_DOMAIN}`;
+
+/** Build the per-submission Reply-To address for inbound routing. */
+function buildReplyTo(submissionToken: string | null | undefined, dealerName: string): string | undefined {
+  if (!submissionToken) return undefined;
+  return `${dealerName} <replies+${submissionToken}@${INBOUND_EMAIL_DOMAIN}>`;
+}
+
 /** Default templates for staff emails and fallback */
 const DEFAULT_TEMPLATES: Record<string, { email_subject: string; email_body: string; sms_body: string }> = {
   customer_offer_ready: {
@@ -469,6 +489,7 @@ Deno.serve(async (req) => {
                 idempotency_key: idempotencyKey,
                 queued_at: new Date().toISOString(),
                 submission_id: submission_id || null,
+                reply_to: buildReplyTo(sub?.token, dealerName),
               },
             });
 
@@ -517,6 +538,7 @@ Deno.serve(async (req) => {
                 idempotency_key: idempotencyKey,
                 queued_at: new Date().toISOString(),
                 submission_id: submission_id || null,
+                reply_to: buildReplyTo(sub?.token, dealerName),
               },
             });
 
