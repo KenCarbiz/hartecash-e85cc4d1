@@ -38,6 +38,8 @@ const TestimonialManagement = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Testimonial | null>(null);
   const [form, setForm] = useState<Omit<Testimonial, "id">>(EMPTY);
+  const [filter, setFilter] = useState<"all" | "published" | "hidden">("all");
+  const [search, setSearch] = useState("");
   const { toast } = useToast();
   const { tenant } = useTenant();
   const dealershipId = tenant.dealership_id;
@@ -111,25 +113,80 @@ const TestimonialManagement = () => {
     return <div className="flex items-center justify-center py-12 text-muted-foreground"><Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading testimonials...</div>;
   }
 
+  // Counts per state for the filter pills.
+  const publishedCount = testimonials.filter((t) => t.is_active).length;
+  const hiddenCount = testimonials.length - publishedCount;
+
+  // Apply filter + search.
+  const visible = testimonials.filter((t) => {
+    if (filter === "published" && !t.is_active) return false;
+    if (filter === "hidden" && t.is_active) return false;
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      const hay = [t.author_name, t.location, t.vehicle, t.review_text]
+        .filter(Boolean).join(" ").toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
   return (
     <div className="space-y-4 max-w-3xl">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-sm font-bold text-card-foreground">Customer Testimonials</h3>
-          <p className="text-xs text-muted-foreground">{testimonials.length} testimonial{testimonials.length !== 1 ? "s" : ""} configured</p>
+          <p className="text-xs text-muted-foreground">{testimonials.length} testimonial{testimonials.length !== 1 ? "s" : ""} configured · {publishedCount} published</p>
         </div>
         <Button size="sm" onClick={openNew}>
           <Plus className="w-4 h-4 mr-1" /> Add Testimonial
         </Button>
       </div>
 
+      {testimonials.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          {([
+            { k: "all" as const, label: "All", count: testimonials.length },
+            { k: "published" as const, label: "Published", count: publishedCount },
+            { k: "hidden" as const, label: "Hidden", count: hiddenCount },
+          ]).map((p) => {
+            const selected = filter === p.k;
+            return (
+              <button
+                key={p.k}
+                onClick={() => setFilter(p.k)}
+                className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
+                  selected
+                    ? "bg-foreground text-background border-foreground"
+                    : "border-border hover:bg-muted text-muted-foreground"
+                }`}
+              >
+                {p.label} <span className={selected ? "opacity-70" : "opacity-50"}>· {p.count}</span>
+              </button>
+            );
+          })}
+          <Input
+            placeholder="Search author, vehicle, review text…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-8 text-xs flex-1 min-w-[200px] max-w-md"
+          />
+        </div>
+      )}
+
       {testimonials.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground text-sm">
           No testimonials yet. Add your first customer review.
         </div>
+      ) : visible.length === 0 ? (
+        <div className="text-center py-10 text-muted-foreground text-sm border border-dashed border-border rounded-lg">
+          No testimonials match the current filter.{" "}
+          <button onClick={() => { setFilter("all"); setSearch(""); }} className="text-primary hover:underline font-semibold">
+            Clear filters
+          </button>
+        </div>
       ) : (
         <div className="space-y-2">
-          {testimonials.map((t) => (
+          {visible.map((t) => (
             <div
               key={t.id}
               className={`flex items-start gap-3 p-4 rounded-lg border transition-colors ${t.is_active ? "bg-card border-border" : "bg-muted/30 border-border/50 opacity-60"}`}
