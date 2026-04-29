@@ -88,6 +88,39 @@ const VoiceAICampaigns = () => {
   const [callLog, setCallLog] = useState<any[]>([]);
   const [expandedCall, setExpandedCall] = useState<string | null>(null);
 
+  // ── Per-campaign analytics ─────────────────────────────────────
+  // Lazy-loaded on row expand so we don't slam voice_call_log for
+  // every dealer on page mount. Cached per campaign id once fetched.
+  const [expandedCampaign, setExpandedCampaign] = useState<string | null>(null);
+  const [campaignStats, setCampaignStats] = useState<Record<string, {
+    loading: boolean;
+    rows: Array<{ status: string | null; outcome: string | null; duration_seconds: number | null }>;
+  }>>({});
+
+  const loadCampaignStats = async (campaignId: string) => {
+    if (campaignStats[campaignId] && !campaignStats[campaignId].loading) return;
+    setCampaignStats((prev) => ({ ...prev, [campaignId]: { loading: true, rows: [] } }));
+    const { data } = await (supabase as any)
+      .from("voice_call_log")
+      .select("status, outcome, duration_seconds")
+      .eq("campaign_id", campaignId)
+      .eq("dealership_id", dealershipId)
+      .limit(2000);
+    setCampaignStats((prev) => ({
+      ...prev,
+      [campaignId]: { loading: false, rows: (data as any[]) || [] },
+    }));
+  };
+
+  const toggleCampaignExpand = (id: string) => {
+    if (expandedCampaign === id) {
+      setExpandedCampaign(null);
+      return;
+    }
+    setExpandedCampaign(id);
+    void loadCampaignStats(id);
+  };
+
   /* ── fetch config + KPIs on mount ── */
   useEffect(() => {
     const fetchData = async () => {
@@ -578,13 +611,26 @@ const VoiceAICampaigns = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead><tr className="border-b border-border/40 text-xs text-muted-foreground">
+                  <th className="w-6"></th>
                   <th className="text-left py-2 pr-4 font-medium">Name</th><th className="text-left py-2 pr-4 font-medium">Status</th>
                   <th className="text-right py-2 pr-4 font-medium">Calls</th><th className="text-right py-2 pr-4 font-medium">Connected</th>
                   <th className="text-right py-2 pr-4 font-medium">Converted</th><th className="text-left py-2 pr-4 font-medium">Created</th>
                   <th className="text-right py-2 font-medium">Actions</th>
                 </tr></thead>
-                <tbody>{campaigns.map((c) => (
-                  <tr key={c.id} className="border-b border-border/20 last:border-0">
+                <tbody>{campaigns.map((c) => {
+                  const expanded = expandedCampaign === c.id;
+                  return (
+                  <Fragment key={c.id}>
+                  <tr className="border-b border-border/20 last:border-0 hover:bg-muted/20">
+                    <td className="py-2.5 pl-1">
+                      <button
+                        onClick={() => toggleCampaignExpand(c.id)}
+                        className="text-muted-foreground hover:text-foreground transition-colors"
+                        aria-label={expanded ? "Collapse analytics" : "Expand analytics"}
+                      >
+                        {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                      </button>
+                    </td>
                     <td className="py-2.5 pr-4 font-medium text-foreground">{c.name}</td>
                     <td className="py-2.5 pr-4"><Badge variant="outline" className={`text-[11px] ${STATUS_COLORS[c.status] ?? ""}`}>{c.status}</Badge></td>
                     <td className="py-2.5 pr-4 text-right text-muted-foreground">{c.total_calls ?? 0}</td>
@@ -604,7 +650,19 @@ const VoiceAICampaigns = () => {
                       </div>
                     </td>
                   </tr>
-                ))}</tbody>
+                  {expanded && (
+                    <tr className="bg-muted/20 border-b border-border/20">
+                      <td colSpan={8} className="px-6 py-4">
+                        <CampaignAnalytics
+                          stats={campaignStats[c.id]}
+                          outcomeColors={OUTCOME_COLORS}
+                        />
+                      </td>
+                    </tr>
+                  )}
+                  </Fragment>
+                  );
+                })}</tbody>
               </table>
             </div>
           )}
@@ -711,5 +769,111 @@ const VoiceAICampaigns = () => {
     </div>
   );
 };
+
+/* ─────────────────────── CampaignAnalytics ─────────────────────── */
+/**
+ * Per-campaign drill-down. Reads voice_call_log filtered by
+ * campaign_id and computes:
+ *   - Total calls / connected rate / conversion rate / avg duration
+ *   - Outcome distribution as horizontal bar chart (no chart lib —
+ *     simple flex divs sized by share of total).
+ *
+ * Data is loaded lazily on first row expand (loadCampaignStats) and
+ * cached on the parent so re-expand is instant.
+ */
+const CONNECTED_STATUSES = new Set(["completed", "in_progress"]);
+const CONVERTED_OUTCOMES = new Set(["accepted", "appointment_scheduled"]);
+
+function CampaignAnalytics({
+  stats,
+  outcomeColors,
+}: {
+  stats?: { loading: boolean; rows: Array<{ status: string | null; outcome: string | null; duration_seconds: number | null }> };
+  outcomeColors: Record<string, string>;
+}) {
+  if (!stats || stats.loading) {
+    return (
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading analytics…
+      </div>
+    );
+  }
+  const rows = stats.rows;
+  if (rows.length === 0) {
+    return (
+      <div className="text-xs text-muted-foreground">No call data for this campaign yet.</div>
+    );
+  }
+
+  const total = rows.length;
+  const connected = rows.filter((r) => CONNECTED_STATUSES.has(r.status || "")).length;
+  const converted = rows.filter((r) => CONVERTED_OUTCOMES.has(r.outcome || "")).length;
+  const durSum = rows.reduce((s, r) => s + (r.duration_seconds || 0), 0);
+  const avgDur = total > 0 ? Math.round(durSum / total) : 0;
+
+  const outcomeCounts: Record<string, number> = {};
+  for (const r of rows) {
+    const k = r.outcome || "(no outcome)";
+    outcomeCounts[k] = (outcomeCounts[k] || 0) + 1;
+  }
+  const sortedOutcomes = Object.entries(outcomeCounts).sort((a, b) => b[1] - a[1]);
+
+  const fmtDur = (secs: number) => {
+    if (secs < 60) return `${secs}s`;
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}m ${s.toString().padStart(2, "0")}s`;
+  };
+  const pct = (n: number) => total > 0 ? Math.round((n / total) * 100) : 0;
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="rounded-lg border border-border bg-background p-3">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Total calls</div>
+          <div className="text-lg font-bold mt-0.5">{total}</div>
+        </div>
+        <div className="rounded-lg border border-border bg-background p-3">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Connected</div>
+          <div className="text-lg font-bold mt-0.5">{connected} <span className="text-xs text-muted-foreground font-normal">({pct(connected)}%)</span></div>
+        </div>
+        <div className="rounded-lg border border-border bg-background p-3">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Converted</div>
+          <div className="text-lg font-bold mt-0.5 text-emerald-600">{converted} <span className="text-xs text-muted-foreground font-normal">({pct(converted)}%)</span></div>
+        </div>
+        <div className="rounded-lg border border-border bg-background p-3">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Avg duration</div>
+          <div className="text-lg font-bold mt-0.5">{fmtDur(avgDur)}</div>
+        </div>
+      </div>
+
+      <div>
+        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-2">Outcomes</div>
+        <div className="space-y-1.5">
+          {sortedOutcomes.map(([outcome, count]) => {
+            const share = pct(count);
+            const colorClass = outcomeColors[outcome] || "bg-muted text-muted-foreground";
+            return (
+              <div key={outcome} className="flex items-center gap-2 text-xs">
+                <div className="w-40 shrink-0 truncate font-medium">{outcome.replace(/_/g, " ")}</div>
+                <div className="flex-1 h-5 bg-muted rounded-md overflow-hidden">
+                  <div
+                    className={`h-full ${colorClass} flex items-center px-2 text-[10px] font-semibold`}
+                    style={{ width: `${share}%`, minWidth: share > 0 ? "2rem" : 0 }}
+                  >
+                    {share >= 8 && `${share}%`}
+                  </div>
+                </div>
+                <div className="w-16 text-right text-muted-foreground tabular-nums">
+                  {count} <span className="text-[10px]">({share}%)</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default VoiceAICampaigns;
