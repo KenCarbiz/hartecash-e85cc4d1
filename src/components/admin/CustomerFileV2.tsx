@@ -530,6 +530,15 @@ function ConversationTab({
   const [messages, setMessages] = useState<ConvMessage[]>([]);
   const [calls, setCalls] = useState<ConvCall[]>([]);
   const [draft, setDraft] = useState("");
+  // ── Manual "Log a call" form — for calls placed outside the
+  // Twilio bridge (e.g. quick chat from the rep's cell). Stored as
+  // a voice_call_log row so the timeline + analytics include it.
+  const [logFormOpen, setLogFormOpen] = useState(false);
+  const [logSavingCall, setLogSavingCall] = useState(false);
+  const [logDirection, setLogDirection] = useState<"outbound" | "inbound">("outbound");
+  const [logOutcome, setLogOutcome] = useState<string>("connected");
+  const [logSummary, setLogSummary] = useState("");
+  const [logDuration, setLogDuration] = useState("");
   const [tone, setTone] = useState<typeof AI_TONES[number]["k"]>("friendly");
   const [sending, setSending] = useState(false);
 
@@ -646,6 +655,52 @@ function ConversationTab({
     void load();
   };
 
+  const logCall = async () => {
+    const summary = logSummary.trim();
+    if (!summary) return;
+    setLogSavingCall(true);
+    try {
+      // Parse "2:22" → 142 seconds. Plain numbers treated as seconds.
+      let durationSeconds: number | null = null;
+      const d = logDuration.trim();
+      if (d) {
+        if (d.includes(":")) {
+          const [m, s] = d.split(":").map((v) => parseInt(v, 10));
+          if (!isNaN(m) && !isNaN(s)) durationSeconds = m * 60 + s;
+        } else {
+          const n = parseInt(d, 10);
+          if (!isNaN(n)) durationSeconds = n;
+        }
+      }
+      const { error } = await (supabase as never as {
+        from: (t: string) => { insert: (rows: unknown) => Promise<{ error: { message: string } | null }> };
+      })
+        .from("voice_call_log")
+        .insert({
+          submission_id: sub.id,
+          direction: logDirection,
+          outcome: logOutcome,
+          status: "completed",
+          summary,
+          duration_seconds: durationSeconds,
+          performed_by: "Staff",
+          customer_name: sub.name,
+          phone_number: sub.phone,
+          created_at: new Date().toISOString(),
+        });
+      if (error) throw new Error(error.message);
+      setLogFormOpen(false);
+      setLogSummary("");
+      setLogDuration("");
+      void load();
+      toast({ title: "Call logged", description: "Added to the timeline." });
+    } catch (e) {
+      toast({ title: "Couldn't save call", description: (e as Error).message, variant: "destructive" });
+    } finally {
+      setLogSavingCall(false);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* Sub-tabs: SMS / Email / Calls / Unified */}
@@ -723,15 +778,81 @@ function ConversationTab({
         )}
 
         {channel === "calls" && (
-          calls.length === 0 ? (
-            <div className="text-center text-[13px] text-slate-400 italic py-12">No call history.</div>
-          ) : (
-            <div className="space-y-2 max-w-[760px] mx-auto">
-              {calls.map((c) => (
-                <VoiceCallCard key={c.id} call={c} />
-              ))}
-            </div>
-          )
+          <div className="space-y-2 max-w-[760px] mx-auto">
+            {calls.length === 0 && (
+              <div className="text-center text-[13px] text-slate-400 italic py-8">No call history.</div>
+            )}
+            {calls.map((c) => (
+              <VoiceCallCard key={c.id} call={c} />
+            ))}
+
+            {/* Log a call — manual entry for calls placed outside the
+                Twilio bridge so the timeline still captures them. */}
+            {!logFormOpen ? (
+              <button
+                onClick={() => setLogFormOpen(true)}
+                className="w-full py-3 rounded-lg border-2 border-dashed border-slate-300 text-[13px] font-bold text-[var(--customer-file-accent,#003b80)] hover:bg-blue-50 hover:border-blue-400 transition flex items-center justify-center gap-1.5"
+              >
+                <Phone className="w-4 h-4" />
+                Log a call
+              </button>
+            ) : (
+              <div className="rounded-lg border border-slate-300 bg-white p-4 space-y-2.5">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Log a call</div>
+                <div className="grid grid-cols-2 gap-2">
+                  <select
+                    value={logDirection}
+                    onChange={(e) => setLogDirection(e.target.value as "outbound" | "inbound")}
+                    className="h-9 text-[12px] rounded-md border border-slate-200 px-2 bg-white outline-none focus:border-blue-400"
+                  >
+                    <option value="outbound">Outbound</option>
+                    <option value="inbound">Inbound</option>
+                  </select>
+                  <select
+                    value={logOutcome}
+                    onChange={(e) => setLogOutcome(e.target.value)}
+                    className="h-9 text-[12px] rounded-md border border-slate-200 px-2 bg-white outline-none focus:border-blue-400"
+                  >
+                    <option value="connected">Connected</option>
+                    <option value="voicemail_left">Voicemail</option>
+                    <option value="no_answer">No answer</option>
+                    <option value="callback_requested">Callback requested</option>
+                    <option value="not_interested">Not interested</option>
+                  </select>
+                </div>
+                <input
+                  type="text"
+                  value={logDuration}
+                  onChange={(e) => setLogDuration(e.target.value)}
+                  placeholder="Duration (e.g. 2:22) — optional"
+                  className="w-full h-9 text-[12px] rounded-md border border-slate-200 px-3 outline-none focus:border-blue-400"
+                />
+                <textarea
+                  value={logSummary}
+                  onChange={(e) => setLogSummary(e.target.value)}
+                  placeholder="What was discussed?"
+                  rows={3}
+                  className="w-full text-[13px] rounded-md border border-slate-200 px-3 py-2 outline-none focus:border-blue-400 resize-none"
+                />
+                <div className="flex justify-end gap-1.5">
+                  <button
+                    onClick={() => { setLogFormOpen(false); setLogSummary(""); setLogDuration(""); }}
+                    disabled={logSavingCall}
+                    className="text-[12px] font-semibold px-3 h-8 rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => void logCall()}
+                    disabled={!logSummary.trim() || logSavingCall}
+                    className="text-[12px] font-bold px-3.5 h-8 rounded-md bg-[var(--customer-file-accent,#003b80)] hover:opacity-90 disabled:bg-slate-300 text-white transition"
+                  >
+                    {logSavingCall ? "Saving…" : "Save call"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
         {channel === "unified" && (
@@ -746,28 +867,30 @@ function ConversationTab({
             }
             return (
               <div className="space-y-2 max-w-[760px] mx-auto">
-                {merged.map((row) => (
-                  <div key={`${row.k}-${row.k === "call" ? row.c.id : row.m.id}`} className="rounded-lg border border-slate-200 bg-white p-3 flex items-start gap-3">
-                    <span className={`shrink-0 inline-flex items-center text-[10px] font-bold uppercase tracking-wider rounded-md px-2 py-0.5 border ${
-                      row.k === "sms" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
-                      row.k === "email" ? "bg-blue-50 text-blue-700 border-blue-200" :
-                      "bg-purple-50 text-purple-700 border-purple-200"
-                    }`}>{row.k}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-baseline justify-between gap-2">
-                        <span className="text-[12px] font-semibold text-slate-900">
-                          {row.k === "call"
-                            ? (row.c.outcome || row.c.status || "Call").replace(/_/g, " ")
-                            : (row.m.actor_label || (row.m.direction === "in" ? "Customer" : "You"))}
-                        </span>
-                        <span className="text-[11px] text-slate-400">{fmtConvTime(row.ts)}</span>
+                {merged.map((row) => {
+                  if (row.k === "call") {
+                    return <VoiceCallCard key={`call-${row.c.id}`} call={row.c} compact />;
+                  }
+                  return (
+                    <div key={`${row.k}-${row.m.id}`} className="rounded-lg border border-slate-200 bg-white p-3 flex items-start gap-3">
+                      <span className={`shrink-0 inline-flex items-center text-[10px] font-bold uppercase tracking-wider rounded-md px-2 py-0.5 border ${
+                        row.k === "sms" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                        "bg-blue-50 text-blue-700 border-blue-200"
+                      }`}>{row.k}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <span className="text-[12px] font-semibold text-slate-900">
+                            {row.m.actor_label || (row.m.direction === "in" ? "Customer" : "You")}
+                          </span>
+                          <span className="text-[11px] text-slate-400">{fmtConvTime(row.ts)}</span>
+                        </div>
+                        <p className="text-[12.5px] text-slate-700 leading-snug line-clamp-2 mt-0.5">
+                          {row.m.body_text}
+                        </p>
                       </div>
-                      <p className="text-[12.5px] text-slate-700 leading-snug line-clamp-2 mt-0.5">
-                        {row.k === "call" ? (row.c.summary || "—") : row.m.body_text}
-                      </p>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             );
           })()
