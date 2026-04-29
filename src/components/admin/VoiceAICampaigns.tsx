@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Phone, Settings, TrendingUp, Clock, DollarSign,
   PhoneCall, PhoneOff, CheckCircle, AlertTriangle, Loader2,
-  Plus, Pause, Play, ChevronDown, ChevronRight, Megaphone, List,
+  Plus, Pause, Play, ChevronDown, ChevronRight, Megaphone, List, Pencil,
 } from "lucide-react";
 
 /* ── types & defaults ──────────────────────────────── */
@@ -75,6 +75,10 @@ const VoiceAICampaigns = () => {
 
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [showNewCampaign, setShowNewCampaign] = useState(false);
+  // Unified state for the New / Edit dialog. When editingId is set,
+  // the dialog operates in edit mode and PATCHes the row instead of
+  // INSERTing. Cleared (set to null) for create mode.
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [newCampaign, setNewCampaign] = useState({
     name: "",
     target: "",
@@ -175,18 +179,53 @@ const VoiceAICampaigns = () => {
     setConfig((prev) => ({ ...prev, [key]: value }));
 
   /* ── campaign actions ── */
-  const handleCreateCampaign = async () => {
-    if (!newCampaign.name || !newCampaign.target) return;
-    const { data, error } = await (supabase as any).from("voice_campaigns").insert({
-      dealership_id: dealershipId, name: newCampaign.name, target: newCampaign.target,
-      max_calls_per_day: newCampaign.max_calls_per_day, status: "draft",
-      voicemail_message: newCampaign.voicemail_message?.trim() || null,
-    }).select().single();
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    setCampaigns((prev) => [data, ...prev]);
-    setNewCampaign({ name: "", target: "", max_calls_per_day: 25, voicemail_message: "" });
+  const openEditDialog = (c: any) => {
+    setEditingId(c.id);
+    setNewCampaign({
+      name: c.name || "",
+      target: c.target || "",
+      max_calls_per_day: c.max_calls_per_day ?? 25,
+      voicemail_message: c.voicemail_message || "",
+    });
+    setShowNewCampaign(true);
+  };
+
+  const closeDialog = () => {
     setShowNewCampaign(false);
-    toast({ title: "Campaign created", description: `"${data.name}" is ready to activate.` });
+    setEditingId(null);
+    setNewCampaign({ name: "", target: "", max_calls_per_day: 25, voicemail_message: "" });
+  };
+
+  const handleSaveCampaign = async () => {
+    if (!newCampaign.name || !newCampaign.target) return;
+    const fields = {
+      name: newCampaign.name,
+      target: newCampaign.target,
+      max_calls_per_day: newCampaign.max_calls_per_day,
+      voicemail_message: newCampaign.voicemail_message?.trim() || null,
+    };
+
+    if (editingId) {
+      const { data, error } = await (supabase as any)
+        .from("voice_campaigns")
+        .update(fields)
+        .eq("id", editingId)
+        .select()
+        .single();
+      if (error) { toast({ title: "Couldn't save", description: error.message, variant: "destructive" }); return; }
+      setCampaigns((prev) => prev.map((x) => (x.id === editingId ? { ...x, ...data } : x)));
+      toast({ title: "Campaign updated" });
+    } else {
+      const { data, error } = await (supabase as any).from("voice_campaigns").insert({
+        dealership_id: dealershipId,
+        status: "draft",
+        ...fields,
+      }).select().single();
+      if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+      setCampaigns((prev) => [data, ...prev]);
+      toast({ title: "Campaign created", description: `"${data.name}" is ready to activate.` });
+    }
+    closeDialog();
   };
 
   const toggleCampaignStatus = async (c: any) => {
@@ -553,11 +592,16 @@ const VoiceAICampaigns = () => {
                     <td className="py-2.5 pr-4 text-right text-muted-foreground">{c.converted ?? 0}</td>
                     <td className="py-2.5 pr-4 text-muted-foreground">{c.created_at ? new Date(c.created_at).toLocaleDateString() : "—"}</td>
                     <td className="py-2.5 text-right">
-                      {(c.status === "active" || c.status === "paused") && (
-                        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1" onClick={() => toggleCampaignStatus(c)}>
-                          {c.status === "active" ? <><Pause className="w-3 h-3" />Pause</> : <><Play className="w-3 h-3" />Resume</>}
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1" onClick={() => openEditDialog(c)} title="Edit campaign">
+                          <Pencil className="w-3 h-3" />Edit
                         </Button>
-                      )}
+                        {(c.status === "active" || c.status === "paused") && (
+                          <Button variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1" onClick={() => toggleCampaignStatus(c)}>
+                            {c.status === "active" ? <><Pause className="w-3 h-3" />Pause</> : <><Play className="w-3 h-3" />Resume</>}
+                          </Button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}</tbody>
@@ -567,10 +611,10 @@ const VoiceAICampaigns = () => {
         </div>
       </div>
 
-      {/* New Campaign Dialog */}
-      <Dialog open={showNewCampaign} onOpenChange={setShowNewCampaign}>
+      {/* New / Edit Campaign Dialog */}
+      <Dialog open={showNewCampaign} onOpenChange={(v) => { if (!v) closeDialog(); else setShowNewCampaign(true); }}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>New Campaign</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editingId ? "Edit Campaign" : "New Campaign"}</DialogTitle></DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Campaign Name</label>
@@ -605,8 +649,10 @@ const VoiceAICampaigns = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowNewCampaign(false)}>Cancel</Button>
-            <Button onClick={handleCreateCampaign} disabled={!newCampaign.name || !newCampaign.target}>Create</Button>
+            <Button variant="outline" onClick={closeDialog}>Cancel</Button>
+            <Button onClick={handleSaveCampaign} disabled={!newCampaign.name || !newCampaign.target}>
+              {editingId ? "Save changes" : "Create"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
