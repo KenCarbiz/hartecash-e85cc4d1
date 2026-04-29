@@ -9,7 +9,7 @@ import { Slider } from "@/components/ui/slider";
 import { calculateEquity } from "@/lib/equityCalculator";
 import {
   Users, DollarSign, Send, Mail, CheckCircle, Clock,
-  Filter, Loader2, Car, Pickaxe, RefreshCw, Flame, Info,
+  Filter, Loader2, Car, Pickaxe, RefreshCw, Flame, Info, Download,
 } from "lucide-react";
 
 /* ── types ──────────────────────────────────────────── */
@@ -236,6 +236,51 @@ const EquityMining = () => {
   const fmtUsd = (v: number) =>
     v.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 
+  /**
+   * CSV export — dump the filtered leads to a download. Common ask
+   * from BDC managers who want to bulk-import into another tool or
+   * share a list with sales without doing it inside the admin UI.
+   * Fields chosen are the actionable ones: name + contact + vehicle
+   * + equity numbers + outreach status. Tokens / IDs left out so the
+   * file stays human-readable.
+   */
+  const exportCsv = () => {
+    if (filtered.length === 0) {
+      toast.error("No leads in the current filter to export.");
+      return;
+    }
+    const csvEscape = (s: string) =>
+      /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    const headers = [
+      "Name", "Email", "Phone", "Vehicle Year", "Make", "Model",
+      "Mileage", "Condition", "Offered Price", "ACV", "Loan Payoff",
+      "Estimated Equity", "Outreach Sent", "Status", "Created",
+    ];
+    const rows = filtered.map((l) => [
+      l.name || "", l.email || "", l.phone || "",
+      l.vehicle_year || "", l.vehicle_make || "", l.vehicle_model || "",
+      l.mileage || "", l.overall_condition || "",
+      l.offered_price?.toString() || "",
+      l.acv_value?.toString() || "",
+      l.loan_payoff_amount?.toString() || "",
+      l.estimated_equity?.toString() || "",
+      outreachSentIds.has(l.id) || l.outreach_sent ? "yes" : "no",
+      l.progress_status || "",
+      l.created_at?.slice(0, 10) || "",
+    ].map((v) => csvEscape(String(v))).join(","));
+    const csv = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `equity-mining-${new Date().toISOString().slice(0, 10)}-${filtered.length}-leads.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success(`Exported ${filtered.length} leads to CSV.`);
+  };
+
   /* ── render ───────────────────────────────────────── */
 
   if (loading) {
@@ -272,6 +317,17 @@ const EquityMining = () => {
           >
             <Filter className="w-3.5 h-3.5" />
             Filters
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={exportCsv}
+            disabled={filtered.length === 0}
+            className="gap-1.5"
+            title="Download the filtered list as a CSV"
+          >
+            <Download className="w-3.5 h-3.5" />
+            Export
           </Button>
           <Button
             variant="outline"
