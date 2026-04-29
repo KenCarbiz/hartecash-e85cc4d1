@@ -226,6 +226,7 @@ const AdminSidebar = ({
   // both sidebar/theme styling and the role-based visibility toggles.
   const setupDealerItems: SidebarItem[] = [
     ...(canManageAccess ? [{ key: "appearance", label: "Appearance & Access", icon: Sparkles }] : []),
+    ...(canManageAccess ? [{ key: "channels", label: "Channels", icon: Phone }] : []),
     ...(canManageAccess ? [{ key: "site-config", label: "Branding", icon: Palette }] : []),
     ...(canManageAccess && locationCount > 1 ? [{ key: "locations", label: "Locations", icon: MapPin }] : []),
     ...(isManager ? [{ key: "offer-settings", label: "Offer Logic", icon: Settings, badge: pricingAccessRequestCount > 0 ? String(pricingAccessRequestCount) : undefined, badgeVariant: "destructive" as const }] : []),
@@ -296,7 +297,7 @@ const AdminSidebar = ({
     "today", "submissions", "accepted-appts", "executive", "appraiser-queue",
     "offer-settings", "form-config", "inspection-config", "photo-config",
     "depth-policies", "promotions", "notifications",
-    "site-config", "appearance", "landing-flow", "locations", "rooftop-websites", "testimonials", "embed-toolkit",
+    "site-config", "appearance", "channels", "landing-flow", "locations", "rooftop-websites", "testimonials", "embed-toolkit",
     "my-lead-link", "my-referrals",
     "staff", "referrals", "compliance", "reports", "image-inventory", "changelog",
     "onboarding", "system-settings", "pricing-model",

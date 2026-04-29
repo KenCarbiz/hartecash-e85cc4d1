@@ -95,6 +95,25 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Honor the Channels admin toggle. Resolves: location override →
+    // tenant default → true. Ask Postgres rather than re-implementing
+    // the merge; keeps a single source of truth.
+    const { data: enabledRow } = await admin.rpc("channel_enabled", {
+      _dealership_id: sub.dealership_id || "default",
+      _location_id: null,
+      _channel: "click_to_dial",
+    });
+    const channelEnabled = enabledRow === null || enabledRow === undefined ? true : !!enabledRow;
+    if (!channelEnabled) {
+      return new Response(
+        JSON.stringify({
+          error: "channel_disabled",
+          message: "Click-to-dial is turned off for this dealership. An admin can re-enable it in Setup → Channels.",
+        }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     const customerE164 = normalizeE164(sub.phone);
     if (!customerE164) {
       return new Response(

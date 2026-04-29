@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { formatPhone } from "@/lib/utils";
+import { useChannelState } from "@/hooks/useChannelState";
 
 interface Props {
   submissionId: string;
@@ -41,10 +42,26 @@ const ClickToDialButton = ({
   variant = "link",
 }: Props) => {
   const { toast } = useToast();
+  const { state: channels, loading: channelsLoading } = useChannelState();
   const [open, setOpen] = useState(false);
   const [calling, setCalling] = useState(false);
 
   if (!customerPhone) return null;
+
+  // If the dealership disabled click-to-dial, fall back to a plain
+  // tel: link so staff can still dial from their device — but skip
+  // the Twilio bridge call.
+  if (!channelsLoading && !channels.click_to_dial) {
+    return (
+      <a
+        href={`tel:${customerPhone}`}
+        title="Click-to-dial is disabled for this dealership — opens your device dialer instead"
+        className={className || "font-mono hover:underline"}
+      >
+        {formatPhone(customerPhone)}
+      </a>
+    );
+  }
 
   const dial = async () => {
     setCalling(true);
