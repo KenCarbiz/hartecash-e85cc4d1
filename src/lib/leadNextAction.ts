@@ -13,16 +13,16 @@ export interface LeadAction {
 }
 
 export function nextActionForLead(s: Submission): LeadAction {
-  const digits = s.phone?.replace(/\D/g, "");
-  const tel = digits ? `tel:+1${digits}` : undefined;
-
+  // No tel: href — call actions go through the Twilio bridge via
+  // `clickToDial(s.id)` from "@/lib/clickToDial". Consumers of this
+  // helper should invoke that on click when actionKey === "call".
   switch (s.progress_status) {
     case "new":
-      return { label: "Call", variant: "primary", icon: "phone", href: tel, actionKey: "call" };
+      return { label: "Call", variant: "primary", icon: "phone", actionKey: "call" };
     case "contacted":
-      return { label: "Follow up", variant: "ghost", icon: "phone", href: tel, actionKey: "call" };
+      return { label: "Follow up", variant: "ghost", icon: "phone", actionKey: "call" };
     case "no_contact":
-      return { label: "Retry", variant: "ghost", icon: "phone", href: tel, actionKey: "call" };
+      return { label: "Retry", variant: "ghost", icon: "phone", actionKey: "call" };
     case "inspection_scheduled":
       return { label: "Prep", variant: "ghost", icon: "eye", actionKey: "open" };
     case "inspection_completed":

@@ -113,3 +113,11 @@ project_id = "ptiwdwfdckfqivoocyvp"
   # latest button color / copy / sale banner without re-installing.
   [functions.embed-config]
     verify_jwt = false
+
+  # ── Telephony ──
+  # Admin-only click-to-dial bridge: dials the rep's cell first, then
+  # bridges to the customer with the dealership's Twilio number as
+  # caller-ID. Recording is OFF in v1 — re-enable only with consent
+  # capture for two-party-consent states.
+  [functions.twilio-click-to-dial]
+    verify_jwt = true

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { ArrowRight, Eye, Phone, DollarSign } from "lucide-react";
 import type { Submission, Appointment, DealerLocation } from "@/lib/adminConstants";
+import { clickToDial } from "@/lib/clickToDial";
 
 interface TodayHomeProps {
   submissions: Submission[];
@@ -190,7 +191,7 @@ const TodayHome = ({
                 primaryLabel="Prep file"
                 onPrimary={() => onView(s)}
                 secondaryLabel="Call"
-                onSecondary={() => s.phone && (window.location.href = `tel:${s.phone}`)}
+                onSecondary={() => { if (s.phone) clickToDial(s.id); }}
               />
             ))}
           </div>

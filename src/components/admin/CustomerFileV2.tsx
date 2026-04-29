@@ -31,6 +31,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import CustomerFileAccentStyle from "./CustomerFileAccentStyle";
 import SubmissionNotesModal, { fetchSubmissionNotes, type SubmissionNote } from "./SubmissionNotesModal";
+import ClickToDialButton from "./ClickToDialButton";
 import { printCheckRequest } from "@/lib/printUtils";
 import logoFallback from "@/assets/logo-placeholder.png";
 
@@ -197,7 +198,12 @@ function V2Identity({
       {sub.phone ? (
         <div className="flex items-center gap-1.5">
           <Phone className="w-3 h-3 shrink-0" />
-          <a href={`tel:${sub.phone}`} className="hover:underline">{sub.phone}</a>
+          <ClickToDialButton
+            submissionId={sub.id}
+            customerPhone={sub.phone}
+            customerName={sub.name}
+            className="hover:underline cursor-pointer"
+          />
         </div>
       ) : (
         <div className="text-white/40 text-[12px] italic">No phone on file</div>
@@ -242,7 +248,7 @@ function V2Identity({
               {sub.name || "Unknown customer"}
             </div>
             <div className="text-[12px] text-white/80 mt-1 flex items-center gap-3 flex-wrap">
-              {sub.phone && <a href={`tel:${sub.phone}`} className="hover:underline">{sub.phone}</a>}
+              {sub.phone && <ClickToDialButton submissionId={sub.id} customerPhone={sub.phone} customerName={sub.name} className="hover:underline cursor-pointer" />}
               {sub.phone && sub.email && <span className="text-white/50">·</span>}
               {sub.email && <a href={`mailto:${sub.email}`} className="hover:underline truncate">{sub.email}</a>}
             </div>

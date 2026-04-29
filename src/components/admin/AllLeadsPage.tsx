@@ -32,6 +32,7 @@ import {
   isOfferPendingSubmission,
 } from "@/lib/adminConstants";
 import { cn } from "@/lib/utils";
+import { clickToDial } from "@/lib/clickToDial";
 
 interface AllLeadsPageProps {
   submissions: Submission[];
@@ -179,11 +180,6 @@ type ActionButton = {
   onClick: (s: Submission, openFile: () => void) => void;
 };
 
-const TEL = (s: Submission) => {
-  const digits = s.phone?.replace(/\D/g, "");
-  return digits ? `tel:+1${digits}` : null;
-};
-
 const actionForLead = (s: Submission): ActionButton => {
   if (s.progress_status === "customer_arrived") {
     return {
@@ -223,8 +219,7 @@ const actionForLead = (s: Submission): ActionButton => {
       icon: PhoneIcon,
       cls: "bg-background border hover:bg-muted/60 text-foreground",
       onClick: (sub) => {
-        const tel = TEL(sub);
-        if (tel) window.location.href = tel;
+        if (sub.phone) clickToDial(sub.id);
       },
     };
   }
@@ -242,8 +237,7 @@ const actionForLead = (s: Submission): ActionButton => {
     icon: PhoneIcon,
     cls: "bg-slate-900 hover:bg-slate-800 text-white",
     onClick: (sub) => {
-      const tel = TEL(sub);
-      if (tel) window.location.href = tel;
+      if (sub.phone) clickToDial(sub.id);
     },
   };
 };
