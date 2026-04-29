@@ -116,26 +116,67 @@ const ClassicCommsCard = ({ submissionId, customerPhone, customerEmail, onOpenFu
       });
       return;
     }
-    setSending(true);
-    const { error } = await (supabase as never as {
-      from: (t: string) => { insert: (rows: unknown) => Promise<{ error: { message: string } | null }> };
-    })
-      .from("conversation_events")
-      .insert({
-        submission_id: submissionId,
-        channel: tab === "sms" ? "sms" : "email",
-        direction: "out",
-        actor_type: "staff",
-        actor_label: "You",
-        body_text: body,
-        occurred_at: new Date().toISOString(),
-      });
-    setSending(false);
-    if (error) {
-      toast({ title: "Send failed", description: error.message, variant: "destructive" });
+    if (tab === "sms" && !customerPhone) {
+      toast({ title: "No phone on file", description: "Can't text — phone number missing.", variant: "destructive" });
       return;
     }
+    if (tab === "email" && !customerEmail) {
+      toast({ title: "No email on file", description: "Can't email — address missing.", variant: "destructive" });
+      return;
+    }
+    setSending(true);
+
+    // Route through send-notification so the message actually reaches
+    // Twilio / the email queue. Mirror ConversationThread's flow: send
+    // first, then log a richer conversation_events row so the timeline
+    // shows the typed body rather than the generic mirror placeholder.
+    const trigger_key = tab === "sms" ? "customer_staff_reply_sms" : "customer_staff_reply_email";
+    const recipientField = tab === "sms"
+      ? { recipient_phone: customerPhone! }
+      : { recipient_email: customerEmail! };
+
+    const { error: sendError } = await supabase.functions.invoke("send-notification", {
+      body: {
+        trigger_key,
+        submission_id: submissionId,
+        custom_body: body,
+        ...recipientField,
+      },
+    });
+
+    if (sendError) {
+      setSending(false);
+      let detail = sendError.message;
+      try {
+        const ctx = (sendError as unknown as { context?: Response }).context;
+        if (ctx && typeof ctx.json === "function") {
+          const j = await ctx.json();
+          detail = j?.message || j?.error || detail;
+        }
+      } catch {
+        /* keep default */
+      }
+      toast({ title: "Send failed", description: detail, variant: "destructive" });
+      return;
+    }
+
+    await supabase.from("conversation_events").insert({
+      submission_id: submissionId,
+      channel: tab === "sms" ? "sms" : "email",
+      direction: "outbound",
+      actor_type: "staff",
+      actor_label: "You",
+      body_text: body,
+      occurred_at: new Date().toISOString(),
+      source_table: tab === "sms" ? "manual_sms" : "manual_email",
+    });
+
+    setSending(false);
     setReply("");
+    toast({
+      title: tab === "sms" ? "SMS sent" : "Email sent",
+      description: tab === "sms" ? `Texted ${customerPhone}` : `Emailed ${customerEmail}`,
+    });
     void load();
   };
 

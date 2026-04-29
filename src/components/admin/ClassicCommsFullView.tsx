@@ -265,26 +265,57 @@ const ClassicCommsFullView = ({
     setBusy("sending");
     try {
       const isEmail = effectiveSendChannel === "email";
-      const metadata = isEmail
-        ? { subject: emailSubject.trim() || "Re: Your trade-in offer" }
-        : null;
-      const { error } = await (supabase as never as {
-        from: (t: string) => { insert: (rows: unknown) => Promise<{ error: { message: string } | null }> };
-      })
-        .from("conversation_events")
-        .insert({
+      const subject = isEmail ? (emailSubject.trim() || "Re: Your trade-in offer") : null;
+
+      // Route through send-notification so the message actually
+      // reaches Twilio / the email queue. Then log a richer
+      // conversation_events row so the timeline shows the typed body.
+      const trigger_key = isEmail ? "customer_staff_reply_email" : "customer_staff_reply_sms";
+      const recipientField = isEmail
+        ? { recipient_email: customerEmail!, custom_subject: subject }
+        : { recipient_phone: customerPhone! };
+
+      const { error: sendError } = await supabase.functions.invoke("send-notification", {
+        body: {
+          trigger_key,
           submission_id: submissionId,
-          channel: effectiveSendChannel,
-          direction: "out",
-          actor_type: "staff",
-          actor_label: "You",
-          body_text: body,
-          occurred_at: new Date().toISOString(),
-          metadata,
-        });
-      if (error) throw new Error(error.message);
+          custom_body: body,
+          ...recipientField,
+        },
+      });
+
+      if (sendError) {
+        let detail = sendError.message;
+        try {
+          const ctx = (sendError as unknown as { context?: Response }).context;
+          if (ctx && typeof ctx.json === "function") {
+            const j = await ctx.json();
+            detail = j?.message || j?.error || detail;
+          }
+        } catch {
+          /* keep default */
+        }
+        throw new Error(detail);
+      }
+
+      await supabase.from("conversation_events").insert({
+        submission_id: submissionId,
+        channel: effectiveSendChannel,
+        direction: "outbound",
+        actor_type: "staff",
+        actor_label: "You",
+        body_text: body,
+        occurred_at: new Date().toISOString(),
+        metadata: subject ? { subject } : {},
+        source_table: isEmail ? "manual_email" : "manual_sms",
+      });
+
       setDraft("");
       setEmailSubject("");
+      toast({
+        title: isEmail ? "Email sent" : "SMS sent",
+        description: isEmail ? `Emailed ${customerEmail}` : `Texted ${customerPhone}`,
+      });
       void load();
     } catch (e) {
       toast({ title: "Send failed", description: (e as Error).message, variant: "destructive" });

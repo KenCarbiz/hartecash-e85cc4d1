@@ -582,26 +582,59 @@ function ConversationTab({
   const send = async () => {
     const body = draft.trim();
     if (!body || composerDisabled || sending) return;
+    if (channel !== "sms" && channel !== "email") return;
     setSending(true);
-    const { error } = await (supabase as never as {
-      from: (t: string) => { insert: (rows: unknown) => Promise<{ error: { message: string } | null }> };
-    })
-      .from("conversation_events")
-      .insert({
+
+    // Route through send-notification so the message actually reaches
+    // Twilio / the email queue. Mirror ConversationThread: send first,
+    // then log a richer conversation_events row.
+    const trigger_key = channel === "sms" ? "customer_staff_reply_sms" : "customer_staff_reply_email";
+    const recipientField = channel === "sms"
+      ? { recipient_phone: sub.phone! }
+      : { recipient_email: sub.email! };
+
+    const { error: sendError } = await supabase.functions.invoke("send-notification", {
+      body: {
+        trigger_key,
         submission_id: sub.id,
-        channel: channel === "calls" ? "sms" : channel,
-        direction: "out",
-        actor_type: "staff",
-        actor_label: "You",
-        body_text: body,
-        occurred_at: new Date().toISOString(),
-      });
-    setSending(false);
-    if (error) {
-      toast({ title: "Send failed", description: error.message, variant: "destructive" });
+        custom_body: body,
+        ...recipientField,
+      },
+    });
+
+    if (sendError) {
+      setSending(false);
+      let detail = sendError.message;
+      try {
+        const ctx = (sendError as unknown as { context?: Response }).context;
+        if (ctx && typeof ctx.json === "function") {
+          const j = await ctx.json();
+          detail = j?.message || j?.error || detail;
+        }
+      } catch {
+        /* keep default */
+      }
+      toast({ title: "Send failed", description: detail, variant: "destructive" });
       return;
     }
+
+    await supabase.from("conversation_events").insert({
+      submission_id: sub.id,
+      channel,
+      direction: "outbound",
+      actor_type: "staff",
+      actor_label: "You",
+      body_text: body,
+      occurred_at: new Date().toISOString(),
+      source_table: channel === "sms" ? "manual_sms" : "manual_email",
+    });
+
+    setSending(false);
     setDraft("");
+    toast({
+      title: channel === "sms" ? "SMS sent" : "Email sent",
+      description: channel === "sms" ? `Texted ${sub.phone}` : `Emailed ${sub.email}`,
+    });
     void load();
   };
 
