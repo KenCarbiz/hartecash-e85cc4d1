@@ -121,6 +121,12 @@ const VoiceAICampaigns = () => {
     target: "",
     max_calls_per_day: 25,
     voicemail_message: "",
+    calling_hours_start: "09:00",
+    calling_hours_end: "18:00",
+    max_call_duration: 5,
+    retry_attempts: 2,
+    retry_delay_hours: 24,
+    script_template: "",
   });
   const [callLog, setCallLog] = useState<any[]>([]);
   const [expandedCall, setExpandedCall] = useState<string | null>(null);
@@ -256,6 +262,12 @@ const VoiceAICampaigns = () => {
       target: c.target || "",
       max_calls_per_day: c.max_calls_per_day ?? 25,
       voicemail_message: c.voicemail_message || "",
+      calling_hours_start: c.calling_hours_start || "09:00",
+      calling_hours_end: c.calling_hours_end || "18:00",
+      max_call_duration: c.max_call_duration ?? 5,
+      retry_attempts: c.retry_attempts ?? 2,
+      retry_delay_hours: c.retry_delay_hours ?? 24,
+      script_template: c.script_template || "",
     });
     setShowNewCampaign(true);
   };
@@ -263,7 +275,12 @@ const VoiceAICampaigns = () => {
   const closeDialog = () => {
     setShowNewCampaign(false);
     setEditingId(null);
-    setNewCampaign({ name: "", target: "", max_calls_per_day: 25, voicemail_message: "" });
+    setNewCampaign({
+      name: "", target: "", max_calls_per_day: 25, voicemail_message: "",
+      calling_hours_start: "09:00", calling_hours_end: "18:00",
+      max_call_duration: 5, retry_attempts: 2, retry_delay_hours: 24,
+      script_template: "",
+    });
   };
 
   const handleSaveCampaign = async () => {
@@ -273,6 +290,12 @@ const VoiceAICampaigns = () => {
       target: newCampaign.target,
       max_calls_per_day: newCampaign.max_calls_per_day,
       voicemail_message: newCampaign.voicemail_message?.trim() || null,
+      calling_hours_start: newCampaign.calling_hours_start || "09:00",
+      calling_hours_end: newCampaign.calling_hours_end || "18:00",
+      max_call_duration: newCampaign.max_call_duration ?? 5,
+      retry_attempts: newCampaign.retry_attempts ?? 2,
+      retry_delay_hours: newCampaign.retry_delay_hours ?? 24,
+      script_template: newCampaign.script_template?.trim() || null,
     };
 
     if (editingId) {
@@ -753,6 +776,84 @@ const VoiceAICampaigns = () => {
               )}
             </div>
             <ScriptPreviewSection editingId={editingId} />
+
+            {/* Advanced settings — collapsible to keep the dialog tidy. */}
+            <details className="border-t border-border pt-3 -mt-1">
+              <summary className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                <ChevronRight className="w-3.5 h-3.5 [details[open]_&]:rotate-90 transition-transform" />
+                Advanced settings
+                <span className="text-muted-foreground font-normal">— calling hours, retries, custom script</span>
+              </summary>
+              <div className="space-y-3 mt-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs font-medium">Calling hours start</label>
+                    <Input
+                      type="time"
+                      value={newCampaign.calling_hours_start}
+                      onChange={(e) => setNewCampaign((p) => ({ ...p, calling_hours_start: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium">Calling hours end</label>
+                    <Input
+                      type="time"
+                      value={newCampaign.calling_hours_end}
+                      onChange={(e) => setNewCampaign((p) => ({ ...p, calling_hours_end: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Customer's local time, derived from ZIP. Outside this window, calls queue but won't dial.
+                </p>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <label className="text-xs font-medium">Max duration (min)</label>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={30}
+                      value={newCampaign.max_call_duration}
+                      onChange={(e) => setNewCampaign((p) => ({ ...p, max_call_duration: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium">Retries</label>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={5}
+                      value={newCampaign.retry_attempts}
+                      onChange={(e) => setNewCampaign((p) => ({ ...p, retry_attempts: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium">Retry delay (h)</label>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={168}
+                      value={newCampaign.retry_delay_hours}
+                      onChange={(e) => setNewCampaign((p) => ({ ...p, retry_delay_hours: Number(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium">Custom script template <span className="text-muted-foreground font-normal">(optional — overrides the default)</span></label>
+                  <textarea
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs min-h-[100px] font-mono"
+                    placeholder="Leave blank to use the default Offer Follow-Up script. Use {{customer_first_name}}, {{vehicle_make}}, etc."
+                    value={newCampaign.script_template}
+                    onChange={(e) => setNewCampaign((p) => ({ ...p, script_template: e.target.value }))}
+                  />
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    Bland.ai will read this exact prompt. The Preview above shows how it'll render with sample data.
+                  </p>
+                </div>
+              </div>
+            </details>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={closeDialog}>Cancel</Button>
