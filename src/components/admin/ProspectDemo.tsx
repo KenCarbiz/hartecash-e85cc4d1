@@ -40,6 +40,7 @@ import {
 } from "@/lib/colorAnalysis";
 import { supabase } from "@/integrations/supabase/client";
 import { Brain, Wand2, Share2, Copy, Check } from "lucide-react";
+import ProspectDemoHistory from "./ProspectDemoHistory";
 
 /**
  * ProspectDemo — standalone sales-pitch generator for Autocurb staff
@@ -659,6 +660,9 @@ const ProspectDemo = () => {
           on cold calls, in emails, or in the showroom. Powered by microlink.io (free, 50/day).
         </div>
       </div>
+
+      {/* Run history — past saved demos */}
+      <ProspectDemoHistory />
 
       {/* Prospect config form */}
       <div className="rounded-lg border border-slate-200 bg-white p-4 space-y-4">
