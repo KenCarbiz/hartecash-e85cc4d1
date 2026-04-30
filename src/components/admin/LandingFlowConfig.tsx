@@ -65,16 +65,34 @@ const LandingFlowConfig = () => {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const { data } = await supabase
+      // Ask for both columns first; if landing_form_variant isn't
+      // deployed yet on this environment, fall back to template-only
+      // so the page still loads instead of bailing out with a generic
+      // schema-cache error.
+      let row: any = null;
+      const wide = await supabase
         .from("site_config" as any)
         .select("landing_template, landing_form_variant")
         .eq("dealership_id", dealershipId)
         .maybeSingle();
+      if (wide.error) {
+        const lower = wide.error.message?.toLowerCase() || "";
+        if (lower.includes("landing_form_variant") || lower.includes("schema cache")) {
+          const narrow = await supabase
+            .from("site_config" as any)
+            .select("landing_template")
+            .eq("dealership_id", dealershipId)
+            .maybeSingle();
+          row = narrow.data;
+        }
+      } else {
+        row = wide.data;
+      }
       const next: State = {
         landing_template:
-          ((data as any)?.landing_template as LandingTemplate) || DEFAULTS.landing_template,
+          (row?.landing_template as LandingTemplate) || DEFAULTS.landing_template,
         landing_form_variant:
-          ((data as any)?.landing_form_variant as FormVariant) || DEFAULTS.landing_form_variant,
+          (row?.landing_form_variant as FormVariant) || DEFAULTS.landing_form_variant,
       };
       setState(next);
       setSaved(next);
@@ -88,20 +106,43 @@ const LandingFlowConfig = () => {
 
   const handleSave = async () => {
     setSaving(true);
-    const { error } = await supabase
+    const fullPayload = {
+      landing_template: state.landing_template,
+      landing_form_variant: state.landing_form_variant,
+      updated_at: new Date().toISOString(),
+    };
+    let { error } = await supabase
       .from("site_config" as any)
-      .update({
-        landing_template: state.landing_template,
-        landing_form_variant: state.landing_form_variant,
-        updated_at: new Date().toISOString(),
-      } as any)
+      .update(fullPayload as any)
       .eq("dealership_id", dealershipId);
+
+    // Resilience: if the new column is missing on this DB, retry
+    // with just the template + updated_at so the admin's template
+    // change still persists. Surface a non-destructive note so they
+    // know to apply the pending migration to unlock the variant
+    // toggle.
+    let variantSkipped = false;
+    if (error) {
+      const lower = error.message?.toLowerCase() || "";
+      const missingVariant = lower.includes("landing_form_variant");
+      const variantTouched = state.landing_form_variant !== saved.landing_form_variant;
+      if (missingVariant && variantTouched) {
+        const fallback = await supabase
+          .from("site_config" as any)
+          .update({
+            landing_template: state.landing_template,
+            updated_at: new Date().toISOString(),
+          } as any)
+          .eq("dealership_id", dealershipId);
+        if (!fallback.error) {
+          error = null;
+          variantSkipped = true;
+        }
+      }
+    }
+
     setSaving(false);
     if (error) {
-      // When pending migrations haven't been applied (or the PostgREST
-      // schema cache is stale after a fresh deploy) the landing_template
-      // column isn't visible yet. Give a diagnostic instead of the raw
-      // error so the admin knows what to do.
       const lower = error.message?.toLowerCase() || "";
       const missingVariant = lower.includes("landing_form_variant");
       const missingTemplate = lower.includes("landing_template");
@@ -119,8 +160,22 @@ const LandingFlowConfig = () => {
       });
       return;
     }
-    setSaved(state);
-    toast({ title: "Saved", description: "Landing page template updated." });
+    // Persist saved state. When we skipped the variant the snapshot
+    // keeps the old value so the toggle's "dirty dot" still shows
+    // until the column is provisioned and a real save lands.
+    setSaved({
+      ...state,
+      ...(variantSkipped ? { landing_form_variant: saved.landing_form_variant } : {}),
+    });
+    if (variantSkipped) {
+      toast({
+        title: "Template saved",
+        description:
+          "Public Sell Flow toggle didn't persist — the landing_form_variant column isn't deployed yet. Apply migration 20260430010000_landing_form_variant.sql to unlock it.",
+      });
+    } else {
+      toast({ title: "Saved", description: "Landing page settings updated." });
+    }
   };
 
   if (loading) {
