@@ -125,7 +125,13 @@ serve(async (req) => {
     // through. Cap response size to 2 MB and total time to 8s.
     const html = await fetchWithGuards(homepageUrl, 8000, 2 * 1024 * 1024);
     if (html === null) {
-      return json({ error: "Couldn't fetch homepage" }, 502);
+      // Return 200 with ok:false so supabase-js surfaces the body
+      // instead of wrapping it in a generic FunctionsHttpError. The
+      // FE checks for `error` on the data payload.
+      return json({
+        error:
+          "Couldn't fetch the homepage. The site may be blocking automated requests (Cloudflare / DataDome / SOKAL bot detection), be unreachable, or have an SSL cert issue.",
+      });
     }
     const lowerHtml = html.toLowerCase();
 
@@ -160,7 +166,10 @@ serve(async (req) => {
       cms: cms.name,
     });
   } catch (err) {
-    return json({ error: (err as Error).message || "unknown error" }, 500);
+    // Top-level safety net — return 200 so the FE shows the real
+    // reason instead of "non-2xx status code".
+    console.error("[detect-dealer-pages] handler crashed:", err);
+    return json({ error: (err as Error).message || "unknown error" });
   }
 });
 

@@ -473,14 +473,31 @@ const ProspectDemo = () => {
     setDetectingPages(true);
     try {
       const { data, error } = await supabase.functions.invoke<{
-        listing: string | null;
-        vdp: string | null;
-        cms: string | null;
+        listing?: string | null;
+        vdp?: string | null;
+        cms?: string | null;
+        error?: string;
       }>("detect-dealer-pages", {
         body: { homepage: homeUrl },
       });
-      if (error) throw new Error(error.message);
+      // The function now returns 200 with { error: ... } when it
+      // can't reach the homepage (CF / SOKAL / cert error / DNS).
+      // It can also return a non-2xx for auth or hard crashes — try
+      // to read the body in that case.
+      if (error) {
+        let detail = error.message || "Auto-detect failed";
+        const ctx = (error as unknown as { context?: { response?: Response } }).context;
+        if (ctx?.response) {
+          try {
+            const body = (await ctx.response.clone().json()) as { error?: string };
+            if (body?.error) detail = body.error;
+          } catch { /* body unreadable, keep generic */ }
+        }
+        throw new Error(detail);
+      }
       if (!data) throw new Error("Empty response from detect-dealer-pages");
+      if (data.error) throw new Error(data.error);
+
       let filled = 0;
       if (data.listing) {
         setListingUrl(data.listing);
