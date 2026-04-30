@@ -890,7 +890,14 @@ export default function SubmissionDetailSheetClassic({
                     Print
                   </button>
                   {manualAppraisalNeeded && (
-                    <button className="px-3 h-8 rounded-lg bg-white text-[#003b80] hover:bg-white/90 text-[12px] font-bold flex items-center gap-1.5 transition">
+                    <button
+                      onClick={() => {
+                        if (!sub?.token || !sub?.id) return;
+                        sessionStorage.setItem("autocurb:reopenSubmissionId", sub.id);
+                        navigate(`/appraisal/${sub.token}`);
+                      }}
+                      className="px-3 h-8 rounded-lg bg-white text-[#003b80] hover:bg-white/90 text-[12px] font-bold flex items-center gap-1.5 transition"
+                    >
                       <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3.5a.5.5 0 01.5.5v5.5H16a.5.5 0 010 1h-5.5V16a.5.5 0 01-1 0v-5.5H4a.5.5 0 010-1h5.5V4a.5.5 0 01.5-.5z"/></svg>
                       Open Appraisal
                     </button>
