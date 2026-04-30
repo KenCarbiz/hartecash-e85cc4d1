@@ -2,6 +2,7 @@ import { Component, ReactNode } from "react";
 import SellCarForm from "@/components/SellCarForm";
 import QuickOfferForm from "@/components/QuickOfferForm";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface LandingFormProps {
   leadSource?: string;
@@ -41,7 +42,24 @@ class QuickOfferBoundary extends Component<{ fallback: ReactNode; children: Reac
 
 const LandingForm = ({ leadSource, variant = "split" }: LandingFormProps) => {
   const { config } = useSiteConfig();
-  const useQuick = config.landing_form_variant === "quick";
+  const { tenant } = useTenant();
+
+  // Read the variant from the DB first; fall back to a per-tenant
+  // localStorage flag the admin sets when the landing_form_variant
+  // column isn't deployed yet. This keeps the admin's preview working
+  // before the Supabase migration lands. Customers on other browsers
+  // see the DB-default ("detailed") until the migration is applied.
+  let resolved: string | undefined = config.landing_form_variant;
+  if (resolved == null || resolved === "" || resolved === "detailed") {
+    try {
+      const local = localStorage.getItem(
+        `landing_form_variant_pending:${tenant.dealership_id}`,
+      );
+      if (local === "quick" || local === "detailed") resolved = local;
+    } catch { /* private mode: ignore */ }
+  }
+
+  const useQuick = resolved === "quick";
   const detailed = <SellCarForm leadSource={leadSource} variant={variant} />;
   return useQuick
     ? (
