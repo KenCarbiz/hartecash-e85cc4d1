@@ -30,6 +30,7 @@ const ServiceLinkGen = lazy(() => import("./pages/ServiceLinkGen"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const OfferPage = lazy(() => import("./pages/OfferPage"));
+const QuickOfferPage = lazy(() => import("./pages/QuickOfferPage"));
 const Sitemap = lazy(() => import("./pages/Sitemap"));
 const ReviewPage = lazy(() => import("./pages/ReviewPage"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
@@ -132,6 +133,7 @@ const AnimatedRoutes = () => {
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/offer/:token" element={<OfferPage />} />
+        <Route path="/quick-offer" element={<QuickOfferPage />} />
         <Route path="/sitemap" element={<Sitemap />} />
         <Route path="/review/:token" element={<ReviewPage />} />
         <Route path="/unsubscribe" element={<Unsubscribe />} />

@@ -1,7 +1,7 @@
 import { Search, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
-import SellCarForm from "@/components/SellCarForm";
+import LandingForm from "@/components/LandingForm";
 import { DefaultBelowFold } from "../sharedSections";
 
 /**
@@ -77,7 +77,7 @@ const SlabTemplate = () => {
 
       <section id="sell-car-form" className="bg-background py-16 px-5">
         <div className="max-w-[560px] mx-auto rounded-2xl shadow border border-border overflow-hidden">
-          <SellCarForm variant="split" />
+          <LandingForm variant="split" />
         </div>
       </section>
 

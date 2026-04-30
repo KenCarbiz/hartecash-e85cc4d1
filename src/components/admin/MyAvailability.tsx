@@ -116,7 +116,22 @@ const MyAvailability = () => {
     });
     setSaving(false);
     if (error) {
-      toast({ title: "Couldn't save", description: error.message, variant: "destructive" });
+      // Distinguish "function isn't deployed yet" from real save errors so
+      // the dealer admin knows to apply the pending migration rather than
+      // chasing phantom data issues. PostgREST returns this exact phrase
+      // when the RPC isn't in the schema cache.
+      const msg = error.message || "";
+      const missingFn =
+        msg.includes("Could not find the function") ||
+        msg.includes("set_my_call_availability") ||
+        msg.toLowerCase().includes("schema cache");
+      toast({
+        title: "Couldn't save",
+        description: missingFn
+          ? "The set_my_call_availability function isn't deployed in this environment yet. Apply the pending Supabase migration (20260430020000_set_my_call_availability_heal.sql) and refresh the page."
+          : msg,
+        variant: "destructive",
+      });
       return;
     }
     toast({ title: "Saved" });

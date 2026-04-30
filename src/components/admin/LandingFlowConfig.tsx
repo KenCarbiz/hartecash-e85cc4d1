@@ -3,9 +3,33 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Save, Loader2, Layout, Sparkles } from "lucide-react";
+import { Save, Loader2, Layout, Sparkles, Zap, ListChecks } from "lucide-react";
 import { LANDING_TEMPLATES, type LandingTemplate } from "@/hooks/useSiteConfig";
 import TemplateThumbnail from "@/components/landing/TemplateThumbnail";
+
+type FormVariant = "detailed" | "quick";
+
+const FORM_VARIANTS: Array<{
+  value: FormVariant;
+  label: string;
+  description: string;
+  icon: typeof Zap;
+}> = [
+  {
+    value: "detailed",
+    label: "Detailed step-by-step",
+    description:
+      "The classic multi-step form: vehicle → trim → condition → history → contact. Highest data quality, longer time-to-offer.",
+    icon: ListChecks,
+  },
+  {
+    value: "quick",
+    label: "60-second one-screen",
+    description:
+      "Plate or VIN + ZIP + mileage + two yes/no condition Q's on a single screen. Conversion-tuned, Carvana-style. Customers land on the offer page in seconds.",
+    icon: Zap,
+  },
+];
 
 /**
  * LandingFlowConfig — Landing & Flow admin page.
@@ -20,10 +44,12 @@ import TemplateThumbnail from "@/components/landing/TemplateThumbnail";
 
 interface State {
   landing_template: LandingTemplate;
+  landing_form_variant: FormVariant;
 }
 
 const DEFAULTS: State = {
   landing_template: "classic",
+  landing_form_variant: "detailed",
 };
 
 const LandingFlowConfig = () => {
@@ -41,12 +67,14 @@ const LandingFlowConfig = () => {
       setLoading(true);
       const { data } = await supabase
         .from("site_config" as any)
-        .select("landing_template")
+        .select("landing_template, landing_form_variant")
         .eq("dealership_id", dealershipId)
         .maybeSingle();
       const next: State = {
         landing_template:
           ((data as any)?.landing_template as LandingTemplate) || DEFAULTS.landing_template,
+        landing_form_variant:
+          ((data as any)?.landing_form_variant as FormVariant) || DEFAULTS.landing_form_variant,
       };
       setState(next);
       setSaved(next);
@@ -54,7 +82,9 @@ const LandingFlowConfig = () => {
     })();
   }, [dealershipId]);
 
-  const dirty = state.landing_template !== saved.landing_template;
+  const dirty =
+    state.landing_template !== saved.landing_template ||
+    state.landing_form_variant !== saved.landing_form_variant;
 
   const handleSave = async () => {
     setSaving(true);
@@ -62,6 +92,7 @@ const LandingFlowConfig = () => {
       .from("site_config" as any)
       .update({
         landing_template: state.landing_template,
+        landing_form_variant: state.landing_form_variant,
         updated_at: new Date().toISOString(),
       } as any)
       .eq("dealership_id", dealershipId);
@@ -71,14 +102,17 @@ const LandingFlowConfig = () => {
       // schema cache is stale after a fresh deploy) the landing_template
       // column isn't visible yet. Give a diagnostic instead of the raw
       // error so the admin knows what to do.
-      const missingCol =
-        error.message?.toLowerCase().includes("landing_template") ||
-        error.message?.toLowerCase().includes("schema cache") ||
-        (error.message?.toLowerCase().includes("column") &&
-          error.message?.toLowerCase().includes("does not exist"));
+      const lower = error.message?.toLowerCase() || "";
+      const missingVariant = lower.includes("landing_form_variant");
+      const missingTemplate = lower.includes("landing_template");
+      const cacheMiss = lower.includes("schema cache") ||
+        (lower.includes("column") && lower.includes("does not exist"));
+      const missingCol = missingVariant || missingTemplate || cacheMiss;
       toast({
-        title: missingCol ? "Landing templates not yet provisioned" : "Save failed",
-        description: missingCol
+        title: missingCol ? "Landing settings not yet provisioned" : "Save failed",
+        description: missingVariant
+          ? "The landing_form_variant column hasn't been added yet. Apply the pending Supabase migration (20260430010000_landing_form_variant.sql) or refresh the PostgREST schema cache, then try again."
+          : missingTemplate || cacheMiss
           ? "The landing_template column hasn't been added to this environment yet. Apply the pending Supabase migrations (20260419000000_landing_templates_and_offer_flow.sql) or refresh the PostgREST schema cache, then try again."
           : error.message,
         variant: "destructive",
@@ -110,6 +144,52 @@ const LandingFlowConfig = () => {
           every &quot;what the customer sees in the form&quot; decision is in one place.
         </p>
       </header>
+
+      {/* ── Form variant picker ── */}
+      <section className="bg-card rounded-xl border border-border p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Zap className="w-4 h-4 text-primary" />
+          <h3 className="font-bold">Public Sell Flow</h3>
+        </div>
+        <p className="text-xs text-muted-foreground mb-4">
+          Which form your landing page mounts. The detailed form captures
+          richer condition data; the quick form maximizes conversion. You can
+          switch back any time.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {FORM_VARIANTS.map((v) => {
+            const active = state.landing_form_variant === v.value;
+            const Icon = v.icon;
+            return (
+              <button
+                key={v.value}
+                type="button"
+                onClick={() => setState((prev) => ({ ...prev, landing_form_variant: v.value }))}
+                className={`text-left rounded-xl border-2 p-4 transition-all ${
+                  active
+                    ? "border-primary bg-primary/5 shadow-md"
+                    : "border-border bg-muted/30 hover:bg-muted hover:border-primary/30"
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+                    active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                  }`}>
+                    <Icon className="w-4 h-4" />
+                  </div>
+                  <span className="font-bold text-sm flex-1">{v.label}</span>
+                  {active && (
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                      Active
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground leading-snug">{v.description}</p>
+              </button>
+            );
+          })}
+        </div>
+      </section>
 
       {/* ── Template picker ── */}
       <section className="bg-card rounded-xl border border-border p-6">
