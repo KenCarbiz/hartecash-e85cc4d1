@@ -1156,6 +1156,8 @@ const SharePanel = ({
   copied,
   onSave,
   onCopy,
+  onExportPdf,
+  exportingPdf,
 }: {
   shareUrl: string | null;
   savedAt?: string;
@@ -1163,6 +1165,8 @@ const SharePanel = ({
   copied: boolean;
   onSave: () => void;
   onCopy: () => void;
+  onExportPdf: () => void;
+  exportingPdf: boolean;
 }) => {
   const expiresLabel = savedAt
     ? new Date(savedAt).toLocaleDateString(undefined, {
