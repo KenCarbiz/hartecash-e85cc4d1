@@ -1042,6 +1042,8 @@ const ProspectDemo = () => {
           copied={linkCopied}
           onSave={handleSaveAndShare}
           onCopy={handleCopyShareUrl}
+          onExportPdf={handleExportPdf}
+          exportingPdf={exportingPdf}
         />
       )}
     </div>
