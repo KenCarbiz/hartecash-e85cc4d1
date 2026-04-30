@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Award, ArrowRight, Star } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
-import SellCarForm from "@/components/SellCarForm";
+import LandingForm from "@/components/LandingForm";
 import {
   TestimonialsSection,
   TrustBadgesSection,
@@ -87,7 +87,7 @@ const ElegantTemplate = () => {
             </h2>
           </div>
           <div className="rounded-3xl shadow-[0_30px_60px_-20px_rgba(0,0,0,0.25)] border border-amber-100 bg-card overflow-hidden">
-            <SellCarForm variant="split" />
+            <LandingForm variant="split" />
           </div>
 
           <div className="mt-8 flex items-center justify-center gap-3 text-sm text-[hsl(220,15%,40%)]">

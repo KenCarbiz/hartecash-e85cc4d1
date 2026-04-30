@@ -10,6 +10,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { supabase } from "@/integrations/supabase/client";
 import { pageView } from "@/lib/analytics";
 import AppErrorBoundary from "@/components/AppErrorBoundary";
+import PageErrorBoundary from "@/components/PageErrorBoundary";
 const Index = lazy(() => import("./pages/Index"));
 
 const UploadPhotos = lazy(() => import("./pages/UploadPhotos"));
@@ -147,7 +148,18 @@ const AnimatedRoutes = () => {
         <Route path="/executive" element={<ProtectedRoute><ExecutiveDashboard /></ProtectedRoute>} />
         <Route path="/inspection/:id" element={<InspectionSheet />} />
         <Route path="/inspect/:id" element={<MobileInspection />} />
-        <Route path="/appraisal/:token" element={<AppraisalTool />} />
+        <Route
+          path="/appraisal/:token"
+          element={
+            <PageErrorBoundary
+              title="Couldn't open this appraisal"
+              subtitlePrefix="The appraisal page crashed while loading."
+              backTo="/admin"
+            >
+              <AppraisalTool />
+            </PageErrorBoundary>
+          }
+        />
         <Route path="/super-admin" element={<ProtectedRoute><SuperAdminDashboard /></ProtectedRoute>} />
         <Route path="/onboard/:dealershipId" element={<OnboardingMobile />} />
         <Route path="/demo/:token" element={<PublicDemo />} />

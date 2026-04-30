@@ -1,7 +1,7 @@
 import { ArrowRight, Shield, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
-import SellCarForm from "@/components/SellCarForm";
+import LandingForm from "@/components/LandingForm";
 import { DefaultBelowFold } from "../sharedSections";
 
 /**
@@ -106,7 +106,7 @@ const BoldTemplate = () => {
       <section id="sell-car-form" className="bg-background py-16 lg:py-24 px-5 -mt-16 relative z-20">
         <div className="max-w-[600px] mx-auto">
           <div className="rounded-2xl shadow-[0_30px_80px_-20px_rgba(0,0,0,0.4)] border border-border overflow-hidden">
-            <SellCarForm variant="split" />
+            <LandingForm variant="split" />
           </div>
         </div>
       </section>

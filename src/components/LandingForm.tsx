@@ -1,3 +1,4 @@
+import { Component, ReactNode } from "react";
 import SellCarForm from "@/components/SellCarForm";
 import QuickOfferForm from "@/components/QuickOfferForm";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
@@ -15,16 +16,40 @@ interface LandingFormProps {
  *   - 'quick'              → the one-screen QuickOfferForm
  *
  * Picked per-tenant in Setup · Process → Landing & Flow. Every
- * landing template (HeroOffset / Carousel / Magazine / Slab and
- * future templates) should mount this wrapper instead of importing
- * SellCarForm directly so the tenant's choice propagates everywhere.
+ * landing template (HeroOffset / Carousel / Magazine / Slab / Classic
+ * etc.) mounts this wrapper instead of importing SellCarForm directly
+ * so the tenant's choice propagates everywhere.
+ *
+ * Wrapped in a local error boundary that falls back to SellCarForm
+ * if QuickOfferForm crashes for any reason — the customer-facing
+ * landing must never produce a white screen, even when the new flow
+ * has a runtime issue.
  */
+
+interface BoundaryState { hasError: boolean }
+
+class QuickOfferBoundary extends Component<{ fallback: ReactNode; children: ReactNode }, BoundaryState> {
+  state: BoundaryState = { hasError: false };
+  static getDerivedStateFromError(): BoundaryState { return { hasError: true }; }
+  componentDidCatch(error: Error, info: { componentStack: string }) {
+    console.error("[LandingForm] QuickOfferForm crashed, falling back to SellCarForm:", error, info.componentStack);
+  }
+  render() {
+    return this.state.hasError ? this.props.fallback : this.props.children;
+  }
+}
+
 const LandingForm = ({ leadSource, variant = "split" }: LandingFormProps) => {
   const { config } = useSiteConfig();
   const useQuick = config.landing_form_variant === "quick";
+  const detailed = <SellCarForm leadSource={leadSource} variant={variant} />;
   return useQuick
-    ? <QuickOfferForm leadSource={leadSource} />
-    : <SellCarForm leadSource={leadSource} variant={variant} />;
+    ? (
+      <QuickOfferBoundary fallback={detailed}>
+        <QuickOfferForm leadSource={leadSource} />
+      </QuickOfferBoundary>
+    )
+    : detailed;
 };
 
 export default LandingForm;

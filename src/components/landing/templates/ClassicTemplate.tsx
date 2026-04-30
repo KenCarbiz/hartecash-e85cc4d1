@@ -1,6 +1,6 @@
 import Hero from "@/components/Hero";
 import HeroOffset from "@/components/HeroOffset";
-import SellCarForm from "@/components/SellCarForm";
+import LandingForm from "@/components/LandingForm";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { DefaultBelowFold } from "../sharedSections";
 
@@ -17,7 +17,7 @@ const ClassicTemplate = () => {
       ) : (
         <>
           <Hero />
-          <SellCarForm />
+          <LandingForm />
         </>
       )}
       <DefaultBelowFold />
