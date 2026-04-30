@@ -68,6 +68,37 @@ const StepHistory = ({ formData, update, formConfig, bbVehicle, vehicleInfo, lea
           onChange={(e) => update("mileage", e.target.value)}
           className="py-3.5 px-4 text-base border-2 border-input focus:border-accent focus:ring-accent/10"
         />
+        {(() => {
+          // Heuristic mileage sanity check — CarGurus uses AutoCheck
+          // for this; we don't have that feed, so we reason from
+          // vehicle age × U.S. average miles/year (~12k). Warn when
+          // the typed value implies < 3k mi/yr (suspicious low /
+          // rollback) or > 25k mi/yr (verify before submitting). The
+          // warning is informational; it doesn't block submit. The
+          // appraiser sees the same number on the inspection sheet.
+          const m = parseInt((formData.mileage || "").replace(/[^0-9]/g, ""));
+          const yr = parseInt(vehicleInfo?.year || bbVehicle?.year || "");
+          if (!m || !yr) return null;
+          const age = Math.max(1, new Date().getFullYear() - yr);
+          const perYear = m / age;
+          if (m > 0 && perYear < 3000 && age >= 2) {
+            return (
+              <p className="text-[11px] text-amber-700 dark:text-amber-400 mt-1.5 flex items-start gap-1.5">
+                <span aria-hidden>⚠️</span>
+                <span>That's under 3,000 miles a year — please double-check before you submit. We verify the odometer at inspection.</span>
+              </p>
+            );
+          }
+          if (perYear > 25000) {
+            return (
+              <p className="text-[11px] text-amber-700 dark:text-amber-400 mt-1.5 flex items-start gap-1.5">
+                <span aria-hidden>⚠️</span>
+                <span>High annual mileage — make sure this matches your odometer. We confirm at inspection.</span>
+              </p>
+            );
+          }
+          return null;
+        })()}
       </FormField>
 
       {(!formConfig || formConfig.q_accidents) && (
