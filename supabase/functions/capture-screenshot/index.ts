@@ -342,7 +342,18 @@ async function tryCapture(url: string): Promise<CaptureAttempt> {
   // Microlink Pro key (better proxy / fingerprint by default) or a
   // switch to a different provider with documented stealth options
   // (e.g. Browserless `unblock` mode).
-  const params = new URLSearchParams({
+  //
+  // Update (post-revert): confirmed via the official docs that
+  //   - `device` is free-tier but already defaults to "macbook pro 13"
+  //     so passing it explicitly does nothing different
+  //   - `headers` is PRO-only (page header literally says "headersPRO")
+  //     — that's what triggered the 400s in #117
+  // We now layer the PRO-gated stealth params (custom user-agent +
+  // accept-language) only when MICROLINK_API_KEY is set, so the free
+  // tier stays clean and the Pro tier gets a real-Chrome fingerprint
+  // the moment a key drops in.
+  const microlinkKey = Deno.env.get("MICROLINK_API_KEY") || "";
+  const baseParams: Record<string, string> = {
     url,
     screenshot: "true",
     "viewport.width": "1280",
@@ -354,14 +365,19 @@ async function tryCapture(url: string): Promise<CaptureAttempt> {
       "[id*='cookie'],[class*='cookie-banner'],[class*='consent']," +
       "[id*='onetrust'],[class*='tcf-banner'],iframe[src*='intercom']," +
       "iframe[src*='drift'],[id*='hubspot-messages'],[class*='livechat']",
-  });
+  };
+  // PRO-only stealth tuning. Layered on top of the base set when a
+  // key is configured. Uses the documented `headers.<name>` REST
+  // wire format from microlink.io/docs/api/parameters/headers.
+  if (microlinkKey) {
+    baseParams["headers.user-agent"] =
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) " +
+      "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+    baseParams["headers.accept-language"] = "en-US,en;q=0.9";
+  }
+  const params = new URLSearchParams(baseParams);
   const microlinkUrl = `https://api.microlink.io?${params.toString()}`;
 
-  // Optional Microlink Pro key. When set, bypass the shared 50/day
-  // free-tier cap that's hit when the platform sees demo bursts. Set
-  // MICROLINK_API_KEY in Supabase function secrets. Without it we use
-  // the free tier — same quota every Microlink IP-bucketed user gets.
-  const microlinkKey = Deno.env.get("MICROLINK_API_KEY") || "";
   const headers: Record<string, string> = {};
   if (microlinkKey) headers["x-api-key"] = microlinkKey;
 
