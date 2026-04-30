@@ -106,74 +106,109 @@ const LandingFlowConfig = () => {
 
   const handleSave = async () => {
     setSaving(true);
-    const fullPayload = {
-      landing_template: state.landing_template,
-      landing_form_variant: state.landing_form_variant,
-      updated_at: new Date().toISOString(),
-    };
-    let { error } = await supabase
-      .from("site_config" as any)
-      .update(fullPayload as any)
-      .eq("dealership_id", dealershipId);
 
-    // Resilience: if the new column is missing on this DB, retry
-    // with just the template + updated_at so the admin's template
-    // change still persists. Surface a non-destructive note so they
-    // know to apply the pending migration to unlock the variant
-    // toggle.
+    // Save in two passes so a missing landing_form_variant column on
+    // not-yet-migrated DBs never blocks the template change.
+    //   1) Always-safe pass: template + updated_at (columns shipped
+    //      with migration 20260419 — present everywhere).
+    //   2) Best-effort pass: variant only (column shipped with
+    //      20260430010000 — may not be deployed yet). On failure we
+    //      detect the missing column and tell the admin instead of
+    //      raising a generic destructive toast.
+
+    const tmplChanged = state.landing_template !== saved.landing_template;
+    const variantChanged = state.landing_form_variant !== saved.landing_form_variant;
+
+    // Pass 1 — template
+    if (tmplChanged) {
+      const { error: tmplErr } = await supabase
+        .from("site_config" as any)
+        .update({
+          landing_template: state.landing_template,
+          updated_at: new Date().toISOString(),
+        } as any)
+        .eq("dealership_id", dealershipId);
+      if (tmplErr) {
+        setSaving(false);
+        const lower = tmplErr.message?.toLowerCase() || "";
+        const looksLikeMissing =
+          lower.includes("landing_template") ||
+          lower.includes("schema cache") ||
+          (lower.includes("column") && lower.includes("does not exist"));
+        toast({
+          title: looksLikeMissing ? "Landing settings not yet provisioned" : "Save failed",
+          description: looksLikeMissing
+            ? "The landing_template column hasn't been added to this environment yet. Apply migration 20260419000000_landing_templates_and_offer_flow.sql or refresh the PostgREST schema cache, then try again."
+            : tmplErr.message,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    // Pass 2 — variant (best-effort)
     let variantSkipped = false;
-    if (error) {
-      const lower = error.message?.toLowerCase() || "";
-      const missingVariant = lower.includes("landing_form_variant");
-      const variantTouched = state.landing_form_variant !== saved.landing_form_variant;
-      if (missingVariant && variantTouched) {
-        const fallback = await supabase
-          .from("site_config" as any)
-          .update({
-            landing_template: state.landing_template,
-            updated_at: new Date().toISOString(),
-          } as any)
-          .eq("dealership_id", dealershipId);
-        if (!fallback.error) {
-          error = null;
-          variantSkipped = true;
+    if (variantChanged) {
+      const { error: varErr } = await supabase
+        .from("site_config" as any)
+        .update({
+          landing_form_variant: state.landing_form_variant,
+          updated_at: new Date().toISOString(),
+        } as any)
+        .eq("dealership_id", dealershipId);
+      if (varErr) {
+        const lower = varErr.message?.toLowerCase() || "";
+        const code = (varErr as any).code || "";
+        const missingVariant =
+          lower.includes("landing_form_variant") ||
+          lower.includes("schema cache") ||
+          code === "PGRST204" ||
+          (lower.includes("column") && lower.includes("does not exist"));
+        if (!missingVariant) {
+          // Genuine save error — surface it.
+          setSaving(false);
+          toast({ title: "Save failed", description: varErr.message, variant: "destructive" });
+          return;
         }
+        // Otherwise: silently skip and tell the admin.
+        variantSkipped = true;
       }
     }
 
     setSaving(false);
-    if (error) {
-      const lower = error.message?.toLowerCase() || "";
-      const missingVariant = lower.includes("landing_form_variant");
-      const missingTemplate = lower.includes("landing_template");
-      const cacheMiss = lower.includes("schema cache") ||
-        (lower.includes("column") && lower.includes("does not exist"));
-      const missingCol = missingVariant || missingTemplate || cacheMiss;
-      toast({
-        title: missingCol ? "Landing settings not yet provisioned" : "Save failed",
-        description: missingVariant
-          ? "The landing_form_variant column hasn't been added yet. Apply the pending Supabase migration (20260430010000_landing_form_variant.sql) or refresh the PostgREST schema cache, then try again."
-          : missingTemplate || cacheMiss
-          ? "The landing_template column hasn't been added to this environment yet. Apply the pending Supabase migrations (20260419000000_landing_templates_and_offer_flow.sql) or refresh the PostgREST schema cache, then try again."
-          : error.message,
-        variant: "destructive",
-      });
-      return;
-    }
-    // Persist saved state. When we skipped the variant the snapshot
-    // keeps the old value so the toggle's "dirty dot" still shows
-    // until the column is provisioned and a real save lands.
+
+    // Persist saved state. When the variant write was skipped the
+    // saved snapshot keeps the old value so the toggle's "dirty"
+    // state stays until the column is provisioned and a real save
+    // lands.
     setSaved({
       ...state,
       ...(variantSkipped ? { landing_form_variant: saved.landing_form_variant } : {}),
     });
+
     if (variantSkipped) {
+      // Store the choice in localStorage so the admin can preview the
+      // new flow in their own browser even before the migration is
+      // applied. LandingForm checks this key as a fallback when the
+      // DB column hasn't propagated yet. NOT visible to other
+      // browsers / customers — that still needs the migration.
+      try {
+        localStorage.setItem(
+          `landing_form_variant_pending:${dealershipId}`,
+          state.landing_form_variant,
+        );
+      } catch { /* private mode: ignore */ }
       toast({
-        title: "Template saved",
+        title: tmplChanged ? "Template saved · variant stored locally" : "Variant stored locally",
         description:
-          "Public Sell Flow toggle didn't persist — the landing_form_variant column isn't deployed yet. Apply migration 20260430010000_landing_form_variant.sql to unlock it.",
+          "Public Sell Flow column isn't deployed yet so the toggle didn't persist DB-wide. Saved your choice to this browser so you can preview it. Apply migration 20260430010000_landing_form_variant.sql to roll it out to all visitors.",
       });
     } else {
+      // Successful real save — clear any local fallback so the DB
+      // value becomes the source of truth again.
+      try {
+        localStorage.removeItem(`landing_form_variant_pending:${dealershipId}`);
+      } catch { /* ignore */ }
       toast({ title: "Saved", description: "Landing page settings updated." });
     }
   };
