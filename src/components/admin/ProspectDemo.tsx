@@ -1184,24 +1184,40 @@ const SharePanel = ({
             Share This Demo with the Prospect
           </div>
         </div>
-        <Button
-          onClick={onSave}
-          disabled={saving}
-          variant="default"
-          size="sm"
-          className="gap-1.5 bg-emerald-600 hover:bg-emerald-700"
-        >
-          {saving ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-          ) : (
-            <Share2 className="w-3.5 h-3.5" />
-          )}
-          {saving
-            ? "Saving…"
-            : shareUrl
-              ? "Re-save (update link)"
-              : "Save & generate link"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={onExportPdf}
+            disabled={exportingPdf}
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+          >
+            {exportingPdf ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <FileDown className="w-3.5 h-3.5" />
+            )}
+            {exportingPdf ? "Building PDF…" : "Download PDF"}
+          </Button>
+          <Button
+            onClick={onSave}
+            disabled={saving}
+            variant="default"
+            size="sm"
+            className="gap-1.5 bg-emerald-600 hover:bg-emerald-700"
+          >
+            {saving ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Share2 className="w-3.5 h-3.5" />
+            )}
+            {saving
+              ? "Saving…"
+              : shareUrl
+                ? "Re-save (update link)"
+                : "Save & generate link"}
+          </Button>
+        </div>
       </div>
 
       {!shareUrl && !saving && (
