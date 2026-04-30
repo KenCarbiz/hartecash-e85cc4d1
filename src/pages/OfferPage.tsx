@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, DollarSign, ArrowDown, TrendingUp, ShieldCheck, Info, Printer, CheckCircle, ArrowRight, Car, Gauge, Palette, Settings2, Pencil, User, Clock, Star, Zap, Shield, BadgeCheck, Handshake, Camera } from "lucide-react";
+import { ArrowLeft, DollarSign, ArrowDown, TrendingUp, ShieldCheck, Info, Printer, CheckCircle, ArrowRight, Car, Gauge, Palette, Settings2, Pencil, User, Clock, Star, Zap, Shield, BadgeCheck, Handshake, Camera, Sparkles } from "lucide-react";
 import InspectionConfidence from "@/components/InspectionConfidence";
 import TalkToAppraiserButton from "@/components/TalkToAppraiserButton";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -852,42 +852,55 @@ const OfferPage = () => {
     </motion.div>
   );
 
-  /* ─── Photo Upload Callout — shown when photos haven't been uploaded ─── */
+  /* ─── Photo Upload Callout — promoted to hero CTA on the offer
+     page. Shown above the Accept button when photos aren't uploaded
+     yet so customers see the most leverage they have *before* they
+     accept. This is our key differentiator vs Carvana's
+     take-it-or-leave-it offer — make it impossible to miss. */
   const PhotoUploadCallout = !s.photos_uploaded && (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.15 }}
-      className="bg-gradient-to-br from-primary/5 via-primary/3 to-transparent rounded-2xl p-5 border border-primary/10 shadow-sm"
+      className="relative overflow-hidden rounded-2xl border-2 border-accent/40 bg-gradient-to-br from-accent/15 via-accent/5 to-primary/5 p-5 shadow-[0_8px_24px_-8px_hsl(var(--accent)/0.35)]"
     >
-      <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-          <Camera className="w-5 h-5 text-primary" />
+      <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-accent/10 blur-2xl pointer-events-none" />
+      <div className="relative flex items-start gap-4">
+        <div className="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center shrink-0 ring-2 ring-accent/30">
+          <Camera className="w-6 h-6 text-accent" />
         </div>
-        <div className="flex-1">
-          <h4 className="font-bold text-card-foreground text-sm">Photos uploaded may increase your offer</h4>
-          <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-            A complete set of vehicle photos allows our AI and inventory team to better assess your vehicle's real condition — which often results in a higher final offer.
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent text-accent-foreground text-[10px] font-bold uppercase tracking-wider">
+              <Sparkles className="w-3 h-3" />
+              Boost
+            </span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-accent">
+              Offer accelerator
+            </span>
+          </div>
+          <h4 className="font-extrabold text-card-foreground text-base leading-tight">
+            Add photos to potentially raise this offer
+          </h4>
+          <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+            Customers who upload a clean photo set get a higher final
+            number more often than not. Our AI re-prices the moment
+            they're in.
           </p>
           <Link to={`/upload/${token}`}>
-            <Button size="sm" className="mt-3 gap-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl text-xs font-semibold">
-              <Camera className="w-3.5 h-3.5" />
-              Upload Photos
-              <ArrowRight className="w-3.5 h-3.5" />
+            <Button
+              size="default"
+              className="mt-3 gap-2 bg-accent hover:bg-accent/90 text-accent-foreground rounded-xl text-sm font-bold shadow-md"
+            >
+              <Camera className="w-4 h-4" />
+              Upload Photos Now
+              <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
         </div>
       </div>
     </motion.div>
   );
-
-  // Render the gallery when photos are uploaded, the upload-CTA when
-  // they're not. Customers asked "did my pics actually arrive?" — the
-  // gallery answers that visually + adds trust before they accept the
-  // offer (since the dealer's offer reflects what the photos showed).
-  const PhotoSection = s.photos_uploaded
-    ? token && <VehiclePhotos token={token} photosUploaded />
-    : PhotoUploadCallout;
 
   const conditionItems = buildConditionItems(condition);
 
@@ -1154,8 +1167,13 @@ const OfferPage = () => {
               </div>
             </div>
 
-            {/* Right column — vehicle summary → trade-in → condition */}
+            {/* Right column — photo-bump CTA leads, then vehicle
+                summary → comparison → trade-in → condition. Photos
+                are the highest-leverage thing the customer can do
+                pre-acceptance, so they're hero on this page. */}
             <div className="col-span-3 space-y-6">
+              {!s.photos_uploaded && PhotoUploadCallout}
+
               {VehicleSummary}
 
               {/* Beat CarMax Comparison Widget — desktop */}
@@ -1167,7 +1185,7 @@ const OfferPage = () => {
                 vehicleStr={vehicleStr}
               />
 
-              {PhotoSection}
+              {s.photos_uploaded && token && <VehiclePhotos token={token} photosUploaded />}
               {TradeInExplanation}
               {NoTaxBlock}
               {ConditionBlock}
@@ -1241,6 +1259,8 @@ const OfferPage = () => {
             ))}
           </motion.div>
 
+          {!s.photos_uploaded && PhotoUploadCallout}
+
           {VehicleSummary}
 
           {/* Beat CarMax Comparison Widget — mobile */}
@@ -1252,7 +1272,7 @@ const OfferPage = () => {
             vehicleStr={vehicleStr}
           />
 
-          {PhotoSection}
+          {s.photos_uploaded && token && <VehiclePhotos token={token} photosUploaded />}
           {TradeInExplanation}
           {NoTaxBlock}
           {ConditionBlock}

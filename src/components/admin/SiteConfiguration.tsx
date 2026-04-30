@@ -823,6 +823,28 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
 
           <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
             <div className="flex-1 mr-3">
+              <Label className="text-sm font-semibold">Mobile Inspection (Inspector Comes to Customer)</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                When enabled, customers see a second option on the scheduling page: "Inspector
+                comes to you." The customer enters an address (driveway, work parking lot, etc.)
+                instead of picking a store. Leave off if you don't run a mobile inspector — the
+                default behavior (drive in to the dealership) is unchanged.
+              </p>
+            </div>
+            <Switch
+              checked={(config as any).offers_mobile_inspection === true}
+              onCheckedChange={v => {
+                setConfig(prev => {
+                  const next = { ...prev, offers_mobile_inspection: v };
+                  setHasChanges(JSON.stringify(next) !== JSON.stringify(savedConfig));
+                  return next;
+                });
+              }}
+            />
+          </div>
+
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
+            <div className="flex-1 mr-3">
               <Label className="text-sm font-semibold">Abandoned Lead Tracking</Label>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Automatically capture partial form submissions when a customer provides contact info but doesn't complete the process. Abandoned leads appear in the submissions list and Executive HUD for follow-up.

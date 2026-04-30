@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import VehicleImage from "@/components/sell-form/VehicleImage";
 import WhatToExpect from "@/components/portal/WhatToExpect";
 import InspectionDisclosure from "@/components/portal/InspectionDisclosure";
+import EssentialUploads from "@/components/portal/EssentialUploads";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
@@ -578,6 +579,18 @@ const DealAccepted = () => {
             )}
           </div>
         </motion.div>
+
+        {/* Three essential uploads — odometer, title, ID — surfaced
+            inline at acceptance so the customer "locks in" the deal
+            without a page hop. Mirrors Carvana's odometer + title +
+            ID requirement at acceptance. The fuller upload pages
+            (UploadPhotos / UploadDocs) remain available for the
+            exhaustive set. */}
+        {token && (submission as any)?.id && (
+          <motion.div {...entrance(2)} className="mb-6">
+            <EssentialUploads token={token} submissionId={(submission as any).id} />
+          </motion.div>
+        )}
 
         {/* Two action cards */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">

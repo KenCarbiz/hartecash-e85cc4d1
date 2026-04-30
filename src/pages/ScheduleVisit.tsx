@@ -140,7 +140,10 @@ const ScheduleVisit = () => {
     store_location: searchParams.get("location") || "",
     vehicle_info: searchParams.get("vehicle") || "",
     notes: "",
+    inspection_mode: "in_store" as "in_store" | "mobile",
+    inspection_address: "",
   });
+  const offersMobileInspection = (config as any).offers_mobile_inspection === true;
 
   // Auto-select locked store or single location
   useEffect(() => {
@@ -180,8 +183,12 @@ const ScheduleVisit = () => {
       toast({ title: "Please select a preferred time", variant: "destructive" });
       return;
     }
-    if (!form.store_location && locations.length > 1) {
+    if (form.inspection_mode === "in_store" && !form.store_location && locations.length > 1) {
       toast({ title: "Please select a store location", variant: "destructive" });
+      return;
+    }
+    if (form.inspection_mode === "mobile" && !form.inspection_address.trim()) {
+      toast({ title: "Please enter the address where the inspector should meet you", variant: "destructive" });
       return;
     }
 
@@ -195,10 +202,12 @@ const ScheduleVisit = () => {
         customer_phone: form.customer_phone,
         preferred_date: form.preferred_date,
         preferred_time: form.preferred_time,
-        store_location: form.store_location || null,
+        store_location: form.inspection_mode === "in_store" ? (form.store_location || null) : null,
         vehicle_info: form.vehicle_info || null,
         notes: form.notes || null,
         submission_token: submissionToken || null,
+        inspection_mode: form.inspection_mode,
+        inspection_address: form.inspection_mode === "mobile" ? form.inspection_address.trim() : null,
       } as any);
 
       if (error) throw error;
@@ -553,7 +562,57 @@ const ScheduleVisit = () => {
                 </div>
               </div>
 
-              {lockedStoreId ? (
+              {/* Mobile inspection toggle — only when the dealer
+                  enabled it in Setup · Branding. Default behavior
+                  (drive in to the store) is unchanged for everyone
+                  else. */}
+              {offersMobileInspection && (
+                <div className="space-y-2">
+                  <Label>Where would you like to be inspected?</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleChange("inspection_mode", "in_store")}
+                      className={`px-3 py-3 rounded-xl border-2 text-left transition-all ${
+                        form.inspection_mode === "in_store"
+                          ? "border-primary bg-primary/5 text-card-foreground"
+                          : "border-border hover:border-primary/40"
+                      }`}
+                    >
+                      <p className="text-sm font-bold">At the dealership</p>
+                      <p className="text-[11px] text-muted-foreground">15-20 min, drive in</p>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleChange("inspection_mode", "mobile")}
+                      className={`px-3 py-3 rounded-xl border-2 text-left transition-all ${
+                        form.inspection_mode === "mobile"
+                          ? "border-primary bg-primary/5 text-card-foreground"
+                          : "border-border hover:border-primary/40"
+                      }`}
+                    >
+                      <p className="text-sm font-bold">Inspector comes to you</p>
+                      <p className="text-[11px] text-muted-foreground">We'll visit your location</p>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {form.inspection_mode === "mobile" ? (
+                <div className="space-y-2">
+                  <Label htmlFor="inspection_address">Where should we meet you? *</Label>
+                  <Input
+                    id="inspection_address"
+                    value={form.inspection_address}
+                    onChange={(e) => handleChange("inspection_address", e.target.value)}
+                    placeholder="Street address, city, state, ZIP"
+                    required
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    Driveway, work parking lot, anywhere safe. We'll text when the inspector is en route.
+                  </p>
+                </div>
+              ) : lockedStoreId ? (
                 <div className="space-y-2">
                   <Label>Store Location</Label>
                   <div className="flex h-10 w-full items-center rounded-md border border-input bg-muted/50 px-3 py-2 text-sm">

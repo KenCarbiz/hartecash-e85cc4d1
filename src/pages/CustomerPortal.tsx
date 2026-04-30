@@ -24,6 +24,9 @@ import PromoBanner from "@/components/portal/PromoBanner";
 import ProgressSteps, { mapStatusToStepIndex } from "@/components/portal/ProgressSteps";
 import PortalOfferCard from "@/components/portal/PortalOfferCard";
 import PortalVehicleSummary from "@/components/portal/PortalVehicleSummary";
+import ResendOfferLink from "@/components/portal/ResendOfferLink";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown, BookOpen } from "lucide-react";
 import { buildOfferFormData, buildStoredBBVehicle, buildSubmissionBBPayload, fetchMileageAdjustedBBVehicle, parseStoredJson } from "@/lib/submissionOffer";
 import { calculateOffer, type OfferSettings, type OfferRule } from "@/lib/offerCalculator";
 import { resolveEffectiveSettings } from "@/lib/resolvePricingModel";
@@ -376,13 +379,18 @@ const CustomerPortal = () => {
               <div className="sticky top-6 space-y-5">
                 {condition?.dealership_id && <PromoBanner dealershipId={condition.dealership_id} />}
                 <PortalOfferCard {...offerCardProps} />
+                <ResendOfferLink submissionId={s.id} customerEmail={s.email} />
                 <PortalVehicleSummary {...vehicleSummaryProps} />
                 <DealerContactCard />
                 <CommunicationPreferences token={s.token} email={s.email} phone={s.phone} />
               </div>
             </div>
 
-            {/* Right column */}
+            {/* Right column. Above-the-fold cards stay open. The
+                educational/reference cards (Equipment Value, What to
+                Bring, What to Expect, FAQ) collapse into a single
+                "Learn more" section so first-time customers aren't
+                overwhelmed by ten parallel panels. */}
             <div className="col-span-3 space-y-5">
               <WhatsNextCard {...whatsNextProps} />
               {s.appointment_set && (
@@ -392,17 +400,28 @@ const CustomerPortal = () => {
                 />
               )}
               <CompletionChecklist {...checklistProps} />
-              <EquipmentValueImpact submissionId={s.id} />
               <VehiclePhotos token={s.token} photosUploaded={s.photos_uploaded} />
               <PaymentInfoCard />
               {s.loan_status && ["has_loan", "lease"].includes(s.loan_status) && <LoanPayoffCard />}
-              {stepIdx >= 2 && !isComplete && (
-                <>
-                  <WhatToBringCard />
-                  <WhatToExpect />
-                </>
-              )}
-              <PortalFAQ />
+              <Collapsible>
+                <CollapsibleTrigger className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl bg-muted/40 border border-border/50 hover:bg-muted/60 transition-colors group">
+                  <span className="flex items-center gap-2 text-sm font-semibold text-card-foreground">
+                    <BookOpen className="w-4 h-4 text-primary" />
+                    Learn more
+                  </span>
+                  <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-5 pt-5">
+                  <EquipmentValueImpact submissionId={s.id} />
+                  {stepIdx >= 2 && !isComplete && (
+                    <>
+                      <WhatToBringCard />
+                      <WhatToExpect />
+                    </>
+                  )}
+                  <PortalFAQ />
+                </CollapsibleContent>
+              </Collapsible>
             </div>
           </div>
         </div>
@@ -420,20 +439,32 @@ const CustomerPortal = () => {
           )}
           {condition?.dealership_id && <PromoBanner dealershipId={condition.dealership_id} />}
           <PortalOfferCard {...offerCardProps} />
+          <ResendOfferLink submissionId={s.id} customerEmail={s.email} />
           <CompletionChecklist {...checklistProps} />
           <VehiclePhotos token={s.token} photosUploaded={s.photos_uploaded} />
-          
+
           <PortalVehicleSummary {...vehicleSummaryProps} />
-          <EquipmentValueImpact submissionId={s.id} />
           <PaymentInfoCard />
           {s.loan_status && ["has_loan", "lease"].includes(s.loan_status) && <LoanPayoffCard />}
-          {stepIdx >= 2 && !isComplete && (
-            <>
-              <WhatToBringCard />
-              <WhatToExpect />
-            </>
-          )}
-          <PortalFAQ />
+          <Collapsible>
+            <CollapsibleTrigger className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl bg-muted/40 border border-border/50 hover:bg-muted/60 transition-colors group">
+              <span className="flex items-center gap-2 text-sm font-semibold text-card-foreground">
+                <BookOpen className="w-4 h-4 text-primary" />
+                Learn more
+              </span>
+              <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-5 pt-5">
+              <EquipmentValueImpact submissionId={s.id} />
+              {stepIdx >= 2 && !isComplete && (
+                <>
+                  <WhatToBringCard />
+                  <WhatToExpect />
+                </>
+              )}
+              <PortalFAQ />
+            </CollapsibleContent>
+          </Collapsible>
           <DealerContactCard />
           <CommunicationPreferences token={s.token} email={s.email} phone={s.phone} />
         </div>
