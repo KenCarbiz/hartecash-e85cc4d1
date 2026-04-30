@@ -130,29 +130,46 @@ serve(async (req) => {
       return json({ error: "Invalid URL" }, 400);
     }
 
-    console.log(`[capture-screenshot] Trying ${variants.length} variants for "${url}":`, variants);
-    const attempts: CaptureAttempt[] = [];
-    for (const v of variants) {
-      const a = await tryCapture(v);
-      console.log(`[capture-screenshot] Attempt ${v}:`, {
+    console.log(`[capture-screenshot] Trying ${variants.length} variants for "${url}" in parallel:`, variants);
+    // Run variants in PARALLEL with Promise.allSettled rather than
+    // serially. Two variants × (10s preflight + 30s microlink) = 80s
+    // serial worst-case, which blows past Supabase Edge Runtime's
+    // wall-time limit and returns a 502 before our handler can emit
+    // a structured failure body. In parallel the worst case is the
+    // single slowest attempt (~30-40s) plus the small overhead of
+    // both fetches sharing the event loop.
+    const results = await Promise.allSettled(variants.map((v) => tryCapture(v)));
+    const attempts: CaptureAttempt[] = results.map((r, i) => {
+      if (r.status === "fulfilled") return r.value;
+      return {
+        url: variants[i],
+        ok: false,
+        reason: `Attempt threw: ${(r.reason as Error)?.message || String(r.reason)}`,
+      };
+    });
+    attempts.forEach((a) => {
+      console.log(`[capture-screenshot] Attempt ${a.url}:`, {
         ok: a.ok,
         reason: a.reason,
         pageTitle: a.pageTitle,
         screenshotUrl: a.screenshotUrl,
       });
-      attempts.push(a);
-      if (a.ok) {
-        return json({
-          screenshotUrl: a.screenshotUrl,
-          finalUrl: a.url,
-          attempts: attempts.map((x) => ({
-            url: x.url,
-            ok: x.ok,
-            reason: x.reason,
-            pageTitle: x.pageTitle,
-          })),
-        });
-      }
+    });
+    // First successful attempt wins (preserves the "with-www first"
+    // bias from the previous serial loop because variants[] keeps
+    // its order).
+    const winner = attempts.find((a) => a.ok);
+    if (winner) {
+      return json({
+        screenshotUrl: winner.screenshotUrl,
+        finalUrl: winner.url,
+        attempts: attempts.map((x) => ({
+          url: x.url,
+          ok: x.ok,
+          reason: x.reason,
+          pageTitle: x.pageTitle,
+        })),
+      });
     }
 
     console.warn(`[capture-screenshot] All attempts failed for "${url}":`, attempts);
@@ -234,7 +251,10 @@ async function preflightCheck(
   url: string,
 ): Promise<{ ok: true } | { ok: false; reason: string }> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 10_000);
+  // Tightened to 5s (was 10s). Combined with the 25s microlink cap
+  // below, worst-case per variant is ~30s, well under Supabase Edge
+  // Runtime's wall-time limit even when both variants run.
+  const timer = setTimeout(() => controller.abort(), 5_000);
   try {
     // HEAD first — most servers honor it and it's cheaper than GET.
     // Some misconfigured servers return 405 for HEAD; we don't care
@@ -317,11 +337,23 @@ async function tryCapture(url: string): Promise<CaptureAttempt> {
   const headers: Record<string, string> = {};
   if (microlinkKey) headers["x-api-key"] = microlinkKey;
 
+  // Hard cap microlink at 25s. Microlink itself defaults to 30s but
+  // we'd rather give up gracefully and let the FE retry than have
+  // Supabase kill the whole function with a 502. Aborting here lets
+  // us return a clean "Site didn't respond within 25s" reason.
+  const mlController = new AbortController();
+  const mlTimer = setTimeout(() => mlController.abort(), 25_000);
   let res: Response;
   try {
-    res = await fetch(microlinkUrl, { headers });
+    res = await fetch(microlinkUrl, { headers, signal: mlController.signal });
   } catch (e) {
-    return { url, ok: false, reason: `Network error: ${(e as Error).message}` };
+    const msg = (e as Error).message || String(e);
+    if (/abort|timeout/i.test(msg)) {
+      return { url, ok: false, reason: "Microlink didn't respond within 25s" };
+    }
+    return { url, ok: false, reason: `Network error: ${msg}` };
+  } finally {
+    clearTimeout(mlTimer);
   }
 
   if (!res.ok) {
