@@ -63,6 +63,16 @@ const ERROR_TITLE_PATTERNS = [
   /please wait/i,
   /checking your browser/i,
   /access denied/i,
+  // SOKAL / DataDome / PerimeterX / Akamai bot-detection challenges
+  // ("Verifying the device...", "Verifying you are human", etc.).
+  // These never complete for a headless browser; without this match
+  // we'd happily return the challenge page as the dealer's site.
+  /verifying (the )?device/i,
+  /verifying you are human/i,
+  /are you a robot/i,
+  /please verify/i,
+  /human verification/i,
+  /bot.?detection/i,
   /\b403\b/,
   /forbidden/i,
   // 404s and server errors
