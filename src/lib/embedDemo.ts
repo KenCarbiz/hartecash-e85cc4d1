@@ -147,9 +147,34 @@ export const captureOne = async (target: string): Promise<CaptureResult> => {
       //                         network error).
       //   FunctionsFetchError — fetch-level failure.
       let detail = error.message || "Capture failed";
-      // supabase-js attaches the Response on the FunctionsHttpError.
-      const ctx = (error as unknown as { context?: { status?: number } }).context;
-      if (ctx?.status) {
+      let attempts: CaptureAttempt[] | undefined;
+      // supabase-js attaches the Response on the FunctionsHttpError —
+      // try to read the body so we can surface the per-attempt reason
+      // even when the function returns 4xx/5xx. Falls through silently
+      // if the body has already been consumed or isn't JSON.
+      const ctx = (error as unknown as {
+        context?: { status?: number; response?: Response };
+      }).context;
+      if (ctx?.response) {
+        try {
+          const cloned = ctx.response.clone();
+          const body = (await cloned.json()) as {
+            error?: string;
+            attempts?: CaptureAttempt[];
+          };
+          if (body?.attempts?.length) {
+            attempts = body.attempts;
+            const reason =
+              body.attempts.find((a) => a.reason)?.reason || body.error;
+            if (reason) detail = reason;
+          } else if (body?.error) {
+            detail = body.error;
+          }
+        } catch {
+          // Body unreadable — keep the high-level detail string.
+        }
+      }
+      if (ctx?.status && !attempts) {
         detail = `${detail} (HTTP ${ctx.status})`;
       }
       // If the error name says relay/fetch, the function probably isn't
@@ -160,7 +185,7 @@ export const captureOne = async (target: string): Promise<CaptureResult> => {
           `Likely Lovable hasn't deployed it yet. Wait 1–2 minutes and retry.`;
       }
       console.warn(`captureOne edge-function error for ${normalized}:`, error, ctx);
-      return { url: null, error: detail };
+      return { url: null, error: detail, attempts };
     }
     if (data?.screenshotUrl) {
       return { url: data.screenshotUrl, error: null, attempts: data.attempts };

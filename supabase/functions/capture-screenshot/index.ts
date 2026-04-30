@@ -146,6 +146,13 @@ serve(async (req) => {
     }
 
     console.warn(`[capture-screenshot] All attempts failed for "${url}":`, attempts);
+    // Return 200 (not 502) so supabase-js surfaces the body to the FE
+    // instead of throwing a generic FunctionsHttpError. The caller
+    // checks `screenshotUrl` to decide success vs failure and reads
+    // `attempts[i].reason` for the actionable per-variant diagnostic
+    // (rate limit, cert error, CF challenge, 404, etc.). Returning a
+    // 5xx swallows the body and the user sees only "non-2xx status
+    // code (HTTP 502)" — useless for debugging.
     return json(
       {
         error: "All capture attempts failed",
@@ -159,7 +166,7 @@ serve(async (req) => {
           screenshotUrl: x.screenshotUrl,
         })),
       },
-      502,
+      200,
     );
   } catch (err) {
     return json({ error: (err as Error).message || "unknown error" }, 500);
