@@ -169,7 +169,14 @@ serve(async (req) => {
       200,
     );
   } catch (err) {
-    return json({ error: (err as Error).message || "unknown error" }, 500);
+    // Top-level safety net. ANY uncaught error becomes a structured
+    // 200 with ok:false body so the FE shows the real reason instead
+    // of a generic supabase-js "non-2xx status code" wrapper. The
+    // only thing that should ever reach the user as a real 5xx is a
+    // Supabase Edge Runtime infrastructure failure (function crash
+    // / memory limit) — and that's outside our control.
+    console.error("[capture-screenshot] handler crashed:", err);
+    return json({ error: (err as Error).message || "unknown error" }, 200);
   }
 });
 
@@ -292,9 +299,17 @@ async function tryCapture(url: string): Promise<CaptureAttempt> {
   });
   const microlinkUrl = `https://api.microlink.io?${params.toString()}`;
 
+  // Optional Microlink Pro key. When set, bypass the shared 50/day
+  // free-tier cap that's hit when the platform sees demo bursts. Set
+  // MICROLINK_API_KEY in Supabase function secrets. Without it we use
+  // the free tier — same quota every Microlink IP-bucketed user gets.
+  const microlinkKey = Deno.env.get("MICROLINK_API_KEY") || "";
+  const headers: Record<string, string> = {};
+  if (microlinkKey) headers["x-api-key"] = microlinkKey;
+
   let res: Response;
   try {
-    res = await fetch(microlinkUrl);
+    res = await fetch(microlinkUrl, { headers });
   } catch (e) {
     return { url, ok: false, reason: `Network error: ${(e as Error).message}` };
   }

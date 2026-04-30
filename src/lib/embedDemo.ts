@@ -176,6 +176,15 @@ export const captureOne = async (target: string): Promise<CaptureResult> => {
       }
       if (ctx?.status && !attempts) {
         detail = `${detail} (HTTP ${ctx.status})`;
+        // 502 / 503 from Supabase Edge Runtime is almost always a
+        // deploy-in-flight (function crashed during cold start, or
+        // the new revision hasn't propagated yet). Hint the rep so
+        // they don't chase the wrong cause.
+        if (ctx.status === 502 || ctx.status === 503) {
+          detail =
+            `${detail} — the capture function is deploying or restarting. ` +
+            `Wait 30–60 seconds and click Capture again.`;
+        }
       }
       // If the error name says relay/fetch, the function probably isn't
       // deployed yet — surface that hint directly.
