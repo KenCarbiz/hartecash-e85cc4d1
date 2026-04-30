@@ -331,17 +331,17 @@ async function tryCapture(url: string): Promise<CaptureAttempt> {
   // many dealer sites have analytics beacons and chat widgets that keep
   // the network busy past the 30s microlink timeout, returning blanks.
   //
-  // Stealth-mode tuning to improve success on bot-detected dealer sites
-  // (SOKAL, DataDome, Cloudflare, PerimeterX). Microlink doesn't expose
-  // a single "antibot" flag, but the underlying browserless engine
-  // accepts these params that together make the headless fingerprint
-  // closer to a real Mac Chrome browser:
-  //   device=macbook pro 13     — emulates a real macOS device
-  //   headers.user-agent=...    — overrides the default headless UA
-  //   animations=false          — avoids capturing mid-transition frames
-  //   waitForTimeout=2500       — 2.5s after DOM ready for hero paint
-  //   ttl=1d                    — cache successful captures for 24h
-  // See https://microlink.io/docs/api/parameters/screenshot for refs.
+  // PR #117 attempted to add stealth-mode params (device, headers.user-
+  // agent, animations, waitForTimeout, ttl) inferred from the under-
+  // lying browserless source. Microlink's REST layer rejected the
+  // request with HTTP 400 across every URL — the REST wire format
+  // isn't 1:1 with browserless's JS function args, and the official
+  // docs are 403'd to non-browser fetchers so we couldn't confirm the
+  // canonical syntax for the REST tier. Reverted to the minimal
+  // known-working param set; further stealth tuning needs a paid
+  // Microlink Pro key (better proxy / fingerprint by default) or a
+  // switch to a different provider with documented stealth options
+  // (e.g. Browserless `unblock` mode).
   const params = new URLSearchParams({
     url,
     screenshot: "true",
@@ -350,13 +350,6 @@ async function tryCapture(url: string): Promise<CaptureAttempt> {
     type: "png",
     waitUntil: "load",
     "screenshot.fullPage": "false",
-    device: "macbook pro 13",
-    "headers.user-agent":
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) " +
-      "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-    animations: "false",
-    waitForTimeout: "2500",
-    ttl: "1d",
     hide:
       "[id*='cookie'],[class*='cookie-banner'],[class*='consent']," +
       "[id*='onetrust'],[class*='tcf-banner'],iframe[src*='intercom']," +
