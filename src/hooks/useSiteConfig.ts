@@ -168,7 +168,11 @@ const DEFAULTS: SiteConfig = {
   accent_color: "0 80% 50%",
   success_color: "142 71% 45%",
   hero_headline: "Sell Your Car The Easy Way",
-  hero_subtext: "Get a top-dollar cash offer in 2 minutes. No haggling, no stress.",
+  // Wedge against the new incumbent reality — Carvana's 7-day window
+  // and CarMax's required store visit, both true as of 2026. Kept
+  // under ~70 chars so the line-clamp-2 in Hero/HeroOffset never
+  // truncates the default. Dealer admins can still override.
+  hero_subtext: "Real cash offer in 60 seconds. No store visit. No 7-day wait.",
   hero_layout: "offset_right",
   landing_template: "classic",
   landing_form_variant: "detailed",

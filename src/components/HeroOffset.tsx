@@ -14,7 +14,7 @@ const HeroOffset = ({ side, leadSource, headlineOverride, subtextOverride }: Her
   const { config } = useSiteConfig();
 
   const headline = headlineOverride || config.hero_headline || "Sell Your Car\nThe Easy Way";
-  const subtext = subtextOverride || config.hero_subtext || "Get a top-dollar cash offer in 2 minutes. No haggling, no stress.";
+  const subtext = subtextOverride || config.hero_subtext || "Real cash offer in 60 seconds. No store visit. No 7-day wait.";
 
   const benefits = [
     "Faster: Get cash in 24 hours, not weeks of meetups",
@@ -64,7 +64,7 @@ const HeroOffset = ({ side, leadSource, headlineOverride, subtextOverride }: Her
       <h1 className="font-display text-[48px] font-extrabold tracking-[0.08em] leading-tight mb-3 uppercase">
         {headline}
       </h1>
-      <p className="text-xl font-medium opacity-95 mb-6 leading-relaxed">
+      <p className="text-xl font-medium opacity-95 mb-6 leading-relaxed line-clamp-2">
         {subtext}
       </p>
       {renderBenefits()}
@@ -94,7 +94,7 @@ const HeroOffset = ({ side, leadSource, headlineOverride, subtextOverride }: Her
         <h1 className="font-display text-[22px] font-extrabold tracking-[0.08em] leading-tight mb-1.5 uppercase">
           {headline}
         </h1>
-        <p className="text-sm font-medium opacity-95 leading-relaxed">
+        <p className="text-sm font-medium opacity-95 leading-relaxed line-clamp-2">
           {subtext}
         </p>
       </div>
