@@ -330,6 +330,18 @@ async function tryCapture(url: string): Promise<CaptureAttempt> {
   // change it without testing — networkidle2 sounds nicer in theory but
   // many dealer sites have analytics beacons and chat widgets that keep
   // the network busy past the 30s microlink timeout, returning blanks.
+  //
+  // Stealth-mode tuning to improve success on bot-detected dealer sites
+  // (SOKAL, DataDome, Cloudflare, PerimeterX). Microlink doesn't expose
+  // a single "antibot" flag, but the underlying browserless engine
+  // accepts these params that together make the headless fingerprint
+  // closer to a real Mac Chrome browser:
+  //   device=macbook pro 13     — emulates a real macOS device
+  //   headers.user-agent=...    — overrides the default headless UA
+  //   animations=false          — avoids capturing mid-transition frames
+  //   waitForTimeout=2500       — 2.5s after DOM ready for hero paint
+  //   ttl=1d                    — cache successful captures for 24h
+  // See https://microlink.io/docs/api/parameters/screenshot for refs.
   const params = new URLSearchParams({
     url,
     screenshot: "true",
@@ -338,6 +350,13 @@ async function tryCapture(url: string): Promise<CaptureAttempt> {
     type: "png",
     waitUntil: "load",
     "screenshot.fullPage": "false",
+    device: "macbook pro 13",
+    "headers.user-agent":
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) " +
+      "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    animations: "false",
+    waitForTimeout: "2500",
+    ttl: "1d",
     hide:
       "[id*='cookie'],[class*='cookie-banner'],[class*='consent']," +
       "[id*='onetrust'],[class*='tcf-banner'],iframe[src*='intercom']," +
