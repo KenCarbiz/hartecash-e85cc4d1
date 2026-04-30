@@ -415,6 +415,50 @@ const ProspectDemo = () => {
     }
   };
 
+  const [exportingPdf, setExportingPdf] = useState(false);
+  const handleExportPdf = async () => {
+    setExportingPdf(true);
+    try {
+      const blob = await generateProspectDemoPdf({
+        dealerName,
+        homeUrl,
+        listingUrl,
+        vdpUrl,
+        screenshots: captures,
+        config: {
+          buttonColor,
+          buttonText,
+          bannerHeadline,
+          bannerCtaText,
+          stickyText,
+          stickyCtaText,
+          pptEnabled,
+          pptButtonText,
+        },
+        pitchLine: llmResult?.pitchLine ?? null,
+        shareUrl,
+      });
+      const safeName = (dealerName || "prospect-demo")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+      const stamp = new Date().toISOString().slice(0, 10);
+      downloadBlob(blob, `${safeName}-demo-${stamp}.pdf`);
+      toast({
+        title: "PDF ready",
+        description: "Your prospect demo report has been downloaded.",
+      });
+    } catch (e) {
+      toast({
+        title: "PDF export failed",
+        description: e instanceof Error ? e.message : "Unknown error",
+        variant: "destructive",
+      });
+    } finally {
+      setExportingPdf(false);
+    }
+  };
+
   // Hits detect-dealer-pages with the homepage URL and fills in the
   // listing + VDP fields with what the CMS-sniffer finds.
   const handleAutoDetectPages = async () => {
