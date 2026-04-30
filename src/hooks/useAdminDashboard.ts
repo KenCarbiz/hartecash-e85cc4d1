@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useStaffPermissions } from "@/hooks/useStaffPermissions";
+import { useEffectivePermissions } from "@/hooks/useEffectivePermissions";
 import { useTenant } from "@/contexts/TenantContext";
 import type { Submission, DealerLocation, Appointment } from "@/lib/adminConstants";
 import { ROLE_LABELS, PAGE_SIZE, getStatusLabel, isPricingRole, isApprovalRole, canViewPricing as canViewPricingHelper, isSalesFloorRole } from "@/lib/adminConstants";
@@ -85,7 +85,12 @@ export function useAdminDashboard() {
   // (profit spread, AI call transcripts, full activity log) are hidden
   // from the sales floor entirely.
   const isSalesFloor = isSalesFloorRole(userRole);
-  const { allowedSections } = useStaffPermissions(userId, canManageAccess);
+  const { allowedSections } = useEffectivePermissions(
+    userId,
+    canManageAccess,
+    userRole,
+    isAppraiser,
+  );
 
   // Audit label — every activity_log entry uses this as performed_by.
   // When a Super Admin is in View-as-Tenant mode, append a suffix so

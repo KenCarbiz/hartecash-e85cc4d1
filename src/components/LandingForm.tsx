@@ -48,7 +48,7 @@ const LandingForm = ({ leadSource, variant = "split" }: LandingFormProps) => {
   // localStorage flag the admin sets when the landing_form_variant
   // column isn't deployed yet. This keeps the admin's preview working
   // before the Supabase migration lands. Customers on other browsers
-  // see the DB-default ("detailed") until the migration is applied.
+  // see the DB default ("detailed") until the migration is applied.
   let resolved: string | undefined = config.landing_form_variant;
   if (resolved == null || resolved === "" || resolved === "detailed") {
     try {
