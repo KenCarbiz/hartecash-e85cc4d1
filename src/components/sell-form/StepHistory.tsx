@@ -42,17 +42,20 @@ const StepHistory = ({ formData, update, formConfig, bbVehicle, vehicleInfo, lea
 
   const [locations, setLocations] = useState<DealerLocation[]>([]);
 
+  // Always fetch locations — even when the picker is hidden — so we
+  // can show a "we'll route to your nearest store" confirmation after
+  // the customer enters their ZIP. The auto-routing happens server-
+  // side at submit; this just gives the customer visible feedback so
+  // they don't wonder where their appointment is going.
   useEffect(() => {
-    if (showLocationPicker) {
-      supabase
-        .from("dealership_locations")
-        .select("id, name, city, state")
-        .eq("is_active", true)
-        .eq("show_in_scheduling", true)
-        .order("sort_order")
-        .then(({ data }) => { if (data) setLocations(data); });
-    }
-  }, [showLocationPicker]);
+    supabase
+      .from("dealership_locations")
+      .select("id, name, city, state")
+      .eq("is_active", true)
+      .eq("show_in_scheduling", true)
+      .order("sort_order")
+      .then(({ data }) => { if (data) setLocations(data); });
+  }, []);
 
   return (
     <>
@@ -132,6 +135,20 @@ const StepHistory = ({ formData, update, formConfig, bbVehicle, vehicleInfo, lea
               </SelectContent>
             </Select>
           </FormField>
+        )}
+
+        {/* Auto-route confirmation. Shown when the picker is hidden
+            and the dealer has multiple locations and a ZIP is entered.
+            Removes the "where is my appointment going?" worry without
+            re-introducing a picker — server-side resolveStoreAssignment
+            picks the nearest active store at submit time. */}
+        {!showLocationPicker && locations.length > 1 && /^\d{5}$/.test(formData.zip || "") && (
+          <p className="text-xs text-muted-foreground mt-2 flex items-start gap-1.5">
+            <span className="text-success">✓</span>
+            <span>
+              We'll route your offer to your nearest {config.dealership_name || "dealership"} store. You can reschedule to a different location after you accept.
+            </span>
+          </p>
         )}
 
         {isTrade && (

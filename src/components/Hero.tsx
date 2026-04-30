@@ -28,8 +28,8 @@ const Hero = () => {
         <h1 className="font-display text-[28px] md:text-[34px] lg:text-[42px] font-extrabold tracking-wide leading-tight mb-4 uppercase">
           {config.hero_headline || "Sell Your Car\nThe Easy Way"}
         </h1>
-        <p className="text-base lg:text-lg font-normal opacity-90 mb-8 lg:mb-10 leading-relaxed max-w-xl mx-auto">
-          {config.hero_subtext || "Get a top-dollar cash offer in 2 minutes. No haggling, no stress."}
+        <p className="text-base lg:text-lg font-normal opacity-90 mb-8 lg:mb-10 leading-relaxed max-w-xl mx-auto line-clamp-2">
+          {config.hero_subtext || "Real cash offer in 60 seconds. No store visit. No 7-day wait."}
         </p>
 
         <div className="max-w-[500px] lg:max-w-none mx-auto mb-6 text-left px-5 md:px-0">
