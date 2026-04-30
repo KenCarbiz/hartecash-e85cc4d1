@@ -1041,17 +1041,30 @@ const ProspectDemo = () => {
         />
       )}
 
+      {/* Live capture progress — per-page status while microlink loads */}
+      <ProspectDemoCaptureProgress
+        capturing={capturing}
+        homeUrl={homeUrl}
+        listingUrl={listingUrl}
+        vdpUrl={vdpUrl}
+        captures={captures}
+        failures={failures}
+      />
+
       {/* Vision-LLM senior-rep recommendations (~$0.05 per click).
           Auto-applies asset placements + accent color when run. */}
       {hasAnyCapture && (
-        <LlmRecommendationsPanel
-          running={llmRunning}
-          result={llmResult}
-          error={llmError}
-          onRun={handleRunLlmAnalysis}
-          onApplyAccent={setButtonColor}
-          activeColor={buttonColor}
-        />
+        <>
+          <ProspectDemoAnalyzeProgress running={llmRunning} />
+          <LlmRecommendationsPanel
+            running={llmRunning}
+            result={llmResult}
+            error={llmError}
+            onRun={handleRunLlmAnalysis}
+            onApplyAccent={setButtonColor}
+            activeColor={buttonColor}
+          />
+        </>
       )}
 
       {/* Share with prospect (Phase 5) */}
