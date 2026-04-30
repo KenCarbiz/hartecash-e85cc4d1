@@ -221,12 +221,25 @@ const StepCondition = ({ formData, updateArray, update, formConfig, bbVehicle, v
       )}
 
       {!cov.exterior && (!formConfig || formConfig.q_exterior_damage) && (
-        <FormField label="Is there any exterior damage?">
-          <div className="grid gap-2">
-            {exteriorOptions.map((opt) => (
-              <CheckboxOption key={opt.value} label={opt.label} checked={formData.exteriorDamage.includes(opt.value)} onClick={() => updateArray("exteriorDamage", opt.value)} />
-            ))}
-          </div>
+        <FormField label="Is there any visible exterior damage?" hint="Inspector will verify the specifics — we just need a yes / no.">
+          {(() => {
+            const hasNone = formData.exteriorDamage.includes("none");
+            const hasDamage = formData.exteriorDamage.length > 0 && !hasNone;
+            // Collapsed yes/no replaces the old five-checkbox grid.
+            // Customer answers in seconds; the actual line items get
+            // recorded by the appraiser at inspection. "Yes" stores a
+            // single generic item ("dents") so the offer engine still
+            // applies one exterior-damage deduction. The inspector
+            // overrides it with reality during inspection check-in.
+            const setNo = () => update("exteriorDamage", ["none"] as any);
+            const setYes = () => update("exteriorDamage", ["dents"] as any);
+            return (
+              <div className="grid grid-cols-2 gap-2">
+                <RadioOption label="No, looks clean" selected={hasNone} onClick={setNo} />
+                <RadioOption label="Yes, some damage" selected={hasDamage} onClick={setYes} />
+              </div>
+            );
+          })()}
         </FormField>
       )}
 

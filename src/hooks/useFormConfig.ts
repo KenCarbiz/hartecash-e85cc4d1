@@ -31,30 +31,53 @@ export interface FormConfig {
   q_next_step: boolean;
 }
 
+/**
+ * Lean defaults — only the fields that meaningfully change the BB offer
+ * math start enabled. The rest (color, drivetrain, mods, moonroof,
+ * windshield, interior/tech/engine/mech issues, smoked-in, tires
+ * replaced, key count) are verified during inspection anyway, so
+ * asking them up front is friction without offer-math payoff.
+ *
+ * Existing dealers with explicit values in their form_config row are
+ * unchanged — fetchFormConfig only overwrites a default when the DB
+ * column has a non-null value. New tenants get the lean form; any
+ * dealer who wants the exhaustive flow back can flip the toggles in
+ * Setup · Dealer · Lead Form.
+ */
 const DEFAULTS: FormConfig = {
-  step_vehicle_build: true,
+  // Skip Step 2 by default — color, drivetrain, and modifications all
+  // live in the Black Book lookup data already pulled in Step 1.
+  step_vehicle_build: false,
+  // Condition + history step still on by default; offer math needs
+  // the overall condition tier and accident count.
   step_condition_history: true,
+  // Photos step is our differentiator vs Carvana — keep on.
   step_ai_photos: true,
   ai_photos_min_required: 4,
   offer_before_details: false,
+  // Offer-math drivers — keep on.
   q_overall_condition: true,
-  q_exterior_damage: true,
-  q_windshield_damage: true,
-  q_moonroof: true,
-  q_interior_damage: true,
-  q_tech_issues: true,
-  q_engine_issues: true,
-  q_mechanical_issues: true,
   q_drivable: true,
   q_accidents: true,
-  q_smoked_in: true,
-  q_tires_replaced: true,
-  q_num_keys: true,
-  q_exterior_color: true,
-  q_drivetrain: true,
-  q_modifications: true,
+  // Major-damage gate — kept on as a single yes/no proxy for the old
+  // five-checkbox list. Inspectors verify the specifics.
+  q_exterior_damage: true,
+  // Trade / lease buy-out branch matters for the offer; keep on.
   q_loan_details: true,
   q_next_step: true,
+  // Off by default — verified at inspection, low offer-math impact.
+  q_windshield_damage: false,
+  q_moonroof: false,
+  q_interior_damage: false,
+  q_tech_issues: false,
+  q_engine_issues: false,
+  q_mechanical_issues: false,
+  q_smoked_in: false,
+  q_tires_replaced: false,
+  q_num_keys: false,
+  q_exterior_color: false,
+  q_drivetrain: false,
+  q_modifications: false,
 };
 
 async function fetchFormConfig(dealershipId: string): Promise<FormConfig> {
