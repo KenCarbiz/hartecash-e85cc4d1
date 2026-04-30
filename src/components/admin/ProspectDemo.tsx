@@ -41,6 +41,10 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { Brain, Wand2, Share2, Copy, Check, FileDown } from "lucide-react";
 import ProspectDemoHistory from "./ProspectDemoHistory";
+import {
+  ProspectDemoAnalyzeProgress,
+  ProspectDemoCaptureProgress,
+} from "./ProspectDemoProgress";
 import { generateProspectDemoPdf, downloadBlob } from "@/lib/prospectDemoPdf";
 
 /**
