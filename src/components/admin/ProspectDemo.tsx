@@ -661,6 +661,9 @@ const ProspectDemo = () => {
         </div>
       </div>
 
+      {/* Run history — past saved demos */}
+      <ProspectDemoHistory />
+
       {/* Prospect config form */}
       <div className="rounded-lg border border-slate-200 bg-white p-4 space-y-4">
         <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500">
