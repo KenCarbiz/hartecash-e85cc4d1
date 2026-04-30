@@ -1922,6 +1922,95 @@ export type Database = {
         }
         Relationships: []
       }
+      prospect_demo_views: {
+        Row: {
+          demo_id: string
+          id: string
+          occurred_at: string
+          referrer: string | null
+          user_agent: string | null
+          visitor_hash: string | null
+        }
+        Insert: {
+          demo_id: string
+          id?: string
+          occurred_at?: string
+          referrer?: string | null
+          user_agent?: string | null
+          visitor_hash?: string | null
+        }
+        Update: {
+          demo_id?: string
+          id?: string
+          occurred_at?: string
+          referrer?: string | null
+          user_agent?: string | null
+          visitor_hash?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospect_demo_views_demo_id_fkey"
+            columns: ["demo_id"]
+            isOneToOne: false
+            referencedRelation: "prospect_demos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prospect_demos: {
+        Row: {
+          config: Json
+          created_at: string
+          created_by: string | null
+          dealer_name: string | null
+          expires_at: string
+          home_screenshot: string | null
+          home_url: string | null
+          id: string
+          listing_screenshot: string | null
+          listing_url: string | null
+          pitch_line: string | null
+          share_token: string
+          updated_at: string
+          vdp_screenshot: string | null
+          vdp_url: string | null
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          created_by?: string | null
+          dealer_name?: string | null
+          expires_at?: string
+          home_screenshot?: string | null
+          home_url?: string | null
+          id?: string
+          listing_screenshot?: string | null
+          listing_url?: string | null
+          pitch_line?: string | null
+          share_token: string
+          updated_at?: string
+          vdp_screenshot?: string | null
+          vdp_url?: string | null
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          created_by?: string | null
+          dealer_name?: string | null
+          expires_at?: string
+          home_screenshot?: string | null
+          home_url?: string | null
+          id?: string
+          listing_screenshot?: string | null
+          listing_url?: string | null
+          pitch_line?: string | null
+          share_token?: string
+          updated_at?: string
+          vdp_screenshot?: string | null
+          vdp_url?: string | null
+        }
+        Relationships: []
+      }
       referrals: {
         Row: {
           converted_at: string | null
