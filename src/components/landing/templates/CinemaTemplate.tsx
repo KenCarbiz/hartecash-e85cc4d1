@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Play, Car, ArrowRight } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
-import SellCarForm from "@/components/SellCarForm";
+import LandingForm from "@/components/LandingForm";
 import { DefaultBelowFold } from "../sharedSections";
 
 /**
@@ -84,7 +84,7 @@ const CinemaTemplate = () => {
 
       <section id="sell-car-form" className="bg-background py-20 px-5">
         <div className="max-w-[600px] mx-auto rounded-2xl shadow-xl border border-border overflow-hidden">
-          <SellCarForm variant="split" />
+          <LandingForm variant="split" />
         </div>
       </section>
 

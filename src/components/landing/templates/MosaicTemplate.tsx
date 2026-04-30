@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Car, Truck, Zap, Users, Sparkles, ArrowRight } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
-import SellCarForm from "@/components/SellCarForm";
+import LandingForm from "@/components/LandingForm";
 import { DefaultBelowFold } from "../sharedSections";
 
 /**
@@ -80,7 +80,7 @@ const MosaicTemplate = () => {
 
       <section id="sell-car-form" className="bg-muted/30 py-14 px-5">
         <div className="max-w-[560px] mx-auto rounded-2xl bg-card shadow border border-border overflow-hidden">
-          <SellCarForm variant="split" />
+          <LandingForm variant="split" />
         </div>
       </section>
 

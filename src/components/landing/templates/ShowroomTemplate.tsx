@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Car, ArrowRight, ShieldCheck } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
-import SellCarForm from "@/components/SellCarForm";
+import LandingForm from "@/components/LandingForm";
 import { DefaultBelowFold } from "../sharedSections";
 
 /**
@@ -98,7 +98,7 @@ const ShowroomTemplate = () => {
                 <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Start here</div>
                 <div className="text-base font-bold text-foreground mt-1">Get my cash offer</div>
               </div>
-              <SellCarForm variant="split" />
+              <LandingForm variant="split" />
             </div>
           </motion.div>
         </div>

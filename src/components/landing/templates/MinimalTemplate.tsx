@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Search, ChevronDown } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
-import SellCarForm from "@/components/SellCarForm";
+import LandingForm from "@/components/LandingForm";
 import { DefaultBelowFold } from "../sharedSections";
 
 /**
@@ -77,7 +77,7 @@ const MinimalTemplate = () => {
       <section id="sell-car-form" className="bg-muted/30 px-5 py-16 lg:py-24">
         <div className="max-w-[560px] mx-auto">
           <div className="rounded-2xl bg-card shadow-md border border-border overflow-hidden">
-            <SellCarForm variant="split" />
+            <LandingForm variant="split" />
           </div>
         </div>
       </section>
