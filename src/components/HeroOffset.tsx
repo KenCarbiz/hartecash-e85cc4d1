@@ -1,6 +1,6 @@
 import { Check, Star } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
-import SellCarForm from "@/components/SellCarForm";
+import LandingForm from "@/components/LandingForm";
 import { motion } from "framer-motion";
 
 interface HeroOffsetProps {
@@ -81,7 +81,7 @@ const HeroOffset = ({ side, leadSource, headlineOverride, subtextOverride }: Her
       transition={{ duration: 0.6, ease: "easeOut", delay: 0.15 }}
     >
       <div className="shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] rounded-2xl">
-        <SellCarForm variant="split" leadSource={leadSource} />
+        <LandingForm variant="split" leadSource={leadSource} />
       </div>
     </motion.div>
   );
@@ -102,7 +102,7 @@ const HeroOffset = ({ side, leadSource, headlineOverride, subtextOverride }: Her
       {/* Form card – immediately visible */}
       <div id="sell-car-form" className="px-4 pb-4">
         <div className="shadow-md rounded-2xl">
-          <SellCarForm variant="split" leadSource={leadSource} />
+          <LandingForm variant="split" leadSource={leadSource} />
         </div>
       </div>
 

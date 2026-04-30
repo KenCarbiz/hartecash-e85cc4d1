@@ -55,6 +55,12 @@ export interface SiteConfig {
   hero_subtext: string;
   hero_layout: string;
   landing_template: LandingTemplate;
+  /**
+   * Public sell-flow variant. 'detailed' renders the full multi-step
+   * SellCarForm (default); 'quick' renders the one-screen
+   * QuickOfferForm (plate + ZIP + mileage + 2 yes/no Q's).
+   */
+  landing_form_variant: "detailed" | "quick";
   price_guarantee_days: number;
   stats_cars_purchased: string;
   stats_years_in_business: string;
@@ -165,6 +171,7 @@ const DEFAULTS: SiteConfig = {
   hero_subtext: "Get a top-dollar cash offer in 2 minutes. No haggling, no stress.",
   hero_layout: "offset_right",
   landing_template: "classic",
+  landing_form_variant: "detailed",
   price_guarantee_days: 8,
   stats_cars_purchased: "14,721+",
   stats_years_in_business: "78 yrs",
@@ -261,6 +268,7 @@ const LOCATION_OVERRIDE_KEYS: (keyof SiteConfig)[] = [
   "hero_subtext",
   "hero_layout",
   "landing_template",
+  "landing_form_variant",
   "service_hero_headline",
   "service_hero_subtext",
   "trade_hero_headline",
