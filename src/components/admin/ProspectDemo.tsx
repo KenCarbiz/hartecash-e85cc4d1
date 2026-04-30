@@ -39,8 +39,9 @@ import {
   recommendAttentionColors,
 } from "@/lib/colorAnalysis";
 import { supabase } from "@/integrations/supabase/client";
-import { Brain, Wand2, Share2, Copy, Check } from "lucide-react";
+import { Brain, Wand2, Share2, Copy, Check, FileDown } from "lucide-react";
 import ProspectDemoHistory from "./ProspectDemoHistory";
+import { generateProspectDemoPdf, downloadBlob } from "@/lib/prospectDemoPdf";
 
 /**
  * ProspectDemo — standalone sales-pitch generator for Autocurb staff
@@ -411,6 +412,50 @@ const ProspectDemo = () => {
         description: "Select the URL above and copy manually.",
         variant: "destructive",
       });
+    }
+  };
+
+  const [exportingPdf, setExportingPdf] = useState(false);
+  const handleExportPdf = async () => {
+    setExportingPdf(true);
+    try {
+      const blob = await generateProspectDemoPdf({
+        dealerName,
+        homeUrl,
+        listingUrl,
+        vdpUrl,
+        screenshots: captures,
+        config: {
+          buttonColor,
+          buttonText,
+          bannerHeadline,
+          bannerCtaText,
+          stickyText,
+          stickyCtaText,
+          pptEnabled,
+          pptButtonText,
+        },
+        pitchLine: llmResult?.pitchLine ?? null,
+        shareUrl,
+      });
+      const safeName = (dealerName || "prospect-demo")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+      const stamp = new Date().toISOString().slice(0, 10);
+      downloadBlob(blob, `${safeName}-demo-${stamp}.pdf`);
+      toast({
+        title: "PDF ready",
+        description: "Your prospect demo report has been downloaded.",
+      });
+    } catch (e) {
+      toast({
+        title: "PDF export failed",
+        description: e instanceof Error ? e.message : "Unknown error",
+        variant: "destructive",
+      });
+    } finally {
+      setExportingPdf(false);
     }
   };
 
@@ -997,6 +1042,8 @@ const ProspectDemo = () => {
           copied={linkCopied}
           onSave={handleSaveAndShare}
           onCopy={handleCopyShareUrl}
+          onExportPdf={handleExportPdf}
+          exportingPdf={exportingPdf}
         />
       )}
     </div>
@@ -1109,6 +1156,8 @@ const SharePanel = ({
   copied,
   onSave,
   onCopy,
+  onExportPdf,
+  exportingPdf,
 }: {
   shareUrl: string | null;
   savedAt?: string;
@@ -1116,6 +1165,8 @@ const SharePanel = ({
   copied: boolean;
   onSave: () => void;
   onCopy: () => void;
+  onExportPdf: () => void;
+  exportingPdf: boolean;
 }) => {
   const expiresLabel = savedAt
     ? new Date(savedAt).toLocaleDateString(undefined, {
@@ -1133,24 +1184,40 @@ const SharePanel = ({
             Share This Demo with the Prospect
           </div>
         </div>
-        <Button
-          onClick={onSave}
-          disabled={saving}
-          variant="default"
-          size="sm"
-          className="gap-1.5 bg-emerald-600 hover:bg-emerald-700"
-        >
-          {saving ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-          ) : (
-            <Share2 className="w-3.5 h-3.5" />
-          )}
-          {saving
-            ? "Saving…"
-            : shareUrl
-              ? "Re-save (update link)"
-              : "Save & generate link"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={onExportPdf}
+            disabled={exportingPdf}
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+          >
+            {exportingPdf ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <FileDown className="w-3.5 h-3.5" />
+            )}
+            {exportingPdf ? "Building PDF…" : "Download PDF"}
+          </Button>
+          <Button
+            onClick={onSave}
+            disabled={saving}
+            variant="default"
+            size="sm"
+            className="gap-1.5 bg-emerald-600 hover:bg-emerald-700"
+          >
+            {saving ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Share2 className="w-3.5 h-3.5" />
+            )}
+            {saving
+              ? "Saving…"
+              : shareUrl
+                ? "Re-save (update link)"
+                : "Save & generate link"}
+          </Button>
+        </div>
       </div>
 
       {!shareUrl && !saving && (
