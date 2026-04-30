@@ -40,6 +40,7 @@ import {
 } from "@/lib/colorAnalysis";
 import { supabase } from "@/integrations/supabase/client";
 import { Brain, Wand2, Share2, Copy, Check } from "lucide-react";
+import ProspectDemoHistory from "./ProspectDemoHistory";
 
 /**
  * ProspectDemo — standalone sales-pitch generator for Autocurb staff
