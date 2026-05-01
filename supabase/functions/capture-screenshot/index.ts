@@ -403,6 +403,37 @@ async function tryCapture(url: string): Promise<CaptureAttempt> {
     if (res.status === 429) {
       return { url, ok: false, reason: "Microlink rate limit (50/day)" };
     }
+    // Microlink uses HTTP 400 for documented business errors like
+    // EPROXYNEEDED ("this URL has antibot protection, upgrade to
+    // Pro"). Try to parse the body so the rep gets the actionable
+    // reason instead of a cryptic "Microlink returned 400". If the
+    // body isn't JSON or doesn't carry a code, fall back to the
+    // status-line message.
+    if (res.status === 400) {
+      try {
+        const body = (await res.json()) as Record<string, unknown>;
+        const code = (body.code as string) || "";
+        const message =
+          ((body.data as Record<string, unknown>)?.url as string) ||
+          (body.message as string) ||
+          "";
+        const microlinkKeyConfigured = !!Deno.env.get("MICROLINK_API_KEY");
+        if (code === "EPROXYNEEDED") {
+          return {
+            url,
+            ok: false,
+            reason: microlinkKeyConfigured
+              ? "Site has bot protection that even Microlink Pro can't bypass — use Manual Upload instead."
+              : "Site uses antibot protection — needs Microlink Pro. Add MICROLINK_API_KEY to Supabase secrets, or use Manual Upload.",
+          };
+        }
+        if (message) {
+          return { url, ok: false, reason: `Microlink: ${message}` };
+        }
+      } catch {
+        // Body unreadable — fall through to the generic message.
+      }
+    }
     return { url, ok: false, reason: `Microlink returned ${res.status}` };
   }
 
