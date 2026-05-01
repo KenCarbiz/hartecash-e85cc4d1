@@ -145,6 +145,23 @@ const QuickOfferForm = ({ leadSource = "quick-offer" }: QuickOfferFormProps) => 
       // appraiser will re-price after seeing the vehicle.
       const subjectToInspection = drivable === "No" || majorDamage === "Yes";
 
+      // Auto-firm rule (Carvana wedge — see migration
+      // 20260501000000_auto_firm_offer_pct). When the dealer has
+      // configured `auto_firm_offer_pct`, set offered_price to that
+      // percentage of the high estimate so the customer lands on the
+      // offer page with a real number instead of a range. Skip when
+      // the offer is subject to inspection (non-driveable / major
+      // damage) — those need a manual look before a firm number, OR
+      // when no estimate could be computed.
+      const autoFirmPct = offerSettings
+        ? ((offerSettings as unknown as { auto_firm_offer_pct?: number | null })
+            .auto_firm_offer_pct ?? null)
+        : null;
+      const firmOfferedPrice =
+        autoFirmPct != null && estimate?.high && !subjectToInspection
+          ? Math.round(estimate.high * autoFirmPct)
+          : null;
+
       const { error: insertErr } = await supabase.from("submissions").insert({
         token: generatedToken,
         plate: formData.plate || null,
@@ -163,6 +180,9 @@ const QuickOfferForm = ({ leadSource = "quick-offer" }: QuickOfferFormProps) => 
         ...bbPayload,
         estimated_offer_low: estimate?.low || null,
         estimated_offer_high: estimate?.high || null,
+        // Firm offer when the dealer opted in via auto_firm_offer_pct;
+        // otherwise null and the manager bumps before customer sees it.
+        offered_price: firmOfferedPrice,
         is_hot_lead: estimate?.isHotLead || false,
         offer_subject_to_inspection: subjectToInspection,
       } as any);

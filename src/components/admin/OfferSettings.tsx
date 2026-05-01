@@ -382,6 +382,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
       learning_threshold: (settings as any).learning_threshold ?? 250,
       archetype_deduction_overrides: (settings as any).archetype_deduction_overrides ?? null,
       strategy_mode: strategyMode,
+      auto_firm_offer_pct: (settings as any).auto_firm_offer_pct ?? null,
       updated_at: new Date().toISOString(),
     } as any).eq("id", settings.id);
 
@@ -704,6 +705,61 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
                   onChange={(e) => setSettings({ ...settings, target_gross_min: Number(e.target.value) || 0 } as any)}
                   className="pl-7"
                 />
+              </div>
+            </div>
+          </div>
+
+          {/* Auto-firm offer rule — drives the QuickOffer (60-second
+              one-screen) flow. When set, the customer lands on the
+              offer page with a real number instead of a range. Empty
+              field = disabled, manager bumps before customer sees
+              anything firm (current behavior). Typical values when
+              enabled: 85–92% of the BB-clean estimate. */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 pt-4 border-t border-border">
+            <div className="sm:col-span-2">
+              <Label className="text-sm font-semibold">Auto-Firm QuickOffer (% of high estimate)</Label>
+              <p className="text-[10px] text-muted-foreground mb-1.5">
+                The 60-second QuickOffer landing flow shows a firm number to the customer
+                instead of waiting for a manager bump. Leave blank to keep "manager bumps
+                before customer sees firm offer" behavior. Typical values: 85–92%.
+                Skipped automatically when the customer flags non-driveable / major damage —
+                those still go to the appraiser first.
+              </p>
+              <div className="flex items-center gap-2 max-w-xs">
+                <Input
+                  type="number"
+                  min={50}
+                  max={100}
+                  step={1}
+                  placeholder="off"
+                  value={(() => {
+                    const v = (settings as any).auto_firm_offer_pct;
+                    return v == null ? "" : Math.round(v * 100);
+                  })()}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    if (raw === "") {
+                      setSettings({ ...settings, auto_firm_offer_pct: null } as any);
+                      return;
+                    }
+                    const pct = Number(raw);
+                    if (!Number.isFinite(pct)) return;
+                    // Clamp to the migration's CHECK constraint (50–100).
+                    const clamped = Math.max(50, Math.min(100, pct));
+                    setSettings({ ...settings, auto_firm_offer_pct: clamped / 100 } as any);
+                  }}
+                  className="max-w-[8rem]"
+                />
+                <span className="text-sm text-muted-foreground">%</span>
+                {(settings as any).auto_firm_offer_pct != null && (
+                  <button
+                    type="button"
+                    onClick={() => setSettings({ ...settings, auto_firm_offer_pct: null } as any)}
+                    className="text-xs font-bold text-muted-foreground hover:text-foreground underline"
+                  >
+                    disable
+                  </button>
+                )}
               </div>
             </div>
           </div>
