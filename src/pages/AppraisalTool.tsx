@@ -1043,6 +1043,35 @@ export default function AppraisalTool() {
       </div>
 
       <div className="max-w-7xl mx-auto p-6">
+        {/* Black-Book data warning. When the lookup failed (no live
+            BB row, no cached tiers on the submission) the offer math
+            silently falls back to $0 — used to be a confusing UX
+            because the manager would see all-zero values with no
+            explanation. Surface it explicitly so they know to either
+            re-run the lookup, edit the VIN, or override manually. */}
+        {(() => {
+          const hasLiveBb = !!liveBbVehicle;
+          const hasCachedBb =
+            !!sub.bb_tradein_avg ||
+            !!sub.bb_wholesale_avg ||
+            !!sub.bb_retail_avg ||
+            !!sub.bb_msrp;
+          if (hasLiveBb || hasCachedBb) return null;
+          return (
+            <div className="mb-4 rounded-xl border-2 border-amber-300 bg-amber-50 dark:bg-amber-950/30 p-4 flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <div className="flex-1 text-sm text-amber-900 dark:text-amber-100 leading-relaxed">
+                <strong>No Black Book data on this submission.</strong> The
+                offer waterfall below will show $0 until either the BB
+                lookup succeeds or you set an ACV override. Most common
+                causes: VIN couldn't be matched, BB API was down at submit
+                time, or this is a manually-entered submission. Try
+                editing the VIN above or use the ACV override sheet.
+              </div>
+            </div>
+          );
+        })()}
+
         {/* ═══════════════════════════════════════ */}
         {/*  ZONE 1 — ORIENT                       */}
         {/* ═══════════════════════════════════════ */}

@@ -142,18 +142,31 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Honor the rep's DND + quiet-hours window. The SQL helper
-    // collapses both signals into a single boolean.
+    // Honor the rep's DND + quiet-hours window AND the dealer's
+    // calling-hours window. The SQL helper collapses all three
+    // signals into a single boolean. When the helper says "no", we
+    // surface the most specific reason we can derive from the
+    // available signals — DND if the flag is set, otherwise the
+    // generic "outside available window" copy that names all three
+    // possible causes so the rep knows where to look.
     const { data: repAvailable } = await admin.rpc("click_to_dial_rep_available", {
       _user_id: caller.userId,
     });
     if (repAvailable === false) {
+      let message: string;
+      if (roleRow?.click_to_dial_dnd) {
+        message = "You have do-not-disturb on for click-to-dial. Toggle it off in My Availability to dial.";
+      } else {
+        message =
+          "Click-to-dial is unavailable right now. Causes (in priority order): " +
+          "(1) you're inside your personal quiet-hours window — adjust in My Availability; " +
+          "(2) you're outside the dealer's calling-hours window — set by your admin in Setup · Process · Voice AI; " +
+          "(3) the day is excluded by TCPA calling-hours rules for the customer's timezone.";
+      }
       return new Response(
         JSON.stringify({
           error: "rep_unavailable",
-          message: roleRow?.click_to_dial_dnd
-            ? "You have do-not-disturb on for click-to-dial. Toggle it off in Staff & Permissions to dial."
-            : "You're inside your quiet-hours window. Adjust the window in Staff & Permissions or wait until it ends.",
+          message,
         }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );

@@ -79,6 +79,11 @@ const DEFAULT_TEMPLATES: Record<string, { email_subject: string; email_body: str
     email_body: "Great news! {{customer_name}} has accepted the offer on their {{vehicle}}.\n\nOffer Amount: {{offer_amount}}\n\nFollow up to schedule their inspection visit.",
     sms_body: "🎉 {{customer_name}} accepted the offer on their {{vehicle}} ({{offer_amount}}). Follow up to schedule!",
   },
+  staff_customer_replied: {
+    email_subject: "💬 {{customer_name}} replied — {{vehicle}}",
+    email_body: "{{custom_body}}\n\nCustomer: {{customer_name}}\nVehicle: {{vehicle}}\n\nOpen the conversation in the dashboard to respond.",
+    sms_body: "💬 {{custom_body}}",
+  },
   staff_deal_completed: {
     email_subject: "✅ Deal Completed — {{customer_name}}",
     email_body: "A deal has been completed.\n\nCustomer: {{customer_name}}\nVehicle: {{vehicle}}\n\nThe purchase has been finalized.",

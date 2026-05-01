@@ -88,7 +88,7 @@ const RequestAccessDialog = ({ open, onOpenChange, userId }: RequestAccessDialog
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Lock className="w-4 h-4 text-primary" />
-            Request Access
+            Request access to a section
           </DialogTitle>
         </DialogHeader>
 
@@ -98,8 +98,13 @@ const RequestAccessDialog = ({ open, onOpenChange, userId }: RequestAccessDialog
           </div>
         ) : (
           <div className="space-y-4 py-2">
+            <p className="text-xs text-muted-foreground">
+              Pick the permission group that grants the section you need. An
+              admin will review your request and grant or deny it — you'll see
+              the new section in the sidebar once it's approved.
+            </p>
             <div>
-              <Label className="text-xs">Permission Group</Label>
+              <Label className="text-xs">Permission group</Label>
               <Select value={selectedGroup} onValueChange={setSelectedGroup}>
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Select a permission group" />
@@ -117,14 +122,18 @@ const RequestAccessDialog = ({ open, onOpenChange, userId }: RequestAccessDialog
                   ))}
                 </SelectContent>
               </Select>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Each group bundles a set of sidebar sections (e.g. "Voice AI"
+                grants Campaigns + Call History).
+              </p>
             </div>
 
             <div>
-              <Label className="text-xs">Message (optional)</Label>
+              <Label className="text-xs">Why do you need this? (optional)</Label>
               <Textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Why do you need this access?"
+                placeholder="e.g. I'm covering Sarah's voice campaigns this week"
                 rows={3}
                 className="mt-1"
               />

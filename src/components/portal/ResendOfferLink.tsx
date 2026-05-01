@@ -28,13 +28,22 @@ const ResendOfferLink = ({ submissionId, customerEmail }: ResendOfferLinkProps) 
     if (state !== "idle") return;
     setState("sending");
     try {
-      const { error } = await supabase.functions.invoke("send-notification", {
-        body: {
-          trigger_key: "customer_offer_ready",
-          submission_id: submissionId,
+      // Send-notification returns 200 with { error } in the body for
+      // recoverable failures (rate limit, missing recipient, etc).
+      // The previous code only checked the FunctionsError network-
+      // layer error, which made silent failures show "Sent!" — fixed
+      // by also checking data.error.
+      const { data, error } = await supabase.functions.invoke<{ error?: string }>(
+        "send-notification",
+        {
+          body: {
+            trigger_key: "customer_offer_ready",
+            submission_id: submissionId,
+          },
         },
-      });
+      );
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       setState("sent");
       toast({
         title: "Sent!",
