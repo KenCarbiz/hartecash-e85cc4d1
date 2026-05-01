@@ -554,8 +554,30 @@ const ProspectDemo = () => {
           },
         },
       );
-      if (error) throw new Error(error.message);
+      // Try to read the response body when supabase-js wraps a
+      // non-2xx in FunctionsHttpError — the body has the actionable
+      // message ("ANTHROPIC_API_KEY not configured", "rate limit",
+      // etc.) that the bare error.message swallows.
+      if (error) {
+        let detail = error.message || "AI analysis failed";
+        const ctx = (error as unknown as { context?: { response?: Response } }).context;
+        if (ctx?.response) {
+          try {
+            const body = (await ctx.response.clone().json()) as { error?: string };
+            if (body?.error) detail = body.error;
+          } catch { /* body unreadable, keep generic */ }
+        }
+        throw new Error(detail);
+      }
       if (!data) throw new Error("Empty response from analyze-prospect-site");
+      // The function now returns 200 with { error } when something
+      // recoverable went wrong (Anthropic down, key missing, etc.).
+      // Surface that as a clean error rather than treating it as a
+      // successful empty response.
+      const dataAsAny = data as unknown as { error?: string; detail?: string };
+      if (dataAsAny.error) {
+        throw new Error(dataAsAny.error + (dataAsAny.detail ? ` — ${dataAsAny.detail.slice(0, 200)}` : ""));
+      }
       setLlmResult(data);
 
       // Auto-apply the AI's recommendations to the live demo.
