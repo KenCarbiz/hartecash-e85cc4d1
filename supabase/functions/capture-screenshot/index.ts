@@ -414,6 +414,19 @@ async function tryCapture(url: string): Promise<CaptureAttempt> {
   }
 
   if (data.status !== "success") {
+    // Specifically detect EPROXYNEEDED — Microlink's documented code
+    // for "this URL uses antibot protection that requires the Pro
+    // proxy." When this fires WITHOUT a key configured, the message
+    // tells the rep their two options. WITH a key configured it's a
+    // genuine "Pro can't beat this site either" signal.
+    const code = (data.code as string) || "";
+    const microlinkKeyConfigured = !!Deno.env.get("MICROLINK_API_KEY");
+    if (code === "EPROXYNEEDED") {
+      const reason = microlinkKeyConfigured
+        ? "Site has bot protection that even Microlink Pro can't bypass — use Manual Upload instead."
+        : "Site uses antibot protection — needs Microlink Pro. Add MICROLINK_API_KEY to Supabase secrets, or use Manual Upload.";
+      return { url, ok: false, reason };
+    }
     return {
       url,
       ok: false,
