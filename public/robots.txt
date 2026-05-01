@@ -1,16 +1,225 @@
+# ── Search engine crawlers ──
 User-agent: Googlebot
 Allow: /
+Disallow: /admin/
+Disallow: /admin
+Disallow: /super-admin
+Disallow: /executive
+Disallow: /plan
+Disallow: /billing
+Disallow: /upload/
+Disallow: /docs/
+Disallow: /offer/
+Disallow: /deal/
+Disallow: /demo/
+Disallow: /onboard/
+Disallow: /inspect/
+Disallow: /inspection/
+Disallow: /appraisal/
+Disallow: /reschedule/
+Disallow: /watch-my-car/
+Disallow: /review/
+Disallow: /obd-scan/
+Disallow: /reset-password
+Disallow: /unsubscribe
+Disallow: /email-unsubscribe
+Disallow: /my-submission/
+Disallow: /service-quick-entry
+Disallow: /inspection-checkin
+Disallow: /checkin
+Disallow: /servicelinkgen
 
 User-agent: Bingbot
 Allow: /
+Disallow: /admin/
+Disallow: /admin
+Disallow: /super-admin
+Disallow: /executive
+Disallow: /plan
+Disallow: /billing
+Disallow: /upload/
+Disallow: /docs/
+Disallow: /offer/
+Disallow: /deal/
+Disallow: /demo/
+Disallow: /onboard/
+Disallow: /inspect/
+Disallow: /inspection/
+Disallow: /appraisal/
+Disallow: /reschedule/
+Disallow: /watch-my-car/
+Disallow: /review/
+Disallow: /obd-scan/
+Disallow: /reset-password
+Disallow: /unsubscribe
+Disallow: /email-unsubscribe
+Disallow: /my-submission/
+Disallow: /service-quick-entry
+Disallow: /inspection-checkin
+Disallow: /checkin
+Disallow: /servicelinkgen
 
+# ── Social preview crawlers (allowed everywhere for share cards) ──
 User-agent: Twitterbot
 Allow: /
 
 User-agent: facebookexternalhit
 Allow: /
 
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: Slackbot
+Allow: /
+
+# ── AI search & answer engines ──
+# We allow these so Harte Auto Group surfaces in AI-generated answers
+# (ChatGPT search, Claude, Perplexity, Google AI Overviews, etc.).
+# They follow the same private-path disallows as web crawlers.
+User-agent: GPTBot
+Allow: /
+Disallow: /admin/
+Disallow: /admin
+Disallow: /super-admin
+Disallow: /executive
+Disallow: /upload/
+Disallow: /docs/
+Disallow: /offer/
+Disallow: /deal/
+Disallow: /demo/
+Disallow: /onboard/
+Disallow: /inspect/
+Disallow: /inspection/
+Disallow: /appraisal/
+Disallow: /reschedule/
+Disallow: /watch-my-car/
+Disallow: /review/
+Disallow: /obd-scan/
+Disallow: /my-submission/
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /admin/
+Disallow: /admin
+Disallow: /super-admin
+Disallow: /executive
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /admin/
+Disallow: /admin
+Disallow: /super-admin
+Disallow: /executive
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /admin/
+Disallow: /admin
+Disallow: /super-admin
+Disallow: /executive
+Disallow: /upload/
+Disallow: /docs/
+Disallow: /offer/
+Disallow: /deal/
+
+User-agent: Claude-Web
+Allow: /
+Disallow: /admin/
+Disallow: /admin
+Disallow: /super-admin
+Disallow: /executive
+
+User-agent: anthropic-ai
+Allow: /
+Disallow: /admin/
+Disallow: /admin
+Disallow: /super-admin
+Disallow: /executive
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /admin/
+Disallow: /admin
+Disallow: /super-admin
+Disallow: /executive
+
+User-agent: Perplexity-User
+Allow: /
+Disallow: /admin/
+Disallow: /admin
+Disallow: /super-admin
+Disallow: /executive
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /admin/
+Disallow: /admin
+Disallow: /super-admin
+Disallow: /executive
+
+User-agent: Applebot
+Allow: /
+Disallow: /admin/
+Disallow: /admin
+Disallow: /super-admin
+Disallow: /executive
+
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /admin/
+Disallow: /admin
+Disallow: /super-admin
+Disallow: /executive
+
+User-agent: cohere-ai
+Allow: /
+Disallow: /admin/
+Disallow: /admin
+
+User-agent: Meta-ExternalAgent
+Allow: /
+Disallow: /admin/
+Disallow: /admin
+
+User-agent: Bytespider
+Allow: /
+Disallow: /admin/
+Disallow: /admin
+
+User-agent: Amazonbot
+Allow: /
+Disallow: /admin/
+Disallow: /admin
+
+# ── Default policy for all other crawlers ──
 User-agent: *
 Allow: /
+Disallow: /admin/
+Disallow: /admin
+Disallow: /super-admin
+Disallow: /executive
+Disallow: /plan
+Disallow: /billing
+Disallow: /upload/
+Disallow: /docs/
+Disallow: /offer/
+Disallow: /deal/
+Disallow: /demo/
+Disallow: /onboard/
+Disallow: /inspect/
+Disallow: /inspection/
+Disallow: /appraisal/
+Disallow: /reschedule/
+Disallow: /watch-my-car/
+Disallow: /review/
+Disallow: /obd-scan/
+Disallow: /reset-password
+Disallow: /unsubscribe
+Disallow: /email-unsubscribe
+Disallow: /my-submission/
+Disallow: /service-quick-entry
+Disallow: /inspection-checkin
+Disallow: /checkin
+Disallow: /servicelinkgen
 
 Sitemap: https://hartecash.lovable.app/sitemap.xml

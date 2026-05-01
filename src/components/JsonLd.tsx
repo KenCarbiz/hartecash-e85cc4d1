@@ -72,12 +72,26 @@ export const LocalBusinessJsonLd = () => {
               },
             }
           : {}),
+        ...(((config as any).founding_date || (config as any).founding_year)
+          ? { foundingDate: (config as any).founding_date || String((config as any).founding_year) }
+          : { foundingDate: "1952" }),
+        ...(((config as any).social_links && Array.isArray((config as any).social_links) && (config as any).social_links.length)
+          ? { sameAs: (config as any).social_links }
+          : {}),
+        ...((config as any).area_served
+          ? { areaServed: (config as any).area_served }
+          : { areaServed: "Connecticut, USA" }),
+        priceRange: "$$",
+        paymentAccepted: ["Cash", "Check", "Bank Transfer"],
+        currenciesAccepted: "USD",
         knowsAbout: [
           "car buying",
           "vehicle appraisal",
           "trade-in valuation",
           "used car purchasing",
           "instant cash offers for cars",
+          "lease buyout",
+          "vehicle pickup",
         ],
         hasOfferCatalog: {
           "@type": "OfferCatalog",
@@ -192,5 +206,59 @@ export const FAQPageJsonLd = () => (
     }}
   />
 );
+
+// ── WebSite + SearchAction (helps Google sitelink search box & AI grounding) ──
+export const WebSiteJsonLd = () => {
+  const { config } = useSiteConfig();
+  const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+  return (
+    <JsonLd
+      data={{
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        name: config.dealership_name,
+        url: baseUrl,
+        inLanguage: "en-US",
+        publisher: {
+          "@type": "Organization",
+          name: config.dealership_name,
+          logo: config.logo_url || `${baseUrl}/og-service.jpg`,
+        },
+        potentialAction: {
+          "@type": "SearchAction",
+          target: {
+            "@type": "EntryPoint",
+            urlTemplate: `${baseUrl}/?q={search_term_string}`,
+          },
+          "query-input": "required name=search_term_string",
+        },
+      }}
+    />
+  );
+};
+
+// ── BreadcrumbList (per-page) ──
+// items: [{ name: "Home", url: "/" }, { name: "About", url: "/about" }]
+export const BreadcrumbJsonLd = ({
+  items,
+}: {
+  items: Array<{ name: string; url: string }>;
+}) => {
+  const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+  return (
+    <JsonLd
+      data={{
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: items.map((item, idx) => ({
+          "@type": "ListItem",
+          position: idx + 1,
+          name: item.name,
+          item: item.url.startsWith("http") ? item.url : `${baseUrl}${item.url}`,
+        })),
+      }}
+    />
+  );
+};
 
 export default JsonLd;
