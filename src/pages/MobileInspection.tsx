@@ -173,6 +173,11 @@ const MobileInspection = () => {
   const [saving, setSaving] = useState(false);
   const [lastAdjustment, setLastAdjustment] = useState<{ adjustment: number; avg_depth: number } | null>(null);
   const [tireBrakeInputMode, setTireBrakeInputMode] = useState<"measurement" | "pass_fail">("measurement");
+  // Split modes — same vocabulary, set per-type. Default to the
+  // legacy shared value so older configs still work; the cascade
+  // resolver below replaces both when a per-rooftop override exists.
+  const [tireInputMode, setTireInputMode] = useState<"measurement" | "pass_fail">("measurement");
+  const [brakeInputMode, setBrakeInputMode] = useState<"measurement" | "pass_fail">("measurement");
 
   // Tire depths
   const [tireLF, setTireLF] = useState<number | null>(null);
@@ -338,13 +343,58 @@ const MobileInspection = () => {
         setSubmission(sub);
         setOverallGrade(sub.overall_condition || "");
 
-        // Fetch inspection config for this submission's dealership to get input mode
-        const { data: subFull } = await supabase.from("submissions").select("dealership_id").eq("id", id).maybeSingle();
-        if ((subFull as any)?.dealership_id) {
-          const { data: cfgData } = await supabase.from("inspection_config").select("tire_brake_input_mode").eq("dealership_id", subFull.dealership_id).maybeSingle();
-          if (cfgData && (cfgData as any).tire_brake_input_mode === "pass_fail") {
-            setTireBrakeInputMode("pass_fail");
+        // Fetch inspection config for this submission's dealership +
+        // location, then resolve the effective tire/brake input modes
+        // through the cascade RPC. The RPC layers any
+        // inspection_config_overrides row for this rooftop on top of
+        // the corporate inspection_config row, so a multi-rooftop
+        // dealer can have e.g. tires on measurement at one store and
+        // pass_fail at another.
+        const { data: subFull } = await supabase
+          .from("submissions")
+          .select("dealership_id, store_location_id")
+          .eq("id", id)
+          .maybeSingle();
+        const subDealershipId = (subFull as any)?.dealership_id as string | undefined;
+        const subLocationId = (subFull as any)?.store_location_id as string | null | undefined;
+        if (subDealershipId) {
+          // Try the new cascade resolver. Falls back to the legacy
+          // shared column if the function isn't deployed yet.
+          let tireMode: "measurement" | "pass_fail" = "measurement";
+          let brakeMode: "measurement" | "pass_fail" = "measurement";
+          let resolvedFromRpc = false;
+          try {
+            const { data: rpcRows } = await (supabase as any).rpc(
+              "effective_inspection_input_modes",
+              { _dealership_id: subDealershipId, _location_id: subLocationId ?? null },
+            );
+            const row = Array.isArray(rpcRows) ? rpcRows[0] : rpcRows;
+            if (row?.tire_mode === "pass_fail" || row?.tire_mode === "measurement") {
+              tireMode = row.tire_mode;
+              resolvedFromRpc = true;
+            }
+            if (row?.brake_mode === "pass_fail" || row?.brake_mode === "measurement") {
+              brakeMode = row.brake_mode;
+              resolvedFromRpc = true;
+            }
+          } catch { /* RPC not deployed — fall back below */ }
+          if (!resolvedFromRpc) {
+            // Pre-migration fallback: read the legacy shared column.
+            const { data: cfgData } = await supabase
+              .from("inspection_config")
+              .select("tire_brake_input_mode")
+              .eq("dealership_id", subDealershipId)
+              .maybeSingle();
+            if ((cfgData as any)?.tire_brake_input_mode === "pass_fail") {
+              tireMode = "pass_fail";
+              brakeMode = "pass_fail";
+            }
           }
+          setTireInputMode(tireMode);
+          setBrakeInputMode(brakeMode);
+          // Keep legacy state in sync for any path still reading it —
+          // tires-side wins as the more visible signal.
+          setTireBrakeInputMode(tireMode);
         }
 
         // Live-inspection transparency SMS — fire exactly once per
@@ -583,6 +633,8 @@ const MobileInspection = () => {
               tireDepths={{ leftFront: tireLF, rightFront: tireRF, leftRear: tireLR, rightRear: tireRR }}
               brakeDepths={{ leftFront: brakeLF, rightFront: brakeRF, leftRear: brakeLR, rightRear: brakeRR }}
               inputMode={tireBrakeInputMode}
+              tireInputMode={tireInputMode}
+              brakeInputMode={brakeInputMode}
               onTireChange={(pos, depth) => {
                 const val = depth === -1 ? null : depth;
                 if (pos === "leftFront") setTireLF(val);

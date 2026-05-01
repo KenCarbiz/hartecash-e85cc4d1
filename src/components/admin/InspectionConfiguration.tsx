@@ -101,7 +101,22 @@ const InspectionConfiguration = () => {
   // Tire credit/deduction policy
   const [enableTireAdjustments, setEnableTireAdjustments] = useState(false);
   const [defaultInspectionMode, setDefaultInspectionMode] = useState<"standard" | "full">("standard");
+  // Legacy single toggle — kept for back-compat with the
+  // tire_brake_input_mode column that older code (AppraisalSidebar)
+  // still reads. New tire_input_mode / brake_input_mode columns
+  // are written alongside it on save and become the source of truth.
   const [tireBrakeInputMode, setTireBrakeInputMode] = useState<"measurement" | "pass_fail">("measurement");
+  const [tireInputMode, setTireInputMode] = useState<"measurement" | "pass_fail">("measurement");
+  const [brakeInputMode, setBrakeInputMode] = useState<"measurement" | "pass_fail">("measurement");
+
+  // Per-location overrides loaded from inspection_config_overrides.
+  // Keyed by location_id. Each value object holds the override per
+  // input mode — null means "inherit from corporate".
+  const [locations, setLocations] = useState<Array<{ id: string; name: string; city: string | null; state: string | null }>>([]);
+  const [locationOverrides, setLocationOverrides] = useState<Record<string, {
+    tire_input_mode: "measurement" | "pass_fail" | null;
+    brake_input_mode: "measurement" | "pass_fail" | null;
+  }>>({});
   const [tireAdjustmentMode, setTireAdjustmentMode] = useState<"whole" | "per_tire">("whole");
   const [tireCreditThreshold, setTireCreditThreshold] = useState(6);
   const [tireDeductThreshold, setTireDeductThreshold] = useState(3);
@@ -156,11 +171,56 @@ const InspectionConfiguration = () => {
         setTireDeductPer32((data as any).tire_deduct_per_32 ?? 50);
         setTireAdjustmentMode((data as any).tire_adjustment_mode || 'whole');
         setDefaultInspectionMode((data as any).default_inspection_mode === 'full' ? 'full' : 'standard');
-        setTireBrakeInputMode((data as any).tire_brake_input_mode === 'pass_fail' ? 'pass_fail' : 'measurement');
+        const legacyShared = (data as any).tire_brake_input_mode === 'pass_fail' ? 'pass_fail' : 'measurement';
+        setTireBrakeInputMode(legacyShared);
+        // New split columns. Fall back to the legacy shared value
+        // when the per-input-type column isn't set yet (DB pre-
+        // migration or never explicitly chosen).
+        setTireInputMode(
+          (data as any).tire_input_mode === 'pass_fail' ? 'pass_fail' :
+          (data as any).tire_input_mode === 'measurement' ? 'measurement' :
+          legacyShared,
+        );
+        setBrakeInputMode(
+          (data as any).brake_input_mode === 'pass_fail' ? 'pass_fail' :
+          (data as any).brake_input_mode === 'measurement' ? 'measurement' :
+          legacyShared,
+        );
       }
       setLoading(false);
     };
     fetchConfig();
+  }, []);
+
+  // Load active locations + any per-location overrides for the
+  // overrides section. Single-rooftop tenants don't see this UI so
+  // skip the network call when there's nothing to override.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: locs } = await supabase
+        .from("dealership_locations" as any)
+        .select("id, name, city, state")
+        .eq("is_active", true)
+        .order("sort_order");
+      if (cancelled) return;
+      const list = (locs as any[]) || [];
+      setLocations(list);
+      if (list.length <= 1) return;
+      const { data: overrides } = await supabase
+        .from("inspection_config_overrides" as any)
+        .select("location_id, tire_input_mode, brake_input_mode");
+      if (cancelled) return;
+      const map: Record<string, any> = {};
+      for (const o of (overrides as any[]) || []) {
+        map[o.location_id] = {
+          tire_input_mode: o.tire_input_mode || null,
+          brake_input_mode: o.brake_input_mode || null,
+        };
+      }
+      setLocationOverrides(map);
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   const handleSave = async () => {
@@ -192,14 +252,50 @@ const InspectionConfiguration = () => {
         tire_deduct_per_32: tireDeductPer32,
         tire_adjustment_mode: tireAdjustmentMode,
         default_inspection_mode: defaultInspectionMode,
-        tire_brake_input_mode: tireBrakeInputMode,
+        // Legacy shared column kept in sync for AppraisalSidebar's
+        // single-toggle reader. New code reads tire_input_mode and
+        // brake_input_mode directly. When the rep splits the two
+        // (tire=measurement, brake=pass_fail), the legacy column
+        // gets the tire value as a sensible fallback.
+        tire_brake_input_mode: tireInputMode,
+        tire_input_mode: tireInputMode,
+        brake_input_mode: brakeInputMode,
         updated_at: new Date().toISOString(),
       } as any)
       .eq("id", configId);
 
+    // Save per-location overrides on the same Save click. Each row
+    // upserts on (dealership_id, location_id). Rows where BOTH
+    // input modes are null get deleted so we don't leave stale
+    // "inherit corporate" rows around.
+    let overrideErr: { message: string } | null = null;
+    if (locations.length > 1) {
+      for (const loc of locations) {
+        const o = locationOverrides[loc.id];
+        if (!o || (!o.tire_input_mode && !o.brake_input_mode)) {
+          await supabase
+            .from("inspection_config_overrides" as any)
+            .delete()
+            .eq("dealership_id", dealershipId)
+            .eq("location_id", loc.id);
+          continue;
+        }
+        const { error: upErr } = await supabase
+          .from("inspection_config_overrides" as any)
+          .upsert({
+            dealership_id: dealershipId,
+            location_id: loc.id,
+            tire_input_mode: o.tire_input_mode,
+            brake_input_mode: o.brake_input_mode,
+            updated_at: new Date().toISOString(),
+          } as any, { onConflict: "dealership_id,location_id" });
+        if (upErr && !overrideErr) overrideErr = upErr;
+      }
+    }
+
     setSaving(false);
-    if (error) {
-      toast({ title: "Save failed", description: error.message, variant: "destructive" });
+    if (error || overrideErr) {
+      toast({ title: "Save failed", description: (error || overrideErr)!.message, variant: "destructive" });
     } else {
       toast({ title: "Inspection config saved", description: "Changes will apply to all new inspections." });
     }
@@ -412,40 +508,146 @@ const InspectionConfiguration = () => {
                   {/* Special sub-toggles for tires */}
                   {sectionKey === "tires" && (
                     <div className="space-y-3">
-                      {/* Input Mode: Measurement vs Pass/Fail */}
-                      <div className="border border-border rounded-lg p-3 bg-muted/20">
-                        <label className="text-sm font-semibold block mb-1">Tire & Brake Input Mode</label>
-                        <p className="text-[10px] text-muted-foreground mb-2">
-                          Choose how inspectors record tire and brake condition
-                        </p>
-                        <div className="flex items-center gap-1 bg-muted rounded-lg p-1 w-fit">
-                          <button
-                            onClick={() => setTireBrakeInputMode("measurement")}
-                            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                              tireBrakeInputMode === "measurement"
-                                ? "bg-primary text-primary-foreground shadow-sm"
-                                : "text-muted-foreground hover:text-foreground"
-                            }`}
-                          >
-                            Depth Measurements
-                          </button>
-                          <button
-                            onClick={() => setTireBrakeInputMode("pass_fail")}
-                            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                              tireBrakeInputMode === "pass_fail"
-                                ? "bg-primary text-primary-foreground shadow-sm"
-                                : "text-muted-foreground hover:text-foreground"
-                            }`}
-                          >
-                            Pass / Fail
-                          </button>
+                      {/* Per-input-type toggles. Tires and brakes are
+                          independent so a dealer can keep exact tread
+                          depth (offer-math sensitive) while letting
+                          inspectors pass/fail brakes. */}
+                      <div className="border border-border rounded-lg p-3 bg-muted/20 space-y-3">
+                        <div>
+                          <label className="text-sm font-semibold block mb-1">Tire Input Mode</label>
+                          <div className="flex items-center gap-1 bg-muted rounded-lg p-1 w-fit">
+                            <button
+                              onClick={() => setTireInputMode("measurement")}
+                              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                                tireInputMode === "measurement"
+                                  ? "bg-primary text-primary-foreground shadow-sm"
+                                  : "text-muted-foreground hover:text-foreground"
+                              }`}
+                            >
+                              Depth Measurements
+                            </button>
+                            <button
+                              onClick={() => setTireInputMode("pass_fail")}
+                              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                                tireInputMode === "pass_fail"
+                                  ? "bg-primary text-primary-foreground shadow-sm"
+                                  : "text-muted-foreground hover:text-foreground"
+                              }`}
+                            >
+                              Pass / Fail
+                            </button>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground mt-1.5">
+                            {tireInputMode === "measurement"
+                              ? "Inspector enters tread depth (/32\") for each tire."
+                              : "Inspector taps each tire to toggle Pass/Fail — no numbers."}
+                          </p>
                         </div>
-                        <p className="text-[9px] text-muted-foreground mt-1.5">
-                          {tireBrakeInputMode === "measurement"
-                            ? "Inspectors enter exact tread depth (/32\") and brake pad thickness (mm) for each position."
-                            : "Inspectors simply tap each tire/brake position to toggle between Pass and Fail — no measurements needed."}
-                        </p>
+                        <div>
+                          <label className="text-sm font-semibold block mb-1">Brake Input Mode</label>
+                          <div className="flex items-center gap-1 bg-muted rounded-lg p-1 w-fit">
+                            <button
+                              onClick={() => setBrakeInputMode("measurement")}
+                              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                                brakeInputMode === "measurement"
+                                  ? "bg-primary text-primary-foreground shadow-sm"
+                                  : "text-muted-foreground hover:text-foreground"
+                              }`}
+                            >
+                              Depth Measurements
+                            </button>
+                            <button
+                              onClick={() => setBrakeInputMode("pass_fail")}
+                              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                                brakeInputMode === "pass_fail"
+                                  ? "bg-primary text-primary-foreground shadow-sm"
+                                  : "text-muted-foreground hover:text-foreground"
+                              }`}
+                            >
+                              Pass / Fail
+                            </button>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground mt-1.5">
+                            {brakeInputMode === "measurement"
+                              ? "Inspector enters pad thickness (mm) for each brake."
+                              : "Inspector taps each brake to toggle Pass/Fail — no numbers."}
+                          </p>
+                        </div>
                       </div>
+
+                      {/* Per-rooftop overrides — only shown for
+                          multi-rooftop tenants. Each row lets the
+                          admin override either input mode for that
+                          rooftop independently. NULL value =
+                          inherit from corporate setting above. */}
+                      {locations.length > 1 && (
+                        <div className="border border-border rounded-lg p-3 bg-muted/20 space-y-2">
+                          <div>
+                            <label className="text-sm font-semibold block">Per-Rooftop Overrides</label>
+                            <p className="text-[10px] text-muted-foreground">
+                              Override the corporate setting for a specific rooftop. Leave on "Inherit" to use the value above.
+                            </p>
+                          </div>
+                          <div className="space-y-2">
+                            {locations.map((loc) => {
+                              const ov = locationOverrides[loc.id] || { tire_input_mode: null, brake_input_mode: null };
+                              return (
+                                <div
+                                  key={loc.id}
+                                  className="grid grid-cols-[1fr_auto_auto] gap-2 items-center text-xs bg-background border border-border/60 rounded px-2 py-1.5"
+                                >
+                                  <span className="font-semibold text-foreground truncate">
+                                    {loc.name}
+                                    {loc.city && (
+                                      <span className="text-muted-foreground ml-1.5 font-normal">
+                                        — {loc.city}{loc.state ? `, ${loc.state}` : ""}
+                                      </span>
+                                    )}
+                                  </span>
+                                  <select
+                                    value={ov.tire_input_mode || ""}
+                                    onChange={(e) => {
+                                      const v = e.target.value as "" | "measurement" | "pass_fail";
+                                      setLocationOverrides((prev) => ({
+                                        ...prev,
+                                        [loc.id]: {
+                                          ...(prev[loc.id] || { tire_input_mode: null, brake_input_mode: null }),
+                                          tire_input_mode: v === "" ? null : v,
+                                        },
+                                      }));
+                                    }}
+                                    className="text-[11px] rounded border border-input bg-background px-2 py-1"
+                                    title="Tire input mode for this rooftop"
+                                  >
+                                    <option value="">Tires: inherit</option>
+                                    <option value="measurement">Tires: Depth</option>
+                                    <option value="pass_fail">Tires: Pass/Fail</option>
+                                  </select>
+                                  <select
+                                    value={ov.brake_input_mode || ""}
+                                    onChange={(e) => {
+                                      const v = e.target.value as "" | "measurement" | "pass_fail";
+                                      setLocationOverrides((prev) => ({
+                                        ...prev,
+                                        [loc.id]: {
+                                          ...(prev[loc.id] || { tire_input_mode: null, brake_input_mode: null }),
+                                          brake_input_mode: v === "" ? null : v,
+                                        },
+                                      }));
+                                    }}
+                                    className="text-[11px] rounded border border-input bg-background px-2 py-1"
+                                    title="Brake input mode for this rooftop"
+                                  >
+                                    <option value="">Brakes: inherit</option>
+                                    <option value="measurement">Brakes: Depth</option>
+                                    <option value="pass_fail">Brakes: Pass/Fail</option>
+                                  </select>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
 
                       <label className="flex items-center justify-between text-sm">
                         <span>Tire tread depth (32nds)</span>

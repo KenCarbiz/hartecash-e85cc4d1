@@ -1673,6 +1673,8 @@ const InspectionSheet = () => {
                                 showTires={inspConfig.show_tire_tread_depth}
                                 showBrakes={inspConfig.show_brake_pad_measurements}
                                 inputMode={inspConfig.tire_brake_input_mode}
+                                tireInputMode={inspConfig.tire_input_mode}
+                                brakeInputMode={inspConfig.brake_input_mode}
                                 tireDepths={{
                                   leftFront: tireDepth.lf,
                                   rightFront: tireDepth.rf,
