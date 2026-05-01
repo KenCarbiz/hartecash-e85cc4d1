@@ -1111,6 +1111,45 @@ const ProspectDemo = () => {
               vdp: "mid",
               listing: "mid",
             };
+            // Anchor-zone center coordinates as a percentage of the
+            // 1280×800 canvas. Used by the drag-snap logic to figure
+            // out which valid zone is closest to the rep's drop point.
+            const POSITION_COORDS: Record<string, Record<string, { x: number; y: number }>> = {
+              widget: {
+                left: { x: 5, y: 50 },
+                right: { x: 95, y: 50 },
+              },
+              sticky: {
+                top: { x: 50, y: 5 },
+                bottom: { x: 50, y: 95 },
+              },
+              button: {
+                "top-left": { x: 10, y: 8 },
+                "top-center": { x: 50, y: 8 },
+                "top-right": { x: 90, y: 8 },
+              },
+              ppt: {
+                "bottom-left": { x: 12, y: 90 },
+                "bottom-right": { x: 88, y: 90 },
+                "top-right": { x: 88, y: 18 },
+              },
+              homepage: {
+                top: { x: 50, y: 22 },
+                mid: { x: 50, y: 50 },
+                bottom: { x: 50, y: 78 },
+              },
+              vdp: {
+                top: { x: 50, y: 18 },
+                mid: { x: 50, y: 60 },
+                bottom: { x: 50, y: 82 },
+              },
+              listing: {
+                top: { x: 50, y: 16 },
+                mid: { x: 50, y: 38 },
+                bottom: { x: 50, y: 70 },
+              },
+            };
+            const positionCoords = POSITION_COORDS[asset.id];
             const positionControl = positionOptions
               ? {
                   current: effectivePos || overlayDefault[asset.id],
@@ -1140,6 +1179,21 @@ const ProspectDemo = () => {
               >
                 {screenshot ? (
                   <PageScreenshot src={screenshot}>
+                    {/* Drag-snap layer — rep can drag the overlay
+                        anywhere on the screenshot; on release the
+                        overlay snaps to the nearest valid anchor
+                        zone for that asset type. iframe modal has
+                        no position vocabulary so it's not wrapped. */}
+                    <DragSnapZone
+                      coords={positionCoords}
+                      currentPosition={effectivePos || overlayDefault[asset.id]}
+                      onSnap={(next) => {
+                        setManualPositions((prev) => ({
+                          ...prev,
+                          [pageKey]: { ...(prev[pageKey] || {}), [asset.id]: next },
+                        }));
+                      }}
+                    />
                     {asset.id === "iframe" && <IframeModalOverlay {...commonOverlayProps} />}
                     {asset.id === "homepage" && (
                       <HomepageBannerOverlay {...commonOverlayProps} position={effectivePos as any} />
@@ -1245,6 +1299,126 @@ const ProspectDemo = () => {
           exportingPdf={exportingPdf}
         />
       )}
+    </div>
+  );
+};
+
+/**
+ * DragSnapZone — invisible canvas-sized layer that captures pointer
+ * events and snaps the overlay to the nearest valid anchor zone on
+ * release. Sits BEHIND the visible overlay (lower z) but ABOVE the
+ * screenshot, with pointer-events: auto so drags land on it instead
+ * of falling through to the image.
+ *
+ * During drag, every snap zone gets a small dotted ring rendered so
+ * the rep sees where the overlay can land. The closest zone to the
+ * cursor is highlighted in the brand color. On release, snap.
+ */
+const DragSnapZone = ({
+  coords,
+  currentPosition,
+  onSnap,
+}: {
+  coords?: Record<string, { x: number; y: number }>;
+  currentPosition: string;
+  onSnap: (nextPosition: string) => void;
+}) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [drag, setDrag] = useState<{ x: number; y: number } | null>(null);
+
+  if (!coords) return null;
+
+  const findClosest = (xPct: number, yPct: number): string => {
+    let best = currentPosition;
+    let bestDist = Infinity;
+    for (const [pos, zone] of Object.entries(coords)) {
+      const dist = Math.hypot(xPct - zone.x, yPct - zone.y);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = pos;
+      }
+    }
+    return best;
+  };
+
+  const eventToPct = (e: React.PointerEvent) => {
+    const rect = ref.current?.getBoundingClientRect();
+    if (!rect) return null;
+    return {
+      x: ((e.clientX - rect.left) / rect.width) * 100,
+      y: ((e.clientY - rect.top) / rect.height) * 100,
+    };
+  };
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    e.preventDefault();
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    const pct = eventToPct(e);
+    if (pct) setDrag(pct);
+  };
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!drag) return;
+    const pct = eventToPct(e);
+    if (pct) setDrag(pct);
+  };
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (!drag) return;
+    const pct = eventToPct(e) || drag;
+    const next = findClosest(pct.x, pct.y);
+    if (next !== currentPosition) onSnap(next);
+    setDrag(null);
+  };
+
+  const closestDuringDrag = drag ? findClosest(drag.x, drag.y) : null;
+
+  return (
+    <div
+      ref={ref}
+      className="absolute inset-0 z-20"
+      style={{
+        // pointer-events: auto so drag lands here, not on the image
+        pointerEvents: "auto",
+        cursor: drag ? "grabbing" : "grab",
+        // Subtle hint that the canvas is interactive — no border in
+        // resting state to keep the demo clean.
+      }}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={() => setDrag(null)}
+      title="Drag the overlay to a different anchor zone"
+    >
+      {/* Snap-zone indicators — only visible during drag */}
+      {drag &&
+        Object.entries(coords).map(([pos, zone]) => {
+          const isClosest = pos === closestDuringDrag;
+          return (
+            <div
+              key={pos}
+              className="absolute pointer-events-none"
+              style={{
+                left: `${zone.x}%`,
+                top: `${zone.y}%`,
+                transform: "translate(-50%, -50%)",
+              }}
+            >
+              <div
+                className={`rounded-full border-2 border-dashed transition-all ${
+                  isClosest
+                    ? "w-12 h-12 border-[#003b80] bg-[#003b80]/15"
+                    : "w-8 h-8 border-slate-400 bg-white/40"
+                }`}
+              />
+              <div
+                className={`absolute top-full mt-1 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${
+                  isClosest ? "text-[#003b80]" : "text-slate-500"
+                }`}
+              >
+                {pos}
+              </div>
+            </div>
+          );
+        })}
     </div>
   );
 };
