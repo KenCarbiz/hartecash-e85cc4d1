@@ -78,7 +78,13 @@ serve(async (req) => {
   try {
     const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
     if (!apiKey) {
-      return json({ error: "ANTHROPIC_API_KEY not configured" }, 500);
+      // 200 with the error so the FE surfaces the actionable
+      // message ("set ANTHROPIC_API_KEY in Supabase secrets") rather
+      // than a generic "non-2xx status code" wrapper.
+      return json({
+        error:
+          "ANTHROPIC_API_KEY isn't configured. Add it to Supabase Edge Function secrets and the AI Recommendations panel will start working.",
+      });
     }
 
     // Auth: only platform admins (Autocurb internal staff) can use this.
@@ -190,9 +196,20 @@ serve(async (req) => {
 
     if (!aiRes.ok) {
       const errText = await aiRes.text();
+      // Return 200 with the body so the FE can surface the actual
+      // Anthropic error (rate limit, auth fail, model unavailable,
+      // etc.) instead of supabase-js wrapping it in a generic
+      // FunctionsHttpError that swallows the message.
       return json(
-        { error: `Anthropic API ${aiRes.status}`, detail: errText.slice(0, 500) },
-        502,
+        {
+          error: `Anthropic API ${aiRes.status} — ${
+            aiRes.status === 401 ? "ANTHROPIC_API_KEY invalid" :
+            aiRes.status === 429 ? "Anthropic rate limit hit, try again in a minute" :
+            aiRes.status === 529 ? "Anthropic is overloaded, try again shortly" :
+            "see detail below"
+          }`,
+          detail: errText.slice(0, 500),
+        },
       );
     }
 
@@ -210,18 +227,22 @@ serve(async (req) => {
       parsed = JSON.parse(stripped);
     } catch (parseErr) {
       console.error("Claude returned non-JSON:", rawText.slice(0, 500));
+      // Return 200 so the FE shows the body. Claude occasionally
+      // wraps responses in conversational prose; the rep can retry.
       return json(
         {
-          error: "Vision response wasn't valid JSON",
+          error: "AI returned non-JSON — try Get AI Recommendations again",
           detail: rawText.slice(0, 500),
         },
-        502,
       );
     }
 
     return json(parsed);
   } catch (err) {
-    return json({ error: (err as Error).message || "unknown error" }, 500);
+    // Top-level safety net — return 200 with the message so the FE
+    // shows the real reason instead of "non-2xx status code".
+    console.error("[analyze-prospect-site] handler crashed:", err);
+    return json({ error: (err as Error).message || "unknown error" });
   }
 });
 
