@@ -132,6 +132,10 @@ serve(async (req) => {
         `    "home"?: {\n` +
         `      "use":   ["asset_id_1", "asset_id_2", ...]   // ARRAY of asset IDs from the catalog (machine-readable, no extra text)\n` +
         `      "skip":  ["asset_id_1", ...]                  // ARRAY of asset IDs we should NOT show on this page\n` +
+        `      "positions": {                                // OBJECT mapping each USED asset_id to its best anchor zone\n` +
+        `        "asset_id_1": "top-right",                  //   on this specific screenshot. See ANCHOR ZONES below.\n` +
+        `        ...\n` +
+        `      },\n` +
         `      "placements": ["asset_id: where + why",  ...] // human-readable reasoning for each USE entry\n` +
         `      "skipReasons": ["asset_id: why",        ...] // human-readable reasoning for each SKIP entry\n` +
         `      "notes":  "1-2 sentence overall observation"\n` +
@@ -144,6 +148,29 @@ serve(async (req) => {
         `catalog below — exact strings like "iframe", "widget", "vdp", etc. — no extra\n` +
         `prose or descriptions. The "placements" and "skipReasons" arrays carry the\n` +
         `human-readable reasoning. We auto-apply the "use" array to the live demo.\n\n` +
+        // Per-asset position vocabulary. Pick the value that creates
+        // the LEAST visual conflict with what's already on the
+        // dealer's screenshot — e.g., if the site has its own chat
+        // widget on the right, put our widget on the LEFT instead.
+        // Only assets listed here have meaningful position choice;
+        // the others (iframe modal) are inherently centered and
+        // don't need a position entry.
+        `ANCHOR ZONES — choose ONE value per used asset, drop the entry if the asset isn't used:\n` +
+        `  widget   : "right" | "left"\n` +
+        `  sticky   : "bottom" | "top"\n` +
+        `  button   : "top-right" | "top-left" | "top-center"\n` +
+        `  ppt      : "bottom-left" | "bottom-right" | "top-right"\n` +
+        `  homepage : "top" | "mid" | "bottom"\n` +
+        `  vdp      : "top" | "mid" | "bottom"\n` +
+        `  listing  : "top" | "mid" | "bottom"\n` +
+        `  iframe   : (no position — it's a centered modal)\n\n` +
+        `When picking positions, look at the screenshot and avoid:\n` +
+        `  - existing chat widgets / live-chat tabs (they use the right edge)\n` +
+        `  - the dealer's own sticky bars (they sit at top or bottom)\n` +
+        `  - high-traffic CTAs the dealer already runs above the fold\n` +
+        `If the right edge is busy, put widget=left. If the dealer has\n` +
+        `a top utility bar, sticky=bottom. If they have their own\n` +
+        `bottom-anchored consent / cookie banner, sticky=top, etc.\n\n` +
         ASSET_CATALOG +
         `\n\n` +
         `Context:\n` +

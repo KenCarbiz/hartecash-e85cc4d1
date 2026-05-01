@@ -93,6 +93,11 @@ interface LlmPageAnalysis {
   // Used for auto-applying the AI's recommendation to the live demo.
   use?: string[];
   skip?: string[];
+  // Per-asset anchor zone the AI chose for this specific screenshot
+  // (e.g. { widget: "left", sticky: "bottom", button: "top-center" }).
+  // Each overlay component knows its own valid position vocabulary
+  // and falls back to its hardcoded default if the AI omits an entry.
+  positions?: Record<string, string>;
   // Human-readable reasoning surfaced in the UI alongside each ID.
   placements?: string[];
   skipReasons?: string[];
@@ -1060,6 +1065,13 @@ const ProspectDemo = () => {
               pageKey === "listing" ? "Listing Page" :
               "Vehicle Detail Page";
             const labelSuffix = isFallback ? " (homepage fallback)" : "";
+            // Pull the AI-recommended anchor zone for this asset on
+            // this page, if Claude returned one. Each overlay falls
+            // back to its own hardcoded default when the value is
+            // missing or doesn't match the overlay's position
+            // vocabulary, so partial AI responses don't break render.
+            const aiPositions = llmResult?.pages?.[pageKey]?.positions || {};
+            const aiPos = aiPositions[asset.id];
             return (
               <BrowserFrame
                 key={asset.id}
@@ -1069,10 +1081,19 @@ const ProspectDemo = () => {
                 {screenshot ? (
                   <PageScreenshot src={screenshot}>
                     {asset.id === "iframe" && <IframeModalOverlay {...commonOverlayProps} />}
-                    {asset.id === "homepage" && <HomepageBannerOverlay {...commonOverlayProps} />}
-                    {asset.id === "widget" && <RightWidgetOverlay {...commonOverlayProps} />}
+                    {asset.id === "homepage" && (
+                      <HomepageBannerOverlay {...commonOverlayProps} position={aiPos as any} />
+                    )}
+                    {asset.id === "widget" && (
+                      <RightWidgetOverlay {...commonOverlayProps} position={aiPos as any} />
+                    )}
                     {asset.id === "sticky" && (
-                      <StickyBarOverlay {...commonOverlayProps} stickyText={stickyText} stickyCtaText={stickyCtaText} />
+                      <StickyBarOverlay
+                        {...commonOverlayProps}
+                        stickyText={stickyText}
+                        stickyCtaText={stickyCtaText}
+                        position={aiPos as any}
+                      />
                     )}
                     {asset.id === "vdp" && (
                       <VdpGhostOverlay
@@ -1080,6 +1101,7 @@ const ProspectDemo = () => {
                         bannerHeadline={bannerHeadline}
                         bannerText={bannerText}
                         bannerCtaText={bannerCtaText}
+                        position={aiPos as any}
                       />
                     )}
                     {asset.id === "listing" && (
@@ -1087,11 +1109,14 @@ const ProspectDemo = () => {
                         {...commonOverlayProps}
                         bannerHeadline={bannerHeadline}
                         bannerCtaText={bannerCtaText}
+                        position={aiPos as any}
                       />
                     )}
-                    {asset.id === "button" && <ButtonCtaOverlay {...commonOverlayProps} />}
+                    {asset.id === "button" && (
+                      <ButtonCtaOverlay {...commonOverlayProps} position={aiPos as any} />
+                    )}
                     {asset.id === "ppt" && pptEnabled && (
-                      <PptOverlay {...commonOverlayProps} pptButtonText={pptButtonText} />
+                      <PptOverlay {...commonOverlayProps} pptButtonText={pptButtonText} position={aiPos as any} />
                     )}
                   </PageScreenshot>
                 ) : (
