@@ -23,7 +23,16 @@ export interface InspectionConfig {
   require_notes: Record<string, boolean>;
   custom_items: { section: string; label: string; sort_order: number }[];
   default_inspection_mode: "standard" | "full";
+  /**
+   * @deprecated kept for back-compat with the AppraisalSidebar reader.
+   * New code should use tire_input_mode and brake_input_mode below.
+   */
   tire_brake_input_mode: "measurement" | "pass_fail";
+  /** Tires-only input style. Replaces the legacy shared toggle. */
+  tire_input_mode: "measurement" | "pass_fail";
+  /** Brakes-only input style. Lets dealers pass/fail brakes while
+   *  keeping exact tread-depth measurement on tires (or vice versa). */
+  brake_input_mode: "measurement" | "pass_fail";
 }
 
 const DEFAULTS: InspectionConfig = {
@@ -48,6 +57,8 @@ const DEFAULTS: InspectionConfig = {
   custom_items: [],
   default_inspection_mode: "standard",
   tire_brake_input_mode: "measurement",
+  tire_input_mode: "measurement",
+  brake_input_mode: "measurement",
 };
 
 export const useInspectionConfig = () => {
@@ -86,6 +97,18 @@ export const useInspectionConfig = () => {
           custom_items: (data.custom_items as any) || [],
           default_inspection_mode: ((data as any).default_inspection_mode === "full" ? "full" : "standard") as "standard" | "full",
           tire_brake_input_mode: ((data as any).tire_brake_input_mode === "pass_fail" ? "pass_fail" : "measurement") as "measurement" | "pass_fail",
+          // New split columns. Fall back to the legacy shared column
+          // when the new ones aren't present (DB pre-migration).
+          tire_input_mode: (() => {
+            const v = (data as any).tire_input_mode;
+            if (v === "measurement" || v === "pass_fail") return v;
+            return ((data as any).tire_brake_input_mode === "pass_fail" ? "pass_fail" : "measurement") as "measurement" | "pass_fail";
+          })(),
+          brake_input_mode: (() => {
+            const v = (data as any).brake_input_mode;
+            if (v === "measurement" || v === "pass_fail") return v;
+            return ((data as any).tire_brake_input_mode === "pass_fail" ? "pass_fail" : "measurement") as "measurement" | "pass_fail";
+          })(),
         });
       }
       setLoading(false);

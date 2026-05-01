@@ -251,7 +251,17 @@ interface TireBrakeWidgetProps {
   compact?: boolean;
   showTires?: boolean;
   showBrakes?: boolean;
+  /**
+   * Shared input mode (legacy). When set, applies to both tires and
+   * brakes. New callers should use `tireInputMode` + `brakeInputMode`
+   * to set them independently. When all three are present, the split
+   * props win for their respective items.
+   */
   inputMode?: "measurement" | "pass_fail";
+  /** Optional per-type override — tires only. Falls back to inputMode. */
+  tireInputMode?: "measurement" | "pass_fail";
+  /** Optional per-type override — brakes only. Falls back to inputMode. */
+  brakeInputMode?: "measurement" | "pass_fail";
 }
 
 /* ─── Pass/Fail Corner ─── */
@@ -354,7 +364,13 @@ export default function BrakePadDepthWidget({
   showTires = true,
   showBrakes = true,
   inputMode = "measurement",
+  tireInputMode,
+  brakeInputMode,
 }: TireBrakeWidgetProps) {
+  // Resolve effective per-type modes. Split props win when set;
+  // otherwise fall back to the shared inputMode (legacy callers).
+  const tireMode: "measurement" | "pass_fail" = tireInputMode ?? inputMode;
+  const brakeMode: "measurement" | "pass_fail" = brakeInputMode ?? inputMode;
   // Backwards compat: accept old "depths" prop shape via rest
   const bd = brakeDepths ?? { leftFront: null, rightFront: null, leftRear: null, rightRear: null };
   const td = tireDepths ?? { leftFront: null, rightFront: null, leftRear: null, rightRear: null };
@@ -367,15 +383,17 @@ export default function BrakePadDepthWidget({
           <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
             {showTires && showBrakes ? "Tire Tread & Brake Pads" : showTires ? "Tire Tread" : "Brake Pads"}
           </div>
-          {!compact && inputMode === "measurement" && (
+          {!compact && (tireMode === "measurement" || brakeMode === "measurement") && (
             <div className="mt-0.5 text-[11px] text-muted-foreground">Rear axle top · Front axle bottom</div>
           )}
-          {inputMode === "pass_fail" && (
+          {tireMode === "pass_fail" && brakeMode === "pass_fail" && (
             <div className="mt-0.5 text-[11px] text-muted-foreground">Tap each position to toggle Pass / Fail</div>
           )}
         </div>
-        {inputMode === "measurement" && <Legend showTire={showTires} />}
-        {inputMode === "pass_fail" && (
+        {(tireMode === "measurement" || brakeMode === "measurement") && (
+          <Legend showTire={showTires && tireMode === "measurement"} />
+        )}
+        {(tireMode === "pass_fail" || brakeMode === "pass_fail") && (
           <div className="flex items-center gap-1.5">
             <span className="rounded-full border border-green-200 bg-green-50 dark:bg-green-950/30 px-2 py-0.5 text-[10px] font-semibold text-green-600">Pass</span>
             <span className="rounded-full border border-red-200 bg-red-50 dark:bg-red-950/30 px-2 py-0.5 text-[10px] font-semibold text-red-600">Fail</span>
@@ -383,9 +401,10 @@ export default function BrakePadDepthWidget({
         )}
       </div>
 
-      {inputMode === "pass_fail" ? (
-        <div className="space-y-5">
-          {showTires && (
+      <div className="space-y-5">
+        {/* Tire section — renders in tireMode independently of brakes */}
+        {showTires && (
+          tireMode === "pass_fail" ? (
             <div>
               <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Tires</div>
               <div className="space-y-4">
@@ -407,36 +426,7 @@ export default function BrakePadDepthWidget({
                 />
               </div>
             </div>
-          )}
-          {showTires && showBrakes && <div className="border-t border-dashed border-border" />}
-          {showBrakes && (
-            <div>
-              <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Brakes</div>
-              <div className="space-y-4">
-                <PassFailAxleRow
-                  left={{ label: "Left Rear", value: bd.leftRear }}
-                  right={{ label: "Right Rear", value: bd.rightRear }}
-                  type="brake"
-                  onChangeLeft={onBrakeChange ? (v) => onBrakeChange("leftRear", v) : undefined}
-                  onChangeRight={onBrakeChange ? (v) => onBrakeChange("rightRear", v) : undefined}
-                  readOnly={readOnly}
-                />
-                <PassFailAxleRow
-                  left={{ label: "Left Front", value: bd.leftFront }}
-                  right={{ label: "Right Front", value: bd.rightFront }}
-                  type="brake"
-                  onChangeLeft={onBrakeChange ? (v) => onBrakeChange("leftFront", v) : undefined}
-                  onChangeRight={onBrakeChange ? (v) => onBrakeChange("rightFront", v) : undefined}
-                  readOnly={readOnly}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="space-y-5">
-          {/* Tire Tread Section */}
-          {showTires && (
+          ) : (
             <div>
               <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Tire Tread</div>
               <div className="space-y-4">
@@ -462,15 +452,39 @@ export default function BrakePadDepthWidget({
                 />
               </div>
             </div>
-          )}
+          )
+        )}
 
-          {/* Divider */}
-          {showTires && showBrakes && (
-            <div className="border-t border-dashed border-border" />
-          )}
+        {/* Divider when both sections render */}
+        {showTires && showBrakes && (
+          <div className="border-t border-dashed border-border" />
+        )}
 
-          {/* Brake Pads Section */}
-          {showBrakes && (
+        {/* Brake section — renders in brakeMode independently of tires */}
+        {showBrakes && (
+          brakeMode === "pass_fail" ? (
+            <div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Brakes</div>
+              <div className="space-y-4">
+                <PassFailAxleRow
+                  left={{ label: "Left Rear", value: bd.leftRear }}
+                  right={{ label: "Right Rear", value: bd.rightRear }}
+                  type="brake"
+                  onChangeLeft={onBrakeChange ? (v) => onBrakeChange("leftRear", v) : undefined}
+                  onChangeRight={onBrakeChange ? (v) => onBrakeChange("rightRear", v) : undefined}
+                  readOnly={readOnly}
+                />
+                <PassFailAxleRow
+                  left={{ label: "Left Front", value: bd.leftFront }}
+                  right={{ label: "Right Front", value: bd.rightFront }}
+                  type="brake"
+                  onChangeLeft={onBrakeChange ? (v) => onBrakeChange("leftFront", v) : undefined}
+                  onChangeRight={onBrakeChange ? (v) => onBrakeChange("rightFront", v) : undefined}
+                  readOnly={readOnly}
+                />
+              </div>
+            </div>
+          ) : (
             <div>
               <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Brake Pads</div>
               <div className="space-y-4">
@@ -496,9 +510,9 @@ export default function BrakePadDepthWidget({
                 />
               </div>
             </div>
-          )}
-        </div>
-      )}
+          )
+        )}
+      </div>
     </div>
   );
 }
