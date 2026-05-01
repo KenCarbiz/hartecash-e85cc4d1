@@ -12,7 +12,7 @@ import { useSiteConfig, type AboutMilestone, type AboutValue } from "@/hooks/use
 import SEO from "@/components/SEO";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
-import { LocalBusinessJsonLd } from "@/components/JsonLd";
+import { LocalBusinessJsonLd, BreadcrumbJsonLd } from "@/components/JsonLd";
 import { Button } from "@/components/ui/button";
 
 interface DealerLocation {
@@ -161,6 +161,12 @@ const AboutPage = () => {
         path="/about"
       />
       <LocalBusinessJsonLd />
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", url: "/" },
+          { name: "About", url: "/about" },
+        ]}
+      />
       <SiteHeader />
 
       <main>

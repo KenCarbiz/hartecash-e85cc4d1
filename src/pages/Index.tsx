@@ -1,5 +1,5 @@
 import SEO from "@/components/SEO";
-import { LocalBusinessJsonLd, FAQPageJsonLd, HowToJsonLd } from "@/components/JsonLd";
+import { LocalBusinessJsonLd, FAQPageJsonLd, HowToJsonLd, WebSiteJsonLd } from "@/components/JsonLd";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import BackToTop from "@/components/BackToTop";
@@ -19,6 +19,7 @@ const Index = () => {
         description={`Get a top-dollar cash offer for your car in 2 minutes. Free pickup, no obligation. ${config.dealership_name}.`}
         path="/"
       />
+      <WebSiteJsonLd />
       <LocalBusinessJsonLd />
       <FAQPageJsonLd />
       <HowToJsonLd />
