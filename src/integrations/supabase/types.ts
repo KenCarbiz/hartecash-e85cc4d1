@@ -2754,6 +2754,50 @@ export type Database = {
         }
         Relationships: []
       }
+      tenant_role_section_permissions: {
+        Row: {
+          allowed: boolean
+          created_at: string
+          dealership_id: string
+          id: string
+          location_id: string | null
+          role: string
+          section_key: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          allowed: boolean
+          created_at?: string
+          dealership_id: string
+          id?: string
+          location_id?: string | null
+          role: string
+          section_key: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          allowed?: boolean
+          created_at?: string
+          dealership_id?: string
+          id?: string
+          location_id?: string | null
+          role?: string
+          section_key?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_role_section_permissions_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "dealership_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenant_view_log: {
         Row: {
           ended_at: string | null
@@ -2965,6 +3009,10 @@ export type Database = {
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
+      }
+      effective_user_sections: {
+        Args: { _sections: Json; _user_id: string }
+        Returns: string[]
       }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
