@@ -49,8 +49,15 @@ const ReferralPage = () => {
 
   const generateCode = () => {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    // CSPRNG so codes can't be predicted from prior issuances. Math.random
+    // is xorshift-style and not safe for anything that gates a payout.
+    // Reject-sample to keep the distribution uniform across the 32-char
+    // alphabet (256 % 32 == 0, so this loop converges immediately, but
+    // we keep it explicit for the next time someone changes the alphabet).
+    const buf = new Uint8Array(8);
+    crypto.getRandomValues(buf);
     let code = "";
-    for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    for (let i = 0; i < 8; i++) code += chars[buf[i] % chars.length];
     return code;
   };
 
