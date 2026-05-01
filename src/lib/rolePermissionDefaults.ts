@@ -90,10 +90,10 @@ export const SECTION_GROUPS: Array<{ label: string; sections: Array<{ key: strin
     label: "Setup · Dealer",
     sections: [
       { key: "appearance", label: "Appearance & Access" },
-      { key: "channels", label: "Channels" },
+      { key: "channels", label: "Communication Channels" },
       { key: "site-config", label: "Branding" },
       { key: "locations", label: "Locations" },
-      { key: "offer-settings", label: "Offer Logic" },
+      { key: "offer-settings", label: "Pricing Rules" },
       { key: "form-config", label: "Lead Form" },
       { key: "inspection-config", label: "Inspection Sheet" },
       { key: "photo-config", label: "Photo Requirements" },
