@@ -71,7 +71,10 @@ export const SECTION_GROUPS: Array<{ label: string; sections: Array<{ key: strin
     sections: [
       { key: "equity-mining", label: "Equity Mining" },
       { key: "voice-ai", label: "Voice AI" },
-      { key: "wholesale-marketplace", label: "Wholesale" },
+      // wholesale-marketplace pulled from sidebar pending product
+      // spec — removed here too so it stops showing as a row in the
+      // role permission matrix. Restore alongside the AdminSidebar
+      // entry when the listing pipeline is real.
     ],
   },
   {

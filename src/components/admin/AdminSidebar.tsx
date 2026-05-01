@@ -177,15 +177,19 @@ const AdminSidebar = ({
     { key: "image-inventory", label: "Vehicle Images", icon: ImageIcon },
   ].filter((item) => isAllowed(item.key));
 
-  // ── GROW ── Revenue-driving tools. Wholesale is also gated by the
-  // enterprise-beta feature flag so it stays hidden for tenants not
-  // enrolled even if their role would otherwise allow it.
+  // ── GROW ── Revenue-driving tools.
+  // Wholesale Marketplace was here as an enterprise-beta entry but
+  // pulled until the listing pipeline has a real product spec — the
+  // InDevelopmentBadge it carried was just visual noise on the
+  // platform-admin sidebar. Restore by un-commenting the entry below
+  // and the matching key in allSectionKeys when the listing
+  // ingestion + buyer matching pipeline lands.
+  //   ...(enterpriseBetaEnabled || isPlatformAdmin
+  //     ? [{ key: "wholesale-marketplace", label: "Wholesale", icon: Store }]
+  //     : []),
   const growItems: SidebarItem[] = [
     { key: "equity-mining", label: "Equity Mining", icon: TrendingUp },
     { key: "voice-ai", label: "Voice AI", icon: Mic },
-    ...(enterpriseBetaEnabled || isPlatformAdmin
-      ? [{ key: "wholesale-marketplace", label: "Wholesale", icon: Store }]
-      : []),
   ].filter((item) => isAllowed(item.key));
 
   // ── MEASURE ── Performance, HUD, reports, compliance
@@ -278,7 +282,7 @@ const AdminSidebar = ({
     "staff", "referrals", "compliance", "reports", "image-inventory", "changelog",
     "onboarding", "system-settings", "pricing-model",
     "platform-billing", "integrations-status", "api-access", "vauto-integration", "white-label", "prospect-demo",
-    "equity-mining", "voice-ai", "wholesale-marketplace", "service-quick-entry", "inspection-checkin",
+    "equity-mining", "voice-ai", "service-quick-entry", "inspection-checkin",
   ];
   const lockedSections = showRequestAccess && allowedSections !== null
     ? allSectionKeys.filter((k) => !allowedSections.includes(k))
