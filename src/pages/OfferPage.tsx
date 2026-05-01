@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { safeInvoke } from "@/lib/safeInvoke";
 import { ArrowLeft, DollarSign, ArrowDown, TrendingUp, ShieldCheck, Info, Printer, CheckCircle, ArrowRight, Car, Gauge, Palette, Settings2, Pencil, User, Clock, Star, Zap, Shield, BadgeCheck, Handshake, Camera, Sparkles } from "lucide-react";
 import InspectionConfidence from "@/components/InspectionConfidence";
 import TalkToAppraiserButton from "@/components/TalkToAppraiserButton";
@@ -624,7 +625,34 @@ const OfferPage = () => {
           /* non-fatal — submissions row still has the flag */
         }
       }
-      
+
+      // Fire acceptance notifications. The contact gate is the
+      // moment a customer in offer-first mode actually commits to
+      // the deal — DealAccepted does the same fire on its first
+      // mount when contact info is already present, but in offer-
+      // first the staff notification was being missed entirely.
+      // Look up the submission id to pass to send-notification.
+      try {
+        const { data: subRow } = await supabase
+          .from("submissions")
+          .select("id")
+          .eq("token", token!)
+          .maybeSingle();
+        if (subRow?.id) {
+          const ctx = { from: "OfferPage.contactGate", submission_id: subRow.id } as const;
+          safeInvoke("send-notification", {
+            body: { trigger_key: "staff_customer_accepted", submission_id: subRow.id },
+            context: ctx,
+          });
+          safeInvoke("send-notification", {
+            body: { trigger_key: "customer_offer_accepted", submission_id: subRow.id },
+            context: ctx,
+          });
+        }
+      } catch {
+        /* non-fatal — DealAccepted's auto-fire is the safety net */
+      }
+
       setShowContactGate(false);
       window.location.href = acceptUrl;
     } catch {

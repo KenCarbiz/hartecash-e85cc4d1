@@ -61,7 +61,20 @@ const DEFAULTS: InspectionConfig = {
   brake_input_mode: "measurement",
 };
 
-export const useInspectionConfig = () => {
+/**
+ * Resolves inspection config including the per-rooftop tire/brake
+ * input-mode cascade.
+ *
+ * @param locationId — when provided, calls the
+ *   effective_inspection_input_modes RPC to overlay any rooftop-
+ *   specific overrides (set by admins via Setup · Dealer ·
+ *   Inspection Sheet → Per-Rooftop Overrides) on top of the
+ *   corporate inspection_config row. Pass the submission's
+ *   store_location_id from InspectionSheet so multi-rooftop dealers
+ *   render the right input modes per rooftop. When omitted, returns
+ *   the corporate-tier values (matches the previous behavior).
+ */
+export const useInspectionConfig = (locationId?: string | null) => {
   const { tenant } = useTenant();
   const dealershipId = tenant.dealership_id;
   const [config, setConfig] = useState<InspectionConfig>(DEFAULTS);
@@ -74,47 +87,69 @@ export const useInspectionConfig = () => {
         .select("*")
         .eq("dealership_id", dealershipId)
         .maybeSingle();
-      if (data) {
-        setConfig({
-          id: data.id,
-          dealership_id: data.dealership_id,
-          section_tires: data.section_tires,
-          section_measurements: data.section_measurements,
-          section_exterior: data.section_exterior,
-          section_interior: data.section_interior,
-          section_mechanical: data.section_mechanical,
-          section_electrical: data.section_electrical,
-          section_glass: data.section_glass,
-          section_order: (data.section_order as any) || DEFAULTS.section_order,
-          disabled_fields: (data.disabled_fields as any) || {},
-          show_tire_tread_depth: data.show_tire_tread_depth,
-          show_brake_pad_measurements: data.show_brake_pad_measurements,
-          show_paint_readings: data.show_paint_readings,
-          show_oil_life: data.show_oil_life,
-          show_battery_health: data.show_battery_health,
-          require_photos: (data.require_photos as any) || {},
-          require_notes: (data.require_notes as any) || {},
-          custom_items: (data.custom_items as any) || [],
-          default_inspection_mode: ((data as any).default_inspection_mode === "full" ? "full" : "standard") as "standard" | "full",
-          tire_brake_input_mode: ((data as any).tire_brake_input_mode === "pass_fail" ? "pass_fail" : "measurement") as "measurement" | "pass_fail",
-          // New split columns. Fall back to the legacy shared column
-          // when the new ones aren't present (DB pre-migration).
-          tire_input_mode: (() => {
-            const v = (data as any).tire_input_mode;
-            if (v === "measurement" || v === "pass_fail") return v;
-            return ((data as any).tire_brake_input_mode === "pass_fail" ? "pass_fail" : "measurement") as "measurement" | "pass_fail";
-          })(),
-          brake_input_mode: (() => {
-            const v = (data as any).brake_input_mode;
-            if (v === "measurement" || v === "pass_fail") return v;
-            return ((data as any).tire_brake_input_mode === "pass_fail" ? "pass_fail" : "measurement") as "measurement" | "pass_fail";
-          })(),
-        });
+      if (!data) {
+        setLoading(false);
+        return;
       }
+      // Resolve per-type input modes with a per-rooftop cascade
+      // overlay. Default to the legacy shared column when neither
+      // the split columns nor the RPC are deployed yet.
+      const legacyShared = ((data as any).tire_brake_input_mode === "pass_fail" ? "pass_fail" : "measurement") as "measurement" | "pass_fail";
+      let tireMode: "measurement" | "pass_fail" = (() => {
+        const v = (data as any).tire_input_mode;
+        return v === "pass_fail" || v === "measurement" ? v : legacyShared;
+      })();
+      let brakeMode: "measurement" | "pass_fail" = (() => {
+        const v = (data as any).brake_input_mode;
+        return v === "pass_fail" || v === "measurement" ? v : legacyShared;
+      })();
+      // When a location is in scope, layer the per-rooftop override
+      // via the cascade RPC. Best-effort — fall back to corporate
+      // values if the RPC isn't deployed (pre-migration environments).
+      if (locationId) {
+        try {
+          const { data: rpcRows } = await (supabase as any).rpc(
+            "effective_inspection_input_modes",
+            { _dealership_id: dealershipId, _location_id: locationId },
+          );
+          const row = Array.isArray(rpcRows) ? rpcRows[0] : rpcRows;
+          if (row?.tire_mode === "measurement" || row?.tire_mode === "pass_fail") {
+            tireMode = row.tire_mode;
+          }
+          if (row?.brake_mode === "measurement" || row?.brake_mode === "pass_fail") {
+            brakeMode = row.brake_mode;
+          }
+        } catch { /* RPC missing → corporate values stand */ }
+      }
+      setConfig({
+        id: data.id,
+        dealership_id: data.dealership_id,
+        section_tires: data.section_tires,
+        section_measurements: data.section_measurements,
+        section_exterior: data.section_exterior,
+        section_interior: data.section_interior,
+        section_mechanical: data.section_mechanical,
+        section_electrical: data.section_electrical,
+        section_glass: data.section_glass,
+        section_order: (data.section_order as any) || DEFAULTS.section_order,
+        disabled_fields: (data.disabled_fields as any) || {},
+        show_tire_tread_depth: data.show_tire_tread_depth,
+        show_brake_pad_measurements: data.show_brake_pad_measurements,
+        show_paint_readings: data.show_paint_readings,
+        show_oil_life: data.show_oil_life,
+        show_battery_health: data.show_battery_health,
+        require_photos: (data.require_photos as any) || {},
+        require_notes: (data.require_notes as any) || {},
+        custom_items: (data.custom_items as any) || [],
+        default_inspection_mode: ((data as any).default_inspection_mode === "full" ? "full" : "standard") as "standard" | "full",
+        tire_brake_input_mode: legacyShared,
+        tire_input_mode: tireMode,
+        brake_input_mode: brakeMode,
+      });
       setLoading(false);
     };
     fetch();
-  }, [dealershipId]);
+  }, [dealershipId, locationId]);
 
   return { config, loading };
 };
