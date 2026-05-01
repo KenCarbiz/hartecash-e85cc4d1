@@ -46,6 +46,7 @@ import {
   ProspectDemoCaptureProgress,
 } from "./ProspectDemoProgress";
 import { generateProspectDemoPdf, downloadBlob } from "@/lib/prospectDemoPdf";
+import ManualScreenshotUpload from "./embed/ManualScreenshotUpload";
 
 /**
  * ProspectDemo — standalone sales-pitch generator for Autocurb staff
@@ -611,6 +612,27 @@ const ProspectDemo = () => {
     }
   };
 
+  // Universal escape hatch when auto-capture can't reach the site
+  // (SOKAL strict, EPROXYNEEDED without Pro, etc.). Drops a manually
+  // taken screenshot into the same captures slot the auto pipeline
+  // writes to, so all the overlay rendering and AI analysis steps
+  // downstream don't care where the image came from. Clears the
+  // failure flag for that slot so the failure panel disappears.
+  const handleManualUpload = (page: PageType, dataUrl: string) => {
+    setCaptures((prev) => ({ ...prev, [page]: dataUrl }));
+    setFailures((prev) => ({ ...prev, [page]: null }));
+    setFallbacks((prev) =>
+      page === "listing"
+        ? { ...prev, listing: false }
+        : page === "vdp"
+        ? { ...prev, vdp: false }
+        : prev,
+    );
+    // Refresh the lastCapturedAt timestamp so the cooldown countdown
+    // doesn't make the rep think they need to wait before doing more.
+    setLastCapturedAt(Date.now());
+  };
+
   const handleCapture = async () => {
     if (inCooldown) return;
     if (!homeUrl.trim()) {
@@ -915,6 +937,36 @@ const ProspectDemo = () => {
             </Button>
           </div>
         </div>
+        {/* Manual-upload row — shown when the rep already knows the
+            target site is bot-protected (SOKAL strict, Cloudflare
+            challenge, etc.) and wants to skip the auto-capture
+            attempt entirely. Three buttons, one per page slot, side
+            by side under the URL inputs. */}
+        <div className="flex items-center justify-between pt-2 gap-3 flex-wrap border-t border-slate-100 mt-2">
+          <p className="text-[11px] text-slate-500 flex-1 min-w-[180px]">
+            Site uses bot protection? Upload your own screenshots — works on every site.
+          </p>
+          <div className="flex gap-2 flex-wrap">
+            <ManualScreenshotUpload
+              pageKey="home"
+              pageLabel="homepage"
+              onUpload={(d) => handleManualUpload("home", d)}
+              compact
+            />
+            <ManualScreenshotUpload
+              pageKey="listing"
+              pageLabel="listing"
+              onUpload={(d) => handleManualUpload("listing", d)}
+              compact
+            />
+            <ManualScreenshotUpload
+              pageKey="vdp"
+              pageLabel="VDP"
+              onUpload={(d) => handleManualUpload("vdp", d)}
+              compact
+            />
+          </div>
+        </div>
       </div>
 
       {/* ── Demos render IMMEDIATELY after the capture form ──
@@ -1021,7 +1073,13 @@ const ProspectDemo = () => {
                     )}
                   </PageScreenshot>
                 ) : (
-                  <CaptureFailurePanel reason={failure!} url={sourceUrl} />
+                  <CaptureFailurePanel
+                    reason={failure!}
+                    url={sourceUrl}
+                    pageKey={pageKey}
+                    pageLabel={pageLabel}
+                    onUpload={handleManualUpload}
+                  />
                 )}
               </BrowserFrame>
             );
@@ -1624,7 +1682,19 @@ const LlmRecommendationsPanel = ({
   );
 };
 
-const CaptureFailurePanel = ({ reason, url }: { reason: string; url: string }) => (
+const CaptureFailurePanel = ({
+  reason,
+  url,
+  pageKey,
+  pageLabel,
+  onUpload,
+}: {
+  reason: string;
+  url: string;
+  pageKey: PageType;
+  pageLabel: string;
+  onUpload: (page: PageType, dataUrl: string) => void;
+}) => (
   <div
     className="relative bg-slate-50 flex flex-col items-center justify-center text-center p-8"
     style={{ aspectRatio: "1280 / 800" }}
@@ -1635,8 +1705,19 @@ const CaptureFailurePanel = ({ reason, url }: { reason: string; url: string }) =
     {url && (
       <div className="text-[11px] font-mono text-slate-400 mt-3 max-w-md truncate">{url}</div>
     )}
-    <div className="text-[11px] text-slate-500 mt-4">
-      Edit the URL above and click Capture again.
+    {/* Manual-upload escape hatch — works on every dealer site
+        regardless of bot protection because the screenshot was taken
+        by a real human in their own browser. */}
+    <div className="mt-5">
+      <ManualScreenshotUpload
+        pageKey={pageKey}
+        pageLabel={pageLabel.toLowerCase()}
+        onUpload={(dataUrl) => onUpload(pageKey, dataUrl)}
+        compact
+      />
+    </div>
+    <div className="text-[11px] text-slate-500 mt-3">
+      Or edit the URL above and click Capture again.
     </div>
   </div>
 );
