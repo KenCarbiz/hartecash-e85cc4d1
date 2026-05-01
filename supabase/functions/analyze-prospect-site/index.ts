@@ -168,10 +168,15 @@ serve(async (req) => {
         type: "text",
         text: `\n--- ${label} (page key: "${pageKey}") ---`,
       });
-      userContent.push({
-        type: "image",
-        source: { type: "url", url },
-      });
+      // Anthropic's vision API has two source shapes:
+      //   { type: "url",    url: "https://..." }      — fetch from a public URL
+      //   { type: "base64", media_type, data: "..." } — inline payload
+      // Manual-upload screenshots come in as data: URLs. Sending those
+      // as type:"url" makes Anthropic try to download the data URL,
+      // which fails with "Unable to download the file." Split the
+      // data: prefix into media_type + raw base64 instead.
+      const source = toAnthropicImageSource(url!);
+      userContent.push({ type: "image", source });
     }
 
     const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
@@ -245,6 +250,29 @@ serve(async (req) => {
     return json({ error: (err as Error).message || "unknown error" });
   }
 });
+
+/**
+ * Convert a screenshot URL into Anthropic's vision-API image source
+ * shape. Microlink CDN URLs (https://…) ship as type:"url"; manual-
+ * upload data URLs (data:image/png;base64,…) split into the inline
+ * type:"base64" + media_type + data shape.
+ */
+function toAnthropicImageSource(url: string): Record<string, string> {
+  if (url.startsWith("data:")) {
+    // Format: data:image/png;base64,iVBORw0K...
+    const match = url.match(/^data:(image\/[a-z+.-]+);base64,(.+)$/i);
+    if (match) {
+      return {
+        type: "base64",
+        media_type: match[1],
+        data: match[2],
+      };
+    }
+    // Malformed data URL — fall through to url type so Anthropic
+    // surfaces a clear error rather than us silently rejecting.
+  }
+  return { type: "url", url };
+}
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
