@@ -192,24 +192,36 @@ export function useAdminDashboard() {
       navigate("/admin/login");
       return;
     }
-    const { data: roleData } = await supabase
+    // Read role first. If the appraiser column hasn't been deployed to
+    // this tenant's DB yet, selecting it would fail the whole query and
+    // boot the user out (PR #138 regression — every admin login was
+    // signing out on tenants that hadn't applied the appraiser
+    // migration). Read role on its own, then read is_appraiser
+    // separately and tolerate a missing column.
+    const { data: roleData, error: roleErr } = await supabase
       .from("user_roles")
-      .select("role, is_appraiser")
+      .select("role")
       .eq("user_id", session.user.id)
       .limit(1)
       .maybeSingle();
-    if (!roleData) {
+    if (roleErr || !roleData) {
       await supabase.auth.signOut();
       navigate("/admin/login");
       return;
     }
     setUserRole((roleData as any).role);
-    // Read the appraiser additive flag from user_roles. Was hardcoded
-    // to false here, which meant the appraiser cascade layer never
-    // activated for staff who actually had the flag set — the
-    // useEffectivePermissions hook would skip the appraiser override
-    // entirely. Now the cascade resolver gets the real value.
-    setIsAppraiser(!!(roleData as any).is_appraiser);
+
+    // Best-effort read of the appraiser additive flag. Was hardcoded
+    // false originally; PR #138 wired it up but couldn't assume the
+    // column existed on every tenant. If the column is missing we just
+    // default to false rather than fail-closing the entire login.
+    const { data: appraiserRow } = await supabase
+      .from("user_roles")
+      .select("is_appraiser")
+      .eq("user_id", session.user.id)
+      .limit(1)
+      .maybeSingle();
+    setIsAppraiser(!!((appraiserRow as any)?.is_appraiser));
     setUserId(session.user.id);
     const { data: profileData } = await supabase
       .from("profiles")
