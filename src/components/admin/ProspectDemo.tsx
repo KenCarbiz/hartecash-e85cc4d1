@@ -694,14 +694,26 @@ const ProspectDemo = () => {
       return;
     }
     setCapturing(true);
-    setCaptures({ home: null, listing: null, vdp: null });
+    // Preserve any manually-uploaded screenshots (data: URLs) across
+    // a re-capture. The audit flagged the original code wiped manual
+    // uploads on every Capture click, which forced reps to re-upload
+    // after each retry — a broken flow for SOKAL/CF-protected sites
+    // where manual upload is the only working path.
+    const isManualUpload = (u: string | null) => !!u && u.startsWith("data:");
+    const preservedHome = isManualUpload(captures.home) ? captures.home : null;
+    const preservedListing = isManualUpload(captures.listing) ? captures.listing : null;
+    const preservedVdp = isManualUpload(captures.vdp) ? captures.vdp : null;
+    setCaptures({ home: preservedHome, listing: preservedListing, vdp: preservedVdp });
     setFailures({ home: null, listing: null, vdp: null });
     setFallbacks({ listing: false, vdp: false });
     try {
+      // Skip captureOne for slots that already have a manual upload —
+      // they're confirmed working content, no reason to overwrite or
+      // burn microlink quota on them.
       const [home, listing, vdp] = await Promise.all([
-        captureOne(homeUrl),
-        captureOne(listingUrl),
-        captureOne(vdpUrl),
+        preservedHome ? Promise.resolve({ url: preservedHome, error: null, attempts: undefined }) : captureOne(homeUrl),
+        preservedListing ? Promise.resolve({ url: preservedListing, error: null, attempts: undefined }) : captureOne(listingUrl),
+        preservedVdp ? Promise.resolve({ url: preservedVdp, error: null, attempts: undefined }) : captureOne(vdpUrl),
       ]);
       // If the homepage captured cleanly but listing or VDP failed (cert
       // error, 404, slow site, etc.) reuse the homepage screenshot as

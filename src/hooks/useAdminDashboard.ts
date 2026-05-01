@@ -194,7 +194,7 @@ export function useAdminDashboard() {
     }
     const { data: roleData } = await supabase
       .from("user_roles")
-      .select("role")
+      .select("role, is_appraiser")
       .eq("user_id", session.user.id)
       .limit(1)
       .maybeSingle();
@@ -204,7 +204,12 @@ export function useAdminDashboard() {
       return;
     }
     setUserRole((roleData as any).role);
-    setIsAppraiser(false);
+    // Read the appraiser additive flag from user_roles. Was hardcoded
+    // to false here, which meant the appraiser cascade layer never
+    // activated for staff who actually had the flag set — the
+    // useEffectivePermissions hook would skip the appraiser override
+    // entirely. Now the cascade resolver gets the real value.
+    setIsAppraiser(!!(roleData as any).is_appraiser);
     setUserId(session.user.id);
     const { data: profileData } = await supabase
       .from("profiles")

@@ -441,10 +441,17 @@ const InspectionSheet = () => {
   const { tenant } = useTenant();
   const dealershipId = tenant.dealership_id;
   const { config } = useSiteConfig();
-  const { config: inspConfig, loading: inspConfigLoading } = useInspectionConfig();
   const printRef = useRef<HTMLDivElement>(null);
 
   const [submission, setSubmission] = useState<any>(null);
+  // Pass the submission's store_location_id so per-rooftop overrides
+  // for tire/brake input mode (set in Setup · Dealer · Inspection Sheet
+  // → Per-Rooftop Overrides) actually apply on desktop. Without this,
+  // multi-rooftop dealers saw the corporate default everywhere because
+  // the cascade RPC was only being called from MobileInspection.
+  const { config: inspConfig, loading: inspConfigLoading } = useInspectionConfig(
+    (submission as any)?.store_location_id ?? null,
+  );
   const [damageReports, setDamageReports] = useState<DamageReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
