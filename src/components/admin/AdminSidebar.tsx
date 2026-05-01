@@ -24,7 +24,7 @@ import {
   // Form & Inspection Sheet, LogIn replaces ScanLine on Inspection
   // Check-In.
   RotateCcw, Image as ImageIcon, Mic, LineChart, Sparkles, FileText, LogIn,
-  Target,
+  Target, Clock,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
@@ -207,10 +207,10 @@ const AdminSidebar = ({
   // multi-rooftop only items still hide when the dealer has one store.
   const setupDealerItems: SidebarItem[] = [
     { key: "appearance", label: "Appearance & Access", icon: Sparkles },
-    { key: "channels", label: "Channels", icon: Phone },
+    { key: "channels", label: "Communication Channels", icon: Phone },
     { key: "site-config", label: "Branding", icon: Palette },
     ...(locationCount > 1 ? [{ key: "locations", label: "Locations", icon: MapPin }] : []),
-    { key: "offer-settings", label: "Offer Logic", icon: Settings, badge: pricingAccessRequestCount > 0 ? String(pricingAccessRequestCount) : undefined, badgeVariant: "destructive" as const },
+    { key: "offer-settings", label: "Pricing Rules", icon: Settings, badge: pricingAccessRequestCount > 0 ? String(pricingAccessRequestCount) : undefined, badgeVariant: "destructive" as const },
     { key: "form-config", label: "Lead Form", icon: FileText },
     { key: "inspection-config", label: "Inspection Sheet", icon: ListChecks },
     { key: "photo-config", label: "Photo Requirements", icon: Camera },
@@ -222,7 +222,7 @@ const AdminSidebar = ({
   // per the approved design, just above Account.
   const myItems: SidebarItem[] = [
     { key: "my-lead-link", label: "My Lead Link", icon: Link2 },
-    { key: "my-availability", label: "My Availability", icon: Phone },
+    { key: "my-availability", label: "My Availability", icon: Clock },
     { key: "my-referrals", label: "My Referrals", icon: Gift },
   ].filter((item) => isAllowed(item.key));
 
