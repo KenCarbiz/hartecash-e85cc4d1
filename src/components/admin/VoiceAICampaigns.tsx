@@ -21,6 +21,13 @@ interface VoiceAIConfig {
   voice_ai_max_bump_amount: number; voice_ai_call_start: string; voice_ai_call_end: string;
   voice_ai_competitor_response_mode: string;
   voice_ai_beat_competitor_amount: number;
+  // Outbound voice provider. "bland" = bland.ai (default; built-in
+  // telephony). "openai" = OpenAI Realtime (needs Twilio for the
+  // outbound dialing layer + OPENAI_API_KEY in Edge Function
+  // secrets). The launch-voice-call-openai function tells admins
+  // exactly which dependencies are missing if they switch before
+  // the bridge is fully operational.
+  voice_ai_provider: "bland" | "openai";
 }
 interface VoiceKPIs { totalCalls: number; connectedRate: number; conversionRate: number; estimatedCost: number; }
 
@@ -30,6 +37,7 @@ const DEFAULT_CONFIG: VoiceAIConfig = {
   voice_ai_call_start: "09:00", voice_ai_call_end: "18:00",
   voice_ai_competitor_response_mode: "none",
   voice_ai_beat_competitor_amount: 0,
+  voice_ai_provider: "bland",
 };
 
 const maskKey = (k: string) => {
@@ -188,6 +196,7 @@ const VoiceAICampaigns = () => {
           voice_ai_call_end: d.voice_ai_call_end || "18:00",
           voice_ai_competitor_response_mode: d.voice_ai_competitor_response_mode || "none",
           voice_ai_beat_competitor_amount: d.voice_ai_beat_competitor_amount ?? 0,
+          voice_ai_provider: d.voice_ai_provider === "openai" ? "openai" : "bland",
         });
       }
 
@@ -239,6 +248,7 @@ const VoiceAICampaigns = () => {
           voice_ai_call_end: config.voice_ai_call_end,
           voice_ai_competitor_response_mode: config.voice_ai_competitor_response_mode,
           voice_ai_beat_competitor_amount: config.voice_ai_beat_competitor_amount,
+          voice_ai_provider: config.voice_ai_provider,
         },
         { onConflict: "dealership_id" },
       );
@@ -491,24 +501,79 @@ const VoiceAICampaigns = () => {
 
           <div className="border-t border-border/40" />
 
-          {/* Bland.ai API Key */}
+          {/* Provider selector — pick between bland.ai (default,
+              built-in telephony) and OpenAI Realtime (lower cost,
+              lower latency, but needs Twilio for the dialing layer
+              and an OpenAI key in Edge Function secrets). */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground">Bland.ai API Key</label>
-            <div className="flex gap-2">
-              <Input
-                type={revealKey ? "text" : "password"}
-                placeholder="sk-bland-..."
-                value={revealKey ? config.voice_ai_api_key : maskKey(config.voice_ai_api_key)}
-                onChange={(e) => updateConfig("voice_ai_api_key", e.target.value)}
-                onFocus={() => setRevealKey(true)}
-                onBlur={() => setRevealKey(false)}
-                className="font-mono text-sm"
-              />
-              <Button variant="outline" size="sm" className="shrink-0">
-                Test
-              </Button>
+            <label className="text-sm font-medium text-foreground">Voice Provider</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => updateConfig("voice_ai_provider", "bland")}
+                className={`text-left rounded-lg border-2 p-3 transition ${
+                  config.voice_ai_provider === "bland"
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:border-primary/40"
+                }`}
+              >
+                <div className="text-sm font-bold">Bland.ai</div>
+                <div className="text-[10px] text-muted-foreground mt-0.5 leading-snug">
+                  Default. Built-in dialing. Dealer-domain-tuned voices. Add a bland API key below.
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => updateConfig("voice_ai_provider", "openai")}
+                className={`text-left rounded-lg border-2 p-3 transition ${
+                  config.voice_ai_provider === "openai"
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:border-primary/40"
+                }`}
+              >
+                <div className="text-sm font-bold">OpenAI Realtime</div>
+                <div className="text-[10px] text-muted-foreground mt-0.5 leading-snug">
+                  Lower latency + cost. Needs Twilio for outbound dialing + OPENAI_API_KEY in Edge Function secrets. Bridge currently in setup — Bland.ai stays the working option.
+                </div>
+              </button>
             </div>
           </div>
+
+          {/* API Key — only shown for the bland.ai path. OpenAI's
+              key lives in the Supabase Edge Function secrets, not
+              here, so it can't leak through the dealer's row. */}
+          {config.voice_ai_provider !== "openai" && (
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">Bland.ai API Key</label>
+              <div className="flex gap-2">
+                <Input
+                  type={revealKey ? "text" : "password"}
+                  placeholder="sk-bland-..."
+                  value={revealKey ? config.voice_ai_api_key : maskKey(config.voice_ai_api_key)}
+                  onChange={(e) => updateConfig("voice_ai_api_key", e.target.value)}
+                  onFocus={() => setRevealKey(true)}
+                  onBlur={() => setRevealKey(false)}
+                  className="font-mono text-sm"
+                />
+                <Button variant="outline" size="sm" className="shrink-0">
+                  Test
+                </Button>
+              </div>
+            </div>
+          )}
+          {config.voice_ai_provider === "openai" && (
+            <div className="space-y-1.5">
+              <div className="rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/30 p-3 text-[11px] text-amber-900 dark:text-amber-100 leading-snug">
+                <strong>OpenAI provider setup checklist:</strong>
+                <ol className="list-decimal pl-4 mt-1.5 space-y-0.5">
+                  <li>Add <code className="font-mono">OPENAI_API_KEY</code> to Supabase Edge Function secrets (server-side only — never put it in Lovable frontend env vars).</li>
+                  <li>Add Twilio Account SID + Auth Token + outbound phone number to your dealer record (column-side wiring lands with the bridge function).</li>
+                  <li>Autocurb engineering enables the Twilio Media Streams ↔ OpenAI Realtime bridge function.</li>
+                </ol>
+                Until all three are done, calls placed from the dashboard will fall back to a clear "OpenAI not yet operational" error. Switch back to Bland.ai above to keep calling today.
+              </div>
+            </div>
+          )}
 
           {/* Caller ID / From Number */}
           <div className="space-y-1.5">
