@@ -246,6 +246,41 @@ serve(async (req) => {
       );
     }
 
+    // ── Provider dispatch ──
+    // Default provider is "bland" (the existing path below). When the
+    // dealer has explicitly chosen "openai" we hand off to the
+    // launch-voice-call-openai function which handles the Twilio +
+    // OpenAI Realtime bridge. Anything unknown errors out so a typo
+    // in the column doesn't silently fall through to bland.
+    const provider = (dealer.voice_ai_provider || "bland").toLowerCase();
+    if (provider === "openai") {
+      const openaiUrl = `${supabaseUrl}/functions/v1/launch-voice-call-openai`;
+      const handoff = await fetch(openaiUrl, {
+        method: "POST",
+        headers: {
+          Authorization: req.headers.get("Authorization") || `Bearer ${supabaseKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ submission_id, campaign_id }),
+      });
+      const handoffBody = await handoff.text();
+      return new Response(handoffBody, {
+        status: handoff.status,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (provider !== "bland") {
+      return new Response(
+        JSON.stringify({
+          error: `Unknown voice_ai_provider "${provider}" — expected "bland" or "openai".`,
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
     // ── Check opt-out status ──
     const customerPhone = submission.phone;
     const customerEmail = submission.email;
