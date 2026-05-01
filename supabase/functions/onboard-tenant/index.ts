@@ -278,6 +278,27 @@ serve(async (req) => {
     await admin.from("inspection_config").insert({ dealership_id });
     steps.push("inspection_config");
 
+    // 7b. Seed permission cascade from platform defaults.
+    // The seed_tenant_role_permissions RPC (migration 20260429230000)
+    // copies every dealership_id='default' row from
+    // tenant_role_section_permissions into this new tenant. Without
+    // this step the new dealer's sidebar relies on FE-side fallbacks
+    // — fine, but the dealer-group admin can't actually edit the
+    // matrix until at least one row exists for their tenant. Best-
+    // effort: if the RPC isn't deployed yet, swallow the error so
+    // onboarding doesn't fail.
+    try {
+      const { data: seeded } = await admin.rpc(
+        "seed_tenant_role_permissions",
+        { _dealership_id: dealership_id } as any,
+      );
+      const copied = typeof seeded === "number" ? seeded : 0;
+      steps.push(`permission_defaults_seeded (${copied} rows)`);
+    } catch (e) {
+      console.warn("[onboard-tenant] seed_tenant_role_permissions failed:", e);
+      steps.push("permission_defaults_seed_skipped");
+    }
+
     // 8. Seed photo_config from default template
     const defaultPhotos = [
       { shot_id: "front", label: "Front", description: "Center front bumper, capture full width", orientation: "landscape", is_required: true, sort_order: 0 },
