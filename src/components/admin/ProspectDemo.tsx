@@ -218,6 +218,20 @@ const ProspectDemo = () => {
   const [llmResult, setLlmResult] = useState<LlmAnalysis | null>(null);
   const [llmError, setLlmError] = useState<string | null>(null);
 
+  // Per-page per-asset manual position overrides. Takes priority
+  // over the AI-suggested position from llmResult.pages[*].positions
+  // and over each overlay's hardcoded default. Persisted with the
+  // rest of the prospect-demo state so it survives reloads and rides
+  // along on shareable demo URLs.
+  const [manualPositions, setManualPositions] = useState<
+    Record<PageType, Record<string, string>>
+  >(() =>
+    readPersisted<Record<PageType, Record<string, string>>>(
+      "manualPositions",
+      { home: {}, listing: {}, vdp: {} },
+    ),
+  );
+
   // ── Auto-detect listing/VDP URLs (Phase 4) ──
   // Server-side fetch the dealer's homepage HTML, sniff the CMS, and
   // pull a real listing URL + sample VDP from anchor hrefs. Saves the
@@ -252,6 +266,7 @@ const ProspectDemo = () => {
   useEffect(() => writePersisted("listingUrl", listingUrl), [listingUrl]);
   useEffect(() => writePersisted("vdpUrl", vdpUrl), [vdpUrl]);
   useEffect(() => writePersisted("captures", captures), [captures]);
+  useEffect(() => writePersisted("manualPositions", manualPositions), [manualPositions]);
   useEffect(() => writePersisted("lastCapturedAt", lastCapturedAt), [lastCapturedAt]);
   useEffect(
     () => writePersisted("activeAssets", Array.from(activeAssets)),
@@ -1065,34 +1080,79 @@ const ProspectDemo = () => {
               pageKey === "listing" ? "Listing Page" :
               "Vehicle Detail Page";
             const labelSuffix = isFallback ? " (homepage fallback)" : "";
-            // Pull the AI-recommended anchor zone for this asset on
-            // this page, if Claude returned one. Each overlay falls
-            // back to its own hardcoded default when the value is
-            // missing or doesn't match the overlay's position
-            // vocabulary, so partial AI responses don't break render.
+            // Resolution order for the position prop:
+            //   1. manual rep override          (manualPositions[page][asset])
+            //   2. AI suggestion                (llmResult.pages[page].positions)
+            //   3. overlay's hardcoded default  (built into the component)
             const aiPositions = llmResult?.pages?.[pageKey]?.positions || {};
             const aiPos = aiPositions[asset.id];
+            const manualPos = manualPositions[pageKey]?.[asset.id];
+            const effectivePos = manualPos || aiPos;
+            const isManualOverride = !!manualPos && manualPos !== aiPos;
+            // Position vocabulary per overlay — picker dropdown
+            // shows only the values valid for that overlay type. iframe
+            // overlay has no position choice (centered modal).
+            const POSITION_OPTIONS: Record<string, string[]> = {
+              widget: ["right", "left"],
+              sticky: ["bottom", "top"],
+              button: ["top-right", "top-left", "top-center"],
+              ppt: ["bottom-left", "bottom-right", "top-right"],
+              homepage: ["top", "mid", "bottom"],
+              vdp: ["top", "mid", "bottom"],
+              listing: ["top", "mid", "bottom"],
+            };
+            const positionOptions = POSITION_OPTIONS[asset.id];
+            const overlayDefault: Record<string, string> = {
+              widget: "right",
+              sticky: "bottom",
+              button: "top-right",
+              ppt: "bottom-left",
+              homepage: "top",
+              vdp: "mid",
+              listing: "mid",
+            };
+            const positionControl = positionOptions
+              ? {
+                  current: effectivePos || overlayDefault[asset.id],
+                  options: positionOptions,
+                  onChange: (next: string) => {
+                    setManualPositions((prev) => ({
+                      ...prev,
+                      [pageKey]: { ...(prev[pageKey] || {}), [asset.id]: next },
+                    }));
+                  },
+                  onReset: () => {
+                    setManualPositions((prev) => {
+                      const pageOverrides = { ...(prev[pageKey] || {}) };
+                      delete pageOverrides[asset.id];
+                      return { ...prev, [pageKey]: pageOverrides };
+                    });
+                  },
+                  isManual: isManualOverride,
+                }
+              : undefined;
             return (
               <BrowserFrame
                 key={asset.id}
                 label={`${asset.label} — on ${pageLabel}${labelSuffix}`}
                 url={sourceUrl}
+                positionControl={positionControl}
               >
                 {screenshot ? (
                   <PageScreenshot src={screenshot}>
                     {asset.id === "iframe" && <IframeModalOverlay {...commonOverlayProps} />}
                     {asset.id === "homepage" && (
-                      <HomepageBannerOverlay {...commonOverlayProps} position={aiPos as any} />
+                      <HomepageBannerOverlay {...commonOverlayProps} position={effectivePos as any} />
                     )}
                     {asset.id === "widget" && (
-                      <RightWidgetOverlay {...commonOverlayProps} position={aiPos as any} />
+                      <RightWidgetOverlay {...commonOverlayProps} position={effectivePos as any} />
                     )}
                     {asset.id === "sticky" && (
                       <StickyBarOverlay
                         {...commonOverlayProps}
                         stickyText={stickyText}
                         stickyCtaText={stickyCtaText}
-                        position={aiPos as any}
+                        position={effectivePos as any}
                       />
                     )}
                     {asset.id === "vdp" && (
@@ -1101,7 +1161,7 @@ const ProspectDemo = () => {
                         bannerHeadline={bannerHeadline}
                         bannerText={bannerText}
                         bannerCtaText={bannerCtaText}
-                        position={aiPos as any}
+                        position={effectivePos as any}
                       />
                     )}
                     {asset.id === "listing" && (
@@ -1109,14 +1169,14 @@ const ProspectDemo = () => {
                         {...commonOverlayProps}
                         bannerHeadline={bannerHeadline}
                         bannerCtaText={bannerCtaText}
-                        position={aiPos as any}
+                        position={effectivePos as any}
                       />
                     )}
                     {asset.id === "button" && (
-                      <ButtonCtaOverlay {...commonOverlayProps} position={aiPos as any} />
+                      <ButtonCtaOverlay {...commonOverlayProps} position={effectivePos as any} />
                     )}
                     {asset.id === "ppt" && pptEnabled && (
-                      <PptOverlay {...commonOverlayProps} pptButtonText={pptButtonText} position={aiPos as any} />
+                      <PptOverlay {...commonOverlayProps} pptButtonText={pptButtonText} position={effectivePos as any} />
                     )}
                   </PageScreenshot>
                 ) : (
@@ -1193,10 +1253,21 @@ const BrowserFrame = ({
   label,
   url,
   children,
+  positionControl,
 }: {
   label: string;
   url: string;
   children: React.ReactNode;
+  /** Optional position picker shown in the frame chrome. Rep selects
+   *  a value to override the AI's suggestion for this asset on this
+   *  page. Pass undefined to hide the control. */
+  positionControl?: {
+    current: string;
+    options: string[];
+    onChange: (next: string) => void;
+    onReset?: () => void;
+    isManual: boolean;
+  };
 }) => (
   <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
     <div className="flex items-center justify-between px-3 py-2 bg-slate-50 border-b border-slate-200">
@@ -1208,6 +1279,36 @@ const BrowserFrame = ({
         </div>
         <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 ml-2">{label}</span>
       </div>
+      {positionControl && (
+        <div className="flex items-center gap-1.5 mr-3 shrink-0">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            Position
+          </span>
+          <select
+            value={positionControl.current}
+            onChange={(e) => positionControl.onChange(e.target.value)}
+            className={`text-[11px] font-semibold rounded px-2 py-1 border ${
+              positionControl.isManual
+                ? "border-[#003b80] bg-[#003b80]/5 text-[#003b80]"
+                : "border-slate-200 bg-white text-slate-700"
+            }`}
+          >
+            {positionControl.options.map((opt) => (
+              <option key={opt} value={opt}>{opt}</option>
+            ))}
+          </select>
+          {positionControl.isManual && positionControl.onReset && (
+            <button
+              type="button"
+              onClick={positionControl.onReset}
+              className="text-[10px] font-bold text-slate-500 hover:text-slate-800 underline"
+              title="Reset to the AI's suggested position"
+            >
+              reset
+            </button>
+          )}
+        </div>
+      )}
       <div className="flex-1 mx-4 flex items-center gap-1.5 bg-white border border-slate-200 rounded-md px-2 py-1 text-[11px] text-slate-600 truncate">
         <ExternalLink className="w-3 h-3 shrink-0 text-slate-400" />
         <span className="truncate">{url || "—"}</span>
