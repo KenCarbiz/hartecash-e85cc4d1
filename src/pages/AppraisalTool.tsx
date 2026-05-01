@@ -28,6 +28,7 @@ import DealMakerSection from "@/components/appraisal/DealMakerSection";
 import ManagementOverride from "@/components/appraisal/ManagementOverride";
 import { calculateOffer, type OfferSettings, type OfferRule, type OfferEstimate, type StrategyMode, calcHighMileagePenaltyPct, calcColorAdjustmentPct, DEFAULT_HIGH_MILEAGE_PENALTY, DEFAULT_COLOR_DESIRABILITY, DEFAULT_SEASONAL_ADJUSTMENT } from "@/lib/offerCalculator";
 import { isManagerRole } from "@/lib/adminConstants";
+import { safeInvoke } from "@/lib/safeInvoke";
 import type { FormData, BBVehicle, BBAddDeduct } from "@/components/sell-form/types";
 import { formatGrade } from "@/lib/formatGrade";
 import ACVSheet from "@/components/offer/ACVSheet";
@@ -266,6 +267,12 @@ export default function AppraisalTool() {
   // Editable overrides
   const [localSettings, setLocalSettings] = useState<OfferSettings | null>(null);
   const [acvOverride, setAcvOverride] = useState<number | null>(null);
+  // Customer-facing offer (the number quoted to the customer). Distinct
+  // from acv_value, which is the appraiser's internal ceiling. Voice AI
+  // and notification triggers read offered_price; appraisers/managers
+  // negotiate within the headroom between the two.
+  const [offerOverride, setOfferOverride] = useState<number | null>(null);
+  const [savingOffer, setSavingOffer] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [bbValueBasis, setBbValueBasis] = useState("tradein_avg");
   const [managerOverride, setManagerOverride] = useState<{ amount: number | null; reason: string | null; by: string | null }>({ amount: null, reason: null, by: null });
@@ -307,6 +314,7 @@ export default function AppraisalTool() {
       const s = subData as any as Submission;
       setSub(s);
       setAcvOverride(s.acv_value ?? null);
+      setOfferOverride(s.offered_price ?? null);
       // Map customer condition to our 4-tier system
       const custCondition = s.inspector_grade || s.overall_condition || "good";
       setCondition(custCondition);
@@ -806,6 +814,80 @@ export default function AppraisalTool() {
       toast({ title: "ACV Updated", description: `Appraisal value updated to $${newVal.toLocaleString()}. Still finalized.` });
     }
     setSaving(false);
+  };
+
+  // Save the customer-facing offer (offered_price). Distinct from
+  // acv_value — this is the number quoted to the customer and what the
+  // Voice AI agent uses to plan negotiations. Fires
+  // customer_offer_increased only when the new value is strictly higher
+  // than the previous one (avoids spamming the customer when an
+  // appraiser is just typing a number to verify it).
+  const handleSaveCustomerOffer = async () => {
+    if (!sub) return;
+    const newVal = offerOverride;
+    if (newVal == null || newVal <= 0) {
+      toast({ title: "Invalid", description: "Enter a valid customer offer amount.", variant: "destructive" });
+      return;
+    }
+    // Soft guard: warn but don't block when the customer offer exceeds
+    // the appraiser's ceiling unless a manager override is active.
+    // The toast gives the appraiser a chance to back out, but if they
+    // confirm again within the same session the save proceeds.
+    const ceiling = (acvOverride != null && acvOverride > 0 ? acvOverride : finalValue) + (managerOverride.amount || 0);
+    if (ceiling > 0 && newVal > ceiling) {
+      const confirmed = typeof window !== "undefined" && window.confirm(
+        `Customer offer ($${newVal.toLocaleString()}) exceeds your ACV ceiling ($${Math.floor(ceiling).toLocaleString()}). ` +
+        `This will result in a loss unless retail recovers it. Save anyway?`,
+      );
+      if (!confirmed) return;
+    }
+
+    setSavingOffer(true);
+    const previousOffer = sub.offered_price;
+    const { error } = await supabase
+      .from("submissions")
+      .update({ offered_price: newVal } as any)
+      .eq("id", sub.id);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      setSavingOffer(false);
+      return;
+    }
+    setSub(prev => prev ? { ...prev, offered_price: newVal } : prev);
+    setLastSavedAt(new Date());
+
+    // Audit trail so the customer file shows who bumped the number.
+    try {
+      await supabase.from("activity_log").insert({
+        submission_id: sub.id,
+        action: previousOffer ? "Customer Offer Updated" : "Customer Offer Set",
+        old_value: previousOffer ? `$${Number(previousOffer).toLocaleString()}` : null,
+        new_value: `$${newVal.toLocaleString()}`,
+        performed_by: sub.appraised_by || "Staff",
+      } as any);
+    } catch (e) {
+      // Non-fatal — audit log failures shouldn't fail the save.
+      console.warn("activity_log insert failed (non-fatal):", e);
+    }
+
+    // Notify the customer only when the offer went up. New offers (no
+    // prior value) fire customer_offer_ready; downward revisions are
+    // silent — the customer was already shown the higher number, so
+    // no proactive ping.
+    const ctx = { from: "AppraisalTool.saveCustomerOffer", submission_id: sub.id } as const;
+    if (!previousOffer) {
+      safeInvoke("send-notification", { body: { trigger_key: "customer_offer_ready", submission_id: sub.id }, context: ctx });
+    } else if (newVal > previousOffer) {
+      safeInvoke("send-notification", { body: { trigger_key: "customer_offer_increased", submission_id: sub.id }, context: ctx });
+    }
+
+    toast({
+      title: previousOffer ? "Offer Updated" : "Offer Sent",
+      description: `Customer offer set to $${newVal.toLocaleString()}.${
+        previousOffer && newVal > previousOffer ? " Customer will be notified." : ""
+      }`,
+    });
+    setSavingOffer(false);
   };
 
   const handlePrintACVSheet = useCallback(() => {
@@ -1515,100 +1597,188 @@ export default function AppraisalTool() {
 
       {/* ═══════════════════════════════════════ */}
       {/*  ZONE 3 — STICKY BOTTOM DECIDE BAR     */}
+      {/*  Two distinct numbers:                  */}
+      {/*    ACV (acv_value)    = internal ceiling */}
+      {/*    Customer Offer     = quoted to buyer  */}
+      {/*  Voice AI reads both to know its room.   */}
       {/* ═══════════════════════════════════════ */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 bg-[hsl(var(--primary))] border-t border-primary-foreground/15 shadow-[0_-4px_20px_rgba(0,0,0,0.3)]">
-        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center gap-4">
-          {sub.appraisal_finalized ? (
-            <>
-              {/* Finalized state — with ACV adjust */}
-              <div className="shrink-0">
-                <div className="text-[10px] text-primary-foreground/60 font-semibold uppercase tracking-wider">Finalized ACV</div>
-                <div className="text-2xl font-black text-emerald-400">${finalValue.toLocaleString()}</div>
-                {sub.appraisal_finalized_by && (
-                  <div className="text-[10px] text-primary-foreground/50">
-                    by {sub.appraisal_finalized_by} · {sub.appraisal_finalized_at ? new Date(sub.appraisal_finalized_at).toLocaleDateString() : ""}
+      {(() => {
+        const ceiling = (acvOverride != null && acvOverride > 0 ? acvOverride : finalValue) + (managerOverride.amount || 0);
+        const offerForRoom = offerOverride != null && offerOverride > 0 ? offerOverride : (sub.offered_price || 0);
+        const headroom = ceiling > 0 && offerForRoom > 0 ? ceiling - offerForRoom : null;
+        const headroomBadge = headroom == null ? null : headroom > 0 ? (
+          <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
+            +${Math.floor(headroom).toLocaleString()} room
+          </span>
+        ) : headroom < 0 ? (
+          <span className="inline-flex items-center gap-1 rounded-md bg-red-500/15 border border-red-500/40 px-2 py-0.5 text-[10px] font-bold text-red-300">
+            <AlertTriangle className="w-3 h-3" /> ${Math.floor(-headroom).toLocaleString()} over ACV
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-[10px] font-bold text-amber-300">
+            at ceiling
+          </span>
+        );
+
+        return (
+        <div className="fixed bottom-0 left-0 right-0 z-30 bg-[hsl(var(--primary))] border-t border-primary-foreground/15 shadow-[0_-4px_20px_rgba(0,0,0,0.3)]">
+          <div className="max-w-7xl mx-auto px-6 py-3 flex flex-wrap items-end gap-x-4 gap-y-2">
+            {sub.appraisal_finalized ? (
+              <>
+                {/* Finalized state — show ACV + allow adjusting both ACV and Customer Offer */}
+                <div className="shrink-0">
+                  <div className="text-[10px] text-primary-foreground/60 font-semibold uppercase tracking-wider">Finalized ACV</div>
+                  <div className="text-2xl font-black text-emerald-400">${finalValue.toLocaleString()}</div>
+                  {sub.appraisal_finalized_by && (
+                    <div className="text-[10px] text-primary-foreground/50">
+                      by {sub.appraisal_finalized_by} · {sub.appraisal_finalized_at ? new Date(sub.appraisal_finalized_at).toLocaleDateString() : ""}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex-1" />
+
+                {/* Adjust ACV — internal ceiling */}
+                <div className="flex flex-col gap-1">
+                  <div className="text-[10px] text-primary-foreground/50 font-semibold uppercase tracking-wider">Adjust ACV (Ceiling)</div>
+                  <div className="flex items-center gap-2">
+                    <div className="relative w-40">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base font-bold text-primary-foreground/40">$</span>
+                      <Input
+                        type="text" inputMode="numeric"
+                        value={acvOverride != null ? acvOverride.toLocaleString("en-US") : ""}
+                        onChange={e => { const raw = e.target.value.replace(/[^0-9]/g, ""); setAcvOverride(raw ? Number(raw) : null); }}
+                        placeholder={finalValue ? finalValue.toLocaleString("en-US") : "Enter amount"}
+                        className="h-10 text-sm font-bold pl-7 bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/30 focus:ring-primary-foreground/30"
+                      />
+                    </div>
+                    <Button
+                      onClick={handleUpdateAcv}
+                      disabled={saving || (acvOverride == null || acvOverride <= 0)}
+                      variant="ghost"
+                      size="sm"
+                      className="text-primary-foreground hover:bg-primary-foreground/10 border border-primary-foreground/20 rounded-lg h-10 px-3"
+                    >
+                      {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    </Button>
                   </div>
-                )}
-              </div>
-
-              <div className="flex-1" />
-
-              {/* ACV adjustment input */}
-              <div className="flex items-center gap-2">
-                <div className="text-[10px] text-primary-foreground/50 font-semibold uppercase tracking-wider shrink-0">Adjust ACV</div>
-                <div className="relative w-44">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg font-bold text-primary-foreground/40">$</span>
-                  <Input
-                    type="text" inputMode="numeric"
-                    value={acvOverride != null ? acvOverride.toLocaleString("en-US") : ""}
-                    onChange={e => { const raw = e.target.value.replace(/[^0-9]/g, ""); setAcvOverride(raw ? Number(raw) : null); }}
-                    placeholder={finalValue ? finalValue.toLocaleString("en-US") : "Enter amount"}
-                    className="h-10 text-base font-bold pl-8 bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/30 focus:ring-primary-foreground/30"
-                  />
                 </div>
-                <Button
-                  onClick={handleUpdateAcv}
-                  disabled={saving || (acvOverride == null || acvOverride <= 0)}
-                  variant="ghost"
-                  className="text-primary-foreground hover:bg-primary-foreground/10 border border-primary-foreground/20 rounded-xl h-10"
-                >
-                  {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Save className="w-4 h-4 mr-1" />}
-                  Update ACV
-                </Button>
-              </div>
 
-              <Button onClick={handlePrintACVSheet} variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10 border border-primary-foreground/20 rounded-xl">
-                <Printer className="w-4 h-4 mr-1.5" />
-                ACV Sheet
-              </Button>
-
-              <Button onClick={handleUnlockAppraisal} disabled={saving} variant="outline" className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 rounded-xl">
-                <Unlock className="w-4 h-4 mr-1.5" />
-                Unlock
-              </Button>
-            </>
-          ) : (
-            <>
-              {/* Active state */}
-              <div className="shrink-0">
-                <div className="text-[10px] text-primary-foreground/60 font-semibold uppercase tracking-wider">COMPASS™ Offer</div>
-                <div className="text-lg font-black text-primary-foreground">${waterfallFinal.toLocaleString()}</div>
-                {managerOverride.amount != null && managerOverride.amount !== 0 && (
-                  <span className="text-xs font-bold text-amber-300">+${managerOverride.amount.toLocaleString()} MGR ADJ</span>
-                )}
-              </div>
-
-              <div className="flex-1 flex items-center gap-2 max-w-md">
-                <div className="relative flex-1">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg font-bold text-primary-foreground/40">$</span>
-                  <Input
-                    type="text" inputMode="numeric"
-                    value={acvOverride != null ? acvOverride.toLocaleString("en-US") : ""}
-                    onChange={e => { const raw = e.target.value.replace(/[^0-9]/g, ""); setAcvOverride(raw ? Number(raw) : null); }}
-                    placeholder="Final Offer to Customer"
-                    className="h-11 text-lg font-bold pl-8 bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/30 focus:ring-primary-foreground/30"
-                  />
+                {/* Customer Offer — what's quoted to the buyer */}
+                <div className="flex flex-col gap-1">
+                  <div className="text-[10px] text-emerald-300/80 font-semibold uppercase tracking-wider flex items-center gap-1.5">
+                    Customer Offer {headroomBadge}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="relative w-40">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base font-bold text-primary-foreground/40">$</span>
+                      <Input
+                        type="text" inputMode="numeric"
+                        value={offerOverride != null ? offerOverride.toLocaleString("en-US") : ""}
+                        onChange={e => { const raw = e.target.value.replace(/[^0-9]/g, ""); setOfferOverride(raw ? Number(raw) : null); }}
+                        placeholder={sub.offered_price ? sub.offered_price.toLocaleString("en-US") : "Quote to customer"}
+                        className="h-10 text-sm font-bold pl-7 bg-emerald-500/10 border-emerald-400/30 text-primary-foreground placeholder:text-primary-foreground/30 focus:ring-emerald-400/40"
+                      />
+                    </div>
+                    <Button
+                      onClick={handleSaveCustomerOffer}
+                      disabled={savingOffer || (offerOverride == null || offerOverride <= 0)}
+                      size="sm"
+                      className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-lg h-10 px-3"
+                    >
+                      {savingOffer ? <Loader2 className="w-4 h-4 animate-spin" /> : <DollarSign className="w-4 h-4" />}
+                    </Button>
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex items-center gap-2 shrink-0">
-                <Button onClick={handleSave} disabled={saving} variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10 border border-primary-foreground/20 rounded-xl">
-                  {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Save className="w-4 h-4 mr-1" />}
-                  Save
+                <Button onClick={handlePrintACVSheet} variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary-foreground/10 border border-primary-foreground/20 rounded-lg h-10">
+                  <Printer className="w-4 h-4 mr-1.5" />
+                  ACV Sheet
                 </Button>
+
+                <Button onClick={handleUnlockAppraisal} disabled={saving} variant="outline" size="sm" className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 rounded-lg h-10">
+                  <Unlock className="w-4 h-4 mr-1.5" />
+                  Unlock
+                </Button>
+              </>
+            ) : (
+              <>
+                {/* Active state */}
+                <div className="shrink-0">
+                  <div className="text-[10px] text-primary-foreground/60 font-semibold uppercase tracking-wider">COMPASS™ Offer</div>
+                  <div className="text-lg font-black text-primary-foreground">${waterfallFinal.toLocaleString()}</div>
+                  {managerOverride.amount != null && managerOverride.amount !== 0 && (
+                    <span className="text-xs font-bold text-amber-300">+${managerOverride.amount.toLocaleString()} MGR ADJ</span>
+                  )}
+                </div>
+
+                {/* ACV input — internal ceiling. Placeholder used to read
+                    "Final Offer to Customer" which was wrong: this writes
+                    acv_value, not offered_price. Renamed so appraisers
+                    aren't confused into typing the customer-facing
+                    quote into the ceiling field. */}
+                <div className="flex flex-col gap-1">
+                  <div className="text-[10px] text-primary-foreground/50 font-semibold uppercase tracking-wider">ACV (Your Ceiling)</div>
+                  <div className="flex items-center gap-2">
+                    <div className="relative w-44">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base font-bold text-primary-foreground/40">$</span>
+                      <Input
+                        type="text" inputMode="numeric"
+                        value={acvOverride != null ? acvOverride.toLocaleString("en-US") : ""}
+                        onChange={e => { const raw = e.target.value.replace(/[^0-9]/g, ""); setAcvOverride(raw ? Number(raw) : null); }}
+                        placeholder="Internal ACV ceiling"
+                        className="h-10 text-sm font-bold pl-7 bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/30 focus:ring-primary-foreground/30"
+                      />
+                    </div>
+                    <Button onClick={handleSave} disabled={saving} variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary-foreground/10 border border-primary-foreground/20 rounded-lg h-10 px-3">
+                      {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Customer Offer input — what gets quoted to the buyer */}
+                <div className="flex flex-col gap-1">
+                  <div className="text-[10px] text-emerald-300/80 font-semibold uppercase tracking-wider flex items-center gap-1.5">
+                    Customer Offer {headroomBadge}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="relative w-44">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base font-bold text-primary-foreground/40">$</span>
+                      <Input
+                        type="text" inputMode="numeric"
+                        value={offerOverride != null ? offerOverride.toLocaleString("en-US") : ""}
+                        onChange={e => { const raw = e.target.value.replace(/[^0-9]/g, ""); setOfferOverride(raw ? Number(raw) : null); }}
+                        placeholder={sub.offered_price ? sub.offered_price.toLocaleString("en-US") : "Quote to customer"}
+                        className="h-10 text-sm font-bold pl-7 bg-emerald-500/10 border-emerald-400/30 text-primary-foreground placeholder:text-primary-foreground/30 focus:ring-emerald-400/40"
+                      />
+                    </div>
+                    <Button
+                      onClick={handleSaveCustomerOffer}
+                      disabled={savingOffer || (offerOverride == null || offerOverride <= 0)}
+                      size="sm"
+                      className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-lg h-10 px-3"
+                    >
+                      {savingOffer ? <Loader2 className="w-4 h-4 animate-spin" /> : <DollarSign className="w-4 h-4" />}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex-1" />
+
                 <Button
                   onClick={handleFinalize}
                   disabled={saving || (acvOverride == null && finalValue <= 0)}
-                  className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-base px-6 h-11 rounded-xl shadow-lg shadow-emerald-500/30"
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-base px-5 h-10 rounded-lg shadow-lg shadow-emerald-500/30"
                 >
                   {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <Lock className="w-4 h-4 mr-1.5" />}
                   Finalize Appraisal
                 </Button>
-              </div>
-            </>
-          )}
+              </>
+            )}
+          </div>
         </div>
-      </div>
+        );
+      })()}
 
       {/* Finalize Success Modal */}
       <Dialog open={showFinalizeSuccess} onOpenChange={setShowFinalizeSuccess}>
