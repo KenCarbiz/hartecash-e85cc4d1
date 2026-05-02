@@ -63,6 +63,24 @@ project_id = "ptiwdwfdckfqivoocyvp"
   # Customer-facing: unsubscribe link contains a signed token. No JWT.
   [functions.handle-email-unsubscribe]
     verify_jwt = false
+  # Customer-facing: 1-click decline-reason capture from day-1 follow-up
+  # email. Authenticated by submission token in query string.
+  [functions.track-decline-reason]
+    verify_jwt = false
+  # Cadence orchestrator — invoked by Supabase scheduled functions
+  # every 5 minutes. Service role required (cron passes the service
+  # JWT). Manual backfills also via service role.
+  [functions.cadence-tick]
+    verify_jwt = true
+  # Bland.AI warm-transfer hook — agent calls this when escalating
+  # to a human BDC rep. Authenticated via BLAND_WEBHOOK_SECRET.
+  [functions.bland-warm-transfer]
+    verify_jwt = false
+  # BDC call task completion — rep marks a queued call done and
+  # picks an outcome. RLS-gated by tenant; user JWT required so we
+  # know who completed the task.
+  [functions.complete-bdc-call]
+    verify_jwt = true
   # Email-provider webhook (bounce/complaint) — validates provider secret.
   [functions.handle-email-suppression]
     verify_jwt = false

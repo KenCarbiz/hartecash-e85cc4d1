@@ -166,6 +166,11 @@ const AdminSidebar = ({
     },
     { key: "accepted-appts", label: "Appointments", icon: CalendarDays, badge: appointmentCount > 0 ? String(appointmentCount) : undefined },
     { key: "bdc-queue", label: "BDC Priority Queue", icon: Flame },
+    // BDC Calls Today — cadence-queued follow-ups that need a human
+    // call (only meaningful for tenants with voice_ai_enabled = false,
+    // but we always render the entry; the page itself shows an empty
+    // state when there are no tasks).
+    { key: "bdc-calls", label: "Calls Today", icon: Phone },
   ].filter((item) => isAllowed(item.key));
 
   // ── FLOOR TOOLS ── Hands-on lot/service tooling. Split out of WORK
@@ -274,7 +279,7 @@ const AdminSidebar = ({
   ].filter((item) => isAllowed(item.key));
 
   const allSectionKeys = [
-    "today", "submissions", "accepted-appts", "executive", "appraiser-queue",
+    "today", "submissions", "accepted-appts", "executive", "appraiser-queue", "bdc-calls",
     "offer-settings", "form-config", "inspection-config", "photo-config",
     "depth-policies", "promotions", "notifications",
     "site-config", "appearance", "channels", "landing-flow", "locations", "rooftop-websites", "testimonials", "embed-toolkit",

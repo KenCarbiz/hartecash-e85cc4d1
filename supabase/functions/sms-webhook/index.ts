@@ -33,7 +33,28 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-twilio-signature",
 };
 
-const STOP_KEYWORDS = ["stop", "stopall", "unsubscribe", "cancel", "end", "quit"];
+// FCC's "any reasonable method" rule (2024) requires us to honor
+// opt-out requests beyond the carrier-mandated STOP keywords. The
+// expanded list below covers the natural-language variants we've
+// seen in inbound logs + plaintiff-firm test cases. The
+// `STOP_PHRASES` regex catches multi-word forms like "stop texting
+// me" or "remove me from your list."
+const STOP_KEYWORDS = ["stop", "stopall", "unsubscribe", "cancel", "end", "quit", "remove", "leave", "no more"];
+const STOP_PHRASES = [
+  /\bstop\s+(text|call|message|sms|emailing|contacting)/i,
+  /\b(remove|take)\s+me\s+(off|from)/i,
+  /\bdo\s+not\s+(text|call|message|contact|email)/i,
+  /\bdon'?t\s+(text|call|message|contact|email)/i,
+  /\bopt\s*-?\s*out/i,
+  /\bunsubscribe\s+me/i,
+  /\bquit\s+(texting|calling|messaging)/i,
+];
+
+function isOptOutMessage(body: string): boolean {
+  const lc = body.toLowerCase().trim();
+  if (STOP_KEYWORDS.includes(lc)) return true;
+  return STOP_PHRASES.some((re) => re.test(body));
+}
 const HELP_KEYWORDS = ["help", "info"];
 const START_KEYWORDS = ["start", "unstop", "yes"];
 
@@ -158,8 +179,8 @@ Deno.serve(async (req) => {
       dealership_id: sub?.dealership_id ?? null,
     } as any);
 
-    // ── STOP / UNSUBSCRIBE ─────────────────────────────────────
-    if (STOP_KEYWORDS.includes(bodyLower)) {
+    // ── STOP / UNSUBSCRIBE (with "any reasonable method" parser) ──
+    if (isOptOutMessage(bodyRaw)) {
       await supabase.from("sms_opt_outs").upsert(
         {
           phone: inbound.From,
@@ -169,6 +190,16 @@ Deno.serve(async (req) => {
         } as any,
         { onConflict: "phone" },
       );
+      // Also write to the canonical opt_outs table so the cadence
+      // trigger (cadence_pause_on_optout) fires + the customer is
+      // suppressed across SMS, voice, and email channels.
+      await supabase.from("opt_outs").insert({
+        phone: inbound.From,
+        email: sub?.email || null,
+        channel: "all",
+        token: crypto.randomUUID(),
+        submission_id: sub?.id ?? null,
+      } as any).catch((e: unknown) => console.warn("opt_outs insert failed (likely dup):", e));
       if (sub) {
         await supabase.from("conversation_events").insert({
           submission_id: sub.id,
@@ -217,6 +248,97 @@ Deno.serve(async (req) => {
         buildTwiML("This is Autocurb — your dealer's trade-in service. For help with your offer, reply with your question or call the dealership. Reply STOP to unsubscribe."),
         { headers: { "Content-Type": "application/xml" } },
       );
+    }
+
+    // ── Slot-booking digit reply (cadence two-way SMS) ─────────
+    // If we recently sent a "Reply 1, 2, or 3" message, the
+    // submission has pending_slot_proposals. Match the digit against
+    // the slots, book the appointment, fire confirmation + clear.
+    if (sub && (sub as any).pending_slot_proposals) {
+      const proposals = (sub as any).pending_slot_proposals;
+      const expiresAt = proposals?.expires_at ? new Date(proposals.expires_at) : null;
+      const expired = expiresAt && expiresAt.getTime() < Date.now();
+      const slots: Array<{ id: string; iso: string; human: string; location: string | null }> = proposals?.slots || [];
+      const digit = bodyLower.trim().match(/^([123])\b/)?.[1];
+      if (digit && !expired && slots.length >= Number(digit)) {
+        const chosen = slots[Number(digit) - 1];
+        const when = new Date(chosen.iso);
+        // Insert appointment + flip submission status. Mirrors the
+        // shape bland-appointment-webhook uses so downstream cadence-
+        // engine and notifications see the same state.
+        await supabase.from("appointments").insert({
+          submission_id: sub.id,
+          dealership_id: sub.dealership_id || "default",
+          preferred_date: when.toISOString().slice(0, 10),
+          preferred_time: when.toISOString().slice(11, 16),
+          location: chosen.location || null,
+          status: "scheduled",
+          source: "sms_two_way",
+        } as any).catch((e: unknown) => console.warn("appointment insert failed:", e));
+        await supabase.from("submissions").update({
+          progress_status: "appointment_scheduled",
+          pending_slot_proposals: null,
+        }).eq("id", sub.id);
+        await supabase.from("conversation_events").insert({
+          submission_id: sub.id,
+          dealership_id: sub.dealership_id || "default",
+          channel: "sms",
+          direction: "inbound",
+          actor_type: "customer",
+          actor_label: sub.name || "Customer",
+          body_text: `${bodyRaw}  (booked slot ${digit}: ${chosen.human})`,
+          occurred_at: new Date().toISOString(),
+          source_table: "sms_inbound_log",
+        } as any);
+        // Notify staff of the booking.
+        await supabase.functions.invoke("send-notification", {
+          body: { trigger_key: "appointment_booked", submission_id: sub.id, appointment_date: chosen.human },
+        }).catch((e: unknown) => console.warn("appointment notify failed:", e));
+        return new Response(
+          buildTwiML(`Locked in for ${chosen.human}. Reply RESCHEDULE if you need to change. See you then!`),
+          { headers: { "Content-Type": "application/xml" } },
+        );
+      }
+      if (expired) {
+        // Clean up so we don't keep matching against stale slots.
+        await supabase.from("submissions").update({ pending_slot_proposals: null }).eq("id", sub.id);
+      }
+    }
+
+    // ── Decline-reason keyword reply (declined cadence) ────────
+    // "price" / "shopping" / "not ready" / "sold" map to the same
+    // decline_reason values the email picker uses. Fires the same
+    // cadence branching downstream.
+    if (sub && !(sub as any).decline_reason) {
+      const declineMap: Record<string, string> = {
+        price: "price_too_low",
+        "too low": "price_too_low",
+        "low offer": "price_too_low",
+        shopping: "shopping_around",
+        "shopping around": "shopping_around",
+        "looking around": "shopping_around",
+        "not ready": "not_ready",
+        "later": "not_ready",
+        "not now": "not_ready",
+        sold: "sold_elsewhere",
+        "already sold": "sold_elsewhere",
+      };
+      const matched = Object.entries(declineMap).find(([keyword]) => bodyLower.includes(keyword));
+      if (matched) {
+        await supabase.from("submissions").update({
+          decline_reason: matched[1],
+          decline_reason_at: new Date().toISOString(),
+          decline_reason_source: "sms_reply",
+        } as any).eq("id", sub.id);
+        await supabase.from("activity_log").insert({
+          submission_id: sub.id,
+          action: "Decline Reason Captured",
+          new_value: matched[1],
+          notes: `via SMS: "${bodyRaw.trim()}"`,
+          performed_by: "Customer (SMS reply)",
+        } as any).catch(() => {});
+        // Don't auto-reply — the cadence engine will branch on this.
+      }
     }
 
     // ── Normal reply ───────────────────────────────────────────

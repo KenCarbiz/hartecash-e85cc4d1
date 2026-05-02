@@ -200,6 +200,12 @@ const QuickOfferForm = ({ leadSource = "quick-offer" }: QuickOfferFormProps) => 
         offered_price: firmOfferedPrice,
         is_hot_lead: estimate?.isHotLead || false,
         offer_subject_to_inspection: subjectToInspection,
+        // TCPA consent snapshot — captures the exact disclosure copy
+        // and version the customer saw at submit time. Required for
+        // FCC 2024 one-to-one defense if a TCPA claim is ever filed.
+        tcpa_consent_at: new Date().toISOString(),
+        tcpa_consent_version: (config as any)?.tcpa_disclosure_version || 1,
+        tcpa_consent_text: (config as any)?.tcpa_disclosure || null,
       } as any);
 
       if (insertErr) throw insertErr;
@@ -397,6 +403,19 @@ const QuickOfferForm = ({ leadSource = "quick-offer" }: QuickOfferFormProps) => 
       <p className="text-[10px] text-muted-foreground/70 text-center flex items-center justify-center gap-1.5">
         <Shield className="w-3 h-3" />
         Your details are never sold. We only use them to make you an offer.
+      </p>
+
+      {/*
+        TCPA disclosure — per-tenant copy from site_config.tcpa_disclosure
+        with a sane fallback so the form still works for tenants that
+        haven't customized. Required by FCC 2024 one-to-one rule: the
+        consent must be tied to THIS dealership, not a generic platform
+        umbrella. Visible directly above/below the submit button so
+        plaintiff firms can't argue the consumer didn't see it.
+      */}
+      <p className="text-[10px] text-muted-foreground/60 leading-relaxed">
+        {(config as any)?.tcpa_disclosure
+          || "By submitting this form, I consent to receive automated and prerecorded calls, texts, and emails from this dealership and its agents about my vehicle inquiry, including via autodialer. Consent is not a condition of any purchase. Standard message and data rates may apply. Reply STOP to opt out."}
       </p>
     </form>
   );

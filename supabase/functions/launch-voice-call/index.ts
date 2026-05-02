@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { buildVoiceContext } from "../_shared/voiceContext.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -86,6 +87,13 @@ serve(async (req) => {
       context,
       submission_token,
       phone: requestedPhone,
+      // ── Cadence-engine intent ──
+      // Cadence-tick passes one of: voice_offer_re_engage,
+      // voice_offer_refresh, voice_schedule_inspection. The
+      // buildVoiceContext helper turns the intent into a full agent
+      // prompt + structured signals (offer, ACV ceiling, bump band,
+      // missing docs, slot proposals).
+      intent,
     } = await req.json();
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -379,13 +387,24 @@ serve(async (req) => {
       }
     }
 
-    if (!isWithinCallingHours(currentLocalTime, callingStart, callingEnd)) {
+    // TCPA HARD FLOOR — 8:00am-9:00pm recipient-local. Cannot be widened
+    // by the dealer. Apply the more-restrictive of {dealer calling
+    // hours, TCPA window} so a dealer with 7am-10pm in their config
+    // doesn't accidentally rack up $1,500/violation lawsuits.
+    const TCPA_START = "08:00";
+    const TCPA_END = "21:00";
+    const effectiveStart = callingStart > TCPA_START ? callingStart : TCPA_START;
+    const effectiveEnd = callingEnd < TCPA_END ? callingEnd : TCPA_END;
+
+    if (!isWithinCallingHours(currentLocalTime, effectiveStart, effectiveEnd)) {
+      const isTcpaBlock = !isWithinCallingHours(currentLocalTime, TCPA_START, TCPA_END);
       return new Response(
         JSON.stringify({
-          error: "Outside calling hours",
+          error: isTcpaBlock ? "Outside TCPA calling window (8am-9pm recipient-local)" : "Outside calling hours",
           customer_timezone: customerTz,
           current_local_time: currentLocalTime,
-          calling_window: `${callingStart} - ${callingEnd}`,
+          calling_window: `${effectiveStart} - ${effectiveEnd}`,
+          tcpa_block: isTcpaBlock,
         }),
         {
           status: 422,
@@ -396,8 +415,25 @@ serve(async (req) => {
 
     // ── Build script from template ──
     let scriptTemplate = "";
+    let voiceContextPayload: any = null;
 
-    if (campaign_type === "appraiser_qa") {
+    // Cadence intent path: if cadence-tick passed an intent, build the
+    // full structured context (offer, ACV, bump, missing docs, slot
+    // proposals) and use the per-intent prompt block as the script.
+    // The structured payload also gets attached to the Bland call so
+    // the agent's tools (book_appointment, transfer_to_human) can read
+    // it without re-querying.
+    if (intent && submission_id) {
+      const ctx = await buildVoiceContext(supabase, submission_id, intent);
+      if (ctx) {
+        scriptTemplate = ctx.prompt_block;
+        voiceContextPayload = ctx;
+      }
+    }
+
+    // Each branch only fills scriptTemplate when it's still empty.
+    // The cadence-intent path above takes precedence over all others.
+    if (!scriptTemplate && campaign_type === "appraiser_qa") {
       // Inline template — no DB row needed. The Bland agent acts as a friendly
       // appraiser who already knows the customer's vehicle and offer. They
       // answer questions about the offer, the inspection process, pickup
@@ -405,16 +441,19 @@ serve(async (req) => {
       const vehicleSummary = context?.vehicle_summary || "your vehicle";
       const offerDollars = context?.cash_offer ? `$${Math.round(context.cash_offer).toLocaleString()}` : "your offer";
       scriptTemplate = `You are a friendly appraiser calling back a customer who just received a cash offer of ${offerDollars} for their ${vehicleSummary}. They asked us to call so you could answer any questions about the offer, the in-person inspection, the pickup process, or how the condition deductions worked. You are NOT trying to sell them or push them to accept. You are explaining and answering. If they want to accept the offer, walk them through scheduling pickup. If they're hesitant, ask what specifically is on their mind. If they ask something you don't know, say "I'll have the team follow up by text within an hour." Keep responses under 30 seconds each. Be warm, knowledgeable, and concise.`;
-    } else if (script_template_id) {
+    }
+    if (!scriptTemplate && script_template_id) {
       const { data: tmpl } = await supabase
         .from("voice_script_templates")
         .select("script_template")
         .eq("id", script_template_id)
         .single();
       if (tmpl) scriptTemplate = tmpl.script_template;
-    } else if (campaignData?.script_template) {
+    }
+    if (!scriptTemplate && campaignData?.script_template) {
       scriptTemplate = campaignData.script_template;
-    } else {
+    }
+    if (!scriptTemplate) {
       // Default to the "Offer Follow-Up" template
       const { data: defaultTmpl } = await supabase
         .from("voice_script_templates")

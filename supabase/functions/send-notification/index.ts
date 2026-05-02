@@ -49,15 +49,86 @@ const DEFAULT_TEMPLATES: Record<string, { email_subject: string; email_body: str
     email_body: "Hi {{customer_name}},\n\nGreat news! We've reviewed your {{vehicle}} and your personalized offer is ready.\n\nClick below to view your offer:\n{{portal_link}}\n\nThis offer is valid for {{guarantee_days}} days.\n\nBest regards,\n{{dealership_name}}",
     sms_body: "Hi {{customer_name}}, your offer for your {{vehicle}} is ready! View it here: {{portal_link}} — {{dealership_name}}",
   },
+  customer_offer_followup_d1: {
+    email_subject: "Quick question about your {{vehicle}} offer",
+    email_body: "Hi {{customer_name}},\n\nWe sent your offer for the {{vehicle}} and just wanted to check in. If you didn't accept it, would you let us know why? It helps us follow up the right way (and not pester you about something that doesn't fit).\n\n• Price too low: {{decline_link_price}}\n• Still shopping around: {{decline_link_shopping}}\n• Not ready to sell yet: {{decline_link_notready}}\n• Sold elsewhere: {{decline_link_sold}}\n\nView your offer: {{portal_link}}\n\n— {{dealership_name}}",
+    sms_body: "Hi {{customer_name}}, just checking in on your {{vehicle}} offer. Reply with the reason if you didn't accept (price/shopping/not ready/sold) and we'll follow up the right way. View: {{portal_link}}",
+  },
+  // ─── Cadence step templates ────────────────────────────────────
+  // D3 — market-data nudge (declined cadence)
+  customer_offer_followup_d3: {
+    email_subject: "Used {{vehicle}} values are moving — here's what we're seeing",
+    email_body: "Hi {{customer_name}},\n\nFollowing up on the offer for your {{vehicle}}.\n\nUsed values on your model have been softening — every week of waiting can mean a few hundred dollars off the high. Our offer ({{offer_amount}}) is still good through {{lock_expires}}.\n\nQuick to lock it in: {{portal_link}}\n\nReply if you'd like us to walk you through the comps we used. — {{dealership_name}}",
+    sms_body: "{{customer_name}}, used {{vehicle}} values are softening. Your offer of {{offer_amount}} still stands through {{lock_expires}}: {{portal_link}}",
+  },
+  // D3 — manager-bump reveal (price_too_low branch only)
+  customer_offer_bump_reveal: {
+    email_subject: "Good news — we found some room",
+    email_body: "Hi {{customer_name}},\n\nMy used-car manager pulled comps this morning and we're able to come up on your {{vehicle}}.\n\nView your refreshed offer: {{portal_link}}\n\nIf this works, just hit Accept and we'll get you scheduled. Otherwise reply with where you need us to be — we'll see what we can do.\n\n— {{rep_name_short}}, {{dealership_name}}",
+    sms_body: "{{customer_name}} — refreshed your {{vehicle}} offer. Take a look: {{portal_link}} — {{rep_name_short}}, {{dealership_name}}",
+  },
+  // D6 — expires tomorrow (declined cadence)
+  customer_offer_expires_tomorrow: {
+    email_subject: "Reminder: your offer expires tomorrow",
+    email_body: "Hi {{customer_name}},\n\nQuick heads-up — your offer of {{offer_amount}} for the {{vehicle}} expires tomorrow ({{lock_expires}}).\n\nIf you'd like to lock it in, just one click: {{portal_link}}\n\nIf you've already moved on, reply STOP and we'll close it out.\n\n— {{dealership_name}}",
+    sms_body: "Heads up — your {{vehicle}} offer ({{offer_amount}}) expires tomorrow {{lock_expires}}: {{portal_link}} — {{dealership_name}}",
+  },
+  // D7 — last chance / counter ask (declined cadence)
+  customer_offer_last_chance: {
+    email_subject: "Last day — we'd love to make this work",
+    email_body: "Hi {{customer_name}},\n\nToday's the last day on your offer of {{offer_amount}} for the {{vehicle}}.\n\nIf the number isn't quite there, send us your best competing quote and we'll see if we can match or beat it. Just reply to this email.\n\nView your offer: {{portal_link}}\n\n— {{rep_name_short}}, {{dealership_name}}",
+    sms_body: "Last day on your {{vehicle}} offer. If you got a better quote elsewhere, reply with the number and we'll try to match. {{portal_link}}",
+  },
+  // ─── Stall cadence (accepted, not scheduled) ───────────────────
+  customer_offer_accepted_sms_followup: {
+    email_subject: "Schedule your inspection — held until {{lock_expires}}",
+    email_body: "Hi {{customer_name}}, just confirming — {{rep_name_short}} is holding your {{offer_amount}} offer through {{lock_expires}}. Schedule your visit: {{portal_link}}\n\n— {{dealership_name}}",
+    sms_body: "{{customer_name}} — {{rep_name_short}} from {{dealership_name}} is holding your {{offer_amount}} offer until {{lock_expires}}. Schedule here (30 min): {{portal_link}}",
+  },
+  customer_schedule_slot_proposal: {
+    email_subject: "A few times that work for your inspection",
+    email_body: "Hi {{customer_name}},\n\nLet's get your {{vehicle}} inspection on the books. Pick the time that works:\n\n{{portal_link}}\n\nIf none of those slots work, reply with what does and {{rep_name_short}} will make it happen. — {{dealership_name}}",
+    sms_body: "{{customer_name}}, reply 1, 2, or 3 to lock a time for your inspection — or pick from {{portal_link}}. Locked through {{lock_expires}}.",
+  },
+  customer_doc_upload_unlock: {
+    email_subject: "One quick step — upload your title to lock the slot",
+    email_body: "Hi {{customer_name}},\n\nUpload a quick photo of your title and we can lock your inspection slot in seconds (and verify there's no surprise lien on the day-of):\n\n{{portal_link}}\n\nNo title in hand? Reply and we'll send a state-specific replacement link. — {{dealership_name}}",
+    sms_body: "{{customer_name}}, snap a pic of your title to lock the slot: {{portal_link}}. Reply if it's in the lender's hands and we'll handle it. — {{dealership_name}}",
+  },
+  customer_lock_expires_48h: {
+    email_subject: "Heads up — your offer locks expire in 48 hours",
+    email_body: "Hi {{customer_name}},\n\nYour offer of {{offer_amount}} expires in 48 hours ({{lock_expires}}). Need a different time? Reply and we'll work it out — {{rep_name_short}}, {{dealership_name}}\n\nSchedule: {{portal_link}}",
+    sms_body: "{{customer_name}}, your {{offer_amount}} offer locks in 48h ({{lock_expires}}). Schedule: {{portal_link}}",
+  },
+  customer_manager_signed_extension: {
+    email_subject: "Personal note from {{rep_name_short}} — happy to extend",
+    email_body: "Hi {{customer_name}},\n\nI'm reaching out personally — your offer of {{offer_amount}} on the {{vehicle}} expires today, but I'd be happy to extend it another 7 days if you need more time.\n\nJust reply and let me know what's going on. If there's a snag (title, payoff, time-off-work), we have options — at-home pickup, after-hours appointments, lender coordination.\n\nSchedule: {{portal_link}}\n\n— {{rep_name_short}}, {{dealership_name}}",
+    sms_body: "{{customer_name}}, this is {{rep_name_short}} from {{dealership_name}}. Happy to extend your {{offer_amount}} offer if you need more time — just reply. Schedule: {{portal_link}}",
+  },
+  // ─── Reengage cadence (post-expiry KBB-style) ──────────────────
+  customer_reengage_market_update: {
+    email_subject: "Market update on your {{vehicle}} — {{dealership_name}}",
+    email_body: "Hi {{customer_name}},\n\nQuick update on the market for your {{vehicle}}.\n\nWe'd still buy it. Want a fresh, no-obligation number? One click: {{portal_link}}\n\n— {{dealership_name}}",
+    sms_body: "Hi {{customer_name}}, market update on your {{vehicle}}: we'd still buy it. Fresh quote: {{portal_link}} — {{dealership_name}}",
+  },
+  customer_reengage_offer_refresh: {
+    email_subject: "Refreshed offer for your {{vehicle}}",
+    email_body: "Hi {{customer_name}},\n\nWe pulled fresh comps and refreshed your offer on the {{vehicle}}: {{portal_link}}\n\nReply STOP if you'd like us to stop following up. — {{dealership_name}}",
+    sms_body: "{{customer_name}}, refreshed your {{vehicle}} offer: {{portal_link}}. Reply STOP to opt out.",
+  },
   customer_offer_increased: {
     email_subject: "Great News — Your Offer Has Been Increased!",
     email_body: "Hi {{customer_name}},\n\nWe've increased the offer on your {{vehicle}}!\n\nView your updated offer:\n{{portal_link}}\n\nDon't wait — this offer is valid for {{guarantee_days}} days.\n\nBest regards,\n{{dealership_name}}",
     sms_body: "Hi {{customer_name}}, great news! We've increased our offer on your {{vehicle}}. View it: {{portal_link}} — {{dealership_name}}",
   },
   customer_offer_accepted: {
-    email_subject: "Offer Accepted — Next Steps for Your {{vehicle}}",
-    email_body: "Hi {{customer_name}},\n\nThank you for accepting our offer on your {{vehicle}}!\n\nOffer Amount: {{offer_amount}}\n\nSchedule now: {{portal_link}}\n\nBest regards,\n{{dealership_name}}",
-    sms_body: "Hi {{customer_name}}, your offer of {{offer_amount}} for your {{vehicle}} is confirmed! Schedule your visit: {{portal_link}} — {{dealership_name}}",
+    email_subject: "Offer Accepted — let's get your {{vehicle}} scheduled",
+    // Friction-removal up-front: doc checklist, lien-payoff pre-auth
+    // link, named-rep accountability, 30-min timebox promise. Research
+    // (KBB ICO data, BDC playbooks) shows surfacing requirements at
+    // acceptance vs. at the door is the #1 lever on schedule-conversion.
+    email_body: "Hi {{customer_name}},\n\nGreat — we've locked your offer of {{offer_amount}} for your {{vehicle}}.\n\n{{rep_intro}}holding it for you through {{lock_expires}}.\n\n📅 SCHEDULE YOUR VISIT (about 30 minutes):\n{{portal_link}}\n\n📋 BRING WITH YOU:\n  • Vehicle title (or signed lien-payoff authorization — see below)\n  • Government-issued photo ID\n  • Current vehicle registration\n  • All keys and key fobs\n  • Owner's manual / second-key fob if you have it{{loan_payoff_block}}\n\nWe'll inspect, verify, and cut your check the same visit. If you have a co-titleholder, please bring them — they'll need to sign too.\n\nQuestions? Just reply to this email — it goes straight to {{rep_name_short}}.\n\n— {{dealership_name}}",
+    sms_body: "Hi {{customer_name}}, your offer of {{offer_amount}} is locked through {{lock_expires}}. Schedule your 30-min visit here: {{portal_link}} — {{dealership_name}}",
   },
   customer_appointment_reminder: {
     email_subject: "Reminder: Your Appointment Is Tomorrow",
@@ -83,6 +154,16 @@ const DEFAULT_TEMPLATES: Record<string, { email_subject: string; email_body: str
     email_subject: "💬 {{customer_name}} replied — {{vehicle}}",
     email_body: "{{custom_body}}\n\nCustomer: {{customer_name}}\nVehicle: {{vehicle}}\n\nOpen the conversation in the dashboard to respond.",
     sms_body: "💬 {{custom_body}}",
+  },
+  ai_warm_transfer_alert: {
+    email_subject: "🚨 AI Voice — warm transfer for {{customer_name}}",
+    email_body: "The AI voice agent is transferring a call to you.\n\n{{custom_body}}\n\nCustomer: {{customer_name}}\nVehicle: {{vehicle}}\nLast offer: {{offer_amount}}\n\nOpen the customer file in the dashboard for the full transfer summary.",
+    sms_body: "{{custom_body}}",
+  },
+  staff_bdc_call_needed: {
+    email_subject: "📞 BDC call needed — {{customer_name}} ({{vehicle}})",
+    email_body: "The cadence engine queued a follow-up call (this dealer doesn't use AI voice).\n\n{{custom_body}}\n\nCustomer: {{customer_name}}\nPhone: {{customer_phone}}\nVehicle: {{vehicle}}\nLast offer: {{offer_amount}}\n\nOpen the BDC Calls page in the dashboard for the full talking points + authorized bump amount.",
+    sms_body: "{{custom_body}}",
   },
   staff_deal_completed: {
     email_subject: "✅ Deal Completed — {{customer_name}}",
@@ -130,6 +211,22 @@ const DEFAULT_TEMPLATES: Record<string, { email_subject: string; email_body: str
     sms_body: "⚠️ Abandoned lead: {{customer_name}} ({{vehicle}}) started the form but didn't finish. Follow up ASAP!",
   },
 };
+
+// Mirror of the SQL tcpa_timezone_for_state() function. Used as a
+// fallback when submissions.customer_timezone hasn't been backfilled
+// yet (e.g. legacy rows imported before the trigger landed). Cross-tz
+// states default to the easternmost zone so we never call too late.
+function hardcodedStateTz(state: string | null | undefined): string {
+  const s = (state || "").toUpperCase();
+  if (["CT", "DE", "DC", "GA", "ME", "MD", "MA", "NH", "NJ", "NY", "NC", "OH", "PA", "RI", "SC", "VT", "VA", "WV", "FL", "IN", "KY", "MI", "TN"].includes(s)) return "America/New_York";
+  if (["AL", "AR", "IL", "IA", "LA", "MN", "MS", "MO", "OK", "WI", "KS", "NE", "TX", "ND", "SD"].includes(s)) return "America/Chicago";
+  if (["CO", "MT", "NM", "UT", "WY", "ID"].includes(s)) return "America/Denver";
+  if (s === "AZ") return "America/Phoenix";
+  if (["CA", "NV", "OR", "WA"].includes(s)) return "America/Los_Angeles";
+  if (s === "AK") return "America/Anchorage";
+  if (s === "HI") return "Pacific/Honolulu";
+  return "America/New_York"; // most-restrictive default
+}
 
 const sanitize = (str: string | null | undefined) =>
   (str || "").replace(/[<>&"']/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&#39;" }[c] || c));
@@ -283,6 +380,54 @@ Deno.serve(async (req) => {
     const siteUrl = Deno.env.get("SITE_URL") || "https://app.autocurb.io";
     const portalLink = sub ? `${siteUrl}/offer/${sub.token}` : siteUrl;
 
+    // Decline-reason capture links — go through the
+    // track-decline-reason edge function which writes to
+    // submissions.decline_reason then redirects to the offer page.
+    // Used by the customer_offer_followup_d1 template (and any future
+    // template that wants to capture branching signals).
+    const supabaseUrlForLinks = Deno.env.get("SUPABASE_URL") || "";
+    const declineLink = (reason: string) =>
+      sub
+        ? `${supabaseUrlForLinks}/functions/v1/track-decline-reason?token=${encodeURIComponent(sub.token)}&reason=${reason}&redirect=${encodeURIComponent(portalLink)}`
+        : "";
+
+    // Acceptance-flow personalization. Only populated when we have the
+    // signal (assigned_rep_email, lien data) — otherwise the variables
+    // render as empty strings so the template degrades gracefully.
+    let repIntro = "We're";
+    let repNameShort = "our team";
+    if (sub && (sub as any).assigned_rep_email) {
+      const { data: repRow } = await supabase
+        .from("user_roles")
+        .select("display_name, email")
+        .eq("email", (sub as any).assigned_rep_email)
+        .maybeSingle();
+      const rawName = (repRow as any)?.display_name || (sub as any).assigned_rep_email.split("@")[0];
+      const firstName = String(rawName).split(/[\s.]/)[0];
+      repIntro = `${firstName} from ${dealerName} is `;
+      repNameShort = firstName;
+    }
+
+    // 7-day price-lock window matches the CarMax / KBB / Carvana norm.
+    // Computed here rather than stored so a tenant can change the
+    // window via site_config.price_guarantee_days without a backfill.
+    let lockExpires = "";
+    if (sub) {
+      const acceptDate = new Date();
+      const lockDays = Number(guaranteeDays) || 7;
+      const exp = new Date(acceptDate.getTime() + lockDays * 24 * 60 * 60 * 1000);
+      lockExpires = exp.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+    }
+
+    // Lien-payoff pre-auth: only show when the customer told us they
+    // have a loan. Surfacing the auth link at acceptance saves the
+    // 10-day lender turnaround stall that kills most accepted-but-
+    // not-scheduled deals.
+    let loanPayoffBlock = "";
+    if (sub && (sub as any).loan_status && String((sub as any).loan_status).toLowerCase() !== "none" && String((sub as any).loan_status).toLowerCase() !== "no") {
+      loanPayoffBlock = `\n\n💳 IF YOU STILL HAVE A LOAN ON THIS VEHICLE:\n  Your lender (${(sub as any).loan_company || "your bank"}) needs to issue a 10-day payoff letter — that takes a few days, so let's get it started now.\n  Sign the payoff authorization here: ${portalLink}/payoff-auth\n  We'll fax/email it to your lender directly so you don't have to.`;
+    }
+
     const templateVars: Record<string, string> = {
       customer_name: sub?.name?.split(" ")[0] || "there",
       customer_email: sub?.email || "",
@@ -291,6 +436,14 @@ Deno.serve(async (req) => {
       mileage: sub?.mileage || "",
       offer_amount: offerAmount,
       portal_link: portalLink,
+      decline_link_price: declineLink("price_too_low"),
+      decline_link_shopping: declineLink("shopping_around"),
+      decline_link_notready: declineLink("not_ready"),
+      decline_link_sold: declineLink("sold_elsewhere"),
+      rep_intro: repIntro,
+      rep_name_short: repNameShort,
+      lock_expires: lockExpires,
+      loan_payoff_block: loanPayoffBlock,
       appointment_date: body.appointment_date || "",
       appointment_time: body.appointment_time || "",
       location: body.location || "",
@@ -422,6 +575,41 @@ Deno.serve(async (req) => {
         ? currentTime >= start || currentTime < end
         : currentTime >= start && currentTime < end;
       if (inQuietHours) smsRecipients = [];
+    }
+
+    // ── TCPA hard floor: 8am–9pm RECIPIENT local time ──
+    // The dealer-configured quiet-hours above honor the *dealer's* tz,
+    // which is wrong under TCPA — case law and 2024 class actions
+    // consistently land on recipient-local. For customer-bound SMS we
+    // also enforce 8pm–9am recipient-local as an absolute floor that
+    // cannot be widened by dealer settings. Use the cached
+    // submissions.customer_timezone (populated by the
+    // submissions_set_customer_timezone trigger).
+    if (isCustomerTrigger && sub && smsRecipients.length > 0) {
+      const customerTz = (sub as any).customer_timezone
+        || hardcodedStateTz((sub as any).state)
+        || "America/New_York";
+      try {
+        const hh = parseInt(
+          new Intl.DateTimeFormat("en-US", {
+            timeZone: customerTz,
+            hour: "2-digit",
+            hourCycle: "h23",
+          }).formatToParts(new Date()).find((p) => p.type === "hour")?.value ?? "0",
+          10,
+        );
+        if (hh < 8 || hh >= 21) {
+          // Defer logNotification — it's declared lower; just console-log
+          // here. The block itself is what matters.
+          console.log(`[send-notification] TCPA quiet-hour block: tz=${customerTz} hour=${hh} sub=${(sub as any).id}`);
+          smsRecipients = [];
+        }
+      } catch (e) {
+        // If tz parsing fails, fail-closed — block the send rather than
+        // risk a TCPA violation. Logged so ops can fix the bad tz value.
+        console.error("[send-notification] TCPA tz parse failed, blocking:", e);
+        smsRecipients = [];
+      }
     }
 
     const results: { email?: string; sms?: string } = {};
