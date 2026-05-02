@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { History, ExternalLink, Copy, Check, RefreshCw, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { History, ExternalLink, Copy, Check, RefreshCw, Loader2, ChevronDown, ChevronUp, Pencil } from "lucide-react";
 
 interface DemoRow {
   id: string;
@@ -12,6 +12,13 @@ interface DemoRow {
   created_at: string;
   updated_at: string;
   expires_at: string;
+}
+
+interface ProspectDemoHistoryProps {
+  /** Loads the selected demo back into the editor above. */
+  onLoadDemo?: (demoId: string) => void | Promise<void>;
+  /** Currently-loaded demo, used to highlight the active row. */
+  activeDemoId?: string | null;
 }
 
 const formatRelative = (iso: string): string => {
@@ -26,12 +33,13 @@ const formatRelative = (iso: string): string => {
   return new Date(iso).toLocaleDateString();
 };
 
-const ProspectDemoHistory = () => {
+const ProspectDemoHistory = ({ onLoadDemo, activeDemoId }: ProspectDemoHistoryProps = {}) => {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [rows, setRows] = useState<DemoRow[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -127,10 +135,16 @@ const ProspectDemoHistory = () => {
                 <tbody className="divide-y divide-slate-100">
                   {rows?.map((r) => {
                     const shareUrl = `${window.location.origin}/demo/${r.share_token}`;
+                    const isActive = activeDemoId === r.id;
                     return (
-                      <tr key={r.id} className="hover:bg-slate-50">
+                      <tr key={r.id} className={isActive ? "bg-blue-50/60" : "hover:bg-slate-50"}>
                         <td className="px-4 py-2 font-medium text-slate-800">
                           {r.dealer_name || <span className="text-slate-400">Unnamed</span>}
+                          {isActive && (
+                            <span className="ml-2 inline-block rounded bg-blue-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-blue-700">
+                              Editing
+                            </span>
+                          )}
                         </td>
                         <td className="px-4 py-2 text-slate-600 max-w-[220px] truncate">
                           {r.home_url || "—"}
@@ -146,6 +160,29 @@ const ProspectDemoHistory = () => {
                         </td>
                         <td className="px-4 py-2 text-right">
                           <div className="flex items-center justify-end gap-1">
+                            {onLoadDemo && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 px-2"
+                                disabled={loadingId === r.id || isActive}
+                                onClick={async () => {
+                                  setLoadingId(r.id);
+                                  try {
+                                    await onLoadDemo(r.id);
+                                  } finally {
+                                    setLoadingId(null);
+                                  }
+                                }}
+                                title={isActive ? "Already loaded" : "Edit this demo"}
+                              >
+                                {loadingId === r.id ? (
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                ) : (
+                                  <Pencil className="w-3 h-3" />
+                                )}
+                              </Button>
+                            )}
                             <Button
                               variant="ghost"
                               size="sm"

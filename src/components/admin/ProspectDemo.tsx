@@ -425,6 +425,65 @@ const ProspectDemo = () => {
     }
   };
 
+  // Load a previously-saved demo back into the editor so the rep can
+  // tweak copy / re-capture screenshots and re-share. Sets savedDemo so
+  // the next Save & Share updates the same row (and re-uses its
+  // share_token — the prospect's existing link keeps working).
+  const handleLoadDemo = async (demoId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("prospect_demos")
+        .select("*")
+        .eq("id", demoId)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) throw new Error("Demo not found");
+
+      const cfg = ((data as any).config || {}) as Record<string, any>;
+      setDealerName((data as any).dealer_name || "");
+      setHomeUrl((data as any).home_url || "");
+      setListingUrl((data as any).listing_url || "");
+      setVdpUrl((data as any).vdp_url || "");
+      setCaptures({
+        home: (data as any).home_screenshot || null,
+        listing: (data as any).listing_screenshot || null,
+        vdp: (data as any).vdp_screenshot || null,
+      });
+      if (typeof cfg.buttonColor === "string") setButtonColor(cfg.buttonColor);
+      if (typeof cfg.buttonText === "string") setButtonText(cfg.buttonText);
+      if (typeof cfg.bannerHeadline === "string") setBannerHeadline(cfg.bannerHeadline);
+      if (typeof cfg.bannerText === "string") setBannerText(cfg.bannerText);
+      if (typeof cfg.bannerCtaText === "string") setBannerCtaText(cfg.bannerCtaText);
+      if (typeof cfg.stickyText === "string") setStickyText(cfg.stickyText);
+      if (typeof cfg.stickyCtaText === "string") setStickyCtaText(cfg.stickyCtaText);
+      if (typeof cfg.pptButtonText === "string") setPptButtonText(cfg.pptButtonText);
+      if (typeof cfg.pptEnabled === "boolean") setPptEnabled(cfg.pptEnabled);
+      if (Array.isArray(cfg.activeAssets)) {
+        setActiveAssets(new Set(cfg.activeAssets as AssetId[]));
+      }
+      setSavedDemo({
+        id: (data as any).id,
+        shareToken: (data as any).share_token,
+        expiresAt: (data as any).expires_at,
+      });
+
+      toast({
+        title: "Demo loaded",
+        description: "Edit the fields below and click Save & Share to update the same link.",
+      });
+
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    } catch (e) {
+      toast({
+        title: "Couldn't load demo",
+        description: e instanceof Error ? e.message : "Unknown error",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleCopyShareUrl = async () => {
     if (!shareUrl) return;
     try {
@@ -804,7 +863,7 @@ const ProspectDemo = () => {
       </div>
 
       {/* Run history — past saved demos */}
-      <ProspectDemoHistory />
+      <ProspectDemoHistory onLoadDemo={handleLoadDemo} activeDemoId={savedDemo?.id ?? null} />
 
       {/* Prospect config form */}
       <div className="rounded-lg border border-slate-200 bg-white p-4 space-y-4">
@@ -1400,6 +1459,18 @@ const DragSnapZone = ({
       onPointerCancel={() => setDrag(null)}
       title="Drag the overlay to a different anchor zone"
     >
+      {/* Resting-state hint — small "drag to reposition" pill in the
+          top-right corner so reps know the canvas is interactive
+          without having to start a drag to discover it. Hidden during
+          drag so it doesn't compete with the snap-zone indicators. */}
+      {!drag && (
+        <div className="absolute top-2 right-2 pointer-events-none flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur-sm px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-600 shadow-sm border border-slate-200/80">
+          <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M10 3a1 1 0 011 1v4h4a1 1 0 110 2h-4v4a1 1 0 11-2 0v-4H5a1 1 0 110-2h4V4a1 1 0 011-1z" />
+          </svg>
+          Drag to reposition
+        </div>
+      )}
       {/* Snap-zone indicators — only visible during drag */}
       {drag &&
         Object.entries(coords).map(([pos, zone]) => {

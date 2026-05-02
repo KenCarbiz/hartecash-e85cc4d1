@@ -370,64 +370,77 @@ serve(async (req) => {
         outcome === "callback_requested" ? "customer_callback_confirmation" :
         null;
 
+      // Await the post-call SMS invokes so the webhook response only
+      // returns 200 once the side-effects have actually been attempted.
+      // Previously these were fire-and-forget with .catch(console.error)
+      // — the webhook returned 200 even when the SMS never sent, which
+      // meant the customer (and rep) silently missed the follow-up.
+      // Wrapping in try/catch so a single SMS failure doesn't tank the
+      // whole webhook (Bland.ai retries 5xx responses).
       if (smsKey) {
-        supabase.functions.invoke("send-notification", {
-          body: { trigger_key: smsKey, submission_id: callLog.submission_id },
-        }).catch(console.error);
+        try {
+          const r = await supabase.functions.invoke("send-notification", {
+            body: { trigger_key: smsKey, submission_id: callLog.submission_id },
+          });
+          if (r.error) console.error(`[voice-call-webhook] ${smsKey} failed:`, r.error);
+        } catch (e) {
+          console.error(`[voice-call-webhook] ${smsKey} threw:`, e);
+        }
       }
 
       if (callStatus === "no_answer") {
-        supabase.functions.invoke("send-notification", {
-          body: { trigger_key: "customer_missed_call_text", submission_id: callLog.submission_id },
-        }).catch(console.error);
+        try {
+          const r = await supabase.functions.invoke("send-notification", {
+            body: { trigger_key: "customer_missed_call_text", submission_id: callLog.submission_id },
+          });
+          if (r.error) console.error("[voice-call-webhook] missed_call_text failed:", r.error);
+        } catch (e) {
+          console.error("[voice-call-webhook] missed_call_text threw:", e);
+        }
       }
     }
 
     // ── Update campaign totals ──
+    // Atomic increment via RPC (migration 20260501070000) so concurrent
+    // webhooks for the same campaign don't trample each other. Bland.ai
+    // can fire webhooks out-of-order or duplicated under load — the
+    // previous read-modify-write code lost increments on collision.
     const effectiveCampaignId = campaignId || callLog.campaign_id;
     if (effectiveCampaignId) {
       try {
-        // Increment total_calls_made
-        const updates: Record<string, unknown> = {
-          total_calls_made: undefined, // will use RPC or manual increment
-        };
-
-        // Fetch current campaign totals
-        const { data: campaign } = await supabase
-          .from("voice_campaigns")
-          .select("total_calls_made, total_connected, total_converted")
-          .eq("id", effectiveCampaignId)
-          .single();
-
-        if (campaign) {
-          const newTotals: Record<string, number> = {
-            total_calls_made: (campaign.total_calls_made || 0) + 1,
-            total_connected: campaign.total_connected || 0,
-            total_converted: campaign.total_converted || 0,
-          };
-
-          // Connected = human answered
-          if (answeredBy === "human" || callStatus === "completed") {
-            newTotals.total_connected += 1;
-          }
-
-          // Converted = accepted or appointment_scheduled
-          if (
-            outcome === "accepted" ||
-            outcome === "appointment_scheduled"
-          ) {
-            newTotals.total_converted += 1;
-          }
-
-          await supabase
+        const callsInc = 1;
+        const connectedInc = (answeredBy === "human" || callStatus === "completed") ? 1 : 0;
+        const convertedInc = (outcome === "accepted" || outcome === "appointment_scheduled") ? 1 : 0;
+        const { error: rpcErr } = await supabase.rpc(
+          "increment_voice_campaign_totals",
+          {
+            _campaign_id: effectiveCampaignId,
+            _calls_inc: callsInc,
+            _connected_inc: connectedInc,
+            _converted_inc: convertedInc,
+          },
+        );
+        if (rpcErr) {
+          // RPC not deployed yet — fall back to read-modify-write
+          // (with the known race) so analytics still update on
+          // pre-migration environments instead of breaking entirely.
+          console.warn("[voice-call-webhook] RPC missing — falling back to non-atomic update:", rpcErr);
+          const { data: campaign } = await supabase
             .from("voice_campaigns")
-            .update({
-              total_calls_made: newTotals.total_calls_made,
-              total_connected: newTotals.total_connected,
-              total_converted: newTotals.total_converted,
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", effectiveCampaignId);
+            .select("total_calls_made, total_connected, total_converted")
+            .eq("id", effectiveCampaignId)
+            .single();
+          if (campaign) {
+            await supabase
+              .from("voice_campaigns")
+              .update({
+                total_calls_made: (campaign.total_calls_made || 0) + callsInc,
+                total_connected: (campaign.total_connected || 0) + connectedInc,
+                total_converted: (campaign.total_converted || 0) + convertedInc,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", effectiveCampaignId);
+          }
         }
       } catch (e) {
         console.error("Failed to update campaign totals:", e);

@@ -122,13 +122,28 @@ const QuickOfferForm = ({ leadSource = "quick-offer" }: QuickOfferFormProps) => 
       };
 
       // ── 3. Resolve dealer offer settings + compute estimate. ──
+      // Retry once on failure — transient network errors shouldn't
+      // demote the customer from "firm offer" to "estimate range"
+      // when the dealer's set up the auto-firm rule. Hard fail still
+      // falls back to calculateOffer's defaults (estimate range, no
+      // firm number) which is the same behavior as a dealer who
+      // hasn't enabled auto-firm.
       let offerSettings: OfferSettings | null = null;
       let offerRules: OfferRule[] = [];
-      try {
-        const resolved = await resolveEffectiveSettings(tenant.dealership_id);
-        offerSettings = resolved.settings;
-        offerRules = resolved.rules;
-      } catch { /* fall back to defaults inside calculateOffer */ }
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const resolved = await resolveEffectiveSettings(tenant.dealership_id);
+          offerSettings = resolved.settings;
+          offerRules = resolved.rules;
+          break;
+        } catch (e) {
+          if (attempt === 0) {
+            await new Promise((r) => setTimeout(r, 400));
+            continue;
+          }
+          console.warn("resolveEffectiveSettings failed twice — using defaults:", e);
+        }
+      }
 
       const estimate = calculateOffer(bbVehicle, formData, [], offerSettings, offerRules);
       const bbPayload = buildSubmissionBBPayload(bbVehicle);

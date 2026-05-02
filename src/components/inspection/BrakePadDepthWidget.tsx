@@ -381,7 +381,20 @@ export default function BrakePadDepthWidget({
       <div className={cn("flex flex-wrap items-center justify-between gap-2 mb-4", compact && "mb-3")}>
         <div>
           <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-            {showTires && showBrakes ? "Tire Tread & Brake Pads" : showTires ? "Tire Tread" : "Brake Pads"}
+            {(() => {
+              // Header label calls out per-type input mode when the
+              // dealer has them set differently. Hides the suffix
+              // when both modes match (the legend below already makes
+              // it clear) to keep the header tight in the common case.
+              const tireSuffix = tireMode === "pass_fail" ? " (Pass/Fail)" : "";
+              const brakeSuffix = brakeMode === "pass_fail" ? " (Pass/Fail)" : "";
+              if (showTires && showBrakes) {
+                if (tireMode === brakeMode) return "Tire Tread & Brake Pads";
+                return `Tires${tireSuffix} & Brakes${brakeSuffix}`;
+              }
+              if (showTires) return `Tire Tread${tireSuffix}`;
+              return `Brake Pads${brakeSuffix}`;
+            })()}
           </div>
           {!compact && (tireMode === "measurement" || brakeMode === "measurement") && (
             <div className="mt-0.5 text-[11px] text-muted-foreground">Rear axle top · Front axle bottom</div>
