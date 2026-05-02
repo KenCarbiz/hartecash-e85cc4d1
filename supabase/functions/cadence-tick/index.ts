@@ -246,17 +246,35 @@ async function processSubmission(supabase: any, sub: any): Promise<{ outcome: st
     }).eq("id", sub.id);
   }
 
-  // Fire the step via send-notification (email/sms) or
-  // launch-voice-call (voice). Both gracefully degrade on missing
-  // templates / consent — they own their own log records too.
+  // Fire the step.
+  //   - email/sms → send-notification
+  //   - voice + voice_ai_enabled → launch-voice-call (Bland.ai)
+  //   - voice + !voice_ai_enabled → BDC call task assigned to the
+  //       rep, plus a staff_bdc_call_needed alert. Cadence advances
+  //       either way; the task is tracked separately so reps can
+  //       work a queue without blocking the engine.
   let outcome = "fired";
   let outcomeDetail: string | undefined;
   try {
     if (nextStep.channel === "voice") {
-      const r = await supabase.functions.invoke("launch-voice-call", {
-        body: { submission_id: sub.id, intent: nextStep.trigger_key },
-      });
-      if (r.error) { outcome = "failed"; outcomeDetail = r.error.message; }
+      // Look up tenant's voice_ai_enabled flag.
+      const { data: notif } = await supabase
+        .from("notification_settings")
+        .select("voice_ai_enabled")
+        .eq("dealership_id", sub.dealership_id)
+        .maybeSingle();
+      const voiceAiOn = (notif as any)?.voice_ai_enabled !== false; // default true
+
+      if (voiceAiOn) {
+        const r = await supabase.functions.invoke("launch-voice-call", {
+          body: { submission_id: sub.id, intent: nextStep.trigger_key },
+        });
+        if (r.error) { outcome = "failed"; outcomeDetail = r.error.message; }
+      } else {
+        const taskId = await createBdcCallTask(supabase, sub, nextStep);
+        outcome = taskId ? "fired_bdc_task" : "failed";
+        outcomeDetail = taskId ? `bdc_task=${taskId}` : "BDC task creation failed";
+      }
     } else {
       const r = await supabase.functions.invoke("send-notification", {
         body: { trigger_key: nextStep.trigger_key, submission_id: sub.id },
@@ -281,6 +299,171 @@ async function processSubmission(supabase: any, sub: any): Promise<{ outcome: st
     outcome, outcome_detail: outcomeDetail ?? null,
   });
   return { outcome, detail: outcomeDetail };
+}
+
+// ── BDC fallback (no AI voice) ─────────────────────────────────────
+// Builds the same context blob the AI agent would have used and
+// inserts a bdc_call_tasks row + fires an alert SMS+email to the
+// assigned rep so they can work the call from a queue.
+async function createBdcCallTask(
+  supabase: any,
+  sub: any,
+  nextStep: CadenceStep,
+): Promise<string | null> {
+  // Resolve assignment: assigned_rep_email first, BDC pool fallback.
+  let assignedTo: string | null = null;
+  let assignedEmail: string | null = sub.assigned_rep_email || null;
+  let assignedRole: string | null = null;
+
+  if (assignedEmail) {
+    const { data: rep } = await supabase
+      .from("user_roles")
+      .select("user_id, role")
+      .eq("email", assignedEmail)
+      .maybeSingle();
+    assignedTo = (rep as any)?.user_id ?? null;
+    assignedRole = (rep as any)?.role ?? null;
+  }
+  if (!assignedTo) {
+    // Fall back to "any sales_bdc role for this dealership" — we
+    // record the role only and the dashboard surfaces it as
+    // "Unassigned BDC call." Ops can claim it from the queue.
+    assignedRole = "sales_bdc";
+  }
+
+  // Pull the same context the AI would have had — offer, ACV,
+  // bump band, missing docs, talking points. Keep it small (this
+  // ends up rendered in the rep's task card, not a full prompt).
+  const { data: notif } = await supabase
+    .from("notification_settings")
+    .select("cadence_authorized_bump_pct")
+    .eq("dealership_id", sub.dealership_id)
+    .maybeSingle();
+  const bumpPct = Number((notif as any)?.cadence_authorized_bump_pct) || 5;
+  const currentOffer = sub.offered_price ?? sub.estimated_offer_high ?? null;
+  const acv = sub.acv_value ?? null;
+  const maxQuotable = currentOffer != null
+    ? Math.min(
+        Math.floor(currentOffer * (1 + bumpPct / 100)),
+        acv ?? Number.POSITIVE_INFINITY,
+      )
+    : null;
+  const headroom = (acv != null && maxQuotable != null) ? acv - maxQuotable : null;
+
+  // Talking points — concrete, ready-to-read script bullets the rep
+  // can use on the call. Same pattern as voiceContext.ts but
+  // human-targeted (no "you are an AI" framing).
+  const talkingPoints = buildTalkingPoints(nextStep.intent || nextStep.trigger_key || "voice_offer_re_engage", {
+    firstName: (sub.name || "").split(" ")[0] || "the customer",
+    vehicle: [sub.vehicle_year, sub.vehicle_make, sub.vehicle_model].filter(Boolean).join(" ") || "their vehicle",
+    currentOffer,
+    maxQuotable,
+    bumpPct,
+    declineReason: sub.decline_reason,
+    hasLoan: !!sub.loan_status && String(sub.loan_status).toLowerCase() !== "none",
+    loanCompany: sub.loan_company,
+  });
+
+  // Priority: hot leads + soon-expiring offers bump up.
+  let priority = 5;
+  if (sub.is_hot_lead) priority -= 2;
+  if (sub.cadence_state === "stall") priority -= 1; // accepted-no-show is high-value
+  priority = Math.max(1, Math.min(10, priority));
+
+  // Due window: voice steps in our cadence are time-sensitive
+  // (D5 manager bump, D6 expires-tomorrow), so default 4 hours.
+  // Auto-expire sweep takes over at 24h.
+  const dueAt = new Date(Date.now() + 4 * 60 * 60_000);
+
+  const { data: task, error: insertErr } = await supabase
+    .from("bdc_call_tasks")
+    .insert({
+      submission_id: sub.id,
+      dealership_id: sub.dealership_id,
+      cadence_state: sub.cadence_state,
+      cadence_step: nextStep.step,
+      intent: nextStep.trigger_key || "unknown",
+      assigned_to: assignedTo,
+      assigned_email: assignedEmail,
+      assigned_role: assignedRole,
+      status: "pending",
+      priority,
+      due_at: dueAt.toISOString(),
+      rep_context: {
+        customer: { name: sub.name, phone: sub.phone, email: sub.email },
+        vehicle: { year: sub.vehicle_year, make: sub.vehicle_make, model: sub.vehicle_model, vin: sub.vin },
+        offer: {
+          current: currentOffer,
+          acv_ceiling: acv,
+          authorized_bump_pct: bumpPct,
+          max_quotable: maxQuotable,
+          headroom,
+        },
+        signals: {
+          decline_reason: sub.decline_reason,
+          progress_status: sub.progress_status,
+          cadence_state: sub.cadence_state,
+          has_loan: !!sub.loan_status && String(sub.loan_status).toLowerCase() !== "none",
+          loan_company: sub.loan_company,
+        },
+        talking_points: talkingPoints,
+      },
+    } as any)
+    .select("id")
+    .maybeSingle();
+  if (insertErr) {
+    console.error("[cadence-tick] BDC task insert failed:", insertErr);
+    return null;
+  }
+  const taskId = (task as any)?.id ?? null;
+
+  // Alert the assigned rep. If unassigned, fall back to the dealer's
+  // staff_trigger_recipients for staff_bdc_call_needed.
+  const customBody = `📞 Call ${(sub.name || "customer").split(" ")[0]} re: ${[sub.vehicle_year, sub.vehicle_make, sub.vehicle_model].filter(Boolean).join(" ")}. ${talkingPoints.split("\n")[0]}`;
+  await supabase.functions.invoke("send-notification", {
+    body: {
+      trigger_key: "staff_bdc_call_needed",
+      submission_id: sub.id,
+      recipient_email: assignedEmail || undefined,
+      custom_body: customBody,
+    },
+  }).catch((e: unknown) => console.warn("BDC alert failed:", e));
+
+  return taskId;
+}
+
+function buildTalkingPoints(intent: string, vars: {
+  firstName: string;
+  vehicle: string;
+  currentOffer: number | null;
+  maxQuotable: number | null;
+  bumpPct: number;
+  declineReason: string | null;
+  hasLoan: boolean;
+  loanCompany: string | null;
+}): string {
+  const offerStr = vars.currentOffer != null ? `$${Math.round(vars.currentOffer).toLocaleString()}` : "their offer";
+  const maxStr = vars.maxQuotable != null ? `$${Math.round(vars.maxQuotable).toLocaleString()}` : "the offer";
+
+  const reEngage = `Re-engage on declined ${offerStr} offer for the ${vars.vehicle}.
+You're authorized up to ${maxStr} (${vars.bumpPct}% bump). Don't quote higher without manager OK.
+${vars.declineReason === "price_too_low" ? `→ They told us PRICE was the issue. Lead with the bump.` : ""}
+${vars.declineReason === "shopping_around" ? `→ They told us they're SHOPPING AROUND. Ask their best competing quote, offer to match or beat.` : ""}
+${vars.declineReason === "not_ready" ? `→ They told us they're NOT READY. Keep brief. Ask if there's a better month for them.` : ""}
+Opener: "Hi ${vars.firstName}, this is [your name] from the dealership. My used-car manager pulled comps this morning on your ${vars.vehicle} — we may have room to come up. Got 60 seconds?"`;
+
+  const schedule = `Schedule the inspection for the ${vars.vehicle} (offer ${offerStr} accepted, not yet booked).
+Get them on the calendar today. Offer 3 specific times — don't let them say "I'll call back."
+${vars.hasLoan ? `→ They still have a loan with ${vars.loanCompany || "their lender"}. The 10-day payoff letter takes ~1 week — start that NOW.` : ""}
+Diagnostic if they hesitate: "Is it the price, the timing, or something about the docs?" Resolve that one thing.
+Opener: "Hi ${vars.firstName}, I'm calling about the ${offerStr} offer you accepted on your ${vars.vehicle}. We're holding it for you — let's lock a time. Got 60 seconds?"`;
+
+  switch (intent) {
+    case "voice_schedule_inspection": return schedule;
+    case "voice_offer_refresh":
+    case "voice_offer_re_engage":
+    default: return reEngage;
+  }
 }
 
 function nextLocal8amFor(state: string | null, customerTz: string | null): Date {
@@ -321,6 +504,19 @@ serve(async (req) => {
   }
 
   const now = new Date().toISOString();
+
+  // ── Auto-expire stale BDC call tasks ──
+  // Tasks that have been pending past their due_at + 24h get marked
+  // expired so the rep's queue doesn't pile up indefinitely. The
+  // submission's cadence has already advanced past this step (we
+  // never block the engine on a human task), so expiring here is
+  // purely for queue hygiene.
+  await supabase
+    .from("bdc_call_tasks")
+    .update({ status: "expired", outcome: null, outcome_notes: "auto-expired: pending past 24h" })
+    .eq("status", "pending")
+    .lt("due_at", new Date(Date.now() - 24 * 60 * 60_000).toISOString());
+
   let query = supabase
     .from("submissions")
     .select("id, name, email, phone, state, customer_timezone, cadence_state, cadence_step, cadence_started_at, cadence_paused_until, cadence_next_due_at, decline_reason, dealership_id")

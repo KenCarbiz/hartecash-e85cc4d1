@@ -53,6 +53,7 @@ export const SECTION_GROUPS: Array<{ label: string; sections: Array<{ key: strin
       { key: "appraiser-queue", label: "Appraiser Queue" },
       { key: "accepted-appts", label: "Appointments" },
       { key: "bdc-queue", label: "BDC Priority Queue" },
+      { key: "bdc-calls", label: "Calls Today" },
       { key: "my-lead-link", label: "My Lead Link" },
       { key: "my-referrals", label: "My Referrals" },
       { key: "my-availability", label: "My Availability" },
@@ -143,7 +144,7 @@ export const ALL_SECTIONS: Array<{ key: string; label: string; group: string }> 
 const ADMIN_SET = new Set(ALL_SECTIONS.map((s) => s.key));
 
 const MANAGER_SET = new Set([
-  "today", "submissions", "appraiser-queue", "accepted-appts", "bdc-queue",
+  "today", "submissions", "appraiser-queue", "accepted-appts", "bdc-queue", "bdc-calls",
   "my-lead-link", "my-referrals", "my-availability",
   "inspection-checkin", "service-quick-entry", "image-inventory",
   "equity-mining", "voice-ai",
@@ -153,7 +154,7 @@ const MANAGER_SET = new Set([
 ]);
 
 const SALES_SET = new Set([
-  "today", "submissions", "accepted-appts", "bdc-queue",
+  "today", "submissions", "accepted-appts", "bdc-queue", "bdc-calls",
   "my-lead-link", "my-referrals", "my-availability",
   "inspection-checkin",
 ]);

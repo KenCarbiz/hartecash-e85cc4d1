@@ -160,6 +160,11 @@ const DEFAULT_TEMPLATES: Record<string, { email_subject: string; email_body: str
     email_body: "The AI voice agent is transferring a call to you.\n\n{{custom_body}}\n\nCustomer: {{customer_name}}\nVehicle: {{vehicle}}\nLast offer: {{offer_amount}}\n\nOpen the customer file in the dashboard for the full transfer summary.",
     sms_body: "{{custom_body}}",
   },
+  staff_bdc_call_needed: {
+    email_subject: "📞 BDC call needed — {{customer_name}} ({{vehicle}})",
+    email_body: "The cadence engine queued a follow-up call (this dealer doesn't use AI voice).\n\n{{custom_body}}\n\nCustomer: {{customer_name}}\nPhone: {{customer_phone}}\nVehicle: {{vehicle}}\nLast offer: {{offer_amount}}\n\nOpen the BDC Calls page in the dashboard for the full talking points + authorized bump amount.",
+    sms_body: "{{custom_body}}",
+  },
   staff_deal_completed: {
     email_subject: "✅ Deal Completed — {{customer_name}}",
     email_body: "A deal has been completed.\n\nCustomer: {{customer_name}}\nVehicle: {{vehicle}}\n\nThe purchase has been finalized.",
