@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { MessageSquare, Mail, Phone, MicVocal, Loader2, MapPin } from "lucide-react";
+import { MessageSquare, Mail, Phone, MicVocal, Loader2, MapPin, Repeat, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   CHANNEL_KEYS,
@@ -13,6 +16,9 @@ import {
   type ChannelKey,
   type ChannelStateMap,
 } from "@/lib/channels";
+
+const DEFAULT_TCPA_DISCLOSURE =
+  "By submitting this form, I consent to receive automated and prerecorded calls, texts, and emails from this dealership and its agents about my vehicle inquiry, including via autodialer, even if my number is on a Do Not Call list. Consent is not a condition of any purchase. Standard message and data rates may apply. Reply STOP to opt out at any time.";
 
 const ICONS: Record<ChannelKey, React.ComponentType<{ className?: string }>> = {
   two_way_sms: MessageSquare,
@@ -33,15 +39,22 @@ function emptyOverrides(): Record<ChannelKey, boolean | null> {
 }
 
 /**
- * Communication channel toggles per dealership and per-store.
+ * Communication channel toggles per dealership and per-store, plus
+ * the cadence engine master switch and per-tenant TCPA disclosure.
  *
- * Tenant-level toggles set the default for every store under the
- * dealership. Per-store override = Inherit / On / Off. v1 channels:
- * two_way_sms, two_way_email, ai_phone_calls, click_to_dial.
+ * Channel toggles gate staff-initiated messaging (v1 channels:
+ * two_way_sms, two_way_email, ai_phone_calls, click_to_dial). Per-store
+ * override = Inherit / On / Off.
  *
- * Toggling a channel here does NOT affect automated outbound (drips,
- * scheduled follow-ups) — that lives in Process · Offer Logic /
- * notification settings.
+ * The cadence engine block (PR #140) controls scheduled drips —
+ * master on/off, AI voice authorized bump %, and the RE-ENGAGE
+ * window length. Granular per-trigger templates and dealer-tz quiet
+ * hours still live in Setup · Process → Notifications.
+ *
+ * The TCPA disclosure block edits site_config.tcpa_disclosure (the
+ * consent copy under the lead-gen form). Editing the copy bumps the
+ * version, which the cadence engine uses for the 12-month
+ * reactivation gate.
  */
 const ChannelsSettings = () => {
   const { tenant } = useTenant();
@@ -54,11 +67,24 @@ const ChannelsSettings = () => {
   const [loading, setLoading] = useState(true);
   const [savingKey, setSavingKey] = useState<string | null>(null);
 
+  // Cadence engine (notification_settings) — added with PR #140.
+  const [cadenceEnabled, setCadenceEnabled] = useState(true);
+  const [cadenceBumpPct, setCadenceBumpPct] = useState<string>("5");
+  const [cadenceReengageDays, setCadenceReengageDays] = useState<string>("90");
+  const [cadenceDirty, setCadenceDirty] = useState(false);
+  const [notificationSettingsId, setNotificationSettingsId] = useState<string | null>(null);
+
+  // TCPA disclosure (site_config) — added with PR #140.
+  const [tcpaDisclosure, setTcpaDisclosure] = useState<string>(DEFAULT_TCPA_DISCLOSURE);
+  const [tcpaSavedDisclosure, setTcpaSavedDisclosure] = useState<string>(DEFAULT_TCPA_DISCLOSURE);
+  const [tcpaVersion, setTcpaVersion] = useState<number>(1);
+  const [siteConfigId, setSiteConfigId] = useState<string | null>(null);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const [{ data: tRows }, { data: locs }, { data: acct }] = await Promise.all([
+      const [{ data: tRows }, { data: locs }, { data: acct }, { data: notif }, { data: site }] = await Promise.all([
         supabase
           .from("tenant_channels")
           .select("channel, enabled")
@@ -73,9 +99,33 @@ const ChannelsSettings = () => {
           .select("click_to_dial_record_calls")
           .eq("dealership_id", tenant.dealership_id)
           .maybeSingle(),
+        supabase
+          .from("notification_settings")
+          .select("id, cadence_enabled, cadence_authorized_bump_pct, cadence_reengage_max_days")
+          .eq("dealership_id", tenant.dealership_id)
+          .maybeSingle(),
+        supabase
+          .from("site_config")
+          .select("id, tcpa_disclosure, tcpa_disclosure_version")
+          .eq("dealership_id", tenant.dealership_id)
+          .maybeSingle(),
       ]);
       if (cancelled) return;
       setRecordCalls(!!acct?.click_to_dial_record_calls);
+
+      const n = (notif || {}) as any;
+      setNotificationSettingsId(n?.id ?? null);
+      setCadenceEnabled(n?.cadence_enabled ?? true);
+      setCadenceBumpPct(String(n?.cadence_authorized_bump_pct ?? 5));
+      setCadenceReengageDays(String(n?.cadence_reengage_max_days ?? 90));
+      setCadenceDirty(false);
+
+      const s = (site || {}) as any;
+      setSiteConfigId(s?.id ?? null);
+      const disc = (s?.tcpa_disclosure as string | undefined) || DEFAULT_TCPA_DISCLOSURE;
+      setTcpaDisclosure(disc);
+      setTcpaSavedDisclosure(disc);
+      setTcpaVersion(s?.tcpa_disclosure_version ?? 1);
 
       const t: ChannelStateMap = { ...ALL_ENABLED };
       (tRows || []).forEach((r) => {
@@ -206,8 +256,102 @@ const ChannelsSettings = () => {
     }
   };
 
+  const saveCadence = async () => {
+    setSavingKey("cadence");
+    const bumpPct = Number(cadenceBumpPct);
+    const reengageDays = Number(cadenceReengageDays);
+    if (!Number.isFinite(bumpPct) || bumpPct < 0 || bumpPct > 100) {
+      setSavingKey(null);
+      toast({ title: "Invalid bump %", description: "Must be 0–100.", variant: "destructive" });
+      return;
+    }
+    if (!Number.isFinite(reengageDays) || reengageDays < 1 || reengageDays > 365) {
+      setSavingKey(null);
+      toast({ title: "Invalid window", description: "Must be 1–365 days.", variant: "destructive" });
+      return;
+    }
+
+    const payload = {
+      dealership_id: tenant.dealership_id,
+      cadence_enabled: cadenceEnabled,
+      cadence_authorized_bump_pct: bumpPct,
+      cadence_reengage_max_days: reengageDays,
+      updated_at: new Date().toISOString(),
+    };
+    const { error, data } = notificationSettingsId
+      ? await supabase
+          .from("notification_settings")
+          .update(payload)
+          .eq("id", notificationSettingsId)
+          .select("id")
+          .maybeSingle()
+      : await supabase
+          .from("notification_settings")
+          .insert(payload as any)
+          .select("id")
+          .maybeSingle();
+
+    setSavingKey(null);
+    if (error) {
+      toast({ title: "Couldn't save cadence settings", description: error.message, variant: "destructive" });
+      return;
+    }
+    if (data?.id) setNotificationSettingsId(data.id);
+    setCadenceDirty(false);
+    toast({ title: "Cadence settings saved" });
+  };
+
+  const saveTcpaDisclosure = async () => {
+    const trimmed = tcpaDisclosure.trim();
+    if (trimmed.length < 40) {
+      toast({
+        title: "Disclosure too short",
+        description: "TCPA disclosure must include the consent + opt-out language.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setSavingKey("tcpa");
+    const copyChanged = trimmed !== tcpaSavedDisclosure.trim();
+    const nextVersion = copyChanged ? tcpaVersion + 1 : tcpaVersion;
+
+    const payload: any = {
+      dealership_id: tenant.dealership_id,
+      tcpa_disclosure: trimmed,
+      tcpa_disclosure_version: nextVersion,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { error, data } = siteConfigId
+      ? await supabase
+          .from("site_config")
+          .update(payload)
+          .eq("id", siteConfigId)
+          .select("id")
+          .maybeSingle()
+      : await supabase
+          .from("site_config")
+          .insert(payload)
+          .select("id")
+          .maybeSingle();
+
+    setSavingKey(null);
+    if (error) {
+      toast({ title: "Couldn't save disclosure", description: error.message, variant: "destructive" });
+      return;
+    }
+    if (data?.id) setSiteConfigId(data.id);
+    setTcpaSavedDisclosure(trimmed);
+    setTcpaVersion(nextVersion);
+    toast({
+      title: "TCPA disclosure saved",
+      description: copyChanged ? `Version bumped to v${nextVersion}.` : undefined,
+    });
+  };
+
   const tenantName = tenant.display_name;
   const showLocations = locations.length > 1;
+  const tcpaDirty = tcpaDisclosure.trim() !== tcpaSavedDisclosure.trim();
 
   const tenantRows = useMemo(
     () =>
@@ -387,11 +531,152 @@ const ChannelsSettings = () => {
         </div>
       )}
 
+      <div className="space-y-3 pt-2">
+        <div className="flex items-center gap-2 mt-2">
+          <Repeat className="w-4 h-4 text-muted-foreground" />
+          <h2 className="text-base font-bold">Cadence engine</h2>
+        </div>
+        <p className="text-sm text-muted-foreground -mt-1 max-w-3xl">
+          The follow-up sequence engine that drives DECLINED, STALL, and
+          RE-ENGAGE drips across email, SMS, and the AI voice agent. Disabling
+          the engine pauses all scheduled outbound for this dealership; the
+          channel toggles above continue to govern staff-initiated messages.
+        </p>
+        <div className="bg-card border rounded-2xl p-5 space-y-5">
+          <div className="flex items-start gap-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-base font-bold">Cadence engine</span>
+                <Badge
+                  variant="outline"
+                  className={
+                    cadenceEnabled
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      : "bg-slate-100 text-slate-600 border-slate-200"
+                  }
+                >
+                  {cadenceEnabled ? "ON" : "OFF"}
+                </Badge>
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                Master switch for the orchestrator (`cadence-tick`). Off = no
+                scheduled drips fire for any lead.
+              </p>
+            </div>
+            <Switch
+              checked={cadenceEnabled}
+              onCheckedChange={(v) => { setCadenceEnabled(v); setCadenceDirty(true); }}
+              aria-label="Toggle cadence engine"
+            />
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-4 pt-2 border-t">
+            <div>
+              <label className="text-sm font-semibold flex items-center gap-2">
+                Authorized voice bump %
+              </label>
+              <p className="text-xs text-muted-foreground mt-1 mb-2">
+                Maximum % over the original quoted offer the AI voice agent can
+                quote on a re-engage call without manager approval. Industry
+                norm is 5%.
+              </p>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  step={0.5}
+                  value={cadenceBumpPct}
+                  onChange={(e) => { setCadenceBumpPct(e.target.value); setCadenceDirty(true); }}
+                  className="w-28"
+                />
+                <span className="text-sm text-muted-foreground">%</span>
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-semibold">RE-ENGAGE window</label>
+              <p className="text-xs text-muted-foreground mt-1 mb-2">
+                How many days post-expiry to keep the long-tail drip running
+                before a lead is marked expired. KBB ICO baseline is 90.
+              </p>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  min={1}
+                  max={365}
+                  step={1}
+                  value={cadenceReengageDays}
+                  onChange={(e) => { setCadenceReengageDays(e.target.value); setCadenceDirty(true); }}
+                  className="w-28"
+                />
+                <span className="text-sm text-muted-foreground">days</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-2 border-t">
+            {savingKey === "cadence" && (
+              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+            )}
+            <Button
+              size="sm"
+              onClick={saveCadence}
+              disabled={!cadenceDirty || savingKey === "cadence"}
+            >
+              Save cadence settings
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-3 pt-2">
+        <div className="flex items-center gap-2 mt-2">
+          <ShieldCheck className="w-4 h-4 text-muted-foreground" />
+          <h2 className="text-base font-bold">TCPA disclosure</h2>
+          <Badge variant="outline" className="text-[10px]">v{tcpaVersion}</Badge>
+        </div>
+        <p className="text-sm text-muted-foreground -mt-1 max-w-3xl">
+          Per-tenant consent language shown beneath the lead-gen submit button.
+          Required by the FCC 2024 one-to-one rule — consent must name THIS
+          dealership. Editing the copy bumps the version; consent older than 12
+          months on cold leads pauses SMS/voice until the customer re-consents.
+        </p>
+        <div className="bg-card border rounded-2xl p-5 space-y-3">
+          <Textarea
+            value={tcpaDisclosure}
+            onChange={(e) => setTcpaDisclosure(e.target.value)}
+            rows={6}
+            className="text-sm leading-relaxed"
+          />
+          <div className="flex items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={() => setTcpaDisclosure(DEFAULT_TCPA_DISCLOSURE)}
+              className="text-xs text-muted-foreground underline hover:text-foreground"
+            >
+              Reset to default copy
+            </button>
+            <div className="flex items-center gap-2">
+              {savingKey === "tcpa" && (
+                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+              )}
+              <Button
+                size="sm"
+                onClick={saveTcpaDisclosure}
+                disabled={!tcpaDirty || savingKey === "tcpa"}
+              >
+                {tcpaDirty ? `Save (bump to v${tcpaVersion + 1})` : "Saved"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="border-t pt-4 text-xs text-muted-foreground">
-        These switches do not affect automated outbound (drip emails, scheduled
-        SMS, follow-up sequences). To disable automated outbound, use{" "}
-        <span className="font-semibold">Setup · Process</span> → Notifications or
-        Offer Logic.
+        Channel switches above gate staff-initiated messages. The cadence
+        engine drives scheduled outbound. Granular per-trigger templates,
+        recipients, and dealer-tz quiet hours live in{" "}
+        <span className="font-semibold">Setup · Process → Notifications</span>.
       </div>
     </div>
   );
