@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { MessageSquare, Mail, Phone, MicVocal, Loader2, MapPin, Repeat, ShieldCheck } from "lucide-react";
+import { MessageSquare, Mail, Phone, MicVocal, Loader2, MapPin, Repeat, ShieldCheck, FlaskConical } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
@@ -80,6 +80,11 @@ const ChannelsSettings = () => {
   const [tcpaVersion, setTcpaVersion] = useState<number>(1);
   const [siteConfigId, setSiteConfigId] = useState<string | null>(null);
 
+  // Demo mode (site_config) — Black Book sandbox kill-switch.
+  const [demoMode, setDemoMode] = useState(false);
+  const [demoOfferAmount, setDemoOfferAmount] = useState<string>("23599");
+  const [demoDirty, setDemoDirty] = useState(false);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -106,7 +111,7 @@ const ChannelsSettings = () => {
           .maybeSingle(),
         supabase
           .from("site_config")
-          .select("id, tcpa_disclosure, tcpa_disclosure_version")
+          .select("id, tcpa_disclosure, tcpa_disclosure_version, demo_mode, demo_offer_amount")
           .eq("dealership_id", tenant.dealership_id)
           .maybeSingle(),
       ]);
@@ -126,6 +131,9 @@ const ChannelsSettings = () => {
       setTcpaDisclosure(disc);
       setTcpaSavedDisclosure(disc);
       setTcpaVersion(s?.tcpa_disclosure_version ?? 1);
+      setDemoMode(s?.demo_mode === true);
+      setDemoOfferAmount(String(s?.demo_offer_amount ?? 23599));
+      setDemoDirty(false);
 
       const t: ChannelStateMap = { ...ALL_ENABLED };
       (tRows || []).forEach((r) => {
@@ -349,6 +357,46 @@ const ChannelsSettings = () => {
     });
   };
 
+  const saveDemoMode = async () => {
+    const amt = Number(demoOfferAmount);
+    if (!Number.isFinite(amt) || amt < 1 || amt > 1_000_000) {
+      toast({ title: "Invalid demo offer", description: "Must be 1–1,000,000.", variant: "destructive" });
+      return;
+    }
+    setSavingKey("demo");
+    const payload: any = {
+      dealership_id: tenant.dealership_id,
+      demo_mode: demoMode,
+      demo_offer_amount: Math.round(amt),
+      updated_at: new Date().toISOString(),
+    };
+    const { error, data } = siteConfigId
+      ? await supabase
+          .from("site_config")
+          .update(payload)
+          .eq("id", siteConfigId)
+          .select("id")
+          .maybeSingle()
+      : await supabase
+          .from("site_config")
+          .insert(payload)
+          .select("id")
+          .maybeSingle();
+    setSavingKey(null);
+    if (error) {
+      toast({ title: "Couldn't save demo mode", description: error.message, variant: "destructive" });
+      return;
+    }
+    if (data?.id) setSiteConfigId(data.id);
+    setDemoDirty(false);
+    toast({
+      title: demoMode ? "Demo mode ON" : "Demo mode OFF",
+      description: demoMode
+        ? `Every offer will display $${Math.round(amt).toLocaleString()} until you turn this off.`
+        : "Live Black Book pricing is restored.",
+    });
+  };
+
   const tenantName = tenant.display_name;
   const showLocations = locations.length > 1;
   const tcpaDirty = tcpaDisclosure.trim() !== tcpaSavedDisclosure.trim();
@@ -453,6 +501,77 @@ const ChannelsSettings = () => {
           switches control whether staff can use a channel at all — separate from
           automation rules.
         </p>
+      </div>
+
+      <div
+        className={`bg-card border rounded-2xl p-5 space-y-4 ${
+          demoMode ? "border-amber-300 ring-2 ring-amber-200/60 bg-amber-50/40" : ""
+        }`}
+      >
+        <div className="flex items-start gap-4">
+          <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+            <FlaskConical className="w-5 h-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-base font-bold">Demo mode</span>
+              <Badge
+                variant="outline"
+                className={
+                  demoMode
+                    ? "bg-amber-100 text-amber-800 border-amber-300"
+                    : "bg-slate-100 text-slate-600 border-slate-200"
+                }
+              >
+                {demoMode ? "ON" : "OFF"}
+              </Badge>
+              {savingKey === "demo" && (
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              Black Book sandbox kill-switch. While ON, the public sell-flow
+              skips the BB lookup, serves a synthetic vehicle, and clamps
+              every customer-facing offer to the amount below. Cadence
+              engine, TCPA capture, and notifications still fire normally
+              so end-to-end demos exercise the full pipeline. Turn this
+              OFF to restore live Black Book pricing — no other behavior
+              changes.
+            </p>
+          </div>
+          <Switch
+            checked={demoMode}
+            onCheckedChange={(v) => { setDemoMode(v); setDemoDirty(true); }}
+            aria-label="Toggle demo mode"
+          />
+        </div>
+
+        <div className="ml-14 pl-4 border-l-2 border-muted">
+          <label className="text-sm font-semibold">Demo offer amount</label>
+          <p className="text-xs text-muted-foreground mt-1 mb-2">
+            Customer-facing offer when demo mode is on. Default $23,599.
+          </p>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">$</span>
+            <Input
+              type="number"
+              min={1}
+              max={1000000}
+              step={1}
+              value={demoOfferAmount}
+              onChange={(e) => { setDemoOfferAmount(e.target.value); setDemoDirty(true); }}
+              className="w-36"
+            />
+            <Button
+              size="sm"
+              onClick={saveDemoMode}
+              disabled={!demoDirty || savingKey === "demo"}
+              className="ml-auto"
+            >
+              Save demo mode
+            </Button>
+          </div>
+        </div>
       </div>
 
       <div className="space-y-3">{tenantRows}</div>
