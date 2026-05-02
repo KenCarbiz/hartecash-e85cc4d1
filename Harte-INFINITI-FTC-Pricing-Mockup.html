@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Harte INFINITI — FTC Pricing Layout Mockup (QX60 Luxe AWD)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: #f4f5f7;
+    color: #1a1a1a;
+    line-height: 1.45;
+  }
+
+  /* Top promo strip */
+  .promo {
+    background: #0b1f3a;
+    color: #fff;
+    text-align: center;
+    font-size: 14px;
+    padding: 10px 16px;
+  }
+  .promo a { color: #fff; text-decoration: underline; font-weight: 600; }
+
+  /* Main nav (simplified) */
+  .nav {
+    background: #fff;
+    border-bottom: 1px solid #e5e5e5;
+    padding: 14px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .nav .brand {
+    font-family: Georgia, serif;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #0b1f3a;
+    font-size: 18px;
+  }
+  .nav .brand small { display: block; font-size: 10px; letter-spacing: 4px; color: #666; }
+  .nav .links { display: flex; gap: 22px; font-size: 14px; color: #333; }
+  .nav .links span { cursor: pointer; }
+  .nav .contact { font-size: 13px; color: #444; }
+  .nav .contact strong { color: #0b1f3a; }
+
+  /* Vehicle title bar */
+  .titlebar {
+    background: #0b1f3a;
+    color: #fff;
+    padding: 14px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .titlebar h1 { font-size: 20px; font-weight: 600; }
+  .titlebar .meta { font-size: 12px; color: #c9d2e0; margin-top: 4px; }
+
+  /* Page grid */
+  .page {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 24px 32px 60px;
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 28px;
+  }
+
+  /* Photo placeholder */
+  .photo {
+    background: linear-gradient(135deg, #b8c1ce 0%, #7e8a9a 100%);
+    border-radius: 8px;
+    aspect-ratio: 4 / 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-style: italic;
+    position: relative;
+    overflow: hidden;
+  }
+  .photo::after {
+    content: "Vehicle Photo";
+    font-size: 18px;
+    opacity: 0.85;
+  }
+  .photo .badge {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    background: rgba(255,255,255,0.95);
+    color: #0b1f3a;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 13px;
+    font-family: Georgia, serif;
+    letter-spacing: 1.5px;
+  }
+
+  /* Pricing card */
+  .pricing-card {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+    padding: 24px 26px;
+  }
+  .pricing-card h2 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0b1f3a;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .pricing-card .vin {
+    font-size: 12px;
+    color: #777;
+    margin-bottom: 16px;
+  }
+
+  /* Section header inside pricing */
+  .section-head {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #555;
+    margin: 18px 0 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #e5e5e5;
+  }
+
+  .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 9px 0;
+    font-size: 14.5px;
+  }
+  .row .label { color: #1a1a1a; padding-right: 16px; }
+  .row .label small {
+    display: block;
+    color: #777;
+    font-size: 11.5px;
+    font-weight: 400;
+    margin-top: 2px;
+  }
+  .row .amount {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: #1a1a1a;
+    font-weight: 500;
+  }
+  .row.add .amount { color: #1a1a1a; }
+  .row.deduct .amount { color: #1f7a1f; font-weight: 600; }
+
+  /* Subtotal row */
+  .subtotal {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-top: 1px solid #e5e5e5;
+    border-bottom: 1px solid #e5e5e5;
+    font-weight: 600;
+    font-size: 15px;
+    margin-top: 6px;
+  }
+
+  /* Total row */
+  .total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 16px 0 6px;
+    margin-top: 6px;
+    border-top: 2px solid #0b1f3a;
+  }
+  .total .label {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0b1f3a;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .total .amount {
+    font-size: 26px;
+    font-weight: 700;
+    color: #0b1f3a;
+    font-variant-numeric: tabular-nums;
+  }
+  .total-note {
+    font-size: 11px;
+    color: #777;
+    margin-top: 4px;
+  }
+
+  /* Optional add-on block */
+  .optional {
+    margin-top: 22px;
+    padding: 14px 16px;
+    background: #f7f9fc;
+    border: 1px solid #d8dfe8;
+    border-radius: 8px;
+  }
+  .optional .opt-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .optional .opt-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #0b1f3a;
+  }
+  .optional .opt-pill {
+    background: #0b1f3a;
+    color: #fff;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+  }
+  .optional p { font-size: 12.5px; color: #555; }
+  .optional .opt-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    font-size: 13px;
+  }
+  .optional .opt-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #1a1a1a;
+  }
+  .optional .opt-toggle input { width: 16px; height: 16px; }
+
+  /* CTA buttons */
+  .cta-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .btn {
+    display: block;
+    text-align: center;
+    padding: 12px 18px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+  }
+  .btn-primary { background: #b69b6b; color: #fff; }
+  .btn-secondary { background: #fff; color: #0b1f3a; border: 1px solid #0b1f3a; }
+
+  /* Disclosure */
+  .disclosure {
+    margin-top: 18px;
+    padding: 14px 16px;
+    background: #fdf6e3;
+    border-left: 4px solid #d4a017;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #4a3a00;
+    line-height: 1.55;
+  }
+  .disclosure strong { color: #2a2200; }
+
+  /* Annotation banner explaining the FTC redesign */
+  .ftc-banner {
+    grid-column: 1 / -1;
+    background: #e8f4fd;
+    border: 1px solid #b6dcf6;
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-size: 13px;
+    color: #084c75;
+  }
+  .ftc-banner strong { color: #062f48; }
+
+  @media (max-width: 900px) {
+    .page { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="promo">
+  <a href="#">Sell Us Your Car! Are You Looking To Sell Or Trade? Let Us Know HERE!</a>
+</div>
+
+<div class="nav">
+  <div class="brand">INFINITI<small>HARTE</small></div>
+  <div class="links">
+    <span>New</span><span>Pre-Owned</span><span>Specials</span><span>Finance</span>
+    <span>Service &amp; Parts</span><span>Collision</span><span>Ownership</span><span>About Us</span>
+  </div>
+  <div class="contact">
+    150 Weston St, Hartford, CT 06120 &nbsp;|&nbsp; Sales: <strong>(866) 851-7778</strong>
+  </div>
+</div>
+
+<div class="titlebar">
+  <div>
+    <h1>New 2026 INFINITI QX60 Luxe AWD</h1>
+    <div class="meta">VIN: 5N1AL1FS7TC339685 &nbsp;·&nbsp; Stock: 4561N</div>
+  </div>
+</div>
+
+<div class="page">
+
+  <div class="ftc-banner">
+    <strong>FTC CARS Rule Compliance Mockup —</strong>
+    All dealer-installed accessories are itemized with their actual price, separated from MSRP and government fees. Optional add-ons are clearly marked optional and excluded from the advertised total purchase price unless the customer selects them.
+  </div>
+
+  <!-- Left column: photo -->
+  <div>
+    <div class="photo">
+      <div class="badge">HARTE INFINITI</div>
+    </div>
+    <div style="margin-top:14px; font-size:13px; color:#555;">
+      <strong>Location:</strong> Harte INFINITI · 150 Weston St, Hartford, CT 06120 · (866) 851-7778
+    </div>
+  </div>
+
+  <!-- Right column: pricing -->
+  <div class="pricing-card">
+    <h2>Pricing Breakdown</h2>
+    <div class="vin">All charges itemized per FTC CARS Rule</div>
+
+    <!-- Manufacturer pricing -->
+    <div class="section-head">Manufacturer Pricing</div>
+    <div class="row">
+      <div class="label">MSRP</div>
+      <div class="amount">$61,895.00</div>
+    </div>
+
+    <!-- Dealer fees -->
+    <div class="section-head">Dealer Fees</div>
+    <div class="row add">
+      <div class="label">
+        Conveyance Fee
+        <small>Dealer documentation / processing</small>
+      </div>
+      <div class="amount">+ $895.00</div>
+    </div>
+
+    <!-- Dealer-installed accessories -->
+    <div class="section-head">Dealer-Installed Accessories</div>
+    <div class="row add">
+      <div class="label">
+        Ceramic Coat Protection
+        <small>Includes 7-Year Warranty</small>
+      </div>
+      <div class="amount">+ $1,499.00</div>
+    </div>
+    <div class="row add">
+      <div class="label">
+        VIN Etch Theft Deterrent
+        <small>Permanent VIN window etching</small>
+      </div>
+      <div class="amount">+ $349.00</div>
+    </div>
+    <div class="row add">
+      <div class="label">
+        Door Edge Guards
+        <small>Paint &amp; edge protection — all four doors</small>
+      </div>
+      <div class="amount">+ $499.99</div>
+    </div>
+
+    <!-- Subtotal -->
+    <div class="subtotal">
+      <div>Subtotal Before Rebate</div>
+      <div>$65,137.99</div>
+    </div>
+
+    <!-- Rebates -->
+    <div class="section-head">Manufacturer Rebates &amp; Incentives</div>
+    <div class="row deduct">
+      <div class="label">
+        $5,000 Retail Bonus Cash
+        <small>2026 QX60 PURE / LUXE trims</small>
+      </div>
+      <div class="amount">− $5,000.00</div>
+    </div>
+
+    <!-- Total -->
+    <div class="total">
+      <div class="label">Total Purchase Price</div>
+      <div class="amount">$60,137.99</div>
+    </div>
+    <div class="total-note">
+      Excludes state sales tax, title, and registration. Optional products below are not included in this total.
+    </div>
+
+    <!-- Optional add-on -->
+    <div class="optional">
+      <div class="opt-head">
+        <div class="opt-title">ValueShield Coverage</div>
+        <div class="opt-pill">Optional</div>
+      </div>
+      <p>
+        Asset protection up to <strong>$10,000</strong> in the event of total loss.
+        Coverage is <strong>not required</strong> to purchase, finance, or lease this vehicle.
+      </p>
+      <div class="opt-row">
+        <label class="opt-toggle">
+          <input type="checkbox" />
+          Add ValueShield Coverage to my purchase
+        </label>
+        <div class="amount" style="font-weight:600;">Up to $10,000</div>
+      </div>
+    </div>
+
+    <!-- CTAs -->
+    <div class="cta-row">
+      <button class="btn btn-primary">Get Harte Price</button>
+      <button class="btn btn-secondary">Value Your Trade</button>
+    </div>
+
+    <!-- Disclosure -->
+    <div class="disclosure">
+      <strong>Disclosure:</strong> The Total Purchase Price above includes MSRP, the dealer Conveyance Fee, and the dealer-installed accessories listed. Accessories were installed prior to listing and are reflected at their actual retail price. The $5,000 Retail Bonus is a manufacturer incentive subject to qualification. Optional products (such as ValueShield Coverage) are <strong>not required</strong> and are not included in the Total Purchase Price unless selected. Tax, title, and registration are additional.
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
