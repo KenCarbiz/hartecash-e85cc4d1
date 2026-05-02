@@ -117,6 +117,16 @@ serve(async (req) => {
       }
     }
 
+    // Auto-fallback: if BB credentials are absent, force demo mode so
+    // the public Trade / TradeIframe / SellCarForm flows keep working
+    // for demos even when site_config.demo_mode hasn't been turned on
+    // (or the column hasn't been migrated yet on this environment).
+    // Without this, every lookup returns 500 and the form stalls.
+    if (!demoMode && (!username || !password)) {
+      console.warn("BB credentials missing — auto-engaging demo mode for this lookup");
+      demoMode = true;
+    }
+
     if (demoMode) {
       const stub = buildDemoVehicle(vin, plate);
       const payload = { error: null, vehicles: [stub], demo_mode: true };
@@ -127,12 +137,6 @@ serve(async (req) => {
           "Content-Type": "application/json",
           "X-BB-Cache": "DEMO",
         },
-      });
-    }
-
-    if (!username || !password) {
-      return new Response(JSON.stringify({ error: "Black Book credentials not configured" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
