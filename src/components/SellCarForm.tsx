@@ -327,6 +327,11 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
       const body: Record<string, unknown> = {
         lookup_type: isVin ? "vin" : "plate",
         state: formData.state || "CT",
+        // Pass tenant + demo flag so the edge function can short-circuit
+        // to a synthetic vehicle when site_config.demo_mode is on (BB
+        // sandbox kill-switch). No effect when demo_mode is off.
+        dealership_id: tenant.dealership_id,
+        demo_mode: (config as any)?.demo_mode === true ? true : undefined,
       };
       if (isVin) body.vin = formData.vin.trim();
       else {
@@ -566,6 +571,16 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
       const estimate = calculateOffer(finalBBVehicle, formData, selectedAddDeducts, offerSettingsData, offerRulesData, promoBonus);
       const bbPayload = buildSubmissionBBPayload(finalBBVehicle);
 
+      // Demo-mode offer override (BB sandbox kill-switch). Clamp the
+      // customer-facing offer to site_config.demo_offer_amount when
+      // demo_mode is on. Off = no behavior change vs. prior pipeline.
+      const isDemoMode =
+        (config as any)?.demo_mode === true ||
+        (finalBBVehicle as any)?._demo === true;
+      const demoOfferAmount = Number((config as any)?.demo_offer_amount ?? 23599) || 23599;
+      const demoEstimateLow = isDemoMode ? demoOfferAmount : (estimate?.low || null);
+      const demoEstimateHigh = isDemoMode ? demoOfferAmount : (estimate?.high || null);
+
       // Resolve store assignment based on admin config
       const storeLocationId = formData.preferredLocationId
         ? formData.preferredLocationId
@@ -611,13 +626,17 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
           loan_balance: formData.loanBalance || null,
           loan_payment: formData.loanPayment || null,
           next_step: "photos",
-          lead_source: leadSource,
+          lead_source: isDemoMode ? `${leadSource}-demo` : leadSource,
           dealership_id: tenant.dealership_id,
           ...bbPayload,
-          estimated_offer_low: estimate?.low || null,
-          estimated_offer_high: estimate?.high || null,
-          is_hot_lead: estimate?.isHotLead || false,
-          matched_rule_ids: estimate?.matchedRuleIds?.length ? estimate.matchedRuleIds : null,
+          estimated_offer_low: demoEstimateLow,
+          estimated_offer_high: demoEstimateHigh,
+          // In demo_mode, force a firm offered_price so the cadence
+          // engine bootstrap fires (it keys off offered_price /
+          // estimated_offer_high being non-null).
+          offered_price: isDemoMode ? demoOfferAmount : null,
+          is_hot_lead: isDemoMode ? false : (estimate?.isHotLead || false),
+          matched_rule_ids: isDemoMode ? null : (estimate?.matchedRuleIds?.length ? estimate.matchedRuleIds : null),
           store_location_id: storeLocationId || null,
           salesperson_name: formData.salespersonName || null,
           bb_selected_options: selectedAddDeducts.length > 0 ? selectedAddDeducts : [],

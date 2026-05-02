@@ -221,7 +221,13 @@ const OfferPage = () => {
         let nextSubmission = sub;
         let nextCondition = conditionData;
 
-        if (conditionData) {
+        // Demo-mode short-circuit: don't recompute the estimate against
+        // the synthetic BB stub — it would override the flat
+        // demo_offer_amount we wrote at submit time. Off = identical
+        // recompute pipeline to before.
+        const isDemoMode = (config as any)?.demo_mode === true;
+
+        if (conditionData && !isDemoMode) {
           const selectedOptions = parseStoredJson<string[]>(conditionData.bb_selected_options, []);
           const resolvedBBVehicle = buildStoredBBVehicle({ ...sub, ...conditionData });
 
@@ -327,7 +333,10 @@ const OfferPage = () => {
 
     // Always use stored BB data — never make a new Black Book call on edit.
     // The offer logic engine recalculates using the already-persisted market data.
-    const resolvedBBVehicle = buildStoredBBVehicle({ ...newSubmission, ...newCondition });
+    // In demo_mode the offer is pinned to demo_offer_amount; skip the
+    // recalc so inline edits don't perturb it.
+    const isDemoMode = (config as any)?.demo_mode === true;
+    const resolvedBBVehicle = isDemoMode ? null : buildStoredBBVehicle({ ...newSubmission, ...newCondition });
 
     if (resolvedBBVehicle) {
       const newEstimate = calculateOffer(

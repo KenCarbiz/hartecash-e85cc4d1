@@ -152,6 +152,13 @@ export interface SiteConfig {
   // shell. Stored as a hex string so AppearanceSettings can offer a
   // straight color picker without HSL conversion. Default is near-black.
   sidebar_active_color: string;
+  // ── Demo mode (BB sandbox kill-switch) ──
+  // When true, bb-lookup serves a synthetic vehicle and every public
+  // offer (Quick + full SellCarForm) gets clamped to demo_offer_amount.
+  // Used while Black Book credentials are renegotiated. Default false:
+  // turning it off restores the prior live pipeline byte-for-byte.
+  demo_mode: boolean;
+  demo_offer_amount: number;
 }
 
 const DEFAULTS: SiteConfig = {
@@ -249,6 +256,8 @@ const DEFAULTS: SiteConfig = {
   customer_file_accent: "#003b80",
   customer_file_accent_2: "#005bb5",
   sidebar_active_color: "#0f172a",
+  demo_mode: false,
+  demo_offer_amount: 23599,
 };
 
 /**

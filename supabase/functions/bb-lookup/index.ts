@@ -9,6 +9,52 @@ const corsHeaders = {
 const BB_BASE = "https://service.blackbookcloud.com/UsedCarWS/UsedCarWS/UsedVehicle";
 const BB_GRAPHQL = "https://service.blackbookcloud.com/UsedCarWS/UsedCarWS/GraphQL";
 
+// Synthetic Black Book response served when demo_mode is on for the
+// caller's tenant (or BB_DEMO_MODE=true env override). The shape mirrors
+// a real BB vehicle so calculateOffer / SellCarForm / QuickOfferForm
+// don't need conditional branches downstream — only the customer-facing
+// offer amount gets clamped to site_config.demo_offer_amount on insert.
+function buildDemoVehicle(vin: string | undefined, plate: string | undefined): Record<string, unknown> {
+  return {
+    uvc: "DEMO-UVC-0000000",
+    vin: vin || "1FTFW1ET5DKE12345",
+    year: 2021,
+    make: "Toyota",
+    model: "Camry",
+    series: "SE",
+    style: "Sedan 4D",
+    class_name: "Mid-Size",
+    msrp: 28999,
+    price_includes: "AT,4CY,AC,PS,PB,PW,PL,TW,CC,AB,SE,FM",
+    drivetrain: "FWD",
+    transmission: "Automatic",
+    engine: "4-Cylinder",
+    fuel_type: "Gasoline",
+    exterior_colors: [
+      { code: "", name: "Midnight Black", hex: "#0b0b0b" },
+      { code: "", name: "Silver Metallic", hex: "#b8b8b8" },
+      { code: "", name: "Pearl White", hex: "#f5f5f0" },
+    ],
+    mileage_adj: 0,
+    regional_adj: 0,
+    base_whole_avg: 22000,
+    add_deduct_list: [],
+    wholesale: { xclean: 23000, clean: 22500, avg: 22000, rough: 21000 },
+    tradein:   { clean: 22000, avg: 21500, rough: 20500 },
+    retail:    { xclean: 26500, clean: 26000, avg: 25500, rough: 24500 },
+    private_party: { xclean: 25000, clean: 24500, avg: 24000, rough: 23000 },
+    finance_advance: { xclean: 24000, clean: 23800, avg: 23600, rough: 22500 },
+    residual_12: 21000,
+    residual_24: 19500,
+    residual_36: 17500,
+    residual_48: 15500,
+    recall_count: 0,
+    recalls: [],
+    _demo: true,
+    _demo_plate: plate || null,
+  };
+}
+
 // Build a stable cache key from the set of params that actually affect
 // the Black Book response. Anything that changes the upstream URL should
 // feed this key.
@@ -39,16 +85,56 @@ serve(async (req) => {
 
   const username = Deno.env.get("BLACKBOOK_USERNAME");
   const password = Deno.env.get("BLACKBOOK_PASSWORD");
-
-  if (!username || !password) {
-    return new Response(JSON.stringify({ error: "Black Book credentials not configured" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
-    });
-  }
+  const envDemoMode = (Deno.env.get("BB_DEMO_MODE") || "").toLowerCase() === "true";
 
   try {
     const body = await req.json();
-    const { lookup_type, vin, plate, state, mileage, uvc, adddeductcodes } = body;
+    const { lookup_type, vin, plate, state, mileage, uvc, adddeductcodes, dealership_id } = body;
+
+    // ── Demo-mode short-circuit ────────────────────────────────────────
+    // Resolve demo_mode in priority order:
+    //   1. BB_DEMO_MODE env var (global kill-switch)
+    //   2. site_config.demo_mode for the caller's dealership
+    //   3. Body flag `demo_mode: true` (last-resort, e.g. a smoke test)
+    // Skip the upstream BB call entirely and return a synthetic vehicle.
+    let demoMode = envDemoMode || body?.demo_mode === true;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const cacheClient = supabaseUrl && supabaseServiceKey
+      ? createClient(supabaseUrl, supabaseServiceKey)
+      : null;
+
+    if (!demoMode && cacheClient && dealership_id) {
+      try {
+        const { data: cfg } = await cacheClient
+          .from("site_config")
+          .select("demo_mode")
+          .eq("dealership_id", dealership_id)
+          .maybeSingle();
+        if (cfg?.demo_mode === true) demoMode = true;
+      } catch (e) {
+        console.warn("BB demo-mode lookup failed (continuing live):", (e as Error).message);
+      }
+    }
+
+    if (demoMode) {
+      const stub = buildDemoVehicle(vin, plate);
+      const payload = { error: null, vehicles: [stub], demo_mode: true };
+      return new Response(JSON.stringify(payload), {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json",
+          "X-BB-Cache": "DEMO",
+        },
+      });
+    }
+
+    if (!username || !password) {
+      return new Response(JSON.stringify({ error: "Black Book credentials not configured" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
 
     if (!lookup_type || (lookup_type !== "vin" && lookup_type !== "plate")) {
       return new Response(JSON.stringify({ error: "lookup_type must be 'vin' or 'plate'" }), {
@@ -72,12 +158,7 @@ serve(async (req) => {
     // Dealers should never be billed for two identical Black Book calls
     // within the 24-hour TTL window. We cache the fully transformed
     // response keyed on all params that influence the upstream call.
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    const cacheClient = supabaseUrl && supabaseServiceKey
-      ? createClient(supabaseUrl, supabaseServiceKey)
-      : null;
-
+    // (cacheClient is created above for the demo-mode site_config probe.)
     const cacheKey = buildCacheKey({ lookup_type, vin, plate, state, mileage, uvc, adddeductcodes });
 
     if (cacheClient) {

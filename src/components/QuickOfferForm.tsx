@@ -77,9 +77,15 @@ const QuickOfferForm = ({ leadSource = "quick-offer" }: QuickOfferFormProps) => 
     setSubmitting(true);
     try {
       // ── 1. Black Book lookup. ──
+      // In demo_mode the edge function short-circuits and returns a
+      // synthetic vehicle so the customer flow keeps working while the
+      // upstream BB sandbox is offline. We pass dealership_id so the
+      // function can resolve the per-tenant flag.
       const lookupBody: Record<string, unknown> = {
         lookup_type: identifierMode === "vin" ? "vin" : "plate",
         state: state || "CT",
+        dealership_id: tenant.dealership_id,
+        demo_mode: (config as any)?.demo_mode === true ? true : undefined,
       };
       if (identifierMode === "vin") lookupBody.vin = vin.trim();
       else {
@@ -172,10 +178,26 @@ const QuickOfferForm = ({ leadSource = "quick-offer" }: QuickOfferFormProps) => 
         ? ((offerSettings as unknown as { auto_firm_offer_pct?: number | null })
             .auto_firm_offer_pct ?? null)
         : null;
-      const firmOfferedPrice =
+      let firmOfferedPrice =
         autoFirmPct != null && estimate?.high && !subjectToInspection
           ? Math.round(estimate.high * autoFirmPct)
           : null;
+
+      // Demo-mode offer override. Black Book sandbox is offline; clamp
+      // every customer-facing offer to site_config.demo_offer_amount
+      // (default $23,599) so the cadence + acceptance flow can still be
+      // demoed end-to-end. We override low/high too so the offer page
+      // reads the same number from any field.
+      const isDemoMode =
+        (config as any)?.demo_mode === true || bbData?.demo_mode === true;
+      const demoOfferAmount = Number((config as any)?.demo_offer_amount ?? 23599) || 23599;
+      let demoEstimateLow: number | null = estimate?.low ?? null;
+      let demoEstimateHigh: number | null = estimate?.high ?? null;
+      if (isDemoMode) {
+        firmOfferedPrice = demoOfferAmount;
+        demoEstimateLow = demoOfferAmount;
+        demoEstimateHigh = demoOfferAmount;
+      }
 
       const { error: insertErr } = await supabase.from("submissions").insert({
         token: generatedToken,
@@ -190,16 +212,17 @@ const QuickOfferForm = ({ leadSource = "quick-offer" }: QuickOfferFormProps) => 
         overall_condition: formData.overallCondition,
         drivable: formData.drivable,
         next_step: "contact",
-        lead_source: leadSource,
+        lead_source: isDemoMode ? `${leadSource}-demo` : leadSource,
         dealership_id: tenant.dealership_id,
         ...bbPayload,
-        estimated_offer_low: estimate?.low || null,
-        estimated_offer_high: estimate?.high || null,
+        estimated_offer_low: demoEstimateLow,
+        estimated_offer_high: demoEstimateHigh,
         // Firm offer when the dealer opted in via auto_firm_offer_pct;
         // otherwise null and the manager bumps before customer sees it.
+        // In demo_mode this is forced to demo_offer_amount above.
         offered_price: firmOfferedPrice,
-        is_hot_lead: estimate?.isHotLead || false,
-        offer_subject_to_inspection: subjectToInspection,
+        is_hot_lead: isDemoMode ? false : (estimate?.isHotLead || false),
+        offer_subject_to_inspection: isDemoMode ? false : subjectToInspection,
         // TCPA consent snapshot — captures the exact disclosure copy
         // and version the customer saw at submit time. Required for
         // FCC 2024 one-to-one defense if a TCPA claim is ever filed.
@@ -238,6 +261,11 @@ const QuickOfferForm = ({ leadSource = "quick-offer" }: QuickOfferFormProps) => 
       className="bg-card rounded-2xl shadow-xl border border-border/50 p-6 max-w-lg mx-auto space-y-4"
     >
       <div className="text-center space-y-1">
+        {(config as any)?.demo_mode === true && (
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold uppercase tracking-wider mb-1">
+            Demo mode
+          </div>
+        )}
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-bold uppercase tracking-wider">
           <Zap className="w-3.5 h-3.5" />
           60-second offer
