@@ -13,6 +13,7 @@ import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useTenant } from "@/contexts/TenantContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import LocationOverrideDriftPanel from "./LocationOverrideDriftPanel";
 
 /**
  * AppearanceSettings — admin-only Theme/Layout/Fine-tune editor.
@@ -428,6 +429,26 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
             </AlertDialog>
           </div>
         </div>
+      )}
+
+      {/* Drift panel — shows which fields a location is overriding off
+          corporate, with per-field and bulk reset. Only renders when a
+          specific location is selected (not the tenant default). */}
+      {locations.length > 0 && selectedLocationId !== null && (
+        <LocationOverrideDriftPanel
+          locationId={selectedLocationId}
+          locationName={locations.find((l) => l.id === selectedLocationId)?.name ?? undefined}
+          onChange={() => {
+            // Reload the draft from the (now-updated) location row by
+            // bouncing the selection through. Simpler than a custom
+            // reload helper since the existing useEffect on
+            // selectedLocationId already does the load.
+            setSelectedLocationId((prev) => prev);
+            queryClient.invalidateQueries({
+              queryKey: ["site_config", tenant.dealership_id, tenant.location_id ?? null],
+            });
+          }}
+        />
       )}
 
       <div className="flex gap-1 border-b border-border mb-4">
