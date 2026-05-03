@@ -74,6 +74,7 @@ const SECTION_MAP: { key: string; label: string; icon: React.ElementType; group:
 
   // ── Platform (super admin) ──
   { key: "tenants", label: "Dealer Tenants", icon: Network, group: "Platform" },
+  { key: "groups", label: "Group Management", icon: Network, group: "Platform" },
   { key: "prospect-demo", label: "Prospect Demo", icon: Target, group: "Platform" },
   { key: "pricing-model", label: "SaaS Pricing", icon: Tag, group: "Platform" },
   { key: "platform-billing", label: "Platform & Billing", icon: Receipt, group: "Platform" },

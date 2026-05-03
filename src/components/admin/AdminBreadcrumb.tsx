@@ -85,9 +85,11 @@ const SECTION_GROUPS: Record<string, string> = {
   "onboarding-script": "Account",
   "system-settings": "Account",
   "image-inventory": "Account",
+  "data-egress": "Account",
 
   // Platform
   tenants: "Platform",
+  groups: "Platform",
   "prospect-demo": "Platform",
   "pricing-model": "Platform",
   "platform-billing": "Platform",
@@ -163,9 +165,11 @@ const SECTION_LABELS: Record<string, string> = {
   "onboarding-script": "Onboarding Script",
   "system-settings": "System Settings",
   "image-inventory": "Vehicle Image Cache",
+  "data-egress": "Export My Data",
 
   // Platform
   tenants: "Dealer Tenants",
+  groups: "Group Management",
   "prospect-demo": "Prospect Demo",
   "pricing-model": "SaaS Pricing",
   "platform-billing": "Platform & Billing",
