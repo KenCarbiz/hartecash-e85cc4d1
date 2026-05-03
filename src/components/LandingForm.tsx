@@ -1,6 +1,7 @@
 import { Component, ReactNode } from "react";
 import SellCarForm from "@/components/SellCarForm";
 import QuickOfferForm from "@/components/QuickOfferForm";
+import SellFlowSimple from "@/components/SellFlowSimple";
 import type { FormData } from "@/components/sell-form/types";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useTenant } from "@/contexts/TenantContext";
@@ -61,6 +62,23 @@ const LandingForm = ({ leadSource, variant = "split", initial }: LandingFormProp
       );
       if (local === "quick" || local === "detailed") resolved = local;
     } catch { /* private mode: ignore */ }
+  }
+
+  // Density-driven dispatch (May-2026 audit). When the LandingPlateInput
+  // hands off plate+state via `initial`, we route into SellFlowSimple
+  // (the 3-screen wizard) for "simple" and "standard" densities. The
+  // "detailed" density and any non-handoff entry (admin preview, embed,
+  // legacy direct mount) keep using the existing SellCarForm.
+  const density = ((config as any).landing_form_density ?? "simple") as "simple" | "standard" | "detailed";
+  const hasHandoff = !!(initial?.plate && initial?.state);
+  if (hasHandoff && density !== "detailed") {
+    return (
+      <SellFlowSimple
+        initial={{ plate: initial!.plate as string, state: initial!.state as string }}
+        density={density}
+        leadSource={leadSource}
+      />
+    );
   }
 
   const useQuick = resolved === "quick";

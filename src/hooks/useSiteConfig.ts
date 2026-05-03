@@ -67,6 +67,17 @@ export interface SiteConfig {
    * QuickOfferForm (plate + ZIP + mileage + 2 yes/no Q's).
    */
   landing_form_variant: "detailed" | "quick";
+  /**
+   * Per the May-2026 sell-flow design audit. Controls which sell-flow
+   * the customer-facing landing dispatches into:
+   *   simple   → 3-question wizard (mileage + condition + ownership) on
+   *              one card. 3 customer-facing pages total. Default.
+   *   standard → 5-question wizard (+ accidents + mechanical). Still
+   *              3 pages but the condition card is denser.
+   *   detailed → falls back to the existing multi-step SellCarForm.
+   *              4-9+ pages depending on the dealer's Lead Form config.
+   */
+  landing_form_density: "simple" | "standard" | "detailed";
   price_guarantee_days: number;
   stats_cars_purchased: string;
   stats_years_in_business: string;
@@ -189,6 +200,7 @@ const DEFAULTS: SiteConfig = {
   hero_layout: "offset_right",
   landing_template: "classic",
   landing_form_variant: "detailed",
+  landing_form_density: "simple",
   price_guarantee_days: 8,
   stats_cars_purchased: "14,721+",
   stats_years_in_business: "78 yrs",
@@ -288,6 +300,7 @@ const LOCATION_OVERRIDE_KEYS: (keyof SiteConfig)[] = [
   "hero_layout",
   "landing_template",
   "landing_form_variant",
+  "landing_form_density",
   "service_hero_headline",
   "service_hero_subtext",
   "trade_hero_headline",

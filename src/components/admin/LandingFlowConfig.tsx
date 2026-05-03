@@ -42,14 +42,18 @@ const FORM_VARIANTS: Array<{
  * dealership_locations admin.
  */
 
+type FormDensity = "simple" | "standard" | "detailed";
+
 interface State {
   landing_template: LandingTemplate;
   landing_form_variant: FormVariant;
+  landing_form_density: FormDensity;
 }
 
 const DEFAULTS: State = {
   landing_template: "classic",
   landing_form_variant: "detailed",
+  landing_form_density: "simple",
 };
 
 const LandingFlowConfig = () => {
@@ -72,12 +76,16 @@ const LandingFlowConfig = () => {
       let row: any = null;
       const wide = await supabase
         .from("site_config" as any)
-        .select("landing_template, landing_form_variant")
+        .select("landing_template, landing_form_variant, landing_form_density")
         .eq("dealership_id", dealershipId)
         .maybeSingle();
       if (wide.error) {
         const lower = wide.error.message?.toLowerCase() || "";
-        if (lower.includes("landing_form_variant") || lower.includes("schema cache")) {
+        if (
+          lower.includes("landing_form_variant") ||
+          lower.includes("landing_form_density") ||
+          lower.includes("schema cache")
+        ) {
           const narrow = await supabase
             .from("site_config" as any)
             .select("landing_template")
@@ -93,6 +101,8 @@ const LandingFlowConfig = () => {
           (row?.landing_template as LandingTemplate) || DEFAULTS.landing_template,
         landing_form_variant:
           (row?.landing_form_variant as FormVariant) || DEFAULTS.landing_form_variant,
+        landing_form_density:
+          (row?.landing_form_density as FormDensity) || DEFAULTS.landing_form_density,
       };
       setState(next);
       setSaved(next);
@@ -102,7 +112,8 @@ const LandingFlowConfig = () => {
 
   const dirty =
     state.landing_template !== saved.landing_template ||
-    state.landing_form_variant !== saved.landing_form_variant;
+    state.landing_form_variant !== saved.landing_form_variant ||
+    state.landing_form_density !== saved.landing_form_density;
 
   const handleSave = async () => {
     setSaving(true);
@@ -146,6 +157,34 @@ const LandingFlowConfig = () => {
       }
     }
 
+    // Pass 1.5 — density (best-effort, may not be deployed yet)
+    const densityChanged = state.landing_form_density !== saved.landing_form_density;
+    let densitySkipped = false;
+    if (densityChanged) {
+      const { error: dErr } = await supabase
+        .from("site_config" as any)
+        .update({
+          landing_form_density: state.landing_form_density,
+          updated_at: new Date().toISOString(),
+        } as any)
+        .eq("dealership_id", dealershipId);
+      if (dErr) {
+        const lower = dErr.message?.toLowerCase() || "";
+        const code = (dErr as any).code || "";
+        const missingDensity =
+          lower.includes("landing_form_density") ||
+          lower.includes("schema cache") ||
+          code === "PGRST204" ||
+          (lower.includes("column") && lower.includes("does not exist"));
+        if (!missingDensity) {
+          setSaving(false);
+          toast({ title: "Save failed", description: dErr.message, variant: "destructive" });
+          return;
+        }
+        densitySkipped = true;
+      }
+    }
+
     // Pass 2 — variant (best-effort)
     let variantSkipped = false;
     if (variantChanged) {
@@ -184,6 +223,7 @@ const LandingFlowConfig = () => {
     setSaved({
       ...state,
       ...(variantSkipped ? { landing_form_variant: saved.landing_form_variant } : {}),
+      ...(densitySkipped ? { landing_form_density: saved.landing_form_density } : {}),
     });
 
     if (variantSkipped) {
@@ -275,6 +315,71 @@ const LandingFlowConfig = () => {
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground leading-snug">{v.description}</p>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ── Flow Density picker ── */}
+      <section className="bg-card rounded-xl border border-border p-6">
+        <div className="flex items-center gap-2 mb-1">
+          <Layout className="w-4 h-4 text-primary" />
+          <h3 className="font-bold">Flow Density</h3>
+          <span className="ml-2 text-[10px] font-bold uppercase tracking-[0.18em] text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+            ★ New
+          </span>
+        </div>
+        <p className="text-xs text-muted-foreground mb-5">
+          How many condition questions does the customer answer? Per the May-2026 design audit, the goal is a 3-page customer journey. Only swap to <strong>Detailed</strong> if your appraisal team needs the full inspection capture before the offer reveals.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {[
+            {
+              value: "simple" as const,
+              label: "Simple",
+              tagline: "3 questions · 3 pages",
+              body: "Mileage, condition, ownership. The fastest path. Recommended.",
+              recommended: true,
+            },
+            {
+              value: "standard" as const,
+              label: "Standard",
+              tagline: "5 questions · 3 pages",
+              body: "Adds accidents and mechanical-issues. Still 3 pages.",
+            },
+            {
+              value: "detailed" as const,
+              label: "Detailed",
+              tagline: "Full Lead Form · 4-9 pages",
+              body: "All questions configured in your Capture & Inspection settings.",
+            },
+          ].map((d) => {
+            const active = state.landing_form_density === d.value;
+            return (
+              <button
+                key={d.value}
+                type="button"
+                onClick={() => setState((prev) => ({ ...prev, landing_form_density: d.value }))}
+                className={`relative text-left rounded-xl border-2 p-4 transition-all ${
+                  active
+                    ? "border-primary bg-primary/5 shadow-md"
+                    : "border-border bg-muted/30 hover:bg-muted hover:border-primary/30"
+                }`}
+                aria-pressed={active}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-bold text-sm">{d.label}</span>
+                  {active ? (
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Active</span>
+                  ) : d.recommended ? (
+                    <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-primary/70 bg-primary/10 px-2 py-0.5 rounded-full">
+                      ★ Pick
+                    </span>
+                  ) : null}
+                </div>
+                <div className="text-[11px] font-mono text-muted-foreground mb-2">{d.tagline}</div>
+                <p className="text-xs text-muted-foreground leading-snug">{d.body}</p>
               </button>
             );
           })}
