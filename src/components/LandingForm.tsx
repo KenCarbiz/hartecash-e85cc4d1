@@ -1,6 +1,7 @@
 import { Component, ReactNode } from "react";
 import SellCarForm from "@/components/SellCarForm";
 import QuickOfferForm from "@/components/QuickOfferForm";
+import type { FormData } from "@/components/sell-form/types";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useTenant } from "@/contexts/TenantContext";
 
@@ -9,6 +10,9 @@ interface LandingFormProps {
   /** Visual variant passed through to SellCarForm. Ignored by the
    *  one-screen QuickOfferForm which has its own card layout. */
   variant?: "default" | "split";
+  /** Optional pre-populated values from the landing-page hand-off
+   *  (FullscreenWizard pattern). Ignored by QuickOfferForm. */
+  initial?: Partial<FormData>;
 }
 
 /**
@@ -40,7 +44,7 @@ class QuickOfferBoundary extends Component<{ fallback: ReactNode; children: Reac
   }
 }
 
-const LandingForm = ({ leadSource, variant = "split" }: LandingFormProps) => {
+const LandingForm = ({ leadSource, variant = "split", initial }: LandingFormProps) => {
   const { config } = useSiteConfig();
   const { tenant } = useTenant();
 
@@ -60,7 +64,7 @@ const LandingForm = ({ leadSource, variant = "split" }: LandingFormProps) => {
   }
 
   const useQuick = resolved === "quick";
-  const detailed = <SellCarForm leadSource={leadSource} variant={variant} />;
+  const detailed = <SellCarForm leadSource={leadSource} variant={variant} initial={initial} />;
   return useQuick
     ? (
       <QuickOfferBoundary fallback={detailed}>

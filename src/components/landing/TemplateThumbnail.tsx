@@ -21,6 +21,114 @@ const TemplateThumbnail = ({ template, className = "" }: Props) => {
 
   switch (template) {
     // ── CLASSIC: split hero (text left, form right) + stacked sections ──
+    // ── 2026 sell-flow audit recommendations ────────────────────
+    // CLARITY: Apple-minimal white. Just the form, massive negative space.
+    case "clarity":
+      return (
+        <div className={wrapClass}>
+          <svg {...common}>
+            <rect x="0" y="0" width="160" height="100" fill="#ffffff" />
+            {/* Tiny dealer logo top-left */}
+            <rect x="6" y="6" width="14" height="3" rx="0.5" fill="#0A0A0A" />
+            {/* Big bold headline centered */}
+            <rect x="36" y="26" width="88" height="6" rx="1" fill="#0A0A0A" />
+            <rect x="48" y="36" width="64" height="6" rx="1" fill="#0A0A0A" />
+            <rect x="56" y="48" width="48" height="2.5" rx="0.5" fill="#A1A1AA" />
+            {/* Single rounded form card centered */}
+            <rect x="36" y="58" width="88" height="34" rx="3" fill="#F5F5F7" stroke="#E5E5EA" strokeWidth="0.4" />
+            <rect x="42" y="64" width="76" height="6" rx="1.5" fill="#FFFFFF" stroke="#E5E5EA" strokeWidth="0.3" />
+            <rect x="42" y="73" width="50" height="6" rx="1.5" fill="#FFFFFF" stroke="#E5E5EA" strokeWidth="0.3" />
+            <rect x="94" y="73" width="24" height="6" rx="1.5" fill="#FFFFFF" stroke="#E5E5EA" strokeWidth="0.3" />
+            <rect x="42" y="82" width="76" height="7" rx="1.5" fill="#0071E3" />
+          </svg>
+        </div>
+      );
+
+    // MARQUEE: Premium dark / luxury. Brass accent, serif feel.
+    case "marquee":
+      return (
+        <div className={wrapClass}>
+          <svg {...common}>
+            <defs>
+              <radialGradient id="marquee-glow" cx="0.5" cy="0.5" r="0.6">
+                <stop offset="0%" stopColor="#C9A96E" stopOpacity="0.18" />
+                <stop offset="100%" stopColor="#0F0F12" stopOpacity="0" />
+              </radialGradient>
+            </defs>
+            <rect x="0" y="0" width="160" height="100" fill="#0F0F12" />
+            <rect x="0" y="0" width="160" height="100" fill="url(#marquee-glow)" />
+            {/* Wordmark large top-center */}
+            <rect x="56" y="14" width="48" height="5" rx="0.5" fill="#FFFFFF" opacity="0.95" />
+            {/* Serif headline */}
+            <rect x="36" y="32" width="88" height="5" rx="0.5" fill="#FFFFFF" opacity="0.95" />
+            <rect x="48" y="40" width="64" height="5" rx="0.5" fill="#FFFFFF" opacity="0.95" />
+            {/* Charcoal form card with brass edge */}
+            <rect x="40" y="54" width="80" height="36" rx="2" fill="#1A1A1F" stroke="#C9A96E" strokeWidth="0.4" strokeOpacity="0.55" />
+            <rect x="46" y="60" width="68" height="6" rx="1" fill="#0F0F12" stroke="#2A2A2E" strokeWidth="0.3" />
+            <rect x="46" y="69" width="44" height="6" rx="1" fill="#0F0F12" stroke="#2A2A2E" strokeWidth="0.3" />
+            <rect x="92" y="69" width="22" height="6" rx="1" fill="#0F0F12" stroke="#2A2A2E" strokeWidth="0.3" />
+            <rect x="46" y="78" width="68" height="7" rx="1.2" fill="#C9A96E" />
+          </svg>
+        </div>
+      );
+
+    // VELOCITY: Carvana-style mass conversion. Blue gradient + yellow CTA.
+    case "velocity":
+      return (
+        <div className={wrapClass}>
+          <svg {...common}>
+            <defs>
+              <linearGradient id="velocity-bg" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#0066CC" />
+                <stop offset="100%" stopColor="#00A6E6" />
+              </linearGradient>
+            </defs>
+            <rect x="0" y="0" width="160" height="100" fill="url(#velocity-bg)" />
+            {/* Headline white */}
+            <rect x="34" y="16" width="92" height="5" rx="1" fill="#FFFFFF" />
+            <rect x="46" y="24" width="68" height="5" rx="1" fill="#FFFFFF" />
+            {/* White form card centered */}
+            <rect x="34" y="38" width="92" height="42" rx="3" fill="#FFFFFF" />
+            <rect x="40" y="44" width="80" height="6" rx="1" fill="#F4F4F5" />
+            <rect x="40" y="53" width="50" height="6" rx="1" fill="#F4F4F5" />
+            <rect x="92" y="53" width="28" height="6" rx="1" fill="#F4F4F5" />
+            <rect x="40" y="63" width="80" height="8" rx="1.2" fill="#FFC700" />
+            {/* Yellow strip below card */}
+            <rect x="34" y="78" width="92" height="3" rx="0" fill="#FFC700" />
+            {/* Three step chips */}
+            <rect x="48" y="88" width="20" height="6" rx="3" fill="#FFFFFF" opacity="0.18" />
+            <rect x="70" y="88" width="20" height="6" rx="3" fill="#FFFFFF" opacity="0.18" />
+            <rect x="92" y="88" width="20" height="6" rx="3" fill="#FFFFFF" opacity="0.18" />
+          </svg>
+        </div>
+      );
+
+    // HERITAGE: Family-dealer two-column with photo placeholder.
+    case "heritage":
+      return (
+        <div className={wrapClass}>
+          <svg {...common}>
+            <rect x="0" y="0" width="160" height="100" fill="#F4EFE6" />
+            {/* Left photo */}
+            <rect x="6" y="10" width="68" height="80" rx="2" fill="#1F4068" />
+            <ellipse cx="40" cy="48" rx="18" ry="6" fill="#A3886B" opacity="0.4" />
+            <rect x="22" y="36" width="36" height="14" rx="3" fill="#A3886B" opacity="0.6" />
+            <rect x="14" y="76" width="52" height="3" rx="0.5" fill="#F4EFE6" opacity="0.7" />
+            <rect x="14" y="82" width="34" height="2" rx="0.5" fill="#F4EFE6" opacity="0.5" />
+            {/* Right column — kicker, serif headline, form */}
+            <rect x="84" y="14" width="20" height="2" rx="0.5" fill="#A3886B" />
+            <rect x="84" y="20" width="64" height="5" rx="0.5" fill="#2C2A26" />
+            <rect x="84" y="28" width="56" height="5" rx="0.5" fill="#2C2A26" />
+            <rect x="84" y="36" width="64" height="2.5" rx="0.5" fill="#2C2A26" opacity="0.55" />
+            <rect x="84" y="48" width="68" height="42" rx="2" fill="#FFFFFF" stroke="#A3886B" strokeWidth="0.4" strokeOpacity="0.4" />
+            <rect x="90" y="54" width="56" height="6" rx="1" fill="#F4EFE6" />
+            <rect x="90" y="63" width="36" height="6" rx="1" fill="#F4EFE6" />
+            <rect x="128" y="63" width="18" height="6" rx="1" fill="#F4EFE6" />
+            <rect x="90" y="73" width="56" height="7" rx="1" fill="#1F4068" />
+          </svg>
+        </div>
+      );
+
     case "classic":
       return (
         <div className={wrapClass}>
