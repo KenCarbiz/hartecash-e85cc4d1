@@ -56,7 +56,11 @@ const OBDScan = lazy(() => import("./pages/OBDScan"));
 const ServiceQuickEntry = lazy(() => import("./pages/ServiceQuickEntry"));
 const InspectionCheckIn = lazy(() => import("./pages/InspectionCheckIn"));
 const PlanPage = lazy(() => import("./pages/PlanPage"));
-const BillingPage = lazy(() => import("./pages/BillingPage"));
+// /billing removed — /plan is now the canonical billing surface, with
+// a "Manage billing" button that opens the Stripe Customer Portal
+// directly. The previous BillingPage was orphaned (not in the sidebar)
+// and read from a parallel app_entitlements schema that doesn't exist
+// in this repo.
 
 const queryClient = new QueryClient();
 
@@ -173,7 +177,7 @@ const AnimatedRoutes = () => {
             page accepts both a full 17-char VIN and a last-6 shortcut. */}
         <Route path="/checkin" element={<ProtectedRoute><InspectionCheckIn /></ProtectedRoute>} />
         <Route path="/plan" element={<ProtectedRoute><PlanPage /></ProtectedRoute>} />
-        <Route path="/billing" element={<ProtectedRoute><BillingPage /></ProtectedRoute>} />
+        {/* /billing removed — see comment near the import. */}
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
