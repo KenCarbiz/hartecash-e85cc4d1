@@ -59,8 +59,25 @@ const RecentInvoicesPanel = () => {
 
   if (loading) {
     return (
-      <div className="border border-border rounded-xl bg-card p-5 flex items-center gap-2 text-sm text-muted-foreground">
-        <Loader2 className="w-4 h-4 animate-spin" /> Loading recent invoices…
+      <div
+        className="border border-border rounded-xl bg-card overflow-hidden"
+        aria-busy="true"
+        aria-label="Loading invoices"
+      >
+        <div className="px-5 py-3 border-b border-border">
+          <div className="h-4 w-32 rounded bg-muted animate-pulse" />
+        </div>
+        <div className="divide-y divide-border">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="px-5 py-3 flex items-center gap-4">
+              <div className="h-3 w-16 rounded bg-muted animate-pulse" />
+              <div className="h-3 w-24 rounded bg-muted animate-pulse" />
+              <div className="h-3 w-20 rounded bg-muted animate-pulse ml-auto" />
+              <div className="h-5 w-12 rounded bg-muted animate-pulse" />
+              <div className="h-7 w-20 rounded bg-muted animate-pulse" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

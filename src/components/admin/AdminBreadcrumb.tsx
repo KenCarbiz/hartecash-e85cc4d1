@@ -90,6 +90,8 @@ const SECTION_GROUPS: Record<string, string> = {
   // Platform
   tenants: "Platform",
   groups: "Platform",
+  "stripe-webhooks": "Platform",
+  "audit-log": "Platform",
   "prospect-demo": "Platform",
   "pricing-model": "Platform",
   "platform-billing": "Platform",
@@ -170,6 +172,8 @@ const SECTION_LABELS: Record<string, string> = {
   // Platform
   tenants: "Dealer Tenants",
   groups: "Group Management",
+  "stripe-webhooks": "Stripe Webhooks",
+  "audit-log": "Audit Log",
   "prospect-demo": "Prospect Demo",
   "pricing-model": "SaaS Pricing",
   "platform-billing": "Platform & Billing",

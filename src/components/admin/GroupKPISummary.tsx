@@ -178,9 +178,32 @@ const GroupKPISummary = ({ rooftops }: Props) => {
   }, [aggs]);
 
   if (loading) {
+    // Skeleton matches the layout of the loaded state so the page
+    // doesn't jump on completion. 4 KPI tiles + a table outline.
     return (
-      <div className="border border-border rounded-xl bg-card p-8 flex items-center justify-center">
-        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+      <div className="space-y-4" aria-busy="true" aria-label="Loading group KPIs">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="border border-border rounded-xl bg-card p-4 space-y-2">
+              <div className="h-3 w-24 rounded bg-muted animate-pulse" />
+              <div className="h-7 w-16 rounded bg-muted animate-pulse" />
+              <div className="h-2.5 w-20 rounded bg-muted animate-pulse" />
+            </div>
+          ))}
+        </div>
+        <div className="border border-border rounded-xl bg-card overflow-hidden">
+          <div className="px-5 py-3 border-b border-border">
+            <div className="h-4 w-40 rounded bg-muted animate-pulse" />
+          </div>
+          <div className="p-5 space-y-3">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="flex items-center justify-between">
+                <div className="h-3 w-1/3 rounded bg-muted animate-pulse" />
+                <div className="h-3 w-16 rounded bg-muted animate-pulse" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

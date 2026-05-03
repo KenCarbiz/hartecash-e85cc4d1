@@ -149,8 +149,16 @@ const GroupActivityFeed = ({ dealerGroupId, dealershipNames }: Props) => {
         </p>
       </div>
       {loading && (
-        <div className="px-5 py-8 flex items-center justify-center">
-          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+        <div className="divide-y divide-border" aria-busy="true" aria-label="Loading group activity">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="px-5 py-2.5 flex items-start gap-3">
+              <div className="w-6 h-6 rounded-full bg-muted animate-pulse shrink-0 mt-0.5" />
+              <div className="flex-1 space-y-2">
+                <div className="h-3.5 w-2/3 rounded bg-muted animate-pulse" />
+                <div className="h-2.5 w-1/3 rounded bg-muted animate-pulse" />
+              </div>
+            </div>
+          ))}
         </div>
       )}
       {!loading && entries.length === 0 && (
