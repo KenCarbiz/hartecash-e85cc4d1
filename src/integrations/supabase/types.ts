@@ -548,6 +548,7 @@ export type Database = {
           architecture: string
           bdc_model: string
           billing_date: number | null
+          click_to_dial_record_calls: boolean
           created_at: string
           dealer_group_id: string | null
           dealership_id: string
@@ -571,6 +572,7 @@ export type Database = {
           architecture?: string
           bdc_model?: string
           billing_date?: number | null
+          click_to_dial_record_calls?: boolean
           created_at?: string
           dealer_group_id?: string | null
           dealership_id?: string
@@ -594,6 +596,7 @@ export type Database = {
           architecture?: string
           bdc_model?: string
           billing_date?: number | null
+          click_to_dial_record_calls?: boolean
           created_at?: string
           dealer_group_id?: string | null
           dealership_id?: string
@@ -2751,6 +2754,7 @@ export type Database = {
           dealership_id: string
           dealership_name: string
           email: string | null
+          embed_config: Json
           enable_animations: boolean
           enable_dl_ocr: boolean
           established_year: number | null
@@ -2840,6 +2844,7 @@ export type Database = {
           dealership_id?: string
           dealership_name?: string
           email?: string | null
+          embed_config?: Json
           enable_animations?: boolean
           enable_dl_ocr?: boolean
           established_year?: number | null
@@ -2929,6 +2934,7 @@ export type Database = {
           dealership_id?: string
           dealership_name?: string
           email?: string | null
+          embed_config?: Json
           enable_animations?: boolean
           enable_dl_ocr?: boolean
           established_year?: number | null
@@ -3678,32 +3684,47 @@ export type Database = {
       }
       user_roles: {
         Row: {
+          click_to_dial_dnd: boolean
+          click_to_dial_quiet_end: string | null
+          click_to_dial_quiet_start: string | null
+          click_to_dial_quiet_tz: string | null
           dealer_group_id: string | null
           dealership_id: string
           id: string
           is_platform_admin: boolean
           licensed_states: string[] | null
           location_id: string | null
+          phone: string | null
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
+          click_to_dial_dnd?: boolean
+          click_to_dial_quiet_end?: string | null
+          click_to_dial_quiet_start?: string | null
+          click_to_dial_quiet_tz?: string | null
           dealer_group_id?: string | null
           dealership_id?: string
           id?: string
           is_platform_admin?: boolean
           licensed_states?: string[] | null
           location_id?: string | null
+          phone?: string | null
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
+          click_to_dial_dnd?: boolean
+          click_to_dial_quiet_end?: string | null
+          click_to_dial_quiet_start?: string | null
+          click_to_dial_quiet_tz?: string | null
           dealer_group_id?: string | null
           dealership_id?: string
           id?: string
           is_platform_admin?: boolean
           licensed_states?: string[] | null
           location_id?: string | null
+          phone?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
@@ -3995,6 +4016,16 @@ export type Database = {
             }
             Returns: Json
           }
+      set_my_call_availability: {
+        Args: {
+          p_dnd: boolean
+          p_phone: string
+          p_quiet_end: string
+          p_quiet_start: string
+          p_quiet_tz: string
+        }
+        Returns: undefined
+      }
       update_staff_role: {
         Args: {
           _new_role: Database["public"]["Enums"]["app_role"]
