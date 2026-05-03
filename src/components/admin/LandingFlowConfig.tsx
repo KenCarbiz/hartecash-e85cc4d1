@@ -283,15 +283,63 @@ const LandingFlowConfig = () => {
 
       {/* ── Template picker ── */}
       <section className="bg-card rounded-xl border border-border p-6">
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-1">
           <Layout className="w-4 h-4 text-primary" />
           <h3 className="font-bold">Landing Page Template</h3>
         </div>
-        <p className="text-xs text-muted-foreground mb-4">
-          Your / route renders whichever template is selected here.
+        <p className="text-xs text-muted-foreground mb-6">
+          Your / route renders whichever template is selected here. The four templates below are the May-2026 design-audit recommendations — each is opinionated for a different dealer archetype.
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {LANDING_TEMPLATES.map((t) => {
+
+        {/* Recommended (4 new templates from the design audit) */}
+        <div className="mb-3 flex items-center gap-2">
+          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
+            ★ Recommended
+          </span>
+          <span className="text-[11px] text-muted-foreground italic">— design-audit picks, May 2026</span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
+          {LANDING_TEMPLATES.filter((t) => ["clarity", "marquee", "velocity", "heritage"].includes(t.value)).map((t) => {
+            const active = state.landing_template === t.value;
+            return (
+              <button
+                key={t.value}
+                type="button"
+                onClick={() => setState((prev) => ({ ...prev, landing_template: t.value }))}
+                className={`relative text-left rounded-xl border-2 p-3 transition-all ${
+                  active
+                    ? "border-primary bg-primary/5 shadow-lg ring-2 ring-primary/20"
+                    : "border-primary/30 bg-card hover:bg-muted/50 hover:border-primary/60 shadow-sm"
+                }`}
+              >
+                <div className="aspect-[16/10] mb-2.5 rounded-md overflow-hidden border border-border/60">
+                  <TemplateThumbnail template={t.value} />
+                </div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-bold text-sm">{t.label}</span>
+                  {active ? (
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                      Active
+                    </span>
+                  ) : (
+                    <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-primary/70 bg-primary/10 px-2 py-0.5 rounded-full">
+                      ★ Pick
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground leading-snug">{t.description}</p>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* All templates (existing 15) — collapsed under a heading */}
+        <details className="border-t border-border pt-5">
+          <summary className="cursor-pointer mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground hover:text-card-foreground transition-colors">
+            ▾ All templates (15 more)
+          </summary>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">
+          {LANDING_TEMPLATES.filter((t) => !["clarity", "marquee", "velocity", "heritage"].includes(t.value)).map((t) => {
             const active = state.landing_template === t.value;
             return (
               <button
@@ -320,6 +368,7 @@ const LandingFlowConfig = () => {
             );
           })}
         </div>
+        </details>
       </section>
 
       <div className="sticky bottom-4 flex justify-end">

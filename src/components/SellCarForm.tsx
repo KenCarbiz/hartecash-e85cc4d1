@@ -59,9 +59,14 @@ const stepVariants = {
 interface SellCarFormProps {
   leadSource?: string;
   variant?: "default" | "split";
+  /** Optional pre-populated values from the landing-page hand-off.
+   *  When the customer types their plate+state on the landing page
+   *  and the FullscreenWizard takes over, these arrive merged into
+   *  the initial form state so the customer doesn't re-enter them. */
+  initial?: Partial<FormData>;
 }
 
-const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarFormProps) => {
+const SellCarForm = ({ leadSource = "inventory", variant = "default", initial }: SellCarFormProps) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const referralCode = searchParams.get("ref") || undefined;
@@ -70,7 +75,7 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default" }: SellCarF
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
   const [vehicleInfo, setVehicleInfo] = useState<VehicleInfo | null>(null);
-  const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [formData, setFormData] = useState<FormData>(() => ({ ...initialFormData, ...(initial ?? {}) }));
   const [submitting, setSubmitting] = useState(false);
   const [showCalculating, setShowCalculating] = useState(false);
   const [pendingToken, setPendingToken] = useState<string | null>(null);

@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import LandingForm from "@/components/LandingForm";
+import LandingPlateInput, { type LandingPlateInputValue } from "../LandingPlateInput";
+import FullscreenWizard from "../FullscreenWizard";
 
 /**
  * MARQUEE — premium dark / luxury. Full-bleed near-black hero with
@@ -15,6 +18,13 @@ import LandingForm from "@/components/LandingForm";
  */
 const MarqueeTemplate = () => {
   const { config } = useSiteConfig();
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [initial, setInitial] = useState<LandingPlateInputValue | null>(null);
+
+  const handleEngage = (value: LandingPlateInputValue) => {
+    setInitial(value);
+    setWizardOpen(true);
+  };
 
   return (
     <>
@@ -66,31 +76,20 @@ const MarqueeTemplate = () => {
           </p>
         </motion.div>
 
-        {/* Form card — charcoal with brass edge */}
+        {/* Plate input — Tier B dark theme, ember accent on hover.
+            Submit hands off to FullscreenWizard, which fades in over
+            the marketing chrome with the diagonal-wipe-style cut Lambo
+            and McLaren use for "engaged → focused" handoffs. */}
         <motion.div
-          id="sell-car-form"
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
           className="relative z-10 w-full max-w-[560px]"
         >
-          <div
-            className="rounded-2xl overflow-hidden shadow-2xl"
-            style={{
-              background: "linear-gradient(180deg, #1A1A1F 0%, #0F0F12 100%)",
-              border: "1px solid #2A2A2E",
-              boxShadow: "0 0 0 1px rgba(201,169,110,0.18) inset, 0 30px 60px -20px rgba(0,0,0,0.6)",
-            }}
-          >
-            <div className="p-1">
-              <div className="rounded-xl bg-[#0F0F12]">
-                <LandingForm variant="split" />
-              </div>
-            </div>
-          </div>
+          <LandingPlateInput onEngage={handleEngage} theme="dark" ctaLabel="Begin appraisal" />
         </motion.div>
 
-        {/* Trust line — single sentence, brass accent */}
+        {/* Trust line — single sentence, ember accent (Tier B) */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -98,15 +97,15 @@ const MarqueeTemplate = () => {
           className="relative z-10 text-center text-[13px] text-white/50 mt-8 font-light tracking-wide"
         >
           Trusted by{" "}
-          <span style={{ color: "#C9A96E" }} className="font-medium">
+          <span style={{ color: "#FF6A00" }} className="font-medium">
             {config.dealership_name}
           </span>
           {config.established_year ? ` since ${config.established_year}.` : "."}
         </motion.p>
       </section>
 
-      {/* Below the fold — quiet, luxury-restrained */}
-      <section className="bg-[#0A0A0C] text-white/85 px-5 py-20 border-t border-white/5">
+      {/* Below the fold — quiet, luxury-restrained, Tier B accent */}
+      <section className="bg-[#050507] text-white/85 px-5 py-20 border-t border-white/5">
         <div className="max-w-3xl mx-auto text-center space-y-12">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
             {[
@@ -115,7 +114,7 @@ const MarqueeTemplate = () => {
               { title: "Full market price", body: "We pay what your car is worth. No 'we buy any car' lowballing." },
             ].map((s) => (
               <div key={s.title} className="space-y-2">
-                <div className="text-xs font-medium uppercase tracking-[0.2em]" style={{ color: "#C9A96E" }}>
+                <div className="text-xs font-medium uppercase tracking-[0.2em]" style={{ color: "#FF6A00" }}>
                   {s.title}
                 </div>
                 <div className="text-sm text-white/70 leading-relaxed font-light">{s.body}</div>
@@ -124,6 +123,14 @@ const MarqueeTemplate = () => {
           </div>
         </div>
       </section>
+
+      {/* Fullscreen wizard — dark theme, takes over on plate submit */}
+      <FullscreenWizard open={wizardOpen} onClose={() => setWizardOpen(false)} theme="dark" accent="#FF6A00">
+        <LandingForm
+          variant="default"
+          initial={initial ? { plate: initial.plate, state: initial.state } : undefined}
+        />
+      </FullscreenWizard>
     </>
   );
 };

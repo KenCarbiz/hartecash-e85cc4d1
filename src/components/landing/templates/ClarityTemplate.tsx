@@ -1,35 +1,44 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import LandingForm from "@/components/LandingForm";
+import LandingPlateInput, { type LandingPlateInputValue } from "../LandingPlateInput";
+import FullscreenWizard from "../FullscreenWizard";
 
 /**
- * CLARITY — Apple-minimal white. Single centered form on plain white,
- * massive negative space, big display headline. The form IS the hero;
- * no stock car photo, no marketing rails competing for attention.
+ * CLARITY — Apple/Porsche minimal white. Tier C of the May-2026
+ * design audit. The customer sees a marketing landing (headline +
+ * plate input + minimal proof + below-fold strip) and the moment
+ * they engage, the FullscreenWizard takes over the viewport — the
+ * landing chrome disappears entirely so the flow is focused and
+ * premium.
  *
- * Per the May-2026 sell-flow design audit (docs/sell-flow-design-audit.md):
- * deliberately omits the stock-car hero, "why sell to us" icon wall,
- * and FAQ-above-the-fold patterns that read mom-and-pop. Below the
- * fold gets ONE 3-step strip and ONE customer quote — that's the
- * ceiling. No collapsible FAQ, no map, no hours.
- *
- * Best for: premium import single-rooftops, EV dealers, design-literate
- * customers (Tesla-adjacent, Honda/Toyota suburban premium).
+ * Mercedes/Apple-grade easing on transitions: 500ms cubic-bezier
+ * (0.16, 1, 0.3, 1). Slow, deliberate, no springs or bounces.
  */
 const ClarityTemplate = () => {
   const { config } = useSiteConfig();
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [initial, setInitial] = useState<LandingPlateInputValue | null>(null);
+
+  const handleEngage = (value: LandingPlateInputValue) => {
+    setInitial(value);
+    setWizardOpen(true);
+  };
 
   return (
     <>
-      {/* Above the fold — only the form. Nothing else. */}
+      {/* ── Landing — marketing-rich, the only customer-facing input
+            is plate+state. All other context lives in the page itself
+            (reviews, process, comparison) and disappears the moment
+            the customer engages. */}
       <section className="relative min-h-[88vh] flex items-center justify-center px-5 py-16 bg-white text-zinc-900">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, ease: "easeOut" }}
-          className="w-full max-w-[560px] flex flex-col items-center gap-10"
+          transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full max-w-[640px] flex flex-col items-center gap-10"
         >
-          {/* Headline — huge, tight, single weight */}
           <div className="text-center space-y-4">
             <h1 className="font-display text-[44px] md:text-[64px] lg:text-[72px] font-bold tracking-[-0.025em] leading-[1.02] text-zinc-900">
               {config.hero_headline || "Sell your car in 2 minutes."}
@@ -39,19 +48,15 @@ const ClarityTemplate = () => {
             </p>
           </div>
 
-          {/* The form — minimal card, no shadow flourishes */}
-          <div
-            id="sell-car-form"
-            className="w-full rounded-3xl bg-zinc-50 border border-zinc-200 p-1.5"
-          >
-            <div className="rounded-[20px] bg-white p-1">
-              <LandingForm variant="split" />
-            </div>
+          <div className="w-full max-w-[560px]">
+            <LandingPlateInput onEngage={handleEngage} theme="light" ctaLabel="Get my offer" />
           </div>
         </motion.div>
       </section>
 
-      {/* Below the fold — one 3-step strip, one customer quote, full stop. */}
+      {/* ── Below the fold — the marketing assets stay on the LANDING
+            (reviews / process / why us). They never appear inside the
+            wizard. Per the May-2026 audit: rich landing, slim flow. */}
       <section className="bg-zinc-50 border-t border-zinc-200 px-5 py-16 md:py-24">
         <div className="max-w-4xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 mb-16">
@@ -78,6 +83,15 @@ const ClarityTemplate = () => {
           </blockquote>
         </div>
       </section>
+
+      {/* ── Fullscreen wizard — opens on plate submit, takes over the
+            viewport so the marketing chrome disappears. */}
+      <FullscreenWizard open={wizardOpen} onClose={() => setWizardOpen(false)} theme="light">
+        <LandingForm
+          variant="default"
+          initial={initial ? { plate: initial.plate, state: initial.state } : undefined}
+        />
+      </FullscreenWizard>
     </>
   );
 };

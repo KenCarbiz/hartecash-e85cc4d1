@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import LandingForm from "@/components/LandingForm";
+import LandingPlateInput, { type LandingPlateInputValue } from "../LandingPlateInput";
+import FullscreenWizard from "../FullscreenWizard";
 
 /**
  * HERITAGE — storytelling / family-dealer. Two-column desktop, stacked
@@ -20,6 +23,13 @@ import LandingForm from "@/components/LandingForm";
  */
 const HeritageTemplate = () => {
   const { config } = useSiteConfig();
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [initial, setInitial] = useState<LandingPlateInputValue | null>(null);
+
+  const handleEngage = (value: LandingPlateInputValue) => {
+    setInitial(value);
+    setWizardOpen(true);
+  };
 
   // Warm palette anchors — dealer can override via Branding admin
   // (top_bar_bg, customer_file_accent), but defaults are intentionally
@@ -119,12 +129,14 @@ const HeritageTemplate = () => {
               </p>
             </div>
 
+            {/* Plate input — warm theme, hands off to FullscreenWizard
+                with Tier A "warm graphite" feel inside (slow 700ms
+                cubic-bezier handoff per the May-2026 design audit). */}
             <div
-              id="sell-car-form"
-              className="rounded-2xl bg-white shadow-md overflow-hidden"
+              className="rounded-2xl bg-white p-5"
               style={{ border: `1px solid ${accent}33` }}
             >
-              <LandingForm variant="split" />
+              <LandingPlateInput onEngage={handleEngage} theme="warm" ctaLabel="Tell us about your car" />
             </div>
           </motion.div>
         </div>
@@ -166,6 +178,15 @@ const HeritageTemplate = () => {
           </div>
         </div>
       </section>
+
+      {/* Fullscreen wizard — warm theme. Slow Tier A handoff so the
+          family-dealer feel carries into the focused flow. */}
+      <FullscreenWizard open={wizardOpen} onClose={() => setWizardOpen(false)} theme="warm" accent={primary}>
+        <LandingForm
+          variant="default"
+          initial={initial ? { plate: initial.plate, state: initial.state } : undefined}
+        />
+      </FullscreenWizard>
     </>
   );
 };
