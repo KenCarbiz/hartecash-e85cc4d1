@@ -127,6 +127,118 @@ export type Database = {
           },
         ]
       }
+      bdc_call_tasks: {
+        Row: {
+          assigned_email: string | null
+          assigned_role: string | null
+          cadence_state: string
+          cadence_step: number
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          due_at: string
+          id: string
+          intent: string
+          outcome: string | null
+          outcome_notes: string | null
+          priority: number
+          rep_context: Json
+          status: string
+          submission_id: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_email?: string | null
+          assigned_role?: string | null
+          cadence_state: string
+          cadence_step?: number
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          due_at?: string
+          id?: string
+          intent: string
+          outcome?: string | null
+          outcome_notes?: string | null
+          priority?: number
+          rep_context?: Json
+          status?: string
+          submission_id: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_email?: string | null
+          assigned_role?: string | null
+          cadence_state?: string
+          cadence_step?: number
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          due_at?: string
+          id?: string
+          intent?: string
+          outcome?: string | null
+          outcome_notes?: string | null
+          priority?: number
+          rep_context?: Json
+          status?: string
+          submission_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bdc_call_tasks_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cadence_log: {
+        Row: {
+          cadence_state: string
+          channel: string
+          fired_at: string
+          id: string
+          outcome: string
+          outcome_detail: string | null
+          step: number
+          submission_id: string
+          trigger_key: string | null
+        }
+        Insert: {
+          cadence_state: string
+          channel: string
+          fired_at?: string
+          id?: string
+          outcome?: string
+          outcome_detail?: string | null
+          step: number
+          submission_id: string
+          trigger_key?: string | null
+        }
+        Update: {
+          cadence_state?: string
+          channel?: string
+          fired_at?: string
+          id?: string
+          outcome?: string
+          outcome_detail?: string | null
+          step?: number
+          submission_id?: string
+          trigger_key?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cadence_log_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       changelog_entries: {
         Row: {
           created_at: string
@@ -233,6 +345,68 @@ export type Database = {
             columns: ["store_location_id"]
             isOneToOne: false
             referencedRelation: "dealership_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversation_events: {
+        Row: {
+          actor_id: string | null
+          actor_label: string | null
+          actor_type: string
+          body_html: string | null
+          body_text: string | null
+          channel: string
+          created_at: string
+          dealership_id: string
+          direction: string
+          id: string
+          metadata: Json
+          occurred_at: string
+          source_id: string | null
+          source_table: string | null
+          submission_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_label?: string | null
+          actor_type?: string
+          body_html?: string | null
+          body_text?: string | null
+          channel: string
+          created_at?: string
+          dealership_id?: string
+          direction?: string
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          source_id?: string | null
+          source_table?: string | null
+          submission_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          actor_label?: string | null
+          actor_type?: string
+          body_html?: string | null
+          body_text?: string | null
+          channel?: string
+          created_at?: string
+          dealership_id?: string
+          direction?: string
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          source_id?: string | null
+          source_table?: string | null
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_events_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "submissions"
             referencedColumns: ["id"]
           },
         ]
@@ -391,6 +565,7 @@ export type Database = {
           special_instructions: string
           start_date: string | null
           updated_at: string
+          voice_ai_provider: string
         }
         Insert: {
           architecture?: string
@@ -413,6 +588,7 @@ export type Database = {
           special_instructions?: string
           start_date?: string | null
           updated_at?: string
+          voice_ai_provider?: string
         }
         Update: {
           architecture?: string
@@ -435,6 +611,7 @@ export type Database = {
           special_instructions?: string
           start_date?: string | null
           updated_at?: string
+          voice_ai_provider?: string
         }
         Relationships: [
           {
@@ -1086,6 +1263,7 @@ export type Database = {
       }
       inspection_config: {
         Row: {
+          brake_input_mode: string
           created_at: string
           custom_items: Json
           dealership_id: string
@@ -1114,9 +1292,11 @@ export type Database = {
           tire_credit_threshold: number
           tire_deduct_per_32: number
           tire_deduct_threshold: number
+          tire_input_mode: string
           updated_at: string
         }
         Insert: {
+          brake_input_mode?: string
           created_at?: string
           custom_items?: Json
           dealership_id?: string
@@ -1145,9 +1325,11 @@ export type Database = {
           tire_credit_threshold?: number
           tire_deduct_per_32?: number
           tire_deduct_threshold?: number
+          tire_input_mode?: string
           updated_at?: string
         }
         Update: {
+          brake_input_mode?: string
           created_at?: string
           custom_items?: Json
           dealership_id?: string
@@ -1176,9 +1358,80 @@ export type Database = {
           tire_credit_threshold?: number
           tire_deduct_per_32?: number
           tire_deduct_threshold?: number
+          tire_input_mode?: string
           updated_at?: string
         }
         Relationships: []
+      }
+      inspection_config_overrides: {
+        Row: {
+          brake_input_mode: string | null
+          created_at: string
+          dealership_id: string
+          id: string
+          location_id: string
+          tire_input_mode: string | null
+          updated_at: string
+        }
+        Insert: {
+          brake_input_mode?: string | null
+          created_at?: string
+          dealership_id: string
+          id?: string
+          location_id: string
+          tire_input_mode?: string | null
+          updated_at?: string
+        }
+        Update: {
+          brake_input_mode?: string | null
+          created_at?: string
+          dealership_id?: string
+          id?: string
+          location_id?: string
+          tire_input_mode?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inspection_config_overrides_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "dealership_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      location_channels: {
+        Row: {
+          channel: string
+          enabled: boolean | null
+          location_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          channel: string
+          enabled?: boolean | null
+          location_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          channel?: string
+          enabled?: boolean | null
+          location_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "location_channels_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "dealership_locations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lookup_attempts: {
         Row: {
@@ -1265,6 +1518,9 @@ export type Database = {
         Row: {
           abandoned_lead_channels: string[]
           appointment_channels: string[]
+          cadence_authorized_bump_pct: number
+          cadence_enabled: boolean
+          cadence_reengage_max_days: number
           created_at: string
           customer_appointment_channels: string[]
           customer_appointment_reminder_channels: string[]
@@ -1307,6 +1563,9 @@ export type Database = {
         Insert: {
           abandoned_lead_channels?: string[]
           appointment_channels?: string[]
+          cadence_authorized_bump_pct?: number
+          cadence_enabled?: boolean
+          cadence_reengage_max_days?: number
           created_at?: string
           customer_appointment_channels?: string[]
           customer_appointment_reminder_channels?: string[]
@@ -1349,6 +1608,9 @@ export type Database = {
         Update: {
           abandoned_lead_channels?: string[]
           appointment_channels?: string[]
+          cadence_authorized_bump_pct?: number
+          cadence_enabled?: boolean
+          cadence_reengage_max_days?: number
           created_at?: string
           customer_appointment_channels?: string[]
           customer_appointment_reminder_channels?: string[]
@@ -1469,6 +1731,7 @@ export type Database = {
         Row: {
           age_tiers: Json
           archetype_deduction_overrides: Json | null
+          auto_firm_offer_pct: number | null
           bb_value_basis: string
           color_desirability: Json
           condition_basis_map: Json
@@ -1508,6 +1771,7 @@ export type Database = {
         Insert: {
           age_tiers?: Json
           archetype_deduction_overrides?: Json | null
+          auto_firm_offer_pct?: number | null
           bb_value_basis?: string
           color_desirability?: Json
           condition_basis_map?: Json
@@ -1547,6 +1811,7 @@ export type Database = {
         Update: {
           age_tiers?: Json
           archetype_deduction_overrides?: Json | null
+          auto_firm_offer_pct?: number | null
           bb_value_basis?: string
           color_desirability?: Json
           condition_basis_map?: Json
@@ -2526,6 +2791,8 @@ export type Database = {
           stats_years_in_business: string | null
           success_color: string
           tagline: string
+          tcpa_disclosure: string
+          tcpa_disclosure_version: number
           text_scale: number | null
           tiktok_url: string | null
           top_bar_bg: string | null
@@ -2613,6 +2880,8 @@ export type Database = {
           stats_years_in_business?: string | null
           success_color?: string
           tagline?: string
+          tcpa_disclosure?: string
+          tcpa_disclosure_version?: number
           text_scale?: number | null
           tiktok_url?: string | null
           top_bar_bg?: string | null
@@ -2700,6 +2969,8 @@ export type Database = {
           stats_years_in_business?: string | null
           success_color?: string
           tagline?: string
+          tcpa_disclosure?: string
+          tcpa_disclosure_version?: number
           text_scale?: number | null
           tiktok_url?: string | null
           top_bar_bg?: string | null
@@ -2829,9 +3100,18 @@ export type Database = {
           brake_lr: number | null
           brake_rf: number | null
           brake_rr: number | null
+          cadence_last_touch_at: string | null
+          cadence_next_due_at: string | null
+          cadence_paused_until: string | null
+          cadence_started_at: string | null
+          cadence_state: string | null
+          cadence_step: number
           check_request_done: boolean
           created_at: string
           dealership_id: string
+          decline_reason: string | null
+          decline_reason_at: string | null
+          decline_reason_source: string | null
           docs_uploaded: boolean
           drivable: string | null
           drivetrain: string | null
@@ -2878,6 +3158,7 @@ export type Database = {
           outcome_wholesale_price: number | null
           outcome_wholesaled: boolean | null
           overall_condition: string | null
+          pending_slot_proposals: Json | null
           phone: string | null
           photos_uploaded: boolean
           plate: string | null
@@ -2891,6 +3172,10 @@ export type Database = {
           status_updated_at: string | null
           status_updated_by: string | null
           store_location_id: string | null
+          tcpa_consent_at: string | null
+          tcpa_consent_ip: string | null
+          tcpa_consent_text: string | null
+          tcpa_consent_version: number | null
           tech_issues: string[] | null
           tire_adjustment: number | null
           tire_lf: number | null
@@ -2942,9 +3227,18 @@ export type Database = {
           brake_lr?: number | null
           brake_rf?: number | null
           brake_rr?: number | null
+          cadence_last_touch_at?: string | null
+          cadence_next_due_at?: string | null
+          cadence_paused_until?: string | null
+          cadence_started_at?: string | null
+          cadence_state?: string | null
+          cadence_step?: number
           check_request_done?: boolean
           created_at?: string
           dealership_id?: string
+          decline_reason?: string | null
+          decline_reason_at?: string | null
+          decline_reason_source?: string | null
           docs_uploaded?: boolean
           drivable?: string | null
           drivetrain?: string | null
@@ -2991,6 +3285,7 @@ export type Database = {
           outcome_wholesale_price?: number | null
           outcome_wholesaled?: boolean | null
           overall_condition?: string | null
+          pending_slot_proposals?: Json | null
           phone?: string | null
           photos_uploaded?: boolean
           plate?: string | null
@@ -3004,6 +3299,10 @@ export type Database = {
           status_updated_at?: string | null
           status_updated_by?: string | null
           store_location_id?: string | null
+          tcpa_consent_at?: string | null
+          tcpa_consent_ip?: string | null
+          tcpa_consent_text?: string | null
+          tcpa_consent_version?: number | null
           tech_issues?: string[] | null
           tire_adjustment?: number | null
           tire_lf?: number | null
@@ -3055,9 +3354,18 @@ export type Database = {
           brake_lr?: number | null
           brake_rf?: number | null
           brake_rr?: number | null
+          cadence_last_touch_at?: string | null
+          cadence_next_due_at?: string | null
+          cadence_paused_until?: string | null
+          cadence_started_at?: string | null
+          cadence_state?: string | null
+          cadence_step?: number
           check_request_done?: boolean
           created_at?: string
           dealership_id?: string
+          decline_reason?: string | null
+          decline_reason_at?: string | null
+          decline_reason_source?: string | null
           docs_uploaded?: boolean
           drivable?: string | null
           drivetrain?: string | null
@@ -3104,6 +3412,7 @@ export type Database = {
           outcome_wholesale_price?: number | null
           outcome_wholesaled?: boolean | null
           overall_condition?: string | null
+          pending_slot_proposals?: Json | null
           phone?: string | null
           photos_uploaded?: boolean
           plate?: string | null
@@ -3117,6 +3426,10 @@ export type Database = {
           status_updated_at?: string | null
           status_updated_by?: string | null
           store_location_id?: string | null
+          tcpa_consent_at?: string | null
+          tcpa_consent_ip?: string | null
+          tcpa_consent_text?: string | null
+          tcpa_consent_version?: number | null
           tech_issues?: string[] | null
           tire_adjustment?: number | null
           tire_lf?: number | null
@@ -3164,6 +3477,30 @@ export type Database = {
           id?: string
           metadata?: Json | null
           reason?: string
+        }
+        Relationships: []
+      }
+      tenant_channels: {
+        Row: {
+          channel: string
+          dealership_id: string
+          enabled: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          channel: string
+          dealership_id?: string
+          enabled?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          channel?: string
+          dealership_id?: string
+          enabled?: boolean
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -3445,6 +3782,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      channel_enabled: {
+        Args: { _channel: string; _dealership_id: string; _location_id: string }
+        Returns: boolean
+      }
       cleanup_old_lookup_attempts: { Args: never; Returns: undefined }
       delete_email: {
         Args: { message_id: number; queue_name: string }
@@ -3459,6 +3800,13 @@ export type Database = {
           _to_dealer_group_id: string
         }
         Returns: string
+      }
+      effective_inspection_input_modes: {
+        Args: { _dealership_id: string; _location_id: string }
+        Returns: {
+          brake_mode: string
+          tire_mode: string
+        }[]
       }
       effective_user_sections: {
         Args: { _sections: Json; _user_id: string }
