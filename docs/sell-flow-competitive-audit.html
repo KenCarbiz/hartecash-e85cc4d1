@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Sell-Your-Car Competitive Audit · May 2026</title>
+<style>
+  :root {
+    --ink:        #0F1722;
+    --ink-soft:   #3a4453;
+    --muted:      #6b7480;
+    --line:       #e3e7ec;
+    --bg:         #ffffff;
+    --panel:      #f7f9fc;
+    --panel-2:    #eef2f7;
+    --primary:    #0B3A6F;
+    --accent:     #1FB6C7;
+    --good:       #2BA86B;
+    --bad:        #c1422f;
+    --warn:       #b6852b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 56px 56px 96px;
+  }
+  /* ── Header ────────────────────────────────────────────── */
+  header.cover {
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 32px;
+    margin-bottom: 48px;
+  }
+  header.cover .kicker {
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+  header.cover h1 {
+    font-size: 40px;
+    line-height: 1.1;
+    margin: 0 0 14px;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  header.cover .lede {
+    font-size: 18px;
+    color: var(--ink-soft);
+    max-width: 720px;
+    margin: 0 0 22px;
+  }
+  header.cover .meta {
+    display: flex;
+    gap: 28px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  header.cover .meta strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  /* ── Section structure ─────────────────────────────────── */
+  h2 {
+    font-size: 24px;
+    margin: 64px 0 8px;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  h2 .num {
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    margin-right: 12px;
+    font-weight: 700;
+  }
+  h2 + p.sub {
+    color: var(--muted);
+    font-size: 15px;
+    margin: 0 0 28px;
+  }
+  h3 {
+    font-size: 18px;
+    margin: 36px 0 10px;
+    color: var(--ink);
+  }
+  p { margin: 0 0 14px; }
+  ul { margin: 0 0 14px; padding-left: 22px; }
+  li { margin-bottom: 6px; }
+  /* ── TL;DR card ────────────────────────────────────────── */
+  .tldr {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--primary);
+    border-radius: 6px;
+    padding: 24px 28px;
+    margin: 0 0 12px;
+  }
+  .tldr h2 {
+    margin-top: 0;
+    font-size: 18px;
+  }
+  .tldr ol {
+    margin: 0;
+    padding-left: 22px;
+  }
+  .tldr ol li {
+    margin-bottom: 8px;
+  }
+  /* ── Tables ────────────────────────────────────────────── */
+  .table-wrap { overflow-x: auto; margin: 0 0 18px; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  thead th {
+    text-align: left;
+    background: var(--panel-2);
+    color: var(--ink);
+    font-weight: 600;
+    padding: 11px 12px;
+    border-bottom: 1px solid var(--line);
+    font-size: 12.5px;
+    letter-spacing: 0.02em;
+  }
+  tbody td {
+    padding: 11px 12px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  tbody tr:hover { background: #fafbfd; }
+  tbody td:first-child { font-weight: 600; color: var(--ink); white-space: nowrap; }
+  td.num, td.center { text-align: center; }
+  /* ── Pills ─────────────────────────────────────────────── */
+  .pill {
+    display: inline-block;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 2px 9px;
+    border-radius: 999px;
+    line-height: 1.5;
+    letter-spacing: 0.02em;
+  }
+  .pill.firm  { background: #e2f7ed; color: var(--good); }
+  .pill.range { background: #fdf3df; color: var(--warn); }
+  .pill.dead  { background: #fae6e2; color: var(--bad); }
+  .pill.note  { background: #e6effa; color: var(--primary); }
+  /* ── Win/Loss callouts ─────────────────────────────────── */
+  .winloss {
+    border-left: 3px solid var(--line);
+    padding: 4px 16px;
+    margin: 8px 0 8px;
+  }
+  .winloss.win   { border-left-color: var(--good); background: #f4fbf7; }
+  .winloss.loss  { border-left-color: var(--bad);  background: #fdf6f4; }
+  .winloss .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-weight: 700;
+    margin-right: 8px;
+  }
+  .winloss.win .label  { color: var(--good); }
+  .winloss.loss .label { color: var(--bad); }
+  /* ── Color swatches ────────────────────────────────────── */
+  .palette-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin-top: 18px;
+  }
+  .palette {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .palette .strip {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+    height: 64px;
+  }
+  .palette .strip span { display: block; }
+  .palette-body { padding: 14px 16px 16px; }
+  .palette-body h4 { margin: 0 0 4px; font-size: 15px; }
+  .palette-body .when { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+  .palette-body .hexlist { font-size: 11.5px; color: var(--ink-soft); font-family: ui-monospace, Menlo, Consolas, monospace; }
+  .palette-body .hexlist span { display: block; margin-bottom: 2px; }
+  /* ── Two-column do/don't ───────────────────────────────── */
+  .twocol {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin: 18px 0;
+  }
+  .twocol .col {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 18px 20px;
+    background: var(--bg);
+  }
+  .twocol .col.do  { border-top: 4px solid var(--good); }
+  .twocol .col.dont { border-top: 4px solid var(--bad); }
+  .twocol .col h3 {
+    margin-top: 0;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .twocol .col.do  h3 { color: var(--good); }
+  .twocol .col.dont h3 { color: var(--bad); }
+  .twocol ul { padding-left: 18px; }
+  .twocol li { font-size: 14px; margin-bottom: 8px; }
+  /* ── Recipe layout ─────────────────────────────────────── */
+  .recipe {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 24px 28px;
+    background: var(--panel);
+    margin: 18px 0;
+  }
+  .recipe h3 { margin-top: 0; }
+  .recipe ol > li { margin-bottom: 12px; }
+  .recipe .step-title { font-weight: 600; }
+  /* ── Footer ────────────────────────────────────────────── */
+  footer {
+    margin-top: 80px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 12.5px;
+  }
+  footer p { margin: 0 0 6px; }
+  /* ── Print ─────────────────────────────────────────────── */
+  @media print {
+    .wrap { padding: 0; max-width: none; }
+    body { font-size: 12pt; }
+    h2 { page-break-after: avoid; }
+    .twocol, .palette-grid { page-break-inside: avoid; }
+    table { page-break-inside: auto; }
+    tr { page-break-inside: avoid; }
+    .tldr { page-break-inside: avoid; }
+  }
+  /* ── Mobile ────────────────────────────────────────────── */
+  @media (max-width: 800px) {
+    .wrap { padding: 32px 22px 64px; }
+    header.cover h1 { font-size: 30px; }
+    .palette-grid { grid-template-columns: 1fr; }
+    .twocol { grid-template-columns: 1fr; }
+    table { font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ────────────────────────────────────────────────────── -->
+<!-- COVER -->
+<!-- ────────────────────────────────────────────────────── -->
+<header class="cover">
+  <div class="kicker">Competitive Audit · Used Vehicle Acquisition</div>
+  <h1>How the rest of the industry is buying cars from the public — and what we should learn from it.</h1>
+  <p class="lede">A side-by-side look at the customer journey on every major sell-your-car website in May 2026 — Carvana, CarMax, Cars.com, CarGurus, AutoNation, KBB, Edmunds, Peddle, plus the dealer plug-ins (TradePending, AccuTrade, Roadster). What works, what doesn't, and what to put in front of our customers.</p>
+  <div class="meta">
+    <div><strong>Prepared for:</strong> Used Car Manager</div>
+    <div><strong>Date:</strong> May 2026</div>
+    <div><strong>Format:</strong> Internal review</div>
+  </div>
+</header>
+
+<!-- ────────────────────────────────────────────────────── -->
+<!-- TL;DR -->
+<!-- ────────────────────────────────────────────────────── -->
+<div class="tldr">
+  <h2>Bottom line — five things to take away from this report</h2>
+  <ol>
+    <li><strong>The market expects a real, firm offer in 2 minutes — good for 7 days.</strong> Carvana set this standard and everyone else copied it. Customers walk if you give them a "range" or a "we'll call you back."</li>
+    <li><strong>Lead with the license plate, not the VIN.</strong> Premium players (Carvana, CarMax, CarGurus, AutoNation, AccuTrade) all do this. VIN-first costs you customers who can't find the VIN on their phone in the parking lot.</li>
+    <li><strong>Two screens to a number.</strong> Plate + mileage + a few yes/no condition questions, then the offer. Anything longer bleeds customers at every step.</li>
+    <li><strong>Don't ask for an email or phone before showing the number.</strong> Every winning flow shows the offer first and collects contact info next to it. The losers gate it up front and watch their conversion rate drop.</li>
+    <li><strong>Stay on our own URL, in our own colors.</strong> Customers don't trust a redirect off the dealership website to some third-party brand. The plug-in vendors (TradePending, AccuTrade) both market this as their #1 feature for a reason.</li>
+  </ol>
+</div>
+
+<!-- ────────────────────────────────────────────────────── -->
+<!-- 1. WHO'S WHO -->
+<!-- ────────────────────────────────────────────────────── -->
+<h2><span class="num">1</span>Who's in the market right now</h2>
+<p class="sub">The sell-your-car space splits into three groups. They look similar from the outside but each has a very different business model — which shapes how their customer flow is designed.</p>
+
+<h3>The big three buyers (they buy your customer's car directly)</h3>
+<div class="table-wrap"><table>
+  <thead><tr>
+    <th>Company</th>
+    <th>What they really are</th>
+    <th>Pressure they put on the dealer</th>
+  </tr></thead>
+  <tbody>
+    <tr><td>Carvana</td><td>National online used-car retailer with their own buy desk</td><td>Sets the customer's expectation for "instant firm offer + 7-day hold"</td></tr>
+    <tr><td>CarMax</td><td>Bricks-and-mortar used-car superstore with online front door</td><td>Customer walks in with a CarMax offer in hand and demands you beat it</td></tr>
+    <tr><td>AutoNation</td><td>Largest franchise dealer group; runs a centralized buy program</td><td>Direct competitor for franchise rooftops in the same market</td></tr>
+  </tbody>
+</table></div>
+
+<h3>The marketplaces (they sell your customer's lead to multiple buyers)</h3>
+<div class="table-wrap"><table>
+  <thead><tr>
+    <th>Company</th>
+    <th>Model</th>
+    <th>Why customers go there</th>
+  </tr></thead>
+  <tbody>
+    <tr><td>Cars.com Quick Offer</td><td>Customer enters details once, multiple dealers/auctioneers bid</td><td>"I'll see what everybody offers and pick the highest"</td></tr>
+    <tr><td>CarGurus IMCO</td><td>Same — picks the highest offer from a network of dealers</td><td>"Compare offers in 2 minutes" headline</td></tr>
+    <tr><td>KBB Instant Cash Offer</td><td>KBB generates the number; participating dealer redeems it</td><td>"KBB said it's worth $X" — the trust anchor</td></tr>
+  </tbody>
+</table></div>
+
+<h3>The buy-anything tier (older / damaged / non-running cars)</h3>
+<div class="table-wrap"><table>
+  <thead><tr>
+    <th>Company</th>
+    <th>Model</th>
+    <th>Why this matters to us</th>
+  </tr></thead>
+  <tbody>
+    <tr><td>Peddle</td><td>Buys 8,000+ cars/week; mostly older trade-ins</td><td>They're the price floor when a customer's car is too rough for retail</td></tr>
+    <tr><td>Wheelzy</td><td>Junk-car buyer with a phone-first flow</td><td>Same — they're the alternative when we say "we can't use it"</td></tr>
+    <tr><td>CarBrain</td><td>Damaged / non-running specialist</td><td>Same</td></tr>
+  </tbody>
+</table></div>
+
+<h3>The dealer plug-ins (what gets installed on a dealer website today)</h3>
+<div class="table-wrap"><table>
+  <thead><tr>
+    <th>Vendor</th>
+    <th>What it puts on the dealer's site</th>
+    <th>What the customer sees</th>
+  </tr></thead>
+  <tbody>
+    <tr><td>TradePending</td><td>A trade-in widget that stays on the dealer URL</td><td><span class="pill range">Value range</span> "Your car is worth $X – $Y"</td></tr>
+    <tr><td>AccuTrade (Cox / Cars Commerce)</td><td>Plate-based instant offer tool, single page</td><td><span class="pill firm">Firm offer</span> at VIN-level precision</td></tr>
+    <tr><td>Roadster (CDK)</td><td>Trade-in step embedded inside a full digital-retailing checkout</td><td><span class="pill firm">Firm offer</span> as part of buying another car</td></tr>
+    <tr><td>Modal / Drive Motors</td><td>Full e-commerce; trade-in is one tile</td><td>Range or firm depending on dealer config</td></tr>
+    <tr><td>Gubagoo</td><td>Trade-in tied to live chat</td><td>Range, with a chat agent following up</td></tr>
+  </tbody>
+</table></div>
+
+<!-- ────────────────────────────────────────────────────── -->
+<!-- 2. SIDE-BY-SIDE COMPARISON -->
+<!-- ────────────────────────────────────────────────────── -->
+<h2><span class="num">2</span>Side-by-side: what each one asks the customer</h2>
+<p class="sub">Steps = how many distinct screens the customer sees before getting a dollar amount. Less is better.</p>
+
+<div class="table-wrap"><table>
+  <thead><tr>
+    <th>Site</th>
+    <th>First field</th>
+    <th>Steps to a number</th>
+    <th>Offer shape</th>
+    <th>How long is the offer good for?</th>
+  </tr></thead>
+  <tbody>
+    <tr><td>Carvana</td><td>Plate <em>or</em> VIN</td><td class="center">~3</td><td><span class="pill firm">Firm</span></td><td>7 days</td></tr>
+    <tr><td>CarMax</td><td>VIN <em>or</em> plate</td><td class="center">2–3</td><td><span class="pill range">"Starting point"</span> until in-store</td><td>7 days</td></tr>
+    <tr><td>Cars.com Quick Offer</td><td>Plate</td><td class="center">2</td><td><span class="pill range">Range</span> + dealer bids</td><td>Varies by dealer</td></tr>
+    <tr><td>CarGurus IMCO</td><td>Plate or VIN</td><td class="center">~2</td><td><span class="pill firm">Firm</span> (highest bid wins)</td><td>~7 days</td></tr>
+    <tr><td>AutoNation</td><td>VIN or plate</td><td class="center">4–5</td><td><span class="pill firm">Firm</span> "Certified Offer"</td><td>7 days <em>or</em> 500 miles</td></tr>
+    <tr><td>Peddle</td><td>Year/Make/Model dropdowns</td><td class="center">~4</td><td><span class="pill firm">Firm</span> instant offer</td><td>7 days</td></tr>
+    <tr><td>Wheelzy</td><td>Year/Make/Model</td><td class="center">~3</td><td><span class="pill firm">Firm</span> phone-forward</td><td>"Won't decrease"</td></tr>
+    <tr><td>CarBrain</td><td>VIN preferred</td><td class="center">~2 (90&nbsp;sec)</td><td><span class="pill firm">Firm</span></td><td>7 days</td></tr>
+    <tr><td>KBB Instant Cash Offer</td><td>Plate, VIN, <em>or</em> Y/M/M</td><td class="center">5–6</td><td><span class="pill firm">Firm</span> at participating dealer</td><td>7 days, pending inspection</td></tr>
+    <tr><td>Edmunds Appraisal</td><td>VIN, plate, or Y/M/M</td><td class="center">3</td><td><span class="pill range">Range</span> (4 different values)</td><td>n/a — informational</td></tr>
+    <tr><td>TradePending (dealer plug-in)</td><td>Plate or VIN</td><td class="center">2</td><td><span class="pill range">Range</span></td><td>Local-market live</td></tr>
+    <tr><td>AccuTrade (dealer plug-in)</td><td>Plate or VIN</td><td class="center">1</td><td><span class="pill firm">Firm</span> VIN-level</td><td>Dealer-set</td></tr>
+    <tr><td>Vroom</td><td colspan="4"><span class="pill dead">Defunct</span> — wound down January 2024</td></tr>
+    <tr><td>Shift</td><td colspan="4"><span class="pill dead">Defunct</span> — Chapter 11, October 2023</td></tr>
+  </tbody>
+</table></div>
+
+<!-- ────────────────────────────────────────────────────── -->
+<!-- 3. WHAT EACH ONE NAILED / WHAT EACH ONE BLEW -->
+<!-- ────────────────────────────────────────────────────── -->
+<h2><span class="num">3</span>What each player nailed — and what they blew</h2>
+<p class="sub">One thing each company is doing right that we should steal, and one thing they're doing wrong that we should avoid.</p>
+
+<h3>Carvana</h3>
+<div class="winloss win"><span class="label">Win</span>One brand promise — "real offer in 2 minutes, good for 7 days" — repeated everywhere. Their turquoise color reads modern and tech-forward, not used-car-lot.</div>
+<div class="winloss loss"><span class="label">Loss</span>Forces a "sell or trade?" choice up front, before showing any number. Customers don't know the answer yet — they just want to see what their car is worth.</div>
+
+<h3>CarMax</h3>
+<div class="winloss win"><span class="label">Win</span>Two-track design: instant online offer to grab the customer, free in-store firm offer to close them. It's the dual-track every franchise dealer should be running.</div>
+<div class="winloss loss"><span class="label">Loss</span>The online number is hedged as a "starting point" — which contradicts their own "instant offer" pitch. Customers feel like they're being baited.</div>
+
+<h3>Cars.com</h3>
+<div class="winloss win"><span class="label">Win</span>Multi-offer comparison ("private party vs. dealer vs. trade") sets honest expectations and educates the customer before they've talked to anybody.</div>
+<div class="winloss loss"><span class="label">Loss</span>Brand color palette (purples and grays) reads more like a software CMS than a car website. Doesn't match the customer's mental model of what a car-buying site looks like.</div>
+
+<h3>CarGurus (IMCO)</h3>
+<div class="winloss win"><span class="label">Win</span>"Compare multiple offers in under 2 minutes" — clear, time-boxed promise. Customers know exactly what they're getting and how long it'll take.</div>
+<div class="winloss loss"><span class="label">Loss</span>The dealer network has gaps in some states, so the promise quietly degrades — a customer in a smaller market may get fewer or no offers.</div>
+
+<h3>AutoNation</h3>
+<div class="winloss win"><span class="label">Win</span>"7 days <em>or</em> 500 miles" makes the offer sound operational and specific, not promotional. That's a phrase to copy.</div>
+<div class="winloss loss"><span class="label">Loss</span>5 minutes and 4–5 screens to a number — the longest in the field. Every extra screen costs them customers.</div>
+
+<h3>Peddle</h3>
+<div class="winloss win"><span class="label">Win</span>Year/Make/Model dropdowns first (no plate friction for a 2002 Tahoe) — exactly right for the older / rougher tier they specialize in.</div>
+<div class="winloss loss"><span class="label">Loss</span>Dense text-heavy mobile form. Looks like 2018. Functional but cheap.</div>
+
+<h3>KBB Instant Cash Offer</h3>
+<div class="winloss win"><span class="label">Win</span>"Real offer for a specific amount, 7 days, redeem at a participating dealer" — the gold-standard script. Every word does work.</div>
+<div class="winloss loss"><span class="label">Loss</span>Form is long: color, engine, transmission, history, condition, contact — that's 6 sections of inputs before the customer sees a dollar amount.</div>
+
+<h3>Edmunds</h3>
+<div class="winloss win"><span class="label">Win</span>Shows three to four different values (trade-in, private party, dealer retail, certified pre-owned) so the customer learns what each one means.</div>
+<div class="winloss loss"><span class="label">Loss</span>The "range" hedge confuses customers who came expecting a single number. Carvana has trained the public to expect one.</div>
+
+<h3>TradePending (the dominant dealer plug-in)</h3>
+<div class="winloss win"><span class="label">Win</span>Stays on the dealer's URL — no redirect, no third-party brand on screen. Best dealer-trust alignment in the field.</div>
+<div class="winloss loss"><span class="label">Loss</span>Outputs a range, not a firm number. In a Carvana-trained world, this is the wrong answer — it makes the dealer look less professional than the national online buyers.</div>
+
+<h3>AccuTrade (Cox Automotive's answer)</h3>
+<div class="winloss win"><span class="label">Win</span>Single-page collapse: plate prefills mileage and history, and the customer sees a firm VIN-level number on one screen. As frictionless as it gets.</div>
+<div class="winloss loss"><span class="label">Loss</span>Requires a mature dealer ops setup behind the scenes — most rooftops can't pull it off without retooling their reconditioning math.</div>
+
+<!-- ────────────────────────────────────────────────────── -->
+<!-- 4. WHAT WORKS / WHAT DOESN'T -->
+<!-- ────────────────────────────────────────────────────── -->
+<h2><span class="num">4</span>The patterns that consistently work — and the ones that consistently don't</h2>
+<p class="sub">After looking at all of the above, the same wins and losses show up over and over. This is the actionable list.</p>
+
+<div class="twocol">
+  <div class="col do">
+    <h3>What works</h3>
+    <ul>
+      <li><strong>Plate + ZIP as the first input.</strong> Resolves to a VIN behind the scenes — saves the customer 4 dropdown screens.</li>
+      <li><strong>A firm offer with a 7-day hold.</strong> A range is the losing answer in 2026.</li>
+      <li><strong>Two screens to a number.</strong> Plate, mileage, a few yes/no condition questions, done.</li>
+      <li><strong>A visible time anchor in the headline.</strong> "2 minutes." "Instant." "90 seconds." Every winning page has one.</li>
+      <li><strong>Show the offer before asking for email or phone.</strong> Email field next to the offer, not before it.</li>
+      <li><strong>Stay on the dealer's URL.</strong> No redirect to a third-party brand.</li>
+      <li><strong>Branching yes/no condition questions</strong> (any accidents? does it run?) — easy for the customer to answer honestly.</li>
+      <li><strong>Operational language, not promotional language.</strong> "7 days or 500 miles" beats "great offer guaranteed!"</li>
+    </ul>
+  </div>
+  <div class="col dont">
+    <h3>What doesn't</h3>
+    <ul>
+      <li><strong>Asking for an account or email before the number.</strong> Kills conversion rate. Every top player avoids it.</li>
+      <li><strong>"Excellent / Very Good / Good / Fair / Poor" condition sliders.</strong> Customers always over-rate. Use yes/no questions instead.</li>
+      <li><strong>Long Year/Make/Model dropdowns when a plate would work.</strong> Looks junk-tier on a franchise dealer site.</li>
+      <li><strong>Range output ($X – $Y).</strong> Carvana taught the public to expect one number. A range looks like the dealer is hedging.</li>
+      <li><strong>Black hero / dark mode on a mainstream brand.</strong> Reads as buy-here-pay-here or scam. Light mode wins everywhere except true luxury.</li>
+      <li><strong>Phone number above the fold</strong> on a franchise dealer site — that's a Wheelzy junk-tier signal. Push it to header utility nav.</li>
+      <li><strong>Forking "sell vs. trade" before showing any value.</strong> Customer doesn't know yet — show the number, then offer the upsell.</li>
+      <li><strong>FAQ accordions and testimonials above the fold.</strong> Top players strip everything to a headline and a form card. Trust signals come below.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────────────── -->
+<!-- 5. COLOR / VISUAL DESIGN -->
+<!-- ────────────────────────────────────────────────────── -->
+<h2><span class="num">5</span>What colors and visual style read as trustworthy</h2>
+<p class="sub">The field clusters into four visual buckets. Each one sends a very specific message — and you don't always have a choice about which one your dealer logo lands in.</p>
+
+<div class="table-wrap"><table>
+  <thead><tr>
+    <th>Bucket</th>
+    <th>Examples</th>
+    <th>What it reads as to a customer</th>
+  </tr></thead>
+  <tbody>
+    <tr><td>Premium / institutional blue</td><td>Carvana, CarMax, CarGurus</td><td>Trustworthy. Bank-or-insurance-adjacent.</td></tr>
+    <tr><td>Approachable consumer</td><td>Cars.com, Edmunds</td><td>Friendly. Marketplace. Browse-y.</td></tr>
+    <tr><td>Premium minimalist</td><td>KBB modern refresh, AccuTrade</td><td>Clinical. B2B-credible. "Tool, not store."</td></tr>
+    <tr><td>Low-trust / loud</td><td>Wheelzy, junk-tier sites</td><td>Spammy. "We buy junk." Avoid.</td></tr>
+  </tbody>
+</table></div>
+
+<h3>Three palette options for our customer-facing landing page</h3>
+<p>All three are designed to work behind any dealer logo without clashing — they're "default safe" colors when the dealer hasn't picked their own.</p>
+
+<div class="palette-grid">
+  <div class="palette">
+    <div class="strip">
+      <span style="background:#0B3A6F"></span>
+      <span style="background:#1FB6C7"></span>
+      <span style="background:#F7F9FC"></span>
+      <span style="background:#0F1722"></span>
+      <span style="background:#2BA86B"></span>
+    </div>
+    <div class="palette-body">
+      <h4>Institutional Blue</h4>
+      <div class="when">Default safe pick — works behind almost any dealer logo</div>
+      <div class="hexlist">
+        <span>Primary &nbsp;#0B3A6F</span>
+        <span>Accent &nbsp;&nbsp;#1FB6C7</span>
+        <span>Surface &nbsp;#F7F9FC</span>
+        <span>Ink &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#0F1722</span>
+        <span>Success &nbsp;#2BA86B</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="palette">
+    <div class="strip">
+      <span style="background:#111418"></span>
+      <span style="background:#C9A24A"></span>
+      <span style="background:#FFFFFF"></span>
+      <span style="background:#1B1F25"></span>
+      <span style="background:#EDEEF1"></span>
+    </div>
+    <div class="palette-body">
+      <h4>Premium Minimalist</h4>
+      <div class="when">Luxury / import dealers (BMW, Lexus, Infiniti, Audi)</div>
+      <div class="hexlist">
+        <span>Primary &nbsp;#111418</span>
+        <span>Accent &nbsp;&nbsp;#C9A24A</span>
+        <span>Surface &nbsp;#FFFFFF</span>
+        <span>Ink &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#1B1F25</span>
+        <span>Tint &nbsp;&nbsp;&nbsp;&nbsp;#EDEEF1</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="palette">
+    <div class="strip">
+      <span style="background:#15467A"></span>
+      <span style="background:#E8772E"></span>
+      <span style="background:#FAF8F4"></span>
+      <span style="background:#22272E"></span>
+      <span style="background:#3E9A57"></span>
+    </div>
+    <div class="palette-body">
+      <h4>Approachable Domestic</h4>
+      <div class="when">Mainstream / family rooftops (Ford, Chevy, Toyota, Honda)</div>
+      <div class="hexlist">
+        <span>Primary &nbsp;#15467A</span>
+        <span>Accent &nbsp;&nbsp;#E8772E</span>
+        <span>Surface &nbsp;#FAF8F4</span>
+        <span>Ink &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#22272E</span>
+        <span>Success &nbsp;#3E9A57</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p style="margin-top:18px;color:var(--ink-soft)"><strong>Avoid:</strong> pure black backgrounds, pure red Call-To-Action buttons, neon green, and yellow text on white. All four correlate with the "low-trust / loud" cluster.</p>
+
+<!-- ────────────────────────────────────────────────────── -->
+<!-- 6. THE RECIPE -->
+<!-- ────────────────────────────────────────────────────── -->
+<h2><span class="num">6</span>The recipe — what our customer should see</h2>
+<p class="sub">A concrete description of the customer's first 90 seconds on our landing page. Walk through this with marketing and we have a spec.</p>
+
+<div class="recipe">
+<h3>Above the fold (mobile, in source order)</h3>
+<ol>
+  <li><span class="step-title">Dealer logo, top left.</span> No third-party co-branding. The customer should feel they're on the dealership's site.</li>
+  <li><span class="step-title">Headline:</span> <em>"Sell your car to [Dealer Name] — real offer in 2 minutes, good for 7 days."</em> The Carvana script, our store's name on it.</li>
+  <li><span class="step-title">A single form card:</span> license plate field, state field (auto-filled by location, editable), one small grey link that reads <em>"Don't have your plate? Use VIN or year/make/model."</em></li>
+  <li><span class="step-title">One Call-To-Action button:</span> "Get my offer." Full-width on mobile. Primary color.</li>
+  <li><span class="step-title">One trust line</span> directly under the CTA: <em>"Backed by [Dealer Name] · Since [year] · [N] cars purchased this year."</em> Add Google review stars + count if we have them.</li>
+</ol>
+
+<h3>The flow after that</h3>
+<ol>
+  <li><span class="step-title">Screen 1:</span> plate, state, mileage. (Plate resolves to a VIN behind the scenes — we already know the year/make/model/trim/options.)</li>
+  <li><span class="step-title">Screen 2:</span> three to five yes/no condition questions. Title status. Any accidents? Does it run? Major mechanical? Exterior condition (one pick from <em>three</em>, not five — "great / decent / rough").</li>
+  <li><span class="step-title">Screen 3:</span> the offer reveals, with a 7-day countdown badge. Email and phone fields appear next to the number, not before it. Customer can lock the offer in or schedule an appointment from this screen.</li>
+</ol>
+
+<h3>What we should NOT put above the fold</h3>
+<ul>
+  <li>The dealership phone number (push it to the header utility nav)</li>
+  <li>A "How it works" 3-step graphic</li>
+  <li>A stock photo of a car the customer doesn't own</li>
+  <li>An inventory grid</li>
+  <li>A floating chat bubble on top of the form</li>
+  <li>A "Sell or trade?" choice (defer that until after the number)</li>
+  <li>An FAQ accordion or a Spanish-language toggle</li>
+  <li>A BBB logo (it correlates with junk-tier sellers)</li>
+</ul>
+</div>
+
+<!-- ────────────────────────────────────────────────────── -->
+<!-- 7. SOURCES -->
+<!-- ────────────────────────────────────────────────────── -->
+<h2><span class="num">7</span>Sources &amp; methodology</h2>
+<p class="sub">Where the data in this report came from, so the manager can verify any claim.</p>
+
+<p>The pages of carvana.com, carmax.com, cars.com, cargurus.com, kbb.com, edmunds.com, autonation.com and peddle.com all blocked our automated reader (HTTP 403). All UX claims about those flows are reconstructed from secondary writeups dated 2025–2026, vendor product pages, and recent industry coverage. To verify any specific claim in person, walk through the corresponding URL on a phone:</p>
+
+<ul style="font-size:14px;column-count:2;column-gap:32px;">
+  <li><a href="https://www.carvana.com/sell-my-car">carvana.com/sell-my-car</a></li>
+  <li><a href="https://www.carmax.com/sell-my-car">carmax.com/sell-my-car</a></li>
+  <li><a href="https://www.cars.com/sell/">cars.com/sell</a></li>
+  <li><a href="https://www.cargurus.com/sell-car">cargurus.com/sell-car</a></li>
+  <li><a href="https://www.autonation.com/sell-my-car">autonation.com/sell-my-car</a></li>
+  <li><a href="https://www.peddle.com/">peddle.com</a></li>
+  <li><a href="https://wheelzy.com/caroffer">wheelzy.com/caroffer</a></li>
+  <li><a href="https://carbrain.com/sell-your-junk-car">carbrain.com/sell-your-junk-car</a></li>
+  <li><a href="https://www.kbb.com/instant-cash-offer/">kbb.com/instant-cash-offer</a></li>
+  <li><a href="https://www.edmunds.com/appraisal/">edmunds.com/appraisal</a></li>
+  <li><a href="https://tradepending.com/products/trade/">tradepending.com</a></li>
+  <li><a href="https://www.carscommerce.inc/accutrade/">carscommerce.inc/accutrade</a></li>
+</ul>
+
+<p>Vroom and Shift are confirmed defunct as of 2024 — Vroom wound down its e-commerce in January 2024, Shift filed Chapter 11 in October 2023.</p>
+
+<footer>
+  <p>Internal competitive review. Compiled May 2026.</p>
+  <p>This document is a snapshot — competitor flows change frequently. Re-audit quarterly.</p>
+</footer>
+
+</div>
+</body>
+</html>

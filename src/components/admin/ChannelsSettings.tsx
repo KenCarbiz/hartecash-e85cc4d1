@@ -370,18 +370,44 @@ const ChannelsSettings = () => {
       demo_offer_amount: Math.round(amt),
       updated_at: new Date().toISOString(),
     };
-    const { error, data } = siteConfigId
-      ? await supabase
+
+    const runWrite = () => (siteConfigId
+      ? supabase
           .from("site_config")
           .update(payload)
           .eq("id", siteConfigId)
           .select("id")
           .maybeSingle()
-      : await supabase
+      : supabase
           .from("site_config")
           .insert(payload)
           .select("id")
-          .maybeSingle();
+          .maybeSingle());
+
+    let { error, data } = await runWrite();
+
+    // PostgREST stale-schema recovery. If the demo_mode/demo_offer_amount
+    // columns exist but PostgREST cached the schema before they landed,
+    // the write fails with PGRST204 ("Could not find the 'demo_mode'
+    // column of 'site_config' in the schema cache"). Call the heal RPC
+    // to re-run ALTER TABLE IF NOT EXISTS + NOTIFY pgrst reload, give
+    // the cache ~1.2s to refresh, then retry once.
+    const looksLikeSchemaCacheMiss = (msg: string) =>
+      /demo_mode|demo_offer_amount/i.test(msg) &&
+      /(schema cache|could not find the .* column)/i.test(msg);
+
+    if (error && looksLikeSchemaCacheMiss(error.message || "")) {
+      try {
+        await supabase.rpc("heal_demo_mode_schema" as any);
+      } catch (e) {
+        console.warn("heal_demo_mode_schema RPC failed:", (e as Error).message);
+      }
+      await new Promise((r) => setTimeout(r, 1200));
+      const retry = await runWrite();
+      error = retry.error;
+      data = retry.data;
+    }
+
     setSavingKey(null);
     if (error) {
       toast({ title: "Couldn't save demo mode", description: error.message, variant: "destructive" });

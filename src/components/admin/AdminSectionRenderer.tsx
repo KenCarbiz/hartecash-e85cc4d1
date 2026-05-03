@@ -1,13 +1,11 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import NotificationLog from "./NotificationLog";
 import { Store, UserCheck, UserX, AlertTriangle, Zap, ArrowRight, ScanLine } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { TenantOverrideProvider } from "@/contexts/TenantContext";
-import { PAGE_SIZE, isAcceptedWithAppointment, isAcceptedWithoutAppointment, isOfferPendingSubmission } from "@/lib/adminConstants";
+import { PAGE_SIZE, isAcceptedWithAppointment, isAcceptedWithoutAppointment, isOfferPendingSubmission, canViewExecutiveHUD } from "@/lib/adminConstants";
 import type { Submission, DealerLocation, Appointment } from "@/lib/adminConstants";
 import type { PendingRequest, ActivityLogEntry } from "@/hooks/useAdminDashboard";
 
@@ -29,26 +27,18 @@ const AppointmentManager = React.lazy(() => import("./AppointmentManager"));
 const StaffManagement = React.lazy(() => import("./StaffManagement"));
 const PermissionManagement = React.lazy(() => import("./PermissionManagement"));
 const RolePermissionsMatrix = React.lazy(() => import("./RolePermissionsMatrix"));
-const ConsentLog = React.lazy(() => import("./ConsentLog"));
-const CommunicationLog = React.lazy(() => import("./CommunicationLog"));
-const VoiceComplianceLog = React.lazy(() => import("./VoiceComplianceLog"));
-const StaffActivityLog = React.lazy(() => import("./StaffActivityLog"));
-const TenantViewLog = React.lazy(() => import("./TenantViewLog"));
-const ExecutiveKPIHub = React.lazy(() => import("./ExecutiveKPIHub"));
+// Channels / Notifications / Compliance components are now imported
+// inside CommunicationsHub.tsx, which renders them as tabs.
+// ExecutiveKPIHub / ExecutiveHUD now imported by PerformanceHub.tsx.
 const OfferSettings = React.lazy(() => import("./OfferSettings"));
-const SiteConfiguration = React.lazy(() => import("./SiteConfiguration"));
-const AppearanceSettings = React.lazy(() => import("./AppearanceSettings"));
-const ChannelsSettings = React.lazy(() => import("./ChannelsSettings"));
-const LandingFlowConfig = React.lazy(() => import("./LandingFlowConfig"));
+// SiteConfiguration / AppearanceSettings / LandingFlowConfig now
+// imported by BrandingHub.tsx.
 const RooftopWebsites = React.lazy(() => import("./RooftopWebsites"));
 const PlatformCatalogManager = React.lazy(() => import("./PlatformCatalogManager"));
 const PlatformPricingManager = React.lazy(() => import("./PlatformPricingManager"));
-const NotificationSettings = React.lazy(() => import("./NotificationSettings"));
-const FormConfiguration = React.lazy(() => import("./FormConfiguration"));
-const InspectionConfiguration = React.lazy(() => import("./InspectionConfiguration"));
-const PhotoConfiguration = React.lazy(() => import("./PhotoConfiguration"));
-const DepthPolicyManager = React.lazy(() => import("./DepthPolicyManager"));
-const TestimonialManagement = React.lazy(() => import("./TestimonialManagement"));
+// FormConfiguration / InspectionConfiguration / PhotoConfiguration /
+// DepthPolicyManager now imported by CaptureInspectionHub.tsx.
+// TestimonialManagement now imported by MarketingHub.tsx.
 const LocationManagement = React.lazy(() => import("./LocationManagement"));
 const VehicleImageInventory = React.lazy(() => import("./VehicleImageInventory"));
 const ChangelogManagement = React.lazy(() => import("./ChangelogManagement"));
@@ -56,26 +46,30 @@ const TenantManagement = React.lazy(() => import("./TenantManagement"));
 const DealerOnboarding = React.lazy(() => import("./DealerOnboarding"));
 const OnboardingScript = React.lazy(() => import("./OnboardingScript"));
 const ReportsExport = React.lazy(() => import("./ReportsExport"));
-const ReferralManagement = React.lazy(() => import("./ReferralManagement"));
+// ReferralManagement now imported by MarketingHub.tsx.
 const MyReferrals = React.lazy(() => import("./MyReferrals"));
 const MyLeadLink = React.lazy(() => import("./MyLeadLink"));
 const MyAvailability = React.lazy(() => import("./MyAvailability"));
 const EmbedToolkit = React.lazy(() => import("./EmbedToolkit"));
 const ProspectDemo = React.lazy(() => import("./ProspectDemo"));
-const PromotionManagement = React.lazy(() => import("./PromotionManagement"));
+// PromotionManagement now imported by MarketingHub.tsx.
 
-const ApiAccessPanel = React.lazy(() => import("./ApiAccessPanel"));
-const WhiteLabelSettings = React.lazy(() => import("./WhiteLabelSettings"));
+// ApiAccessPanel / WhiteLabelSettings now imported by IntegrationsHub.tsx.
 const EquityMining = React.lazy(() => import("./EquityMining"));
 const WholesaleMarketplace = React.lazy(() => import("./WholesaleMarketplace"));
-const VautoIntegration = React.lazy(() => import("./VautoIntegration"));
-const IntegrationsStatus = React.lazy(() => import("./IntegrationsStatus"));
+// VautoIntegration / IntegrationsStatus now imported by IntegrationsHub.tsx.
 const AppraiserQueue = React.lazy(() => import("./AppraiserQueue"));
-const BDCPriorityQueue = React.lazy(() => import("./BDCPriorityQueue"));
-const BDCCallsToday = React.lazy(() => import("./BDCCallsToday"));
-const ExecutiveHUD = React.lazy(() => import("./ExecutiveHUD"));
+// BDCPriorityQueue / BDCCallsToday now imported by BdcQueueHub.tsx.
+// ExecutiveHUD now imported by PerformanceHub.tsx.
 const PlatformSubscriptions = React.lazy(() => import("./PlatformSubscriptions"));
 const VoiceAICampaigns = React.lazy(() => import("./VoiceAICampaigns"));
+const CommunicationsHub = React.lazy(() => import("./CommunicationsHub"));
+const BdcQueueHub = React.lazy(() => import("./BdcQueueHub"));
+const BrandingHub = React.lazy(() => import("./BrandingHub"));
+const CaptureInspectionHub = React.lazy(() => import("./CaptureInspectionHub"));
+const MarketingHub = React.lazy(() => import("./MarketingHub"));
+const PerformanceHub = React.lazy(() => import("./PerformanceHub"));
+const IntegrationsHub = React.lazy(() => import("./IntegrationsHub"));
 
 class AdminErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -457,94 +451,201 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
     );
   }
 
-  // ── Compliance ──
-  if (activeSection === "compliance") {
+  // ── Communications hub ── Channels + Notifications + Compliance
+  // collapsed into one tabbed page. Legacy keys ("channels",
+  // "notifications", "compliance") still route here on the right tab
+  // so existing bookmarks / breadcrumbs keep working.
+  if (
+    activeSection === "communications" ||
+    activeSection === "channels" ||
+    activeSection === "notifications" ||
+    activeSection === "compliance"
+  ) {
+    // Compliance was previously viewable without canManageAccess (it
+    // gated on permission cascade alone). Channels + Notifications
+    // required canManageAccess. Preserve that split: route compliance
+    // viewers to the hub on the compliance tab even without
+    // canManageAccess; gate the other tabs by passing the flag down.
+    const initialTab =
+      activeSection === "notifications"
+        ? "notifications"
+        : activeSection === "compliance"
+          ? "compliance"
+          : "channels";
+    if (!canManageAccess && initialTab !== "compliance") return null;
     return (
-      <div className="space-y-6">
-        <h2 className="text-lg font-semibold text-card-foreground">Compliance</h2>
-        <ConsentLog />
-        <div className="border-t border-border pt-6">
-          <CommunicationLog />
-        </div>
-        <div className="border-t border-border pt-6">
-          <VoiceComplianceLog />
-        </div>
-        <div className="border-t border-border pt-6">
-          <StaffActivityLog />
-        </div>
-        {props.tenant.dealership_id === "default" && props.canManageAccess && (
-          <div className="border-t border-border pt-6">
-            <TenantViewLog />
-          </div>
-        )}
-      </div>
+      <React.Suspense fallback={<AdminLoadingSkeleton />}>
+        <CommunicationsHub
+          initialTab={initialTab}
+          canManageChannels={canManageAccess}
+          showTenantViewLog={
+            props.tenant.dealership_id === "default" && props.canManageAccess
+          }
+        />
+      </React.Suspense>
+    );
+  }
+
+  // ── BDC queue hub ── Priority + Calls Today merged. Legacy keys
+  // ("bdc-queue", "bdc-calls") route here on the right tab.
+  if (
+    activeSection === "bdc-hub" ||
+    activeSection === "bdc-queue" ||
+    activeSection === "bdc-calls"
+  ) {
+    const initialTab = activeSection === "bdc-calls" ? "calls" : "priority";
+    return (
+      <React.Suspense fallback={<AdminLoadingSkeleton />}>
+        <BdcQueueHub
+          initialTab={initialTab}
+          onOpenSubmission={(id) => {
+            props.setActiveSection?.("submissions");
+            if (typeof window !== "undefined") {
+              const url = new URL(window.location.href);
+              url.searchParams.set("submission", id);
+              window.history.pushState(null, "", url.toString());
+            }
+          }}
+        />
+      </React.Suspense>
+    );
+  }
+
+  // ── Performance hub ── KPI + GM HUD as role-aware tabs. Legacy
+  // keys ("executive", "gm-hud") still resolve here.
+  if (activeSection === "performance" || activeSection === "executive" || activeSection === "gm-hud") {
+    const showHud = canViewExecutiveHUD(userRole);
+    const initialTab: "kpi" | "hud" = activeSection === "gm-hud" && showHud ? "hud" : "kpi";
+    return (
+      <React.Suspense fallback={<AdminLoadingSkeleton />}>
+        <PerformanceHub initialTab={initialTab} showHud={showHud} />
+      </React.Suspense>
+    );
+  }
+
+  // ── Branding hub ── Identity + Appearance + Landing on tabs. Legacy
+  // keys ("site-config", "appearance", "landing-flow") still resolve.
+  if (
+    activeSection === "branding" ||
+    activeSection === "site-config" ||
+    activeSection === "appearance" ||
+    activeSection === "landing-flow"
+  ) {
+    if (!canManageAccess) return null;
+    const initialTab =
+      activeSection === "appearance"
+        ? "appearance"
+        : activeSection === "landing-flow"
+          ? "landing"
+          : "identity";
+    return (
+      <React.Suspense fallback={<AdminLoadingSkeleton />}>
+        <BrandingHub
+          initialTab={initialTab}
+          userRole={userRole}
+          canManageAccess={canManageAccess}
+          focusField={focusField}
+        />
+      </React.Suspense>
+    );
+  }
+
+  // ── Capture & Inspection hub ── Lead Form + Inspection Sheet +
+  // Photos + Standards on tabs. Legacy keys still resolve.
+  if (
+    activeSection === "capture-inspection" ||
+    activeSection === "form-config" ||
+    activeSection === "inspection-config" ||
+    activeSection === "photo-config" ||
+    activeSection === "depth-policies"
+  ) {
+    if (!canManageAccess) return null;
+    const initialTab =
+      activeSection === "inspection-config"
+        ? "inspection-sheet"
+        : activeSection === "photo-config"
+          ? "photos"
+          : activeSection === "depth-policies"
+            ? "standards"
+            : "lead-form";
+    return (
+      <React.Suspense fallback={<AdminLoadingSkeleton />}>
+        <CaptureInspectionHub initialTab={initialTab} />
+      </React.Suspense>
+    );
+  }
+
+  // ── Marketing hub ── Promotions + Referrals + Testimonials on tabs.
+  // Legacy keys ("promotions", "referrals", "testimonials") still resolve.
+  if (
+    activeSection === "marketing" ||
+    activeSection === "promotions" ||
+    activeSection === "referrals" ||
+    activeSection === "testimonials"
+  ) {
+    if (!canManageAccess) return null;
+    const initialTab =
+      activeSection === "referrals"
+        ? "referrals"
+        : activeSection === "testimonials"
+          ? "testimonials"
+          : "promotions";
+    return (
+      <React.Suspense fallback={<AdminLoadingSkeleton />}>
+        <MarketingHub initialTab={initialTab} />
+      </React.Suspense>
+    );
+  }
+
+  // ── Integrations hub ── Status + API + vAuto + White Label on tabs.
+  // Legacy keys ("white-label", "integrations-status", "api-access",
+  // "vauto-integration") still resolve onto the right tab.
+  if (
+    activeSection === "integrations" ||
+    activeSection === "integrations-status" ||
+    activeSection === "api-access" ||
+    activeSection === "vauto-integration" ||
+    activeSection === "white-label"
+  ) {
+    if (!canManageAccess) return null;
+    const initialTab =
+      activeSection === "api-access"
+        ? "api"
+        : activeSection === "vauto-integration"
+          ? "vauto"
+          : activeSection === "white-label"
+            ? "white-label"
+            : "status";
+    return (
+      <React.Suspense fallback={<AdminLoadingSkeleton />}>
+        <IntegrationsHub initialTab={initialTab} />
+      </React.Suspense>
     );
   }
 
   // ── Config sections (wrapped with optional tenant override) ──
   const configSections = (
     <>
-      {activeSection === "executive" && <ExecutiveKPIHub />}
-      {activeSection === "gm-hud" && (
-        <React.Suspense fallback={<AdminLoadingSkeleton />}>
-          <ExecutiveHUD />
-        </React.Suspense>
-      )}
+      {/* "executive" / "gm-hud" handled by PerformanceHub above. */}
       {activeSection === "appraiser-queue" && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <AppraiserQueue userRole={userRole} isAppraiser={props.isAppraiser} />
         </React.Suspense>
       )}
-      {activeSection === "bdc-calls" && (
-        <React.Suspense fallback={<AdminLoadingSkeleton />}>
-          <BDCCallsToday />
-        </React.Suspense>
-      )}
-      {activeSection === "bdc-queue" && (
-        <React.Suspense fallback={<AdminLoadingSkeleton />}>
-          <BDCPriorityQueue
-            onOpenSubmission={(id) => {
-              // Parent manages the selected submission via the
-              // submissions section's state. Easiest handoff: switch
-              // section to submissions and pass the id via query.
-              props.setActiveSection?.("submissions");
-              if (typeof window !== "undefined") {
-                const url = new URL(window.location.href);
-                url.searchParams.set("submission", id);
-                window.history.pushState(null, "", url.toString());
-              }
-            }}
-          />
-        </React.Suspense>
-      )}
+      {/* BDC keys ("bdc-queue" / "bdc-calls") are handled by the
+          BdcQueueHub block above so the two surfaces share one page. */}
       {activeSection === "offer-settings" && (canManageAccess || userRole === "gsm_gm" || userRole === "gm") && (
         <OfferSettings userId={userId || undefined} userRole={userRole} />
       )}
-      {activeSection === "site-config" && canManageAccess && <SiteConfiguration focusField={focusField} />}
-      {activeSection === "appearance" && canManageAccess && (
-        <AppearanceSettings userRole={userRole} canManageAccess={canManageAccess} />
-      )}
-      {activeSection === "channels" && canManageAccess && <ChannelsSettings />}
-      {activeSection === "landing-flow" && canManageAccess && <LandingFlowConfig />}
+      {/* "site-config" / "appearance" / "landing-flow" handled by
+          BrandingHub above. */}
+      {/* "channels" / "notifications" / "compliance" handled by
+          CommunicationsHub above. */}
+      {/* "form-config" / "inspection-config" / "photo-config" /
+          "depth-policies" handled by CaptureInspectionHub above. */}
+      {/* "promotions" / "referrals" / "testimonials" handled by
+          MarketingHub above. */}
       {activeSection === "rooftop-websites" && canManageAccess && <RooftopWebsites />}
-      {activeSection === "promotions" && canManageAccess && <PromotionManagement />}
-      {activeSection === "notifications" && canManageAccess && (
-        <div className="space-y-6">
-          <Tabs defaultValue="settings" className="w-full">
-            <TabsList>
-              <TabsTrigger value="settings">Settings</TabsTrigger>
-              <TabsTrigger value="log">Sent Messages</TabsTrigger>
-            </TabsList>
-            <TabsContent value="settings"><NotificationSettings /></TabsContent>
-            <TabsContent value="log"><NotificationLog /></TabsContent>
-          </Tabs>
-        </div>
-      )}
-      {activeSection === "form-config" && canManageAccess && <FormConfiguration />}
-      {activeSection === "inspection-config" && canManageAccess && <InspectionConfiguration />}
-      {activeSection === "photo-config" && canManageAccess && <PhotoConfiguration />}
-      {activeSection === "depth-policies" && canManageAccess && <DepthPolicyManager />}
-      {activeSection === "testimonials" && canManageAccess && <TestimonialManagement />}
       {activeSection === "locations" && canManageAccess && <LocationManagement />}
       {activeSection === "image-inventory" && canManageAccess && <VehicleImageInventory />}
       {activeSection === "system-settings" && canManageAccess && (
@@ -594,7 +695,7 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
       )}
       {activeSection === "onboarding-script" && <OnboardingScript targetDealershipId={onboardingDealershipId} onNavigate={props.setActiveSection} />}
       {activeSection === "reports" && <ReportsExport />}
-      {activeSection === "referrals" && canManageAccess && <ReferralManagement />}
+      {/* "referrals" routes to MarketingHub above. */}
       {activeSection === "my-referrals" && (
         <MyReferrals staffName={props.userName} />
       )}
@@ -621,26 +722,9 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
           <WholesaleMarketplace />
         </React.Suspense>
       )}
-      {activeSection === "api-access" && canManageAccess && (
-        <React.Suspense fallback={<AdminLoadingSkeleton />}>
-          <ApiAccessPanel />
-        </React.Suspense>
-      )}
-      {activeSection === "vauto-integration" && canManageAccess && (
-        <React.Suspense fallback={<AdminLoadingSkeleton />}>
-          <VautoIntegration />
-        </React.Suspense>
-      )}
-      {activeSection === "white-label" && canManageAccess && (
-        <React.Suspense fallback={<AdminLoadingSkeleton />}>
-          <WhiteLabelSettings />
-        </React.Suspense>
-      )}
-      {activeSection === "integrations-status" && canManageAccess && (
-        <React.Suspense fallback={<AdminLoadingSkeleton />}>
-          <IntegrationsStatus />
-        </React.Suspense>
-      )}
+      {/* "white-label" / "integrations-status" / "api-access" /
+          "vauto-integration" all dispatch to IntegrationsHub via the
+          dedicated block below configSections. */}
       {activeSection === "platform-billing" && canManageAccess && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <PlatformSubscriptions />
