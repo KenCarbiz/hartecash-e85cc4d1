@@ -30,7 +30,6 @@ import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { canViewExecutiveHUD } from "@/lib/adminConstants";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 interface AdminSidebarProps {
@@ -200,33 +199,26 @@ const AdminSidebar = ({
     { key: "voice-ai", label: "Voice AI", icon: Mic },
   ].filter((item) => isAllowed(item.key));
 
-  // ── MEASURE ── Performance + Reports. "Compliance" moved into the
-  // new Communications hub (TCPA / consent / audit logs all live with
-  // the comms surfaces). GM HUD remains a sibling of Performance only
-  // for the audience that can view it.
+  // ── MEASURE ── Performance hub (KPI + GM HUD as role-aware tabs)
+  // and Reports. "Compliance" moved into the Communications hub (TCPA
+  // / consent / audit logs all live with the comms surfaces).
   const measureItems: SidebarItem[] = [
-    { key: "executive", label: "Performance", icon: LineChart },
-    ...(canViewExecutiveHUD(userRole)
-      ? [{ key: "gm-hud", label: "GM HUD", icon: DollarSign }]
-      : []),
+    { key: "performance", label: "Performance", icon: LineChart },
     { key: "reports", label: "Reports", icon: BarChart3 },
   ].filter((item) => isAllowed(item.key));
 
-  // ── SETUP · DEALER ── Identity, branding, locations, and core
-  // data-capture configuration. "Communication Channels" + "Notifications"
-  // + "Compliance" collapse into the new "Communications" hub
-  // (CommunicationsHub.tsx); the legacy "channels" / "notifications" /
-  // "compliance" keys still resolve onto the right tab.
+  // ── SETUP · DEALER ── Major consolidation pass:
+  //   - Branding hub      = Identity + Appearance + Landing (was 3 entries)
+  //   - Communications    = Channels + Notifications + Compliance (was 3)
+  //   - Capture & Inspect = Lead Form + Sheet + Photos + Standards (was 4)
+  // Legacy keys keep resolving so existing role-permission grants and
+  // bookmarks stay valid.
   const setupDealerItems: SidebarItem[] = [
-    { key: "appearance", label: "Appearance & Access", icon: Sparkles },
+    { key: "branding", label: "Branding", icon: Palette },
     { key: "communications", label: "Communications", icon: Phone },
-    { key: "site-config", label: "Branding", icon: Palette },
+    { key: "capture-inspection", label: "Capture & Inspection", icon: FileText },
     ...(locationCount > 1 ? [{ key: "locations", label: "Locations", icon: MapPin }] : []),
     { key: "offer-settings", label: "Pricing Rules", icon: Settings, badge: pricingAccessRequestCount > 0 ? String(pricingAccessRequestCount) : undefined, badgeVariant: "destructive" as const },
-    { key: "form-config", label: "Lead Form", icon: FileText },
-    { key: "inspection-config", label: "Inspection Sheet", icon: ListChecks },
-    { key: "photo-config", label: "Photo Requirements", icon: Camera },
-    { key: "depth-policies", label: "Inspection Standards", icon: Gauge },
   ].filter((item) => isAllowed(item.key));
 
   // ── MY ── Per-user surfaces every staff member benefits from
@@ -238,17 +230,12 @@ const AdminSidebar = ({
     { key: "my-referrals", label: "My Referrals", icon: Gift },
   ].filter((item) => isAllowed(item.key));
 
-  // ── SETUP · PROCESS ── Customer-facing flow, marketing, embed,
-  // rooftop micro-sites. Enterprise-only items (White Label,
-  // Integrations, API, vAuto) moved to their own Integrations group
-  // so the gate is visible and Setup · Process stays focused on
-  // operational tooling that every paying tenant can access.
+  // ── SETUP · PROCESS ── Distribution surfaces. "Marketing" hub
+  // (Promotions + Referrals + Testimonials) replaces those three
+  // separate entries. "Landing & Flow" merged into the Branding hub.
   const setupProcessItems: SidebarItem[] = [
-    { key: "promotions", label: "Promotions", icon: Megaphone },
-    { key: "referrals", label: "Referral Program", icon: Award },
-    { key: "landing-flow", label: "Landing & Flow", icon: Layout },
+    { key: "marketing", label: "Marketing", icon: Megaphone },
     ...(locationCount > 1 ? [{ key: "rooftop-websites", label: "Rooftop Websites", icon: Globe }] : []),
-    { key: "testimonials", label: "Testimonials", icon: MessageSquareQuote },
     { key: "embed-toolkit", label: "Website Embed", icon: Code2 },
   ].filter((item) => isAllowed(item.key));
 
@@ -301,18 +288,23 @@ const AdminSidebar = ({
   ].filter((item) => isAllowed(item.key));
 
   const allSectionKeys = [
-    "today", "submissions", "accepted-appts", "executive", "appraiser-queue",
-    // BDC: legacy keys ("bdc-queue", "bdc-calls") still resolve, but the
-    // sidebar uses the merged "bdc-hub" entry.
+    "today", "submissions", "accepted-appts", "appraiser-queue",
+    // Performance: legacy "executive" / "gm-hud" still resolve.
+    "performance", "executive", "gm-hud",
+    // BDC: legacy "bdc-queue" / "bdc-calls" still resolve.
     "bdc-hub", "bdc-queue", "bdc-calls",
-    "offer-settings", "form-config", "inspection-config", "photo-config",
-    "depth-policies", "promotions",
-    // Comms: legacy keys ("channels", "notifications", "compliance") still
-    // resolve onto the right tab, but the sidebar uses "communications".
+    // Comms: legacy "channels" / "notifications" / "compliance" still resolve.
     "communications", "channels", "notifications", "compliance",
-    "site-config", "appearance", "landing-flow", "locations", "rooftop-websites", "testimonials", "embed-toolkit",
+    // Branding: legacy "site-config" / "appearance" / "landing-flow" still resolve.
+    "branding", "site-config", "appearance", "landing-flow",
+    // Capture & Inspection: legacy keys still resolve.
+    "capture-inspection", "form-config", "inspection-config", "photo-config", "depth-policies",
+    // Marketing: legacy "promotions" / "referrals" / "testimonials" still resolve.
+    "marketing", "promotions", "referrals", "testimonials",
+    "offer-settings",
+    "locations", "rooftop-websites", "embed-toolkit",
     "my-lead-link", "my-availability", "my-referrals",
-    "staff", "referrals", "reports", "image-inventory", "changelog",
+    "staff", "reports", "image-inventory", "changelog",
     "onboarding", "system-settings", "pricing-model",
     "platform-billing", "integrations-status", "api-access", "vauto-integration", "white-label", "prospect-demo",
     "equity-mining", "voice-ai", "service-quick-entry", "inspection-checkin",

@@ -5,7 +5,7 @@ import { Store, UserCheck, UserX, AlertTriangle, Zap, ArrowRight, ScanLine } fro
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { TenantOverrideProvider } from "@/contexts/TenantContext";
-import { PAGE_SIZE, isAcceptedWithAppointment, isAcceptedWithoutAppointment, isOfferPendingSubmission } from "@/lib/adminConstants";
+import { PAGE_SIZE, isAcceptedWithAppointment, isAcceptedWithoutAppointment, isOfferPendingSubmission, canViewExecutiveHUD } from "@/lib/adminConstants";
 import type { Submission, DealerLocation, Appointment } from "@/lib/adminConstants";
 import type { PendingRequest, ActivityLogEntry } from "@/hooks/useAdminDashboard";
 
@@ -29,19 +29,16 @@ const PermissionManagement = React.lazy(() => import("./PermissionManagement"));
 const RolePermissionsMatrix = React.lazy(() => import("./RolePermissionsMatrix"));
 // Channels / Notifications / Compliance components are now imported
 // inside CommunicationsHub.tsx, which renders them as tabs.
-const ExecutiveKPIHub = React.lazy(() => import("./ExecutiveKPIHub"));
+// ExecutiveKPIHub / ExecutiveHUD now imported by PerformanceHub.tsx.
 const OfferSettings = React.lazy(() => import("./OfferSettings"));
-const SiteConfiguration = React.lazy(() => import("./SiteConfiguration"));
-const AppearanceSettings = React.lazy(() => import("./AppearanceSettings"));
-const LandingFlowConfig = React.lazy(() => import("./LandingFlowConfig"));
+// SiteConfiguration / AppearanceSettings / LandingFlowConfig now
+// imported by BrandingHub.tsx.
 const RooftopWebsites = React.lazy(() => import("./RooftopWebsites"));
 const PlatformCatalogManager = React.lazy(() => import("./PlatformCatalogManager"));
 const PlatformPricingManager = React.lazy(() => import("./PlatformPricingManager"));
-const FormConfiguration = React.lazy(() => import("./FormConfiguration"));
-const InspectionConfiguration = React.lazy(() => import("./InspectionConfiguration"));
-const PhotoConfiguration = React.lazy(() => import("./PhotoConfiguration"));
-const DepthPolicyManager = React.lazy(() => import("./DepthPolicyManager"));
-const TestimonialManagement = React.lazy(() => import("./TestimonialManagement"));
+// FormConfiguration / InspectionConfiguration / PhotoConfiguration /
+// DepthPolicyManager now imported by CaptureInspectionHub.tsx.
+// TestimonialManagement now imported by MarketingHub.tsx.
 const LocationManagement = React.lazy(() => import("./LocationManagement"));
 const VehicleImageInventory = React.lazy(() => import("./VehicleImageInventory"));
 const ChangelogManagement = React.lazy(() => import("./ChangelogManagement"));
@@ -49,13 +46,13 @@ const TenantManagement = React.lazy(() => import("./TenantManagement"));
 const DealerOnboarding = React.lazy(() => import("./DealerOnboarding"));
 const OnboardingScript = React.lazy(() => import("./OnboardingScript"));
 const ReportsExport = React.lazy(() => import("./ReportsExport"));
-const ReferralManagement = React.lazy(() => import("./ReferralManagement"));
+// ReferralManagement now imported by MarketingHub.tsx.
 const MyReferrals = React.lazy(() => import("./MyReferrals"));
 const MyLeadLink = React.lazy(() => import("./MyLeadLink"));
 const MyAvailability = React.lazy(() => import("./MyAvailability"));
 const EmbedToolkit = React.lazy(() => import("./EmbedToolkit"));
 const ProspectDemo = React.lazy(() => import("./ProspectDemo"));
-const PromotionManagement = React.lazy(() => import("./PromotionManagement"));
+// PromotionManagement now imported by MarketingHub.tsx.
 
 const ApiAccessPanel = React.lazy(() => import("./ApiAccessPanel"));
 const WhiteLabelSettings = React.lazy(() => import("./WhiteLabelSettings"));
@@ -65,11 +62,15 @@ const VautoIntegration = React.lazy(() => import("./VautoIntegration"));
 const IntegrationsStatus = React.lazy(() => import("./IntegrationsStatus"));
 const AppraiserQueue = React.lazy(() => import("./AppraiserQueue"));
 // BDCPriorityQueue / BDCCallsToday now imported by BdcQueueHub.tsx.
-const ExecutiveHUD = React.lazy(() => import("./ExecutiveHUD"));
+// ExecutiveHUD now imported by PerformanceHub.tsx.
 const PlatformSubscriptions = React.lazy(() => import("./PlatformSubscriptions"));
 const VoiceAICampaigns = React.lazy(() => import("./VoiceAICampaigns"));
 const CommunicationsHub = React.lazy(() => import("./CommunicationsHub"));
 const BdcQueueHub = React.lazy(() => import("./BdcQueueHub"));
+const BrandingHub = React.lazy(() => import("./BrandingHub"));
+const CaptureInspectionHub = React.lazy(() => import("./CaptureInspectionHub"));
+const MarketingHub = React.lazy(() => import("./MarketingHub"));
+const PerformanceHub = React.lazy(() => import("./PerformanceHub"));
 
 class AdminErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -511,15 +512,96 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
     );
   }
 
+  // ── Performance hub ── KPI + GM HUD as role-aware tabs. Legacy
+  // keys ("executive", "gm-hud") still resolve here.
+  if (activeSection === "performance" || activeSection === "executive" || activeSection === "gm-hud") {
+    const showHud = canViewExecutiveHUD(userRole);
+    const initialTab: "kpi" | "hud" = activeSection === "gm-hud" && showHud ? "hud" : "kpi";
+    return (
+      <React.Suspense fallback={<AdminLoadingSkeleton />}>
+        <PerformanceHub initialTab={initialTab} showHud={showHud} />
+      </React.Suspense>
+    );
+  }
+
+  // ── Branding hub ── Identity + Appearance + Landing on tabs. Legacy
+  // keys ("site-config", "appearance", "landing-flow") still resolve.
+  if (
+    activeSection === "branding" ||
+    activeSection === "site-config" ||
+    activeSection === "appearance" ||
+    activeSection === "landing-flow"
+  ) {
+    if (!canManageAccess) return null;
+    const initialTab =
+      activeSection === "appearance"
+        ? "appearance"
+        : activeSection === "landing-flow"
+          ? "landing"
+          : "identity";
+    return (
+      <React.Suspense fallback={<AdminLoadingSkeleton />}>
+        <BrandingHub
+          initialTab={initialTab}
+          userRole={userRole}
+          canManageAccess={canManageAccess}
+          focusField={focusField}
+        />
+      </React.Suspense>
+    );
+  }
+
+  // ── Capture & Inspection hub ── Lead Form + Inspection Sheet +
+  // Photos + Standards on tabs. Legacy keys still resolve.
+  if (
+    activeSection === "capture-inspection" ||
+    activeSection === "form-config" ||
+    activeSection === "inspection-config" ||
+    activeSection === "photo-config" ||
+    activeSection === "depth-policies"
+  ) {
+    if (!canManageAccess) return null;
+    const initialTab =
+      activeSection === "inspection-config"
+        ? "inspection-sheet"
+        : activeSection === "photo-config"
+          ? "photos"
+          : activeSection === "depth-policies"
+            ? "standards"
+            : "lead-form";
+    return (
+      <React.Suspense fallback={<AdminLoadingSkeleton />}>
+        <CaptureInspectionHub initialTab={initialTab} />
+      </React.Suspense>
+    );
+  }
+
+  // ── Marketing hub ── Promotions + Referrals + Testimonials on tabs.
+  // Legacy keys ("promotions", "referrals", "testimonials") still resolve.
+  if (
+    activeSection === "marketing" ||
+    activeSection === "promotions" ||
+    activeSection === "referrals" ||
+    activeSection === "testimonials"
+  ) {
+    if (!canManageAccess) return null;
+    const initialTab =
+      activeSection === "referrals"
+        ? "referrals"
+        : activeSection === "testimonials"
+          ? "testimonials"
+          : "promotions";
+    return (
+      <React.Suspense fallback={<AdminLoadingSkeleton />}>
+        <MarketingHub initialTab={initialTab} />
+      </React.Suspense>
+    );
+  }
+
   // ── Config sections (wrapped with optional tenant override) ──
   const configSections = (
     <>
-      {activeSection === "executive" && <ExecutiveKPIHub />}
-      {activeSection === "gm-hud" && (
-        <React.Suspense fallback={<AdminLoadingSkeleton />}>
-          <ExecutiveHUD />
-        </React.Suspense>
-      )}
+      {/* "executive" / "gm-hud" handled by PerformanceHub above. */}
       {activeSection === "appraiser-queue" && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <AppraiserQueue userRole={userRole} isAppraiser={props.isAppraiser} />
@@ -530,21 +612,15 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
       {activeSection === "offer-settings" && (canManageAccess || userRole === "gsm_gm" || userRole === "gm") && (
         <OfferSettings userId={userId || undefined} userRole={userRole} />
       )}
-      {activeSection === "site-config" && canManageAccess && <SiteConfiguration focusField={focusField} />}
-      {activeSection === "appearance" && canManageAccess && (
-        <AppearanceSettings userRole={userRole} canManageAccess={canManageAccess} />
-      )}
-      {/* "channels" / "notifications" / "compliance" are handled by the
-          CommunicationsHub block above so the three surfaces share one
-          tabbed page. */}
-      {activeSection === "landing-flow" && canManageAccess && <LandingFlowConfig />}
+      {/* "site-config" / "appearance" / "landing-flow" handled by
+          BrandingHub above. */}
+      {/* "channels" / "notifications" / "compliance" handled by
+          CommunicationsHub above. */}
+      {/* "form-config" / "inspection-config" / "photo-config" /
+          "depth-policies" handled by CaptureInspectionHub above. */}
+      {/* "promotions" / "referrals" / "testimonials" handled by
+          MarketingHub above. */}
       {activeSection === "rooftop-websites" && canManageAccess && <RooftopWebsites />}
-      {activeSection === "promotions" && canManageAccess && <PromotionManagement />}
-      {activeSection === "form-config" && canManageAccess && <FormConfiguration />}
-      {activeSection === "inspection-config" && canManageAccess && <InspectionConfiguration />}
-      {activeSection === "photo-config" && canManageAccess && <PhotoConfiguration />}
-      {activeSection === "depth-policies" && canManageAccess && <DepthPolicyManager />}
-      {activeSection === "testimonials" && canManageAccess && <TestimonialManagement />}
       {activeSection === "locations" && canManageAccess && <LocationManagement />}
       {activeSection === "image-inventory" && canManageAccess && <VehicleImageInventory />}
       {activeSection === "system-settings" && canManageAccess && (
@@ -594,7 +670,7 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
       )}
       {activeSection === "onboarding-script" && <OnboardingScript targetDealershipId={onboardingDealershipId} onNavigate={props.setActiveSection} />}
       {activeSection === "reports" && <ReportsExport />}
-      {activeSection === "referrals" && canManageAccess && <ReferralManagement />}
+      {/* "referrals" routes to MarketingHub above. */}
       {activeSection === "my-referrals" && (
         <MyReferrals staffName={props.userName} />
       )}
