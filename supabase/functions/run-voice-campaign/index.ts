@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireProduct } from "../_shared/entitlements.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -67,6 +68,18 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  // Tier gate: AI Voice agent requires the autocurb_premium tier.
+  const gate = await requireProduct(req, "autocurb", {
+    requiredTierIds: ["autocurb_premium"],
+  });
+  if (!gate.ok) {
+    return new Response(JSON.stringify({ error: gate.reason, upgrade_required: true }), {
+      status: gate.status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
 
   try {
     const body = await req.json().catch(() => ({}));

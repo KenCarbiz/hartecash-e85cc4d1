@@ -45,6 +45,7 @@ const ChangelogManagement = React.lazy(() => import("./ChangelogManagement"));
 const TenantManagement = React.lazy(() => import("./TenantManagement"));
 const GroupManagement = React.lazy(() => import("./GroupManagement"));
 const DataEgressPanel = React.lazy(() => import("./DataEgressPanel"));
+const StripeWebhookReprocessor = React.lazy(() => import("./StripeWebhookReprocessor"));
 const DealerOnboarding = React.lazy(() => import("./DealerOnboarding"));
 const OnboardingScript = React.lazy(() => import("./OnboardingScript"));
 const ReportsExport = React.lazy(() => import("./ReportsExport"));
@@ -72,6 +73,7 @@ const CaptureInspectionHub = React.lazy(() => import("./CaptureInspectionHub"));
 const MarketingHub = React.lazy(() => import("./MarketingHub"));
 const PerformanceHub = React.lazy(() => import("./PerformanceHub"));
 const IntegrationsHub = React.lazy(() => import("./IntegrationsHub"));
+const RequireProduct = React.lazy(() => import("../platform/RequireProduct"));
 
 class AdminErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -714,6 +716,11 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
           <GroupManagement />
         </React.Suspense>
       )}
+      {activeSection === "stripe-webhooks" && canManageAccess && props.tenant.dealership_id === "default" && (
+        <React.Suspense fallback={<AdminLoadingSkeleton />}>
+          <StripeWebhookReprocessor />
+        </React.Suspense>
+      )}
       {activeSection === "data-egress" && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <DataEgressPanel />
@@ -726,7 +733,16 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
       )}
       {activeSection === "voice-ai" && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
-          <VoiceAICampaigns />
+          {/* Tier gate: AI Voice agent ships only with the Premium
+              AutoCurb tier. Basic-tier dealers see the paywall card
+              with an Upgrade CTA that lands on /plan. */}
+          <RequireProduct
+            productId="autocurb"
+            minTierId="autocurb_premium"
+            productLabel="AI Voice agent"
+          >
+            <VoiceAICampaigns />
+          </RequireProduct>
         </React.Suspense>
       )}
       {activeSection === "wholesale-marketplace" && (

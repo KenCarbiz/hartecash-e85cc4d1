@@ -49,6 +49,12 @@ export type EntitlementGate = EntitlementGateOk | EntitlementGateFail;
 export async function requireProduct(
   req: Request,
   productId: string,
+  options?: {
+    /** When set, the caller's subscription must include at least one
+     *  of these tier_ids for the product. Used by tier-gated features
+     *  like the AI Voice agent (autocurb_premium). */
+    requiredTierIds?: string[];
+  },
 ): Promise<EntitlementGate> {
   const url = Deno.env.get("SUPABASE_URL");
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -98,6 +104,36 @@ export async function requireProduct(
 
   if (!sub) {
     return { ok: false, status: 402, reason: `${productId} not on your plan` };
+  }
+
+  const requiredTierIds = options?.requiredTierIds;
+
+  // Tier gate (when requested) shortcuts the rest of the resolution —
+  // a tier-gated feature requires an exact tier match, not just any
+  // tier of the product.
+  if (requiredTierIds && requiredTierIds.length > 0) {
+    const tierIds: string[] = (sub as any).tier_ids ?? [];
+    if (tierIds.some((t) => requiredTierIds.includes(t))) {
+      return { ok: true, userId, dealershipId, isPlatformAdmin: false };
+    }
+    // Bundle that names the tier in its tier_ids list also counts.
+    const bundleId: string | null = (sub as any).bundle_id ?? null;
+    if (bundleId) {
+      const { data: bundleRow } = await sb
+        .from("platform_bundles")
+        .select("tier_ids")
+        .eq("id", bundleId)
+        .maybeSingle();
+      const bundleTierIds: string[] = ((bundleRow as any)?.tier_ids) ?? [];
+      if (bundleTierIds.some((t: string) => requiredTierIds.includes(t))) {
+        return { ok: true, userId, dealershipId, isPlatformAdmin: false };
+      }
+    }
+    return {
+      ok: false,
+      status: 402,
+      reason: `${productId} on your plan, but this feature requires the ${requiredTierIds.join(" / ")} tier`,
+    };
   }
 
   // 1. Direct product list.

@@ -27,6 +27,7 @@ type DealerGroup = {
   parent_group_id: string | null;
   master_msa_signed_at: string | null;
   master_msa_url: string | null;
+  custom_domain: string | null;
   status: "active" | "pilot" | "paused" | "terminated";
   notes: string | null;
   created_at: string;
@@ -105,6 +106,9 @@ const GroupManagement = () => {
   const [busy, setBusy] = useState<string | null>(null);
   const [confirmDetach, setConfirmDetach] = useState<{ dealershipId: string; activationId: string | null } | null>(null);
   const [detachReason, setDetachReason] = useState("");
+  const [confirmMerge, setConfirmMerge] = useState<{ dealershipId: string; fromGroupName: string } | null>(null);
+  const [mergeReason, setMergeReason] = useState("");
+  const [mergeCreatePilot, setMergeCreatePilot] = useState(true);
 
   // Periodic refresh so the pilot countdown stays honest. 30s is enough.
   const [refreshTick, setRefreshTick] = useState(0);
@@ -149,6 +153,18 @@ const GroupManagement = () => {
   const accountsWithoutGroup = useMemo(
     () => accounts.filter((a) => a.dealer_group_id == null),
     [accounts],
+  );
+
+  // Rooftops currently in OTHER groups — eligible for merge (acquisition)
+  // into the selected group via the merge_rooftop() RPC.
+  const accountsInOtherGroups = useMemo(
+    () =>
+      accounts.filter(
+        (a) =>
+          a.dealer_group_id != null &&
+          a.dealer_group_id !== selectedGroupId,
+      ),
+    [accounts, selectedGroupId],
   );
 
   // Active activation per dealership_id (the most recent pilot/active row).
@@ -275,6 +291,36 @@ const GroupManagement = () => {
     });
   };
 
+  const mergeRooftop = async () => {
+    if (!confirmMerge || !selectedGroup) return;
+    if (mergeReason.trim().length < 10) {
+      toast({ title: "Reason needs ≥10 characters", variant: "destructive" });
+      return;
+    }
+    setBusy("merge");
+    const { error } = await supabase.rpc("merge_rooftop", {
+      _dealership_id: confirmMerge.dealershipId,
+      _to_dealer_group_id: selectedGroup.id,
+      _reason: mergeReason.trim(),
+      _create_pilot: mergeCreatePilot,
+    });
+    setBusy(null);
+    if (error) {
+      toast({ title: "Merge failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    setConfirmMerge(null);
+    setMergeReason("");
+    setMergeCreatePilot(true);
+    await reload();
+    toast({
+      title: "Rooftop merged",
+      description: mergeCreatePilot
+        ? "Fresh 30-day pilot started under this group. Cancel old-group Stripe subs if any."
+        : "Moved without a new pilot. Active subscription must be migrated manually in Stripe.",
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -371,6 +417,58 @@ const GroupManagement = () => {
                         view MSA
                       </a>
                     </>
+                  )}
+                </div>
+                {/* Custom-domain editor — sets dealer_groups.custom_domain
+                    so requests to that hostname resolve into the group
+                    context per TenantContext. DNS + SSL provisioned
+                    out-of-band; this is the data-layer slot. */}
+                <div className="text-xs text-muted-foreground pt-2 border-t border-border/50 flex items-center gap-2 flex-wrap">
+                  <span className="font-medium text-card-foreground">Custom domain:</span>
+                  {selectedGroup.custom_domain ? (
+                    <>
+                      <span className="font-mono">{selectedGroup.custom_domain}</span>
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="text-xs p-0 h-auto"
+                        onClick={async () => {
+                          const next = window.prompt(
+                            "New custom domain (or leave blank to remove)",
+                            selectedGroup.custom_domain || "",
+                          );
+                          if (next === null) return;
+                          const cleaned = next.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "") || null;
+                          const { error } = await supabase
+                            .from("dealer_groups")
+                            .update({ custom_domain: cleaned })
+                            .eq("id", selectedGroup.id);
+                          if (error) toast({ title: "Couldn't update", description: error.message, variant: "destructive" });
+                          else { await reload(); toast({ title: cleaned ? `Custom domain set to ${cleaned}` : "Custom domain removed" }); }
+                        }}
+                      >
+                        Edit
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="text-xs p-0 h-auto"
+                      onClick={async () => {
+                        const next = window.prompt("Custom domain (e.g. autocurb.group1.com)") ?? "";
+                        const cleaned = next.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+                        if (!cleaned) return;
+                        const { error } = await supabase
+                          .from("dealer_groups")
+                          .update({ custom_domain: cleaned })
+                          .eq("id", selectedGroup.id);
+                        if (error) toast({ title: "Couldn't set", description: error.message, variant: "destructive" });
+                        else { await reload(); toast({ title: `Custom domain set to ${cleaned}` }); }
+                      }}
+                    >
+                      Add custom domain
+                    </Button>
                   )}
                 </div>
               </div>
@@ -503,6 +601,57 @@ const GroupManagement = () => {
                     {accountsWithoutGroup.length > 10 && (
                       <p className="text-[11px] text-muted-foreground pt-2">
                         Showing 10 of {accountsWithoutGroup.length}.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Merge an acquired rooftop from another group */}
+              {accountsInOtherGroups.length > 0 && (
+                <div className="border border-border rounded-xl bg-card p-5">
+                  <h3 className="text-sm font-semibold mb-1">Merge an acquired rooftop</h3>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Bring a rooftop from another group into this group. Records the move in the detach log; optionally starts a fresh 30-day pilot under this group.
+                  </p>
+                  <div className="space-y-1">
+                    {accountsInOtherGroups.slice(0, 10).map((acc) => {
+                      const fromGroup = groups.find((g) => g.id === acc.dealer_group_id);
+                      return (
+                        <div
+                          key={acc.dealership_id}
+                          className="flex items-center justify-between py-1.5 text-sm"
+                        >
+                          <span className="truncate">
+                            {acc.display_name || acc.dealership_id}{" "}
+                            <span className="text-muted-foreground font-mono text-[11px]">
+                              ({acc.dealership_id})
+                            </span>
+                            <span className="text-[11px] text-muted-foreground ml-2">
+                              from {fromGroup?.display_name || fromGroup?.name || "—"}
+                            </span>
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              setConfirmMerge({
+                                dealershipId: acc.dealership_id,
+                                fromGroupName: fromGroup?.display_name || fromGroup?.name || "another group",
+                              });
+                              setMergeReason("");
+                              setMergeCreatePilot(true);
+                            }}
+                          >
+                            <ArrowRightLeft className="w-3.5 h-3.5 mr-1.5" />
+                            Merge here
+                          </Button>
+                        </div>
+                      );
+                    })}
+                    {accountsInOtherGroups.length > 10 && (
+                      <p className="text-[11px] text-muted-foreground pt-2">
+                        Showing 10 of {accountsInOtherGroups.length}.
                       </p>
                     )}
                   </div>
@@ -653,6 +802,53 @@ const GroupManagement = () => {
             >
               {busy === "detach" ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : null}
               Detach rooftop
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Merge confirm */}
+      <AlertDialog open={!!confirmMerge} onOpenChange={(open) => { if (!open) setConfirmMerge(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Merge this rooftop into the group?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Moves the rooftop from <strong>{confirmMerge?.fromGroupName ?? "—"}</strong> into <strong>{selectedGroup?.display_name || selectedGroup?.name}</strong>. Customer / lead history stays on the dealership; only the group attribution changes. <strong>Cancel any old-group Stripe subscriptions first to avoid double billing.</strong>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">Reason (≥10 chars, audit trail)</Label>
+              <Textarea
+                value={mergeReason}
+                onChange={(e) => setMergeReason(e.target.value)}
+                placeholder="Acquired Q3 / spinoff from Lithia / etc."
+                className="mt-1 min-h-[80px]"
+              />
+            </div>
+            <label className="flex items-start gap-2 text-sm cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={mergeCreatePilot}
+                onChange={(e) => setMergeCreatePilot(e.target.checked)}
+                className="mt-1"
+              />
+              <span>
+                Start a fresh 30-day pilot under this group
+                <span className="block text-[11px] text-muted-foreground">
+                  Recommended for true acquisitions. Uncheck if you're continuing an existing billing arrangement and will manually move the Stripe subscription instead.
+                </span>
+              </span>
+            </label>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={busy === "merge"}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); mergeRooftop(); }}
+              disabled={busy === "merge" || mergeReason.trim().length < 10}
+            >
+              {busy === "merge" ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : null}
+              Merge rooftop
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
