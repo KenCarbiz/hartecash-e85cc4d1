@@ -1857,6 +1857,7 @@ export type Database = {
           name: string
           overage_price_per_unit: number | null
           product_id: string
+          slug: string | null
           sort_order: number
           updated_at: string
         }
@@ -1875,6 +1876,7 @@ export type Database = {
           name: string
           overage_price_per_unit?: number | null
           product_id: string
+          slug?: string | null
           sort_order?: number
           updated_at?: string
         }
@@ -1893,6 +1895,7 @@ export type Database = {
           name?: string
           overage_price_per_unit?: number | null
           product_id?: string
+          slug?: string | null
           sort_order?: number
           updated_at?: string
         }
