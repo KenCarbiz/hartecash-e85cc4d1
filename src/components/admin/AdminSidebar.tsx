@@ -282,6 +282,7 @@ const AdminSidebar = ({
     // customer collection — purely a maintenance tool for clearing /
     // regenerating cached images, so it lives next to System Settings.
     { key: "image-inventory", label: "Vehicle Image Cache", icon: ImageIcon },
+    { key: "data-egress", label: "Export My Data", icon: Send },
   ].filter((item) => isAllowed(item.key));
 
   // ── PLATFORM ── Super-admin only, cross-tenant operations.
@@ -289,6 +290,7 @@ const AdminSidebar = ({
   // with dealer-facing "Pricing Rules" in Setup · Dealer.
   const platformItems: SidebarItem[] = [
     ...(isPlatformAdmin ? [{ key: "tenants", label: "Dealer Tenants", icon: Network }] : []),
+    ...(isPlatformAdmin ? [{ key: "groups", label: "Group Management", icon: Network }] : []),
     ...(isPlatformAdmin ? [{ key: "prospect-demo", label: "Prospect Demo", icon: Target }] : []),
     ...(isPlatformAdmin ? [{ key: "pricing-model", label: "SaaS Pricing", icon: Tag }] : []),
     ...(canManageAccess && (enterpriseBetaEnabled || isPlatformAdmin)
@@ -314,11 +316,11 @@ const AdminSidebar = ({
     "offer-settings",
     "locations", "rooftop-websites", "embed-toolkit",
     "my-lead-link", "my-availability", "my-referrals",
-    "staff", "reports", "image-inventory", "changelog",
+    "staff", "reports", "image-inventory", "data-egress", "changelog",
     "onboarding", "system-settings", "pricing-model",
     // Integrations: legacy keys still resolve.
     "integrations", "platform-billing", "integrations-status", "api-access", "vauto-integration", "white-label",
-    "prospect-demo",
+    "prospect-demo", "groups",
     "equity-mining", "voice-ai", "service-quick-entry", "inspection-checkin",
   ];
   const lockedSections = showRequestAccess && allowedSections !== null

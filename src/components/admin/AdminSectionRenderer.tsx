@@ -43,6 +43,8 @@ const LocationManagement = React.lazy(() => import("./LocationManagement"));
 const VehicleImageInventory = React.lazy(() => import("./VehicleImageInventory"));
 const ChangelogManagement = React.lazy(() => import("./ChangelogManagement"));
 const TenantManagement = React.lazy(() => import("./TenantManagement"));
+const GroupManagement = React.lazy(() => import("./GroupManagement"));
+const DataEgressPanel = React.lazy(() => import("./DataEgressPanel"));
 const DealerOnboarding = React.lazy(() => import("./DealerOnboarding"));
 const OnboardingScript = React.lazy(() => import("./OnboardingScript"));
 const ReportsExport = React.lazy(() => import("./ReportsExport"));
@@ -705,6 +707,16 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
       {activeSection === "prospect-demo" && canManageAccess && props.tenant.dealership_id === "default" && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <ProspectDemo />
+        </React.Suspense>
+      )}
+      {activeSection === "groups" && canManageAccess && props.tenant.dealership_id === "default" && (
+        <React.Suspense fallback={<AdminLoadingSkeleton />}>
+          <GroupManagement />
+        </React.Suspense>
+      )}
+      {activeSection === "data-egress" && (
+        <React.Suspense fallback={<AdminLoadingSkeleton />}>
+          <DataEgressPanel />
         </React.Suspense>
       )}
       {activeSection === "equity-mining" && (
