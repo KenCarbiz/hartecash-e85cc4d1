@@ -84,7 +84,7 @@ const GroupCustomerSearch = ({ dealershipNames }: Props) => {
       const { data, error } = await supabase
         .from("submissions")
         .select(
-          "id, token, name, email, phone, dealership_id, store_location_id, vehicle_year, vehicle_make, vehicle_model, status, offered_price, created_at",
+          "id, token, name, email, phone, dealership_id, store_location_id, vehicle_year, vehicle_make, vehicle_model, progress_status, offered_price, created_at",
         )
         .in("dealership_id", dealershipIds)
         .or(orClause)
