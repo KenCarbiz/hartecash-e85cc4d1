@@ -59,6 +59,7 @@ const PlanPage = lazy(() => import("./pages/PlanPage"));
 const StatusPage = lazy(() => import("./pages/StatusPage"));
 const SlaPage = lazy(() => import("./pages/SlaPage"));
 const DocsLanding = lazy(() => import("./pages/DocsLanding"));
+const GroupLandingPage = lazy(() => import("./pages/GroupLandingPage"));
 // /billing removed — /plan is now the canonical billing surface, with
 // a "Manage billing" button that opens the Stripe Customer Portal
 // directly. The previous BillingPage was orphaned (not in the sidebar)
@@ -187,6 +188,10 @@ const AnimatedRoutes = () => {
         <Route path="/sla" element={<SlaPage />} />
         {/* /docs — public landing page for SLA / status / runbooks. */}
         <Route path="/docs" element={<DocsLanding />} />
+        {/* /group — chooser page when a customer hits a dealer_groups
+            custom_domain with multiple rooftops. Single-rooftop groups
+            skip this via TenantContext direct resolution. */}
+        <Route path="/group" element={<GroupLandingPage />} />
         {/* /billing removed — see comment near the import. */}
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
