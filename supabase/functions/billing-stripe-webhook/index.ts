@@ -196,6 +196,42 @@ async function upsertSubscription(sub: Stripe.Subscription) {
     console.error("upsertSubscription error:", error);
     throw new Error(`upsert dealer_subscriptions: ${error.message}`);
   }
+
+  // Rooftop-activation linkage (Tier 2.10). When the Subscription was
+  // created via billing-activate-rooftop, the metadata includes the
+  // activation id. Keep the activation row in sync with the live
+  // subscription state — promote pilot→active when the trial ends,
+  // mark deactivated when canceled.
+  const activationId = (sub.metadata ?? {}).rooftop_activation_id;
+  if (activationId) {
+    // Stamp stripe_subscription_id on the activation if not yet set.
+    const updates: Record<string, unknown> = {
+      stripe_subscription_id: sub.id,
+    };
+    if (sub.status === "canceled") {
+      updates.status = "deactivated";
+      updates.deactivated_at = sub.canceled_at
+        ? new Date(sub.canceled_at * 1000).toISOString()
+        : new Date().toISOString();
+    } else if (sub.status === "active" && (!sub.trial_end || sub.trial_end * 1000 < Date.now())) {
+      // Trial has ended and Stripe has charged — promote to active.
+      updates.status = "active";
+    }
+    const { error: actErr } = await sb
+      .from("rooftop_activations")
+      .update(updates)
+      .eq("id", activationId);
+    if (actErr) {
+      console.error("rooftop_activation sync error:", actErr);
+      // Don't throw — dealer_subscriptions is already correct.
+    }
+
+    // Also link the dealer_subscriptions row back to the activation.
+    await sb
+      .from("dealer_subscriptions")
+      .update({ rooftop_activation_id: activationId })
+      .eq("stripe_subscription_id", sub.id);
+  }
 }
 
 async function markCanceled(sub: Stripe.Subscription) {
