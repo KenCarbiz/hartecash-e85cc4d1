@@ -432,13 +432,13 @@ export default function NotificationSettings() {
 
   const setAllInGroup = (group: typeof STAFF_TRIGGERS | typeof CUSTOMER_TRIGGERS, on: boolean) => {
     setConfig((c) => {
-      const next = { ...c } as Record<string, unknown>;
+      const next = { ...c } as unknown as Record<string, unknown>;
       for (const t of group) next[`notify_${t.key}`] = on;
-      return next as NotificationConfig;
+      return next as unknown as NotificationConfig;
     });
   };
-  const staffEnabledCount = STAFF_TRIGGERS.filter((t) => (config as Record<string, unknown>)[`notify_${t.key}`]).length;
-  const customerEnabledCount = CUSTOMER_TRIGGERS.filter((t) => (config as Record<string, unknown>)[`notify_${t.key}`]).length;
+  const staffEnabledCount = STAFF_TRIGGERS.filter((t) => (config as unknown as Record<string, unknown>)[`notify_${t.key}`]).length;
+  const customerEnabledCount = CUSTOMER_TRIGGERS.filter((t) => (config as unknown as Record<string, unknown>)[`notify_${t.key}`]).length;
 
   const renderTriggerRow = (trigger: { key: string; label: string; desc: string; channelKey: string; icon: any }) => {
     const enabled = (config as any)[`notify_${trigger.key}`] as boolean;
