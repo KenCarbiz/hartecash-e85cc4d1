@@ -21,6 +21,7 @@ import DealerWebsiteAutofillCard from "./DealerWebsiteAutofillCard";
 import ArchitectureSelector from "./onboarding/ArchitectureSelector";
 import BDCSelector from "./onboarding/BDCSelector";
 import { architectureToDbValue } from "./onboarding/types";
+import OnboardingGroupClaim from "./onboarding/GroupClaim";
 import type { ArchitectureType } from "./onboarding/types";
 import type { BDCType } from "./onboarding/BDCSelector";
 import PricingPlanPicker, { type PlanSelection } from "@/components/platform/PricingPlanPicker";
@@ -481,6 +482,13 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate, targetDealershipId, onD
           />
         </CardContent>
       </Card>
+
+      {/* Group claim — only visible when architecture = dealer_group */}
+      <OnboardingGroupClaim
+        dealershipId={dealershipId}
+        enabled={account.architecture === "dealer_group"}
+        disabled={readOnly}
+      />
 
       {/* BDC Model — Premium Selector */}
       <Card>
