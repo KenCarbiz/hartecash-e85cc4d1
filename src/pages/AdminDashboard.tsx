@@ -11,6 +11,7 @@ import TenantViewBanner from "@/components/admin/TenantViewBanner";
 import { PlatformProvider } from "@/contexts/PlatformContext";
 import { useAdminDashboard } from "@/hooks/useAdminDashboard";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useIsPlatformAdmin } from "@/hooks/useIsPlatformAdmin";
 import { lazy, Suspense, useRef, useEffect, useState, Component, type ReactNode, type ErrorInfo } from "react";
 
 // SubmissionDetailSheet is the largest component in the codebase (~1.6k lines).
@@ -67,6 +68,14 @@ const AdminDashboard = () => {
   // Strip ":fieldHint" for sidebar/breadcrumb matching
   const baseSectionId = db.activeSection.includes(":") ? db.activeSection.split(":")[0] : db.activeSection;
 
+  // Server-driven platform-admin check. Replaces the previous
+  // `tenant.dealership_id === "default"` derivation, which conflated
+  // "the user is a super admin" with "the user's home tenant is the
+  // platform tenant". The new column on user_roles is the source of
+  // truth — a super admin who is currently "viewing as" another tenant
+  // still gets isPlatformAdmin=true here.
+  const { isPlatformAdmin } = useIsPlatformAdmin();
+
   useEffect(() => {
     contentRef.current?.scrollTo({ top: 0, behavior: "instant" });
   }, [db.activeSection]);
@@ -116,6 +125,7 @@ const AdminDashboard = () => {
           isAppraiser={db.isAppraiser}
           dealershipId={db.tenant.dealership_id}
           enterpriseBetaEnabled={Boolean((siteConfig as any).enterprise_beta_enabled)}
+          isPlatformAdminFromServer={isPlatformAdmin}
         />
         <div className="flex-1 flex flex-col min-w-0">
           <AdminHeader
@@ -124,7 +134,7 @@ const AdminDashboard = () => {
             userRole={db.userRole}
             userName={db.userName}
             dealerName={db.tenant.display_name}
-            isPlatformAdmin={db.userRole === "admin" && db.tenant.dealership_id === "default"}
+            isPlatformAdmin={isPlatformAdmin}
             onLogout={async () => {
               await supabase.auth.signOut();
               db.navigate("/admin/login");

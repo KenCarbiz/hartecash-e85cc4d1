@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 interface TenantInfo {
@@ -195,6 +196,7 @@ async function resolveTenant(): Promise<TenantInfo> {
 }
 
 export const TenantProvider = ({ children }: { children: ReactNode }) => {
+  const queryClient = useQueryClient();
   const [resolvedTenant, setResolvedTenant] = useState<TenantInfo>(
     cachedTenant?.tenant || DEFAULT_TENANT,
   );
@@ -254,9 +256,16 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
       };
       writeOverride(override);
       setViewOverrideState(override);
+      // Hard cache flush so any keyed-or-unkeyed React-Query data from
+      // the super-admin's own tenant is dropped before the next render.
+      // Without this, list queries that already resolved (and any
+      // component-local memoised state hydrated off them) keep showing
+      // the previous tenant's rows until the next mount — a real
+      // cross-tenant data flash during the swap.
+      queryClient.clear();
       return true;
     },
-    [],
+    [queryClient],
   );
 
   const clearViewAsTenant = useCallback<TenantContextValue["clearViewAsTenant"]>(
@@ -277,8 +286,11 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
       }
       writeOverride(null);
       setViewOverrideState(null);
+      // Same flush on exit so tenant-X data doesn't bleed back into
+      // the super-admin's own dashboard until next mount.
+      queryClient.clear();
     },
-    [viewOverride],
+    [viewOverride, queryClient],
   );
 
   // Compose the effective tenant — override takes precedence over

@@ -53,6 +53,12 @@ interface AdminSidebarProps {
    *  items (API Access, vAuto, White Label, Wholesale Marketplace) by
    *  default. Flipped on per-dealer by Super Admin. */
   enterpriseBetaEnabled?: boolean;
+  /** Server-driven super-admin flag from useIsPlatformAdmin(). When
+   *  passed, replaces the legacy `dealershipId === "default"` magic-
+   *  string derivation for hiding/showing platform-admin-only items.
+   *  Pass undefined to fall back to the legacy behaviour during the
+   *  transitional release. */
+  isPlatformAdminFromServer?: boolean;
 }
 
 type SidebarItem = {
@@ -107,6 +113,7 @@ const AdminSidebar = ({
   isAppraiser = false,
   dealershipId = "default",
   enterpriseBetaEnabled = false,
+  isPlatformAdminFromServer,
 }: AdminSidebarProps) => {
   const { state, isMobile, setOpenMobile } = useSidebar();
   const collapsed = isMobile ? false : state === "collapsed";
@@ -143,7 +150,13 @@ const AdminSidebar = ({
   };
 
   const isAllowed = (key: string) => allowedSections === null || allowedSections.includes(key);
-  const isPlatformAdmin = canManageAccess && dealershipId === "default";
+  // Prefer the server-driven flag when supplied. Falls back to the
+  // legacy magic-string derivation during the transitional release —
+  // remove the fallback once all call sites pass isPlatformAdminFromServer.
+  const isPlatformAdmin =
+    isPlatformAdminFromServer !== undefined
+      ? isPlatformAdminFromServer
+      : canManageAccess && dealershipId === "default";
   const isReceptionist = userRole === "receptionist";
 
   // The cascade resolver in useEffectivePermissions is the sole
