@@ -69,13 +69,14 @@ export const FALLBACK_PRODUCTS: PlatformProduct[] = [
 ];
 
 export const FALLBACK_TIERS: PlatformProductTier[] = [
-  // AutoCurb — one tier, Monthly vs Annual-Prepaid pair in the UI
+  // AutoCurb Basic — the existing "autocurb_standard" tier id is
+  // preserved for grandfathering; legacy subscribers stay on this row.
   {
     id: "autocurb_standard",
     product_id: "autocurb",
-    name: "AutoCurb",
+    name: "Basic",
     description:
-      "Full acquisition stack — unlimited submissions, instant cash offers, inspection workflow.",
+      "Off-street vehicle acquisition — instant offers, inspections, appraisals, dealer dashboard. Includes the cadence engine and click-to-dial; voice automation requires Premium.",
     monthly_price: 1995,
     annual_price: 20388, // $1,699/mo × 12 = $20,388 prepaid
     features: [
@@ -95,6 +96,34 @@ export const FALLBACK_TIERS: PlatformProductTier[] = [
     is_introductory: false,
     is_active: true,
     sort_order: 0,
+  },
+
+  // AutoCurb Premium — Basic + AI Voice agent. The picker surfaces this
+  // as an upgrade choice; RequireProduct(productId="autocurb",
+  // minTierId="autocurb_premium") gates the Voice AI surfaces.
+  {
+    id: "autocurb_premium",
+    product_id: "autocurb",
+    name: "Premium",
+    description:
+      "Everything in Basic, plus the AI Voice agent — outbound campaigns, voicemail drop, on-call qualification, transcripts in every customer file.",
+    monthly_price: 2495,
+    annual_price: 22455,
+    features: [
+      "Everything in Basic",
+      "AI Voice agent — outbound campaigns",
+      "Voicemail drop fallback",
+      "On-call qualification + appointment-set",
+      "Voice call transcripts in customer file",
+      "Voice analytics: connect rate, talk time, outcomes",
+      "Concurrent-call atomic billing",
+      "Bland.ai or OpenAI Realtime provider",
+    ],
+    inventory_limit: null,
+    included_with_product_ids: [],
+    is_introductory: false,
+    is_active: true,
+    sort_order: 1,
   },
 
   // AutoLabels Basic — free with AutoCurb OR with AutoLabels Premium

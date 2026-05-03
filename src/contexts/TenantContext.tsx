@@ -171,6 +171,49 @@ async function resolveTenant(): Promise<TenantInfo> {
     return t;
   }
 
+  // 1b. Try dealer_groups custom domain. When a hostname is registered
+  // to a group, we resolve into the group's primary (most-recent-active)
+  // rooftop. A future migration can add an explicit primary_dealership
+  // column on dealer_groups; for now we pick the rooftop with the most
+  // recent activity to keep the customer-facing landing fresh.
+  try {
+    const { data: groupRow } = await supabase
+      .from("dealer_groups")
+      .select("id, slug, display_name, name")
+      .eq("custom_domain", hostname)
+      .eq("status", "active")
+      .maybeSingle();
+    if (groupRow) {
+      const { data: primary } = await supabase
+        .from("dealer_accounts")
+        .select("dealership_id, updated_at")
+        .eq("dealer_group_id", (groupRow as any).id)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (primary) {
+        const { data: tenantRow } = await supabase
+          .from("tenants")
+          .select("dealership_id, slug, display_name, location_id")
+          .eq("dealership_id", (primary as any).dealership_id)
+          .maybeSingle();
+        if (tenantRow) {
+          const t: TenantInfo = {
+            dealership_id: (tenantRow as any).dealership_id,
+            slug: (tenantRow as any).slug,
+            display_name: (groupRow as any).display_name || (groupRow as any).name || (tenantRow as any).display_name,
+            location_id: (tenantRow as any).location_id ?? null,
+          };
+          cachedTenant = { hostname, tenant: t };
+          return t;
+        }
+      }
+    }
+  } catch (e) {
+    // dealer_groups table may not exist on older deployments; fall through.
+    console.warn("dealer_groups custom_domain lookup failed:", (e as Error).message);
+  }
+
   // 2. Try subdomain slug (e.g. smith.yourdomain.com → "smith")
   const parts = hostname.split(".");
   if (parts.length >= 3) {
