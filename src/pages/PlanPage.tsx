@@ -6,7 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import PricingPlanPicker, { type PlanSelection } from "@/components/platform/PricingPlanPicker";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ExternalLink } from "lucide-react";
+import { useState } from "react";
 
 /**
  * Dealer-facing standalone pricing / plan page. Reachable from the
@@ -15,53 +16,117 @@ import { ArrowLeft } from "lucide-react";
  */
 const PlanPageInner = () => {
   const { tenant } = useTenant();
-  const { subscription, tiers, architecture } = usePlatform();
+  const { subscription, architecture } = usePlatform();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const saveSelection = useCallback(
     async (selection: PlanSelection) => {
-      const cycle =
-        selection.kind !== "enterprise" && selection.cycle === "annual" ? "annual" : "monthly";
-      const base = {
-        dealership_id: tenant.dealership_id,
-        status: "trial" as const,
-        billing_cycle: cycle,
-        rooftop_count: Math.max(1, selection.rooftopCount ?? 1),
-        updated_at: new Date().toISOString(),
-      };
-      const payload =
-        selection.kind === "bundle"
-          ? { ...base, bundle_id: selection.bundleId, tier_ids: [], product_ids: [] }
-          : selection.kind === "tiers"
-            ? (() => {
-                const productIds = Array.from(
-                  new Set(
-                    selection.tierIds
-                      .map((tid) => tiers.find((t) => t.id === tid)?.product_id)
-                      .filter(Boolean) as string[],
-                  ),
-                );
-                return { ...base, bundle_id: null, tier_ids: selection.tierIds, product_ids: productIds };
-              })()
-            : { ...base, bundle_id: selection.bundleId, tier_ids: [], product_ids: [] };
-
-      const { error } = await supabase
-        .from("dealer_subscriptions")
-        .upsert(payload as never, { onConflict: "dealership_id" });
-
-      if (error) {
-        toast({ title: "Couldn't save plan", description: error.message, variant: "destructive" });
+      // Stripe Checkout flow.
+      // Picker passes the selection up; we forward it to billing-subscribe,
+      // which resolves Stripe Price IDs by metadata and returns a Checkout
+      // Session URL. The webhook (billing-stripe-webhook) writes the
+      // subscription state back into dealer_subscriptions on confirmation,
+      // so there's no local upsert here — Stripe is the source of truth.
+      //
+      // Enterprise (custom-quote) bundles still take the legacy upsert
+      // path: the picker only emits {kind:"enterprise"} for the
+      // contact-sales flow, where the actual subscription is created
+      // manually in Stripe by the platform admin and the webhook will
+      // backfill the row. Until then we save the selection locally so
+      // /plan can show "request submitted" state.
+      if (selection.kind === "enterprise") {
+        const { error } = await supabase
+          .from("dealer_subscriptions")
+          .upsert(
+            {
+              dealership_id: tenant.dealership_id,
+              bundle_id: selection.bundleId,
+              tier_ids: [],
+              product_ids: [],
+              status: "trial",
+              billing_cycle: "annual",
+              rooftop_count: Math.max(1, selection.rooftopCount ?? 1),
+              updated_at: new Date().toISOString(),
+            } as never,
+            { onConflict: "dealership_id" },
+          );
+        if (error) {
+          toast({ title: "Couldn't save request", description: error.message, variant: "destructive" });
+          return;
+        }
+        toast({
+          title: "Request submitted",
+          description: "Your enterprise request is in. We'll be in touch within one business day.",
+        });
+        navigate("/admin");
         return;
       }
-      toast({
-        title: "Plan updated",
-        description: "Your account manager will follow up with billing details shortly.",
+
+      // Standard flow → Stripe Checkout.
+      const { data, error } = await supabase.functions.invoke("billing-subscribe", {
+        body: {
+          selection: {
+            kind: selection.kind,
+            bundleId: selection.kind === "bundle" ? selection.bundleId : undefined,
+            tierIds: selection.kind === "tiers" ? selection.tierIds : undefined,
+            cycle: selection.cycle,
+            rooftopCount: Math.max(1, selection.rooftopCount ?? 1),
+          },
+          origin: window.location.origin,
+          return_path: "/plan",
+        },
       });
-      navigate("/admin");
+      if (error) {
+        toast({
+          title: "Couldn't start checkout",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+      const url = (data as { url?: string })?.url;
+      if (!url) {
+        toast({
+          title: "Checkout unavailable",
+          description: "Stripe Checkout couldn't be created. Please try again or contact support.",
+          variant: "destructive",
+        });
+        return;
+      }
+      // Hand off to Stripe. The dealer comes back via success_url which
+      // includes ?subscribed=1; PlanPage can show a confirmation banner
+      // there in a follow-up.
+      window.location.href = url;
     },
-    [tenant.dealership_id, tiers, toast, navigate],
+    [tenant.dealership_id, toast, navigate],
   );
+
+  // Open the Stripe Customer Portal so the dealer can update card,
+  // download invoices, or cancel. Only meaningful for dealers with an
+  // active Stripe subscription (stripe_customer_id set in tenants).
+  const [portalLoading, setPortalLoading] = useState(false);
+  const openCustomerPortal = useCallback(async () => {
+    setPortalLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("billing-portal-session", {
+        body: { return_url: `${window.location.origin}/plan` },
+      });
+      if (error) throw error;
+      const url = (data as { url?: string })?.url;
+      if (!url) throw new Error("No portal URL returned");
+      window.location.href = url;
+    } catch (e) {
+      toast({
+        title: "Couldn't open billing portal",
+        description: (e as Error).message,
+        variant: "destructive",
+      });
+      setPortalLoading(false);
+    }
+  }, [toast]);
+
+  const hasActiveStripeSub = !!(subscription as any)?.stripe_subscription_id;
 
   return (
     <div className="min-h-screen bg-background">
@@ -71,13 +136,26 @@ const PlanPageInner = () => {
             <ArrowLeft className="w-4 h-4 mr-1.5" />
             Back
           </Button>
-          <div className="text-right">
-            <h1 className="text-2xl font-bold text-card-foreground tracking-tight">Your plan</h1>
-            <p className="text-[11px] text-muted-foreground">
-              {subscription
-                ? `${subscription.billing_cycle === "annual" ? "Annual" : "Monthly"} · ${subscription.rooftop_count ?? 1} rooftop${(subscription.rooftop_count ?? 1) > 1 ? "s" : ""}`
-                : "No active subscription"}
-            </p>
+          <div className="flex items-center gap-3">
+            {hasActiveStripeSub && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={openCustomerPortal}
+                disabled={portalLoading}
+              >
+                <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
+                {portalLoading ? "Opening…" : "Manage billing"}
+              </Button>
+            )}
+            <div className="text-right">
+              <h1 className="text-2xl font-bold text-card-foreground tracking-tight">Your plan</h1>
+              <p className="text-[11px] text-muted-foreground">
+                {subscription
+                  ? `${subscription.billing_cycle === "annual" ? "Annual" : "Monthly"} · ${subscription.rooftop_count ?? 1} rooftop${(subscription.rooftop_count ?? 1) > 1 ? "s" : ""}`
+                  : "No active subscription"}
+              </p>
+            </div>
           </div>
         </div>
 
