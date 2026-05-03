@@ -17,6 +17,7 @@ import {
   Network, Plus, Building2, Power, PowerOff, ArrowRightLeft, RefreshCw, Loader2, Clock,
 } from "lucide-react";
 import GroupKPISummary from "./GroupKPISummary";
+import GroupActivityFeed from "./GroupActivityFeed";
 
 type DealerGroup = {
   id: string;
@@ -381,6 +382,16 @@ const GroupManagement = () => {
                     dealership_id: r.dealership_id,
                     display_name: r.display_name,
                   }))}
+                />
+              )}
+
+              {/* Recent activity feed */}
+              {groupRooftops.length > 0 && (
+                <GroupActivityFeed
+                  dealerGroupId={selectedGroup.id}
+                  dealershipNames={
+                    new Map(groupRooftops.map((r) => [r.dealership_id, r.display_name || r.dealership_id]))
+                  }
                 />
               )}
 

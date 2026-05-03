@@ -56,6 +56,7 @@ const OBDScan = lazy(() => import("./pages/OBDScan"));
 const ServiceQuickEntry = lazy(() => import("./pages/ServiceQuickEntry"));
 const InspectionCheckIn = lazy(() => import("./pages/InspectionCheckIn"));
 const PlanPage = lazy(() => import("./pages/PlanPage"));
+const StatusPage = lazy(() => import("./pages/StatusPage"));
 // /billing removed — /plan is now the canonical billing surface, with
 // a "Manage billing" button that opens the Stripe Customer Portal
 // directly. The previous BillingPage was orphaned (not in the sidebar)
@@ -177,6 +178,9 @@ const AnimatedRoutes = () => {
             page accepts both a full 17-char VIN and a last-6 shortcut. */}
         <Route path="/checkin" element={<ProtectedRoute><InspectionCheckIn /></ProtectedRoute>} />
         <Route path="/plan" element={<ProtectedRoute><PlanPage /></ProtectedRoute>} />
+        {/* /status — public health page. The CDK ransomware wedge:
+            customers can self-verify uptime any time. No auth. */}
+        <Route path="/status" element={<StatusPage />} />
         {/* /billing removed — see comment near the import. */}
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
