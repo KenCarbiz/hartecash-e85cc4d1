@@ -42,7 +42,7 @@ export function useCustomerFileRealtime(
         () => { cbRef.current(); },
       )
       .on(
-        // @ts-expect-error supabase realtime types are loose
+        // @ts-ignore supabase realtime types are loose
         "postgres_changes",
         {
           event: "*",
