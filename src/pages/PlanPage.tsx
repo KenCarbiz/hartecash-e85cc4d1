@@ -9,6 +9,7 @@ import PricingPlanPicker, { type PlanSelection } from "@/components/platform/Pri
 import { ArrowLeft, ExternalLink, Clock, CheckCircle2, AlertCircle } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import RecentInvoicesPanel from "@/components/admin/RecentInvoicesPanel";
 
 /**
  * Dealer-facing standalone pricing / plan page. Reachable from the
@@ -248,6 +249,10 @@ const PlanPageInner = () => {
             </div>
           </div>
         )}
+
+        {/* Recent Stripe invoices — at-a-glance, one-click PDF download.
+            Renders silently empty when the dealer has no Stripe customer yet. */}
+        {hasActiveStripeSub && <RecentInvoicesPanel />}
 
         <PricingPlanPicker
           architecture={architecture}

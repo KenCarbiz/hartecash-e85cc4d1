@@ -57,6 +57,8 @@ const ServiceQuickEntry = lazy(() => import("./pages/ServiceQuickEntry"));
 const InspectionCheckIn = lazy(() => import("./pages/InspectionCheckIn"));
 const PlanPage = lazy(() => import("./pages/PlanPage"));
 const StatusPage = lazy(() => import("./pages/StatusPage"));
+const SlaPage = lazy(() => import("./pages/SlaPage"));
+const DocsLanding = lazy(() => import("./pages/DocsLanding"));
 // /billing removed — /plan is now the canonical billing surface, with
 // a "Manage billing" button that opens the Stripe Customer Portal
 // directly. The previous BillingPage was orphaned (not in the sidebar)
@@ -181,6 +183,10 @@ const AnimatedRoutes = () => {
         {/* /status — public health page. The CDK ransomware wedge:
             customers can self-verify uptime any time. No auth. */}
         <Route path="/status" element={<StatusPage />} />
+        {/* /sla — public service-level commitment, linked from /status footer. */}
+        <Route path="/sla" element={<SlaPage />} />
+        {/* /docs — public landing page for SLA / status / runbooks. */}
+        <Route path="/docs" element={<DocsLanding />} />
         {/* /billing removed — see comment near the import. */}
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
