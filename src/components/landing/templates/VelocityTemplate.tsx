@@ -133,6 +133,9 @@ const VelocityTemplate = () => {
         <LandingForm
           variant="default"
           initial={initial ? { plate: initial.plate, state: initial.state } : undefined}
+          theme="light"
+          loader="running-car"
+          accent={primary}
         />
       </FullscreenWizard>
     </>

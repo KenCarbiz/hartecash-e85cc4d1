@@ -129,6 +129,9 @@ const MarqueeTemplate = () => {
         <LandingForm
           variant="default"
           initial={initial ? { plate: initial.plate, state: initial.state } : undefined}
+          theme="dark"
+          loader="brass-arc"
+          accent="#FF6A00"
         />
       </FullscreenWizard>
     </>

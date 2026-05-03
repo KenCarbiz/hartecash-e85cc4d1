@@ -185,6 +185,9 @@ const HeritageTemplate = () => {
         <LandingForm
           variant="default"
           initial={initial ? { plate: initial.plate, state: initial.state } : undefined}
+          theme="warm"
+          loader="hand-drawn"
+          accent={primary}
         />
       </FullscreenWizard>
     </>
