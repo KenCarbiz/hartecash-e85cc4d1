@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import GroupKPISummary from "./GroupKPISummary";
 import GroupActivityFeed from "./GroupActivityFeed";
+import GroupCustomerSearch from "./GroupCustomerSearch";
 
 type DealerGroup = {
   id: string;
@@ -342,9 +343,12 @@ const GroupManagement = () => {
         </div>
       </div>
 
+      {/* Side rail collapses to a horizontal scroller on mobile so a
+          tablet user can still pick a group without losing the detail
+          column to a stacked layout. */}
       <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
         {/* Group list */}
-        <div className="border border-border rounded-xl divide-y divide-border bg-card max-h-[70vh] overflow-y-auto">
+        <div className="border border-border rounded-xl divide-y divide-border bg-card max-h-[40vh] lg:max-h-[70vh] overflow-y-auto">
           {groups.length === 0 && !loading && (
             <div className="p-6 text-center text-sm text-muted-foreground">
               No dealer groups yet. Create one to start activating rooftops under a master MSA.
@@ -480,6 +484,15 @@ const GroupManagement = () => {
                     dealership_id: r.dealership_id,
                     display_name: r.display_name,
                   }))}
+                />
+              )}
+
+              {/* Group-wide customer search */}
+              {groupRooftops.length > 0 && (
+                <GroupCustomerSearch
+                  dealershipNames={
+                    new Map(groupRooftops.map((r) => [r.dealership_id, r.display_name || r.dealership_id]))
+                  }
                 />
               )}
 
