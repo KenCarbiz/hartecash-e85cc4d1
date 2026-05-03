@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, TrendingUp, TrendingDown, Minus, Inbox, CalendarCheck, Target, DollarSign } from "lucide-react";
+import { Loader2, TrendingUp, TrendingDown, Minus, Inbox, CalendarCheck, Target, DollarSign, ExternalLink } from "lucide-react";
+import { useTenant } from "@/contexts/TenantContext";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 type DealershipRow = { dealership_id: string; display_name: string | null };
 
@@ -79,6 +82,29 @@ function DeltaBadge({ value, prior }: { value: number; prior: number }) {
 const GroupKPISummary = ({ rooftops }: Props) => {
   const [loading, setLoading] = useState(true);
   const [aggs, setAggs] = useState<SubmissionAgg[]>([]);
+  const { setViewAsTenant } = useTenant();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [drilling, setDrilling] = useState<string | null>(null);
+
+  const drillInto = async (dealershipId: string, displayName: string) => {
+    setDrilling(dealershipId);
+    const ok = await setViewAsTenant({
+      dealership_id: dealershipId,
+      display_name: displayName,
+      reason: "Group KPI drill-down — viewing rooftop dashboard from group summary",
+    });
+    setDrilling(null);
+    if (!ok) {
+      toast({
+        title: "Couldn't switch view",
+        description: "Make sure you're a platform admin and the rooftop is active.",
+        variant: "destructive",
+      });
+      return;
+    }
+    navigate("/admin");
+  };
 
   const monthStart = useMemo(() => startOfMonth(0).toISOString(), []);
   const lastMonthStart = useMemo(() => startOfMonth(-1).toISOString(), []);
@@ -276,7 +302,8 @@ const GroupKPISummary = ({ rooftops }: Props) => {
                 <th className="text-right px-3 py-2.5 font-medium">Δ</th>
                 <th className="text-right px-3 py-2.5 font-medium">Appts</th>
                 <th className="text-right px-3 py-2.5 font-medium">Conv %</th>
-                <th className="text-right px-5 py-2.5 font-medium">Pipeline $</th>
+                <th className="text-right px-3 py-2.5 font-medium">Pipeline $</th>
+                <th className="text-right px-5 py-2.5 font-medium" aria-label="Drill into rooftop">{" "}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -302,16 +329,39 @@ const GroupKPISummary = ({ rooftops }: Props) => {
                       <td className="text-right px-3 py-2.5 tabular-nums">
                         {a.count_this_month > 0 ? `${conv.toFixed(0)}%` : "—"}
                       </td>
-                      <td className="text-right px-5 py-2.5 tabular-nums">
+                      <td className="text-right px-3 py-2.5 tabular-nums">
                         ${a.estimated_revenue_this_month.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </td>
+                      <td className="text-right px-5 py-2.5">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            drillInto(
+                              a.dealership_id,
+                              rooftop?.display_name || a.dealership_id,
+                            )
+                          }
+                          disabled={drilling === a.dealership_id}
+                          aria-label={`Open ${rooftop?.display_name || a.dealership_id} dashboard`}
+                          className="inline-flex items-center gap-1 text-xs text-primary hover:underline disabled:opacity-50"
+                        >
+                          {drilling === a.dealership_id ? (
+                            <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />
+                          ) : (
+                            <>
+                              View <ExternalLink className="w-3 h-3" aria-hidden="true" />
+                            </>
+                          )}
+                        </button>
                       </td>
                     </tr>
                   );
                 })}
               {aggs.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="text-center py-8 text-sm text-muted-foreground">
-                    No rooftops attached to this group yet.
+                  <td colSpan={7} className="text-center py-8 text-sm text-muted-foreground">
+                    <p className="font-medium text-card-foreground">No rooftops attached to this group yet.</p>
+                    <p className="text-xs mt-1">Use "Attach a rooftop to this group" below to add the first one.</p>
                   </td>
                 </tr>
               )}
