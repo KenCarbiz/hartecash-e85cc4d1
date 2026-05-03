@@ -31,7 +31,7 @@ export function useCustomerFileRealtime(
     const channel = supabase
       .channel(`customer-file:${submissionId}`)
       .on(
-        // @ts-expect-error supabase realtime types are loose
+        // @ts-ignore supabase realtime types are loose
         "postgres_changes",
         {
           event: "INSERT",
