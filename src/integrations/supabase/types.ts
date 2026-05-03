@@ -60,11 +60,15 @@ export type Database = {
           customer_phone: string
           dealership_id: string
           id: string
+          imported_at: string | null
+          imported_from_dms: string | null
+          legacy_id: string | null
           notes: string | null
           preferred_date: string
           preferred_time: string
           status: string
           store_location: string | null
+          store_location_id: string | null
           submission_token: string | null
           vehicle_info: string | null
         }
@@ -75,11 +79,15 @@ export type Database = {
           customer_phone: string
           dealership_id?: string
           id?: string
+          imported_at?: string | null
+          imported_from_dms?: string | null
+          legacy_id?: string | null
           notes?: string | null
           preferred_date: string
           preferred_time: string
           status?: string
           store_location?: string | null
+          store_location_id?: string | null
           submission_token?: string | null
           vehicle_info?: string | null
         }
@@ -90,15 +98,26 @@ export type Database = {
           customer_phone?: string
           dealership_id?: string
           id?: string
+          imported_at?: string | null
+          imported_from_dms?: string | null
+          legacy_id?: string | null
           notes?: string | null
           preferred_date?: string
           preferred_time?: string
           status?: string
           store_location?: string | null
+          store_location_id?: string | null
           submission_token?: string | null
           vehicle_info?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "appointments_store_location_id_fkey"
+            columns: ["store_location_id"]
+            isOneToOne: false
+            referencedRelation: "dealership_locations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "appointments_submission_token_fkey"
             columns: ["submission_token"]
@@ -164,7 +183,11 @@ export type Database = {
           dealership_id: string
           form_source: string
           id: string
+          imported_at: string | null
+          imported_from_dms: string | null
           ip_address: string | null
+          legacy_id: string | null
+          store_location_id: string | null
           submission_token: string | null
           user_agent: string | null
         }
@@ -178,7 +201,11 @@ export type Database = {
           dealership_id?: string
           form_source: string
           id?: string
+          imported_at?: string | null
+          imported_from_dms?: string | null
           ip_address?: string | null
+          legacy_id?: string | null
+          store_location_id?: string | null
           submission_token?: string | null
           user_agent?: string | null
         }
@@ -192,11 +219,23 @@ export type Database = {
           dealership_id?: string
           form_source?: string
           id?: string
+          imported_at?: string | null
+          imported_from_dms?: string | null
           ip_address?: string | null
+          legacy_id?: string | null
+          store_location_id?: string | null
           submission_token?: string | null
           user_agent?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "consent_log_store_location_id_fkey"
+            columns: ["store_location_id"]
+            isOneToOne: false
+            referencedRelation: "dealership_locations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       damage_reports: {
         Row: {
@@ -207,10 +246,14 @@ export type Database = {
           damage_items: Json
           dealership_id: string
           id: string
+          imported_at: string | null
+          imported_from_dms: string | null
+          legacy_id: string | null
           overall_severity: string
           photo_category: string
           photo_path: string
           raw_response: Json | null
+          store_location_id: string | null
           submission_id: string
           suggested_condition: string | null
         }
@@ -222,10 +265,14 @@ export type Database = {
           damage_items?: Json
           dealership_id?: string
           id?: string
+          imported_at?: string | null
+          imported_from_dms?: string | null
+          legacy_id?: string | null
           overall_severity?: string
           photo_category: string
           photo_path: string
           raw_response?: Json | null
+          store_location_id?: string | null
           submission_id: string
           suggested_condition?: string | null
         }
@@ -237,14 +284,25 @@ export type Database = {
           damage_items?: Json
           dealership_id?: string
           id?: string
+          imported_at?: string | null
+          imported_from_dms?: string | null
+          legacy_id?: string | null
           overall_severity?: string
           photo_category?: string
           photo_path?: string
           raw_response?: Json | null
+          store_location_id?: string | null
           submission_id?: string
           suggested_condition?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "damage_reports_store_location_id_fkey"
+            columns: ["store_location_id"]
+            isOneToOne: false
+            referencedRelation: "dealership_locations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "damage_reports_submission_id_fkey"
             columns: ["submission_id"]
@@ -254,12 +312,70 @@ export type Database = {
           },
         ]
       }
+      data_egress_log: {
+        Row: {
+          created_at: string
+          dealership_id: string
+          download_url: string | null
+          error_message: string | null
+          expires_at: string | null
+          export_kind: string
+          exported_by_email: string | null
+          exported_by_user_id: string | null
+          file_bytes: number | null
+          file_path: string | null
+          filters: Json
+          id: string
+          row_counts: Json
+          status: string
+          table_names: string[]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dealership_id: string
+          download_url?: string | null
+          error_message?: string | null
+          expires_at?: string | null
+          export_kind?: string
+          exported_by_email?: string | null
+          exported_by_user_id?: string | null
+          file_bytes?: number | null
+          file_path?: string | null
+          filters?: Json
+          id?: string
+          row_counts?: Json
+          status?: string
+          table_names?: string[]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dealership_id?: string
+          download_url?: string | null
+          error_message?: string | null
+          expires_at?: string | null
+          export_kind?: string
+          exported_by_email?: string | null
+          exported_by_user_id?: string | null
+          file_bytes?: number | null
+          file_path?: string | null
+          filters?: Json
+          id?: string
+          row_counts?: Json
+          status?: string
+          table_names?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       dealer_accounts: {
         Row: {
           architecture: string
           bdc_model: string
           billing_date: number | null
           created_at: string
+          dealer_group_id: string | null
           dealership_id: string
           id: string
           max_locations: number
@@ -281,6 +397,7 @@ export type Database = {
           bdc_model?: string
           billing_date?: number | null
           created_at?: string
+          dealer_group_id?: string | null
           dealership_id?: string
           id?: string
           max_locations?: number
@@ -302,6 +419,7 @@ export type Database = {
           bdc_model?: string
           billing_date?: number | null
           created_at?: string
+          dealer_group_id?: string | null
           dealership_id?: string
           id?: string
           max_locations?: number
@@ -318,19 +436,95 @@ export type Database = {
           start_date?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "dealer_accounts_dealer_group_id_fkey"
+            columns: ["dealer_group_id"]
+            isOneToOne: false
+            referencedRelation: "dealer_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dealer_groups: {
+        Row: {
+          billing_email: string | null
+          created_at: string
+          custom_domain: string | null
+          display_name: string | null
+          id: string
+          master_msa_signed_at: string | null
+          master_msa_url: string | null
+          name: string
+          notes: string | null
+          parent_group_id: string | null
+          primary_contact_user_id: string | null
+          slug: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          billing_email?: string | null
+          created_at?: string
+          custom_domain?: string | null
+          display_name?: string | null
+          id?: string
+          master_msa_signed_at?: string | null
+          master_msa_url?: string | null
+          name: string
+          notes?: string | null
+          parent_group_id?: string | null
+          primary_contact_user_id?: string | null
+          slug: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          billing_email?: string | null
+          created_at?: string
+          custom_domain?: string | null
+          display_name?: string | null
+          id?: string
+          master_msa_signed_at?: string | null
+          master_msa_url?: string | null
+          name?: string
+          notes?: string | null
+          parent_group_id?: string | null
+          primary_contact_user_id?: string | null
+          slug?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dealer_groups_parent_group_id_fkey"
+            columns: ["parent_group_id"]
+            isOneToOne: false
+            referencedRelation: "dealer_groups"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       dealer_subscriptions: {
         Row: {
           billing_cycle: string
           bundle_id: string | null
+          cancel_at_period_end: boolean
+          canceled_at: string | null
           created_at: string
+          current_period_end: string | null
           dealership_id: string
           id: string
+          last_synced_at: string | null
           monthly_amount: number | null
           product_ids: string[]
+          rooftop_activation_id: string | null
           rooftop_count: number
           status: string
+          stripe_customer_id: string | null
+          stripe_price_id: string | null
+          stripe_product_id: string | null
+          stripe_subscription_id: string | null
           tier_ids: string[]
           trial_ends_at: string | null
           updated_at: string
@@ -338,13 +532,22 @@ export type Database = {
         Insert: {
           billing_cycle?: string
           bundle_id?: string | null
+          cancel_at_period_end?: boolean
+          canceled_at?: string | null
           created_at?: string
+          current_period_end?: string | null
           dealership_id?: string
           id?: string
+          last_synced_at?: string | null
           monthly_amount?: number | null
           product_ids?: string[]
+          rooftop_activation_id?: string | null
           rooftop_count?: number
           status?: string
+          stripe_customer_id?: string | null
+          stripe_price_id?: string | null
+          stripe_product_id?: string | null
+          stripe_subscription_id?: string | null
           tier_ids?: string[]
           trial_ends_at?: string | null
           updated_at?: string
@@ -352,13 +555,22 @@ export type Database = {
         Update: {
           billing_cycle?: string
           bundle_id?: string | null
+          cancel_at_period_end?: boolean
+          canceled_at?: string | null
           created_at?: string
+          current_period_end?: string | null
           dealership_id?: string
           id?: string
+          last_synced_at?: string | null
           monthly_amount?: number | null
           product_ids?: string[]
+          rooftop_activation_id?: string | null
           rooftop_count?: number
           status?: string
+          stripe_customer_id?: string | null
+          stripe_price_id?: string | null
+          stripe_product_id?: string | null
+          stripe_subscription_id?: string | null
           tier_ids?: string[]
           trial_ends_at?: string | null
           updated_at?: string
@@ -369,6 +581,13 @@ export type Database = {
             columns: ["bundle_id"]
             isOneToOne: false
             referencedRelation: "platform_bundles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dealer_subscriptions_rooftop_activation_id_fkey"
+            columns: ["rooftop_activation_id"]
+            isOneToOne: false
+            referencedRelation: "rooftop_activations"
             referencedColumns: ["id"]
           },
         ]
@@ -725,7 +944,11 @@ export type Database = {
           dealership_id: string
           error_message: string | null
           id: string
+          imported_at: string | null
+          imported_from_dms: string | null
+          legacy_id: string | null
           status: string
+          store_location_id: string | null
           submission_id: string
           touch_number: number
           triggered_by: string | null
@@ -736,7 +959,11 @@ export type Database = {
           dealership_id?: string
           error_message?: string | null
           id?: string
+          imported_at?: string | null
+          imported_from_dms?: string | null
+          legacy_id?: string | null
           status?: string
+          store_location_id?: string | null
           submission_id: string
           touch_number: number
           triggered_by?: string | null
@@ -747,12 +974,23 @@ export type Database = {
           dealership_id?: string
           error_message?: string | null
           id?: string
+          imported_at?: string | null
+          imported_from_dms?: string | null
+          legacy_id?: string | null
           status?: string
+          store_location_id?: string | null
           submission_id?: string
           touch_number?: number
           triggered_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "follow_ups_store_location_id_fkey"
+            columns: ["store_location_id"]
+            isOneToOne: false
+            referencedRelation: "dealership_locations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "follow_ups_submission_id_fkey"
             columns: ["submission_id"]
@@ -967,8 +1205,12 @@ export type Database = {
           dealership_id: string
           error_message: string | null
           id: string
+          imported_at: string | null
+          imported_from_dms: string | null
+          legacy_id: string | null
           recipient: string
           status: string
+          store_location_id: string | null
           submission_id: string | null
           trigger_key: string
         }
@@ -978,8 +1220,12 @@ export type Database = {
           dealership_id?: string
           error_message?: string | null
           id?: string
+          imported_at?: string | null
+          imported_from_dms?: string | null
+          legacy_id?: string | null
           recipient: string
           status?: string
+          store_location_id?: string | null
           submission_id?: string | null
           trigger_key: string
         }
@@ -989,12 +1235,23 @@ export type Database = {
           dealership_id?: string
           error_message?: string | null
           id?: string
+          imported_at?: string | null
+          imported_from_dms?: string | null
+          legacy_id?: string | null
           recipient?: string
           status?: string
+          store_location_id?: string | null
           submission_id?: string | null
           trigger_key?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "notification_log_store_location_id_fkey"
+            columns: ["store_location_id"]
+            isOneToOne: false
+            referencedRelation: "dealership_locations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "notification_log_submission_id_fkey"
             columns: ["submission_id"]
@@ -2082,6 +2339,123 @@ export type Database = {
           },
         ]
       }
+      rooftop_activations: {
+        Row: {
+          activated_at: string
+          activated_by_user_id: string | null
+          created_at: string
+          deactivated_at: string | null
+          deactivation_reason: string | null
+          dealer_group_id: string
+          dealership_id: string
+          id: string
+          location_id: string | null
+          notes: string | null
+          pilot_ends_at: string
+          status: string
+          stripe_subscription_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          activated_at?: string
+          activated_by_user_id?: string | null
+          created_at?: string
+          deactivated_at?: string | null
+          deactivation_reason?: string | null
+          dealer_group_id: string
+          dealership_id: string
+          id?: string
+          location_id?: string | null
+          notes?: string | null
+          pilot_ends_at?: string
+          status?: string
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activated_at?: string
+          activated_by_user_id?: string | null
+          created_at?: string
+          deactivated_at?: string | null
+          deactivation_reason?: string | null
+          dealer_group_id?: string
+          dealership_id?: string
+          id?: string
+          location_id?: string | null
+          notes?: string | null
+          pilot_ends_at?: string
+          status?: string
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rooftop_activations_dealer_group_id_fkey"
+            columns: ["dealer_group_id"]
+            isOneToOne: false
+            referencedRelation: "dealer_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rooftop_activations_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "dealership_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rooftop_detach_log: {
+        Row: {
+          dealership_id: string
+          from_dealer_group_id: string | null
+          id: string
+          performed_at: string
+          performed_by_email: string | null
+          performed_by_user_id: string | null
+          reason: string
+          snapshot: Json
+          to_dealer_group_id: string | null
+        }
+        Insert: {
+          dealership_id: string
+          from_dealer_group_id?: string | null
+          id?: string
+          performed_at?: string
+          performed_by_email?: string | null
+          performed_by_user_id?: string | null
+          reason: string
+          snapshot?: Json
+          to_dealer_group_id?: string | null
+        }
+        Update: {
+          dealership_id?: string
+          from_dealer_group_id?: string | null
+          id?: string
+          performed_at?: string
+          performed_by_email?: string | null
+          performed_by_user_id?: string | null
+          reason?: string
+          snapshot?: Json
+          to_dealer_group_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rooftop_detach_log_from_dealer_group_id_fkey"
+            columns: ["from_dealer_group_id"]
+            isOneToOne: false
+            referencedRelation: "dealer_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rooftop_detach_log_to_dealer_group_id_fkey"
+            columns: ["to_dealer_group_id"]
+            isOneToOne: false
+            referencedRelation: "dealer_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       site_config: {
         Row: {
           about_hero_headline: string
@@ -2389,6 +2763,33 @@ export type Database = {
           },
         ]
       }
+      stripe_events: {
+        Row: {
+          id: string
+          livemode: boolean
+          processed_at: string | null
+          received_at: string
+          summary: string | null
+          type: string
+        }
+        Insert: {
+          id: string
+          livemode: boolean
+          processed_at?: string | null
+          received_at?: string
+          summary?: string | null
+          type: string
+        }
+        Update: {
+          id?: string
+          livemode?: boolean
+          processed_at?: string | null
+          received_at?: string
+          summary?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
       submissions: {
         Row: {
           accidents: string | null
@@ -2438,6 +2839,8 @@ export type Database = {
           exterior_color: string | null
           exterior_damage: string[] | null
           id: string
+          imported_at: string | null
+          imported_from_dms: string | null
           inspection_data: Json | null
           inspection_pin: string | null
           inspector_grade: string | null
@@ -2445,6 +2848,7 @@ export type Database = {
           internal_notes: string | null
           is_hot_lead: boolean
           lead_source: string
+          legacy_id: string | null
           loan_balance: string | null
           loan_company: string | null
           loan_payment: string | null
@@ -2548,6 +2952,8 @@ export type Database = {
           exterior_color?: string | null
           exterior_damage?: string[] | null
           id?: string
+          imported_at?: string | null
+          imported_from_dms?: string | null
           inspection_data?: Json | null
           inspection_pin?: string | null
           inspector_grade?: string | null
@@ -2555,6 +2961,7 @@ export type Database = {
           internal_notes?: string | null
           is_hot_lead?: boolean
           lead_source?: string
+          legacy_id?: string | null
           loan_balance?: string | null
           loan_company?: string | null
           loan_payment?: string | null
@@ -2658,6 +3065,8 @@ export type Database = {
           exterior_color?: string | null
           exterior_damage?: string[] | null
           id?: string
+          imported_at?: string | null
+          imported_from_dms?: string | null
           inspection_data?: Json | null
           inspection_pin?: string | null
           inspector_grade?: string | null
@@ -2665,6 +3074,7 @@ export type Database = {
           internal_notes?: string | null
           is_hot_lead?: boolean
           lead_source?: string
+          legacy_id?: string | null
           loan_balance?: string | null
           loan_company?: string | null
           loan_payment?: string | null
@@ -2847,6 +3257,7 @@ export type Database = {
           is_active: boolean
           location_id: string | null
           slug: string
+          stripe_customer_id: string | null
           updated_at: string
         }
         Insert: {
@@ -2858,6 +3269,7 @@ export type Database = {
           is_active?: boolean
           location_id?: string | null
           slug: string
+          stripe_customer_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -2869,6 +3281,7 @@ export type Database = {
           is_active?: boolean
           location_id?: string | null
           slug?: string
+          stripe_customer_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -2925,27 +3338,43 @@ export type Database = {
       }
       user_roles: {
         Row: {
+          dealer_group_id: string | null
           dealership_id: string
           id: string
+          is_platform_admin: boolean
+          licensed_states: string[] | null
           location_id: string | null
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
+          dealer_group_id?: string | null
           dealership_id?: string
           id?: string
+          is_platform_admin?: boolean
+          licensed_states?: string[] | null
           location_id?: string | null
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
+          dealer_group_id?: string | null
           dealership_id?: string
           id?: string
+          is_platform_admin?: boolean
+          licensed_states?: string[] | null
           location_id?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "user_roles_dealer_group_id_fkey"
+            columns: ["dealer_group_id"]
+            isOneToOne: false
+            referencedRelation: "dealer_groups"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "user_roles_location_id_fkey"
             columns: ["location_id"]
@@ -2997,6 +3426,14 @@ export type Database = {
     }
     Functions: {
       accept_offer: { Args: { _token: string }; Returns: undefined }
+      activation_in_pilot: {
+        Args: { _activation_id: string }
+        Returns: boolean
+      }
+      can_act_in_state: {
+        Args: { _state: string; _user_id: string }
+        Returns: boolean
+      }
       can_view_submission: {
         Args: {
           _submission_dealership_id: string
@@ -3010,6 +3447,16 @@ export type Database = {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
       }
+      detach_rooftop: {
+        Args: {
+          _dealership_id: string
+          _performed_by_email?: string
+          _performed_by_user_id?: string
+          _reason: string
+          _to_dealer_group_id: string
+        }
+        Returns: string
+      }
       effective_user_sections: {
         Args: { _sections: Json; _user_id: string }
         Returns: string[]
@@ -3018,6 +3465,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      expire_pilots: { Args: never; Returns: number }
       get_all_staff: {
         Args: { _dealership_id?: string }
         Returns: {
@@ -3112,6 +3560,7 @@ export type Database = {
           slug: string
         }[]
       }
+      get_user_dealer_group_id: { Args: { _user_id: string }; Returns: string }
       get_user_dealership_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
@@ -3120,8 +3569,13 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_dealer_group_admin: {
+        Args: { _group_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_platform_admin: { Args: { _user_id: string }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      licensed_states_valid: { Args: { _states: string[] }; Returns: boolean }
       lookup_submission_by_contact: {
         Args: { _email: string; _phone: string }
         Returns: {
@@ -3134,6 +3588,17 @@ export type Database = {
       }
       mark_docs_uploaded: { Args: { _token: string }; Returns: undefined }
       mark_photos_uploaded: { Args: { _token: string }; Returns: undefined }
+      merge_rooftop: {
+        Args: {
+          _create_pilot?: boolean
+          _dealership_id: string
+          _performed_by_email?: string
+          _performed_by_user_id?: string
+          _reason: string
+          _to_dealer_group_id: string
+        }
+        Returns: string
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -3152,6 +3617,7 @@ export type Database = {
         }[]
       }
       remove_staff_role: { Args: { _role_id: string }; Returns: undefined }
+      role_requires_state_license: { Args: { _role: string }; Returns: boolean }
       save_mobile_inspection:
         | {
             Args: {
