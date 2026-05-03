@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { LogOut, Moon, Sun, Crown, Menu, PanelLeft, Bell, Search } from "lucide-react";
+import { LogOut, Moon, Sun, Crown, Menu, PanelLeft, Bell, Search, HelpCircle, Activity, ShieldCheck, ScrollText, BookOpen, Mail } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { ROLE_LABELS } from "@/lib/adminConstants";
@@ -7,6 +7,7 @@ import PushNotificationToggle from "@/components/admin/PushNotificationToggle";
 import AppSwitcher from "@/components/platform/AppSwitcher";
 import { usePlatform } from "@/contexts/PlatformContext";
 import { Badge } from "@/components/ui/badge";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
 interface AdminHeaderProps {
   darkMode: boolean;
@@ -324,6 +325,48 @@ const AdminHeader = ({ darkMode, setDarkMode, userRole, onLogout, userName, isPl
               </div>
             </div>
           </div>
+
+          {/* Help — links to /docs index, /status, /sla, /updates,
+              support email. Uses the existing dropdown-menu UI. Visible
+              to every authenticated admin; non-authed users find /docs
+              via the public route directly. */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 px-2 hover:bg-white/10 transition-all"
+                style={{ color: `${topBarText}b3` }}
+                aria-label="Help"
+              >
+                <HelpCircle className="w-4 h-4" />
+                <span className="hidden lg:inline ml-1.5 text-[12px]">Help</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={() => window.open("/docs", "_blank", "noopener")}>
+                <BookOpen className="w-4 h-4 mr-2" />
+                All docs
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => window.open("/status", "_blank", "noopener")}>
+                <Activity className="w-4 h-4 mr-2" />
+                Live system status
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => window.open("/sla", "_blank", "noopener")}>
+                <ShieldCheck className="w-4 h-4 mr-2" />
+                Service Level Agreement
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => window.open("/updates", "_blank", "noopener")}>
+                <ScrollText className="w-4 h-4 mr-2" />
+                What's new
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => { window.location.href = "mailto:support@autocurb.io"; }}>
+                <Mail className="w-4 h-4 mr-2" />
+                Contact support
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* Logout */}
           <Button
