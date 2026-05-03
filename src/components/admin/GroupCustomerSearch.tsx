@@ -12,7 +12,7 @@ type SubmissionRow = {
   phone: string | null;
   dealership_id: string;
   store_location_id: string | null;
-  vehicle_year: number | null;
+  vehicle_year: number | string | null;
   vehicle_make: string | null;
   vehicle_model: string | null;
   progress_status: string | null;
