@@ -197,6 +197,7 @@ const LocationOverrideDriftPanel = ({ locationId, locationName, onChange }: Prop
             type="button"
             size="sm"
             variant="outline"
+            aria-label={`Reset all ${overrideCount} appearance overrides for this location to corporate defaults`}
             onClick={(e) => {
               e.stopPropagation();
               resetAll();
@@ -204,7 +205,7 @@ const LocationOverrideDriftPanel = ({ locationId, locationName, onChange }: Prop
             disabled={resetting === "__all"}
             className="h-7 text-xs"
           >
-            <RotateCcw className="w-3 h-3 mr-1.5" />
+            <RotateCcw className="w-3 h-3 mr-1.5" aria-hidden="true" />
             Reset all
           </Button>
         )}
@@ -230,6 +231,7 @@ const LocationOverrideDriftPanel = ({ locationId, locationName, onChange }: Prop
                 type="button"
                 size="sm"
                 variant="ghost"
+                aria-label={`Reset ${f.label} to corporate default`}
                 onClick={() => resetField(f.key)}
                 disabled={resetting === f.key}
                 className="h-7 text-xs"

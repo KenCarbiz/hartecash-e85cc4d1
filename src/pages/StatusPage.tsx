@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle2, AlertCircle, XCircle, Activity, Loader2 } from "lucide-react";
+import SEO from "@/components/SEO";
 
 type Probe = {
   name: string;
@@ -224,9 +225,14 @@ const StatusPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="System status — Autocurb"
+        description="Live health checks for the Autocurb platform — customer site, database, vehicle lookup, notifications, billing. Refreshes every 60 seconds."
+        path="/status"
+      />
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 space-y-6">
         <header className="flex items-center gap-3">
-          <Activity className="w-7 h-7 text-primary" />
+          <Activity className="w-7 h-7 text-primary" aria-hidden="true" />
           <div>
             <h1 className="text-2xl font-bold text-card-foreground tracking-tight">
               Autocurb status
