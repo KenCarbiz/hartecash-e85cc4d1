@@ -15,7 +15,7 @@ type SubmissionRow = {
   vehicle_year: number | null;
   vehicle_make: string | null;
   vehicle_model: string | null;
-  status: string | null;
+  progress_status: string | null;
   offered_price: number | null;
   created_at: string;
 };
