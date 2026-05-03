@@ -12,10 +12,10 @@ type SubmissionRow = {
   phone: string | null;
   dealership_id: string;
   store_location_id: string | null;
-  vehicle_year: number | null;
+  vehicle_year: number | string | null;
   vehicle_make: string | null;
   vehicle_model: string | null;
-  status: string | null;
+  progress_status: string | null;
   offered_price: number | null;
   created_at: string;
 };
@@ -84,7 +84,7 @@ const GroupCustomerSearch = ({ dealershipNames }: Props) => {
       const { data, error } = await supabase
         .from("submissions")
         .select(
-          "id, token, name, email, phone, dealership_id, store_location_id, vehicle_year, vehicle_make, vehicle_model, status, offered_price, created_at",
+          "id, token, name, email, phone, dealership_id, store_location_id, vehicle_year, vehicle_make, vehicle_model, progress_status, offered_price, created_at",
         )
         .in("dealership_id", dealershipIds)
         .or(orClause)
@@ -163,12 +163,12 @@ const GroupCustomerSearch = ({ dealershipNames }: Props) => {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-medium text-sm">{r.name || "—"}</span>
                     <Badge variant="outline" className="text-[10px]">{rooftop}</Badge>
-                    {r.status && (
+                    {r.progress_status && (
                       <Badge
                         variant="secondary"
                         className="text-[10px]"
                       >
-                        {r.status}
+                        {r.progress_status}
                       </Badge>
                     )}
                   </div>
