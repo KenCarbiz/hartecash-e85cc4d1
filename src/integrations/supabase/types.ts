@@ -552,6 +552,7 @@ export type Database = {
           created_at: string
           dealer_group_id: string | null
           dealership_id: string
+          display_name: string | null
           id: string
           max_locations: number
           offer_logic_approver_role: string
@@ -576,6 +577,7 @@ export type Database = {
           created_at?: string
           dealer_group_id?: string | null
           dealership_id?: string
+          display_name?: string | null
           id?: string
           max_locations?: number
           offer_logic_approver_role?: string
@@ -600,6 +602,7 @@ export type Database = {
           created_at?: string
           dealer_group_id?: string | null
           dealership_id?: string
+          display_name?: string | null
           id?: string
           max_locations?: number
           offer_logic_approver_role?: string
