@@ -50,7 +50,7 @@ function rowsToCSV(rows: AuditRow[]): string {
     if (v === null || v === undefined) return "";
     const s = String(v);
     return s.includes(",") || s.includes('"') || s.includes("\n")
-      ? `"${s.replaceAll('"', '""')}"`
+      ? `"${s.split('"').join('""')}"`
       : s;
   };
   const header = cols.join(",");
