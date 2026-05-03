@@ -292,6 +292,7 @@ const AdminSidebar = ({
     ...(isPlatformAdmin ? [{ key: "tenants", label: "Dealer Tenants", icon: Network }] : []),
     ...(isPlatformAdmin ? [{ key: "groups", label: "Group Management", icon: Network }] : []),
     ...(isPlatformAdmin ? [{ key: "stripe-webhooks", label: "Stripe Webhooks", icon: Activity }] : []),
+    ...(isPlatformAdmin ? [{ key: "audit-log", label: "Audit Log", icon: ScrollText }] : []),
     ...(isPlatformAdmin ? [{ key: "prospect-demo", label: "Prospect Demo", icon: Target }] : []),
     ...(isPlatformAdmin ? [{ key: "pricing-model", label: "SaaS Pricing", icon: Tag }] : []),
     ...(canManageAccess && (enterpriseBetaEnabled || isPlatformAdmin)
@@ -321,7 +322,7 @@ const AdminSidebar = ({
     "onboarding", "system-settings", "pricing-model",
     // Integrations: legacy keys still resolve.
     "integrations", "platform-billing", "integrations-status", "api-access", "vauto-integration", "white-label",
-    "prospect-demo", "groups", "stripe-webhooks",
+    "prospect-demo", "groups", "stripe-webhooks", "audit-log",
     "equity-mining", "voice-ai", "service-quick-entry", "inspection-checkin",
   ];
   const lockedSections = showRequestAccess && allowedSections !== null

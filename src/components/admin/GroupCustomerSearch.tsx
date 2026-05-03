@@ -124,8 +124,17 @@ const GroupCustomerSearch = ({ dealershipNames }: Props) => {
         />
       </div>
       {loading && (
-        <div className="px-5 py-6 flex items-center justify-center text-sm text-muted-foreground">
-          <Loader2 className="w-4 h-4 animate-spin mr-2" /> Searching…
+        <div aria-busy="true" aria-label="Searching customers" className="divide-y divide-border">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="px-5 py-3 flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-muted animate-pulse shrink-0 mt-0.5" />
+              <div className="flex-1 space-y-2">
+                <div className="h-3.5 w-1/2 rounded bg-muted animate-pulse" />
+                <div className="h-2.5 w-3/4 rounded bg-muted animate-pulse" />
+                <div className="h-2.5 w-1/3 rounded bg-muted animate-pulse" />
+              </div>
+            </div>
+          ))}
         </div>
       )}
       {!loading && debouncedQ.length >= 2 && results.length === 0 && (

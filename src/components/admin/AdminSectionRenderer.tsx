@@ -46,6 +46,7 @@ const TenantManagement = React.lazy(() => import("./TenantManagement"));
 const GroupManagement = React.lazy(() => import("./GroupManagement"));
 const DataEgressPanel = React.lazy(() => import("./DataEgressPanel"));
 const StripeWebhookReprocessor = React.lazy(() => import("./StripeWebhookReprocessor"));
+const UnifiedAuditLog = React.lazy(() => import("./UnifiedAuditLog"));
 const DealerOnboarding = React.lazy(() => import("./DealerOnboarding"));
 const OnboardingScript = React.lazy(() => import("./OnboardingScript"));
 const ReportsExport = React.lazy(() => import("./ReportsExport"));
@@ -719,6 +720,11 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
       {activeSection === "stripe-webhooks" && canManageAccess && props.tenant.dealership_id === "default" && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <StripeWebhookReprocessor />
+        </React.Suspense>
+      )}
+      {activeSection === "audit-log" && canManageAccess && props.tenant.dealership_id === "default" && (
+        <React.Suspense fallback={<AdminLoadingSkeleton />}>
+          <UnifiedAuditLog />
         </React.Suspense>
       )}
       {activeSection === "data-egress" && (
