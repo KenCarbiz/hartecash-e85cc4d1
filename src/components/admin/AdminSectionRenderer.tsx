@@ -54,12 +54,10 @@ const EmbedToolkit = React.lazy(() => import("./EmbedToolkit"));
 const ProspectDemo = React.lazy(() => import("./ProspectDemo"));
 // PromotionManagement now imported by MarketingHub.tsx.
 
-const ApiAccessPanel = React.lazy(() => import("./ApiAccessPanel"));
-const WhiteLabelSettings = React.lazy(() => import("./WhiteLabelSettings"));
+// ApiAccessPanel / WhiteLabelSettings now imported by IntegrationsHub.tsx.
 const EquityMining = React.lazy(() => import("./EquityMining"));
 const WholesaleMarketplace = React.lazy(() => import("./WholesaleMarketplace"));
-const VautoIntegration = React.lazy(() => import("./VautoIntegration"));
-const IntegrationsStatus = React.lazy(() => import("./IntegrationsStatus"));
+// VautoIntegration / IntegrationsStatus now imported by IntegrationsHub.tsx.
 const AppraiserQueue = React.lazy(() => import("./AppraiserQueue"));
 // BDCPriorityQueue / BDCCallsToday now imported by BdcQueueHub.tsx.
 // ExecutiveHUD now imported by PerformanceHub.tsx.
@@ -71,6 +69,7 @@ const BrandingHub = React.lazy(() => import("./BrandingHub"));
 const CaptureInspectionHub = React.lazy(() => import("./CaptureInspectionHub"));
 const MarketingHub = React.lazy(() => import("./MarketingHub"));
 const PerformanceHub = React.lazy(() => import("./PerformanceHub"));
+const IntegrationsHub = React.lazy(() => import("./IntegrationsHub"));
 
 class AdminErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -598,6 +597,32 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
     );
   }
 
+  // ── Integrations hub ── Status + API + vAuto + White Label on tabs.
+  // Legacy keys ("white-label", "integrations-status", "api-access",
+  // "vauto-integration") still resolve onto the right tab.
+  if (
+    activeSection === "integrations" ||
+    activeSection === "integrations-status" ||
+    activeSection === "api-access" ||
+    activeSection === "vauto-integration" ||
+    activeSection === "white-label"
+  ) {
+    if (!canManageAccess) return null;
+    const initialTab =
+      activeSection === "api-access"
+        ? "api"
+        : activeSection === "vauto-integration"
+          ? "vauto"
+          : activeSection === "white-label"
+            ? "white-label"
+            : "status";
+    return (
+      <React.Suspense fallback={<AdminLoadingSkeleton />}>
+        <IntegrationsHub initialTab={initialTab} />
+      </React.Suspense>
+    );
+  }
+
   // ── Config sections (wrapped with optional tenant override) ──
   const configSections = (
     <>
@@ -697,26 +722,9 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
           <WholesaleMarketplace />
         </React.Suspense>
       )}
-      {activeSection === "api-access" && canManageAccess && (
-        <React.Suspense fallback={<AdminLoadingSkeleton />}>
-          <ApiAccessPanel />
-        </React.Suspense>
-      )}
-      {activeSection === "vauto-integration" && canManageAccess && (
-        <React.Suspense fallback={<AdminLoadingSkeleton />}>
-          <VautoIntegration />
-        </React.Suspense>
-      )}
-      {activeSection === "white-label" && canManageAccess && (
-        <React.Suspense fallback={<AdminLoadingSkeleton />}>
-          <WhiteLabelSettings />
-        </React.Suspense>
-      )}
-      {activeSection === "integrations-status" && canManageAccess && (
-        <React.Suspense fallback={<AdminLoadingSkeleton />}>
-          <IntegrationsStatus />
-        </React.Suspense>
-      )}
+      {/* "white-label" / "integrations-status" / "api-access" /
+          "vauto-integration" all dispatch to IntegrationsHub via the
+          dedicated block below configSections. */}
       {activeSection === "platform-billing" && canManageAccess && (
         <React.Suspense fallback={<AdminLoadingSkeleton />}>
           <PlatformSubscriptions />

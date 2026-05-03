@@ -7,82 +7,169 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
+// Group + label maps follow the post-audit sidebar structure (May 2026).
+// Legacy section keys (executive, gm-hud, channels, notifications,
+// compliance, site-config, appearance, landing-flow, form-config,
+// inspection-config, photo-config, depth-policies, promotions,
+// referrals, testimonials, bdc-queue, bdc-calls, white-label, etc.) all
+// keep working — they resolve to the right hub on the right tab via
+// AdminSectionRenderer, and the breadcrumb shows the hub label so the
+// user sees a consistent location even when arriving via a deep link.
+
 const SECTION_GROUPS: Record<string, string> = {
+  // Queues
   submissions: "Queues",
   "offer-pending": "Queues",
   "offer-accepted": "Queues",
   "accepted-appts": "Queues",
   "appraiser-queue": "Queues",
+  "bdc-hub": "Queues",
   "bdc-queue": "Queues",
-  executive: "Measure",
-  "gm-hud": "Measure",
-  reports: "Measure",
-  "inspection-checkin": "Floor Tools",
-  "service-quick-entry": "Floor Tools",
-  "image-inventory": "Floor Tools",
+  "bdc-calls": "Queues",
+
+  // Lane Tools (was "Floor Tools")
+  "inspection-checkin": "Lane Tools",
+  "service-quick-entry": "Lane Tools",
+
+  // Grow
   "equity-mining": "Grow",
   "voice-ai": "Grow",
   "wholesale-marketplace": "Grow",
-  "offer-settings": "Configuration",
-  "form-config": "Configuration",
-  "inspection-config": "Configuration",
-  "photo-config": "Configuration",
-  "depth-policies": "Configuration",
-  promotions: "Configuration",
-  notifications: "Configuration",
-  "site-config": "Storefront",
-  locations: "Storefront",
-  testimonials: "Storefront",
-  "embed-toolkit": "Storefront",
-  "my-lead-link": "My Tools",
-  "my-referrals": "My Tools",
-  staff: "Account",
+
+  // Measure
+  performance: "Measure",
+  executive: "Measure",
+  "gm-hud": "Measure",
+  reports: "Measure",
+
+  // Setup · Dealer
+  "offer-settings": "Setup · Dealer",
+  branding: "Setup · Dealer",
+  "site-config": "Setup · Dealer",
+  appearance: "Setup · Dealer",
+  "landing-flow": "Setup · Dealer",
+  communications: "Setup · Dealer",
+  channels: "Setup · Dealer",
+  notifications: "Setup · Dealer",
+  compliance: "Setup · Dealer",
+  "capture-inspection": "Setup · Dealer",
+  "form-config": "Setup · Dealer",
+  "inspection-config": "Setup · Dealer",
+  "photo-config": "Setup · Dealer",
+  "depth-policies": "Setup · Dealer",
+  locations: "Setup · Dealer",
+
+  // Setup · Process
+  marketing: "Setup · Process",
+  promotions: "Setup · Process",
   referrals: "Setup · Process",
-  compliance: "Measure",
+  testimonials: "Setup · Process",
+  "rooftop-websites": "Setup · Process",
+  "embed-toolkit": "Setup · Process",
+
+  // Integrations (enterprise)
+  integrations: "Integrations",
+  "integrations-status": "Integrations",
+  "api-access": "Integrations",
+  "vauto-integration": "Integrations",
+  "white-label": "Integrations",
+
+  // My
+  "my-lead-link": "My",
+  "my-availability": "My",
+  "my-referrals": "My",
+
+  // Account
+  staff: "Account",
   onboarding: "Account",
   "onboarding-script": "Account",
   "system-settings": "Account",
+  "image-inventory": "Account",
+
+  // Platform
   tenants: "Platform",
   "prospect-demo": "Platform",
+  "pricing-model": "Platform",
+  "platform-billing": "Platform",
+  changelog: "Platform",
 };
 
 const SECTION_LABELS: Record<string, string> = {
+  // Queues
   submissions: "All Leads",
   "offer-pending": "Offer Pending",
   "offer-accepted": "Offer Accepted",
   "accepted-appts": "Appointments",
   "appraiser-queue": "Appraiser Queue",
-  "bdc-queue": "BDC Priority Queue",
-  executive: "Performance",
-  "gm-hud": "GM HUD",
+  "bdc-hub": "BDC Queue",
+  "bdc-queue": "BDC Queue · Priority",
+  "bdc-calls": "BDC Queue · Calls Today",
+
+  // Lane Tools
   "inspection-checkin": "Inspection Check-In",
   "service-quick-entry": "Service Quick Entry",
+
+  // Grow
   "equity-mining": "Equity Mining",
   "voice-ai": "Voice AI",
   "wholesale-marketplace": "Wholesale",
-  "offer-settings": "Offer Logic",
-  "form-config": "Lead Form",
-  "inspection-config": "Inspection Sheet",
-  "photo-config": "Photo Requirements",
-  "depth-policies": "Depth Policies",
-  promotions: "Promotions",
-  notifications: "Notifications",
-  "site-config": "Branding",
-  locations: "Locations",
-  testimonials: "Testimonials",
-  "embed-toolkit": "Website Embed",
-  "my-lead-link": "My Lead Link",
-  "my-referrals": "My Referrals",
-  staff: "Staff & Permissions",
-  referrals: "Referral Program",
-  compliance: "Compliance",
+
+  // Measure
+  performance: "Performance",
+  executive: "Performance · KPI",
+  "gm-hud": "Performance · GM HUD",
   reports: "Reports & Export",
-  "image-inventory": "Vehicle Images",
-  onboarding: "Dealer Setup",
+
+  // Setup · Dealer
+  "offer-settings": "Pricing Rules",
+  branding: "Branding",
+  "site-config": "Branding · Identity",
+  appearance: "Branding · Appearance",
+  "landing-flow": "Branding · Landing",
+  communications: "Communications",
+  channels: "Communications · Channels",
+  notifications: "Communications · Notifications",
+  compliance: "Communications · Compliance",
+  "capture-inspection": "Capture & Inspection",
+  "form-config": "Capture & Inspection · Lead Form",
+  "inspection-config": "Capture & Inspection · Inspection Sheet",
+  "photo-config": "Capture & Inspection · Photos",
+  "depth-policies": "Capture & Inspection · Standards",
+  locations: "Locations",
+
+  // Setup · Process
+  marketing: "Marketing",
+  promotions: "Marketing · Promotions",
+  referrals: "Marketing · Referrals",
+  testimonials: "Marketing · Testimonials",
+  "rooftop-websites": "Rooftop Websites",
+  "embed-toolkit": "Website Embed",
+
+  // Integrations
+  integrations: "Integrations",
+  "integrations-status": "Integrations · Status",
+  "api-access": "Integrations · API Access",
+  "vauto-integration": "Integrations · vAuto",
+  "white-label": "Integrations · White Label",
+
+  // My
+  "my-lead-link": "My Lead Link",
+  "my-availability": "My Availability",
+  "my-referrals": "My Referrals",
+
+  // Account
+  staff: "Staff & Permissions",
+  onboarding: "Onboarding Wizard",
   "onboarding-script": "Onboarding Script",
   "system-settings": "System Settings",
+  "image-inventory": "Vehicle Image Cache",
+
+  // Platform
   tenants: "Dealer Tenants",
   "prospect-demo": "Prospect Demo",
+  "pricing-model": "SaaS Pricing",
+  "platform-billing": "Platform & Billing",
+  changelog: "Platform Updates",
 };
 
 interface AdminBreadcrumbProps {

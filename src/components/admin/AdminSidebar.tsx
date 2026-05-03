@@ -239,16 +239,13 @@ const AdminSidebar = ({
     { key: "embed-toolkit", label: "Website Embed", icon: Code2 },
   ].filter((item) => isAllowed(item.key));
 
-  // ── INTEGRATIONS ── Enterprise-gated. Held separate so the gate
-  // is visually obvious and the technical surfaces don't compete with
-  // marketing tooling for sidebar attention.
+  // ── INTEGRATIONS ── Enterprise-gated. Status + API + vAuto +
+  // White Label collapse into the IntegrationsHub on tabs. Legacy
+  // keys still resolve onto the right tab.
   const integrationsItems: SidebarItem[] = (
     enterpriseBetaEnabled || isPlatformAdmin
       ? [
-          { key: "white-label", label: "White Label", icon: Paintbrush },
-          { key: "integrations-status", label: "Integrations", icon: Activity },
-          { key: "api-access", label: "API Access", icon: Key },
-          { key: "vauto-integration", label: "vAuto Integration", icon: Truck },
+          { key: "integrations", label: "Integrations", icon: Activity },
         ]
       : []
   ).filter((item) => isAllowed(item.key));
@@ -306,7 +303,9 @@ const AdminSidebar = ({
     "my-lead-link", "my-availability", "my-referrals",
     "staff", "reports", "image-inventory", "changelog",
     "onboarding", "system-settings", "pricing-model",
-    "platform-billing", "integrations-status", "api-access", "vauto-integration", "white-label", "prospect-demo",
+    // Integrations: legacy keys still resolve.
+    "integrations", "platform-billing", "integrations-status", "api-access", "vauto-integration", "white-label",
+    "prospect-demo",
     "equity-mining", "voice-ai", "service-quick-entry", "inspection-checkin",
   ];
   const lockedSections = showRequestAccess && allowedSections !== null
