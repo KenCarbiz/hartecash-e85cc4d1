@@ -163,12 +163,12 @@ const GroupCustomerSearch = ({ dealershipNames }: Props) => {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-medium text-sm">{r.name || "—"}</span>
                     <Badge variant="outline" className="text-[10px]">{rooftop}</Badge>
-                    {r.status && (
+                    {r.progress_status && (
                       <Badge
                         variant="secondary"
                         className="text-[10px]"
                       >
-                        {r.status}
+                        {r.progress_status}
                       </Badge>
                     )}
                   </div>
