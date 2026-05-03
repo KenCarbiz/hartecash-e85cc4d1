@@ -73,13 +73,21 @@ type SidebarItem = {
 const STORAGE_KEY = "admin-sidebar-collapsed";
 
 /**
- * Sidebar groups (top → bottom):
- *   - Work     — daily tasks: Today, All Leads, Appraiser Queue, Appointments + ops tools
- *   - Grow     — revenue-driving tools: Equity Mining, Voice AI, Wholesale
- *   - Measure  — analytics & reporting: Performance, GM HUD, Reports, Compliance
- *   - Setup    — dealer configuration: Offer Logic, Branding, Locations, etc.
- *   - Account  — Staff & Permissions, Plan, Dealer Setup, System Settings
- *   - Platform — super-admin cross-tenant tools
+ * Sidebar groups (top → bottom). Re-ordered per the May-2026 logic
+ * audit so the day-to-day surfaces are at the top and the heavy
+ * configuration sinks to the bottom.
+ *
+ *   - Work          — Today (daily landing card)
+ *   - My            — per-user surfaces (Lead Link, Availability, Referrals)
+ *   - Queues        — All Leads, Appraiser Queue, Appointments, BDC Queue (merged)
+ *   - Lane Tools    — hands-on lot/service tooling (was "Floor Tools")
+ *   - Grow          — revenue-driving tools: Equity Mining, Voice AI
+ *   - Measure       — Performance (incl. GM HUD), Reports
+ *   - Setup·Dealer  — Branding/Appearance/Comms, Capture & Inspection, Pricing, Locations
+ *   - Setup·Process — Marketing, Landing & Flow, Rooftop Websites, Embed
+ *   - Integrations  — enterprise-only: White Label, Integrations, API, vAuto
+ *   - Account       — Staff & Permissions, Plan, Onboarding Wizard, System Settings
+ *   - Platform      — super-admin cross-tenant: Tenants, Demo, SaaS Pricing, Billing
  */
 
 const AdminSidebar = ({
@@ -151,10 +159,11 @@ const AdminSidebar = ({
     { key: "today", label: "Today", icon: Home },
   ].filter((item) => isAllowed(item.key));
 
-  // ── QUEUES ── Shared inboxes. Item visibility is now driven by the
-  // cascade resolver (isAllowed). Role-conditional bdc-queue/
-  // appraiser-queue gates have moved to defaultAllowedForRole +
-  // per-tenant overrides + per-user grants.
+  // ── QUEUES ── Shared inboxes. BDC Priority Queue + Calls Today are
+  // merged into one "BDC Queue" hub (tabs: Priority / Calls Today)
+  // since they share an audience and a data domain — see
+  // BdcQueueHub.tsx. The legacy "bdc-queue" / "bdc-calls" keys remain
+  // valid section IDs that route into the same hub on the right tab.
   const queueItems: SidebarItem[] = [
     { key: "submissions", label: "All Leads", icon: Inbox, badge: submissionCount > 0 ? String(submissionCount) : undefined },
     {
@@ -165,21 +174,15 @@ const AdminSidebar = ({
       badgeVariant: "destructive" as const,
     },
     { key: "accepted-appts", label: "Appointments", icon: CalendarDays, badge: appointmentCount > 0 ? String(appointmentCount) : undefined },
-    { key: "bdc-queue", label: "BDC Priority Queue", icon: Flame },
-    // BDC Calls Today — cadence-queued follow-ups that need a human
-    // call (only meaningful for tenants with voice_ai_enabled = false,
-    // but we always render the entry; the page itself shows an empty
-    // state when there are no tasks).
-    { key: "bdc-calls", label: "Calls Today", icon: Phone },
+    { key: "bdc-hub", label: "BDC Queue", icon: Flame },
   ].filter((item) => isAllowed(item.key));
 
-  // ── FLOOR TOOLS ── Hands-on lot/service tooling. Split out of WORK
-  // so floor staff (inspectors, receptionists, service writers) see
-  // their tools as a distinct surface rather than buried in a long list.
+  // ── LANE TOOLS ── Hands-on lot/service tooling. Vehicle Images was
+  // here previously but moved to Setup · Dealer alongside Photo
+  // Requirements — the two configure / view the same media domain.
   const floorToolsItems: SidebarItem[] = [
     { key: "inspection-checkin", label: "Inspection Check-In", icon: LogIn },
     { key: "service-quick-entry", label: "Service Quick Entry", icon: Wrench },
-    { key: "image-inventory", label: "Vehicle Images", icon: ImageIcon },
   ].filter((item) => isAllowed(item.key));
 
   // ── GROW ── Revenue-driving tools.
@@ -197,22 +200,26 @@ const AdminSidebar = ({
     { key: "voice-ai", label: "Voice AI", icon: Mic },
   ].filter((item) => isAllowed(item.key));
 
-  // ── MEASURE ── Performance, HUD, reports, compliance
+  // ── MEASURE ── Performance + Reports. "Compliance" moved into the
+  // new Communications hub (TCPA / consent / audit logs all live with
+  // the comms surfaces). GM HUD remains a sibling of Performance only
+  // for the audience that can view it.
   const measureItems: SidebarItem[] = [
     { key: "executive", label: "Performance", icon: LineChart },
     ...(canViewExecutiveHUD(userRole)
       ? [{ key: "gm-hud", label: "GM HUD", icon: DollarSign }]
       : []),
     { key: "reports", label: "Reports", icon: BarChart3 },
-    { key: "compliance", label: "Compliance", icon: ShieldCheck },
   ].filter((item) => isAllowed(item.key));
 
   // ── SETUP · DEALER ── Identity, branding, locations, and core
-  // data-capture configuration. The cascade resolver gates each item;
-  // multi-rooftop only items still hide when the dealer has one store.
+  // data-capture configuration. "Communication Channels" + "Notifications"
+  // + "Compliance" collapse into the new "Communications" hub
+  // (CommunicationsHub.tsx); the legacy "channels" / "notifications" /
+  // "compliance" keys still resolve onto the right tab.
   const setupDealerItems: SidebarItem[] = [
     { key: "appearance", label: "Appearance & Access", icon: Sparkles },
-    { key: "channels", label: "Communication Channels", icon: Phone },
+    { key: "communications", label: "Communications", icon: Phone },
     { key: "site-config", label: "Branding", icon: Palette },
     ...(locationCount > 1 ? [{ key: "locations", label: "Locations", icon: MapPin }] : []),
     { key: "offer-settings", label: "Pricing Rules", icon: Settings, badge: pricingAccessRequestCount > 0 ? String(pricingAccessRequestCount) : undefined, badgeVariant: "destructive" as const },
@@ -231,60 +238,81 @@ const AdminSidebar = ({
     { key: "my-referrals", label: "My Referrals", icon: Gift },
   ].filter((item) => isAllowed(item.key));
 
-  // ── SETUP · PROCESS ── Customer-facing flow, marketing, comms, and
-  // distribution channels (promos, referrals, notifications, landing,
-  // rooftop micro-sites, testimonials, embed). Enterprise-only items
-  // (White Label, Integrations, API, vAuto) tail this group so they
-  // stay grouped with operational tooling rather than dealer identity.
+  // ── SETUP · PROCESS ── Customer-facing flow, marketing, embed,
+  // rooftop micro-sites. Enterprise-only items (White Label,
+  // Integrations, API, vAuto) moved to their own Integrations group
+  // so the gate is visible and Setup · Process stays focused on
+  // operational tooling that every paying tenant can access.
   const setupProcessItems: SidebarItem[] = [
     { key: "promotions", label: "Promotions", icon: Megaphone },
     { key: "referrals", label: "Referral Program", icon: Award },
-    { key: "notifications", label: "Notifications", icon: Bell },
     { key: "landing-flow", label: "Landing & Flow", icon: Layout },
     ...(locationCount > 1 ? [{ key: "rooftop-websites", label: "Rooftop Websites", icon: Globe }] : []),
     { key: "testimonials", label: "Testimonials", icon: MessageSquareQuote },
     { key: "embed-toolkit", label: "Website Embed", icon: Code2 },
-    ...(enterpriseBetaEnabled || isPlatformAdmin
+  ].filter((item) => isAllowed(item.key));
+
+  // ── INTEGRATIONS ── Enterprise-gated. Held separate so the gate
+  // is visually obvious and the technical surfaces don't compete with
+  // marketing tooling for sidebar attention.
+  const integrationsItems: SidebarItem[] = (
+    enterpriseBetaEnabled || isPlatformAdmin
       ? [
           { key: "white-label", label: "White Label", icon: Paintbrush },
           { key: "integrations-status", label: "Integrations", icon: Activity },
           { key: "api-access", label: "API Access", icon: Key },
           { key: "vauto-integration", label: "vAuto Integration", icon: Truck },
         ]
-      : []),
-  ].filter((item) => isAllowed(item.key));
+      : []
+  ).filter((item) => isAllowed(item.key));
 
-  // ── ACCOUNT ── Staff & Permissions, Plan, Dealer Setup, System
+  // ── ACCOUNT ── Staff & Permissions, Plan, Onboarding Wizard, System
   // Settings. Cascade-gated. Plan is hidden on the platform tenant
-  // since the super-admin doesn't pay for itself.
+  // since the super-admin doesn't pay for itself. "Platform Updates"
+  // (changelog) was here previously; it's a read-only release feed and
+  // was moved into the Platform group for super-admins (and hidden
+  // from regular admins, who don't author changelog entries).
   const teamBadgeCount = pendingRequestCount + permissionRequestCount;
   const accountItems: SidebarItem[] = [
     { key: "staff", label: "Staff & Permissions", icon: Users, badge: teamBadgeCount > 0 ? String(teamBadgeCount) : undefined, badgeVariant: "destructive" as const },
     ...(!isPlatformAdmin
       ? [{ key: "my-plan", label: "Plan", icon: CreditCard, href: "/plan" }]
       : []),
-    { key: "onboarding", label: "Dealer Setup", icon: Rocket },
+    { key: "onboarding", label: "Onboarding Wizard", icon: Rocket },
     { key: "system-settings", label: "System Settings", icon: SlidersHorizontal },
-    { key: "changelog", label: "Platform Updates", icon: ScrollText },
+    // Vehicle Images is a backend cache inspector for API-fetched stock
+    // photos (vehicle_image_cache + submission-photos bucket). Not a
+    // customer collection — purely a maintenance tool for clearing /
+    // regenerating cached images, so it lives next to System Settings.
+    { key: "image-inventory", label: "Vehicle Image Cache", icon: ImageIcon },
   ].filter((item) => isAllowed(item.key));
 
-  // ── PLATFORM ── Super-admin only, cross-tenant operations
+  // ── PLATFORM ── Super-admin only, cross-tenant operations.
+  // "Pricing Model" renamed to "SaaS Pricing" so it doesn't collide
+  // with dealer-facing "Pricing Rules" in Setup · Dealer.
   const platformItems: SidebarItem[] = [
     ...(isPlatformAdmin ? [{ key: "tenants", label: "Dealer Tenants", icon: Network }] : []),
     ...(isPlatformAdmin ? [{ key: "prospect-demo", label: "Prospect Demo", icon: Target }] : []),
-    ...(isPlatformAdmin ? [{ key: "pricing-model", label: "Pricing Model", icon: Tag }] : []),
+    ...(isPlatformAdmin ? [{ key: "pricing-model", label: "SaaS Pricing", icon: Tag }] : []),
     ...(canManageAccess && (enterpriseBetaEnabled || isPlatformAdmin)
       ? [{ key: "platform-billing", label: "Platform & Billing", icon: Receipt }]
       : []),
+    ...(isPlatformAdmin ? [{ key: "changelog", label: "Platform Updates", icon: ScrollText }] : []),
   ].filter((item) => isAllowed(item.key));
 
   const allSectionKeys = [
-    "today", "submissions", "accepted-appts", "executive", "appraiser-queue", "bdc-calls",
+    "today", "submissions", "accepted-appts", "executive", "appraiser-queue",
+    // BDC: legacy keys ("bdc-queue", "bdc-calls") still resolve, but the
+    // sidebar uses the merged "bdc-hub" entry.
+    "bdc-hub", "bdc-queue", "bdc-calls",
     "offer-settings", "form-config", "inspection-config", "photo-config",
-    "depth-policies", "promotions", "notifications",
-    "site-config", "appearance", "channels", "landing-flow", "locations", "rooftop-websites", "testimonials", "embed-toolkit",
+    "depth-policies", "promotions",
+    // Comms: legacy keys ("channels", "notifications", "compliance") still
+    // resolve onto the right tab, but the sidebar uses "communications".
+    "communications", "channels", "notifications", "compliance",
+    "site-config", "appearance", "landing-flow", "locations", "rooftop-websites", "testimonials", "embed-toolkit",
     "my-lead-link", "my-availability", "my-referrals",
-    "staff", "referrals", "compliance", "reports", "image-inventory", "changelog",
+    "staff", "referrals", "reports", "image-inventory", "changelog",
     "onboarding", "system-settings", "pricing-model",
     "platform-billing", "integrations-status", "api-access", "vauto-integration", "white-label", "prospect-demo",
     "equity-mining", "voice-ai", "service-quick-entry", "inspection-checkin",
@@ -302,19 +330,23 @@ const AdminSidebar = ({
   const groupEntries: [string, SidebarItem[]][] = isReceptionist
     ? [
         ["Work", workItems],
-        ["Queues", queueItems.filter((i) => i.key === "accepted-appts")],
-        ["Floor Tools", floorToolsItems.filter((i) => i.key === "inspection-checkin")],
         ["My", myItems],
+        ["Queues", queueItems.filter((i) => i.key === "accepted-appts")],
+        ["Lane Tools", floorToolsItems.filter((i) => i.key === "inspection-checkin")],
       ]
     : [
+        // Daily / personal context first.
         ["Work", workItems],
+        ["My", myItems],
+        // Active work surfaces.
         ["Queues", queueItems],
-        ["Floor Tools", floorToolsItems],
+        ["Lane Tools", floorToolsItems],
         ["Grow", growItems],
         ["Measure", measureItems],
+        // Configuration sinks to the bottom.
         ["Setup · Dealer", setupDealerItems],
         ["Setup · Process", setupProcessItems],
-        ["My", myItems],
+        ["Integrations", integrationsItems],
         ["Account", accountItems],
         ["Platform", platformItems],
       ];

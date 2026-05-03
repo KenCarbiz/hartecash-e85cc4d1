@@ -1,8 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import NotificationLog from "./NotificationLog";
 import { Store, UserCheck, UserX, AlertTriangle, Zap, ArrowRight, ScanLine } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,21 +27,16 @@ const AppointmentManager = React.lazy(() => import("./AppointmentManager"));
 const StaffManagement = React.lazy(() => import("./StaffManagement"));
 const PermissionManagement = React.lazy(() => import("./PermissionManagement"));
 const RolePermissionsMatrix = React.lazy(() => import("./RolePermissionsMatrix"));
-const ConsentLog = React.lazy(() => import("./ConsentLog"));
-const CommunicationLog = React.lazy(() => import("./CommunicationLog"));
-const VoiceComplianceLog = React.lazy(() => import("./VoiceComplianceLog"));
-const StaffActivityLog = React.lazy(() => import("./StaffActivityLog"));
-const TenantViewLog = React.lazy(() => import("./TenantViewLog"));
+// Channels / Notifications / Compliance components are now imported
+// inside CommunicationsHub.tsx, which renders them as tabs.
 const ExecutiveKPIHub = React.lazy(() => import("./ExecutiveKPIHub"));
 const OfferSettings = React.lazy(() => import("./OfferSettings"));
 const SiteConfiguration = React.lazy(() => import("./SiteConfiguration"));
 const AppearanceSettings = React.lazy(() => import("./AppearanceSettings"));
-const ChannelsSettings = React.lazy(() => import("./ChannelsSettings"));
 const LandingFlowConfig = React.lazy(() => import("./LandingFlowConfig"));
 const RooftopWebsites = React.lazy(() => import("./RooftopWebsites"));
 const PlatformCatalogManager = React.lazy(() => import("./PlatformCatalogManager"));
 const PlatformPricingManager = React.lazy(() => import("./PlatformPricingManager"));
-const NotificationSettings = React.lazy(() => import("./NotificationSettings"));
 const FormConfiguration = React.lazy(() => import("./FormConfiguration"));
 const InspectionConfiguration = React.lazy(() => import("./InspectionConfiguration"));
 const PhotoConfiguration = React.lazy(() => import("./PhotoConfiguration"));
@@ -71,11 +64,12 @@ const WholesaleMarketplace = React.lazy(() => import("./WholesaleMarketplace"));
 const VautoIntegration = React.lazy(() => import("./VautoIntegration"));
 const IntegrationsStatus = React.lazy(() => import("./IntegrationsStatus"));
 const AppraiserQueue = React.lazy(() => import("./AppraiserQueue"));
-const BDCPriorityQueue = React.lazy(() => import("./BDCPriorityQueue"));
-const BDCCallsToday = React.lazy(() => import("./BDCCallsToday"));
+// BDCPriorityQueue / BDCCallsToday now imported by BdcQueueHub.tsx.
 const ExecutiveHUD = React.lazy(() => import("./ExecutiveHUD"));
 const PlatformSubscriptions = React.lazy(() => import("./PlatformSubscriptions"));
 const VoiceAICampaigns = React.lazy(() => import("./VoiceAICampaigns"));
+const CommunicationsHub = React.lazy(() => import("./CommunicationsHub"));
+const BdcQueueHub = React.lazy(() => import("./BdcQueueHub"));
 
 class AdminErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -457,27 +451,63 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
     );
   }
 
-  // ── Compliance ──
-  if (activeSection === "compliance") {
+  // ── Communications hub ── Channels + Notifications + Compliance
+  // collapsed into one tabbed page. Legacy keys ("channels",
+  // "notifications", "compliance") still route here on the right tab
+  // so existing bookmarks / breadcrumbs keep working.
+  if (
+    activeSection === "communications" ||
+    activeSection === "channels" ||
+    activeSection === "notifications" ||
+    activeSection === "compliance"
+  ) {
+    // Compliance was previously viewable without canManageAccess (it
+    // gated on permission cascade alone). Channels + Notifications
+    // required canManageAccess. Preserve that split: route compliance
+    // viewers to the hub on the compliance tab even without
+    // canManageAccess; gate the other tabs by passing the flag down.
+    const initialTab =
+      activeSection === "notifications"
+        ? "notifications"
+        : activeSection === "compliance"
+          ? "compliance"
+          : "channels";
+    if (!canManageAccess && initialTab !== "compliance") return null;
     return (
-      <div className="space-y-6">
-        <h2 className="text-lg font-semibold text-card-foreground">Compliance</h2>
-        <ConsentLog />
-        <div className="border-t border-border pt-6">
-          <CommunicationLog />
-        </div>
-        <div className="border-t border-border pt-6">
-          <VoiceComplianceLog />
-        </div>
-        <div className="border-t border-border pt-6">
-          <StaffActivityLog />
-        </div>
-        {props.tenant.dealership_id === "default" && props.canManageAccess && (
-          <div className="border-t border-border pt-6">
-            <TenantViewLog />
-          </div>
-        )}
-      </div>
+      <React.Suspense fallback={<AdminLoadingSkeleton />}>
+        <CommunicationsHub
+          initialTab={initialTab}
+          canManageChannels={canManageAccess}
+          showTenantViewLog={
+            props.tenant.dealership_id === "default" && props.canManageAccess
+          }
+        />
+      </React.Suspense>
+    );
+  }
+
+  // ── BDC queue hub ── Priority + Calls Today merged. Legacy keys
+  // ("bdc-queue", "bdc-calls") route here on the right tab.
+  if (
+    activeSection === "bdc-hub" ||
+    activeSection === "bdc-queue" ||
+    activeSection === "bdc-calls"
+  ) {
+    const initialTab = activeSection === "bdc-calls" ? "calls" : "priority";
+    return (
+      <React.Suspense fallback={<AdminLoadingSkeleton />}>
+        <BdcQueueHub
+          initialTab={initialTab}
+          onOpenSubmission={(id) => {
+            props.setActiveSection?.("submissions");
+            if (typeof window !== "undefined") {
+              const url = new URL(window.location.href);
+              url.searchParams.set("submission", id);
+              window.history.pushState(null, "", url.toString());
+            }
+          }}
+        />
+      </React.Suspense>
     );
   }
 
@@ -495,28 +525,8 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
           <AppraiserQueue userRole={userRole} isAppraiser={props.isAppraiser} />
         </React.Suspense>
       )}
-      {activeSection === "bdc-calls" && (
-        <React.Suspense fallback={<AdminLoadingSkeleton />}>
-          <BDCCallsToday />
-        </React.Suspense>
-      )}
-      {activeSection === "bdc-queue" && (
-        <React.Suspense fallback={<AdminLoadingSkeleton />}>
-          <BDCPriorityQueue
-            onOpenSubmission={(id) => {
-              // Parent manages the selected submission via the
-              // submissions section's state. Easiest handoff: switch
-              // section to submissions and pass the id via query.
-              props.setActiveSection?.("submissions");
-              if (typeof window !== "undefined") {
-                const url = new URL(window.location.href);
-                url.searchParams.set("submission", id);
-                window.history.pushState(null, "", url.toString());
-              }
-            }}
-          />
-        </React.Suspense>
-      )}
+      {/* BDC keys ("bdc-queue" / "bdc-calls") are handled by the
+          BdcQueueHub block above so the two surfaces share one page. */}
       {activeSection === "offer-settings" && (canManageAccess || userRole === "gsm_gm" || userRole === "gm") && (
         <OfferSettings userId={userId || undefined} userRole={userRole} />
       )}
@@ -524,22 +534,12 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
       {activeSection === "appearance" && canManageAccess && (
         <AppearanceSettings userRole={userRole} canManageAccess={canManageAccess} />
       )}
-      {activeSection === "channels" && canManageAccess && <ChannelsSettings />}
+      {/* "channels" / "notifications" / "compliance" are handled by the
+          CommunicationsHub block above so the three surfaces share one
+          tabbed page. */}
       {activeSection === "landing-flow" && canManageAccess && <LandingFlowConfig />}
       {activeSection === "rooftop-websites" && canManageAccess && <RooftopWebsites />}
       {activeSection === "promotions" && canManageAccess && <PromotionManagement />}
-      {activeSection === "notifications" && canManageAccess && (
-        <div className="space-y-6">
-          <Tabs defaultValue="settings" className="w-full">
-            <TabsList>
-              <TabsTrigger value="settings">Settings</TabsTrigger>
-              <TabsTrigger value="log">Sent Messages</TabsTrigger>
-            </TabsList>
-            <TabsContent value="settings"><NotificationSettings /></TabsContent>
-            <TabsContent value="log"><NotificationLog /></TabsContent>
-          </Tabs>
-        </div>
-      )}
       {activeSection === "form-config" && canManageAccess && <FormConfiguration />}
       {activeSection === "inspection-config" && canManageAccess && <InspectionConfiguration />}
       {activeSection === "photo-config" && canManageAccess && <PhotoConfiguration />}
