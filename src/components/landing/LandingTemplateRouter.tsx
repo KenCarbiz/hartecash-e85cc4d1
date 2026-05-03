@@ -2,6 +2,12 @@ import { lazy, Suspense } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useSiteConfig, type LandingTemplate } from "@/hooks/useSiteConfig";
 
+// ── 2026 sell-flow design audit (Clarity/Marquee/Velocity/Heritage) ──
+const ClarityTemplate  = lazy(() => import("./templates/ClarityTemplate"));
+const MarqueeTemplate  = lazy(() => import("./templates/MarqueeTemplate"));
+const VelocityTemplate = lazy(() => import("./templates/VelocityTemplate"));
+const HeritageTemplate = lazy(() => import("./templates/HeritageTemplate"));
+
 // ── Originals ──────────────────────────────────────────────────────
 const ClassicTemplate  = lazy(() => import("./templates/ClassicTemplate"));
 const BoldTemplate     = lazy(() => import("./templates/BoldTemplate"));
@@ -28,6 +34,12 @@ const TemplateFallback = () => (
 );
 
 const templateMap: Record<LandingTemplate, React.ComponentType> = {
+  // 2026 audit-recommended
+  clarity:  ClarityTemplate,
+  marquee:  MarqueeTemplate,
+  velocity: VelocityTemplate,
+  heritage: HeritageTemplate,
+  // Originals
   classic:  ClassicTemplate,
   bold:     BoldTemplate,
   minimal:  MinimalTemplate,
@@ -46,6 +58,7 @@ const templateMap: Record<LandingTemplate, React.ComponentType> = {
 };
 
 const VALID_TEMPLATES = new Set<LandingTemplate>([
+  "clarity", "marquee", "velocity", "heritage",
   "classic", "bold", "minimal", "elegant", "showroom",
   "cinema", "portal", "carousel", "slab", "diagonal",
   "pickup", "magazine", "circular", "motion", "mosaic",

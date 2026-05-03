@@ -5,9 +5,15 @@ import { useTenant } from "@/contexts/TenantContext";
 export type LandingTemplate =
   | "classic" | "bold" | "minimal" | "elegant" | "showroom"
   | "cinema" | "portal" | "carousel" | "slab" | "diagonal"
-  | "pickup" | "magazine" | "circular" | "motion" | "mosaic";
+  | "pickup" | "magazine" | "circular" | "motion" | "mosaic"
+  | "clarity" | "marquee" | "velocity" | "heritage";
 
 export const LANDING_TEMPLATES: { value: LandingTemplate; label: string; description: string }[] = [
+  // ── 2026 sell-flow design audit (recommended starting points) ──
+  { value: "clarity",  label: "Clarity",  description: "Apple-minimal white. Centered form is the hero. No stock photo, no FAQ above the fold. Best for premium import single-rooftops + EV dealers." },
+  { value: "marquee",  label: "Marquee",  description: "Premium dark / luxury. Full-bleed near-black, brass accents, serif headline. Best for BMW / Audi / Lexus / Porsche / Mercedes." },
+  { value: "velocity", label: "Velocity", description: "Carvana-style conversion-tuned. Brand-blue gradient, yellow CTA, single social-proof line. Best for mass-market multi-rooftops + domestics." },
+  { value: "heritage", label: "Heritage", description: "Family-dealer storytelling. Two-column with a real dealership photo + warm palette. Best for single-rooftop family dealers + regional chains." },
   // ── Originals ──
   { value: "classic",  label: "Classic",  description: "Default split hero with instant-offer form. Choose left, center, or right hero alignment." },
   { value: "bold",     label: "Bold",     description: "Dark, premium, asymmetric. Large display type with one focused CTA — Carvana-style." },
