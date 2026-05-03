@@ -6,8 +6,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import PricingPlanPicker, { type PlanSelection } from "@/components/platform/PricingPlanPicker";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft, ExternalLink, Clock, CheckCircle2, AlertCircle } from "lucide-react";
 import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
 
 /**
  * Dealer-facing standalone pricing / plan page. Reachable from the
@@ -128,6 +129,33 @@ const PlanPageInner = () => {
 
   const hasActiveStripeSub = !!(subscription as any)?.stripe_subscription_id;
 
+  // ── Subscription status banner ──
+  // Surfaces what the dealer is paying for, current trial / pilot
+  // countdown, next renewal date, and any "scheduled to cancel"
+  // warning. Reads from dealer_subscriptions which the
+  // billing-stripe-webhook keeps in sync with Stripe.
+  const subStatus = (() => {
+    if (!subscription) return null;
+    const s = subscription as any;
+    const cycle = s.billing_cycle === "annual" ? "Annual" : "Monthly";
+    const periodEnd = s.current_period_end ? new Date(s.current_period_end) : null;
+    const trialEnd = s.trial_ends_at ? new Date(s.trial_ends_at) : null;
+    const inTrial = trialEnd && trialEnd > new Date();
+    const cancelScheduled = !!s.cancel_at_period_end;
+    const status: string = s.status || "unknown";
+    return {
+      cycle,
+      periodEnd,
+      trialEnd,
+      inTrial,
+      cancelScheduled,
+      status,
+      monthlyAmount: Number(s.monthly_amount ?? 0),
+      rooftopCount: s.rooftop_count ?? 1,
+      stripePriceId: s.stripe_price_id as string | null,
+    };
+  })();
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-6">
@@ -158,6 +186,68 @@ const PlanPageInner = () => {
             </div>
           </div>
         </div>
+
+        {/* Subscription status banner — only when there's an active sub. */}
+        {subStatus && (
+          <div
+            className={`rounded-xl border px-5 py-4 ${
+              subStatus.cancelScheduled
+                ? "border-amber-200 bg-amber-50"
+                : subStatus.inTrial
+                ? "border-sky-200 bg-sky-50"
+                : "border-emerald-200 bg-emerald-50"
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              {subStatus.cancelScheduled ? (
+                <AlertCircle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+              ) : subStatus.inTrial ? (
+                <Clock className="w-5 h-5 text-sky-700 shrink-0 mt-0.5" />
+              ) : (
+                <CheckCircle2 className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-sm font-semibold text-card-foreground">
+                    {subStatus.cancelScheduled
+                      ? "Subscription scheduled to cancel"
+                      : subStatus.inTrial
+                      ? "Trial active"
+                      : "Subscription active"}
+                  </span>
+                  <Badge variant="outline" className="text-[10px]">{subStatus.status}</Badge>
+                  {subStatus.stripePriceId && subStatus.stripePriceId.length > 0 && (
+                    <Badge variant="outline" className="text-[10px] font-mono" title="Your locked-in price ID. Grandfathered if we raise prices later.">
+                      grandfathered
+                    </Badge>
+                  )}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  {subStatus.cycle} billing
+                  {subStatus.monthlyAmount > 0 &&
+                    ` · $${subStatus.monthlyAmount.toLocaleString()}/${subStatus.cycle === "Annual" ? "yr" : "mo"} per rooftop`}
+                  {" · "}
+                  {subStatus.rooftopCount} rooftop{subStatus.rooftopCount > 1 ? "s" : ""}
+                </div>
+                {subStatus.inTrial && subStatus.trialEnd && (
+                  <p className="text-xs text-sky-900 mt-2">
+                    Trial ends <strong>{subStatus.trialEnd.toLocaleDateString()}</strong>. After that you'll be charged automatically using the card on file. Cancel any time during the trial with no charge.
+                  </p>
+                )}
+                {!subStatus.inTrial && subStatus.periodEnd && !subStatus.cancelScheduled && (
+                  <p className="text-xs text-emerald-900 mt-2">
+                    Renews <strong>{subStatus.periodEnd.toLocaleDateString()}</strong>. Manage card or cancel via the Manage billing button.
+                  </p>
+                )}
+                {subStatus.cancelScheduled && subStatus.periodEnd && (
+                  <p className="text-xs text-amber-900 mt-2">
+                    You'll keep access through <strong>{subStatus.periodEnd.toLocaleDateString()}</strong>. Click Manage billing to undo this cancellation.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         <PricingPlanPicker
           architecture={architecture}

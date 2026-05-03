@@ -16,6 +16,7 @@ import {
 import {
   Network, Plus, Building2, Power, PowerOff, ArrowRightLeft, RefreshCw, Loader2, Clock,
 } from "lucide-react";
+import GroupKPISummary from "./GroupKPISummary";
 
 type DealerGroup = {
   id: string;
@@ -372,6 +373,16 @@ const GroupManagement = () => {
                   )}
                 </div>
               </div>
+
+              {/* Group-wide KPI roll-up */}
+              {groupRooftops.length > 0 && (
+                <GroupKPISummary
+                  rooftops={groupRooftops.map((r) => ({
+                    dealership_id: r.dealership_id,
+                    display_name: r.display_name,
+                  }))}
+                />
+              )}
 
               {/* Rooftops + activations */}
               <div className="border border-border rounded-xl bg-card">
