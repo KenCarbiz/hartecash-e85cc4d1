@@ -89,7 +89,7 @@ const ClarityTemplate = () => {
       <FullscreenWizard open={wizardOpen} onClose={() => setWizardOpen(false)} theme="light">
         <LandingForm
           variant="default"
-          initial={initial ? { plate: initial.plate, state: initial.state } : undefined}
+          initial={initial ?? undefined}
           theme="light"
           loader="thin-line"
         />
