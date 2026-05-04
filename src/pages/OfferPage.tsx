@@ -1423,7 +1423,7 @@ const OfferPage = () => {
               onClick={handleContactSubmit}
               disabled={contactSaving}
               className="relative w-full py-5 text-base font-extrabold gap-2.5 rounded-2xl overflow-hidden group"
-              style={{ backgroundColor: "hsl(var(--cta-accept))", boxShadow: "0 8px 24px hsl(var(--cta-accept) / 0.25)" }}
+              style={{ backgroundColor: "hsl(var(--cta-accept))", color: "var(--cta-accept-text)", boxShadow: "0 8px 24px hsl(var(--cta-accept) / 0.25)" }}
             >
               <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
               {contactSaving ? "Saving..." : (
