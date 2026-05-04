@@ -141,7 +141,7 @@ const HeritageTemplate = () => {
                 onEngage={handleEngage}
                 theme="warm"
                 ctaLabel="Tell us about your car"
-                ctaColor={config.landing_cta_color || undefined}
+                ctaColor="hsl(var(--cta-offer))"
                 defaultLookup={config.landing_lookup_default || "vin"}
                 trustLine={`★ ${config.stats_rating || "4.9"} · Family-owned${config.established_year ? ` since ${config.established_year}` : ""} · ${config.stats_cars_purchased || "14,721+"} cars bought`}
               />

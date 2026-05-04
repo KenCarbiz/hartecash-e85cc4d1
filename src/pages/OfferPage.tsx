@@ -684,7 +684,6 @@ const OfferPage = () => {
             <SlideToAccept
               onAccept={handleAcceptAttempt}
               label={`Slide to Accept $${cashOffer.toLocaleString("en-US", { maximumFractionDigits: 0 })}`}
-              color={(config as any).landing_cta_color || undefined}
             />
           </div>
           {/* Desktop: premium accept button — inherits the dealer's
@@ -694,13 +693,7 @@ const OfferPage = () => {
             <Button
               onClick={handleAcceptAttempt}
               className="relative w-full py-6 text-base font-extrabold text-white gap-2.5 rounded-2xl overflow-hidden group transition-all duration-300 hover:scale-[1.01] active:scale-[0.99]"
-              style={(config as any).landing_cta_color
-                ? {
-                    backgroundColor: (config as any).landing_cta_color,
-                    color: "#0A0A0A",
-                    boxShadow: `0 8px 32px ${(config as any).landing_cta_color}4D, 0 2px 8px ${(config as any).landing_cta_color}33`,
-                  }
-                : { backgroundColor: "hsl(var(--cta-accept))", boxShadow: "0 8px 32px hsl(var(--cta-accept) / 0.3), 0 2px 8px hsl(var(--cta-accept) / 0.2)" }}
+              style={{ backgroundColor: "hsl(var(--cta-accept))", boxShadow: "0 8px 32px hsl(var(--cta-accept) / 0.3), 0 2px 8px hsl(var(--cta-accept) / 0.2)" }}
             >
               {/* Animated shine sweep */}
               <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out" />
