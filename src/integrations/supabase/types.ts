@@ -2854,6 +2854,7 @@ export type Database = {
           ui_scale: number | null
           updated_at: string
           use_animated_calculating: boolean
+          value_props: Json | null
           vehicle_image_angle: string
           website_url: string | null
           youtube_url: string | null
@@ -2957,6 +2958,7 @@ export type Database = {
           ui_scale?: number | null
           updated_at?: string
           use_animated_calculating?: boolean
+          value_props?: Json | null
           vehicle_image_angle?: string
           website_url?: string | null
           youtube_url?: string | null
@@ -3060,6 +3062,7 @@ export type Database = {
           ui_scale?: number | null
           updated_at?: string
           use_animated_calculating?: boolean
+          value_props?: Json | null
           vehicle_image_angle?: string
           website_url?: string | null
           youtube_url?: string | null
