@@ -16,7 +16,7 @@ import { logConsent } from "@/lib/consent";
 type Screen = "lookup" | "confirm" | "condition" | "computing" | "offer";
 
 import RunningCarLoader from "./landing/RunningCarLoader";
-import GhostScreen, { type GhostScreenKind } from "./landing/GhostScreen";
+import GhostScreen from "./landing/GhostScreen";
 import { useGhostScreen } from "@/hooks/useGhostScreen";
 import { GhostSyncIndicator } from "@/components/PortalSkeleton";
 
@@ -82,7 +82,7 @@ const SellFlowSimple = ({
   density = "simple",
   theme = "light",
   loader = "thin-line",
-  ghost = "legacy-car",
+  ghost: _ghost = "legacy-car",
   ghostHeadline,
   ghostSubhead,
   accent,
