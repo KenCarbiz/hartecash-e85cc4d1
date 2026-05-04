@@ -19,6 +19,7 @@ import RunningCarLoader from "./landing/RunningCarLoader";
 import GhostScreen from "./landing/GhostScreen";
 import { useGhostScreen } from "@/hooks/useGhostScreen";
 import { GhostSyncIndicator } from "@/components/PortalSkeleton";
+import VehicleImage from "./sell-form/VehicleImage";
 
 interface Props {
   /** Pre-populated identifier from the landing-page LandingPlateInput.
@@ -376,29 +377,17 @@ const SellFlowSimple = ({
               )}
             </div>
 
-            {/* Spec chips — Trim · Engine · Drivetrain · Transmission */}
-            <div className="flex flex-wrap justify-center gap-2 text-[11px] uppercase tracking-wider">
-              {bbVehicle.style && (
-                <span className="px-3 py-1.5 rounded-full bg-muted text-muted-foreground">
-                  {bbVehicle.style}
-                </span>
-              )}
-              {bbVehicle.engine && (
-                <span className="px-3 py-1.5 rounded-full bg-muted text-muted-foreground">
-                  {bbVehicle.engine}
-                </span>
-              )}
-              {bbVehicle.drivetrain && (
-                <span className="px-3 py-1.5 rounded-full bg-muted text-muted-foreground">
-                  {bbVehicle.drivetrain}
-                </span>
-              )}
-              {bbVehicle.transmission && (
-                <span className="px-3 py-1.5 rounded-full bg-muted text-muted-foreground">
-                  {bbVehicle.transmission}
-                </span>
-              )}
-            </div>
+            {/* Found-your-car card — 45° hero image (three-quarter angle,
+                no background) sits above the spec rail so the vehicle
+                appears to float on the surface. Equipment options
+                detected from the factory build pull from BB's
+                add_deduct_list (filtered to auto != "N"). */}
+            <FoundCarCard vehicle={bbVehicle} />
+            {bbVehicle._nhtsa && (
+              <p className="text-[11px] text-center text-muted-foreground/70 -mt-4">
+                Specs verified from the federal NHTSA registry. Final pricing confirmed at pickup.
+              </p>
+            )}
 
             {/* Mileage input — the only thing the customer types on this screen */}
             <div className="space-y-2">
@@ -639,6 +628,106 @@ const SellFlowSimple = ({
     </div>
   );
 };
+
+/**
+ * "Found your car" card shown on the confirm screen. Houses a 45°
+ * three-quarter-front vehicle image (rendered with no background by
+ * the generate-vehicle-image function — it produces transparent
+ * studio-shot PNGs) on top, a spec rail beneath, and a chip cloud
+ * of factory equipment detected from BB's add_deduct_list.
+ *
+ * When the lookup came from NHTSA fallback (`_nhtsa: true`),
+ * add_deduct_list is empty — the chip cloud collapses gracefully.
+ */
+function FoundCarCard({ vehicle }: { vehicle: BBVehicle }) {
+  const factoryOptions = (vehicle.add_deduct_list || []).filter((o) => o.auto !== "N");
+  const visibleOptions = factoryOptions.slice(0, 8);
+  const moreOptions = Math.max(0, factoryOptions.length - visibleOptions.length);
+
+  return (
+    <div className="relative overflow-hidden rounded-3xl border border-border bg-card shadow-[0_2px_24px_rgba(0,0,0,0.06)]">
+      {/* Subtle gradient stage so the transparent-bg vehicle photo
+          looks like it's resting on a showroom surface. */}
+      <div
+        className="relative aspect-[16/8] w-full"
+        style={{
+          background:
+            "radial-gradient(ellipse at 50% 95%, rgba(0,0,0,0.10), transparent 55%), linear-gradient(180deg, hsl(var(--muted)/0.4) 0%, hsl(var(--background)) 100%)",
+        }}
+      >
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-[88%] h-full">
+            <VehicleImage
+              year={vehicle.year}
+              make={vehicle.make}
+              model={vehicle.model}
+              style={vehicle.style}
+              uvc={vehicle.uvc}
+              selectedColor=""
+              imageAngle="three_quarter"
+              hideColorLabel
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Spec rail — Trim · Drivetrain · Engine · Transmission · Fuel */}
+      <div className="px-5 py-4 border-t border-border grid grid-cols-2 sm:grid-cols-4 gap-x-5 gap-y-3">
+        {vehicle.series && (
+          <SpecCell label="Trim" value={vehicle.series} />
+        )}
+        {vehicle.drivetrain && (
+          <SpecCell label="Drivetrain" value={vehicle.drivetrain} />
+        )}
+        {vehicle.engine && (
+          <SpecCell label="Engine" value={vehicle.engine} />
+        )}
+        {vehicle.transmission && (
+          <SpecCell label="Transmission" value={vehicle.transmission} />
+        )}
+        {!vehicle.transmission && vehicle.fuel_type && (
+          <SpecCell label="Fuel" value={vehicle.fuel_type} />
+        )}
+      </div>
+
+      {/* Equipment options from the factory build */}
+      {visibleOptions.length > 0 && (
+        <div className="px-5 pb-5 pt-1 border-t border-border">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground mb-2">
+            Factory equipment
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {visibleOptions.map((opt) => (
+              <span
+                key={opt.uoc}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-primary/8 border border-primary/15 text-primary"
+              >
+                <Check className="w-3 h-3" aria-hidden="true" />
+                {opt.name}
+              </span>
+            ))}
+            {moreOptions > 0 && (
+              <span className="px-2.5 py-1 rounded-full text-[11px] text-muted-foreground bg-muted">
+                +{moreOptions} more
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SpecCell({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/80">
+        {label}
+      </p>
+      <p className="text-sm font-medium text-card-foreground truncate">{value}</p>
+    </div>
+  );
+}
 
 interface RadioProps<T extends string> {
   label: string;
