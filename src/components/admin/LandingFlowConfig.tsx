@@ -364,12 +364,10 @@ const LandingFlowConfig = () => {
     // lands.
     setSaved({
       ...state,
-      landing_cta_color: effectiveCtaColor,
       ...(variantSkipped ? { landing_form_variant: saved.landing_form_variant } : {}),
       ...(densitySkipped ? { landing_form_density: saved.landing_form_density } : {}),
       ...(pickupSkipped ? { pickup_offered: saved.pickup_offered } : {}),
       ...(lookupSkipped ? { landing_lookup_default: saved.landing_lookup_default } : {}),
-      ...(ctaColorSkipped ? { landing_cta_color: saved.landing_cta_color } : {}),
       ...(ghostSkipped
         ? {
             ghost_screen: saved.ghost_screen,
@@ -402,7 +400,6 @@ const LandingFlowConfig = () => {
       try {
         localStorage.removeItem(`landing_form_variant_pending:${dealershipId}`);
       } catch { /* ignore */ }
-      setState((prev) => ({ ...prev, landing_cta_color: effectiveCtaColor }));
       // Invalidate the public-facing useSiteConfig cache so the
       // landing reflects the dealer's new template / density /
       // pickup / ghost / lookup-default / cta-color choices on the
