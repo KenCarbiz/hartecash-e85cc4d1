@@ -2803,6 +2803,7 @@ export type Database = {
           hero_subtext: string
           id: string
           instagram_url: string | null
+          landing_cta_color: string | null
           landing_template: string
           logo_url: string | null
           logo_white_url: string | null
@@ -2904,6 +2905,7 @@ export type Database = {
           hero_subtext?: string
           id?: string
           instagram_url?: string | null
+          landing_cta_color?: string | null
           landing_template?: string
           logo_url?: string | null
           logo_white_url?: string | null
@@ -3005,6 +3007,7 @@ export type Database = {
           hero_subtext?: string
           id?: string
           instagram_url?: string | null
+          landing_cta_color?: string | null
           landing_template?: string
           logo_url?: string | null
           logo_white_url?: string | null
