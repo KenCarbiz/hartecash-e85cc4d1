@@ -2800,6 +2800,7 @@ export type Database = {
           phone: string | null
           photo_allow_color_change: boolean
           photo_overlay_color: string
+          pickup_offered: boolean
           price_guarantee_days: number
           primary_color: string
           referral_program_enabled: boolean
@@ -2891,6 +2892,7 @@ export type Database = {
           phone?: string | null
           photo_allow_color_change?: boolean
           photo_overlay_color?: string
+          pickup_offered?: boolean
           price_guarantee_days?: number
           primary_color?: string
           referral_program_enabled?: boolean
@@ -2982,6 +2984,7 @@ export type Database = {
           phone?: string | null
           photo_allow_color_change?: boolean
           photo_overlay_color?: string
+          pickup_offered?: boolean
           price_guarantee_days?: number
           primary_color?: string
           referral_program_enabled?: boolean
