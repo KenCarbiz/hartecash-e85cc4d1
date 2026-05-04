@@ -259,13 +259,15 @@ const LandingFlowConfig = () => {
     }
 
     // Pass 1.6.5 — landing_cta_color (best-effort)
-    const ctaColorChanged = state.landing_cta_color !== saved.landing_cta_color;
+    const effectiveCtaColor = normalizedCtaColor || "#FACC15";
+    const ctaColorChanged =
+      state.landing_cta_color !== saved.landing_cta_color || !saved.landing_cta_color;
     let ctaColorSkipped = false;
     if (ctaColorChanged) {
       const { error: cErr } = await supabase
         .from("site_config" as any)
         .update({
-          landing_cta_color: normalizedCtaColor || null,
+          landing_cta_color: effectiveCtaColor,
           updated_at: new Date().toISOString(),
         } as any)
         .eq("dealership_id", dealershipId);
@@ -418,7 +420,7 @@ const LandingFlowConfig = () => {
     // lands.
     setSaved({
       ...state,
-      landing_cta_color: normalizedCtaColor,
+      landing_cta_color: effectiveCtaColor,
       ...(variantSkipped ? { landing_form_variant: saved.landing_form_variant } : {}),
       ...(densitySkipped ? { landing_form_density: saved.landing_form_density } : {}),
       ...(pickupSkipped ? { pickup_offered: saved.pickup_offered } : {}),
@@ -456,7 +458,7 @@ const LandingFlowConfig = () => {
       try {
         localStorage.removeItem(`landing_form_variant_pending:${dealershipId}`);
       } catch { /* ignore */ }
-      setState((prev) => ({ ...prev, landing_cta_color: normalizedCtaColor }));
+      setState((prev) => ({ ...prev, landing_cta_color: effectiveCtaColor }));
       // Invalidate the public-facing useSiteConfig cache so the
       // landing reflects the dealer's new template / density /
       // pickup / ghost / lookup-default / cta-color choices on the
