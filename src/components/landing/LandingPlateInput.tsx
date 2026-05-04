@@ -78,6 +78,8 @@ const hexToRgb = (hex: string): string => {
   return `${parseInt(hex.slice(1, 3), 16)},${parseInt(hex.slice(3, 5), 16)},${parseInt(hex.slice(5, 7), 16)}`;
 };
 
+const canDeriveHover = (color: string) => color.startsWith("#") && color.length === 7;
+
 const LandingPlateInput = ({
   onEngage,
   theme = "light",
@@ -167,11 +169,13 @@ const LandingPlateInput = ({
   // highlight, so the button itself stays maximally saturated.
   // Dealer can override via site_config.landing_cta_color.
   const ctaBg = ctaColor || "#FACC15";
-  const ctaBgHover = darkenHex(ctaBg, 16);
+  const ctaBgHover = canDeriveHover(ctaBg) ? darkenHex(ctaBg, 16) : ctaBg;
   const ctaText = "#0A0A0A";
   const ctaShadow =
     "0 4px 12px -2px rgba(0,0,0,0.18), 0 2px 4px -1px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.30)";
-  const ctaShadowHover = `0 8px 18px -3px rgba(${hexToRgb(ctaBg)},0.45), 0 3px 6px -1px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.30)`;
+  const ctaShadowHover = canDeriveHover(ctaBg)
+    ? `0 8px 18px -3px rgba(${hexToRgb(ctaBg)},0.45), 0 3px 6px -1px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.30)`
+    : ctaShadow;
 
   const submitDisabled =
     submitting ||
