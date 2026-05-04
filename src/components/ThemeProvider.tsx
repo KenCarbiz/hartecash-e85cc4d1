@@ -2,6 +2,38 @@ import { useEffect } from "react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 /**
+ * Convert any color string (hex `#RRGGBB`, `#RGB`, or already-HSL like
+ * `"210 50% 40%"`) into the bare HSL component triplet that our CSS
+ * tokens expect (e.g. `"210 50% 40%"`). Returns the input untouched if
+ * it doesn't look like a hex color.
+ */
+function normalizeToHslTriplet(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const v = value.trim();
+  if (!v.startsWith("#")) return v; // already an HSL triplet or other usable form
+  let hex = v.slice(1);
+  if (hex.length === 3) hex = hex.split("").map((c) => c + c).join("");
+  if (hex.length !== 6 || !/^[0-9a-fA-F]{6}$/.test(hex)) return v;
+  const r = parseInt(hex.slice(0, 2), 16) / 255;
+  const g = parseInt(hex.slice(2, 4), 16) / 255;
+  const b = parseInt(hex.slice(4, 6), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0;
+  const l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+    }
+    h *= 60;
+  }
+  return `${Math.round(h)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+}
+
+/**
  * Applies site_config colors as CSS custom properties on :root,
  * so admin color changes take effect without code deploys.
  */
@@ -11,23 +43,27 @@ const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const root = document.documentElement;
 
-    if (config.primary_color) {
-      root.style.setProperty("--primary", config.primary_color);
-      root.style.setProperty("--ring", config.primary_color);
-      root.style.setProperty("--secondary-foreground", config.primary_color);
+    const primary = normalizeToHslTriplet(config.primary_color);
+    const accent = normalizeToHslTriplet(config.accent_color);
+    const success = normalizeToHslTriplet(config.success_color);
+
+    if (primary) {
+      root.style.setProperty("--primary", primary);
+      root.style.setProperty("--ring", primary);
+      root.style.setProperty("--secondary-foreground", primary);
     }
-    if (config.accent_color) {
-      root.style.setProperty("--accent", config.accent_color);
+    if (accent) {
+      root.style.setProperty("--accent", accent);
     }
-    if (config.success_color) {
-      root.style.setProperty("--success", config.success_color);
+    if (success) {
+      root.style.setProperty("--success", success);
     }
 
     // CTA button overrides — fall back to accent if not set
-    const ctaOffer = (config as any).cta_offer_color || config.accent_color;
-    const ctaAccept = (config as any).cta_accept_color || config.accent_color;
-    root.style.setProperty("--cta-offer", ctaOffer);
-    root.style.setProperty("--cta-accept", ctaAccept);
+    const ctaOffer = normalizeToHslTriplet((config as any).cta_offer_color) || accent;
+    const ctaAccept = normalizeToHslTriplet((config as any).cta_accept_color) || accent;
+    if (ctaOffer) root.style.setProperty("--cta-offer", ctaOffer);
+    if (ctaAccept) root.style.setProperty("--cta-accept", ctaAccept);
 
     // ── Admin Refresh: UI scale + text scale ──
     // Only applied on the authenticated admin shell so consumer routes
