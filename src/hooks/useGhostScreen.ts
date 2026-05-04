@@ -26,6 +26,7 @@ export function useGhostScreen(): {
   kind: GhostScreenKind;
   live: GhostScreenKind | null;
   syncing: boolean;
+  ready: boolean;
   stale: boolean;
 } {
   const { config } = useSiteConfig();
@@ -41,15 +42,32 @@ export function useGhostScreen(): {
     let cancelled = false;
     setSyncing(true);
     (async () => {
-      const { data, error } = await supabase
+      const corporatePromise = supabase
         .from("site_config" as any)
         .select("ghost_screen")
         .eq("dealership_id", tenant.dealership_id)
         .maybeSingle();
+
+      const locationPromise = tenant.location_id
+        ? supabase
+            .from("dealership_locations" as any)
+            .select("ghost_screen")
+            .eq("id", tenant.location_id)
+            .maybeSingle()
+        : Promise.resolve({ data: null, error: null });
+
+      const [{ data, error }, { data: locationData, error: locationError }] =
+        await Promise.all([corporatePromise, locationPromise]);
       if (cancelled) return;
-      if (!error) {
+      if (!error && !locationError) {
+        const locationGhost = (locationData as any)?.ghost_screen as
+          | GhostScreenKind
+          | null
+          | undefined;
         const next =
-          ((data as any)?.ghost_screen as GhostScreenKind) || "legacy-car";
+          locationGhost ||
+          ((data as any)?.ghost_screen as GhostScreenKind) ||
+          "legacy-car";
         setLive(next);
       }
       setSyncing(false);
@@ -57,13 +75,14 @@ export function useGhostScreen(): {
     return () => {
       cancelled = true;
     };
-  }, [tenant.dealership_id]);
+  }, [tenant.dealership_id, tenant.location_id]);
 
   // Prefer the freshly fetched value once it arrives so the loader
   // self-corrects mid-render rather than waiting for the React Query
   // cache to revalidate on its own (5-min staleTime).
   const kind = live ?? cached;
   const stale = live !== null && live !== cached;
+  const ready = live !== null || !syncing;
 
-  return { kind, live, syncing, stale };
+  return { kind, live, syncing, ready, stale };
 }
