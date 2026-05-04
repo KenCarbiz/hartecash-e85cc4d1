@@ -36,6 +36,33 @@ export const LANDING_TEMPLATES: { value: LandingTemplate; label: string; descrip
   { value: "mosaic",   label: "Mosaic",   description: "No hero photo \u2014 a tile-mosaic of model categories above the fold. Performance-first light mode. Jazel." },
 ];
 
+/** Allowed icon names for value_props cards. Must match the keys
+ *  in VALUE_PROP_ICONS in src/components/ValueProps.tsx. */
+export type ValuePropIcon =
+  | "shield"
+  | "shield-check"
+  | "dollar"
+  | "clock"
+  | "truck"
+  | "award"
+  | "thumbs-up"
+  | "users"
+  | "wrench"
+  | "heart"
+  | "star"
+  | "map-pin"
+  | "banknote";
+
+export interface ValueProp {
+  title: string;
+  body: string;
+  icon: ValuePropIcon;
+  /** When true the card is visually elevated (success-tinted border)
+   *  and centered on its own row on wide screens. Use sparingly —
+   *  only one card should be highlighted at a time. */
+  highlight?: boolean;
+}
+
 export interface AboutMilestone {
   year: string;
   label: string;
@@ -118,6 +145,14 @@ export interface SiteConfig {
   stats_years_in_business: string;
   stats_rating: string;
   stats_reviews_count: string;
+  /**
+   * Up to 6 dealer-editable cards shown in the "Why Sell to X?"
+   * section on the public landing. Each card has a title (rendered
+   * bold) + body (regular weight) + icon name + optional highlight
+   * flag. NULL or empty array falls back to the ValueProps component's
+   * default cards.
+   */
+  value_props: ValueProp[] | null;
   enable_animations: boolean;
   use_animated_calculating: boolean;
   enable_dl_ocr: boolean;
@@ -248,6 +283,7 @@ const DEFAULTS: SiteConfig = {
   stats_years_in_business: "78 yrs",
   stats_rating: "4.9",
   stats_reviews_count: "2,400+",
+  value_props: null,
   enable_animations: false,
   use_animated_calculating: false,
   enable_dl_ocr: false,
@@ -370,6 +406,7 @@ const LOCATION_OVERRIDE_KEYS: (keyof SiteConfig)[] = [
   "stats_years_in_business",
   "stats_rating",
   "stats_reviews_count",
+  "value_props",
   "price_guarantee_days",
   "established_year",
   // Customer-file / Tweaks branding (per location)
