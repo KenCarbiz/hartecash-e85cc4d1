@@ -15,6 +15,8 @@ import { logConsent } from "@/lib/consent";
 
 type Screen = "lookup" | "confirm" | "condition" | "computing" | "offer";
 
+import RunningCarLoader from "./landing/RunningCarLoader";
+
 interface Props {
   /** Pre-populated plate + state from the landing-page LandingPlateInput.
    *  Required — SellFlowSimple is the post-engagement flow. */
@@ -24,6 +26,21 @@ interface Props {
   /** Density mode chosen by the dealer in the admin. Defaults to
    *  'simple' (3 questions). 'standard' = 5, 'detailed' = 7+. */
   density?: "simple" | "standard" | "detailed";
+  /** Theme + loader-style hint from the parent template. The
+   *  FullscreenWizard already provides background + chrome; this
+   *  prop tells the wizard interior which Tier polish to apply
+   *  (typography weights, accent colors, computing-screen loader). */
+  theme?: "light" | "dark" | "warm";
+  /** Loader style for the "Calculating your offer…" reveal. Picked
+   *  per-template per the May-2026 prestige design audit:
+   *    velocity → "running-car" (the user explicitly wants this here)
+   *    marquee  → "brass-arc"
+   *    clarity  → "thin-line"
+   *    heritage → "hand-drawn"
+   */
+  loader?: "running-car" | "brass-arc" | "thin-line" | "hand-drawn";
+  /** Brand accent color override. Defaults derived from theme. */
+  accent?: string;
 }
 
 /**
@@ -48,7 +65,14 @@ interface Props {
  * Photos and contact info are deliberately deferred to AFTER the
  * offer reveals — the audit's single biggest mom-and-pop fix.
  */
-const SellFlowSimple = ({ initial, leadSource = "sell-simple", density = "simple" }: Props) => {
+const SellFlowSimple = ({
+  initial,
+  leadSource = "sell-simple",
+  density = "simple",
+  theme = "light",
+  loader = "thin-line",
+  accent,
+}: Props) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { config } = useSiteConfig();
@@ -477,34 +501,93 @@ const SellFlowSimple = ({ initial, leadSource = "sell-simple", density = "simple
           </motion.div>
         )}
 
-        {/* ── Screen: computing ── (branded reveal moment) */}
+        {/* ── Screen: computing ── (branded reveal moment).
+              Loader style is template-driven per the May-2026 prestige
+              audit. Velocity gets the running-car (the user's request),
+              Marquee gets a slow brass arc, Clarity gets a thin
+              expanding line, Heritage gets a hand-drawn fill. */}
         {screen === "computing" && (
           <motion.div
             key="computing"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
             className="flex flex-col items-center justify-center min-h-[400px] text-center"
           >
-            <div className="w-20 h-20 rounded-full border-2 border-primary/20 border-t-primary animate-spin mb-6" />
-            <h2 className="text-2xl font-semibold tracking-tight">
+            {loader === "running-car" ? (
+              <div className="mb-6" style={{ color: accent || "#0066CC" }}>
+                <RunningCarLoader size="lg" />
+              </div>
+            ) : loader === "brass-arc" ? (
+              <svg
+                width="80" height="80" viewBox="0 0 80 80"
+                className="mb-6" aria-hidden="true"
+              >
+                <circle
+                  cx="40" cy="40" r="34"
+                  fill="none"
+                  stroke={accent || "#C9A96E"}
+                  strokeWidth="1.5"
+                  strokeOpacity="0.15"
+                />
+                <motion.circle
+                  cx="40" cy="40" r="34"
+                  fill="none"
+                  stroke={accent || "#C9A96E"}
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  pathLength="1"
+                  strokeDasharray="0.25 0.75"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 2.4, repeat: Infinity, ease: "linear" }}
+                  style={{ transformOrigin: "40px 40px" }}
+                />
+              </svg>
+            ) : loader === "hand-drawn" ? (
+              <svg
+                width="120" height="60" viewBox="0 0 120 60"
+                className="mb-6" aria-hidden="true"
+              >
+                {/* Quick line-drawing of a small showroom — strokes
+                    in over 1.6s so the customer sees it being drawn. */}
+                <motion.path
+                  d="M10 50 L10 25 L60 10 L110 25 L110 50 Z M30 50 L30 35 L50 35 L50 50 M70 50 L70 30 L100 30 L100 50"
+                  fill="none"
+                  stroke={accent || "#A3886B"}
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  initial={{ pathLength: 0, opacity: 0.5 }}
+                  animate={{ pathLength: [0, 1, 1], opacity: [0.5, 1, 1] }}
+                  transition={{ duration: 1.6, repeat: Infinity, repeatDelay: 0.4 }}
+                />
+              </svg>
+            ) : (
+              // thin-line — Apple/Porsche default
+              <div className="w-48 h-px relative mb-8" aria-hidden="true">
+                <div
+                  className="absolute inset-0 rounded-full"
+                  style={{ background: accent ? `${accent}26` : "rgba(0,0,0,0.10)" }}
+                />
+                <motion.div
+                  className="absolute inset-y-0 left-0 rounded-full"
+                  style={{ background: accent || "#0A0A0A" }}
+                  animate={{ width: ["10%", "100%", "10%"], left: ["0%", "0%", "90%"] }}
+                  transition={{ duration: 1.8, repeat: Infinity, ease: [0.4, 0, 0.2, 1] }}
+                />
+              </div>
+            )}
+            <h2 className={`text-2xl font-semibold tracking-tight ${
+              theme === "dark" ? "text-white" : theme === "warm" ? "text-[#2C2A26]" : "text-[#1D1D1F]"
+            }`}>
               Calculating your offer…
             </h2>
-            <p className="text-sm text-muted-foreground mt-2 max-w-xs">
+            <p className={`text-sm mt-2 max-w-xs ${
+              theme === "dark" ? "text-white/60" : theme === "warm" ? "text-[#2C2A26]/65" : "text-[#1D1D1F]/65"
+            }`}>
               Pricing against live wholesale market data + recent sales of {bbVehicle?.year} {bbVehicle?.make}s.
             </p>
-            {/* Subtle progress dots */}
-            <div className="flex gap-1.5 mt-8" aria-hidden="true">
-              {[0, 1, 2].map((i) => (
-                <motion.span
-                  key={i}
-                  className="w-1.5 h-1.5 rounded-full bg-primary"
-                  animate={{ opacity: [0.2, 1, 0.2] }}
-                  transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.18 }}
-                />
-              ))}
-            </div>
           </motion.div>
         )}
       </AnimatePresence>

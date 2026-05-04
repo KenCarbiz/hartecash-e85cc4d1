@@ -90,6 +90,8 @@ const ClarityTemplate = () => {
         <LandingForm
           variant="default"
           initial={initial ? { plate: initial.plate, state: initial.state } : undefined}
+          theme="light"
+          loader="thin-line"
         />
       </FullscreenWizard>
     </>

@@ -14,6 +14,14 @@ interface LandingFormProps {
   /** Optional pre-populated values from the landing-page hand-off
    *  (FullscreenWizard pattern). Ignored by QuickOfferForm. */
   initial?: Partial<FormData>;
+  /** Wizard interior theme — passed through to SellFlowSimple so the
+   *  3-screen flow inherits the template's prestige tier. */
+  theme?: "light" | "dark" | "warm";
+  /** Per-template compute-reveal loader. Velocity uses "running-car"
+   *  per the May-2026 audit; other templates use quieter loaders. */
+  loader?: "running-car" | "brass-arc" | "thin-line" | "hand-drawn";
+  /** Brand accent (hex) used by the wizard's loader + emphasis. */
+  accent?: string;
 }
 
 /**
@@ -45,7 +53,7 @@ class QuickOfferBoundary extends Component<{ fallback: ReactNode; children: Reac
   }
 }
 
-const LandingForm = ({ leadSource, variant = "split", initial }: LandingFormProps) => {
+const LandingForm = ({ leadSource, variant = "split", initial, theme, loader, accent }: LandingFormProps) => {
   const { config } = useSiteConfig();
   const { tenant } = useTenant();
 
@@ -77,6 +85,9 @@ const LandingForm = ({ leadSource, variant = "split", initial }: LandingFormProp
         initial={{ plate: initial!.plate as string, state: initial!.state as string }}
         density={density}
         leadSource={leadSource}
+        theme={theme}
+        loader={loader}
+        accent={accent}
       />
     );
   }
