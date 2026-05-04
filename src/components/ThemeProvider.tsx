@@ -59,11 +59,31 @@ const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
       root.style.setProperty("--success", success);
     }
 
-    // CTA button overrides — fall back to accent if not set
-    const ctaOffer = normalizeToHslTriplet((config as any).cta_offer_color) || accent;
-    const ctaAccept = normalizeToHslTriplet((config as any).cta_accept_color) || accent;
+    // CTA button overrides — fall back to accent if not set.
+    // landing_cta_color (the unified Landing & Flow override) wins over
+    // the legacy cta_offer_color / cta_accept_color pair so the dealer
+    // can change one color and have it apply to the landing hero CTA,
+    // the wizard's Continue / Get-my-offer buttons, AND the offer
+    // page's Accept button in one place.
+    const landingCtaBg = normalizeToHslTriplet((config as any).landing_cta_color);
+    const ctaOffer =
+      landingCtaBg ||
+      normalizeToHslTriplet((config as any).cta_offer_color) ||
+      accent;
+    const ctaAccept =
+      landingCtaBg ||
+      normalizeToHslTriplet((config as any).cta_accept_color) ||
+      accent;
     if (ctaOffer) root.style.setProperty("--cta-offer", ctaOffer);
     if (ctaAccept) root.style.setProperty("--cta-accept", ctaAccept);
+
+    // CTA TEXT color override — raw value (hex/named) since these vars
+    // are consumed via `color: var(--cta-offer-text)` not wrapped in
+    // hsl(). Default white so existing buttons are unchanged when the
+    // dealer hasn't set an override.
+    const landingCtaText = (config as any).landing_cta_text_color?.trim?.() || "#FFFFFF";
+    root.style.setProperty("--cta-offer-text", landingCtaText);
+    root.style.setProperty("--cta-accept-text", landingCtaText);
 
     // ── Admin Refresh: UI scale + text scale ──
     // Only applied on the authenticated admin shell so consumer routes
