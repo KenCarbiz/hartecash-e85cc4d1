@@ -70,7 +70,12 @@ const VelocityTemplate = () => {
               "0 30px 60px -20px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,0,0,0.06)",
           }}
         >
-          <LandingPlateInput onEngage={handleEngage} theme="light" ctaLabel="Get real offer" />
+          <LandingPlateInput
+            onEngage={handleEngage}
+            theme="light"
+            ctaLabel="Get real offer"
+            trustLine={`★ ${config.stats_rating || "4.9"} · ${config.stats_cars_purchased || "14,721+"} sellers paid · Free pickup nationwide`}
+          />
         </motion.div>
 
         {/* One line of social proof */}

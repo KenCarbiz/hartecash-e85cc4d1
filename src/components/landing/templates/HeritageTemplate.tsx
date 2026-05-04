@@ -137,7 +137,12 @@ const HeritageTemplate = () => {
               className="rounded-2xl bg-white p-5"
               style={{ border: `1px solid ${accent}33` }}
             >
-              <LandingPlateInput onEngage={handleEngage} theme="warm" ctaLabel="Tell us about your car" />
+              <LandingPlateInput
+                onEngage={handleEngage}
+                theme="warm"
+                ctaLabel="Tell us about your car"
+                trustLine={`★ ${config.stats_rating || "4.9"} · Family-owned${config.established_year ? ` since ${config.established_year}` : ""} · ${config.stats_cars_purchased || "14,721+"} cars bought`}
+              />
             </div>
           </motion.div>
         </div>

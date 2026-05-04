@@ -87,7 +87,12 @@ const MarqueeTemplate = () => {
           transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
           className="relative z-10 w-full max-w-[560px]"
         >
-          <LandingPlateInput onEngage={handleEngage} theme="dark" ctaLabel="Begin appraisal" />
+          <LandingPlateInput
+            onEngage={handleEngage}
+            theme="dark"
+            ctaLabel="Begin appraisal"
+            trustLine={`★ ${config.stats_rating || "4.9"} · ${config.stats_cars_purchased || "14,721+"} appraised · Concierge from offer to title`}
+          />
         </motion.div>
 
         {/* Trust line — single sentence, ember accent (Tier B) */}

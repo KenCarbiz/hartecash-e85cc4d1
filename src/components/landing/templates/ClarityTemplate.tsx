@@ -50,7 +50,12 @@ const ClarityTemplate = () => {
           </div>
 
           <div className="w-full max-w-[560px]">
-            <LandingPlateInput onEngage={handleEngage} theme="light" ctaLabel="Get my offer" />
+            <LandingPlateInput
+              onEngage={handleEngage}
+              theme="light"
+              ctaLabel="Get my offer"
+              trustLine={`★ ${config.stats_rating || "4.9"} · ${config.stats_cars_purchased || "14,721+"} cars purchased · 100% free, no obligation`}
+            />
           </div>
         </motion.div>
       </section>
