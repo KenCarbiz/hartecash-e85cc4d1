@@ -364,14 +364,14 @@ const LandingFlowConfig = () => {
       toast({ title: "Save failed", description: ghostSubheadWrite.hardFailMsg, variant: "destructive" });
       return;
     }
-    // Treat the WHOLE ghost section as skipped only when every part
-    // of it failed. The variant pick (ghost_screen) is the most
-    // important — if it succeeded but the copy fields didn't, the
-    // dealer still gets the variant they wanted.
-    const ghostSkipped =
-      ghostScreenWrite.skipped &&
-      ghostHeadlineWrite.skipped &&
-      ghostSubheadWrite.skipped;
+    // Track each ghost-column write outcome individually so the
+    // setSaved finalize can roll back only the columns that didn't
+    // actually persist (ghostScreenWrite.skipped is what matters
+    // for the picker's "Live" state). The earlier coarse boolean-AND
+    // ghostSkipped was wrong — when ghost_headline / ghost_subhead
+    // returned skipped=false because they were unchanged, the AND
+    // collapsed to false even when ghost_screen had been rejected,
+    // and the bad write was silently treated as a successful one.
 
     // Pass 1.6 — pickup_offered (best-effort, may not be deployed yet)
     const pickupChanged = state.pickup_offered !== saved.pickup_offered;
@@ -436,6 +436,16 @@ const LandingFlowConfig = () => {
     // saved snapshot keeps the old value so the toggle's "dirty"
     // state stays until the column is provisioned and a real save
     // lands.
+    // Per-column rollback for the ghost section. The earlier
+    // ghostSkipped logic (boolean AND of all three) was wrong: if
+    // only ghost_screen got rejected by PostgREST but ghost_headline
+    // and ghost_subhead saved cleanly (or were unchanged so they
+    // returned skipped=false), the rollback was skipped entirely
+    // and saved.ghost_screen ended up matching the local state
+    // EVEN THOUGH THE DB STILL HAS THE OLD VALUE. The picker would
+    // then show "Live" on the new pick while the public site kept
+    // serving the old one. Customer-flagged: "active landing ghost
+    // loader not working stuck on a different one".
     setSaved({
       ...state,
       ...(variantSkipped ? { landing_form_variant: saved.landing_form_variant } : {}),
@@ -448,14 +458,22 @@ const LandingFlowConfig = () => {
             landing_cta_text_color: saved.landing_cta_text_color,
           }
         : {}),
-      ...(ghostSkipped
-        ? {
-            ghost_screen: saved.ghost_screen,
-            ghost_headline: saved.ghost_headline,
-            ghost_subhead: saved.ghost_subhead,
-          }
-        : {}),
+      ...(ghostScreenWrite.skipped ? { ghost_screen: saved.ghost_screen } : {}),
+      ...(ghostHeadlineWrite.skipped ? { ghost_headline: saved.ghost_headline } : {}),
+      ...(ghostSubheadWrite.skipped ? { ghost_subhead: saved.ghost_subhead } : {}),
     });
+
+    // Surface a clear warning when the variant pick itself was
+    // rejected by PostgREST. Without this, the dealer thought their
+    // pick had saved (Save toast fired) but it never landed.
+    if (ghostScreenWrite.skipped) {
+      toast({
+        title: "Ghost loader not saved",
+        description:
+          "The ghost_screen column isn't reachable in PostgREST's schema cache. Apply migration 20260504040000_ghost_screen_admin.sql or re-run the schema-reload migration, then try again.",
+        variant: "destructive",
+      });
+    }
 
     if (variantSkipped) {
       // Store the choice in localStorage so the admin can preview the
