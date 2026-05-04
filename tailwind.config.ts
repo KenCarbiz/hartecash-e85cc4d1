@@ -72,9 +72,16 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        // Refreshed Customer File sheet uses DM Serif Display for the
-        // headline. Falls back to Georgia, then serif system fonts.
+        // 'display' = the heavy editorial serif used on the Customer
+        // File sheet and a handful of marketing splashes. Falls back
+        // to Georgia, then serif system fonts.
         display: ['"DM Serif Display"', "Georgia", "serif"],
+        // 'sans' = the national-tech-brand workhorse. Inter is what
+        // Stripe / Linear / Vercel / GitHub / Notion / Apple's web
+        // surfaces all ship. Loaded in src/index.css. Used on the
+        // Minimal template's headline and any other "Apple-clean"
+        // surface that would feel dealer-y in DM Serif Display.
+        sans: ['"Inter"', "-apple-system", "BlinkMacSystemFont", '"Segoe UI"', "Roboto", "sans-serif"],
       },
       keyframes: {
         "accordion-down": {

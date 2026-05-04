@@ -114,11 +114,16 @@ const LandingPlateInput = ({
       className="w-full"
       aria-label="Get an instant offer on your car"
     >
-      {/* Plate / VIN tab toggle */}
+      {/* Plate / VIN segmented control. National-brand pattern (Apple
+          / Stripe / Linear segmented controls): a single rounded
+          backplate, two equal-width buttons, the active one elevated
+          on a clean fill rather than colored. Centered above the
+          input row so the eye lands on the lookup type first, then
+          the input. */}
       <div
         role="tablist"
         aria-label="Choose lookup method"
-        className="inline-flex items-center gap-1 mb-3 p-1 rounded-lg"
+        className="inline-grid grid-cols-2 gap-1 mb-4 p-1 rounded-full text-center"
         style={{ background: t.fieldBg, border: `1px solid ${t.fieldBorder}` }}
       >
         <button
@@ -127,13 +132,17 @@ const LandingPlateInput = ({
           aria-selected={mode === "plate"}
           onClick={() => setMode("plate")}
           disabled={submitting}
-          className="px-4 py-1.5 rounded-md text-xs font-semibold tracking-wide uppercase transition-colors"
+          className="font-sans px-5 py-1.5 rounded-full text-[12px] font-semibold tracking-wide transition-all"
           style={{
             background: mode === "plate" ? t.tabActiveBg : "transparent",
             color: mode === "plate" ? t.fieldText : t.tabIdleText,
+            boxShadow:
+              mode === "plate"
+                ? "0 1px 2px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.04)"
+                : "none",
           }}
         >
-          Plate + State
+          Plate &amp; State
         </button>
         <button
           type="button"
@@ -141,10 +150,14 @@ const LandingPlateInput = ({
           aria-selected={mode === "vin"}
           onClick={() => setMode("vin")}
           disabled={submitting}
-          className="px-4 py-1.5 rounded-md text-xs font-semibold tracking-wide uppercase transition-colors"
+          className="font-sans px-5 py-1.5 rounded-full text-[12px] font-semibold tracking-wide transition-all"
           style={{
             background: mode === "vin" ? t.tabActiveBg : "transparent",
             color: mode === "vin" ? t.fieldText : t.tabIdleText,
+            boxShadow:
+              mode === "vin"
+                ? "0 1px 2px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.04)"
+                : "none",
           }}
         >
           VIN
