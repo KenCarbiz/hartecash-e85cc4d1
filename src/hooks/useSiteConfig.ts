@@ -110,6 +110,9 @@ export interface SiteConfig {
   /** Optional dealer override for the landing CTA button color (hex).
    *  Null / empty = component default (#FACC15 saturated yellow). */
   landing_cta_color: string | null;
+  /** Optional dealer override for the landing CTA button text color
+   *  (hex). Null / empty = component default (#0A0A0A near-black). */
+  landing_cta_text_color: string | null;
   price_guarantee_days: number;
   stats_cars_purchased: string;
   stats_years_in_business: string;
@@ -239,6 +242,7 @@ const DEFAULTS: SiteConfig = {
   ghost_subhead: null,
   landing_lookup_default: "vin",
   landing_cta_color: null,
+  landing_cta_text_color: null,
   price_guarantee_days: 8,
   stats_cars_purchased: "14,721+",
   stats_years_in_business: "78 yrs",
@@ -345,6 +349,7 @@ const LOCATION_OVERRIDE_KEYS: (keyof SiteConfig)[] = [
   "ghost_subhead",
   "landing_lookup_default",
   "landing_cta_color",
+  "landing_cta_text_color",
   "service_hero_headline",
   "service_hero_subtext",
   "trade_hero_headline",
