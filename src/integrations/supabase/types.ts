@@ -2765,6 +2765,12 @@ export type Database = {
           about_values: Json
           accent_color: string
           address: string | null
+          ai_auto_bump_confidence_floor: number
+          ai_auto_bump_daily_cap: number
+          ai_auto_bump_enabled: boolean
+          ai_auto_bump_max_dollars: number
+          ai_auto_bump_max_pct: number
+          ai_photo_reappraisal: boolean
           assign_auto_zip: boolean
           assign_buying_center: boolean
           assign_customer_picks: boolean
@@ -2860,6 +2866,12 @@ export type Database = {
           about_values?: Json
           accent_color?: string
           address?: string | null
+          ai_auto_bump_confidence_floor?: number
+          ai_auto_bump_daily_cap?: number
+          ai_auto_bump_enabled?: boolean
+          ai_auto_bump_max_dollars?: number
+          ai_auto_bump_max_pct?: number
+          ai_photo_reappraisal?: boolean
           assign_auto_zip?: boolean
           assign_buying_center?: boolean
           assign_customer_picks?: boolean
@@ -2955,6 +2967,12 @@ export type Database = {
           about_values?: Json
           accent_color?: string
           address?: string | null
+          ai_auto_bump_confidence_floor?: number
+          ai_auto_bump_daily_cap?: number
+          ai_auto_bump_enabled?: boolean
+          ai_auto_bump_max_dollars?: number
+          ai_auto_bump_max_pct?: number
+          ai_photo_reappraisal?: boolean
           assign_auto_zip?: boolean
           assign_buying_center?: boolean
           assign_customer_picks?: boolean
