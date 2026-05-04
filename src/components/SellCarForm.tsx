@@ -2,7 +2,9 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Shield, Loader2 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import CalculatingOffer from "@/components/CalculatingOffer";
-import GhostScreen, { type GhostScreenKind } from "@/components/landing/GhostScreen";
+import GhostScreen from "@/components/landing/GhostScreen";
+import { GhostSyncIndicator } from "@/components/PortalSkeleton";
+import { useGhostScreen } from "@/hooks/useGhostScreen";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { track } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
@@ -97,6 +99,7 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default", initial }:
   const { config } = useSiteConfig();
   const { formConfig } = useFormConfig();
   const { tenant } = useTenant();
+  const { kind: ghostKind, syncing: ghostSyncing, ready: ghostReady, stale: ghostStale } = useGhostScreen();
 
   // Black Book state
   const [bbVehicles, setBbVehicles] = useState<BBVehicle[]>([]);
@@ -830,15 +833,16 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default", initial }:
           = the line-art ghost-car PNG over an animated dashed road). */}
       {bbLoading && (
         <div className="absolute inset-0 z-20 rounded-2xl bg-card/95 backdrop-blur-sm flex items-center justify-center p-8">
-          <GhostScreen
-            kind={
-              ((config as any).ghost_screen as GhostScreenKind) || "legacy-car"
-            }
-            accent="#5B6B8A"
-            size="lg"
-            headline="Finding your vehicle"
-            subhead="Pulling your details from the registry."
-          />
+          {ghostReady && (
+            <GhostScreen
+              kind={ghostKind}
+              accent="#5B6B8A"
+              size="lg"
+              headline="Finding your vehicle"
+              subhead="Pulling your details from the registry."
+            />
+          )}
+          <GhostSyncIndicator syncing={ghostSyncing} stale={ghostStale} />
         </div>
       )}
       {/* Progress - Premium numbered stepper */}
