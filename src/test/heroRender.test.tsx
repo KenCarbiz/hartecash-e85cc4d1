@@ -112,7 +112,7 @@ describe("Hero rendering — admin inputs flow to landing DOM", () => {
     const name = file.replace(".tsx", "");
 
     it(`${name} renders hero_headline and hero_subtext from config`, async () => {
-      const mod = await import(`@/components/landing/templates/${name}`);
+      const mod = await import(`@/components/landing/templates/${name}.tsx`);
       const Template = mod.default;
       const { container } = render(<Template />);
       const text = container.textContent || "";
