@@ -62,9 +62,6 @@ interface State {
   ghost_subhead: string;
   /** Which lookup tab opens by default on the landing cluster. */
   landing_lookup_default: "plate" | "vin";
-  /** Optional dealer override for the landing CTA button color (hex).
-   *  Empty string = inherit the SaaS-default punchy yellow. */
-  landing_cta_color: string;
 }
 
 const DEFAULTS: State = {
@@ -76,16 +73,7 @@ const DEFAULTS: State = {
   ghost_headline: "",
   ghost_subhead: "",
   landing_lookup_default: "plate",
-  landing_cta_color: "",
 };
-
-const normalizeCtaColor = (value: string) => {
-  const trimmed = value.trim();
-  if (!trimmed) return "";
-  return trimmed.startsWith("#") ? trimmed.toUpperCase() : `#${trimmed}`.toUpperCase();
-};
-
-const isValidHexColor = (value: string) => /^#[0-9A-F]{6}$/.test(value);
 
 const GHOST_OPTIONS: { value: GhostScreenKind; label: string; description: string }[] = [
   { value: "legacy-car",    label: "Hartecash classic",     description: "The running-car silhouette over a road line. The familiar Hartecash motion." },
