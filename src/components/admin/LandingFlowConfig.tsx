@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Save, Loader2, Layout, Sparkles, Zap, ListChecks } from "lucide-react";
 import { LANDING_TEMPLATES, type LandingTemplate } from "@/hooks/useSiteConfig";
@@ -86,6 +87,7 @@ const LandingFlowConfig = () => {
   const { tenant } = useTenant();
   const dealershipId = tenant.dealership_id;
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const [state, setState] = useState<State>(DEFAULTS);
   const [saved, setSaved] = useState<State>(DEFAULTS);
@@ -396,6 +398,11 @@ const LandingFlowConfig = () => {
       try {
         localStorage.removeItem(`landing_form_variant_pending:${dealershipId}`);
       } catch { /* ignore */ }
+      // Invalidate the public-facing useSiteConfig cache so the
+      // landing reflects the dealer's new template / density /
+      // pickup / ghost / lookup-default / cta-color choices on the
+      // next request instead of waiting up to 5 min for staleness.
+      queryClient.invalidateQueries({ queryKey: ["site_config"] });
       toast({ title: "Saved", description: "Landing page settings updated." });
     }
   };

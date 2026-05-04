@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
@@ -188,6 +189,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
   const [savedConfig, setSavedConfig] = useState<SiteConfig>(DEFAULT_CONFIG);
   const [dealerLocations, setDealerLocations] = useState<DealerLocation[]>([]);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     fetchConfig();
@@ -248,6 +250,12 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
     } else {
       setSavedConfig(config);
       setHasChanges(false);
+      // Invalidate the React Query cache so the public landing — and
+      // any other surface using useSiteConfig — re-fetches immediately
+      // instead of waiting up to 5 minutes for staleTime to elapse.
+      // Root cause of the "I changed the hero in admin and the
+      // landing page didn't update" customer report.
+      queryClient.invalidateQueries({ queryKey: ["site_config"] });
       toast({ title: "Saved", description: "Site configuration updated." });
     }
     setSaving(false);

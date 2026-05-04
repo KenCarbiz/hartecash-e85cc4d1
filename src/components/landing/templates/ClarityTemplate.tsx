@@ -54,7 +54,8 @@ const ClarityTemplate = () => {
               onEngage={handleEngage}
               theme="light"
               ctaLabel="Get my offer"
-              defaultLookup={config.landing_lookup_default || "plate"}
+              ctaColor={config.landing_cta_color || undefined}
+              defaultLookup={config.landing_lookup_default || "vin"}
               trustLine={`★ ${config.stats_rating || "4.9"} · ${config.stats_cars_purchased || "14,721+"} cars purchased · 100% free, no obligation`}
             />
           </div>
@@ -70,7 +71,9 @@ const ClarityTemplate = () => {
             {[
               { n: "01", title: "Tell us about your car", body: "Plate or VIN, then a few quick questions." },
               { n: "02", title: "Get your offer", body: "Real cash number in under two minutes. Good for 7 days." },
-              { n: "03", title: "We pick it up", body: "Free pickup at your home or work. We pay on the spot." },
+              config.pickup_offered !== false
+                ? { n: "03", title: "We pick it up", body: "Free pickup at your home or work. We pay on the spot." }
+                : { n: "03", title: "Drop off & get paid", body: "Bring your car in when it's convenient. We pay on the spot." },
             ].map((s) => (
               <div key={s.n} className="space-y-2">
                 <div className="text-xs font-mono text-zinc-400 tracking-wider">{s.n}</div>

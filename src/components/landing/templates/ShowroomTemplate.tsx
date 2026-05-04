@@ -81,7 +81,7 @@ const ShowroomTemplate = () => {
             </p>
             <div className="mt-7 flex items-center gap-2 text-sm text-primary-foreground/80">
               <ShieldCheck className="w-4 h-4 text-success" />
-              {config.price_guarantee_days}-day price guarantee · free pickup
+              {config.price_guarantee_days}-day price guarantee{config.pickup_offered !== false ? " · free pickup" : ""}
             </div>
           </div>
 

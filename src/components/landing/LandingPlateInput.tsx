@@ -26,13 +26,12 @@ interface Props {
   defaultState?: string;
   /** Optional CTA copy override. Defaults to "Get my offer". */
   ctaLabel?: string;
-  /** Optional inline trust line shown directly under the card.
-   *  E.g. "★★★★★ 4.9 · 12,000+ cars purchased". When omitted the
-   *  trust row is hidden — keeps the cluster tight on templates
-   *  that already carry their own social proof above. */
+  /** Optional CTA background color override (hex). When omitted the
+   *  cluster uses the SaaS-grade saturated yellow #FACC15. */
+  ctaColor?: string;
+  /** Optional inline trust line shown directly under the card. */
   trustLine?: string;
-  /** Which lookup tab opens by default. Dealer-controlled in admin
-   *  via site_config.landing_lookup_default. Defaults to 'plate'. */
+  /** Which lookup tab opens by default. */
   defaultLookup?: "plate" | "vin";
 }
 
@@ -58,11 +57,33 @@ interface Props {
  *      → submit, top-to-bottom.
  *   5. Trust line directly under the card (optional, dealer-driven).
  */
+/**
+ * Adjust an arbitrary hex color into a darker hover variant by
+ * dropping each channel by 12 / 256. Cheap-and-cheerful — fine for
+ * the admin-driven CTA color where we just want a visible response
+ * on hover regardless of which yellow / orange / red the dealer picks.
+ */
+const darkenHex = (hex: string, amount = 12): string => {
+  if (!hex.startsWith("#") || hex.length !== 7) return hex;
+  const r = Math.max(0, parseInt(hex.slice(1, 3), 16) - amount);
+  const g = Math.max(0, parseInt(hex.slice(3, 5), 16) - amount);
+  const b = Math.max(0, parseInt(hex.slice(5, 7), 16) - amount);
+  return `#${[r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+};
+
+/** Convert a hex color to an rgb() string so we can compose subtle
+ *  alpha shadows from it without locking to specific tints. */
+const hexToRgb = (hex: string): string => {
+  if (!hex.startsWith("#") || hex.length !== 7) return "0,0,0";
+  return `${parseInt(hex.slice(1, 3), 16)},${parseInt(hex.slice(3, 5), 16)},${parseInt(hex.slice(5, 7), 16)}`;
+};
+
 const LandingPlateInput = ({
   onEngage,
   theme = "light",
   defaultState = "CT",
   ctaLabel = "Get my offer",
+  ctaColor,
   trustLine,
   defaultLookup = "plate",
 }: Props) => {
@@ -137,21 +158,20 @@ const LandingPlateInput = ({
           stateBg: "#FAFAFA",
         };
 
-  // High-saturation conversion yellow. Earlier #FFC72C read as
-  // washed-out cream against a white card; #FFD500 is the saturated
-  // primary yellow used by Carvana / CarMax / IKEA / DHL. Black
-  // copy contrast is ~16:1 (AAA). Hover deepens to #FFC400 so the
-  // button visibly responds without going orange.
-  const ctaBg = "#FFD500";
-  const ctaBgHover = "#FFC400";
+  // SaaS-grade saturated yellow. #FACC15 is Tailwind yellow-400 —
+  // the punchy yellow used across Linear, Substack, modern fintech
+  // CTAs. Reads bright and confident against a white card without
+  // tipping into amber. Earlier #FFD500 with a yellow-halo glow read
+  // washed-out because the halo diluted the perceived saturation;
+  // we now use a clean dark elevation shadow + a tighter inset
+  // highlight, so the button itself stays maximally saturated.
+  // Dealer can override via site_config.landing_cta_color.
+  const ctaBg = ctaColor || "#FACC15";
+  const ctaBgHover = darkenHex(ctaBg, 16);
   const ctaText = "#0A0A0A";
-  // Subtle lift + brand-tinted glow so the CTA pops off the white
-  // card surface — black/grey buttons can stay flat, but a yellow
-  // CTA needs elevation or it reads as a passive label.
   const ctaShadow =
-    "0 6px 18px -4px rgba(255,196,0,0.55), 0 2px 6px -1px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.40)";
-  const ctaShadowHover =
-    "0 10px 24px -4px rgba(255,196,0,0.70), 0 3px 8px -1px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.40)";
+    "0 4px 12px -2px rgba(0,0,0,0.18), 0 2px 4px -1px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.30)";
+  const ctaShadowHover = `0 8px 18px -3px rgba(${hexToRgb(ctaBg)},0.45), 0 3px 6px -1px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.30)`;
 
   const submitDisabled =
     submitting ||
