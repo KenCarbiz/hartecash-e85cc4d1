@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import RunningCarLoader from "./RunningCarLoader";
+import HartecashClassicLoader from "./HartecashClassicLoader";
 
 export type GhostScreenKind =
   | "pulse-orb"
@@ -204,23 +204,10 @@ const GhostScreen = ({
       break;
 
     case "legacy-car":
-      // The original RunningCarLoader, restored to exactly the look
-      // it had on yesterday's compute screen. Two changes vs the
-      // earlier wrapped version that rendered "trash":
-      //   1. size hardcoded to "lg" — yesterday it was always large;
-      //      the new GhostScreen default of "md" shrunk it.
-      //   2. Color falls back to brand-blue #0066CC when the only
-      //      input is GhostScreen's graphite theme defaults
-      //      (#1F2937 / #2C2A26). Graphite made the silhouette look
-      //      dull; brand blue restores the familiar Hartecash motion.
-      {
-        const isGraphiteDefault =
-          accent === "#1F2937" ||
-          accent === "#2C2A26" ||
-          accent === "currentColor";
-        const carColor = isGraphiteDefault ? "#0066CC" : accent;
-        visual = <RunningCarLoader color={carColor} size="lg" />;
-      }
+      // "Hartecash Classic" — the official PNG ghost-car loader the
+      // dealer uses across their public surfaces. Inline-friendly
+      // wrapper around the same artwork PortalSkeleton renders.
+      visual = <HartecashClassicLoader size={size} />;
       break;
 
     case "card-skeleton":

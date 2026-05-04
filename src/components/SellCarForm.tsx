@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Shield, Loader2 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import CalculatingOffer from "@/components/CalculatingOffer";
-import RunningCarLoader from "@/components/landing/RunningCarLoader";
+import GhostScreen, { type GhostScreenKind } from "@/components/landing/GhostScreen";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { track } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
@@ -825,21 +825,20 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default", initial }:
 
   return (
     <div ref={formRef} className={`bg-card rounded-2xl shadow-xl p-6 md:p-8 relative z-10 ${variant === "split" ? "w-full" : "mx-auto -mt-10 mb-10 max-w-lg w-[calc(100%-40px)]"}`}>
-      {/* Hartecash Classic loading overlay during BB lookup. The
-          card is dimmed and the line-art running-car loader takes
-          center stage so the customer sees the same loader on every
-          flow path (SellCarForm or SellFlowSimple). */}
+      {/* Ghost loader overlay during BB lookup. Renders whichever
+          variant the dealer picked in admin (default "Hartecash Classic"
+          = the line-art ghost-car PNG over an animated dashed road). */}
       {bbLoading && (
-        <div className="absolute inset-0 z-20 rounded-2xl bg-card/95 backdrop-blur-sm flex flex-col items-center justify-center text-center p-8">
-          <div className="mb-6" style={{ color: "#5B6B8A" }}>
-            <RunningCarLoader size="lg" />
-          </div>
-          <p className="text-lg font-medium tracking-tight">
-            Looking up your vehicle…
-          </p>
-          <p className="text-sm text-muted-foreground mt-2 max-w-sm">
-            Pulling your vehicle details from the registry.
-          </p>
+        <div className="absolute inset-0 z-20 rounded-2xl bg-card/95 backdrop-blur-sm flex items-center justify-center p-8">
+          <GhostScreen
+            kind={
+              ((config as any).ghost_screen as GhostScreenKind) || "legacy-car"
+            }
+            accent="#5B6B8A"
+            size="lg"
+            headline="Looking up your vehicle…"
+            subhead="Pulling your vehicle details from the registry."
+          />
         </div>
       )}
       {/* Progress - Premium numbered stepper */}
