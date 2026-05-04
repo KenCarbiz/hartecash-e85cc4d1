@@ -184,7 +184,7 @@ const HeritageTemplate = () => {
       <FullscreenWizard open={wizardOpen} onClose={() => setWizardOpen(false)} theme="warm" accent={primary}>
         <LandingForm
           variant="default"
-          initial={initial ? { plate: initial.plate, state: initial.state } : undefined}
+          initial={initial ?? undefined}
           theme="warm"
           loader="hand-drawn"
           accent={primary}

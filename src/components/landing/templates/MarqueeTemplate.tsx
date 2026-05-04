@@ -128,7 +128,7 @@ const MarqueeTemplate = () => {
       <FullscreenWizard open={wizardOpen} onClose={() => setWizardOpen(false)} theme="dark" accent="#FF6A00">
         <LandingForm
           variant="default"
-          initial={initial ? { plate: initial.plate, state: initial.state } : undefined}
+          initial={initial ?? undefined}
           theme="dark"
           loader="brass-arc"
           accent="#FF6A00"

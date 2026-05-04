@@ -73,16 +73,22 @@ const LandingForm = ({ leadSource, variant = "split", initial, theme, loader, ac
   }
 
   // Density-driven dispatch (May-2026 audit). When the LandingPlateInput
-  // hands off plate+state via `initial`, we route into SellFlowSimple
-  // (the 3-screen wizard) for "simple" and "standard" densities. The
-  // "detailed" density and any non-handoff entry (admin preview, embed,
-  // legacy direct mount) keep using the existing SellCarForm.
+  // hands off either plate+state OR a 17-character VIN via `initial`,
+  // we route into SellFlowSimple (the 3-screen wizard) for "simple"
+  // and "standard" densities. The "detailed" density and any
+  // non-handoff entry (admin preview, embed, legacy direct mount) keep
+  // using the existing SellCarForm.
   const density = ((config as any).landing_form_density ?? "simple") as "simple" | "standard" | "detailed";
-  const hasHandoff = !!(initial?.plate && initial?.state);
-  if (hasHandoff && density !== "detailed") {
+  const hasPlateHandoff = !!(initial?.plate && initial?.state);
+  const hasVinHandoff = !!(initial?.vin && initial.vin.length === 17);
+  if ((hasPlateHandoff || hasVinHandoff) && density !== "detailed") {
     return (
       <SellFlowSimple
-        initial={{ plate: initial!.plate as string, state: initial!.state as string }}
+        initial={
+          hasVinHandoff
+            ? { vin: initial!.vin as string }
+            : { plate: initial!.plate as string, state: initial!.state as string }
+        }
         density={density}
         leadSource={leadSource}
         theme={theme}

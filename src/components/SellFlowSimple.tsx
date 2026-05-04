@@ -18,9 +18,12 @@ type Screen = "lookup" | "confirm" | "condition" | "computing" | "offer";
 import RunningCarLoader from "./landing/RunningCarLoader";
 
 interface Props {
-  /** Pre-populated plate + state from the landing-page LandingPlateInput.
-   *  Required — SellFlowSimple is the post-engagement flow. */
-  initial: { plate: string; state: string };
+  /** Pre-populated identifier from the landing-page LandingPlateInput.
+   *  Either a plate+state pair OR a 17-character VIN. Required —
+   *  SellFlowSimple is the post-engagement flow. */
+  initial:
+    | { plate: string; state: string; vin?: undefined }
+    | { vin: string; plate?: undefined; state?: undefined };
   /** Lead source tag for analytics + cadence. */
   leadSource?: string;
   /** Density mode chosen by the dealer in the admin. Defaults to
@@ -88,24 +91,34 @@ const SellFlowSimple = ({
   const [ownership, setOwnership] = useState<"" | "Own" | "Loan" | "Lease">("");
   const [submitting, setSubmitting] = useState(false);
 
-  // Run the BB lookup on mount with the plate/state from the landing.
+  // Run the BB lookup on mount. Uses VIN when the landing handed off
+  // a VIN; otherwise plate + state.
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const lookupBody: Record<string, unknown> = {
-          lookup_type: "plate",
-          plate: initial.plate,
-          state: initial.state,
-          dealership_id: tenant.dealership_id,
-          demo_mode: (config as any)?.demo_mode === true ? true : undefined,
-        };
+        const lookupBody: Record<string, unknown> = initial.vin
+          ? {
+              lookup_type: "vin",
+              vin: initial.vin,
+              dealership_id: tenant.dealership_id,
+              demo_mode: (config as any)?.demo_mode === true ? true : undefined,
+            }
+          : {
+              lookup_type: "plate",
+              plate: initial.plate,
+              state: initial.state,
+              dealership_id: tenant.dealership_id,
+              demo_mode: (config as any)?.demo_mode === true ? true : undefined,
+            };
         const { data, error } = await supabase.functions.invoke("bb-lookup", { body: lookupBody });
         if (cancelled) return;
         if (error || data?.error || !Array.isArray(data?.vehicles) || data.vehicles.length === 0) {
           toast({
             title: "Couldn't identify the vehicle",
-            description: "Try VIN instead, or call us — we'll get the details over the phone.",
+            description: initial.vin
+              ? "Double-check the VIN, or call us — we'll get the details over the phone."
+              : "Try VIN instead, or call us — we'll get the details over the phone.",
             variant: "destructive",
           });
           return;
@@ -126,7 +139,7 @@ const SellFlowSimple = ({
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initial.plate, initial.state]);
+  }, [initial.plate, initial.state, initial.vin]);
 
   const continueToCondition = () => {
     if (!mileage.trim()) {
@@ -163,8 +176,9 @@ const SellFlowSimple = ({
     try {
       const formData: FormData = {
         ...initialFormData,
-        plate: initial.plate,
-        state: initial.state,
+        plate: initial.plate || "",
+        state: initial.state || "",
+        vin: initial.vin || bbVehicle.vin || "",
         mileage: mileage.replace(/[^0-9]/g, ""),
         overallCondition,
         accidents: accidents || "No",
