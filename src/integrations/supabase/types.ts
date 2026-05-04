@@ -2779,6 +2779,7 @@ export type Database = {
           buying_center_location_id: string | null
           comparison_features: Json
           competitor_columns: Json
+          condition_card_style: string
           created_at: string
           cta_accept_color: string
           cta_offer_color: string
@@ -2883,6 +2884,7 @@ export type Database = {
           buying_center_location_id?: string | null
           comparison_features?: Json
           competitor_columns?: Json
+          condition_card_style?: string
           created_at?: string
           cta_accept_color?: string
           cta_offer_color?: string
@@ -2987,6 +2989,7 @@ export type Database = {
           buying_center_location_id?: string | null
           comparison_features?: Json
           competitor_columns?: Json
+          condition_card_style?: string
           created_at?: string
           cta_accept_color?: string
           cta_offer_color?: string
