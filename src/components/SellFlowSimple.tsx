@@ -16,7 +16,9 @@ import { logConsent } from "@/lib/consent";
 type Screen = "lookup" | "confirm" | "condition" | "computing" | "offer";
 
 import RunningCarLoader from "./landing/RunningCarLoader";
-import GhostScreen, { type GhostScreenKind } from "./landing/GhostScreen";
+import GhostScreen from "./landing/GhostScreen";
+import { useGhostScreen } from "@/hooks/useGhostScreen";
+import { GhostSyncIndicator } from "@/components/PortalSkeleton";
 
 interface Props {
   /** Pre-populated identifier from the landing-page LandingPlateInput.
@@ -80,7 +82,6 @@ const SellFlowSimple = ({
   density = "simple",
   theme = "light",
   loader = "thin-line",
-  ghost = "legacy-car",
   ghostHeadline,
   ghostSubhead,
   accent,
@@ -89,6 +90,7 @@ const SellFlowSimple = ({
   const { toast } = useToast();
   const { config } = useSiteConfig();
   const { tenant } = useTenant();
+  const { kind: ghostKind, syncing: ghostSyncing, ready: ghostReady, stale: ghostStale } = useGhostScreen();
 
   // Dealer-controlled CTA color for the wizard's Continue / Get-my-offer
   // buttons. Inherits the landing-page color so the customer sees the
@@ -329,22 +331,23 @@ const SellFlowSimple = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="min-h-[400px] flex items-center justify-center"
+            className="min-h-[400px] flex items-center justify-center relative"
           >
-            <GhostScreen
-              kind={
-                ((config as any).ghost_screen as GhostScreenKind) ||
-                "legacy-car"
-              }
-              accent={accent || "#0066CC"}
-              size="lg"
-              headline="Finding your vehicle"
-              subhead={
-                initial.vin
-                  ? `Looking up VIN ${initial.vin}`
-                  : `Looking up ${initial.plate} on the ${initial.state} registry`
-              }
-            />
+            {ghostReady && (
+              <GhostScreen
+                kind={ghostKind}
+                accent={accent || "#0066CC"}
+                size="lg"
+                headline={ghostHeadline || "Finding your vehicle"}
+                subhead={
+                  ghostSubhead ||
+                  (initial.vin
+                    ? `Looking up VIN ${initial.vin}`
+                    : `Looking up ${initial.plate} on the ${initial.state} registry`)
+                }
+              />
+            )}
+            <GhostSyncIndicator syncing={ghostSyncing} stale={ghostStale} />
           </motion.div>
         )}
 
