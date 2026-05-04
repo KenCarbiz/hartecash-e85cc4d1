@@ -92,6 +92,13 @@ const SellFlowSimple = ({
   const { config } = useSiteConfig();
   const { tenant } = useTenant();
 
+  // Dealer-controlled CTA color for the wizard's Continue / Get-my-offer
+  // buttons. Inherits the landing-page color so the customer sees the
+  // same primary action color end-to-end. Falls back to the shadcn
+  // Button default (theme primary) when no override is set.
+  const ctaBg = (config as any).landing_cta_color || undefined;
+  const ctaText = ctaBg ? "#0A0A0A" : undefined;
+
   const [screen, setScreen] = useState<Screen>("lookup");
   const [bbVehicle, setBbVehicle] = useState<BBVehicle | null>(null);
   const [mileage, setMileage] = useState("");
@@ -426,6 +433,7 @@ const SellFlowSimple = ({
                 disabled={!mileage.trim()}
                 size="lg"
                 className="h-14 px-7 rounded-full text-base font-semibold"
+                style={ctaBg ? { background: ctaBg, color: ctaText } : undefined}
               >
                 Continue
                 <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
@@ -536,6 +544,7 @@ const SellFlowSimple = ({
                 disabled={submitting}
                 size="lg"
                 className="h-14 px-7 rounded-full text-base font-semibold"
+                style={ctaBg ? { background: ctaBg, color: ctaText } : undefined}
               >
                 Get my offer
                 <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
