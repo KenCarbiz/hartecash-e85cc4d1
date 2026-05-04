@@ -41,6 +41,7 @@ const PushPullTow = lazy(() => import("./pages/PushPullTow"));
 const DealAccepted = lazy(() => import("./pages/DealAccepted"));
 const OfferDisclosure = lazy(() => import("./pages/OfferDisclosure"));
 const Updates = lazy(() => import("./pages/Updates"));
+const PreviewLoader = lazy(() => import("./pages/PreviewLoader"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const ExecutiveDashboard = lazy(() => import("./pages/ExecutiveDashboard"));
 const InspectionSheet = lazy(() => import("./pages/InspectionSheet"));
@@ -59,7 +60,6 @@ const PlanPage = lazy(() => import("./pages/PlanPage"));
 const StatusPage = lazy(() => import("./pages/StatusPage"));
 const SlaPage = lazy(() => import("./pages/SlaPage"));
 const DocsLanding = lazy(() => import("./pages/DocsLanding"));
-const LoaderPreview = lazy(() => import("./pages/LoaderPreview"));
 const GroupLandingPage = lazy(() => import("./pages/GroupLandingPage"));
 // /billing removed — /plan is now the canonical billing surface, with
 // a "Manage billing" button that opens the Stripe Customer Portal
@@ -121,7 +121,6 @@ const AnimatedRoutes = () => {
       <main id="main-content" tabIndex={-1}>
       <Routes>
         <Route path="/" element={<Index />} />
-        <Route path="/preview/loader" element={<LoaderPreview />} />
         {/* Subdirectory rooftop URL — preferred for SEO, pools authority to
             the main domain. Renders the same Index; TenantContext resolves
             the rooftop from the slug path segment. */}
@@ -154,6 +153,7 @@ const AnimatedRoutes = () => {
         <Route path="/deal/:token" element={<DealAccepted />} />
         <Route path="/disclosure" element={<OfferDisclosure />} />
         <Route path="/updates" element={<Updates />} />
+        <Route path="/preview/loader" element={<PreviewLoader />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/executive" element={<ProtectedRoute><ExecutiveDashboard /></ProtectedRoute>} />
         <Route path="/inspection/:id" element={<InspectionSheet />} />

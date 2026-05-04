@@ -181,10 +181,12 @@ const LandingPlateInput = ({
   // near-black for the default punchy yellow.
   const ctaText =
     ctaTextColor || (ctaColor?.startsWith("hsl(") ? "#FFFFFF" : "#0A0A0A");
+  // Shadow without the 1px white inset highlight that was washing out
+  // the top edge of the chosen color. Pure dark elevation only.
   const ctaShadow =
-    "0 4px 12px -2px rgba(0,0,0,0.18), 0 2px 4px -1px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.30)";
+    "0 4px 12px -2px rgba(0,0,0,0.18), 0 2px 4px -1px rgba(0,0,0,0.10)";
   const ctaShadowHover = canDeriveHover(ctaBg)
-    ? `0 8px 18px -3px rgba(${hexToRgb(ctaBg)},0.45), 0 3px 6px -1px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.30)`
+    ? `0 8px 18px -3px rgba(${hexToRgb(ctaBg)},0.45), 0 3px 6px -1px rgba(0,0,0,0.16)`
     : ctaShadow;
 
   const submitDisabled =
@@ -346,7 +348,7 @@ const LandingPlateInput = ({
             <button
               type="submit"
               disabled={submitDisabled}
-              className="font-sans h-14 sm:h-16 px-7 rounded-2xl text-base sm:text-[17px] font-bold inline-flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed sm:flex-shrink-0"
+              className="font-sans h-14 sm:h-16 px-7 rounded-2xl text-base sm:text-[17px] font-bold inline-flex items-center justify-center gap-2 transition-all disabled:cursor-not-allowed sm:flex-shrink-0"
               style={{ background: ctaBg, color: ctaText, boxShadow: ctaShadow }}
               onMouseEnter={(e) => {
                 if (!submitDisabled) {
