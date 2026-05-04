@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
+import type { ValueProp, ValuePropIcon } from "@/hooks/useSiteConfig";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Save, Loader2, ChevronDown, Building2, Palette, Type, BarChart3, Upload, Star, Sparkles, Eye, ScanLine, MapPin, FileText, GitCompare, Clock, Facebook, Instagram, Youtube, Globe, Plus, Trash2, Gift } from "lucide-react";
+import { Save, Loader2, ChevronDown, Building2, Palette, Type, BarChart3, Upload, Star, Sparkles, Eye, ScanLine, MapPin, FileText, GitCompare, Clock, Facebook, Instagram, Youtube, Globe, Plus, Trash2, Gift, Award, Shield, ShieldCheck, DollarSign, Truck, ThumbsUp, Users, Wrench, Heart, Banknote, type LucideIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import CalculatingOffer from "@/components/CalculatingOffer";
 import AboutPageConfig from "@/components/admin/AboutPageConfig";
@@ -38,6 +39,7 @@ interface SiteConfig {
   stats_years_in_business: string;
   stats_rating: string;
   stats_reviews_count: string;
+  value_props: ValueProp[] | null;
   review_request_subject: string;
   review_request_message: string;
   enable_animations: boolean;
@@ -94,6 +96,7 @@ const DEFAULT_CONFIG: SiteConfig = {
   stats_years_in_business: "78 yrs",
   stats_rating: "4.9",
   stats_reviews_count: "2,400+",
+  value_props: null,
   review_request_subject: "We'd Love Your Feedback!",
   review_request_message: "Thank you for choosing us! We hope you had a great experience selling your vehicle. Would you take a moment to share your feedback? Your review helps other car owners make the right choice.",
   enable_animations: false,
@@ -179,6 +182,148 @@ interface DealerLocation {
   state: string;
 }
 
+/** Icon catalog mirrors the same map in src/components/ValueProps.tsx.
+ *  Keeping it inline keeps the picker self-contained — the dealer
+ *  picks from these labels and the public landing renders the
+ *  matching lucide icon. */
+const VALUE_PROP_ICON_OPTIONS: { value: ValuePropIcon; label: string; Icon: LucideIcon }[] = [
+  { value: "shield",       label: "Shield",        Icon: Shield },
+  { value: "shield-check", label: "Shield Check",  Icon: ShieldCheck },
+  { value: "dollar",       label: "Dollar",        Icon: DollarSign },
+  { value: "clock",        label: "Clock",         Icon: Clock },
+  { value: "truck",        label: "Truck",         Icon: Truck },
+  { value: "award",        label: "Award",         Icon: Award },
+  { value: "thumbs-up",    label: "Thumbs Up",     Icon: ThumbsUp },
+  { value: "users",        label: "People",        Icon: Users },
+  { value: "wrench",       label: "Wrench",        Icon: Wrench },
+  { value: "heart",        label: "Heart",         Icon: Heart },
+  { value: "star",         label: "Star",          Icon: Star },
+  { value: "map-pin",      label: "Pin",           Icon: MapPin },
+  { value: "banknote",     label: "Banknote",      Icon: Banknote },
+];
+
+interface ValuePropsEditorProps {
+  value: ValueProp[] | null;
+  fallbackDays: number;
+  onChange: (next: ValueProp[]) => void;
+}
+
+const ValuePropsEditor = ({ value, fallbackDays, onChange }: ValuePropsEditorProps) => {
+  // Always show six rows. If the dealer hasn't customized, seed
+  // with the same defaults the public ValueProps component uses.
+  const seed: ValueProp[] = [
+    { icon: "shield",       title: `${fallbackDays}-Day Price Guarantee`, body: `Your offer is locked in for ${fallbackDays} full days. No pressure, no surprises — sell on your schedule.`, highlight: true },
+    { icon: "dollar",       title: "Top Dollar Guaranteed", body: "We use real-time market data to ensure you get the best price." },
+    { icon: "clock",        title: "Offer in 2 Minutes",    body: "No waiting around — get your cash offer almost instantly." },
+    { icon: "truck",        title: "Free Pickup",           body: "We come to your home or office. Zero hassle on your end. Available on select transactions." },
+    { icon: "shield-check", title: "Trusted Dealership",    body: "Family-owned. Thousands of happy customers." },
+    { icon: "banknote",     title: "Same-Day Payment",      body: "Money in your account the moment you accept — no waiting weeks for a check." },
+  ];
+
+  const cards: ValueProp[] = (() => {
+    const base = Array.isArray(value) && value.length > 0 ? [...value] : [];
+    while (base.length < 6) base.push({ ...seed[base.length] });
+    return base.slice(0, 6);
+  })();
+
+  const updateCard = (i: number, patch: Partial<ValueProp>) => {
+    const next = cards.map((c, idx) => (idx === i ? { ...c, ...patch } : c));
+    onChange(next);
+  };
+
+  const setSingleHighlight = (i: number, on: boolean) => {
+    // Only one card can be highlighted at a time. Flip the others off.
+    const next = cards.map((c, idx) => ({
+      ...c,
+      highlight: idx === i ? on : false,
+    }));
+    onChange(next);
+  };
+
+  return (
+    <div className="space-y-4">
+      {cards.map((card, i) => {
+        const ChosenIcon =
+          VALUE_PROP_ICON_OPTIONS.find((o) => o.value === card.icon)?.Icon || Shield;
+        return (
+          <div
+            key={i}
+            className={`rounded-lg border p-4 ${
+              card.highlight ? "border-success/50 bg-success/5" : "border-border bg-muted/20"
+            }`}
+          >
+            <div className="flex items-center justify-between mb-3 gap-3">
+              <div className="flex items-center gap-2">
+                <div
+                  className={`w-9 h-9 rounded-md flex items-center justify-center ${
+                    card.highlight ? "bg-success/15 text-success" : "bg-primary/10 text-primary"
+                  }`}
+                >
+                  <ChosenIcon className="w-4 h-4" />
+                </div>
+                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Card {i + 1}
+                </span>
+              </div>
+              <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={!!card.highlight}
+                  onChange={(e) => setSingleHighlight(i, e.target.checked)}
+                  className="h-4 w-4 rounded border-border accent-success"
+                />
+                Highlighted
+              </label>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+              <div className="md:col-span-1">
+                <Label className="text-[11px] font-semibold uppercase tracking-wider mb-1 block">
+                  Icon
+                </Label>
+                <select
+                  value={card.icon}
+                  onChange={(e) => updateCard(i, { icon: e.target.value as ValuePropIcon })}
+                  className="w-full h-9 px-3 rounded-md border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                >
+                  {VALUE_PROP_ICON_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="md:col-span-2">
+                <Label className="text-[11px] font-semibold uppercase tracking-wider mb-1 block">
+                  Title (bold)
+                </Label>
+                <Input
+                  value={card.title}
+                  onChange={(e) => updateCard(i, { title: e.target.value })}
+                  placeholder="Top Dollar Guaranteed"
+                />
+              </div>
+            </div>
+            <div>
+              <Label className="text-[11px] font-semibold uppercase tracking-wider mb-1 block">
+                Body (regular)
+              </Label>
+              <Input
+                value={card.body}
+                onChange={(e) => updateCard(i, { body: e.target.value })}
+                placeholder="Short description of this benefit."
+              />
+            </div>
+          </div>
+        );
+      })}
+      <p className="text-[11px] text-muted-foreground">
+        Only one card can be highlighted at a time. Card 1 highlighted by default.
+      </p>
+    </div>
+  );
+};
+
 const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
   const { tenant } = useTenant();
   const dealershipId = tenant.dealership_id;
@@ -213,7 +358,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
     setLoading(false);
   };
 
-  const update = (field: keyof SiteConfig, value: string | number) => {
+  const update = (field: keyof SiteConfig, value: string | number | unknown) => {
     setConfig(prev => {
       const next = { ...prev, [field]: value };
       setHasChanges(JSON.stringify(next) !== JSON.stringify(savedConfig));
@@ -905,6 +1050,20 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
             <Input value={config.stats_reviews_count} onChange={e => update("stats_reviews_count", e.target.value)} placeholder="2,400+" />
           </div>
         </div>
+      </Section>
+
+      {/* "Why Sell to {dealer}?" cards — six dealer-editable rows
+          with title, body, icon, and optional highlight flag. The
+          first card is highlighted by default. */}
+      <Section icon={Award} title="Why Sell to Us — Cards">
+        <p className="text-xs text-muted-foreground mb-4">
+          Six cards shown in the &quot;Why Sell to {(config.dealership_name || "Us").split(" ")[0]}?&quot; section on the public landing. Each card has a bold title and a regular-weight body. Mark one card as highlighted to emphasize it visually.
+        </p>
+        <ValuePropsEditor
+          value={config.value_props}
+          fallbackDays={config.price_guarantee_days || 8}
+          onChange={(next) => update("value_props" as keyof SiteConfig, next as unknown as string)}
+        />
       </Section>
 
       {/* Animations */}
