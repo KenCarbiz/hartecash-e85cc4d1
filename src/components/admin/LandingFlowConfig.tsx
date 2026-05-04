@@ -305,42 +305,73 @@ const LandingFlowConfig = () => {
       }
     }
 
-    // Pass 1.7 — ghost_screen + copy (best-effort)
-    const ghostChanged =
-      state.ghost_screen !== saved.ghost_screen ||
-      state.ghost_headline !== saved.ghost_headline ||
-      state.ghost_subhead !== saved.ghost_subhead;
-    let ghostSkipped = false;
-    if (ghostChanged) {
-      const { error: gErr } = await supabase
+    // Pass 1.7 — ghost variant + copy. Each column writes
+    // independently so that a single missing column (e.g. PostgREST
+    // hasn't cached the new ghost_subhead yet) can't silently drop
+    // the dealer's variant pick. Customer-flagged: picker was
+    // "stuck on Vehicle Card" because the combined UPDATE failed
+    // whenever ANY of the three columns was unknown to the schema
+    // cache, dropping the ghost_screen value with it.
+    const writeIfChanged = async (
+      key: "ghost_screen" | "ghost_headline" | "ghost_subhead",
+      newVal: unknown,
+      oldVal: unknown,
+    ): Promise<{ skipped: boolean; hardFailMsg?: string }> => {
+      if (newVal === oldVal) return { skipped: false };
+      const { error: e } = await supabase
         .from("site_config" as any)
-        .update({
-          ghost_screen: state.ghost_screen,
-          ghost_headline: state.ghost_headline.trim() || null,
-          ghost_subhead: state.ghost_subhead.trim() || null,
-          updated_at: new Date().toISOString(),
-        } as any)
+        .update({ [key]: newVal, updated_at: new Date().toISOString() } as any)
         .eq("dealership_id", dealershipId);
-      if (gErr) {
-        const lower = gErr.message?.toLowerCase() || "";
-        const code = (gErr as any).code || "";
-        const missingGhost =
-          lower.includes("ghost_screen") ||
-          lower.includes("ghost_headline") ||
-          lower.includes("ghost_subhead") ||
-          lower.includes("landing_lookup_default") ||
-          lower.includes("landing_cta_color") ||
-          lower.includes("schema cache") ||
-          code === "PGRST204" ||
-          (lower.includes("column") && lower.includes("does not exist"));
-        if (!missingGhost) {
-          setSaving(false);
-          toast({ title: "Save failed", description: gErr.message, variant: "destructive" });
-          return;
-        }
-        ghostSkipped = true;
-      }
+      if (!e) return { skipped: false };
+      const lower = e.message?.toLowerCase() || "";
+      const code = (e as any).code || "";
+      const isCacheMiss =
+        lower.includes(key) ||
+        lower.includes("schema cache") ||
+        code === "PGRST204" ||
+        (lower.includes("column") && lower.includes("does not exist"));
+      if (isCacheMiss) return { skipped: true };
+      return { skipped: false, hardFailMsg: e.message };
+    };
+
+    const ghostScreenWrite = await writeIfChanged(
+      "ghost_screen",
+      state.ghost_screen,
+      saved.ghost_screen,
+    );
+    if (ghostScreenWrite.hardFailMsg) {
+      setSaving(false);
+      toast({ title: "Save failed", description: ghostScreenWrite.hardFailMsg, variant: "destructive" });
+      return;
     }
+    const ghostHeadlineWrite = await writeIfChanged(
+      "ghost_headline",
+      state.ghost_headline.trim() || null,
+      saved.ghost_headline,
+    );
+    if (ghostHeadlineWrite.hardFailMsg) {
+      setSaving(false);
+      toast({ title: "Save failed", description: ghostHeadlineWrite.hardFailMsg, variant: "destructive" });
+      return;
+    }
+    const ghostSubheadWrite = await writeIfChanged(
+      "ghost_subhead",
+      state.ghost_subhead.trim() || null,
+      saved.ghost_subhead,
+    );
+    if (ghostSubheadWrite.hardFailMsg) {
+      setSaving(false);
+      toast({ title: "Save failed", description: ghostSubheadWrite.hardFailMsg, variant: "destructive" });
+      return;
+    }
+    // Treat the WHOLE ghost section as skipped only when every part
+    // of it failed. The variant pick (ghost_screen) is the most
+    // important — if it succeeded but the copy fields didn't, the
+    // dealer still gets the variant they wanted.
+    const ghostSkipped =
+      ghostScreenWrite.skipped &&
+      ghostHeadlineWrite.skipped &&
+      ghostSubheadWrite.skipped;
 
     // Pass 1.6 — pickup_offered (best-effort, may not be deployed yet)
     const pickupChanged = state.pickup_offered !== saved.pickup_offered;
