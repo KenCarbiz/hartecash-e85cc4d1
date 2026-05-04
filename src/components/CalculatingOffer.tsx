@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import ghostCar from "@/assets/ghost-loader.png";
+import GhostScreen, { type GhostScreenKind } from "@/components/landing/GhostScreen";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 interface Props {
   vehicleYear?: string;
@@ -9,7 +10,19 @@ interface Props {
   previewMode?: boolean;
 }
 
-const CalculatingOffer = ({ vehicleYear, vehicleMake, vehicleModel, onComplete, previewMode }: Props) => {
+/**
+ * Shown while we pull vehicle data after the customer enters a VIN /
+ * plate. Renders the dealer-selected ghost-screen variant configured
+ * in admin → Branding → Landing → Ghost Screen.
+ */
+const CalculatingOffer = ({
+  vehicleYear,
+  vehicleMake,
+  vehicleModel,
+  onComplete,
+  previewMode,
+}: Props) => {
+  const { config } = useSiteConfig();
   const vehicleStr = [vehicleYear, vehicleMake, vehicleModel].filter(Boolean).join(" ");
 
   useEffect(() => {
@@ -18,35 +31,18 @@ const CalculatingOffer = ({ vehicleYear, vehicleMake, vehicleModel, onComplete, 
     return () => clearTimeout(t);
   }, [previewMode, onComplete]);
 
+  const kind = (((config as any)?.ghost_screen as GhostScreenKind) ||
+    "legacy-car") as GhostScreenKind;
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="text-center">
-        <div className="relative mx-auto mb-4 w-[320px] h-[200px]">
-          <img
-            src={ghostCar}
-            alt=""
-            className="w-full h-full object-contain"
-            style={{ animation: "car-bounce 1.2s ease-in-out infinite" }}
-          />
-          <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 320 200">
-            <style>{`
-              @keyframes car-bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
-              @keyframes road-scroll { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -40; } }
-            `}</style>
-            <line
-              x1="0" y1="170" x2="320" y2="170"
-              stroke="hsl(var(--muted-foreground))"
-              strokeWidth="2"
-              strokeDasharray="12 8"
-              opacity="0.4"
-              style={{ animation: "road-scroll 0.6s linear infinite" }}
-            />
-          </svg>
-        </div>
-        <p className="text-sm font-medium text-muted-foreground animate-pulse">
-          {vehicleStr ? `Pulling info for your ${vehicleStr}...` : "Pulling your vehicle info..."}
-        </p>
-      </div>
+      <GhostScreen
+        kind={kind}
+        accent="#5B6B8A"
+        background="transparent"
+        headline={vehicleStr ? `Pulling info for your ${vehicleStr}` : "Pulling your vehicle info"}
+        size="lg"
+      />
     </div>
   );
 };
