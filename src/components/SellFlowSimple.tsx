@@ -97,7 +97,7 @@ const SellFlowSimple = ({
   // same primary action color end-to-end. Falls back to the shadcn
   // Button default (theme primary) when no override is set.
   const ctaBg = "hsl(var(--cta-offer))";
-  const ctaText = "#FFFFFF";
+  const ctaText = "var(--cta-offer-text)";
 
   const [screen, setScreen] = useState<Screen>("lookup");
   const [bbVehicle, setBbVehicle] = useState<BBVehicle | null>(null);

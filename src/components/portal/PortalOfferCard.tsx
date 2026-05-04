@@ -246,8 +246,8 @@ const PortalOfferCard = ({
         ) : (
           <Link to={`/offer/${token}`}>
             <Button
-              className="w-full py-5 text-base font-bold text-white shadow-lg gap-2 rounded-xl mt-4"
-              style={{ backgroundColor: "hsl(var(--cta-accept))", boxShadow: "0 10px 15px -3px hsl(var(--cta-accept) / 0.2)" }}
+              className="w-full py-5 text-base font-bold shadow-lg gap-2 rounded-xl mt-4"
+              style={{ backgroundColor: "hsl(var(--cta-accept))", color: "var(--cta-accept-text)", boxShadow: "0 10px 15px -3px hsl(var(--cta-accept) / 0.2)" }}
             >
               <CheckCircle className="w-5 h-5" />
               Accept & Lock In Your Price

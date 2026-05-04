@@ -897,8 +897,8 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default", initial }:
               type="button"
               onClick={handleNext}
               disabled={bbLoading}
-              className="flex-1 py-4 text-white text-[17px] font-bold shadow-lg hover:-translate-y-0.5 transition-all"
-              style={{ backgroundColor: "hsl(var(--cta-offer))", boxShadow: "0 10px 15px -3px hsl(var(--cta-offer) / 0.3)" }}
+              className="flex-1 py-4 text-[17px] font-bold shadow-lg hover:-translate-y-0.5 transition-all"
+              style={{ backgroundColor: "hsl(var(--cta-offer))", color: "var(--cta-offer-text)", boxShadow: "0 10px 15px -3px hsl(var(--cta-offer) / 0.3)" }}
             >
               {bbLoading ? (
                 <span className="flex items-center gap-2">
@@ -913,8 +913,8 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default", initial }:
             <Button
               type="submit"
               disabled={submitting}
-              className="flex-1 py-4 text-white text-[17px] font-bold shadow-lg hover:-translate-y-0.5 transition-all"
-              style={{ backgroundColor: "hsl(var(--cta-offer))", boxShadow: "0 10px 15px -3px hsl(var(--cta-offer) / 0.3)" }}
+              className="flex-1 py-4 text-[17px] font-bold shadow-lg hover:-translate-y-0.5 transition-all"
+              style={{ backgroundColor: "hsl(var(--cta-offer))", color: "var(--cta-offer-text)", boxShadow: "0 10px 15px -3px hsl(var(--cta-offer) / 0.3)" }}
             >
               {submitting ? (
                 <span className="flex items-center gap-2">
