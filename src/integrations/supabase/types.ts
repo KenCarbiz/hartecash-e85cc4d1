@@ -2788,6 +2788,9 @@ export type Database = {
           facebook_url: string | null
           favicon_url: string | null
           file_layout: string | null
+          ghost_headline: string | null
+          ghost_screen: string
+          ghost_subhead: string | null
           google_review_url: string | null
           hero_headline: string
           hero_layout: string
@@ -2880,6 +2883,9 @@ export type Database = {
           facebook_url?: string | null
           favicon_url?: string | null
           file_layout?: string | null
+          ghost_headline?: string | null
+          ghost_screen?: string
+          ghost_subhead?: string | null
           google_review_url?: string | null
           hero_headline?: string
           hero_layout?: string
@@ -2972,6 +2978,9 @@ export type Database = {
           facebook_url?: string | null
           favicon_url?: string | null
           file_layout?: string | null
+          ghost_headline?: string | null
+          ghost_screen?: string
+          ghost_subhead?: string | null
           google_review_url?: string | null
           hero_headline?: string
           hero_layout?: string
