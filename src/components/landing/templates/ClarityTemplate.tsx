@@ -54,7 +54,8 @@ const ClarityTemplate = () => {
               onEngage={handleEngage}
               theme="light"
               ctaLabel="Get my offer"
-              ctaColor="hsl(var(--cta-offer))"
+              ctaColor={config.landing_cta_color || undefined}
+              ctaTextColor={config.landing_cta_text_color || undefined}
               defaultLookup={config.landing_lookup_default || "vin"}
               trustLine={`★ ${config.stats_rating || "4.9"} · ${config.stats_cars_purchased || "14,721+"} cars purchased · 100% free, no obligation`}
             />

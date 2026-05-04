@@ -29,6 +29,11 @@ interface Props {
   /** Optional CTA background color override (hex). When omitted the
    *  cluster uses the SaaS-grade saturated yellow #FACC15. */
   ctaColor?: string;
+  /** Optional CTA text color override (hex). When omitted defaults
+   *  to near-black (#0A0A0A) which reads well on the yellow default;
+   *  dealers picking a darker button color should set this to #FFFFFF
+   *  or a contrasting hue. */
+  ctaTextColor?: string;
   /** Optional inline trust line shown directly under the card. */
   trustLine?: string;
   /** Which lookup tab opens by default. */
@@ -86,6 +91,7 @@ const LandingPlateInput = ({
   defaultState = "CT",
   ctaLabel = "Get my offer",
   ctaColor,
+  ctaTextColor,
   trustLine,
   defaultLookup = "plate",
 }: Props) => {
@@ -170,7 +176,11 @@ const LandingPlateInput = ({
   // Dealer can override via site_config.landing_cta_color.
   const ctaBg = ctaColor || "#FACC15";
   const ctaBgHover = canDeriveHover(ctaBg) ? darkenHex(ctaBg, 16) : ctaBg;
-  const ctaText = ctaColor?.startsWith("hsl(") ? "#FFFFFF" : "#0A0A0A";
+  // Dealer-controlled text color first; falls back to white when the
+  // background is an HSL var (theme primary, often dark), else
+  // near-black for the default punchy yellow.
+  const ctaText =
+    ctaTextColor || (ctaColor?.startsWith("hsl(") ? "#FFFFFF" : "#0A0A0A");
   const ctaShadow =
     "0 4px 12px -2px rgba(0,0,0,0.18), 0 2px 4px -1px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.30)";
   const ctaShadowHover = canDeriveHover(ctaBg)

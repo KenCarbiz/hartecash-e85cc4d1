@@ -62,6 +62,10 @@ interface State {
   ghost_subhead: string;
   /** Which lookup tab opens by default on the landing cluster. */
   landing_lookup_default: "plate" | "vin";
+  /** Optional dealer override for the CTA button background (hex). */
+  landing_cta_color: string;
+  /** Optional dealer override for the CTA button text color (hex). */
+  landing_cta_text_color: string;
 }
 
 const DEFAULTS: State = {
@@ -73,6 +77,8 @@ const DEFAULTS: State = {
   ghost_headline: "",
   ghost_subhead: "",
   landing_lookup_default: "plate",
+  landing_cta_color: "",
+  landing_cta_text_color: "",
 };
 
 const GHOST_OPTIONS: { value: GhostScreenKind; label: string; description: string }[] = [
@@ -104,7 +110,7 @@ const LandingFlowConfig = () => {
       let row: any = null;
       const wide = await supabase
         .from("site_config" as any)
-        .select("landing_template, landing_form_variant, landing_form_density, pickup_offered, ghost_screen, ghost_headline, ghost_subhead, landing_lookup_default")
+        .select("landing_template, landing_form_variant, landing_form_density, pickup_offered, ghost_screen, ghost_headline, ghost_subhead, landing_lookup_default, landing_cta_color, landing_cta_text_color")
         .eq("dealership_id", dealershipId)
         .maybeSingle();
       if (wide.error) {
@@ -145,6 +151,9 @@ const LandingFlowConfig = () => {
         landing_lookup_default:
           (row?.landing_lookup_default as "plate" | "vin") ||
           DEFAULTS.landing_lookup_default,
+        landing_cta_color: row?.landing_cta_color ?? DEFAULTS.landing_cta_color,
+        landing_cta_text_color:
+          row?.landing_cta_text_color ?? DEFAULTS.landing_cta_text_color,
       };
       setState(next);
       setSaved(next);
@@ -160,7 +169,9 @@ const LandingFlowConfig = () => {
     state.ghost_screen !== saved.ghost_screen ||
     state.ghost_headline !== saved.ghost_headline ||
     state.ghost_subhead !== saved.ghost_subhead ||
-    state.landing_lookup_default !== saved.landing_lookup_default;
+    state.landing_lookup_default !== saved.landing_lookup_default ||
+    state.landing_cta_color !== saved.landing_cta_color ||
+    state.landing_cta_text_color !== saved.landing_cta_text_color;
 
   const handleSave = async () => {
     setSaving(true);
@@ -259,6 +270,38 @@ const LandingFlowConfig = () => {
           return;
         }
         lookupSkipped = true;
+      }
+    }
+
+    // Pass 1.66 — landing CTA colors (button bg + text, both best-effort)
+    const ctaColorChanged =
+      state.landing_cta_color !== saved.landing_cta_color ||
+      state.landing_cta_text_color !== saved.landing_cta_text_color;
+    let ctaColorSkipped = false;
+    if (ctaColorChanged) {
+      const { error: cErr } = await supabase
+        .from("site_config" as any)
+        .update({
+          landing_cta_color: state.landing_cta_color.trim() || null,
+          landing_cta_text_color: state.landing_cta_text_color.trim() || null,
+          updated_at: new Date().toISOString(),
+        } as any)
+        .eq("dealership_id", dealershipId);
+      if (cErr) {
+        const lower = cErr.message?.toLowerCase() || "";
+        const code = (cErr as any).code || "";
+        const missing =
+          lower.includes("landing_cta_color") ||
+          lower.includes("landing_cta_text_color") ||
+          lower.includes("schema cache") ||
+          code === "PGRST204" ||
+          (lower.includes("column") && lower.includes("does not exist"));
+        if (!missing) {
+          setSaving(false);
+          toast({ title: "Save failed", description: cErr.message, variant: "destructive" });
+          return;
+        }
+        ctaColorSkipped = true;
       }
     }
 
@@ -368,6 +411,12 @@ const LandingFlowConfig = () => {
       ...(densitySkipped ? { landing_form_density: saved.landing_form_density } : {}),
       ...(pickupSkipped ? { pickup_offered: saved.pickup_offered } : {}),
       ...(lookupSkipped ? { landing_lookup_default: saved.landing_lookup_default } : {}),
+      ...(ctaColorSkipped
+        ? {
+            landing_cta_color: saved.landing_cta_color,
+            landing_cta_text_color: saved.landing_cta_text_color,
+          }
+        : {}),
       ...(ghostSkipped
         ? {
             ghost_screen: saved.ghost_screen,
@@ -576,6 +625,105 @@ const LandingFlowConfig = () => {
                 state.pickup_offered ? "translate-x-6" : "translate-x-1"
               }`}
             />
+          </button>
+        </div>
+      </section>
+
+      {/* ── CTA button colors ──
+          One pair of colors (background + text) drives the landing's
+          Get-my-offer button, the wizard's Continue / Get-my-offer
+          buttons, AND the offer page Accept slider. Empty = punchy
+          yellow #FACC15 background + near-black #0A0A0A text. */}
+      <section className="bg-card rounded-xl border border-border p-6">
+        <div className="flex items-start justify-between gap-4 mb-4">
+          <div>
+            <h3 className="font-bold mb-1">CTA button colors</h3>
+            <p className="text-xs text-muted-foreground max-w-prose">
+              Drives the color and text on the landing's{" "}
+              <strong>Get my offer</strong> button, the wizard's{" "}
+              <strong>Continue</strong> / <strong>Get my offer</strong>{" "}
+              buttons, and the offer page's <strong>Accept</strong> button.
+              Pick a button color first, then if the default near-black
+              text doesn't read against it, set a contrasting text color.
+            </p>
+          </div>
+        </div>
+
+        {/* Two color rows side by side on desktop, stacked on mobile.
+            Each row: native color picker + hex text input + reset link
+            + a swatch preview at the right end. */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {([
+            {
+              key: "landing_cta_color" as const,
+              label: "Button color",
+              defaultHex: "#FACC15",
+              placeholder: "#FACC15",
+            },
+            {
+              key: "landing_cta_text_color" as const,
+              label: "Text color",
+              defaultHex: "#0A0A0A",
+              placeholder: "#0A0A0A",
+            },
+          ]).map(({ key, label, defaultHex, placeholder }) => (
+            <div key={key}>
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 block">
+                {label}
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={state[key] || defaultHex}
+                  onChange={(e) =>
+                    setState((prev) => ({ ...prev, [key]: e.target.value }))
+                  }
+                  className="h-11 w-14 rounded-lg border border-border cursor-pointer p-0.5 flex-shrink-0"
+                  aria-label={`${label} picker`}
+                />
+                <input
+                  type="text"
+                  value={state[key]}
+                  onChange={(e) =>
+                    setState((prev) => ({ ...prev, [key]: e.target.value }))
+                  }
+                  placeholder={placeholder}
+                  className="flex-1 min-w-0 h-11 px-3 rounded-lg border border-border bg-card font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                  spellCheck={false}
+                />
+                {state[key] && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setState((prev) => ({ ...prev, [key]: "" }))
+                    }
+                    className="text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors flex-shrink-0 px-2"
+                  >
+                    Reset
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Live preview pill */}
+        <div className="mt-5 rounded-xl border border-border bg-muted/30 p-4 flex items-center justify-between gap-4">
+          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Preview
+          </div>
+          <button
+            type="button"
+            disabled
+            className="h-12 px-6 rounded-xl text-[15px] font-bold inline-flex items-center justify-center gap-2 cursor-default"
+            style={{
+              background: state.landing_cta_color || "#FACC15",
+              color: state.landing_cta_text_color || "#0A0A0A",
+              boxShadow:
+                "0 4px 12px -2px rgba(0,0,0,0.18), 0 2px 4px -1px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.30)",
+            }}
+          >
+            Get my offer →
           </button>
         </div>
       </section>
