@@ -2,7 +2,7 @@ import Hero from "@/components/Hero";
 import HeroOffset from "@/components/HeroOffset";
 import LandingForm from "@/components/LandingForm";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
-import { DefaultBelowFold } from "../sharedSections";
+import { FullBelowFold } from "../sharedSections";
 
 const ClassicTemplate = () => {
   const { config } = useSiteConfig();
@@ -20,7 +20,7 @@ const ClassicTemplate = () => {
           <LandingForm />
         </>
       )}
-      <DefaultBelowFold />
+      <FullBelowFold />
     </>
   );
 };

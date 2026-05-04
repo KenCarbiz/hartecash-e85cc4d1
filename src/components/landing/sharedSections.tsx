@@ -117,3 +117,38 @@ export const DefaultBelowFold = () => (
     <CTABannerSection />
   </>
 );
+
+/**
+ * Full marketing chrome — every below-fold section the customer
+ * expects on a Hartecash-style landing, all inline (no Learn-more
+ * accordion). Per the May-2026 dealer directive every template must
+ * render the same below-fold set, so customers landing on Velocity,
+ * Marquee, Heritage, Clarity, Legacy, or any of the OEM-style
+ * templates all see:
+ *
+ *   - TrustBadges
+ *   - HowItWorks            (the 1-2-3 ease-of-purchase strip)
+ *   - CompetitorComparison  (Hartecash vs CarMax / Carvana / KBB)
+ *   - ValueProps
+ *   - Testimonials          (reviews with stars)
+ *   - FAQ                   (collapsed by default — only section
+ *                            the dealer wanted gated behind a click)
+ *   - ReferralBanner
+ *   - CTABanner
+ *
+ * Each template wraps this in its own background tone so the chrome
+ * inherits the template's color vibe rather than forcing Hartecash
+ * brand colors onto every dealer.
+ */
+export const FullBelowFold = () => (
+  <>
+    <TrustBadgesSection />
+    <HowItWorksSection />
+    <CompetitorComparisonSection />
+    <ValuePropsSection />
+    <TestimonialsSection />
+    <FAQSection />
+    <ReferralBannerSection />
+    <CTABannerSection />
+  </>
+);

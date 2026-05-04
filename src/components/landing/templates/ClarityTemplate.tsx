@@ -4,6 +4,7 @@ import { useSiteConfig } from "@/hooks/useSiteConfig";
 import LandingForm from "@/components/LandingForm";
 import LandingPlateInput, { type LandingPlateInputValue } from "../LandingPlateInput";
 import FullscreenWizard from "../FullscreenWizard";
+import { FullBelowFold } from "../sharedSections";
 
 /**
  * CLARITY — Apple/Porsche minimal white. Tier C of the May-2026
@@ -83,6 +84,11 @@ const ClarityTemplate = () => {
           </blockquote>
         </div>
       </section>
+
+      {/* ── Canonical below-fold (reviews, 1-2-3, comparison, FAQ, etc.)
+            shared with every other template. Inherits the Clarity
+            light theme via CSS vars; FAQ stays collapsed by default. */}
+      <FullBelowFold />
 
       {/* ── Fullscreen wizard — opens on plate submit, takes over the
             viewport so the marketing chrome disappears. */}

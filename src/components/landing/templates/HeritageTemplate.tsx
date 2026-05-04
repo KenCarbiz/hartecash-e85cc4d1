@@ -4,6 +4,7 @@ import { useSiteConfig } from "@/hooks/useSiteConfig";
 import LandingForm from "@/components/LandingForm";
 import LandingPlateInput, { type LandingPlateInputValue } from "../LandingPlateInput";
 import FullscreenWizard from "../FullscreenWizard";
+import { FullBelowFold } from "../sharedSections";
 
 /**
  * HERITAGE — storytelling / family-dealer. Two-column desktop, stacked
@@ -178,6 +179,11 @@ const HeritageTemplate = () => {
           </div>
         </div>
       </section>
+
+      {/* Canonical below-fold marketing chrome shared with every
+          template (reviews, 1-2-3, comparison, FAQ collapsed). The
+          FullscreenWizard hides this during the customer journey. */}
+      <FullBelowFold />
 
       {/* Fullscreen wizard — warm theme. Slow Tier A handoff so the
           family-dealer feel carries into the focused flow. */}

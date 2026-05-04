@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { DollarSign, Wrench, Repeat, Search, Car, ArrowRight } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import LandingForm from "@/components/LandingForm";
-import { DefaultBelowFold } from "../sharedSections";
+import { FullBelowFold } from "../sharedSections";
 
 /**
  * PORTAL — OEM brand-portal split (Dealer.com / Ansira / GM iMR style).
@@ -89,7 +89,7 @@ const PortalTemplate = () => {
         </div>
       </section>
 
-      <DefaultBelowFold />
+      <FullBelowFold />
     </>
   );
 };

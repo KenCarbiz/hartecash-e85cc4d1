@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Play, Car, ArrowRight } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import LandingForm from "@/components/LandingForm";
-import { DefaultBelowFold } from "../sharedSections";
+import { FullBelowFold } from "../sharedSections";
 
 /**
  * CINEMA — Dealer Inspire / Toyota T3 / Honda HDDP visual.
@@ -88,7 +88,7 @@ const CinemaTemplate = () => {
         </div>
       </section>
 
-      <DefaultBelowFold />
+      <FullBelowFold />
     </>
   );
 };

@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Truck, ArrowRight, ShieldCheck } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import LandingForm from "@/components/LandingForm";
-import { DefaultBelowFold } from "../sharedSections";
+import { FullBelowFold } from "../sharedSections";
 
 /**
  * PICKUP — Ford / FordDirect / GM truck dealer feel. Brand-color ribbon
@@ -77,7 +77,7 @@ const PickupTemplate = () => {
         </div>
       </section>
 
-      <DefaultBelowFold />
+      <FullBelowFold />
     </>
   );
 };
