@@ -16,7 +16,9 @@ import { logConsent } from "@/lib/consent";
 type Screen = "lookup" | "confirm" | "condition" | "computing" | "offer";
 
 import RunningCarLoader from "./landing/RunningCarLoader";
-import GhostScreen, { type GhostScreenKind } from "./landing/GhostScreen";
+// GhostScreen scrapped per dealer feedback — the lookup screen now
+// renders the original RunningCarLoader directly. Imports kept off so
+// the GhostScreen variants don't drift into other surfaces.
 
 interface Props {
   /** Pre-populated identifier from the landing-page LandingPlateInput.
@@ -43,15 +45,13 @@ interface Props {
    *    heritage → "hand-drawn"
    */
   loader?: "running-car" | "brass-arc" | "thin-line" | "hand-drawn";
-  /** Ghost-screen variant for the BB lookup transition state. Picked
-   *  per-template / per-dealer in admin so the "system is thinking"
-   *  moment matches the rest of the landing's vibe. */
-  ghost?: GhostScreenKind;
-  /** Optional copy override for the lookup ghost screen. */
-  ghostHeadline?: string;
-  ghostSubhead?: string;
   /** Brand accent color override. Defaults derived from theme. */
   accent?: string;
+  /** @deprecated GhostScreen scrapped — props kept for backwards-compat
+   *  with LandingForm's call signature but ignored at render time. */
+  ghost?: string;
+  ghostHeadline?: string;
+  ghostSubhead?: string;
 }
 
 /**
@@ -320,6 +320,11 @@ const SellFlowSimple = ({
         {/* ── Screen: lookup — premium SaaS ghost screen, dealer-picked
               variant per template (pulse-orb / sweep-arc / stack-reveal
               / card-skeleton). All copy + colors customizable. */}
+        {/* ── Screen: lookup — restored to the original Hartecash
+              running-car loader. The week-of-Apr-27 GhostScreen
+              wrapper that introduced four geometric SaaS variants
+              was scrapped per dealer feedback — they want the
+              familiar running-car silhouette only. */}
         {screen === "lookup" && (
           <motion.div
             key="lookup"
@@ -327,34 +332,26 @@ const SellFlowSimple = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="min-h-[400px] flex items-center justify-center"
+            className="min-h-[400px] flex flex-col items-center justify-center text-center"
           >
-            <GhostScreen
-              kind={ghost}
-              accent={
-                accent ||
-                (theme === "dark"
-                  ? "#FFFFFF"
-                  : theme === "warm"
-                  ? "#2C2A26"
-                  : "#1F2937")
-              }
-              background="transparent"
-              size="lg"
-              fill
-              headline={
-                ghostHeadline ??
-                (initial.vin
-                  ? "Looking up your VIN…"
-                  : `Looking up your ${initial.plate}…`)
-              }
-              subhead={
-                ghostSubhead ??
-                (initial.vin
-                  ? "Pulling your vehicle details from the registry."
-                  : `Pulling your vehicle details from the ${initial.state} registry.`)
-              }
-            />
+            <div className="mb-6" style={{ color: accent || "#0066CC" }}>
+              <RunningCarLoader size="lg" />
+            </div>
+            <p className="text-lg font-medium tracking-tight">
+              {initial.vin
+                ? "Looking up your VIN…"
+                : (
+                  <>
+                    Looking up your{" "}
+                    <span className="font-mono font-bold">{initial.plate}</span>…
+                  </>
+                )}
+            </p>
+            <p className="text-sm text-muted-foreground mt-2 max-w-sm">
+              {initial.vin
+                ? "Pulling your vehicle details from the registry."
+                : `Pulling your vehicle details from the ${initial.state} registry.`}
+            </p>
           </motion.div>
         )}
 
