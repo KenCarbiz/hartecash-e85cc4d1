@@ -18,7 +18,7 @@ const CalculatingOffer = ({
   onComplete,
   previewMode,
 }: Props) => {
-  const { kind, syncing, stale } = useGhostScreen();
+  const { kind, syncing, ready, stale } = useGhostScreen();
   const vehicleStr = [vehicleYear, vehicleMake, vehicleModel].filter(Boolean).join(" ");
 
   useEffect(() => {
@@ -29,13 +29,15 @@ const CalculatingOffer = ({
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center relative">
-      <GhostScreen
-        kind={kind}
-        accent="#5B6B8A"
-        background="transparent"
-        headline={vehicleStr ? `Pulling info for your ${vehicleStr}` : "Pulling your vehicle info"}
-        size="lg"
-      />
+      {ready && (
+        <GhostScreen
+          kind={kind}
+          accent="#5B6B8A"
+          background="transparent"
+          headline={vehicleStr ? `Pulling info for your ${vehicleStr}` : "Pulling your vehicle info"}
+          size="lg"
+        />
+      )}
       <GhostSyncIndicator syncing={syncing} stale={stale} />
     </div>
   );
