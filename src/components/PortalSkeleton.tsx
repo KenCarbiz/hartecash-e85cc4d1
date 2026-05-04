@@ -1,27 +1,26 @@
-import { AlertTriangle, RefreshCw } from "lucide-react";
-import GhostScreen, { type GhostScreenKind } from "@/components/landing/GhostScreen";
-import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { AlertTriangle, RefreshCw, RotateCw } from "lucide-react";
+import GhostScreen from "@/components/landing/GhostScreen";
+import { useGhostScreen } from "@/hooks/useGhostScreen";
 
 interface PortalSkeletonProps {
   error?: string | null;
   onRetry?: () => void;
-  /** Headline displayed above the loader so the customer knows
-   *  what's happening — "Finding Vehicle", "Loading Submission",
-   *  "Uploading Photos", etc. Defaults to "Loading your submission". */
   headline?: string;
 }
 
 /**
  * Site-wide loading skeleton. Renders the dealer-selected ghost-screen
- * variant (admin → Branding → Landing → Ghost Screen). Falls back to
- * "legacy-car" until the dealer's site_config loads.
+ * variant (admin → Branding → Landing → Ghost Screen). Force-fetches
+ * the live value on mount via useGhostScreen so a stale cache never
+ * serves the wrong loader; surfaces a small sync chip while the
+ * fresh value is in flight or when it differs from the cached value.
  */
 const PortalSkeleton = ({
   error,
   onRetry,
   headline = "Loading your submission",
 }: PortalSkeletonProps = {}) => {
-  const { config } = useSiteConfig();
+  const { kind, syncing, stale } = useGhostScreen();
 
   if (error) {
     return (
@@ -47,11 +46,8 @@ const PortalSkeleton = ({
     );
   }
 
-  const kind = (((config as any)?.ghost_screen as GhostScreenKind) ||
-    "legacy-car") as GhostScreenKind;
-
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="min-h-screen bg-background flex items-center justify-center relative">
       <GhostScreen
         kind={kind}
         accent="#5B6B8A"
@@ -59,6 +55,31 @@ const PortalSkeleton = ({
         headline={headline}
         size="lg"
       />
+      <GhostSyncIndicator syncing={syncing} stale={stale} />
+    </div>
+  );
+};
+
+/** Tiny chip in the bottom-right showing whether the loader variant
+ *  has been confirmed against the live site_config row. Hidden by
+ *  default once everything matches; visible while syncing or when
+ *  the cached pick disagrees with what's in the DB. */
+export const GhostSyncIndicator = ({
+  syncing,
+  stale,
+}: {
+  syncing: boolean;
+  stale: boolean;
+}) => {
+  if (!syncing && !stale) return null;
+  return (
+    <div
+      className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-card/80 backdrop-blur border border-border text-[10px] text-muted-foreground"
+      role="status"
+      aria-live="polite"
+    >
+      <RotateCw className={`w-3 h-3 ${syncing ? "animate-spin" : ""}`} />
+      {syncing ? "Syncing loader…" : "Updating loader…"}
     </div>
   );
 };

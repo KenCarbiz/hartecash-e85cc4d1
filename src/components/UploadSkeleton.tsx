@@ -1,6 +1,7 @@
 import { AlertTriangle, RefreshCw } from "lucide-react";
-import GhostScreen, { type GhostScreenKind } from "@/components/landing/GhostScreen";
-import { useSiteConfig } from "@/hooks/useSiteConfig";
+import GhostScreen from "@/components/landing/GhostScreen";
+import { useGhostScreen } from "@/hooks/useGhostScreen";
+import { GhostSyncIndicator } from "@/components/PortalSkeleton";
 
 interface UploadSkeletonProps {
   error?: string | null;
@@ -8,16 +9,12 @@ interface UploadSkeletonProps {
   headline?: string;
 }
 
-/**
- * Photo-upload page loading state. Mirrors PortalSkeleton — renders the
- * dealer-selected ghost-screen variant from admin → Branding → Landing.
- */
 const UploadSkeleton = ({
   error,
   onRetry,
   headline = "Loading photos",
 }: UploadSkeletonProps = {}) => {
-  const { config } = useSiteConfig();
+  const { kind, syncing, stale } = useGhostScreen();
 
   if (error) {
     return (
@@ -43,11 +40,8 @@ const UploadSkeleton = ({
     );
   }
 
-  const kind = (((config as any)?.ghost_screen as GhostScreenKind) ||
-    "legacy-car") as GhostScreenKind;
-
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="min-h-screen bg-background flex items-center justify-center relative">
       <GhostScreen
         kind={kind}
         accent="#5B6B8A"
@@ -55,6 +49,7 @@ const UploadSkeleton = ({
         headline={headline}
         size="lg"
       />
+      <GhostSyncIndicator syncing={syncing} stale={stale} />
     </div>
   );
 };

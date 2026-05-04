@@ -1,6 +1,7 @@
 import { useEffect } from "react";
-import GhostScreen, { type GhostScreenKind } from "@/components/landing/GhostScreen";
-import { useSiteConfig } from "@/hooks/useSiteConfig";
+import GhostScreen from "@/components/landing/GhostScreen";
+import { useGhostScreen } from "@/hooks/useGhostScreen";
+import { GhostSyncIndicator } from "@/components/PortalSkeleton";
 
 interface Props {
   vehicleYear?: string;
@@ -10,11 +11,6 @@ interface Props {
   previewMode?: boolean;
 }
 
-/**
- * Shown while we pull vehicle data after the customer enters a VIN /
- * plate. Renders the dealer-selected ghost-screen variant configured
- * in admin → Branding → Landing → Ghost Screen.
- */
 const CalculatingOffer = ({
   vehicleYear,
   vehicleMake,
@@ -22,7 +18,7 @@ const CalculatingOffer = ({
   onComplete,
   previewMode,
 }: Props) => {
-  const { config } = useSiteConfig();
+  const { kind, syncing, stale } = useGhostScreen();
   const vehicleStr = [vehicleYear, vehicleMake, vehicleModel].filter(Boolean).join(" ");
 
   useEffect(() => {
@@ -31,11 +27,8 @@ const CalculatingOffer = ({
     return () => clearTimeout(t);
   }, [previewMode, onComplete]);
 
-  const kind = (((config as any)?.ghost_screen as GhostScreenKind) ||
-    "legacy-car") as GhostScreenKind;
-
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="min-h-screen bg-background flex items-center justify-center relative">
       <GhostScreen
         kind={kind}
         accent="#5B6B8A"
@@ -43,6 +36,7 @@ const CalculatingOffer = ({
         headline={vehicleStr ? `Pulling info for your ${vehicleStr}` : "Pulling your vehicle info"}
         size="lg"
       />
+      <GhostSyncIndicator syncing={syncing} stale={stale} />
     </div>
   );
 };
