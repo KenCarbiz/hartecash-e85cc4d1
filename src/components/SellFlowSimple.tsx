@@ -250,10 +250,9 @@ const SellFlowSimple = ({
       // Light consent log — same pattern as QuickOfferForm.
       try {
         await logConsent({
-          submission_token: generatedToken,
-          consent_type: "submit_intent",
-          channels: [],
-          dealership_id: tenant.dealership_id,
+          submissionToken: generatedToken,
+          formSource: "sell_flow_simple",
+          dealershipName: tenant.dealership_id,
         });
       } catch (e) {
         console.warn("logConsent failed (non-fatal):", e);

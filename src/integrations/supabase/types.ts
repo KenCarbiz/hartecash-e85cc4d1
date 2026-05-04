@@ -806,6 +806,7 @@ export type Database = {
           id: string
           instagram_url: string | null
           is_active: boolean
+          landing_template: string | null
           location_type: string
           logo_layout: string
           logo_url: string | null
@@ -874,6 +875,7 @@ export type Database = {
           id?: string
           instagram_url?: string | null
           is_active?: boolean
+          landing_template?: string | null
           location_type?: string
           logo_layout?: string
           logo_url?: string | null
@@ -942,6 +944,7 @@ export type Database = {
           id?: string
           instagram_url?: string | null
           is_active?: boolean
+          landing_template?: string | null
           location_type?: string
           logo_layout?: string
           logo_url?: string | null
@@ -1762,12 +1765,19 @@ export type Database = {
           mileage_tiers: Json
           offer_ceiling: number | null
           offer_floor: number
+          payment_selection_timing: string
+          pricing_reveal_mode: string
+          range_high_mode: string
+          range_high_percent: number | null
+          range_high_source: string | null
+          range_low_source: string
           recon_cost: number
           regional_adjustment_pct: number
           retail_profit_basis: string
           retail_search_radius: number
           retail_search_zip: string | null
           seasonal_adjustment: Json
+          show_range_before_final: boolean
           strategy_mode: string | null
           target_gross_min: number
           updated_at: string
@@ -1802,12 +1812,19 @@ export type Database = {
           mileage_tiers?: Json
           offer_ceiling?: number | null
           offer_floor?: number
+          payment_selection_timing?: string
+          pricing_reveal_mode?: string
+          range_high_mode?: string
+          range_high_percent?: number | null
+          range_high_source?: string | null
+          range_low_source?: string
           recon_cost?: number
           regional_adjustment_pct?: number
           retail_profit_basis?: string
           retail_search_radius?: number
           retail_search_zip?: string | null
           seasonal_adjustment?: Json
+          show_range_before_final?: boolean
           strategy_mode?: string | null
           target_gross_min?: number
           updated_at?: string
@@ -1842,12 +1859,19 @@ export type Database = {
           mileage_tiers?: Json
           offer_ceiling?: number | null
           offer_floor?: number
+          payment_selection_timing?: string
+          pricing_reveal_mode?: string
+          range_high_mode?: string
+          range_high_percent?: number | null
+          range_high_source?: string | null
+          range_low_source?: string
           recon_cost?: number
           regional_adjustment_pct?: number
           retail_profit_basis?: string
           retail_search_radius?: number
           retail_search_zip?: string | null
           seasonal_adjustment?: Json
+          show_range_before_final?: boolean
           strategy_mode?: string | null
           target_gross_min?: number
           updated_at?: string
@@ -2770,6 +2794,7 @@ export type Database = {
           hero_subtext: string
           id: string
           instagram_url: string | null
+          landing_template: string
           logo_url: string | null
           logo_white_url: string | null
           phone: string | null
@@ -2860,6 +2885,7 @@ export type Database = {
           hero_subtext?: string
           id?: string
           instagram_url?: string | null
+          landing_template?: string
           logo_url?: string | null
           logo_white_url?: string | null
           phone?: string | null
@@ -2950,6 +2976,7 @@ export type Database = {
           hero_subtext?: string
           id?: string
           instagram_url?: string | null
+          landing_template?: string
           logo_url?: string | null
           logo_white_url?: string | null
           phone?: string | null
