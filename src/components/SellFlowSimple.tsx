@@ -13,7 +13,7 @@ import { buildSubmissionBBPayload } from "@/lib/submissionOffer";
 import { initialFormData, type FormData, type BBVehicle } from "./sell-form/types";
 import { logConsent } from "@/lib/consent";
 
-type Screen = "lookup" | "confirm" | "condition" | "computing" | "offer";
+type Screen = "lookup" | "confirm" | "condition" | "contact" | "computing" | "offer";
 
 const NHTSA_DECODE = "https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValuesExtended";
 
@@ -253,6 +253,19 @@ const SellFlowSimple = ({
     ((config as any).condition_card_style as "basic" | "kbb") || "basic";
   const [overallCondition, setOverallCondition] = useState<string>("Good");
   const [showKbbDialog, setShowKbbDialog] = useState(false);
+  // Contact info — collected pre-offer when pricing_reveal_mode is
+  // "contact_first" (the SellFlowSimple default per the May-2026
+  // audit follow-up: most mom-and-pops want the lead's contact in
+  // the CRM regardless of whether they accept the number).
+  const [contactName, setContactName] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  // pricing_reveal_mode lives on offer_settings, not site_config.
+  // Fetched on mount; defaults to "contact_first" for the simple
+  // flow until the dealer's setting comes back.
+  const [revealMode, setRevealMode] = useState<
+    "price_first" | "range_then_price" | "contact_first"
+  >("contact_first");
 
   // Re-align the default once site_config loads — if the dealer turned
   // on KBB style, switch the pre-selected pill from "Good" (basic) to
@@ -262,6 +275,36 @@ const SellFlowSimple = ({
     if (conditionStyle === "basic" && overallCondition === "good") setOverallCondition("Good");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conditionStyle]);
+
+  // Fetch pricing_reveal_mode once on mount so we know whether to
+  // insert the contact step before /offer (contact_first) or jump
+  // straight to /offer where contact is collected post-reveal
+  // (price_first / range_then_price). Best-effort — if the column
+  // isn't deployed yet on this environment we keep the
+  // contact_first default per user's stated preference for the
+  // simple flow.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("offer_settings" as any)
+          .select("pricing_reveal_mode")
+          .eq("dealership_id", tenant.dealership_id)
+          .maybeSingle();
+        if (cancelled || error) return;
+        const mode = (data as { pricing_reveal_mode?: string } | null)?.pricing_reveal_mode;
+        if (mode === "price_first" || mode === "range_then_price" || mode === "contact_first") {
+          setRevealMode(mode);
+        }
+      } catch {
+        /* keep default */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [tenant.dealership_id]);
   const [accidents, setAccidents] = useState<"" | "Yes" | "No">("");
   const [mechanical, setMechanical] = useState<"" | "Yes" | "No">("");
   const [drivable, setDrivable] = useState<"" | "Yes" | "No">("");
@@ -357,9 +400,59 @@ const SellFlowSimple = ({
     setScreen("condition");
   };
 
-  // Submit the lead and compute the offer. We submit the partial
-  // record now and let the offer page handle contact-info collection
-  // post-reveal — that's the audit's "collect AFTER the offer" rule.
+  // Validate Step 2 answers, then route based on dealer's
+  // pricing_reveal_mode. contact_first inserts a name/email/phone
+  // screen between condition and computing; price_first /
+  // range_then_price preserve the original behavior of computing →
+  // /offer where contact is captured post-reveal.
+  const handleConditionSubmit = useCallback(() => {
+    if (!bbVehicle) return;
+    if (!overallCondition) {
+      toast({ title: "Pick a condition", variant: "destructive" });
+      return;
+    }
+    if (density !== "simple") {
+      if (!accidents || !mechanical) {
+        toast({ title: "Answer both questions", variant: "destructive" });
+        return;
+      }
+    }
+    if (!ownership) {
+      toast({ title: "Pick ownership status", variant: "destructive" });
+      return;
+    }
+    if (revealMode === "contact_first") {
+      setScreen("contact");
+      return;
+    }
+    void submitForOffer();
+  }, [bbVehicle, overallCondition, density, accidents, mechanical, ownership, revealMode, toast]);
+
+  // Validate the contact form, then submit to compute the offer.
+  // Used only when pricing_reveal_mode === "contact_first".
+  const handleContactSubmit = useCallback(() => {
+    const name = contactName.trim();
+    const email = contactEmail.trim();
+    const phone = contactPhone.replace(/[^0-9]/g, "");
+    if (!name || name.length < 2) {
+      toast({ title: "Add your full name", variant: "destructive" });
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast({ title: "Add a valid email", variant: "destructive" });
+      return;
+    }
+    if (phone.length < 10) {
+      toast({ title: "Add a valid phone number", variant: "destructive" });
+      return;
+    }
+    void submitForOffer();
+  }, [contactName, contactEmail, contactPhone, toast]);
+
+  // Submit the lead and compute the offer. When contact_first ran,
+  // contact fields are populated on the submission insert. Otherwise
+  // /offer/:token collects them post-reveal (the original audit's
+  // "collect AFTER the offer" rule).
   const submitForOffer = useCallback(async () => {
     if (!bbVehicle) return;
     if (!overallCondition) {
@@ -453,6 +546,12 @@ const SellFlowSimple = ({
         drivable: formData.drivable,
         accidents: formData.accidents || null,
         loan_status: formData.loanStatus || null,
+        // Persist contact fields collected pre-offer when the dealer
+        // runs in contact_first mode. When empty, /offer/:token will
+        // collect them post-reveal as before.
+        name: contactName.trim() || null,
+        email: contactEmail.trim() || null,
+        phone: contactPhone.replace(/[^0-9]/g, "") || null,
         next_step: "contact",
         lead_source: isDemoMode ? `${leadSource}-demo` : leadSource,
         dealership_id: tenant.dealership_id,
@@ -769,16 +868,122 @@ const SellFlowSimple = ({
 
             <div className="flex items-center justify-end gap-3 pt-2">
               <Button
-                onClick={submitForOffer}
+                onClick={handleConditionSubmit}
                 disabled={submitting}
                 size="lg"
                 className="h-14 px-7 rounded-full text-base font-semibold"
                 style={ctaBg ? { background: ctaBg, color: ctaText } : undefined}
               >
-                Get my offer
+                {revealMode === "contact_first" ? "Continue" : "Get my offer"}
                 <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
               </Button>
             </div>
+          </motion.div>
+        )}
+
+        {/* ── Screen: contact ── (only shown when the dealer's
+              pricing_reveal_mode is "contact_first"). Three short
+              fields — name, cell, email — then the customer hits
+              "See my offer" and we drop into the computing reveal.
+              Mom-and-pop dealers use this when they want the lead
+              in their CRM regardless of whether the customer accepts
+              the number. */}
+        {screen === "contact" && (
+          <motion.div
+            key="contact"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="space-y-8"
+          >
+            <div className="text-center space-y-2">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                Almost there
+              </p>
+              <h2 className="text-3xl md:text-4xl font-semibold tracking-tight leading-[1.1]">
+                Where should we send your offer?
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                We'll text and email your firm cash offer in seconds. No spam — your offer locks for {config.price_guarantee_days || 8} days.
+              </p>
+            </div>
+
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <label
+                  htmlFor="sfs-name"
+                  className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground"
+                >
+                  Full name
+                </label>
+                <input
+                  id="sfs-name"
+                  type="text"
+                  autoComplete="name"
+                  placeholder="Jane Smith"
+                  value={contactName}
+                  onChange={(e) => setContactName(e.target.value)}
+                  className="w-full h-14 px-0 text-xl font-medium bg-transparent border-0 border-b border-border focus:border-primary focus:ring-0 outline-none transition-colors"
+                  autoFocus
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="sfs-phone"
+                  className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground"
+                >
+                  Cell phone
+                </label>
+                <input
+                  id="sfs-phone"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  placeholder="(555) 123-4567"
+                  value={contactPhone}
+                  onChange={(e) => setContactPhone(e.target.value.replace(/[^0-9()\-\s+]/g, ""))}
+                  className="w-full h-14 px-0 text-xl font-medium tabular-nums bg-transparent border-0 border-b border-border focus:border-primary focus:ring-0 outline-none transition-colors"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="sfs-email"
+                  className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground"
+                >
+                  Email
+                </label>
+                <input
+                  id="sfs-email"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  placeholder="jane@example.com"
+                  value={contactEmail}
+                  onChange={(e) => setContactEmail(e.target.value)}
+                  className="w-full h-14 px-0 text-xl font-medium bg-transparent border-0 border-b border-border focus:border-primary focus:ring-0 outline-none transition-colors"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <Button
+                onClick={handleContactSubmit}
+                disabled={submitting}
+                size="lg"
+                className="h-14 px-7 rounded-full text-base font-semibold"
+                style={ctaBg ? { background: ctaBg, color: ctaText } : undefined}
+              >
+                See my offer
+                <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
+              </Button>
+            </div>
+
+            <p className="text-[11px] text-center text-muted-foreground/70 px-4 leading-relaxed">
+              By tapping "See my offer" you agree to receive calls and texts from {config.dealership_name || "us"} about your offer. Msg & data rates may apply. Reply STOP to opt out.
+            </p>
           </motion.div>
         )}
 
