@@ -76,7 +76,7 @@ describe("Hero wiring — page-level routes", () => {
       const src = read(join(process.cwd(), path));
       for (const key of keys) {
         expect(src, `${path} should reference ${key}`).toMatch(
-          new RegExp(`config\\.${key}`)
+          new RegExp(`(config|siteConfig)\\.${key}`)
         );
       }
     });
