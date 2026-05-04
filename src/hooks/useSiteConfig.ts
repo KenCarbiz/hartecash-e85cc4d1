@@ -89,6 +89,17 @@ export interface SiteConfig {
    * true to preserve the historical hartecash.com behavior.
    */
   pickup_offered: boolean;
+  /**
+   * Ghost-screen variant shown while the BB lookup is in flight.
+   * Premium SaaS-grade transitions, dealer-controlled so it matches
+   * the rest of the landing's aesthetic. Defaults to 'pulse-orb'
+   * (the calmest / most universally premium variant).
+   */
+  ghost_screen: "pulse-orb" | "sweep-arc" | "stack-reveal" | "card-skeleton" | "legacy-car";
+  /** Optional dealer copy override for the ghost-screen headline. */
+  ghost_headline: string | null;
+  /** Optional dealer copy override for the ghost-screen subhead. */
+  ghost_subhead: string | null;
   price_guarantee_days: number;
   stats_cars_purchased: string;
   stats_years_in_business: string;
@@ -213,6 +224,9 @@ const DEFAULTS: SiteConfig = {
   landing_form_variant: "detailed",
   landing_form_density: "simple",
   pickup_offered: true,
+  ghost_screen: "legacy-car",
+  ghost_headline: null,
+  ghost_subhead: null,
   price_guarantee_days: 8,
   stats_cars_purchased: "14,721+",
   stats_years_in_business: "78 yrs",
@@ -314,6 +328,9 @@ const LOCATION_OVERRIDE_KEYS: (keyof SiteConfig)[] = [
   "landing_form_variant",
   "landing_form_density",
   "pickup_offered",
+  "ghost_screen",
+  "ghost_headline",
+  "ghost_subhead",
   "service_hero_headline",
   "service_hero_subtext",
   "trade_hero_headline",

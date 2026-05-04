@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Save, Loader2, Layout, Sparkles, Zap, ListChecks } from "lucide-react";
 import { LANDING_TEMPLATES, type LandingTemplate } from "@/hooks/useSiteConfig";
 import TemplateThumbnail from "@/components/landing/TemplateThumbnail";
+import GhostScreen, { type GhostScreenKind } from "@/components/landing/GhostScreen";
+import { Input } from "@/components/ui/input";
 
 type FormVariant = "detailed" | "quick";
 
@@ -52,6 +54,11 @@ interface State {
    *  HowItWorks step 3 + the default "Why X Wins" wedge row. When
    *  off, the customer-facing copy switches to in-person drop-off. */
   pickup_offered: boolean;
+  /** Ghost-screen variant + optional copy overrides for the
+   *  BB-lookup transition state. */
+  ghost_screen: GhostScreenKind;
+  ghost_headline: string;
+  ghost_subhead: string;
 }
 
 const DEFAULTS: State = {
@@ -59,7 +66,18 @@ const DEFAULTS: State = {
   landing_form_variant: "detailed",
   landing_form_density: "simple",
   pickup_offered: true,
+  ghost_screen: "legacy-car",
+  ghost_headline: "",
+  ghost_subhead: "",
 };
+
+const GHOST_OPTIONS: { value: GhostScreenKind; label: string; description: string }[] = [
+  { value: "legacy-car",    label: "Hartecash classic",     description: "The running-car silhouette over a road line. The familiar Hartecash motion." },
+  { value: "pulse-orb",     label: "Pulse orb",             description: "Concentric rings pulsing outward from a solid center. Apple Vision Pro / OpenAI vibe." },
+  { value: "sweep-arc",     label: "Sweep arc",             description: "Thin quarter-arc rotating with a soft trailing gradient. Stripe / Linear vibe." },
+  { value: "stack-reveal",  label: "Stack reveal",          description: "Four horizontal bars filling left-to-right in sequence. Vercel deploy vibe." },
+  { value: "card-skeleton", label: "Vehicle card",          description: "Vehicle-card placeholder with a diagonal shimmer sweep. Edmunds / Carvana vibe." },
+];
 
 const LandingFlowConfig = () => {
   const { tenant } = useTenant();
@@ -81,7 +99,7 @@ const LandingFlowConfig = () => {
       let row: any = null;
       const wide = await supabase
         .from("site_config" as any)
-        .select("landing_template, landing_form_variant, landing_form_density, pickup_offered")
+        .select("landing_template, landing_form_variant, landing_form_density, pickup_offered, ghost_screen, ghost_headline, ghost_subhead")
         .eq("dealership_id", dealershipId)
         .maybeSingle();
       if (wide.error) {
@@ -90,6 +108,9 @@ const LandingFlowConfig = () => {
           lower.includes("landing_form_variant") ||
           lower.includes("landing_form_density") ||
           lower.includes("pickup_offered") ||
+          lower.includes("ghost_screen") ||
+          lower.includes("ghost_headline") ||
+          lower.includes("ghost_subhead") ||
           lower.includes("schema cache")
         ) {
           const narrow = await supabase
@@ -111,6 +132,10 @@ const LandingFlowConfig = () => {
           (row?.landing_form_density as FormDensity) || DEFAULTS.landing_form_density,
         pickup_offered:
           row?.pickup_offered === false ? false : DEFAULTS.pickup_offered,
+        ghost_screen:
+          (row?.ghost_screen as GhostScreenKind) || DEFAULTS.ghost_screen,
+        ghost_headline: row?.ghost_headline ?? DEFAULTS.ghost_headline,
+        ghost_subhead: row?.ghost_subhead ?? DEFAULTS.ghost_subhead,
       };
       setState(next);
       setSaved(next);
@@ -122,7 +147,10 @@ const LandingFlowConfig = () => {
     state.landing_template !== saved.landing_template ||
     state.landing_form_variant !== saved.landing_form_variant ||
     state.landing_form_density !== saved.landing_form_density ||
-    state.pickup_offered !== saved.pickup_offered;
+    state.pickup_offered !== saved.pickup_offered ||
+    state.ghost_screen !== saved.ghost_screen ||
+    state.ghost_headline !== saved.ghost_headline ||
+    state.ghost_subhead !== saved.ghost_subhead;
 
   const handleSave = async () => {
     setSaving(true);
@@ -194,6 +222,41 @@ const LandingFlowConfig = () => {
       }
     }
 
+    // Pass 1.7 — ghost_screen + copy (best-effort)
+    const ghostChanged =
+      state.ghost_screen !== saved.ghost_screen ||
+      state.ghost_headline !== saved.ghost_headline ||
+      state.ghost_subhead !== saved.ghost_subhead;
+    let ghostSkipped = false;
+    if (ghostChanged) {
+      const { error: gErr } = await supabase
+        .from("site_config" as any)
+        .update({
+          ghost_screen: state.ghost_screen,
+          ghost_headline: state.ghost_headline.trim() || null,
+          ghost_subhead: state.ghost_subhead.trim() || null,
+          updated_at: new Date().toISOString(),
+        } as any)
+        .eq("dealership_id", dealershipId);
+      if (gErr) {
+        const lower = gErr.message?.toLowerCase() || "";
+        const code = (gErr as any).code || "";
+        const missingGhost =
+          lower.includes("ghost_screen") ||
+          lower.includes("ghost_headline") ||
+          lower.includes("ghost_subhead") ||
+          lower.includes("schema cache") ||
+          code === "PGRST204" ||
+          (lower.includes("column") && lower.includes("does not exist"));
+        if (!missingGhost) {
+          setSaving(false);
+          toast({ title: "Save failed", description: gErr.message, variant: "destructive" });
+          return;
+        }
+        ghostSkipped = true;
+      }
+    }
+
     // Pass 1.6 — pickup_offered (best-effort, may not be deployed yet)
     const pickupChanged = state.pickup_offered !== saved.pickup_offered;
     let pickupSkipped = false;
@@ -262,6 +325,13 @@ const LandingFlowConfig = () => {
       ...(variantSkipped ? { landing_form_variant: saved.landing_form_variant } : {}),
       ...(densitySkipped ? { landing_form_density: saved.landing_form_density } : {}),
       ...(pickupSkipped ? { pickup_offered: saved.pickup_offered } : {}),
+      ...(ghostSkipped
+        ? {
+            ghost_screen: saved.ghost_screen,
+            ghost_headline: saved.ghost_headline,
+            ghost_subhead: saved.ghost_subhead,
+          }
+        : {}),
     });
 
     if (variantSkipped) {
@@ -459,6 +529,82 @@ const LandingFlowConfig = () => {
               }`}
             />
           </button>
+        </div>
+      </section>
+
+      {/* ── Ghost-screen picker ──
+          Five premium variants for the BB-lookup transition state.
+          Each card renders a live preview so the dealer can see what
+          the customer will see while we look up their plate. Copy
+          fields default to the component's auto-generated text but
+          can be overridden per dealer. */}
+      <section className="bg-card rounded-xl border border-border p-6">
+        <div className="flex items-center gap-2 mb-1">
+          <Sparkles className="w-4 h-4 text-primary" />
+          <h3 className="font-bold">Ghost Screen</h3>
+        </div>
+        <p className="text-xs text-muted-foreground mb-6 max-w-prose">
+          Pick the "system is thinking" animation customers see while we look up their car. Five variants — the original Hartecash running-car (default) plus four SaaS-grade transitions.
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+          {GHOST_OPTIONS.map((opt) => {
+            const active = state.ghost_screen === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setState((prev) => ({ ...prev, ghost_screen: opt.value }))}
+                className={`text-left rounded-xl border-2 p-3 transition-all ${
+                  active
+                    ? "border-primary bg-primary/5 shadow-lg ring-2 ring-primary/20"
+                    : "border-border bg-muted/20 hover:bg-muted/40 hover:border-primary/40"
+                }`}
+              >
+                {/* Live preview — same component the customer sees */}
+                <div className="relative aspect-[16/10] mb-2.5 rounded-md overflow-hidden border border-border/60 bg-background flex items-center justify-center">
+                  <GhostScreen kind={opt.value} size="sm" />
+                </div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-bold text-sm">{opt.label}</span>
+                  {active && (
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                      Active
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground leading-snug">{opt.description}</p>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Copy overrides */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+          <label className="block">
+            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5 block">
+              Headline (optional)
+            </span>
+            <Input
+              value={state.ghost_headline}
+              placeholder='Leave blank for "Looking up your ABC1234…"'
+              onChange={(e) =>
+                setState((prev) => ({ ...prev, ghost_headline: e.target.value }))
+              }
+            />
+          </label>
+          <label className="block">
+            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5 block">
+              Subhead (optional)
+            </span>
+            <Input
+              value={state.ghost_subhead}
+              placeholder="Leave blank for the auto-generated registry copy"
+              onChange={(e) =>
+                setState((prev) => ({ ...prev, ghost_subhead: e.target.value }))
+              }
+            />
+          </label>
         </div>
       </section>
 
