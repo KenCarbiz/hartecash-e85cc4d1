@@ -113,35 +113,10 @@ const VelocityTemplate = () => {
         </motion.div>
       </section>
 
-      {/* Below the fold — minimal explainer; lives only on the LANDING.
-          Disappears entirely once the customer engages. */}
-      <section className="bg-zinc-50 px-5 py-16">
-        <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            { n: "1", title: "Plate + state", body: "Tell us your car. We auto-find it in seconds." },
-            { n: "2", title: "Quick condition Q's", body: "Five questions. Two minutes. Real cash number." },
-            config.pickup_offered !== false
-              ? { n: "3", title: "Pickup or drop-off", body: "Free pickup nationwide. Money in your account same day." }
-              : { n: "3", title: "Drop off & get paid", body: "Bring your car to any rooftop. Money in your account same day." },
-          ].map((s) => (
-            <div key={s.n} className="bg-white rounded-2xl border border-zinc-200 p-6">
-              <div
-                className="w-9 h-9 rounded-full text-white font-bold flex items-center justify-center mb-3 text-sm"
-                style={{ background: primary }}
-              >
-                {s.n}
-              </div>
-              <div className="text-base font-bold text-zinc-900 mb-1">{s.title}</div>
-              <div className="text-sm text-zinc-600 leading-relaxed">{s.body}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Canonical below-fold marketing chrome shared with every
-          template (reviews, 1-2-3, comparison, FAQ collapsed). The
-          FullscreenWizard hides this during the customer journey
-          via fixed-position overlay + body-scroll lock. */}
+      {/* Canonical below-fold marketing chrome (reviews, the bolder
+          1-2-3 HowItWorks, comparison wedge, FAQ collapsed). Replaces
+          the prior inline 1-2-3 white-card strip that duplicated
+          HowItWorks one fold below. */}
       <FullBelowFold />
 
       {/* Fullscreen wizard — light theme, blue accent */}
