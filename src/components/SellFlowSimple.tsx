@@ -82,7 +82,6 @@ const SellFlowSimple = ({
   density = "simple",
   theme = "light",
   loader = "thin-line",
-  ghost: _ghost = "legacy-car",
   ghostHeadline,
   ghostSubhead,
   accent,
