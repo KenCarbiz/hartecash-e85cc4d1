@@ -20,6 +20,11 @@ interface LandingFormProps {
   /** Per-template compute-reveal loader. Velocity uses "running-car"
    *  per the May-2026 audit; other templates use quieter loaders. */
   loader?: "running-car" | "brass-arc" | "thin-line" | "hand-drawn";
+  /** Ghost-screen variant for the BB lookup transition state. */
+  ghost?: "pulse-orb" | "sweep-arc" | "stack-reveal" | "card-skeleton" | "legacy-car";
+  /** Optional override for the ghost-screen copy. */
+  ghostHeadline?: string;
+  ghostSubhead?: string;
   /** Brand accent (hex) used by the wizard's loader + emphasis. */
   accent?: string;
 }
@@ -53,7 +58,7 @@ class QuickOfferBoundary extends Component<{ fallback: ReactNode; children: Reac
   }
 }
 
-const LandingForm = ({ leadSource, variant = "split", initial, theme, loader, accent }: LandingFormProps) => {
+const LandingForm = ({ leadSource, variant = "split", initial, theme, loader, ghost, ghostHeadline, ghostSubhead, accent }: LandingFormProps) => {
   const { config } = useSiteConfig();
   const { tenant } = useTenant();
 
@@ -81,6 +86,22 @@ const LandingForm = ({ leadSource, variant = "split", initial, theme, loader, ac
   const density = ((config as any).landing_form_density ?? "simple") as "simple" | "standard" | "detailed";
   const hasPlateHandoff = !!(initial?.plate && initial?.state);
   const hasVinHandoff = !!(initial?.vin && initial.vin.length === 17);
+  // Resolve the ghost-screen choice. Template-prop wins, otherwise
+  // fall back to whatever the dealer picked in site_config (which
+  // defaults to "pulse-orb" — the calmest premium variant).
+  const resolvedGhost =
+    ghost ||
+    ((config as any).ghost_screen as
+      | "pulse-orb"
+      | "sweep-arc"
+      | "stack-reveal"
+      | "card-skeleton"
+      | "legacy-car"
+      | undefined) ||
+    "legacy-car";
+  const resolvedGhostHeadline = ghostHeadline || ((config as any).ghost_headline ?? undefined);
+  const resolvedGhostSubhead = ghostSubhead || ((config as any).ghost_subhead ?? undefined);
+
   if ((hasPlateHandoff || hasVinHandoff) && density !== "detailed") {
     return (
       <SellFlowSimple
@@ -93,6 +114,9 @@ const LandingForm = ({ leadSource, variant = "split", initial, theme, loader, ac
         leadSource={leadSource}
         theme={theme}
         loader={loader}
+        ghost={resolvedGhost}
+        ghostHeadline={resolvedGhostHeadline}
+        ghostSubhead={resolvedGhostSubhead}
         accent={accent}
       />
     );

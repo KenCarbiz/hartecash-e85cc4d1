@@ -16,6 +16,7 @@ import { logConsent } from "@/lib/consent";
 type Screen = "lookup" | "confirm" | "condition" | "computing" | "offer";
 
 import RunningCarLoader from "./landing/RunningCarLoader";
+import GhostScreen, { type GhostScreenKind } from "./landing/GhostScreen";
 
 interface Props {
   /** Pre-populated identifier from the landing-page LandingPlateInput.
@@ -42,6 +43,13 @@ interface Props {
    *    heritage → "hand-drawn"
    */
   loader?: "running-car" | "brass-arc" | "thin-line" | "hand-drawn";
+  /** Ghost-screen variant for the BB lookup transition state. Picked
+   *  per-template / per-dealer in admin so the "system is thinking"
+   *  moment matches the rest of the landing's vibe. */
+  ghost?: GhostScreenKind;
+  /** Optional copy override for the lookup ghost screen. */
+  ghostHeadline?: string;
+  ghostSubhead?: string;
   /** Brand accent color override. Defaults derived from theme. */
   accent?: string;
 }
@@ -74,6 +82,9 @@ const SellFlowSimple = ({
   density = "simple",
   theme = "light",
   loader = "thin-line",
+  ghost = "legacy-car",
+  ghostHeadline,
+  ghostSubhead,
   accent,
 }: Props) => {
   const navigate = useNavigate();
@@ -299,7 +310,9 @@ const SellFlowSimple = ({
   return (
     <div className="w-full">
       <AnimatePresence mode="wait">
-        {/* ── Screen: lookup ── */}
+        {/* ── Screen: lookup — premium SaaS ghost screen, dealer-picked
+              variant per template (pulse-orb / sweep-arc / stack-reveal
+              / card-skeleton). All copy + colors customizable. */}
         {screen === "lookup" && (
           <motion.div
             key="lookup"
@@ -307,17 +320,34 @@ const SellFlowSimple = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="flex flex-col items-center justify-center min-h-[400px] text-center"
+            className="min-h-[400px] flex items-center justify-center"
           >
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-              <Car className="w-7 h-7 text-primary animate-pulse" aria-hidden="true" />
-            </div>
-            <p className="text-lg font-medium tracking-tight">
-              Looking up your <span className="font-mono font-bold">{initial.plate}</span>…
-            </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              We're pulling your vehicle details from the {initial.state} registry.
-            </p>
+            <GhostScreen
+              kind={ghost}
+              accent={
+                accent ||
+                (theme === "dark"
+                  ? "#FFFFFF"
+                  : theme === "warm"
+                  ? "#2C2A26"
+                  : "#1F2937")
+              }
+              background="transparent"
+              size="lg"
+              fill
+              headline={
+                ghostHeadline ??
+                (initial.vin
+                  ? "Looking up your VIN…"
+                  : `Looking up your ${initial.plate}…`)
+              }
+              subhead={
+                ghostSubhead ??
+                (initial.vin
+                  ? "Pulling your vehicle details from the registry."
+                  : `Pulling your vehicle details from the ${initial.state} registry.`)
+              }
+            />
           </motion.div>
         )}
 
