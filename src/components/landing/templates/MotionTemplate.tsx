@@ -59,9 +59,9 @@ const MotionTemplate = () => {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="font-display text-[40px] md:text-[60px] lg:text-[72px] font-bold leading-[1.05] tracking-tight"
+            className="font-display text-[40px] md:text-[60px] lg:text-[72px] font-bold leading-[1.05] tracking-tight whitespace-pre-line"
           >
-            Your offer, in motion.
+            {config.hero_headline || "Your offer, in motion."}
           </motion.h1>
           <p className="mt-5 text-base md:text-lg max-w-2xl mx-auto opacity-85">
             {config.hero_subtext || "Type, scan, or chat your way to a real cash offer. We meet you where you are."}
