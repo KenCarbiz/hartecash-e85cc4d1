@@ -223,7 +223,7 @@ const CustomerPortal = () => {
     }
   };
 
-  if (loading) return <PortalSkeleton />;
+  if (loading) return <PortalSkeleton headline="Loading your submission" />;
 
   if (error) return (
     <div className="min-h-screen flex items-center justify-center bg-background p-6">

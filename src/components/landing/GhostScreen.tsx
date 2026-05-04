@@ -306,20 +306,24 @@ const GhostScreen = ({
       }`}
       style={{ background, color: accent }}
     >
-      <div className="mb-6" style={{ color: accent }}>
-        {visual}
-      </div>
+      {/* Headline ABOVE the visual so the customer sees what's
+          happening ("Finding Vehicle", "Uploading Photos", etc.)
+          before noticing the animation. Required by the May 2026
+          dealer feedback — every loader should announce its action. */}
       {headline && (
         <p
-          className="font-sans text-base md:text-lg font-medium tracking-tight"
+          className="font-sans text-lg md:text-xl font-semibold tracking-tight mb-5"
           style={{ color: accent }}
         >
           {headline}
         </p>
       )}
+      <div style={{ color: accent }}>
+        {visual}
+      </div>
       {subhead && (
         <p
-          className="font-sans text-sm mt-2 max-w-sm leading-relaxed"
+          className="font-sans text-sm mt-5 max-w-sm leading-relaxed"
           style={{ color: `${accent}A6` }}
         >
           {subhead}

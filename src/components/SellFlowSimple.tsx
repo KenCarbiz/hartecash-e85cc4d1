@@ -338,15 +338,11 @@ const SellFlowSimple = ({
               }
               accent={accent || "#0066CC"}
               size="lg"
-              headline={
-                initial.vin
-                  ? "Looking up your VIN…"
-                  : `Looking up your ${initial.plate}…`
-              }
+              headline="Finding your vehicle"
               subhead={
                 initial.vin
-                  ? "Pulling your vehicle details from the registry."
-                  : `Pulling your vehicle details from the ${initial.state} registry.`
+                  ? `Looking up VIN ${initial.vin}`
+                  : `Looking up ${initial.plate} on the ${initial.state} registry`
               }
             />
           </motion.div>

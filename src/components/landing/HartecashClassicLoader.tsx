@@ -27,6 +27,13 @@ const HartecashClassicLoader = ({ size = "lg", headline, subhead }: Props) => {
 
   return (
     <div className="flex flex-col items-center justify-center text-center">
+      {/* Headline above the car so the customer sees the action
+          before noticing the animation. */}
+      {headline && (
+        <p className="text-lg md:text-xl font-semibold tracking-tight mb-5">
+          {headline}
+        </p>
+      )}
       <div
         className="relative"
         style={{ width: w, height: h }}
@@ -65,13 +72,8 @@ const HartecashClassicLoader = ({ size = "lg", headline, subhead }: Props) => {
           />
         </svg>
       </div>
-      {headline && (
-        <p className="mt-4 text-base md:text-lg font-medium tracking-tight">
-          {headline}
-        </p>
-      )}
       {subhead && (
-        <p className="text-sm text-muted-foreground mt-2 max-w-sm">{subhead}</p>
+        <p className="text-sm text-muted-foreground mt-4 max-w-sm">{subhead}</p>
       )}
     </div>
   );
