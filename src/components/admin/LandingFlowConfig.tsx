@@ -48,12 +48,17 @@ interface State {
   landing_template: LandingTemplate;
   landing_form_variant: FormVariant;
   landing_form_density: FormDensity;
+  /** Whether this dealer offers free at-home pickup. Drives the
+   *  HowItWorks step 3 + the default "Why X Wins" wedge row. When
+   *  off, the customer-facing copy switches to in-person drop-off. */
+  pickup_offered: boolean;
 }
 
 const DEFAULTS: State = {
   landing_template: "classic",
   landing_form_variant: "detailed",
   landing_form_density: "simple",
+  pickup_offered: true,
 };
 
 const LandingFlowConfig = () => {
@@ -76,7 +81,7 @@ const LandingFlowConfig = () => {
       let row: any = null;
       const wide = await supabase
         .from("site_config" as any)
-        .select("landing_template, landing_form_variant, landing_form_density")
+        .select("landing_template, landing_form_variant, landing_form_density, pickup_offered")
         .eq("dealership_id", dealershipId)
         .maybeSingle();
       if (wide.error) {
@@ -84,6 +89,7 @@ const LandingFlowConfig = () => {
         if (
           lower.includes("landing_form_variant") ||
           lower.includes("landing_form_density") ||
+          lower.includes("pickup_offered") ||
           lower.includes("schema cache")
         ) {
           const narrow = await supabase
@@ -103,6 +109,8 @@ const LandingFlowConfig = () => {
           (row?.landing_form_variant as FormVariant) || DEFAULTS.landing_form_variant,
         landing_form_density:
           (row?.landing_form_density as FormDensity) || DEFAULTS.landing_form_density,
+        pickup_offered:
+          row?.pickup_offered === false ? false : DEFAULTS.pickup_offered,
       };
       setState(next);
       setSaved(next);
@@ -113,7 +121,8 @@ const LandingFlowConfig = () => {
   const dirty =
     state.landing_template !== saved.landing_template ||
     state.landing_form_variant !== saved.landing_form_variant ||
-    state.landing_form_density !== saved.landing_form_density;
+    state.landing_form_density !== saved.landing_form_density ||
+    state.pickup_offered !== saved.pickup_offered;
 
   const handleSave = async () => {
     setSaving(true);
@@ -185,6 +194,34 @@ const LandingFlowConfig = () => {
       }
     }
 
+    // Pass 1.6 — pickup_offered (best-effort, may not be deployed yet)
+    const pickupChanged = state.pickup_offered !== saved.pickup_offered;
+    let pickupSkipped = false;
+    if (pickupChanged) {
+      const { error: pErr } = await supabase
+        .from("site_config" as any)
+        .update({
+          pickup_offered: state.pickup_offered,
+          updated_at: new Date().toISOString(),
+        } as any)
+        .eq("dealership_id", dealershipId);
+      if (pErr) {
+        const lower = pErr.message?.toLowerCase() || "";
+        const code = (pErr as any).code || "";
+        const missingPickup =
+          lower.includes("pickup_offered") ||
+          lower.includes("schema cache") ||
+          code === "PGRST204" ||
+          (lower.includes("column") && lower.includes("does not exist"));
+        if (!missingPickup) {
+          setSaving(false);
+          toast({ title: "Save failed", description: pErr.message, variant: "destructive" });
+          return;
+        }
+        pickupSkipped = true;
+      }
+    }
+
     // Pass 2 — variant (best-effort)
     let variantSkipped = false;
     if (variantChanged) {
@@ -224,6 +261,7 @@ const LandingFlowConfig = () => {
       ...state,
       ...(variantSkipped ? { landing_form_variant: saved.landing_form_variant } : {}),
       ...(densitySkipped ? { landing_form_density: saved.landing_form_density } : {}),
+      ...(pickupSkipped ? { pickup_offered: saved.pickup_offered } : {}),
     });
 
     if (variantSkipped) {
@@ -386,6 +424,44 @@ const LandingFlowConfig = () => {
         </div>
       </section>
 
+      {/* ── Pickup toggle ──
+          Drives "We pick up your car" copy on HowItWorks step 3 and the
+          default Why-X-Wins wedge row. When off, those swap to in-person
+          drop-off so the landing stays honest. */}
+      <section className="bg-card rounded-xl border border-border p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-base">🚚</span>
+              <h3 className="font-bold">Free At-Home Pickup</h3>
+            </div>
+            <p className="text-xs text-muted-foreground max-w-prose">
+              Toggle on if you offer free pickup of the car after the customer accepts
+              the offer. Drives the "We pick up your car" wording on the landing
+              page (HowItWorks step 3) and the comparison wedge. When off, the page
+              swaps to in-person drop-off copy.
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={state.pickup_offered}
+            onClick={() =>
+              setState((prev) => ({ ...prev, pickup_offered: !prev.pickup_offered }))
+            }
+            className={`relative inline-flex h-7 w-12 flex-shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40 ${
+              state.pickup_offered ? "bg-primary" : "bg-muted"
+            }`}
+          >
+            <span
+              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                state.pickup_offered ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
+          </button>
+        </div>
+      </section>
+
       {/* ── Template picker ── */}
       <section className="bg-card rounded-xl border border-border p-6">
         <div className="flex items-center gap-2 mb-1">
@@ -393,8 +469,51 @@ const LandingFlowConfig = () => {
           <h3 className="font-bold">Landing Page Template</h3>
         </div>
         <p className="text-xs text-muted-foreground mb-6">
-          Your / route renders whichever template is selected here. The four templates below are the May-2026 design-audit recommendations — each is opinionated for a different dealer archetype.
+          Your / route renders whichever template is selected here. Pick the original Hartecash long-scroll, one of the May-2026 design-audit picks, or any of the 15 alternates.
         </p>
+
+        {/* Legacy Hartecash — pre-audit maximalist look, kept featured
+            for dealers whose conversions came from the long scroll. */}
+        <div className="mb-3 flex items-center gap-2">
+          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-600">
+            ◇ Legacy
+          </span>
+          <span className="text-[11px] text-muted-foreground italic">— the original Hartecash look</span>
+        </div>
+        <div className="grid grid-cols-1 gap-3 mb-8">
+          {LANDING_TEMPLATES.filter((t) => t.value === "legacy").map((t) => {
+            const active = state.landing_template === t.value;
+            return (
+              <button
+                key={t.value}
+                type="button"
+                onClick={() => setState((prev) => ({ ...prev, landing_template: t.value }))}
+                className={`relative text-left rounded-xl border-2 p-3 transition-all ${
+                  active
+                    ? "border-amber-500 bg-amber-50 shadow-lg ring-2 ring-amber-300/40"
+                    : "border-amber-300/60 bg-card hover:bg-amber-50/40 hover:border-amber-400 shadow-sm"
+                }`}
+              >
+                <div className="aspect-[16/10] mb-2.5 rounded-md overflow-hidden border border-border/60">
+                  <TemplateThumbnail template={t.value} />
+                </div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-bold text-sm">{t.label}</span>
+                  {active ? (
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700">
+                      Active
+                    </span>
+                  ) : (
+                    <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                      ◇ Pick
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground leading-snug">{t.description}</p>
+              </button>
+            );
+          })}
+        </div>
 
         {/* Recommended (4 new templates from the design audit) */}
         <div className="mb-3 flex items-center gap-2">
@@ -444,7 +563,7 @@ const LandingFlowConfig = () => {
             ▾ All templates (15 more)
           </summary>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">
-          {LANDING_TEMPLATES.filter((t) => !["clarity", "marquee", "velocity", "heritage"].includes(t.value)).map((t) => {
+          {LANDING_TEMPLATES.filter((t) => !["legacy", "clarity", "marquee", "velocity", "heritage"].includes(t.value)).map((t) => {
             const active = state.landing_template === t.value;
             return (
               <button

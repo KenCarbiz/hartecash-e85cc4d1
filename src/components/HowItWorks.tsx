@@ -1,4 +1,11 @@
+import { useSiteConfig } from "@/hooks/useSiteConfig";
+
 const HowItWorks = () => {
+  const { config } = useSiteConfig();
+  // Default true so legacy / unset rows still get the pickup messaging
+  // that hartecash.com has historically used.
+  const pickupOffered = config.pickup_offered !== false;
+
   const steps = [
     {
       num: "1",
@@ -10,11 +17,17 @@ const HowItWorks = () => {
       title: "Get Your Cash Offer",
       desc: "Receive a competitive, no-obligation offer based on real market data.",
     },
-    {
-      num: "3",
-      title: "Get Paid & We Pick Up",
-      desc: "Accept your offer, get paid on the spot, and we'll pick up your car for free.",
-    },
+    pickupOffered
+      ? {
+          num: "3",
+          title: "Get Paid & We Pick Up",
+          desc: "Accept your offer, get paid on the spot, and we'll pick up your car for free.",
+        }
+      : {
+          num: "3",
+          title: "Drop Off & Get Paid",
+          desc: "Bring your car to us when it's convenient. We'll inspect, pay you on the spot, and handle the paperwork.",
+        },
   ];
 
   return (

@@ -17,8 +17,34 @@ const CompetitorComparison = () => {
   const shortName = name.split(" ")[0];
   const animate = config.enable_animations;
 
-  const [columns, setColumns] = useState<string[]>(["CarMax", "Carvana", "Private Sale"]);
-  const [features, setFeatures] = useState<ComparisonFeature[]>([]);
+  // Sensible defaults so the wedge always renders, even before a
+  // dealer customizes their own comparison rows in the admin. The
+  // section disappeared in production around mid-April 2026 because
+  // dealers' comparison_features columns were null and the component
+  // was silently early-returning. Defaults restore the original
+  // hartecash.com "Why X Wins" wedge against CarMax / Carvana /
+  // Private Sale across the seven points the page historically used.
+  // Each row is [us, CarMax, Carvana, Private Sale]. true = yes,
+  // false = no, "partial" = sometimes/varies.
+  const DEFAULT_COLUMNS = ["CarMax", "Carvana", "Private Sale"];
+  // Whether the dealer offers free at-home pickup. When the toggle is
+  // off, swap the row label to in-person drop-off so the wedge stays
+  // honest. Default true preserves historical hartecash.com behavior.
+  const pickupOffered = config.pickup_offered !== false;
+  const DEFAULT_FEATURES: ComparisonFeature[] = [
+    { label: "Real cash offer in 2 minutes",       values: [true,  "partial", true,  false] },
+    pickupOffered
+      ? { label: "Free at-home pickup",            values: [true,  false,     true,  false] }
+      : { label: "Quick in-person drop-off",       values: [true,  true,      false, "partial"] },
+    { label: "We pay the loan payoff",             values: [true,  true,      true,  false] },
+    { label: "Same-day payment",                   values: [true,  true,      "partial", "partial"] },
+    { label: "Offer good for 7 days",              values: [true,  true,      true,  false] },
+    { label: "No haggling or trade-in pressure",   values: [true,  true,      true,  false] },
+    { label: "Local family-owned, not a corporation", values: [true, false, false, true] },
+  ];
+
+  const [columns, setColumns] = useState<string[]>(DEFAULT_COLUMNS);
+  const [features, setFeatures] = useState<ComparisonFeature[]>(DEFAULT_FEATURES);
   const [loaded, setLoaded] = useState(false);
 
   const sectionRef = useRef<HTMLElement>(null);
@@ -33,14 +59,24 @@ const CompetitorComparison = () => {
       .then(({ data }) => {
         if (data) {
           const d = data as any;
-          if (d.competitor_columns) setColumns(d.competitor_columns);
-          if (d.comparison_features) setFeatures(d.comparison_features);
+          // Only override defaults when the dealer has provided
+          // a non-empty array — empty/null keeps the defaults visible.
+          if (Array.isArray(d.competitor_columns) && d.competitor_columns.length > 0) {
+            setColumns(d.competitor_columns);
+          }
+          if (Array.isArray(d.comparison_features) && d.comparison_features.length > 0) {
+            setFeatures(d.comparison_features);
+          }
         }
         setLoaded(true);
       });
   }, []);
 
-  if (!loaded || features.length === 0) return null;
+  // We no longer early-return when features is empty — DEFAULT_FEATURES
+  // guarantees there's always something to show. We still wait for the
+  // initial fetch to settle so we don't flash defaults when the dealer
+  // has custom data on the way.
+  if (!loaded) return null;
 
   const CellIcon = ({ value }: { value: boolean | string }) => {
     if (value === true) return <Check className="w-5 h-5 text-success mx-auto" />;
