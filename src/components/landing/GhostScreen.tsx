@@ -71,7 +71,7 @@ interface Props {
 const GhostScreen = ({
   kind = "legacy-car",
   accent = "#1F2937",
-  background = "#FAFAFA",
+  background = "transparent",
   headline,
   subhead,
   size = "md",
