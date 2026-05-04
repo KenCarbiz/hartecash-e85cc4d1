@@ -141,6 +141,7 @@ const HeritageTemplate = () => {
                 onEngage={handleEngage}
                 theme="warm"
                 ctaLabel="Tell us about your car"
+                defaultLookup={config.landing_lookup_default || "plate"}
                 trustLine={`★ ${config.stats_rating || "4.9"} · Family-owned${config.established_year ? ` since ${config.established_year}` : ""} · ${config.stats_cars_purchased || "14,721+"} cars bought`}
               />
             </div>

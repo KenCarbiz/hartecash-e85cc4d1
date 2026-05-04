@@ -100,6 +100,13 @@ export interface SiteConfig {
   ghost_headline: string | null;
   /** Optional dealer copy override for the ghost-screen subhead. */
   ghost_subhead: string | null;
+  /**
+   * Which lookup tab opens by default on the landing input cluster.
+   * Some dealer audiences are more VIN-literate (luxury, fleet,
+   * out-of-state buyers) while most consumer rooftops still expect
+   * plate + state. Dealer-controlled in admin.
+   */
+  landing_lookup_default: "plate" | "vin";
   price_guarantee_days: number;
   stats_cars_purchased: string;
   stats_years_in_business: string;
@@ -227,6 +234,7 @@ const DEFAULTS: SiteConfig = {
   ghost_screen: "legacy-car",
   ghost_headline: null,
   ghost_subhead: null,
+  landing_lookup_default: "plate",
   price_guarantee_days: 8,
   stats_cars_purchased: "14,721+",
   stats_years_in_business: "78 yrs",
@@ -331,6 +339,7 @@ const LOCATION_OVERRIDE_KEYS: (keyof SiteConfig)[] = [
   "ghost_screen",
   "ghost_headline",
   "ghost_subhead",
+  "landing_lookup_default",
   "service_hero_headline",
   "service_hero_subtext",
   "trade_hero_headline",

@@ -74,6 +74,7 @@ const VelocityTemplate = () => {
             onEngage={handleEngage}
             theme="light"
             ctaLabel="Get real offer"
+            defaultLookup={config.landing_lookup_default || "plate"}
             trustLine={`★ ${config.stats_rating || "4.9"} · ${config.stats_cars_purchased || "14,721+"} sellers paid · Free pickup nationwide`}
           />
         </motion.div>

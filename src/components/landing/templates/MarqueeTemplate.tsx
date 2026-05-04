@@ -91,6 +91,7 @@ const MarqueeTemplate = () => {
             onEngage={handleEngage}
             theme="dark"
             ctaLabel="Begin appraisal"
+            defaultLookup={config.landing_lookup_default || "plate"}
             trustLine={`★ ${config.stats_rating || "4.9"} · ${config.stats_cars_purchased || "14,721+"} appraised · Concierge from offer to title`}
           />
         </motion.div>

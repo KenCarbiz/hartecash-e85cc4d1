@@ -59,6 +59,8 @@ interface State {
   ghost_screen: GhostScreenKind;
   ghost_headline: string;
   ghost_subhead: string;
+  /** Which lookup tab opens by default on the landing cluster. */
+  landing_lookup_default: "plate" | "vin";
 }
 
 const DEFAULTS: State = {
@@ -69,6 +71,7 @@ const DEFAULTS: State = {
   ghost_screen: "legacy-car",
   ghost_headline: "",
   ghost_subhead: "",
+  landing_lookup_default: "plate",
 };
 
 const GHOST_OPTIONS: { value: GhostScreenKind; label: string; description: string }[] = [
@@ -99,7 +102,7 @@ const LandingFlowConfig = () => {
       let row: any = null;
       const wide = await supabase
         .from("site_config" as any)
-        .select("landing_template, landing_form_variant, landing_form_density, pickup_offered, ghost_screen, ghost_headline, ghost_subhead")
+        .select("landing_template, landing_form_variant, landing_form_density, pickup_offered, ghost_screen, ghost_headline, ghost_subhead, landing_lookup_default")
         .eq("dealership_id", dealershipId)
         .maybeSingle();
       if (wide.error) {
@@ -111,6 +114,7 @@ const LandingFlowConfig = () => {
           lower.includes("ghost_screen") ||
           lower.includes("ghost_headline") ||
           lower.includes("ghost_subhead") ||
+          lower.includes("landing_lookup_default") ||
           lower.includes("schema cache")
         ) {
           const narrow = await supabase
@@ -136,6 +140,9 @@ const LandingFlowConfig = () => {
           (row?.ghost_screen as GhostScreenKind) || DEFAULTS.ghost_screen,
         ghost_headline: row?.ghost_headline ?? DEFAULTS.ghost_headline,
         ghost_subhead: row?.ghost_subhead ?? DEFAULTS.ghost_subhead,
+        landing_lookup_default:
+          (row?.landing_lookup_default as "plate" | "vin") ||
+          DEFAULTS.landing_lookup_default,
       };
       setState(next);
       setSaved(next);
@@ -150,7 +157,8 @@ const LandingFlowConfig = () => {
     state.pickup_offered !== saved.pickup_offered ||
     state.ghost_screen !== saved.ghost_screen ||
     state.ghost_headline !== saved.ghost_headline ||
-    state.ghost_subhead !== saved.ghost_subhead;
+    state.ghost_subhead !== saved.ghost_subhead ||
+    state.landing_lookup_default !== saved.landing_lookup_default;
 
   const handleSave = async () => {
     setSaving(true);
@@ -222,6 +230,35 @@ const LandingFlowConfig = () => {
       }
     }
 
+    // Pass 1.65 — landing_lookup_default (best-effort)
+    const lookupChanged =
+      state.landing_lookup_default !== saved.landing_lookup_default;
+    let lookupSkipped = false;
+    if (lookupChanged) {
+      const { error: lErr } = await supabase
+        .from("site_config" as any)
+        .update({
+          landing_lookup_default: state.landing_lookup_default,
+          updated_at: new Date().toISOString(),
+        } as any)
+        .eq("dealership_id", dealershipId);
+      if (lErr) {
+        const lower = lErr.message?.toLowerCase() || "";
+        const code = (lErr as any).code || "";
+        const missingLookup =
+          lower.includes("landing_lookup_default") ||
+          lower.includes("schema cache") ||
+          code === "PGRST204" ||
+          (lower.includes("column") && lower.includes("does not exist"));
+        if (!missingLookup) {
+          setSaving(false);
+          toast({ title: "Save failed", description: lErr.message, variant: "destructive" });
+          return;
+        }
+        lookupSkipped = true;
+      }
+    }
+
     // Pass 1.7 — ghost_screen + copy (best-effort)
     const ghostChanged =
       state.ghost_screen !== saved.ghost_screen ||
@@ -245,6 +282,7 @@ const LandingFlowConfig = () => {
           lower.includes("ghost_screen") ||
           lower.includes("ghost_headline") ||
           lower.includes("ghost_subhead") ||
+          lower.includes("landing_lookup_default") ||
           lower.includes("schema cache") ||
           code === "PGRST204" ||
           (lower.includes("column") && lower.includes("does not exist"));
@@ -325,6 +363,7 @@ const LandingFlowConfig = () => {
       ...(variantSkipped ? { landing_form_variant: saved.landing_form_variant } : {}),
       ...(densitySkipped ? { landing_form_density: saved.landing_form_density } : {}),
       ...(pickupSkipped ? { pickup_offered: saved.pickup_offered } : {}),
+      ...(lookupSkipped ? { landing_lookup_default: saved.landing_lookup_default } : {}),
       ...(ghostSkipped
         ? {
             ghost_screen: saved.ghost_screen,
@@ -529,6 +568,58 @@ const LandingFlowConfig = () => {
               }`}
             />
           </button>
+        </div>
+      </section>
+
+      {/* ── Default lookup picker ──
+          Which tab opens first on the public landing input cluster
+          (Plate & State vs VIN). Some dealer audiences are more
+          VIN-literate than plate-literate; this lets the dealer pick. */}
+      <section className="bg-card rounded-xl border border-border p-6">
+        <div className="flex items-start justify-between gap-4 mb-4">
+          <div>
+            <h3 className="font-bold mb-1">Default lookup</h3>
+            <p className="text-xs text-muted-foreground max-w-prose">
+              Which tab opens first on the landing input cluster. Customers
+              can still toggle to the other one — this just sets which
+              they see when the page loads.
+            </p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {([
+            { value: "plate", label: "Plate &amp; State", body: "Default for most consumer rooftops. The familiar pattern from Carvana / CarMax." },
+            { value: "vin", label: "VIN", body: "Default for luxury, fleet, and out-of-state-heavy audiences who already have the VIN handy." },
+          ] as const).map((opt) => {
+            const active = state.landing_lookup_default === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() =>
+                  setState((prev) => ({ ...prev, landing_lookup_default: opt.value }))
+                }
+                className={`text-left rounded-xl border-2 p-4 transition-all ${
+                  active
+                    ? "border-primary bg-primary/5 shadow-md ring-2 ring-primary/15"
+                    : "border-border bg-muted/20 hover:bg-muted/40 hover:border-primary/40"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1.5">
+                  <span
+                    className="font-bold text-sm"
+                    dangerouslySetInnerHTML={{ __html: opt.label }}
+                  />
+                  {active && (
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                      Active
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground leading-snug">{opt.body}</p>
+              </button>
+            );
+          })}
         </div>
       </section>
 
