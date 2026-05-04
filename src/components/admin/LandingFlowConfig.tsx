@@ -81,12 +81,12 @@ const DEFAULTS: State = {
   landing_cta_text_color: "",
 };
 
-const GHOST_OPTIONS: { value: GhostScreenKind; label: string; description: string }[] = [
-  { value: "legacy-car",    label: "Hartecash classic",     description: "The running-car silhouette over a road line. The familiar Hartecash motion." },
-  { value: "pulse-orb",     label: "Pulse orb",             description: "Concentric rings pulsing outward from a solid center. Apple Vision Pro / OpenAI vibe." },
-  { value: "sweep-arc",     label: "Sweep arc",             description: "Thin quarter-arc rotating with a soft trailing gradient. Stripe / Linear vibe." },
-  { value: "stack-reveal",  label: "Stack reveal",          description: "Four horizontal bars filling left-to-right in sequence. Vercel deploy vibe." },
-  { value: "card-skeleton", label: "Vehicle card",          description: "Vehicle-card placeholder with a diagonal shimmer sweep. Edmunds / Carvana vibe." },
+const GHOST_OPTIONS: { value: GhostScreenKind; label: string; description: string; recommended?: boolean }[] = [
+  { value: "legacy-car",    label: "Hartecash Classic",     description: "The official Hartecash ghost-car illustration bouncing over a scrolling dashed road. The default — used everywhere on the live site.", recommended: true },
+  { value: "pulse-orb",     label: "Pulse Orb",             description: "Concentric rings pulsing outward from a solid center. Apple Vision Pro / OpenAI vibe — calm, premium, geometric." },
+  { value: "sweep-arc",     label: "Sweep Arc",             description: "Thin quarter-arc rotating with a soft trailing gradient. Stripe / Linear / Vercel — minimal, fast-feeling." },
+  { value: "stack-reveal",  label: "Stack Reveal",          description: "Four horizontal bars filling left-to-right in sequence. Vercel deploy / Notion publish — clearly progressing." },
+  { value: "card-skeleton", label: "Vehicle Card",          description: "Vehicle-card placeholder with a diagonal shimmer sweep. Edmunds / Carvana — industry-standard pattern." },
 ];
 
 const LandingFlowConfig = () => {
@@ -813,13 +813,20 @@ const LandingFlowConfig = () => {
                 <div className="relative aspect-[16/10] mb-2.5 rounded-md overflow-hidden border border-border/60 bg-background flex items-center justify-center">
                   <GhostScreen kind={opt.value} size="sm" />
                 </div>
-                <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center justify-between gap-2 mb-1">
                   <span className="font-bold text-sm">{opt.label}</span>
-                  {active && (
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
-                      Active
-                    </span>
-                  )}
+                  <div className="flex items-center gap-1.5">
+                    {opt.recommended && !active && (
+                      <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-primary/80 bg-primary/10 px-2 py-0.5 rounded-full">
+                        ★ Default
+                      </span>
+                    )}
+                    {active && (
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                        Active
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <p className="text-xs text-muted-foreground leading-snug">{opt.description}</p>
               </button>
