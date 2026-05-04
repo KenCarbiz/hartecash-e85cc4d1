@@ -79,6 +79,14 @@ const DEFAULTS: State = {
   landing_cta_color: "",
 };
 
+const normalizeCtaColor = (value: string) => {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  return trimmed.startsWith("#") ? trimmed.toUpperCase() : `#${trimmed}`.toUpperCase();
+};
+
+const isValidHexColor = (value: string) => /^#[0-9A-F]{6}$/.test(value);
+
 const GHOST_OPTIONS: { value: GhostScreenKind; label: string; description: string }[] = [
   { value: "legacy-car",    label: "Hartecash classic",     description: "The running-car silhouette over a road line. The familiar Hartecash motion." },
   { value: "pulse-orb",     label: "Pulse orb",             description: "Concentric rings pulsing outward from a solid center. Apple Vision Pro / OpenAI vibe." },
@@ -172,6 +180,17 @@ const LandingFlowConfig = () => {
   const handleSave = async () => {
     setSaving(true);
 
+    const normalizedCtaColor = normalizeCtaColor(state.landing_cta_color);
+    if (normalizedCtaColor && !isValidHexColor(normalizedCtaColor)) {
+      setSaving(false);
+      toast({
+        title: "CTA color needs a hex value",
+        description: "Use a 6-character color like #FACC15.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Save in two passes so a missing landing_form_variant column on
     // not-yet-migrated DBs never blocks the template change.
     //   1) Always-safe pass: template + updated_at (columns shipped
@@ -246,7 +265,7 @@ const LandingFlowConfig = () => {
       const { error: cErr } = await supabase
         .from("site_config" as any)
         .update({
-          landing_cta_color: state.landing_cta_color.trim() || null,
+          landing_cta_color: normalizedCtaColor || null,
           updated_at: new Date().toISOString(),
         } as any)
         .eq("dealership_id", dealershipId);
