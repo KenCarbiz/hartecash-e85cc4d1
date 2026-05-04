@@ -822,21 +822,55 @@ const LandingFlowConfig = () => {
           <Sparkles className="w-4 h-4 text-primary" />
           <h3 className="font-bold">Ghost Screen</h3>
         </div>
-        <p className="text-xs text-muted-foreground mb-6 max-w-prose">
+        <p className="text-xs text-muted-foreground mb-4 max-w-prose">
           Pick the "system is thinking" animation customers see while we look up their car. Five variants — the original Hartecash running-car (default) plus four SaaS-grade transitions.
         </p>
 
+        {/* Unsaved-change banner. Without this, dealers were picking
+            a variant, seeing "Selected" / "Active" on the card, and
+            assuming it was already live — even though they hadn't
+            scrolled down to click Save Changes. The card-level
+            "Selected · Save to apply" tag tells you what to do; this
+            banner reminds you BEFORE you scroll past. */}
+        {state.ghost_screen !== saved.ghost_screen && (
+          <div className="mb-4 rounded-lg border border-amber-300/60 bg-amber-50 dark:bg-amber-500/10 px-3 py-2 text-xs text-amber-900 dark:text-amber-100 flex items-start gap-2">
+            <span className="font-bold">⚠ Unsaved change.</span>
+            <span>
+              You picked{" "}
+              <strong>
+                {GHOST_OPTIONS.find((o) => o.value === state.ghost_screen)?.label}
+              </strong>{" "}
+              but the live site is still serving{" "}
+              <strong>
+                {GHOST_OPTIONS.find((o) => o.value === saved.ghost_screen)?.label}
+              </strong>
+              . Click <strong>Save Changes</strong> at the bottom to switch.
+            </span>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
           {GHOST_OPTIONS.map((opt) => {
-            const active = state.ghost_screen === opt.value;
+            // Two distinct states the dealer needs to see:
+            //   selected — currently picked in the form (unsaved)
+            //   live     — what saved.ghost_screen is set to (the
+            //              variant actually serving public traffic)
+            // Earlier the badge just said "Active" if state matched,
+            // which made dealers think their pick was already live
+            // even when they hadn't hit Save Changes. Splitting the
+            // labels removes that confusion.
+            const selected = state.ghost_screen === opt.value;
+            const live = saved.ghost_screen === opt.value;
             return (
               <button
                 key={opt.value}
                 type="button"
                 onClick={() => setState((prev) => ({ ...prev, ghost_screen: opt.value }))}
                 className={`text-left rounded-xl border-2 p-3 transition-all ${
-                  active
+                  selected
                     ? "border-primary bg-primary/5 shadow-lg ring-2 ring-primary/20"
+                    : live
+                    ? "border-emerald-500/60 bg-emerald-500/5"
                     : "border-border bg-muted/20 hover:bg-muted/40 hover:border-primary/40"
                 }`}
               >
@@ -846,15 +880,25 @@ const LandingFlowConfig = () => {
                 </div>
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <span className="font-bold text-sm">{opt.label}</span>
-                  <div className="flex items-center gap-1.5">
-                    {opt.recommended && !active && (
+                  <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                    {opt.recommended && !selected && !live && (
                       <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-primary/80 bg-primary/10 px-2 py-0.5 rounded-full">
                         ★ Default
                       </span>
                     )}
-                    {active && (
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
-                        Active
+                    {live && (
+                      <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-emerald-700 bg-emerald-500/15 px-2 py-0.5 rounded-full">
+                        Live
+                      </span>
+                    )}
+                    {selected && !live && (
+                      <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-primary bg-primary/15 px-2 py-0.5 rounded-full">
+                        Selected · Save to apply
+                      </span>
+                    )}
+                    {selected && live && (
+                      <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-primary bg-primary/15 px-2 py-0.5 rounded-full">
+                        Selected
                       </span>
                     )}
                   </div>
