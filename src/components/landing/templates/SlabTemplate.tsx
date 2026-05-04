@@ -36,6 +36,11 @@ const SlabTemplate = () => {
           >
             {config.hero_headline || "Find your car. Sell yours. Done in two minutes."}
           </motion.h1>
+          {config.hero_subtext && (
+            <p className="mt-4 text-base md:text-lg text-muted-foreground max-w-2xl">
+              {config.hero_subtext}
+            </p>
+          )}
 
           {/* Sticky-feel search bar — the hero CTA */}
           <motion.div
