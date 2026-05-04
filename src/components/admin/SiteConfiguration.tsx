@@ -351,7 +351,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
       .maybeSingle();
 
     if (data && !error) {
-      const loaded = { ...DEFAULT_CONFIG, ...data } as SiteConfig;
+      const loaded = { ...DEFAULT_CONFIG, ...data } as unknown as SiteConfig;
       // Re-hydrate any fields the dealer edited but couldn't persist
       // last time (PostgREST schema cache miss). Keys are written by
       // handleSave when stripped[] is non-empty. Once the migration
