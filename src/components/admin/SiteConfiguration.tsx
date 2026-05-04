@@ -352,8 +352,35 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
 
     if (data && !error) {
       const loaded = { ...DEFAULT_CONFIG, ...data } as SiteConfig;
-      setConfig(loaded);
-      setSavedConfig(loaded);
+      // Re-hydrate any fields the dealer edited but couldn't persist
+      // last time (PostgREST schema cache miss). Keys are written by
+      // handleSave when stripped[] is non-empty. Once the migration
+      // applies and the next save succeeds, the dealer can clear the
+      // pending key by saving cleanly — at which point this read just
+      // matches the DB value.
+      try {
+        const fields = Object.keys(loaded) as (keyof SiteConfig)[];
+        const merged = { ...loaded };
+        for (const key of fields) {
+          const raw = localStorage.getItem(
+            `site_config_pending:${dealershipId}:${key}`,
+          );
+          if (raw === null) continue;
+          try {
+            (merged as any)[key] = JSON.parse(raw);
+          } catch {
+            /* corrupted entry, ignore */
+          }
+        }
+        setConfig(merged);
+        setSavedConfig(loaded);
+        // Important: setSavedConfig stays at the DB-loaded value so
+        // the dirty/unsaved indicator surfaces the pending edits and
+        // the dealer is reminded to re-save once the migration lands.
+      } catch {
+        setConfig(loaded);
+        setSavedConfig(loaded);
+      }
     }
     setLoading(false);
   };
@@ -454,14 +481,46 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
       // instead of waiting up to 5 minutes for staleTime to elapse.
       queryClient.invalidateQueries({ queryKey: ["site_config"] });
       if (stripped.length > 0) {
-        // Soft-warn the dealer so they know SOME fields didn't land
-        // (the schema cache hasn't picked them up yet). The save
-        // SUCCEEDED for every other field — that's the win.
+        // Persist any stripped fields' values to localStorage so the
+        // dealer doesn't lose their work between sessions while the
+        // migration is pending. The admin form re-hydrates from this
+        // on mount; the public landing still falls back to defaults
+        // until the migration applies (localStorage is browser-bound).
+        try {
+          for (const key of stripped) {
+            const val = (config as any)[key];
+            if (val !== undefined) {
+              localStorage.setItem(
+                `site_config_pending:${dealershipId}:${key}`,
+                JSON.stringify(val),
+              );
+            }
+          }
+        } catch {
+          /* private-mode / quota: ignore */
+        }
+        // Destructive (red) toast so the dealer can't miss it. The
+        // earlier warm "Saved (with caveats)" looked like a normal
+        // confirmation and dealers were treating it as a success.
         toast({
-          title: "Saved (with caveats)",
-          description: `Most fields saved. PostgREST hasn't refreshed for: ${stripped.join(", ")}. Re-save in a minute or apply the schema-reload migration.`,
+          title: "Some fields didn't save to the database",
+          description: `PostgREST's schema cache doesn't know about: ${stripped.join(", ")}. Your edits are stored locally so you can keep working — but customers won't see them on the public landing until you apply the schema-reload migration (supabase/migrations/20260504070000_force_postgrest_reload.sql) and re-save.`,
+          variant: "destructive",
         });
       } else {
+        // Clean save with no stripped fields. Drop any pending
+        // localStorage entries for this dealer so the editor stops
+        // showing stale "you owe a re-save" state.
+        try {
+          const fields = Object.keys(config) as (keyof SiteConfig)[];
+          for (const key of fields) {
+            localStorage.removeItem(
+              `site_config_pending:${dealershipId}:${key}`,
+            );
+          }
+        } catch {
+          /* ignore */
+        }
         toast({ title: "Saved", description: "Site configuration updated." });
       }
     }
