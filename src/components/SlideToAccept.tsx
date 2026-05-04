@@ -5,9 +5,13 @@ import { CheckCircle, ArrowRight } from "lucide-react";
 interface SlideToAcceptProps {
   onAccept: () => void;
   label?: string;
+  /** Optional fill color (hex) — overrides the shadcn --cta-accept
+   *  CSS variable so the dealer-controlled landing CTA color flows
+   *  through to the offer-acceptance slider. */
+  color?: string;
 }
 
-const SlideToAccept = ({ onAccept, label = "Slide to Accept" }: SlideToAcceptProps) => {
+const SlideToAccept = ({ onAccept, label = "Slide to Accept", color }: SlideToAcceptProps) => {
   const [accepted, setAccepted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const x = useMotionValue(0);
@@ -46,17 +50,27 @@ const SlideToAccept = ({ onAccept, label = "Slide to Accept" }: SlideToAcceptPro
     );
   }
 
+  // When a hex override is provided we substitute the inline color
+  // for the --cta-accept CSS var. Track / fill / thumb all share it
+  // so the dealer's landing CTA color reads consistently across the
+  // whole flow. Fallback keeps backwards-compat with the existing
+  // shadcn theme variable.
+  const trackBg = color
+    ? `${color}26`
+    : "hsl(var(--cta-accept) / 0.15)";
+  const fillBg = color || "hsl(var(--cta-accept))";
+
   return (
     <div
       ref={containerRef}
       className="relative h-16 rounded-2xl overflow-hidden select-none"
-      style={{ backgroundColor: "hsl(var(--cta-accept) / 0.15)" }}
+      style={{ backgroundColor: trackBg }}
     >
       {/* Animated fill */}
       <motion.div
         className="absolute inset-0 rounded-2xl"
         style={{
-          backgroundColor: "hsl(var(--cta-accept))",
+          backgroundColor: fillBg,
           opacity: bgOpacity,
           originX: 0,
           scaleX: fillScaleX,
@@ -87,7 +101,7 @@ const SlideToAccept = ({ onAccept, label = "Slide to Accept" }: SlideToAcceptPro
       >
         <div
           className="w-full h-full rounded-xl flex items-center justify-center"
-          style={{ backgroundColor: "hsl(var(--cta-accept))" }}
+          style={{ backgroundColor: fillBg }}
         >
           <ArrowRight className="w-6 h-6 text-white" />
         </div>

@@ -62,6 +62,9 @@ interface State {
   ghost_subhead: string;
   /** Which lookup tab opens by default on the landing cluster. */
   landing_lookup_default: "plate" | "vin";
+  /** Optional dealer override for the landing CTA button color (hex).
+   *  Empty string = inherit the SaaS-default punchy yellow. */
+  landing_cta_color: string;
 }
 
 const DEFAULTS: State = {
@@ -73,6 +76,7 @@ const DEFAULTS: State = {
   ghost_headline: "",
   ghost_subhead: "",
   landing_lookup_default: "plate",
+  landing_cta_color: "",
 };
 
 const GHOST_OPTIONS: { value: GhostScreenKind; label: string; description: string }[] = [
@@ -104,7 +108,7 @@ const LandingFlowConfig = () => {
       let row: any = null;
       const wide = await supabase
         .from("site_config" as any)
-        .select("landing_template, landing_form_variant, landing_form_density, pickup_offered, ghost_screen, ghost_headline, ghost_subhead, landing_lookup_default")
+        .select("landing_template, landing_form_variant, landing_form_density, pickup_offered, ghost_screen, ghost_headline, ghost_subhead, landing_lookup_default, landing_cta_color")
         .eq("dealership_id", dealershipId)
         .maybeSingle();
       if (wide.error) {
@@ -117,6 +121,7 @@ const LandingFlowConfig = () => {
           lower.includes("ghost_headline") ||
           lower.includes("ghost_subhead") ||
           lower.includes("landing_lookup_default") ||
+          lower.includes("landing_cta_color") ||
           lower.includes("schema cache")
         ) {
           const narrow = await supabase
@@ -145,6 +150,7 @@ const LandingFlowConfig = () => {
         landing_lookup_default:
           (row?.landing_lookup_default as "plate" | "vin") ||
           DEFAULTS.landing_lookup_default,
+        landing_cta_color: row?.landing_cta_color ?? DEFAULTS.landing_cta_color,
       };
       setState(next);
       setSaved(next);
@@ -160,7 +166,8 @@ const LandingFlowConfig = () => {
     state.ghost_screen !== saved.ghost_screen ||
     state.ghost_headline !== saved.ghost_headline ||
     state.ghost_subhead !== saved.ghost_subhead ||
-    state.landing_lookup_default !== saved.landing_lookup_default;
+    state.landing_lookup_default !== saved.landing_lookup_default ||
+    state.landing_cta_color !== saved.landing_cta_color;
 
   const handleSave = async () => {
     setSaving(true);
@@ -232,6 +239,34 @@ const LandingFlowConfig = () => {
       }
     }
 
+    // Pass 1.6.5 — landing_cta_color (best-effort)
+    const ctaColorChanged = state.landing_cta_color !== saved.landing_cta_color;
+    let ctaColorSkipped = false;
+    if (ctaColorChanged) {
+      const { error: cErr } = await supabase
+        .from("site_config" as any)
+        .update({
+          landing_cta_color: state.landing_cta_color.trim() || null,
+          updated_at: new Date().toISOString(),
+        } as any)
+        .eq("dealership_id", dealershipId);
+      if (cErr) {
+        const lower = cErr.message?.toLowerCase() || "";
+        const code = (cErr as any).code || "";
+        const missing =
+          lower.includes("landing_cta_color") ||
+          lower.includes("schema cache") ||
+          code === "PGRST204" ||
+          (lower.includes("column") && lower.includes("does not exist"));
+        if (!missing) {
+          setSaving(false);
+          toast({ title: "Save failed", description: cErr.message, variant: "destructive" });
+          return;
+        }
+        ctaColorSkipped = true;
+      }
+    }
+
     // Pass 1.65 — landing_lookup_default (best-effort)
     const lookupChanged =
       state.landing_lookup_default !== saved.landing_lookup_default;
@@ -249,6 +284,7 @@ const LandingFlowConfig = () => {
         const code = (lErr as any).code || "";
         const missingLookup =
           lower.includes("landing_lookup_default") ||
+          lower.includes("landing_cta_color") ||
           lower.includes("schema cache") ||
           code === "PGRST204" ||
           (lower.includes("column") && lower.includes("does not exist"));
@@ -285,6 +321,7 @@ const LandingFlowConfig = () => {
           lower.includes("ghost_headline") ||
           lower.includes("ghost_subhead") ||
           lower.includes("landing_lookup_default") ||
+          lower.includes("landing_cta_color") ||
           lower.includes("schema cache") ||
           code === "PGRST204" ||
           (lower.includes("column") && lower.includes("does not exist"));
@@ -366,6 +403,7 @@ const LandingFlowConfig = () => {
       ...(densitySkipped ? { landing_form_density: saved.landing_form_density } : {}),
       ...(pickupSkipped ? { pickup_offered: saved.pickup_offered } : {}),
       ...(lookupSkipped ? { landing_lookup_default: saved.landing_lookup_default } : {}),
+      ...(ctaColorSkipped ? { landing_cta_color: saved.landing_cta_color } : {}),
       ...(ghostSkipped
         ? {
             ghost_screen: saved.ghost_screen,
@@ -574,6 +612,82 @@ const LandingFlowConfig = () => {
                 state.pickup_offered ? "translate-x-6" : "translate-x-1"
               }`}
             />
+          </button>
+        </div>
+      </section>
+
+      {/* ── CTA button color picker ──
+          One color drives the landing input's "Get my offer" button,
+          the wizard's Continue / Get-my-offer buttons, AND the
+          offer-page Accept slider so the customer sees the same
+          primary action color end-to-end. Empty = SaaS-default
+          punchy yellow (#FACC15). */}
+      <section className="bg-card rounded-xl border border-border p-6">
+        <div className="flex items-start justify-between gap-4 mb-4">
+          <div>
+            <h3 className="font-bold mb-1">CTA button color</h3>
+            <p className="text-xs text-muted-foreground max-w-prose">
+              Drives the color on the landing's <strong>Get my offer</strong>{" "}
+              button, the wizard's <strong>Continue</strong> /{" "}
+              <strong>Get my offer</strong> buttons, and the offer page's{" "}
+              <strong>Accept</strong> slider so customers see the same
+              action color through the whole flow. Leave blank to use the
+              default punchy yellow (<span className="font-mono">#FACC15</span>).
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          {/* Native color picker — shows the current swatch + a system
+              eyedropper. Lives in the same row as the hex input so the
+              dealer can see what they're picking in context. */}
+          <input
+            type="color"
+            value={state.landing_cta_color || "#FACC15"}
+            onChange={(e) =>
+              setState((prev) => ({ ...prev, landing_cta_color: e.target.value }))
+            }
+            className="h-12 w-16 rounded-lg border border-border cursor-pointer p-0.5"
+            aria-label="CTA color picker"
+          />
+          <input
+            type="text"
+            value={state.landing_cta_color}
+            onChange={(e) =>
+              setState((prev) => ({ ...prev, landing_cta_color: e.target.value }))
+            }
+            placeholder="#FACC15"
+            className="flex-1 h-12 px-4 rounded-lg border border-border bg-card font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+            spellCheck={false}
+          />
+          {state.landing_cta_color && (
+            <button
+              type="button"
+              onClick={() =>
+                setState((prev) => ({ ...prev, landing_cta_color: "" }))
+              }
+              className="h-12 px-3 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Reset to default
+            </button>
+          )}
+        </div>
+        {/* Live preview pill */}
+        <div className="mt-4 rounded-xl border border-border bg-muted/30 p-4 flex items-center justify-between gap-4">
+          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Preview
+          </div>
+          <button
+            type="button"
+            disabled
+            className="h-12 px-6 rounded-xl text-[15px] font-bold inline-flex items-center justify-center gap-2 cursor-default"
+            style={{
+              background: state.landing_cta_color || "#FACC15",
+              color: "#0A0A0A",
+              boxShadow:
+                "0 4px 12px -2px rgba(0,0,0,0.18), 0 2px 4px -1px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.30)",
+            }}
+          >
+            Get my offer →
           </button>
         </div>
       </section>
