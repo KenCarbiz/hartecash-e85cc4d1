@@ -74,8 +74,9 @@ const VelocityTemplate = () => {
             onEngage={handleEngage}
             theme="light"
             ctaLabel="Get real offer"
-            defaultLookup={config.landing_lookup_default || "plate"}
-            trustLine={`★ ${config.stats_rating || "4.9"} · ${config.stats_cars_purchased || "14,721+"} sellers paid · Free pickup nationwide`}
+            ctaColor={config.landing_cta_color || undefined}
+            defaultLookup={config.landing_lookup_default || "vin"}
+            trustLine={`★ ${config.stats_rating || "4.9"} · ${config.stats_cars_purchased || "14,721+"} sellers paid · ${config.pickup_offered !== false ? "Free pickup nationwide" : "Drop off at any rooftop"}`}
           />
         </motion.div>
 
@@ -100,7 +101,7 @@ const VelocityTemplate = () => {
           transition={{ duration: 0.5, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
           className="flex items-center gap-2 md:gap-3 mt-4 flex-wrap justify-center"
         >
-          {["Plate or VIN", "30-second offer", "Pickup at your door"].map((s, i) => (
+          {["Plate or VIN", "30-second offer", config.pickup_offered !== false ? "Pickup at your door" : "Drop off & get paid"].map((s, i) => (
             <span
               key={s}
               className="text-[11px] md:text-xs font-semibold text-white bg-white/15 backdrop-blur-sm rounded-full px-3 py-1.5"
@@ -119,7 +120,9 @@ const VelocityTemplate = () => {
           {[
             { n: "1", title: "Plate + state", body: "Tell us your car. We auto-find it in seconds." },
             { n: "2", title: "Quick condition Q's", body: "Five questions. Two minutes. Real cash number." },
-            { n: "3", title: "Pickup or drop-off", body: "Free pickup nationwide. Money in your account same day." },
+            config.pickup_offered !== false
+              ? { n: "3", title: "Pickup or drop-off", body: "Free pickup nationwide. Money in your account same day." }
+              : { n: "3", title: "Drop off & get paid", body: "Bring your car to any rooftop. Money in your account same day." },
           ].map((s) => (
             <div key={s.n} className="bg-white rounded-2xl border border-zinc-200 p-6">
               <div

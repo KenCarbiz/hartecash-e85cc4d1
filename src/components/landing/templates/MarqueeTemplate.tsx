@@ -91,8 +91,9 @@ const MarqueeTemplate = () => {
             onEngage={handleEngage}
             theme="dark"
             ctaLabel="Begin appraisal"
-            defaultLookup={config.landing_lookup_default || "plate"}
-            trustLine={`★ ${config.stats_rating || "4.9"} · ${config.stats_cars_purchased || "14,721+"} appraised · Concierge from offer to title`}
+            ctaColor={config.landing_cta_color || undefined}
+            defaultLookup={config.landing_lookup_default || "vin"}
+            trustLine={`★ ${config.stats_rating || "4.9"} · ${config.stats_cars_purchased || "14,721+"} appraised · ${config.pickup_offered !== false ? "Concierge from offer to title" : "By appointment at our showroom"}`}
           />
         </motion.div>
 

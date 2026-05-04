@@ -141,7 +141,8 @@ const HeritageTemplate = () => {
                 onEngage={handleEngage}
                 theme="warm"
                 ctaLabel="Tell us about your car"
-                defaultLookup={config.landing_lookup_default || "plate"}
+                ctaColor={config.landing_cta_color || undefined}
+                defaultLookup={config.landing_lookup_default || "vin"}
                 trustLine={`★ ${config.stats_rating || "4.9"} · Family-owned${config.established_year ? ` since ${config.established_year}` : ""} · ${config.stats_cars_purchased || "14,721+"} cars bought`}
               />
             </div>
@@ -163,12 +164,19 @@ const HeritageTemplate = () => {
               },
               {
                 title: "Plain dealing",
-                body: "What we offer is what we pay. No deductions at pickup. No surprise paperwork.",
+                body: config.pickup_offered !== false
+                  ? "What we offer is what we pay. No deductions at pickup. No surprise paperwork."
+                  : "What we offer is what we pay. No deductions at drop-off. No surprise paperwork.",
               },
-              {
-                title: "Local pickup",
-                body: "We come to you, anywhere in the area. Title, payment, keys — done in 20 minutes.",
-              },
+              config.pickup_offered !== false
+                ? {
+                    title: "Local pickup",
+                    body: "We come to you, anywhere in the area. Title, payment, keys — done in 20 minutes.",
+                  }
+                : {
+                    title: "Quick drop-off",
+                    body: "Stop by when it's convenient. Title, payment, keys — done in 20 minutes.",
+                  },
             ].map((s) => (
               <div key={s.title} className="space-y-2">
                 <div

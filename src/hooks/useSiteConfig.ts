@@ -107,6 +107,9 @@ export interface SiteConfig {
    * plate + state. Dealer-controlled in admin.
    */
   landing_lookup_default: "plate" | "vin";
+  /** Optional dealer override for the landing CTA button color (hex).
+   *  Null / empty = component default (#FACC15 saturated yellow). */
+  landing_cta_color: string | null;
   price_guarantee_days: number;
   stats_cars_purchased: string;
   stats_years_in_business: string;
@@ -234,7 +237,8 @@ const DEFAULTS: SiteConfig = {
   ghost_screen: "legacy-car",
   ghost_headline: null,
   ghost_subhead: null,
-  landing_lookup_default: "plate",
+  landing_lookup_default: "vin",
+  landing_cta_color: null,
   price_guarantee_days: 8,
   stats_cars_purchased: "14,721+",
   stats_years_in_business: "78 yrs",
@@ -340,6 +344,7 @@ const LOCATION_OVERRIDE_KEYS: (keyof SiteConfig)[] = [
   "ghost_headline",
   "ghost_subhead",
   "landing_lookup_default",
+  "landing_cta_color",
   "service_hero_headline",
   "service_hero_subtext",
   "trade_hero_headline",
