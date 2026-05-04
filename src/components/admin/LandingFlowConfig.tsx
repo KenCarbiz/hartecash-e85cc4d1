@@ -418,6 +418,7 @@ const LandingFlowConfig = () => {
     // lands.
     setSaved({
       ...state,
+      landing_cta_color: normalizedCtaColor,
       ...(variantSkipped ? { landing_form_variant: saved.landing_form_variant } : {}),
       ...(densitySkipped ? { landing_form_density: saved.landing_form_density } : {}),
       ...(pickupSkipped ? { pickup_offered: saved.pickup_offered } : {}),
