@@ -1,25 +1,13 @@
-import car from "@/assets/loader-car-body.png";
+import RunningCarLoader from "@/components/landing/RunningCarLoader";
 
 const LoaderPreview = () => (
-  <div className="min-h-screen flex items-center justify-center p-8" style={{ backgroundColor: "#e5e7eb" }}>
-    <img
-      src={car}
-      alt="Loading"
-      className="h-auto loader-car"
-      style={{ width: "25%" }}
-    />
-    <style>{`
-      @keyframes loaderCarPulse {
-        0%, 100% { transform: scaleX(-1) scale(1); opacity: 0.85; }
-        50%      { transform: scaleX(-1) scale(1.04); opacity: 1; }
-      }
-      .loader-car {
-        transform: scaleX(-1);
-        transform-origin: center;
-        animation: loaderCarPulse 1.8s ease-in-out infinite;
-        will-change: transform, opacity;
-      }
-    `}</style>
+  <div
+    className="min-h-screen flex items-center justify-center p-8"
+    style={{ backgroundColor: "#e5e7eb" }}
+  >
+    <div style={{ transform: "scaleX(-1)" }}>
+      <RunningCarLoader size="lg" color="#5B6B8A" />
+    </div>
   </div>
 );
 
