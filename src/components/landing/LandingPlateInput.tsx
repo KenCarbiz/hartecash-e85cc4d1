@@ -31,6 +31,9 @@ interface Props {
    *  trust row is hidden — keeps the cluster tight on templates
    *  that already carry their own social proof above. */
   trustLine?: string;
+  /** Which lookup tab opens by default. Dealer-controlled in admin
+   *  via site_config.landing_lookup_default. Defaults to 'plate'. */
+  defaultLookup?: "plate" | "vin";
 }
 
 /**
@@ -61,8 +64,9 @@ const LandingPlateInput = ({
   defaultState = "CT",
   ctaLabel = "Get my offer",
   trustLine,
+  defaultLookup = "plate",
 }: Props) => {
-  const [mode, setMode] = useState<"plate" | "vin">("plate");
+  const [mode, setMode] = useState<"plate" | "vin">(defaultLookup);
   const [plate, setPlate] = useState("");
   const [state, setState] = useState(defaultState);
   const [vin, setVin] = useState("");
@@ -133,11 +137,21 @@ const LandingPlateInput = ({
           stateBg: "#FAFAFA",
         };
 
-  // Carvana-grade yellow + black copy. Calibrated for WCAG AA
-  // contrast (10.5:1).
-  const ctaBg = "#FFC72C";
-  const ctaBgHover = "#FFB800";
+  // High-saturation conversion yellow. Earlier #FFC72C read as
+  // washed-out cream against a white card; #FFD500 is the saturated
+  // primary yellow used by Carvana / CarMax / IKEA / DHL. Black
+  // copy contrast is ~16:1 (AAA). Hover deepens to #FFC400 so the
+  // button visibly responds without going orange.
+  const ctaBg = "#FFD500";
+  const ctaBgHover = "#FFC400";
   const ctaText = "#0A0A0A";
+  // Subtle lift + brand-tinted glow so the CTA pops off the white
+  // card surface — black/grey buttons can stay flat, but a yellow
+  // CTA needs elevation or it reads as a passive label.
+  const ctaShadow =
+    "0 6px 18px -4px rgba(255,196,0,0.55), 0 2px 6px -1px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.40)";
+  const ctaShadowHover =
+    "0 10px 24px -4px rgba(255,196,0,0.70), 0 3px 8px -1px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.40)";
 
   const submitDisabled =
     submitting ||
@@ -299,11 +313,17 @@ const LandingPlateInput = ({
               type="submit"
               disabled={submitDisabled}
               className="font-sans h-14 sm:h-16 px-7 rounded-2xl text-base sm:text-[17px] font-bold inline-flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed sm:flex-shrink-0"
-              style={{ background: ctaBg, color: ctaText }}
+              style={{ background: ctaBg, color: ctaText, boxShadow: ctaShadow }}
               onMouseEnter={(e) => {
-                if (!submitDisabled) (e.currentTarget.style.background = ctaBgHover);
+                if (!submitDisabled) {
+                  e.currentTarget.style.background = ctaBgHover;
+                  e.currentTarget.style.boxShadow = ctaShadowHover;
+                }
               }}
-              onMouseLeave={(e) => (e.currentTarget.style.background = ctaBg)}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = ctaBg;
+                e.currentTarget.style.boxShadow = ctaShadow;
+              }}
             >
               {submitting ? (
                 <>

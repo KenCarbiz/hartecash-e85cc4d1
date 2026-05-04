@@ -51,38 +51,45 @@ const CompetitorComparison = () => {
 
   const [columns, setColumns] = useState<string[]>(DEFAULT_COLUMNS);
   const [features, setFeatures] = useState<ComparisonFeature[]>(DEFAULT_FEATURES);
-  const [loaded, setLoaded] = useState(false);
 
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.2 });
 
   useEffect(() => {
-    supabase
-      .from("site_config")
-      .select("competitor_columns, comparison_features")
-      .eq("dealership_id", tenant.dealership_id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) {
-          const d = data as any;
-          // Only override defaults when the dealer has provided
-          // a non-empty array — empty/null keeps the defaults visible.
-          if (Array.isArray(d.competitor_columns) && d.competitor_columns.length > 0) {
-            setColumns(d.competitor_columns);
-          }
-          if (Array.isArray(d.comparison_features) && d.comparison_features.length > 0) {
-            setFeatures(d.comparison_features);
-          }
+    if (!tenant?.dealership_id) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from("site_config")
+          .select("competitor_columns, comparison_features")
+          .eq("dealership_id", tenant.dealership_id)
+          .maybeSingle();
+        if (cancelled || !data) return;
+        const d = data as any;
+        if (Array.isArray(d.competitor_columns) && d.competitor_columns.length > 0) {
+          setColumns(d.competitor_columns);
         }
-        setLoaded(true);
-      });
-  }, []);
+        if (Array.isArray(d.comparison_features) && d.comparison_features.length > 0) {
+          setFeatures(d.comparison_features);
+        }
+      } catch (err) {
+        // Swallow — the wedge already shows DEFAULT_FEATURES, so the
+        // dealer / customer never sees a missing section just because
+        // PostgREST hiccupped on the schema cache. Silent failures here
+        // were the root cause of the wedge disappearing in mid-April.
+        console.warn("[CompetitorComparison] override fetch failed:", err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [tenant?.dealership_id]);
 
-  // We no longer early-return when features is empty — DEFAULT_FEATURES
-  // guarantees there's always something to show. We still wait for the
-  // initial fetch to settle so we don't flash defaults when the dealer
-  // has custom data on the way.
-  if (!loaded) return null;
+  // No `loaded` gate — DEFAULT_FEATURES + DEFAULT_COLUMNS render
+  // immediately. The query above only overrides them when the dealer
+  // has saved their own. Removes the previous failure mode where a
+  // rejected query left loaded=false and the whole wedge disappeared.
 
   const CellIcon = ({ value }: { value: boolean | string }) => {
     if (value === true) return <Check className="w-5 h-5 text-success mx-auto" />;
