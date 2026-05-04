@@ -20,7 +20,7 @@ const PortalSkeleton = ({
   onRetry,
   headline = "Loading your submission",
 }: PortalSkeletonProps = {}) => {
-  const { kind, syncing, stale } = useGhostScreen();
+  const { kind, syncing, ready, stale } = useGhostScreen();
 
   if (error) {
     return (
@@ -48,13 +48,15 @@ const PortalSkeleton = ({
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center relative">
-      <GhostScreen
-        kind={kind}
-        accent="#5B6B8A"
-        background="transparent"
-        headline={headline}
-        size="lg"
-      />
+      {ready && (
+        <GhostScreen
+          kind={kind}
+          accent="#5B6B8A"
+          background="transparent"
+          headline={headline}
+          size="lg"
+        />
+      )}
       <GhostSyncIndicator syncing={syncing} stale={stale} />
     </div>
   );
