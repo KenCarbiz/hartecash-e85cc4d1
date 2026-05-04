@@ -15,6 +15,114 @@ import { logConsent } from "@/lib/consent";
 
 type Screen = "lookup" | "confirm" | "condition" | "computing" | "offer";
 
+const NHTSA_DECODE = "https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValuesExtended";
+
+/**
+ * Browser-side NHTSA vPIC fallback — used when bb-lookup errors or
+ * times out so the customer still advances past the ghost screen.
+ * Mirrors the BB shape with pricing zeroed and `_nhtsa: true`.
+ */
+async function decodeVinViaNhtsaClient(vin: string): Promise<BBVehicle | null> {
+  try {
+    const res = await fetch(`${NHTSA_DECODE}/${encodeURIComponent(vin)}?format=json`);
+    if (!res.ok) return null;
+    const json = await res.json();
+    const row: Record<string, unknown> | undefined = json?.Results?.[0];
+    if (!row) return null;
+    const errCode = String(row.ErrorCode || "").trim();
+    const acceptable = errCode === "0" || errCode === "1" || errCode === "6" || errCode === "7" || errCode === "8";
+    if (!acceptable || !row.ModelYear || !row.Make || !row.Model) return null;
+
+    const driveRaw = String(row.DriveType || "").toUpperCase();
+    let drivetrain = "";
+    if (driveRaw.includes("AWD") || driveRaw.includes("ALL-WHEEL") || driveRaw.includes("4WD") || driveRaw.includes("4-WHEEL") || driveRaw.includes("4X4")) drivetrain = "AWD/4WD";
+    else if (driveRaw.includes("FWD") || driveRaw.includes("FRONT-WHEEL")) drivetrain = "FWD";
+    else if (driveRaw.includes("RWD") || driveRaw.includes("REAR-WHEEL")) drivetrain = "RWD";
+
+    const cyls = row.EngineCylinders ? String(row.EngineCylinders) : "";
+    const disp = row.DisplacementL ? `${Number(row.DisplacementL).toFixed(1)}L` : "";
+    const engine = [disp, cyls ? `${cyls}-Cylinder` : ""].filter(Boolean).join(" ");
+
+    const fuel = String(row.FuelTypePrimary || "").toLowerCase();
+    let fuel_type = "";
+    if (fuel.includes("diesel")) fuel_type = "Diesel";
+    else if (fuel.includes("electric")) fuel_type = "Electric";
+    else if (fuel.includes("hybrid")) fuel_type = "Hybrid";
+    else if (fuel.includes("flex")) fuel_type = "Flex Fuel";
+    else if (fuel.includes("gas")) fuel_type = "Gasoline";
+
+    const transStyle = String(row.TransmissionStyle || "").toLowerCase();
+    let transmission = "";
+    if (transStyle.includes("auto")) transmission = "Automatic";
+    else if (transStyle.includes("manual")) transmission = "Manual";
+    else if (transStyle.includes("cvt") || transStyle.includes("continuously")) transmission = "CVT";
+    else if (transStyle.includes("dual")) transmission = "DCT";
+
+    const trim = String(row.Trim || row.Series || "");
+    const body = String(row.BodyClass || "");
+
+    return {
+      uvc: "",
+      vin,
+      year: String(row.ModelYear),
+      make: String(row.Make),
+      model: String(row.Model),
+      series: String(row.Series || trim || ""),
+      style: [trim, body].filter(Boolean).join(" ").trim(),
+      class_name: body,
+      msrp: 0,
+      price_includes: "",
+      drivetrain,
+      transmission,
+      engine,
+      fuel_type,
+      exterior_colors: [],
+      mileage_adj: 0,
+      regional_adj: 0,
+      base_whole_avg: 0,
+      add_deduct_list: [],
+      wholesale: { xclean: 0, clean: 0, avg: 0, rough: 0 },
+      tradein: { clean: 0, avg: 0, rough: 0 },
+      retail: { xclean: 0, clean: 0, avg: 0, rough: 0 },
+      _nhtsa: true,
+    } as BBVehicle;
+  } catch {
+    return null;
+  }
+}
+
+/** Last-resort empty vehicle stub so the customer can still continue
+ *  past the lookup screen when both BB and NHTSA are unreachable. */
+function buildManualVehicleStub(
+  initial: { vin?: string; plate?: string; state?: string },
+): BBVehicle {
+  return {
+    uvc: "",
+    vin: initial.vin || "",
+    year: "",
+    make: "",
+    model: "",
+    series: "",
+    style: "",
+    class_name: "",
+    msrp: 0,
+    price_includes: "",
+    drivetrain: "",
+    transmission: "",
+    engine: "",
+    fuel_type: "",
+    exterior_colors: [],
+    mileage_adj: 0,
+    regional_adj: 0,
+    base_whole_avg: 0,
+    add_deduct_list: [],
+    wholesale: { xclean: 0, clean: 0, avg: 0, rough: 0 },
+    tradein: { clean: 0, avg: 0, rough: 0 },
+    retail: { xclean: 0, clean: 0, avg: 0, rough: 0 },
+    _nhtsa: true,
+  } as BBVehicle;
+}
+
 import RunningCarLoader from "./landing/RunningCarLoader";
 import GhostScreen from "./landing/GhostScreen";
 import { useGhostScreen } from "@/hooks/useGhostScreen";
@@ -111,48 +219,79 @@ const SellFlowSimple = ({
   const [submitting, setSubmitting] = useState(false);
 
   // Run the BB lookup on mount. Uses VIN when the landing handed off
-  // a VIN; otherwise plate + state.
+  // a VIN; otherwise plate + state. If bb-lookup errors, times out, or
+  // returns no vehicles, fall back to the public NHTSA vPIC decoder
+  // client-side so the customer always advances to the confirm screen
+  // — even when Black Book or the edge function are down.
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      const lookupBody: Record<string, unknown> = initial.vin
+        ? {
+            lookup_type: "vin",
+            vin: initial.vin,
+            dealership_id: tenant.dealership_id,
+            demo_mode: (config as any)?.demo_mode === true ? true : undefined,
+          }
+        : {
+            lookup_type: "plate",
+            plate: initial.plate,
+            state: initial.state,
+            dealership_id: tenant.dealership_id,
+            demo_mode: (config as any)?.demo_mode === true ? true : undefined,
+          };
+
+      // Race the edge-function call against a 12s timeout — Black Book
+      // p99 is sub-3s, so 12s is a generous failure threshold that
+      // still keeps the customer moving instead of staring at the
+      // ghost screen.
+      let bbResult: { data?: any; error?: any } = {};
       try {
-        const lookupBody: Record<string, unknown> = initial.vin
-          ? {
-              lookup_type: "vin",
-              vin: initial.vin,
-              dealership_id: tenant.dealership_id,
-              demo_mode: (config as any)?.demo_mode === true ? true : undefined,
-            }
-          : {
-              lookup_type: "plate",
-              plate: initial.plate,
-              state: initial.state,
-              dealership_id: tenant.dealership_id,
-              demo_mode: (config as any)?.demo_mode === true ? true : undefined,
-            };
-        const { data, error } = await supabase.functions.invoke("bb-lookup", { body: lookupBody });
-        if (cancelled) return;
-        if (error || data?.error || !Array.isArray(data?.vehicles) || data.vehicles.length === 0) {
-          toast({
-            title: "Couldn't identify the vehicle",
-            description: initial.vin
-              ? "Double-check the VIN, or call us — we'll get the details over the phone."
-              : "Try VIN instead, or call us — we'll get the details over the phone.",
-            variant: "destructive",
-          });
-          return;
-        }
-        // First match wins (audit recipe — no trim disambiguation up front).
+        bbResult = await Promise.race([
+          supabase.functions.invoke("bb-lookup", { body: lookupBody }),
+          new Promise<{ data: null; error: Error }>((resolve) =>
+            setTimeout(() => resolve({ data: null, error: new Error("bb-lookup timeout") }), 12000),
+          ),
+        ]) as { data?: any; error?: any };
+      } catch (e) {
+        bbResult = { error: e };
+      }
+
+      if (cancelled) return;
+      const { data, error } = bbResult;
+      const bbOk = !error && !data?.error && Array.isArray(data?.vehicles) && data.vehicles.length > 0;
+
+      if (bbOk) {
         setBbVehicle(data.vehicles[0] as BBVehicle);
         setScreen("confirm");
-      } catch (e) {
-        if (cancelled) return;
-        toast({
-          title: "Lookup failed",
-          description: (e as Error).message,
-          variant: "destructive",
-        });
+        return;
       }
+
+      // ── Client-side NHTSA fallback ───────────────────────────────────
+      // Only meaningful for VIN lookups (NHTSA has no plate registry).
+      // Decodes year / make / model / trim / drivetrain / engine /
+      // transmission so the customer still sees their vehicle on the
+      // confirm screen.
+      if (initial.vin) {
+        const stub = await decodeVinViaNhtsaClient(initial.vin);
+        if (!cancelled && stub) {
+          setBbVehicle(stub);
+          setScreen("confirm");
+          return;
+        }
+      }
+
+      if (cancelled) return;
+      // Both BB and NHTSA failed (or this is a plate lookup with no BB).
+      // Drop into a manual-confirm screen so the customer can still
+      // proceed — never leave them on the spinner forever.
+      const fallback = buildManualVehicleStub(initial);
+      setBbVehicle(fallback);
+      setScreen("confirm");
+      toast({
+        title: "We couldn't auto-verify your vehicle",
+        description: "Double-check the details on the next screen, or call us if anything looks wrong.",
+      });
     })();
     return () => {
       cancelled = true;
@@ -367,10 +506,16 @@ const SellFlowSimple = ({
                 Step 1 of 2
               </p>
               <h2 className="text-3xl md:text-4xl font-semibold tracking-tight leading-[1.1]">
-                We found your{" "}
-                <span className="font-bold">
-                  {bbVehicle.year} {bbVehicle.make} {bbVehicle.model}
-                </span>
+                {bbVehicle.year && bbVehicle.make && bbVehicle.model ? (
+                  <>
+                    We found your{" "}
+                    <span className="font-bold">
+                      {bbVehicle.year} {bbVehicle.make} {bbVehicle.model}
+                    </span>
+                  </>
+                ) : (
+                  <>Confirm your vehicle</>
+                )}
               </h2>
               {bbVehicle.series && (
                 <p className="text-sm text-muted-foreground">{bbVehicle.series}</p>
