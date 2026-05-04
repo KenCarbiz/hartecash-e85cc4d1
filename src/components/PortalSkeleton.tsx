@@ -1,16 +1,28 @@
-import ghostCar from "@/assets/ghost-loader.png";
 import { AlertTriangle, RefreshCw } from "lucide-react";
+import GhostScreen, { type GhostScreenKind } from "@/components/landing/GhostScreen";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 interface PortalSkeletonProps {
   error?: string | null;
   onRetry?: () => void;
-  /** Headline displayed above the ghost car so the customer knows
+  /** Headline displayed above the loader so the customer knows
    *  what's happening — "Finding Vehicle", "Loading Submission",
    *  "Uploading Photos", etc. Defaults to "Loading your submission". */
   headline?: string;
 }
 
-const PortalSkeleton = ({ error, onRetry, headline = "Loading your submission" }: PortalSkeletonProps = {}) => {
+/**
+ * Site-wide loading skeleton. Renders the dealer-selected ghost-screen
+ * variant (admin → Branding → Landing → Ghost Screen). Falls back to
+ * "legacy-car" until the dealer's site_config loads.
+ */
+const PortalSkeleton = ({
+  error,
+  onRetry,
+  headline = "Loading your submission",
+}: PortalSkeletonProps = {}) => {
+  const { config } = useSiteConfig();
+
   if (error) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
@@ -18,7 +30,9 @@ const PortalSkeleton = ({ error, onRetry, headline = "Loading your submission" }
           <div className="mx-auto mb-4 w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center">
             <AlertTriangle className="w-7 h-7 text-destructive" />
           </div>
-          <h2 className="text-lg font-semibold text-foreground mb-1">We couldn't load your submission</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-1">
+            We couldn't load your submission
+          </h2>
           <p className="text-sm text-muted-foreground mb-4">{error}</p>
           {onRetry && (
             <button
@@ -33,37 +47,18 @@ const PortalSkeleton = ({ error, onRetry, headline = "Loading your submission" }
     );
   }
 
+  const kind = (((config as any)?.ghost_screen as GhostScreenKind) ||
+    "legacy-car") as GhostScreenKind;
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="text-center">
-        {/* Headline ABOVE the car so the customer immediately sees
-            what's happening before noticing the animation. */}
-        <p className="text-lg md:text-xl font-semibold tracking-tight text-foreground mb-4">
-          {headline}
-        </p>
-        <div className="relative mx-auto w-[320px] h-[200px]">
-          <img
-            src={ghostCar}
-            alt=""
-            className="w-full h-full object-contain"
-            style={{ animation: "car-bounce 1.2s ease-in-out infinite" }}
-          />
-          <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 320 200">
-            <style>{`
-              @keyframes car-bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
-              @keyframes road-scroll { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -40; } }
-            `}</style>
-            <line
-              x1="0" y1="170" x2="320" y2="170"
-              stroke="hsl(var(--muted-foreground))"
-              strokeWidth="2"
-              strokeDasharray="12 8"
-              opacity="0.4"
-              style={{ animation: "road-scroll 0.6s linear infinite" }}
-            />
-          </svg>
-        </div>
-      </div>
+      <GhostScreen
+        kind={kind}
+        accent="#5B6B8A"
+        background="transparent"
+        headline={headline}
+        size="lg"
+      />
     </div>
   );
 };

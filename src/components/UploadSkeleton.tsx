@@ -1,12 +1,24 @@
-import ghostCar from "@/assets/ghost-loader.png";
 import { AlertTriangle, RefreshCw } from "lucide-react";
+import GhostScreen, { type GhostScreenKind } from "@/components/landing/GhostScreen";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 interface UploadSkeletonProps {
   error?: string | null;
   onRetry?: () => void;
+  headline?: string;
 }
 
-const UploadSkeleton = ({ error, onRetry }: UploadSkeletonProps = {}) => {
+/**
+ * Photo-upload page loading state. Mirrors PortalSkeleton — renders the
+ * dealer-selected ghost-screen variant from admin → Branding → Landing.
+ */
+const UploadSkeleton = ({
+  error,
+  onRetry,
+  headline = "Loading photos",
+}: UploadSkeletonProps = {}) => {
+  const { config } = useSiteConfig();
+
   if (error) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
@@ -14,7 +26,9 @@ const UploadSkeleton = ({ error, onRetry }: UploadSkeletonProps = {}) => {
           <div className="mx-auto mb-4 w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center">
             <AlertTriangle className="w-7 h-7 text-destructive" />
           </div>
-          <h2 className="text-lg font-semibold text-foreground mb-1">We couldn't upload your photos</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-1">
+            We couldn't upload your photos
+          </h2>
           <p className="text-sm text-muted-foreground mb-4">{error}</p>
           {onRetry && (
             <button
@@ -29,33 +43,18 @@ const UploadSkeleton = ({ error, onRetry }: UploadSkeletonProps = {}) => {
     );
   }
 
+  const kind = (((config as any)?.ghost_screen as GhostScreenKind) ||
+    "legacy-car") as GhostScreenKind;
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="text-center">
-        <div className="relative mx-auto mb-4 w-[320px] h-[200px]">
-          <img
-            src={ghostCar}
-            alt=""
-            className="w-full h-full object-contain"
-            style={{ animation: "car-bounce 1.2s ease-in-out infinite" }}
-          />
-          <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 320 200">
-            <style>{`
-              @keyframes car-bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
-              @keyframes road-scroll { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -40; } }
-            `}</style>
-            <line
-              x1="0" y1="170" x2="320" y2="170"
-              stroke="hsl(var(--muted-foreground))"
-              strokeWidth="2"
-              strokeDasharray="12 8"
-              opacity="0.4"
-              style={{ animation: "road-scroll 0.6s linear infinite" }}
-            />
-          </svg>
-        </div>
-        <p className="text-sm font-medium text-muted-foreground animate-pulse">Loading photos...</p>
-      </div>
+      <GhostScreen
+        kind={kind}
+        accent="#5B6B8A"
+        background="transparent"
+        headline={headline}
+        size="lg"
+      />
     </div>
   );
 };
