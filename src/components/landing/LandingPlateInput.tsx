@@ -170,7 +170,7 @@ const LandingPlateInput = ({
   // Dealer can override via site_config.landing_cta_color.
   const ctaBg = ctaColor || "#FACC15";
   const ctaBgHover = canDeriveHover(ctaBg) ? darkenHex(ctaBg, 16) : ctaBg;
-  const ctaText = "#0A0A0A";
+  const ctaText = ctaColor?.startsWith("hsl(") ? "#FFFFFF" : "#0A0A0A";
   const ctaShadow =
     "0 4px 12px -2px rgba(0,0,0,0.18), 0 2px 4px -1px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.30)";
   const ctaShadowHover = canDeriveHover(ctaBg)
