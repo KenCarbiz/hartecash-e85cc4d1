@@ -114,24 +114,17 @@ describe("Hero rendering — admin inputs flow to landing DOM", () => {
     it(`${name} renders hero_headline and hero_subtext from config`, async () => {
       const mod = await import(`@/components/landing/templates/${name}`);
       const Template = mod.default;
-      render(<Template />);
+      const { container } = render(<Template />);
+      const text = container.textContent || "";
 
-      // Headline check — every hero-rendering template must surface the
-      // configured headline somewhere in the DOM.
       expect(
-        screen.queryByText((_t, node) =>
-          !!node?.textContent?.includes(FIXTURE.hero_headline)
-        ),
+        text.includes(FIXTURE.hero_headline),
         `${name} should render config.hero_headline in the DOM`
-      ).toBeTruthy();
-
-      // Subtext check — same contract for the supporting copy.
+      ).toBe(true);
       expect(
-        screen.queryByText((_t, node) =>
-          !!node?.textContent?.includes(FIXTURE.hero_subtext)
-        ),
+        text.includes(FIXTURE.hero_subtext),
         `${name} should render config.hero_subtext in the DOM`
-      ).toBeTruthy();
+      ).toBe(true);
     });
   }
 });
