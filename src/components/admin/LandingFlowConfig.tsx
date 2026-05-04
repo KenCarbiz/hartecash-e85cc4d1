@@ -165,17 +165,6 @@ const LandingFlowConfig = () => {
   const handleSave = async () => {
     setSaving(true);
 
-    const normalizedCtaColor = normalizeCtaColor(state.landing_cta_color);
-    if (normalizedCtaColor && !isValidHexColor(normalizedCtaColor)) {
-      setSaving(false);
-      toast({
-        title: "CTA color needs a hex value",
-        description: "Use a 6-character color like #FACC15.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     // Save in two passes so a missing landing_form_variant column on
     // not-yet-migrated DBs never blocks the template change.
     //   1) Always-safe pass: template + updated_at (columns shipped
@@ -240,36 +229,6 @@ const LandingFlowConfig = () => {
           return;
         }
         densitySkipped = true;
-      }
-    }
-
-    // Pass 1.6.5 — landing_cta_color (best-effort)
-    const effectiveCtaColor = normalizedCtaColor || "#FACC15";
-    const ctaColorChanged =
-      state.landing_cta_color !== saved.landing_cta_color || !saved.landing_cta_color;
-    let ctaColorSkipped = false;
-    if (ctaColorChanged) {
-      const { error: cErr } = await supabase
-        .from("site_config" as any)
-        .update({
-          landing_cta_color: effectiveCtaColor,
-          updated_at: new Date().toISOString(),
-        } as any)
-        .eq("dealership_id", dealershipId);
-      if (cErr) {
-        const lower = cErr.message?.toLowerCase() || "";
-        const code = (cErr as any).code || "";
-        const missing =
-          lower.includes("landing_cta_color") ||
-          lower.includes("schema cache") ||
-          code === "PGRST204" ||
-          (lower.includes("column") && lower.includes("does not exist"));
-        if (!missing) {
-          setSaving(false);
-          toast({ title: "Save failed", description: cErr.message, variant: "destructive" });
-          return;
-        }
-        ctaColorSkipped = true;
       }
     }
 
