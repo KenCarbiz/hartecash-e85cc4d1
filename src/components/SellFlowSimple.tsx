@@ -211,7 +211,10 @@ const SellFlowSimple = ({
   const [screen, setScreen] = useState<Screen>("lookup");
   const [bbVehicle, setBbVehicle] = useState<BBVehicle | null>(null);
   const [mileage, setMileage] = useState("");
-  const [overallCondition, setOverallCondition] = useState<"Excellent" | "Good" | "Fair" | "Rough" | "">("");
+  // Default to "Good" — most cars submitted online land in this bucket
+  // and pre-selecting it removes one mandatory tap from the flow.
+  // Customer can still flip to Excellent / Fair / Rough.
+  const [overallCondition, setOverallCondition] = useState<"Excellent" | "Good" | "Fair" | "Rough" | "">("Good");
   const [accidents, setAccidents] = useState<"" | "Yes" | "No">("");
   const [mechanical, setMechanical] = useState<"" | "Yes" | "No">("");
   const [drivable, setDrivable] = useState<"" | "Yes" | "No">("");
@@ -600,7 +603,7 @@ const SellFlowSimple = ({
                 A few quick questions.
               </h2>
               <p className="text-sm text-muted-foreground">
-                Two minutes from here. Your offer locks for 7 days once you see it.
+                Two minutes from here. Your offer locks for {config.price_guarantee_days || 8} days once you see it.
               </p>
             </div>
 

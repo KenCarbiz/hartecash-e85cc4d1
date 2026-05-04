@@ -159,7 +159,7 @@ export const HowToJsonLd = () => {
 };
 
 // ── FAQPage ──
-const FAQ_ITEMS = [
+const buildFaqItems = (priceGuaranteeDays: number) => [
   {
     q: "How long does it take to get an offer?",
     a: "Most offers are generated within 2 minutes of submitting your vehicle information. Complex cases may take up to 24 hours.",
@@ -186,26 +186,30 @@ const FAQ_ITEMS = [
   },
   {
     q: "How long is my offer valid?",
-    a: "Your offer is guaranteed for 8 full days. No pressure, no bait-and-switch — sell when you're ready.",
+    a: `Your offer is guaranteed for ${priceGuaranteeDays} full days. No pressure, no bait-and-switch — sell when you're ready.`,
   },
 ];
 
-export const FAQPageJsonLd = () => (
-  <JsonLd
-    data={{
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      mainEntity: FAQ_ITEMS.map((item) => ({
-        "@type": "Question",
-        name: item.q,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: item.a,
-        },
-      })),
-    }}
-  />
-);
+export const FAQPageJsonLd = () => {
+  const { config } = useSiteConfig();
+  const items = buildFaqItems(config.price_guarantee_days || 8);
+  return (
+    <JsonLd
+      data={{
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: items.map((item) => ({
+          "@type": "Question",
+          name: item.q,
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: item.a,
+          },
+        })),
+      }}
+    />
+  );
+};
 
 // ── WebSite + SearchAction (helps Google sitelink search box & AI grounding) ──
 export const WebSiteJsonLd = () => {

@@ -44,7 +44,7 @@ const CompetitorComparison = () => {
       : { label: "Quick in-person drop-off",       values: [true,  true,      false,     "partial"] },
     { label: "We pay the loan payoff",             values: [true,  true,      true,      "partial"] },
     { label: "Same-day payment",                   values: [true,  true,      "partial", false] },
-    { label: "Offer good for 7 days",              values: [true,  true,      true,      false] },
+    { label: `Offer good for ${config.price_guarantee_days || 8} days`, values: [true, true, true, false] },
     { label: "No haggling or trade-in pressure",   values: [true,  true,      true,      true] },
     { label: "Local family-owned, not a corporation", values: [true, false, false, false] },
   ];
