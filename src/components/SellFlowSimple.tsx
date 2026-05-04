@@ -471,13 +471,15 @@ const SellFlowSimple = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="min-h-[400px] flex items-center justify-center relative"
+            className="min-h-screen w-full bg-background flex items-center justify-center relative"
           >
             {ghostReady && (
               <GhostScreen
                 kind={ghostKind}
                 accent={accent || "#0066CC"}
+                background="transparent"
                 size="lg"
+                fill
                 headline={ghostHeadline || "Finding your vehicle"}
                 subhead={
                   ghostSubhead ||
