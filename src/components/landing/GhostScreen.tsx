@@ -204,15 +204,23 @@ const GhostScreen = ({
       break;
 
     case "legacy-car":
-      // The original RunningCarLoader — preserved as a dealer choice
-      // for templates that intentionally want the familiar Hartecash
-      // motion (running car over a road-line) rather than one of the
-      // four geometric SaaS variants.
-      visual = (
-        <div style={{ color: accent }} aria-hidden="true">
-          <RunningCarLoader color={accent} size={size} />
-        </div>
-      );
+      // The original RunningCarLoader, restored to exactly the look
+      // it had on yesterday's compute screen. Two changes vs the
+      // earlier wrapped version that rendered "trash":
+      //   1. size hardcoded to "lg" — yesterday it was always large;
+      //      the new GhostScreen default of "md" shrunk it.
+      //   2. Color falls back to brand-blue #0066CC when the only
+      //      input is GhostScreen's graphite theme defaults
+      //      (#1F2937 / #2C2A26). Graphite made the silhouette look
+      //      dull; brand blue restores the familiar Hartecash motion.
+      {
+        const isGraphiteDefault =
+          accent === "#1F2937" ||
+          accent === "#2C2A26" ||
+          accent === "currentColor";
+        const carColor = isGraphiteDefault ? "#0066CC" : accent;
+        visual = <RunningCarLoader color={carColor} size="lg" />;
+      }
       break;
 
     case "card-skeleton":
