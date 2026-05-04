@@ -37,6 +37,11 @@ const MosaicTemplate = () => {
             >
               {config.hero_headline || "Sell yours. Browse ours. Two minutes either way."}
             </motion.h1>
+            {config.hero_subtext && (
+              <p className="mt-4 text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
+                {config.hero_subtext}
+              </p>
+            )}
           </div>
 
           {/* Model mosaic */}
