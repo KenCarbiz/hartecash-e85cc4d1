@@ -8,11 +8,13 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import UploadSkeleton from "@/components/UploadSkeleton";
-import GhostScreen, { type GhostScreenKind } from "@/components/landing/GhostScreen";
+import GhostScreen from "@/components/landing/GhostScreen";
+import { GhostSyncIndicator } from "@/components/PortalSkeleton";
 import MobileQRBanner from "@/components/upload/MobileQRBanner";
 import PhotoGuide from "@/components/upload/PhotoGuide";
 import VehicleCameraCapture from "@/components/upload/VehicleCameraCapture";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useGhostScreen } from "@/hooks/useGhostScreen";
 import { track } from "@/lib/analytics";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePhotoConfig, type PhotoShot } from "@/hooks/usePhotoConfig";
@@ -35,6 +37,7 @@ type CategoryUploads = Record<string, { file?: File; preview?: string; uploaded?
 const UploadPhotos = () => {
   const { token } = useParams<{ token: string }>();
   const { config } = useSiteConfig();
+  const { kind: ghostKind, syncing: ghostSyncing, ready: ghostReady, stale: ghostStale } = useGhostScreen();
   const isMobile = useIsMobile();
   const [submission, setSubmission] = useState<SubmissionInfo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -527,15 +530,16 @@ const UploadPhotos = () => {
           loader so the upload moment matches the rest of the brand. */}
       {uploading && (
         <div className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm flex items-center justify-center p-6">
-          <GhostScreen
-            kind={
-              ((config as any).ghost_screen as GhostScreenKind) || "legacy-car"
-            }
-            accent="#5B6B8A"
-            size="lg"
-            headline="Uploading Photos"
-            subhead="Please don't close this page."
-          />
+          {ghostReady && (
+            <GhostScreen
+              kind={ghostKind}
+              accent="#5B6B8A"
+              size="lg"
+              headline="Uploading Photos"
+              subhead="Please don't close this page."
+            />
+          )}
+          <GhostSyncIndicator syncing={ghostSyncing} stale={ghostStale} />
         </div>
       )}
 
