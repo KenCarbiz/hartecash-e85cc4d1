@@ -26,25 +26,41 @@ interface Props {
   defaultState?: string;
   /** Optional CTA copy override. Defaults to "Get my offer". */
   ctaLabel?: string;
+  /** Optional inline trust line shown directly under the card.
+   *  E.g. "★★★★★ 4.9 · 12,000+ cars purchased". When omitted the
+   *  trust row is hidden — keeps the cluster tight on templates
+   *  that already carry their own social proof above. */
+  trustLine?: string;
 }
 
 /**
- * Slim landing-page lookup input — the only thing the customer touches
- * on the marketing landing. Submitting hands off the value to the
- * parent (which opens FullscreenWizard) so the marketing chrome
- * disappears and a focused premium flow takes over the viewport.
+ * Landing plate / VIN cluster — the single most important interaction
+ * on the customer landing. Designed against the visual language of
+ * the three national sell-flow brands (CarMax Max Offer, Carvana
+ * Sell-Us-Your-Car, CarGurus Sell My Car):
  *
- * Per the May-2026 sell-flow design audit: plate+state is the default
- * because it's the universal premium first-input pattern (Carvana,
- * CarMax, CarGurus, AccuTrade), but the customer can switch to VIN
- * via a small tab — some sellers don't have plates handy (in transit,
- * dealer plates, etc.) and forcing them to dig increases drop-off.
+ *   1. ONE unified card containing the entire cluster (toggle + input
+ *      row + CTA + trust line). Soft shadow + 1px hairline border so
+ *      the cluster reads as a single elevated surface rather than a
+ *      collection of floating inputs.
+ *   2. Plate + State merged into a single bordered pill — state sits
+ *      flush against the plate field separated by a hairline divider,
+ *      not floating with a gap. Carvana / CarMax pattern.
+ *   3. Inline yellow CTA at the right end of the row on desktop.
+ *      Yellow (#FFC72C — calibrated for AA against black copy) is
+ *      the universal sell-flow conversion accent. Mobile collapses
+ *      the CTA to a full-width button under the input row.
+ *   4. Plate / VIN segmented control sits ABOVE the input row in a
+ *      compact pill so the customer's eye lands on lookup type → input
+ *      → submit, top-to-bottom.
+ *   5. Trust line directly under the card (optional, dealer-driven).
  */
 const LandingPlateInput = ({
   onEngage,
   theme = "light",
   defaultState = "CT",
   ctaLabel = "Get my offer",
+  trustLine,
 }: Props) => {
   const [mode, setMode] = useState<"plate" | "vin">("plate");
   const [plate, setPlate] = useState("");
@@ -61,196 +77,262 @@ const LandingPlateInput = ({
       setTimeout(() => onEngage({ plate: cleaned, state }), 180);
     } else {
       const cleaned = vin.trim().toUpperCase();
-      // VINs are 17 alphanumeric chars (no I/O/Q). Light client check
-      // only — the server validates strictly.
       if (cleaned.length !== 17) return;
       setSubmitting(true);
       setTimeout(() => onEngage({ vin: cleaned }), 180);
     }
   };
 
-  // Theme tokens
+  // Theme tokens. The card surface is always near-white so the
+  // shadow / border read clearly even on a dark hero — that's the
+  // pattern Carvana and CarMax use on their bright color hero
+  // backgrounds. The cluster is the "lit" element on the page.
   const t =
     theme === "dark"
       ? {
-          fieldBg: "rgba(255,255,255,0.06)",
-          fieldBorder: "rgba(255,255,255,0.10)",
-          fieldText: "#FFFFFF",
-          placeholder: "rgba(255,255,255,0.40)",
-          ctaBg: "#FFFFFF",
-          ctaText: "#0F0F12",
-          tabActiveBg: "rgba(255,255,255,0.12)",
-          tabIdleText: "rgba(255,255,255,0.55)",
+          card: "#FFFFFF",
+          cardBorder: "rgba(0,0,0,0.06)",
+          cardShadow: "0 18px 50px -10px rgba(0,0,0,0.40), 0 0 0 1px rgba(255,255,255,0.04)",
+          fieldText: "#0A0A0A",
+          fieldDivider: "rgba(0,0,0,0.10)",
+          placeholder: "rgba(0,0,0,0.40)",
+          tabBg: "#F4F4F5",
+          tabBorder: "rgba(0,0,0,0.06)",
+          tabActiveBg: "#FFFFFF",
+          tabIdleText: "rgba(0,0,0,0.55)",
+          trustText: "rgba(255,255,255,0.85)",
+          stateBg: "#FAFAFA",
         }
       : theme === "warm"
       ? {
-          fieldBg: "#FFFFFF",
-          fieldBorder: "rgba(44,42,38,0.18)",
+          card: "#FFFFFF",
+          cardBorder: "rgba(44,42,38,0.10)",
+          cardShadow: "0 12px 40px -10px rgba(44,42,38,0.20), 0 0 0 1px rgba(44,42,38,0.04)",
           fieldText: "#2C2A26",
+          fieldDivider: "rgba(44,42,38,0.12)",
           placeholder: "rgba(44,42,38,0.45)",
-          ctaBg: "#1F4068",
-          ctaText: "#FFFFFF",
-          tabActiveBg: "rgba(44,42,38,0.08)",
+          tabBg: "#F4EFE6",
+          tabBorder: "rgba(44,42,38,0.10)",
+          tabActiveBg: "#FFFFFF",
           tabIdleText: "rgba(44,42,38,0.55)",
+          trustText: "rgba(44,42,38,0.65)",
+          stateBg: "#FAF8F4",
         }
       : {
-          fieldBg: "#F5F5F7",
-          fieldBorder: "rgba(0,0,0,0.06)",
+          card: "#FFFFFF",
+          cardBorder: "rgba(0,0,0,0.07)",
+          cardShadow: "0 10px 36px -10px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.04)",
           fieldText: "#0A0A0A",
+          fieldDivider: "rgba(0,0,0,0.10)",
           placeholder: "rgba(0,0,0,0.40)",
-          ctaBg: "#0A0A0A",
-          ctaText: "#FFFFFF",
-          tabActiveBg: "rgba(0,0,0,0.06)",
-          tabIdleText: "rgba(0,0,0,0.45)",
+          tabBg: "#F4F4F5",
+          tabBorder: "rgba(0,0,0,0.06)",
+          tabActiveBg: "#FFFFFF",
+          tabIdleText: "rgba(0,0,0,0.55)",
+          trustText: "rgba(0,0,0,0.55)",
+          stateBg: "#FAFAFA",
         };
+
+  // Carvana-grade yellow + black copy. Calibrated for WCAG AA
+  // contrast (10.5:1).
+  const ctaBg = "#FFC72C";
+  const ctaBgHover = "#FFB800";
+  const ctaText = "#0A0A0A";
 
   const submitDisabled =
     submitting ||
     (mode === "plate" ? !plate.trim() : vin.trim().length !== 17);
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="w-full"
-      aria-label="Get an instant offer on your car"
-    >
-      {/* Plate / VIN segmented control. National-brand pattern (Apple
-          / Stripe / Linear segmented controls): a single rounded
-          backplate, two equal-width buttons, the active one elevated
-          on a clean fill rather than colored. Centered above the
-          input row so the eye lands on the lookup type first, then
-          the input. */}
-      <div
-        role="tablist"
-        aria-label="Choose lookup method"
-        className="inline-grid grid-cols-2 gap-1 mb-4 p-1 rounded-full text-center"
-        style={{ background: t.fieldBg, border: `1px solid ${t.fieldBorder}` }}
+    <div className="w-full max-w-[640px] mx-auto">
+      <form
+        onSubmit={handleSubmit}
+        className="w-full"
+        aria-label="Get an instant offer on your car"
       >
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mode === "plate"}
-          onClick={() => setMode("plate")}
-          disabled={submitting}
-          className="font-sans px-5 py-1.5 rounded-full text-[12px] font-semibold tracking-wide transition-all"
+        {/* The unified card — every interactive element lives inside
+            so the cluster reads as ONE elevated surface. */}
+        <div
+          className="rounded-[20px] p-3 sm:p-4"
           style={{
-            background: mode === "plate" ? t.tabActiveBg : "transparent",
-            color: mode === "plate" ? t.fieldText : t.tabIdleText,
-            boxShadow:
-              mode === "plate"
-                ? "0 1px 2px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.04)"
-                : "none",
+            background: t.card,
+            border: `1px solid ${t.cardBorder}`,
+            boxShadow: t.cardShadow,
           }}
         >
-          Plate &amp; State
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mode === "vin"}
-          onClick={() => setMode("vin")}
-          disabled={submitting}
-          className="font-sans px-5 py-1.5 rounded-full text-[12px] font-semibold tracking-wide transition-all"
-          style={{
-            background: mode === "vin" ? t.tabActiveBg : "transparent",
-            color: mode === "vin" ? t.fieldText : t.tabIdleText,
-            boxShadow:
-              mode === "vin"
-                ? "0 1px 2px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.04)"
-                : "none",
-          }}
-        >
-          VIN
-        </button>
-      </div>
-
-      {/* Inputs row + CTA */}
-      <div className="flex flex-col sm:flex-row gap-2 sm:gap-2">
-        {mode === "plate" ? (
-          <div className="flex gap-2 flex-1">
-            <input
-              type="text"
-              value={plate}
-              onChange={(e) => setPlate(e.target.value)}
-              placeholder="License plate"
-              inputMode="text"
-              autoCapitalize="characters"
-              autoComplete="off"
-              spellCheck={false}
-              enterKeyHint="next"
+          {/* Plate / VIN segmented control — pinned top-left so the
+              eye lands on lookup type before the input. */}
+          <div
+            role="tablist"
+            aria-label="Choose lookup method"
+            className="inline-grid grid-cols-2 gap-1 mb-3 p-1 rounded-full text-center"
+            style={{
+              background: t.tabBg,
+              border: `1px solid ${t.tabBorder}`,
+            }}
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mode === "plate"}
+              onClick={() => setMode("plate")}
               disabled={submitting}
-              aria-label="License plate"
-              className="flex-1 min-w-0 h-14 px-5 rounded-xl text-base font-medium tracking-[0.06em] uppercase border outline-none focus:ring-2 focus:ring-offset-0 transition-all"
+              className="font-sans px-5 py-1.5 rounded-full text-[12px] font-semibold tracking-wide transition-all"
               style={{
-                background: t.fieldBg,
-                borderColor: t.fieldBorder,
-                color: t.fieldText,
-              }}
-            />
-            <select
-              value={state}
-              onChange={(e) => setState(e.target.value)}
-              disabled={submitting}
-              aria-label="State"
-              className="h-14 px-3 rounded-xl text-base font-semibold border outline-none focus:ring-2 focus:ring-offset-0 transition-all w-[88px]"
-              style={{
-                background: t.fieldBg,
-                borderColor: t.fieldBorder,
-                color: t.fieldText,
+                background: mode === "plate" ? t.tabActiveBg : "transparent",
+                color: mode === "plate" ? t.fieldText : t.tabIdleText,
+                boxShadow:
+                  mode === "plate"
+                    ? "0 1px 2px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.04)"
+                    : "none",
               }}
             >
-              {STATES.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
+              Plate &amp; State
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mode === "vin"}
+              onClick={() => setMode("vin")}
+              disabled={submitting}
+              className="font-sans px-5 py-1.5 rounded-full text-[12px] font-semibold tracking-wide transition-all"
+              style={{
+                background: mode === "vin" ? t.tabActiveBg : "transparent",
+                color: mode === "vin" ? t.fieldText : t.tabIdleText,
+                boxShadow:
+                  mode === "vin"
+                    ? "0 1px 2px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.04)"
+                    : "none",
+              }}
+            >
+              VIN
+            </button>
           </div>
-        ) : (
-          <input
-            type="text"
-            value={vin}
-            onChange={(e) => setVin(e.target.value.replace(/[^A-Za-z0-9]/g, "").slice(0, 17))}
-            placeholder="17-character VIN"
-            inputMode="text"
-            autoCapitalize="characters"
-            autoComplete="off"
-            spellCheck={false}
-            enterKeyHint="go"
-            disabled={submitting}
-            aria-label="Vehicle Identification Number"
-            maxLength={17}
-            className="flex-1 min-w-0 h-14 px-5 rounded-xl text-base font-medium tracking-[0.08em] uppercase border outline-none focus:ring-2 focus:ring-offset-0 transition-all"
-            style={{
-              background: t.fieldBg,
-              borderColor: t.fieldBorder,
-              color: t.fieldText,
-            }}
-          />
+
+          {/* Input row + inline CTA. On desktop everything sits on a
+              single row inside a single bordered pill; on mobile the
+              CTA collapses to a full-width button below. */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Unified input pill — Plate & State share one bordered
+                container separated by a hairline; VIN takes the whole
+                row. The pill itself is the "input" the customer sees,
+                not the individual fields. */}
+            <div
+              className="flex-1 flex items-center min-w-0 rounded-2xl overflow-hidden"
+              style={{
+                border: `1.5px solid ${t.fieldDivider}`,
+                background: "#FFFFFF",
+              }}
+            >
+              {mode === "plate" ? (
+                <>
+                  <input
+                    type="text"
+                    value={plate}
+                    onChange={(e) => setPlate(e.target.value)}
+                    placeholder="License plate"
+                    inputMode="text"
+                    autoCapitalize="characters"
+                    autoComplete="off"
+                    spellCheck={false}
+                    enterKeyHint="next"
+                    disabled={submitting}
+                    aria-label="License plate"
+                    className="flex-1 min-w-0 h-14 sm:h-16 px-5 text-base sm:text-lg font-semibold tracking-[0.10em] uppercase border-none outline-none bg-transparent"
+                    style={{ color: t.fieldText }}
+                  />
+                  {/* Hairline divider between plate and state */}
+                  <div
+                    className="self-stretch w-px"
+                    style={{ background: t.fieldDivider }}
+                    aria-hidden
+                  />
+                  <select
+                    value={state}
+                    onChange={(e) => setState(e.target.value)}
+                    disabled={submitting}
+                    aria-label="State"
+                    className="h-14 sm:h-16 pl-3 pr-7 text-base sm:text-lg font-bold tracking-wide border-none outline-none appearance-none cursor-pointer"
+                    style={{
+                      color: t.fieldText,
+                      background: t.stateBg,
+                      backgroundImage:
+                        "url(\"data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3e%3cpath d='M1 1l4 4 4-4' stroke='%231F2937' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3e%3c/svg%3e\")",
+                      backgroundRepeat: "no-repeat",
+                      backgroundPosition: "right 10px center",
+                    }}
+                  >
+                    {STATES.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              ) : (
+                <input
+                  type="text"
+                  value={vin}
+                  onChange={(e) =>
+                    setVin(
+                      e.target.value.replace(/[^A-Za-z0-9]/g, "").slice(0, 17),
+                    )
+                  }
+                  placeholder="17-character VIN"
+                  inputMode="text"
+                  autoCapitalize="characters"
+                  autoComplete="off"
+                  spellCheck={false}
+                  enterKeyHint="go"
+                  disabled={submitting}
+                  aria-label="Vehicle Identification Number"
+                  maxLength={17}
+                  className="flex-1 min-w-0 h-14 sm:h-16 px-5 text-base sm:text-lg font-semibold tracking-[0.14em] uppercase border-none outline-none bg-transparent"
+                  style={{ color: t.fieldText }}
+                />
+              )}
+            </div>
+
+            {/* Inline CTA — Carvana-yellow pill, weighty, the loudest
+                element on the page. */}
+            <button
+              type="submit"
+              disabled={submitDisabled}
+              className="font-sans h-14 sm:h-16 px-7 rounded-2xl text-base sm:text-[17px] font-bold inline-flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed sm:flex-shrink-0"
+              style={{ background: ctaBg, color: ctaText }}
+              onMouseEnter={(e) => {
+                if (!submitDisabled) (e.currentTarget.style.background = ctaBgHover);
+              }}
+              onMouseLeave={(e) => (e.currentTarget.style.background = ctaBg)}
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+                  <span>Looking it up</span>
+                </>
+              ) : (
+                <>
+                  <span>{ctaLabel}</span>
+                  <ArrowRight className="w-[18px] h-[18px]" aria-hidden="true" strokeWidth={2.4} />
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Trust line — sits OUTSIDE the card, smaller, secondary so
+            the card stays the visual anchor. Optional; only renders
+            when the template passes a string. */}
+        {trustLine && (
+          <p
+            className="font-sans text-[12px] sm:text-[13px] text-center mt-3 leading-relaxed"
+            style={{ color: t.trustText }}
+          >
+            {trustLine}
+          </p>
         )}
-        <button
-          type="submit"
-          disabled={submitDisabled}
-          className="h-14 px-7 rounded-xl text-base font-semibold inline-flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{
-            background: t.ctaBg,
-            color: t.ctaText,
-          }}
-        >
-          {submitting ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-              <span>Looking it up</span>
-            </>
-          ) : (
-            <>
-              <span>{ctaLabel}</span>
-              <ArrowRight className="w-4 h-4" aria-hidden="true" />
-            </>
-          )}
-        </button>
-      </div>
-    </form>
+      </form>
+    </div>
   );
 };
 
