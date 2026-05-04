@@ -6,7 +6,7 @@ const PortalSkeleton = () => (
       <img
         src={drivingCar}
         alt=""
-        className="mx-auto mb-4 w-[320px] h-[200px]"
+        className="mx-auto mb-4 w-[420px] max-w-full h-auto"
       />
       <p className="text-sm font-medium text-muted-foreground animate-pulse">Loading your submission...</p>
     </div>
