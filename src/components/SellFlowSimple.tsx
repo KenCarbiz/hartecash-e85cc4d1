@@ -96,8 +96,8 @@ const SellFlowSimple = ({
   // buttons. Inherits the landing-page color so the customer sees the
   // same primary action color end-to-end. Falls back to the shadcn
   // Button default (theme primary) when no override is set.
-  const ctaBg = (config as any).landing_cta_color || undefined;
-  const ctaText = ctaBg ? "#0A0A0A" : undefined;
+  const ctaBg = "hsl(var(--cta-offer))";
+  const ctaText = "#FFFFFF";
 
   const [screen, setScreen] = useState<Screen>("lookup");
   const [bbVehicle, setBbVehicle] = useState<BBVehicle | null>(null);
