@@ -32,7 +32,7 @@ const SlabTemplate = () => {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="font-display text-[40px] md:text-[60px] lg:text-[72px] font-extrabold leading-[1.05]"
+            className="font-sans text-[40px] md:text-[60px] lg:text-[72px] font-extrabold tracking-[-0.025em] leading-[1.05]"
           >
             {config.hero_headline || "Find your car. Sell yours. Done in two minutes."}
           </motion.h1>

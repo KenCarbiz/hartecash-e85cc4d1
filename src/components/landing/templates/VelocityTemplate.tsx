@@ -51,10 +51,10 @@ const VelocityTemplate = () => {
           transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
           className="text-center mb-10 max-w-2xl"
         >
-          <h1 className="font-display text-[34px] md:text-[52px] lg:text-[60px] font-medium tracking-tight leading-[1.05] text-white">
+          <h1 className="font-sans text-[34px] md:text-[52px] lg:text-[60px] font-semibold tracking-[-0.02em] leading-[1.05] text-white">
             {config.hero_headline || "Real cash offer in 2 minutes."}
           </h1>
-          <p className="text-base md:text-lg text-white/85 mt-4 max-w-md mx-auto font-light">
+          <p className="font-sans text-base md:text-lg text-white/85 mt-4 max-w-md mx-auto font-light">
             {config.hero_subtext || "Tell us about your car. Get a real number. Pick up at your door."}
           </p>
         </motion.div>

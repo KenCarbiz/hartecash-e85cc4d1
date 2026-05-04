@@ -54,10 +54,10 @@ const BoldTemplate = () => {
               {config.price_guarantee_days}-day price guarantee
             </div>
 
-            <h1 className="font-display text-[44px] md:text-[68px] lg:text-[88px] font-extrabold tracking-[-0.02em] leading-[0.95]">
+            <h1 className="font-sans text-[44px] md:text-[68px] lg:text-[88px] font-extrabold tracking-[-0.025em] leading-[0.95]">
               {config.hero_headline || "Sell your car.\nGet paid today."}
             </h1>
-            <p className="text-lg md:text-xl text-primary-foreground/80 mt-6 max-w-2xl leading-relaxed">
+            <p className="font-sans text-lg md:text-xl text-primary-foreground/80 mt-6 max-w-2xl leading-relaxed">
               {config.hero_subtext ||
                 "A real cash offer in two minutes. No haggling, no junk-mail follow-ups, no tire kickers."}
             </p>

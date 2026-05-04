@@ -41,10 +41,10 @@ const ClarityTemplate = () => {
           className="w-full max-w-[640px] flex flex-col items-center gap-10"
         >
           <div className="text-center space-y-4">
-            <h1 className="font-display text-[44px] md:text-[64px] lg:text-[72px] font-bold tracking-[-0.025em] leading-[1.02] text-zinc-900">
+            <h1 className="font-sans text-[44px] md:text-[64px] lg:text-[72px] font-bold tracking-[-0.025em] leading-[1.02] text-zinc-900">
               {config.hero_headline || "Sell your car in 2 minutes."}
             </h1>
-            <p className="text-base md:text-lg text-zinc-500 max-w-md mx-auto leading-relaxed">
+            <p className="font-sans text-base md:text-lg text-zinc-500 max-w-md mx-auto leading-relaxed">
               {config.hero_subtext || "Real cash offer. No haggling. Picked up at your door."}
             </p>
           </div>
