@@ -9,13 +9,16 @@ interface Props {
 }
 
 /**
- * RunningCarLoader — the original Hartecash line-art "loading" animation.
+ * RunningCarLoader — "Hartecash Classic", the official Hartecash
+ * loading animation.
  *
- * Thin outline hatchback drawn entirely as strokes (no fill), parked
- * over a dashed road that scrolls right-to-left to suggest motion.
- * Wheels rotate in place; speed lines flick past the front bumper.
- * Restored from the dealer's reference set — the prior solid
+ * Thin line-art hatchback drawn entirely as strokes (no fill),
+ * parked over a dashed road that scrolls right-to-left to suggest
+ * motion. Wheels rotate in place; speed lines flick past the front
+ * bumper. Restored from the dealer's reference set — the prior solid
  * silhouette version was the wrong artwork.
+ *
+ * Visible at /preview/loader as a diagnostic preview.
  *
  * Pure SVG + framer-motion, no asset dependency.
  */

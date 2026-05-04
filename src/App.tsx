@@ -41,6 +41,7 @@ const PushPullTow = lazy(() => import("./pages/PushPullTow"));
 const DealAccepted = lazy(() => import("./pages/DealAccepted"));
 const OfferDisclosure = lazy(() => import("./pages/OfferDisclosure"));
 const Updates = lazy(() => import("./pages/Updates"));
+const PreviewLoader = lazy(() => import("./pages/PreviewLoader"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const ExecutiveDashboard = lazy(() => import("./pages/ExecutiveDashboard"));
 const InspectionSheet = lazy(() => import("./pages/InspectionSheet"));
@@ -154,6 +155,7 @@ const AnimatedRoutes = () => {
         <Route path="/deal/:token" element={<DealAccepted />} />
         <Route path="/disclosure" element={<OfferDisclosure />} />
         <Route path="/updates" element={<Updates />} />
+        <Route path="/preview/loader" element={<PreviewLoader />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/executive" element={<ProtectedRoute><ExecutiveDashboard /></ProtectedRoute>} />
         <Route path="/inspection/:id" element={<InspectionSheet />} />
