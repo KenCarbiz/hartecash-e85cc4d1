@@ -37,10 +37,9 @@ const DiagonalTemplate = () => {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
-            className="font-display text-[44px] md:text-[64px] lg:text-[78px] font-extrabold leading-[0.98] text-accent-foreground max-w-2xl"
+            className="font-display text-[44px] md:text-[64px] lg:text-[78px] font-extrabold leading-[0.98] text-accent-foreground max-w-2xl whitespace-pre-line"
           >
-            Cash for cars.{" "}
-            <span className="italic font-light">Done right.</span>
+            {config.hero_headline || (<>Cash for cars.{" "}<span className="italic font-light">Done right.</span></>)}
           </motion.h1>
           <p className="mt-5 max-w-md text-base lg:text-lg text-accent-foreground/80">
             {config.hero_subtext || "Real numbers, real-time, no haggling."}
