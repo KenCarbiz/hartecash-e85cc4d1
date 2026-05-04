@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Car, Truck, Zap, Users, Sparkles, ArrowRight } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import LandingForm from "@/components/LandingForm";
-import { DefaultBelowFold } from "../sharedSections";
+import { FullBelowFold } from "../sharedSections";
 
 /**
  * MOSAIC — Jazel-style: no big hero photo. A model-category mosaic IS the
@@ -84,7 +84,7 @@ const MosaicTemplate = () => {
         </div>
       </section>
 
-      <DefaultBelowFold />
+      <FullBelowFold />
     </>
   );
 };

@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Car, ArrowRight, ShieldCheck } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import LandingForm from "@/components/LandingForm";
-import { DefaultBelowFold } from "../sharedSections";
+import { FullBelowFold } from "../sharedSections";
 
 /**
  * SHOWROOM — inventory grid behind a translucent form card. Frames the
@@ -120,7 +120,7 @@ const ShowroomTemplate = () => {
         </div>
       </section>
 
-      <DefaultBelowFold />
+      <FullBelowFold />
     </>
   );
 };

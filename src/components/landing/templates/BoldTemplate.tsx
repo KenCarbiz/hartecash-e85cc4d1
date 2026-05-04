@@ -2,7 +2,7 @@ import { ArrowRight, Shield, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import LandingForm from "@/components/LandingForm";
-import { DefaultBelowFold } from "../sharedSections";
+import { FullBelowFold } from "../sharedSections";
 
 /**
  * BOLD — dark cinematic, asymmetric, premium feel. Inspired by Carvana and
@@ -111,7 +111,7 @@ const BoldTemplate = () => {
         </div>
       </section>
 
-      <DefaultBelowFold />
+      <FullBelowFold />
     </>
   );
 };

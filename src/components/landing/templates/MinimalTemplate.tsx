@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Search, ChevronDown } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import LandingForm from "@/components/LandingForm";
-import { DefaultBelowFold } from "../sharedSections";
+import { FullBelowFold } from "../sharedSections";
 
 /**
  * MINIMAL — almost-empty hero with one giant decorative search bar that
@@ -82,7 +82,7 @@ const MinimalTemplate = () => {
         </div>
       </section>
 
-      <DefaultBelowFold />
+      <FullBelowFold />
     </>
   );
 };

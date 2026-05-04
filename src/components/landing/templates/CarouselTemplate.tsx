@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, DollarSign, Repeat, Wrench, Search } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import LandingForm from "@/components/LandingForm";
-import { DefaultBelowFold } from "../sharedSections";
+import { FullBelowFold } from "../sharedSections";
 
 /**
  * CAROUSEL — CDK / Sincro form factor. 16:9 hero slider with chevrons,
@@ -121,7 +121,7 @@ const CarouselTemplate = () => {
         </div>
       </section>
 
-      <DefaultBelowFold />
+      <FullBelowFold />
     </>
   );
 };

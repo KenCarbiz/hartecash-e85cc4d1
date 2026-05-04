@@ -26,21 +26,27 @@ const CompetitorComparison = () => {
   // Private Sale across the seven points the page historically used.
   // Each row is [us, CarMax, Carvana, Private Sale]. true = yes,
   // false = no, "partial" = sometimes/varies.
-  const DEFAULT_COLUMNS = ["CarMax", "Carvana", "Private Sale"];
+  // Default columns: CarMax, Carvana, KBB Instant Cash Offer (the three
+  // names every customer recognizes when comparing where to sell their
+  // car). KBB replaces the older "Private Sale" default — it's the
+  // direct apples-to-apples competitor (instant offer, no haggling)
+  // rather than the slow private-listing flow.
+  const DEFAULT_COLUMNS = ["CarMax", "Carvana", "KBB Instant Offer"];
   // Whether the dealer offers free at-home pickup. When the toggle is
   // off, swap the row label to in-person drop-off so the wedge stays
   // honest. Default true preserves historical hartecash.com behavior.
   const pickupOffered = config.pickup_offered !== false;
+  // Each row is [us, CarMax, Carvana, KBB]. true / false / "partial".
   const DEFAULT_FEATURES: ComparisonFeature[] = [
-    { label: "Real cash offer in 2 minutes",       values: [true,  "partial", true,  false] },
+    { label: "Real cash offer in 2 minutes",       values: [true,  "partial", true,      true] },
     pickupOffered
-      ? { label: "Free at-home pickup",            values: [true,  false,     true,  false] }
-      : { label: "Quick in-person drop-off",       values: [true,  true,      false, "partial"] },
-    { label: "We pay the loan payoff",             values: [true,  true,      true,  false] },
-    { label: "Same-day payment",                   values: [true,  true,      "partial", "partial"] },
-    { label: "Offer good for 7 days",              values: [true,  true,      true,  false] },
-    { label: "No haggling or trade-in pressure",   values: [true,  true,      true,  false] },
-    { label: "Local family-owned, not a corporation", values: [true, false, false, true] },
+      ? { label: "Free at-home pickup",            values: [true,  false,     true,      false] }
+      : { label: "Quick in-person drop-off",       values: [true,  true,      false,     "partial"] },
+    { label: "We pay the loan payoff",             values: [true,  true,      true,      "partial"] },
+    { label: "Same-day payment",                   values: [true,  true,      "partial", false] },
+    { label: "Offer good for 7 days",              values: [true,  true,      true,      false] },
+    { label: "No haggling or trade-in pressure",   values: [true,  true,      true,      true] },
+    { label: "Local family-owned, not a corporation", values: [true, false, false, false] },
   ];
 
   const [columns, setColumns] = useState<string[]>(DEFAULT_COLUMNS);

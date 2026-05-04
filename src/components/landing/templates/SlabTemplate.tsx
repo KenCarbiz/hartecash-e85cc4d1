@@ -2,7 +2,7 @@ import { Search, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import LandingForm from "@/components/LandingForm";
-import { DefaultBelowFold } from "../sharedSections";
+import { FullBelowFold } from "../sharedSections";
 
 /**
  * SLAB — DealerOn / Overfuel conversion-first. The search bar is THE hero.
@@ -81,7 +81,7 @@ const SlabTemplate = () => {
         </div>
       </section>
 
-      <DefaultBelowFold />
+      <FullBelowFold />
     </>
   );
 };

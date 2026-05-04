@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Tag, Car, ArrowRight, Flame } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import LandingForm from "@/components/LandingForm";
-import { DefaultBelowFold } from "../sharedSections";
+import { FullBelowFold } from "../sharedSections";
 
 /**
  * CIRCULAR — "Dealership Circular" / Force Marketing energy. Yellow/red
@@ -80,7 +80,7 @@ const CircularTemplate = () => {
         </div>
       </section>
 
-      <DefaultBelowFold />
+      <FullBelowFold />
     </>
   );
 };

@@ -2,14 +2,7 @@ import { motion } from "framer-motion";
 import { Award, ArrowRight, Star } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import LandingForm from "@/components/LandingForm";
-import {
-  TestimonialsSection,
-  TrustBadgesSection,
-  HowItWorksSection,
-  FAQSection,
-  CTABannerSection,
-  ReferralBannerSection,
-} from "../sharedSections";
+import { FullBelowFold } from "../sharedSections";
 
 /**
  * ELEGANT — premium, deliberate, dark with gold accents. Inspired by
@@ -103,12 +96,7 @@ const ElegantTemplate = () => {
         </div>
       </section>
 
-      <HowItWorksSection />
-      <TestimonialsSection />
-      <TrustBadgesSection />
-      <FAQSection />
-      <ReferralBannerSection />
-      <CTABannerSection />
+      <FullBelowFold />
     </>
   );
 };

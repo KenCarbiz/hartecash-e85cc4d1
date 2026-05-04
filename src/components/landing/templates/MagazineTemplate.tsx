@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Car } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import LandingForm from "@/components/LandingForm";
-import { DefaultBelowFold } from "../sharedSections";
+import { FullBelowFold } from "../sharedSections";
 
 /**
  * MAGAZINE — Stream Companies / Lincoln editorial. Full-width photo
@@ -62,7 +62,7 @@ const MagazineTemplate = () => {
         </div>
       </section>
 
-      <DefaultBelowFold />
+      <FullBelowFold />
     </>
   );
 };

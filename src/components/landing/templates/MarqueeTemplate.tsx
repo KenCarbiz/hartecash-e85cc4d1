@@ -4,6 +4,7 @@ import { useSiteConfig } from "@/hooks/useSiteConfig";
 import LandingForm from "@/components/LandingForm";
 import LandingPlateInput, { type LandingPlateInputValue } from "../LandingPlateInput";
 import FullscreenWizard from "../FullscreenWizard";
+import { FullBelowFold } from "../sharedSections";
 
 /**
  * MARQUEE — premium dark / luxury. Full-bleed near-black hero with
@@ -123,6 +124,12 @@ const MarqueeTemplate = () => {
           </div>
         </div>
       </section>
+
+      {/* Canonical below-fold marketing chrome shared with every
+          template (reviews, 1-2-3, comparison, FAQ collapsed). The
+          sections inherit theme tokens so they take on a darker tone
+          inside the Marquee container. */}
+      <FullBelowFold />
 
       {/* Fullscreen wizard — dark theme, takes over on plate submit */}
       <FullscreenWizard open={wizardOpen} onClose={() => setWizardOpen(false)} theme="dark" accent="#FF6A00">

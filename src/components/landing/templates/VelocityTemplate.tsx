@@ -4,6 +4,7 @@ import { useSiteConfig } from "@/hooks/useSiteConfig";
 import LandingForm from "@/components/LandingForm";
 import LandingPlateInput, { type LandingPlateInputValue } from "../LandingPlateInput";
 import FullscreenWizard from "../FullscreenWizard";
+import { FullBelowFold } from "../sharedSections";
 
 /**
  * VELOCITY — conversion-tuned, Carvana-style with Tier B prestige
@@ -127,6 +128,12 @@ const VelocityTemplate = () => {
           ))}
         </div>
       </section>
+
+      {/* Canonical below-fold marketing chrome shared with every
+          template (reviews, 1-2-3, comparison, FAQ collapsed). The
+          FullscreenWizard hides this during the customer journey
+          via fixed-position overlay + body-scroll lock. */}
+      <FullBelowFold />
 
       {/* Fullscreen wizard — light theme, blue accent */}
       <FullscreenWizard open={wizardOpen} onClose={() => setWizardOpen(false)} theme="light" accent={primary}>

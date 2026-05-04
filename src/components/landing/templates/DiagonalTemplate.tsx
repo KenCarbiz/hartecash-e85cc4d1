@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Car, ArrowRight } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import LandingForm from "@/components/LandingForm";
-import { DefaultBelowFold } from "../sharedSections";
+import { FullBelowFold } from "../sharedSections";
 
 /**
  * DIAGONAL — DealerSocket / DealerFire signature. A diagonal accent-color
@@ -60,7 +60,7 @@ const DiagonalTemplate = () => {
         </div>
       </section>
 
-      <DefaultBelowFold />
+      <FullBelowFold />
     </>
   );
 };
