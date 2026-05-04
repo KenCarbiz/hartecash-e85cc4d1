@@ -6,9 +6,12 @@ export type LandingTemplate =
   | "classic" | "bold" | "minimal" | "elegant" | "showroom"
   | "cinema" | "portal" | "carousel" | "slab" | "diagonal"
   | "pickup" | "magazine" | "circular" | "motion" | "mosaic"
-  | "clarity" | "marquee" | "velocity" | "heritage";
+  | "clarity" | "marquee" | "velocity" | "heritage"
+  | "legacy";
 
 export const LANDING_TEMPLATES: { value: LandingTemplate; label: string; description: string }[] = [
+  // ── Legacy Hartecash (the pre-audit maximalist look) ──
+  { value: "legacy",   label: "Legacy Hartecash", description: "The original Hartecash long-scroll. Hero + form, then every trust signal, value prop, testimonial, and FAQ visible inline. Best for single-rooftop dealers whose conversions came from the long scroll." },
   // ── 2026 sell-flow design audit (recommended starting points) ──
   { value: "clarity",  label: "Clarity",  description: "Apple-minimal white. Centered form is the hero. No stock photo, no FAQ above the fold. Best for premium import single-rooftops + EV dealers." },
   { value: "marquee",  label: "Marquee",  description: "Premium dark / luxury. Full-bleed near-black, brass accents, serif headline. Best for BMW / Audi / Lexus / Porsche / Mercedes." },
@@ -78,6 +81,14 @@ export interface SiteConfig {
    *              4-9+ pages depending on the dealer's Lead Form config.
    */
   landing_form_density: "simple" | "standard" | "detailed";
+  /**
+   * Whether the dealer offers free at-home pickup. Drives the
+   * "We pick up your car" messaging on the landing page (HowItWorks
+   * step 3, default comparison wedge, value props). When false, the
+   * messaging swaps to drop-off at the dealership instead. Default
+   * true to preserve the historical hartecash.com behavior.
+   */
+  pickup_offered: boolean;
   price_guarantee_days: number;
   stats_cars_purchased: string;
   stats_years_in_business: string;
@@ -201,6 +212,7 @@ const DEFAULTS: SiteConfig = {
   landing_template: "classic",
   landing_form_variant: "detailed",
   landing_form_density: "simple",
+  pickup_offered: true,
   price_guarantee_days: 8,
   stats_cars_purchased: "14,721+",
   stats_years_in_business: "78 yrs",
@@ -301,6 +313,7 @@ const LOCATION_OVERRIDE_KEYS: (keyof SiteConfig)[] = [
   "landing_template",
   "landing_form_variant",
   "landing_form_density",
+  "pickup_offered",
   "service_hero_headline",
   "service_hero_subtext",
   "trade_hero_headline",

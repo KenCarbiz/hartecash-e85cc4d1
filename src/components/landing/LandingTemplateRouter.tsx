@@ -2,6 +2,9 @@ import { lazy, Suspense } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useSiteConfig, type LandingTemplate } from "@/hooks/useSiteConfig";
 
+// ── Legacy Hartecash (the pre-audit maximalist long-scroll) ──
+const LegacyTemplate   = lazy(() => import("./templates/LegacyTemplate"));
+
 // ── 2026 sell-flow design audit (Clarity/Marquee/Velocity/Heritage) ──
 const ClarityTemplate  = lazy(() => import("./templates/ClarityTemplate"));
 const MarqueeTemplate  = lazy(() => import("./templates/MarqueeTemplate"));
@@ -34,6 +37,8 @@ const TemplateFallback = () => (
 );
 
 const templateMap: Record<LandingTemplate, React.ComponentType> = {
+  // Legacy Hartecash (pre-audit maximalist look)
+  legacy:   LegacyTemplate,
   // 2026 audit-recommended
   clarity:  ClarityTemplate,
   marquee:  MarqueeTemplate,
@@ -58,6 +63,7 @@ const templateMap: Record<LandingTemplate, React.ComponentType> = {
 };
 
 const VALID_TEMPLATES = new Set<LandingTemplate>([
+  "legacy",
   "clarity", "marquee", "velocity", "heritage",
   "classic", "bold", "minimal", "elegant", "showroom",
   "cinema", "portal", "carousel", "slab", "diagonal",

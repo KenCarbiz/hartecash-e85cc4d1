@@ -129,6 +129,52 @@ const TemplateThumbnail = ({ template, className = "" }: Props) => {
         </div>
       );
 
+    // ── LEGACY: pre-audit Hartecash long-scroll. Centered hero on top,
+    //   form mid, then every section stacked below (trust badges,
+    //   competitor wedge, how-it-works, value props, testimonials,
+    //   FAQ, referral, CTA). Tall layout. ──
+    case "legacy":
+      return (
+        <div className={wrapClass}>
+          <svg {...common}>
+            <rect x="0" y="0" width="160" height="100" fill="hsl(var(--background))" />
+            {/* Header strip */}
+            <rect x="0" y="0" width="160" height="6" fill="hsl(var(--primary))" />
+            <rect x="6" y="2" width="14" height="2" rx="0.5" fill="hsl(var(--primary-foreground))" />
+            {/* Hero block */}
+            <rect x="0" y="6" width="160" height="22" fill="hsl(var(--primary) / 0.10)" />
+            <rect x="40" y="11" width="80" height="3" rx="1" fill="hsl(var(--foreground) / 0.85)" />
+            <rect x="48" y="16" width="64" height="3" rx="1" fill="hsl(var(--foreground) / 0.85)" />
+            <rect x="56" y="21" width="48" height="2" rx="0.5" fill="hsl(var(--foreground) / 0.55)" />
+            {/* Form card */}
+            <rect x="32" y="30" width="96" height="14" rx="2" fill="hsl(var(--card))" stroke="hsl(var(--border))" strokeWidth="0.4" />
+            <rect x="36" y="33" width="68" height="3" rx="0.8" fill="hsl(var(--muted))" />
+            <rect x="106" y="33" width="18" height="3" rx="0.8" fill="hsl(var(--primary))" />
+            <rect x="36" y="38" width="88" height="3" rx="0.8" fill="hsl(var(--muted))" />
+            {/* Trust badges row */}
+            <rect x="6" y="48" width="22" height="6" rx="1" fill="hsl(var(--muted))" />
+            <rect x="32" y="48" width="22" height="6" rx="1" fill="hsl(var(--muted))" />
+            <rect x="58" y="48" width="22" height="6" rx="1" fill="hsl(var(--muted))" />
+            <rect x="84" y="48" width="22" height="6" rx="1" fill="hsl(var(--muted))" />
+            <rect x="110" y="48" width="22" height="6" rx="1" fill="hsl(var(--muted))" />
+            <rect x="136" y="48" width="18" height="6" rx="1" fill="hsl(var(--muted))" />
+            {/* Competitor table */}
+            <rect x="20" y="58" width="120" height="14" rx="2" fill="hsl(var(--card))" stroke="hsl(var(--border))" strokeWidth="0.4" />
+            <rect x="22" y="60" width="116" height="2" rx="0.5" fill="hsl(var(--foreground) / 0.65)" />
+            <rect x="22" y="64" width="116" height="1.5" rx="0.5" fill="hsl(var(--muted))" />
+            <rect x="22" y="67" width="116" height="1.5" rx="0.5" fill="hsl(var(--muted))" />
+            <rect x="22" y="70" width="116" height="1.5" rx="0.5" fill="hsl(var(--muted))" />
+            {/* How-it-works 3 cards */}
+            <rect x="10" y="76" width="42" height="14" rx="2" fill="hsl(var(--muted))" />
+            <rect x="58" y="76" width="42" height="14" rx="2" fill="hsl(var(--muted))" />
+            <rect x="106" y="76" width="44" height="14" rx="2" fill="hsl(var(--muted))" />
+            {/* CTA banner footer */}
+            <rect x="0" y="93" width="160" height="7" fill="hsl(var(--primary))" />
+            <rect x="56" y="95" width="48" height="3" rx="1" fill="hsl(var(--primary-foreground))" />
+          </svg>
+        </div>
+      );
+
     case "classic":
       return (
         <div className={wrapClass}>
