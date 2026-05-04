@@ -134,6 +134,14 @@ export interface SiteConfig {
    * plate + state. Dealer-controlled in admin.
    */
   landing_lookup_default: "plate" | "vin";
+  /** How the customer-facing condition picker renders.
+   *   "basic" — short hint per option (default)
+   *   "kbb"   — Kelley Blue Book–style description on each card,
+   *             with the qualifying criteria customers use to
+   *             self-grade their vehicle (clean title, tire wear,
+   *             cosmetic defects, etc.)
+   *  Dealer-controlled in admin Setup · Process → Landing & Flow. */
+  condition_card_style: "basic" | "kbb";
   /** Optional dealer override for the landing CTA button color (hex).
    *  Null / empty = component default (#FACC15 saturated yellow). */
   landing_cta_color: string | null;
@@ -272,6 +280,7 @@ const DEFAULTS: SiteConfig = {
   landing_form_variant: "detailed",
   landing_form_density: "simple",
   pickup_offered: true,
+  condition_card_style: "basic",
   ghost_screen: "legacy-car",
   ghost_headline: null,
   ghost_subhead: null,
@@ -380,6 +389,7 @@ const LOCATION_OVERRIDE_KEYS: (keyof SiteConfig)[] = [
   "landing_form_variant",
   "landing_form_density",
   "pickup_offered",
+  "condition_card_style",
   "ghost_screen",
   "ghost_headline",
   "ghost_subhead",

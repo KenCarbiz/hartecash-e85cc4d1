@@ -128,6 +128,39 @@ import GhostScreen from "./landing/GhostScreen";
 import { useGhostScreen } from "@/hooks/useGhostScreen";
 import { GhostSyncIndicator } from "@/components/PortalSkeleton";
 import VehicleImage from "./sell-form/VehicleImage";
+import { Dialog, DialogContent, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Info } from "lucide-react";
+
+// Original Hartecash KBB-style condition buckets — used when the
+// dealer picks `condition_card_style: "kbb"` in admin Setup · Process
+// → Landing & Flow. Per-card descriptions match the customer-facing
+// text on the legacy SellCarForm so dealers can switch flows
+// without their condition prompts changing wording.
+const KBB_CONDITION_OPTIONS = [
+  { value: "excellent", label: "Excellent", desc: "(2% of cars KBB values) - Looks new and is in excellent mechanical condition." },
+  { value: "very_good", label: "Very Good", desc: "(28% of cars KBB values) - Has minor cosmetic defects and is in good mechanical condition." },
+  { value: "good",      label: "Good",      desc: "(50% of cars KBB values) - Has repairable cosmetic defects and mechanical problems." },
+  { value: "fair",      label: "Fair",      desc: "(20% of cars KBB values) - Requires some mechanical repairs." },
+] as const;
+
+const KBB_FULL_DEFINITIONS = [
+  {
+    title: "Excellent",
+    text: `"Excellent" condition means that the vehicle looks new and is in excellent mechanical condition. This vehicle has never had any paint or bodywork and does not need reconditioning. The engine compartment is clean and free of fluid leaks. This vehicle is free of rust. The body and interior are free of wear or visible defects. The tires all match and are like new. This vehicle has a clean title history and will pass a safety and smog inspection. This vehicle has complete and verifiable service records.`,
+  },
+  {
+    title: "Very Good",
+    text: `"Very Good" condition means that the vehicle has minor cosmetic defects and is in excellent mechanical condition. This vehicle has had minor or no paint or bodywork, and requires minimal reconditioning. The engine compartment is clean and free of fluid leaks. This vehicle is free of rust. The body and interior have minimal signs of wear or visible defects. The tires all match and have 75% or more of tread remaining. This vehicle has a clean title history and will pass a safety and smog inspection. Most service records are available.`,
+  },
+  {
+    title: "Good",
+    text: `"Good" condition means that the vehicle has some cosmetic repairable defects and is free of major mechanical problems. The paint and bodywork may require minor touch-ups. The engine compartment may have minor leaks. This vehicle has only minor cosmetic or no rust. The body may have minor scratches or dings and the interior has minor blemishes characteristic of normal wear. The tires match and have at least 50% of tread remaining. Though it may need some reconditioning, it has a clean title history and will pass safety and smog inspection. Some service records are available.`,
+  },
+  {
+    title: "Fair",
+    text: `"Fair" condition means that the vehicle has some cosmetic defects that require repairing and/or replacing and requires some mechanical repairs. The paint and bodywork may require refinishing and body repair. The engine compartment has leaks and may require a tune up. This vehicle may have some repairable rust damage. The body has dings, chips, or scratches and the interior has substantial wear, and may have small tears. The tires may need replacing. This vehicle needs servicing, but is still in reasonable running condition. Has a clean title history. A few service records are available.`,
+  },
+];
 
 interface Props {
   /** Pre-populated identifier from the landing-page LandingPlateInput.
@@ -213,8 +246,22 @@ const SellFlowSimple = ({
   const [mileage, setMileage] = useState("");
   // Default to "Good" — most cars submitted online land in this bucket
   // and pre-selecting it removes one mandatory tap from the flow.
-  // Customer can still flip to Excellent / Fair / Rough.
-  const [overallCondition, setOverallCondition] = useState<"Excellent" | "Good" | "Fair" | "Rough" | "">("Good");
+  // Stored as either capitalized buckets (basic style) or KBB lowercase
+  // keys ("excellent" / "very_good" / "good" / "fair") when the dealer
+  // turned on the KBB card style in admin.
+  const conditionStyle =
+    ((config as any).condition_card_style as "basic" | "kbb") || "basic";
+  const [overallCondition, setOverallCondition] = useState<string>("Good");
+  const [showKbbDialog, setShowKbbDialog] = useState(false);
+
+  // Re-align the default once site_config loads — if the dealer turned
+  // on KBB style, switch the pre-selected pill from "Good" (basic) to
+  // "good" (KBB lowercase key) so the highlight lands on the right card.
+  useEffect(() => {
+    if (conditionStyle === "kbb" && overallCondition === "Good") setOverallCondition("good");
+    if (conditionStyle === "basic" && overallCondition === "good") setOverallCondition("Good");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conditionStyle]);
   const [accidents, setAccidents] = useState<"" | "Yes" | "No">("");
   const [mechanical, setMechanical] = useState<"" | "Yes" | "No">("");
   const [drivable, setDrivable] = useState<"" | "Yes" | "No">("");
@@ -608,19 +655,69 @@ const SellFlowSimple = ({
             </div>
 
             <div className="space-y-7">
-              {/* Q1 — Overall condition (always asked) */}
-              <ConditionRadio
-                label="Overall condition"
-                hint="Be honest — wrong-rates make the offer change at pickup."
-                value={overallCondition}
-                onChange={(v) => setOverallCondition(v as typeof overallCondition)}
-                options={[
-                  { value: "Excellent", label: "Excellent", hint: "Looks new. No issues." },
-                  { value: "Good", label: "Good", hint: "Normal wear. Drives perfectly." },
-                  { value: "Fair", label: "Fair", hint: "Visible wear. Mechanically OK." },
-                  { value: "Rough", label: "Rough", hint: "Significant wear or repairs needed." },
-                ]}
-              />
+              {/* Q1 — Overall condition (always asked).
+                  KBB style swaps the option set to KBB's 4-tier scale
+                  with per-card descriptions and a tap-to-open key
+                  dialog. Basic style keeps the short-hint cards. */}
+              {conditionStyle === "kbb" ? (
+                <fieldset className="space-y-3">
+                  <legend className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Overall condition
+                  </legend>
+                  <button
+                    type="button"
+                    onClick={() => setShowKbbDialog(true)}
+                    className="flex items-center gap-1.5 text-xs text-primary hover:underline -mt-1 font-medium"
+                  >
+                    <Info className="w-3.5 h-3.5" aria-hidden="true" />
+                    View full Kelley Blue Book&reg; condition definitions
+                  </button>
+                  <div className="grid grid-cols-1 gap-2">
+                    {KBB_CONDITION_OPTIONS.map((opt) => {
+                      const checked = overallCondition === opt.value;
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setOverallCondition(opt.value)}
+                          className={`relative w-full text-left p-4 rounded-xl border-2 transition-all overflow-hidden ${
+                            checked
+                              ? "border-primary bg-primary/5"
+                              : "border-border bg-card hover:bg-muted/40"
+                          }`}
+                          aria-pressed={checked}
+                        >
+                          {checked && (
+                            <div className="absolute top-0 right-0 w-8 h-8">
+                              <div className="absolute top-0 right-0 w-0 h-0 border-t-[32px] border-t-primary border-l-[32px] border-l-transparent" />
+                              <Check className="absolute top-0.5 right-0.5 w-3.5 h-3.5 text-primary-foreground" strokeWidth={3} aria-hidden="true" />
+                            </div>
+                          )}
+                          <span className={`block text-sm font-bold ${checked ? "text-primary" : "text-card-foreground"}`}>
+                            {opt.label}
+                          </span>
+                          <span className="block text-xs text-muted-foreground mt-1 leading-relaxed">
+                            {opt.desc}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </fieldset>
+              ) : (
+                <ConditionRadio
+                  label="Overall condition"
+                  hint="Be honest — wrong-rates make the offer change at pickup."
+                  value={overallCondition}
+                  onChange={(v) => setOverallCondition(v as typeof overallCondition)}
+                  options={[
+                    { value: "Excellent", label: "Excellent", hint: "Looks new. No issues." },
+                    { value: "Good", label: "Good", hint: "Normal wear. Drives perfectly." },
+                    { value: "Fair", label: "Fair", hint: "Visible wear. Mechanically OK." },
+                    { value: "Rough", label: "Rough", hint: "Significant wear or repairs needed." },
+                  ]}
+                />
+              )}
 
               {/* Q2 — Drivable (always asked, single yes/no) */}
               <ConditionRadio
@@ -775,6 +872,39 @@ const SellFlowSimple = ({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Kelley Blue Book® condition definitions — opens from the
+          "View full Kelley Blue Book® condition definitions" link
+          on Step 2 when the dealer turned on KBB card style. */}
+      <Dialog open={showKbbDialog} onOpenChange={setShowKbbDialog}>
+        <DialogContent className="max-h-[80vh] overflow-y-auto p-0">
+          <div className="sticky top-0 z-10 bg-primary text-primary-foreground px-6 py-4 rounded-t-lg text-center">
+            <DialogTitle className="text-2xl font-bold">
+              Kelley Blue Book&reg; Condition Definitions
+            </DialogTitle>
+          </div>
+          <div className="px-6 pt-2">
+            <div className="space-y-5 mt-2">
+              {KBB_FULL_DEFINITIONS.map((d) => (
+                <div key={d.title}>
+                  <h4 className="font-bold text-card-foreground mb-1 text-center">{d.title}</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{d.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="px-6 pb-4">
+            <DialogFooter>
+              <Button
+                onClick={() => setShowKbbDialog(false)}
+                className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-bold"
+              >
+                GOT IT!
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

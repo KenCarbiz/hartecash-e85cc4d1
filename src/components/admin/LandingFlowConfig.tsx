@@ -46,6 +46,7 @@ const FORM_VARIANTS: Array<{
  */
 
 type FormDensity = "simple" | "standard" | "detailed";
+type ConditionCardStyle = "basic" | "kbb";
 
 interface State {
   landing_template: LandingTemplate;
@@ -55,6 +56,9 @@ interface State {
    *  HowItWorks step 3 + the default "Why X Wins" wedge row. When
    *  off, the customer-facing copy switches to in-person drop-off. */
   pickup_offered: boolean;
+  /** Customer-facing condition picker style — "basic" hint per
+   *  option vs. "kbb" KBB-style descriptions + key dialog. */
+  condition_card_style: ConditionCardStyle;
   /** Ghost-screen variant + optional copy overrides for the
    *  BB-lookup transition state. */
   ghost_screen: GhostScreenKind;
@@ -73,6 +77,7 @@ const DEFAULTS: State = {
   landing_form_variant: "detailed",
   landing_form_density: "simple",
   pickup_offered: true,
+  condition_card_style: "basic",
   ghost_screen: "legacy-car",
   ghost_headline: "",
   ghost_subhead: "",
@@ -110,7 +115,7 @@ const LandingFlowConfig = () => {
       let row: any = null;
       const wide = await supabase
         .from("site_config" as any)
-        .select("landing_template, landing_form_variant, landing_form_density, pickup_offered, ghost_screen, ghost_headline, ghost_subhead, landing_lookup_default, landing_cta_color, landing_cta_text_color")
+        .select("landing_template, landing_form_variant, landing_form_density, pickup_offered, condition_card_style, ghost_screen, ghost_headline, ghost_subhead, landing_lookup_default, landing_cta_color, landing_cta_text_color")
         .eq("dealership_id", dealershipId)
         .maybeSingle();
       if (wide.error) {
@@ -119,6 +124,7 @@ const LandingFlowConfig = () => {
           lower.includes("landing_form_variant") ||
           lower.includes("landing_form_density") ||
           lower.includes("pickup_offered") ||
+          lower.includes("condition_card_style") ||
           lower.includes("ghost_screen") ||
           lower.includes("ghost_headline") ||
           lower.includes("ghost_subhead") ||
@@ -144,6 +150,9 @@ const LandingFlowConfig = () => {
           (row?.landing_form_density as FormDensity) || DEFAULTS.landing_form_density,
         pickup_offered:
           row?.pickup_offered === false ? false : DEFAULTS.pickup_offered,
+        condition_card_style:
+          (row?.condition_card_style as ConditionCardStyle) ||
+          DEFAULTS.condition_card_style,
         ghost_screen:
           (row?.ghost_screen as GhostScreenKind) || DEFAULTS.ghost_screen,
         ghost_headline: row?.ghost_headline ?? DEFAULTS.ghost_headline,
@@ -166,6 +175,7 @@ const LandingFlowConfig = () => {
     state.landing_form_variant !== saved.landing_form_variant ||
     state.landing_form_density !== saved.landing_form_density ||
     state.pickup_offered !== saved.pickup_offered ||
+    state.condition_card_style !== saved.condition_card_style ||
     state.ghost_screen !== saved.ghost_screen ||
     state.ghost_headline !== saved.ghost_headline ||
     state.ghost_subhead !== saved.ghost_subhead ||
@@ -401,6 +411,35 @@ const LandingFlowConfig = () => {
       }
     }
 
+    // Pass 1.61 — condition_card_style (best-effort, may not be deployed yet)
+    const conditionStyleChanged =
+      state.condition_card_style !== saved.condition_card_style;
+    let conditionStyleSkipped = false;
+    if (conditionStyleChanged) {
+      const { error: cErr } = await supabase
+        .from("site_config" as any)
+        .update({
+          condition_card_style: state.condition_card_style,
+          updated_at: new Date().toISOString(),
+        } as any)
+        .eq("dealership_id", dealershipId);
+      if (cErr) {
+        const lower = cErr.message?.toLowerCase() || "";
+        const code = (cErr as any).code || "";
+        const missing =
+          lower.includes("condition_card_style") ||
+          lower.includes("schema cache") ||
+          code === "PGRST204" ||
+          (lower.includes("column") && lower.includes("does not exist"));
+        if (!missing) {
+          setSaving(false);
+          toast({ title: "Save failed", description: cErr.message, variant: "destructive" });
+          return;
+        }
+        conditionStyleSkipped = true;
+      }
+    }
+
     // Pass 2 — variant (best-effort)
     let variantSkipped = false;
     if (variantChanged) {
@@ -451,6 +490,7 @@ const LandingFlowConfig = () => {
       ...(variantSkipped ? { landing_form_variant: saved.landing_form_variant } : {}),
       ...(densitySkipped ? { landing_form_density: saved.landing_form_density } : {}),
       ...(pickupSkipped ? { pickup_offered: saved.pickup_offered } : {}),
+      ...(conditionStyleSkipped ? { condition_card_style: saved.condition_card_style } : {}),
       ...(lookupSkipped ? { landing_lookup_default: saved.landing_lookup_default } : {}),
       ...(ctaColorSkipped
         ? {
@@ -675,6 +715,69 @@ const LandingFlowConfig = () => {
               }`}
             />
           </button>
+        </div>
+      </section>
+
+      {/* ── Condition card style ──
+          Picks how Step 2's overall-condition options render to the
+          customer. "Basic" keeps the short hint. "KBB" brings back the
+          original Hartecash treatment — Kelley Blue Book–style
+          descriptions on each card plus a "View full Kelley Blue Book®
+          condition definitions" key dialog. */}
+      <section className="bg-card rounded-xl border border-border p-6">
+        <div className="flex items-center gap-2 mb-1">
+          <ListChecks className="w-4 h-4 text-primary" />
+          <h3 className="font-bold">Condition card descriptions</h3>
+        </div>
+        <p className="text-xs text-muted-foreground mb-5">
+          How the overall-condition options on Step 2 render. The KBB
+          treatment matches the original Hartecash flow with per-card
+          KBB descriptions and a tap-to-open Kelley Blue Book® key.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {[
+            {
+              value: "basic" as const,
+              label: "Basic",
+              tagline: "Short hint per option",
+              body: "One line per card — \"Looks new. No issues.\" / \"Normal wear. Drives perfectly.\" / etc. Fastest read, no pop-ups.",
+            },
+            {
+              value: "kbb" as const,
+              label: "Kelley Blue Book® style",
+              tagline: "Per-card descriptions + key",
+              body: "KBB-style description on each card with the % of vehicles that fall in that bucket, plus a tap-to-open dialog with the full KBB condition definitions. The original Hartecash treatment.",
+            },
+          ].map((c) => {
+            const active = state.condition_card_style === c.value;
+            return (
+              <button
+                key={c.value}
+                type="button"
+                onClick={() =>
+                  setState((prev) => ({ ...prev, condition_card_style: c.value }))
+                }
+                className={`relative text-left rounded-xl border-2 p-4 transition-all ${
+                  active
+                    ? "border-primary bg-primary/5 shadow-md"
+                    : "border-border bg-muted/30 hover:bg-muted hover:border-primary/30"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-bold text-sm">{c.label}</span>
+                  {active && (
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                      Active
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                  {c.tagline}
+                </p>
+                <p className="text-xs text-muted-foreground leading-snug">{c.body}</p>
+              </button>
+            );
+          })}
         </div>
       </section>
 
