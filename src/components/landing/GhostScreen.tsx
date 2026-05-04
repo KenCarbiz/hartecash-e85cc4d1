@@ -302,7 +302,7 @@ const GhostScreen = ({
   return (
     <div
       className={`flex flex-col items-center justify-center text-center ${
-        fill ? "min-h-[400px] w-full" : ""
+        fill ? "min-h-screen w-full h-full flex-1" : ""
       }`}
       style={{ background, color: accent }}
     >
