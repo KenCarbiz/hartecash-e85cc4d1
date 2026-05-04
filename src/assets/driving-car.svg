@@ -1,17 +1,28 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200" aria-hidden="true">
   <defs>
     <style>
+      /* ── Single source of truth for "driving speed" ──
+         --drive-speed = seconds per full wheel rotation.
+         Wheel radius r = 16  →  circumference C = 2π·16 ≈ 100.531 px.
+         Road dash pattern is 16/16 → one dash cycle = 32 px.
+         To keep ground velocity = wheel surface velocity, the road must
+         scroll C px in one --drive-speed, i.e. one dash cycle every
+         (32 / C) · --drive-speed ≈ 0.3183 · --drive-speed.        */
+      svg { --drive-speed: 0.6s; }
+
       .stroke { fill: none; stroke: #4A6FA5; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
       .stroke-thin { fill: none; stroke: #4A6FA5; stroke-width: 1.8; stroke-linecap: round; }
-      /* Wheel rotates around its own local origin (0,0) inside its translate group */
-      .wheel-spin { animation: dc-spin 0.45s linear infinite; }
-      .road-move { animation: dc-road 0.45s linear infinite; }
-      .speed-1 { animation: dc-speed 0.6s linear infinite; }
-      .speed-2 { animation: dc-speed 0.6s linear infinite; animation-delay: 0.12s; }
-      .speed-3 { animation: dc-speed 0.6s linear infinite; animation-delay: 0.24s; }
-      .body-bob { transform-box: fill-box; transform-origin: center; animation: dc-bob 1.2s ease-in-out infinite; }
+
+      .wheel-spin { animation: dc-spin var(--drive-speed) linear infinite; }
+      .road-move  { animation: dc-road  calc(var(--drive-speed) * 0.31831) linear infinite; }
+
+      .speed-1 { animation: dc-speed calc(var(--drive-speed) * 1.1) linear infinite; }
+      .speed-2 { animation: dc-speed calc(var(--drive-speed) * 1.1) linear infinite; animation-delay: calc(var(--drive-speed) * 0.2); }
+      .speed-3 { animation: dc-speed calc(var(--drive-speed) * 1.1) linear infinite; animation-delay: calc(var(--drive-speed) * 0.4); }
+
+      .body-bob { transform-box: fill-box; transform-origin: center; animation: dc-bob calc(var(--drive-speed) * 2.2) ease-in-out infinite; }
+
       @keyframes dc-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-      /* Dash pattern is 16+16 = 32; scroll one full cycle per iteration for seamless loop */
       @keyframes dc-road { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -32; } }
       @keyframes dc-speed { 0% { opacity: 0; transform: translateX(20px); } 30% { opacity: 0.9; } 100% { opacity: 0; transform: translateX(-30px); } }
       @keyframes dc-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-1.5px); } }
@@ -27,7 +38,6 @@
 
   <!-- Car body group (subtle bob) -->
   <g class="body-bob">
-    <!-- Hatchback silhouette -->
     <path class="stroke" d="
       M 95 145
       L 100 120
@@ -38,7 +48,6 @@
       L 280 130
       L 280 145
       Z" />
-    <!-- Window outline -->
     <path class="stroke-thin" d="
       M 130 118
       Q 138 100 158 96
@@ -46,17 +55,13 @@
       Q 225 96 240 108
       L 250 118
       Z" />
-    <!-- Window divider -->
     <line class="stroke-thin" x1="180" y1="96" x2="180" y2="118" />
     <line class="stroke-thin" x1="210" y1="95" x2="212" y2="118" />
-    <!-- Door line / rocker -->
     <line class="stroke-thin" x1="125" y1="145" x2="265" y2="145" />
-    <!-- Headlight -->
     <path class="stroke-thin" d="M 272 128 q 6 2 6 8" />
-    <!-- Side mirror hint -->
     <path class="stroke-thin" d="M 108 118 q -4 2 -4 6" />
 
-    <!-- Front wheel: outer tire stays put, inner spokes spin around 0,0 of the translated group -->
+    <!-- Wheels (r=16). Inner spokes spin around the wheel center. -->
     <g transform="translate(135 150)">
       <circle class="stroke" cx="0" cy="0" r="16" />
       <g class="wheel-spin">
@@ -79,10 +84,6 @@
     </g>
   </g>
 
-  <!-- Moving road (dashed). Wheel circumference 2π·16 ≈ 100; one rotation per 0.45s = ~222 px/s,
-       road scrolls 32 px per 0.45s = ~71 px/s — visually balanced for "driving" feel without strobing. -->
-  <line
-    class="stroke road-move"
-    x1="20" y1="178" x2="300" y2="178"
-    stroke-dasharray="16 16" />
+  <!-- Moving road (dashed) -->
+  <line class="stroke road-move" x1="20" y1="178" x2="300" y2="178" stroke-dasharray="16 16" />
 </svg>
