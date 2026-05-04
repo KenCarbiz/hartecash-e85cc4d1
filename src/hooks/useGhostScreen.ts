@@ -59,11 +59,13 @@ export function useGhostScreen(): {
       const [{ data, error }, { data: locationData, error: locationError }] =
         await Promise.all([corporatePromise, locationPromise]);
       if (cancelled) return;
-      if (!error && !locationError) {
-        const locationGhost = (locationData as any)?.ghost_screen as
-          | GhostScreenKind
-          | null
-          | undefined;
+      if (!error) {
+        const locationGhost = !locationError
+          ? ((locationData as any)?.ghost_screen as
+              | GhostScreenKind
+              | null
+              | undefined)
+          : null;
         const next =
           locationGhost ||
           ((data as any)?.ghost_screen as GhostScreenKind) ||
