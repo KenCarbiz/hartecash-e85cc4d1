@@ -221,6 +221,55 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
     });
   };
 
+  /**
+   * Resilient site_config writer.
+   *
+   * Production has hit two failure modes that historically silently
+   * killed every admin save:
+   *   1. PostgREST keeps an in-memory schema cache that doesn't
+   *      auto-refresh after every migration. After a fresh migration
+   *      lands, the next UPDATE fails with "Could not find the 'X'
+   *      column of 'site_config' in the schema cache" even though
+   *      the column exists. Subsequent saves keep failing until the
+   *      schema cache reloads.
+   *   2. Code drift — a frontend rev introduces a new field before
+   *      its migration is applied. The whole UPDATE rolls back
+   *      because PostgREST doesn't know the column exists, so the
+   *      hero / address / phone / every other field also fails to
+   *      save in the same payload.
+   *
+   * Both cases produce the same error string. This helper detects
+   * it, strips the offending column, and retries — so the save
+   * succeeds for every other field even when one is unknown to
+   * the cache. Maximum 12 retries to bound runaway loops.
+   */
+  const resilientSiteConfigWrite = async (
+    op: (payload: Record<string, unknown>) => Promise<{ error: { message?: string } | null }>,
+    payload: Record<string, unknown>,
+  ): Promise<{ error: { message?: string } | null; stripped: string[] }> => {
+    const stripped: string[] = [];
+    let working: Record<string, unknown> = { ...payload };
+    for (let attempt = 0; attempt < 12; attempt++) {
+      const { error } = await op(working);
+      if (!error) return { error: null, stripped };
+      const msg = error.message?.toLowerCase() || "";
+      // PostgREST error format:
+      //   "Could not find the 'auto_route_appraiser_queue' column of 'site_config' in the schema cache"
+      const m = error.message?.match(/'([^']+)' column of 'site_config'/i);
+      const isSchemaCacheMiss =
+        m &&
+        (msg.includes("schema cache") ||
+          msg.includes("could not find") ||
+          (msg.includes("column") && msg.includes("does not exist")));
+      if (!isSchemaCacheMiss) return { error, stripped };
+      const offending = m![1];
+      if (!(offending in working)) return { error, stripped };
+      delete working[offending];
+      stripped.push(offending);
+    }
+    return { error: { message: "Too many schema-cache retries" }, stripped };
+  };
+
   const handleSave = async () => {
     setSaving(true);
     const { id, ...rest } = config;
@@ -233,17 +282,22 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
       .eq("dealership_id", dealershipId)
       .maybeSingle();
 
-    let error;
-    if (existing) {
-      ({ error } = await supabase
-        .from("site_config")
-        .update(payload)
-        .eq("id", existing.id));
-    } else {
-      ({ error } = await supabase
-        .from("site_config")
-        .insert(payload));
-    }
+    const { error, stripped } = existing
+      ? await resilientSiteConfigWrite(
+          (p) =>
+            supabase
+              .from("site_config")
+              .update(p)
+              .eq("id", existing.id) as unknown as Promise<{ error: { message?: string } | null }>,
+          payload,
+        )
+      : await resilientSiteConfigWrite(
+          (p) =>
+            supabase
+              .from("site_config")
+              .insert(p) as unknown as Promise<{ error: { message?: string } | null }>,
+          payload,
+        );
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -253,10 +307,18 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
       // Invalidate the React Query cache so the public landing — and
       // any other surface using useSiteConfig — re-fetches immediately
       // instead of waiting up to 5 minutes for staleTime to elapse.
-      // Root cause of the "I changed the hero in admin and the
-      // landing page didn't update" customer report.
       queryClient.invalidateQueries({ queryKey: ["site_config"] });
-      toast({ title: "Saved", description: "Site configuration updated." });
+      if (stripped.length > 0) {
+        // Soft-warn the dealer so they know SOME fields didn't land
+        // (the schema cache hasn't picked them up yet). The save
+        // SUCCEEDED for every other field — that's the win.
+        toast({
+          title: "Saved (with caveats)",
+          description: `Most fields saved. PostgREST hasn't refreshed for: ${stripped.join(", ")}. Re-save in a minute or apply the schema-reload migration.`,
+        });
+      } else {
+        toast({ title: "Saved", description: "Site configuration updated." });
+      }
     }
     setSaving(false);
   };
