@@ -104,7 +104,7 @@ const LandingFlowConfig = () => {
       let row: any = null;
       const wide = await supabase
         .from("site_config" as any)
-        .select("landing_template, landing_form_variant, landing_form_density, pickup_offered, ghost_screen, ghost_headline, ghost_subhead, landing_lookup_default, landing_cta_color")
+        .select("landing_template, landing_form_variant, landing_form_density, pickup_offered, ghost_screen, ghost_headline, ghost_subhead, landing_lookup_default")
         .eq("dealership_id", dealershipId)
         .maybeSingle();
       if (wide.error) {
@@ -117,7 +117,6 @@ const LandingFlowConfig = () => {
           lower.includes("ghost_headline") ||
           lower.includes("ghost_subhead") ||
           lower.includes("landing_lookup_default") ||
-          lower.includes("landing_cta_color") ||
           lower.includes("schema cache")
         ) {
           const narrow = await supabase
@@ -146,7 +145,6 @@ const LandingFlowConfig = () => {
         landing_lookup_default:
           (row?.landing_lookup_default as "plate" | "vin") ||
           DEFAULTS.landing_lookup_default,
-        landing_cta_color: row?.landing_cta_color ?? DEFAULTS.landing_cta_color,
       };
       setState(next);
       setSaved(next);
@@ -162,8 +160,7 @@ const LandingFlowConfig = () => {
     state.ghost_screen !== saved.ghost_screen ||
     state.ghost_headline !== saved.ghost_headline ||
     state.ghost_subhead !== saved.ghost_subhead ||
-    state.landing_lookup_default !== saved.landing_lookup_default ||
-    state.landing_cta_color !== saved.landing_cta_color;
+    state.landing_lookup_default !== saved.landing_lookup_default;
 
   const handleSave = async () => {
     setSaving(true);
