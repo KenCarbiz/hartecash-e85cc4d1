@@ -9,6 +9,113 @@ const corsHeaders = {
 const BB_BASE = "https://service.blackbookcloud.com/UsedCarWS/UsedCarWS/UsedVehicle";
 const BB_GRAPHQL = "https://service.blackbookcloud.com/UsedCarWS/UsedCarWS/GraphQL";
 
+// NHTSA vPIC — free public VIN decoder. We use it as a graceful
+// fallback when Black Book is unavailable so the customer-facing
+// flow can still confirm year / make / model / trim / drivetrain /
+// engine without hitting the demo stub. NHTSA does NOT provide
+// pricing; downstream code treats `_nhtsa: true` vehicles as
+// "specs-only" — the offer page falls back to manual appraisal.
+const NHTSA_DECODE = "https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValuesExtended";
+
+interface NhtsaResultRow { [key: string]: string | number | null }
+
+async function decodeViaNhtsa(vin: string): Promise<Record<string, unknown> | null> {
+  try {
+    const res = await fetch(`${NHTSA_DECODE}/${encodeURIComponent(vin)}?format=json`);
+    if (!res.ok) {
+      console.warn(`NHTSA returned ${res.status} for VIN ${vin}`);
+      return null;
+    }
+    const data = await res.json();
+    const row: NhtsaResultRow | undefined = data?.Results?.[0];
+    if (!row) return null;
+    const errCode = String(row.ErrorCode || "").trim();
+    // ErrorCode "0" = full match, "6"/"7"/"8" = partial but year/make/model
+    // usually present. Anything else (e.g. "11" invalid VIN) → bail.
+    const acceptable = errCode === "0" || errCode === "1" || errCode === "6" || errCode === "7" || errCode === "8";
+    if (!acceptable || !row.ModelYear || !row.Make || !row.Model) return null;
+
+    const yearStr = String(row.ModelYear);
+    const make = String(row.Make);
+    const model = String(row.Model);
+    const trim = String(row.Trim || row.Series || "");
+
+    // Drivetrain — NHTSA's DriveType is verbose ("4WD/4-Wheel Drive/4x4");
+    // collapse to the same compact strings BB returns.
+    const driveRaw = String(row.DriveType || "").toUpperCase();
+    let drivetrain = "";
+    if (driveRaw.includes("AWD") || driveRaw.includes("ALL-WHEEL") || driveRaw.includes("4WD") || driveRaw.includes("4-WHEEL") || driveRaw.includes("4X4")) drivetrain = "AWD/4WD";
+    else if (driveRaw.includes("FWD") || driveRaw.includes("FRONT-WHEEL")) drivetrain = "FWD";
+    else if (driveRaw.includes("RWD") || driveRaw.includes("REAR-WHEEL")) drivetrain = "RWD";
+
+    // Engine — best-effort string from cyls + displacement.
+    const cyls = row.EngineCylinders ? String(row.EngineCylinders) : "";
+    const disp = row.DisplacementL ? `${Number(row.DisplacementL).toFixed(1)}L` : "";
+    const engineParts = [disp, cyls ? `${cyls}-Cylinder` : ""].filter(Boolean);
+    const engine = engineParts.join(" ");
+
+    const fuel = String(row.FuelTypePrimary || "").toLowerCase();
+    let fuel_type = "";
+    if (fuel.includes("diesel")) fuel_type = "Diesel";
+    else if (fuel.includes("electric")) fuel_type = "Electric";
+    else if (fuel.includes("hybrid")) fuel_type = "Hybrid";
+    else if (fuel.includes("flex")) fuel_type = "Flex Fuel";
+    else if (fuel.includes("gas")) fuel_type = "Gasoline";
+
+    const transStyle = String(row.TransmissionStyle || "").toLowerCase();
+    let transmission = "";
+    if (transStyle.includes("auto")) transmission = "Automatic";
+    else if (transStyle.includes("manual")) transmission = "Manual";
+    else if (transStyle.includes("cvt") || transStyle.includes("continuously")) transmission = "CVT";
+    else if (transStyle.includes("dual")) transmission = "DCT";
+
+    const body = String(row.BodyClass || "");
+    const series = String(row.Series || "");
+    const style = [trim, body].filter(Boolean).join(" ").trim();
+
+    // Build a vehicle that mirrors the BB shape so downstream code
+    // (SellFlowSimple, BBVehicleCard, calculateOffer) doesn't branch.
+    // Pricing fields are zeroed; the `_nhtsa` flag tells the offer
+    // pipeline to treat this as a manual-appraisal lead.
+    return {
+      uvc: "",
+      vin,
+      year: yearStr,
+      make,
+      model,
+      series: series || trim,
+      style,
+      class_name: body,
+      msrp: 0,
+      price_includes: "",
+      drivetrain,
+      transmission,
+      engine,
+      fuel_type,
+      exterior_colors: [],
+      mileage_adj: 0,
+      regional_adj: 0,
+      base_whole_avg: 0,
+      add_deduct_list: [],
+      wholesale: { xclean: 0, clean: 0, avg: 0, rough: 0 },
+      tradein: { clean: 0, avg: 0, rough: 0 },
+      retail: { xclean: 0, clean: 0, avg: 0, rough: 0 },
+      private_party: { xclean: 0, clean: 0, avg: 0, rough: 0 },
+      finance_advance: { xclean: 0, clean: 0, avg: 0, rough: 0 },
+      residual_12: 0,
+      residual_24: 0,
+      residual_36: 0,
+      residual_48: 0,
+      recall_count: 0,
+      recalls: [],
+      _nhtsa: true,
+    };
+  } catch (e) {
+    console.warn("NHTSA decode threw:", (e as Error).message);
+    return null;
+  }
+}
+
 // Synthetic Black Book response served when demo_mode is on for the
 // caller's tenant (or BB_DEMO_MODE=true env override). The shape mirrors
 // a real BB vehicle so calculateOffer / SellCarForm / QuickOfferForm
@@ -117,12 +224,30 @@ serve(async (req) => {
       }
     }
 
-    // Auto-fallback: if BB credentials are absent, force demo mode so
-    // the public Trade / TradeIframe / SellCarForm flows keep working
-    // for demos even when site_config.demo_mode hasn't been turned on
-    // (or the column hasn't been migrated yet on this environment).
-    // Without this, every lookup returns 500 and the form stalls.
-    if (!demoMode && (!username || !password)) {
+    // Auto-fallback: if BB credentials are absent and we have a real
+    // VIN, decode it via NHTSA so the customer still sees their actual
+    // year / make / model / trim / drivetrain on the next screen.
+    // Plate-only lookups can't be served by NHTSA (no plate registry),
+    // so those continue to hit demo mode.
+    const bbCredsMissing = !username || !password;
+    if (!demoMode && bbCredsMissing && lookup_type === "vin" && vin) {
+      console.warn("BB credentials missing — attempting NHTSA fallback for VIN");
+      const nhtsa = await decodeViaNhtsa(vin);
+      if (nhtsa) {
+        const payload = { error: null, vehicles: [nhtsa], nhtsa_fallback: true };
+        return new Response(JSON.stringify(payload), {
+          status: 200,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+            "X-BB-Cache": "NHTSA",
+          },
+        });
+      }
+      console.warn("NHTSA fallback returned no usable data — falling through to demo");
+      demoMode = true;
+    }
+    if (!demoMode && bbCredsMissing) {
       console.warn("BB credentials missing — auto-engaging demo mode for this lookup");
       demoMode = true;
     }
@@ -211,6 +336,16 @@ serve(async (req) => {
     const bbText = await bbRes.text();
     if (!bbRes.ok) {
       console.error(`BB API returned ${bbRes.status}: ${bbText.substring(0, 500)}`);
+      // Graceful fallback to NHTSA so the customer still gets a
+      // confirm screen with real specs instead of a dead end.
+      if (lookup_type === "vin" && vin) {
+        const nhtsa = await decodeViaNhtsa(vin);
+        if (nhtsa) {
+          return new Response(JSON.stringify({ error: null, vehicles: [nhtsa], nhtsa_fallback: true }), {
+            status: 200, headers: { ...corsHeaders, "Content-Type": "application/json", "X-BB-Cache": "NHTSA" }
+          });
+        }
+      }
       return new Response(JSON.stringify({ error: `Black Book API error (${bbRes.status})`, vehicles: [] }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
@@ -237,6 +372,14 @@ serve(async (req) => {
     // Check for errors
     if (bbData.error_count > 0) {
       const errorMsg = bbData.message_list?.map((m: { description: string }) => m.description).join(", ") || "Vehicle not found";
+      if (lookup_type === "vin" && vin) {
+        const nhtsa = await decodeViaNhtsa(vin);
+        if (nhtsa) {
+          return new Response(JSON.stringify({ error: null, vehicles: [nhtsa], nhtsa_fallback: true, bb_message: errorMsg }), {
+            status: 200, headers: { ...corsHeaders, "Content-Type": "application/json", "X-BB-Cache": "NHTSA" }
+          });
+        }
+      }
       return new Response(JSON.stringify({ error: errorMsg, vehicles: [] }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });

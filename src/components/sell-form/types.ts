@@ -57,6 +57,11 @@ export interface BBVehicle {
   residual_48?: number;
   recall_count?: number;
   recalls?: { campaign_number: string; component: string; summary: string }[];
+  // Set by the bb-lookup edge function when the response was decoded
+  // via NHTSA vPIC instead of Black Book. Pricing fields are zeroed
+  // for these vehicles — downstream code should treat them as
+  // specs-only and route to manual appraisal.
+  _nhtsa?: boolean;
 }
 
 export interface FormData {
