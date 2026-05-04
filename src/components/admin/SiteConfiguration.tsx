@@ -636,6 +636,83 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
               );
             })}
           </div>
+
+          {/* ── Live preview ──────────────────────────────────────────
+              Mirrors how the CTAs render on the live landing & offer
+              pages, but uses the in-memory config values so toggles +
+              color picks update instantly without requiring a save. */}
+          {(() => {
+            const resolveBg = (override: string) => {
+              const raw = (override || config.accent_color || "0 77% 50%").trim();
+              return raw.startsWith("#") ? raw : `hsl(${raw})`;
+            };
+            const offerBg = resolveBg(config.cta_offer_color);
+            const acceptBg = resolveBg(config.cta_accept_color);
+            const primaryBg = (config.primary_color || "").trim().startsWith("#")
+              ? config.primary_color
+              : `hsl(${config.primary_color || "210 100% 25%"})`;
+
+            return (
+              <div className="mt-5 pt-5 border-t border-border">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs font-semibold text-card-foreground">Live preview</p>
+                  <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                    Updates as you edit
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {/* Landing hero mock */}
+                  <div
+                    className="rounded-xl p-5 overflow-hidden relative"
+                    style={{ background: `linear-gradient(135deg, ${primaryBg}, ${primaryBg} 60%, hsl(0 0% 0% / 0.4))` }}
+                  >
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-white/60 mb-2">
+                      Landing page · /
+                    </div>
+                    <div className="text-white font-display text-lg font-bold leading-tight mb-1">
+                      {config.hero_headline || "Sell Your Car The Easy Way"}
+                    </div>
+                    <div className="text-white/70 text-xs mb-4 line-clamp-2">
+                      {config.hero_subtext || "Real cash offer in 60 seconds."}
+                    </div>
+                    <div className="bg-white/95 rounded-lg p-2.5 flex gap-2 items-center">
+                      <div className="flex-1 h-7 rounded bg-muted/40 flex items-center px-2 text-[10px] text-muted-foreground">
+                        ABC-1234
+                      </div>
+                      <button
+                        type="button"
+                        className="h-7 px-3 rounded text-[11px] font-bold text-white shadow-sm cursor-default"
+                        style={{ backgroundColor: offerBg }}
+                      >
+                        Get My Offer
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Offer page mock */}
+                  <div className="rounded-xl p-5 bg-card border border-border">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
+                      Offer page · /offer
+                    </div>
+                    <div className="text-card-foreground font-bold text-base mb-1">Your Cash Offer</div>
+                    <div className="font-display text-2xl font-bold mb-3" style={{ color: primaryBg }}>
+                      $18,500
+                    </div>
+                    <button
+                      type="button"
+                      className="w-full h-10 rounded-lg text-sm font-bold text-white shadow-md cursor-default flex items-center justify-center gap-2"
+                      style={{ backgroundColor: acceptBg, boxShadow: `0 6px 16px ${acceptBg}40` }}
+                    >
+                      → Accept Offer
+                    </button>
+                    <p className="text-[10px] text-muted-foreground text-center mt-2">
+                      Slide-to-accept on the live page
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </Section>
 
