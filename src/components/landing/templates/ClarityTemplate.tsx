@@ -62,41 +62,10 @@ const ClarityTemplate = () => {
         </motion.div>
       </section>
 
-      {/* ── Below the fold — the marketing assets stay on the LANDING
-            (reviews / process / why us). They never appear inside the
-            wizard. Per the May-2026 audit: rich landing, slim flow. */}
-      <section className="bg-zinc-50 border-t border-zinc-200 px-5 py-16 md:py-24">
-        <div className="max-w-4xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 mb-16">
-            {[
-              { n: "01", title: "Tell us about your car", body: "Plate or VIN, then a few quick questions." },
-              { n: "02", title: "Get your offer", body: "Real cash number in under two minutes. Good for 7 days." },
-              config.pickup_offered !== false
-                ? { n: "03", title: "We pick it up", body: "Free pickup at your home or work. We pay on the spot." }
-                : { n: "03", title: "Drop off & get paid", body: "Bring your car in when it's convenient. We pay on the spot." },
-            ].map((s) => (
-              <div key={s.n} className="space-y-2">
-                <div className="text-xs font-mono text-zinc-400 tracking-wider">{s.n}</div>
-                <div className="text-lg font-semibold text-zinc-900">{s.title}</div>
-                <div className="text-sm text-zinc-500 leading-relaxed">{s.body}</div>
-              </div>
-            ))}
-          </div>
-
-          <blockquote className="text-center max-w-2xl mx-auto">
-            <p className="text-xl md:text-2xl font-medium text-zinc-700 leading-snug">
-              "Easiest car sale I've ever made. Two minutes online, picked up the next day, money in my account."
-            </p>
-            <footer className="text-sm text-zinc-400 mt-4">
-              — Customer, {config.dealership_name}
-            </footer>
-          </blockquote>
-        </div>
-      </section>
-
-      {/* ── Canonical below-fold (reviews, 1-2-3, comparison, FAQ, etc.)
-            shared with every other template. Inherits the Clarity
-            light theme via CSS vars; FAQ stays collapsed by default. */}
+      {/* ── Canonical below-fold (reviews with stars, the bolder 1-2-3
+            HowItWorks, comparison wedge, value props, FAQ, etc.).
+            Replaces the prior inline "01/02/03" strip + curated
+            testimonial that duplicated this content one fold below. */}
       <FullBelowFold />
 
       {/* ── Fullscreen wizard — opens on plate submit, takes over the
