@@ -456,6 +456,7 @@ const LandingFlowConfig = () => {
       try {
         localStorage.removeItem(`landing_form_variant_pending:${dealershipId}`);
       } catch { /* ignore */ }
+      setState((prev) => ({ ...prev, landing_cta_color: normalizedCtaColor }));
       // Invalidate the public-facing useSiteConfig cache so the
       // landing reflects the dealer's new template / density /
       // pickup / ghost / lookup-default / cta-color choices on the
