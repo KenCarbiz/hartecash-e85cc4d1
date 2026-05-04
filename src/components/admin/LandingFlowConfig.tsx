@@ -79,6 +79,14 @@ const DEFAULTS: State = {
   landing_cta_color: "",
 };
 
+const normalizeCtaColor = (value: string) => {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  return trimmed.startsWith("#") ? trimmed.toUpperCase() : `#${trimmed}`.toUpperCase();
+};
+
+const isValidHexColor = (value: string) => /^#[0-9A-F]{6}$/.test(value);
+
 const GHOST_OPTIONS: { value: GhostScreenKind; label: string; description: string }[] = [
   { value: "legacy-car",    label: "Hartecash classic",     description: "The running-car silhouette over a road line. The familiar Hartecash motion." },
   { value: "pulse-orb",     label: "Pulse orb",             description: "Concentric rings pulsing outward from a solid center. Apple Vision Pro / OpenAI vibe." },
@@ -172,6 +180,17 @@ const LandingFlowConfig = () => {
   const handleSave = async () => {
     setSaving(true);
 
+    const normalizedCtaColor = normalizeCtaColor(state.landing_cta_color);
+    if (normalizedCtaColor && !isValidHexColor(normalizedCtaColor)) {
+      setSaving(false);
+      toast({
+        title: "CTA color needs a hex value",
+        description: "Use a 6-character color like #FACC15.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Save in two passes so a missing landing_form_variant column on
     // not-yet-migrated DBs never blocks the template change.
     //   1) Always-safe pass: template + updated_at (columns shipped
@@ -240,13 +259,15 @@ const LandingFlowConfig = () => {
     }
 
     // Pass 1.6.5 — landing_cta_color (best-effort)
-    const ctaColorChanged = state.landing_cta_color !== saved.landing_cta_color;
+    const effectiveCtaColor = normalizedCtaColor || "#FACC15";
+    const ctaColorChanged =
+      state.landing_cta_color !== saved.landing_cta_color || !saved.landing_cta_color;
     let ctaColorSkipped = false;
     if (ctaColorChanged) {
       const { error: cErr } = await supabase
         .from("site_config" as any)
         .update({
-          landing_cta_color: state.landing_cta_color.trim() || null,
+          landing_cta_color: effectiveCtaColor,
           updated_at: new Date().toISOString(),
         } as any)
         .eq("dealership_id", dealershipId);
@@ -399,6 +420,7 @@ const LandingFlowConfig = () => {
     // lands.
     setSaved({
       ...state,
+      landing_cta_color: effectiveCtaColor,
       ...(variantSkipped ? { landing_form_variant: saved.landing_form_variant } : {}),
       ...(densitySkipped ? { landing_form_density: saved.landing_form_density } : {}),
       ...(pickupSkipped ? { pickup_offered: saved.pickup_offered } : {}),
@@ -436,6 +458,7 @@ const LandingFlowConfig = () => {
       try {
         localStorage.removeItem(`landing_form_variant_pending:${dealershipId}`);
       } catch { /* ignore */ }
+      setState((prev) => ({ ...prev, landing_cta_color: effectiveCtaColor }));
       // Invalidate the public-facing useSiteConfig cache so the
       // landing reflects the dealer's new template / density /
       // pickup / ghost / lookup-default / cta-color choices on the
