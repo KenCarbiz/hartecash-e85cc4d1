@@ -535,41 +535,99 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
         <div className="mt-4 pt-4 border-t border-border">
           <p className="text-xs font-semibold text-card-foreground mb-1">CTA Button Overrides</p>
           <p className="text-xs text-muted-foreground mb-3">
-            Leave blank to use the default Accent color. Set custom HSL values to override specific buttons when white-labeling.
+            Toggle on to override the brand Accent color for a specific CTA. Click the swatch to pick a color, or type a hex (#FF0000) or HSL ("0 80% 50%") value.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {([
               { key: "cta_offer_color" as const, label: "\"Get My Offer\" Button", btnText: "Get My Offer", desc: "Form submit & Continue buttons" },
               { key: "cta_accept_color" as const, label: "\"Accept Offer\" Button", btnText: "Accept Offer", desc: "Accept & Lock In Your Price (accepted badge stays green)" },
             ]).map(({ key, label, btnText, desc }) => {
-              const effectiveColor = config[key] || config.accent_color;
+              const overrideOn = !!config[key];
+              const value = config[key] || "";
+              // Convert stored value (hex or HSL triplet) → hex for the
+              // native color input. Falls back to a neutral red if parsing
+              // fails so the swatch is always interactive.
+              const toHexForPicker = (v: string): string => {
+                const t = (v || "").trim();
+                if (!t) return "#dc2626";
+                if (t.startsWith("#")) return t.length === 4
+                  ? "#" + t.slice(1).split("").map((c) => c + c).join("")
+                  : t;
+                // Parse "H S% L%" → hex
+                const m = t.match(/^(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)%\s+(\d+(?:\.\d+)?)%$/);
+                if (!m) return "#dc2626";
+                const h = parseFloat(m[1]) / 360;
+                const s = parseFloat(m[2]) / 100;
+                const l = parseFloat(m[3]) / 100;
+                const hue2rgb = (p: number, q: number, t: number) => {
+                  if (t < 0) t += 1; if (t > 1) t -= 1;
+                  if (t < 1 / 6) return p + (q - p) * 6 * t;
+                  if (t < 1 / 2) return q;
+                  if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+                  return p;
+                };
+                let r: number, g: number, b: number;
+                if (s === 0) { r = g = b = l; } else {
+                  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                  const p = 2 * l - q;
+                  r = hue2rgb(p, q, h + 1 / 3);
+                  g = hue2rgb(p, q, h);
+                  b = hue2rgb(p, q, h - 1 / 3);
+                }
+                const toHex = (n: number) => Math.round(n * 255).toString(16).padStart(2, "0");
+                return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+              };
+              const swatchColor = overrideOn ? value : config.accent_color;
+              const swatchBg = swatchColor.trim().startsWith("#")
+                ? swatchColor
+                : `hsl(${swatchColor})`;
               return (
-                <div key={key} className="space-y-2">
-                  <Label className="text-xs font-semibold">{label}</Label>
+                <div key={key} className="space-y-2 rounded-lg border border-border bg-muted/20 p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <Label className="text-xs font-semibold">{label}</Label>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                        {overrideOn ? "Override on" : "Using brand"}
+                      </span>
+                      <Switch
+                        checked={overrideOn}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            // Seed with the current accent color so the
+                            // swatch is immediately editable.
+                            update(key, value || config.accent_color || "0 77% 50%");
+                          } else {
+                            update(key, "");
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
                   <div className="flex items-center gap-2">
-                    <div
-                      className="w-8 h-8 rounded-md border border-border shrink-0"
-                      style={{ backgroundColor: `hsl(${effectiveColor})` }}
-                    />
+                    <label
+                      className={`relative w-9 h-9 rounded-md border border-border shrink-0 overflow-hidden ${overrideOn ? "cursor-pointer" : "opacity-60 cursor-not-allowed"}`}
+                      style={{ backgroundColor: swatchBg }}
+                      title={overrideOn ? "Click to pick a color" : "Toggle override on to edit"}
+                    >
+                      <input
+                        type="color"
+                        value={toHexForPicker(value)}
+                        disabled={!overrideOn}
+                        onChange={(e) => update(key, e.target.value.toUpperCase())}
+                        className="absolute inset-0 opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                      />
+                    </label>
                     <Input
-                      value={config[key]}
-                      onChange={e => update(key, e.target.value)}
-                      className="h-8 text-xs"
-                      placeholder={`Default: ${config.accent_color}`}
+                      value={value}
+                      onChange={(e) => update(key, e.target.value)}
+                      disabled={!overrideOn}
+                      className="h-9 text-xs font-mono"
+                      placeholder={overrideOn ? "#FF0000 or 0 80% 50%" : "Override off — using brand accent"}
                     />
-                    {config[key] && (
-                      <button
-                        type="button"
-                        onClick={() => update(key, "")}
-                        className="text-xs text-muted-foreground hover:text-foreground whitespace-nowrap"
-                      >
-                        Reset
-                      </button>
-                    )}
                   </div>
                   <div
-                    className="inline-block px-4 py-2 rounded-lg text-xs font-semibold text-white shadow-sm transition-colors cursor-default"
-                    style={{ backgroundColor: `hsl(${effectiveColor})` }}
+                    className="inline-block px-4 py-2 rounded-lg text-xs font-semibold text-white shadow-sm cursor-default"
+                    style={{ backgroundColor: swatchBg }}
                   >
                     {btnText}
                   </div>
