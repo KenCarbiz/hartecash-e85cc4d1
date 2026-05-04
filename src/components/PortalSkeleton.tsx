@@ -4,9 +4,13 @@ import { AlertTriangle, RefreshCw } from "lucide-react";
 interface PortalSkeletonProps {
   error?: string | null;
   onRetry?: () => void;
+  /** Headline displayed above the ghost car so the customer knows
+   *  what's happening — "Finding Vehicle", "Loading Submission",
+   *  "Uploading Photos", etc. Defaults to "Loading your submission". */
+  headline?: string;
 }
 
-const PortalSkeleton = ({ error, onRetry }: PortalSkeletonProps = {}) => {
+const PortalSkeleton = ({ error, onRetry, headline = "Loading your submission" }: PortalSkeletonProps = {}) => {
   if (error) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
@@ -32,7 +36,12 @@ const PortalSkeleton = ({ error, onRetry }: PortalSkeletonProps = {}) => {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="text-center">
-        <div className="relative mx-auto mb-4 w-[320px] h-[200px]">
+        {/* Headline ABOVE the car so the customer immediately sees
+            what's happening before noticing the animation. */}
+        <p className="text-lg md:text-xl font-semibold tracking-tight text-foreground mb-4">
+          {headline}
+        </p>
+        <div className="relative mx-auto w-[320px] h-[200px]">
           <img
             src={ghostCar}
             alt=""
@@ -54,7 +63,6 @@ const PortalSkeleton = ({ error, onRetry }: PortalSkeletonProps = {}) => {
             />
           </svg>
         </div>
-        <p className="text-sm font-medium text-muted-foreground animate-pulse">Loading your submission...</p>
       </div>
     </div>
   );

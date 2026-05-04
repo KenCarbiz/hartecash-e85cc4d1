@@ -836,8 +836,8 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default", initial }:
             }
             accent="#5B6B8A"
             size="lg"
-            headline="Looking up your vehicle…"
-            subhead="Pulling your vehicle details from the registry."
+            headline="Finding your vehicle"
+            subhead="Pulling your details from the registry."
           />
         </div>
       )}

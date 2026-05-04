@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import UploadSkeleton from "@/components/UploadSkeleton";
+import GhostScreen, { type GhostScreenKind } from "@/components/landing/GhostScreen";
 import MobileQRBanner from "@/components/upload/MobileQRBanner";
 import PhotoGuide from "@/components/upload/PhotoGuide";
 import VehicleCameraCapture from "@/components/upload/VehicleCameraCapture";
@@ -522,14 +523,19 @@ const UploadPhotos = () => {
         </p>
       </div>
 
-      {/* Upload progress overlay */}
+      {/* Upload progress overlay — uses the dealer's chosen ghost
+          loader so the upload moment matches the rest of the brand. */}
       {uploading && (
-        <div className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto" />
-            <p className="text-lg font-semibold text-foreground">Uploading your photos...</p>
-            <p className="text-sm text-muted-foreground">Please don't close this page.</p>
-          </div>
+        <div className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm flex items-center justify-center p-6">
+          <GhostScreen
+            kind={
+              ((config as any).ghost_screen as GhostScreenKind) || "legacy-car"
+            }
+            accent="#5B6B8A"
+            size="lg"
+            headline="Uploading Photos"
+            subhead="Please don't close this page."
+          />
         </div>
       )}
 
