@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { Button } from "@/components/ui/button";
 import VehicleImage from "@/components/sell-form/VehicleImage";
+import { getTaxRateFromZip, calcTradeInValue } from "@/lib/salesTax";
 
 /**
  * Clarity-tier customer portal — Apple/Porsche minimal white,
@@ -183,6 +184,14 @@ const CustomerPortalClarity = () => {
   const isDemoMode = (config as any)?.demo_mode === true;
   const demoOfferAmount = Number((config as any)?.demo_offer_amount ?? 23599) || 23599;
   const displayedOffer = isDemoMode ? demoOfferAmount : s.offered_price;
+
+  // Trade-in math — same logic as OfferPageClarity. Uses the
+  // customer's ZIP (when on file) for state-specific sales-tax
+  // credit; defaults to CT 6.35% so the chip is never blank.
+  const zipResult = getTaxRateFromZip(s.zip || "");
+  const taxRate = zipResult.state ? zipResult.rate : 0.0635;
+  const taxSavings = (displayedOffer || 0) * taxRate;
+  const tradeInValue = calcTradeInValue(displayedOffer || 0, taxRate);
   let mappedStatus = STAGE_MAPPING[s.progress_status] || s.progress_status;
   if (mappedStatus === "contacted" && displayedOffer) mappedStatus = "offer_made";
   const stepIdx = statusToStepIndex(mappedStatus);
@@ -431,6 +440,36 @@ const CustomerPortalClarity = () => {
                 hideColorLabel
               />
             </div>
+            {/* Offer block — pulled out of the spec grid and
+                promoted to the visual anchor. Big tabular-nums
+                cash offer on top, trade-in value beneath in
+                emerald with the tax-credit chip. */}
+            {displayedOffer && displayedOffer > 0 && (
+              <div className="px-6 pt-6 pb-4 text-center border-b border-zinc-100">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-500 mb-2">
+                  Your cash offer
+                </p>
+                <p className="font-sans text-[44px] md:text-[56px] font-bold tracking-[-0.03em] leading-[1] text-zinc-900 tabular-nums">
+                  ${displayedOffer.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+                </p>
+                <div className="mt-4 inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-zinc-500">
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700">
+                      Trade-in
+                    </span>
+                    <span className="font-semibold tabular-nums text-emerald-700">
+                      ${tradeInValue.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+                    </span>
+                  </span>
+                  <span className="text-zinc-300" aria-hidden="true">·</span>
+                  <span>
+                    +${taxSavings.toLocaleString("en-US", { maximumFractionDigits: 0 })} tax credit
+                    {zipResult.state ? ` (${zipResult.state})` : ""}
+                  </span>
+                </div>
+              </div>
+            )}
+
             <dl className="px-6 py-5 grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
               {s.vin && (
                 <div className="col-span-2">
@@ -454,14 +493,6 @@ const CustomerPortalClarity = () => {
                 <div>
                   <dt className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500 mb-1">Condition</dt>
                   <dd className="font-medium text-zinc-900">{conditionLabel}</dd>
-                </div>
-              )}
-              {displayedOffer && displayedOffer > 0 && (
-                <div>
-                  <dt className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500 mb-1">Cash Offer</dt>
-                  <dd className="font-bold tabular-nums text-zinc-900">
-                    ${displayedOffer.toLocaleString("en-US", { maximumFractionDigits: 0 })}
-                  </dd>
                 </div>
               )}
             </dl>
