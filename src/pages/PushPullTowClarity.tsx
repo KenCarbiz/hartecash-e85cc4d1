@@ -48,7 +48,7 @@ const PushPullTowClarity = () => {
             <img
               src={config.logo_url}
               alt={config.dealership_name}
-              className="h-8 mx-auto mb-5 object-contain"
+              className="h-10 md:h-12 mx-auto mb-5 object-contain"
             />
           )}
           <motion.div
