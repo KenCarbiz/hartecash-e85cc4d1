@@ -192,8 +192,32 @@ const CustomerPortalClarity = () => {
   // Drives the action-required card. Each progress state has one
   // canonical "next thing the customer should do" — sequencing
   // mirrors the legacy WhatsNextCard but pared down to one CTA.
+  // First gate: customer hasn't accepted the offer yet. Earlier
+  // versions skipped this step and took everyone to "Schedule
+  // Your Inspection" — but if they're returning to the portal
+  // before accepting, the next action is reviewing the offer
+  // and tapping Accept on /offer/:token.
+  const ACCEPTED_STATUSES = new Set([
+    "offer_accepted",
+    "price_agreed",
+    "inspection_scheduled",
+    "inspection_completed",
+    "deal_finalized",
+    "title_ownership_verified",
+    "check_request_submitted",
+    "purchase_complete",
+  ]);
+  const hasAcceptedOffer = ACCEPTED_STATUSES.has(s.progress_status);
   const nextAction = (() => {
     if (mappedStatus === "purchase_complete") return null;
+    if (!hasAcceptedOffer && (displayedOffer ?? 0) > 0) {
+      return {
+        label: "Review & Accept Your Offer",
+        body: `Your firm cash offer of $${displayedOffer!.toLocaleString("en-US", { maximumFractionDigits: 0 })} is locked in. Tap below to accept and start the inspection scheduling.`,
+        cta: "View My Offer",
+        href: `/offer/${s.token}`,
+      };
+    }
     if (!s.appointment_set) {
       return {
         label: "Schedule Your Inspection",
@@ -395,6 +419,24 @@ const CustomerPortalClarity = () => {
                 </div>
               )}
             </dl>
+            {/* Always-available link back to the full offer page so
+                the customer can re-open Accept / Save / Print without
+                hunting for it. Only renders when the offer exists. */}
+            {displayedOffer && displayedOffer > 0 && (
+              <div className="border-t border-zinc-100 px-6 py-3 flex items-center justify-between">
+                <span className="text-[11px] text-zinc-500">
+                  {hasAcceptedOffer ? "Offer accepted" : "Ready to accept?"}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => navigate(`/offer/${s.token}`)}
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-zinc-900 hover:text-zinc-600 transition-colors"
+                >
+                  {hasAcceptedOffer ? "View offer" : "View & accept"}
+                  <ArrowRight className="w-3 h-3" aria-hidden="true" />
+                </button>
+              </div>
+            )}
           </section>
 
           {/* ── Action Required + Checklist column ── */}

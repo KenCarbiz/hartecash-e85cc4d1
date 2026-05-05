@@ -500,10 +500,19 @@ const OfferPageLegacy = () => {
     s.bb_retail_avg ||
     condition?.bb_value_tiers,
   );
-  const cashOffer = (!isAccepted ? liveEstimate?.high : s.offered_price)
-    ?? s.estimated_offer_high
-    ?? s.offered_price
-    ?? 0;
+  // Demo-mode override — when site_config.demo_mode is on, every
+  // customer-facing offer clamps to demo_offer_amount. Mirrors the
+  // identical fallback in OfferPageClarity so flipping the staff
+  // OfferScreenToggle (Clarity ↔ Legacy) renders both variants
+  // with the same number on demo submissions.
+  const isDemoModeRender = (config as any)?.demo_mode === true;
+  const demoOfferAmountRender = Number((config as any)?.demo_offer_amount ?? 23599) || 23599;
+  const cashOffer = isDemoModeRender
+    ? demoOfferAmountRender
+    : ((!isAccepted ? liveEstimate?.high : s.offered_price)
+        ?? s.estimated_offer_high
+        ?? s.offered_price
+        ?? 0);
 
   if (cashOffer <= 0) return (
     <div className="min-h-screen flex items-center justify-center bg-background p-6">
