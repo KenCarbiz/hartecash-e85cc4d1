@@ -127,6 +127,7 @@ const LOCKED_OFFER_STATUSES = new Set([
 ]);
 
 import OfferPageClarity from "./OfferPageClarity";
+import OfferScreenToggle from "@/components/offer/OfferScreenToggle";
 
 const OfferPage = () => {
   const { config: rootConfig } = useSiteConfig();
@@ -134,7 +135,8 @@ const OfferPage = () => {
   // forces a specific offer screen regardless of the tenant's
   // landing_template. Persists for the session via sessionStorage so
   // navigating away & back keeps the chosen variant. Clear with
-  // ?offer=reset.
+  // ?offer=reset. Staff also get a floating toggle (OfferScreenToggle)
+  // so they don't need to type the query string by hand.
   let override: string | null = null;
   if (typeof window !== "undefined") {
     try {
@@ -150,16 +152,15 @@ const OfferPage = () => {
       }
     } catch { /* private mode: ignore */ }
   }
-  if (override === "legacy") return <OfferPageLegacy />;
-  if (override === "clarity") return <OfferPageClarity />;
-  // Template-aware dispatch — dealers on the Clarity landing get the
-  // Apple-minimal Clarity offer page; everyone else (including the
-  // "Legacy Hartecash" maximalist look) keeps the original long-scroll
-  // OfferPage rendered below. Future templates layer in here.
-  if (rootConfig.landing_template === "clarity") {
-    return <OfferPageClarity />;
-  }
-  return <OfferPageLegacy />;
+  const usingClarity =
+    override === "clarity" ||
+    (override !== "legacy" && rootConfig.landing_template === "clarity");
+  return (
+    <>
+      {usingClarity ? <OfferPageClarity /> : <OfferPageLegacy />}
+      <OfferScreenToggle current={usingClarity ? "clarity" : "legacy"} />
+    </>
+  );
 };
 
 const OfferPageLegacy = () => {
