@@ -167,18 +167,25 @@ const OfferPageClarity = () => {
 
   const s = submission;
   const isAccepted = !!s.progress_status && LOCKED_OFFER_STATUSES.has(s.progress_status);
-  // Cash-offer fallback chain — manual offer wins, then estimated, then
-  // BB trade-in average so a freshly-submitted lead with no manual
-  // appraisal still shows a real number instead of $0. Wholesale avg
-  // is the last resort for vehicles that came in via the NHTSA path
-  // (no BB pricing) — typically still 0 there, in which case the
-  // template falls into the awaiting-appraisal state below.
-  const cashOffer =
-    s.offered_price ??
-    s.estimated_offer_high ??
-    s.bb_tradein_avg ??
-    s.bb_wholesale_avg ??
-    0;
+  // Demo-mode fallback. When site_config.demo_mode is on, every
+  // customer-facing offer clamps to demo_offer_amount — including
+  // submissions that were created BEFORE demo mode was switched on
+  // (those rows have null offered_price). Lets the dealer drop a
+  // single dealership into demo for a sales presentation without
+  // backfilling old leads.
+  const isDemoMode = (config as any)?.demo_mode === true;
+  const demoOfferAmount = Number((config as any)?.demo_offer_amount ?? 23599) || 23599;
+
+  // Cash-offer fallback chain — demo mode wins outright when on.
+  // Otherwise: manual offer → estimated → BB trade-in avg → BB
+  // wholesale avg. Last resort 0 → "awaiting appraisal" state.
+  const cashOffer = isDemoMode
+    ? demoOfferAmount
+    : (s.offered_price ??
+       s.estimated_offer_high ??
+       s.bb_tradein_avg ??
+       s.bb_wholesale_avg ??
+       0);
   const offerPending = cashOffer <= 0;
 
   // Trade-in calculation — uses the customer's ZIP to look up their

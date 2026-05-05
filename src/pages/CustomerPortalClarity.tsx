@@ -177,8 +177,14 @@ const CustomerPortalClarity = () => {
   const s = submission;
   const vehicleStr = [s.vehicle_year, s.vehicle_make, s.vehicle_model].filter(Boolean).join(" ");
   const firstName = s.name?.split(" ")[0] || "";
+  // Demo-mode override — when site_config.demo_mode is on, every
+  // customer-facing offer clamps to demo_offer_amount even if the
+  // submission was created before demo mode was switched on.
+  const isDemoMode = (config as any)?.demo_mode === true;
+  const demoOfferAmount = Number((config as any)?.demo_offer_amount ?? 23599) || 23599;
+  const displayedOffer = isDemoMode ? demoOfferAmount : s.offered_price;
   let mappedStatus = STAGE_MAPPING[s.progress_status] || s.progress_status;
-  if (mappedStatus === "contacted" && s.offered_price) mappedStatus = "offer_made";
+  if (mappedStatus === "contacted" && displayedOffer) mappedStatus = "offer_made";
   const stepIdx = statusToStepIndex(mappedStatus);
   const conditionLabel = CONDITION_LABEL[s.overall_condition || ""] || s.overall_condition || "";
   const scheduleLink = `/schedule?token=${s.token}&vehicle=${encodeURIComponent(vehicleStr)}&name=${encodeURIComponent(s.name || "")}&email=${encodeURIComponent(s.email || "")}&phone=${encodeURIComponent(s.phone || "")}`;
@@ -380,11 +386,11 @@ const CustomerPortalClarity = () => {
                   <dd className="font-medium text-zinc-900">{conditionLabel}</dd>
                 </div>
               )}
-              {s.offered_price && (
+              {displayedOffer && displayedOffer > 0 && (
                 <div>
                   <dt className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500 mb-1">Cash Offer</dt>
                   <dd className="font-bold tabular-nums text-zinc-900">
-                    ${s.offered_price.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+                    ${displayedOffer.toLocaleString("en-US", { maximumFractionDigits: 0 })}
                   </dd>
                 </div>
               )}

@@ -255,7 +255,15 @@ const DealAcceptedClarity = () => {
 
   const s = submission;
   const vehicleStr = [s.vehicle_year, s.vehicle_make, s.vehicle_model].filter(Boolean).join(" ");
-  const cashOffer = s.offered_price ?? s.estimated_offer_high ?? 0;
+  // Demo-mode override — see OfferPageClarity / CustomerPortalClarity
+  // for the same pattern. When site_config.demo_mode is on, every
+  // customer-facing offer clamps to demo_offer_amount, even on
+  // submissions that pre-date the toggle being switched on.
+  const isDemoMode = (config as any)?.demo_mode === true;
+  const demoOfferAmount = Number((config as any)?.demo_offer_amount ?? 23599) || 23599;
+  const cashOffer = isDemoMode
+    ? demoOfferAmount
+    : (s.offered_price ?? s.estimated_offer_high ?? 0);
   const conditionLabel = CONDITION_LABEL[s.overall_condition || ""] || s.overall_condition || "";
   const scheduleLink = `/schedule?token=${s.token}&vehicle=${encodeURIComponent(vehicleStr)}&name=${encodeURIComponent(s.name || "")}&email=${encodeURIComponent(s.email || "")}&phone=${encodeURIComponent(s.phone || "")}`;
 
