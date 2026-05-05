@@ -533,7 +533,12 @@ const SellFlowSimple = ({
         demoEstimateHigh = demoOfferAmount;
       }
 
-      const { error: insertErr } = await supabase.from("submissions").insert({
+      // Build the insert payload. Optional columns (TCPA, hot-lead,
+      // estimate ranges) live in a separate object so we can drop
+      // them and retry if PostgREST rejects an unknown column on a
+      // partially-migrated environment instead of bouncing the
+      // customer back to the condition screen.
+      const baseRow: Record<string, unknown> = {
         token: generatedToken,
         plate: formData.plate || null,
         state: formData.state || null,
@@ -546,9 +551,6 @@ const SellFlowSimple = ({
         drivable: formData.drivable,
         accidents: formData.accidents || null,
         loan_status: formData.loanStatus || null,
-        // Persist contact fields collected pre-offer when the dealer
-        // runs in contact_first mode. When empty, /offer/:token will
-        // collect them post-reveal as before.
         name: contactName.trim() || null,
         email: contactEmail.trim() || null,
         phone: contactPhone.replace(/[^0-9]/g, "") || null,
@@ -556,6 +558,8 @@ const SellFlowSimple = ({
         lead_source: isDemoMode ? `${leadSource}-demo` : leadSource,
         dealership_id: tenant.dealership_id,
         ...bbPayload,
+      };
+      const optionalRow: Record<string, unknown> = {
         estimated_offer_low: demoEstimateLow,
         estimated_offer_high: demoEstimateHigh,
         offered_price: firmOfferedPrice,
@@ -564,8 +568,33 @@ const SellFlowSimple = ({
         tcpa_consent_at: new Date().toISOString(),
         tcpa_consent_version: (config as any)?.tcpa_disclosure_version || 1,
         tcpa_consent_text: (config as any)?.tcpa_disclosure || null,
-      } as any);
+      };
 
+      let insertErr: { message?: string; code?: string } | null = null;
+      {
+        const { error } = await supabase
+          .from("submissions")
+          .insert({ ...baseRow, ...optionalRow } as any);
+        insertErr = error as any;
+      }
+      // Retry without optional columns if PostgREST rejected an
+      // unknown column — happens when the TCPA / cadence / pricing
+      // migrations haven't been applied yet on this environment.
+      if (insertErr) {
+        const msg = (insertErr.message || "").toLowerCase();
+        const code = insertErr.code || "";
+        const looksMissing =
+          code === "PGRST204" ||
+          msg.includes("schema cache") ||
+          (msg.includes("column") && msg.includes("does not exist"));
+        if (looksMissing) {
+          console.warn("[SellFlowSimple] retrying insert without optional columns:", insertErr.message);
+          const { error } = await supabase
+            .from("submissions")
+            .insert(baseRow as any);
+          insertErr = error as any;
+        }
+      }
       if (insertErr) throw insertErr;
 
       // Light consent log — same pattern as QuickOfferForm.
@@ -588,10 +617,16 @@ const SellFlowSimple = ({
       // contact info post-reveal and shows the firm number.
       navigate(`/offer/${generatedToken}`);
     } catch (e) {
-      setScreen("condition");
+      // Send the customer back to whichever screen they came from so
+      // their just-typed answers aren't wiped. contact_first means
+      // they came from the contact step; everyone else came from
+      // condition. Surface the real error message for debugging.
+      const fallbackScreen: Screen = revealMode === "contact_first" ? "contact" : "condition";
+      setScreen(fallbackScreen);
+      console.error("[SellFlowSimple] submitForOffer failed:", e);
       toast({
         title: "Couldn't get your offer",
-        description: (e as Error).message,
+        description: (e as Error).message || "Please try again or call us directly.",
         variant: "destructive",
       });
     } finally {
@@ -600,7 +635,7 @@ const SellFlowSimple = ({
   }, [
     bbVehicle, overallCondition, accidents, mechanical, drivable, ownership, mileage,
     initial.plate, initial.state, density, tenant.dealership_id, config, leadSource,
-    navigate, toast,
+    navigate, toast, revealMode, contactName, contactEmail, contactPhone,
   ]);
 
   return (
