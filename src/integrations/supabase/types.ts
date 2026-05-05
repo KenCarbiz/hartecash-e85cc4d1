@@ -1188,6 +1188,7 @@ export type Database = {
       }
       form_config: {
         Row: {
+          ai_photos_min_required: number
           created_at: string
           dealership_id: string
           id: string
@@ -1210,11 +1211,13 @@ export type Database = {
           q_tech_issues: boolean
           q_tires_replaced: boolean
           q_windshield_damage: boolean
+          step_ai_photos: boolean
           step_condition_history: boolean
           step_vehicle_build: boolean
           updated_at: string
         }
         Insert: {
+          ai_photos_min_required?: number
           created_at?: string
           dealership_id?: string
           id?: string
@@ -1237,11 +1240,13 @@ export type Database = {
           q_tech_issues?: boolean
           q_tires_replaced?: boolean
           q_windshield_damage?: boolean
+          step_ai_photos?: boolean
           step_condition_history?: boolean
           step_vehicle_build?: boolean
           updated_at?: string
         }
         Update: {
+          ai_photos_min_required?: number
           created_at?: string
           dealership_id?: string
           id?: string
@@ -1264,6 +1269,7 @@ export type Database = {
           q_tech_issues?: boolean
           q_tires_replaced?: boolean
           q_windshield_damage?: boolean
+          step_ai_photos?: boolean
           step_condition_history?: boolean
           step_vehicle_build?: boolean
           updated_at?: string
