@@ -616,6 +616,11 @@ const DealAcceptedClarity = () => {
               onClick={handleContactSubmit}
               disabled={contactSaving}
               className="w-full h-12 rounded-full bg-zinc-900 hover:bg-zinc-800 text-white font-semibold"
+              style={
+                config.landing_cta_color
+                  ? { background: config.landing_cta_color, color: config.landing_cta_text_color || "#ffffff" }
+                  : undefined
+              }
             >
               {contactSaving ? "Saving…" : "Confirm and continue"}
             </Button>
