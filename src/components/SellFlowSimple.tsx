@@ -6,7 +6,7 @@ import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useTenant } from "@/contexts/TenantContext";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Loader2, Check, Car } from "lucide-react";
+import { ArrowRight, ArrowLeft, Loader2, Check, Car } from "lucide-react";
 import { calculateOffer, type OfferSettings, type OfferRule } from "@/lib/offerCalculator";
 import { resolveEffectiveSettings } from "@/lib/resolvePricingModel";
 import { buildSubmissionBBPayload } from "@/lib/submissionOffer";
@@ -400,6 +400,17 @@ const SellFlowSimple = ({
     setScreen("condition");
   };
 
+  // Back-button navigation. Maps each screen to its predecessor so
+  // the customer can step back without losing what they've already
+  // typed (state stays in the parent component). lookup has no
+  // predecessor (it's the first thing they see); computing/offer
+  // are post-submit terminal states with no rewind.
+  const goBack = useCallback(() => {
+    if (screen === "condition") setScreen("confirm");
+    else if (screen === "contact") setScreen("condition");
+  }, [screen]);
+  const canGoBack = screen === "condition" || screen === "contact";
+
   // Validate Step 2 answers, then route based on dealer's
   // pricing_reveal_mode. contact_first inserts a name/email/phone
   // screen between condition and computing; price_first /
@@ -640,6 +651,23 @@ const SellFlowSimple = ({
 
   return (
     <div className="w-full">
+      {/* In-flow back button — sits above the screen content and is
+          shown only on screens that have a meaningful predecessor
+          (condition → confirm, contact → condition). Customer can
+          step back without losing typed answers because state lives
+          in this parent component. */}
+      {canGoBack && (
+        <button
+          type="button"
+          onClick={goBack}
+          disabled={submitting}
+          aria-label="Back to the previous step"
+          className="inline-flex items-center gap-1.5 mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" />
+          Back
+        </button>
+      )}
       <AnimatePresence mode="wait">
         {/* ── Screen: lookup — premium SaaS ghost screen, dealer-picked
               variant per template (pulse-orb / sweep-arc / stack-reveal
