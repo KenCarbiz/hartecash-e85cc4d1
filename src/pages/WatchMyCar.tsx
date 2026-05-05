@@ -37,7 +37,18 @@ interface HistoryRow {
 
 const fmt = (n: number) => `$${Math.round(n).toLocaleString()}`;
 
+import WatchMyCarClarity from "./WatchMyCarClarity";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
+
 const WatchMyCar = () => {
+  const { config: rootConfig } = useSiteConfig();
+  if (rootConfig.landing_template === "clarity") {
+    return <WatchMyCarClarity />;
+  }
+  return <WatchMyCarLegacy />;
+};
+
+const WatchMyCarLegacy = () => {
   const { token } = useParams();
   const { toast } = useToast();
   const [watched, setWatched] = useState<Watched | null>(null);

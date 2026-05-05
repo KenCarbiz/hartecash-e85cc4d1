@@ -16,7 +16,17 @@ import { ShieldCheck, Award, Clock, BadgeDollarSign } from "lucide-react";
  *   ?rep=<code>          — sales rep tracking
  *   ?amount=<number>     — override the guaranteed amount (e.g. 3000)
  */
+import PushPullTowClarity from "./PushPullTowClarity";
+
 const PushPullTow = () => {
+  const { config: rootConfig } = useSiteConfig();
+  if (rootConfig.landing_template === "clarity") {
+    return <PushPullTowClarity />;
+  }
+  return <PushPullTowLegacy />;
+};
+
+const PushPullTowLegacy = () => {
   const { config } = useSiteConfig();
   const [searchParams] = useSearchParams();
 

@@ -6,7 +6,18 @@ import { CheckCircle, XCircle, Loader2, MailX } from "lucide-react";
 
 type Status = "loading" | "valid" | "already" | "invalid" | "success" | "error";
 
+import EmailUnsubscribeClarity from "./EmailUnsubscribeClarity";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
+
 const EmailUnsubscribe = () => {
+  const { config: rootConfig } = useSiteConfig();
+  if (rootConfig.landing_template === "clarity") {
+    return <EmailUnsubscribeClarity />;
+  }
+  return <EmailUnsubscribeLegacy />;
+};
+
+const EmailUnsubscribeLegacy = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
   const [status, setStatus] = useState<Status>("loading");

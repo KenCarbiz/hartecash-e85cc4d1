@@ -4,7 +4,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle2, Loader2, AlertCircle, Mail, MessageSquare, ShieldOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+import UnsubscribeClarity from "./UnsubscribeClarity";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
+
 const Unsubscribe = () => {
+  const { config: rootConfig } = useSiteConfig();
+  if (rootConfig.landing_template === "clarity") {
+    return <UnsubscribeClarity />;
+  }
+  return <UnsubscribeLegacy />;
+};
+
+const UnsubscribeLegacy = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
   const channelParam = searchParams.get("channel") || "all";
