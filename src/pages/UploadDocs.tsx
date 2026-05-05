@@ -33,7 +33,20 @@ interface SubmissionInfo {
   vin: string | null;
 }
 
+import UploadDocsClarity from "./UploadDocsClarity";
+
 const UploadDocs = () => {
+  const { config: rootConfig } = useSiteConfig();
+  // Template-aware dispatch — Clarity dealers see the Apple-minimal
+  // doc-upload page; everyone else falls through to the legacy
+  // renderer below.
+  if (rootConfig.landing_template === "clarity") {
+    return <UploadDocsClarity />;
+  }
+  return <UploadDocsLegacy />;
+};
+
+const UploadDocsLegacy = () => {
   const { token } = useParams<{ token: string }>();
   const { config } = useSiteConfig();
   const [submission, setSubmission] = useState<SubmissionInfo | null>(null);

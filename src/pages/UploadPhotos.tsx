@@ -34,7 +34,20 @@ interface SubmissionInfo {
 
 type CategoryUploads = Record<string, { file?: File; preview?: string; uploaded?: boolean }>;
 
+import UploadPhotosClarity from "./UploadPhotosClarity";
+
 const UploadPhotos = () => {
+  const { config: rootConfig } = useSiteConfig();
+  // Template-aware dispatch — Clarity dealers see the Apple-minimal
+  // photo upload page; everyone else falls through to the legacy
+  // (camera + GhostScreen + tips) renderer.
+  if (rootConfig.landing_template === "clarity") {
+    return <UploadPhotosClarity />;
+  }
+  return <UploadPhotosLegacy />;
+};
+
+const UploadPhotosLegacy = () => {
   const { token } = useParams<{ token: string }>();
   const { config } = useSiteConfig();
   const { kind: ghostKind, syncing: ghostSyncing, ready: ghostReady, stale: ghostStale } = useGhostScreen();
