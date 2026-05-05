@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Mail, Phone, Loader2, Check, Calendar, FileText, Camera, BadgeDollarSign, Shield } from "lucide-react";
+import { ArrowLeft, ArrowRight, Mail, Phone, Loader2, Check, Calendar, FileText, Camera, BadgeDollarSign, Shield, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { Button } from "@/components/ui/button";
@@ -365,6 +365,52 @@ const CustomerPortalClarity = () => {
             </ol>
           </div>
         </section>
+
+        {/* ── Boost your offer card ──
+              Only shown for non-accepted customers. Frames the
+              optional photo upload as "we want to pay you more"
+              instead of a generic chore. Tappable card opens the
+              dedicated /boost-offer/:token flow with the six
+              opinionated shots. */}
+        {!hasAcceptedOffer && (
+          <motion.section
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+            aria-label="Boost your offer"
+            className="rounded-3xl overflow-hidden border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white shadow-[0_2px_12px_rgba(16,185,129,0.08)]"
+          >
+            <button
+              type="button"
+              onClick={() => navigate(`/boost-offer/${s.token}`)}
+              className="w-full text-left p-6 md:p-7 hover:bg-emerald-50/40 transition-colors"
+            >
+              <div className="flex items-start gap-5">
+                <div className="hidden sm:flex w-12 h-12 rounded-2xl bg-emerald-500 text-white items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-5 h-5" aria-hidden="true" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-700 mb-2 inline-flex items-center gap-1.5">
+                    <Sparkles className="w-3 h-3 sm:hidden" aria-hidden="true" />
+                    Looking for more cash?
+                  </p>
+                  <h3 className="text-xl md:text-[22px] font-bold tracking-tight leading-[1.15] text-zinc-900 mb-2">
+                    Help us pay you more for your{" "}
+                    {[s.vehicle_make, s.vehicle_model].filter(Boolean).join(" ") || "vehicle"}.
+                  </h3>
+                  <p className="text-sm text-zinc-600 leading-relaxed mb-4">
+                    Six quick photos. Our AI and an appraiser review them — if your vehicle's in
+                    better shape than rated, we'll bump your offer.
+                  </p>
+                  <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700 hover:text-emerald-900 transition-colors">
+                    Start the boost
+                    <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+                  </span>
+                </div>
+              </div>
+            </button>
+          </motion.section>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* ── Vehicle Summary ── */}

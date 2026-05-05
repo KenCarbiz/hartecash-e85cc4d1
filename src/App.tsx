@@ -15,6 +15,7 @@ const Index = lazy(() => import("./pages/Index"));
 
 const UploadPhotos = lazy(() => import("./pages/UploadPhotos"));
 const UploadDocs = lazy(() => import("./pages/UploadDocs"));
+const BoostOfferClarity = lazy(() => import("./pages/BoostOfferClarity"));
 const CustomerPortal = lazy(() => import("./pages/CustomerPortal"));
 const CustomerLookup = lazy(() => import("./pages/CustomerLookup"));
 const ScheduleVisit = lazy(() => import("./pages/ScheduleVisit"));
@@ -127,6 +128,7 @@ const AnimatedRoutes = () => {
         <Route path="/locations/:rooftopSlug" element={<Index />} />
         <Route path="/upload/:token" element={<UploadPhotos />} />
         <Route path="/docs/:token" element={<UploadDocs />} />
+        <Route path="/boost-offer/:token" element={<BoostOfferClarity />} />
         <Route path="/my-submission" element={<CustomerLookup />} />
         <Route path="/my-submission/:token" element={<CustomerPortal />} />
         <Route path="/reschedule/:token" element={<RescheduleAppointment />} />
