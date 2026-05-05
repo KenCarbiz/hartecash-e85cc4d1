@@ -126,7 +126,21 @@ const LOCKED_OFFER_STATUSES = new Set([
   "purchase_complete",
 ]);
 
+import OfferPageClarity from "./OfferPageClarity";
+
 const OfferPage = () => {
+  const { config: rootConfig } = useSiteConfig();
+  // Template-aware dispatch — dealers on the Clarity landing get the
+  // Apple-minimal Clarity offer page; everyone else (including the
+  // "Legacy Hartecash" maximalist look) keeps the original long-scroll
+  // OfferPage rendered below. Future templates layer in here.
+  if (rootConfig.landing_template === "clarity") {
+    return <OfferPageClarity />;
+  }
+  return <OfferPageLegacy />;
+};
+
+const OfferPageLegacy = () => {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
   const [submission, setSubmission] = useState<OfferSubmission | null>(null);
