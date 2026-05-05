@@ -50,7 +50,20 @@ interface AppointmentData {
   location_state: string | null;
 }
 
+import DealAcceptedClarity from "./DealAcceptedClarity";
+
 const DealAccepted = () => {
+  const { config: rootConfig } = useSiteConfig();
+  // Template-aware dispatch — Clarity dealers see the Apple-minimal
+  // accepted page; everyone else falls through to the legacy
+  // confetti+celebration renderer below.
+  if (rootConfig.landing_template === "clarity") {
+    return <DealAcceptedClarity />;
+  }
+  return <DealAcceptedLegacy />;
+};
+
+const DealAcceptedLegacy = () => {
   const { token } = useParams<{ token: string }>();
   const [searchParams] = useSearchParams();
   const [submission, setSubmission] = useState<DealSubmission | null>(null);
