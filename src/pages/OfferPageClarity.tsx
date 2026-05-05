@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, CheckCircle, ShieldCheck, Loader2, DollarSign, TrendingUp } from "lucide-react";
+import { ArrowRight, CheckCircle, ShieldCheck, Loader2, DollarSign, TrendingUp, Printer, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { safeInvoke } from "@/lib/safeInvoke";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
@@ -14,7 +14,7 @@ import VehicleImage from "@/components/sell-form/VehicleImage";
 import SlideToAccept from "@/components/SlideToAccept";
 import SaveOfferButton from "@/components/offer/SaveOfferButton";
 import { track } from "@/lib/analytics";
-import { getTaxRateFromZip, calcTradeInValue } from "@/lib/salesTax";
+import { getTaxRateFromZip, calcTradeInValue, STATE_NAMES } from "@/lib/salesTax";
 
 /**
  * Clarity-tier offer page — Apple/Porsche minimal white. Mirrors
@@ -282,7 +282,7 @@ const OfferPageClarity = () => {
   return (
     <div className="min-h-screen bg-white text-zinc-900">
       {/* ── Header — dealer logo left, "save offer" link right ── */}
-      <header className="border-b border-zinc-200 bg-white">
+      <header className="border-b border-zinc-200 bg-white print:hidden">
         <div className="max-w-[960px] mx-auto px-5 md:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3 min-w-0">
             {config.logo_url ? (
@@ -347,7 +347,7 @@ const OfferPageClarity = () => {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
-            className="relative flex bg-zinc-100 rounded-full p-1 max-w-sm mx-auto"
+            className="relative flex bg-zinc-100 rounded-full p-1 max-w-sm mx-auto print:hidden"
             role="tablist"
             aria-label="Offer view"
           >
@@ -495,7 +495,7 @@ const OfferPageClarity = () => {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            className="space-y-4"
+            className="space-y-4 print:hidden"
           >
             {isAccepted ? (
               <div className="w-full py-4 flex items-center justify-center gap-2.5 rounded-2xl bg-emerald-500 text-white font-bold text-base">
@@ -529,10 +529,11 @@ const OfferPageClarity = () => {
                   </Button>
                 </div>
 
-                {/* Save offer — visible on every screen size, sits
-                    directly under accept so the customer sees both
-                    options without scrolling. */}
-                <div className="flex justify-center pt-1">
+                {/* Save offer + Print — sit directly under accept so
+                    the customer sees both options without scrolling.
+                    Print uses window.print() and the page-level
+                    print:hidden classes hide chrome / forms / dialogs. */}
+                <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
                   <SaveOfferButton
                     token={s.token}
                     vehicleStr={`${s.vehicle_year} ${s.vehicle_make} ${s.vehicle_model}`.trim()}
@@ -542,14 +543,96 @@ const OfferPageClarity = () => {
                     guaranteeDays={offerLockDays}
                     dealershipName={config.dealership_name || ""}
                   />
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500 hover:text-zinc-900 transition-colors"
+                  >
+                    <Printer className="w-3.5 h-3.5" aria-hidden="true" />
+                    Print offer
+                  </button>
                 </div>
               </>
             )}
           </motion.section>
         )}
 
+        {/* ── Trade-In Tax Credit Explained ──
+              Only shown when activeTab is "trade". Removes the "wait,
+              why is trade-in worth more than cash?" friction by laying
+              out the math: cash offer + sales-tax credit = total trade
+              value. Mirrors the legacy Hartecash card's content with
+              Clarity typography. */}
+        {!offerPending && activeTab === "trade" && (
+          <motion.section
+            key="trade-credit"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            aria-label="Trade-in tax credit explained"
+            className="rounded-3xl border border-zinc-200 bg-zinc-50/40 shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-6 md:p-7 space-y-5"
+          >
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-emerald-600" aria-hidden="true" />
+              <h2 className="text-sm font-semibold tracking-tight text-zinc-900">
+                Trade-In Tax Credit Explained
+              </h2>
+            </div>
+            <p className="text-sm text-zinc-600 leading-relaxed">
+              When you trade in your vehicle toward a new or pre-owned purchase at{" "}
+              <span className="font-semibold text-zinc-900">
+                {config.dealership_name || "the dealership"}
+              </span>
+              , you receive a <span className="font-semibold text-zinc-900">sales tax credit</span> on
+              the value of your trade.
+            </p>
+
+            <dl className="space-y-3 text-sm border-t border-zinc-200 pt-4">
+              <div className="flex items-center justify-between">
+                <dt className="text-zinc-600">Cash offer value</dt>
+                <dd className="font-medium tabular-nums text-zinc-900">
+                  ${cashOffer.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+                </dd>
+              </div>
+              <div className="flex items-center justify-between">
+                <dt className="text-zinc-600 inline-flex items-center gap-1">
+                  {zipResult.state ? STATE_NAMES[zipResult.state] : "State"} sales tax rate
+                </dt>
+                <dd className="font-medium tabular-nums text-zinc-900">
+                  {(taxRate * 100).toFixed(2)}%
+                </dd>
+              </div>
+              <div className="flex items-center justify-between">
+                <dt className="text-zinc-600">Sales tax credit savings</dt>
+                <dd className="font-semibold tabular-nums text-emerald-600">
+                  +${taxSavings.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+                </dd>
+              </div>
+              <div className="flex items-center justify-between border-t border-zinc-200 pt-3">
+                <dt className="text-zinc-900 font-semibold">Total trade-in value</dt>
+                <dd className="font-bold tabular-nums text-zinc-900">
+                  ${tradeInValue.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+                </dd>
+              </div>
+            </dl>
+
+            <div className="flex items-start gap-2 pt-2">
+              <Info className="w-3.5 h-3.5 text-zinc-400 shrink-0 mt-0.5" aria-hidden="true" />
+              <p className="text-[11px] text-zinc-500 leading-relaxed">
+                The tax credit is based on
+                {zipResult.state
+                  ? ` ${STATE_NAMES[zipResult.state]}'s ${(taxRate * 100).toFixed(2)}% sales tax rate`
+                  : " your state's sales tax rate"}
+                . Formula: ${cashOffer.toLocaleString()} × {(1 + taxRate).toFixed(4)} = $
+                {tradeInValue.toLocaleString("en-US", { maximumFractionDigits: 2, minimumFractionDigits: 2 })}.
+                Actual tax credit may vary and is subject to qualifications.
+              </p>
+            </div>
+          </motion.section>
+        )}
+
         {/* ── Trust line — short and quiet, the Clarity language ── */}
-        <p className="text-center text-[11px] text-zinc-400 leading-relaxed">
+        <p className="text-center text-[11px] text-zinc-400 leading-relaxed print:hidden">
           {config.dealership_name || "We"} purchases vehicles directly from
           consumers. {offerLockDays}-day price guarantee · No obligation ·
           Final pricing confirmed at pickup.
