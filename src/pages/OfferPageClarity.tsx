@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import VehicleImage from "@/components/sell-form/VehicleImage";
 import SlideToAccept from "@/components/SlideToAccept";
 import SaveOfferButton from "@/components/offer/SaveOfferButton";
+import ConsentDisclosure from "@/components/ConsentDisclosure";
 import { track } from "@/lib/analytics";
 import { getTaxRateFromZip, calcTradeInValue, STATE_NAMES } from "@/lib/salesTax";
 
@@ -898,6 +899,7 @@ const OfferPageClarity = () => {
             >
               {contactSaving ? "Saving…" : "Confirm and continue"}
             </Button>
+            <ConsentDisclosure ctaLabel="Confirm and continue" />
           </div>
         </DialogContent>
       </Dialog>

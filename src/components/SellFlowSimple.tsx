@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useTenant } from "@/contexts/TenantContext";
 import { Button } from "@/components/ui/button";
+import ConsentDisclosure from "@/components/ConsentDisclosure";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, ArrowLeft, Loader2, Check, Car } from "lucide-react";
 import { calculateOffer, type OfferSettings, type OfferRule } from "@/lib/offerCalculator";
@@ -1044,9 +1045,7 @@ const SellFlowSimple = ({
               </Button>
             </div>
 
-            <p className="text-[11px] text-center text-muted-foreground/70 px-4 leading-relaxed">
-              By tapping "See my offer" you agree to receive calls and texts from {config.dealership_name || "us"} about your offer. Msg & data rates may apply. Reply STOP to opt out.
-            </p>
+            <ConsentDisclosure ctaLabel="See my offer" className="px-4" />
           </motion.div>
         )}
 

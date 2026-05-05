@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import VehicleImage from "@/components/sell-form/VehicleImage";
+import ConsentDisclosure from "@/components/ConsentDisclosure";
 import {
   generateICalEvent,
   downloadCalendarInvite,
@@ -641,6 +642,7 @@ const DealAcceptedClarity = () => {
             >
               {contactSaving ? "Saving…" : "Confirm and continue"}
             </Button>
+            <ConsentDisclosure ctaLabel="Confirm and continue" />
           </div>
         </DialogContent>
       </Dialog>

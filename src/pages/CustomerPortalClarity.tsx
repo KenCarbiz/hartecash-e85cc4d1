@@ -5,6 +5,8 @@ import { ArrowLeft, ArrowRight, Mail, Phone, Loader2, Check, Calendar, FileText,
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/hooks/use-toast";
 import VehicleImage from "@/components/sell-form/VehicleImage";
 import { getTaxRateFromZip, calcTradeInValue } from "@/lib/salesTax";
 
@@ -598,6 +600,18 @@ const CustomerPortalClarity = () => {
           </div>
         </div>
 
+        {/* ── Communication preferences ──
+              SMS + voice opt-outs only. Email opt-out lives in
+              every email's footer per CAN-SPAM, so we don't
+              duplicate it here. Writes to public.opt_outs which
+              the cadence engine + AI voice agent both honor before
+              firing. */}
+        <CommPrefsBlock
+          token={s.token}
+          phone={s.phone}
+          email={s.email}
+        />
+
         {/* ── Need Help + How You Get Paid ── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <section
@@ -663,6 +677,166 @@ const CustomerPortalClarity = () => {
         </p>
       </main>
     </div>
+  );
+};
+
+/**
+ * Communication preferences — two switches (SMS / Calls). Email
+ * opt-out lives in every email's footer per CAN-SPAM and isn't
+ * duplicated here. SMS + voice opt-outs are TCPA requirements;
+ * the cadence engine + AI voice agent both check public.opt_outs
+ * before firing.
+ *
+ * Reads existing opt-out state on mount so the toggles reflect
+ * the current saved preference (true = opted IN). Writing flips
+ * the row in opt_outs (insert on opt-out, delete on re-subscribe).
+ */
+const CommPrefsBlock = ({
+  token,
+  phone,
+  email,
+}: {
+  token: string;
+  phone: string | null;
+  email: string | null;
+}) => {
+  const [smsOptedOut, setSmsOptedOut] = useState(false);
+  const [callsOptedOut, setCallsOptedOut] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [saving, setSaving] = useState<"sms" | "calls" | null>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!phone && !email) {
+        if (!cancelled) setLoaded(true);
+        return;
+      }
+      const checks = await Promise.all([
+        phone
+          ? supabase.from("opt_outs" as any).select("id").eq("phone", phone).eq("channel", "sms").maybeSingle()
+          : Promise.resolve({ data: null }),
+        phone
+          ? supabase.from("opt_outs" as any).select("id").eq("phone", phone).eq("channel", "calls").maybeSingle()
+          : Promise.resolve({ data: null }),
+      ]);
+      if (cancelled) return;
+      setSmsOptedOut(!!checks[0].data);
+      setCallsOptedOut(!!checks[1].data);
+      setLoaded(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [phone, email]);
+
+  const toggle = async (channel: "sms" | "calls") => {
+    if (!phone) {
+      toast({ title: "No phone on file", description: "Add a phone number to manage these settings." });
+      return;
+    }
+    const isOptedOut = channel === "sms" ? smsOptedOut : callsOptedOut;
+    setSaving(channel);
+    try {
+      if (isOptedOut) {
+        // Re-subscribe: delete the opt-out row + log a consent
+        // re-grant on consent_log so the compliance timeline shows
+        // both directions (opt-out and opt-in).
+        await supabase
+          .from("opt_outs" as any)
+          .delete()
+          .eq("phone", phone)
+          .eq("channel", channel);
+        await supabase.from("consent_log" as any).insert({
+          customer_phone: phone,
+          customer_email: email || null,
+          consent_type: channel === "sms" ? "sms_opt_in_via_portal" : "calls_opt_in_via_portal",
+          consent_text: `Customer re-subscribed to ${channel === "sms" ? "SMS messages" : "phone calls"} via the customer portal.`,
+          form_source: "portal_communication_preferences",
+          submission_token: token,
+        } as any);
+        if (channel === "sms") setSmsOptedOut(false);
+        else setCallsOptedOut(false);
+        toast({ title: "Re-subscribed", description: `You'll receive ${channel === "sms" ? "text messages" : "calls"} again.` });
+      } else {
+        // Opt-out: insert opt_outs row + log opt-out on consent_log
+        // so the compliance audit trail captures the timestamp,
+        // channel, and originating submission token.
+        await supabase
+          .from("opt_outs" as any)
+          .insert({ phone, channel, token } as any);
+        await supabase.from("consent_log" as any).insert({
+          customer_phone: phone,
+          customer_email: email || null,
+          consent_type: channel === "sms" ? "sms_opt_out_via_portal" : "calls_opt_out_via_portal",
+          consent_text: `Customer opted out of ${channel === "sms" ? "SMS messages" : "phone calls"} via the customer portal.`,
+          form_source: "portal_communication_preferences",
+          submission_token: token,
+        } as any);
+        if (channel === "sms") setSmsOptedOut(true);
+        else setCallsOptedOut(true);
+        toast({ title: "Unsubscribed", description: `We won't ${channel === "sms" ? "text" : "call"} you anymore.` });
+      }
+    } catch (e) {
+      toast({
+        title: "Couldn't save",
+        description: (e as Error).message || "Try again or call us.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  if (!loaded) return null;
+
+  return (
+    <section
+      aria-label="Communication preferences"
+      className="rounded-3xl border border-zinc-200 bg-zinc-50/40 shadow-[0_1px_3px_rgba(0,0,0,0.04)] px-6 py-5 space-y-4"
+    >
+      <div>
+        <h2 className="text-sm font-semibold tracking-tight">Communication preferences</h2>
+        <p className="text-[11px] text-zinc-500 mt-1 leading-relaxed">
+          You can opt out any time. To stop emails, use the unsubscribe link in any email we send.
+        </p>
+      </div>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-sm text-zinc-900 font-medium">Text messages (SMS)</p>
+            <p className="text-[11px] text-zinc-500 mt-0.5">
+              {phone ? `Sent to ${phone}` : "No phone number on file"}
+            </p>
+          </div>
+          <Switch
+            checked={!smsOptedOut}
+            onCheckedChange={() => toggle("sms")}
+            disabled={saving !== null || !phone}
+            aria-label="Receive SMS messages"
+          />
+        </div>
+        <div className="flex items-center justify-between gap-4 border-t border-zinc-100 pt-4">
+          <div className="min-w-0">
+            <p className="text-sm text-zinc-900 font-medium">Phone calls</p>
+            <p className="text-[11px] text-zinc-500 mt-0.5">
+              {phone ? "Includes autodialed and AI-assisted calls" : "No phone number on file"}
+            </p>
+          </div>
+          <Switch
+            checked={!callsOptedOut}
+            onCheckedChange={() => toggle("calls")}
+            disabled={saving !== null || !phone}
+            aria-label="Receive phone calls"
+          />
+        </div>
+      </div>
+      <p className="text-[11px] text-zinc-400 leading-relaxed">
+        Reply STOP to any text to opt out instantly. We'll still send transactional updates
+        you need to complete your sale (e.g. appointment confirmations) via email.
+      </p>
+    </section>
   );
 };
 
