@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, CheckCircle, Loader2, Upload, X, FileText, CreditCard, ClipboardList, ScrollText, Plus } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle, Loader2, Upload, X, FileText, CreditCard, ClipboardList, ScrollText, Plus, Smartphone } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { supabase } from "@/integrations/supabase/client";
 import { safeInvoke } from "@/lib/safeInvoke";
 import { Button } from "@/components/ui/button";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 /**
  * Clarity-tier document upload page — Apple-minimal companion to
@@ -51,6 +53,7 @@ const UploadDocsClarity = () => {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
   const { config } = useSiteConfig();
+  const isMobile = useIsMobile();
 
   const [submission, setSubmission] = useState<SubmissionInfo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -247,6 +250,40 @@ const UploadDocsClarity = () => {
           <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {error}
           </div>
+        )}
+
+        {/* Mobile QR — desktop-only nudge to scan documents from
+            the customer's phone where they can use the rear camera
+            to capture title / DL more cleanly than a webcam. */}
+        {!isMobile && token && (
+          <section
+            aria-label="Continue on your phone"
+            className="rounded-3xl border border-zinc-200 bg-zinc-50/40 p-6 flex items-center gap-6"
+          >
+            <div className="bg-white p-3 rounded-2xl shadow-sm border border-zinc-200">
+              <QRCodeSVG value={`${window.location.origin}/docs/${token}`} size={120} level="H" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500 mb-1.5">
+                Easier on your phone
+              </p>
+              <p className="text-base font-semibold tracking-tight text-zinc-900 mb-2">
+                Scan to continue on mobile
+              </p>
+              <p className="text-xs text-zinc-500 leading-relaxed mb-3">
+                Snap your title and ID with your rear camera and they'll sync back here automatically.
+              </p>
+              <a
+                href={`${window.location.origin}/docs/${token}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-900 hover:text-zinc-600 transition-colors"
+              >
+                <Smartphone className="w-3.5 h-3.5" aria-hidden="true" />
+                Or tap to open on this device
+              </a>
+            </div>
+          </section>
         )}
 
         <section aria-label="Document tiles" className="grid grid-cols-1 md:grid-cols-2 gap-3">

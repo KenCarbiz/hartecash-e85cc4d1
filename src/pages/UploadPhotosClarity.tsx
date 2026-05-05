@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Camera, CheckCircle, Loader2, Plus, Upload, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Camera, CheckCircle, Loader2, Plus, Smartphone, Upload, X } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { supabase } from "@/integrations/supabase/client";
 import { safeInvoke } from "@/lib/safeInvoke";
 import { Button } from "@/components/ui/button";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { usePhotoConfig } from "@/hooks/usePhotoConfig";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 /**
  * Clarity-tier photo upload page — Apple-minimal companion to the
@@ -50,6 +52,7 @@ const UploadPhotosClarity = () => {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
   const { config } = useSiteConfig();
+  const isMobile = useIsMobile();
 
   const [submission, setSubmission] = useState<SubmissionInfo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -326,6 +329,40 @@ const UploadPhotosClarity = () => {
           <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {error}
           </div>
+        )}
+
+        {/* Mobile QR — desktop-only nudge to continue from a phone
+            so the customer can use the rear camera. Auto-hides on
+            mobile (no point showing a QR to the device reading it). */}
+        {!isMobile && token && (
+          <section
+            aria-label="Continue on your phone"
+            className="rounded-3xl border border-zinc-200 bg-zinc-50/40 p-6 flex items-center gap-6"
+          >
+            <div className="bg-white p-3 rounded-2xl shadow-sm border border-zinc-200">
+              <QRCodeSVG value={`${window.location.origin}/upload/${token}`} size={120} level="H" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500 mb-1.5">
+                Easier on your phone
+              </p>
+              <p className="text-base font-semibold tracking-tight text-zinc-900 mb-2">
+                Scan to continue on mobile
+              </p>
+              <p className="text-xs text-zinc-500 leading-relaxed mb-3">
+                Snap photos with your rear camera and they'll sync back here automatically.
+              </p>
+              <a
+                href={`${window.location.origin}/upload/${token}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-900 hover:text-zinc-600 transition-colors"
+              >
+                <Smartphone className="w-3.5 h-3.5" aria-hidden="true" />
+                Or tap to open on this device
+              </a>
+            </div>
+          </section>
         )}
 
         {/* Required shots grid */}
