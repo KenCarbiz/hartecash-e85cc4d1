@@ -39,7 +39,21 @@ interface DealershipInfo {
   phone: string | null;
 }
 
+import RescheduleAppointmentClarity from "./RescheduleAppointmentClarity";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
+
 const RescheduleAppointment = () => {
+  const { config: rootConfig } = useSiteConfig();
+  // Template-aware dispatch — Clarity dealers see the Apple-minimal
+  // reschedule page; everyone else falls through to the legacy
+  // gradient renderer below.
+  if (rootConfig.landing_template === "clarity") {
+    return <RescheduleAppointmentClarity />;
+  }
+  return <RescheduleAppointmentLegacy />;
+};
+
+const RescheduleAppointmentLegacy = () => {
   const { token } = useParams<{ token: string }>();
   const [params] = useSearchParams();
   const action = params.get("action"); // "confirm" to auto-confirm

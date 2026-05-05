@@ -91,7 +91,19 @@ const isSunday = (dateStr: string): boolean => {
   return date.getDay() === 0;
 };
 
+import ScheduleVisitClarity from "./ScheduleVisitClarity";
+
 const ScheduleVisit = () => {
+  const { config: rootConfig } = useSiteConfig();
+  // Template-aware dispatch — Clarity dealers see the Apple-minimal
+  // schedule page; everyone else falls through to the legacy renderer.
+  if (rootConfig.landing_template === "clarity") {
+    return <ScheduleVisitClarity />;
+  }
+  return <ScheduleVisitLegacy />;
+};
+
+const ScheduleVisitLegacy = () => {
   const [searchParams] = useSearchParams();
   const submissionToken = searchParams.get("token") || "";
   const { toast } = useToast();
