@@ -2793,6 +2793,8 @@ export type Database = {
           customer_file_accent_2: string | null
           dealership_id: string
           dealership_name: string
+          demo_mode: boolean
+          demo_offer_amount: number
           email: string | null
           embed_config: Json
           enable_animations: boolean
@@ -2812,6 +2814,9 @@ export type Database = {
           instagram_url: string | null
           landing_cta_color: string | null
           landing_cta_text_color: string | null
+          landing_form_density: string
+          landing_form_variant: string
+          landing_lookup_default: string
           landing_template: string
           logo_url: string | null
           logo_white_url: string | null
@@ -2898,6 +2903,8 @@ export type Database = {
           customer_file_accent_2?: string | null
           dealership_id?: string
           dealership_name?: string
+          demo_mode?: boolean
+          demo_offer_amount?: number
           email?: string | null
           embed_config?: Json
           enable_animations?: boolean
@@ -2917,6 +2924,9 @@ export type Database = {
           instagram_url?: string | null
           landing_cta_color?: string | null
           landing_cta_text_color?: string | null
+          landing_form_density?: string
+          landing_form_variant?: string
+          landing_lookup_default?: string
           landing_template?: string
           logo_url?: string | null
           logo_white_url?: string | null
@@ -3003,6 +3013,8 @@ export type Database = {
           customer_file_accent_2?: string | null
           dealership_id?: string
           dealership_name?: string
+          demo_mode?: boolean
+          demo_offer_amount?: number
           email?: string | null
           embed_config?: Json
           enable_animations?: boolean
@@ -3022,6 +3034,9 @@ export type Database = {
           instagram_url?: string | null
           landing_cta_color?: string | null
           landing_cta_text_color?: string | null
+          landing_form_density?: string
+          landing_form_variant?: string
+          landing_lookup_default?: string
           landing_template?: string
           logo_url?: string | null
           logo_white_url?: string | null
