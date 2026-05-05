@@ -5,29 +5,51 @@ import SEO from "@/components/SEO";
 
 const TermsOfService = () => {
   const { config } = useSiteConfig();
+  // Template-aware chrome — same pattern as PrivacyPolicy. Clarity
+  // dealers get the quiet white header; every other template
+  // keeps the dark primary banner. Body content unchanged.
+  const isClarity = config.landing_template === "clarity";
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className={`min-h-screen flex flex-col ${isClarity ? "bg-white text-zinc-900" : "bg-background"}`}>
       <SEO
         title={`Terms of Service | ${config.dealership_name}`}
         description={`Review the terms and conditions for using ${config.dealership_name}'s vehicle appraisal and purchasing services.`}
         path="/terms"
       />
-      <div className="bg-primary text-primary-foreground px-6 py-4">
-        <div className="max-w-3xl mx-auto flex items-center gap-3">
-          <Link to="/" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          {config.logo_white_url ? (
-            <img src={config.logo_white_url} alt={config.dealership_name} className="h-20 w-auto" />
-          ) : (
-            <span className="text-lg font-bold">{config.dealership_name}</span>
-          )}
-          <h1 className="font-bold text-lg">Terms of Service</h1>
+      {isClarity ? (
+        <header className="border-b border-zinc-200 bg-white">
+          <div className="max-w-3xl mx-auto px-5 md:px-8 py-4 flex items-center justify-between">
+            <Link to="/" className="flex items-center gap-3 min-w-0">
+              <ArrowLeft className="w-4 h-4 text-zinc-500" aria-hidden="true" />
+              {config.logo_url ? (
+                <img src={config.logo_url} alt={config.dealership_name} className="h-12 md:h-14 w-auto object-contain" />
+              ) : (
+                <span className="text-sm font-semibold tracking-tight truncate text-zinc-900">{config.dealership_name}</span>
+              )}
+            </Link>
+            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
+              Terms of Service
+            </span>
+          </div>
+        </header>
+      ) : (
+        <div className="bg-primary text-primary-foreground px-6 py-4">
+          <div className="max-w-3xl mx-auto flex items-center gap-3">
+            <Link to="/" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
+            {config.logo_white_url ? (
+              <img src={config.logo_white_url} alt={config.dealership_name} className="h-20 w-auto" />
+            ) : (
+              <span className="text-lg font-bold">{config.dealership_name}</span>
+            )}
+            <h1 className="font-bold text-lg">Terms of Service</h1>
+          </div>
         </div>
-      </div>
+      )}
 
-      <main className="flex-1 max-w-3xl mx-auto px-5 py-10 md:py-14">
-        <h1 className="text-3xl font-extrabold mb-2 text-foreground">Terms of Service</h1>
+      <main className={`flex-1 max-w-3xl mx-auto px-5 py-10 md:py-14 ${isClarity ? "text-zinc-700" : ""}`}>
+        <h1 className={`text-3xl font-extrabold mb-2 ${isClarity ? "font-sans tracking-[-0.025em] text-zinc-900" : "text-foreground"}`}>Terms of Service</h1>
         <p className="text-sm text-muted-foreground mb-8">Last updated: February 26, 2026</p>
 
         <div className="prose prose-sm max-w-none text-foreground/90 space-y-6">
