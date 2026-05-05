@@ -99,6 +99,15 @@ const OfferPageClarity = () => {
   // OfferPage tab toggle behavior.
   const [activeTab, setActiveTab] = useState<"sell" | "trade">("sell");
 
+  // Edit-details dialog — only the two fields that meaningfully
+  // change the offer (mileage, condition). VIN / color / powertrain
+  // don't move the price so we don't expose them. Dialog mirrors
+  // the legacy InlineEdit pattern but compressed to one panel.
+  const [showEditDetails, setShowEditDetails] = useState(false);
+  const [editMileage, setEditMileage] = useState("");
+  const [editCondition, setEditCondition] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
+
   // Contact-gate dialog state — opens when accept is tapped without
   // contact on file (offer-first or stale link). Mirrors the legacy
   // page's gate so the deal moves into /deal/:token cleanly.
@@ -217,6 +226,41 @@ const OfferPageClarity = () => {
     }
   };
 
+  /** Save mileage + condition edits — same pattern as legacy
+   *  InlineEdit. Re-fetch the submission so the offer recomputes
+   *  from the fresh values via the same fallback chain. */
+  const handleSaveDetails = async () => {
+    if (!s) return;
+    setEditSaving(true);
+    try {
+      const cleanMileage = editMileage.replace(/[^0-9]/g, "");
+      await supabase
+        .from("submissions")
+        .update({
+          mileage: cleanMileage || null,
+          overall_condition: editCondition || null,
+        } as any)
+        .eq("token", token!);
+      // Re-fetch so the displayed offer reflects any backend recompute.
+      const { data } = await supabase.rpc("get_submission_portal", { _token: token });
+      if (data && (data as unknown[]).length > 0) {
+        setSubmission((data as unknown as PortalSubmission[])[0]);
+      } else {
+        // Optimistic fallback if the RPC didn't return.
+        setSubmission({ ...s, mileage: cleanMileage || null, overall_condition: editCondition || null });
+      }
+      setShowEditDetails(false);
+      toast({ title: "Updated", description: "Your details have been saved." });
+    } catch (e) {
+      toast({
+        title: "Couldn't save",
+        description: (e as Error).message || "Please try again.",
+        variant: "destructive",
+      });
+    }
+    setEditSaving(false);
+  };
+
   const handleContactSubmit = async () => {
     const errors: Record<string, string> = {};
     if (!contactForm.name.trim()) errors.name = "Name is required";
@@ -289,7 +333,7 @@ const OfferPageClarity = () => {
               <img
                 src={config.logo_url}
                 alt={config.dealership_name}
-                className="h-9 md:h-11 w-auto object-contain"
+                className="h-12 md:h-14 w-auto object-contain"
               />
             ) : (
               <span className="text-sm font-semibold tracking-tight truncate text-zinc-900">
@@ -322,6 +366,41 @@ const OfferPageClarity = () => {
           <h1 className="font-sans text-[36px] md:text-[52px] font-bold tracking-[-0.025em] leading-[1.04] text-zinc-900">
             {s.vehicle_year} {s.vehicle_make} {s.vehicle_model}
           </h1>
+          {/* Quiet inline detail line in place of a full Vehicle
+              Summary card. Mileage / color / condition with an
+              inline edit affordance — opens a small dialog with
+              just the two fields that move the price. */}
+          <div className="text-sm text-zinc-500 inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+            {s.mileage && (
+              <>
+                <span className="tabular-nums">{Number(s.mileage).toLocaleString()} mi</span>
+                <span className="text-zinc-300" aria-hidden="true">·</span>
+              </>
+            )}
+            {s.exterior_color && (
+              <>
+                <span>{s.exterior_color}</span>
+                <span className="text-zinc-300" aria-hidden="true">·</span>
+              </>
+            )}
+            {conditionLabel && (
+              <>
+                <span>{conditionLabel} condition</span>
+                <span className="text-zinc-300" aria-hidden="true">·</span>
+              </>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                setEditMileage(s.mileage || "");
+                setEditCondition(s.overall_condition || "");
+                setShowEditDetails(true);
+              }}
+              className="font-semibold text-zinc-900 hover:text-zinc-600 transition-colors print:hidden"
+            >
+              Edit details
+            </button>
+          </div>
           <div className="rounded-3xl border border-zinc-200 bg-zinc-50/50 overflow-hidden">
             <div className="aspect-[16/9]">
               <VehicleImage
@@ -638,6 +717,67 @@ const OfferPageClarity = () => {
           Final pricing confirmed at pickup.
         </p>
       </main>
+
+      {/* ── Edit details — slim alternative to the legacy Vehicle
+            Summary card. Only the two fields that change the price
+            (mileage + condition). Submit refetches the portal RPC
+            so the offer reveal reflects any recompute. */}
+      <Dialog open={showEditDetails} onOpenChange={setShowEditDetails}>
+        <DialogContent className="max-w-md">
+          <DialogTitle className="text-xl font-bold tracking-tight text-center mb-1">
+            Update your details
+          </DialogTitle>
+          <p className="text-sm text-zinc-500 text-center mb-5">
+            Change your mileage or condition and we'll re-quote.
+          </p>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="ed-mileage" className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500">Current mileage</Label>
+              <Input
+                id="ed-mileage"
+                type="text"
+                inputMode="numeric"
+                value={editMileage}
+                onChange={(e) => setEditMileage(e.target.value.replace(/[^0-9,]/g, ""))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500">Overall condition</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { v: "excellent", label: "Excellent" },
+                  { v: "very_good", label: "Very Good" },
+                  { v: "good",      label: "Good" },
+                  { v: "fair",      label: "Fair" },
+                ].map((opt) => {
+                  const checked = editCondition === opt.v;
+                  return (
+                    <button
+                      key={opt.v}
+                      type="button"
+                      onClick={() => setEditCondition(opt.v)}
+                      className={`h-11 rounded-xl border text-sm font-medium transition-all ${
+                        checked
+                          ? "border-zinc-900 bg-zinc-900 text-white"
+                          : "border-zinc-200 bg-white text-zinc-900 hover:border-zinc-400"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <Button
+              onClick={handleSaveDetails}
+              disabled={editSaving}
+              className="w-full h-12 rounded-full bg-zinc-900 hover:bg-zinc-800 text-white transition-[filter,background] duration-150 hover:brightness-95 disabled:opacity-75 disabled:brightness-100 font-semibold"
+            >
+              {editSaving ? "Saving…" : "Save and re-quote"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* ── Contact-info gate — shown when accept is tapped without
             name / email / phone / zip on file. Same persistence

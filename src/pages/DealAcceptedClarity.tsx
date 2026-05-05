@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Calendar, FileText, Camera, CheckCircle, Loader2, Download, ExternalLink } from "lucide-react";
+import { ArrowLeft, ArrowRight, Calendar, FileText, Camera, CheckCircle, Loader2, Download, ExternalLink, Printer } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { safeInvoke } from "@/lib/safeInvoke";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
@@ -364,11 +364,11 @@ const DealAcceptedClarity = () => {
   return (
     <div className="min-h-screen bg-white text-zinc-900">
       {/* ── Quiet header — logo left, support phone right ── */}
-      <header className="border-b border-zinc-200 bg-white">
+      <header className="border-b border-zinc-200 bg-white print:hidden">
         <div className="max-w-[840px] mx-auto px-5 md:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3 min-w-0">
             {config.logo_url ? (
-              <img src={config.logo_url} alt={config.dealership_name} className="h-9 md:h-11 w-auto object-contain" />
+              <img src={config.logo_url} alt={config.dealership_name} className="h-12 md:h-14 w-auto object-contain" />
             ) : (
               <span className="text-sm font-semibold tracking-tight truncate text-zinc-900">
                 {config.dealership_name}
@@ -540,7 +540,7 @@ const DealAcceptedClarity = () => {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
-          className="space-y-4"
+          className="space-y-4 print:hidden"
         >
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500 text-center">
             What happens next
@@ -570,7 +570,24 @@ const DealAcceptedClarity = () => {
           </div>
         </motion.section>
 
-        <p className="text-center text-[11px] text-zinc-400 leading-relaxed pt-2">
+        {/* Print receipt — sits as a quiet text button under What
+            happens next so the customer can take a paper copy of
+            their accepted offer to the inspection. window.print()
+            with print:hidden classes on chrome/dialogs prints just
+            the success badge, vehicle card, and appointment summary
+            cleanly. */}
+        <div className="flex justify-center print:hidden">
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500 hover:text-zinc-900 transition-colors"
+          >
+            <Printer className="w-3.5 h-3.5" aria-hidden="true" />
+            Print receipt
+          </button>
+        </div>
+
+        <p className="text-center text-[11px] text-zinc-400 leading-relaxed pt-2 print:hidden">
           We'll text and email confirmation to {s.email || "your email on file"}. Bring your title, photo ID,
           and all keys to the inspection.
         </p>

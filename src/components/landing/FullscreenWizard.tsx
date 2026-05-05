@@ -128,7 +128,7 @@ const FullscreenWizard = ({ open, onClose, theme = "light", accent, children }: 
                 <img
                   src={config.logo_url}
                   alt={config.dealership_name}
-                  className={`h-9 md:h-11 w-auto object-contain ${theme === "dark" ? "brightness-0 invert" : ""}`}
+                  className={`h-12 md:h-14 w-auto object-contain ${theme === "dark" ? "brightness-0 invert" : ""}`}
                 />
               ) : (
                 <span className="text-sm font-semibold tracking-tight truncate" style={{ color: tokens.ink }}>
