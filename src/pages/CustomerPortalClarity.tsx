@@ -346,7 +346,7 @@ const CustomerPortalClarity = () => {
           {/* ── Vehicle Summary ── */}
           <section
             aria-label="Vehicle summary"
-            className="rounded-3xl border border-zinc-200 bg-white overflow-hidden"
+            className="rounded-3xl border border-zinc-200 bg-zinc-50/40 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden"
           >
             <div className="px-6 py-5 border-b border-zinc-100 flex items-center justify-between">
               <h2 className="text-sm font-semibold tracking-tight">Vehicle Summary</h2>
@@ -431,7 +431,7 @@ const CustomerPortalClarity = () => {
 
             <section
               aria-label="Your checklist"
-              className="rounded-3xl border border-zinc-200 bg-white"
+              className="rounded-3xl border border-zinc-200 bg-zinc-50/40 shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
             >
               <div className="px-6 py-5 border-b border-zinc-100 flex items-center justify-between">
                 <h2 className="text-sm font-semibold tracking-tight">Your Checklist</h2>
@@ -483,7 +483,7 @@ const CustomerPortalClarity = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <section
             aria-label="Need help"
-            className="rounded-3xl border border-zinc-200 bg-white p-6 md:p-7"
+            className="rounded-3xl border border-zinc-200 bg-zinc-50/40 shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-6 md:p-7"
           >
             <h2 className="text-sm font-semibold tracking-tight mb-4">Need Help?</h2>
             <p className="text-base font-bold tracking-tight text-zinc-900 mb-3">

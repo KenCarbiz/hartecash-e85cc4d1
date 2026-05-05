@@ -299,7 +299,7 @@ const UploadDocsClarity = () => {
                 className={`relative rounded-2xl border-2 p-5 text-left transition-all ${
                   filled
                     ? "border-zinc-900 bg-zinc-50/40"
-                    : "border-zinc-200 hover:border-zinc-400 bg-white"
+                    : "border-zinc-200 hover:border-zinc-400 bg-zinc-50/40 shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
                 }`}
               >
                 <div className="flex items-center gap-3 mb-3">

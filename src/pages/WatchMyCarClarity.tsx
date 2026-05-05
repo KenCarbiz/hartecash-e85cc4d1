@@ -186,7 +186,7 @@ const WatchMyCarClarity = () => {
 
         {/* History */}
         {history.length > 0 && (
-          <section className="rounded-3xl border border-zinc-200 bg-white">
+          <section className="rounded-3xl border border-zinc-200 bg-zinc-50/40 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
             <div className="px-6 py-5 border-b border-zinc-100">
               <h2 className="text-sm font-semibold tracking-tight">History</h2>
             </div>
@@ -218,7 +218,7 @@ const WatchMyCarClarity = () => {
         )}
 
         {/* Notification preferences */}
-        <section className="rounded-3xl border border-zinc-200 bg-white px-6 py-5 space-y-4">
+        <section className="rounded-3xl border border-zinc-200 bg-zinc-50/40 shadow-[0_1px_3px_rgba(0,0,0,0.04)] px-6 py-5 space-y-4">
           <h2 className="text-sm font-semibold tracking-tight">Notifications</h2>
           <PrefRow
             label="Email me when value changes"

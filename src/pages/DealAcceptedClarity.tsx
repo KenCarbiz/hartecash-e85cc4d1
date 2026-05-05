@@ -467,7 +467,7 @@ const DealAcceptedClarity = () => {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="rounded-3xl border border-zinc-200 bg-white p-6 md:p-7 space-y-5"
+            className="rounded-3xl border border-zinc-200 bg-zinc-50/40 shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-6 md:p-7 space-y-5"
           >
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -642,7 +642,7 @@ function NextStepCard({ icon: Icon, label, cta, onClick, primary }: NextStepCard
       className={`text-left rounded-2xl border p-5 transition-all ${
         primary
           ? "border-zinc-900 bg-zinc-900 text-white hover:bg-zinc-800"
-          : "border-zinc-200 bg-white text-zinc-900 hover:border-zinc-300"
+          : "border-zinc-200 bg-zinc-50/40 shadow-[0_1px_3px_rgba(0,0,0,0.04)] text-zinc-900 hover:border-zinc-300"
       }`}
     >
       <Icon className={`w-5 h-5 mb-3 ${primary ? "text-white" : "text-zinc-500"}`} aria-hidden="true" />
