@@ -392,7 +392,7 @@ const ScheduleVisitClarity = () => {
             <div className="text-center pt-2">
               <Button
                 onClick={() => navigate(`/my-submission/${submissionToken}`)}
-                className="rounded-full px-6 h-12 bg-zinc-900 hover:bg-zinc-800 text-white font-semibold"
+                className="rounded-full px-6 h-12 bg-zinc-900 hover:bg-zinc-800 text-white transition-[filter,background] duration-150 hover:brightness-95 disabled:opacity-75 disabled:brightness-100 font-semibold"
               >
                 View my submission
                 <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
@@ -547,7 +547,7 @@ const ScheduleVisitClarity = () => {
           <Button
             type="submit"
             disabled={submitting}
-            className="w-full h-14 rounded-full text-base font-semibold bg-zinc-900 hover:bg-zinc-800 text-white"
+            className="w-full h-14 rounded-full text-base font-semibold bg-zinc-900 hover:bg-zinc-800 text-white transition-[filter,background] duration-150 hover:brightness-95 disabled:opacity-75 disabled:brightness-100"
             style={
               config.landing_cta_color
                 ? { background: config.landing_cta_color, color: config.landing_cta_text_color || "#ffffff" }

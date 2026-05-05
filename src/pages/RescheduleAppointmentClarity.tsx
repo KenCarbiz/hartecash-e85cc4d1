@@ -331,7 +331,7 @@ const RescheduleAppointmentClarity = () => {
             <Button
               onClick={handleSubmitPick}
               disabled={!selectedSlot || submittingPick}
-              className="w-full h-12 rounded-full text-base font-semibold bg-zinc-900 hover:bg-zinc-800 text-white"
+              className="w-full h-12 rounded-full text-base font-semibold bg-zinc-900 hover:bg-zinc-800 text-white transition-[filter,background] duration-150 hover:brightness-95 disabled:opacity-75 disabled:brightness-100"
             >
               {submittingPick ? (
                 <>
@@ -350,7 +350,7 @@ const RescheduleAppointmentClarity = () => {
             <Button
               onClick={handleConfirm}
               disabled={confirming}
-              className="w-full h-12 rounded-full text-base font-semibold bg-zinc-900 hover:bg-zinc-800 text-white"
+              className="w-full h-12 rounded-full text-base font-semibold bg-zinc-900 hover:bg-zinc-800 text-white transition-[filter,background] duration-150 hover:brightness-95 disabled:opacity-75 disabled:brightness-100"
               style={
                 config.landing_cta_color
                   ? { background: config.landing_cta_color, color: config.landing_cta_text_color || "#ffffff" }

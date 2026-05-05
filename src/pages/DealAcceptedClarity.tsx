@@ -615,7 +615,7 @@ const DealAcceptedClarity = () => {
             <Button
               onClick={handleContactSubmit}
               disabled={contactSaving}
-              className="w-full h-12 rounded-full bg-zinc-900 hover:bg-zinc-800 text-white font-semibold"
+              className="w-full h-12 rounded-full bg-zinc-900 hover:bg-zinc-800 text-white transition-[filter,background] duration-150 hover:brightness-95 disabled:opacity-75 disabled:brightness-100 font-semibold"
               style={
                 config.landing_cta_color
                   ? { background: config.landing_cta_color, color: config.landing_cta_text_color || "#ffffff" }

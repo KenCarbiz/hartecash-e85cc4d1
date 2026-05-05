@@ -156,7 +156,7 @@ const OfferPageClarity = () => {
           <p className="text-sm text-zinc-500">{error || "We couldn't find that offer."}</p>
           <Button
             onClick={() => navigate("/")}
-            className="rounded-full px-6 h-12 bg-zinc-900 hover:bg-zinc-800 text-white"
+            className="rounded-full px-6 h-12 bg-zinc-900 hover:bg-zinc-800 text-white transition-[filter,background] duration-150 hover:brightness-95 disabled:opacity-75 disabled:brightness-100"
           >
             Back to {config.dealership_name || "home"}
           </Button>
@@ -513,7 +513,7 @@ const OfferPageClarity = () => {
                 <div className="hidden lg:block">
                   <Button
                     onClick={handleAcceptAttempt}
-                    className="w-full h-16 rounded-full text-lg font-semibold bg-zinc-900 hover:bg-zinc-800 text-white"
+                    className="w-full h-16 rounded-full text-lg font-semibold bg-zinc-900 hover:bg-zinc-800 text-white transition-[filter,background] duration-150 hover:brightness-95 disabled:opacity-75 disabled:brightness-100"
                     style={
                       config.landing_cta_color
                         ? {
@@ -627,7 +627,7 @@ const OfferPageClarity = () => {
             <Button
               onClick={handleContactSubmit}
               disabled={contactSaving}
-              className="w-full h-12 rounded-full bg-zinc-900 hover:bg-zinc-800 text-white font-semibold"
+              className="w-full h-12 rounded-full bg-zinc-900 hover:bg-zinc-800 text-white transition-[filter,background] duration-150 hover:brightness-95 disabled:opacity-75 disabled:brightness-100 font-semibold"
             >
               {contactSaving ? "Saving…" : "Confirm and continue"}
             </Button>

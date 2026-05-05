@@ -100,7 +100,7 @@ const EmailUnsubscribeClarity = () => {
               <Button
                 onClick={handleUnsubscribe}
                 disabled={processing}
-                className="w-full h-12 rounded-full bg-zinc-900 hover:bg-zinc-800 text-white font-semibold"
+                className="w-full h-12 rounded-full bg-zinc-900 hover:bg-zinc-800 text-white transition-[filter,background] duration-150 hover:brightness-95 disabled:opacity-75 disabled:brightness-100 font-semibold"
               >
                 {processing ? (
                   <>
