@@ -99,6 +99,25 @@ const isSunday = (dateStr: string): boolean => {
   return new Date(dateStr + "T12:00:00").getDay() === 0;
 };
 
+/** Parse a 12h slot like "2:30 PM" into a real Date paired with a
+ *  date string. Returns null on bad input. */
+function parseAppointmentDate(dateStr: string, timeStr: string): Date | null {
+  if (!dateStr || !timeStr) return null;
+  const m = timeStr.trim().match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)$/i);
+  if (!m) {
+    // Already 24h?
+    const d = new Date(`${dateStr}T${timeStr}`);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  let h = parseInt(m[1], 10);
+  const min = m[2] ? parseInt(m[2], 10) : 0;
+  const period = m[3].toUpperCase();
+  if (period === "PM" && h !== 12) h += 12;
+  if (period === "AM" && h === 12) h = 0;
+  const d = new Date(`${dateStr}T${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}:00`);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 const ScheduleVisitClarity = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -276,16 +295,30 @@ const ScheduleVisitClarity = () => {
     ? [selectedLocation.address, selectedLocation.city, selectedLocation.state].filter(Boolean).join(", ")
     : "";
 
-  const calEvent =
-    form.preferred_date && form.preferred_time
-      ? generateICalEvent({
-          title: `Vehicle Inspection — ${form.vehicle_info || "your vehicle"}`,
-          description: "Bring your title, ID, and keys.",
-          location: form.inspection_mode === "in_store" ? locationAddress : form.inspection_address,
-          start: `${form.preferred_date}T${form.preferred_time}`,
-          durationMinutes: 60,
-        })
-      : null;
+  const calParams = (() => {
+    if (!form.preferred_date || !form.preferred_time) return null;
+    const start = parseAppointmentDate(form.preferred_date, form.preferred_time);
+    if (!start) return null;
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
+    return {
+      title: `Vehicle Inspection — ${form.vehicle_info || "your vehicle"}`,
+      description: "Bring your title, ID, and keys.",
+      location: form.inspection_mode === "in_store" ? locationAddress : form.inspection_address,
+      startDate: start,
+      endDate: end,
+    };
+  })();
+  const icsString = calParams
+    ? generateICalEvent({
+        summary: calParams.title,
+        description: calParams.description,
+        location: calParams.location,
+        startDate: calParams.startDate,
+        endDate: calParams.endDate,
+        organizerName: config.dealership_name || "Dealer",
+        organizerEmail: config.email || "noreply@dealer.local",
+      })
+    : null;
 
   if (submitted) {
     return (
@@ -326,18 +359,18 @@ const ScheduleVisitClarity = () => {
             </p>
           </motion.section>
 
-          {calEvent && (
+          {calParams && icsString && (
             <div className="flex flex-wrap justify-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => downloadCalendarInvite(calEvent, `appointment-${submissionToken || "visit"}.ics`)}
+                onClick={() => downloadCalendarInvite(icsString, `appointment-${submissionToken || "visit"}.ics`)}
                 className="rounded-full text-xs font-semibold border-zinc-200 text-zinc-900 hover:bg-zinc-50"
               >
                 <Download className="w-3.5 h-3.5 mr-1.5" aria-hidden="true" /> iCal
               </Button>
               <a
-                href={generateGoogleCalendarUrl(calEvent)}
+                href={generateGoogleCalendarUrl(calParams)}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-1.5 px-4 h-9 rounded-full text-xs font-semibold border border-zinc-200 text-zinc-900 hover:bg-zinc-50 transition-colors"
@@ -345,7 +378,7 @@ const ScheduleVisitClarity = () => {
                 <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" /> Google
               </a>
               <a
-                href={generateOutlookCalendarUrl(calEvent)}
+                href={generateOutlookCalendarUrl(calParams)}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-1.5 px-4 h-9 rounded-full text-xs font-semibold border border-zinc-200 text-zinc-900 hover:bg-zinc-50 transition-colors"

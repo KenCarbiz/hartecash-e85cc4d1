@@ -501,10 +501,15 @@ const CustomerPortalClarity = () => {
                 </li>
               )}
             </ul>
-            {config.business_hours && (
-              <p className="text-[11px] text-zinc-500 leading-relaxed mt-4 whitespace-pre-line">
-                {config.business_hours}
-              </p>
+            {Array.isArray(config.business_hours) && config.business_hours.length > 0 && (
+              <ul className="mt-4 space-y-1 text-[11px] text-zinc-500 leading-relaxed">
+                {config.business_hours.map((row, i) => (
+                  <li key={i} className="flex justify-between gap-3">
+                    <span className="font-semibold text-zinc-600">{row.days}</span>
+                    <span>{row.hours}</span>
+                  </li>
+                ))}
+              </ul>
             )}
           </section>
 

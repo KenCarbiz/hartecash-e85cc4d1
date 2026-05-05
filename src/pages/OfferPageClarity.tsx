@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import VehicleImage from "@/components/sell-form/VehicleImage";
 import SlideToAccept from "@/components/SlideToAccept";
+import SaveOfferButton from "@/components/offer/SaveOfferButton";
 import { track } from "@/lib/analytics";
 
 /**
@@ -369,13 +370,15 @@ const OfferPageClarity = () => {
                 </Button>
               </div>
               <div className="text-center">
-                <button
-                  type="button"
-                  onClick={() => navigate(`/save-offer/${token}`)}
-                  className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500 hover:text-zinc-900 transition-colors"
-                >
-                  Save offer for later
-                </button>
+                <SaveOfferButton
+                  token={s.token}
+                  vehicleStr={`${s.vehicle_year} ${s.vehicle_make} ${s.vehicle_model}`.trim()}
+                  customerName={s.name || undefined}
+                  customerEmail={s.email || undefined}
+                  customerPhone={s.phone || undefined}
+                  guaranteeDays={offerLockDays}
+                  dealershipName={config.dealership_name || ""}
+                />
               </div>
             </>
           )}

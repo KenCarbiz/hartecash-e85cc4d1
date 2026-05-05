@@ -71,6 +71,30 @@ interface AppointmentData {
   location_state: string | null;
 }
 
+/**
+ * Parse appointment date+time. Handles both formats the appointments
+ * table uses: 24h "14:30:00" and 12h "2:30 PM". Returns null if either
+ * piece is missing or can't be parsed.
+ */
+function parseAppointmentDate(dateStr: string, timeStr: string): Date | null {
+  if (!dateStr || !timeStr) return null;
+  // Already 24h ISO time: "14:30:00" or "14:30"
+  if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(timeStr.trim())) {
+    const d = new Date(`${dateStr}T${timeStr.length === 5 ? `${timeStr}:00` : timeStr}`);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  // 12h "2:30 PM" / "2 PM" — split + reconstruct as 24h.
+  const m = timeStr.trim().match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)$/i);
+  if (!m) return null;
+  let h = parseInt(m[1], 10);
+  const min = m[2] ? parseInt(m[2], 10) : 0;
+  const period = m[3].toUpperCase();
+  if (period === "PM" && h !== 12) h += 12;
+  if (period === "AM" && h === 12) h = 0;
+  const d = new Date(`${dateStr}T${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}:00`);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 const CONDITION_LABEL: Record<string, string> = {
   excellent: "Excellent",
   very_good: "Very Good",
@@ -293,25 +317,41 @@ const DealAcceptedClarity = () => {
     setContactSaving(false);
   };
 
-  // Calendar invite generation. Only valid when an appointment is on
-  // file with both a date and a time.
-  const buildCalEvent = () => {
-    if (!appointment) return null;
-    const { preferred_date, preferred_time } = appointment;
-    if (!preferred_date || !preferred_time) return null;
-    const locParts = [appointment.location_name, appointment.location_address, appointment.location_city, appointment.location_state]
+  // Build calendar params once — used to generate the ICS string +
+  // both Google and Outlook deep-links from the same source data.
+  // Only valid when an appointment is on file with date + time.
+  const calParams = (() => {
+    if (!appointment?.preferred_date || !appointment?.preferred_time) return null;
+    const start = parseAppointmentDate(appointment.preferred_date, appointment.preferred_time);
+    if (!start) return null;
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
+    const location = [
+      appointment.location_name,
+      appointment.location_address,
+      appointment.location_city,
+      appointment.location_state,
+    ]
       .filter(Boolean)
       .join(", ");
-    return generateICalEvent({
+    return {
       title: `Vehicle Inspection — ${vehicleStr}`,
       description: `Bring your title, ID, and keys. Locked offer: $${cashOffer.toLocaleString("en-US", { maximumFractionDigits: 0 })}.`,
-      location: locParts,
-      start: `${preferred_date}T${preferred_time}`,
-      durationMinutes: 60,
-    });
-  };
-
-  const calEvent = buildCalEvent();
+      location,
+      startDate: start,
+      endDate: end,
+    };
+  })();
+  const icsString = calParams
+    ? generateICalEvent({
+        summary: calParams.title,
+        description: calParams.description,
+        location: calParams.location,
+        startDate: calParams.startDate,
+        endDate: calParams.endDate,
+        organizerName: config.dealership_name || "Dealer",
+        organizerEmail: config.email || "noreply@dealer.local",
+      })
+    : null;
 
   return (
     <div className="min-h-screen bg-white text-zinc-900">
@@ -450,18 +490,18 @@ const DealAcceptedClarity = () => {
                 )}
               </div>
             </div>
-            {calEvent && (
+            {calParams && icsString && (
               <div className="flex flex-wrap gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => downloadCalendarInvite(calEvent, `appointment-${s.token}.ics`)}
+                  onClick={() => downloadCalendarInvite(icsString, `appointment-${s.token}.ics`)}
                   className="rounded-full text-xs font-semibold border-zinc-200 text-zinc-900 hover:bg-zinc-50"
                 >
                   <Download className="w-3.5 h-3.5 mr-1.5" aria-hidden="true" /> iCal
                 </Button>
                 <a
-                  href={generateGoogleCalendarUrl(calEvent)}
+                  href={generateGoogleCalendarUrl(calParams)}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-1.5 px-4 h-9 rounded-full text-xs font-semibold border border-zinc-200 text-zinc-900 hover:bg-zinc-50 transition-colors"
@@ -469,7 +509,7 @@ const DealAcceptedClarity = () => {
                   <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" /> Google
                 </a>
                 <a
-                  href={generateOutlookCalendarUrl(calEvent)}
+                  href={generateOutlookCalendarUrl(calParams)}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-1.5 px-4 h-9 rounded-full text-xs font-semibold border border-zinc-200 text-zinc-900 hover:bg-zinc-50 transition-colors"
