@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ArrowRight, CheckCircle, ShieldCheck, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowRight, CheckCircle, ShieldCheck, Loader2, DollarSign, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { safeInvoke } from "@/lib/safeInvoke";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
@@ -14,6 +14,7 @@ import VehicleImage from "@/components/sell-form/VehicleImage";
 import SlideToAccept from "@/components/SlideToAccept";
 import SaveOfferButton from "@/components/offer/SaveOfferButton";
 import { track } from "@/lib/analytics";
+import { getTaxRateFromZip, calcTradeInValue } from "@/lib/salesTax";
 
 /**
  * Clarity-tier offer page — Apple/Porsche minimal white. Mirrors
@@ -66,6 +67,8 @@ interface PortalSubmission {
   offered_price: number | null;
   estimated_offer_high: number | null;
   estimated_offer_low: number | null;
+  bb_tradein_avg: number | null;
+  bb_wholesale_avg: number | null;
   token: string;
   progress_status: string | null;
 }
@@ -90,6 +93,11 @@ const OfferPageClarity = () => {
   const [submission, setSubmission] = useState<PortalSubmission | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  // Sell vs Trade-In tab — Trade-In adds the customer's state sales-tax
+  // rate to the cash offer so they can see what the offer is "worth"
+  // applied against another vehicle purchase. Mirrors the legacy
+  // OfferPage tab toggle behavior.
+  const [activeTab, setActiveTab] = useState<"sell" | "trade">("sell");
 
   // Contact-gate dialog state — opens when accept is tapped without
   // contact on file (offer-first or stale link). Mirrors the legacy
@@ -119,7 +127,7 @@ const OfferPageClarity = () => {
           setLoading(false);
           return;
         }
-        setSubmission((data as PortalSubmission[])[0]);
+        setSubmission((data as unknown as PortalSubmission[])[0]);
         setLoading(false);
       } catch (e) {
         if (cancelled) return;
@@ -159,11 +167,31 @@ const OfferPageClarity = () => {
 
   const s = submission;
   const isAccepted = !!s.progress_status && LOCKED_OFFER_STATUSES.has(s.progress_status);
+  // Cash-offer fallback chain — manual offer wins, then estimated, then
+  // BB trade-in average so a freshly-submitted lead with no manual
+  // appraisal still shows a real number instead of $0. Wholesale avg
+  // is the last resort for vehicles that came in via the NHTSA path
+  // (no BB pricing) — typically still 0 there, in which case the
+  // template falls into the awaiting-appraisal state below.
   const cashOffer =
-    (isAccepted ? s.offered_price : s.offered_price ?? s.estimated_offer_high) ??
+    s.offered_price ??
     s.estimated_offer_high ??
+    s.bb_tradein_avg ??
+    s.bb_wholesale_avg ??
     0;
-  const acceptUrl = `/deal/${token}`;
+  const offerPending = cashOffer <= 0;
+
+  // Trade-in calculation — uses the customer's ZIP to look up their
+  // state sales-tax rate, then adds that as a "tax credit" since
+  // trading instead of selling for cash defers sales tax on the
+  // replacement purchase. CT default at 6.35% if no zip on file.
+  const zipResult = getTaxRateFromZip(s.zip || "");
+  const taxRate = zipResult.state ? zipResult.rate : 0.0635;
+  const taxSavings = cashOffer * taxRate;
+  const tradeInValue = calcTradeInValue(cashOffer, taxRate);
+  const displayedAmount = activeTab === "trade" ? tradeInValue : cashOffer;
+
+  const acceptUrl = `/deal/${token}${activeTab === "trade" ? "?mode=trade" : ""}`;
   const isMissingContact = !s.name || !s.email || !s.phone;
 
   const handleAcceptAttempt = () => {
@@ -301,6 +329,56 @@ const OfferPageClarity = () => {
           </div>
         </motion.section>
 
+        {/* ── Sell vs Trade-In tabs ──
+              Cash offer is the as-paid number. Trade-In adds the
+              customer's state sales-tax rate as a "tax credit" so they
+              can see what the same number is worth applied against
+              another vehicle purchase. Sliding pill behind the active
+              tab matches the Clarity premium-soft easing. */}
+        {!offerPending && !isAccepted && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+            className="relative flex bg-zinc-100 rounded-full p-1 max-w-sm mx-auto"
+            role="tablist"
+            aria-label="Offer view"
+          >
+            <motion.div
+              className="absolute top-1 bottom-1 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
+              layout
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              style={{
+                width: "calc(50% - 4px)",
+                left: activeTab === "sell" ? "4px" : "calc(50% + 0px)",
+              }}
+              aria-hidden="true"
+            />
+            <button
+              role="tab"
+              aria-selected={activeTab === "sell"}
+              onClick={() => setActiveTab("sell")}
+              className={`relative z-10 flex-1 inline-flex items-center justify-center gap-1.5 h-10 rounded-full text-xs font-semibold uppercase tracking-[0.14em] transition-colors ${
+                activeTab === "sell" ? "text-zinc-900" : "text-zinc-500"
+              }`}
+            >
+              <DollarSign className="w-3.5 h-3.5" aria-hidden="true" />
+              Cash offer
+            </button>
+            <button
+              role="tab"
+              aria-selected={activeTab === "trade"}
+              onClick={() => setActiveTab("trade")}
+              className={`relative z-10 flex-1 inline-flex items-center justify-center gap-1.5 h-10 rounded-full text-xs font-semibold uppercase tracking-[0.14em] transition-colors ${
+                activeTab === "trade" ? "text-zinc-900" : "text-zinc-500"
+              }`}
+            >
+              <TrendingUp className="w-3.5 h-3.5" aria-hidden="true" />
+              Trade-in value
+            </button>
+          </motion.div>
+        )}
+
         {/* ── Offer reveal card — the moment of truth ── */}
         <motion.section
           initial={{ opacity: 0, y: 12 }}
@@ -308,81 +386,160 @@ const OfferPageClarity = () => {
           transition={{ duration: 0.55, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           className="text-center space-y-4"
         >
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">
-            Your cash offer
-          </p>
-          <p className="font-sans text-[64px] md:text-[88px] font-bold tracking-[-0.035em] leading-[1] text-zinc-900 tabular-nums">
-            ${cashOffer.toLocaleString("en-US", { maximumFractionDigits: 0 })}
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] uppercase tracking-wider">
-            {conditionLabel && (
-              <span className="px-3 py-1.5 rounded-full bg-zinc-100 text-zinc-600">
-                {conditionLabel} condition
-              </span>
-            )}
-            {s.mileage && (
-              <span className="px-3 py-1.5 rounded-full bg-zinc-100 text-zinc-600">
-                {Number(s.mileage).toLocaleString()} mi
-              </span>
-            )}
-            <span className="px-3 py-1.5 rounded-full bg-zinc-100 text-zinc-600 inline-flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" />
-              Locks for {offerLockDays} days
-            </span>
-          </div>
-        </motion.section>
-
-        {/* ── Accept block ── */}
-        <motion.section
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
-          className="space-y-4"
-        >
-          {isAccepted ? (
-            <div className="w-full py-4 flex items-center justify-center gap-2.5 rounded-2xl bg-emerald-500 text-white font-bold text-base">
-              <CheckCircle className="w-5 h-5" aria-hidden="true" />
-              Offer Accepted
-            </div>
+          {offerPending ? (
+            <>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">
+                Awaiting appraisal
+              </p>
+              <p className="font-sans text-[44px] md:text-[60px] font-bold tracking-[-0.025em] leading-[1.05] text-zinc-900">
+                Pricing in progress
+              </p>
+              <p className="text-sm text-zinc-500 max-w-md mx-auto leading-relaxed">
+                Our appraiser is putting a number together and will reach out within 24 hours.
+                {config.phone && (
+                  <>
+                    {" "}
+                    Or call us now at{" "}
+                    <a
+                      href={`tel:${config.phone}`}
+                      className="font-semibold text-zinc-900 hover:text-zinc-600 transition-colors"
+                    >
+                      {config.phone}
+                    </a>
+                    .
+                  </>
+                )}
+              </p>
+            </>
           ) : (
             <>
-              <div className="lg:hidden">
-                <SlideToAccept
-                  onAccept={handleAcceptAttempt}
-                  label={`Slide to Accept $${cashOffer.toLocaleString("en-US", { maximumFractionDigits: 0 })}`}
-                />
-              </div>
-              <div className="hidden lg:block">
-                <Button
-                  onClick={handleAcceptAttempt}
-                  className="w-full h-16 rounded-full text-lg font-semibold bg-zinc-900 hover:bg-zinc-800 text-white"
-                  style={
-                    config.landing_cta_color
-                      ? {
-                          background: config.landing_cta_color,
-                          color: config.landing_cta_text_color || "#ffffff",
-                        }
-                      : undefined
-                  }
-                >
-                  Accept ${cashOffer.toLocaleString("en-US", { maximumFractionDigits: 0 })}
-                  <ArrowRight className="w-5 h-5 ml-2" aria-hidden="true" />
-                </Button>
-              </div>
-              <div className="text-center">
-                <SaveOfferButton
-                  token={s.token}
-                  vehicleStr={`${s.vehicle_year} ${s.vehicle_make} ${s.vehicle_model}`.trim()}
-                  customerName={s.name || undefined}
-                  customerEmail={s.email || undefined}
-                  customerPhone={s.phone || undefined}
-                  guaranteeDays={offerLockDays}
-                  dealershipName={config.dealership_name || ""}
-                />
+              <AnimatePresence mode="wait">
+                {activeTab === "sell" ? (
+                  <motion.div
+                    key="sell"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.25 }}
+                    className="space-y-2"
+                  >
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">
+                      {isAccepted ? "Accepted cash offer" : "Your cash offer"}
+                    </p>
+                    <p className="font-sans text-[64px] md:text-[88px] font-bold tracking-[-0.035em] leading-[1] text-zinc-900 tabular-nums">
+                      ${cashOffer.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+                    </p>
+                    <p className="text-[11px] text-zinc-500 inline-flex items-center justify-center gap-1.5">
+                      <ShieldCheck className="w-3 h-3" aria-hidden="true" />
+                      Subject to in-person inspection
+                    </p>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="trade"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.25 }}
+                    className="space-y-2"
+                  >
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">
+                      Your trade-in total value
+                    </p>
+                    <p className="font-sans text-[64px] md:text-[88px] font-bold tracking-[-0.035em] leading-[1] text-emerald-600 tabular-nums">
+                      ${tradeInValue.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+                    </p>
+                    <p className="text-[11px] text-zinc-500 inline-flex items-center justify-center gap-1.5">
+                      <TrendingUp className="w-3 h-3 text-emerald-600" aria-hidden="true" />
+                      Includes{" "}
+                      <span className="font-semibold text-emerald-600">
+                        ${taxSavings.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+                      </span>{" "}
+                      tax credit
+                      {zipResult.state ? ` (${zipResult.state})` : ""}
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] uppercase tracking-wider pt-2">
+                {conditionLabel && (
+                  <span className="px-3 py-1.5 rounded-full bg-zinc-100 text-zinc-600">
+                    {conditionLabel} condition
+                  </span>
+                )}
+                {s.mileage && (
+                  <span className="px-3 py-1.5 rounded-full bg-zinc-100 text-zinc-600">
+                    {Number(s.mileage).toLocaleString()} mi
+                  </span>
+                )}
+                <span className="px-3 py-1.5 rounded-full bg-zinc-100 text-zinc-600 inline-flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" />
+                  Locks for {offerLockDays} days
+                </span>
               </div>
             </>
           )}
         </motion.section>
+
+        {/* ── Accept block ── */}
+        {!offerPending && (
+          <motion.section
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            className="space-y-4"
+          >
+            {isAccepted ? (
+              <div className="w-full py-4 flex items-center justify-center gap-2.5 rounded-2xl bg-emerald-500 text-white font-bold text-base">
+                <CheckCircle className="w-5 h-5" aria-hidden="true" />
+                Offer accepted
+              </div>
+            ) : (
+              <>
+                <div className="lg:hidden">
+                  <SlideToAccept
+                    onAccept={handleAcceptAttempt}
+                    label={`Slide to Accept $${displayedAmount.toLocaleString("en-US", { maximumFractionDigits: 0 })}`}
+                  />
+                </div>
+                <div className="hidden lg:block">
+                  <Button
+                    onClick={handleAcceptAttempt}
+                    className="w-full h-16 rounded-full text-lg font-semibold bg-zinc-900 hover:bg-zinc-800 text-white"
+                    style={
+                      config.landing_cta_color
+                        ? {
+                            background: config.landing_cta_color,
+                            color: config.landing_cta_text_color || "#ffffff",
+                          }
+                        : undefined
+                    }
+                  >
+                    Accept ${displayedAmount.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+                    {activeTab === "trade" ? " trade-in" : ""}
+                    <ArrowRight className="w-5 h-5 ml-2" aria-hidden="true" />
+                  </Button>
+                </div>
+
+                {/* Save offer — visible on every screen size, sits
+                    directly under accept so the customer sees both
+                    options without scrolling. */}
+                <div className="flex justify-center pt-1">
+                  <SaveOfferButton
+                    token={s.token}
+                    vehicleStr={`${s.vehicle_year} ${s.vehicle_make} ${s.vehicle_model}`.trim()}
+                    customerName={s.name || undefined}
+                    customerEmail={s.email || undefined}
+                    customerPhone={s.phone || undefined}
+                    guaranteeDays={offerLockDays}
+                    dealershipName={config.dealership_name || ""}
+                  />
+                </div>
+              </>
+            )}
+          </motion.section>
+        )}
 
         {/* ── Trust line — short and quiet, the Clarity language ── */}
         <p className="text-center text-[11px] text-zinc-400 leading-relaxed">
