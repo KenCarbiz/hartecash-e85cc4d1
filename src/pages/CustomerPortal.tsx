@@ -111,7 +111,20 @@ const ACCEPTED_PORTAL_STATUSES = new Set([
   "purchase_complete",
 ]);
 
+import CustomerPortalClarity from "./CustomerPortalClarity";
+
 const CustomerPortal = () => {
+  const { config: rootConfig } = useSiteConfig();
+  // Template-aware dispatch — Clarity dealers get the Apple-minimal
+  // portal scaffold; everyone else falls through to the maximalist
+  // legacy portal below.
+  if (rootConfig.landing_template === "clarity") {
+    return <CustomerPortalClarity />;
+  }
+  return <CustomerPortalLegacy />;
+};
+
+const CustomerPortalLegacy = () => {
   const { token } = useParams<{ token: string }>();
   const { config } = useSiteConfig();
   const { toast } = useToast();
