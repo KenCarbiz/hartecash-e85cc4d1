@@ -130,6 +130,28 @@ import OfferPageClarity from "./OfferPageClarity";
 
 const OfferPage = () => {
   const { config: rootConfig } = useSiteConfig();
+  // Admin/QA preview override: ?offer=legacy or ?offer=clarity in the URL
+  // forces a specific offer screen regardless of the tenant's
+  // landing_template. Persists for the session via sessionStorage so
+  // navigating away & back keeps the chosen variant. Clear with
+  // ?offer=reset.
+  let override: string | null = null;
+  if (typeof window !== "undefined") {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const q = params.get("offer");
+      if (q === "reset") {
+        sessionStorage.removeItem("offer_screen_override");
+      } else if (q === "legacy" || q === "clarity") {
+        sessionStorage.setItem("offer_screen_override", q);
+        override = q;
+      } else {
+        override = sessionStorage.getItem("offer_screen_override");
+      }
+    } catch { /* private mode: ignore */ }
+  }
+  if (override === "legacy") return <OfferPageLegacy />;
+  if (override === "clarity") return <OfferPageClarity />;
   // Template-aware dispatch — dealers on the Clarity landing get the
   // Apple-minimal Clarity offer page; everyone else (including the
   // "Legacy Hartecash" maximalist look) keeps the original long-scroll
