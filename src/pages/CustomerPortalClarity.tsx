@@ -207,7 +207,7 @@ const CustomerPortalClarity = () => {
         label: "Upload Your Documents",
         body: "Send us your title and ID so we can have your paperwork ready when you arrive.",
         cta: "Upload Documents",
-        href: `/upload-docs/${s.token}`,
+        href: `/docs/${s.token}`,
       };
     }
     if (!s.photos_uploaded) {
@@ -215,7 +215,7 @@ const CustomerPortalClarity = () => {
         label: "Add Vehicle Photos",
         body: "A few photos of your vehicle help us finalize your offer faster — and may bump it up.",
         cta: "Upload Photos",
-        href: `/upload-photos/${s.token}`,
+        href: `/upload/${s.token}`,
       };
     }
     return null;
@@ -233,14 +233,14 @@ const CustomerPortalClarity = () => {
       label: "Documents",
       icon: FileText,
       done: s.docs_uploaded,
-      href: `/upload-docs/${s.token}`,
+      href: `/docs/${s.token}`,
       cta: "Upload Documents",
     },
     {
       label: "Vehicle Photos",
       icon: Camera,
       done: s.photos_uploaded,
-      href: `/upload-photos/${s.token}`,
+      href: `/upload/${s.token}`,
       cta: "Upload Photos",
       hint: "Photos uploaded may increase your offer",
     },

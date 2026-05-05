@@ -559,13 +559,13 @@ const DealAcceptedClarity = () => {
               icon={Camera}
               label="Add vehicle photos"
               cta="Upload photos"
-              onClick={() => navigate(`/upload-photos/${s.token}`)}
+              onClick={() => navigate(`/upload/${s.token}`)}
             />
             <NextStepCard
               icon={FileText}
               label="Title & ID"
               cta="Upload documents"
-              onClick={() => navigate(`/upload-docs/${s.token}`)}
+              onClick={() => navigate(`/docs/${s.token}`)}
             />
           </div>
         </motion.section>
