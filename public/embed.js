@@ -1051,6 +1051,8 @@
       var days = daysSinceOffer(s);
       var toast = document.createElement("div");
       toast.className = "hc-toast";
+      toast.setAttribute("role", "status");
+      toast.setAttribute("aria-live", "polite");
       toast.innerHTML =
         '<button aria-label="Dismiss">&times;</button>' +
         "<strong>Your $" + Number(s.offer || 0).toLocaleString() + " offer is still good</strong>" +

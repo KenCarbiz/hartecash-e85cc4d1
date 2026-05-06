@@ -837,6 +837,12 @@ window.addEventListener("message", function(e) {
                 </div>
               </div>
 
+              {/* Live performance summary — aggregates embed_events
+                  for the last 30 days. Surfaces top-of-funnel
+                  metrics so the dealer can validate the widget is
+                  firing on their site without leaving the admin. */}
+              <EmbedPerformanceCard dealershipId={tenant.dealership_id} />
+
               {/* Escalation controls */}
               <div className="rounded-xl border border-border bg-muted/20 p-4 space-y-3">
                 <div className="flex items-center justify-between gap-4">
@@ -1401,6 +1407,102 @@ window.addEventListener("message", function(e) {
           </p>
         </CardContent>
       </Card>
+    </div>
+  );
+};
+
+/**
+ * Embed performance summary — aggregates the last 30 days of
+ * embed_events for the dealership. Five top-of-funnel counters:
+ *   - Widget loads     (every page render that mounts the widget)
+ *   - Vehicles detected (VDP attribution coverage)
+ *   - Pill clicks      (engagement)
+ *   - Overlays opened  (conversion intent)
+ *   - State changes    (offers + acceptances broadcast back)
+ *
+ * Reads through Postgres RLS — only events for this rooftop are
+ * visible to the dealer's admin user. Refreshes on mount and
+ * exposes a manual refresh button so the dealer can verify a new
+ * install fires events without waiting for a hard reload.
+ */
+const EmbedPerformanceCard = ({ dealershipId }: { dealershipId: string }) => {
+  const [counts, setCounts] = useState<Record<string, number>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = async () => {
+    setLoading(true);
+    setError(null);
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const { data, error: queryError } = await supabase
+      .from("embed_events" as never)
+      .select("event_type")
+      .eq("dealership_id", dealershipId)
+      .gte("created_at", since);
+    if (queryError) {
+      // PGRST205 / "relation does not exist" means the migration
+      // hasn't run yet. Surface a soft message instead of a red
+      // toast so the rest of the embed UI stays usable.
+      const msg = queryError.message.toLowerCase();
+      if (msg.includes("does not exist") || msg.includes("schema cache")) {
+        setError("Pending migration — apply 20260506120000_embed_attribution_and_analytics.sql.");
+      } else {
+        setError(queryError.message);
+      }
+      setLoading(false);
+      return;
+    }
+    const tally: Record<string, number> = {};
+    (data as Array<{ event_type: string }> | null)?.forEach((r) => {
+      tally[r.event_type] = (tally[r.event_type] || 0) + 1;
+    });
+    setCounts(tally);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dealershipId]);
+
+  const tiles: Array<{ key: string; label: string; sub?: string }> = [
+    { key: "widget_loaded", label: "Widget loads", sub: "Page renders" },
+    { key: "vehicle_detected", label: "Vehicles detected", sub: "VDPs covered" },
+    { key: "pill_clicked", label: "Pill clicks", sub: "Engagement" },
+    { key: "overlay_opened", label: "Overlays opened", sub: "Intent" },
+    { key: "offer_made", label: "Offers made", sub: "Conversion" },
+  ];
+
+  return (
+    <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border bg-muted/20">
+        <div>
+          <Label className="text-sm font-semibold">Embed performance — last 30 days</Label>
+          <p className="text-xs text-muted-foreground">
+            Live counts from embed_events. Refresh after pasting the snippet into the dealer site to confirm install.
+          </p>
+        </div>
+        <Button size="sm" variant="outline" onClick={load} disabled={loading}>
+          {loading ? "Loading…" : "Refresh"}
+        </Button>
+      </div>
+      {error ? (
+        <div className="px-4 py-6 text-xs text-muted-foreground">{error}</div>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-5 divide-x divide-y md:divide-y-0 divide-border">
+          {tiles.map((t) => (
+            <div key={t.key} className="px-4 py-3.5">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                {t.label}
+              </p>
+              <p className="text-2xl font-bold tabular-nums tracking-tight text-card-foreground mt-0.5">
+                {(counts[t.key] || 0).toLocaleString()}
+              </p>
+              {t.sub && <p className="text-[10px] text-muted-foreground">{t.sub}</p>}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
