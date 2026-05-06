@@ -443,24 +443,66 @@
   }
 
   // State-aware floating-button copy. Re-engagement is the whole
-  // point — a customer who already has an offer should see "View
-  // your $X offer," not "Get your trade-in value."
-  function getFloatingCopy(state) {
+  // point — a customer who already has an offer should see "Apply
+  // your $X toward this vehicle" on a VDP and "Increase your trade
+  // offer" everywhere else (homepage, SRP, content pages). The
+  // returning-customer recognition comes from localStorage state
+  // persisted across pageloads on the same dealer domain.
+  //
+  // Returns: { primary, secondary, intent }
+  //   intent === "apply"  — open the embed flow with vehicle context
+  //   intent === "boost"  — deep-link to /boost-offer/:token
+  //   intent === "view"   — open the customer portal / accepted deal
+  //   intent === "resume" — resume the in-progress submission
+  //   intent === "start"  — first-time visitor, start the flow
+  function getFloatingCopy(state, vehicle) {
     var status = state && state.status;
     var offer = state && Number(state.offer) || 0;
+    var hasVehicle = !!(vehicle && vehicle.label);
+    var vehicleShort = hasVehicle ? vehicle.label.replace(/^\s*\d{4}\s+/, "") : "";
+
+    // Returning customer — accepted deal. Surface the deal portal.
     if (status === "deal_accepted") {
-      return { primary: "View your accepted offer", secondary: "Schedule pickup" };
-    }
-    if (status === "offer_made" && offer > 0) {
       return {
-        primary: "View your $" + offer.toLocaleString() + " offer",
-        secondary: "Apply toward this vehicle",
+        primary: "View your accepted offer",
+        secondary: hasVehicle ? "Apply toward this " + vehicleShort : "Schedule pickup",
+        intent: "view",
       };
     }
-    if (status === "in_progress") {
-      return { primary: "Resume your trade-in", secondary: "Pick up where you left off" };
+
+    // Returning customer — has an offer. Two flavors:
+    //   on a VDP → frame as "apply your $X toward THIS car"
+    //   off VDP → frame as "increase your $X offer" (boost flow)
+    if (offer > 0) {
+      if (hasVehicle) {
+        return {
+          primary: "Apply your $" + offer.toLocaleString() + " toward this " + vehicleShort,
+          secondary: "Tap to see your effective price",
+          intent: "apply",
+        };
+      }
+      return {
+        primary: "Increase your $" + offer.toLocaleString() + " trade offer",
+        secondary: "Add photos to unlock more $",
+        intent: "boost",
+      };
     }
-    return { primary: "Get your trade-in value", secondary: "Apply toward this vehicle" };
+
+    // Returning customer mid-flow — resume.
+    if (status === "in_progress") {
+      return {
+        primary: "Resume your trade-in",
+        secondary: "Pick up where you left off",
+        intent: "resume",
+      };
+    }
+
+    // First-time visitor.
+    return {
+      primary: "Get your trade-in value",
+      secondary: hasVehicle ? "Apply toward this " + vehicleShort : "Free, instant offer",
+      intent: "start",
+    };
   }
 
   // Full-bleed overlay iframe (separate from the slim drawer above
@@ -491,6 +533,43 @@
 
     var iframe = document.createElement("iframe");
     iframe.src = buildEmbedUrl(Object.assign({}, cfg, { displayMode: "overlay" }), vehicle);
+    iframe.allow = "camera; clipboard-read; clipboard-write";
+    iframe.loading = "lazy";
+    overlayFrame.appendChild(iframe);
+
+    document.body.appendChild(overlayFrame);
+    document.body.style.overflow = "hidden";
+
+    requestAnimationFrame(function () {
+      overlayBackdrop.classList.add("hc-open");
+      overlayFrame.classList.add("hc-open");
+    });
+  }
+
+  // Open an arbitrary HarteCash URL in the same overlay shell —
+  // used for boost/view/resume intents that deep-link past the
+  // /embed/:dealershipId flow into a token-scoped page.
+  function openDirectOverlay(url) {
+    if (overlayFrame) return;
+    injectStyles([
+      ".hc-embed-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99998;opacity:0;transition:opacity .3s ease}",
+      ".hc-embed-backdrop.hc-open{opacity:1}",
+      ".hc-embed-overlay{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.96);width:min(960px,94vw);height:min(720px,90vh);z-index:99999;background:#fff;border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.45);overflow:hidden;opacity:0;transition:opacity .3s ease,transform .3s ease}",
+      ".hc-embed-overlay.hc-open{opacity:1;transform:translate(-50%,-50%) scale(1)}",
+      ".hc-embed-overlay iframe{width:100%;height:100%;border:0;display:block}",
+    ].join("\n"));
+
+    overlayBackdrop = document.createElement("div");
+    overlayBackdrop.className = "hc-embed-backdrop";
+    overlayBackdrop.addEventListener("click", closeInventoryOverlay);
+    document.body.appendChild(overlayBackdrop);
+
+    overlayFrame = document.createElement("div");
+    overlayFrame.className = "hc-embed-overlay";
+    overlayFrame.setAttribute("role", "dialog");
+
+    var iframe = document.createElement("iframe");
+    iframe.src = url;
     iframe.allow = "camera; clipboard-read; clipboard-write";
     iframe.loading = "lazy";
     overlayFrame.appendChild(iframe);
@@ -562,7 +641,7 @@
     }
 
     // Floating mode — state-aware pill button.
-    var copy = getFloatingCopy(state);
+    var copy = getFloatingCopy(state, vehicle);
     var color = cfg.color || "#1a365d";
     var btn = document.createElement("button");
     btn.setAttribute("aria-label", copy.primary);
@@ -590,7 +669,9 @@
 
     function renderButton() {
       var s = readState(cfg.dealerId);
-      var c = getFloatingCopy(s);
+      var v = detectInventoryVehicle();
+      var c = getFloatingCopy(s, v);
+      btn.dataset.intent = c.intent;
       btn.innerHTML =
         '<span style="font-size:14px;font-weight:700;letter-spacing:-.01em">' + c.primary + "</span>" +
         '<span style="font-size:11px;font-weight:500;opacity:.85">' + c.secondary + "</span>";
@@ -608,7 +689,32 @@
     };
     btn.addEventListener("click", function (e) {
       e.preventDefault();
-      openInventoryOverlay(cfg, detectInventoryVehicle());
+      var s = readState(cfg.dealerId);
+      var v = detectInventoryVehicle();
+      var c = getFloatingCopy(s, v);
+      var host = (cfg.host || "https://hartecash.com").replace(/\/$/, "");
+
+      // Boost intent — off-VDP returning customer wants to bump
+      // their offer. Deep-link to /boost-offer/:token in the
+      // overlay iframe instead of the lookup flow.
+      if (c.intent === "boost" && s.token) {
+        openDirectOverlay(host + "/boost-offer/" + encodeURIComponent(s.token));
+        return;
+      }
+      // View intent — accepted deal. Deep-link to /deal/:token.
+      if (c.intent === "view" && s.token) {
+        openDirectOverlay(host + "/deal/" + encodeURIComponent(s.token));
+        return;
+      }
+      // Resume intent — submission in progress. Drop them into
+      // their portal (which dispatches by status).
+      if (c.intent === "resume" && s.token) {
+        openDirectOverlay(host + "/my-submission/" + encodeURIComponent(s.token));
+        return;
+      }
+      // Default — open the embed flow with vehicle context
+      // (apply / start intents).
+      openInventoryOverlay(cfg, v);
     });
 
     document.body.appendChild(btn);

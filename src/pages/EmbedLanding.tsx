@@ -5,6 +5,7 @@ import { TrendingUp, X } from "lucide-react";
 import LandingTemplateRouter from "@/components/landing/LandingTemplateRouter";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { getTaxRateFromZip, calcTradeInValue } from "@/lib/salesTax";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Embedded customer-flow page mounted at /embed/:dealershipId.
@@ -98,6 +99,52 @@ const EmbedLanding = () => {
       /* Safari private mode — fail open, dealer's chosen template wins. */
     }
   }, [templateOverride]);
+
+  // Returning-customer recognition. When the parent embed.js
+  // handed us a resume token (?t=...) — typically because the
+  // customer already started or completed a submission on a prior
+  // visit — fetch their current status + offer and broadcast it
+  // back to the parent via hartecash-state-change. The parent
+  // floating button uses this to swap copy from "Get your trade-in
+  // value" to "Apply your $X toward this vehicle" (on a VDP) or
+  // "Increase your $X trade offer" (off a VDP).
+  const submissionToken = searchParams.get("t") || "";
+  useEffect(() => {
+    if (!submissionToken) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("submissions")
+        .select("progress_status, offered_price, estimated_offer_high, bb_tradein_avg, bb_wholesale_avg")
+        .eq("submission_token", submissionToken)
+        .maybeSingle();
+      if (cancelled || !data) return;
+      const offer =
+        Number(data.offered_price) ||
+        Number(data.estimated_offer_high) ||
+        Number(data.bb_tradein_avg) ||
+        Number(data.bb_wholesale_avg) ||
+        0;
+      const status =
+        data.progress_status === "deal_accepted" || data.progress_status === "scheduled"
+          ? "deal_accepted"
+          : offer > 0
+          ? "offer_made"
+          : "in_progress";
+      window.parent.postMessage(
+        {
+          type: "hartecash-state-change",
+          token: submissionToken,
+          status,
+          offer,
+        },
+        "*",
+      );
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [submissionToken]);
 
   return (
     <div className="min-h-screen bg-white">
