@@ -391,6 +391,75 @@
     }
   }
 
+  // ── Analytics ────────────────────────────────────────────────────
+  // Tiny event firehose — POSTs to /functions/v1/embed-track on
+  // hartecash.com. Batched with a 250ms debounce + sendBeacon on
+  // page hide so we don't drop events on quick bounces.
+
+  function lsSession() {
+    try {
+      var k = "hartecash_embed_sid";
+      var existing = sessionStorage.getItem(k);
+      if (existing) return existing;
+      var sid = "s_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+      sessionStorage.setItem(k, sid);
+      return sid;
+    } catch (e) { return null; }
+  }
+
+  var trackBuffer = [];
+  var trackTimer = null;
+  var trackHost = "";
+  var trackDealerId = "";
+
+  function flushTrack(useBeacon) {
+    if (!trackBuffer.length || !trackHost || !trackDealerId) return;
+    var url = trackHost + "/functions/v1/embed-track";
+    var body = JSON.stringify({ dealer_id: trackDealerId, events: trackBuffer.slice() });
+    trackBuffer.length = 0;
+    if (useBeacon && typeof navigator !== "undefined" && navigator.sendBeacon) {
+      try {
+        navigator.sendBeacon(url, new Blob([body], { type: "application/json" }));
+        return;
+      } catch (e) { /* fall through */ }
+    }
+    try {
+      fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: body,
+        keepalive: true,
+        // Anonymous — no cookies, so we don't accidentally leak the
+        // dealer's first-party session into our analytics endpoint.
+        credentials: "omit",
+        mode: "cors",
+      }).catch(function () { /* swallow — analytics is best-effort */ });
+    } catch (e) { /* noop */ }
+  }
+
+  function track(eventType, extra) {
+    if (!trackHost || !trackDealerId) return;
+    var sid = lsSession();
+    var evt = Object.assign(
+      {
+        event_type: eventType,
+        page_url: typeof location !== "undefined" ? location.href : null,
+        session_id: sid,
+      },
+      extra || {},
+    );
+    trackBuffer.push(evt);
+    if (trackTimer) clearTimeout(trackTimer);
+    trackTimer = setTimeout(function () { flushTrack(false); }, 250);
+  }
+
+  if (typeof window !== "undefined") {
+    // sendBeacon-based flush on page hide so escalation/click events
+    // survive the customer navigating away mid-session.
+    window.addEventListener("pagehide", function () { flushTrack(true); });
+    window.addEventListener("beforeunload", function () { flushTrack(true); });
+  }
+
   // Days since the customer first received an offer. Returns 0
   // when no offer or no anchor.
   function daysSinceOffer(state) {
@@ -783,6 +852,7 @@
 
   function closeInventoryOverlay() {
     if (!overlayFrame) return;
+    track("overlay_closed", {});
     overlayBackdrop.classList.remove("hc-open");
     overlayFrame.classList.remove("hc-open");
     document.body.style.overflow = "";
@@ -804,9 +874,27 @@
       return;
     }
 
+    // Wire analytics — done once on first widget creation. host
+    // defaults to hartecash.com so the loader doesn't depend on the
+    // dealer passing it.
+    trackHost = (cfg.host || "https://hartecash.com").replace(/\/$/, "");
+    trackDealerId = cfg.dealerId;
+
     var vehicle = detectInventoryVehicle();
     var state = readState(cfg.dealerId);
     var displayMode = cfg.displayMode || "floating"; // "floating" | "inline"
+
+    track("widget_loaded", {
+      tier: escalationTier(state),
+      submission_token: state && state.token,
+      payload: { display_mode: displayMode },
+    });
+    if (vehicle && vehicle.label) {
+      track("vehicle_detected", {
+        vehicle_label: vehicle.label,
+        vehicle_msrp: vehicle.msrp || 0,
+      });
+    }
 
     // Resize listener — applies to inline mode where we need to
     // grow the iframe with content.
@@ -832,6 +920,17 @@
           patch.offer_made_at = d.offer_made_at;
         }
         writeState(cfg.dealerId, patch);
+        track("state_received", {
+          submission_token: patch.token,
+          payload: { status: patch.status, offer: patch.offer || 0 },
+        });
+        // High-signal shortcuts so analytics dashboards don't have
+        // to derive these from state_received payloads.
+        if (patch.status === "offer_made") {
+          track("offer_made", { submission_token: patch.token, payload: { offer: patch.offer || 0 } });
+        } else if (patch.status === "deal_accepted") {
+          track("deal_accepted", { submission_token: patch.token });
+        }
         // Refresh button copy in place if floating button exists
         if (cfg._refreshFloating) cfg._refreshFloating();
       }
@@ -928,6 +1027,7 @@
         // honor the boost intent (off-VDP, has offer) so dormant
         // customers land on the photo accelerator instead of the
         // generic flow.
+        track("escalation_fired", { tier: 3, submission_token: s.token });
         setTimeout(function () {
           var v = detectInventoryVehicle();
           var c = getFloatingCopy(s, v);
@@ -940,6 +1040,8 @@
         }, 1500);
         return;
       }
+
+      track("escalation_fired", { tier: 2, submission_token: s.token });
 
       // Tier 2 — soft toast above the pill. Auto-dismiss after 8s
       // or on click (which opens the overlay).
@@ -981,27 +1083,43 @@
       var c = getFloatingCopy(s, v);
       var host = (cfg.host || "https://hartecash.com").replace(/\/$/, "");
 
+      track("pill_clicked", {
+        intent: c.intent,
+        tier: escalationTier(s),
+        vehicle_label: v && v.label,
+        vehicle_msrp: v && v.msrp,
+        submission_token: s && s.token,
+      });
+
       // Boost intent — off-VDP returning customer wants to bump
       // their offer. Deep-link to /boost-offer/:token in the
       // overlay iframe instead of the lookup flow.
       if (c.intent === "boost" && s.token) {
         openDirectOverlay(host + "/boost-offer/" + encodeURIComponent(s.token));
+        track("overlay_opened", { intent: "boost", submission_token: s.token });
         return;
       }
       // View intent — accepted deal. Deep-link to /deal/:token.
       if (c.intent === "view" && s.token) {
         openDirectOverlay(host + "/deal/" + encodeURIComponent(s.token));
+        track("overlay_opened", { intent: "view", submission_token: s.token });
         return;
       }
       // Resume intent — submission in progress. Drop them into
       // their portal (which dispatches by status).
       if (c.intent === "resume" && s.token) {
         openDirectOverlay(host + "/my-submission/" + encodeURIComponent(s.token));
+        track("overlay_opened", { intent: "resume", submission_token: s.token });
         return;
       }
       // Default — open the embed flow with vehicle context
       // (apply / start intents).
       openInventoryOverlay(cfg, v);
+      track("overlay_opened", {
+        intent: c.intent,
+        vehicle_label: v && v.label,
+        vehicle_msrp: v && v.msrp,
+      });
     });
 
     document.body.appendChild(btn);
