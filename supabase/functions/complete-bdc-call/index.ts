@@ -10,18 +10,18 @@
 //                           If new amount > previous offered_price,
 //                           writes offered_price + fires
 //                           customer_offer_increased (matches the
---                           SubmissionDetailSheet pattern).
+//                           SubmissionDetailSheet pattern).
 //   customer_pushed_back  → captures rep notes, no state change.
 //                           Cadence continues with the next touch.
 //   left_voicemail        → schedules ANOTHER voice touch in 48h
 //                           (overrides the cadence's next_due_at)
---                           since voicemail-only doesn't count as
+//                           since voicemail-only doesn't count as
 //                           a real contact.
 //   no_answer             → same as voicemail but 24h backoff.
 //   not_interested        → flips progress_status to 'declined' which
---                           cascades to cadence_state='reengage'
+//                           cascades to cadence_state='reengage'
 //                           with a 7-day cooldown via the bootstrap
---                           trigger.
+//                           trigger.
 //   wrong_number          → marks submission with wrong_number flag;
 //                           cadence pauses indefinitely.
 //
