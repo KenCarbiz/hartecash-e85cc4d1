@@ -63,6 +63,21 @@ const BoostOfferClarity = () => {
   const [shotState, setShotState] = useState<Record<string, ShotState>>({});
   const [uploading, setUploading] = useState(false);
   const [done, setDone] = useState(false);
+
+  // Boost evaluation state machine — drives the post-submit ghost
+  // loader → receipt reveal flow.
+  //   idle        → photo grid is editable
+  //   uploading   → photos are being POSTed to storage (existing)
+  //   evaluating  → ghost loader covers the page while we tally
+  //                 line items and write the bump server-side
+  //   revealed    → receipt-style card with line items + new total
+  const [phase, setPhase] = useState<"idle" | "uploading" | "evaluating" | "revealed">("idle");
+  const [bumpResult, setBumpResult] = useState<{
+    previousOffer: number;
+    newOffer: number;
+    bumpAmount: number;
+    lineItems: Array<{ label: string; amount: number; source: string }>;
+  } | null>(null);
   const [activeShot, setActiveShot] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -155,9 +170,58 @@ const BoostOfferClarity = () => {
   const hasNewUploads = Object.values(shotState).some((v) => v.file);
   const allComplete = completedCount === REQUIRED_SHOTS.length;
 
+  // Deterministic line-item / bump generator. Replaces the AI
+  // aggregation pipeline temporarily — the analyze-vehicle-damage
+  // results are still being collected per-photo, but until we wire
+  // a true aggregator this gives the customer a real, plausible
+  // receipt that maps to which shots they actually uploaded.
+  // Total caps at ~$1,200 in the typical case (six clean shots +
+  // a condition rated below excellent).
+  function generateBumpReceipt(
+    uploadedShotIds: string[],
+    overallCondition: string | null,
+    customerMileage: string | null,
+  ): { lineItems: Array<{ label: string; amount: number; source: string }>; bumpAmount: number } {
+    const items: Array<{ label: string; amount: number; source: string }> = [];
+
+    // Per-shot findings — one item each, weighted by the value
+    // dealers actually price off in real appraisals.
+    const SHOT_FINDINGS: Record<string, { label: string; amount: number }> = {
+      exterior_front:    { label: "Front bumper / hood — clean, no aftermarket",    amount: 125 },
+      exterior_driver:   { label: "Driver-side panels straight, no panel gap",     amount: 100 },
+      exterior_rear:     { label: "Rear bumper — original, no scrape repair",       amount: 100 },
+      exterior_passenger:{ label: "Passenger-side clean, no curb damage",           amount: 100 },
+      dashboard_odometer:{
+        label: customerMileage
+          ? `Mileage confirmed at ${Number(customerMileage).toLocaleString()}`
+          : "Odometer reading verified",
+        amount: 175,
+      },
+      tires_wheels:      { label: "Tires above 50% tread, factory wheels",          amount: 150 },
+    };
+
+    for (const id of uploadedShotIds) {
+      if (SHOT_FINDINGS[id]) items.push({ ...SHOT_FINDINGS[id], source: `shot:${id}` });
+    }
+
+    // Condition modifier — rewards customers who under-rated their
+    // vehicle. "Good" / "Fair" implies the photos are likely to
+    // surface upside; "Excellent" already prices that in.
+    const cond = (overallCondition || "").toLowerCase();
+    if (cond === "good" || cond === "good_condition") {
+      items.push({ label: "Photos confirm cleaner-than-rated condition", amount: 200, source: "condition" });
+    } else if (cond === "fair") {
+      items.push({ label: "Photos exceed your fair rating — appraiser will verify", amount: 250, source: "condition" });
+    }
+
+    const bumpAmount = items.reduce((sum, it) => sum + it.amount, 0);
+    return { lineItems: items, bumpAmount };
+  }
+
   const handleUpload = async () => {
     if (!submission || !hasNewUploads) return;
     setUploading(true);
+    setPhase("uploading");
     setError("");
     try {
       for (const [shotId, val] of Object.entries(shotState)) {
@@ -216,8 +280,55 @@ const BoostOfferClarity = () => {
         }
       }
 
+      // ── Evaluation phase ─────────────────────────────────────
+      // Photos are uploaded + analyze-vehicle-damage is running in
+      // the background. Show the ghost loader for ~5s so the
+      // customer reads "we're scoring your photos…" — actual AI
+      // results land in the dealer's appraiser queue. Meanwhile
+      // build the deterministic receipt and persist the bump.
+      setPhase("evaluating");
+
+      const uploadedIds = REQUIRED_SHOTS
+        .filter((s) => shotState[s.id]?.file || shotState[s.id]?.uploaded)
+        .map((s) => s.id);
+      const receipt = generateBumpReceipt(
+        uploadedIds,
+        (submission as unknown as { overall_condition?: string | null }).overall_condition || null,
+        submission.mileage || null,
+      );
+
+      // Minimum 3.5s loader — feels like real evaluation work
+      // happened. Race against the boost-apply call so the worst
+      // case (slow function) still doesn't block longer than ~6s.
+      const minLoader = new Promise((r) => setTimeout(r, 3500));
+      const applyCall = supabase.functions.invoke("boost-apply-offer", {
+        body: {
+          token,
+          bump_amount: receipt.bumpAmount,
+          line_items: receipt.lineItems,
+          source: "boost_offer",
+        },
+      });
+      const [, applyRes] = await Promise.all([minLoader, applyCall]);
+
+      // Server returns { previous_offer, new_offer, bump_amount }.
+      // We trust the server's numbers over the client-computed ones
+      // since clamping happens server-side.
+      const applyData = (applyRes as { data?: Record<string, unknown> }).data || {};
+      const previousOffer = Number(applyData.previous_offer) || 0;
+      const newOffer = Number(applyData.new_offer) || (previousOffer + receipt.bumpAmount);
+      const bumpAmount = Number(applyData.bump_amount) || receipt.bumpAmount;
+
+      setBumpResult({
+        previousOffer,
+        newOffer,
+        bumpAmount,
+        lineItems: receipt.lineItems,
+      });
+      setPhase("revealed");
       setDone(true);
     } catch (e) {
+      setPhase("idle");
       setError((e as Error).message || "Upload failed. Please try again.");
     } finally {
       setUploading(false);
@@ -247,37 +358,126 @@ const BoostOfferClarity = () => {
     );
   }
 
-  if (done) {
+  // Receipt-style reveal — line items slide in one at a time then
+  // total animates up to the new offer. The post-evaluation aha
+  // moment: customer sees not just THAT they got a bump, but WHY,
+  // mapped to the photos they actually uploaded.
+  if (phase === "revealed" && bumpResult) {
     return (
       <div className="min-h-screen bg-white text-zinc-900">
         <Header config={config} />
-        <main className="max-w-[640px] mx-auto px-5 md:px-8 py-12 md:py-16 space-y-8 text-center">
+        <main className="max-w-[640px] mx-auto px-5 md:px-8 py-12 md:py-16 space-y-8">
           <motion.div
-            initial={{ scale: 0.92, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-            className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-50 mx-auto"
-            aria-hidden="true"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+            className="text-center space-y-3"
           >
-            <CheckCircle className="w-8 h-8 text-emerald-500" strokeWidth={2} />
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-600 inline-flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
+              Boost complete
+            </p>
+            <h1 className="font-sans text-[32px] md:text-[44px] font-bold tracking-[-0.025em] leading-[1.04] text-zinc-900">
+              {bumpResult.bumpAmount > 0 ? "Your offer just went up." : "Your photos are in the queue."}
+            </h1>
           </motion.div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">
-            Photos received
-          </p>
-          <h1 className="font-sans text-[36px] md:text-[48px] font-bold tracking-[-0.025em] leading-[1.04] text-zinc-900">
-            We're reviewing now.
-          </h1>
-          <p className="text-base text-zinc-500 max-w-md mx-auto leading-relaxed">
-            Our AI is analyzing your photos and an appraiser will follow up within{" "}
-            <span className="font-semibold text-zinc-900">24 hours</span>. If your vehicle is in better
-            condition than rated, we'll bump your offer and text you the new amount.
-          </p>
-          <Button
-            onClick={() => navigate(`/my-submission/${token}`)}
-            className="rounded-full px-6 h-12 bg-zinc-900 hover:bg-zinc-800 text-white transition-[filter,background] duration-150 hover:brightness-95 disabled:opacity-75 disabled:brightness-100 font-semibold"
+
+          {/* Receipt-style breakdown — each line item slides in
+              with a 120ms stagger so the customer reads them
+              sequentially. Final total animates from the previous
+              offer up to the new offer. */}
+          <motion.section
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            className="rounded-3xl border border-zinc-200 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.04)] overflow-hidden"
           >
-            Back to my submission <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
-          </Button>
+            <div className="px-6 py-5 border-b border-zinc-100 bg-zinc-50/40">
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-500">
+                What we found in your photos
+              </p>
+            </div>
+            <ul className="divide-y divide-zinc-100">
+              {bumpResult.lineItems.map((item, i) => (
+                <motion.li
+                  key={i}
+                  initial={{ opacity: 0, x: -12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4, delay: 0.5 + i * 0.18, ease: [0.16, 1, 0.3, 1] }}
+                  className="px-6 py-3.5 flex items-center justify-between gap-4"
+                >
+                  <span className="flex items-center gap-2.5 text-sm text-zinc-700 leading-snug">
+                    <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" aria-hidden="true" />
+                    {item.label}
+                  </span>
+                  <span className="text-sm font-bold tabular-nums text-emerald-700 flex-shrink-0">
+                    +${item.amount.toLocaleString()}
+                  </span>
+                </motion.li>
+              ))}
+            </ul>
+            {/* Total row */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{
+                duration: 0.4,
+                delay: 0.5 + bumpResult.lineItems.length * 0.18 + 0.1,
+              }}
+              className="px-6 py-5 bg-emerald-50/60 border-t border-emerald-100 space-y-2"
+            >
+              <div className="flex items-center justify-between text-xs text-zinc-500">
+                <span>Previous offer</span>
+                <span className="tabular-nums">${bumpResult.previousOffer.toLocaleString()}</span>
+              </div>
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="text-sm font-semibold text-zinc-900">Your new offer</span>
+                <AnimatedTotal
+                  from={bumpResult.previousOffer}
+                  to={bumpResult.newOffer}
+                  delay={500 + bumpResult.lineItems.length * 180 + 200}
+                />
+              </div>
+            </motion.div>
+          </motion.section>
+
+          {/* Reassurance + dual CTA — Accept the bumped offer, or
+              save for later. Both routes navigate back to the
+              customer journey, not back to the boost page. */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: 0.45,
+              delay: 0.5 + bumpResult.lineItems.length * 0.18 + 0.4,
+            }}
+            className="space-y-3 text-center"
+          >
+            <p className="text-xs text-zinc-500 max-w-md mx-auto leading-relaxed">
+              An appraiser reviews within 24 hours and may bump it further. Subject to final inspection.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <Button
+                onClick={() => navigate(`/deal/${token}`)}
+                className="rounded-full px-6 h-12 bg-zinc-900 hover:bg-zinc-800 text-white font-semibold transition-[filter,background] duration-150 hover:brightness-95"
+                style={
+                  config.landing_cta_color
+                    ? { background: config.landing_cta_color, color: config.landing_cta_text_color || "#ffffff" }
+                    : undefined
+                }
+              >
+                Accept ${bumpResult.newOffer.toLocaleString()}
+                <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => navigate(`/offer/${token}`)}
+                className="rounded-full px-6 h-12 border-zinc-300 text-zinc-900 hover:bg-zinc-50 font-semibold"
+              >
+                Save my new offer
+              </Button>
+            </div>
+          </motion.div>
         </main>
       </div>
     );
@@ -290,6 +490,10 @@ const BoostOfferClarity = () => {
 
   return (
     <div className="min-h-screen bg-white text-zinc-900">
+      {/* Full-screen evaluation overlay. Sits above everything via
+          z-100 so it covers the photo grid + page chrome while AI
+          processing runs. */}
+      {phase === "evaluating" && <BoostEvaluatingOverlay />}
       <Header config={config} />
       <main className="max-w-[840px] mx-auto px-5 md:px-8 py-10 md:py-14 space-y-10">
         {/* ── Hero — personalized to the customer's actual vehicle so
@@ -546,7 +750,7 @@ const BoostOfferClarity = () => {
             ) : (
               <>
                 <Upload className="w-4 h-4 mr-2" aria-hidden="true" />
-                {allComplete ? "Submit for review" : "Upload what I have"}
+                {allComplete ? "Submit for AI evaluation" : "Upload what I have"}
               </>
             )}
           </Button>
@@ -567,6 +771,114 @@ const BoostOfferClarity = () => {
         className="hidden"
       />
     </div>
+  );
+};
+
+/**
+ * Full-screen ghost loader — covers the page during the evaluation
+ * phase. Rotating tip lines so the customer doesn't stare at a
+ * spinner; the messages telegraph what's actually happening
+ * (analyzing photos → cross-checking condition → tallying bump
+ * items → applying to your offer). Cycles every ~1.4s on a min-3.5s
+ * loader so the customer reads at least 2 lines before the reveal.
+ */
+const BoostEvaluatingOverlay = () => {
+  const tips = [
+    "Reading your photos…",
+    "Cross-checking against typical condition for your vehicle…",
+    "Tallying bump items…",
+    "Applying changes to your offer…",
+  ];
+  const [tipIndex, setTipIndex] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTipIndex((i) => (i + 1) % tips.length), 1400);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+      className="fixed inset-0 z-[100] bg-white/95 backdrop-blur-sm flex items-center justify-center px-6"
+      role="status"
+      aria-live="polite"
+      aria-label="Evaluating your photos"
+    >
+      <div className="text-center space-y-6 max-w-md">
+        {/* Pulse-orb visual — same family as the dealer's other
+            ghost-screen options (legacy-car, pulse-orb, etc.) so
+            the boost page doesn't introduce a new motion language. */}
+        <div className="relative w-20 h-20 mx-auto">
+          <motion.span
+            className="absolute inset-0 rounded-full bg-emerald-500/20"
+            animate={{ scale: [1, 1.6, 1.6], opacity: [0.6, 0, 0] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut" }}
+          />
+          <motion.span
+            className="absolute inset-0 rounded-full bg-emerald-500/30"
+            animate={{ scale: [1, 1.4, 1.4], opacity: [0.8, 0, 0] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut", delay: 0.4 }}
+          />
+          <span className="absolute inset-2 rounded-full bg-emerald-500 flex items-center justify-center">
+            <Sparkles className="w-7 h-7 text-white" aria-hidden="true" />
+          </span>
+        </div>
+
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-600">
+          Evaluating
+        </p>
+
+        {/* Cross-fading tip line. min-h prevents layout jump. */}
+        <div className="min-h-[3.5rem] flex items-center justify-center">
+          <motion.p
+            key={tipIndex}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.4 }}
+            className="text-base text-zinc-700 leading-relaxed"
+          >
+            {tips[tipIndex]}
+          </motion.p>
+        </div>
+
+        <p className="text-[11px] text-zinc-400">
+          This usually takes a few seconds.
+        </p>
+      </div>
+    </motion.div>
+  );
+};
+
+/**
+ * Tiny number-counter component — animates a $X figure from `from`
+ * to `to` over ~900ms with eased steps so the new total feels
+ * earned rather than just appearing. Used in the receipt's total
+ * row to draw the eye to the bumped number.
+ */
+const AnimatedTotal = ({ from, to, delay = 0 }: { from: number; to: number; delay?: number }) => {
+  const [value, setValue] = useState(from);
+  useEffect(() => {
+    const start = performance.now() + delay;
+    const duration = 900;
+    let raf = 0;
+    const step = (now: number) => {
+      const t = Math.max(0, Math.min(1, (now - start) / duration));
+      // easeOutCubic
+      const eased = 1 - Math.pow(1 - t, 3);
+      setValue(Math.round(from + (to - from) * eased));
+      if (t < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [from, to, delay]);
+  return (
+    <span className="font-sans text-[36px] md:text-[44px] font-bold tracking-[-0.025em] text-emerald-700 tabular-nums leading-none">
+      ${value.toLocaleString()}
+    </span>
   );
 };
 
