@@ -116,32 +116,15 @@ async function decodeViaNhtsa(vin: string): Promise<Record<string, unknown> | nu
   }
 }
 
-// Synthetic Black Book response served when demo_mode is on for the
-// caller's tenant (or BB_DEMO_MODE=true env override). The shape mirrors
-// a real BB vehicle so calculateOffer / SellCarForm / QuickOfferForm
-// don't need conditional branches downstream — only the customer-facing
-// offer amount gets clamped to site_config.demo_offer_amount on insert.
-function buildDemoVehicle(vin: string | undefined, plate: string | undefined): Record<string, unknown> {
+// Synthetic Black Book PRICING served when demo_mode is on. We
+// intentionally do NOT include vehicle identity (year/make/model)
+// here — we always decode the actual VIN via Black Book or NHTSA
+// so the customer sees their real car. Demo mode only clamps the
+// number, not the metadata.
+function buildDemoPricing(): Record<string, unknown> {
   return {
-    uvc: "DEMO-UVC-0000000",
-    vin: vin || "1FTFW1ET5DKE12345",
-    year: 2021,
-    make: "Toyota",
-    model: "Camry",
-    series: "SE",
-    style: "Sedan 4D",
-    class_name: "Mid-Size",
     msrp: 28999,
     price_includes: "AT,4CY,AC,PS,PB,PW,PL,TW,CC,AB,SE,FM",
-    drivetrain: "FWD",
-    transmission: "Automatic",
-    engine: "4-Cylinder",
-    fuel_type: "Gasoline",
-    exterior_colors: [
-      { code: "", name: "Midnight Black", hex: "#0b0b0b" },
-      { code: "", name: "Silver Metallic", hex: "#b8b8b8" },
-      { code: "", name: "Pearl White", hex: "#f5f5f0" },
-    ],
     mileage_adj: 0,
     regional_adj: 0,
     base_whole_avg: 22000,
@@ -155,10 +138,37 @@ function buildDemoVehicle(vin: string | undefined, plate: string | undefined): R
     residual_24: 19500,
     residual_36: 17500,
     residual_48: 15500,
+  };
+}
+
+// Last-resort generic stub — only used when neither BB nor NHTSA
+// could decode anything (e.g. plate-only lookup with no BB creds,
+// nothing to fall back to). Even this no longer hardcodes "Camry"
+// since that misled dealers into thinking their VIN flow was
+// returning the wrong vehicle. Empty year/make/model so the UI
+// gates on "no vehicle found" instead of confidently showing the
+// wrong one.
+function buildEmptyVehicle(vin: string | undefined, plate: string | undefined): Record<string, unknown> {
+  return {
+    uvc: "",
+    vin: vin || "",
+    year: "",
+    make: "",
+    model: "",
+    series: "",
+    style: "",
+    class_name: "",
+    drivetrain: "",
+    transmission: "",
+    engine: "",
+    fuel_type: "",
+    exterior_colors: [],
     recall_count: 0,
     recalls: [],
+    ...buildDemoPricing(),
     _demo: true,
     _demo_plate: plate || null,
+    _stub: true,
   };
 }
 
@@ -174,7 +184,12 @@ function buildCacheKey(params: {
   uvc?: string;
   adddeductcodes?: string;
 }): string {
+  // v2 — bumped to invalidate cached responses from before the
+  // BB→NHTSA contract change. Without this, cached "2021 Camry"
+  // demo stubs would keep coming back for VINs that should now
+  // decode to their real vehicle.
   return [
+    "v2",
     params.lookup_type,
     params.vin || "",
     params.plate || "",
@@ -224,44 +239,70 @@ serve(async (req) => {
       }
     }
 
-    // Auto-fallback: if BB credentials are absent and we have a real
-    // VIN, decode it via NHTSA so the customer still sees their actual
-    // year / make / model / trim / drivetrain on the next screen.
-    // Plate-only lookups can't be served by NHTSA (no plate registry),
-    // so those continue to hit demo mode.
+    // ── VIN decoding contract ──────────────────────────────────────────
+    // Every VIN entry goes through Black Book first, NHTSA second.
+    // Demo mode no longer short-circuits this — the customer must
+    // always see their REAL vehicle (a Nissan Armada VIN must never
+    // come back as a Toyota Camry just because the dealer toggled
+    // demo mode in admin). Demo mode only swaps in synthetic pricing
+    // on top of the real vehicle metadata.
     const bbCredsMissing = !username || !password;
-    if (!demoMode && bbCredsMissing && lookup_type === "vin" && vin) {
-      console.warn("BB credentials missing — attempting NHTSA fallback for VIN");
-      const nhtsa = await decodeViaNhtsa(vin);
-      if (nhtsa) {
-        const payload = { error: null, vehicles: [nhtsa], nhtsa_fallback: true };
-        return new Response(JSON.stringify(payload), {
+    if (lookup_type === "vin" && vin) {
+      // 1. Black Book — only when creds exist AND demo_mode is off.
+      //    Demo mode skips BB to avoid burning live API credits on
+      //    sandbox traffic, but still decodes the VIN via NHTSA so
+      //    the vehicle identity is real.
+      if (!demoMode && !bbCredsMissing) {
+        // Fall through to the live BB path below — handled in the
+        // existing code further down. demoMode stays false.
+      } else {
+        // 2. NHTSA fallback — gives us real year/make/model/trim/
+        //    drivetrain/engine. Pricing fields come back zero so
+        //    we layer demo pricing on top when demo mode is on.
+        console.warn(
+          demoMode
+            ? "Demo mode on — decoding VIN via NHTSA so the vehicle is still real"
+            : "BB credentials missing — using NHTSA fallback for VIN identity",
+        );
+        const nhtsa = await decodeViaNhtsa(vin);
+        if (nhtsa) {
+          const merged = demoMode
+            ? { ...nhtsa, ...buildDemoPricing(), _demo: true, _nhtsa: true }
+            : nhtsa;
+          const payload = {
+            error: null,
+            vehicles: [merged],
+            ...(demoMode ? { demo_mode: true } : {}),
+            nhtsa_fallback: true,
+          };
+          return new Response(JSON.stringify(payload), {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json",
+              "X-BB-Cache": demoMode ? "NHTSA+DEMO" : "NHTSA",
+            },
+          });
+        }
+        // NHTSA returned nothing usable — VIN may be invalid. Surface
+        // an empty stub so the UI prompts the customer to re-check
+        // rather than confidently showing the wrong car.
+        console.warn("NHTSA returned no usable data for VIN — returning empty stub");
+        const stub = buildEmptyVehicle(vin, plate);
+        return new Response(JSON.stringify({ error: null, vehicles: [stub], demo_mode: demoMode, nhtsa_unmatched: true }), {
           status: 200,
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json",
-            "X-BB-Cache": "NHTSA",
-          },
+          headers: { ...corsHeaders, "Content-Type": "application/json", "X-BB-Cache": "EMPTY" },
         });
       }
-      console.warn("NHTSA fallback returned no usable data — falling through to demo");
-      demoMode = true;
-    }
-    if (!demoMode && bbCredsMissing) {
-      console.warn("BB credentials missing — auto-engaging demo mode for this lookup");
-      demoMode = true;
     }
 
-    if (demoMode) {
-      const stub = buildDemoVehicle(vin, plate);
-      const payload = { error: null, vehicles: [stub], demo_mode: true };
-      return new Response(JSON.stringify(payload), {
+    // Plate-only path — no NHTSA equivalent, so demo mode here still
+    // returns the empty stub (UI gates on missing year/make/model).
+    if (lookup_type === "plate" && (demoMode || bbCredsMissing)) {
+      const stub = buildEmptyVehicle(vin, plate);
+      return new Response(JSON.stringify({ error: null, vehicles: [stub], demo_mode: true }), {
         status: 200,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json",
-          "X-BB-Cache": "DEMO",
-        },
+        headers: { ...corsHeaders, "Content-Type": "application/json", "X-BB-Cache": "DEMO-PLATE" },
       });
     }
 
@@ -388,6 +429,17 @@ serve(async (req) => {
     const vehicleList = bbData.used_vehicles?.used_vehicle_list || [];
     if (vehicleList.length > 0) {
       console.log("BB raw vehicle keys:", Object.keys(vehicleList[0]).join(", "));
+    } else if (lookup_type === "vin" && vin) {
+      // BB returned 200 OK with no vehicles — happens for newer
+      // VINs not yet in their catalog. Fall back to NHTSA so the
+      // customer still sees the right year/make/model.
+      console.warn("BB returned empty vehicle_list — falling back to NHTSA");
+      const nhtsa = await decodeViaNhtsa(vin);
+      if (nhtsa) {
+        return new Response(JSON.stringify({ error: null, vehicles: [nhtsa], nhtsa_fallback: true, bb_message: "BB returned no match" }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json", "X-BB-Cache": "NHTSA" }
+        });
+      }
     }
 
     // Fetch exterior colors for each vehicle UVC via GraphQL + parse specs from price_includes
