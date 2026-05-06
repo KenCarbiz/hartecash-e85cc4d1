@@ -1123,6 +1123,54 @@ export type Database = {
         }
         Relationships: []
       }
+      embed_events: {
+        Row: {
+          created_at: string
+          dealership_id: string
+          event_type: string
+          id: string
+          intent: string | null
+          page_url: string | null
+          payload: Json | null
+          session_id: string | null
+          submission_token: string | null
+          tier: number | null
+          user_agent: string | null
+          vehicle_label: string | null
+          vehicle_msrp: number | null
+        }
+        Insert: {
+          created_at?: string
+          dealership_id: string
+          event_type: string
+          id?: string
+          intent?: string | null
+          page_url?: string | null
+          payload?: Json | null
+          session_id?: string | null
+          submission_token?: string | null
+          tier?: number | null
+          user_agent?: string | null
+          vehicle_label?: string | null
+          vehicle_msrp?: number | null
+        }
+        Update: {
+          created_at?: string
+          dealership_id?: string
+          event_type?: string
+          id?: string
+          intent?: string | null
+          page_url?: string | null
+          payload?: Json | null
+          session_id?: string | null
+          submission_token?: string | null
+          tier?: number | null
+          user_agent?: string | null
+          vehicle_label?: string | null
+          vehicle_msrp?: number | null
+        }
+        Relationships: []
+      }
       follow_ups: {
         Row: {
           channel: string
@@ -2797,6 +2845,8 @@ export type Database = {
           demo_offer_amount: number
           email: string | null
           embed_config: Json
+          embed_escalation_enabled: boolean
+          embed_escalation_max_tier: number
           enable_animations: boolean
           enable_dl_ocr: boolean
           established_year: number | null
@@ -2907,6 +2957,8 @@ export type Database = {
           demo_offer_amount?: number
           email?: string | null
           embed_config?: Json
+          embed_escalation_enabled?: boolean
+          embed_escalation_max_tier?: number
           enable_animations?: boolean
           enable_dl_ocr?: boolean
           established_year?: number | null
@@ -3017,6 +3069,8 @@ export type Database = {
           demo_offer_amount?: number
           email?: string | null
           embed_config?: Json
+          embed_escalation_enabled?: boolean
+          embed_escalation_max_tier?: number
           enable_animations?: boolean
           enable_dl_ocr?: boolean
           established_year?: number | null
@@ -3215,6 +3269,9 @@ export type Database = {
           drivable: string | null
           drivetrain: string | null
           email: string | null
+          embed_source: string | null
+          embed_vehicle_label: string | null
+          embed_vehicle_msrp: number | null
           engine_issues: string[] | null
           estimated_offer_high: number | null
           estimated_offer_low: number | null
@@ -3246,6 +3303,7 @@ export type Database = {
           name: string | null
           next_step: string | null
           num_keys: string | null
+          offer_made_at: string | null
           offered_price: number | null
           on_the_way_at: string | null
           outcome_accepted: boolean | null
@@ -3342,6 +3400,9 @@ export type Database = {
           drivable?: string | null
           drivetrain?: string | null
           email?: string | null
+          embed_source?: string | null
+          embed_vehicle_label?: string | null
+          embed_vehicle_msrp?: number | null
           engine_issues?: string[] | null
           estimated_offer_high?: number | null
           estimated_offer_low?: number | null
@@ -3373,6 +3434,7 @@ export type Database = {
           name?: string | null
           next_step?: string | null
           num_keys?: string | null
+          offer_made_at?: string | null
           offered_price?: number | null
           on_the_way_at?: string | null
           outcome_accepted?: boolean | null
@@ -3469,6 +3531,9 @@ export type Database = {
           drivable?: string | null
           drivetrain?: string | null
           email?: string | null
+          embed_source?: string | null
+          embed_vehicle_label?: string | null
+          embed_vehicle_msrp?: number | null
           engine_issues?: string[] | null
           estimated_offer_high?: number | null
           estimated_offer_low?: number | null
@@ -3500,6 +3565,7 @@ export type Database = {
           name?: string | null
           next_step?: string | null
           num_keys?: string | null
+          offer_made_at?: string | null
           offered_price?: number | null
           on_the_way_at?: string | null
           outcome_accepted?: boolean | null
