@@ -8,6 +8,7 @@ import { safeInvoke } from "@/lib/safeInvoke";
 import { Button } from "@/components/ui/button";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useIsMobile } from "@/hooks/use-mobile";
+import CaptureWithOverlay from "@/components/sell-form/CaptureWithOverlay";
 
 /**
  * Clarity-tier "Boost my offer" page — a focused, opinionated
@@ -143,16 +144,23 @@ const BoostOfferClarity = () => {
     };
   }, [token, submission]);
 
+  // Tile-tap behavior — opens the CarMax-style overlay camera by
+  // setting activeShot. The CaptureWithOverlay component (rendered
+  // conditionally below) requests getUserMedia and shows the
+  // silhouette guide. If the customer hits "Choose from library"
+  // or the camera isn't available, we fall through to the native
+  // file picker via fileInputRef.
   const handleTileClick = (shotId: string) => {
     setActiveShot(shotId);
-    fileInputRef.current?.click();
   };
 
-  const handleShotFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !activeShot) return;
+  // Common path for any captured image — both camera capture and
+  // native picker funnel through here so the preview / state /
+  // size validation logic lives in one place.
+  const acceptCapturedFile = (file: File) => {
+    if (!activeShot) return;
     if (!file.type.startsWith("image/")) {
-      setError("Please select an image file.");
+      setError("That doesn't look like an image. Please try again.");
       return;
     }
     if (file.size > MAX_FILE_SIZE) {
@@ -162,11 +170,28 @@ const BoostOfferClarity = () => {
     setError("");
     const reader = new FileReader();
     reader.onload = (ev) => {
-      setShotState((prev) => ({ ...prev, [activeShot]: { file, preview: ev.target?.result as string } }));
+      setShotState((prev) => ({
+        ...prev,
+        [activeShot]: { file, preview: ev.target?.result as string },
+      }));
     };
     reader.readAsDataURL(file);
     setActiveShot(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleShotFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) acceptCapturedFile(file);
+  };
+
+  // Library fallback — fires when the camera modal can't get a
+  // stream OR when the customer explicitly taps the library icon.
+  // Triggers the existing hidden <input type="file"> so the OS
+  // photo picker opens. activeShot stays set; acceptCapturedFile
+  // runs on selection.
+  const triggerLibraryFallback = () => {
+    fileInputRef.current?.click();
   };
 
   const removeShot = (shotId: string) => {
@@ -825,6 +850,25 @@ const BoostOfferClarity = () => {
         onChange={handleShotFile}
         className="hidden"
       />
+
+      {/* CarMax-style overlay capture. Mounts only when activeShot
+          is set (after a tile-tap) so we don't request camera
+          permission on page load. The component handles its own
+          stream lifecycle — every exit path stops the tracks. */}
+      {activeShot && (() => {
+        const shotDef = REQUIRED_SHOTS.find((s) => s.id === activeShot);
+        if (!shotDef) return null;
+        return (
+          <CaptureWithOverlay
+            shotKey={shotDef.id}
+            shotLabel={shotDef.label}
+            tip={shotDef.tip}
+            onCapture={(file) => acceptCapturedFile(file)}
+            onFallback={triggerLibraryFallback}
+            onCancel={() => setActiveShot(null)}
+          />
+        );
+      })()}
     </div>
   );
 };
