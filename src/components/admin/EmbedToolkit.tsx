@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Copy, Check, Code2, ExternalLink, Monitor, MapPin, PanelRightOpen, LayoutList, Lightbulb, MousePointerClick, Award, Info, Eye, EyeOff, Layout } from "lucide-react";
+import { Copy, Check, Code2, ExternalLink, Monitor, MapPin, PanelRightOpen, LayoutList, Lightbulb, MousePointerClick, Award, Info, Eye, EyeOff, Layout, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { LANDING_TEMPLATES, type LandingTemplate } from "@/hooks/useSiteConfig";
@@ -235,6 +235,57 @@ window.addEventListener("message", function(e) {
 })();
 </script>`;
 
+  // ── Snippet: Inventory-Aware Floating Widget (v3) ──
+  // The state-aware re-engagement widget. Detects the inventory
+  // vehicle on VDPs (schema.org JSON-LD → OG meta) and reshapes
+  // its copy around the customer's submission state. Persists the
+  // resume token in localStorage so a returning visitor sees
+  // "Apply your $X toward this vehicle" on a VDP and "Increase
+  // your $X trade offer" everywhere else.
+  const inventoryFloatingSnippet = `<!-- ${config.dealership_name}${selectedLocLabel ? ` — ${selectedLocLabel.name}` : ''} - Inventory-Aware Trade Widget -->
+<script>
+(function(){
+  var s = document.createElement("script");
+  s.src = "${baseUrl}/embed.js";
+  s.async = true;
+  s.onload = function(){
+    HarteCash.inventory({
+      dealerId: "${tenant.dealership_id}",
+      host: "${baseUrl}",
+      displayMode: "floating",
+      color: "${buttonColor}",
+      position: "${widgetPosition}",${embedTemplate !== "__default__" ? `\n      template: "${embedTemplate}",` : ""}${storeParam ? `\n      ${storeParam}` : ""}
+    });
+  };
+  document.body.appendChild(s);
+})();
+</script>`;
+
+  // ── Snippet: Inventory-Aware Inline Banner (v3) ──
+  // Same engine as the floating widget but mounted inline in a
+  // dealer-chosen container (e.g. on the VDP between gallery and
+  // specs). Auto-resizes via postMessage as the customer moves
+  // through the flow.
+  const inventoryInlineSnippet = `<!-- ${config.dealership_name}${selectedLocLabel ? ` — ${selectedLocLabel.name}` : ''} - Inventory-Aware Inline Embed -->
+<div id="hartecash-inventory"></div>
+<script>
+(function(){
+  var s = document.createElement("script");
+  s.src = "${baseUrl}/embed.js";
+  s.async = true;
+  s.onload = function(){
+    HarteCash.inventory({
+      dealerId: "${tenant.dealership_id}",
+      host: "${baseUrl}",
+      displayMode: "inline",
+      target: "#hartecash-inventory",
+      color: "${buttonColor}",${embedTemplate !== "__default__" ? `\n      template: "${embedTemplate}",` : ""}${storeParam ? `\n      ${storeParam}` : ""}
+    });
+  };
+  document.body.appendChild(s);
+})();
+</script>`;
+
   // ── Snippet: Push/Pull/Tow Floating Widget ──
   const pptWidgetSnippet = `<!-- ${config.dealership_name}${selectedLocLabel ? ` — ${selectedLocLabel.name}` : ''} - Push/Pull/Tow Certificate Widget -->
 <script>
@@ -281,6 +332,24 @@ window.addEventListener("message", function(e) {
   // Preview state
   const [previewOpen, setPreviewOpen] = useState<string | null>(null);
   const togglePreview = (id: string) => setPreviewOpen(previewOpen === id ? null : id);
+
+  const CopyRow = ({
+    state,
+    onVdp,
+    offVdp,
+    accent = false,
+  }: {
+    state: string;
+    onVdp: string;
+    offVdp: string;
+    accent?: boolean;
+  }) => (
+    <div className={`grid grid-cols-3 gap-3 px-4 py-2.5 ${accent ? "bg-emerald-50/40" : ""}`}>
+      <div className="text-muted-foreground">{state}</div>
+      <div className={accent ? "font-semibold text-emerald-700" : "text-card-foreground"}>{onVdp}</div>
+      <div className={accent ? "font-semibold text-emerald-700" : "text-card-foreground"}>{offVdp}</div>
+    </div>
+  );
 
   const CodeBlock = ({ code, id }: { code: string; id: string }) => (
     <div className="relative">
@@ -635,8 +704,11 @@ window.addEventListener("message", function(e) {
       </Card>
 
       {/* ── Code Snippets ── */}
-      <Tabs defaultValue="iframe" className="w-full">
-        <TabsList className={`grid w-full ${pptEnabled ? "grid-cols-9" : "grid-cols-8"}`}>
+      <Tabs defaultValue="inventory" className="w-full">
+        <TabsList className={`grid w-full ${pptEnabled ? "grid-cols-10" : "grid-cols-9"}`}>
+          <TabsTrigger value="inventory" className="gap-1.5 text-xs">
+            <Sparkles className="w-3.5 h-3.5" /> Inventory-Aware
+          </TabsTrigger>
           <TabsTrigger value="iframe" className="gap-1.5 text-xs">
             <Monitor className="w-3.5 h-3.5" /> Trade iFrame
           </TabsTrigger>
@@ -667,6 +739,106 @@ window.addEventListener("message", function(e) {
             <Code2 className="w-3.5 h-3.5" /> Install
           </TabsTrigger>
         </TabsList>
+
+        {/* Inventory-Aware Embed (v3) — state-aware re-engagement */}
+        <TabsContent value="inventory" className="mt-4 space-y-3">
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-base">Inventory-Aware Trade Widget</CardTitle>
+                <Badge className="text-[10px] bg-emerald-600 hover:bg-emerald-700">New</Badge>
+                <Badge variant="secondary" className="text-[10px]">State-Aware</Badge>
+              </div>
+              <CardDescription>
+                One snippet, every page. Detects the vehicle the customer is viewing on the dealer's
+                inventory pages and reframes the embed as <em>"apply your trade toward this car"</em>{" "}
+                — using trade value with state tax credit, not the cash equivalent. Recognizes
+                returning customers via localStorage so a visitor with an offer sees{" "}
+                <strong>"Apply your $X toward this vehicle"</strong> on a VDP and{" "}
+                <strong>"Increase your $X trade offer"</strong> elsewhere.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {/* State-aware copy preview matrix */}
+              <div className="rounded-xl border border-border overflow-hidden">
+                <div className="bg-muted/40 px-4 py-2 border-b border-border">
+                  <Label className="text-xs font-semibold text-card-foreground">
+                    How the floating button copy adapts
+                  </Label>
+                </div>
+                <div className="divide-y divide-border text-xs">
+                  <div className="grid grid-cols-3 gap-3 px-4 py-2.5 bg-muted/20 font-semibold text-card-foreground">
+                    <div>Customer state</div>
+                    <div>On a VDP</div>
+                    <div>Anywhere else</div>
+                  </div>
+                  <CopyRow
+                    state="First-time visitor"
+                    onVdp="Get your trade-in value"
+                    offVdp="Get your trade-in value"
+                  />
+                  <CopyRow state="In progress" onVdp="Resume your trade-in" offVdp="Resume your trade-in" />
+                  <CopyRow
+                    state="Has an offer"
+                    onVdp="Apply your $X toward this Civic"
+                    offVdp="Increase your $X trade offer"
+                    accent
+                  />
+                  <CopyRow state="Deal accepted" onVdp="View your accepted offer" offVdp="View your accepted offer" />
+                </div>
+              </div>
+
+              {/* Floating mode snippet */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <PanelRightOpen className="w-4 h-4 text-muted-foreground" />
+                  <Label className="text-sm font-semibold">Floating mode (recommended)</Label>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  One snippet for the dealer's site-wide template / footer. Pill button bottom-{widgetPosition === "bottom-left" ? "left" : "right"}, opens an overlay
+                  iframe when tapped. Auto-detects vehicles on VDPs.
+                </p>
+                <CodeBlock code={inventoryFloatingSnippet} id="inventory-floating" />
+              </div>
+
+              {/* Inline mode snippet */}
+              <div className="space-y-2 pt-2 border-t border-border">
+                <div className="flex items-center gap-2">
+                  <LayoutList className="w-4 h-4 text-muted-foreground" />
+                  <Label className="text-sm font-semibold">Inline mode</Label>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Drop the embed straight into a page (e.g. between gallery and specs on a VDP). Same
+                  inventory detection + state awareness as floating, just no pill button.
+                </p>
+                <CodeBlock code={inventoryInlineSnippet} id="inventory-inline" />
+              </div>
+
+              <div className="bg-muted/30 rounded-lg border border-border p-3 space-y-2">
+                <p className="text-xs font-semibold text-card-foreground">How it works:</p>
+                <ol className="text-xs text-muted-foreground space-y-1 list-decimal pl-4">
+                  <li>
+                    Drop one snippet into the dealer's global template (header / footer). Works on
+                    every page — homepage, SRP, VDP, content pages.
+                  </li>
+                  <li>
+                    On VDPs the loader reads schema.org <code className="bg-muted px-1 rounded">Vehicle</code> JSON-LD
+                    (or OG meta as fallback) and forwards <code className="bg-muted px-1 rounded">vehicle_label</code> +{" "}
+                    <code className="bg-muted px-1 rounded">vehicle_msrp</code> into the iframe.
+                  </li>
+                  <li>
+                    The embed banner shows the customer's <strong>trade value with state tax credit</strong> —
+                    the actual amount applied against the inventory vehicle, not the base cash offer.
+                  </li>
+                  <li>
+                    Resume token + offer + status are persisted in <code className="bg-muted px-1 rounded">localStorage</code>{" "}
+                    on the dealer domain, so a returning customer sees the right CTA without re-entering anything.
+                  </li>
+                </ol>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         {/* Trade iFrame */}
         <TabsContent value="iframe" className="mt-4 space-y-3">
