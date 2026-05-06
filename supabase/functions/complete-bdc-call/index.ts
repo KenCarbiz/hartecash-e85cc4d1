@@ -19,7 +19,7 @@
 //                           a real contact.
 //   no_answer             → same as voicemail but 24h backoff.
 //   not_interested        → flips progress_status to 'declined' which
---                           cascades to cadence_state='reengage'
+//                           cascades to cadence_state='reengage'
 //                           with a 7-day cooldown via the bootstrap
 --                           trigger.
 //   wrong_number          → marks submission with wrong_number flag;
