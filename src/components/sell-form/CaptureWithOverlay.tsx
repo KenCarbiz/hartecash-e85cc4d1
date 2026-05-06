@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Camera, Image as ImageIcon, RotateCcw, X, Check, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import ShotSilhouette, { type SilhouetteState } from "./captureSilhouettes";
 
 /**
  * Full-screen camera capture with a silhouette overlay — the
@@ -44,7 +45,9 @@ export interface CaptureWithOverlayProps {
 // iPhone in interior / underground / dusk lighting.
 const LUMA_DARK_BANNER = 60;   // soft warning
 const LUMA_DARK_FLOOR  = 35;   // hard warning, pulse the banner
-const SAMPLE_INTERVAL_MS = 500;
+const SAMPLE_INTERVAL_MS = 500;        // initial / "actively responding to light changes"
+const SAMPLE_INTERVAL_SLOW_MS = 1500;  // throttled rate once light has stabilized
+const SAMPLES_BEFORE_SLOW = 3;         // ticks of stability before throttling
 // Permission pre-prompt is shown once per browser session — flag
 // in sessionStorage so revisits don't re-explain. This boosts
 // allow-rate measurably (industry data: 15–25% lift).
@@ -168,9 +171,26 @@ const CaptureWithOverlay = ({
         }
         const sampleCtx = sampleCanvasRef.current.getContext("2d", { willReadFrequently: true });
         if (sampleCtx && videoRef.current) {
-          sampleTimerRef.current = setInterval(() => {
+          // Stability-throttled, visibility-aware sampler. We read
+          // luma every SAMPLE_INTERVAL_MS at first; once the value
+          // has been stable (within ±5) for SAMPLES_BEFORE_SLOW
+          // ticks, we back off to SAMPLE_INTERVAL_SLOW_MS. Skip the
+          // read entirely when:
+          //   - the page is hidden (background tab)
+          //   - the video is paused (preview/review beat is up)
+          //   - the modal already captured (previewFile set)
+          // Saves real battery on long sessions without losing
+          // responsiveness when light conditions actually change.
+          let stableCount = 0;
+          let lastLuma = -1;
+          let currentInterval = SAMPLE_INTERVAL_MS;
+
+          const tick = () => {
             const v = videoRef.current;
             if (!v || v.videoWidth === 0) return;
+            // Hard-skip when nothing on the page can act on the result.
+            if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
+            if (v.paused) return;
             try {
               sampleCtx.drawImage(v, 0, 0, 32, 24);
               const data = sampleCtx.getImageData(0, 0, 32, 24).data;
@@ -182,9 +202,35 @@ const CaptureWithOverlay = ({
                 // than a flat RGB average.
                 sum += 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
               }
-              setLuma(sum / pixels);
+              const next = sum / pixels;
+              setLuma(next);
+
+              // Stability-aware throttling — once light conditions
+              // are steady, halve the sample rate. A real lighting
+              // change resets the counter and we go back to fast.
+              if (lastLuma >= 0 && Math.abs(next - lastLuma) < 5) {
+                stableCount += 1;
+              } else {
+                stableCount = 0;
+                if (currentInterval !== SAMPLE_INTERVAL_MS) {
+                  // Light just changed — restart the interval so we
+                  // pick up the new condition responsively.
+                  if (sampleTimerRef.current) clearInterval(sampleTimerRef.current);
+                  currentInterval = SAMPLE_INTERVAL_MS;
+                  sampleTimerRef.current = setInterval(tick, currentInterval);
+                }
+              }
+              lastLuma = next;
+
+              if (stableCount >= SAMPLES_BEFORE_SLOW && currentInterval === SAMPLE_INTERVAL_MS) {
+                if (sampleTimerRef.current) clearInterval(sampleTimerRef.current);
+                currentInterval = SAMPLE_INTERVAL_SLOW_MS;
+                sampleTimerRef.current = setInterval(tick, currentInterval);
+              }
             } catch { /* CORS-tainted canvas etc. — give up silently */ }
-          }, SAMPLE_INTERVAL_MS);
+          };
+
+          sampleTimerRef.current = setInterval(tick, currentInterval);
         }
       } catch (e) {
         if (cancelled) return;
@@ -223,6 +269,28 @@ const CaptureWithOverlay = ({
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
   }, [previewUrl]);
+
+  // Pause the live feed when the page is backgrounded. Saves
+  // battery + bandwidth on long sessions and on iOS keeps the
+  // green camera dot off when it doesn't need to be on. Resume
+  // on visibility return only if the stream is still alive
+  // (the customer might have been preview-reviewing during the
+  // background event).
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const handler = () => {
+      const v = videoRef.current;
+      if (!v) return;
+      if (document.visibilityState === "hidden") {
+        try { v.pause(); } catch { /* noop */ }
+      } else if (!previewFile && streamRef.current) {
+        // Foreground + not in preview = resume.
+        v.play().catch(() => {});
+      }
+    };
+    document.addEventListener("visibilitychange", handler);
+    return () => document.removeEventListener("visibilitychange", handler);
+  }, [previewFile]);
 
   // Fire the AI quality check in the background once we have the
   // captured file. Soft-fail on every error path — verification
@@ -562,6 +630,18 @@ const CaptureWithOverlay = ({
     );
   }
 
+  // Silhouette stroke color derives from the brightness sampler:
+  //   too dark        → amber (matches the "too dark" banner)
+  //   bright + ready  → emerald (matches the receipt accent)
+  //   else (warming)  → white  (default)
+  // Keeps the overlay itself a feedback signal, not a static guide.
+  const silhouetteState: SilhouetteState =
+    luma === null || !ready
+      ? "neutral"
+      : luma < LUMA_DARK_BANNER
+        ? "warn"
+        : "ok";
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -589,7 +669,11 @@ const CaptureWithOverlay = ({
       {/* Silhouette overlay — the alignment guide. White stroke +
           subtle outer glow for contrast over any lighting. */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none px-8">
-        <ShotSilhouette shotKey={shotKey} className="w-full max-w-[440px] h-auto opacity-80 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]" />
+        <ShotSilhouette
+          shotKey={shotKey}
+          state={silhouetteState}
+          className="w-full max-w-[440px] h-auto opacity-90 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]"
+        />
       </div>
 
       {/* Brightness warning — shows up to ~2cm above the shutter
@@ -709,128 +793,3 @@ const CaptureWithOverlay = ({
 
 export default CaptureWithOverlay;
 
-/**
- * Per-shot silhouette overlays. White stroke, no fill, scaled to
- * the container width. Each silhouette sets up the customer's
- * mental model of what to align with the live feed.
- *
- * These don't have to be photo-realistic — they just need to
- * communicate "the front of a car / the side / the dashboard /
- * a wheel" at a glance. Inspired by the passport-photo and
- * check-deposit overlay convention: clearly diagrammatic, never
- * mistakable for a real edge of the live image.
- */
-const ShotSilhouette = ({ shotKey, className }: { shotKey: string; className?: string }) => {
-  const stroke = "white";
-  const strokeWidth = 1.5;
-  const common = {
-    fill: "none",
-    stroke,
-    strokeWidth,
-    strokeLinecap: "round" as const,
-    strokeLinejoin: "round" as const,
-  };
-
-  switch (shotKey) {
-    case "exterior_front":
-      return (
-        <svg viewBox="0 0 200 130" className={className}>
-          {/* Hood + roof outline */}
-          <path d="M30 95 Q30 60 50 50 L80 35 L120 35 L150 50 Q170 60 170 95" {...common} />
-          {/* Bumper line */}
-          <line x1="20" y1="95" x2="180" y2="95" {...common} />
-          {/* Headlights */}
-          <ellipse cx="55" cy="72" rx="14" ry="8" {...common} />
-          <ellipse cx="145" cy="72" rx="14" ry="8" {...common} />
-          {/* Grille */}
-          <rect x="80" y="68" width="40" height="20" rx="3" {...common} />
-          <line x1="85" y1="78" x2="115" y2="78" {...common} />
-          {/* Wheels (lower edge) */}
-          <circle cx="40" cy="105" r="10" {...common} />
-          <circle cx="160" cy="105" r="10" {...common} />
-        </svg>
-      );
-
-    case "exterior_driver":
-    case "exterior_passenger":
-      return (
-        <svg viewBox="0 0 240 110" className={className}>
-          {/* Side profile — windshield curve, roof, trunk */}
-          <path
-            d="M20 75 L40 75 Q50 55 70 50 L130 38 Q160 38 175 50 L210 65 L220 75"
-            {...common}
-          />
-          <line x1="20" y1="80" x2="220" y2="80" {...common} />
-          {/* Window glass */}
-          <path d="M62 70 Q72 55 88 53 L138 45 Q150 47 162 56 L172 70" {...common} />
-          <line x1="115" y1="48" x2="115" y2="70" {...common} />
-          {/* Wheels */}
-          <circle cx="55" cy="90" r="14" {...common} />
-          <circle cx="185" cy="90" r="14" {...common} />
-          {/* Door handle hint */}
-          <line x1="100" y1="75" x2="115" y2="75" {...common} />
-        </svg>
-      );
-
-    case "exterior_rear":
-      return (
-        <svg viewBox="0 0 200 130" className={className}>
-          {/* Trunk + rear glass + roof */}
-          <path d="M30 95 Q30 65 45 55 L75 42 L125 42 L155 55 Q170 65 170 95" {...common} />
-          <line x1="20" y1="95" x2="180" y2="95" {...common} />
-          {/* Rear glass */}
-          <path d="M55 60 L80 50 L120 50 L145 60" {...common} />
-          {/* Taillights */}
-          <rect x="32" y="72" width="22" height="14" rx="3" {...common} />
-          <rect x="146" y="72" width="22" height="14" rx="3" {...common} />
-          {/* License plate area */}
-          <rect x="80" y="78" width="40" height="14" rx="2" {...common} />
-          {/* Wheels */}
-          <circle cx="40" cy="105" r="10" {...common} />
-          <circle cx="160" cy="105" r="10" {...common} />
-        </svg>
-      );
-
-    case "dashboard_odometer":
-      return (
-        <svg viewBox="0 0 240 130" className={className}>
-          {/* Steering wheel arc at the bottom */}
-          <path d="M70 115 Q120 95 170 115" {...common} />
-          <circle cx="120" cy="120" r="6" {...common} />
-          {/* Gauge cluster — tach + speedo + center info */}
-          <rect x="40" y="35" width="160" height="60" rx="10" {...common} />
-          <circle cx="80" cy="65" r="22" {...common} />
-          <circle cx="160" cy="65" r="22" {...common} />
-          <rect x="110" y="55" width="20" height="20" rx="3" {...common} />
-          {/* Odometer text-line hint inside center */}
-          <line x1="113" y1="68" x2="127" y2="68" {...common} />
-        </svg>
-      );
-
-    case "tires_wheels":
-      return (
-        <svg viewBox="0 0 200 200" className={className}>
-          {/* Tire (outer) */}
-          <circle cx="100" cy="100" r="85" {...common} />
-          {/* Wheel (inner) */}
-          <circle cx="100" cy="100" r="55" {...common} />
-          {/* Hub */}
-          <circle cx="100" cy="100" r="12" {...common} />
-          {/* Spokes */}
-          <line x1="100" y1="50" x2="100" y2="150" {...common} />
-          <line x1="50" y1="100" x2="150" y2="100" {...common} />
-          <line x1="65" y1="65" x2="135" y2="135" {...common} />
-          <line x1="135" y1="65" x2="65" y2="135" {...common} />
-          {/* Tread band hint (outer ring decorations) */}
-          <circle cx="100" cy="100" r="78" strokeDasharray="4 4" {...common} />
-        </svg>
-      );
-
-    default:
-      return (
-        <svg viewBox="0 0 200 200" className={className}>
-          <rect x="20" y="40" width="160" height="120" rx="12" {...common} />
-        </svg>
-      );
-  }
-};
