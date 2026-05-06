@@ -129,13 +129,13 @@ const EmbedLanding = () => {
     if (!submissionToken) return;
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
+      const { data } = await (supabase
         .from("submissions")
         .select(
           "progress_status, offered_price, estimated_offer_high, bb_tradein_avg, bb_wholesale_avg, offer_made_at, created_at",
         )
         .eq("token", submissionToken)
-        .maybeSingle();
+        .maybeSingle() as any);
       if (cancelled || !data) return;
       const offer =
         Number(data.offered_price) ||
