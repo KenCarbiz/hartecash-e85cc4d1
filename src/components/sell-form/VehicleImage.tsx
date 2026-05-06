@@ -38,7 +38,10 @@ const VehicleImage = ({ year, make, model, style, selectedColor, compact = false
   const buildCacheKey = useCallback((color: string) => {
     const colorKey = (color || "white").toLowerCase().replace(/\s+/g, "_");
     const angleKey = imageAngle === "side" ? "side" : "3q";
-    return `vehicle-img-${year}-${make}-${model}-${colorKey}-${angleKey}`.toLowerCase().replace(/\s+/g, "_");
+    // v2 — bumped to invalidate cached PNGs that came back with the
+    // checkerboard "transparent" pattern baked into the pixel data
+    // before we changed the AI prompt to anchor on pure white.
+    return `vehicle-img-v2-${year}-${make}-${model}-${colorKey}-${angleKey}`.toLowerCase().replace(/\s+/g, "_");
   }, [year, make, model, imageAngle]);
 
   const fetchImage = useCallback(async (color: string, isPrefetch = false) => {
@@ -157,7 +160,11 @@ const VehicleImage = ({ year, make, model, style, selectedColor, compact = false
   if (!year || !make || !model) return null;
 
   return (
-    <div className={`relative w-full overflow-hidden ${compact ? "mb-2" : "mb-4"}`}
+    // bg-white is REQUIRED — vehicle PNGs sometimes come back with
+    // true alpha transparency. We always want them sitting on solid
+    // white so the dealer's brand palette never bleeds through and
+    // the image NEVER reads as the checkered transparency pattern.
+    <div className={`relative w-full overflow-hidden bg-white ${compact ? "mb-2" : "mb-4"}`}
          style={{ aspectRatio: compact ? "16/7" : "4/3" }}>
       {/* Loading indicator — small and non-intrusive when we already have an image */}
       {loading && (

@@ -402,7 +402,7 @@ const OfferPageClarity = () => {
               Edit details
             </button>
           </div>
-          <div className="rounded-3xl border border-zinc-200 bg-zinc-50/50 overflow-hidden">
+          <div className="rounded-3xl border border-zinc-200 bg-white overflow-hidden">
             <div className="aspect-[16/9]">
               <VehicleImage
                 year={s.vehicle_year || ""}

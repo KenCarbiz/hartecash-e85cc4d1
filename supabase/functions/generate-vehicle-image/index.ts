@@ -114,7 +114,12 @@ serve(async (req) => {
       const angleInstruction = angle === "side"
         ? "The car should be viewed from directly the side, showing the full length of the vehicle in a clean profile shot."
         : "The car should be angled slightly toward the viewer showing the front and driver side.";
-      const prompt = `${angleDesc} of a ${vehicleDesc} in ${colorDesc} color, isolated on a perfectly clean transparent white background with no ground shadow. Professional automotive studio photography, dramatic studio lighting with soft reflections, ultra sharp details, no text or watermarks. ${angleInstruction} The car body color must be clearly ${colorDesc}. High-end dealership hero image style, the vehicle should look premium and aspirational.`;
+      // Prompt note: never say "transparent" here — AI image
+      // models often interpret that literally as the checkered
+      // placeholder pattern image editors use to indicate
+      // transparency. Always anchor to a pure-white solid background
+      // so the result composites cleanly onto our white pages.
+      const prompt = `${angleDesc} of a ${vehicleDesc} in ${colorDesc} color, isolated on a pure solid white background (#FFFFFF) with absolutely no checkered pattern, no grid, no shadow, and no ground reflection. Professional automotive studio photography, dramatic studio lighting with soft reflections, ultra sharp details, no text or watermarks. ${angleInstruction} The car body color must be clearly ${colorDesc}. High-end dealership hero image style, the vehicle should look premium and aspirational. The background must be uniform, plain, solid white — never transparent, never checkered.`;
 
       const models = [
         "google/gemini-3.1-flash-image-preview",
