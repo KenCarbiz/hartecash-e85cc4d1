@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Bookmark, Mail, MessageSquare, Send, Check, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Bookmark, Mail, MessageSquare, Send, Check, Loader2, Sparkles, ArrowRight, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,6 +35,7 @@ const SaveOfferButton = ({
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const portalLink = `${window.location.origin}/offer/${token}`;
 
@@ -82,15 +84,75 @@ const SaveOfferButton = ({
     setSending(false);
   };
 
+  // Post-save "next page" — replaces the inline form once the offer
+  // link has been sent. Surfaces the AI-photo boost as the natural
+  // next step (the only thing the customer can do that materially
+  // improves their offer at this point) with a secondary "Save again"
+  // path for customers who want to re-send to a different address.
   if (sent) {
     return (
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="flex items-center justify-center gap-2 py-3 rounded-xl bg-success/10 text-success text-sm font-semibold"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+        className="space-y-3 w-full"
       >
-        <Check className="w-4 h-4" />
-        Offer link sent — check your {method === "email" ? "inbox" : "messages"}!
+        <div className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-50 text-emerald-700 text-sm font-semibold border border-emerald-200">
+          <Check className="w-4 h-4" />
+          Offer link sent — check your {method === "email" ? "inbox" : "messages"}
+        </div>
+
+        {/* Boost CTA — only appears here, after save. Same emerald
+            language as the legacy standalone card on the offer page
+            (now removed) so the customer sees it as a continuation
+            of "your offer is locked, here's how to make it bigger." */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+          className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-5 md:p-6"
+        >
+          <div className="flex items-start gap-4">
+            <div className="hidden sm:flex w-11 h-11 rounded-2xl bg-emerald-500 text-white items-center justify-center flex-shrink-0">
+              <Sparkles className="w-5 h-5" aria-hidden="true" />
+            </div>
+            <div className="flex-1 min-w-0 text-left">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-700 mb-1.5 inline-flex items-center gap-1.5">
+                <Sparkles className="w-3 h-3 sm:hidden" aria-hidden="true" />
+                Boost this offer
+              </p>
+              <h3 className="text-lg md:text-xl font-bold tracking-tight leading-[1.2] text-zinc-900 mb-1.5">
+                Add photos to potentially raise this offer.
+              </h3>
+              <p className="text-sm text-zinc-600 leading-relaxed mb-4">
+                Customers who upload a clean photo set get a higher final number more often than not. Our AI re-prices the moment they're in.
+              </p>
+              <div className="flex flex-wrap items-center gap-3">
+                <Button
+                  type="button"
+                  onClick={() => navigate(`/boost-offer/${token}`)}
+                  className="gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+                >
+                  <Camera className="w-4 h-4" />
+                  Upload photos now
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Reset → opens the form again so the customer
+                    // can save to a different email/phone.
+                    setSent(false);
+                    setOpen(true);
+                  }}
+                  className="text-sm font-semibold text-zinc-600 hover:text-zinc-900 transition-colors underline-offset-4 hover:underline"
+                >
+                  Save again
+                </button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </motion.div>
     );
   }

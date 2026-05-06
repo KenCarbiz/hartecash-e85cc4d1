@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, CheckCircle, ShieldCheck, Loader2, DollarSign, TrendingUp, Printer, Info, Sparkles } from "lucide-react";
+import { ArrowRight, CheckCircle, ShieldCheck, Loader2, DollarSign, TrendingUp, Printer, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { safeInvoke } from "@/lib/safeInvoke";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
@@ -58,6 +58,7 @@ interface PortalSubmission {
   vehicle_year: string | null;
   vehicle_make: string | null;
   vehicle_model: string | null;
+  vin: string | null;
   name: string | null;
   email: string | null;
   phone: string | null;
@@ -517,6 +518,18 @@ const OfferPageClarity = () => {
                     <p className="font-sans text-[64px] md:text-[88px] font-bold tracking-[-0.035em] leading-[1] text-zinc-900 tabular-nums">
                       ${cashOffer.toLocaleString("en-US", { maximumFractionDigits: 0 })}
                     </p>
+                    {/* Full VIN bubble — sits directly under the
+                        offer number, above the "Subject to inspection"
+                        line. tabular-nums keeps the 17-character VIN
+                        from jittering on hover. uppercase + tracking
+                        match the small-caps treatment of the chip
+                        tags below. Hidden when no VIN on file (plate
+                        lookups). */}
+                    {s.vin && (
+                      <p className="inline-flex items-center justify-center px-3 py-1 mt-2 rounded-full bg-zinc-100 border border-zinc-200 text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-600 tabular-nums">
+                        VIN&nbsp;·&nbsp;{s.vin}
+                      </p>
+                    )}
                     <p className="text-[11px] text-zinc-500 inline-flex items-center justify-center gap-1.5">
                       <ShieldCheck className="w-3 h-3" aria-hidden="true" />
                       Subject to in-person inspection
@@ -638,50 +651,13 @@ const OfferPageClarity = () => {
           </motion.section>
         )}
 
-        {/* ── Boost offer accelerator ──
-              Quiet emerald card with a Camera icon and a one-line
-              promise. Apple-minimal version of the legacy red
-              "BOOST OFFER ACCELERATOR" hero — same intent, no shout.
-              Only shown when the offer isn't accepted yet. Click
-              opens /boost-offer/:token. */}
-        {!offerPending && !isAccepted && (
-          <motion.section
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            aria-label="Boost your offer"
-            className="rounded-3xl overflow-hidden border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white shadow-[0_2px_12px_rgba(16,185,129,0.08)] print:hidden"
-          >
-            <button
-              type="button"
-              onClick={() => navigate(`/boost-offer/${s.token}`)}
-              className="w-full text-left p-6 md:p-7 hover:bg-emerald-50/40 transition-colors"
-            >
-              <div className="flex items-start gap-5">
-                <div className="hidden sm:flex w-12 h-12 rounded-2xl bg-emerald-500 text-white items-center justify-center flex-shrink-0">
-                  <Sparkles className="w-5 h-5" aria-hidden="true" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-700 mb-2 inline-flex items-center gap-1.5">
-                    <Sparkles className="w-3 h-3 sm:hidden" aria-hidden="true" />
-                    Boost this offer
-                  </p>
-                  <h3 className="text-xl md:text-[22px] font-bold tracking-tight leading-[1.15] text-zinc-900 mb-2">
-                    Add photos to potentially raise this offer.
-                  </h3>
-                  <p className="text-sm text-zinc-600 leading-relaxed mb-4">
-                    Customers who upload a clean photo set get a higher final number more often than not.
-                    Our AI re-prices the moment they're in.
-                  </p>
-                  <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700 hover:text-emerald-900 transition-colors">
-                    Upload photos now
-                    <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
-                  </span>
-                </div>
-              </div>
-            </button>
-          </motion.section>
-        )}
+        {/* Boost-offer accelerator removed from this page — it now
+            lives inside SaveOfferButton's post-save state so the
+            customer only sees the upgrade prompt after they've
+            committed to saving the offer (the "next page" the
+            dealer specced). Keeps the offer view focused on the
+            cash number + accept until the customer has an
+            intentional next step. */}
 
         {/* ── Trade-In Tax Credit Explained ──
               Always rendered when the offer is real (not pending /
