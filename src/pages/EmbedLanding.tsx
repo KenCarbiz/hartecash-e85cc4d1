@@ -134,7 +134,7 @@ const EmbedLanding = () => {
         .select(
           "progress_status, offered_price, estimated_offer_high, bb_tradein_avg, bb_wholesale_avg, offer_made_at, created_at",
         )
-        .eq("submission_token", submissionToken)
+        .eq("token", submissionToken)
         .maybeSingle();
       if (cancelled || !data) return;
       const offer =
