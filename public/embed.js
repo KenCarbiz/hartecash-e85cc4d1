@@ -414,46 +414,168 @@
     return 0;
   }
 
-  // Pulls a vehicle off the inventory page. Schema.org Vehicle
-  // JSON-LD wins (most modern dealer DMS exports include it), then
-  // Open Graph product meta as a fallback.
-  function detectInventoryVehicle() {
-    try {
-      var ldNodes = document.querySelectorAll('script[type="application/ld+json"]');
-      for (var i = 0; i < ldNodes.length; i++) {
-        var raw = ldNodes[i].textContent;
-        if (!raw) continue;
-        var parsed;
-        try { parsed = JSON.parse(raw); } catch (e) { continue; }
-        var items = Array.isArray(parsed) ? parsed : [parsed];
-        for (var j = 0; j < items.length; j++) {
-          var item = items[j];
-          if (!item || !item["@type"]) continue;
-          var type = Array.isArray(item["@type"]) ? item["@type"].join(",") : item["@type"];
-          if (!/Vehicle|Car|Product/i.test(type)) continue;
-          var label = [item.modelDate || item.vehicleModelDate, item.brand && (item.brand.name || item.brand), item.model || item.name]
-            .filter(Boolean)
-            .join(" ")
-            .trim();
-          if (!label && item.name) label = item.name;
-          var price = 0;
-          var offers = item.offers;
-          if (offers) {
-            var off = Array.isArray(offers) ? offers[0] : offers;
-            price = Number(off && (off.price || off.priceSpecification && off.priceSpecification.price)) || 0;
-          }
-          if (label) return { label: label, msrp: price };
+  // Vehicle detection — multi-strategy fallback chain.
+  //   1. Schema.org Vehicle / Car / Product JSON-LD
+  //      (Dealer.com, DealerInspire, most modern DMS)
+  //   2. itemtype="schema.org/Vehicle" microdata
+  //      (older AutoTrader / Autobytel templates)
+  //   3. Common DMS DOM patterns
+  //      (DealerOn, DealerSocket, Cobalt, fox-dealer)
+  //   4. Open Graph product meta
+  //   5. URL-pattern + page heuristics (last resort)
+  // Each adapter returns null if it can't confidently extract,
+  // and the chain advances. Keeps the customer on a generic CTA
+  // rather than mis-attributing them to the wrong vehicle.
+
+  function cleanLabel(s) {
+    if (!s) return "";
+    return String(s).replace(/\s+/g, " ").trim();
+  }
+
+  function parsePriceText(txt) {
+    if (!txt) return 0;
+    var m = String(txt).replace(/[^0-9.]/g, "").match(/^\d+(\.\d+)?/);
+    return m ? Number(m[0]) || 0 : 0;
+  }
+
+  // Strategy 1 — JSON-LD (the modern standard).
+  function detectFromJsonLd() {
+    var ldNodes = document.querySelectorAll('script[type="application/ld+json"]');
+    for (var i = 0; i < ldNodes.length; i++) {
+      var raw = ldNodes[i].textContent;
+      if (!raw) continue;
+      var parsed;
+      try { parsed = JSON.parse(raw); } catch (e) { continue; }
+      // JSON-LD allows top-level @graph arrays — flatten them.
+      var pool = [];
+      var roots = Array.isArray(parsed) ? parsed : [parsed];
+      for (var r = 0; r < roots.length; r++) {
+        if (roots[r] && roots[r]["@graph"]) {
+          pool = pool.concat(roots[r]["@graph"]);
+        } else {
+          pool.push(roots[r]);
         }
       }
-    } catch (e) { /* ignore JSON-LD parse errors */ }
+      for (var j = 0; j < pool.length; j++) {
+        var item = pool[j];
+        if (!item || !item["@type"]) continue;
+        var type = Array.isArray(item["@type"]) ? item["@type"].join(",") : item["@type"];
+        if (!/Vehicle|Car|Product/i.test(type)) continue;
+        var label = cleanLabel(
+          [item.modelDate || item.vehicleModelDate, item.brand && (item.brand.name || item.brand), item.model || item.name]
+            .filter(Boolean)
+            .join(" "),
+        );
+        if (!label && item.name) label = cleanLabel(item.name);
+        var price = 0;
+        var offers = item.offers;
+        if (offers) {
+          var off = Array.isArray(offers) ? offers[0] : offers;
+          price = Number(off && (off.price || (off.priceSpecification && off.priceSpecification.price))) || 0;
+        }
+        if (label) return { label: label, msrp: price };
+      }
+    }
+    return null;
+  }
 
+  // Strategy 2 — schema.org microdata.
+  function detectFromMicrodata() {
+    var scope = document.querySelector('[itemtype*="schema.org/Vehicle"], [itemtype*="schema.org/Car"], [itemtype*="schema.org/Product"]');
+    if (!scope) return null;
+    var name = scope.querySelector('[itemprop="name"]');
+    var brand = scope.querySelector('[itemprop="brand"] [itemprop="name"], [itemprop="brand"]');
+    var model = scope.querySelector('[itemprop="model"]');
+    var year = scope.querySelector('[itemprop="modelDate"], [itemprop="vehicleModelDate"]');
+    var price = scope.querySelector('[itemprop="price"]');
+    var label = cleanLabel(
+      [
+        year && (year.getAttribute("content") || year.textContent),
+        brand && (brand.getAttribute("content") || brand.textContent),
+        model && (model.getAttribute("content") || model.textContent),
+      ]
+        .filter(Boolean)
+        .join(" "),
+    );
+    if (!label && name) label = cleanLabel(name.getAttribute("content") || name.textContent);
+    if (!label) return null;
+    var msrp = price ? parsePriceText(price.getAttribute("content") || price.textContent) : 0;
+    return { label: label, msrp: msrp };
+  }
+
+  // Strategy 3 — DMS-specific DOM patterns.
+  // Selectors picked from inspecting top-platform VDP markup as of
+  // 2026-04: Dealer.com (.vdp-content, .pricing-block .price),
+  // DealerInspire (.vehicle-title, .price-value), DealerOn (.title,
+  // .internetPrice), Cobalt (.vehicleTitle, .pricing__price),
+  // fox-dealer (h1.vehicle-name, .price--current). We try the
+  // generic combos first then platform-specific.
+  function detectFromDmsDom() {
+    var titleSelectors = [
+      "h1.vehicle-title", "h1.vehicle-name", "h1.vehicleTitle",
+      ".vdp-content h1", ".vehicle-title", ".vehicleTitle",
+      "[class*='vehicle-title']", "[class*='VehicleTitle']",
+      ".inv-type-used h1", ".inv-type-new h1",
+      "[data-vehicle-title]",
+    ];
+    var priceSelectors = [
+      ".pricing-block .price", ".pricing__price", ".price-value",
+      ".internetPrice", ".price--current", ".vehiclePrice",
+      "[class*='final-price']", "[class*='asking-price']",
+      "[data-price]",
+    ];
+    var label = "";
+    for (var i = 0; i < titleSelectors.length && !label; i++) {
+      var t = document.querySelector(titleSelectors[i]);
+      if (t) {
+        label = cleanLabel(t.getAttribute("data-vehicle-title") || t.textContent);
+      }
+    }
+    if (!label) return null;
+    var msrp = 0;
+    for (var k = 0; k < priceSelectors.length && !msrp; k++) {
+      var p = document.querySelector(priceSelectors[k]);
+      if (p) {
+        msrp = parsePriceText(p.getAttribute("data-price") || p.getAttribute("content") || p.textContent);
+      }
+    }
+    return { label: label, msrp: msrp };
+  }
+
+  // Strategy 4 — Open Graph fallback.
+  function detectFromOpenGraph() {
     var ogTitle = document.querySelector('meta[property="og:title"]');
     var ogPrice = document.querySelector('meta[property="product:price:amount"], meta[property="og:price:amount"]');
-    if (ogTitle) {
-      return {
-        label: ogTitle.getAttribute("content") || "",
-        msrp: Number(ogPrice && ogPrice.getAttribute("content")) || 0,
-      };
+    if (!ogTitle) return null;
+    var label = cleanLabel(ogTitle.getAttribute("content"));
+    if (!label) return null;
+    return {
+      label: label,
+      msrp: Number(ogPrice && ogPrice.getAttribute("content")) || 0,
+    };
+  }
+
+  // Strategy 5 — URL pattern heuristic (last resort).
+  // Most VDP URLs include something like /YYYY-Make-Model-... so
+  // we can extract a label even when the dealer's page has no
+  // structured data at all. We don't try to recover MSRP this way.
+  function detectFromUrl() {
+    var path = (location.pathname || "").toLowerCase();
+    var m = path.match(/(20\d{2})[-_/]([a-z]+)[-_/]([a-z0-9-]+)/i);
+    if (!m) return null;
+    var year = m[1];
+    var make = m[2].charAt(0).toUpperCase() + m[2].slice(1);
+    var model = m[3].split("-").slice(0, 2).join(" ").replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+    return { label: cleanLabel([year, make, model].join(" ")), msrp: 0 };
+  }
+
+  function detectInventoryVehicle() {
+    var strategies = [detectFromJsonLd, detectFromMicrodata, detectFromDmsDom, detectFromOpenGraph, detectFromUrl];
+    for (var i = 0; i < strategies.length; i++) {
+      try {
+        var hit = strategies[i]();
+        if (hit && hit.label) return hit;
+      } catch (e) { /* keep trying */ }
     }
     return { label: "", msrp: 0 };
   }
