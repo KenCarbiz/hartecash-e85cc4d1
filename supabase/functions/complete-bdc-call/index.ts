@@ -21,7 +21,7 @@
 //   not_interested        → flips progress_status to 'declined' which
 //                           cascades to cadence_state='reengage'
 //                           with a 7-day cooldown via the bootstrap
---                           trigger.
+//                           trigger.
 //   wrong_number          → marks submission with wrong_number flag;
 //                           cadence pauses indefinitely.
 //
