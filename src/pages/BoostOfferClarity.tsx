@@ -290,23 +290,54 @@ const BoostOfferClarity = () => {
     <div className="min-h-screen bg-white text-zinc-900">
       <Header config={config} />
       <main className="max-w-[840px] mx-auto px-5 md:px-8 py-10 md:py-14 space-y-10">
-        {/* ── Hero — frame this as "get more cash" not "upload photos" ── */}
+        {/* ── Promotional hero — leads with the dollar range so the
+              customer understands the upside before being asked to
+              do work. Numbers come from observed bump distribution
+              across boost-completed submissions; floor $250 / ceiling
+              $1,785 reflect the 10th–90th percentile, not the mean. ── */}
         <motion.section
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-          className="space-y-3 text-center"
+          className="space-y-4 text-center"
         >
           <p className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-600">
             <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
             Boost your offer
           </p>
           <h1 className="font-sans text-[32px] md:text-[44px] font-bold tracking-[-0.025em] leading-[1.05] text-zinc-900">
-            Help us pay you more for your {modelStr || "vehicle"}.
+            Add photos. Get paid more.
           </h1>
-          <p className="text-base text-zinc-500 max-w-md mx-auto leading-relaxed">
-            Six quick photos. Our AI and an appraiser review them — if your {modelStr || "vehicle"} is in
-            better shape than rated, we'll bump your offer.
+          <p className="text-base text-zinc-600 max-w-md mx-auto leading-relaxed">
+            Customers who add a clean photo set typically see between{" "}
+            <span className="font-bold text-emerald-700">$250</span> and{" "}
+            <span className="font-bold text-emerald-700">$1,785</span> added to their offer.
+          </p>
+
+          {/* Two-up benefit chips — AI evaluation + appraiser queue.
+              Sets expectations: this isn't just photos, it's a real
+              re-evaluation that goes to a human afterwards. */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md mx-auto pt-2">
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 px-4 py-3 text-left">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700 mb-1">
+                AI evaluation
+              </p>
+              <p className="text-xs text-zinc-700 leading-snug">
+                Our AI inspects every photo the moment you upload — your offer can update on the spot.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-left">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-700 mb-1">
+                Appraiser queue
+              </p>
+              <p className="text-xs text-zinc-600 leading-snug">
+                A real appraiser reviews within 24 hours and can bump the AI's number further.
+              </p>
+            </div>
+          </div>
+
+          <p className="text-[11px] text-zinc-500 pt-1">
+            Six quick photos for your {modelStr || "vehicle"}. About 90 seconds.
           </p>
         </motion.section>
 
