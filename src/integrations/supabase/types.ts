@@ -1748,6 +1748,42 @@ export type Database = {
         }
         Relationships: []
       }
+      offer_bumps: {
+        Row: {
+          bump_amount: number
+          created_at: string
+          dealership_id: string
+          id: string
+          line_items: Json | null
+          new_offer: number
+          previous_offer: number
+          source: string
+          submission_id: string
+        }
+        Insert: {
+          bump_amount: number
+          created_at?: string
+          dealership_id: string
+          id?: string
+          line_items?: Json | null
+          new_offer: number
+          previous_offer: number
+          source?: string
+          submission_id: string
+        }
+        Update: {
+          bump_amount?: number
+          created_at?: string
+          dealership_id?: string
+          id?: string
+          line_items?: Json | null
+          new_offer?: number
+          previous_offer?: number
+          source?: string
+          submission_id?: string
+        }
+        Relationships: []
+      }
       offer_rules: {
         Row: {
           adjustment_pct: number
