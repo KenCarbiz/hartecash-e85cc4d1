@@ -117,13 +117,14 @@ serve(async (req) => {
   );
 
   // Confirm the dealership exists before writing — keeps random
-  // POST traffic from filling the table with bogus rows. Soft fail
-  // to 200 so a misconfigured embed snippet doesn't cause client
-  // errors that the dealer notices in their console.
+  // POST traffic from filling the table with bogus rows. dealership_id
+  // is a TEXT slug in this codebase (see dealer_accounts), not a UUID.
+  // Soft fail to 200 so a misconfigured embed snippet doesn't cause
+  // client errors that the dealer notices in their console.
   const { data: dealer } = await supabase
-    .from("dealerships")
-    .select("id")
-    .eq("id", body.dealer_id)
+    .from("dealer_accounts")
+    .select("dealership_id")
+    .eq("dealership_id", body.dealer_id)
     .maybeSingle();
 
   if (!dealer) {
