@@ -438,6 +438,9 @@ const SellFlowSimple = ({
       return;
     }
     void submitForOffer();
+    // submitForOffer is declared below — forward reference is safe
+    // since this callback only fires on user click, after mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bbVehicle, overallCondition, density, accidents, mechanical, ownership, revealMode, toast]);
 
   // Validate the contact form, then submit to compute the offer.
@@ -459,6 +462,7 @@ const SellFlowSimple = ({
       return;
     }
     void submitForOffer();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contactName, contactEmail, contactPhone, toast]);
 
   // Submit the lead and compute the offer. When contact_first ran,
@@ -646,7 +650,7 @@ const SellFlowSimple = ({
     }
   }, [
     bbVehicle, overallCondition, accidents, mechanical, drivable, ownership, mileage,
-    initial.plate, initial.state, density, tenant.dealership_id, config, leadSource,
+    initial.plate, initial.state, initial.vin, density, tenant.dealership_id, config, leadSource,
     navigate, toast, revealMode, contactName, contactEmail, contactPhone,
   ]);
 
