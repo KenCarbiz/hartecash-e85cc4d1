@@ -75,11 +75,19 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
   );
 
-  // Fetch the current offered_price so we can compute the new total
-  // server-side rather than trusting the client's number.
+  // Fetch the current offered_price + every fallback the offer
+  // page reads from. offered_price is frequently NULL in practice
+  // (lookups that didn't run a firm appraisal yet, demo-mode rows,
+  // older submissions) — in that case the customer is looking at
+  // a number computed from estimated_offer_high / bb_tradein_avg /
+  // bb_wholesale_avg. Without this fallback, the bump would
+  // overwrite NULL → just-the-bump-amount and the customer would
+  // see "$750" instead of "$24,749" on the receipt.
   const { data: row, error: readErr } = await supabase
     .from("submissions")
-    .select("id, offered_price, dealership_id")
+    .select(
+      "id, offered_price, estimated_offer_high, bb_tradein_avg, bb_wholesale_avg, dealership_id",
+    )
     .eq("token", body.token)
     .maybeSingle();
 
@@ -91,7 +99,16 @@ serve(async (req) => {
     });
   }
 
-  const currentOffer = Number(row.offered_price) || 0;
+  // Mirror the OfferPageClarity / OfferPage fallback order. First
+  // truthy value wins. This is the same number the customer was
+  // staring at on the offer page when they clicked Save, so the
+  // bump arithmetic on the receipt matches their mental model.
+  const currentOffer =
+    Number(row.offered_price) ||
+    Number(row.estimated_offer_high) ||
+    Number(row.bb_tradein_avg) ||
+    Number(row.bb_wholesale_avg) ||
+    0;
   // Floor-locked promise from the boost page: the offer can only
   // go up. If the current price is somehow null/0 we still apply
   // the bump as the new floor.

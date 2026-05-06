@@ -36,7 +36,15 @@ interface SubmissionInfo {
   bb_class_name?: string | null;
   dealership_id?: string;
   offered_price?: number | null;
+  // Fallback price fields the offer page reads from when
+  // offered_price is null. Carrying them here so the boost-page
+  // hero shows the same number the customer just saw on /offer
+  // (and so the floor-locked chip / receipt arithmetic line up).
+  estimated_offer_high?: number | null;
+  bb_tradein_avg?: number | null;
+  bb_wholesale_avg?: number | null;
   mileage?: string | null;
+  overall_condition?: string | null;
 }
 
 const REQUIRED_SHOTS = [
@@ -293,7 +301,7 @@ const BoostOfferClarity = () => {
         .map((s) => s.id);
       const receipt = generateBumpReceipt(
         uploadedIds,
-        (submission as unknown as { overall_condition?: string | null }).overall_condition || null,
+        submission.overall_condition || null,
         submission.mileage || null,
       );
 
@@ -488,6 +496,19 @@ const BoostOfferClarity = () => {
   const vehicleStr = [submission.vehicle_year, submission.vehicle_make, submission.vehicle_model].filter(Boolean).join(" ");
   const modelStr = [submission.vehicle_make, submission.vehicle_model].filter(Boolean).join(" ");
 
+  // Effective offer — the same fallback chain the offer page uses.
+  // offered_price wins when present; otherwise we read whichever
+  // appraisal field actually held the customer-facing number. Used
+  // for both the personalized hero ("Push your $X higher") and the
+  // floor-locked chip so they always match what the customer saw
+  // on /offer when they clicked Save.
+  const effectiveOffer =
+    Number(submission.offered_price) ||
+    Number(submission.estimated_offer_high) ||
+    Number(submission.bb_tradein_avg) ||
+    Number(submission.bb_wholesale_avg) ||
+    0;
+
   return (
     <div className="min-h-screen bg-white text-zinc-900">
       {/* Full-screen evaluation overlay. Sits above everything via
@@ -513,8 +534,8 @@ const BoostOfferClarity = () => {
             Boost your offer
           </p>
           <h1 className="font-sans text-[32px] md:text-[44px] font-bold tracking-[-0.025em] leading-[1.04] text-zinc-900">
-            {submission.offered_price && submission.offered_price > 0
-              ? `Push your $${Number(submission.offered_price).toLocaleString()} higher.`
+            {effectiveOffer > 0
+              ? `Push your $${effectiveOffer.toLocaleString()} higher.`
               : "Push your offer higher."}
           </h1>
           <p className="text-base text-zinc-600 max-w-lg mx-auto leading-relaxed">
@@ -546,9 +567,7 @@ const BoostOfferClarity = () => {
             <span className="inline-flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
               Floor locked
-              {submission.offered_price && submission.offered_price > 0
-                ? ` at $${Number(submission.offered_price).toLocaleString()}`
-                : ""}
+              {effectiveOffer > 0 ? ` at $${effectiveOffer.toLocaleString()}` : ""}
             </span>
           </div>
         </motion.section>
