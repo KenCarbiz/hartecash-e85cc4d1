@@ -325,14 +325,14 @@ const SellFlowSimple = ({
             lookup_type: "vin",
             vin: initial.vin,
             dealership_id: tenant.dealership_id,
-            demo_mode: (config as any)?.demo_mode === true ? true : undefined,
+            demo_mode: config.demo_mode === true ? true : undefined,
           }
         : {
             lookup_type: "plate",
             plate: initial.plate,
             state: initial.state,
             dealership_id: tenant.dealership_id,
-            demo_mode: (config as any)?.demo_mode === true ? true : undefined,
+            demo_mode: config.demo_mode === true ? true : undefined,
           };
 
       // Race the edge-function call against a 12s timeout — Black Book
@@ -538,9 +538,9 @@ const SellFlowSimple = ({
 
       // Demo-mode offer override.
       const isDemoMode =
-        (config as any)?.demo_mode === true ||
+        config.demo_mode === true ||
         (bbVehicle as unknown as { _demo?: boolean })?._demo === true;
-      const demoOfferAmount = Number((config as any)?.demo_offer_amount ?? 23599) || 23599;
+      const demoOfferAmount = Number(config.demo_offer_amount ?? 23599) || 23599;
       let demoEstimateLow: number | null = estimate?.low ?? null;
       let demoEstimateHigh: number | null = estimate?.high ?? null;
       if (isDemoMode) {
@@ -582,8 +582,8 @@ const SellFlowSimple = ({
         is_hot_lead: isDemoMode ? false : (estimate?.isHotLead || false),
         offer_subject_to_inspection: isDemoMode ? false : subjectToInspection,
         tcpa_consent_at: new Date().toISOString(),
-        tcpa_consent_version: (config as any)?.tcpa_disclosure_version || 1,
-        tcpa_consent_text: (config as any)?.tcpa_disclosure || null,
+        tcpa_consent_version: config.tcpa_disclosure_version || 1,
+        tcpa_consent_text: config.tcpa_disclosure || null,
       };
 
       let insertErr: { message?: string; code?: string } | null = null;

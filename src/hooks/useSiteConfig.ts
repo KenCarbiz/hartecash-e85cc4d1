@@ -254,6 +254,12 @@ export interface SiteConfig {
   // turning it off restores the prior live pipeline byte-for-byte.
   demo_mode: boolean;
   demo_offer_amount: number;
+  /** Per-tenant TCPA disclosure text shown under lead-gen forms.
+   *  Server-defaulted via migration 20260502070000. */
+  tcpa_disclosure: string;
+  /** Bumped when the disclosure copy changes — lets the cadence
+   *  engine detect "old consent" and gate re-engagement. */
+  tcpa_disclosure_version: number;
 }
 
 const DEFAULTS: SiteConfig = {
@@ -363,6 +369,8 @@ const DEFAULTS: SiteConfig = {
   sidebar_active_color: "#0f172a",
   demo_mode: false,
   demo_offer_amount: 23599,
+  tcpa_disclosure: "",
+  tcpa_disclosure_version: 1,
 };
 
 /**

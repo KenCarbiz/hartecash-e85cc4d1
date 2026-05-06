@@ -183,8 +183,8 @@ const OfferPageClarity = () => {
   // (those rows have null offered_price). Lets the dealer drop a
   // single dealership into demo for a sales presentation without
   // backfilling old leads.
-  const isDemoMode = (config as any)?.demo_mode === true;
-  const demoOfferAmount = Number((config as any)?.demo_offer_amount ?? 23599) || 23599;
+  const isDemoMode = config.demo_mode === true;
+  const demoOfferAmount = Number(config.demo_offer_amount ?? 23599) || 23599;
 
   // Cash-offer fallback chain — demo mode wins outright when on.
   // Otherwise: manual offer → estimated → BB trade-in avg → BB

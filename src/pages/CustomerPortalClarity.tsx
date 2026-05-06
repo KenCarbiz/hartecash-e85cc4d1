@@ -183,8 +183,8 @@ const CustomerPortalClarity = () => {
   // Demo-mode override — when site_config.demo_mode is on, every
   // customer-facing offer clamps to demo_offer_amount even if the
   // submission was created before demo mode was switched on.
-  const isDemoMode = (config as any)?.demo_mode === true;
-  const demoOfferAmount = Number((config as any)?.demo_offer_amount ?? 23599) || 23599;
+  const isDemoMode = config.demo_mode === true;
+  const demoOfferAmount = Number(config.demo_offer_amount ?? 23599) || 23599;
   const displayedOffer = isDemoMode ? demoOfferAmount : s.offered_price;
 
   // Trade-in math — same logic as OfferPageClarity. Uses the
