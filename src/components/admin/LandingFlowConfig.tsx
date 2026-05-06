@@ -4,7 +4,7 @@ import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Save, Loader2, Layout, Sparkles, Zap, ListChecks } from "lucide-react";
+import { Save, Loader2, Layout, Sparkles, Zap, ListChecks, Smartphone, Monitor, RefreshCw, ExternalLink } from "lucide-react";
 import { LANDING_TEMPLATES, type LandingTemplate } from "@/hooks/useSiteConfig";
 import TemplateThumbnail from "@/components/landing/TemplateThumbnail";
 import GhostScreen, { type GhostScreenKind } from "@/components/landing/GhostScreen";
@@ -1069,6 +1069,17 @@ const LandingFlowConfig = () => {
           Your / route renders whichever template is selected here. Pick the original Hartecash long-scroll, one of the May-2026 design-audit picks, or any of the 15 alternates.
         </p>
 
+        {/* Live screenshot of the currently-selected template — reads
+            from the dealer's actual / route (with ?template= override
+            so the preview reflects the unsaved selection too).
+            Static thumbnails on the picker tiles still load instantly;
+            this iframe is the source of truth for "what does my page
+            look like right now." */}
+        <LiveTemplatePreview
+          template={state.landing_template}
+          unsaved={state.landing_template !== saved.landing_template}
+        />
+
         {/* Legacy Hartecash — pre-audit maximalist look, kept featured
             for dealers whose conversions came from the long scroll. */}
         <div className="mb-3 flex items-center gap-2">
@@ -1202,6 +1213,143 @@ const LandingFlowConfig = () => {
           {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
           Save Changes
         </Button>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Live preview for the currently-selected landing template.
+ *
+ * Renders the dealer's actual / route inside an iframe with the
+ * picker's selection passed as a ?template= URL override so the
+ * preview tracks unsaved changes — flip a tile in the picker and
+ * the iframe re-keys to the new template instantly. Two viewport
+ * modes (desktop / mobile) since some templates only differ
+ * meaningfully at one breakpoint.
+ *
+ * Uses iframe scaling so a 1280×900 desktop render fits in a
+ * ~640×450 admin panel. Auto-resize via the same hartecash-resize
+ * postMessage contract EmbedLanding uses, so the preview stays
+ * tight to actual content height instead of leaving dead space.
+ */
+const LiveTemplatePreview = ({
+  template,
+  unsaved,
+}: {
+  template: LandingTemplate;
+  unsaved: boolean;
+}) => {
+  const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
+  // refreshKey lets us hard-remount the iframe on demand. We don't
+  // want React reconciliation reusing the iframe across template
+  // changes — Lovable's preview iframe caches aggressively, so
+  // re-keying is the only reliable way to force a fresh load.
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // ?template= override + cache-buster on every refresh / template
+  // change. previewMode=1 lets the page suppress chrome the dealer
+  // normally sees but a preview shouldn't (e.g. cookie banners).
+  const src = `/?template=${encodeURIComponent(template)}&previewMode=1&_k=${refreshKey}`;
+
+  const openInNewTab = () => window.open(`/?template=${encodeURIComponent(template)}`, "_blank", "noopener");
+
+  // Desktop: 1280px content scaled to fit container at ~50% so the
+  // dealer sees the layout the way most of their visitors will.
+  // Mobile: native 390px so micro-typography and tap targets read
+  // truthfully.
+  const frame =
+    device === "mobile"
+      ? { width: 390, height: 720, scale: 0.7 }
+      : { width: 1280, height: 800, scale: 0.5 };
+
+  return (
+    <div className="mb-8 rounded-2xl border border-border bg-zinc-50/50 overflow-hidden">
+      <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border bg-card">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+            Live preview
+          </span>
+          <span className="text-xs font-semibold text-card-foreground truncate">
+            {LANDING_TEMPLATES.find((t) => t.value === template)?.label || template}
+          </span>
+          {unsaved && (
+            <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-600 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200">
+              Unsaved
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-1">
+          <Button
+            type="button"
+            size="sm"
+            variant={device === "desktop" ? "secondary" : "ghost"}
+            onClick={() => setDevice("desktop")}
+            className="h-8 px-2.5"
+            aria-label="Desktop preview"
+          >
+            <Monitor className="w-3.5 h-3.5" />
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={device === "mobile" ? "secondary" : "ghost"}
+            onClick={() => setDevice("mobile")}
+            className="h-8 px-2.5"
+            aria-label="Mobile preview"
+          >
+            <Smartphone className="w-3.5 h-3.5" />
+          </Button>
+          <div className="w-px h-5 bg-border mx-1" />
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => setRefreshKey((k) => k + 1)}
+            className="h-8 px-2.5"
+            aria-label="Refresh preview"
+            title="Refresh"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={openInNewTab}
+            className="h-8 px-2.5"
+            aria-label="Open in new tab"
+            title="Open in new tab"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-center p-6 bg-[radial-gradient(circle_at_top,rgba(0,0,0,.04),transparent_60%)]">
+        <div
+          className="relative bg-white rounded-xl shadow-[0_20px_60px_-30px_rgba(0,0,0,.35)] border border-zinc-200 overflow-hidden"
+          style={{
+            width: frame.width * frame.scale,
+            height: frame.height * frame.scale,
+          }}
+        >
+          <iframe
+            key={`${template}-${device}-${refreshKey}`}
+            src={src}
+            title={`Live preview of ${template}`}
+            loading="lazy"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+            style={{
+              width: frame.width,
+              height: frame.height,
+              border: 0,
+              transform: `scale(${frame.scale})`,
+              transformOrigin: "top left",
+              pointerEvents: "auto",
+            }}
+          />
+        </div>
       </div>
     </div>
   );
