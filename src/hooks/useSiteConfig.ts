@@ -260,6 +260,18 @@ export interface SiteConfig {
   /** Bumped when the disclosure copy changes — lets the cadence
    *  engine detect "old consent" and gate re-engagement. */
   tcpa_disclosure_version: number;
+  /** Master kill switch for the inventory-aware embed's time-decay
+   *  escalation. When false, the floating widget reshapes copy
+   *  based on customer state but never pulses, never toasts, and
+   *  never auto-opens. Useful for luxury / high-end dealers who
+   *  consider Day 7 auto-open too aggressive for their brand. */
+  embed_escalation_enabled: boolean;
+  /** Caps escalation at a tier:
+   *    0 → no escalation (equivalent to disabled)
+   *    1 → pulse only (Day 2–4)
+   *    2 → pulse + soft toast (Day 5–6)
+   *    3 → pulse + toast + Day 7 auto-open (full machine) */
+  embed_escalation_max_tier: 0 | 1 | 2 | 3;
 }
 
 const DEFAULTS: SiteConfig = {
@@ -371,6 +383,8 @@ const DEFAULTS: SiteConfig = {
   demo_offer_amount: 23599,
   tcpa_disclosure: "",
   tcpa_disclosure_version: 1,
+  embed_escalation_enabled: true,
+  embed_escalation_max_tier: 3,
 };
 
 /**

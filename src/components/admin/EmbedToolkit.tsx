@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Copy, Check, Code2, ExternalLink, Monitor, MapPin, PanelRightOpen, LayoutList, Lightbulb, MousePointerClick, Award, Info, Eye, EyeOff, Layout, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +45,45 @@ const VDP_CTA_PRESETS = [
 
 const EmbedToolkit = () => {
   const { config } = useSiteConfig();
+  // Escalation controls — local state mirrors site_config so toggles
+  // feel responsive while the write is in flight. We persist on
+  // change rather than batching behind a save button (matches the
+  // pattern in LandingFlowConfig).
+  const [escalationEnabled, setEscalationEnabled] = useState<boolean>(config.embed_escalation_enabled);
+  const [escalationMaxTier, setEscalationMaxTier] = useState<0 | 1 | 2 | 3>(
+    config.embed_escalation_max_tier as 0 | 1 | 2 | 3,
+  );
+  const [escalationSaving, setEscalationSaving] = useState(false);
+  useEffect(() => {
+    setEscalationEnabled(config.embed_escalation_enabled);
+    setEscalationMaxTier(config.embed_escalation_max_tier as 0 | 1 | 2 | 3);
+  }, [config.embed_escalation_enabled, config.embed_escalation_max_tier]);
+
+  const persistEscalation = async (
+    next: { embed_escalation_enabled?: boolean; embed_escalation_max_tier?: number },
+  ) => {
+    setEscalationSaving(true);
+    try {
+      const { error } = await supabase
+        .from("site_config" as never)
+        .update(next as never)
+        .eq("dealership_id", tenant.dealership_id);
+      if (error) {
+        // PGRST204 / schema-cache misses mean the migration hasn't
+        // been applied yet on this environment. Surface a useful
+        // toast instead of failing silently.
+        toast({
+          title: "Couldn't save",
+          description: error.message.includes("schema cache")
+            ? "Pending migration — apply 20260506120000_embed_attribution_and_analytics.sql."
+            : error.message,
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setEscalationSaving(false);
+    }
+  };
   const { tenant } = useTenant();
   const { toast } = useToast();
   const [copied, setCopied] = useState<string | null>(null);
@@ -242,6 +282,13 @@ window.addEventListener("message", function(e) {
   // resume token in localStorage so a returning visitor sees
   // "Apply your $X toward this vehicle" on a VDP and "Increase
   // your $X trade offer" everywhere else.
+  // Bake the dealer's escalation prefs into the snippet so the
+  // loader doesn't need a config-fetch round-trip on every page.
+  // Re-pasting after a toggle change is the documented update path.
+  const escalationSnippetLines = [
+    `escalationEnabled: ${escalationEnabled ? "true" : "false"}`,
+    `escalationMaxTier: ${escalationMaxTier}`,
+  ];
   const inventoryFloatingSnippet = `<!-- ${config.dealership_name}${selectedLocLabel ? ` — ${selectedLocLabel.name}` : ''} - Inventory-Aware Trade Widget -->
 <script>
 (function(){
@@ -254,7 +301,8 @@ window.addEventListener("message", function(e) {
       host: "${baseUrl}",
       displayMode: "floating",
       color: "${buttonColor}",
-      position: "${widgetPosition}",${embedTemplate !== "__default__" ? `\n      template: "${embedTemplate}",` : ""}${storeParam ? `\n      ${storeParam}` : ""}
+      position: "${widgetPosition}",
+      ${escalationSnippetLines.join(",\n      ")},${embedTemplate !== "__default__" ? `\n      template: "${embedTemplate}",` : ""}${storeParam ? `\n      ${storeParam}` : ""}
     });
   };
   document.body.appendChild(s);
@@ -279,7 +327,8 @@ window.addEventListener("message", function(e) {
       host: "${baseUrl}",
       displayMode: "inline",
       target: "#hartecash-inventory",
-      color: "${buttonColor}",${embedTemplate !== "__default__" ? `\n      template: "${embedTemplate}",` : ""}${storeParam ? `\n      ${storeParam}` : ""}
+      color: "${buttonColor}",
+      ${escalationSnippetLines.join(",\n      ")},${embedTemplate !== "__default__" ? `\n      template: "${embedTemplate}",` : ""}${storeParam ? `\n      ${storeParam}` : ""}
     });
   };
   document.body.appendChild(s);
@@ -786,6 +835,56 @@ window.addEventListener("message", function(e) {
                   />
                   <CopyRow state="Deal accepted" onVdp="View your accepted offer" offVdp="View your accepted offer" />
                 </div>
+              </div>
+
+              {/* Escalation controls */}
+              <div className="rounded-xl border border-border bg-muted/20 p-4 space-y-3">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="space-y-0.5">
+                    <Label className="text-sm font-semibold">Time-decay escalation</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Reshape the floating widget across visits when an offer goes stale. Off ={" "}
+                      ambient pill only — no pulse, no toast, no auto-open.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={escalationEnabled}
+                    disabled={escalationSaving}
+                    onCheckedChange={(v) => {
+                      setEscalationEnabled(v);
+                      persistEscalation({ embed_escalation_enabled: v });
+                    }}
+                  />
+                </div>
+                {escalationEnabled && (
+                  <div className="flex items-center justify-between gap-4 pt-2 border-t border-border/60">
+                    <div className="space-y-0.5">
+                      <Label className="text-xs font-semibold">Maximum tier</Label>
+                      <p className="text-[11px] text-muted-foreground">
+                        Caps how aggressive escalation gets. Recommend 3 for mainstream brands; 1 or
+                        2 for luxury / high-end where Day 7 auto-open feels intrusive.
+                      </p>
+                    </div>
+                    <Select
+                      value={String(escalationMaxTier)}
+                      disabled={escalationSaving}
+                      onValueChange={(v) => {
+                        const next = Number(v) as 0 | 1 | 2 | 3;
+                        setEscalationMaxTier(next);
+                        persistEscalation({ embed_escalation_max_tier: next });
+                      }}
+                    >
+                      <SelectTrigger className="w-[200px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">Tier 1 — Pulse only</SelectItem>
+                        <SelectItem value="2">Tier 2 — Pulse + toast</SelectItem>
+                        <SelectItem value="3">Tier 3 — Full (auto-open)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
 
               {/* Floating mode snippet */}

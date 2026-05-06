@@ -474,13 +474,16 @@
   //   1   → pulse + soft toast (Day 2–4)
   //   2   → ghost overlay nudge once per session (Day 5–6)
   //   3   → auto-open the iframe overlay (Day 7+)
-  function escalationTier(state) {
+  function escalationTier(state, cfg) {
     if (!state || state.status !== "offer_made") return 0;
+    // Per-dealer kill switch + cap — passed in via the embed
+    // snippet (HarteCash.inventory({ escalationEnabled, escalationMaxTier })).
+    // We default to enabled + tier 3 to match the legacy behavior.
+    if (cfg && cfg.escalationEnabled === false) return 0;
+    var max = cfg && typeof cfg.escalationMaxTier === "number" ? cfg.escalationMaxTier : 3;
     var d = daysSinceOffer(state);
-    if (d >= 7) return 3;
-    if (d >= 5) return 2;
-    if (d >= 2) return 1;
-    return 0;
+    var tier = d >= 7 ? 3 : d >= 5 ? 2 : d >= 2 ? 1 : 0;
+    return Math.min(tier, max);
   }
 
   // Vehicle detection — multi-strategy fallback chain.
@@ -885,7 +888,7 @@
     var displayMode = cfg.displayMode || "floating"; // "floating" | "inline"
 
     track("widget_loaded", {
-      tier: escalationTier(state),
+      tier: escalationTier(state, cfg),
       submission_token: state && state.token,
       payload: { display_mode: displayMode },
     });
@@ -994,7 +997,7 @@
       var s = readState(cfg.dealerId);
       var v = detectInventoryVehicle();
       var c = getFloatingCopy(s, v);
-      var tier = escalationTier(s);
+      var tier = escalationTier(s, cfg);
       btn.dataset.intent = c.intent;
       btn.dataset.tier = String(tier);
       // Pulse from Day 2 onwards. Tiers 1+ all pulse; tier 3 also
@@ -1014,7 +1017,7 @@
     //            doesn't fight first paint
     function runEscalation() {
       var s = readState(cfg.dealerId);
-      var tier = escalationTier(s);
+      var tier = escalationTier(s, cfg);
       if (tier < 2) return;
       var sessionFlag = "hc-escalated-" + cfg.dealerId;
       try {
@@ -1085,7 +1088,7 @@
 
       track("pill_clicked", {
         intent: c.intent,
-        tier: escalationTier(s),
+        tier: escalationTier(s, cfg),
         vehicle_label: v && v.label,
         vehicle_msrp: v && v.msrp,
         submission_token: s && s.token,
