@@ -369,7 +369,7 @@ const DealAcceptedClarity = () => {
         <div className="max-w-[840px] mx-auto px-5 md:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3 min-w-0">
             {config.logo_url ? (
-              <img src={config.logo_url} alt={config.dealership_name} className="h-12 md:h-14 w-auto object-contain" />
+              <img src={config.logo_url} alt={config.dealership_name} className="h-16 md:h-20 w-auto object-contain" />
             ) : (
               <span className="text-sm font-semibold tracking-tight truncate text-zinc-900">
                 {config.dealership_name}

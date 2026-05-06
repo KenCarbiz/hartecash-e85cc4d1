@@ -22,7 +22,7 @@ const TermsOfService = () => {
             <Link to="/" className="flex items-center gap-3 min-w-0">
               <ArrowLeft className="w-4 h-4 text-zinc-500" aria-hidden="true" />
               {config.logo_url ? (
-                <img src={config.logo_url} alt={config.dealership_name} className="h-12 md:h-14 w-auto object-contain" />
+                <img src={config.logo_url} alt={config.dealership_name} className="h-16 md:h-20 w-auto object-contain" />
               ) : (
                 <span className="text-sm font-semibold tracking-tight truncate text-zinc-900">{config.dealership_name}</span>
               )}

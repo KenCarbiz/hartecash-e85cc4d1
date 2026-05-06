@@ -296,7 +296,7 @@ const CustomerPortalClarity = () => {
               <img
                 src={config.logo_url}
                 alt={config.dealership_name}
-                className="h-12 md:h-14 w-auto object-contain"
+                className="h-16 md:h-20 w-auto object-contain"
               />
             ) : (
               <span className="text-sm font-semibold tracking-tight truncate text-zinc-900">
