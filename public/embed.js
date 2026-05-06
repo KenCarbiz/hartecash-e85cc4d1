@@ -545,16 +545,56 @@
   // the dealer's full landing template).
   var overlayFrame = null;
   var overlayBackdrop = null;
+  var overlayKeyHandler = null;
+  var overlayStylesInjected = false;
 
-  function openInventoryOverlay(cfg, vehicle) {
-    if (overlayFrame) return;
+  // Append our analytics tagging onto whichever URL the caller
+  // hands us so dealer-side GA picks the embed up as a referral
+  // source. Skips if the dealer already passed their own utm_*.
+  function tagUrl(url) {
+    if (/utm_source=/.test(url)) return url;
+    var sep = url.indexOf("?") === -1 ? "?" : "&";
+    return url + sep + "utm_source=hartecash_embed&utm_medium=widget";
+  }
+
+  function isMobile() {
+    return typeof window !== "undefined" && window.matchMedia
+      ? window.matchMedia("(max-width: 640px)").matches
+      : false;
+  }
+
+  function prefersReducedMotion() {
+    return typeof window !== "undefined" && window.matchMedia
+      ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      : false;
+  }
+
+  function ensureOverlayStyles() {
+    if (overlayStylesInjected) return;
+    overlayStylesInjected = true;
+    // Mobile (≤640px) drops the rounded-corner card and goes
+    // edge-to-edge so the flow has the room it needs on a phone.
+    // Reduced-motion suppresses the scale-in so screen-reader
+    // users + folks who flagged motion sensitivity get an instant
+    // open instead of an animation they can't avoid.
     injectStyles([
       ".hc-embed-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99998;opacity:0;transition:opacity .3s ease}",
       ".hc-embed-backdrop.hc-open{opacity:1}",
       ".hc-embed-overlay{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.96);width:min(960px,94vw);height:min(720px,90vh);z-index:99999;background:#fff;border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.45);overflow:hidden;opacity:0;transition:opacity .3s ease,transform .3s ease}",
       ".hc-embed-overlay.hc-open{opacity:1;transform:translate(-50%,-50%) scale(1)}",
       ".hc-embed-overlay iframe{width:100%;height:100%;border:0;display:block}",
+      ".hc-embed-close{position:absolute;top:10px;right:12px;z-index:2;background:rgba(255,255,255,.92);border:none;border-radius:999px;width:36px;height:36px;cursor:pointer;font-size:18px;line-height:1;color:#0f172a;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.18)}",
+      "@media (max-width:640px){.hc-embed-overlay{top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;border-radius:0;transform:none}.hc-embed-overlay.hc-open{transform:none}}",
+      "@media (prefers-reduced-motion:reduce){.hc-embed-backdrop,.hc-embed-overlay{transition:none}.hc-embed-overlay{transform:translate(-50%,-50%)}.hc-pulse{animation:none}}",
     ].join("\n"));
+  }
+
+  // One overlay shell, two callers:
+  //   openInventoryOverlay(cfg, vehicle) → /embed/:dealershipId
+  //   openDirectOverlay(url)             → /boost-offer, /deal, etc.
+  function mountOverlay(src, ariaLabel) {
+    if (overlayFrame) return;
+    ensureOverlayStyles();
 
     overlayBackdrop = document.createElement("div");
     overlayBackdrop.className = "hc-embed-backdrop";
@@ -564,16 +604,43 @@
     overlayFrame = document.createElement("div");
     overlayFrame.className = "hc-embed-overlay";
     overlayFrame.setAttribute("role", "dialog");
-    overlayFrame.setAttribute("aria-label", "Trade-In");
+    overlayFrame.setAttribute("aria-modal", "true");
+    if (ariaLabel) overlayFrame.setAttribute("aria-label", ariaLabel);
+
+    // Always-visible close affordance for mobile (the backdrop
+    // tap is hidden behind the full-screen iframe at ≤640px).
+    var close = document.createElement("button");
+    close.className = "hc-embed-close";
+    close.setAttribute("aria-label", "Close");
+    close.innerHTML = "&times;";
+    close.addEventListener("click", closeInventoryOverlay);
+    overlayFrame.appendChild(close);
 
     var iframe = document.createElement("iframe");
-    iframe.src = buildEmbedUrl(Object.assign({}, cfg, { displayMode: "overlay" }), vehicle);
+    iframe.src = tagUrl(src);
     iframe.allow = "camera; clipboard-read; clipboard-write";
     iframe.loading = "lazy";
+    iframe.setAttribute("title", ariaLabel || "Trade-In");
+    // Sandbox: allow-same-origin so the iframe can hit Supabase
+    // with its session cookie. Scripts + forms required for the
+    // SPA. Popups so legal/privacy links can open in new tabs.
+    // Top-navigation is intentionally *not* allowed so the embed
+    // can't redirect the dealer's page.
+    iframe.setAttribute(
+      "sandbox",
+      "allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-storage-access-by-user-activation"
+    );
     overlayFrame.appendChild(iframe);
 
     document.body.appendChild(overlayFrame);
     document.body.style.overflow = "hidden";
+
+    // Esc to close — listener lives only while the overlay is open
+    // so we don't leak handlers across opens.
+    overlayKeyHandler = function (e) {
+      if (e.key === "Escape") closeInventoryOverlay();
+    };
+    document.addEventListener("keydown", overlayKeyHandler);
 
     requestAnimationFrame(function () {
       overlayBackdrop.classList.add("hc-open");
@@ -581,41 +648,15 @@
     });
   }
 
+  function openInventoryOverlay(cfg, vehicle) {
+    mountOverlay(buildEmbedUrl(Object.assign({}, cfg, { displayMode: "overlay" }), vehicle), "Trade-In");
+  }
+
   // Open an arbitrary HarteCash URL in the same overlay shell —
   // used for boost/view/resume intents that deep-link past the
   // /embed/:dealershipId flow into a token-scoped page.
   function openDirectOverlay(url) {
-    if (overlayFrame) return;
-    injectStyles([
-      ".hc-embed-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99998;opacity:0;transition:opacity .3s ease}",
-      ".hc-embed-backdrop.hc-open{opacity:1}",
-      ".hc-embed-overlay{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.96);width:min(960px,94vw);height:min(720px,90vh);z-index:99999;background:#fff;border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.45);overflow:hidden;opacity:0;transition:opacity .3s ease,transform .3s ease}",
-      ".hc-embed-overlay.hc-open{opacity:1;transform:translate(-50%,-50%) scale(1)}",
-      ".hc-embed-overlay iframe{width:100%;height:100%;border:0;display:block}",
-    ].join("\n"));
-
-    overlayBackdrop = document.createElement("div");
-    overlayBackdrop.className = "hc-embed-backdrop";
-    overlayBackdrop.addEventListener("click", closeInventoryOverlay);
-    document.body.appendChild(overlayBackdrop);
-
-    overlayFrame = document.createElement("div");
-    overlayFrame.className = "hc-embed-overlay";
-    overlayFrame.setAttribute("role", "dialog");
-
-    var iframe = document.createElement("iframe");
-    iframe.src = url;
-    iframe.allow = "camera; clipboard-read; clipboard-write";
-    iframe.loading = "lazy";
-    overlayFrame.appendChild(iframe);
-
-    document.body.appendChild(overlayFrame);
-    document.body.style.overflow = "hidden";
-
-    requestAnimationFrame(function () {
-      overlayBackdrop.classList.add("hc-open");
-      overlayFrame.classList.add("hc-open");
-    });
+    mountOverlay(url, "Trade-In");
   }
 
   function closeInventoryOverlay() {
@@ -623,12 +664,16 @@
     overlayBackdrop.classList.remove("hc-open");
     overlayFrame.classList.remove("hc-open");
     document.body.style.overflow = "";
+    if (overlayKeyHandler) {
+      document.removeEventListener("keydown", overlayKeyHandler);
+      overlayKeyHandler = null;
+    }
     setTimeout(function () {
       if (overlayFrame && overlayFrame.parentNode) overlayFrame.parentNode.removeChild(overlayFrame);
       if (overlayBackdrop && overlayBackdrop.parentNode) overlayBackdrop.parentNode.removeChild(overlayBackdrop);
       overlayFrame = null;
       overlayBackdrop = null;
-    }, 300);
+    }, prefersReducedMotion() ? 0 : 300);
   }
 
   function createInventoryEmbed(cfg) {
@@ -889,6 +934,20 @@
     inventory: function (cfg) {
       createInventoryEmbed(cfg || {});
     },
+
+    /** Programmatically open the inventory-aware overlay. Lets a
+     *  dealer wire their own "Trade your car" nav link or hero
+     *  button to our flow without installing a second loader.
+     *  cfg shape matches HarteCash.inventory(). */
+    openInventory: function (cfg) {
+      cfg = cfg || {};
+      if (!cfg.dealerId) return;
+      openInventoryOverlay(cfg, detectInventoryVehicle());
+    },
+
+    /** Close the inventory overlay (alias for legacy call sites
+     *  that already used HarteCash.close). */
+    closeInventory: closeInventoryOverlay,
   };
 
   // Backwards compatibility with v1
