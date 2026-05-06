@@ -24,7 +24,8 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-import { Save, Plus, Trash2, Flame, SlidersHorizontal, Target, Zap, AlertTriangle, DollarSign, Shield, Gauge, Calendar, ChevronDown, MapPin, Loader2, TrendingUp, Truck, Brain } from "lucide-react";
+import { Save, Plus, Trash2, Flame, SlidersHorizontal, Target, Zap, AlertTriangle, DollarSign, Shield, Gauge, Calendar, ChevronDown, MapPin, Loader2, TrendingUp, Truck, Brain, Sparkles } from "lucide-react";
+import BoostRulesEditor from "./BoostRulesEditor";
 
 // ── Collapsible Section wrapper ──
 const Section = ({
@@ -584,6 +585,16 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
             ))}
           </div>
         )}
+      </Section>
+
+      {/* ── Boost-Offer Rules ── per-dealer overrides for the AI
+            signals that fire on the boost-offer page. */}
+      <Section
+        icon={<Sparkles className="w-5 h-5 text-primary" />}
+        title="Boost-Offer Rules (AI photo bumps)"
+        defaultOpen={false}
+      >
+        <BoostRulesEditor />
       </Section>
 
       {/* ── Live Market Adjustment ── */}
