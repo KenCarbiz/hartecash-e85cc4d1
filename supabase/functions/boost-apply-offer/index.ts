@@ -128,38 +128,28 @@ serve(async (req) => {
   // the bump as the new floor.
   const newOffer = currentOffer + bump;
 
-  const { error: updateErr } = await supabase
-    .from("submissions")
-    .update({
-      offered_price: newOffer,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("token", body.token);
+  // Single transaction for offered_price update + offer_bumps
+  // audit insert. apply_boost_bump (in 20260507000000_boost_
+  // safety.sql) row-locks the submission so concurrent runs
+  // can't race; if the audit insert fails the price update
+  // rolls back too.
+  const { error: applyErr } = await supabase.rpc("apply_boost_bump", {
+    _token: body.token,
+    _previous_offer: currentOffer,
+    _new_offer: newOffer,
+    _bump_amount: bump,
+    _line_items: body.line_items ?? [],
+    _source: body.source || "boost_offer",
+  });
 
-  if (updateErr) {
-    console.error("[boost-apply-offer] update failed", updateErr.message);
-    return new Response(JSON.stringify({ error: "update_failed", detail: updateErr.message }), {
+  if (applyErr) {
+    console.error("[boost-apply-offer] apply_boost_bump failed", applyErr.message);
+    return new Response(JSON.stringify({ error: "apply_failed", detail: applyErr.message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-
-  // Audit row — best-effort, don't fail the whole request if the
-  // table doesn't exist yet on this environment. The dealer-side
-  // file detail view picks this up to show the bump reasons.
-  try {
-    await supabase.from("offer_bumps").insert({
-      submission_id: row.id,
-      dealership_id: row.dealership_id,
-      previous_offer: currentOffer,
-      new_offer: newOffer,
-      bump_amount: bump,
-      line_items: body.line_items ?? [],
-      source: body.source || "boost_offer",
-    });
-  } catch (e) {
-    console.warn("[boost-apply-offer] audit insert skipped:", (e as Error).message);
-  }
+  void row;
 
   return new Response(
     JSON.stringify({

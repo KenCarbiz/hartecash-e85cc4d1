@@ -193,6 +193,31 @@ serve(async (req) => {
   const submissionId = row.id as string;
   const declaredMileage = Number(row.mileage) || 0;
 
+  // ── Idempotency guard ──────────────────────────────────────────────
+  // If this submission already had a boost in the last 60 seconds,
+  // return the cached result instead of re-running the AI pipeline
+  // and stacking another bump. Catches double-taps on Submit, flaky
+  // network retries, and accidental refresh-during-evaluation. The
+  // recent_boost_bump RPC is in 20260507000000_boost_safety.sql.
+  const { data: recent } = await supabase.rpc("recent_boost_bump", {
+    _token: body.token,
+    _within_seconds: 60,
+  });
+  // RPC returns a setof; first row wins.
+  const recentRow = Array.isArray(recent) && recent.length > 0 ? recent[0] : null;
+  if (recentRow) {
+    return new Response(
+      JSON.stringify({
+        previous_offer: Number(recentRow.previous_offer) || 0,
+        new_offer: Number(recentRow.new_offer) || 0,
+        bump_amount: Number(recentRow.bump_amount) || 0,
+        line_items: recentRow.line_items || [],
+        idempotent_replay: true,
+      }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+
   // ── Step 0.5 — load per-dealer signal overrides ──────────────────
   // boost_bump_rules rows replace the SIGNAL_DEFAULTS for this
   // dealership. Single round-trip, then helper closures below
@@ -492,29 +517,28 @@ serve(async (req) => {
   const bumpTotal = Math.max(MIN_BUMP_TOTAL, runningTotal);
   const newOffer = baseline + bumpTotal;
 
-  // ── Step 5 — persist ──────────────────────────────────────────────
-  await supabase
-    .from("submissions")
-    .update({
-      offered_price: newOffer,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("token", body.token);
-
-  // Audit trail — best-effort.
-  try {
-    await supabase.from("offer_bumps").insert({
-      submission_id: submissionId,
-      dealership_id: row.dealership_id,
-      previous_offer: previousOffer,
-      new_offer: newOffer,
-      bump_amount: bumpTotal,
-      line_items: finalItems,
-      source: baselineSource === "bb_re_appraisal" ? "boost_evaluate_bb_recall" : "boost_evaluate",
-    });
-  } catch (e) {
-    console.warn("[boost-evaluate] audit insert skipped:", (e as Error).message);
+  // ── Step 5 — persist atomically ───────────────────────────────────
+  // apply_boost_bump (in 20260507000000_boost_safety.sql) wraps
+  // the offered_price update + offer_bumps audit insert in a
+  // single transaction with a row lock on the submission. If
+  // either step fails, both roll back — no more "mutated price
+  // with no audit row" failure mode.
+  const { error: applyErr } = await supabase.rpc("apply_boost_bump", {
+    _token: body.token,
+    _previous_offer: previousOffer,
+    _new_offer: newOffer,
+    _bump_amount: bumpTotal,
+    _line_items: finalItems,
+    _source: baselineSource === "bb_re_appraisal" ? "boost_evaluate_bb_recall" : "boost_evaluate",
+  });
+  if (applyErr) {
+    console.error("[boost-evaluate] apply_boost_bump failed:", applyErr.message);
+    return new Response(
+      JSON.stringify({ error: "apply_failed", detail: applyErr.message }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   }
+  void submissionId;
 
   return new Response(
     JSON.stringify({

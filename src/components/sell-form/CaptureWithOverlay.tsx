@@ -309,39 +309,24 @@ const CaptureWithOverlay = ({
     } catch { /* noop */ }
 
     try {
-      // ── Orientation reconciliation ── On Android in particular,
-      // a portrait-held device with a rear camera reports a
-      // landscape video frame (e.g. 1920×1080) even when the user
-      // is clearly framing portrait. If we just dump video pixels
-      // into a same-dim canvas the resulting JPEG looks sideways
-      // in the gallery. Compare device-orientation aspect to the
-      // video aspect; rotate 90° if they disagree.
-      const videoLandscape = video.videoWidth > video.videoHeight;
-      const deviceLandscape =
-        typeof window !== "undefined" && window.innerWidth > window.innerHeight;
-      const needsRotation = videoLandscape !== deviceLandscape;
-
+      // Straight drawImage from video to canvas. Modern browsers
+      // deliver getUserMedia frames in display orientation
+      // already; the previous "rotate on innerWidth-vs-videoWidth
+      // mismatch" heuristic broke on tablets, foldables, external
+      // monitors, and desktop QA (the cure became the disease).
+      // If a future device genuinely returns mis-oriented frames
+      // we'll handle it via screen.orientation + the underlying
+      // MediaStreamTrack.getSettings().aspectRatio rather than a
+      // viewport-width guess.
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
       if (!ctx) {
         setCapturing(false);
         return;
       }
-
-      if (needsRotation) {
-        // Swap dims, rotate the context 90° clockwise, then draw.
-        canvas.width = video.videoHeight;
-        canvas.height = video.videoWidth;
-        ctx.save();
-        ctx.translate(canvas.width, 0);
-        ctx.rotate(Math.PI / 2);
-        ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
-        ctx.restore();
-      } else {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      }
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       canvas.toBlob(
         (blob) => {
