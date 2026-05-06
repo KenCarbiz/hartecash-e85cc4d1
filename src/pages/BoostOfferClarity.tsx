@@ -35,6 +35,8 @@ interface SubmissionInfo {
   photos_uploaded: boolean;
   bb_class_name?: string | null;
   dealership_id?: string;
+  offered_price?: number | null;
+  mileage?: string | null;
 }
 
 const REQUIRED_SHOTS = [
@@ -290,11 +292,12 @@ const BoostOfferClarity = () => {
     <div className="min-h-screen bg-white text-zinc-900">
       <Header config={config} />
       <main className="max-w-[840px] mx-auto px-5 md:px-8 py-10 md:py-14 space-y-10">
-        {/* ── Promotional hero — leads with the dollar range so the
-              customer understands the upside before being asked to
-              do work. Numbers come from observed bump distribution
-              across boost-completed submissions; floor $250 / ceiling
-              $1,785 reflect the 10th–90th percentile, not the mean. ── */}
+        {/* ── Hero — personalized to the customer's actual vehicle so
+              the promise reads as insight, not marketing. Floor-locked
+              line removes the only real objection ("what if the AI
+              finds something and lowers my offer?"). The whole hero
+              is two short sentences — the rest of the page is the
+              unlock, this is just the open. ── */}
         <motion.section
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -305,40 +308,42 @@ const BoostOfferClarity = () => {
             <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
             Boost your offer
           </p>
-          <h1 className="font-sans text-[32px] md:text-[44px] font-bold tracking-[-0.025em] leading-[1.05] text-zinc-900">
-            Add photos. Get paid more.
+          <h1 className="font-sans text-[32px] md:text-[44px] font-bold tracking-[-0.025em] leading-[1.04] text-zinc-900">
+            {submission.offered_price && submission.offered_price > 0
+              ? `Push your $${Number(submission.offered_price).toLocaleString()} higher.`
+              : "Push your offer higher."}
           </h1>
-          <p className="text-base text-zinc-600 max-w-md mx-auto leading-relaxed">
-            Customers who add a clean photo set typically see between{" "}
-            <span className="font-bold text-emerald-700">$250</span> and{" "}
-            <span className="font-bold text-emerald-700">$1,785</span> added to their offer.
+          <p className="text-base text-zinc-600 max-w-lg mx-auto leading-relaxed">
+            Most {vehicleStr || "vehicles"}{submission.mileage ? ` with ${Number(submission.mileage).toLocaleString()} miles` : ""} have at least one thing that bumps the offer. Six photos. Ninety seconds.
           </p>
 
-          {/* Two-up benefit chips — AI evaluation + appraiser queue.
-              Sets expectations: this isn't just photos, it's a real
-              re-evaluation that goes to a human afterwards. */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md mx-auto pt-2">
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 px-4 py-3 text-left">
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700 mb-1">
-                AI evaluation
-              </p>
-              <p className="text-xs text-zinc-700 leading-snug">
-                Our AI inspects every photo the moment you upload — your offer can update on the spot.
-              </p>
-            </div>
-            <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-left">
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-700 mb-1">
-                Appraiser queue
-              </p>
-              <p className="text-xs text-zinc-600 leading-snug">
-                A real appraiser reviews within 24 hours and can bump the AI's number further.
-              </p>
-            </div>
+          {/* The single most important line on this page — removes
+              the unspoken fear that uploading photos could *lower*
+              the offer. Stated as a guarantee, not a maybe. */}
+          <p className="inline-flex items-center justify-center gap-2 text-[12px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-4 py-2 mt-1">
+            <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
+            Your offer can only go up — never down.
+          </p>
+
+          {/* Trust strip — three slim chips, one line. Sets the
+              dealer's process expectations without burying the lede. */}
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[11px] text-zinc-600 pt-3">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+              AI scores instantly
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+              Appraiser confirms within 24 h
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+              Floor locked
+              {submission.offered_price && submission.offered_price > 0
+                ? ` at $${Number(submission.offered_price).toLocaleString()}`
+                : ""}
+            </span>
           </div>
-
-          <p className="text-[11px] text-zinc-500 pt-1">
-            Six quick photos for your {modelStr || "vehicle"}. About 90 seconds.
-          </p>
         </motion.section>
 
         {error && (
