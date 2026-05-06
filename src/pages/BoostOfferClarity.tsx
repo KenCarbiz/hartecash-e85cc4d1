@@ -202,11 +202,18 @@ const BoostOfferClarity = () => {
         allFiles?.some((f) => f.name.startsWith(`${s.id}-`)),
       );
       if (allRequiredPresent && token) {
-        await supabase.rpc("mark_photos_uploaded", { _token: token });
+        // Intentionally NOT calling mark_photos_uploaded here.
+        // That RPC promotes the submission's next_step into a
+        // "photos done" state, which makes get_submission_portal
+        // exclude the row → after the boost the customer would
+        // bounce back to /offer/:token and see "Offer Not Available"
+        // because the portal RPC stopped returning their submission.
+        // The boost flow uses storage + offer_bumps audit to track
+        // photos; the legacy "photos_uploaded" flag is for the
+        // separate /upload/:token path and shouldn't fire here.
         if (submission.id) {
-          // Tag this as a boost-trigger so the dealer sees the
-          // customer specifically asked for an AI re-appraisal,
-          // not just a routine photo upload.
+          // Notify the dealer that a boost was triggered so the
+          // appraiser queue picks it up promptly.
           safeInvoke("send-notification", {
             body: {
               trigger_key: "photos_uploaded",

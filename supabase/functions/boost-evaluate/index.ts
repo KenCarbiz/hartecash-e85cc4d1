@@ -219,14 +219,29 @@ serve(async (req) => {
     return override ? override.enabled : true; // default ON
   };
 
-  // Effective starting offer — same fallback chain the offer page
-  // uses so the bump arithmetic matches what the customer saw.
-  let baseline =
-    Number(row.offered_price) ||
-    Number(row.estimated_offer_high) ||
-    Number(row.bb_tradein_avg) ||
-    Number(row.bb_wholesale_avg) ||
-    0;
+  // Read site_config.demo_mode + demo_offer_amount alongside the
+  // submission. When demo mode is on, the offer page hard-overrides
+  // cashOffer to demo_offer_amount regardless of what's in the row's
+  // pricing fields — the boost arithmetic has to honor the same
+  // override or "Previous offer" reads $0 on every demo submission.
+  const { data: cfg } = await supabase
+    .from("site_config")
+    .select("demo_mode, demo_offer_amount")
+    .eq("dealership_id", row.dealership_id)
+    .maybeSingle();
+  const demoMode = cfg?.demo_mode === true;
+  const demoAmount = Number(cfg?.demo_offer_amount) || 0;
+
+  // Effective starting offer — demo override wins, then the same
+  // fallback chain the offer page uses so the bump arithmetic
+  // matches what the customer saw.
+  let baseline = demoMode && demoAmount > 0
+    ? demoAmount
+    : (Number(row.offered_price) ||
+       Number(row.estimated_offer_high) ||
+       Number(row.bb_tradein_avg) ||
+       Number(row.bb_wholesale_avg) ||
+       0);
   const previousOffer = baseline;
   let baselineSource: "current" | "bb_re_appraisal" = "current";
 

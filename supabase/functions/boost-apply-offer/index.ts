@@ -99,16 +99,30 @@ serve(async (req) => {
     });
   }
 
+  // Read site_config.demo_mode + demo_offer_amount alongside the
+  // submission. When demo mode is on, the offer page hard-overrides
+  // cashOffer to demo_offer_amount regardless of what's in the row's
+  // pricing fields — so the boost arithmetic has to honor the same
+  // override or "Previous offer" reads $0 on every demo submission.
+  const { data: cfg } = await supabase
+    .from("site_config")
+    .select("demo_mode, demo_offer_amount")
+    .eq("dealership_id", row.dealership_id)
+    .maybeSingle();
+  const demoMode = cfg?.demo_mode === true;
+  const demoAmount = Number(cfg?.demo_offer_amount) || 0;
+
   // Mirror the OfferPageClarity / OfferPage fallback order. First
-  // truthy value wins. This is the same number the customer was
-  // staring at on the offer page when they clicked Save, so the
-  // bump arithmetic on the receipt matches their mental model.
-  const currentOffer =
-    Number(row.offered_price) ||
-    Number(row.estimated_offer_high) ||
-    Number(row.bb_tradein_avg) ||
-    Number(row.bb_wholesale_avg) ||
-    0;
+  // truthy value wins. In demo mode, demo_offer_amount supersedes
+  // every database column so the customer's bump receipt shows the
+  // same baseline they actually saw on /offer.
+  const currentOffer = demoMode && demoAmount > 0
+    ? demoAmount
+    : (Number(row.offered_price) ||
+       Number(row.estimated_offer_high) ||
+       Number(row.bb_tradein_avg) ||
+       Number(row.bb_wholesale_avg) ||
+       0);
   // Floor-locked promise from the boost page: the offer can only
   // go up. If the current price is somehow null/0 we still apply
   // the bump as the new floor.
