@@ -48,12 +48,17 @@ interface SubmissionInfo {
 }
 
 const REQUIRED_SHOTS = [
-  { id: "exterior_front",    label: "Front",          captured: "Front exterior captured" },
-  { id: "exterior_driver",   label: "Driver Side",    captured: "Driver side angle clear" },
-  { id: "exterior_rear",     label: "Rear",           captured: "Rear exterior captured" },
-  { id: "exterior_passenger",label: "Passenger Side", captured: "Passenger side angle clear" },
-  { id: "dashboard_odometer",label: "Odometer",       captured: "Odometer reading visible" },
-  { id: "tires_wheels",      label: "Tire & Wheel",   captured: "Tire wear pattern visible" },
+  { id: "exterior_front",    label: "Front",          captured: "Front exterior captured",    tip: "Whole front in frame" },
+  { id: "exterior_driver",   label: "Driver Side",    captured: "Driver side angle clear",    tip: "Whole side, daylight if you can" },
+  { id: "exterior_rear",     label: "Rear",           captured: "Rear exterior captured",     tip: "Stand back so the whole rear fits" },
+  { id: "exterior_passenger",label: "Passenger Side", captured: "Passenger side angle clear", tip: "Whole side, daylight if you can" },
+  // Engine-on tip is intentionally vague — we don't tell the
+  // customer why (the AI uses a running engine to capture live
+  // warning lights vs. pre-start indicators), but the instruction
+  // is non-negotiable for the no_warning_lights signal to fire
+  // accurately.
+  { id: "dashboard_odometer",label: "Odometer",       captured: "Odometer reading visible",   tip: "Engine running, photo from the driver seat" },
+  { id: "tires_wheels",      label: "Tire & Wheel",   captured: "Tire wear pattern visible",  tip: "Get close — show the tread groove" },
 ];
 
 type ShotState = { file?: File; preview?: string; uploaded?: boolean };
@@ -690,11 +695,21 @@ const BoostOfferClarity = () => {
                     {state?.preview ? (
                       <img src={state.preview} alt={shot.label} className="absolute inset-0 w-full h-full object-cover" />
                     ) : (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-zinc-500">
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-zinc-500 px-3 text-center">
                         <Camera className="w-5 h-5" aria-hidden="true" />
-                        <span className="text-xs font-semibold uppercase tracking-wider text-center px-2">
+                        <span className="text-xs font-semibold uppercase tracking-wider">
                           {shot.label}
                         </span>
+                        {/* Per-shot capture tip — sets up the right
+                            shot before the camera opens so we don't
+                            burn AI cycles on a blurry front-too-close
+                            or an engine-off odometer (which would
+                            miss the warning-light pass). */}
+                        {shot.tip && (
+                          <span className="text-[10px] font-medium text-zinc-400 leading-snug">
+                            {shot.tip}
+                          </span>
+                        )}
                       </div>
                     )}
                     {filled && (
