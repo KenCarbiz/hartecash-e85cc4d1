@@ -75,9 +75,26 @@ const VehicleImage = ({ year, make, model, style, selectedColor, compact = false
 
       if (currentColorRef.current !== color && !isPrefetch) return;
 
-      if (fnErr || data?.error) {
+      // The edge function now returns 200 with image_url:null when
+      // every source (cache, BB, Wikipedia, AI) failed — that's a
+      // graceful "no image available" rather than a hard error. We
+      // surface the camera-icon empty state in either case but no
+      // longer log a noisy error for the expected null path.
+      const isHardError = fnErr || (data?.error && data?.error !== "image_unavailable");
+      const hasUrl = !!data?.image_url;
+
+      if (isHardError) {
         if (!isPrefetch) {
           console.error("Vehicle image error:", fnErr || data?.error);
+          setError(true);
+          setLoading(false);
+        }
+        return;
+      }
+
+      if (!hasUrl) {
+        if (!isPrefetch) {
+          // Soft-fail — no image, no toast. Camera icon shows.
           setError(true);
           setLoading(false);
         }

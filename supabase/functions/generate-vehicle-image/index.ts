@@ -8,6 +8,58 @@ const corsHeaders = {
 
 const BB_PHOTO_BASE = "https://service.blackbookcloud.com/UsedCarWS/UsedCarWS/UsedVehicle/Photo/uvc";
 
+// Wikipedia REST API — free, no key, ~300-500ms response time.
+// Most popular vehicles (Camry, Civic, F-150, Armada, etc.) have a
+// Wikipedia article whose infobox includes a stock photo. We use the
+// summary endpoint to grab the originalimage / thumbnail.
+async function fetchWikipediaImage(year: string, make: string, model: string): Promise<Uint8Array | null> {
+  // Build progressively-broader search terms. Year-specific titles
+  // exist for some redesigns ("2024 Toyota Camry") but most articles
+  // are model-only. Try most-specific first.
+  const candidates = [
+    `${year}_${make}_${model}`,
+    `${make}_${model}`,
+    `${make}_${model.replace(/\s+/g, "_")}`,
+  ];
+  for (const title of candidates) {
+    try {
+      const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
+      const ctrl = new AbortController();
+      const timeoutId = setTimeout(() => ctrl.abort(), 2500);
+      const res = await fetch(summaryUrl, {
+        signal: ctrl.signal,
+        headers: { "User-Agent": "HartecashVehicleLookup/1.0 (https://hartecash.com)" },
+      });
+      clearTimeout(timeoutId);
+      if (!res.ok) continue;
+      const data = await res.json();
+      const imgUrl: string | undefined = data?.originalimage?.source || data?.thumbnail?.source;
+      if (!imgUrl) continue;
+
+      // Refuse logos / non-vehicle images. Wikipedia summary returns
+      // a page image which for some manufacturer pages is a logo. We
+      // sniff via mime + size — vehicle photos are typically > 30KB.
+      const imgCtrl = new AbortController();
+      const imgTimeout = setTimeout(() => imgCtrl.abort(), 4000);
+      const imgRes = await fetch(imgUrl, {
+        signal: imgCtrl.signal,
+        headers: { "User-Agent": "HartecashVehicleLookup/1.0 (https://hartecash.com)" },
+      });
+      clearTimeout(imgTimeout);
+      if (!imgRes.ok) continue;
+      const ct = imgRes.headers.get("content-type") || "";
+      if (!ct.startsWith("image/")) continue;
+      const buf = await imgRes.arrayBuffer();
+      if (buf.byteLength < 8000) continue; // tiny logo / thumbnail
+      console.log(`Wikipedia HIT for ${title} (${buf.byteLength} bytes)`);
+      return new Uint8Array(buf);
+    } catch (e) {
+      console.log(`Wikipedia attempt for "${title}" failed: ${(e as Error).message}`);
+    }
+  }
+  return null;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -63,6 +115,38 @@ serve(async (req) => {
 
     console.log(`Cache MISS for ${cacheKey}`);
 
+    // 1.5 Color-agnostic cache fallback. Most lookups don't need the
+    // exact body color — the vehicle silhouette + trim is what the
+    // customer needs to see. If we have ANY cached image of this
+    // Y/M/M, serve it immediately so the customer never waits on AI.
+    // The frontend's separate per-color cache key still triggers a
+    // re-fetch later if/when the color matches.
+    const { data: anyColorRow } = await supabase
+      .from("vehicle_image_cache")
+      .select("storage_path, exterior_color")
+      .eq("vehicle_year", String(year))
+      .eq("vehicle_make", make)
+      .eq("vehicle_model", model)
+      .limit(1)
+      .maybeSingle();
+
+    if (anyColorRow?.storage_path) {
+      const { data: signedData } = await supabase.storage
+        .from("submission-photos")
+        .createSignedUrl(anyColorRow.storage_path, 60 * 60 * 24 * 30);
+      if (signedData?.signedUrl) {
+        console.log(`Color-agnostic cache HIT for ${year} ${make} ${model} (${anyColorRow.exterior_color})`);
+        return new Response(JSON.stringify({
+          image_url: signedData.signedUrl,
+          cached: true,
+          color_fallback: true,
+          fallback_color: anyColorRow.exterior_color,
+        }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+    }
+
     // 2. Try Black Book photo API first (if UVC provided and year >= 2001)
     let imageBytes: Uint8Array | null = null;
     let imageSource = "ai";
@@ -101,7 +185,18 @@ serve(async (req) => {
       }
     }
 
-    // 3. Fall back to AI generation if BB photo unavailable
+    // 3. Wikipedia infobox — free, fast (~500ms), high hit rate for
+    //    common cars. Tried before AI so we don't burn 10-30s on
+    //    Gemini for vehicles Wikipedia already has a clean photo of.
+    if (!imageBytes) {
+      const wikiBytes = await fetchWikipediaImage(String(year), make, model);
+      if (wikiBytes) {
+        imageBytes = wikiBytes;
+        imageSource = "wikipedia";
+      }
+    }
+
+    // 4. Fall back to AI generation as last resort
     let imageDataUrl: string | null = null;
 
     if (!imageBytes) {
@@ -130,8 +225,15 @@ serve(async (req) => {
 
       for (const aiModel of models) {
         try {
+          // 15s per-model cap. Gemini sometimes hangs longer than
+          // 30s and the customer is staring at a spinner; better to
+          // bail and try the next model (or fall through to the
+          // graceful 404 below) than block.
+          const ctrl = new AbortController();
+          const timeoutId = setTimeout(() => ctrl.abort(), 15000);
           const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
             method: "POST",
+            signal: ctrl.signal,
             headers: {
               "Authorization": `Bearer ${LOVABLE_API_KEY}`,
               "Content-Type": "application/json",
@@ -142,6 +244,7 @@ serve(async (req) => {
               modalities: ["image", "text"],
             }),
           });
+          clearTimeout(timeoutId);
 
           if (!aiRes.ok) {
             lastError = `${aiModel} failed [${aiRes.status}]`;
@@ -162,7 +265,18 @@ serve(async (req) => {
       }
 
       if (!imageDataUrl) {
-        throw new Error(`All models failed. Last: ${lastError}`);
+        // Graceful no-image response — frontend already handles a
+        // 200 with image_url:null by showing the camera icon instead
+        // of looking broken. Better than a 500 that triggers the
+        // toast / "unavailable" red state.
+        console.warn(`All AI models failed for ${cacheKey}: ${lastError}`);
+        return new Response(JSON.stringify({
+          image_url: null,
+          error: "image_unavailable",
+          detail: lastError,
+        }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
       }
 
       const base64Data = imageDataUrl.replace(/^data:image\/\w+;base64,/, "");
@@ -170,9 +284,12 @@ serve(async (req) => {
       imageSource = "ai";
     }
 
-    // 4. Upload to storage and register in cache table
-    const contentType = imageSource === "blackbook" ? "image/jpeg" : "image/png";
-    const ext = imageSource === "blackbook" ? "jpg" : "png";
+    // 5. Upload to storage and register in cache table.
+    //    BB returns JPEG, Wikipedia is usually JPEG (sometimes PNG
+    //    or WebP), AI returns PNG. JPEG is the safe default for the
+    //    non-AI path since it covers all the common cases.
+    const contentType = imageSource === "ai" ? "image/png" : "image/jpeg";
+    const ext = imageSource === "ai" ? "png" : "jpg";
     const finalStoragePath = `vehicle-images/${cacheKey}.${ext}`;
 
     supabase.storage
@@ -200,13 +317,14 @@ serve(async (req) => {
         else console.log(`Cached ${cacheKey} → ${finalStoragePath} (source: ${imageSource})`);
       });
 
-    // Return immediately
-    if (imageSource === "blackbook") {
-      // For BB photos, create a signed URL from the uploaded bytes
-      // Since upload is fire-and-forget, return a data URL for immediate display
+    // Return immediately. Storage upload is fire-and-forget so for
+    // BB and Wikipedia we hand back a data URL of the bytes we
+    // already have in memory — no second round-trip to fetch the
+    // freshly-uploaded file.
+    if (imageSource !== "ai") {
       const base64 = btoa(String.fromCharCode(...imageBytes!));
       const dataUrl = `data:image/jpeg;base64,${base64}`;
-      return new Response(JSON.stringify({ image_url: dataUrl, cached: false, source: "blackbook" }), {
+      return new Response(JSON.stringify({ image_url: dataUrl, cached: false, source: imageSource }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
