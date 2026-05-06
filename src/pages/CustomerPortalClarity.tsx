@@ -432,7 +432,7 @@ const CustomerPortalClarity = () => {
             <div className="px-6 py-5 border-b border-zinc-100 flex items-center justify-between">
               <h2 className="text-sm font-semibold tracking-tight">Vehicle Summary</h2>
             </div>
-            <div className="aspect-[16/8] bg-zinc-50/40">
+            <div className="aspect-[16/8] bg-white">
               <VehicleImage
                 year={s.vehicle_year || ""}
                 make={s.vehicle_make || ""}
@@ -440,6 +440,7 @@ const CustomerPortalClarity = () => {
                 selectedColor={s.exterior_color || ""}
                 imageAngle="three_quarter"
                 hideColorLabel
+                fill
               />
             </div>
             {/* Offer block — pulled out of the spec grid and

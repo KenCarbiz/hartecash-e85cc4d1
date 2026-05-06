@@ -1291,6 +1291,7 @@ function FoundCarCard({ vehicle }: { vehicle: BBVehicle }) {
               selectedColor=""
               imageAngle="three_quarter"
               hideColorLabel
+              fill
             />
           </div>
         </div>

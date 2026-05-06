@@ -450,6 +450,7 @@ const DealAcceptedClarity = () => {
               selectedColor={s.exterior_color || ""}
               imageAngle="three_quarter"
               hideColorLabel
+              fill
             />
           </div>
           <div className="px-6 py-5 grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm border-t border-zinc-100 bg-white">

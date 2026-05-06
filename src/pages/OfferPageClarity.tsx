@@ -411,6 +411,7 @@ const OfferPageClarity = () => {
                 selectedColor={s.exterior_color || ""}
                 imageAngle="three_quarter"
                 hideColorLabel
+                fill
               />
             </div>
           </div>

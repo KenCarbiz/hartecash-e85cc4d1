@@ -14,6 +14,12 @@ interface Props {
   uvc?: string;
   hideColorLabel?: boolean;
   imageAngle?: string;
+  /** When true, fill the parent container at w-full h-full instead
+   *  of forcing the component's own 4/3 aspect ratio. Use this
+   *  when the parent (offer card, deal-accepted hero, etc.) is
+   *  already shaping the slot — otherwise the inner 4/3 fights
+   *  with the outer 16/9 and the car renders letterboxed. */
+  fill?: boolean;
 }
 
 // Preload an image and resolve when ready
@@ -25,7 +31,7 @@ const preloadImage = (url: string): Promise<string> =>
     img.src = url;
   });
 
-const VehicleImage = ({ year, make, model, style, selectedColor, compact = false, uvc, hideColorLabel = false, imageAngle: imageAngleProp }: Props) => {
+const VehicleImage = ({ year, make, model, style, selectedColor, compact = false, uvc, hideColorLabel = false, imageAngle: imageAngleProp, fill = false }: Props) => {
   const { config } = useSiteConfig();
   const imageAngle = imageAngleProp || config.vehicle_image_angle || "three_quarter";
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -181,8 +187,16 @@ const VehicleImage = ({ year, make, model, style, selectedColor, compact = false
     // true alpha transparency. We always want them sitting on solid
     // white so the dealer's brand palette never bleeds through and
     // the image NEVER reads as the checkered transparency pattern.
-    <div className={`relative w-full overflow-hidden bg-white ${compact ? "mb-2" : "mb-4"}`}
-         style={{ aspectRatio: compact ? "16/7" : "4/3" }}>
+    //
+    // fill mode: parent sets the slot shape (typical when this lives
+    // inside a Clarity card with its own aspect ratio). No internal
+    // aspect-ratio so the parent wins and the car never letterboxes.
+    <div
+      className={`relative w-full overflow-hidden bg-white ${
+        fill ? "h-full" : compact ? "mb-2" : "mb-4"
+      }`}
+      style={fill ? undefined : { aspectRatio: compact ? "16/7" : "4/3" }}
+    >
       {/* Loading indicator — small and non-intrusive when we already have an image */}
       {loading && (
         <div className={`absolute z-10 ${imageUrl
