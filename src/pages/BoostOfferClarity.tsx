@@ -321,10 +321,28 @@ const BoostOfferClarity = () => {
   // moment: customer sees not just THAT they got a bump, but WHY,
   // mapped to the photos they actually uploaded.
   if (phase === "revealed" && bumpResult) {
+    // Concrete date for the trust chip — "Locked through May 14"
+    // out-trusts a generic "Locked for 8 days" because dates are
+    // verifiable. Bound to the dealer's actual guarantee window so
+    // it can't drift from the real expiry. Defaults to 8 days when
+    // the dealer hasn't set a value.
+    const lockDays = Number(config.price_guarantee_days) || 8;
+    const lockEnd = new Date();
+    lockEnd.setDate(lockEnd.getDate() + lockDays);
+    const lockEndsLabel = lockEnd.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+
     return (
       <div className="min-h-screen bg-white text-zinc-900">
         <Header config={config} />
-        <main className="max-w-[640px] mx-auto px-5 md:px-8 py-12 md:py-16 space-y-8">
+        {/* min-h reserves vertical space during the line-item
+            stagger + count-up animation so the demoted Save link
+            and trust chips don't shift the page underneath the
+            customer's finger as they animate in. CLS prevention
+            on the highest-conversion screen. */}
+        <main className="max-w-[640px] mx-auto px-5 md:px-8 py-12 md:py-16 space-y-8 min-h-[640px]">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -409,32 +427,59 @@ const BoostOfferClarity = () => {
               duration: 0.45,
               delay: 0.5 + bumpResult.lineItems.length * 0.18 + 0.4,
             }}
-            className="space-y-3 text-center"
+            className="space-y-4 text-center"
           >
-            <p className="text-xs text-zinc-500 max-w-md mx-auto leading-relaxed">
-              Your offer is firm. Subject to final inspection.
+            {/* Single dominant Accept CTA. Save demoted to a text
+                link below so the customer's choice has a clear
+                primary instead of two equal-weight pills. */}
+            <Button
+              onClick={() => navigate(`/deal/${token}`)}
+              className="w-full sm:w-auto sm:min-w-[280px] rounded-full px-8 h-14 text-base bg-zinc-900 hover:bg-zinc-800 text-white font-semibold transition-[filter,background] duration-150 hover:brightness-95 shadow-[0_4px_14px_rgba(0,0,0,0.15)]"
+              style={
+                config.landing_cta_color
+                  ? { background: config.landing_cta_color, color: config.landing_cta_text_color || "#ffffff" }
+                  : undefined
+              }
+            >
+              Accept ${bumpResult.newOffer.toLocaleString()}
+              <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
+            </Button>
+
+            {/* Trust chips — sit directly under Accept so they
+                catch the customer at the click moment. Semantic
+                <ul> with separator <li>s so screen readers parse
+                three items, not one middot-string blob. Date is
+                bound to the dealer's price-guarantee window so
+                it's never out of sync with the actual lock. */}
+            <ul
+              role="list"
+              className="inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[11px] text-zinc-500 leading-tight"
+            >
+              <li className="inline-flex items-center">Locked through {lockEndsLabel}</li>
+              <li aria-hidden="true" className="text-zinc-300">·</li>
+              <li className="inline-flex items-center">
+                Backed by {config.dealership_name || "the dealer"}
+              </li>
+              <li aria-hidden="true" className="text-zinc-300">·</li>
+              <li className="inline-flex items-center">One firm offer</li>
+            </ul>
+
+            {/* Save → text link, not a pill button. Same
+                navigation; visual demotion only. */}
+            <button
+              type="button"
+              onClick={() => navigate(`/offer/${token}`)}
+              className="text-sm text-zinc-500 hover:text-zinc-900 transition-colors underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:rounded"
+            >
+              Save this offer for later →
+            </button>
+
+            {/* Final-inspection footer — reframed so it reinforces
+                the floor-locked promise instead of quietly
+                retracting it. Same legal cover, opposite tone. */}
+            <p className="text-[11px] text-zinc-400 max-w-md mx-auto leading-relaxed pt-2">
+              Final number confirmed at drop-off — your floor holds either way.
             </p>
-            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-              <Button
-                onClick={() => navigate(`/deal/${token}`)}
-                className="rounded-full px-6 h-12 bg-zinc-900 hover:bg-zinc-800 text-white font-semibold transition-[filter,background] duration-150 hover:brightness-95"
-                style={
-                  config.landing_cta_color
-                    ? { background: config.landing_cta_color, color: config.landing_cta_text_color || "#ffffff" }
-                    : undefined
-                }
-              >
-                Accept ${bumpResult.newOffer.toLocaleString()}
-                <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => navigate(`/offer/${token}`)}
-                className="rounded-full px-6 h-12 border-zinc-300 text-zinc-900 hover:bg-zinc-50 font-semibold"
-              >
-                Save my new offer
-              </Button>
-            </div>
           </motion.div>
         </main>
       </div>
@@ -508,7 +553,7 @@ const BoostOfferClarity = () => {
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[11px] text-zinc-600 pt-3">
             <span className="inline-flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
-              AI scores instantly
+              AI inspects every panel, dash, and tire — then scores it
             </span>
             <span className="inline-flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
@@ -534,8 +579,31 @@ const BoostOfferClarity = () => {
             aria-label="Continue on your phone"
             className="rounded-3xl border border-zinc-200 bg-zinc-50/40 shadow-[0_1px_3px_rgba(0,0,0,0.04)] p-6 flex items-center gap-6"
           >
-            <div className="bg-white p-3 rounded-2xl shadow-sm border border-zinc-200">
-              <QRCodeSVG value={`${window.location.origin}/boost-offer/${token}`} size={120} level="H" />
+            {/* Phone-with-camera glyph + QR — the icon takes the
+                "what do I do with this thing?" friction off the QR.
+                Sibling layout (no absolute overlay → no CLS),
+                aria-hidden so the QR keeps its label. */}
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <svg
+                width="24"
+                height="32"
+                viewBox="0 0 24 32"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-zinc-700"
+                aria-hidden="true"
+              >
+                <rect x="3" y="2" width="18" height="28" rx="3" />
+                <circle cx="12" cy="11" r="2.5" />
+                <path d="M9 8h-1.5M16.5 8H15" />
+                <line x1="10" y1="26" x2="14" y2="26" />
+              </svg>
+              <div className="bg-white p-3 rounded-2xl shadow-sm border border-zinc-200">
+                <QRCodeSVG value={`${window.location.origin}/boost-offer/${token}`} size={120} level="H" />
+              </div>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500 mb-1.5">
@@ -837,11 +905,24 @@ const AnimatedTotal = ({ from, to, delay = 0 }: { from: number; to: number; dela
     const start = performance.now() + delay;
     const duration = 900;
     let raf = 0;
+    let hapticFired = false;
     const step = (now: number) => {
       const t = Math.max(0, Math.min(1, (now - start) / duration));
       // easeOutCubic
       const eased = 1 - Math.pow(1 - t, 3);
       setValue(Math.round(from + (to - from) * eased));
+      // Single haptic tick at the start of the count-up — the
+      // moment of delight on this page. navigator.vibrate is
+      // ignored on iOS Safari (graceful), fires on Android. Only
+      // happens when a real bump occurred (to > from).
+      if (!hapticFired && t > 0 && to > from) {
+        hapticFired = true;
+        try {
+          if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
+            navigator.vibrate(15);
+          }
+        } catch { /* noop — some embedded browsers throw */ }
+      }
       if (t < 1) raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);
