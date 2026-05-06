@@ -78,22 +78,35 @@ const MAX_BUMP_TOTAL = 2500;     // hard ceiling on total photo-bump
 const MIN_BUMP_TOTAL = 0;        // floor — never reduces the offer
 const MILEAGE_DRIFT_THRESHOLD = 1000; // OCR vs declared trigger
 
-// Per-finding dollar values. Ordered by signal strength (research
-// notes above). Tunable per-dealer in a future migration; for now
-// these constants keep the surface predictable and the audit trail
-// readable.
-const BUMP_AMOUNTS = {
-  conditionTierUp:        450,   // suggested_condition > customer-rated
-  noPaintMismatch:        225,   // exterior shots clean, no panel mismatch
-  noAccidentRepair:       175,   // no factory-replacement signals
-  factoryWheelsClean:     200,   // tire+wheel shot: no aftermarket, no curb rash
-  highTireTread:          200,   // tire tread > 7/32 (more than half)
-  midTireTread:           100,   // tire tread 5–7/32
-  cleanDashboard:         200,   // no warning lights detected
-  cleanInteriorPanels:    125,   // dashboard photo: no cabin concerns
-  noSevereExteriorDamage: 175,   // none of the four exterior shots flagged severe
-  headlightClarity:       100,   // bumper photo: no haze flag
+// Default per-finding dollar values, keyed by canonical
+// signal_key (snake_case, stable). Each signal can be overridden
+// per-dealer via the boost_bump_rules table (admin → Boost Rules).
+// Signals without a row fall back to the defaults below.
+const SIGNAL_DEFAULTS: Record<string, { amount: number; enabled: boolean }> = {
+  // Tier 1
+  mileage_verified:        { amount: 100, enabled: true },
+  condition_upgrade:       { amount: 450, enabled: true },
+  // Tier 2
+  paint_match:             { amount: 225, enabled: true },
+  no_accident_repair:      { amount: 175, enabled: true },
+  exterior_clean:          { amount: 175, enabled: true },
+  // Tier 3
+  tire_tread_high:         { amount: 200, enabled: true },
+  tire_tread_mid:          { amount: 100, enabled: true },
+  wheels_clean:            { amount: 200, enabled: true },
+  // Tier 4
+  no_warning_lights:       { amount: 200, enabled: true },
+  clean_cabin:             { amount: 125, enabled: true },
+  // Tier 5 (defined but not yet emitted by the orchestrator below)
+  headlight_clarity:       { amount: 100, enabled: false },
 };
+
+// Special-case: the BB-re-appraisal mileage delta isn't a fixed
+// amount — it's whatever Black Book returns when re-priced with
+// verified miles. The dealer can disable the entire re-appraisal
+// step via a row with signal_key='ocr_mileage_reappraisal' and
+// enabled=false; the bump_amount on that row is ignored.
+const MILEAGE_REAPPRAISAL_KEY = "ocr_mileage_reappraisal";
 
 interface BumpLineItem {
   label: string;
@@ -180,6 +193,32 @@ serve(async (req) => {
   const submissionId = row.id as string;
   const declaredMileage = Number(row.mileage) || 0;
 
+  // ── Step 0.5 — load per-dealer signal overrides ──────────────────
+  // boost_bump_rules rows replace the SIGNAL_DEFAULTS for this
+  // dealership. Single round-trip, then helper closures below
+  // resolve each signal in O(1).
+  const { data: ruleRows } = await supabase
+    .from("boost_bump_rules")
+    .select("signal_key, bump_amount, enabled")
+    .eq("dealership_id", row.dealership_id);
+
+  const ruleMap = new Map<string, { amount: number; enabled: boolean }>();
+  for (const r of (ruleRows || [])) {
+    ruleMap.set(r.signal_key as string, {
+      amount: Number(r.bump_amount) || 0,
+      enabled: r.enabled !== false,
+    });
+  }
+  const resolveSignal = (key: string): { amount: number; enabled: boolean } => {
+    const override = ruleMap.get(key);
+    if (override) return override;
+    return SIGNAL_DEFAULTS[key] ?? { amount: 0, enabled: false };
+  };
+  const isReappraisalEnabled = () => {
+    const override = ruleMap.get(MILEAGE_REAPPRAISAL_KEY);
+    return override ? override.enabled : true; // default ON
+  };
+
   // Effective starting offer — same fallback chain the offer page
   // uses so the bump arithmetic matches what the customer saw.
   let baseline =
@@ -254,7 +293,7 @@ serve(async (req) => {
       // the OCR value is plausible (within 60% of declared, so a
       // misread "754,287" doesn't tank a 75k-mile vehicle).
       const plausible = declaredMileage === 0 || (ocr >= declaredMileage * 0.4 && ocr <= declaredMileage * 1.6);
-      if (drift > MILEAGE_DRIFT_THRESHOLD && plausible) {
+      if (drift > MILEAGE_DRIFT_THRESHOLD && plausible && isReappraisalEnabled()) {
         mileageCorrected = true;
         await supabase
           .from("submissions")
@@ -318,19 +357,26 @@ serve(async (req) => {
   if (mileageCorrected && verifiedMileage != null) {
     const delta = baseline - previousOffer;
     if (delta > 0) {
+      // The mileage re-appraisal "bump" amount is the BB delta, not
+      // a configurable dollar value. Dealers can disable the entire
+      // re-appraisal step via boost_bump_rules.enabled but they
+      // can't tune the amount — that's whatever Black Book says.
       lineItems.push({
         label: `Mileage verified at ${verifiedMileage.toLocaleString()} (lower than reported)`,
         amount: Math.round(delta),
-        source: "ocr_mileage_reappraisal",
+        source: MILEAGE_REAPPRAISAL_KEY,
       });
     }
   } else if (verifiedMileage != null && Math.abs(verifiedMileage - declaredMileage) <= MILEAGE_DRIFT_THRESHOLD) {
     // OCR confirmed the customer's stated miles — small confidence bump.
-    lineItems.push({
-      label: `Odometer verified at ${verifiedMileage.toLocaleString()}`,
-      amount: 100,
-      source: "ocr_mileage_verified",
-    });
+    const sig = resolveSignal("mileage_verified");
+    if (sig.enabled && sig.amount > 0) {
+      lineItems.push({
+        label: `Odometer verified at ${verifiedMileage.toLocaleString()}`,
+        amount: sig.amount,
+        source: "mileage_verified",
+      });
+    }
   }
 
   // 4b. Condition tier upgrade — strongest non-mileage signal.
@@ -347,40 +393,36 @@ serve(async (req) => {
       aiCondition = r.suggested_condition;
     }
   }
+  // Helper to push a signal-driven line item only when the signal
+  // is enabled and has a non-zero amount in the dealer's rule set.
+  // Keeps the firing logic compact + auditable.
+  const pushSignal = (key: string, label: string) => {
+    const sig = resolveSignal(key);
+    if (!sig.enabled || sig.amount <= 0) return;
+    lineItems.push({ label, amount: sig.amount, source: key });
+  };
+
   if (aiCondition && customerRank >= 0 && aiRank > customerRank) {
-    lineItems.push({
-      label: `Photos confirm ${aiCondition.replace("_", " ")} condition (you rated ${row.overall_condition})`,
-      amount: BUMP_AMOUNTS.conditionTierUp,
-      source: "condition_upgrade",
-    });
+    pushSignal(
+      "condition_upgrade",
+      `Photos confirm ${aiCondition.replace("_", " ")} condition (you rated ${row.overall_condition})`,
+    );
   }
 
   // 4c. Severity sweep across the four exterior photos.
   const anySevere = exteriorReports.some((r) => r.overall_severity === "severe" || r.overall_severity === "moderate");
   if (exteriorReports.length >= 3 && !anySevere) {
-    lineItems.push({
-      label: "All four exterior angles — no moderate or severe damage",
-      amount: BUMP_AMOUNTS.noSevereExteriorDamage,
-      source: "exterior_clean",
-    });
+    pushSignal("exterior_clean", "All four exterior angles — no moderate or severe damage");
   }
 
   // 4d. Paint match / no accident-repair signals.
   const anyPaintMismatch = exteriorReports.some((r) => r.verification_findings?.paint_mismatch_detected === true);
   const anyAccidentSigns = exteriorReports.some((r) => Array.isArray(r.verification_findings?.accident_repair_signs) && r.verification_findings.accident_repair_signs.length > 0);
   if (exteriorReports.length >= 3 && !anyPaintMismatch) {
-    lineItems.push({
-      label: "Paint matches across all panels — no repaint detected",
-      amount: BUMP_AMOUNTS.noPaintMismatch,
-      source: "paint_match",
-    });
+    pushSignal("paint_match", "Paint matches across all panels — no repaint detected");
   }
   if (exteriorReports.length >= 3 && !anyAccidentSigns) {
-    lineItems.push({
-      label: "Factory panel alignment — no accident-repair signs",
-      amount: BUMP_AMOUNTS.noAccidentRepair,
-      source: "no_accident",
-    });
+    pushSignal("no_accident_repair", "Factory panel alignment — no accident-repair signs");
   }
 
   // 4e. Tire tread + factory wheels.
@@ -392,25 +434,16 @@ serve(async (req) => {
 
     if (Number.isFinite(tread)) {
       if (tread >= 7 && !hasSidewallIssue) {
-        lineItems.push({
-          label: `Tires above 7/32" tread — ${Math.round((tread / 11) * 100)}% remaining`,
-          amount: BUMP_AMOUNTS.highTireTread,
-          source: "tire_tread_high",
-        });
+        pushSignal(
+          "tire_tread_high",
+          `Tires above 7/32" tread — ${Math.round((tread / 11) * 100)}% remaining`,
+        );
       } else if (tread >= 5 && !hasSidewallIssue) {
-        lineItems.push({
-          label: `Tires at ${tread}/32" tread — above wear bar`,
-          amount: BUMP_AMOUNTS.midTireTread,
-          source: "tire_tread_mid",
-        });
+        pushSignal("tire_tread_mid", `Tires at ${tread}/32" tread — above wear bar`);
       }
     }
     if (!hasCurbRash) {
-      lineItems.push({
-        label: "Wheels original — no curb rash detected",
-        amount: BUMP_AMOUNTS.factoryWheelsClean,
-        source: "wheels_clean",
-      });
+      pushSignal("wheels_clean", "Wheels original — no curb rash detected");
     }
   }
 
@@ -418,19 +451,11 @@ serve(async (req) => {
   if (dashboardReport) {
     const lights: string[] = dashboardReport.verification_findings?.warning_lights || [];
     if (lights.length === 0) {
-      lineItems.push({
-        label: "Dashboard clear — no warning lights",
-        amount: BUMP_AMOUNTS.cleanDashboard,
-        source: "no_warning_lights",
-      });
+      pushSignal("no_warning_lights", "Dashboard clear — no warning lights");
     }
     const concerns: string[] = dashboardReport.verification_findings?.cabin_concerns || [];
     if (concerns.length === 0) {
-      lineItems.push({
-        label: "Cabin presents clean — no smoke / stains / wear flagged",
-        amount: BUMP_AMOUNTS.cleanInteriorPanels,
-        source: "clean_cabin",
-      });
+      pushSignal("clean_cabin", "Cabin presents clean — no smoke / stains / wear flagged");
     }
   }
 
