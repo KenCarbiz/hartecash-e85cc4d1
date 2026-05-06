@@ -107,10 +107,14 @@ const LandingFlowConfig = () => {
   // Tile preview mode — schematic (SVG thumbnails) or live
   // (lazy iframes). Persisted in sessionStorage so flipping tabs
   // in the admin doesn't reset the dealer's choice.
+  // Default to "live" so the dealer sees real screenshots of all
+  // 20 templates without having to find + flip a toggle. The
+  // schematic mode is still available for slow connections / when
+  // the dealer wants the abstract layout-only view.
   const [tilePreviewMode, _setTilePreviewMode] = useState<"schematic" | "live">(() => {
     try {
-      return (sessionStorage.getItem("__landing_tile_mode") as "schematic" | "live") || "schematic";
-    } catch { return "schematic"; }
+      return (sessionStorage.getItem("__landing_tile_mode") as "schematic" | "live") || "live";
+    } catch { return "live"; }
   });
   const setTilePreviewMode = (m: "schematic" | "live") => {
     _setTilePreviewMode(m);
@@ -1264,10 +1268,12 @@ const LandingFlowConfig = () => {
  *   live      — a real iframe pointing at /?template=<key>&previewMode=1.
  *               Lazy-mounted via IntersectionObserver so 20 tiles
  *               don't all hammer the server on first render. The
- *               iframe is scaled down so a 1280-wide page fits in
- *               the small picker thumbnail. pointer-events:none on
- *               the iframe + a transparent overlay so clicks bubble
- *               up to the parent button (which selects the template).
+ *               iframe renders at native 1280×800 and is scaled to
+ *               fit the tile via a ResizeObserver-driven transform
+ *               so the WHOLE page is visible (not just the
+ *               top-left corner). pointer-events:none on the iframe
+ *               + a transparent overlay so clicks bubble up to the
+ *               parent button (which selects the template).
  */
 const LandingTile = ({
   template,
@@ -1279,6 +1285,12 @@ const LandingTile = ({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  // Scale is computed from the container's actual rendered width
+  // so the entire 1280×800 page fits the tile regardless of which
+  // grid (1-col legacy, 2-col featured, 3-col alternates) the
+  // tile lives in. Default 0.2 covers the first paint before the
+  // ResizeObserver fires.
+  const [scale, setScale] = useState(0.2);
 
   useEffect(() => {
     if (mode !== "live") return;
@@ -1305,20 +1317,39 @@ const LandingTile = ({
     return () => obs.disconnect();
   }, [mode]);
 
+  // ResizeObserver — keep the scale factor in sync with the actual
+  // rendered tile width so the whole 1280×800 page fits regardless
+  // of which grid (1-col legacy / 2-col featured / 3-col alternates)
+  // and viewport the tile lives in.
+  useEffect(() => {
+    if (mode !== "live") return;
+    const el = containerRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const compute = () => {
+      const w = el.getBoundingClientRect().width;
+      if (w > 0) setScale(w / 1280);
+    };
+    compute();
+    const ro = new ResizeObserver(compute);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [mode]);
+
   if (mode === "schematic") {
     return <TemplateThumbnail template={template} />;
   }
 
-  // 1280x800 content scaled to fit the ~256px-wide picker tile
-  // (16/10 aspect). Native dimensions matter — most templates have
-  // hero CSS that breaks below desktop breakpoints.
+  // 1280×800 desktop render — small breakpoints would cascade into
+  // mobile layouts on a tiny iframe and stop being recognizable as
+  // a desktop template preview.
   const NATIVE_WIDTH = 1280;
   const NATIVE_HEIGHT = 800;
 
   return (
     <div ref={containerRef} className="relative w-full h-full overflow-hidden bg-zinc-50">
-      {/* SVG schematic showing while the iframe lazy-loads. Fades
-          out once the iframe reports loaded. */}
+      {/* SVG schematic shows during lazy-load + fades out once the
+          iframe paints. Sits below the iframe in DOM order so the
+          iframe paints over it once mounted. */}
       <div
         className={`absolute inset-0 transition-opacity duration-300 ${
           loaded ? "opacity-0" : "opacity-100"
@@ -1337,15 +1368,15 @@ const LandingTile = ({
             width: NATIVE_WIDTH,
             height: NATIVE_HEIGHT,
             border: 0,
-            // Cover the tile (16/10) — picks up the bigger of the
-            // two scale ratios so neither letterboxing nor cropping
-            // beats the layout.
-            transform: "scale(0.2)",
+            // ResizeObserver-driven — fits the entire 1280×800 page
+            // into the tile, not just the upper-left corner.
+            transform: `scale(${scale})`,
             transformOrigin: "top left",
             position: "absolute",
             top: 0,
             left: 0,
             pointerEvents: "none",
+            background: "#fff",
           }}
         />
       )}
