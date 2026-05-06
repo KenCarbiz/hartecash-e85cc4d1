@@ -211,7 +211,7 @@ const BoostOfferClarity = () => {
     if (cond === "good" || cond === "good_condition") {
       items.push({ label: "Photos confirm cleaner-than-rated condition", amount: 200, source: "condition" });
     } else if (cond === "fair") {
-      items.push({ label: "Photos exceed your fair rating — appraiser will verify", amount: 250, source: "condition" });
+      items.push({ label: "Photos exceed your fair rating — bumped one tier", amount: 250, source: "condition" });
     }
 
     const bumpAmount = items.reduce((sum, it) => sum + it.amount, 0);
@@ -454,7 +454,7 @@ const BoostOfferClarity = () => {
             className="space-y-3 text-center"
           >
             <p className="text-xs text-zinc-500 max-w-md mx-auto leading-relaxed">
-              An appraiser reviews within 24 hours and may bump it further. Subject to final inspection.
+              Your offer is firm. Subject to final inspection.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
               <Button
@@ -529,8 +529,11 @@ const BoostOfferClarity = () => {
             Your offer can only go up — never down.
           </p>
 
-          {/* Trust strip — three slim chips, one line. Sets the
-              dealer's process expectations without burying the lede. */}
+          {/* Trust strip — three slim chips, one line. No timing
+              promises (anything that says "more might come later"
+              gives the customer a reason to wait instead of click
+              Accept). Floor-locked is the only future-tense
+              commitment we make. */}
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[11px] text-zinc-600 pt-3">
             <span className="inline-flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
@@ -538,7 +541,7 @@ const BoostOfferClarity = () => {
             </span>
             <span className="inline-flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
-              Appraiser confirms within 24 h
+              Backed by a real appraiser
             </span>
             <span className="inline-flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
@@ -723,11 +726,11 @@ const BoostOfferClarity = () => {
             </li>
             <li className="flex gap-3">
               <span className="font-semibold text-zinc-900 tabular-nums">2.</span>
-              An appraiser confirms within 24 hours.
+              If we find evidence of cleaner-than-rated condition, your offer goes up on the spot.
             </li>
             <li className="flex gap-3">
               <span className="font-semibold text-zinc-900 tabular-nums">3.</span>
-              If your vehicle is in better condition than rated, we'll text you the new offer — your old offer never goes down.
+              Your offer can only go up — never down. The bumped number is yours to accept.
             </li>
           </ol>
         </section>
