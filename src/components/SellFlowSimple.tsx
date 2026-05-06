@@ -355,6 +355,35 @@ const SellFlowSimple = ({
       const { data, error } = bbResult;
       const bbOk = !error && !data?.error && Array.isArray(data?.vehicles) && data.vehicles.length > 0;
 
+      // ── Defense against a stale edge function ─────────────────
+      // If the deployed bb-lookup is the legacy build that returns
+      // a hardcoded "2021 Toyota Camry" demo stub for ANY VIN when
+      // the dealer has demo_mode on, we'd happily display that
+      // wrong vehicle. Detect a suspicious response — demo flag set
+      // AND we asked about a real VIN — and re-decode the VIN via
+      // NHTSA on the client to recover the real year/make/model.
+      // The synthetic pricing from the stub is layered on top so
+      // the offer-amount behavior is preserved.
+      if (bbOk && initial.vin) {
+        const v = data.vehicles[0] as BBVehicle & { _demo?: boolean; _stub?: boolean };
+        const looksLikeStub =
+          v._demo === true ||
+          v._stub === true ||
+          // Heuristic: hardcoded legacy stub had this exact UVC.
+          (v as { uvc?: string }).uvc === "DEMO-UVC-0000000";
+        if (looksLikeStub) {
+          const real = await decodeVinViaNhtsaClient(initial.vin);
+          if (!cancelled && real) {
+            // Layer demo pricing on top of the real vehicle so the
+            // dealer's demo_offer_amount still applies.
+            const merged = { ...real, ...v, year: real.year, make: real.make, model: real.model };
+            setBbVehicle(merged as BBVehicle);
+            setScreen("confirm");
+            return;
+          }
+        }
+      }
+
       if (bbOk) {
         setBbVehicle(data.vehicles[0] as BBVehicle);
         setScreen("confirm");
