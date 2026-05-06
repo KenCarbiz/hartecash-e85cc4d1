@@ -346,6 +346,274 @@
     }
   }
 
+  // ── Inventory-Aware Embed (v3) ──────────────────────────────────
+  // Mounts the dealer's full landing template inside an iframe (no
+  // chrome, just the flow). Detects the inventory vehicle the
+  // customer is browsing, persists their resume token + offer in
+  // localStorage so the floating button copy adapts to their state,
+  // and forwards trade value (with state tax credit) into the
+  // iframe so the inventory-aware banner can frame the embed as
+  // "apply your trade toward this car."
+
+  function lsKey(dealerId) {
+    return "hartecash_embed_state__" + dealerId;
+  }
+
+  function readState(dealerId) {
+    try {
+      var raw = localStorage.getItem(lsKey(dealerId));
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function writeState(dealerId, patch) {
+    try {
+      var current = readState(dealerId);
+      var next = Object.assign({}, current, patch, { updated_at: Date.now() });
+      localStorage.setItem(lsKey(dealerId), JSON.stringify(next));
+      return next;
+    } catch (e) {
+      return patch;
+    }
+  }
+
+  // Pulls a vehicle off the inventory page. Schema.org Vehicle
+  // JSON-LD wins (most modern dealer DMS exports include it), then
+  // Open Graph product meta as a fallback.
+  function detectInventoryVehicle() {
+    try {
+      var ldNodes = document.querySelectorAll('script[type="application/ld+json"]');
+      for (var i = 0; i < ldNodes.length; i++) {
+        var raw = ldNodes[i].textContent;
+        if (!raw) continue;
+        var parsed;
+        try { parsed = JSON.parse(raw); } catch (e) { continue; }
+        var items = Array.isArray(parsed) ? parsed : [parsed];
+        for (var j = 0; j < items.length; j++) {
+          var item = items[j];
+          if (!item || !item["@type"]) continue;
+          var type = Array.isArray(item["@type"]) ? item["@type"].join(",") : item["@type"];
+          if (!/Vehicle|Car|Product/i.test(type)) continue;
+          var label = [item.modelDate || item.vehicleModelDate, item.brand && (item.brand.name || item.brand), item.model || item.name]
+            .filter(Boolean)
+            .join(" ")
+            .trim();
+          if (!label && item.name) label = item.name;
+          var price = 0;
+          var offers = item.offers;
+          if (offers) {
+            var off = Array.isArray(offers) ? offers[0] : offers;
+            price = Number(off && (off.price || off.priceSpecification && off.priceSpecification.price)) || 0;
+          }
+          if (label) return { label: label, msrp: price };
+        }
+      }
+    } catch (e) { /* ignore JSON-LD parse errors */ }
+
+    var ogTitle = document.querySelector('meta[property="og:title"]');
+    var ogPrice = document.querySelector('meta[property="product:price:amount"], meta[property="og:price:amount"]');
+    if (ogTitle) {
+      return {
+        label: ogTitle.getAttribute("content") || "",
+        msrp: Number(ogPrice && ogPrice.getAttribute("content")) || 0,
+      };
+    }
+    return { label: "", msrp: 0 };
+  }
+
+  function buildEmbedUrl(cfg, vehicle) {
+    var host = (cfg.host || "https://hartecash.com").replace(/\/$/, "");
+    var dealerId = cfg.dealerId;
+    var state = readState(dealerId);
+    var params = ["mode=" + (cfg.displayMode === "overlay" ? "overlay" : "inline")];
+
+    if (cfg.template) params.push("template=" + encodeURIComponent(cfg.template));
+    if (cfg.store) params.push("store=" + encodeURIComponent(cfg.store));
+    if (cfg.ref) params.push("ref=" + encodeURIComponent(cfg.ref));
+    if (cfg.rep) params.push("rep=" + encodeURIComponent(cfg.rep));
+    if (state.token) params.push("t=" + encodeURIComponent(state.token));
+    if (state.offer) params.push("offer=" + encodeURIComponent(state.offer));
+    if (state.zip) params.push("zip=" + encodeURIComponent(state.zip));
+    if (vehicle && vehicle.label) params.push("vehicle_label=" + encodeURIComponent(vehicle.label));
+    if (vehicle && vehicle.msrp) params.push("vehicle_msrp=" + encodeURIComponent(vehicle.msrp));
+
+    return host + "/embed/" + encodeURIComponent(dealerId) + "?" + params.join("&");
+  }
+
+  // State-aware floating-button copy. Re-engagement is the whole
+  // point — a customer who already has an offer should see "View
+  // your $X offer," not "Get your trade-in value."
+  function getFloatingCopy(state) {
+    var status = state && state.status;
+    var offer = state && Number(state.offer) || 0;
+    if (status === "deal_accepted") {
+      return { primary: "View your accepted offer", secondary: "Schedule pickup" };
+    }
+    if (status === "offer_made" && offer > 0) {
+      return {
+        primary: "View your $" + offer.toLocaleString() + " offer",
+        secondary: "Apply toward this vehicle",
+      };
+    }
+    if (status === "in_progress") {
+      return { primary: "Resume your trade-in", secondary: "Pick up where you left off" };
+    }
+    return { primary: "Get your trade-in value", secondary: "Apply toward this vehicle" };
+  }
+
+  // Full-bleed overlay iframe (separate from the slim drawer above
+  // — the drawer is for the legacy /trade-in endpoint; this is for
+  // the dealer's full landing template).
+  var overlayFrame = null;
+  var overlayBackdrop = null;
+
+  function openInventoryOverlay(cfg, vehicle) {
+    if (overlayFrame) return;
+    injectStyles([
+      ".hc-embed-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99998;opacity:0;transition:opacity .3s ease}",
+      ".hc-embed-backdrop.hc-open{opacity:1}",
+      ".hc-embed-overlay{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.96);width:min(960px,94vw);height:min(720px,90vh);z-index:99999;background:#fff;border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.45);overflow:hidden;opacity:0;transition:opacity .3s ease,transform .3s ease}",
+      ".hc-embed-overlay.hc-open{opacity:1;transform:translate(-50%,-50%) scale(1)}",
+      ".hc-embed-overlay iframe{width:100%;height:100%;border:0;display:block}",
+    ].join("\n"));
+
+    overlayBackdrop = document.createElement("div");
+    overlayBackdrop.className = "hc-embed-backdrop";
+    overlayBackdrop.addEventListener("click", closeInventoryOverlay);
+    document.body.appendChild(overlayBackdrop);
+
+    overlayFrame = document.createElement("div");
+    overlayFrame.className = "hc-embed-overlay";
+    overlayFrame.setAttribute("role", "dialog");
+    overlayFrame.setAttribute("aria-label", "Trade-In");
+
+    var iframe = document.createElement("iframe");
+    iframe.src = buildEmbedUrl(Object.assign({}, cfg, { displayMode: "overlay" }), vehicle);
+    iframe.allow = "camera; clipboard-read; clipboard-write";
+    iframe.loading = "lazy";
+    overlayFrame.appendChild(iframe);
+
+    document.body.appendChild(overlayFrame);
+    document.body.style.overflow = "hidden";
+
+    requestAnimationFrame(function () {
+      overlayBackdrop.classList.add("hc-open");
+      overlayFrame.classList.add("hc-open");
+    });
+  }
+
+  function closeInventoryOverlay() {
+    if (!overlayFrame) return;
+    overlayBackdrop.classList.remove("hc-open");
+    overlayFrame.classList.remove("hc-open");
+    document.body.style.overflow = "";
+    setTimeout(function () {
+      if (overlayFrame && overlayFrame.parentNode) overlayFrame.parentNode.removeChild(overlayFrame);
+      if (overlayBackdrop && overlayBackdrop.parentNode) overlayBackdrop.parentNode.removeChild(overlayBackdrop);
+      overlayFrame = null;
+      overlayBackdrop = null;
+    }, 300);
+  }
+
+  function createInventoryEmbed(cfg) {
+    if (!cfg.dealerId) {
+      // Soft-fail: invalid config shouldn't break the dealer site.
+      return;
+    }
+
+    var vehicle = detectInventoryVehicle();
+    var state = readState(cfg.dealerId);
+    var displayMode = cfg.displayMode || "floating"; // "floating" | "inline"
+
+    // Resize listener — applies to inline mode where we need to
+    // grow the iframe with content.
+    var inlineFrame = null;
+
+    window.addEventListener("message", function (e) {
+      var d = e.data;
+      if (!d || typeof d !== "object") return;
+      if (d.type === "hartecash-resize" && inlineFrame && d.height) {
+        inlineFrame.style.height = d.height + "px";
+      } else if (d.type === "hartecash-close") {
+        closeInventoryOverlay();
+      } else if (d.type === "hartecash-state-change") {
+        writeState(cfg.dealerId, {
+          token: d.token || state.token,
+          status: d.status,
+          offer: d.offer,
+        });
+        // Refresh button copy in place if floating button exists
+        if (cfg._refreshFloating) cfg._refreshFloating();
+      }
+    });
+
+    if (displayMode === "inline") {
+      var target = typeof cfg.target === "string" ? document.querySelector(cfg.target) : cfg.target;
+      if (!target) return;
+      inlineFrame = document.createElement("iframe");
+      inlineFrame.src = buildEmbedUrl(Object.assign({}, cfg, { displayMode: "inline" }), vehicle);
+      inlineFrame.allow = "camera; clipboard-read; clipboard-write";
+      inlineFrame.loading = "lazy";
+      inlineFrame.style.cssText = "width:100%;border:0;display:block;height:600px;transition:height .25s ease";
+      target.appendChild(inlineFrame);
+      return;
+    }
+
+    // Floating mode — state-aware pill button.
+    var copy = getFloatingCopy(state);
+    var color = cfg.color || "#1a365d";
+    var btn = document.createElement("button");
+    btn.setAttribute("aria-label", copy.primary);
+    btn.style.cssText = [
+      "position:fixed",
+      "z-index:99997",
+      "bottom:24px",
+      (cfg.position === "bottom-left" ? "left:24px" : "right:24px"),
+      "display:flex",
+      "flex-direction:column",
+      "align-items:flex-start",
+      "gap:1px",
+      "padding:12px 22px",
+      "background:" + color,
+      "color:#fff",
+      "font-family:system-ui,-apple-system,sans-serif",
+      "border-radius:14px",
+      "border:none",
+      "cursor:pointer",
+      "box-shadow:0 8px 28px rgba(0,0,0,.25)",
+      "transition:transform .2s,box-shadow .2s",
+      "white-space:nowrap",
+      "text-align:left",
+    ].join(";");
+
+    function renderButton() {
+      var s = readState(cfg.dealerId);
+      var c = getFloatingCopy(s);
+      btn.innerHTML =
+        '<span style="font-size:14px;font-weight:700;letter-spacing:-.01em">' + c.primary + "</span>" +
+        '<span style="font-size:11px;font-weight:500;opacity:.85">' + c.secondary + "</span>";
+    }
+    cfg._refreshFloating = renderButton;
+    renderButton();
+
+    btn.onmouseover = function () {
+      btn.style.transform = "translateY(-2px)";
+      btn.style.boxShadow = "0 12px 36px rgba(0,0,0,.3)";
+    };
+    btn.onmouseout = function () {
+      btn.style.transform = "translateY(0)";
+      btn.style.boxShadow = "0 8px 28px rgba(0,0,0,.25)";
+    };
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      openInventoryOverlay(cfg, detectInventoryVehicle());
+    });
+
+    document.body.appendChild(btn);
+  }
+
   // ── Public API ──────────────────────────────────────────────────
 
   window.HarteCash = {
@@ -374,6 +642,26 @@
 
     /** Programmatically close the drawer */
     close: closeDrawer,
+
+    /**
+     * v3 inventory-aware embed — mounts the dealer's full landing
+     * template inside an iframe and frames it as "apply your trade
+     * toward this car" when the loader detects a vehicle on the
+     * inventory detail page.
+     *
+     * cfg:
+     *   dealerId    (required) — dealership UUID
+     *   host        — base URL (default https://hartecash.com)
+     *   displayMode — "floating" (default) or "inline"
+     *   target      — selector / element (inline mode only)
+     *   color       — pill background (default #1a365d)
+     *   position    — "bottom-right" (default) or "bottom-left"
+     *   template    — override dealer's chosen template for this embed
+     *   store, ref, rep — pre-assignment / tracking codes
+     */
+    inventory: function (cfg) {
+      createInventoryEmbed(cfg || {});
+    },
   };
 
   // Backwards compatibility with v1
