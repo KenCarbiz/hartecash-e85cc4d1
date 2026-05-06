@@ -372,11 +372,45 @@
     try {
       var current = readState(dealerId);
       var next = Object.assign({}, current, patch, { updated_at: Date.now() });
+      // Stamp offer_made_at the first time we see status:offer_made
+      // so time-decay escalation has a stable anchor independent of
+      // updated_at (which moves every postMessage).
+      if (patch.status === "offer_made" && !current.offer_made_at) {
+        next.offer_made_at = Date.now();
+      }
+      // Reset the anchor if the customer accepts — avoids escalating
+      // an already-converted lead.
+      if (patch.status === "deal_accepted") {
+        next.offer_made_at = null;
+      }
       localStorage.setItem(lsKey(dealerId), JSON.stringify(next));
       return next;
     } catch (e) {
       return patch;
     }
+  }
+
+  // Days since the customer first received an offer. Returns 0
+  // when no offer or no anchor.
+  function daysSinceOffer(state) {
+    if (!state || !state.offer_made_at) return 0;
+    return Math.floor((Date.now() - state.offer_made_at) / 86400000);
+  }
+
+  // Escalation tier for time-decay re-engagement. The pill only
+  // reshapes around stale offers — first-time visitors and
+  // accepted deals stay on their normal CTA.
+  //   0   → ambient (normal pill)
+  //   1   → pulse + soft toast (Day 2–4)
+  //   2   → ghost overlay nudge once per session (Day 5–6)
+  //   3   → auto-open the iframe overlay (Day 7+)
+  function escalationTier(state) {
+    if (!state || state.status !== "offer_made") return 0;
+    var d = daysSinceOffer(state);
+    if (d >= 7) return 3;
+    if (d >= 5) return 2;
+    if (d >= 2) return 1;
+    return 0;
   }
 
   // Pulls a vehicle off the inventory page. Schema.org Vehicle
@@ -643,6 +677,21 @@
     // Floating mode — state-aware pill button.
     var copy = getFloatingCopy(state, vehicle);
     var color = cfg.color || "#1a365d";
+
+    // Time-decay escalation styles. Pulse keyframes ride on the
+    // pill once we cross Day 2; an auto-open kicks in at Day 7 so
+    // a long-dormant offer surfaces front-and-center on the next
+    // visit. Per-session guard so we don't badger the customer on
+    // every page nav.
+    injectStyles([
+      "@keyframes hc-pulse{0%,100%{box-shadow:0 8px 28px rgba(0,0,0,.25)}50%{box-shadow:0 8px 28px rgba(0,0,0,.25),0 0 0 8px rgba(16,185,129,.18)}}",
+      ".hc-pulse{animation:hc-pulse 2.4s ease-in-out infinite}",
+      ".hc-toast{position:fixed;z-index:99996;bottom:96px;right:24px;max-width:320px;background:#0f172a;color:#fff;padding:14px 18px;border-radius:14px;box-shadow:0 16px 40px rgba(0,0,0,.35);font-family:system-ui,-apple-system,sans-serif;font-size:13px;line-height:1.4;opacity:0;transform:translateY(8px);transition:opacity .35s ease,transform .35s ease}",
+      ".hc-toast.hc-show{opacity:1;transform:translateY(0)}",
+      ".hc-toast strong{display:block;font-size:14px;font-weight:700;margin-bottom:2px}",
+      ".hc-toast button{position:absolute;top:6px;right:8px;background:none;border:none;color:rgba(255,255,255,.6);cursor:pointer;font-size:14px;line-height:1;padding:4px}",
+    ].join("\n"));
+
     var btn = document.createElement("button");
     btn.setAttribute("aria-label", copy.primary);
     btn.style.cssText = [
@@ -671,13 +720,76 @@
       var s = readState(cfg.dealerId);
       var v = detectInventoryVehicle();
       var c = getFloatingCopy(s, v);
+      var tier = escalationTier(s);
       btn.dataset.intent = c.intent;
+      btn.dataset.tier = String(tier);
+      // Pulse from Day 2 onwards. Tiers 1+ all pulse; tier 3 also
+      // auto-opens (handled separately below).
+      if (tier >= 1) btn.classList.add("hc-pulse");
+      else btn.classList.remove("hc-pulse");
       btn.innerHTML =
         '<span style="font-size:14px;font-weight:700;letter-spacing:-.01em">' + c.primary + "</span>" +
         '<span style="font-size:11px;font-weight:500;opacity:.85">' + c.secondary + "</span>";
     }
     cfg._refreshFloating = renderButton;
     renderButton();
+
+    // Time-decay escalation runner. Fires once per page load.
+    //   tier 2 → soft toast nudge (once per session)
+    //   tier 3 → auto-open the overlay after a 1.5s delay so it
+    //            doesn't fight first paint
+    function runEscalation() {
+      var s = readState(cfg.dealerId);
+      var tier = escalationTier(s);
+      if (tier < 2) return;
+      var sessionFlag = "hc-escalated-" + cfg.dealerId;
+      try {
+        if (sessionStorage.getItem(sessionFlag) === "1") return;
+        sessionStorage.setItem(sessionFlag, "1");
+      } catch (e) { /* private mode — fall through, behaves like fresh session */ }
+
+      if (tier >= 3) {
+        // Day 7+ — surface the offer overlay automatically. We
+        // honor the boost intent (off-VDP, has offer) so dormant
+        // customers land on the photo accelerator instead of the
+        // generic flow.
+        setTimeout(function () {
+          var v = detectInventoryVehicle();
+          var c = getFloatingCopy(s, v);
+          var host = (cfg.host || "https://hartecash.com").replace(/\/$/, "");
+          if (c.intent === "boost" && s.token) {
+            openDirectOverlay(host + "/boost-offer/" + encodeURIComponent(s.token));
+          } else {
+            openInventoryOverlay(cfg, v);
+          }
+        }, 1500);
+        return;
+      }
+
+      // Tier 2 — soft toast above the pill. Auto-dismiss after 8s
+      // or on click (which opens the overlay).
+      var days = daysSinceOffer(s);
+      var toast = document.createElement("div");
+      toast.className = "hc-toast";
+      toast.innerHTML =
+        '<button aria-label="Dismiss">&times;</button>' +
+        "<strong>Your $" + Number(s.offer || 0).toLocaleString() + " offer is still good</strong>" +
+        "It's been " + days + " days — tap to apply it toward a vehicle or boost it with photos.";
+      toast.querySelector("button").addEventListener("click", function (ev) {
+        ev.stopPropagation();
+        toast.classList.remove("hc-show");
+        setTimeout(function () { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 350);
+      });
+      toast.addEventListener("click", function () {
+        btn.click();
+      });
+      document.body.appendChild(toast);
+      requestAnimationFrame(function () { toast.classList.add("hc-show"); });
+      setTimeout(function () {
+        toast.classList.remove("hc-show");
+        setTimeout(function () { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 350);
+      }, 8000);
+    }
 
     btn.onmouseover = function () {
       btn.style.transform = "translateY(-2px)";
@@ -718,6 +830,7 @@
     });
 
     document.body.appendChild(btn);
+    runEscalation();
   }
 
   // ── Public API ──────────────────────────────────────────────────
