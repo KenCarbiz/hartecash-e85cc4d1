@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
@@ -104,6 +104,18 @@ const LandingFlowConfig = () => {
   const [saved, setSaved] = useState<State>(DEFAULTS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  // Tile preview mode — schematic (SVG thumbnails) or live
+  // (lazy iframes). Persisted in sessionStorage so flipping tabs
+  // in the admin doesn't reset the dealer's choice.
+  const [tilePreviewMode, _setTilePreviewMode] = useState<"schematic" | "live">(() => {
+    try {
+      return (sessionStorage.getItem("__landing_tile_mode") as "schematic" | "live") || "schematic";
+    } catch { return "schematic"; }
+  });
+  const setTilePreviewMode = (m: "schematic" | "live") => {
+    _setTilePreviewMode(m);
+    try { sessionStorage.setItem("__landing_tile_mode", m); } catch { /* private mode */ }
+  };
 
   useEffect(() => {
     (async () => {
@@ -1061,9 +1073,36 @@ const LandingFlowConfig = () => {
 
       {/* ── Template picker ── */}
       <section className="bg-card rounded-xl border border-border p-6">
-        <div className="flex items-center gap-2 mb-1">
-          <Layout className="w-4 h-4 text-primary" />
-          <h3 className="font-bold">Landing Page Template</h3>
+        <div className="flex items-start justify-between gap-3 mb-1">
+          <div className="flex items-center gap-2">
+            <Layout className="w-4 h-4 text-primary" />
+            <h3 className="font-bold">Landing Page Template</h3>
+          </div>
+          {/* Tile preview-mode toggle. Schematic (default) = the
+              hand-drawn SVG thumbnails that load instantly. Live =
+              lazy-mounted iframes per tile so the dealer can see
+              their actual content + branding rendered. Live can
+              chew bandwidth on slow connections, so it's opt-in. */}
+          <div className="flex items-center gap-1 rounded-full border border-border bg-muted/30 p-0.5 text-[11px] font-semibold">
+            <button
+              type="button"
+              onClick={() => setTilePreviewMode("schematic")}
+              className={`px-2.5 py-1 rounded-full transition-colors ${
+                tilePreviewMode === "schematic" ? "bg-card shadow-sm text-card-foreground" : "text-muted-foreground hover:text-card-foreground"
+              }`}
+            >
+              Schematic
+            </button>
+            <button
+              type="button"
+              onClick={() => setTilePreviewMode("live")}
+              className={`px-2.5 py-1 rounded-full transition-colors ${
+                tilePreviewMode === "live" ? "bg-card shadow-sm text-card-foreground" : "text-muted-foreground hover:text-card-foreground"
+              }`}
+            >
+              Live
+            </button>
+          </div>
         </div>
         <p className="text-xs text-muted-foreground mb-6">
           Your / route renders whichever template is selected here. Pick the original Hartecash long-scroll, one of the May-2026 design-audit picks, or any of the 15 alternates.
@@ -1103,7 +1142,7 @@ const LandingFlowConfig = () => {
                 }`}
               >
                 <div className="aspect-[16/10] mb-2.5 rounded-md overflow-hidden border border-border/60">
-                  <TemplateThumbnail template={t.value} />
+                  <LandingTile template={t.value} mode={tilePreviewMode} />
                 </div>
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-bold text-sm">{t.label}</span>
@@ -1145,7 +1184,7 @@ const LandingFlowConfig = () => {
                 }`}
               >
                 <div className="aspect-[16/10] mb-2.5 rounded-md overflow-hidden border border-border/60">
-                  <TemplateThumbnail template={t.value} />
+                  <LandingTile template={t.value} mode={tilePreviewMode} />
                 </div>
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-bold text-sm">{t.label}</span>
@@ -1185,7 +1224,7 @@ const LandingFlowConfig = () => {
                 }`}
               >
                 <div className="aspect-[16/10] mb-2.5 rounded-md overflow-hidden border border-border/60">
-                  <TemplateThumbnail template={t.value} />
+                  <LandingTile template={t.value} mode={tilePreviewMode} />
                 </div>
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-bold text-sm">{t.label}</span>
@@ -1214,6 +1253,107 @@ const LandingFlowConfig = () => {
           Save Changes
         </Button>
       </div>
+    </div>
+  );
+};
+
+/**
+ * One picker-tile preview. Two modes:
+ *   schematic — the existing hand-drawn SVG (TemplateThumbnail).
+ *               Loads instantly, no network.
+ *   live      — a real iframe pointing at /?template=<key>&previewMode=1.
+ *               Lazy-mounted via IntersectionObserver so 20 tiles
+ *               don't all hammer the server on first render. The
+ *               iframe is scaled down so a 1280-wide page fits in
+ *               the small picker thumbnail. pointer-events:none on
+ *               the iframe + a transparent overlay so clicks bubble
+ *               up to the parent button (which selects the template).
+ */
+const LandingTile = ({
+  template,
+  mode,
+}: {
+  template: LandingTemplate;
+  mode: "schematic" | "live";
+}) => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [visible, setVisible] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    if (mode !== "live") return;
+    const el = containerRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") {
+      setVisible(true);
+      return;
+    }
+    const obs = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setVisible(true);
+            obs.disconnect();
+            break;
+          }
+        }
+      },
+      // Pre-load tiles slightly outside the viewport so the dealer
+      // doesn't see a flicker as they scroll the picker.
+      { rootMargin: "200px" },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [mode]);
+
+  if (mode === "schematic") {
+    return <TemplateThumbnail template={template} />;
+  }
+
+  // 1280x800 content scaled to fit the ~256px-wide picker tile
+  // (16/10 aspect). Native dimensions matter — most templates have
+  // hero CSS that breaks below desktop breakpoints.
+  const NATIVE_WIDTH = 1280;
+  const NATIVE_HEIGHT = 800;
+
+  return (
+    <div ref={containerRef} className="relative w-full h-full overflow-hidden bg-zinc-50">
+      {/* SVG schematic showing while the iframe lazy-loads. Fades
+          out once the iframe reports loaded. */}
+      <div
+        className={`absolute inset-0 transition-opacity duration-300 ${
+          loaded ? "opacity-0" : "opacity-100"
+        }`}
+      >
+        <TemplateThumbnail template={template} />
+      </div>
+      {visible && (
+        <iframe
+          src={`/?template=${encodeURIComponent(template)}&previewMode=1`}
+          title={`Preview ${template}`}
+          loading="lazy"
+          sandbox="allow-scripts allow-same-origin allow-forms"
+          onLoad={() => setLoaded(true)}
+          style={{
+            width: NATIVE_WIDTH,
+            height: NATIVE_HEIGHT,
+            border: 0,
+            // Cover the tile (16/10) — picks up the bigger of the
+            // two scale ratios so neither letterboxing nor cropping
+            // beats the layout.
+            transform: "scale(0.2)",
+            transformOrigin: "top left",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            pointerEvents: "none",
+          }}
+        />
+      )}
+      {/* Tap-shield: keeps clicks on the iframe from being captured
+          by the iframe sandbox (belt + suspenders alongside
+          pointer-events:none above) so the parent button still
+          selects the template. */}
+      <div className="absolute inset-0" aria-hidden="true" />
     </div>
   );
 };
