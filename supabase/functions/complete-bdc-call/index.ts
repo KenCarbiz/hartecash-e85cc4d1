@@ -10,7 +10,7 @@
 //                           If new amount > previous offered_price,
 //                           writes offered_price + fires
 //                           customer_offer_increased (matches the
---                           SubmissionDetailSheet pattern).
+//                           SubmissionDetailSheet pattern).
 //   customer_pushed_back  → captures rep notes, no state change.
 //                           Cadence continues with the next touch.
 //   left_voicemail        → schedules ANOTHER voice touch in 48h
