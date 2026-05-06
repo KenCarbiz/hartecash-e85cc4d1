@@ -554,6 +554,20 @@ const SellFlowSimple = ({
       // them and retry if PostgREST rejects an unknown column on a
       // partially-migrated environment instead of bouncing the
       // customer back to the condition screen.
+      // Pick up inventory-embed context EmbedLanding stashed in
+      // sessionStorage. Lets us attribute leads back to the dealer
+      // VDP they were viewing without prop-drilling through the
+      // template router.
+      let embedSource: string | null = null;
+      let embedVehicleLabel: string | null = null;
+      let embedVehicleMsrp: number | null = null;
+      try {
+        embedSource = sessionStorage.getItem("__embed_lead_source");
+        embedVehicleLabel = sessionStorage.getItem("__embed_vehicle_label");
+        const msrpStr = sessionStorage.getItem("__embed_vehicle_msrp");
+        embedVehicleMsrp = msrpStr ? Number(msrpStr) || null : null;
+      } catch { /* private mode — leave nulls */ }
+
       const baseRow: Record<string, unknown> = {
         token: generatedToken,
         plate: formData.plate || null,
@@ -571,7 +585,13 @@ const SellFlowSimple = ({
         email: contactEmail.trim() || null,
         phone: contactPhone.replace(/[^0-9]/g, "") || null,
         next_step: "contact",
-        lead_source: isDemoMode ? `${leadSource}-demo` : leadSource,
+        // When we have inventory-embed context, prefer the embed
+        // source label over the generic flow tag — makes lead-source
+        // analytics in the dealer dashboard accurately reflect the
+        // re-engagement surface.
+        lead_source: embedSource
+          ? (isDemoMode ? `${embedSource}-demo` : embedSource)
+          : (isDemoMode ? `${leadSource}-demo` : leadSource),
         dealership_id: tenant.dealership_id,
         ...bbPayload,
       };
@@ -584,6 +604,9 @@ const SellFlowSimple = ({
         tcpa_consent_at: new Date().toISOString(),
         tcpa_consent_version: config.tcpa_disclosure_version || 1,
         tcpa_consent_text: config.tcpa_disclosure || null,
+        embed_source: embedSource,
+        embed_vehicle_label: embedVehicleLabel,
+        embed_vehicle_msrp: embedVehicleMsrp,
       };
 
       let insertErr: { message?: string; code?: string } | null = null;
@@ -628,6 +651,28 @@ const SellFlowSimple = ({
       // calculation is real (Carvana ~30s; we use a faster 2.5s for
       // simple flow so the offer page doesn't feel padded).
       await new Promise((r) => setTimeout(r, 2500));
+
+      // When this flow is rendered inside the inventory-aware embed
+      // iframe, broadcast the new offer back up to the parent page
+      // immediately so the floating widget on the dealer's site
+      // updates from "Get your trade-in value" to "Apply your $X
+      // toward this vehicle" without a full reload. window.parent
+      // === window when not iframed, so this is a no-op on direct
+      // visits to /trade-in or /.
+      try {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage(
+            {
+              type: "hartecash-state-change",
+              token: generatedToken,
+              status: firmOfferedPrice && firmOfferedPrice > 0 ? "offer_made" : "in_progress",
+              offer: firmOfferedPrice || 0,
+              offer_made_at: Date.now(),
+            },
+            "*",
+          );
+        }
+      } catch { /* postMessage can throw on cross-origin in older browsers */ }
 
       // Hand off to the existing /offer/:token page which collects
       // contact info post-reveal and shows the firm number.

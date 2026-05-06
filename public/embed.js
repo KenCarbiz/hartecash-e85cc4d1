@@ -372,15 +372,16 @@
     try {
       var current = readState(dealerId);
       var next = Object.assign({}, current, patch, { updated_at: Date.now() });
-      // Stamp offer_made_at the first time we see status:offer_made
-      // so time-decay escalation has a stable anchor independent of
-      // updated_at (which moves every postMessage).
-      if (patch.status === "offer_made" && !current.offer_made_at) {
+      // Anchor precedence:
+      //   1. Server value (patch.offer_made_at explicitly set, including null)
+      //   2. Existing client anchor (preserved across patches)
+      //   3. Client-stamp on first offer_made we see (fallback when
+      //      iframe couldn't reach Supabase to source-of-truth it)
+      if (Object.prototype.hasOwnProperty.call(patch, "offer_made_at")) {
+        next.offer_made_at = patch.offer_made_at;
+      } else if (patch.status === "offer_made" && !current.offer_made_at) {
         next.offer_made_at = Date.now();
-      }
-      // Reset the anchor if the customer accepts — avoids escalating
-      // an already-converted lead.
-      if (patch.status === "deal_accepted") {
+      } else if (patch.status === "deal_accepted") {
         next.offer_made_at = null;
       }
       localStorage.setItem(lsKey(dealerId), JSON.stringify(next));
@@ -652,11 +653,18 @@
       } else if (d.type === "hartecash-close") {
         closeInventoryOverlay();
       } else if (d.type === "hartecash-state-change") {
-        writeState(cfg.dealerId, {
+        var patch = {
           token: d.token || state.token,
           status: d.status,
           offer: d.offer,
-        });
+        };
+        // Server-authoritative anchor — the iframe sends millis
+        // when known so we don't have to guess from updated_at.
+        // null clears the anchor (deal accepted).
+        if (d.offer_made_at !== undefined) {
+          patch.offer_made_at = d.offer_made_at;
+        }
+        writeState(cfg.dealerId, patch);
         // Refresh button copy in place if floating button exists
         if (cfg._refreshFloating) cfg._refreshFloating();
       }

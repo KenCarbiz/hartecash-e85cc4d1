@@ -100,6 +100,22 @@ const EmbedLanding = () => {
     }
   }, [templateOverride]);
 
+  // Stash inventory + embed-source context in sessionStorage so
+  // SellFlowSimple (a deeply-nested child) can include them on the
+  // submission insert without prop-drilling through five layers.
+  // Cleared automatically when the tab closes.
+  useEffect(() => {
+    try {
+      sessionStorage.setItem("__embed_lead_source", "inventory_embed");
+      if (vehicleLabel) sessionStorage.setItem("__embed_vehicle_label", vehicleLabel);
+      else sessionStorage.removeItem("__embed_vehicle_label");
+      if (vehicleMsrp > 0) sessionStorage.setItem("__embed_vehicle_msrp", String(vehicleMsrp));
+      else sessionStorage.removeItem("__embed_vehicle_msrp");
+    } catch {
+      /* private mode — submission falls back to default lead_source */
+    }
+  }, [vehicleLabel, vehicleMsrp]);
+
   // Returning-customer recognition. When the parent embed.js
   // handed us a resume token (?t=...) — typically because the
   // customer already started or completed a submission on a prior
@@ -115,7 +131,9 @@ const EmbedLanding = () => {
     (async () => {
       const { data } = await supabase
         .from("submissions")
-        .select("progress_status, offered_price, estimated_offer_high, bb_tradein_avg, bb_wholesale_avg")
+        .select(
+          "progress_status, offered_price, estimated_offer_high, bb_tradein_avg, bb_wholesale_avg, offer_made_at, created_at",
+        )
         .eq("submission_token", submissionToken)
         .maybeSingle();
       if (cancelled || !data) return;
@@ -131,12 +149,18 @@ const EmbedLanding = () => {
           : offer > 0
           ? "offer_made"
           : "in_progress";
+      // Server-authoritative anchor — falls back to created_at on
+      // older rows that pre-date the offer_made_at column. Sent as
+      // millis-since-epoch so the loader doesn't have to parse ISO.
+      const anchor = (data as { offer_made_at?: string | null; created_at?: string | null }).offer_made_at
+        || (status === "offer_made" ? data.created_at : null);
       window.parent.postMessage(
         {
           type: "hartecash-state-change",
           token: submissionToken,
           status,
           offer,
+          offer_made_at: anchor ? new Date(anchor).getTime() : null,
         },
         "*",
       );

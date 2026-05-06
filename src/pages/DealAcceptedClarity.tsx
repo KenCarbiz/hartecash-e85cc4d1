@@ -139,6 +139,22 @@ const DealAcceptedClarity = () => {
       } catch {
         /* non-fatal */
       }
+      // When mounted inside the inventory-aware iframe, tell the
+      // parent so the floating widget swaps to "View your accepted
+      // offer" and clears the time-decay escalation anchor.
+      try {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage(
+            {
+              type: "hartecash-state-change",
+              token,
+              status: "deal_accepted",
+              offer_made_at: null,
+            },
+            "*",
+          );
+        }
+      } catch { /* noop */ }
       try {
         const { data, error: rpcErr } = await supabase.rpc("get_submission_portal", { _token: token });
         if (cancelled) return;
