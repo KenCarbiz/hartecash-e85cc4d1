@@ -40,12 +40,12 @@ interface SubmissionInfo {
 }
 
 const REQUIRED_SHOTS = [
-  { id: "exterior_front",    label: "Front" },
-  { id: "exterior_driver",   label: "Driver Side" },
-  { id: "exterior_rear",     label: "Rear" },
-  { id: "exterior_passenger",label: "Passenger Side" },
-  { id: "dashboard_odometer",label: "Odometer" },
-  { id: "tires_wheels",      label: "Tire & Wheel" },
+  { id: "exterior_front",    label: "Front",          captured: "Front exterior captured" },
+  { id: "exterior_driver",   label: "Driver Side",    captured: "Driver side angle clear" },
+  { id: "exterior_rear",     label: "Rear",           captured: "Rear exterior captured" },
+  { id: "exterior_passenger",label: "Passenger Side", captured: "Passenger side angle clear" },
+  { id: "dashboard_odometer",label: "Odometer",       captured: "Odometer reading visible" },
+  { id: "tires_wheels",      label: "Tire & Wheel",   captured: "Tire wear pattern visible" },
 ];
 
 type ShotState = { file?: File; preview?: string; uploaded?: boolean };
@@ -396,51 +396,107 @@ const BoostOfferClarity = () => {
               </p>
             )}
           </div>
+
+          {/* Confidence meter — shows the customer the AI is building
+              up signal as they upload. Copy reads as a running
+              dialogue ("Building a profile" → "Halfway there" →
+              "One more" → "Ready to evaluate") so each photo feels
+              like progress, not paperwork. */}
+          <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-700">
+                Evaluation confidence
+              </p>
+              <p className="text-[11px] font-bold tabular-nums text-zinc-900">
+                {Math.round((completedCount / REQUIRED_SHOTS.length) * 100)}%
+              </p>
+            </div>
+            <div className="h-1.5 w-full bg-zinc-100 rounded-full overflow-hidden">
+              <motion.div
+                className={`h-full rounded-full ${allComplete ? "bg-emerald-500" : "bg-zinc-900"}`}
+                initial={{ width: 0 }}
+                animate={{ width: `${(completedCount / REQUIRED_SHOTS.length) * 100}%` }}
+                transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+              />
+            </div>
+            <p className="text-[11px] text-zinc-500">
+              {completedCount === 0 && "Start with any angle — order doesn't matter."}
+              {completedCount === 1 && "Building a profile of your vehicle."}
+              {completedCount === 2 && "Building a profile of your vehicle."}
+              {completedCount === 3 && "Halfway there — three more for full coverage."}
+              {completedCount === 4 && "Two more for full coverage."}
+              {completedCount === 5 && "One more for full coverage."}
+              {completedCount === 6 && "Ready to evaluate. Submit when you're set."}
+            </p>
+          </div>
+
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {REQUIRED_SHOTS.map((shot) => {
               const state = shotState[shot.id];
               const filled = state?.file || state?.uploaded;
               return (
-                <button
-                  key={shot.id}
-                  type="button"
-                  onClick={() => handleTileClick(shot.id)}
-                  className={`relative aspect-[4/3] rounded-2xl overflow-hidden border-2 transition-all text-left ${
-                    filled ? "border-zinc-900" : "border-zinc-200 hover:border-zinc-400 bg-zinc-50/40 shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
-                  }`}
-                >
-                  {state?.preview ? (
-                    <img src={state.preview} alt={shot.label} className="absolute inset-0 w-full h-full object-cover" />
-                  ) : (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-zinc-500">
-                      <Camera className="w-5 h-5" aria-hidden="true" />
-                      <span className="text-xs font-semibold uppercase tracking-wider text-center px-2">
-                        {shot.label}
+                <div key={shot.id} className="space-y-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleTileClick(shot.id)}
+                    className={`relative aspect-[4/3] w-full rounded-2xl overflow-hidden border-2 transition-all text-left ${
+                      filled ? "border-zinc-900" : "border-zinc-200 hover:border-zinc-400 bg-zinc-50/40 shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
+                    }`}
+                  >
+                    {state?.preview ? (
+                      <img src={state.preview} alt={shot.label} className="absolute inset-0 w-full h-full object-cover" />
+                    ) : (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-zinc-500">
+                        <Camera className="w-5 h-5" aria-hidden="true" />
+                        <span className="text-xs font-semibold uppercase tracking-wider text-center px-2">
+                          {shot.label}
+                        </span>
+                      </div>
+                    )}
+                    {filled && (
+                      <span className="absolute top-2 right-2 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center" aria-hidden="true">
+                        <CheckCircle className="w-3.5 h-3.5" strokeWidth={3} />
                       </span>
-                    </div>
-                  )}
-                  {filled && (
-                    <span className="absolute top-2 right-2 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center" aria-hidden="true">
-                      <CheckCircle className="w-3.5 h-3.5" strokeWidth={3} />
+                    )}
+                    {state?.file && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeShot(shot.id);
+                        }}
+                        className="absolute top-2 left-2 w-6 h-6 rounded-full bg-zinc-900/80 text-white flex items-center justify-center"
+                        aria-label="Remove photo"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                    <span className="absolute bottom-0 left-0 right-0 px-3 py-2 bg-gradient-to-t from-black/60 to-transparent text-white text-[11px] font-semibold tracking-tight">
+                      {filled ? "Tap to retake" : shot.label}
                     </span>
-                  )}
-                  {state?.file && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeShot(shot.id);
-                      }}
-                      className="absolute top-2 left-2 w-6 h-6 rounded-full bg-zinc-900/80 text-white flex items-center justify-center"
-                      aria-label="Remove photo"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  )}
-                  <span className="absolute bottom-0 left-0 right-0 px-3 py-2 bg-gradient-to-t from-black/60 to-transparent text-white text-[11px] font-semibold tracking-tight">
-                    {filled ? "Tap to retake" : shot.label}
-                  </span>
-                </button>
+                  </button>
+                  {/* Per-tile capture-confirmed microcopy. Truthful
+                      "we received it" not "AI scored it" — the
+                      actual scoring reveal lives on the post-submit
+                      receipt. Animates in once the tile is filled
+                      so the customer feels per-photo progress. */}
+                  <motion.p
+                    initial={false}
+                    animate={{
+                      opacity: filled ? 1 : 0,
+                      y: filled ? 0 : -2,
+                    }}
+                    transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                    className="text-[10px] font-semibold text-emerald-700 inline-flex items-center gap-1 px-1 min-h-[14px]"
+                  >
+                    {filled && (
+                      <>
+                        <CheckCircle className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
+                        <span className="leading-tight">{shot.captured}</span>
+                      </>
+                    )}
+                  </motion.p>
+                </div>
               );
             })}
           </div>
