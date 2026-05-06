@@ -15,7 +15,7 @@
 //                           Cadence continues with the next touch.
 //   left_voicemail        → schedules ANOTHER voice touch in 48h
 //                           (overrides the cadence's next_due_at)
---                           since voicemail-only doesn't count as
+//                           since voicemail-only doesn't count as
 //                           a real contact.
 //   no_answer             → same as voicemail but 24h backoff.
 //   not_interested        → flips progress_status to 'declined' which
