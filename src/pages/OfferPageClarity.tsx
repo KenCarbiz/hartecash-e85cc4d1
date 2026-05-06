@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, CheckCircle, ShieldCheck, Loader2, DollarSign, TrendingUp, Printer, Info } from "lucide-react";
+import { ArrowRight, CheckCircle, ShieldCheck, Loader2, DollarSign, TrendingUp, Printer, Info, Bookmark } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { safeInvoke } from "@/lib/safeInvoke";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
@@ -12,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import VehicleImage from "@/components/sell-form/VehicleImage";
 import SlideToAccept from "@/components/SlideToAccept";
-import SaveOfferButton from "@/components/offer/SaveOfferButton";
 import ConsentDisclosure from "@/components/ConsentDisclosure";
 import { track } from "@/lib/analytics";
 import { getTaxRateFromZip, calcTradeInValue, STATE_NAMES } from "@/lib/salesTax";
@@ -550,6 +549,15 @@ const OfferPageClarity = () => {
                     <p className="font-sans text-[64px] md:text-[88px] font-bold tracking-[-0.035em] leading-[1] text-emerald-600 tabular-nums">
                       ${tradeInValue.toLocaleString("en-US", { maximumFractionDigits: 0 })}
                     </p>
+                    {/* VIN bubble — mirrors the cash-offer view so the
+                        full VIN is visible regardless of which tab the
+                        customer is looking at. Slim zinc pill, tabular
+                        nums to keep the 17-char string from jittering. */}
+                    {s.vin && (
+                      <p className="inline-flex items-center justify-center px-3 py-1 mt-2 rounded-full bg-zinc-100 border border-zinc-200 text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-600 tabular-nums">
+                        VIN&nbsp;·&nbsp;{s.vin}
+                      </p>
+                    )}
                     <p className="text-[11px] text-zinc-500 inline-flex items-center justify-center gap-1.5">
                       <TrendingUp className="w-3 h-3 text-emerald-600" aria-hidden="true" />
                       Includes{" "}
@@ -623,20 +631,25 @@ const OfferPageClarity = () => {
                   </Button>
                 </div>
 
-                {/* Save offer + Print — sit directly under accept so
-                    the customer sees both options without scrolling.
-                    Print uses window.print() and the page-level
-                    print:hidden classes hide chrome / forms / dialogs. */}
+                {/* Save = forward navigation to the AI photo boost.
+                    No email/text dialog — that was the legacy
+                    "save the offer link to your inbox" pattern. The
+                    dealer's specced flow treats Save as the customer
+                    saying "I'm not ready to accept yet, what else
+                    can I do" — and the answer is "upload photos to
+                    see if your offer goes up." Print stays inline
+                    next to it for the dealer who wants paper. */}
                 <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
-                  <SaveOfferButton
-                    token={s.token}
-                    vehicleStr={`${s.vehicle_year} ${s.vehicle_make} ${s.vehicle_model}`.trim()}
-                    customerName={s.name || undefined}
-                    customerEmail={s.email || undefined}
-                    customerPhone={s.phone || undefined}
-                    guaranteeDays={offerLockDays}
-                    dealershipName={config.dealership_name || ""}
-                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => navigate(`/boost-offer/${s.token}`)}
+                    className="rounded-full px-6 h-12 border-zinc-300 text-zinc-900 hover:bg-zinc-50 transition-colors font-semibold"
+                  >
+                    <Bookmark className="w-4 h-4 mr-2" aria-hidden="true" />
+                    Save my offer
+                    <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
+                  </Button>
                   <button
                     type="button"
                     onClick={() => window.print()}
