@@ -231,6 +231,7 @@ const BoostOfferClarity = () => {
           if (matched) {
             // Intentionally no-op — boost-evaluate handles this.
             void shotId;
+          }
         }
       }
 

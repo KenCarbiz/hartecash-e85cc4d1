@@ -195,6 +195,33 @@ export type Database = {
           },
         ]
       }
+      boost_bump_rules: {
+        Row: {
+          bump_amount: number
+          dealership_id: string
+          enabled: boolean
+          id: string
+          signal_key: string
+          updated_at: string
+        }
+        Insert: {
+          bump_amount?: number
+          dealership_id: string
+          enabled?: boolean
+          id?: string
+          signal_key: string
+          updated_at?: string
+        }
+        Update: {
+          bump_amount?: number
+          dealership_id?: string
+          enabled?: boolean
+          id?: string
+          signal_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cadence_log: {
         Row: {
           cadence_state: string
