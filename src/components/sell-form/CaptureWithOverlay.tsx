@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Image as ImageIcon, RotateCcw, X } from "lucide-react";
+import { Camera, Image as ImageIcon, RotateCcw, X, Check, AlertTriangle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Full-screen camera capture with a silhouette overlay — the
@@ -66,6 +67,23 @@ const CaptureWithOverlay = ({
   const [capturing, setCapturing] = useState(false);
   const [luma, setLuma] = useState<number | null>(null); // null = not yet sampled
   const [flashing, setFlashing] = useState(false);
+
+  // Preview / review state — between shutter and onCapture, we
+  // show the customer their captured photo full-screen and let
+  // them choose Use this photo / Retake. CarMax-style review
+  // beat that the immediate-save flow lacked.
+  const [previewFile, setPreviewFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  // AI-side quality check fires in the background once the
+  // preview is up. Banner appears asynchronously when the AI
+  // returns a flag — customer can still hit "Use this photo"
+  // before verification finishes (verification is advisory).
+  const [verifying, setVerifying] = useState(false);
+  const [verification, setVerification] = useState<{
+    ok: boolean;
+    reason?: string;
+    hint?: string;
+  } | null>(null);
   // Pre-prompt explainer — shown once per session before we
   // request camera permission. Skipping it (because the customer
   // saw it on a prior shot in this session) goes straight to
@@ -197,6 +215,80 @@ const CaptureWithOverlay = ({
     };
   }, [phase]);
 
+  // Free the object-URL the preview screen built so it doesn't
+  // leak when the modal unmounts (large blob, retained for life
+  // of the page otherwise).
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
+  // Fire the AI quality check in the background once we have the
+  // captured file. Soft-fail on every error path — verification
+  // is advisory, never a blocker. Customer can still hit "Use
+  // this photo" before we get a result.
+  const fireVerification = async (file: File) => {
+    setVerifying(true);
+    setVerification(null);
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      });
+      const { data, error } = await supabase.functions.invoke("verify-shot-photo", {
+        body: { shot_key: shotKey, image_base64: dataUrl },
+      });
+      if (error) {
+        // Edge function failed — assume ok so a flaky network
+        // doesn't trap the customer in a retake loop.
+        setVerification({ ok: true });
+        return;
+      }
+      const v = (data || {}) as { ok?: boolean; reason?: string; hint?: string };
+      setVerification({
+        ok: v.ok !== false,
+        reason: v.reason,
+        hint: v.hint,
+      });
+    } catch {
+      setVerification({ ok: true });
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const handleAcceptPreview = () => {
+    if (!previewFile) return;
+    // Stop the stream now — capture is final.
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
+    if (sampleTimerRef.current) {
+      clearInterval(sampleTimerRef.current);
+      sampleTimerRef.current = null;
+    }
+    onCapture(previewFile);
+  };
+
+  const handleRetakePreview = () => {
+    // Discard the captured file, resume the live feed.
+    setPreviewFile(null);
+    setPreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+    setVerification(null);
+    setVerifying(false);
+    setCapturing(false);
+    if (videoRef.current) {
+      videoRef.current.play().catch(() => {});
+    }
+  };
+
   const handleShutter = () => {
     const video = videoRef.current;
     if (!video || video.videoWidth === 0) return;
@@ -261,17 +353,23 @@ const CaptureWithOverlay = ({
             type: "image/jpeg",
             lastModified: Date.now(),
           });
-          // Stop the stream BEFORE callback so the camera LED dies
-          // immediately (good UX signal that capture worked).
-          if (streamRef.current) {
-            streamRef.current.getTracks().forEach((t) => t.stop());
-            streamRef.current = null;
+          // Pause the live feed (don't stop yet — Retake needs to
+          // resume it without re-prompting for camera permission).
+          // The brightness sampler stays paused along with the
+          // video since drawImage on a paused element returns the
+          // last frame.
+          if (videoRef.current) {
+            try { videoRef.current.pause(); } catch { /* noop */ }
           }
-          if (sampleTimerRef.current) {
-            clearInterval(sampleTimerRef.current);
-            sampleTimerRef.current = null;
-          }
-          onCapture(file);
+          // Build the preview URL from the blob so we don't keep
+          // the canvas alive in memory.
+          const url = URL.createObjectURL(blob);
+          setPreviewFile(file);
+          setPreviewUrl(url);
+          setCapturing(false);
+          // Background AI quality check — verification banner
+          // shows asynchronously when the result lands.
+          fireVerification(file);
         },
         "image/jpeg",
         0.92,
@@ -359,6 +457,123 @@ const CaptureWithOverlay = ({
           </div>
         </div>
       </div>
+    );
+  }
+
+  // ── Preview / review beat ── After the customer taps the
+  // shutter, instead of immediately handing off to onCapture we
+  // show the captured photo full-screen with Use / Retake CTAs.
+  // AI quality check (verify-shot-photo) runs in the background
+  // and surfaces a non-blocking warning banner if the photo
+  // looks off — customer can override and use anyway.
+  if (previewFile && previewUrl) {
+    const showWarning = verification && !verification.ok;
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="fixed inset-0 z-[200] bg-black"
+        role="dialog"
+        aria-label={`Review ${shotLabel} photo`}
+      >
+        {/* The photo, full-bleed. object-contain so portrait /
+            landscape both read without cropping. */}
+        <img
+          src={previewUrl}
+          alt={`${shotLabel} preview`}
+          className="absolute inset-0 w-full h-full object-contain"
+        />
+
+        {/* Top chrome — same close affordance as the camera view
+            so the customer can bail to library or cancel without
+            having to retake first. */}
+        <div className="absolute top-0 left-0 right-0 px-5 pt-[max(env(safe-area-inset-top),16px)] pb-3 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="w-10 h-10 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 transition-colors"
+            aria-label="Cancel"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <div className="text-center">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/70">
+              Review {shotLabel}
+            </p>
+            <p className="text-[12px] text-white/80 mt-0.5">
+              Looks good? Use it. Otherwise, retake.
+            </p>
+          </div>
+          <div className="w-10 h-10" aria-hidden="true" />
+        </div>
+
+        {/* AI verification status — verifying spinner + result
+            banner. Banner is amber for soft warnings, red feel
+            avoided so the customer doesn't think their offer is
+            in trouble. Only renders once we have a result OR
+            we're explicitly verifying. */}
+        <AnimatePresence>
+          {showWarning && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="absolute left-0 right-0 top-[88px] flex justify-center px-5"
+            >
+              <div className="inline-flex items-start gap-2.5 px-4 py-3 rounded-2xl bg-amber-500/95 text-zinc-900 text-sm font-semibold shadow-xl max-w-md">
+                <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-px" aria-hidden="true" />
+                <div className="space-y-0.5">
+                  <p className="leading-tight">We couldn't read this clearly.</p>
+                  <p className="text-xs font-medium opacity-90 leading-snug">
+                    {verification?.hint ||
+                      "Try again with better framing — the AI needs to see it clearly to bump your offer."}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+          {verifying && !verification && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute left-0 right-0 top-[88px] flex justify-center px-5"
+            >
+              <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-black/60 text-white/85 text-[12px] font-medium backdrop-blur">
+                <RotateCcw className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
+                Checking your photo…
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Bottom chrome — Retake (left, ghosted) + Use this photo
+            (right, primary). Layout mirrors iOS Photos confirm
+            screen. Use is always enabled — verification is
+            advisory; the customer's call wins. */}
+        <div className="absolute bottom-0 left-0 right-0 px-5 pb-[max(env(safe-area-inset-bottom),24px)] pt-6 bg-gradient-to-t from-black/80 to-transparent">
+          <div className="flex items-center justify-center gap-3 max-w-md mx-auto">
+            <button
+              type="button"
+              onClick={handleRetakePreview}
+              className="flex-1 h-14 rounded-full bg-white/10 text-white border border-white/30 font-semibold inline-flex items-center justify-center gap-2 hover:bg-white/20 transition-colors"
+            >
+              <RotateCcw className="w-4 h-4" aria-hidden="true" />
+              Retake
+            </button>
+            <button
+              type="button"
+              onClick={handleAcceptPreview}
+              className="flex-1 h-14 rounded-full bg-white text-zinc-900 font-semibold inline-flex items-center justify-center gap-2 hover:bg-zinc-100 transition-colors shadow-[0_4px_14px_rgba(0,0,0,0.25)]"
+            >
+              <Check className="w-4 h-4" aria-hidden="true" />
+              Use this photo
+            </button>
+          </div>
+        </div>
+      </motion.div>
     );
   }
 
