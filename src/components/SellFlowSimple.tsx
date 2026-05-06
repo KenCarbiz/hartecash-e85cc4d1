@@ -823,7 +823,7 @@ const SellFlowSimple = ({
             <FoundCarCard vehicle={bbVehicle} />
             {bbVehicle._nhtsa && (
               <p className="text-[11px] text-center text-muted-foreground/70 -mt-4">
-                Specs verified from the federal NHTSA registry. Final pricing confirmed at pickup.
+                Specs verified from the federal NHTSA registry. Subject to final inspection.
               </p>
             )}
 

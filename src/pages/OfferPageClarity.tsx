@@ -749,7 +749,7 @@ const OfferPageClarity = () => {
         <p className="text-center text-[11px] text-zinc-400 leading-relaxed print:hidden">
           {config.dealership_name || "We"} purchases vehicles directly from
           consumers. {offerLockDays}-day price guarantee · No obligation ·
-          Final pricing confirmed at pickup.
+          Subject to final inspection.
         </p>
       </main>
 
