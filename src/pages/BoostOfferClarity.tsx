@@ -178,54 +178,6 @@ const BoostOfferClarity = () => {
   const hasNewUploads = Object.values(shotState).some((v) => v.file);
   const allComplete = completedCount === REQUIRED_SHOTS.length;
 
-  // Deterministic line-item / bump generator. Replaces the AI
-  // aggregation pipeline temporarily — the analyze-vehicle-damage
-  // results are still being collected per-photo, but until we wire
-  // a true aggregator this gives the customer a real, plausible
-  // receipt that maps to which shots they actually uploaded.
-  // Total caps at ~$1,200 in the typical case (six clean shots +
-  // a condition rated below excellent).
-  function generateBumpReceipt(
-    uploadedShotIds: string[],
-    overallCondition: string | null,
-    customerMileage: string | null,
-  ): { lineItems: Array<{ label: string; amount: number; source: string }>; bumpAmount: number } {
-    const items: Array<{ label: string; amount: number; source: string }> = [];
-
-    // Per-shot findings — one item each, weighted by the value
-    // dealers actually price off in real appraisals.
-    const SHOT_FINDINGS: Record<string, { label: string; amount: number }> = {
-      exterior_front:    { label: "Front bumper / hood — clean, no aftermarket",    amount: 125 },
-      exterior_driver:   { label: "Driver-side panels straight, no panel gap",     amount: 100 },
-      exterior_rear:     { label: "Rear bumper — original, no scrape repair",       amount: 100 },
-      exterior_passenger:{ label: "Passenger-side clean, no curb damage",           amount: 100 },
-      dashboard_odometer:{
-        label: customerMileage
-          ? `Mileage confirmed at ${Number(customerMileage).toLocaleString()}`
-          : "Odometer reading verified",
-        amount: 175,
-      },
-      tires_wheels:      { label: "Tires above 50% tread, factory wheels",          amount: 150 },
-    };
-
-    for (const id of uploadedShotIds) {
-      if (SHOT_FINDINGS[id]) items.push({ ...SHOT_FINDINGS[id], source: `shot:${id}` });
-    }
-
-    // Condition modifier — rewards customers who under-rated their
-    // vehicle. "Good" / "Fair" implies the photos are likely to
-    // surface upside; "Excellent" already prices that in.
-    const cond = (overallCondition || "").toLowerCase();
-    if (cond === "good" || cond === "good_condition") {
-      items.push({ label: "Photos confirm cleaner-than-rated condition", amount: 200, source: "condition" });
-    } else if (cond === "fair") {
-      items.push({ label: "Photos exceed your fair rating — bumped one tier", amount: 250, source: "condition" });
-    }
-
-    const bumpAmount = items.reduce((sum, it) => sum + it.amount, 0);
-    return { lineItems: items, bumpAmount };
-  }
-
   const handleUpload = async () => {
     if (!submission || !hasNewUploads) return;
     setUploading(true);
@@ -266,72 +218,62 @@ const BoostOfferClarity = () => {
         }
       }
 
-      // Per-shot AI damage analysis. Same edge fn the legacy
-      // upload page calls — the appraiser queue picks up bump
-      // recommendations and the dealer can approve / reject.
+      // analyze-vehicle-damage is now invoked by boost-evaluate
+      // server-side instead of fired-and-forgotten from the
+      // browser. Single source of truth + the orchestrator can
+      // wait for results before computing bumps. The block below
+      // is intentionally empty for now to keep the surrounding
+      // try/catch intact during the migration.
       if (submission.id) {
         for (const [shotId, val] of Object.entries(shotState)) {
           if (!val.file) continue;
           const matched = allFiles?.find((f) => f.name.startsWith(`${shotId}-`));
           if (matched) {
-            safeInvoke("analyze-vehicle-damage", {
-              body: {
-                submission_id: submission.id,
-                token,
-                photo_category: shotId,
-                photo_path: `${token}/${matched.name}`,
-                source: "boost_offer",
-              },
-              context: { from: "BoostOfferClarity.analyze", category: shotId },
-            });
-          }
+            // Intentionally no-op — boost-evaluate handles this.
+            void shotId;
         }
       }
 
       // ── Evaluation phase ─────────────────────────────────────
-      // Photos are uploaded + analyze-vehicle-damage is running in
-      // the background. Show the ghost loader for ~5s so the
-      // customer reads "we're scoring your photos…" — actual AI
-      // results land in the dealer's appraiser queue. Meanwhile
-      // build the deterministic receipt and persist the bump.
+      // Hand the uploaded photo paths to boost-evaluate which:
+      //   1. runs Gemini 2.5 Flash vision per photo (writes to
+      //      damage_reports for the appraiser queue)
+      //   2. OCRs the odometer and re-calls bb-lookup with
+      //      verified miles for a fresh organic baseline
+      //   3. composes AI bumps on top of the new baseline
+      //   4. persists offered_price + audits in offer_bumps
+      // The deterministic client-side receipt is gone — the receipt
+      // shown on the next screen comes straight from the AI run.
       setPhase("evaluating");
 
-      const uploadedIds = REQUIRED_SHOTS
-        .filter((s) => shotState[s.id]?.file || shotState[s.id]?.uploaded)
-        .map((s) => s.id);
-      const receipt = generateBumpReceipt(
-        uploadedIds,
-        submission.overall_condition || null,
-        submission.mileage || null,
-      );
+      const photoPaths: Record<string, string> = {};
+      for (const shot of REQUIRED_SHOTS) {
+        const matched = allFiles?.find((f) => f.name.startsWith(`${shot.id}-`));
+        if (matched) photoPaths[shot.id] = `${token}/${matched.name}`;
+      }
 
-      // Minimum 3.5s loader — feels like real evaluation work
-      // happened. Race against the boost-apply call so the worst
-      // case (slow function) still doesn't block longer than ~6s.
+      // Minimum 3.5s loader — gives Gemini calls time to land + the
+      // customer reads at least 2 cycling tip lines before the reveal.
+      // boost-evaluate itself can take 8–15s under load, so we wait
+      // for it; the loader's min duration just prevents a flash for
+      // unusually fast runs (cached photos, etc.).
       const minLoader = new Promise((r) => setTimeout(r, 3500));
-      const applyCall = supabase.functions.invoke("boost-apply-offer", {
-        body: {
-          token,
-          bump_amount: receipt.bumpAmount,
-          line_items: receipt.lineItems,
-          source: "boost_offer",
-        },
+      const evalCall = supabase.functions.invoke("boost-evaluate", {
+        body: { token, photo_paths: photoPaths },
       });
-      const [, applyRes] = await Promise.all([minLoader, applyCall]);
+      const [, evalRes] = await Promise.all([minLoader, evalCall]);
 
-      // Server returns { previous_offer, new_offer, bump_amount }.
-      // We trust the server's numbers over the client-computed ones
-      // since clamping happens server-side.
-      const applyData = (applyRes as { data?: Record<string, unknown> }).data || {};
-      const previousOffer = Number(applyData.previous_offer) || 0;
-      const newOffer = Number(applyData.new_offer) || (previousOffer + receipt.bumpAmount);
-      const bumpAmount = Number(applyData.bump_amount) || receipt.bumpAmount;
+      const evalData = (evalRes as { data?: Record<string, unknown> }).data || {};
+      const previousOffer = Number(evalData.previous_offer) || 0;
+      const newOffer = Number(evalData.new_offer) || previousOffer;
+      const bumpAmount = Number(evalData.bump_amount) || 0;
+      const lineItems = (evalData.line_items as Array<{ label: string; amount: number; source: string }>) || [];
 
       setBumpResult({
         previousOffer,
         newOffer,
         bumpAmount,
-        lineItems: receipt.lineItems,
+        lineItems,
       });
       setPhase("revealed");
       setDone(true);
