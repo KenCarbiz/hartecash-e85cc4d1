@@ -265,6 +265,18 @@ serve(async (req) => {
       console.error("Failed to update call log:", updateErr);
     }
 
+    // ── Fire-and-forget post-call enrichment ──
+    // voice-call-enrich does Whisper re-ASR (when configured), per-turn
+    // sentiment, silence/barge-in detection, customer-memory extraction,
+    // and back-fills memory_hook_used on this row. We do NOT await — Bland
+    // expects a fast 200 and enrichment can take 5-15s. Errors are logged
+    // by the enrich function itself.
+    if (callStatus === "completed") {
+      supabase.functions.invoke("voice-call-enrich", {
+        body: { call_id: callLog.id },
+      }).catch((e: unknown) => console.warn("voice-call-enrich invoke failed:", e));
+    }
+
     // ── Handle outcome-specific actions ──
 
     // Opt-out: insert into opt_outs table
