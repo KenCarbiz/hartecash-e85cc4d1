@@ -160,13 +160,33 @@ Deno.serve(async (req) => {
     const bodyRaw = inbound.Body || "";
     const bodyLower = bodyRaw.trim().toLowerCase();
 
-    // Match the inbound to the most recent open submission by phone.
-    const { data: subs } = await supabase
+    // Match the inbound to the most recent open submission by
+    // (To-number → dealership_id, From-phone). Pre-architect-audit
+    // we matched by phone alone, which cross-contaminated tenants
+    // when two dealers happened to share a customer phone number
+    // (e.g. a prior buyer who shopped multiple stores). Now we
+    // resolve the To-number to the dealership first, then narrow.
+    const toPhone = (inbound.To || "").trim();
+    let dealerByNumber: string | null = null;
+    if (toPhone) {
+      const { data: dealerRow } = await supabase
+        .from("dealer_accounts")
+        .select("dealership_id")
+        .eq("twilio_from_number", toPhone)
+        .maybeSingle();
+      dealerByNumber = (dealerRow as { dealership_id?: string } | null)?.dealership_id || null;
+    }
+
+    let subQuery = supabase
       .from("submissions")
       .select("id, dealership_id, name, assigned_rep_email, progress_status")
       .ilike("phone", `%${fromDigits.slice(-10)}`)
       .order("created_at", { ascending: false })
       .limit(1);
+    if (dealerByNumber) {
+      subQuery = subQuery.eq("dealership_id", dealerByNumber);
+    }
+    const { data: subs } = await subQuery;
     const sub = (subs && subs[0]) || null;
 
     // ── Log the inbound ────────────────────────────────────────

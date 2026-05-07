@@ -673,7 +673,7 @@ Deno.serve(async (req) => {
 
     const results: { email?: string; sms?: string } = {};
 
-    const logNotification = async (channel: string, recipient: string, status: string, errorMsg?: string) => {
+    const logNotification = async (channel: string, recipient: string, status: string, errorMsg?: string, providerMessageId?: string | null) => {
       // Deterministic idempotency key — same trigger + submission +
       // channel + recipient inside the same 5-minute bucket dedupes at
       // the DB layer (UNIQUE index from migration 20260507090000).
@@ -688,6 +688,7 @@ Deno.serve(async (req) => {
           submission_id: submission_id || null,
           dealership_id: dealershipId,
           idempotency_key: idempotencyKey,
+          provider_message_id: providerMessageId || null,
         });
         if (insertErr) {
           // 23505 = unique violation = duplicate within 5-min bucket.
@@ -939,22 +940,36 @@ Deno.serve(async (req) => {
       if (twilioSid && twilioToken && twilioPhone) {
         const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`;
         const smsText = smsBodyText + " Reply STOP to opt out.";
+        // StatusCallback URL — Twilio POSTs back delivery/failure
+        // status updates here so notification_log.status reflects
+        // the actual carrier outcome, not just the API ACK.
+        const supabaseUrlForCallback = Deno.env.get("SUPABASE_URL") || "";
+        const statusCallback = supabaseUrlForCallback
+          ? `${supabaseUrlForCallback}/functions/v1/twilio-status-webhook`
+          : "";
 
         for (const phone of smsRecipients) {
           try {
+            const twilioBody: Record<string, string> = {
+              To: phone,
+              From: twilioPhone,
+              Body: smsText,
+            };
+            if (statusCallback) twilioBody.StatusCallback = statusCallback;
             const smsRes = await fetch(twilioUrl, {
               method: "POST",
               headers: {
                 Authorization: "Basic " + btoa(`${twilioSid}:${twilioToken}`),
                 "Content-Type": "application/x-www-form-urlencoded",
               },
-              body: new URLSearchParams({ To: phone, From: twilioPhone, Body: smsText }),
+              body: new URLSearchParams(twilioBody),
             });
             const smsData = await smsRes.json();
             console.log("SMS response:", JSON.stringify(smsData));
             const smsStatus = smsRes.ok ? "sent" : "failed";
+            const providerSid = (smsData as { sid?: string })?.sid || null;
             results.sms = smsRes.ok ? "sent" : `failed: ${JSON.stringify(smsData)}`;
-            await logNotification("sms", phone, smsStatus, smsRes.ok ? undefined : JSON.stringify(smsData));
+            await logNotification("sms", phone, smsStatus, smsRes.ok ? undefined : JSON.stringify(smsData), providerSid);
           } catch (e) {
             console.error("SMS error:", e);
             results.sms = "error";
