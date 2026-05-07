@@ -444,96 +444,138 @@ export type Database = {
           call_type: string
           content: string
           created_at: string
+          created_from_call_id: string | null
           dealership_id: string
           id: string
           is_active: boolean
+          last_promoted_at: string | null
+          loss_count: number
+          parent_variant_id: string | null
           phase_key: string
           phase_position: string
+          retired_at: string | null
           signal_keywords: string[]
           sort_order: number
           updated_at: string
           use_when: string | null
+          variant_id: string | null
           variant_label: string
+          win_count: number
         }
         Insert: {
           advances_to?: string | null
           call_type: string
           content: string
           created_at?: string
+          created_from_call_id?: string | null
           dealership_id?: string
           id?: string
           is_active?: boolean
+          last_promoted_at?: string | null
+          loss_count?: number
+          parent_variant_id?: string | null
           phase_key: string
           phase_position: string
+          retired_at?: string | null
           signal_keywords?: string[]
           sort_order?: number
           updated_at?: string
           use_when?: string | null
+          variant_id?: string | null
           variant_label: string
+          win_count?: number
         }
         Update: {
           advances_to?: string | null
           call_type?: string
           content?: string
           created_at?: string
+          created_from_call_id?: string | null
           dealership_id?: string
           id?: string
           is_active?: boolean
+          last_promoted_at?: string | null
+          loss_count?: number
+          parent_variant_id?: string | null
           phase_key?: string
           phase_position?: string
+          retired_at?: string | null
           signal_keywords?: string[]
           sort_order?: number
           updated_at?: string
           use_when?: string | null
+          variant_id?: string | null
           variant_label?: string
+          win_count?: number
         }
         Relationships: []
       }
       customer_signals: {
         Row: {
           created_at: string
+          created_from_call_id: string | null
           customer_state: string
           dealership_id: string
           do_not_say: string[]
           hand_off_to_human: boolean
           id: string
           is_active: boolean
+          last_promoted_at: string | null
+          loss_count: number
+          parent_variant_id: string | null
           recommended_posture: string
           response_variants: string[]
+          retired_at: string | null
           signal_key: string
           signal_phrases: string[]
           sort_order: number
           updated_at: string
+          variant_id: string | null
+          win_count: number
         }
         Insert: {
           created_at?: string
+          created_from_call_id?: string | null
           customer_state: string
           dealership_id?: string
           do_not_say?: string[]
           hand_off_to_human?: boolean
           id?: string
           is_active?: boolean
+          last_promoted_at?: string | null
+          loss_count?: number
+          parent_variant_id?: string | null
           recommended_posture: string
           response_variants?: string[]
+          retired_at?: string | null
           signal_key: string
           signal_phrases?: string[]
           sort_order?: number
           updated_at?: string
+          variant_id?: string | null
+          win_count?: number
         }
         Update: {
           created_at?: string
+          created_from_call_id?: string | null
           customer_state?: string
           dealership_id?: string
           do_not_say?: string[]
           hand_off_to_human?: boolean
           id?: string
           is_active?: boolean
+          last_promoted_at?: string | null
+          loss_count?: number
+          parent_variant_id?: string | null
           recommended_posture?: string
           response_variants?: string[]
+          retired_at?: string | null
           signal_key?: string
           signal_phrases?: string[]
           sort_order?: number
           updated_at?: string
+          variant_id?: string | null
+          win_count?: number
         }
         Relationships: []
       }
@@ -694,7 +736,12 @@ export type Database = {
           start_date: string | null
           twilio_from_number: string | null
           updated_at: string
+          voice_ai_api_key: string | null
+          voice_ai_enabled: boolean | null
+          voice_ai_from_number: string | null
+          voice_ai_max_bump_amount: number | null
           voice_ai_provider: string
+          voice_ai_transfer_number: string | null
         }
         Insert: {
           architecture?: string
@@ -720,7 +767,12 @@ export type Database = {
           start_date?: string | null
           twilio_from_number?: string | null
           updated_at?: string
+          voice_ai_api_key?: string | null
+          voice_ai_enabled?: boolean | null
+          voice_ai_from_number?: string | null
+          voice_ai_max_bump_amount?: number | null
           voice_ai_provider?: string
+          voice_ai_transfer_number?: string | null
         }
         Update: {
           architecture?: string
@@ -746,7 +798,12 @@ export type Database = {
           start_date?: string | null
           twilio_from_number?: string | null
           updated_at?: string
+          voice_ai_api_key?: string | null
+          voice_ai_enabled?: boolean | null
+          voice_ai_from_number?: string | null
+          voice_ai_max_bump_amount?: number | null
           voice_ai_provider?: string
+          voice_ai_transfer_number?: string | null
         }
         Relationships: [
           {
@@ -1506,49 +1563,70 @@ export type Database = {
           applies_to_segments: string[]
           citable_number: string | null
           created_at: string
+          created_from_call_id: string | null
           dealership_id: string
           evidence_url: string | null
           id: string
           is_active: boolean
+          last_promoted_at: string | null
           last_verified_at: string | null
+          loss_count: number
+          parent_variant_id: string | null
+          retired_at: string | null
           scope: string
           short_claim: string
           sort_order: number
           topic: string
           updated_at: string
           use_when: string | null
+          variant_id: string | null
+          win_count: number
         }
         Insert: {
           applies_to_segments?: string[]
           citable_number?: string | null
           created_at?: string
+          created_from_call_id?: string | null
           dealership_id?: string
           evidence_url?: string | null
           id?: string
           is_active?: boolean
+          last_promoted_at?: string | null
           last_verified_at?: string | null
+          loss_count?: number
+          parent_variant_id?: string | null
+          retired_at?: string | null
           scope: string
           short_claim: string
           sort_order?: number
           topic: string
           updated_at?: string
           use_when?: string | null
+          variant_id?: string | null
+          win_count?: number
         }
         Update: {
           applies_to_segments?: string[]
           citable_number?: string | null
           created_at?: string
+          created_from_call_id?: string | null
           dealership_id?: string
           evidence_url?: string | null
           id?: string
           is_active?: boolean
+          last_promoted_at?: string | null
           last_verified_at?: string | null
+          loss_count?: number
+          parent_variant_id?: string | null
+          retired_at?: string | null
           scope?: string
           short_claim?: string
           sort_order?: number
           topic?: string
           updated_at?: string
           use_when?: string | null
+          variant_id?: string | null
+          win_count?: number
         }
         Relationships: []
       }
@@ -3676,6 +3754,7 @@ export type Database = {
           cadence_step: number
           check_request_done: boolean
           created_at: string
+          customer_memory: Json
           dealership_id: string
           decline_reason: string | null
           decline_reason_at: string | null
@@ -3816,6 +3895,7 @@ export type Database = {
           cadence_step?: number
           check_request_done?: boolean
           created_at?: string
+          customer_memory?: Json
           dealership_id?: string
           decline_reason?: string | null
           decline_reason_at?: string | null
@@ -3956,6 +4036,7 @@ export type Database = {
           cadence_step?: number
           check_request_done?: boolean
           created_at?: string
+          customer_memory?: Json
           dealership_id?: string
           decline_reason?: string | null
           decline_reason_at?: string | null
@@ -4435,62 +4516,548 @@ export type Database = {
         Row: {
           ai_disclosure_line: string | null
           created_at: string
+          created_from_call_id: string | null
           dealership_id: string
           greeting_style: string | null
           hard_constraints: string[]
           id: string
           is_active: boolean
+          last_promoted_at: string | null
+          loss_count: number
           mission_block: string
+          parent_variant_id: string | null
           persona_name: string
+          retired_at: string | null
           signoff_style: string | null
           sort_order: number
           success_criteria: string
           updated_at: string
+          variant_id: string | null
           voice_rules: string
+          win_count: number
         }
         Insert: {
           ai_disclosure_line?: string | null
           created_at?: string
+          created_from_call_id?: string | null
           dealership_id?: string
           greeting_style?: string | null
           hard_constraints?: string[]
           id?: string
           is_active?: boolean
+          last_promoted_at?: string | null
+          loss_count?: number
           mission_block: string
+          parent_variant_id?: string | null
           persona_name: string
+          retired_at?: string | null
           signoff_style?: string | null
           sort_order?: number
           success_criteria: string
           updated_at?: string
+          variant_id?: string | null
           voice_rules: string
+          win_count?: number
         }
         Update: {
           ai_disclosure_line?: string | null
           created_at?: string
+          created_from_call_id?: string | null
           dealership_id?: string
           greeting_style?: string | null
           hard_constraints?: string[]
           id?: string
           is_active?: boolean
+          last_promoted_at?: string | null
+          loss_count?: number
           mission_block?: string
+          parent_variant_id?: string | null
           persona_name?: string
+          retired_at?: string | null
           signoff_style?: string | null
           sort_order?: number
           success_criteria?: string
           updated_at?: string
+          variant_id?: string | null
           voice_rules?: string
+          win_count?: number
+        }
+        Relationships: []
+      }
+      voice_call_grades: {
+        Row: {
+          call_id: string
+          composite_score: number
+          created_at: string
+          dim_brand_tone: number | null
+          dim_close_control: number | null
+          dim_compliance: number | null
+          dim_hallucination: number | null
+          dim_motivation_disco: number | null
+          dim_objection_handle: number | null
+          dim_pacing: number | null
+          dim_quote_band: number | null
+          dim_transfer_hygiene: number | null
+          dim_vehicle_confirm: number | null
+          gating_failed: boolean
+          golden_pinned: boolean
+          grader: string
+          grader_model: string | null
+          id: string
+          rationale: string | null
+        }
+        Insert: {
+          call_id: string
+          composite_score: number
+          created_at?: string
+          dim_brand_tone?: number | null
+          dim_close_control?: number | null
+          dim_compliance?: number | null
+          dim_hallucination?: number | null
+          dim_motivation_disco?: number | null
+          dim_objection_handle?: number | null
+          dim_pacing?: number | null
+          dim_quote_band?: number | null
+          dim_transfer_hygiene?: number | null
+          dim_vehicle_confirm?: number | null
+          gating_failed?: boolean
+          golden_pinned?: boolean
+          grader?: string
+          grader_model?: string | null
+          id?: string
+          rationale?: string | null
+        }
+        Update: {
+          call_id?: string
+          composite_score?: number
+          created_at?: string
+          dim_brand_tone?: number | null
+          dim_close_control?: number | null
+          dim_compliance?: number | null
+          dim_hallucination?: number | null
+          dim_motivation_disco?: number | null
+          dim_objection_handle?: number | null
+          dim_pacing?: number | null
+          dim_quote_band?: number | null
+          dim_transfer_hygiene?: number | null
+          dim_vehicle_confirm?: number | null
+          gating_failed?: boolean
+          golden_pinned?: boolean
+          grader?: string
+          grader_model?: string | null
+          id?: string
+          rationale?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_call_grades_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
+            referencedRelation: "v_voice_call_quality"
+            referencedColumns: ["call_id"]
+          },
+          {
+            foreignKeyName: "voice_call_grades_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
+            referencedRelation: "voice_call_log"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voice_call_log: {
+        Row: {
+          answered_by: string | null
+          attempt_number: number | null
+          bump_offered: number | null
+          campaign_id: string | null
+          consent_verified: boolean | null
+          created_at: string
+          customer_name: string | null
+          dealership_id: string | null
+          duration_seconds: number | null
+          ended_at: string | null
+          id: string
+          memory_hook_offered: string | null
+          memory_hook_used: boolean | null
+          memory_hook_used_within_20s: boolean | null
+          metadata: Json | null
+          opt_out_requested: boolean | null
+          original_offer: number | null
+          outcome: string | null
+          phone_number: string
+          provider_call_id: string | null
+          provider_response: Json | null
+          recording_url: string | null
+          retry_scheduled_at: string | null
+          scheduled_at: string | null
+          started_at: string | null
+          status: string
+          submission_id: string
+          summary: string | null
+          tcpa_disclosure_given: boolean | null
+          transcript: string | null
+          vehicle_info: string | null
+        }
+        Insert: {
+          answered_by?: string | null
+          attempt_number?: number | null
+          bump_offered?: number | null
+          campaign_id?: string | null
+          consent_verified?: boolean | null
+          created_at?: string
+          customer_name?: string | null
+          dealership_id?: string | null
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          memory_hook_offered?: string | null
+          memory_hook_used?: boolean | null
+          memory_hook_used_within_20s?: boolean | null
+          metadata?: Json | null
+          opt_out_requested?: boolean | null
+          original_offer?: number | null
+          outcome?: string | null
+          phone_number: string
+          provider_call_id?: string | null
+          provider_response?: Json | null
+          recording_url?: string | null
+          retry_scheduled_at?: string | null
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: string
+          submission_id: string
+          summary?: string | null
+          tcpa_disclosure_given?: boolean | null
+          transcript?: string | null
+          vehicle_info?: string | null
+        }
+        Update: {
+          answered_by?: string | null
+          attempt_number?: number | null
+          bump_offered?: number | null
+          campaign_id?: string | null
+          consent_verified?: boolean | null
+          created_at?: string
+          customer_name?: string | null
+          dealership_id?: string | null
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          memory_hook_offered?: string | null
+          memory_hook_used?: boolean | null
+          memory_hook_used_within_20s?: boolean | null
+          metadata?: Json | null
+          opt_out_requested?: boolean | null
+          original_offer?: number | null
+          outcome?: string | null
+          phone_number?: string
+          provider_call_id?: string | null
+          provider_response?: Json | null
+          recording_url?: string | null
+          retry_scheduled_at?: string | null
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: string
+          submission_id?: string
+          summary?: string | null
+          tcpa_disclosure_given?: boolean | null
+          transcript?: string | null
+          vehicle_info?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_call_log_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "voice_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voice_call_log_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voice_call_turns: {
+        Row: {
+          asr_confidence: number | null
+          call_id: string
+          created_at: string
+          emotion_score: number | null
+          emotion_top: string | null
+          end_ms: number | null
+          first_token_ms: number | null
+          id: string
+          matched_signal_key: string | null
+          metadata: Json
+          sentiment: string | null
+          sentiment_score: number | null
+          silence_before_ms: number | null
+          speaker: string
+          start_ms: number | null
+          text: string
+          total_token_ms: number | null
+          turn_index: number
+          was_interrupted: boolean
+        }
+        Insert: {
+          asr_confidence?: number | null
+          call_id: string
+          created_at?: string
+          emotion_score?: number | null
+          emotion_top?: string | null
+          end_ms?: number | null
+          first_token_ms?: number | null
+          id?: string
+          matched_signal_key?: string | null
+          metadata?: Json
+          sentiment?: string | null
+          sentiment_score?: number | null
+          silence_before_ms?: number | null
+          speaker: string
+          start_ms?: number | null
+          text?: string
+          total_token_ms?: number | null
+          turn_index: number
+          was_interrupted?: boolean
+        }
+        Update: {
+          asr_confidence?: number | null
+          call_id?: string
+          created_at?: string
+          emotion_score?: number | null
+          emotion_top?: string | null
+          end_ms?: number | null
+          first_token_ms?: number | null
+          id?: string
+          matched_signal_key?: string | null
+          metadata?: Json
+          sentiment?: string | null
+          sentiment_score?: number | null
+          silence_before_ms?: number | null
+          speaker?: string
+          start_ms?: number | null
+          text?: string
+          total_token_ms?: number | null
+          turn_index?: number
+          was_interrupted?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_call_turns_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
+            referencedRelation: "v_voice_call_quality"
+            referencedColumns: ["call_id"]
+          },
+          {
+            foreignKeyName: "voice_call_turns_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
+            referencedRelation: "voice_call_log"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voice_call_variants_used: {
+        Row: {
+          call_id: string
+          id: string
+          recorded_at: string
+          slot_key: string
+          source_table: string
+          thompson_draw: number | null
+          variant_id: string
+        }
+        Insert: {
+          call_id: string
+          id?: string
+          recorded_at?: string
+          slot_key: string
+          source_table: string
+          thompson_draw?: number | null
+          variant_id: string
+        }
+        Update: {
+          call_id?: string
+          id?: string
+          recorded_at?: string
+          slot_key?: string
+          source_table?: string
+          thompson_draw?: number | null
+          variant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_call_variants_used_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
+            referencedRelation: "v_voice_call_quality"
+            referencedColumns: ["call_id"]
+          },
+          {
+            foreignKeyName: "voice_call_variants_used_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
+            referencedRelation: "voice_call_log"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voice_campaigns: {
+        Row: {
+          calling_hours_end: string | null
+          calling_hours_start: string | null
+          created_at: string
+          dealership_id: string
+          id: string
+          max_call_duration: number | null
+          max_calls_per_day: number | null
+          name: string
+          retry_attempts: number | null
+          retry_delay_hours: number | null
+          script_template: string
+          status: string
+          target_criteria: Json
+          total_calls_made: number | null
+          total_connected: number | null
+          total_converted: number | null
+          transfer_phone: string | null
+          updated_at: string
+          voice_id: string | null
+          voice_provider: string
+        }
+        Insert: {
+          calling_hours_end?: string | null
+          calling_hours_start?: string | null
+          created_at?: string
+          dealership_id: string
+          id?: string
+          max_call_duration?: number | null
+          max_calls_per_day?: number | null
+          name: string
+          retry_attempts?: number | null
+          retry_delay_hours?: number | null
+          script_template: string
+          status?: string
+          target_criteria?: Json
+          total_calls_made?: number | null
+          total_connected?: number | null
+          total_converted?: number | null
+          transfer_phone?: string | null
+          updated_at?: string
+          voice_id?: string | null
+          voice_provider?: string
+        }
+        Update: {
+          calling_hours_end?: string | null
+          calling_hours_start?: string | null
+          created_at?: string
+          dealership_id?: string
+          id?: string
+          max_call_duration?: number | null
+          max_calls_per_day?: number | null
+          name?: string
+          retry_attempts?: number | null
+          retry_delay_hours?: number | null
+          script_template?: string
+          status?: string
+          target_criteria?: Json
+          total_calls_made?: number | null
+          total_connected?: number | null
+          total_converted?: number | null
+          transfer_phone?: string | null
+          updated_at?: string
+          voice_id?: string | null
+          voice_provider?: string
+        }
+        Relationships: []
+      }
+      voice_script_templates: {
+        Row: {
+          category: string | null
+          created_at: string
+          dealership_id: string | null
+          description: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          script_template: string
+          variables: Json | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          dealership_id?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          script_template: string
+          variables?: Json | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          dealership_id?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          script_template?: string
+          variables?: Json | null
         }
         Relationships: []
       }
     }
     Views: {
-      [_ in never]: never
+      v_voice_call_quality: {
+        Row: {
+          call_id: string | null
+          call_outcome: string | null
+          composite_score: number | null
+          customer_name: string | null
+          dealership_id: string | null
+          dim_compliance: number | null
+          dim_hallucination: number | null
+          dim_quote_band: number | null
+          duration_seconds: number | null
+          gating_failed: boolean | null
+          grader_model: string | null
+          grader_rationale: string | null
+          started_at: string | null
+          submission_id: string | null
+          vehicle_info: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_call_log_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       accept_offer: { Args: { _token: string }; Returns: undefined }
       activation_in_pilot: {
         Args: { _activation_id: string }
         Returns: boolean
+      }
+      add_customer_memory_item: {
+        Args: {
+          _fact: string
+          _kind?: string
+          _source_call_id?: string
+          _submission_id: string
+        }
+        Returns: undefined
       }
       apply_boost_bump: {
         Args: {
@@ -4502,6 +5069,14 @@ export type Database = {
           _token: string
         }
         Returns: string
+      }
+      apply_voice_call_outcome: {
+        Args: {
+          _call_id: string
+          _outcome_score: number
+          _retire_gating_failures?: boolean
+        }
+        Returns: undefined
       }
       assign_submission_user: {
         Args: { _role: string; _submission_id: string; _user_id: string }
@@ -4540,6 +5115,7 @@ export type Database = {
         }
         Returns: string
       }
+      decay_voice_variant_counts: { Args: never; Returns: undefined }
       decide_offer_request: {
         Args: {
           _decision: string
