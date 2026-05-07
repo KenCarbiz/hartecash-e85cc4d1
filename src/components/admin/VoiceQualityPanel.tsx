@@ -27,8 +27,10 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   AlertTriangle, ChevronDown, ChevronRight,
-  Mic, Sparkles, ShieldAlert,
+  Mic, Sparkles, ShieldAlert, Star, Play, Loader2,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 interface QualityRow {
   call_id: string;
@@ -61,6 +63,19 @@ interface FullGrade extends QualityRow {
   dim_transfer_hygiene: number | null;
   dim_pacing: number | null;
   dim_brand_tone: number | null;
+  golden_pinned?: boolean | null;
+}
+
+interface GradeRun {
+  id: string;
+  run_label: string;
+  started_at: string;
+  finished_at: string | null;
+  call_count: number;
+  avg_composite: number | null;
+  gating_fail_count: number;
+  baseline_run_id: string | null;
+  notes: string | null;
 }
 
 const fmtTime = (iso: string | null) => {
@@ -121,8 +136,13 @@ const npsBadge = (n: number | null | undefined) => {
   return                   { label: `★${n}`, cls: "bg-red-100 text-red-700 border-red-300 font-bold" };
 };
 
-function CallRow({ row, expanded, onToggle, full }: {
-  row: QualityRow; expanded: boolean; onToggle: () => void; full: FullGrade | null;
+function CallRow({ row, expanded, onToggle, full, pinned, onTogglePin }: {
+  row: QualityRow;
+  expanded: boolean;
+  onToggle: () => void;
+  full: FullGrade | null;
+  pinned: boolean;
+  onTogglePin: () => void;
 }) {
   const badge = scoreBadge(row.composite_score);
   const isGating = !!row.gating_failed;
@@ -137,10 +157,25 @@ function CallRow({ row, expanded, onToggle, full }: {
 
   return (
     <div className={`rounded-lg border ${isGating ? "border-red-300 bg-red-50/30 dark:bg-red-900/10 dark:border-red-700" : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"}`}>
+      <div className="flex items-stretch">
+        {/* Pin-to-golden star — tappable separately from row expansion. */}
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onTogglePin(); }}
+          aria-label={pinned ? "Unpin from golden set" : "Pin to golden set"}
+          title={pinned ? "Pinned to the golden-100 holdout. Tap to remove." : "Pin this call to the golden-100 holdout — it'll re-grade on every regression run."}
+          className={`shrink-0 px-3 flex items-center justify-center transition ${
+            pinned
+              ? "text-amber-500 hover:text-amber-600"
+              : "text-slate-300 hover:text-amber-500"
+          }`}
+        >
+          <Star className={`w-4 h-4 ${pinned ? "fill-amber-400" : ""}`} />
+        </button>
       <button
         type="button"
         onClick={onToggle}
-        className="w-full text-left px-4 py-3 flex items-start gap-3 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition"
+        className="flex-1 text-left px-1 py-3 flex items-start gap-3 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition"
       >
         <span className="shrink-0 mt-0.5">
           {expanded ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
@@ -194,6 +229,7 @@ function CallRow({ row, expanded, onToggle, full }: {
           )}
         </div>
       </button>
+      </div>
 
       {expanded && full && (
         <div className="border-t border-slate-200 dark:border-slate-800 px-4 py-3 bg-slate-50/30 dark:bg-slate-950/20">
@@ -258,11 +294,13 @@ interface SectionProps {
   expandedId: string | null;
   onToggle: (id: string) => void;
   fullById: Record<string, FullGrade>;
+  pinnedById: Record<string, boolean>;
+  onTogglePin: (callId: string) => void;
   emptyHint: string;
   icon: React.ElementType;
 }
 
-function Section({ title, subtitle, rows, expandedId, onToggle, fullById, emptyHint, icon: Icon }: SectionProps) {
+function Section({ title, subtitle, rows, expandedId, onToggle, fullById, pinnedById, onTogglePin, emptyHint, icon: Icon }: SectionProps) {
   return (
     <div>
       <div className="flex items-start gap-3 mb-3">
@@ -285,6 +323,8 @@ function Section({ title, subtitle, rows, expandedId, onToggle, fullById, emptyH
               expanded={expandedId === r.call_id}
               onToggle={() => onToggle(r.call_id)}
               full={fullById[r.call_id] || null}
+              pinned={!!pinnedById[r.call_id]}
+              onTogglePin={() => onTogglePin(r.call_id)}
             />
           ))}
         </div>
@@ -294,6 +334,7 @@ function Section({ title, subtitle, rows, expandedId, onToggle, fullById, emptyH
 }
 
 export default function VoiceQualityPanel() {
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [missing, setMissing] = useState(false);
   const [highest, setHighest] = useState<QualityRow[]>([]);
@@ -301,6 +342,10 @@ export default function VoiceQualityPanel() {
   const [gating, setGating]   = useState<QualityRow[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [fullById, setFullById] = useState<Record<string, FullGrade>>({});
+  const [pinnedById, setPinnedById] = useState<Record<string, boolean>>({});
+  const [runs, setRuns] = useState<GradeRun[]>([]);
+  const [running, setRunning] = useState(false);
+  const [pinnedCount, setPinnedCount] = useState<number>(0);
 
   const weekAgoIso = useMemo(() => {
     const d = new Date();
@@ -352,14 +397,125 @@ export default function VoiceQualityPanel() {
         || (gate.error?.message || "").includes("does not exist");
 
       setMissing(anyMissing);
-      setHighest((hi.data as QualityRow[]) || []);
-      setLowest((lo.data as QualityRow[]) || []);
-      setGating((gate.data as QualityRow[]) || []);
+      const hiRows = (hi.data as QualityRow[]) || [];
+      const loRows = (lo.data as QualityRow[]) || [];
+      const gtRows = (gate.data as QualityRow[]) || [];
+      setHighest(hiRows);
+      setLowest(loRows);
+      setGating(gtRows);
+
+      // Bulk-fetch pinned status for the union of visible call ids.
+      const allIds = Array.from(new Set([...hiRows, ...loRows, ...gtRows].map((r) => r.call_id)));
+      if (allIds.length) {
+        const { data: pins } = await supabase
+          .from("voice_call_grades")
+          .select("call_id, golden_pinned, created_at")
+          .in("call_id", allIds)
+          .is("run_id", null)
+          .order("created_at", { ascending: false });
+        const seen = new Set<string>();
+        const map: Record<string, boolean> = {};
+        for (const p of pins || []) {
+          const id = p.call_id as string;
+          if (seen.has(id)) continue;
+          seen.add(id);
+          map[id] = !!p.golden_pinned;
+        }
+        if (!cancel) setPinnedById(map);
+      }
+
+      // Recent runs + pinned-count for the header.
+      const [runsQ, pinnedQ] = await Promise.all([
+        supabase
+          .from("voice_grade_runs")
+          .select("id, run_label, started_at, finished_at, call_count, avg_composite, gating_fail_count, baseline_run_id, notes")
+          .order("started_at", { ascending: false })
+          .limit(5),
+        supabase
+          .from("voice_call_grades")
+          .select("call_id", { count: "exact", head: false })
+          .eq("golden_pinned", true)
+          .is("run_id", null),
+      ]);
+      if (!cancel) {
+        setRuns((runsQ.data as GradeRun[]) || []);
+        const uniq = new Set((pinnedQ.data || []).map((r) => r.call_id as string));
+        setPinnedCount(uniq.size);
+      }
       setLoading(false);
     };
     void load();
     return () => { cancel = true; };
   }, [weekAgoIso]);
+
+  const togglePin = async (callId: string) => {
+    const next = !pinnedById[callId];
+    // Optimistic update.
+    setPinnedById((prev) => ({ ...prev, [callId]: next }));
+    setPinnedCount((c) => c + (next ? 1 : -1));
+    const { data, error } = await supabase.rpc("mark_call_golden", {
+      _call_id: callId,
+      _pinned: next,
+    });
+    const result = data as { ok?: boolean; reason?: string } | null;
+    if (error || !result?.ok) {
+      // Roll back.
+      setPinnedById((prev) => ({ ...prev, [callId]: !next }));
+      setPinnedCount((c) => c + (next ? -1 : 1));
+      toast({
+        title: "Couldn't update pin",
+        description: error?.message || result?.reason || "no_grade_yet",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const runRegression = async () => {
+    if (running) return;
+    setRunning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("regrade-golden-set", {
+        body: { run_label: `regression ${new Date().toLocaleString()}` },
+      });
+      if (error) throw error;
+      const result = data as {
+        ok: boolean;
+        reason?: string;
+        run?: GradeRun;
+        baseline?: GradeRun | null;
+        succeeded?: number;
+        failed?: number;
+        total?: number;
+      };
+      if (!result?.ok) {
+        toast({ title: "Run failed", description: result?.reason || "unknown", variant: "destructive" });
+        return;
+      }
+      toast({
+        title: "Regression complete",
+        description: `${result.succeeded}/${result.total} calls re-graded${
+          result.baseline?.avg_composite != null && result.run?.avg_composite != null
+            ? ` · Δ ${(result.run.avg_composite - result.baseline.avg_composite).toFixed(2)}`
+            : ""
+        }`,
+      });
+      // Refresh runs.
+      const { data: runsData } = await supabase
+        .from("voice_grade_runs")
+        .select("id, run_label, started_at, finished_at, call_count, avg_composite, gating_fail_count, baseline_run_id, notes")
+        .order("started_at", { ascending: false })
+        .limit(5);
+      setRuns((runsData as GradeRun[]) || []);
+    } catch (e) {
+      toast({
+        title: "Run failed",
+        description: e instanceof Error ? e.message : undefined,
+        variant: "destructive",
+      });
+    } finally {
+      setRunning(false);
+    }
+  };
 
   const onToggle = async (callId: string) => {
     if (expandedId === callId) {
@@ -371,8 +527,9 @@ export default function VoiceQualityPanel() {
 
     const { data } = await supabase
       .from("voice_call_grades")
-      .select("call_id, dim_compliance, dim_vehicle_confirm, dim_motivation_disco, dim_quote_band, dim_objection_handle, dim_close_control, dim_transfer_hygiene, dim_pacing, dim_hallucination, dim_brand_tone, composite_score, gating_failed, rationale, grader_model")
+      .select("call_id, dim_compliance, dim_vehicle_confirm, dim_motivation_disco, dim_quote_band, dim_objection_handle, dim_close_control, dim_transfer_hygiene, dim_pacing, dim_hallucination, dim_brand_tone, composite_score, gating_failed, rationale, grader_model, golden_pinned")
       .eq("call_id", callId)
+      .is("run_id", null)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -412,6 +569,14 @@ export default function VoiceQualityPanel() {
 
       {!loading && (
         <>
+          {/* Golden-100 control bar — pin + run regression */}
+          <GoldenControlBar
+            pinnedCount={pinnedCount}
+            running={running}
+            onRun={runRegression}
+            runs={runs}
+          />
+
           <Section
             title="Gating fails (TCPA · quote band · hallucination)"
             subtitle="Variants used in these calls were auto-retired. Listen first, then patch the cabinet so the failure mode can't recur."
@@ -419,6 +584,8 @@ export default function VoiceQualityPanel() {
             expandedId={expandedId}
             onToggle={onToggle}
             fullById={fullById}
+            pinnedById={pinnedById}
+            onTogglePin={togglePin}
             emptyHint="No gating fails this week. Keep that streak."
             icon={AlertTriangle}
           />
@@ -429,6 +596,8 @@ export default function VoiceQualityPanel() {
             expandedId={expandedId}
             onToggle={onToggle}
             fullById={fullById}
+            pinnedById={pinnedById}
+            onTogglePin={togglePin}
             emptyHint="No graded calls yet."
             icon={Sparkles}
           />
@@ -439,10 +608,130 @@ export default function VoiceQualityPanel() {
             expandedId={expandedId}
             onToggle={onToggle}
             fullById={fullById}
+            pinnedById={pinnedById}
+            onTogglePin={togglePin}
             emptyHint="No graded calls yet."
             icon={Mic}
           />
         </>
+      )}
+    </div>
+  );
+}
+
+/* ──────────────────────── GOLDEN-100 CONTROL BAR ──────────────────────── */
+function GoldenControlBar({
+  pinnedCount, running, onRun, runs,
+}: {
+  pinnedCount: number;
+  running: boolean;
+  onRun: () => void;
+  runs: GradeRun[];
+}) {
+  const baseline = runs.length >= 2 ? runs[1] : null;
+  const latest   = runs.length >= 1 ? runs[0] : null;
+  const delta = latest?.avg_composite != null && baseline?.avg_composite != null
+    ? latest.avg_composite - baseline.avg_composite
+    : null;
+
+  return (
+    <div className="rounded-xl border border-amber-300 bg-gradient-to-br from-amber-50 to-white dark:from-amber-900/10 dark:to-slate-900 dark:border-amber-700 p-4">
+      <div className="flex items-start gap-3 flex-wrap">
+        <Star className="w-5 h-5 mt-0.5 text-amber-500 fill-amber-400 shrink-0" />
+        <div className="flex-1 min-w-[240px]">
+          <h3 className="text-[13px] font-bold uppercase tracking-wider text-amber-900 dark:text-amber-200">
+            Golden-100 Holdout
+          </h3>
+          <p className="text-[12px] text-slate-600 dark:text-slate-400 max-w-prose">
+            Pin a diverse set of ~100 calls (mix of high/low/edge) by tapping the star next to any row.
+            Then "Run regression" to re-grade the whole set — useful after rubric or judge-model changes
+            to verify the grader hasn't drifted.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="text-right">
+            <div className="text-[10.5px] uppercase tracking-wider text-slate-500 font-bold">Pinned</div>
+            <div className={`text-[20px] font-mono font-bold ${
+              pinnedCount === 0 ? "text-slate-400"
+              : pinnedCount < 50 ? "text-amber-600"
+              : pinnedCount > 150 ? "text-amber-600"
+              : "text-emerald-600"
+            }`}>
+              {pinnedCount}
+            </div>
+          </div>
+          <Button
+            onClick={onRun}
+            disabled={running || pinnedCount === 0}
+            className="h-10"
+            title={pinnedCount === 0 ? "Pin some calls first" : `Re-grade ${pinnedCount} calls against the current rubric`}
+          >
+            {running ? (
+              <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Running…</>
+            ) : (
+              <><Play className="w-4 h-4 mr-2" /> Run regression</>
+            )}
+          </Button>
+        </div>
+      </div>
+
+      {runs.length > 0 && (
+        <div className="mt-4 pt-4 border-t border-amber-200 dark:border-amber-800">
+          <div className="text-[10.5px] uppercase tracking-wider text-slate-500 font-bold mb-2">
+            Recent runs
+            {delta != null && (
+              <span className={`ml-3 inline-block font-mono normal-case ${
+                delta > 0.05 ? "text-emerald-600"
+                  : delta < -0.05 ? "text-red-600"
+                  : "text-slate-500"
+              }`}>
+                Δ {delta > 0 ? "+" : ""}{delta.toFixed(2)} vs prior
+              </span>
+            )}
+          </div>
+          <div className="space-y-1">
+            {runs.map((r, i) => {
+              const prev = runs[i + 1];
+              const d = r.avg_composite != null && prev?.avg_composite != null
+                ? r.avg_composite - prev.avg_composite
+                : null;
+              return (
+                <div key={r.id} className="flex items-center gap-3 text-[12px] py-1">
+                  <span className="font-mono text-slate-500 shrink-0 w-[140px] truncate">
+                    {new Date(r.started_at).toLocaleString(undefined, {
+                      month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
+                    })}
+                  </span>
+                  <span className="flex-1 truncate text-slate-700 dark:text-slate-300">{r.run_label}</span>
+                  <span className="text-slate-500 font-mono">
+                    n={r.call_count}
+                  </span>
+                  <span className={`font-mono font-bold w-[60px] text-right ${
+                    r.avg_composite == null ? "text-slate-300"
+                      : r.avg_composite >= 0.5 ? "text-emerald-600"
+                      : r.avg_composite >= 0  ? "text-slate-600"
+                      : "text-red-600"
+                  }`}>
+                    {r.avg_composite != null ? r.avg_composite.toFixed(2) : "—"}
+                  </span>
+                  <span className={`font-mono w-[60px] text-right text-[11px] ${
+                    d == null ? "text-slate-300"
+                      : d > 0.05 ? "text-emerald-600"
+                      : d < -0.05 ? "text-red-600"
+                      : "text-slate-400"
+                  }`}>
+                    {d != null ? `${d > 0 ? "+" : ""}${d.toFixed(2)}` : ""}
+                  </span>
+                  {r.gating_fail_count > 0 && (
+                    <span className="text-[11px] text-red-600 font-bold">
+                      {r.gating_fail_count} gating
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
       )}
     </div>
   );

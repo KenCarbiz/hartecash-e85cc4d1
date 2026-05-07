@@ -53,6 +53,13 @@ interface GradeRequest {
    *  frozen golden-100 holdout that we re-score on every prompt change
    *  to detect regression on the rockstar-edge cases. */
   golden_pin?: boolean;
+  /** When set, the grade row is tagged with this run_id (used by the
+   *  regrade-golden-set batch path). The row also carries the
+   *  golden_pin flag forward so subsequent runs filter to the same
+   *  set. Skip the post-call NPS SMS when this is set — we don't ask
+   *  the customer to re-rate the same call when the team is just
+   *  validating a rubric change. */
+  run_id?: string;
 }
 
 interface RubricGrade {
@@ -256,11 +263,27 @@ Deno.serve(async (req) => {
 
   const { score, gatingFailed } = computeComposite(grade);
 
-  // Insert the grade row.
+  // Insert the grade row. When run_id is set this is a regression-
+  // run regrade; carry forward the golden_pin from the most recent
+  // prior grade so the holdout set stays stable across runs (manager
+  // pins once, every regrade inherits).
+  let goldenPinned = !!body.golden_pin;
+  if (body.run_id && !body.golden_pin) {
+    const { data: priorPin } = await supabase
+      .from("voice_call_grades")
+      .select("golden_pinned")
+      .eq("call_id", body.call_id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    goldenPinned = !!priorPin?.golden_pinned;
+  }
+
   const { error: insErr } = await supabase.from("voice_call_grades").insert({
     call_id: body.call_id,
     grader: "llm",
     grader_model: GRADER_MODEL,
+    run_id: body.run_id ?? null,
     dim_compliance:        grade.dim_compliance,
     dim_vehicle_confirm:   grade.dim_vehicle_confirm,
     dim_motivation_disco:  grade.dim_motivation_disco,
@@ -274,29 +297,35 @@ Deno.serve(async (req) => {
     composite_score: score,
     gating_failed: gatingFailed,
     rationale: grade.rationale ?? null,
-    golden_pinned: !!body.golden_pin,
+    golden_pinned: goldenPinned,
   });
   if (insErr) console.warn("voice_call_grades insert failed:", insErr.message);
 
   // Push reward signal into the variant store. Auto-retire on gating fail.
-  const { error: rpcErr } = await supabase.rpc("apply_voice_call_outcome", {
-    _call_id: body.call_id,
-    _outcome_score: score,
-    _retire_gating_failures: gatingFailed,
-  });
-  if (rpcErr) console.warn("apply_voice_call_outcome failed:", rpcErr.message);
+  // SKIP this on regrade runs — moving the bandit on historical calls
+  // because the rubric changed would corrupt every variant's count.
+  if (!body.run_id) {
+    const { error: rpcErr } = await supabase.rpc("apply_voice_call_outcome", {
+      _call_id: body.call_id,
+      _outcome_score: score,
+      _retire_gating_failures: gatingFailed,
+    });
+    if (rpcErr) console.warn("apply_voice_call_outcome failed:", rpcErr.message);
+  }
 
   // ── Customer NPS feedback request (post-call) ──
   // Send a 1-tap "How was that call? 1-5" SMS so the customer
   // can ground-truth our LLM grade. Realistic response rate 8-12%
   // — we treat it as a noisy weighting on the variant outcome,
   // not a replacement. Skip on gating fails (we already know the
-  // call went badly; asking adds insult), on opt-outs, and on
-  // calls that hung up under 30s (the customer never engaged).
+  // call went badly; asking adds insult), on opt-outs, on calls
+  // that hung up under 30s (the customer never engaged), AND on
+  // regrade runs (we don't ask the customer to re-rate the same
+  // call when the team is just validating a rubric change).
   //
   // Fire-and-forget: a feedback-SMS failure should not block the
   // grader's response or cause Bland retries.
-  if (!gatingFailed) {
+  if (!gatingFailed && !body.run_id) {
     void (async () => {
       try {
         const { data: callRow } = await supabase
