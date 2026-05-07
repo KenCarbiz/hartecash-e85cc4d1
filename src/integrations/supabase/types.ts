@@ -5107,14 +5107,24 @@ export type Database = {
         Returns: boolean
       }
       cleanup_old_lookup_attempts: { Args: never; Returns: undefined }
-      compile_voice_agent_prompt: {
-        Args: {
-          _call_type?: string
-          _dealership_id?: string
-          _submission_id?: string
-        }
-        Returns: string
-      }
+      compile_voice_agent_prompt:
+        | {
+            Args: {
+              _call_type?: string
+              _dealership_id?: string
+              _submission_id?: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              _call_id?: string
+              _call_type?: string
+              _dealership_id?: string
+              _submission_id?: string
+            }
+            Returns: string
+          }
       decay_voice_variant_counts: { Args: never; Returns: undefined }
       decide_offer_request: {
         Args: {
