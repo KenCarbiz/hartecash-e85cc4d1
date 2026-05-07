@@ -4013,6 +4013,17 @@ export type Database = {
         Args: { _activation_id: string }
         Returns: boolean
       }
+      apply_boost_bump: {
+        Args: {
+          _bump_amount: number
+          _line_items: Json
+          _new_offer: number
+          _previous_offer: number
+          _source: string
+          _token: string
+        }
+        Returns: string
+      }
       can_act_in_state: {
         Args: { _state: string; _user_id: string }
         Returns: boolean
@@ -4208,6 +4219,17 @@ export type Database = {
           message: Json
           msg_id: number
           read_ct: number
+        }[]
+      }
+      recent_boost_bump: {
+        Args: { _token: string; _within_seconds?: number }
+        Returns: {
+          bump_amount: number
+          created_at: string
+          id: string
+          line_items: Json
+          new_offer: number
+          previous_offer: number
         }[]
       }
       remove_staff_role: { Args: { _role_id: string }; Returns: undefined }
