@@ -312,7 +312,7 @@ const AdminSidebar = ({
     // Branding: legacy "site-config" / "appearance" / "landing-flow" still resolve.
     "branding", "site-config", "appearance", "landing-flow",
     // Capture & Inspection: legacy keys still resolve.
-    "capture-inspection", "form-config", "inspection-config", "photo-config", "depth-policies",
+    "capture-inspection", "form-config", "inspection-config", "photo-config", "document-config", "depth-policies",
     // Marketing: legacy "promotions" / "referrals" / "testimonials" still resolve.
     "marketing", "promotions", "referrals", "testimonials",
     "offer-settings",

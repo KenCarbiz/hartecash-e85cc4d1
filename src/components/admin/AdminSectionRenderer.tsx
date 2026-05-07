@@ -562,6 +562,7 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
     activeSection === "form-config" ||
     activeSection === "inspection-config" ||
     activeSection === "photo-config" ||
+    activeSection === "document-config" ||
     activeSection === "depth-policies"
   ) {
     if (!canManageAccess) return null;
@@ -570,9 +571,11 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
         ? "inspection-sheet"
         : activeSection === "photo-config"
           ? "photos"
-          : activeSection === "depth-policies"
-            ? "standards"
-            : "lead-form";
+          : activeSection === "document-config"
+            ? "documents"
+            : activeSection === "depth-policies"
+              ? "standards"
+              : "lead-form";
     return (
       <React.Suspense fallback={<AdminLoadingSkeleton />}>
         <CaptureInspectionHub initialTab={initialTab} />

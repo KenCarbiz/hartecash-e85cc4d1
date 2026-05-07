@@ -5,6 +5,7 @@ import AdminLoadingSkeleton from "./AdminLoadingSkeleton";
 const FormConfiguration = React.lazy(() => import("./FormConfiguration"));
 const InspectionConfiguration = React.lazy(() => import("./InspectionConfiguration"));
 const PhotoConfiguration = React.lazy(() => import("./PhotoConfiguration"));
+const DocumentConfiguration = React.lazy(() => import("./DocumentConfiguration"));
 const DepthPolicyManager = React.lazy(() => import("./DepthPolicyManager"));
 
 interface CaptureInspectionHubProps {
@@ -12,9 +13,10 @@ interface CaptureInspectionHubProps {
    *  "form-config"        → lead-form
    *  "inspection-config"  → inspection-sheet
    *  "photo-config"       → photos
+   *  "document-config"    → documents
    *  "depth-policies"     → standards
    *  "capture-inspection" → lead-form (default) */
-  initialTab?: "lead-form" | "inspection-sheet" | "photos" | "standards";
+  initialTab?: "lead-form" | "inspection-sheet" | "photos" | "documents" | "standards";
 }
 
 /**
@@ -24,6 +26,10 @@ interface CaptureInspectionHubProps {
  *   - Lead Form        — public sell-flow questions (FormConfiguration)
  *   - Inspection Sheet — staff inspection field set (InspectionConfiguration)
  *   - Photos           — required photo angles + overlay (PhotoConfiguration)
+ *   - Documents        — DL / title / registration / payoff catalog
+ *                        (DocumentConfiguration). DL + title rows carry
+ *                        OCR pipelines that auto-populate the customer
+ *                        detail page on upload.
  *   - Standards        — tire/brake depth tier definitions (DepthPolicyManager)
  *
  * Admins typically edit these together (a new lead-form question often
@@ -49,6 +55,7 @@ const CaptureInspectionHub = ({
           <TabsTrigger value="lead-form">Lead Form</TabsTrigger>
           <TabsTrigger value="inspection-sheet">Inspection Sheet</TabsTrigger>
           <TabsTrigger value="photos">Photos</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="standards">Standards</TabsTrigger>
         </TabsList>
 
@@ -67,6 +74,12 @@ const CaptureInspectionHub = ({
         <TabsContent value="photos" className="pt-4">
           <React.Suspense fallback={<AdminLoadingSkeleton />}>
             <PhotoConfiguration />
+          </React.Suspense>
+        </TabsContent>
+
+        <TabsContent value="documents" className="pt-4">
+          <React.Suspense fallback={<AdminLoadingSkeleton />}>
+            <DocumentConfiguration />
           </React.Suspense>
         </TabsContent>
 

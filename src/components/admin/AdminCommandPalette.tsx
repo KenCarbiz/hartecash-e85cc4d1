@@ -91,6 +91,7 @@ const SECTION_MAP: { key: string; label: string; icon: React.ElementType; group:
   { key: "form-config", label: "Lead Form", icon: ListChecks, group: "Direct Links" },
   { key: "inspection-config", label: "Inspection Sheet", icon: Shield, group: "Direct Links" },
   { key: "photo-config", label: "Photo Requirements", icon: Camera, group: "Direct Links" },
+  { key: "document-config", label: "Document Requirements", icon: FileText, group: "Direct Links" },
   { key: "depth-policies", label: "Inspection Standards", icon: Gauge, group: "Direct Links" },
   { key: "promotions", label: "Promotions", icon: Megaphone, group: "Direct Links" },
   { key: "referrals", label: "Referral Program", icon: Gift, group: "Direct Links" },
