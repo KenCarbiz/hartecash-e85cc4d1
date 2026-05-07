@@ -438,6 +438,105 @@ export type Database = {
           },
         ]
       }
+      conversation_phases: {
+        Row: {
+          advances_to: string | null
+          call_type: string
+          content: string
+          created_at: string
+          dealership_id: string
+          id: string
+          is_active: boolean
+          phase_key: string
+          phase_position: string
+          signal_keywords: string[]
+          sort_order: number
+          updated_at: string
+          use_when: string | null
+          variant_label: string
+        }
+        Insert: {
+          advances_to?: string | null
+          call_type: string
+          content: string
+          created_at?: string
+          dealership_id?: string
+          id?: string
+          is_active?: boolean
+          phase_key: string
+          phase_position: string
+          signal_keywords?: string[]
+          sort_order?: number
+          updated_at?: string
+          use_when?: string | null
+          variant_label: string
+        }
+        Update: {
+          advances_to?: string | null
+          call_type?: string
+          content?: string
+          created_at?: string
+          dealership_id?: string
+          id?: string
+          is_active?: boolean
+          phase_key?: string
+          phase_position?: string
+          signal_keywords?: string[]
+          sort_order?: number
+          updated_at?: string
+          use_when?: string | null
+          variant_label?: string
+        }
+        Relationships: []
+      }
+      customer_signals: {
+        Row: {
+          created_at: string
+          customer_state: string
+          dealership_id: string
+          do_not_say: string[]
+          hand_off_to_human: boolean
+          id: string
+          is_active: boolean
+          recommended_posture: string
+          response_variants: string[]
+          signal_key: string
+          signal_phrases: string[]
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_state: string
+          dealership_id?: string
+          do_not_say?: string[]
+          hand_off_to_human?: boolean
+          id?: string
+          is_active?: boolean
+          recommended_posture: string
+          response_variants?: string[]
+          signal_key: string
+          signal_phrases?: string[]
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_state?: string
+          dealership_id?: string
+          do_not_say?: string[]
+          hand_off_to_human?: boolean
+          id?: string
+          is_active?: boolean
+          recommended_posture?: string
+          response_variants?: string[]
+          signal_key?: string
+          signal_phrases?: string[]
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       damage_reports: {
         Row: {
           ai_model: string
@@ -1399,6 +1498,57 @@ export type Database = {
           step_condition_history?: boolean
           step_vehicle_build?: boolean
           updated_at?: string
+        }
+        Relationships: []
+      }
+      industry_intel: {
+        Row: {
+          applies_to_segments: string[]
+          citable_number: string | null
+          created_at: string
+          dealership_id: string
+          evidence_url: string | null
+          id: string
+          is_active: boolean
+          last_verified_at: string | null
+          scope: string
+          short_claim: string
+          sort_order: number
+          topic: string
+          updated_at: string
+          use_when: string | null
+        }
+        Insert: {
+          applies_to_segments?: string[]
+          citable_number?: string | null
+          created_at?: string
+          dealership_id?: string
+          evidence_url?: string | null
+          id?: string
+          is_active?: boolean
+          last_verified_at?: string | null
+          scope: string
+          short_claim: string
+          sort_order?: number
+          topic: string
+          updated_at?: string
+          use_when?: string | null
+        }
+        Update: {
+          applies_to_segments?: string[]
+          citable_number?: string | null
+          created_at?: string
+          dealership_id?: string
+          evidence_url?: string | null
+          id?: string
+          is_active?: boolean
+          last_verified_at?: string | null
+          scope?: string
+          short_claim?: string
+          sort_order?: number
+          topic?: string
+          updated_at?: string
+          use_when?: string | null
         }
         Relationships: []
       }
@@ -4204,6 +4354,57 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_agent_persona: {
+        Row: {
+          ai_disclosure_line: string | null
+          created_at: string
+          dealership_id: string
+          greeting_style: string | null
+          hard_constraints: string[]
+          id: string
+          is_active: boolean
+          mission_block: string
+          persona_name: string
+          signoff_style: string | null
+          sort_order: number
+          success_criteria: string
+          updated_at: string
+          voice_rules: string
+        }
+        Insert: {
+          ai_disclosure_line?: string | null
+          created_at?: string
+          dealership_id?: string
+          greeting_style?: string | null
+          hard_constraints?: string[]
+          id?: string
+          is_active?: boolean
+          mission_block: string
+          persona_name: string
+          signoff_style?: string | null
+          sort_order?: number
+          success_criteria: string
+          updated_at?: string
+          voice_rules: string
+        }
+        Update: {
+          ai_disclosure_line?: string | null
+          created_at?: string
+          dealership_id?: string
+          greeting_style?: string | null
+          hard_constraints?: string[]
+          id?: string
+          is_active?: boolean
+          mission_block?: string
+          persona_name?: string
+          signoff_style?: string | null
+          sort_order?: number
+          success_criteria?: string
+          updated_at?: string
+          voice_rules?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -4254,6 +4455,14 @@ export type Database = {
         Returns: boolean
       }
       cleanup_old_lookup_attempts: { Args: never; Returns: undefined }
+      compile_voice_agent_prompt: {
+        Args: {
+          _call_type?: string
+          _dealership_id?: string
+          _submission_id?: string
+        }
+        Returns: string
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
