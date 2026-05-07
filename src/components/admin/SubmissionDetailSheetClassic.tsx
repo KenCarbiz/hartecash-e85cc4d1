@@ -31,6 +31,10 @@ import {
 } from "@/lib/adminConstants";
 import SubmissionNotesModal, { fetchSubmissionNotes, type SubmissionNote } from "./SubmissionNotesModal";
 import SaveTheDealDialog from "./SaveTheDealDialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import ClassicCommsCard from "./ClassicCommsCard";
 import ObjectionCardInline from "./ObjectionCardInline";
 import ClassicCommsFullView from "./ClassicCommsFullView";
@@ -956,6 +960,15 @@ export default function SubmissionDetailSheetClassic({
   const [notesOpen, setNotesOpen] = useState(false);
   const [saveTheDealOpen, setSaveTheDealOpen] = useState(false);
   const [commsFullOpen, setCommsFullOpen] = useState(false);
+  // Above-ACV offer-increase request flow. Visible to non-managers
+  // (BDC reps, salespeople); a manager just edits offered_price
+  // directly. Migration 20260507120000 routes the request through
+  // the offer_approval_requests table.
+  const [increaseOpen, setIncreaseOpen] = useState(false);
+  const [increaseAmount, setIncreaseAmount] = useState<string>("");
+  const [increaseReason, setIncreaseReason] = useState<string>("customer_pushback");
+  const [increaseNotes, setIncreaseNotes] = useState<string>("");
+  const [increaseSubmitting, setIncreaseSubmitting] = useState(false);
   const [notes, setNotes] = useState<SubmissionNote[]>([]);
 
   // Refresh notes — called on open and after add.
@@ -1207,6 +1220,25 @@ export default function SubmissionDetailSheetClassic({
                         <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-.4.8l-5.6 4.2v4l-2 1v-5L3 6.8A1 1 0 013 6V4z" />
                       </svg>
                       {(sub as { arrival_link_sent_at?: string | null }).arrival_link_sent_at ? "Link sent" : "Send check-in"}
+                    </button>
+                  )}
+                  {/* Above-ACV offer-increase request — visible to
+                      everyone, but the RPC auto-approves for managers
+                      and creates a pending request for non-managers.
+                      Hidden when the lead has no offer to increase. */}
+                  {sub && typeof sub.offered_price === "number" && sub.offered_price > 0 && (
+                    <button
+                      onClick={() => {
+                        setIncreaseAmount(String(sub.offered_price));
+                        setIncreaseReason("customer_pushback");
+                        setIncreaseNotes("");
+                        setIncreaseOpen(true);
+                      }}
+                      className="px-3 h-8 rounded-lg bg-warning/95 hover:bg-warning text-white text-caption font-bold flex items-center gap-1.5 transition"
+                      title="Request manager approval for an offer above the ACV ceiling"
+                    >
+                      <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3l8 14H2L10 3zm0 5v4m0 2v.5" stroke="currentColor" strokeWidth="1.5" fill="none" /></svg>
+                      Request increase
                     </button>
                   )}
                 </div>
@@ -1911,6 +1943,127 @@ export default function SubmissionDetailSheetClassic({
             if (sub) onUpdate(sub);
           }}
         />
+
+        {/* Above-ACV offer-increase request dialog. Calls
+            request_offer_increase RPC; auto-applies if the user is a
+            manager, otherwise lands as a pending request on the
+            Manager Dispatch tab. */}
+        <Dialog open={increaseOpen} onOpenChange={setIncreaseOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Request offer increase</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div className="text-xs text-muted-foreground">
+                Current offer: <span className="font-bold text-foreground">
+                  ${sub.offered_price?.toLocaleString() || "—"}
+                </span>
+                {sub.acv_value && (
+                  <>
+                    {" · ACV ceiling: "}
+                    <span className="font-bold text-foreground">${sub.acv_value.toLocaleString()}</span>
+                    <span className="text-warning"> ({(sub as { acv_status?: string }).acv_status === "final" ? "final" : "preliminary"})</span>
+                  </>
+                )}
+              </div>
+              <div>
+                <Label className="text-xs font-bold">New offer amount</Label>
+                <Input
+                  type="number"
+                  value={increaseAmount}
+                  onChange={(e) => setIncreaseAmount(e.target.value)}
+                  className="mt-1"
+                />
+                {sub.acv_value && Number(increaseAmount) > sub.acv_value && (
+                  <p className="text-micro text-warning mt-1">
+                    +${(Number(increaseAmount) - sub.acv_value).toLocaleString()} above ACV — needs manager approval.
+                  </p>
+                )}
+              </div>
+              <div>
+                <Label className="text-xs font-bold">Reason</Label>
+                <select
+                  value={increaseReason}
+                  onChange={(e) => setIncreaseReason(e.target.value)}
+                  className="w-full mt-1 h-9 rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="customer_pushback">Customer pushback</option>
+                  <option value="competitor_match">Match a written competitor offer</option>
+                  <option value="market_movement">Market moved up</option>
+                  <option value="goodwill">Goodwill / repeat customer</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div>
+                <Label className="text-xs font-bold">Notes (optional)</Label>
+                <Textarea
+                  value={increaseNotes}
+                  onChange={(e) => setIncreaseNotes(e.target.value)}
+                  rows={3}
+                  placeholder="What did the customer say? Specific competitor offer? Anything the manager should know."
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <button
+                type="button"
+                onClick={() => setIncreaseOpen(false)}
+                className="px-3 h-9 rounded-md border text-sm font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={increaseSubmitting || !Number(increaseAmount) || Number(increaseAmount) <= 0}
+                onClick={async () => {
+                  if (!sub?.id) return;
+                  setIncreaseSubmitting(true);
+                  try {
+                    const { data, error } = await supabase.rpc(
+                      "request_offer_increase",
+                      {
+                        _submission_id: sub.id,
+                        _requested_offer: Number(increaseAmount),
+                        _reason: increaseReason,
+                        _reason_notes: increaseNotes || null,
+                        _requested_by_role: null,
+                      } as never,
+                    );
+                    if (error) throw error;
+                    const result = data as { auto_approved?: boolean } | null;
+                    if (result?.auto_approved) {
+                      toast({
+                        title: `Approved & applied — offer raised to $${Number(increaseAmount).toLocaleString()}`,
+                        description: "Customer will be notified.",
+                      });
+                      // Notify customer of the increase via the
+                      // existing trigger so the bump goes out the door.
+                      safeInvoke("send-notification", {
+                        body: { trigger_key: "customer_offer_increased", submission_id: sub.id },
+                        context: { from: "ClassicHeader.requestIncrease" },
+                      });
+                    } else {
+                      toast({
+                        title: "Request sent to manager",
+                        description: "You'll see this on the Manager Dispatch tab until decided.",
+                      });
+                    }
+                    setIncreaseOpen(false);
+                    if (sub) onUpdate(sub);
+                  } catch (e) {
+                    const msg = e instanceof Error ? e.message : "Try again in a moment.";
+                    toast({ title: "Request failed", description: msg, variant: "destructive" });
+                  } finally {
+                    setIncreaseSubmitting(false);
+                  }
+                }}
+                className="px-3 h-9 rounded-md bg-warning text-white text-sm font-bold disabled:opacity-50"
+              >
+                {increaseSubmitting ? "Sending…" : "Send request"}
+              </button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         </ClassicErrorBoundary>
       </SheetContent>
     </Sheet>

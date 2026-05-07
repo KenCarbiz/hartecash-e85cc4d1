@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
+import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, AlertTriangle, RotateCcw, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loader2, AlertTriangle, RotateCcw, Clock, ShieldCheck } from "lucide-react";
+import { useOfferApprovals, type OfferApprovalRequest } from "@/hooks/useOfferApprovals";
 import type { Submission } from "@/lib/adminConstants";
 
 /**
@@ -78,8 +81,15 @@ const buildRow = (s: Submission): DispatchRow => {
 
 const SalesManagerDispatch = ({ onOpenSubmission }: SalesManagerDispatchProps) => {
   const { tenant } = useTenant();
+  const { toast } = useToast();
   const [rows, setRows] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
+  const [decidingId, setDecidingId] = useState<string | null>(null);
+  // Pending offer-increase approvals — fourth bucket on this dispatch
+  // tab. Anyone (BDC rep, voice AI, salesperson) can request an offer
+  // above the manager-set ACV; approval lands here for the manager
+  // to decide. See migration 20260507120000_offer_approval_workflow.
+  const offerApprovals = useOfferApprovals(tenant.dealership_id, { status: "open" });
 
   useEffect(() => {
     let cancelled = false;
@@ -196,6 +206,102 @@ const SalesManagerDispatch = ({ onOpenSubmission }: SalesManagerDispatchProps) =
             empty="No stale offers. Every active offer has moved within the last hour."
             renderRight={(r) => `${fmtMoney(r.offered_price)} · ${fmtAge(r.age_hours)}`}
           />
+
+          {/* Above-ACV approval requests — anyone (BDC, voice AI, salesperson)
+              who wants to take a customer above the manager-set ACV files a
+              request that lands here. Each row inline-decideable: approve
+              (applies offered_price + audit-logs) or deny. */}
+          <section className="mt-5">
+            <div className="flex items-center gap-2 mb-2">
+              <ShieldCheck className="w-3.5 h-3.5 text-warning" />
+              <h4 className="text-micro font-bold uppercase tracking-wider text-warning">
+                Above-ACV approval requests
+              </h4>
+              <Badge variant="outline" className="text-micro">{offerApprovals.requests.length}</Badge>
+            </div>
+            {offerApprovals.missing ? (
+              <p className="text-xs text-muted-foreground italic">
+                Approval workflow not enabled yet — apply migration 20260507120000_offer_approval_workflow.sql.
+              </p>
+            ) : offerApprovals.requests.length === 0 ? (
+              <p className="text-xs text-muted-foreground italic">
+                No pending approval requests. When a BDC rep, voice AI, or salesperson asks to go above ACV, the request shows up here.
+              </p>
+            ) : (
+              <ul className="rounded-lg border border-border divide-y divide-border bg-card">
+                {offerApprovals.requests.map((req) => (
+                  <li key={req.id} className="px-3 py-2.5 flex items-center gap-3 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => onOpenSubmission?.(req.submission_id)}
+                      className="flex-1 min-w-0 text-left"
+                    >
+                      <div className="text-sm font-semibold text-foreground truncate">
+                        Request: {fmtMoney(req.current_offer)} → {fmtMoney(req.requested_offer)}
+                        {req.acv_breach > 0 && (
+                          <span className="ml-2 text-warning text-micro font-bold">
+                            +${Math.round(req.acv_breach).toLocaleString()} above ACV
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-micro text-muted-foreground mt-0.5 truncate">
+                        {req.requested_by_role || "staff"} · {req.reason.replace(/_/g, " ")}
+                        {req.reason_notes ? ` · ${req.reason_notes}` : ""}
+                        {" · "}
+                        {fmtAge((Date.now() - new Date(req.requested_at).getTime()) / 3_600_000)} ago
+                      </div>
+                    </button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={decidingId === req.id}
+                      onClick={async () => {
+                        setDecidingId(req.id);
+                        try {
+                          await offerApprovals.decideRequest(req.id, "denied");
+                          toast({ title: "Request denied" });
+                        } catch (e) {
+                          toast({
+                            title: "Couldn't deny",
+                            description: e instanceof Error ? e.message : undefined,
+                            variant: "destructive",
+                          });
+                        } finally {
+                          setDecidingId(null);
+                        }
+                      }}
+                    >
+                      Deny
+                    </Button>
+                    <Button
+                      size="sm"
+                      disabled={decidingId === req.id}
+                      onClick={async () => {
+                        setDecidingId(req.id);
+                        try {
+                          await offerApprovals.decideRequest(req.id, "approved");
+                          toast({
+                            title: `Approved — offer raised to ${fmtMoney(req.requested_offer)}`,
+                            description: "The customer will be notified.",
+                          });
+                        } catch (e) {
+                          toast({
+                            title: "Couldn't approve",
+                            description: e instanceof Error ? e.message : undefined,
+                            variant: "destructive",
+                          });
+                        } finally {
+                          setDecidingId(null);
+                        }
+                      }}
+                    >
+                      Approve
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
         </CardContent>
       </Card>
     </div>
