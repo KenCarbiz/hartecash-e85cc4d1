@@ -601,7 +601,12 @@ const DealAcceptedLegacy = () => {
             exhaustive set. */}
         {token && (submission as any)?.id && (
           <motion.div {...entrance(2)} className="mb-6">
-            <EssentialUploads token={token} submissionId={(submission as any).id} />
+            <EssentialUploads
+              token={token}
+              submissionId={(submission as any).id}
+              loanStatus={(submission as any).loan_status}
+              dealershipId={(submission as any).dealership_id}
+            />
           </motion.div>
         )}
 

@@ -8,6 +8,7 @@ import { safeInvoke } from "@/lib/safeInvoke";
 import { Button } from "@/components/ui/button";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useDocumentConfig } from "@/hooks/useDocumentConfig";
 
 /**
  * Clarity-tier document upload page — Apple-minimal companion to
@@ -27,13 +28,17 @@ import { useIsMobile } from "@/hooks/use-mobile";
  * scaffold is verified.
  */
 
-const DOC_TYPES = [
-  { key: "drivers_license_front", label: "Driver's License — Front", icon: CreditCard, ocr: true },
-  { key: "drivers_license_back", label: "Driver's License — Back", icon: CreditCard },
-  { key: "registration", label: "Registration", icon: ClipboardList },
-  { key: "title_front", label: "Title — Front", icon: ScrollText, ocr: true },
-  { key: "title_back", label: "Title — Back", icon: ScrollText },
-];
+// Icon mapping by canonical doc_id. Falls back to FileText for any
+// new doc the dealer adds in admin → Customer Requirements.
+const DOC_ICON: Record<string, typeof CreditCard> = {
+  drivers_license_front: CreditCard,
+  drivers_license_back:  CreditCard,
+  registration:          ClipboardList,
+  title_front:           ScrollText,
+  title_back:            ScrollText,
+  payoff_verification:   FileText,
+  lease_buyout:          FileText,
+};
 
 interface SubmissionInfo {
   id: string;
@@ -43,6 +48,8 @@ interface SubmissionInfo {
   name: string | null;
   state: string | null;
   vin: string | null;
+  loan_status?: string | null;
+  dealership_id?: string | null;
 }
 
 type DocFile = { file: File; docType: string; preview: string };
@@ -63,6 +70,22 @@ const UploadDocsClarity = () => {
   const [done, setDone] = useState(false);
   const [activeDocType, setActiveDocType] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Per-tenant doc list — drives the tile grid so the dealer can
+  // add/remove/relabel doc types in admin → Customer Requirements
+  // and have it propagate here without a code change.
+  const { customerAllDocs } = useDocumentConfig(
+    submission?.dealership_id || "default",
+    submission?.loan_status,
+  );
+  const DOC_TYPES = customerAllDocs.map((d) => ({
+    key: d.doc_id,
+    label: d.label,
+    icon: DOC_ICON[d.doc_id] || FileText,
+    ocr: !!d.ocr_pipeline,
+    ocrPipeline: d.ocr_pipeline,
+    role: d.role,
+  }));
 
   useEffect(() => {
     let cancelled = false;

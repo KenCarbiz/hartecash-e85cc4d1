@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Upload, X, FileText, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useTenant } from "@/contexts/TenantContext";
+import { useDocumentConfig } from "@/hooks/useDocumentConfig";
 
 interface StaffFileUploadProps {
   token: string;
@@ -11,16 +13,21 @@ interface StaffFileUploadProps {
   onUploadComplete: () => void;
 }
 
-const DOC_TYPES = [
+// Fallback shown when document_config has no rows yet (instance
+// hasn't applied 20260507020000_document_config.sql or a brand-new
+// dealer hasn't customized). Mirrors the pre-hook hardcoded list so
+// staff-upload UX never regresses while the migration rolls out.
+const FALLBACK_DOC_TYPES = [
   { key: "drivers_license_front", label: "Driver's License (Front)" },
-  { key: "drivers_license_back", label: "Driver's License (Back)" },
-  { key: "registration", label: "Registration" },
-  { key: "title_inquiry", label: "Title Inquiry" },
-  { key: "title", label: "Title" },
-  { key: "payoff_verification", label: "Payoff Verification" },
-  { key: "appraisal", label: "Appraisal" },
-  { key: "carfax", label: "Carfax" },
-  { key: "window_sticker", label: "Window Sticker (if available)" },
+  { key: "drivers_license_back",  label: "Driver's License (Back)" },
+  { key: "registration",          label: "Registration" },
+  { key: "title_inquiry",         label: "Title Inquiry" },
+  { key: "title_front",           label: "Title (front)" },
+  { key: "title_back",            label: "Title (back)" },
+  { key: "payoff_verification",   label: "Payoff Verification" },
+  { key: "appraisal",             label: "Appraisal" },
+  { key: "carfax",                label: "Carfax" },
+  { key: "window_sticker",        label: "Window Sticker (if available)" },
 ];
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -35,6 +42,19 @@ const StaffFileUpload = ({ token, bucket, onUploadComplete }: StaffFileUploadPro
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  // Drive the doc-type dropdown from the per-tenant document_config
+  // catalog. Includes both customer-visible and staff_only docs so
+  // appraisal / Carfax / window-sticker stay reachable from this
+  // uploader. Falls back to the hardcoded list if document_config
+  // is empty (migration not applied yet).
+  const { tenant } = useTenant();
+  const { docs } = useDocumentConfig(tenant.dealership_id);
+  const DOC_TYPES = docs.length > 0
+    ? docs
+        .filter((d) => d.role !== "off" || d.staff_only)
+        .map((d) => ({ key: d.doc_id, label: d.staff_only ? `${d.label} (staff)` : d.label }))
+    : FALLBACK_DOC_TYPES;
 
   const isPhotos = bucket === "submission-photos";
   const accept = isPhotos ? "image/*" : "image/*,.pdf";
