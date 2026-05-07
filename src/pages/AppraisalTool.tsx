@@ -1300,7 +1300,16 @@ export default function AppraisalTool() {
                       return data?.[tierKey] || 0;
                     })();
                     const bubbleFormData = { ...formData, overallCondition: cond };
+                    // calculateOffer returns null when bbVehicle is
+                    // absent OR when baseValue resolves to 0 for the
+                    // chosen condition tier (rare but real — a Black
+                    // Book row can have empty pricing for "rough" on
+                    // some classes). Guard the .high access with the
+                    // selectedValue fallback so the bubble still
+                    // renders something sensible instead of crashing
+                    // the whole appraisal page.
                     const bubbleResult = calculateOffer(bbVehicle, bubbleFormData, liveSelectedAddDeducts, activeSettings, rules, undefined, retailMarketStats?.market_days_supply ?? undefined, retailMarketStats?.sold?.mean_price ?? undefined, retailMarketStats?.active?.mean_price ?? undefined, sub?.ai_condition_score, sub?.ai_damage_summary);
+                    const bubbleHigh = bubbleResult?.high ?? selectedValue;
 
                     return (
                       <button
@@ -1316,7 +1325,7 @@ export default function AppraisalTool() {
                           {CONDITION_LABELS[cond]}
                         </div>
                         <div className={`text-lg font-bold ${isActive ? "text-primary" : "text-card-foreground"}`}>
-                          ${bubbleResult.high.toLocaleString()}
+                          ${bubbleHigh.toLocaleString()}
                         </div>
                         <div className="text-[10px] font-bold text-muted-foreground mt-0.5">
                           Base: ${selectedValue.toLocaleString()} × {mult.toFixed(2)}
