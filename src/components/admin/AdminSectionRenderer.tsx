@@ -527,15 +527,31 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
     );
   }
 
-  // ── Performance hub ── KPI + GM HUD as role-aware tabs. Legacy
-  // keys ("executive", "gm-hud") still resolve here.
-  if (activeSection === "performance" || activeSection === "executive" || activeSection === "gm-hud") {
+  // ── Performance hub ── KPI + GM HUD + BDC Health as role-aware
+  // tabs. Legacy keys ("executive", "gm-hud", "bdc-health") all
+  // resolve here.
+  if (
+    activeSection === "performance" ||
+    activeSection === "executive" ||
+    activeSection === "gm-hud" ||
+    activeSection === "bdc-health"
+  ) {
     const showHud = canViewExecutiveHUD(userRole);
-    const initialTab: "kpi" | "hud" = activeSection === "gm-hud" && showHud ? "hud" : "kpi";
+    // BDC Health: managers + GM/GSM + admins. BDC manager role-key
+    // varies by deployment so we accept both bdc_manager and the
+    // legacy 'manager' / 'used_car_manager' for safety.
+    const showBdcHealth = ["admin", "gsm_gm", "used_car_manager", "manager", "bdc_manager"].includes(userRole);
+    const initialTab: "kpi" | "hud" | "bdc" =
+      activeSection === "bdc-health" && showBdcHealth
+        ? "bdc"
+        : activeSection === "gm-hud" && showHud
+          ? "hud"
+          : "kpi";
     return (
       <React.Suspense fallback={<AdminLoadingSkeleton />}>
         <PerformanceHub
           initialTab={initialTab}
+          showBdcHealth={showBdcHealth}
           showHud={showHud}
           onHudDrillDown={(target) => {
             // Park the drill-down on the dashboard hook so the All

@@ -4,16 +4,21 @@ import AdminLoadingSkeleton from "./AdminLoadingSkeleton";
 import ExecutiveKPIHub from "./ExecutiveKPIHub";
 
 const ExecutiveHUD = React.lazy(() => import("./ExecutiveHUD"));
+const BDCHealthPanel = React.lazy(() => import("./BDCHealthPanel"));
 
 interface PerformanceHubProps {
   /** Deep-link tab from legacy keys:
    *  "executive" → kpi
    *  "gm-hud"    → hud
+   *  "bdc-health" → bdc
    *  "performance" → kpi (default) */
-  initialTab?: "kpi" | "hud";
+  initialTab?: "kpi" | "hud" | "bdc";
   /** When false (role can't view HUD) the HUD tab is hidden and we
    *  render only the KPI surface. Routed by canViewExecutiveHUD. */
   showHud?: boolean;
+  /** Whether the viewer can see BDC Health (manager / GSM / GM /
+   *  admin). When false the BDC tab is hidden. */
+  showBdcHealth?: boolean;
   /** Drill-down handler for the GM HUD funnel + decline buckets.
    *  Threaded down from AdminSectionRenderer so clicking a tile
    *  opens All Leads pre-filtered. */
@@ -37,12 +42,13 @@ interface PerformanceHubProps {
 const PerformanceHub = ({
   initialTab = "kpi",
   showHud = false,
+  showBdcHealth = false,
   onHudDrillDown,
 }: PerformanceHubProps) => {
   const [tab, setTab] = useState<string>(initialTab);
 
-  // Role can't see HUD → render KPI inline, skip the tab strip.
-  if (!showHud) {
+  // Role with no extra tabs → render KPI inline, skip the tab strip.
+  if (!showHud && !showBdcHealth) {
     return <ExecutiveKPIHub />;
   }
 
@@ -51,25 +57,36 @@ const PerformanceHub = ({
       <div>
         <h2 className="text-lg font-semibold text-card-foreground">Performance</h2>
         <p className="text-sm text-muted-foreground">
-          Headline KPIs and the live GM HUD for today.
+          Headline KPIs, live GM HUD, and per-rep BDC activity.
         </p>
       </div>
 
       <Tabs value={tab} onValueChange={setTab} className="w-full">
         <TabsList>
           <TabsTrigger value="kpi">KPI Hub</TabsTrigger>
-          <TabsTrigger value="hud">GM HUD</TabsTrigger>
+          {showHud && <TabsTrigger value="hud">GM HUD</TabsTrigger>}
+          {showBdcHealth && <TabsTrigger value="bdc">BDC Health</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="kpi" className="pt-4">
           <ExecutiveKPIHub />
         </TabsContent>
 
-        <TabsContent value="hud" className="pt-4">
-          <React.Suspense fallback={<AdminLoadingSkeleton />}>
-            <ExecutiveHUD onDrillDown={onHudDrillDown} />
-          </React.Suspense>
-        </TabsContent>
+        {showHud && (
+          <TabsContent value="hud" className="pt-4">
+            <React.Suspense fallback={<AdminLoadingSkeleton />}>
+              <ExecutiveHUD onDrillDown={onHudDrillDown} />
+            </React.Suspense>
+          </TabsContent>
+        )}
+
+        {showBdcHealth && (
+          <TabsContent value="bdc" className="pt-4">
+            <React.Suspense fallback={<AdminLoadingSkeleton />}>
+              <BDCHealthPanel />
+            </React.Suspense>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

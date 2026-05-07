@@ -44,6 +44,8 @@ interface Lead extends ScoreInputs {
   vin: string | null;
   is_hot_lead?: boolean | null;
   status_updated_at?: string | null;
+  internal_notes?: string | null;
+  assigned_bdc_rep_id?: string | null;
 }
 
 const FINAL_STATUSES = new Set([
@@ -114,6 +116,52 @@ const BDCPriorityQueue = ({ onOpenSubmission }: { onOpenSubmission?: (id: string
   const { tenant } = useTenant();
   const [rows, setRows] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  // user_id -> display label, for the assigned-rep chip on each row.
+  // Populated lazily from get_all_staff so we don't pay the cost
+  // until there's at least one assigned row in the result set.
+  const [staffLabels, setStaffLabels] = useState<Record<string, string>>({});
+  // Tracks which rows are mid-claim so the button can show a spinner
+  // and we don't fire two RPCs against the same lead.
+  const [claiming, setClaiming] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id || null));
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.rpc(
+        "get_all_staff",
+        { _dealership_id: tenant.dealership_id } as never,
+      );
+      if (cancelled || !data) return;
+      const map: Record<string, string> = {};
+      for (const row of data as unknown as Array<{ user_id: string; display_name: string | null; email?: string | null }>) {
+        map[row.user_id] = row.display_name || row.email || row.user_id.slice(0, 8);
+      }
+      setStaffLabels(map);
+    })();
+    return () => { cancelled = true; };
+  }, [tenant.dealership_id]);
+
+  // Claim an unclaimed lead OR re-claim an already-claimed one for
+  // the current user. Writes through assign_submission_user so the
+  // activity_log gets an audit row.
+  const claimLead = async (leadId: string) => {
+    if (!currentUserId) return;
+    setClaiming((p) => ({ ...p, [leadId]: true }));
+    try {
+      await supabase.rpc(
+        "assign_submission_user",
+        { _submission_id: leadId, _role: "bdc_rep", _user_id: currentUserId } as never,
+      );
+      setRows((prev) => prev.map((r) => r.id === leadId ? { ...r, assigned_bdc_rep_id: currentUserId } : r));
+    } finally {
+      setClaiming((p) => ({ ...p, [leadId]: false }));
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -122,7 +170,7 @@ const BDCPriorityQueue = ({ onOpenSubmission }: { onOpenSubmission?: (id: string
       const { data } = await supabase
         .from("submissions")
         .select(
-          "id, name, phone, email, vehicle_year, vehicle_make, vehicle_model, vin, is_hot_lead, dealership_id, created_at, status_updated_at, offered_price, estimated_offer_high, appointment_set, progress_status, declined_reason, customer_walk_away_number, competitor_mentioned, portal_view_count, hot_followup_2h_sent_at, last_outreach_at, internal_notes",
+          "id, name, phone, email, vehicle_year, vehicle_make, vehicle_model, vin, is_hot_lead, dealership_id, created_at, status_updated_at, offered_price, estimated_offer_high, appointment_set, progress_status, declined_reason, customer_walk_away_number, competitor_mentioned, portal_view_count, hot_followup_2h_sent_at, last_outreach_at, internal_notes, assigned_bdc_rep_id",
         )
         .eq("dealership_id", tenant.dealership_id)
         .gte("created_at", new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString())
@@ -245,6 +293,35 @@ const BDCPriorityQueue = ({ onOpenSubmission }: { onOpenSubmission?: (id: string
                       <span className="inline-flex items-center justify-center min-w-[28px] h-5 px-1.5 rounded-full bg-muted text-foreground text-[11px] font-bold">
                         {result.score}
                       </span>
+                      {/* Assignment chip — shows who's working this lead.
+                          Click to claim if unassigned (current user
+                          becomes the assigned rep + an audit row lands
+                          in activity_log via assign_submission_user). */}
+                      {lead.assigned_bdc_rep_id ? (
+                        <span
+                          className={cn(
+                            "text-[10px] font-bold rounded-full px-2 py-0.5 inline-flex items-center gap-1",
+                            lead.assigned_bdc_rep_id === currentUserId
+                              ? "bg-info/10 text-info border border-info/30"
+                              : "bg-muted text-muted-foreground",
+                          )}
+                          title={lead.assigned_bdc_rep_id === currentUserId ? "Yours" : `Working: ${staffLabels[lead.assigned_bdc_rep_id] || "Another rep"}`}
+                        >
+                          {lead.assigned_bdc_rep_id === currentUserId
+                            ? "You"
+                            : staffLabels[lead.assigned_bdc_rep_id]?.split(" ")[0] || "Rep"}
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => claimLead(lead.id)}
+                          disabled={!currentUserId || claiming[lead.id]}
+                          className="text-[10px] font-bold rounded-full px-2 py-0.5 inline-flex items-center gap-1 border border-dashed border-border text-muted-foreground hover:border-info hover:text-info disabled:opacity-50 transition-colors"
+                          title="Claim this lead — you become the assigned rep"
+                        >
+                          {claiming[lead.id] ? "…" : "Claim"}
+                        </button>
+                      )}
                     </div>
                     <div className="text-xs text-muted-foreground truncate mt-0.5">
                       {ymm(lead)}

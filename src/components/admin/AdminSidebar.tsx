@@ -303,8 +303,8 @@ const AdminSidebar = ({
 
   const allSectionKeys = [
     "today", "submissions", "accepted-appts", "appraiser-queue",
-    // Performance: legacy "executive" / "gm-hud" still resolve.
-    "performance", "executive", "gm-hud",
+    // Performance: legacy "executive" / "gm-hud" / "bdc-health" all resolve.
+    "performance", "executive", "gm-hud", "bdc-health",
     // BDC: legacy "bdc-queue" / "bdc-calls" still resolve.
     "bdc-hub", "bdc-queue", "bdc-calls",
     // Comms: legacy "channels" / "notifications" / "compliance" still resolve.
