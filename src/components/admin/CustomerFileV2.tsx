@@ -74,6 +74,7 @@ interface CustomerFileV2Props {
   onDeleteDoc: (docType: string, fileName: string) => void;
   fetchActivityLog: (id: string) => void;
   fetchSubmissions: () => void;
+  viewerRole?: string;
 }
 
 type TabId = "conversation" | "activity" | "cadence" | "deal" | "vehicle";
