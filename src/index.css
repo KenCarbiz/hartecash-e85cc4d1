@@ -69,6 +69,11 @@
     --success-foreground: 0 0% 100%;
     --warning: 43 96% 52%;
     --warning-foreground: 210 29% 24%;
+    /* --info: calm sky blue used for "informational, not urgent"
+       indicators (BDC last-touch chips, neutral status pills, etc.).
+       Replaces hardcoded bg-sky-*, bg-blue-* literals across admin/. */
+    --info: 210 91% 56%;
+    --info-foreground: 0 0% 100%;
 
     --cta-offer: 0 80% 50%;
     --cta-accept: 0 80% 50%;
@@ -118,6 +123,8 @@
     --success-foreground: 0 0% 100%;
     --warning: 43 96% 52%;
     --warning-foreground: 222 47% 8%;
+    --info: 210 91% 56%;
+    --info-foreground: 0 0% 100%;
 
     --cta-offer: 0 80% 50%;
     --cta-accept: 0 80% 50%;

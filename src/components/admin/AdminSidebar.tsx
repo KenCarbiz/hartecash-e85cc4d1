@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 import {
   Inbox, CalendarDays, Users, ShieldCheck, SlidersHorizontal,
-  Settings, Bell, ListChecks, MessageSquareQuote, BarChart3, Send, MapPin, Car, ScrollText, Shield, Lock, Wrench, Rocket, Gauge, Network, Camera, Gift, Megaphone, ChevronDown, Link2, Code2, Paintbrush, TrendingUp, Store, Truck, Zap, Activity, ScanLine, CreditCard, Phone, DollarSign, Layout, Globe, Palette, UserCheck, Award, Flame, Home, Tag, Receipt, Key,
+  Settings, Bell, ListChecks, MessageSquareQuote, BarChart3, Send, MapPin, Car, ScrollText, Shield, Lock, Wrench, Rocket, Gauge, Network, Camera, Gift, Megaphone, ChevronDown, Link2, Code2, Paintbrush, TrendingUp, Store, Truck, Zap, Activity, ScanLine, CreditCard, Phone, PhoneCall, DollarSign, Layout, Globe, Palette, UserCheck, Award, Home, Tag, Receipt, Key,
   // Icons added to bring the left-bar in line with the approved
   // Claude Design reference. RotateCcw replaces UserCheck on the
   // Appraiser Queue (circular re-appraise glyph), Wrench replaces
@@ -186,7 +186,7 @@ const AdminSidebar = ({
       badgeVariant: "destructive" as const,
     },
     { key: "accepted-appts", label: "Appointments", icon: CalendarDays, badge: appointmentCount > 0 ? String(appointmentCount) : undefined },
-    { key: "bdc-hub", label: "BDC Queue", icon: Flame },
+    { key: "bdc-hub", label: "BDC Queue", icon: PhoneCall },
   ].filter((item) => isAllowed(item.key));
 
   // ── LANE TOOLS ── Hands-on lot/service tooling. Vehicle Images was

@@ -67,6 +67,15 @@ const ymm = (l: Lead) =>
 const hoursOpen = (created_at: string) =>
   Math.max(0, (Date.now() - new Date(created_at).getTime()) / 3_600_000);
 
+// Compact "3h ago" / "2d ago" formatter for the row's last-touch line.
+const fmtAgo = (iso: string): string => {
+  const minutes = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60_000));
+  if (minutes < 1)        return "just now";
+  if (minutes < 60)       return `${minutes}m ago`;
+  if (minutes < 60 * 24)  return `${Math.round(minutes / 60)}h ago`;
+  return `${Math.round(minutes / (60 * 24))}d ago`;
+};
+
 // Status pill: derive from progress_status with a few hot-state overrides
 const pillFor = (l: Lead): { label: string; cls: string; dot: string } | null => {
   if (l.progress_status === "customer_arrived")
@@ -113,7 +122,7 @@ const BDCPriorityQueue = ({ onOpenSubmission }: { onOpenSubmission?: (id: string
       const { data } = await supabase
         .from("submissions")
         .select(
-          "id, name, phone, email, vehicle_year, vehicle_make, vehicle_model, vin, is_hot_lead, dealership_id, created_at, status_updated_at, offered_price, estimated_offer_high, appointment_set, progress_status, declined_reason, customer_walk_away_number, competitor_mentioned, portal_view_count, hot_followup_2h_sent_at",
+          "id, name, phone, email, vehicle_year, vehicle_make, vehicle_model, vin, is_hot_lead, dealership_id, created_at, status_updated_at, offered_price, estimated_offer_high, appointment_set, progress_status, declined_reason, customer_walk_away_number, competitor_mentioned, portal_view_count, hot_followup_2h_sent_at, last_outreach_at, internal_notes",
         )
         .eq("dealership_id", tenant.dealership_id)
         .gte("created_at", new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString())
@@ -242,6 +251,28 @@ const BDCPriorityQueue = ({ onOpenSubmission }: { onOpenSubmission?: (id: string
                       {lead.phone && <> · {formatPhone(lead.phone)}</>}
                     </div>
                     <div className={cn("text-[12px] mt-1", subline.cls)}>{subline.text}</div>
+                    {/* Last-touch + last-note line. Eliminates the
+                        "did anyone touch this recently?" guesswork the
+                        rep gets today; reduces double-dialing. Note
+                        preview is truncated to 90 chars to keep rows
+                        compact. */}
+                    {(lead.last_outreach_at || lead.internal_notes) && (
+                      <div className="text-[11px] text-muted-foreground mt-1 truncate">
+                        {lead.last_outreach_at && (
+                          <span>
+                            <span className="font-semibold">Last touch:</span> {fmtAgo(lead.last_outreach_at)}
+                          </span>
+                        )}
+                        {lead.last_outreach_at && lead.internal_notes && <span className="opacity-50"> · </span>}
+                        {lead.internal_notes && (
+                          <span title={lead.internal_notes}>
+                            <span className="font-semibold">Note:</span> {lead.internal_notes.length > 90
+                              ? `${lead.internal_notes.slice(0, 90)}…`
+                              : lead.internal_notes}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {lead.phone ? (
@@ -253,11 +284,22 @@ const BDCPriorityQueue = ({ onOpenSubmission }: { onOpenSubmission?: (id: string
                           <Phone className="w-3.5 h-3.5" />
                           Call
                         </Button>
-                        <a href={`sms:${lead.phone}`} aria-label="Text">
-                          <Button variant="outline" size="icon" className="h-9 w-9">
-                            <MessageSquare className="w-4 h-4" />
-                          </Button>
-                        </a>
+                        {/* Text — opens the customer file inline (which
+                            auto-scrolls to the Comms card for BDC reps
+                            via the viewerRole anchor system). The legacy
+                            sms:<phone> href bypassed the platform's
+                            compliance log and ConversationThread,
+                            creating TCPA risk. Now every text goes
+                            through the in-app threaded surface. */}
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-9 w-9"
+                          aria-label="Text via customer file"
+                          onClick={() => onOpenSubmission && onOpenSubmission(lead.id)}
+                        >
+                          <MessageSquare className="w-4 h-4" />
+                        </Button>
                       </>
                     ) : (
                       <Button

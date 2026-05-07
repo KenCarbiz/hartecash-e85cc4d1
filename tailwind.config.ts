@@ -13,6 +13,20 @@ export default {
       },
     },
     extend: {
+      // 5-step type scale + a "micro" caption variant for the
+      // section labels admin surfaces use everywhere. Adding via
+      // `extend` so the default scale (text-xs through text-9xl)
+      // stays available — the goal is to migrate away from
+      // arbitrary text-[Npx] values to these named steps over time,
+      // not break the existing usage in one go.
+      fontSize: {
+        display: ["2.5rem",   { lineHeight: "1.05", letterSpacing: "-0.025em", fontWeight: "700" }],
+        h1:      ["2rem",     { lineHeight: "1.1",  letterSpacing: "-0.02em",  fontWeight: "700" }],
+        h2:      ["1.25rem",  { lineHeight: "1.2",  letterSpacing: "-0.01em",  fontWeight: "600" }],
+        body:    ["0.875rem", { lineHeight: "1.5" }],
+        caption: ["0.75rem",  { lineHeight: "1.4" }],
+        micro:   ["0.625rem", { lineHeight: "1.3",  letterSpacing: "0.04em" }],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -46,6 +60,10 @@ export default {
         warning: {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
+        },
+        info: {
+          DEFAULT: "hsl(var(--info))",
+          foreground: "hsl(var(--info-foreground))",
         },
         popover: {
           DEFAULT: "hsl(var(--popover))",

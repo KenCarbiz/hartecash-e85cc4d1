@@ -12,7 +12,7 @@ import {
   ListChecks, MessageSquareQuote, BarChart3, Send, ShieldCheck,
   Car, Wrench, Rocket, ScrollText, Gauge, Camera, Network, MapPin, Search, Shield,
   Megaphone, Gift, Link2, Target, FileText, Phone, Palette, Activity,
-  TrendingUp, Mic, LineChart, Flame, RotateCcw, Clock, Tag, Receipt, LogIn,
+  TrendingUp, Mic, LineChart, PhoneCall, RotateCcw, Clock, Tag, Receipt, LogIn,
 } from "lucide-react";
 import type { Submission } from "@/lib/adminConstants";
 
@@ -33,7 +33,7 @@ const SECTION_MAP: { key: string; label: string; icon: React.ElementType; group:
   { key: "submissions", label: "All Leads", icon: Inbox, group: "Queues" },
   { key: "appraiser-queue", label: "Appraiser Queue", icon: RotateCcw, group: "Queues" },
   { key: "accepted-appts", label: "Appointments", icon: CalendarDays, group: "Queues" },
-  { key: "bdc-hub", label: "BDC Queue", icon: Flame, group: "Queues" },
+  { key: "bdc-hub", label: "BDC Queue", icon: PhoneCall, group: "Queues" },
 
   // ── Lane Tools ──
   { key: "inspection-checkin", label: "Inspection Check-In", icon: LogIn, group: "Lane Tools" },
