@@ -638,17 +638,72 @@ Deno.serve(async (req) => {
     const results: { email?: string; sms?: string } = {};
 
     const logNotification = async (channel: string, recipient: string, status: string, errorMsg?: string) => {
+      // Deterministic idempotency key — same trigger + submission +
+      // channel + recipient inside the same 5-minute bucket dedupes at
+      // the DB layer (UNIQUE index from migration 20260507090000).
+      // Catches dual-tab dispatches, cron-overlap re-fires, and
+      // Twilio/Bland webhook retries that race the worker.
+      const bucket = Math.floor(Date.now() / (5 * 60 * 1000));
+      const idempotencyKey = `${trigger_key}:${submission_id || "no-sub"}:${channel}:${recipient}:${bucket}`;
       try {
-        await supabase.from("notification_log").insert({
+        const { error: insertErr } = await supabase.from("notification_log").insert({
           trigger_key, channel, recipient, status,
           error_message: errorMsg || null,
           submission_id: submission_id || null,
           dealership_id: dealershipId,
+          idempotency_key: idempotencyKey,
         });
+        if (insertErr) {
+          // 23505 = unique violation = duplicate within 5-min bucket.
+          // Log and swallow; do NOT re-attempt the actual send (caller
+          // shouldn't reach here twice for the same key, but if it
+          // does we treat it as a no-op).
+          if (!String(insertErr.message || "").includes("duplicate key")) {
+            console.error("notification_log insert error:", insertErr);
+          }
+        }
       } catch (e) {
         console.error("Failed to log notification:", e);
       }
     };
+
+    // ── can_touch gate ──
+    // Single source of truth from migration 20260507090000. Enforces
+    // opt-out (all channels), recipient-local quiet hours, per-channel
+    // gap, and 3/24h + 7/7d frequency caps. Staff triggers and manual
+    // sends bypass the gate (the rep clicks Send; cap protections still
+    // apply per-channel via the same function called with bypass=false).
+    const canTouchOnChannel = async (chan: "sms" | "email" | "voice"): Promise<{ ok: true } | { ok: false; reason: string }> => {
+      if (!sub?.id) return { ok: true };
+      // Staff-facing triggers shouldn't honor customer opt-out — they're
+      // notifying the dealership team, not the customer.
+      if (!isCustomerTrigger) return { ok: true };
+      try {
+        const { data } = await supabase.rpc("can_touch", { _submission_id: sub.id, _channel: chan } as never);
+        const row = (data as Array<{ decision: string; reason: string }> | null)?.[0];
+        if (!row || row.decision === "ok") return { ok: true };
+        return { ok: false, reason: `${row.decision}:${row.reason}` };
+      } catch {
+        // can_touch RPC missing (migration not applied) → fail open.
+        // The legacy opt-out checks below still run.
+        return { ok: true };
+      }
+    };
+
+    if (channels.includes("email") && emailRecipients.length > 0) {
+      const ct = await canTouchOnChannel("email");
+      if (!ct.ok) {
+        emailRecipients = [];
+        results.email = { skipped: ct.reason };
+      }
+    }
+    if (channels.includes("sms") && smsRecipients.length > 0) {
+      const ct = await canTouchOnChannel("sms");
+      if (!ct.ok) {
+        smsRecipients = [];
+        results.sms = { skipped: ct.reason };
+      }
+    }
 
     // ── SEND EMAILS ──
     if (channels.includes("email") && emailRecipients.length > 0) {
@@ -828,7 +883,22 @@ Deno.serve(async (req) => {
     if (channels.includes("sms") && smsRecipients.length > 0) {
       const twilioSid = Deno.env.get("TWILIO_ACCOUNT_SID");
       const twilioToken = Deno.env.get("TWILIO_AUTH_TOKEN");
-      const twilioPhone = Deno.env.get("TWILIO_PHONE_NUMBER");
+      // Per-dealer Twilio number routing — pulled from
+      // dealer_accounts.twilio_from_number first, env-var as the last-
+      // resort fallback. Single global number across tenants is the
+      // multi-tenant safety bug the architect audit flagged: brand
+      // contamination, spam-flag risk, and cross-tenant inbound-reply
+      // matching all flow from it.
+      let twilioPhone: string | null = null;
+      if (sub?.dealership_id) {
+        const { data: dealerRow } = await supabase
+          .from("dealer_accounts")
+          .select("twilio_from_number")
+          .eq("dealership_id", sub.dealership_id)
+          .maybeSingle();
+        twilioPhone = (dealerRow as { twilio_from_number?: string } | null)?.twilio_from_number || null;
+      }
+      if (!twilioPhone) twilioPhone = Deno.env.get("TWILIO_PHONE_NUMBER") || null;
 
       if (twilioSid && twilioToken && twilioPhone) {
         const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`;
