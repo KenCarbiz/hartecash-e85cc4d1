@@ -314,7 +314,7 @@ interface LineageRow {
   __display_title: string;
 }
 
-const VariantLineage = <T extends Record<string, unknown>>({
+const VariantLineage = <T extends object>({
   table,
   row,
   displayTitle,
@@ -356,8 +356,8 @@ const VariantLineage = <T extends Record<string, unknown>>({
         __display_title: displayTitle(r),
       } as LineageRow & T);
 
-      setParent((parentQ.data ? decorate(parentQ.data as T) : null));
-      setChildren(((childrenQ.data || []) as T[]).map(decorate));
+      setParent((parentQ.data ? decorate(parentQ.data as unknown as T) : null));
+      setChildren(((childrenQ.data || []) as unknown as T[]).map(decorate));
       setLoading(false);
     })();
 
