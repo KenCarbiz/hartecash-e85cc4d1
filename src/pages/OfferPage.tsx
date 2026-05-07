@@ -1220,11 +1220,13 @@ const OfferPageLegacy = () => {
                   {[
                     // Trust trio rewrite per the May-2026 comms-strategist
                     // audit. Replaces three abstract claims (fast/no-haggle/
-                    // guaranteed) with three concrete commitments from the
-                    // objection playbook — each verifiable, each addresses a
-                    // specific customer concern.
+                    // guaranteed) with three concrete commitments. Voice is
+                    // "simple, easy, clean, safe" — we don't name competitors
+                    // here. Competitor-specific reframes only fire when the
+                    // customer brings one up (objection playbook handles that
+                    // path).
                     { icon: BadgeCheck, label: "Title stays here", sub: "3 people see your file" },
-                    { icon: Handshake, label: "$300 CarMax-match", sub: "Written offers honored" },
+                    { icon: Handshake, label: "Locked for 7 days", sub: "No moving target" },
                     { icon: Zap, label: "Same-day check", sub: "30-45 min on-site" },
                   ].map(item => (
                     <div key={item.label} className="flex flex-col items-center text-center bg-card/60 backdrop-blur-sm rounded-2xl p-3 border border-border/20 shadow-sm">
@@ -1336,11 +1338,9 @@ const OfferPageLegacy = () => {
             className="grid grid-cols-3 gap-2"
           >
             {[
-              // Mirror of the desktop trust trio (lines ~1220) — see
-              // strategist audit notes there. Mobile gets the same
-              // three concrete commitments.
+              // Mirror of the desktop trust trio (lines ~1220).
               { icon: BadgeCheck, label: "Title stays here" },
-              { icon: Handshake, label: "$300 CarMax-match" },
+              { icon: Handshake, label: "Locked 7 days" },
               { icon: Zap, label: "Same-day check" },
             ].map(item => (
               <div key={item.label} className="flex flex-col items-center text-center bg-card/60 rounded-2xl p-2.5 border border-border/15 shadow-sm">

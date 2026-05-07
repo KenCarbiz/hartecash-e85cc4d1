@@ -1794,8 +1794,39 @@ export default function SubmissionDetailSheetClassic({
                       </span>
                     </div>
                     <div className="flex items-baseline justify-between text-[13px]">
-                      <span className="text-slate-600">ACV</span>
-                      <span className="font-semibold text-slate-800">
+                      <span className="text-slate-600 inline-flex items-center gap-1.5">
+                        ACV
+                        {sub.acv_value != null && (() => {
+                          // Preliminary vs final state per migration
+                          // 20260507110000. acv_status flips to 'final'
+                          // automatically when inspection_completed_at
+                          // is stamped; until then, the chip reads
+                          // amber so anyone scanning the file knows the
+                          // number isn't locked yet.
+                          const isFinal =
+                            (sub as { acv_status?: string }).acv_status === "final" ||
+                            (!!sub.inspection_completed_at && !!sub.acv_value);
+                          return (
+                            <span
+                              className={`text-[10px] font-bold uppercase tracking-wider rounded px-1.5 py-0.5 ${
+                                isFinal
+                                  ? "bg-success/15 text-success"
+                                  : "bg-warning/15 text-warning"
+                              }`}
+                              title={isFinal
+                                ? "Final — confirmed at inspection"
+                                : "Preliminary — not yet confirmed at inspection"}
+                            >
+                              {isFinal ? "Final" : "Preliminary"}
+                            </span>
+                          );
+                        })()}
+                      </span>
+                      <span className={`font-semibold ${
+                        sub.acv_value != null && !sub.inspection_completed_at
+                          ? "text-warning"
+                          : "text-slate-800"
+                      }`}>
                         {sub.acv_value != null ? fmtMoney(sub.acv_value) : <span className="text-slate-400">—</span>}
                       </span>
                     </div>

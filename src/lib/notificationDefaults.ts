@@ -164,23 +164,26 @@ export const DEFAULT_TEMPLATES: Record<string, TemplateDefaults> = {
   },
 
   customer_education_wholesale_vs_retail: {
-    // What actually happens to a customer's car at CarMax/Carvana
-    // vs at us. Anchored in CarMax FY2025 10-K — citable.
+    // The "where your car actually goes" piece. We do NOT name
+    // competitors proactively — naming them promotes them. The
+    // industry stat (30-40% of online-buyer purchases get wholesaled
+    // at auction) is citable as "publicly published annual reports"
+    // without naming the brand. The objection playbook handles the
+    // named-competitor case when the customer brings one up.
     email_subject: "Where your car actually goes after you sell it",
     email_body:
       "Hi {{customer_name}},\n\n" +
-      "Quick honest comparison since the question comes up a lot.\n\n" +
-      "AT CARMAX\n" +
-      "CarMax's most recent annual report shows they bought 1.3 million vehicles last year and sold roughly 540,000 of those at wholesale auction — about 4 in every 10 cars they buy gets flipped to another dealer at auction within a week or two. Your car is one of those 1.3 million. There's no way to know in advance whether yours retails on a CarMax lot or auctions to whoever bids on it. Either way, your title information passes through the auction registry, which is visible to every wholesale buyer who participates.\n\n" +
-      "AT CARVANA\n" +
-      "Their offer is conditional on a 150-point inspection at pickup. They don't publish what the typical reduction is. Reductions happen for cosmetic damage, mechanical issues, mileage discrepancies — and the customer has limited recourse once Carvana is at their door with the truck.\n\n" +
-      "AT US\n" +
+      "Quick honest comparison since the question comes up a lot — what happens to your car after you sell it depends entirely on whether the buyer is a wholesaler or a retailer.\n\n" +
+      "THE WHOLESALE MODEL\n" +
+      "Most of the big online buyers operate on a wholesale-and-flip model. Their published annual reports show 30-40% of the vehicles they buy get sold at wholesale auction, often within a week or two. Your car becomes one of thousands moving through the auction registry, where your title chain is visible to every dealer who bids on it. There's no way for the seller to know in advance whether their car ends up retailed by the buyer or shipped to auction.\n\n" +
+      "Some online buyers also condition their offer on a separate inspection at pickup. Reductions are case-by-case and unpublished — once their truck is in your driveway, the negotiating leverage is theirs.\n\n" +
+      "OUR MODEL\n" +
       "We're a single dealership. We bought your {{vehicle}} for our own retail lot. We'll recondition it, photograph it, list it, and sell it to a customer in the next 30-45 days. Your title and your contact information stay in this building. Three people see your name on this transaction: me, our title clerk, and the DMV. That's it.\n\n" +
-      "If you'd rather see what we're going to list it as, here's our current inventory: {{portal_link}}\n\n" +
+      "If you'd rather see what we're going to list your car as, here's our current inventory: {{portal_link}}\n\n" +
       "Your offer of {{offer_amount}} is locked through {{lock_expires}}.\n\n" +
       "— {{rep_name_short}}, {{dealership_name}}",
     sms_body:
-      "Quick honest one — CarMax wholesales about 40% of what they buy (their own annual report). Carvana can change their offer at pickup. We're a single store buying your {{vehicle}} for our lot. Title stays here. Three people see your name. {{portal_link}} — {{rep_name_short}}",
+      "Quick honest one — the big online buyers wholesale 30-40% of what they buy (their own annual reports). We're a single store buying your {{vehicle}} for our lot. Title stays here, three people see your name. {{portal_link}} — {{rep_name_short}}",
   },
 
   customer_education_title_data_flow: {
@@ -267,21 +270,21 @@ export const DEFAULT_TEMPLATES: Record<string, TemplateDefaults> = {
       "I saw the offer didn't move forward. I'm not going to keep emailing you — but if it would help to see the comparison clearly before you go elsewhere, here it is in one place.\n\n" +
       "WHAT MAKES OUR OFFER DIFFERENT\n\n" +
       "1. Title and information stay in our building\n" +
-      "Three people see your name: me, our title clerk, and the DMV. That's it. The big online buyers wholesale 30-40% of what they take in, which means your title information touches every dealer at the auction.\n\n" +
+      "Three people see your name: me, our title clerk, and the DMV. That's it. Online wholesale buyers move 30-40% of what they take in to auction (their own annual reports), which means your title information touches every dealer who bids.\n\n" +
       "2. Locked, in writing, for 7 days\n" +
       "Your offer of {{offer_amount}} doesn't change at inspection unless we find something specific (and we walk you through it line by line if we do). The first $0-500 of any inspection difference, we eat — not you.\n\n" +
-      "3. Match a written competitor offer by $300\n" +
-      "If CarMax, Carvana, or anyone else gave you a written offer that beats ours by less than $300, send it over and we match on the spot. No re-appraisal, no inspection games.\n\n" +
+      "3. Match a written offer\n" +
+      "If you've got a written offer in hand from anyone else that beats ours, send it over and we'll see what we can do on the spot. No re-appraisal, no inspection games.\n\n" +
       "4. Same-day check\n" +
       "From your driveway to a check in your hand: typically 30-45 minutes once you're at the dealership. Most folks expect this to take a day or two — it doesn't.\n\n" +
       "5. {{trade_up_block}}\n\n" +
       "WHAT YOU'RE COMPARING TO\n\n" +
       "Selling private: 30-60 days on market on average, plus the open-title liability (you stay on the registration until the buyer registers, which means tickets and accidents come back to you), plus check fraud risk, plus the time tax of running ads and screening buyers.\n\n" +
-      "CarMax/Carvana: their numbers can move at inspection. Carvana doesn't publish how much. CarMax buys ~1.3 million cars a year and wholesales about 540,000 of them — your car has roughly a 40% chance of going to auction, where your title chain becomes visible to every dealer who bids.\n\n" +
-      "If the math still doesn't work for you, no hard feelings. Auction prices are running about 0.5% higher than they were last week (Manheim Index 213.0, mid-April) — if you want to revisit in 30 days, I'll re-quote based on the market then.\n\n" +
+      "Online wholesale buyers: their numbers can move at inspection — most don't publish what the reduction range looks like. Combined, the major online players wholesale roughly 40% of what they buy, so your car may not stay with the buyer; it likely ends up at auction within a week.\n\n" +
+      "If the math still doesn't work for you, no hard feelings. Auction prices are running about 0.5% higher than they were last week (Manheim Index 213.0) — if you want to revisit in 30 days, I'll re-quote based on the market then.\n\n" +
       "— {{rep_name_short}}, {{dealership_name}}",
     sms_body:
-      "{{customer_name}} — quick recap on your {{vehicle}}: title + info stay with us, $300 written competitor match, same-day check, first $500 of inspection delta we eat. {{trade_up_short}} Full comparison: {{portal_link}} — {{rep_name_short}}",
+      "{{customer_name}} — quick recap on your {{vehicle}}: title + info stay with us, written offers honored, same-day check, first $500 of inspection delta we eat. {{trade_up_short}} Full comparison: {{portal_link}} — {{rep_name_short}}",
   },
 
   customer_offer_accepted_v2: {

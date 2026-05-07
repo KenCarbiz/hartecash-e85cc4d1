@@ -1776,9 +1776,23 @@ function ContextRail({
               )}
             </>
           )}
-          {sub.acv_value != null && (
-            <Row label="ACV" value={fmtMoney(sub.acv_value)} compact />
-          )}
+          {sub.acv_value != null && (() => {
+            // Preliminary vs final ACV — see migration 20260507110000.
+            // Final = inspection_completed_at + ACV both present; until
+            // then the row reads "ACV (preliminary)" so the file reader
+            // knows it's not locked. Row component takes strings so we
+            // bake the state into the label suffix instead of a chip.
+            const isFinal =
+              (sub as { acv_status?: string }).acv_status === "final" ||
+              (!!sub.inspection_completed_at && !!sub.acv_value);
+            return (
+              <Row
+                label={isFinal ? "ACV (final)" : "ACV (preliminary)"}
+                value={fmtMoney(sub.acv_value)}
+                compact
+              />
+            );
+          })()}
           {!latestBump && sub.offered_price == null && sub.estimated_offer_high == null && sub.acv_value == null && (
             <span className="text-caption text-slate-400 italic">No offer yet.</span>
           )}
