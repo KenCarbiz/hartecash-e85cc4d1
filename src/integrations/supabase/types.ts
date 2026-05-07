@@ -2042,6 +2042,77 @@ export type Database = {
         }
         Relationships: []
       }
+      offer_approval_requests: {
+        Row: {
+          acv_breach: number | null
+          acv_value_at_request: number | null
+          applied_at: string | null
+          current_offer: number | null
+          dealership_id: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_notes: string | null
+          delta: number | null
+          id: string
+          reason: string
+          reason_notes: string | null
+          requested_at: string
+          requested_by: string | null
+          requested_by_role: string | null
+          requested_offer: number
+          status: string
+          submission_id: string
+        }
+        Insert: {
+          acv_breach?: number | null
+          acv_value_at_request?: number | null
+          applied_at?: string | null
+          current_offer?: number | null
+          dealership_id: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_notes?: string | null
+          delta?: number | null
+          id?: string
+          reason?: string
+          reason_notes?: string | null
+          requested_at?: string
+          requested_by?: string | null
+          requested_by_role?: string | null
+          requested_offer: number
+          status?: string
+          submission_id: string
+        }
+        Update: {
+          acv_breach?: number | null
+          acv_value_at_request?: number | null
+          applied_at?: string | null
+          current_offer?: number | null
+          dealership_id?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_notes?: string | null
+          delta?: number | null
+          id?: string
+          reason?: string
+          reason_notes?: string | null
+          requested_at?: string
+          requested_by?: string | null
+          requested_by_role?: string | null
+          requested_offer?: number
+          status?: string
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_approval_requests_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       offer_bumps: {
         Row: {
           bump_amount: number
@@ -4469,6 +4540,14 @@ export type Database = {
         }
         Returns: string
       }
+      decide_offer_request: {
+        Args: {
+          _decision: string
+          _decision_notes?: string
+          _request_id: string
+        }
+        Returns: Json
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -4665,6 +4744,16 @@ export type Database = {
         }[]
       }
       remove_staff_role: { Args: { _role_id: string }; Returns: undefined }
+      request_offer_increase: {
+        Args: {
+          _reason?: string
+          _reason_notes?: string
+          _requested_by_role?: string
+          _requested_offer: number
+          _submission_id: string
+        }
+        Returns: Json
+      }
       role_requires_state_license: { Args: { _role: string }; Returns: boolean }
       save_mobile_inspection:
         | {
