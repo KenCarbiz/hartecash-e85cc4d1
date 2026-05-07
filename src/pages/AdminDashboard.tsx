@@ -265,6 +265,7 @@ const AdminDashboard = () => {
               canUpdateStatus={true}
               auditLabel={db.auditLabel}
               userName={db.userName}
+              viewerRole={db.userRole}
               onUpdate={(updated) =>
                 db.setSubmissions((prev) => prev.map((s) => (s.id === updated.id ? updated : s)))
               }
@@ -304,6 +305,7 @@ const AdminDashboard = () => {
               canUpdateStatus={true}
               auditLabel={db.auditLabel}
               userName={db.userName}
+              viewerRole={db.userRole}
               onUpdate={(updated) =>
                 db.setSubmissions((prev) => prev.map((s) => (s.id === updated.id ? updated : s)))
               }

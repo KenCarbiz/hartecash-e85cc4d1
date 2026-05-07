@@ -63,6 +63,9 @@ interface SubmissionDetailSheetProps {
   canUpdateStatus: boolean;
   auditLabel: string;
   userName: string;
+  /** Viewer's role — passed to the Classic slide-out so it can
+   *  auto-scroll to the section that role works from on open. */
+  viewerRole?: string;
   onUpdate: (updated: Submission) => void;
   onDelete: (id: string) => void;
   onRefresh: (sub: Submission) => void;

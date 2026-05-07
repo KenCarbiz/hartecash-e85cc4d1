@@ -53,7 +53,26 @@ interface ClassicProps {
   onUpdate: (updated: Submission) => void;
   onRefresh: (sub: Submission) => void;
   onScheduleAppointment: (sub: Submission) => void;
+  /** Role of the user viewing this file. Used to auto-scroll the
+   *  most relevant section into view on open so each role lands
+   *  where their work happens. Optional — when absent the file
+   *  opens at the top, matching legacy behavior. */
+  viewerRole?: string;
 }
+
+// Maps a role to the data-role-anchor attribute we should scroll to
+// on first render. Tuned per the audit's role-by-role recommendations:
+// appraiser → offer breakdown; BDC → comms; manager → offer breakdown.
+const ROLE_PRIMARY_ANCHOR: Record<string, string> = {
+  used_car_manager:    "offer-breakdown",
+  gsm_gm:              "offer-breakdown",
+  finance:             "offer-breakdown",
+  appraiser:           "photos",
+  bdc:                 "comms",
+  bdc_manager:         "comms",
+  // salesperson + receptionist + admin land at the top — the
+  // greeting card / header strip already gives them what they need.
+};
 
 // ── Mock-field adapters ──────────────────────────────────────────────
 // The design references fields like sub.intent / sub.offer_accepted /
@@ -816,7 +835,7 @@ const ClassicHeaderIdentity = ({
 
 export default function SubmissionDetailSheetClassic({
   selected, onClose, photos, docs, auditLabel,
-  onUpdate, onScheduleAppointment,
+  onUpdate, onScheduleAppointment, viewerRole,
 }: ClassicProps) {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -956,6 +975,24 @@ export default function SubmissionDetailSheetClassic({
 
   // Reset local edit state whenever the parent opens a different submission.
   useEffect(() => { setEditState(null); }, [selected?.id]);
+
+  // Role-aware auto-scroll. When the slide-out opens (selected.id
+  // changes) and we know the viewer's role, jump to the section
+  // that role works from first. Lets a BDC rep land on Comms, an
+  // appraiser on Photos, a manager on Offer Breakdown — without
+  // reorganizing the layout. Falls back to "scroll to top" when
+  // there's no role-specific anchor (salesperson, admin, etc.).
+  useEffect(() => {
+    if (!selected?.id) return;
+    const anchorKey = viewerRole ? ROLE_PRIMARY_ANCHOR[viewerRole] : undefined;
+    // Wait one paint so the cards are mounted before we look them up.
+    const t = setTimeout(() => {
+      if (!anchorKey) return;
+      const el = document.querySelector<HTMLElement>(`[data-role-anchor="${anchorKey}"]`);
+      el?.scrollIntoView({ block: "start", behavior: "smooth" });
+    }, 60);
+    return () => clearTimeout(t);
+  }, [selected?.id, viewerRole]);
 
   // Refetch the submission row from Supabase whenever the file
   // opens. Solves the "stale cached row" problem — the parent
@@ -1161,10 +1198,14 @@ export default function SubmissionDetailSheetClassic({
               </div>
             </div>
 
-            {/* Arrival strip — only when customer has physically arrived */}
+            {/* Arrival / greeting strip — only when customer has physically arrived.
+                Doubles as the Greeting Card: name + arrival time + appt
+                slot + current offer + walk-away + last comms — every
+                signal a salesperson needs to greet without bouncing
+                between rails. */}
             {customerArrived && (
               <div className="bg-gradient-to-r from-red-600 to-red-500 border-t border-red-800/30">
-                <div className="px-6 py-3 flex items-center gap-4 flex-wrap">
+                <div className="px-6 pt-3 pb-2 flex items-center gap-4 flex-wrap">
                   <div className="relative flex items-center justify-center shrink-0">
                     <span className="absolute inline-flex h-3 w-3 rounded-full bg-white/60 animate-ping" />
                     <span className="relative inline-flex h-3 w-3 rounded-full bg-white" />
@@ -1183,6 +1224,42 @@ export default function SubmissionDetailSheetClassic({
                     Send QR to My Phone
                   </button>
                 </div>
+                {/* Greeting Card facts row — packed below the headline so
+                    the salesperson can take it all in without scrolling. */}
+                <div className="px-6 pb-3 flex items-center gap-x-6 gap-y-1 flex-wrap text-[12px] text-white/95">
+                  {sub.appointment_set && sub.appointment_date && (
+                    <span>
+                      <span className="text-white/65 font-semibold uppercase tracking-wider text-[10px]">Appt</span>
+                      <span className="ml-1.5 font-bold tabular-nums">
+                        {sub.appointment_time || ""}{sub.appointment_time ? " · " : ""}{new Date(sub.appointment_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                      </span>
+                    </span>
+                  )}
+                  {typeof sub.offered_price === "number" && sub.offered_price > 0 && (
+                    <span>
+                      <span className="text-white/65 font-semibold uppercase tracking-wider text-[10px]">Offer</span>
+                      <span className="ml-1.5 font-bold tabular-nums">${sub.offered_price.toLocaleString()}</span>
+                    </span>
+                  )}
+                  {typeof sub.customer_walk_away_number === "number" && sub.customer_walk_away_number > 0 && (
+                    <span>
+                      <span className="text-white/65 font-semibold uppercase tracking-wider text-[10px]">Walk-away</span>
+                      <span className="ml-1.5 font-bold tabular-nums">${sub.customer_walk_away_number.toLocaleString()}</span>
+                    </span>
+                  )}
+                  {sub.competitor_mentioned && (
+                    <span>
+                      <span className="text-white/65 font-semibold uppercase tracking-wider text-[10px]">Competitor</span>
+                      <span className="ml-1.5 font-bold capitalize">{sub.competitor_mentioned}</span>
+                    </span>
+                  )}
+                  {sub.last_outreach_at && (
+                    <span>
+                      <span className="text-white/65 font-semibold uppercase tracking-wider text-[10px]">Last touch</span>
+                      <span className="ml-1.5 font-bold">{timeAgo(sub.last_outreach_at)}</span>
+                    </span>
+                  )}
+                </div>
               </div>
             )}
           </header>
@@ -1195,7 +1272,7 @@ export default function SubmissionDetailSheetClassic({
               <div className="space-y-5 min-w-0">
 
                 {/* Photos + ID/Intent row */}
-                <div className="grid grid-cols-1 md:grid-cols-[1fr_280px] gap-4">
+                <div data-role-anchor="photos" className="grid grid-cols-1 md:grid-cols-[1fr_280px] gap-4 scroll-mt-24">
                   <Card title="Vehicle Photos" right={
                     <span className="text-[11px] text-slate-500">
                       {(() => {
@@ -1480,13 +1557,15 @@ export default function SubmissionDetailSheetClassic({
                 })()}
 
                 {/* Comms tabs — SMS / Email / Calls preview + composer */}
-                <ClassicCommsCard
-                  submissionId={sub.id}
-                  customerName={sub.name}
-                  customerPhone={sub.phone}
-                  customerEmail={sub.email}
-                  onOpenFull={() => setCommsFullOpen(true)}
-                />
+                <div data-role-anchor="comms" className="scroll-mt-24">
+                  <ClassicCommsCard
+                    submissionId={sub.id}
+                    customerName={sub.name}
+                    customerPhone={sub.phone}
+                    customerEmail={sub.email}
+                    onOpenFull={() => setCommsFullOpen(true)}
+                  />
+                </div>
 
                 {/* Internal Notes — last 3 in a timeline + Add link → modal */}
                 <Card
@@ -1615,6 +1694,7 @@ export default function SubmissionDetailSheetClassic({
                     where they exist and a muted "—" placeholder where
                     they don't, so the right-rail layout stays stable
                     between leads with vs. without an offer/loan. */}
+                <div data-role-anchor="offer-breakdown" className="scroll-mt-24">
                 <Card title="Offer Breakdown">
                   <div className="space-y-2.5">
                     {latestBump && latestBump.bump_amount > 0 && (
@@ -1685,6 +1765,7 @@ export default function SubmissionDetailSheetClassic({
                     </div>
                   </div>
                 </Card>
+                </div>
 
                 {/* Loan card — only when loan info exists */}
                 {(sub.loan_status || sub.loan_company) && (

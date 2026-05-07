@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Check, Search, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { safeInvoke } from "@/lib/safeInvoke";
 import { useToast } from "@/hooks/use-toast";
 import type { Appointment, Submission } from "@/lib/adminConstants";
 
@@ -74,6 +75,14 @@ const FrontDesk = ({ appointments, submissions, fetchSubmissions, onView, onCrea
       toast({ title: "Check-in failed", description: error.message, variant: "destructive" });
       return;
     }
+    // Fire the staff_customer_arrived notification so the sales floor
+    // gets paged via SMS/email per the dealer's notification rules.
+    // The toast was previously claiming "sales team has been notified"
+    // without actually firing the trigger — fixed.
+    safeInvoke("send-notification", {
+      body: { trigger_key: "staff_customer_arrived", submission_id: sub.id },
+      context: { from: "FrontDesk.checkIn" },
+    });
     toast({ title: `${sub.name || "Customer"} checked in`, description: "Sales team has been notified." });
     fetchSubmissions();
   };
