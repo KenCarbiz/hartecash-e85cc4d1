@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Loader2, Save, ChevronDown, Mic, Bot, MessageSquare, BookOpen, Sparkles,
+  GitBranch, ArchiveRestore, Archive,
 } from "lucide-react";
 
 /**
@@ -32,7 +33,22 @@ import {
  * sub-tab shows an in-context message pointing at the migration.
  */
 
-interface PersonaRow {
+/**
+ * Variant tracking columns (added by 20260507150000_voice_variant_store.sql)
+ * — every cabinet row carries them. Optional in the type because
+ * tables predate the migration; the editor degrades gracefully when
+ * these are absent.
+ */
+interface VariantFields {
+  variant_id?: string | null;
+  parent_variant_id?: string | null;
+  win_count?: number | null;
+  loss_count?: number | null;
+  last_promoted_at?: string | null;
+  retired_at?: string | null;
+}
+
+interface PersonaRow extends VariantFields {
   id: string;
   dealership_id: string;
   persona_name: string;
@@ -46,7 +62,7 @@ interface PersonaRow {
   is_active: boolean;
 }
 
-interface PhaseRow {
+interface PhaseRow extends VariantFields {
   id: string;
   dealership_id: string;
   phase_key: string;
@@ -61,10 +77,11 @@ interface PhaseRow {
   sort_order: number;
 }
 
-interface SignalRow {
+interface SignalRow extends VariantFields {
   id: string;
   dealership_id: string;
   signal_key: string;
+  variant_label?: string;
   signal_phrases: string[];
   customer_state: string;
   recommended_posture: string;
@@ -75,11 +92,12 @@ interface SignalRow {
   sort_order: number;
 }
 
-interface IntelRow {
+interface IntelRow extends VariantFields {
   id: string;
   dealership_id: string;
   scope: string;
   topic: string;
+  variant_label?: string;
   short_claim: string;
   citable_number: string | null;
   evidence_url: string | null;
@@ -164,6 +182,109 @@ const useTenantTable = <T extends { id: string; dealership_id: string }>(
   useEffect(() => { void refetch(); }, [refetch]);
 
   return { rows, loading, missing, refetch, dealershipId: tenant.dealership_id };
+};
+
+/**
+ * Win/loss + retired pill row, shown next to the row title in every
+ * editor's collapsed header. Hidden entirely when the variant
+ * columns aren't present (migration 20260507150000 not yet applied).
+ *
+ * The win-rate column is the bandit's current Beta posterior mean —
+ * (1 + wins) / (2 + wins + losses). We render it instead of raw
+ * win_count so a manager can compare two variants at a glance even
+ * when their absolute counts differ wildly.
+ */
+const VariantBadges = ({ row }: { row: VariantFields }) => {
+  const wins  = row.win_count  ?? 0;
+  const losses = row.loss_count ?? 0;
+  const total = wins + losses;
+  const retired = !!row.retired_at;
+
+  if (!row.variant_id && total === 0 && !retired) return null;
+
+  const winRate = total === 0 ? null : (1 + wins) / (2 + wins + losses);
+
+  return (
+    <div className="flex items-center gap-1.5 shrink-0">
+      {retired && (
+        <Badge variant="outline" className="text-micro border-red-300 text-red-600 bg-red-50">
+          Retired
+        </Badge>
+      )}
+      {total > 0 && (
+        <Badge
+          variant="outline"
+          className={
+            winRate != null && winRate >= 0.6
+              ? "text-micro border-emerald-300 text-emerald-700 bg-emerald-50 font-mono"
+              : winRate != null && winRate >= 0.4
+              ? "text-micro border-slate-300 text-slate-700 bg-slate-50 font-mono"
+              : "text-micro border-amber-300 text-amber-700 bg-amber-50 font-mono"
+          }
+        >
+          {wins}W·{losses}L
+          {winRate != null && (
+            <span className="ml-1 opacity-70">
+              ({Math.round(winRate * 100)}%)
+            </span>
+          )}
+        </Badge>
+      )}
+    </div>
+  );
+};
+
+/**
+ * Branch / retire / reactivate actions inside the expanded edit form.
+ * Branch creates a copy with a new variant_label and zero counts so
+ * the original keeps its production-tested win/loss history. Retire
+ * sets retired_at = now() — compile_voice_agent_prompt skips retired
+ * rows so the variant stops being sampled at call-launch.
+ *
+ * The Branch button is disabled on rows the user can't write to (the
+ * shared "default" rows). For those, the user should branch from the
+ * tenant override, OR edit the default once which auto-creates a
+ * tenant override (the existing upsert pattern), then branch off it.
+ */
+interface VariantActionsProps {
+  row: VariantFields & { dealership_id: string; id: string };
+  isOverride: boolean;
+  onBranch: () => Promise<void>;
+  onToggleRetire: () => Promise<void>;
+  saving?: boolean;
+}
+const VariantActions = ({ row, isOverride, onBranch, onToggleRetire, saving }: VariantActionsProps) => {
+  const retired = !!row.retired_at;
+  const branchHint = isOverride
+    ? "Create a new variant copied from this one, with zero counts. Both versions stay active and the bandit picks at call-time."
+    : "Edit this row first to create a tenant override, then branch.";
+
+  return (
+    <div className="flex items-center gap-2">
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={!isOverride || !!saving}
+        onClick={() => void onBranch()}
+        title={branchHint}
+        className="h-8 text-xs"
+      >
+        <GitBranch className="w-3 h-3 mr-1.5" />
+        Branch
+      </Button>
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={!isOverride || !!saving}
+        onClick={() => void onToggleRetire()}
+        title={retired ? "Re-activate this variant in the bandit pool." : "Stop sampling this variant. Counts retained."}
+        className={`h-8 text-xs ${retired ? "border-emerald-300 text-emerald-700" : "border-red-300 text-red-700"}`}
+      >
+        {retired ? <ArchiveRestore className="w-3 h-3 mr-1.5" /> : <Archive className="w-3 h-3 mr-1.5" />}
+        {retired ? "Reactivate" : "Retire"}
+      </Button>
+    </div>
+  );
 };
 
 const MigrationMissingCard = () => (
@@ -319,6 +440,50 @@ const PhaseEditor = () => {
     return Array.from(byKey.values()).sort((a, b) => a.sort_order - b.sort_order);
   })();
 
+  const handleBranch = async (row: PhaseRow) => {
+    setSaving(row.id);
+    try {
+      const stamp = new Date().toISOString().slice(5, 16).replace(/[-T:]/g, "");
+      const payload = {
+        dealership_id: dealershipId,
+        phase_key: row.phase_key,
+        call_type: row.call_type,
+        phase_position: row.phase_position,
+        variant_label: `${row.variant_label}_v${stamp}`,
+        content: row.content,
+        signal_keywords: row.signal_keywords,
+        use_when: row.use_when,
+        advances_to: row.advances_to,
+        is_active: true,
+        sort_order: row.sort_order,
+        parent_variant_id: row.variant_id ?? null,
+        win_count: 0,
+        loss_count: 0,
+        retired_at: null,
+      };
+      const { error } = await supabase.from("conversation_phases" as never).insert(payload as never);
+      if (error) throw error;
+      toast({ title: "Branched", description: `New variant: ${payload.variant_label}` });
+      await refetch();
+    } catch (e) {
+      toast({ title: "Branch failed", description: e instanceof Error ? e.message : undefined, variant: "destructive" });
+    } finally { setSaving(null); }
+  };
+
+  const handleToggleRetire = async (row: PhaseRow) => {
+    setSaving(row.id);
+    try {
+      const { error } = await supabase.from("conversation_phases" as never)
+        .update({ retired_at: row.retired_at ? null : new Date().toISOString() } as never)
+        .eq("id", row.id);
+      if (error) throw error;
+      toast({ title: row.retired_at ? "Reactivated" : "Retired" });
+      await refetch();
+    } catch (e) {
+      toast({ title: "Action failed", description: e instanceof Error ? e.message : undefined, variant: "destructive" });
+    } finally { setSaving(null); }
+  };
+
   if (loading) return <Loader2 className="w-5 h-5 animate-spin text-muted-foreground my-12 mx-auto block" />;
   if (missing)  return <MigrationMissingCard />;
 
@@ -358,7 +523,7 @@ const PhaseEditor = () => {
         const draft = drafts[row.id] || {};
         const isOverride = row.dealership_id === dealershipId;
         return (
-          <Card key={row.id} className={!row.is_active ? "opacity-60" : ""}>
+          <Card key={row.id} className={(!row.is_active || row.retired_at) ? "opacity-60" : ""}>
             <CardContent className="p-0">
               <button type="button" onClick={() => setOpenId(isOpen ? null : row.id)} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/30">
                 <Badge variant="outline" className="text-micro">{row.phase_position}</Badge>
@@ -367,6 +532,7 @@ const PhaseEditor = () => {
                   <div className="text-sm font-bold truncate">{row.phase_key}</div>
                   <div className="text-micro text-muted-foreground truncate">variant: {row.variant_label}</div>
                 </div>
+                <VariantBadges row={row} />
                 {isOverride && <Badge variant="outline" className="text-micro border-info/40 text-info">Customized</Badge>}
                 <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} />
               </button>
@@ -380,11 +546,19 @@ const PhaseEditor = () => {
                     <Label className="text-micro font-bold uppercase tracking-wider">Use when</Label>
                     <Textarea rows={2} value={(draft.use_when ?? row.use_when) || ""} onChange={(e) => setDrafts({ ...drafts, [row.id]: { ...draft, use_when: e.target.value || null } })} className="mt-1 text-xs" />
                   </div>
-                  <div className="flex items-center justify-between pt-2 border-t border-border">
+                  <div className="flex items-center justify-between pt-2 border-t border-border gap-3 flex-wrap">
                     <label className="inline-flex items-center gap-2 text-xs cursor-pointer">
                       <input type="checkbox" checked={(draft.is_active ?? row.is_active)} onChange={(e) => setDrafts({ ...drafts, [row.id]: { ...draft, is_active: e.target.checked } })} className="w-4 h-4 rounded border-border accent-primary" />
                       <span className="text-muted-foreground">{(draft.is_active ?? row.is_active) ? "Active" : "Inactive"}</span>
                     </label>
+                    <div className="flex-1" />
+                    <VariantActions
+                      row={row}
+                      isOverride={isOverride}
+                      onBranch={() => handleBranch(row)}
+                      onToggleRetire={() => handleToggleRetire(row)}
+                      saving={saving === row.id}
+                    />
                     <Button size="sm" disabled={saving === row.id} onClick={() => void handleSave(row)}>
                       {saving === row.id ? "Saving…" : "Save"}
                     </Button>
@@ -407,10 +581,12 @@ const SignalEditor = () => {
   const [drafts, setDrafts] = useState<Record<string, Partial<SignalRow>>>({});
   const [saving, setSaving] = useState<string | null>(null);
 
+  // Dedupe by signal_key+variant_label; tenant override wins on the same slot.
   const merged = (() => {
     const byKey = new Map<string, SignalRow>();
-    for (const r of rows.filter((r) => r.dealership_id === "default")) byKey.set(r.signal_key, r);
-    for (const r of rows.filter((r) => r.dealership_id === dealershipId)) byKey.set(r.signal_key, r);
+    const k = (r: SignalRow) => `${r.signal_key}|${r.variant_label || "default"}`;
+    for (const r of rows.filter((r) => r.dealership_id === "default")) byKey.set(k(r), r);
+    for (const r of rows.filter((r) => r.dealership_id === dealershipId)) byKey.set(k(r), r);
     return Array.from(byKey.values()).sort((a, b) => a.sort_order - b.sort_order);
   })();
 
@@ -424,6 +600,7 @@ const SignalEditor = () => {
       const payload = {
         dealership_id: dealershipId,
         signal_key: row.signal_key,
+        variant_label: row.variant_label || "default",
         signal_phrases: draft.signal_phrases ?? row.signal_phrases,
         customer_state: draft.customer_state ?? row.customer_state,
         recommended_posture: draft.recommended_posture ?? row.recommended_posture,
@@ -434,7 +611,7 @@ const SignalEditor = () => {
         sort_order: row.sort_order,
         updated_at: new Date().toISOString(),
       };
-      const { error } = await supabase.from("customer_signals" as never).upsert(payload as never, { onConflict: "dealership_id,signal_key" });
+      const { error } = await supabase.from("customer_signals" as never).upsert(payload as never, { onConflict: "dealership_id,signal_key,variant_label" });
       if (error) throw error;
       toast({ title: "Signal saved" });
       await refetch();
@@ -445,6 +622,50 @@ const SignalEditor = () => {
     }
   };
 
+  const handleBranch = async (row: SignalRow) => {
+    setSaving(row.id);
+    try {
+      const stamp = new Date().toISOString().slice(5, 16).replace(/[-T:]/g, "");
+      const payload = {
+        dealership_id: dealershipId,
+        signal_key: row.signal_key,
+        variant_label: `${row.variant_label || "default"}_v${stamp}`,
+        signal_phrases: row.signal_phrases,
+        customer_state: row.customer_state,
+        recommended_posture: row.recommended_posture,
+        response_variants: row.response_variants,
+        do_not_say: row.do_not_say,
+        hand_off_to_human: row.hand_off_to_human,
+        is_active: true,
+        sort_order: row.sort_order,
+        parent_variant_id: row.variant_id ?? null,
+        win_count: 0,
+        loss_count: 0,
+        retired_at: null,
+      };
+      const { error } = await supabase.from("customer_signals" as never).insert(payload as never);
+      if (error) throw error;
+      toast({ title: "Branched", description: `New variant: ${payload.variant_label}` });
+      await refetch();
+    } catch (e) {
+      toast({ title: "Branch failed", description: e instanceof Error ? e.message : undefined, variant: "destructive" });
+    } finally { setSaving(null); }
+  };
+
+  const handleToggleRetire = async (row: SignalRow) => {
+    setSaving(row.id);
+    try {
+      const { error } = await supabase.from("customer_signals" as never)
+        .update({ retired_at: row.retired_at ? null : new Date().toISOString() } as never)
+        .eq("id", row.id);
+      if (error) throw error;
+      toast({ title: row.retired_at ? "Reactivated" : "Retired" });
+      await refetch();
+    } catch (e) {
+      toast({ title: "Action failed", description: e instanceof Error ? e.message : undefined, variant: "destructive" });
+    } finally { setSaving(null); }
+  };
+
   return (
     <div className="space-y-2">
       {merged.map((row) => {
@@ -452,14 +673,20 @@ const SignalEditor = () => {
         const draft = drafts[row.id] || {};
         const isOverride = row.dealership_id === dealershipId;
         return (
-          <Card key={row.id} className={!row.is_active ? "opacity-60" : ""}>
+          <Card key={row.id} className={(!row.is_active || row.retired_at) ? "opacity-60" : ""}>
             <CardContent className="p-0">
               <button type="button" onClick={() => setOpenId(isOpen ? null : row.id)} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/30">
                 <Badge variant="outline" className="text-micro">{row.customer_state}</Badge>
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-bold truncate">{row.signal_key}</div>
+                  <div className="text-sm font-bold truncate">
+                    {row.signal_key}
+                    {row.variant_label && row.variant_label !== "default" && (
+                      <span className="ml-2 text-micro text-muted-foreground font-normal">· {row.variant_label}</span>
+                    )}
+                  </div>
                   <div className="text-micro text-muted-foreground truncate">{row.recommended_posture}</div>
                 </div>
+                <VariantBadges row={row} />
                 {row.hand_off_to_human && <Badge variant="outline" className="text-micro border-warning/40 text-warning">→ Human</Badge>}
                 {isOverride && <Badge variant="outline" className="text-micro border-info/40 text-info">Customized</Badge>}
                 <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} />
@@ -482,7 +709,7 @@ const SignalEditor = () => {
                     <Label className="text-micro font-bold uppercase tracking-wider">Do NOT say (one per line)</Label>
                     <Textarea rows={2} value={(draft.do_not_say ?? row.do_not_say).join("\n")} onChange={(e) => setDrafts({ ...drafts, [row.id]: { ...draft, do_not_say: e.target.value.split("\n").map(s => s.trim()).filter(Boolean) } })} className="mt-1 text-xs" />
                   </div>
-                  <div className="flex items-center gap-3 pt-2 border-t border-border">
+                  <div className="flex items-center gap-3 pt-2 border-t border-border flex-wrap">
                     <label className="inline-flex items-center gap-2 text-xs cursor-pointer">
                       <input type="checkbox" checked={(draft.is_active ?? row.is_active)} onChange={(e) => setDrafts({ ...drafts, [row.id]: { ...draft, is_active: e.target.checked } })} className="w-4 h-4 rounded border-border accent-primary" />
                       <span className="text-muted-foreground">Active</span>
@@ -492,6 +719,13 @@ const SignalEditor = () => {
                       <span className="text-muted-foreground">Hand off to human</span>
                     </label>
                     <div className="flex-1" />
+                    <VariantActions
+                      row={row}
+                      isOverride={isOverride}
+                      onBranch={() => handleBranch(row)}
+                      onToggleRetire={() => handleToggleRetire(row)}
+                      saving={saving === row.id}
+                    />
                     <Button size="sm" disabled={saving === row.id} onClick={() => void handleSave(row)}>
                       {saving === row.id ? "Saving…" : "Save"}
                     </Button>
@@ -514,10 +748,12 @@ const IntelEditor = () => {
   const [drafts, setDrafts] = useState<Record<string, Partial<IntelRow>>>({});
   const [saving, setSaving] = useState<string | null>(null);
 
+  // Dedupe by scope+topic+variant_label; tenant override wins.
   const merged = (() => {
     const byKey = new Map<string, IntelRow>();
-    for (const r of rows.filter((r) => r.dealership_id === "default")) byKey.set(`${r.scope}|${r.topic}`, r);
-    for (const r of rows.filter((r) => r.dealership_id === dealershipId)) byKey.set(`${r.scope}|${r.topic}`, r);
+    const k = (r: IntelRow) => `${r.scope}|${r.topic}|${r.variant_label || "default"}`;
+    for (const r of rows.filter((r) => r.dealership_id === "default")) byKey.set(k(r), r);
+    for (const r of rows.filter((r) => r.dealership_id === dealershipId)) byKey.set(k(r), r);
     return Array.from(byKey.values()).sort((a, b) => a.scope.localeCompare(b.scope) || a.sort_order - b.sort_order);
   })();
 
@@ -532,6 +768,7 @@ const IntelEditor = () => {
         dealership_id: dealershipId,
         scope: row.scope,
         topic: row.topic,
+        variant_label: row.variant_label || "default",
         short_claim: draft.short_claim ?? row.short_claim,
         citable_number: draft.citable_number ?? row.citable_number,
         evidence_url: draft.evidence_url ?? row.evidence_url,
@@ -541,7 +778,7 @@ const IntelEditor = () => {
         last_verified_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
-      const { error } = await supabase.from("industry_intel" as never).upsert(payload as never, { onConflict: "dealership_id,scope,topic" });
+      const { error } = await supabase.from("industry_intel" as never).upsert(payload as never, { onConflict: "dealership_id,scope,topic,variant_label" });
       if (error) throw error;
       toast({ title: "Intel saved" });
       await refetch();
@@ -552,6 +789,49 @@ const IntelEditor = () => {
     }
   };
 
+  const handleBranch = async (row: IntelRow) => {
+    setSaving(row.id);
+    try {
+      const stamp = new Date().toISOString().slice(5, 16).replace(/[-T:]/g, "");
+      const payload = {
+        dealership_id: dealershipId,
+        scope: row.scope,
+        topic: row.topic,
+        variant_label: `${row.variant_label || "default"}_v${stamp}`,
+        short_claim: row.short_claim,
+        citable_number: row.citable_number,
+        evidence_url: row.evidence_url,
+        use_when: row.use_when,
+        is_active: true,
+        sort_order: row.sort_order,
+        parent_variant_id: row.variant_id ?? null,
+        win_count: 0,
+        loss_count: 0,
+        retired_at: null,
+      };
+      const { error } = await supabase.from("industry_intel" as never).insert(payload as never);
+      if (error) throw error;
+      toast({ title: "Branched", description: `New variant: ${payload.variant_label}` });
+      await refetch();
+    } catch (e) {
+      toast({ title: "Branch failed", description: e instanceof Error ? e.message : undefined, variant: "destructive" });
+    } finally { setSaving(null); }
+  };
+
+  const handleToggleRetire = async (row: IntelRow) => {
+    setSaving(row.id);
+    try {
+      const { error } = await supabase.from("industry_intel" as never)
+        .update({ retired_at: row.retired_at ? null : new Date().toISOString() } as never)
+        .eq("id", row.id);
+      if (error) throw error;
+      toast({ title: row.retired_at ? "Reactivated" : "Retired" });
+      await refetch();
+    } catch (e) {
+      toast({ title: "Action failed", description: e instanceof Error ? e.message : undefined, variant: "destructive" });
+    } finally { setSaving(null); }
+  };
+
   return (
     <div className="space-y-2">
       {merged.map((row) => {
@@ -559,16 +839,22 @@ const IntelEditor = () => {
         const draft = drafts[row.id] || {};
         const isOverride = row.dealership_id === dealershipId;
         return (
-          <Card key={row.id} className={!row.is_active ? "opacity-60" : ""}>
+          <Card key={row.id} className={(!row.is_active || row.retired_at) ? "opacity-60" : ""}>
             <CardContent className="p-0">
               <button type="button" onClick={() => setOpenId(isOpen ? null : row.id)} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/30">
                 <Badge variant="outline" className={`text-micro ${row.scope === "competitor" ? "border-warning/40 text-warning" : ""}`}>
                   {row.scope}
                 </Badge>
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-bold truncate">{row.topic}</div>
+                  <div className="text-sm font-bold truncate">
+                    {row.topic}
+                    {row.variant_label && row.variant_label !== "default" && (
+                      <span className="ml-2 text-micro text-muted-foreground font-normal">· {row.variant_label}</span>
+                    )}
+                  </div>
                   <div className="text-micro text-muted-foreground truncate">{row.short_claim}</div>
                 </div>
+                <VariantBadges row={row} />
                 {isOverride && <Badge variant="outline" className="text-micro border-info/40 text-info">Customized</Badge>}
                 <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} />
               </button>
@@ -592,11 +878,19 @@ const IntelEditor = () => {
                     <Label className="text-micro font-bold uppercase tracking-wider">Use when</Label>
                     <Textarea rows={2} value={(draft.use_when ?? row.use_when) || ""} onChange={(e) => setDrafts({ ...drafts, [row.id]: { ...draft, use_when: e.target.value || null } })} className="mt-1 text-xs" />
                   </div>
-                  <div className="flex items-center justify-between pt-2 border-t border-border">
+                  <div className="flex items-center justify-between pt-2 border-t border-border gap-3 flex-wrap">
                     <label className="inline-flex items-center gap-2 text-xs cursor-pointer">
                       <input type="checkbox" checked={(draft.is_active ?? row.is_active)} onChange={(e) => setDrafts({ ...drafts, [row.id]: { ...draft, is_active: e.target.checked } })} className="w-4 h-4 rounded border-border accent-primary" />
                       <span className="text-muted-foreground">Active</span>
                     </label>
+                    <div className="flex-1" />
+                    <VariantActions
+                      row={row}
+                      isOverride={isOverride}
+                      onBranch={() => handleBranch(row)}
+                      onToggleRetire={() => handleToggleRetire(row)}
+                      saving={saving === row.id}
+                    />
                     <Button size="sm" disabled={saving === row.id} onClick={() => void handleSave(row)}>
                       {saving === row.id ? "Saving…" : "Save"}
                     </Button>
