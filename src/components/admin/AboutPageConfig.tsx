@@ -326,7 +326,7 @@ const AboutPageConfig = () => {
                     {/* Location photos (multiple) */}
                     <div>
                       <Label className="text-xs">Location Photos</Label>
-                      <p className="text-[10px] text-muted-foreground mb-2">Upload multiple images for a carousel.</p>
+                      <p className="text-micro text-muted-foreground mb-2">Upload multiple images for a carousel.</p>
                       <div className="border border-border rounded-lg p-3 bg-muted/30 space-y-2 min-h-[80px]">
                         {loc.about_image_urls.length > 0 ? (
                           <div className="flex flex-wrap gap-2">
@@ -454,7 +454,7 @@ const CorporateAboutFields = ({
             placeholder="Write your dealership's story here. You can use <strong>, <em>, <br> tags for formatting."
             className="font-mono text-xs"
           />
-          <p className="text-[10px] text-muted-foreground mt-1">
+          <p className="text-micro text-muted-foreground mt-1">
             Leave blank to use the default story. Supports basic HTML tags for formatting.
           </p>
         </div>
@@ -464,7 +464,7 @@ const CorporateAboutFields = ({
     {/* About Photos (multiple) */}
     <div className="px-1">
       <Label className="text-xs font-semibold">Dealership Photos</Label>
-      <p className="text-[10px] text-muted-foreground mb-2">
+      <p className="text-micro text-muted-foreground mb-2">
         Upload multiple images (building, team, storefront). They'll display as a carousel on the About page.
       </p>
       <div className="border border-border rounded-lg p-3 bg-muted/30 space-y-3 min-h-[100px]">
@@ -503,7 +503,7 @@ const CorporateAboutFields = ({
       <CollapsibleTrigger className="flex items-center gap-2 w-full text-left py-2 px-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
         <ChevronDown className={`w-4 h-4 transition-transform ${milestonesOpen ? "" : "-rotate-90"}`} />
         <span className="font-semibold text-sm">Timeline Milestones</span>
-        <span className="text-[10px] text-muted-foreground ml-auto mr-2">{milestones.length} items</span>
+        <span className="text-micro text-muted-foreground ml-auto mr-2">{milestones.length} items</span>
       </CollapsibleTrigger>
       <CollapsibleContent className="pt-3 space-y-3 px-1">
         {milestones.map((m, i) => (
@@ -540,7 +540,7 @@ const CorporateAboutFields = ({
       <CollapsibleTrigger className="flex items-center gap-2 w-full text-left py-2 px-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
         <ChevronDown className={`w-4 h-4 transition-transform ${valuesOpen ? "" : "-rotate-90"}`} />
         <span className="font-semibold text-sm">Values / Differentiators</span>
-        <span className="text-[10px] text-muted-foreground ml-auto mr-2">{values.length} items</span>
+        <span className="text-micro text-muted-foreground ml-auto mr-2">{values.length} items</span>
       </CollapsibleTrigger>
       <CollapsibleContent className="pt-3 space-y-3 px-1">
         {values.map((v, i) => (

@@ -44,14 +44,14 @@ function DeltaBadge({ value, prior }: { value: number; prior: number }) {
   const d = delta(value, prior);
   if (d.sign === "flat") {
     return (
-      <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+      <span className="inline-flex items-center gap-1 text-micro text-muted-foreground">
         <Minus className="w-3 h-3" /> flat
       </span>
     );
   }
   return (
     <span
-      className={`inline-flex items-center gap-1 text-[10px] font-medium ${
+      className={`inline-flex items-center gap-1 text-micro font-medium ${
         d.sign === "up" ? "text-emerald-700" : "text-red-700"
       }`}
     >
@@ -254,7 +254,7 @@ const GroupKPISummary = ({ rooftops }: Props) => {
             <span className="text-2xl font-semibold">{totals.count_this_month.toLocaleString()}</span>
             <DeltaBadge value={totals.count_this_month} prior={totals.count_last_month} />
           </div>
-          <div className="text-[10px] text-muted-foreground mt-1">
+          <div className="text-micro text-muted-foreground mt-1">
             vs {totals.count_last_month.toLocaleString()} last month
           </div>
         </div>
@@ -264,7 +264,7 @@ const GroupKPISummary = ({ rooftops }: Props) => {
             Appointments
           </div>
           <div className="mt-2 text-2xl font-semibold">{totals.appointments_this_month.toLocaleString()}</div>
-          <div className="text-[10px] text-muted-foreground mt-1">scheduled this month</div>
+          <div className="text-micro text-muted-foreground mt-1">scheduled this month</div>
         </div>
         <div className="border border-border rounded-xl bg-card p-4">
           <div className="flex items-center gap-2 text-muted-foreground text-xs font-medium uppercase tracking-wider">
@@ -272,7 +272,7 @@ const GroupKPISummary = ({ rooftops }: Props) => {
             Conversion
           </div>
           <div className="mt-2 text-2xl font-semibold">{conv.toFixed(1)}%</div>
-          <div className="text-[10px] text-muted-foreground mt-1">
+          <div className="text-micro text-muted-foreground mt-1">
             {totals.count_accepted_this_month.toLocaleString()} accepted offers
           </div>
         </div>
@@ -284,7 +284,7 @@ const GroupKPISummary = ({ rooftops }: Props) => {
           <div className="mt-2 text-2xl font-semibold">
             ${totals.estimated_revenue_this_month.toLocaleString(undefined, { maximumFractionDigits: 0 })}
           </div>
-          <div className="text-[10px] text-muted-foreground mt-1">accepted offers MTD</div>
+          <div className="text-micro text-muted-foreground mt-1">accepted offers MTD</div>
         </div>
       </div>
 
@@ -319,7 +319,7 @@ const GroupKPISummary = ({ rooftops }: Props) => {
                     <tr key={a.dealership_id} className="hover:bg-muted/20">
                       <td className="px-5 py-2.5">
                         <div className="font-medium">{rooftop?.display_name || a.dealership_id}</div>
-                        <div className="text-[10px] text-muted-foreground font-mono">{a.dealership_id}</div>
+                        <div className="text-micro text-muted-foreground font-mono">{a.dealership_id}</div>
                       </td>
                       <td className="text-right px-3 py-2.5 tabular-nums">{a.count_this_month.toLocaleString()}</td>
                       <td className="text-right px-3 py-2.5">
@@ -370,7 +370,7 @@ const GroupKPISummary = ({ rooftops }: Props) => {
         </div>
       </div>
 
-      <p className="text-[10px] text-muted-foreground italic">
+      <p className="text-micro text-muted-foreground italic">
         Live data — refresh the Group page to recompute. Aggregates from submissions + appointments tables, scoped to this group's dealerships.
       </p>
     </div>

@@ -109,13 +109,13 @@ export default function NotificationLog() {
   const statusBadge = (status: string) => {
     switch (status) {
       case "sent":
-        return <Badge className="bg-green-500/15 text-green-700 dark:text-green-400 border-green-500/30 text-[10px]"><CheckCircle className="w-3 h-3 mr-1" />Sent</Badge>;
+        return <Badge className="bg-green-500/15 text-green-700 dark:text-green-400 border-green-500/30 text-micro"><CheckCircle className="w-3 h-3 mr-1" />Sent</Badge>;
       case "failed":
-        return <Badge variant="destructive" className="text-[10px]"><XCircle className="w-3 h-3 mr-1" />Failed</Badge>;
+        return <Badge variant="destructive" className="text-micro"><XCircle className="w-3 h-3 mr-1" />Failed</Badge>;
       case "error":
-        return <Badge className="bg-orange-500/15 text-orange-700 dark:text-orange-400 border-orange-500/30 text-[10px]"><AlertTriangle className="w-3 h-3 mr-1" />Error</Badge>;
+        return <Badge className="bg-orange-500/15 text-orange-700 dark:text-orange-400 border-orange-500/30 text-micro"><AlertTriangle className="w-3 h-3 mr-1" />Error</Badge>;
       default:
-        return <Badge variant="outline" className="text-[10px]">{status}</Badge>;
+        return <Badge variant="outline" className="text-micro">{status}</Badge>;
     }
   };
 
@@ -253,7 +253,7 @@ export default function NotificationLog() {
       {/* Date range presets — populate the From/To pickers in one
           click. Same shortcuts as Reports (#89). */}
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mr-1">Range:</span>
+        <span className="text-micro uppercase tracking-wider text-muted-foreground font-bold mr-1">Range:</span>
         {(() => {
           const toIso = (d: Date) => d.toISOString().slice(0, 10);
           const today = new Date();
@@ -372,11 +372,11 @@ export default function NotificationLog() {
                     </td>
                     <td className="px-4 py-2.5 max-w-[200px]">
                       {log.error_message ? (
-                        <span className="text-[10px] text-red-500 truncate block" title={log.error_message}>
+                        <span className="text-micro text-red-500 truncate block" title={log.error_message}>
                           {log.error_message.slice(0, 80)}{log.error_message.length > 80 ? "…" : ""}
                         </span>
                       ) : (
-                        <span className="text-[10px] text-muted-foreground">—</span>
+                        <span className="text-micro text-muted-foreground">—</span>
                       )}
                     </td>
                   </tr>

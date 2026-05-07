@@ -58,7 +58,7 @@ export default function MarketContextPanel({ bbVehicle, offerHigh }: Props) {
             Market Values (Black Book)
           </span>
         </div>
-        <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+        <div className="flex items-center gap-1 text-micro text-muted-foreground">
           <MapPin className="w-3 h-3" />
           <span>Regional adjusted</span>
         </div>
@@ -81,7 +81,7 @@ export default function MarketContextPanel({ bbVehicle, offerHigh }: Props) {
           return (
             <div key={row.label} className="flex items-center gap-2 group">
               <div className="w-32 shrink-0 text-right">
-                <span className="text-[10px] text-muted-foreground leading-tight">{row.label}</span>
+                <span className="text-micro text-muted-foreground leading-tight">{row.label}</span>
               </div>
               <div className="flex-1 h-5 relative">
                 <div
@@ -112,7 +112,7 @@ export default function MarketContextPanel({ bbVehicle, offerHigh }: Props) {
         {offerHigh > 0 && (
           <div className="flex items-center gap-2 mt-1 pt-1 border-t border-border">
             <div className="w-32 shrink-0 text-right">
-              <span className="text-[10px] font-bold text-primary">Your Offer</span>
+              <span className="text-micro font-bold text-primary">Your Offer</span>
             </div>
             <div className="flex-1 h-5 relative">
               <div
@@ -132,7 +132,7 @@ export default function MarketContextPanel({ bbVehicle, offerHigh }: Props) {
       {/* Finance Advance / Equipped Retail */}
       {hasFinanceAdv && (
         <Collapsible>
-          <CollapsibleTrigger className="flex items-center gap-1.5 text-[10px] font-semibold text-muted-foreground hover:text-card-foreground w-full text-left py-1">
+          <CollapsibleTrigger className="flex items-center gap-1.5 text-micro font-semibold text-muted-foreground hover:text-card-foreground w-full text-left py-1">
             <DollarSign className="w-3 h-3" />
             Equipped / Finance Advance Values
           </CollapsibleTrigger>
@@ -150,7 +150,7 @@ export default function MarketContextPanel({ bbVehicle, offerHigh }: Props) {
       {/* Residual Values */}
       {hasResiduals && (
         <Collapsible>
-          <CollapsibleTrigger className="flex items-center gap-1.5 text-[10px] font-semibold text-muted-foreground hover:text-card-foreground w-full text-left py-1">
+          <CollapsibleTrigger className="flex items-center gap-1.5 text-micro font-semibold text-muted-foreground hover:text-card-foreground w-full text-left py-1">
             <Shield className="w-3 h-3" />
             Residual / Future Values
           </CollapsibleTrigger>
@@ -170,12 +170,12 @@ export default function MarketContextPanel({ bbVehicle, offerHigh }: Props) {
         <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-2.5 space-y-1">
           <div className="flex items-center gap-1.5">
             <AlertTriangle className="w-3.5 h-3.5 text-destructive" />
-            <span className="text-[10px] font-bold text-destructive uppercase tracking-wider">
+            <span className="text-micro font-bold text-destructive uppercase tracking-wider">
               {bbVehicle.recall_count} Open Recall{(bbVehicle.recall_count || 0) > 1 ? "s" : ""}
             </span>
           </div>
           {bbVehicle.recalls!.map((r, i) => (
-            <div key={i} className="text-[10px] text-muted-foreground pl-5">
+            <div key={i} className="text-micro text-muted-foreground pl-5">
               <span className="font-semibold text-card-foreground">{r.component}</span>
               {r.summary && <span className="ml-1">— {r.summary.substring(0, 100)}{r.summary.length > 100 ? "…" : ""}</span>}
               {r.campaign_number && <Badge variant="outline" className="text-[7px] ml-1 px-1 py-0">{r.campaign_number}</Badge>}

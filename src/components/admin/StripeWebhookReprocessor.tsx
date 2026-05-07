@@ -149,11 +149,11 @@ const StripeWebhookReprocessor = () => {
                     <div className="text-[11px] text-muted-foreground mt-0.5">
                       {e.type}
                       {!e.livemode && (
-                        <Badge variant="outline" className="ml-2 text-[10px]">test mode</Badge>
+                        <Badge variant="outline" className="ml-2 text-micro">test mode</Badge>
                       )}
                     </div>
                     {e.summary && (
-                      <div className="text-[10px] text-muted-foreground/70 mt-1 truncate max-w-md">
+                      <div className="text-micro text-muted-foreground/70 mt-1 truncate max-w-md">
                         {e.summary}
                       </div>
                     )}

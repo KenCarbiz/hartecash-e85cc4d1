@@ -705,7 +705,7 @@ export default function DealerWebsiteAutofillCard({
                   <div className="flex items-center gap-2 mb-2">
                     <CatIcon className="h-4 w-4 text-primary" />
                     <span className="text-xs font-semibold text-card-foreground">{category.label}</span>
-                    {newCount > 0 && <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-emerald-100 text-emerald-700 border-emerald-200">{newCount} new</Badge>}
+                    {newCount > 0 && <Badge variant="secondary" className="text-micro px-1.5 py-0 bg-emerald-100 text-emerald-700 border-emerald-200">{newCount} new</Badge>}
                   </div>
                   <div className="space-y-1">
                     {category.items.map((item, idx) => (
@@ -750,7 +750,7 @@ export default function DealerWebsiteAutofillCard({
                   );
                 })}
               </div>
-              <p className="text-[10px] text-muted-foreground mt-2">Click any item to save results and navigate there.</p>
+              <p className="text-micro text-muted-foreground mt-2">Click any item to save results and navigate there.</p>
             </div>
           )}
         </CardContent>

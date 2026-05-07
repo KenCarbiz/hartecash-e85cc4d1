@@ -305,7 +305,7 @@ const RooftopWebsites = () => {
                 placeholder="smith-toyota"
                 className="font-mono"
               />
-              {newSlug && <p className="text-[10px] text-muted-foreground">Will serve at {newSlug}.autocurb.io</p>}
+              {newSlug && <p className="text-micro text-muted-foreground">Will serve at {newSlug}.autocurb.io</p>}
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold">
@@ -421,11 +421,11 @@ const RooftopRow = ({ tenant, locationLabel, locationTemplate, saving, onSave, o
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div className="space-y-1">
-          <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Slug</Label>
+          <Label className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Slug</Label>
           <Input value={slug} onChange={(e) => setSlug(e.target.value)} className="font-mono text-sm" />
         </div>
         <div className="space-y-1">
-          <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Custom Domain</Label>
+          <Label className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Custom Domain</Label>
           <Input
             value={domain}
             onChange={(e) => setDomain(e.target.value)}
@@ -434,7 +434,7 @@ const RooftopRow = ({ tenant, locationLabel, locationTemplate, saving, onSave, o
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Landing Template</Label>
+          <Label className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Landing Template</Label>
           <Select value={template} onValueChange={setTemplate}>
             <SelectTrigger className="text-sm"><SelectValue placeholder="Inherit group" /></SelectTrigger>
             <SelectContent>

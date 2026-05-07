@@ -184,7 +184,7 @@ const LocationOverrideDriftPanel = ({ locationId, locationName, onChange }: Prop
           {!loading && (
             <Badge
               variant={overrideCount > 0 ? "secondary" : "outline"}
-              className="ml-1 text-[10px]"
+              className="ml-1 text-micro"
             >
               {overrideCount === 0
                 ? "fully inherited"

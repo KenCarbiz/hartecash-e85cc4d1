@@ -108,9 +108,9 @@ const VautoPushButton = ({
       >
         <CheckCircle2 className="w-3 h-3" />
         <span className="font-semibold">Pushed to vAuto</span>
-        {localVautoId && <span className="font-mono text-[10px] opacity-80">· {localVautoId}</span>}
+        {localVautoId && <span className="font-mono text-micro opacity-80">· {localVautoId}</span>}
         {localPushedAt && (
-          <span className="text-[10px] opacity-70">
+          <span className="text-micro opacity-70">
             · {new Date(localPushedAt).toLocaleDateString()}
           </span>
         )}

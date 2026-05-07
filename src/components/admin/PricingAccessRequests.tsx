@@ -167,11 +167,11 @@ const PricingAccessRequests = ({ userId }: PricingAccessRequestsProps) => {
                 <XCircle className="w-4 h-4 text-destructive shrink-0" />
               )}
               <span className="truncate flex-1">{req.requester_name}</span>
-              <Badge variant={req.status === "approved" ? "secondary" : "outline"} className="text-[10px]">
+              <Badge variant={req.status === "approved" ? "secondary" : "outline"} className="text-micro">
                 {req.status}
               </Badge>
               {req.expires_at && (
-                <span className="text-[10px] text-muted-foreground font-mono">
+                <span className="text-micro text-muted-foreground font-mono">
                   exp {new Date(req.expires_at).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                 </span>
               )}

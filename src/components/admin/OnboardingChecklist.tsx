@@ -165,7 +165,7 @@ const OnboardingChecklist = ({ onNavigate, dealershipId: propDealershipId }: Onb
                     <span className={cn("text-xs font-bold uppercase tracking-wider", allDone ? "text-primary" : "text-muted-foreground")}>
                       {group.title}
                     </span>
-                    <span className={cn("text-[10px] font-semibold ml-auto px-2 py-0.5 rounded-full",
+                    <span className={cn("text-micro font-semibold ml-auto px-2 py-0.5 rounded-full",
                       allDone ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
                     )}>
                       {groupDone}/{groupTotal}

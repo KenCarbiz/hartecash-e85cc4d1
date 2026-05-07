@@ -206,12 +206,12 @@ const ClassicCommsCard = ({ submissionId, customerPhone, customerEmail, onOpenFu
             >
               {c === "calls" ? "Calls" : c.toUpperCase()}
               {unread > 0 && (
-                <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold">
+                <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-red-500 text-white text-micro font-bold">
                   {unread}
                 </span>
               )}
               {unread === 0 && counts[c] > 0 && (
-                <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold">
+                <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-slate-100 text-slate-600 text-micro font-bold">
                   {counts[c]}
                 </span>
               )}
@@ -269,9 +269,9 @@ const ClassicCommsCard = ({ submissionId, customerPhone, customerEmail, onOpenFu
                     <span className="text-[11px] font-semibold text-slate-700 truncate">
                       {e.actor_label || (e.direction === "in" ? "Customer" : "You")}
                     </span>
-                    <span className="text-[10px] text-slate-400 shrink-0">{fmtTime(e.occurred_at)}</span>
+                    <span className="text-micro text-slate-400 shrink-0">{fmtTime(e.occurred_at)}</span>
                   </div>
-                  <div className="text-[12px] text-slate-700 leading-snug line-clamp-2">{e.body_text}</div>
+                  <div className="text-caption text-slate-700 leading-snug line-clamp-2">{e.body_text}</div>
                 </div>
               ))}
             </div>

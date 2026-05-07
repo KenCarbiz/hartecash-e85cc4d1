@@ -538,7 +538,7 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate, targetDealershipId, onD
               Billing & Plan
               {pricingModel.row && (
                 <span
-                  className="ml-2 inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300"
+                  className="ml-2 inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-micro font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300"
                   title="Prices are being sourced live from Admin → Pricing Model"
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />

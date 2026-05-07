@@ -206,7 +206,7 @@ const InteractiveWaterfallBlock = ({
       {isExpanded && block.editable && block.editKey && onValueChange && (
         <div className="ml-6 mr-6 mt-1 mb-2 p-2 bg-card border border-border rounded-lg shadow-sm">
           <div className="flex items-center gap-2">
-            <Label className="text-[10px] font-semibold text-muted-foreground shrink-0">
+            <Label className="text-micro font-semibold text-muted-foreground shrink-0">
               {block.editType === "pct" ? "%" : block.editType === "multiplier" ? "×" : "$"}
             </Label>
             <Input
@@ -663,7 +663,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div>
-                        <Label className="text-[10px] font-semibold text-muted-foreground">Base Value Source</Label>
+                        <Label className="text-micro font-semibold text-muted-foreground">Base Value Source</Label>
                         <Select
                           value={selectedBasis}
                           onValueChange={(val) => updateLocalSetting("condition_basis_map", {
@@ -689,7 +689,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                         </Select>
                       </div>
                       <div className="flex flex-col justify-between">
-                        <Label className="text-[10px] font-semibold text-muted-foreground">Include Equipment</Label>
+                        <Label className="text-micro font-semibold text-muted-foreground">Include Equipment</Label>
                         <div className="flex items-center gap-2 mt-1">
                           <Switch
                             checked={equipEnabled}
@@ -698,12 +698,12 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                               updateLocalSetting("condition_equipment_map" as any, newMap);
                             }}
                           />
-                          <span className="text-[10px] text-muted-foreground">{equipEnabled ? "Yes" : "No"}</span>
+                          <span className="text-micro text-muted-foreground">{equipEnabled ? "Yes" : "No"}</span>
                         </div>
                       </div>
                       <div>
                         <div className="flex items-center justify-between mb-1">
-                          <Label className="text-[10px] font-semibold text-muted-foreground">Value Multiplier</Label>
+                          <Label className="text-micro font-semibold text-muted-foreground">Value Multiplier</Label>
                           <span className="text-xs font-bold text-primary">{mult.toFixed(2)}×</span>
                         </div>
                         <Slider
@@ -763,16 +763,16 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                     <div className="space-y-2">
                       {/* Row: Condition Tier */}
                       <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-                        <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Condition</span>
+                        <span className="text-micro font-semibold text-muted-foreground w-32 shrink-0">Condition</span>
                         <span className="text-xs font-bold text-primary">{CONDITION_LABELS[liveCondition]}</span>
                         <span className="text-[9px] text-muted-foreground ml-auto">Set above ①</span>
                       </div>
 
                       {/* Row: Modifications */}
                       <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-                        <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Modifications</span>
+                        <span className="text-micro font-semibold text-muted-foreground w-32 shrink-0">Modifications</span>
                         <Select value={liveModifications} onValueChange={setLiveModifications}>
-                          <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                          <SelectTrigger className="h-6 text-micro w-36"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">No Modifications</SelectItem>
                             <SelectItem value="yes">Has Modifications</SelectItem>
@@ -784,9 +784,9 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                       {/* Row: Drivable */}
                       {isOn("not_drivable") && (
                         <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-                          <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Drivable?</span>
+                          <span className="text-micro font-semibold text-muted-foreground w-32 shrink-0">Drivable?</span>
                           <Select value={liveDrivable} onValueChange={setLiveDrivable}>
-                            <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="h-6 text-micro w-36"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="yes">Drivable</SelectItem>
                               <SelectItem value="no">Not Drivable</SelectItem>
@@ -799,9 +799,9 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                       {/* Row: Exterior Damage (up to 5 issues) */}
                       {isOn("exterior_damage") && (
                         <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-                          <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Exterior Damage</span>
+                          <span className="text-micro font-semibold text-muted-foreground w-32 shrink-0">Exterior Damage</span>
                           <Select value={String(liveExteriorItems)} onValueChange={v => setLiveExteriorItems(Number(v))}>
-                            <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="h-6 text-micro w-36"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="0">None</SelectItem>
                               <SelectItem value="1">1 issue</SelectItem>
@@ -819,9 +819,9 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                       {/* Row: Windshield — matches customer form exactly */}
                       {isOn("windshield_damage") && (
                         <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-                          <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Windshield</span>
+                          <span className="text-micro font-semibold text-muted-foreground w-32 shrink-0">Windshield</span>
                           <Select value={liveWindshield} onValueChange={setLiveWindshield}>
-                            <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="h-6 text-micro w-36"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="none">No damage</SelectItem>
                               <SelectItem value="minor_chips">Minor chips or pitting (-${getAmt("windshield_chipped").toLocaleString()})</SelectItem>
@@ -834,9 +834,9 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
 
                       {/* Row: Moonroof — customer input: Works great / Doesn't work / No moonroof */}
                       <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-                        <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Moonroof</span>
+                        <span className="text-micro font-semibold text-muted-foreground w-32 shrink-0">Moonroof</span>
                         <Select value={liveMoonroof} onValueChange={setLiveMoonroof}>
-                          <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                          <SelectTrigger className="h-6 text-micro w-36"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="Works great">Works great</SelectItem>
                             <SelectItem value="Doesn't work">Doesn't work</SelectItem>
@@ -849,9 +849,9 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                       {/* Row: Interior Damage (up to 4 issues) */}
                       {isOn("interior_damage") && (
                         <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-                          <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Interior Damage</span>
+                          <span className="text-micro font-semibold text-muted-foreground w-32 shrink-0">Interior Damage</span>
                           <Select value={String(liveInteriorItems)} onValueChange={v => setLiveInteriorItems(Number(v))}>
-                            <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="h-6 text-micro w-36"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="0">None</SelectItem>
                               <SelectItem value="1">1 issue</SelectItem>
@@ -868,9 +868,9 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                       {/* Row: Tech Issues (up to 4 issues) */}
                       {isOn("tech_issues") && (
                         <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-                          <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Tech Issues</span>
+                          <span className="text-micro font-semibold text-muted-foreground w-32 shrink-0">Tech Issues</span>
                           <Select value={String(liveTechItems)} onValueChange={v => setLiveTechItems(Number(v))}>
-                            <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="h-6 text-micro w-36"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="0">None</SelectItem>
                               <SelectItem value="1">1 issue</SelectItem>
@@ -887,9 +887,9 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                       {/* Row: Engine Issues (up to 5 issues) */}
                       {isOn("engine_issues") && (
                         <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-                          <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Engine Issues</span>
+                          <span className="text-micro font-semibold text-muted-foreground w-32 shrink-0">Engine Issues</span>
                           <Select value={String(liveEngineItems)} onValueChange={v => setLiveEngineItems(Number(v))}>
-                            <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="h-6 text-micro w-36"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="0">None</SelectItem>
                               <SelectItem value="1">1 issue</SelectItem>
@@ -907,9 +907,9 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                       {/* Row: Mechanical & Electrical Issues (up to 4 issues) */}
                       {isOn("mechanical_issues") && (
                         <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-                          <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Mechanical Issues</span>
+                          <span className="text-micro font-semibold text-muted-foreground w-32 shrink-0">Mechanical Issues</span>
                           <Select value={String(liveMechanicalItems)} onValueChange={v => setLiveMechanicalItems(Number(v))}>
-                            <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="h-6 text-micro w-36"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="0">None</SelectItem>
                               <SelectItem value="1">1 issue</SelectItem>
@@ -926,9 +926,9 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                       {/* Row: Accidents — matches customer form: No accidents / 1 accident / 2+ accidents */}
                       {isOn("accidents") && (
                         <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-                          <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Accidents</span>
+                          <span className="text-micro font-semibold text-muted-foreground w-32 shrink-0">Accidents</span>
                           <Select value={liveAccidents} onValueChange={setLiveAccidents}>
-                            <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="h-6 text-micro w-36"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="0">No accidents</SelectItem>
                               <SelectItem value="1">1 accident (-${getAmt("accidents_1").toLocaleString()})</SelectItem>
@@ -942,9 +942,9 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                       {/* Row: Smoked In */}
                       {isOn("smoked_in") && (
                         <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-                          <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Smoked In?</span>
+                          <span className="text-micro font-semibold text-muted-foreground w-32 shrink-0">Smoked In?</span>
                           <Select value={liveSmokedIn} onValueChange={setLiveSmokedIn}>
-                            <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="h-6 text-micro w-36"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="no">Not Smoked In</SelectItem>
                               <SelectItem value="yes">Smoked In (-${getAmt("smoked_in").toLocaleString()})</SelectItem>
@@ -957,9 +957,9 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                       {/* Row: Tires — matches customer form: None / 1 / 2 / 3 / 4 */}
                       {isOn("tires_not_replaced") && (
                         <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-                          <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Tires Replaced</span>
+                          <span className="text-micro font-semibold text-muted-foreground w-32 shrink-0">Tires Replaced</span>
                           <Select value={liveTiresReplaced} onValueChange={setLiveTiresReplaced}>
-                            <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="h-6 text-micro w-36"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="4">4 tires (no deduction)</SelectItem>
                               <SelectItem value="3">3 tires</SelectItem>
@@ -975,9 +975,9 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                       {/* Row: Keys — 2+ no deduction, 1 key deduction */}
                       {isOn("missing_keys") && (
                         <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/30">
-                          <span className="text-[10px] font-semibold text-muted-foreground w-32 shrink-0">Keys</span>
+                          <span className="text-micro font-semibold text-muted-foreground w-32 shrink-0">Keys</span>
                           <Select value={liveNumKeys} onValueChange={setLiveNumKeys}>
-                            <SelectTrigger className="h-6 text-[10px] w-36"><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="h-6 text-micro w-36"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="2+">2+ keys (no deduction)</SelectItem>
                               <SelectItem value="1">1 key (-${getAmt("missing_keys_1").toLocaleString()})</SelectItem>
@@ -1012,7 +1012,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                     {/* Inspector verification reminder */}
                     <div className="mx-1 mt-2 mb-1 px-2.5 py-1.5 rounded-md bg-amber-500/10 border border-amber-500/20 flex items-center gap-2">
                       <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                      <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-400">
+                      <span className="text-micro font-semibold text-amber-700 dark:text-amber-400">
                         Inspector: Verify all customer-selected equipment is present on the vehicle during in-person inspection.
                       </span>
                     </div>
@@ -1022,7 +1022,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                         const isAutoDetected = ad.auto !== "N";
                         const dollarStr = ad.avg !== 0 ? ` (${ad.avg > 0 ? "+" : ""}$${Math.abs(ad.avg)})` : "";
                         return (
-                          <label key={ad.uoc} className={`flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer text-[10px] ${isSelected ? "bg-primary/10 text-card-foreground" : "text-muted-foreground hover:bg-muted"}`}>
+                          <label key={ad.uoc} className={`flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer text-micro ${isSelected ? "bg-primary/10 text-card-foreground" : "text-muted-foreground hover:bg-muted"}`}>
                             <input type="checkbox" checked={isSelected} onChange={() => toggleLiveAddDeduct(ad.uoc)} className="rounded border-border w-3 h-3" />
                             <span className="truncate">{ad.name}{dollarStr}</span>
                             {isSelected && (
@@ -1087,12 +1087,12 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                     <CollapsibleContent>
                       <div className="space-y-1 p-2">
                         {(localSettings.age_tiers || []).map((tier, idx) => (
-                          <div key={idx} className="flex items-center gap-1 text-[10px]">
-                            <Input type="number" value={tier.min_years} onChange={e => { const u = [...(localSettings.age_tiers || [])]; u[idx] = { ...u[idx], min_years: Number(e.target.value) }; updateLocalSetting("age_tiers", u); }} className="w-12 h-5 text-[10px]" />
+                          <div key={idx} className="flex items-center gap-1 text-micro">
+                            <Input type="number" value={tier.min_years} onChange={e => { const u = [...(localSettings.age_tiers || [])]; u[idx] = { ...u[idx], min_years: Number(e.target.value) }; updateLocalSetting("age_tiers", u); }} className="w-12 h-5 text-micro" />
                             <span>–</span>
-                            <Input type="number" value={tier.max_years} onChange={e => { const u = [...(localSettings.age_tiers || [])]; u[idx] = { ...u[idx], max_years: Number(e.target.value) }; updateLocalSetting("age_tiers", u); }} className="w-12 h-5 text-[10px]" />
+                            <Input type="number" value={tier.max_years} onChange={e => { const u = [...(localSettings.age_tiers || [])]; u[idx] = { ...u[idx], max_years: Number(e.target.value) }; updateLocalSetting("age_tiers", u); }} className="w-12 h-5 text-micro" />
                             <span>yr →</span>
-                            <Input type="number" value={tier.adjustment_pct} onChange={e => { const u = [...(localSettings.age_tiers || [])]; u[idx] = { ...u[idx], adjustment_pct: Number(e.target.value) }; updateLocalSetting("age_tiers", u); }} className="w-14 h-5 text-[10px]" step="0.5" />
+                            <Input type="number" value={tier.adjustment_pct} onChange={e => { const u = [...(localSettings.age_tiers || [])]; u[idx] = { ...u[idx], adjustment_pct: Number(e.target.value) }; updateLocalSetting("age_tiers", u); }} className="w-14 h-5 text-micro" step="0.5" />
                             <span>%</span>
                             <Button variant="ghost" size="sm" className="h-5 w-5 p-0 text-destructive" onClick={() => updateLocalSetting("age_tiers", (localSettings.age_tiers || []).filter((_, i) => i !== idx))}><Trash2 className="w-2.5 h-2.5" /></Button>
                           </div>
@@ -1124,7 +1124,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                     <CollapsibleContent>
                       <div className="space-y-2 p-2">
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] text-muted-foreground">Enable low-mileage bonus</span>
+                          <span className="text-micro text-muted-foreground">Enable low-mileage bonus</span>
                           <Switch
                             checked={(localSettings as any).low_mileage_bonus?.enabled ?? false}
                             onCheckedChange={(checked) => updateLocalSetting("low_mileage_bonus" as any, { ...(localSettings as any).low_mileage_bonus || {}, enabled: checked })}
@@ -1133,35 +1133,35 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                         </div>
                         {(localSettings as any).low_mileage_bonus?.enabled && (
                           <div className="space-y-1.5 border-t border-border pt-2">
-                            <div className="flex items-center gap-1 text-[10px]">
+                            <div className="flex items-center gap-1 text-micro">
                               <span className="text-muted-foreground w-28">Avg mi/year:</span>
                               <Input type="number" value={(localSettings as any).low_mileage_bonus?.avg_miles_per_year ?? 12000}
                                 onChange={e => updateLocalSetting("low_mileage_bonus" as any, { ...(localSettings as any).low_mileage_bonus, avg_miles_per_year: Number(e.target.value) })}
-                                className="w-20 h-5 text-[10px]" step="1000" />
+                                className="w-20 h-5 text-micro" step="1000" />
                             </div>
-                            <div className="flex items-center gap-1 text-[10px]">
+                            <div className="flex items-center gap-1 text-micro">
                               <span className="text-muted-foreground w-28">Bonus % per step:</span>
                               <Input type="number" value={(localSettings as any).low_mileage_bonus?.bonus_pct_per_step ?? 2}
                                 onChange={e => updateLocalSetting("low_mileage_bonus" as any, { ...(localSettings as any).low_mileage_bonus, bonus_pct_per_step: Number(e.target.value) })}
-                                className="w-14 h-5 text-[10px]" step="0.5" />
+                                className="w-14 h-5 text-micro" step="0.5" />
                             </div>
-                            <div className="flex items-center gap-1 text-[10px]">
+                            <div className="flex items-center gap-1 text-micro">
                               <span className="text-muted-foreground w-28">Step size (% below):</span>
                               <Input type="number" value={(localSettings as any).low_mileage_bonus?.step_size_pct ?? 20}
                                 onChange={e => updateLocalSetting("low_mileage_bonus" as any, { ...(localSettings as any).low_mileage_bonus, step_size_pct: Number(e.target.value) })}
-                                className="w-14 h-5 text-[10px]" step="5" />
+                                className="w-14 h-5 text-micro" step="5" />
                             </div>
-                            <div className="flex items-center gap-1 text-[10px]">
+                            <div className="flex items-center gap-1 text-micro">
                               <span className="text-muted-foreground w-28">Max bonus %:</span>
                               <Input type="number" value={(localSettings as any).low_mileage_bonus?.max_bonus_pct ?? 8}
                                 onChange={e => updateLocalSetting("low_mileage_bonus" as any, { ...(localSettings as any).low_mileage_bonus, max_bonus_pct: Number(e.target.value) })}
-                                className="w-14 h-5 text-[10px]" step="1" />
+                                className="w-14 h-5 text-micro" step="1" />
                             </div>
-                            <div className="flex items-center gap-1 text-[10px]">
+                            <div className="flex items-center gap-1 text-micro">
                               <span className="text-muted-foreground w-28">Min mi/year floor:</span>
                               <Input type="number" value={(localSettings as any).low_mileage_bonus?.min_miles_per_year ?? 4000}
                                 onChange={e => updateLocalSetting("low_mileage_bonus" as any, { ...(localSettings as any).low_mileage_bonus, min_miles_per_year: Number(e.target.value) })}
-                                className="w-20 h-5 text-[10px]" step="500" />
+                                className="w-20 h-5 text-micro" step="500" />
                             </div>
                             <p className="text-[8px] text-muted-foreground leading-tight mt-1">
                               Vehicles averaging below the benchmark get a bonus. E.g., 40% below avg → 2 steps × 2% = +4% bonus. Floor prevents rewarding garaged/unused vehicles.
@@ -1189,7 +1189,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                     <CollapsibleContent>
                       <div className="space-y-2 p-2">
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] text-muted-foreground">Enable high-mileage penalty</span>
+                          <span className="text-micro text-muted-foreground">Enable high-mileage penalty</span>
                           <Switch
                             checked={(localSettings as any).high_mileage_penalty?.enabled ?? false}
                             onCheckedChange={(checked) => updateLocalSetting("high_mileage_penalty" as any, { ...(localSettings as any).high_mileage_penalty || DEFAULT_HIGH_MILEAGE_PENALTY, enabled: checked })}
@@ -1198,35 +1198,35 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                         </div>
                         {(localSettings as any).high_mileage_penalty?.enabled && (
                           <div className="space-y-1.5 border-t border-border pt-2">
-                            <div className="flex items-center gap-1 text-[10px]">
+                            <div className="flex items-center gap-1 text-micro">
                               <span className="text-muted-foreground w-28">Avg mi/year:</span>
                               <Input type="number" value={(localSettings as any).high_mileage_penalty?.avg_miles_per_year ?? 12000}
                                 onChange={e => updateLocalSetting("high_mileage_penalty" as any, { ...(localSettings as any).high_mileage_penalty, avg_miles_per_year: Number(e.target.value) })}
-                                className="w-20 h-5 text-[10px]" step="1000" />
+                                className="w-20 h-5 text-micro" step="1000" />
                             </div>
-                            <div className="flex items-center gap-1 text-[10px]">
+                            <div className="flex items-center gap-1 text-micro">
                               <span className="text-muted-foreground w-28">Penalty % per step:</span>
                               <Input type="number" value={(localSettings as any).high_mileage_penalty?.penalty_pct_per_step ?? 2}
                                 onChange={e => updateLocalSetting("high_mileage_penalty" as any, { ...(localSettings as any).high_mileage_penalty, penalty_pct_per_step: Number(e.target.value) })}
-                                className="w-14 h-5 text-[10px]" step="0.5" />
+                                className="w-14 h-5 text-micro" step="0.5" />
                             </div>
-                            <div className="flex items-center gap-1 text-[10px]">
+                            <div className="flex items-center gap-1 text-micro">
                               <span className="text-muted-foreground w-28">Step size (% above):</span>
                               <Input type="number" value={(localSettings as any).high_mileage_penalty?.step_size_pct ?? 20}
                                 onChange={e => updateLocalSetting("high_mileage_penalty" as any, { ...(localSettings as any).high_mileage_penalty, step_size_pct: Number(e.target.value) })}
-                                className="w-14 h-5 text-[10px]" step="5" />
+                                className="w-14 h-5 text-micro" step="5" />
                             </div>
-                            <div className="flex items-center gap-1 text-[10px]">
+                            <div className="flex items-center gap-1 text-micro">
                               <span className="text-muted-foreground w-28">Max penalty %:</span>
                               <Input type="number" value={(localSettings as any).high_mileage_penalty?.max_penalty_pct ?? 10}
                                 onChange={e => updateLocalSetting("high_mileage_penalty" as any, { ...(localSettings as any).high_mileage_penalty, max_penalty_pct: Number(e.target.value) })}
-                                className="w-14 h-5 text-[10px]" step="1" />
+                                className="w-14 h-5 text-micro" step="1" />
                             </div>
-                            <div className="flex items-center gap-1 text-[10px]">
+                            <div className="flex items-center gap-1 text-micro">
                               <span className="text-muted-foreground w-28">Max mi/year cap:</span>
                               <Input type="number" value={(localSettings as any).high_mileage_penalty?.max_miles_per_year ?? 25000}
                                 onChange={e => updateLocalSetting("high_mileage_penalty" as any, { ...(localSettings as any).high_mileage_penalty, max_miles_per_year: Number(e.target.value) })}
-                                className="w-20 h-5 text-[10px]" step="1000" />
+                                className="w-20 h-5 text-micro" step="1000" />
                             </div>
                             <p className="text-[8px] text-muted-foreground leading-tight mt-1">
                               Vehicles averaging above the benchmark get a penalty. E.g., 40% above avg → 2 steps × 2% = -4% penalty. Cap prevents penalizing commercial/fleet vehicles.
@@ -1254,7 +1254,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                     <CollapsibleContent>
                       <div className="space-y-2 p-2">
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] text-muted-foreground">Enable color adjustments</span>
+                          <span className="text-micro text-muted-foreground">Enable color adjustments</span>
                           <Switch
                             checked={(localSettings as any).color_desirability?.enabled ?? false}
                             onCheckedChange={(checked) => updateLocalSetting("color_desirability" as any, { ...(localSettings as any).color_desirability || DEFAULT_COLOR_DESIRABILITY, enabled: checked })}
@@ -1264,7 +1264,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                         {(localSettings as any).color_desirability?.enabled && (
                           <div className="grid grid-cols-2 gap-1 border-t border-border pt-2">
                             {Object.entries(((localSettings as any).color_desirability?.adjustments || DEFAULT_COLOR_DESIRABILITY.adjustments) as Record<string, number>).map(([color, pct]) => (
-                              <div key={color} className="flex items-center gap-1 text-[10px]">
+                              <div key={color} className="flex items-center gap-1 text-micro">
                                 <span className="text-muted-foreground w-14 capitalize">{color}:</span>
                                 <Input type="number" value={pct}
                                   onChange={e => {
@@ -1301,7 +1301,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                     <CollapsibleContent>
                       <div className="space-y-2 p-2">
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] text-muted-foreground">Enable seasonal adjustment</span>
+                          <span className="text-micro text-muted-foreground">Enable seasonal adjustment</span>
                           <Switch
                             checked={(localSettings as any).seasonal_adjustment?.enabled ?? false}
                             onCheckedChange={(checked) => updateLocalSetting("seasonal_adjustment" as any, { ...(localSettings as any).seasonal_adjustment || DEFAULT_SEASONAL_ADJUSTMENT, enabled: checked })}
@@ -1310,11 +1310,11 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                         </div>
                         {(localSettings as any).seasonal_adjustment?.enabled && (
                           <div className="space-y-1.5 border-t border-border pt-2">
-                            <div className="flex items-center gap-1 text-[10px]">
+                            <div className="flex items-center gap-1 text-micro">
                               <span className="text-muted-foreground w-28">Adjustment %:</span>
                               <Input type="number" value={(localSettings as any).seasonal_adjustment?.adjustment_pct ?? 0}
                                 onChange={e => updateLocalSetting("seasonal_adjustment" as any, { ...(localSettings as any).seasonal_adjustment, adjustment_pct: Number(e.target.value) })}
-                                className="w-16 h-5 text-[10px]" step="0.5" />
+                                className="w-16 h-5 text-micro" step="0.5" />
                             </div>
                             <p className="text-[8px] text-muted-foreground leading-tight">
                               Apply a temporary market timing adjustment. Use positive % in high-demand seasons, negative in slow periods.
@@ -1342,23 +1342,23 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                           Choose whether accident and non-drivable deductions use flat dollar amounts or a percentage of the base value.
                           When set to %, the deduction amount fields represent percentages instead of dollars.
                         </p>
-                        <div className="flex items-center gap-2 text-[10px]">
+                        <div className="flex items-center gap-2 text-micro">
                           <span className="text-muted-foreground w-24">Accidents:</span>
                           <Select value={((localSettings as any).deduction_modes?.accidents) || "flat"} onValueChange={(v) => updateLocalSetting("deduction_modes" as any, { ...((localSettings as any).deduction_modes || DEFAULT_DEDUCTION_MODES), accidents: v })}>
                             <SelectTrigger className="h-5 w-24 text-[9px]"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="flat" className="text-[10px]">Flat ($)</SelectItem>
-                              <SelectItem value="pct" className="text-[10px]">Percent (%)</SelectItem>
+                              <SelectItem value="flat" className="text-micro">Flat ($)</SelectItem>
+                              <SelectItem value="pct" className="text-micro">Percent (%)</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
-                        <div className="flex items-center gap-2 text-[10px]">
+                        <div className="flex items-center gap-2 text-micro">
                           <span className="text-muted-foreground w-24">Not Drivable:</span>
                           <Select value={((localSettings as any).deduction_modes?.not_drivable) || "flat"} onValueChange={(v) => updateLocalSetting("deduction_modes" as any, { ...((localSettings as any).deduction_modes || DEFAULT_DEDUCTION_MODES), not_drivable: v })}>
                             <SelectTrigger className="h-5 w-24 text-[9px]"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="flat" className="text-[10px]">Flat ($)</SelectItem>
-                              <SelectItem value="pct" className="text-[10px]">Percent (%)</SelectItem>
+                              <SelectItem value="flat" className="text-micro">Flat ($)</SelectItem>
+                              <SelectItem value="pct" className="text-micro">Percent (%)</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -1391,7 +1391,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                             <div key={key} className={`rounded border px-2 py-1 ${enabled ? "bg-muted/30 border-border" : "bg-muted/10 border-border/50 opacity-50"}`}>
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-1">
-                                  <span className="text-[10px] font-semibold text-card-foreground">{config.label}</span>
+                                  <span className="text-micro font-semibold text-card-foreground">{config.label}</span>
                                   {isPctMode && <Badge variant="outline" className="text-[7px] px-1 py-0">% mode</Badge>}
                                   {isModified && <Badge variant="outline" className="text-[7px] px-1 py-0 border-amber-500/50 text-amber-600 dark:text-amber-400 bg-amber-500/10">Modified</Badge>}
                                 </div>
@@ -1433,7 +1433,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                 <>
                   {/* Final Offer Card */}
                   <div className="rounded-xl border-2 border-primary/40 bg-gradient-to-br from-primary/5 to-primary/10 p-5">
-                    <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-1">Customer Offer</div>
+                    <div className="text-micro uppercase tracking-wider font-bold text-muted-foreground mb-1">Customer Offer</div>
                     <div className="text-3xl font-bold text-primary">
                       ${liveResult.high.toLocaleString()}
                     </div>
@@ -1447,8 +1447,8 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                     )}
                     {liveResult.matchedRuleIds.length > 0 && (
                       <div className="flex items-center gap-1 mt-2">
-                        <Badge variant="secondary" className="text-[10px]">{liveResult.matchedRuleIds.length} rule(s) applied</Badge>
-                        {liveResult.isHotLead && <Badge variant="destructive" className="text-[10px]">🔥 Hot</Badge>}
+                        <Badge variant="secondary" className="text-micro">{liveResult.matchedRuleIds.length} rule(s) applied</Badge>
+                        {liveResult.isHotLead && <Badge variant="destructive" className="text-micro">🔥 Hot</Badge>}
                       </div>
                     )}
                   </div>
@@ -1466,7 +1466,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
 
                   {compareMode && liveSavedResult && (
                      <div className="rounded-lg border border-border bg-muted/20 p-3">
-                      <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-1">Saved Logic Offer</div>
+                      <div className="text-micro uppercase tracking-wider font-bold text-muted-foreground mb-1">Saved Logic Offer</div>
                       <div className="text-lg font-bold text-muted-foreground">
                         ${liveSavedResult.high.toLocaleString()}
                       </div>

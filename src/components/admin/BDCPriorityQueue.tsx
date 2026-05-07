@@ -83,13 +83,13 @@ const pillFor = (l: Lead): { label: string; cls: string; dot: string } | null =>
   if (l.progress_status === "customer_arrived")
     return { label: "Arrived", cls: "bg-red-100 text-red-700", dot: "bg-red-500" };
   if (l.progress_status === "on_the_way")
-    return { label: "On the way", cls: "bg-amber-100 text-amber-700", dot: "" };
+    return { label: "On the way", cls: "bg-warning/15 text-warning", dot: "" };
   if (l.progress_status === "offer_accepted" || l.progress_status === "price_agreed")
-    return { label: "Offer accepted", cls: "bg-emerald-100 text-emerald-700", dot: "bg-emerald-500" };
+    return { label: "Offer accepted", cls: "bg-success/15 text-success", dot: "bg-success" };
   if (l.progress_status === "inspection_completed" || l.progress_status === "appraisal_completed")
-    return { label: "Inspected", cls: "bg-blue-100 text-blue-700", dot: "bg-blue-500" };
+    return { label: "Inspected", cls: "bg-info/15 text-info", dot: "bg-info" };
   if (l.progress_status === "contacted")
-    return { label: "Contacted", cls: "bg-blue-100 text-blue-700", dot: "bg-blue-500" };
+    return { label: "Contacted", cls: "bg-info/15 text-info", dot: "bg-info" };
   if (l.progress_status === "new")
     return { label: "New", cls: "bg-muted text-muted-foreground", dot: "" };
   if (l.is_hot_lead)
@@ -102,11 +102,11 @@ const sublineFor = (l: Lead, isSlaBreach: boolean): { text: string; cls: string 
   if (l.progress_status === "customer_arrived")
     return { text: "Arrived · On the lot", cls: "text-red-600 font-semibold" };
   if (l.progress_status === "on_the_way")
-    return { text: "On the way · Prep file", cls: "text-amber-600 font-semibold" };
+    return { text: "On the way · Prep file", cls: "text-warning font-semibold" };
   if (l.progress_status === "offer_accepted" || l.progress_status === "price_agreed")
-    return { text: "Accepted · Book the appointment", cls: "text-emerald-700 font-semibold" };
+    return { text: "Accepted · Book the appointment", cls: "text-success font-semibold" };
   if (isSlaBreach)
-    return { text: "SLA breach · Call immediately", cls: "text-blue-700 font-semibold" };
+    return { text: "SLA breach · Call immediately", cls: "text-info font-semibold" };
   if (l.appointment_set)
     return { text: "Booked · Confirm + remind", cls: "text-muted-foreground" };
   return { text: "Keep warm", cls: "text-orange-600 font-semibold" };
@@ -246,7 +246,7 @@ const BDCPriorityQueue = ({ onOpenSubmission }: { onOpenSubmission?: (id: string
         <Tile label="Call now" value={counts.now} sub="score ≥ 80" valueClass="text-red-600" />
         <Tile label="Today" value={counts.today} sub="score 65–80" valueClass="text-orange-500" />
         <Tile label="Later" value={counts.later} sub="score < 65" />
-        <Tile label="SLA breach" value={counts.sla} sub="> 2h open" valueClass="text-blue-600" />
+        <Tile label="SLA breach" value={counts.sla} sub="> 2h open" valueClass="text-info" />
       </section>
 
       {/* Queue */}
@@ -284,7 +284,7 @@ const BDCPriorityQueue = ({ onOpenSubmission }: { onOpenSubmission?: (id: string
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       {pill && (
-                        <span className={cn("text-[10px] font-bold rounded px-2 py-0.5 inline-flex items-center gap-1.5", pill.cls)}>
+                        <span className={cn("text-micro font-bold rounded px-2 py-0.5 inline-flex items-center gap-1.5", pill.cls)}>
                           {pill.dot && <span className={cn("w-1.5 h-1.5 rounded-full", pill.dot)} />}
                           {pill.label}
                         </span>
@@ -300,7 +300,7 @@ const BDCPriorityQueue = ({ onOpenSubmission }: { onOpenSubmission?: (id: string
                       {lead.assigned_bdc_rep_id ? (
                         <span
                           className={cn(
-                            "text-[10px] font-bold rounded-full px-2 py-0.5 inline-flex items-center gap-1",
+                            "text-micro font-bold rounded-full px-2 py-0.5 inline-flex items-center gap-1",
                             lead.assigned_bdc_rep_id === currentUserId
                               ? "bg-info/10 text-info border border-info/30"
                               : "bg-muted text-muted-foreground",
@@ -316,7 +316,7 @@ const BDCPriorityQueue = ({ onOpenSubmission }: { onOpenSubmission?: (id: string
                           type="button"
                           onClick={() => claimLead(lead.id)}
                           disabled={!currentUserId || claiming[lead.id]}
-                          className="text-[10px] font-bold rounded-full px-2 py-0.5 inline-flex items-center gap-1 border border-dashed border-border text-muted-foreground hover:border-info hover:text-info disabled:opacity-50 transition-colors"
+                          className="text-micro font-bold rounded-full px-2 py-0.5 inline-flex items-center gap-1 border border-dashed border-border text-muted-foreground hover:border-info hover:text-info disabled:opacity-50 transition-colors"
                           title="Claim this lead — you become the assigned rep"
                         >
                           {claiming[lead.id] ? "…" : "Claim"}
@@ -327,7 +327,7 @@ const BDCPriorityQueue = ({ onOpenSubmission }: { onOpenSubmission?: (id: string
                       {ymm(lead)}
                       {lead.phone && <> · {formatPhone(lead.phone)}</>}
                     </div>
-                    <div className={cn("text-[12px] mt-1", subline.cls)}>{subline.text}</div>
+                    <div className={cn("text-caption mt-1", subline.cls)}>{subline.text}</div>
                     {/* Last-touch + last-note line. Eliminates the
                         "did anyone touch this recently?" guesswork the
                         rep gets today; reduces double-dialing. Note

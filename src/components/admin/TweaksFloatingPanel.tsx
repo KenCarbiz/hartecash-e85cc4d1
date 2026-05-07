@@ -185,7 +185,7 @@ const TweaksFloatingPanel = ({ userRole }: TweaksFloatingPanelProps) => {
                             <div className="text-[13px] font-bold text-slate-900">{o.label}</div>
                             <div className="text-[11px] text-slate-500">{o.sub}</div>
                           </div>
-                          {active && <span className="text-[10px] font-bold text-slate-700 uppercase">Active</span>}
+                          {active && <span className="text-micro font-bold text-slate-700 uppercase">Active</span>}
                         </button>
                       );
                     })}
@@ -212,7 +212,7 @@ const TweaksFloatingPanel = ({ userRole }: TweaksFloatingPanelProps) => {
                           <span className="flex-1" style={{ background: p.bg }} />
                           <span className="flex-1" style={{ background: p.accent }} />
                         </div>
-                        <div className="text-[12px] font-semibold text-slate-900 mt-1">{p.name}</div>
+                        <div className="text-caption font-semibold text-slate-900 mt-1">{p.name}</div>
                       </button>
                     );
                   })}

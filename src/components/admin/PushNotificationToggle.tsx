@@ -63,7 +63,7 @@ const PushNotificationToggle = ({ compact = false }: { compact?: boolean }) => {
         </Button>
       )}
       {!compact && !error && !subscribed && (
-        <p className="text-[10px] text-muted-foreground">
+        <p className="text-micro text-muted-foreground">
           Get instant pings for escalations and "customer arrived" events — even when Autocurb isn't open.
         </p>
       )}

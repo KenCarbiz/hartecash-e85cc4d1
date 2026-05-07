@@ -239,8 +239,8 @@ export default function ProfitSpreadGauge({
             />
             {/* Label above */}
             <div className="absolute -top-[28px] left-1/2 -translate-x-1/2 whitespace-nowrap text-center">
-              <div className="text-[10px] font-black text-primary leading-none">YOUR OFFER</div>
-              <div className="text-[10px] font-bold text-primary leading-tight">
+              <div className="text-micro font-black text-primary leading-none">YOUR OFFER</div>
+              <div className="text-micro font-bold text-primary leading-tight">
                 ${offerHigh.toLocaleString()}
               </div>
             </div>
@@ -256,7 +256,7 @@ export default function ProfitSpreadGauge({
             ? "border-green-500/20 bg-gradient-to-b from-green-500/5 to-transparent"
             : "border-destructive/20 bg-gradient-to-b from-destructive/5 to-transparent"
         }`}>
-          <div className="text-[10px] text-muted-foreground font-medium mb-0.5">Projected Profit</div>
+          <div className="text-micro text-muted-foreground font-medium mb-0.5">Projected Profit</div>
           <div className={`text-lg font-bold tabular-nums ${data.projectedProfit >= 0 ? "text-green-600 dark:text-green-400" : "text-destructive"}`}>
             {data.projectedProfit >= 0 ? "+" : ""}${Math.abs(data.projectedProfit).toLocaleString()}
           </div>
@@ -266,7 +266,7 @@ export default function ProfitSpreadGauge({
             ) : (
               <TrendingDown className="w-3 h-3 text-destructive" />
             )}
-            <span className={`text-[10px] font-semibold ${data.projectedProfit >= 0 ? "text-green-600 dark:text-green-400" : "text-destructive"}`}>
+            <span className={`text-micro font-semibold ${data.projectedProfit >= 0 ? "text-green-600 dark:text-green-400" : "text-destructive"}`}>
               vs Retail Avg
             </span>
           </div>
@@ -280,7 +280,7 @@ export default function ProfitSpreadGauge({
             ? "border-amber-500/20 bg-gradient-to-b from-amber-500/5 to-transparent"
             : "border-destructive/20 bg-gradient-to-b from-destructive/5 to-transparent"
         }`}>
-          <div className="text-[10px] text-muted-foreground font-medium mb-0.5">Margin</div>
+          <div className="text-micro text-muted-foreground font-medium mb-0.5">Margin</div>
           <div className={`text-lg font-bold tabular-nums ${
             data.profitPct >= 15 ? "text-green-600 dark:text-green-400" : data.profitPct >= 5 ? "text-amber-600 dark:text-amber-400" : "text-destructive"
           }`}>
@@ -300,7 +300,7 @@ export default function ProfitSpreadGauge({
         <div className="relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-b from-muted/30 to-transparent p-3 text-center">
           {retailListings?.avgPrice ? (
             <>
-              <div className="text-[10px] text-muted-foreground font-medium mb-0.5 flex items-center justify-center gap-1">
+              <div className="text-micro text-muted-foreground font-medium mb-0.5 flex items-center justify-center gap-1">
                 <BarChart3 className="w-3 h-3 text-violet-500" />
                 Live Market Δ
               </div>
@@ -313,7 +313,7 @@ export default function ProfitSpreadGauge({
             </>
           ) : (
             <>
-              <div className="text-[10px] text-muted-foreground font-medium mb-0.5">Spread to Retail</div>
+              <div className="text-micro text-muted-foreground font-medium mb-0.5">Spread to Retail</div>
               <div className="text-lg font-bold tabular-nums text-card-foreground">
                 ${Math.abs(retailAvg - offerHigh).toLocaleString()}
               </div>
@@ -326,7 +326,7 @@ export default function ProfitSpreadGauge({
       </div>
 
       {/* === LEGEND === */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] text-muted-foreground pt-1 border-t border-border/40">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-micro text-muted-foreground pt-1 border-t border-border/40">
         {wholesaleRough && wholesaleRough > 0 && (
           <span className="flex items-center gap-1">
             <div className="w-2 h-2 rounded-full bg-gray-400" /> WHL Rough

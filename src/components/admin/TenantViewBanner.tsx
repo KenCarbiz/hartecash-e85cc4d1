@@ -58,13 +58,13 @@ export default function TenantViewBanner() {
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">
+              <span className="text-micro font-black uppercase tracking-[0.2em] opacity-80">
                 Super Admin View
               </span>
-              <span className="text-[10px] font-semibold opacity-60">
+              <span className="text-micro font-semibold opacity-60">
                 · Session active
               </span>
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-white/10 border border-white/20 rounded-md px-1.5 py-0.5 tabular-nums">
+              <span className="inline-flex items-center gap-1 text-micro font-bold bg-white/10 border border-white/20 rounded-md px-1.5 py-0.5 tabular-nums">
                 <Clock className="w-2.5 h-2.5" />
                 {elapsed}
               </span>

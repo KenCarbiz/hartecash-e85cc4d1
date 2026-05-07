@@ -187,7 +187,7 @@ const AdminCommandPalette = ({ onNavigate, onViewSubmission, submissions, allowe
               >
                 <Icon className="mr-2 h-4 w-4 text-muted-foreground" />
                 <span>{s.label}</span>
-                <span className="ml-auto text-[10px] text-muted-foreground">{s.group}</span>
+                <span className="ml-auto text-micro text-muted-foreground">{s.group}</span>
               </CommandItem>
             );
           })}

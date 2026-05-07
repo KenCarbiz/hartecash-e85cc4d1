@@ -131,19 +131,19 @@ const VoiceComplianceLog = () => {
       {/* KPI strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="rounded-xl border border-border bg-card p-4">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Calls placed</div>
+          <div className="text-micro uppercase tracking-wider text-muted-foreground font-bold">Calls placed</div>
           <div className="text-2xl font-bold mt-1">{completed.length}</div>
         </div>
         <div className="rounded-xl border border-border bg-card p-4">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Consent verified</div>
+          <div className="text-micro uppercase tracking-wider text-muted-foreground font-bold">Consent verified</div>
           <div className="text-2xl font-bold mt-1 text-emerald-600">{compliantCount}</div>
         </div>
         <div className="rounded-xl border border-border bg-card p-4">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Blocked at gate</div>
+          <div className="text-micro uppercase tracking-wider text-muted-foreground font-bold">Blocked at gate</div>
           <div className={`text-2xl font-bold mt-1 ${blocked.length > 0 ? "text-amber-600" : ""}`}>{blocked.length}</div>
         </div>
         <div className="rounded-xl border border-border bg-card p-4">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Recordings on file</div>
+          <div className="text-micro uppercase tracking-wider text-muted-foreground font-bold">Recordings on file</div>
           <div className="text-2xl font-bold mt-1">{recordedCount}</div>
         </div>
       </div>

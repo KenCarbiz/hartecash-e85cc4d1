@@ -531,7 +531,7 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
                   placeholder="smith_motors"
                   disabled={!!editing}
                 />
-                <p className="text-[10px] text-muted-foreground">Internal key — cannot change after creation</p>
+                <p className="text-micro text-muted-foreground">Internal key — cannot change after creation</p>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold">URL Slug</Label>
@@ -540,7 +540,7 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
                   onChange={e => setForm(prev => ({ ...prev, slug: e.target.value }))}
                   placeholder="smith"
                 />
-                <p className="text-[10px] text-muted-foreground">Used for subdomain: smith.yourdomain.com</p>
+                <p className="text-micro text-muted-foreground">Used for subdomain: smith.yourdomain.com</p>
               </div>
             </div>
             <div className="space-y-1.5">
@@ -550,7 +550,7 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
                 onChange={e => setForm(prev => ({ ...prev, custom_domain: e.target.value || null }))}
                 placeholder="sellmycar.smithmotors.com"
               />
-              <p className="text-[10px] text-muted-foreground">Dealer must point DNS to your server for this to work</p>
+              <p className="text-micro text-muted-foreground">Dealer must point DNS to your server for this to work</p>
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold">Offer Logic Approver</Label>
@@ -563,7 +563,7 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
                   <SelectItem value="admin">Admin Only</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-[10px] text-muted-foreground">Who must approve new pricing model changes before activation</p>
+              <p className="text-micro text-muted-foreground">Who must approve new pricing model changes before activation</p>
             </div>
             <div className="flex items-center gap-2">
               <Switch checked={form.is_active} onCheckedChange={v => setForm(prev => ({ ...prev, is_active: v }))} />

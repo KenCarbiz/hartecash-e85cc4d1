@@ -302,11 +302,11 @@ const UnifiedAuditLog = () => {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <Badge variant="outline" className="text-[10px]">{meta.label}</Badge>
+                      <Badge variant="outline" className="text-micro">{meta.label}</Badge>
                       <span className="text-sm font-medium truncate">{r.target}</span>
                     </div>
-                    <div className="text-[12px] text-muted-foreground mt-0.5 truncate">{r.detail}</div>
-                    <div className="text-[10px] text-muted-foreground/70 mt-0.5 font-mono">
+                    <div className="text-caption text-muted-foreground mt-0.5 truncate">{r.detail}</div>
+                    <div className="text-micro text-muted-foreground/70 mt-0.5 font-mono">
                       {fmtRelative(r.ts)} · {r.actor_email || "unknown"}
                       {r.actor_role && r.actor_role !== "system" && ` (${r.actor_role})`}
                     </div>

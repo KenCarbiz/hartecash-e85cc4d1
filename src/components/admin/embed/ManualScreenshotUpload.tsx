@@ -112,7 +112,7 @@ const ManualScreenshotUpload = ({
         )}
       </Button>
       {!compact && (
-        <p className="text-[10px] text-muted-foreground mt-1.5 leading-snug">
+        <p className="text-micro text-muted-foreground mt-1.5 leading-snug">
           Take the screenshot yourself (Cmd+Shift+4 on Mac, Win+Shift+S on Windows) and drop it in. Use this for sites with bot protection.
         </p>
       )}

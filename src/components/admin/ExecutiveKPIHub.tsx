@@ -501,7 +501,7 @@ const ExecutiveKPIHub = ({ standalone = false }: ExecutiveKPIHubProps) => {
                   : "bg-emerald-500";
                 return (
                   <div key={stage.key} className="flex items-center gap-3">
-                    <span className="text-[10px] font-semibold text-muted-foreground uppercase w-32 text-right shrink-0 truncate">
+                    <span className="text-micro font-semibold text-muted-foreground uppercase w-32 text-right shrink-0 truncate">
                       {stage.label}
                     </span>
                     <div className="flex-1 h-6 bg-muted/30 rounded-md overflow-hidden">
@@ -509,12 +509,12 @@ const ExecutiveKPIHub = ({ standalone = false }: ExecutiveKPIHubProps) => {
                         className={`h-full ${barColor} transition-all duration-500 flex items-center px-2`}
                         style={{ width: `${widthPct}%`, minWidth: 40 }}
                       >
-                        <span className="text-[10px] font-black text-white">
+                        <span className="text-micro font-black text-white">
                           {stage.avgDays}d
                         </span>
                       </div>
                     </div>
-                    <span className="text-[10px] text-muted-foreground w-10 shrink-0">
+                    <span className="text-micro text-muted-foreground w-10 shrink-0">
                       {stage.count}
                     </span>
                   </div>
@@ -596,13 +596,13 @@ const ExecutiveKPIHub = ({ standalone = false }: ExecutiveKPIHubProps) => {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border">
-              <th className="text-left py-2 text-[10px] font-bold text-muted-foreground uppercase">Source</th>
-              <th className="text-right py-2 text-[10px] font-bold text-muted-foreground uppercase">Leads</th>
-              <th className="text-right py-2 text-[10px] font-bold text-muted-foreground uppercase">Closed</th>
-              <th className="text-right py-2 text-[10px] font-bold text-muted-foreground uppercase">Conv %</th>
-              <th className="text-right py-2 text-[10px] font-bold text-muted-foreground uppercase">Spend</th>
-              <th className="text-right py-2 text-[10px] font-bold text-muted-foreground uppercase">Gross Profit</th>
-              <th className="text-right py-2 text-[10px] font-bold text-muted-foreground uppercase">Avg Gross / Unit</th>
+              <th className="text-left py-2 text-micro font-bold text-muted-foreground uppercase">Source</th>
+              <th className="text-right py-2 text-micro font-bold text-muted-foreground uppercase">Leads</th>
+              <th className="text-right py-2 text-micro font-bold text-muted-foreground uppercase">Closed</th>
+              <th className="text-right py-2 text-micro font-bold text-muted-foreground uppercase">Conv %</th>
+              <th className="text-right py-2 text-micro font-bold text-muted-foreground uppercase">Spend</th>
+              <th className="text-right py-2 text-micro font-bold text-muted-foreground uppercase">Gross Profit</th>
+              <th className="text-right py-2 text-micro font-bold text-muted-foreground uppercase">Avg Gross / Unit</th>
             </tr>
           </thead>
           <tbody>
@@ -638,7 +638,7 @@ const ExecutiveKPIHub = ({ standalone = false }: ExecutiveKPIHubProps) => {
           </tbody>
         </table>
         {!sourceRoi.some(s => s.grossDollars != null) && (
-          <p className="text-[10px] text-muted-foreground mt-3">
+          <p className="text-micro text-muted-foreground mt-3">
             Gross profit columns populate when deals have outcome data set on
             the submission (sale price + recon actual). Until then we show
             spend only.
@@ -655,14 +655,14 @@ const ExecutiveKPIHub = ({ standalone = false }: ExecutiveKPIHubProps) => {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border">
-              <th className="text-left py-2 text-[10px] font-bold text-muted-foreground uppercase">Store</th>
-              <th className="text-right py-2 text-[10px] font-bold text-muted-foreground uppercase">Leads</th>
-              <th className="text-right py-2 text-[10px] font-bold text-muted-foreground uppercase">Active</th>
-              <th className="text-right py-2 text-[10px] font-bold text-muted-foreground uppercase">Closed</th>
-              <th className="text-right py-2 text-[10px] font-bold text-muted-foreground uppercase">Conv %</th>
-              <th className="text-right py-2 text-[10px] font-bold text-muted-foreground uppercase">Pipeline</th>
-              <th className="text-right py-2 text-[10px] font-bold text-muted-foreground uppercase">Closed $</th>
-              <th className="text-left py-2 text-[10px] font-bold text-muted-foreground uppercase pl-4">Channel Mix</th>
+              <th className="text-left py-2 text-micro font-bold text-muted-foreground uppercase">Store</th>
+              <th className="text-right py-2 text-micro font-bold text-muted-foreground uppercase">Leads</th>
+              <th className="text-right py-2 text-micro font-bold text-muted-foreground uppercase">Active</th>
+              <th className="text-right py-2 text-micro font-bold text-muted-foreground uppercase">Closed</th>
+              <th className="text-right py-2 text-micro font-bold text-muted-foreground uppercase">Conv %</th>
+              <th className="text-right py-2 text-micro font-bold text-muted-foreground uppercase">Pipeline</th>
+              <th className="text-right py-2 text-micro font-bold text-muted-foreground uppercase">Closed $</th>
+              <th className="text-left py-2 text-micro font-bold text-muted-foreground uppercase pl-4">Channel Mix</th>
             </tr>
           </thead>
           <tbody>
@@ -685,7 +685,7 @@ const ExecutiveKPIHub = ({ standalone = false }: ExecutiveKPIHubProps) => {
                 <td className="py-2.5 pl-4">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     {sm.channels.map(ch => (
-                      <span key={ch.channel} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/60 text-[10px] font-medium text-muted-foreground">
+                      <span key={ch.channel} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/60 text-micro font-medium text-muted-foreground">
                         {ch.channel}: {ch.count}
                       </span>
                     ))}
@@ -728,7 +728,7 @@ const ExecutiveKPIHub = ({ standalone = false }: ExecutiveKPIHubProps) => {
             {sourceMetrics.map(s => (
               <div key={s.name} className="flex items-center gap-1.5">
                 <div className="w-2 h-2 rounded-full" style={{ background: s.color }} />
-                <span className="text-[10px] text-muted-foreground">{s.name}: {s.value}</span>
+                <span className="text-micro text-muted-foreground">{s.name}: {s.value}</span>
               </div>
             ))}
           </div>
@@ -779,7 +779,7 @@ const ExecutiveKPIHub = ({ standalone = false }: ExecutiveKPIHubProps) => {
             const dropOff = prevCount > 0 && i > 0 ? Math.round(((prevCount - stage.count) / prevCount) * 100) : 0;
             return (
               <div key={stage.name} className="flex items-center gap-3">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase w-20 text-right shrink-0">{stage.name}</span>
+                <span className="text-micro font-bold text-muted-foreground uppercase w-20 text-right shrink-0">{stage.name}</span>
                 <div className="flex-1 relative">
                   <div
                     className="h-9 rounded-lg flex items-center px-3 transition-all duration-500"
@@ -789,7 +789,7 @@ const ExecutiveKPIHub = ({ standalone = false }: ExecutiveKPIHubProps) => {
                   </div>
                 </div>
                 {dropOff > 0 && (
-                  <span className="text-[10px] font-semibold text-red-500 w-16 shrink-0">−{dropOff}% drop</span>
+                  <span className="text-micro font-semibold text-red-500 w-16 shrink-0">−{dropOff}% drop</span>
                 )}
               </div>
             );
@@ -798,12 +798,12 @@ const ExecutiveKPIHub = ({ standalone = false }: ExecutiveKPIHubProps) => {
           <div className="flex items-center gap-4 mt-2 pt-2 border-t border-border/50">
             <div className="flex items-center gap-1.5">
               <AlertTriangle className="w-3 h-3 text-amber-500" />
-              <span className="text-[10px] font-bold text-muted-foreground uppercase">Abandoned:</span>
+              <span className="text-micro font-bold text-muted-foreground uppercase">Abandoned:</span>
               <span className="text-xs font-black text-amber-600">{funnelStages.abandoned}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <TrendingDown className="w-3 h-3 text-red-500" />
-              <span className="text-[10px] font-bold text-muted-foreground uppercase">Dead:</span>
+              <span className="text-micro font-bold text-muted-foreground uppercase">Dead:</span>
               <span className="text-xs font-black text-red-500">{funnelStages.dead}</span>
             </div>
           </div>
@@ -818,10 +818,10 @@ const ExecutiveKPIHub = ({ standalone = false }: ExecutiveKPIHubProps) => {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="text-left py-2 text-[10px] font-bold text-muted-foreground uppercase">Staff Member</th>
-                  <th className="text-right py-2 text-[10px] font-bold text-muted-foreground uppercase">Deals Closed</th>
-                  <th className="text-right py-2 text-[10px] font-bold text-muted-foreground uppercase">Total Value</th>
-                  <th className="text-left py-2 text-[10px] font-bold text-muted-foreground uppercase pl-4">Performance</th>
+                  <th className="text-left py-2 text-micro font-bold text-muted-foreground uppercase">Staff Member</th>
+                  <th className="text-right py-2 text-micro font-bold text-muted-foreground uppercase">Deals Closed</th>
+                  <th className="text-right py-2 text-micro font-bold text-muted-foreground uppercase">Total Value</th>
+                  <th className="text-left py-2 text-micro font-bold text-muted-foreground uppercase pl-4">Performance</th>
                 </tr>
               </thead>
               <tbody>
@@ -861,13 +861,13 @@ function KpiCard({ label, value, icon: Icon, color, bg, badge }: {
       <div className={`absolute inset-0 bg-gradient-to-br ${bg} pointer-events-none`} />
       <div className="relative">
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{label}</span>
+          <span className="text-micro text-muted-foreground font-bold uppercase tracking-wider">{label}</span>
           <Icon className={`w-4 h-4 ${color}`} />
         </div>
         <div className="flex items-baseline gap-1.5">
           <span className="text-3xl font-black text-card-foreground tracking-tight">{value}</span>
           {badge && (
-            <span className={`text-[10px] font-bold flex items-center gap-0.5 ${badge.positive ? "text-emerald-500" : "text-red-500"}`}>
+            <span className={`text-micro font-bold flex items-center gap-0.5 ${badge.positive ? "text-emerald-500" : "text-red-500"}`}>
               {badge.positive ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
               {badge.value}
             </span>

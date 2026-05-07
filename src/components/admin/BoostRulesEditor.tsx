@@ -341,7 +341,7 @@ const BoostRulesEditor = () => {
           <div key={tier} className="space-y-3">
             <div className="flex items-center gap-2">
               <h4 className="text-sm font-semibold text-card-foreground">{TIER_LABEL[tier]}</h4>
-              <Badge variant="outline" className="text-[10px]">
+              <Badge variant="outline" className="text-micro">
                 {signals.length} {signals.length === 1 ? "signal" : "signals"}
               </Badge>
             </div>
@@ -355,12 +355,12 @@ const BoostRulesEditor = () => {
                       <div className="flex items-center gap-2 flex-wrap">
                         <Label className="text-sm font-semibold text-card-foreground">{s.label}</Label>
                         {r.saving && (
-                          <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                          <span className="inline-flex items-center gap-1 text-micro text-muted-foreground">
                             <Loader2 className="w-3 h-3 animate-spin" /> Saving
                           </span>
                         )}
                         {r.saved && !r.saving && (
-                          <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600">
+                          <span className="inline-flex items-center gap-1 text-micro text-success">
                             <Check className="w-3 h-3" /> Saved
                           </span>
                         )}

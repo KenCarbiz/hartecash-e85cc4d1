@@ -160,14 +160,14 @@ const TenantViewLog = () => {
                       <td className="px-3 py-2 font-mono">{r.super_admin_email}</td>
                       <td className="px-3 py-2">
                         <div className="font-medium">{r.target_display_name}</div>
-                        <div className="text-[10px] text-muted-foreground font-mono">{r.target_dealership_id}</div>
+                        <div className="text-micro text-muted-foreground font-mono">{r.target_dealership_id}</div>
                       </td>
                       <td className="px-3 py-2 max-w-md">
                         <div className="text-foreground/80 leading-snug">{r.reason || "—"}</div>
                       </td>
                       <td className="px-3 py-2">
                         {active ? (
-                          <Badge className="bg-amber-500/15 text-amber-700 border-amber-500/30 text-[10px] gap-1">
+                          <Badge className="bg-amber-500/15 text-amber-700 border-amber-500/30 text-micro gap-1">
                             <Clock className="w-3 h-3 animate-pulse" />
                             active
                           </Badge>

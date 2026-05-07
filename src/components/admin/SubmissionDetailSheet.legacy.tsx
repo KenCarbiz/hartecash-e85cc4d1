@@ -231,7 +231,7 @@ const InspectionVitals = ({ submissionId }: { submissionId: string }) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {/* Tires */}
         <div>
-          <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-1.5">Tires</div>
+          <div className="text-micro font-bold uppercase tracking-[0.18em] text-muted-foreground mb-1.5">Tires</div>
           <div className="grid grid-cols-2 gap-2">
             <Pos label="LF" value={data.tire_lf} kind="tire" />
             <Pos label="RF" value={data.tire_rf} kind="tire" />
@@ -241,7 +241,7 @@ const InspectionVitals = ({ submissionId }: { submissionId: string }) => {
         </div>
         {/* Brakes */}
         <div>
-          <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-1.5">Brake Pads</div>
+          <div className="text-micro font-bold uppercase tracking-[0.18em] text-muted-foreground mb-1.5">Brake Pads</div>
           <div className="grid grid-cols-2 gap-2">
             <Pos label="LF" value={data.brake_lf} kind="brake" />
             <Pos label="RF" value={data.brake_rf} kind="brake" />
@@ -250,7 +250,7 @@ const InspectionVitals = ({ submissionId }: { submissionId: string }) => {
           </div>
         </div>
       </div>
-      <p className="text-[10px] text-muted-foreground italic">
+      <p className="text-micro text-muted-foreground italic">
         From the inspection — Green good, Amber fair, Red replace.
       </p>
     </div>
@@ -291,13 +291,13 @@ const QuickSummary = ({
     <div className="rounded-2xl border border-border/50 bg-card shadow-[0_2px_10px_rgba(0,0,0,0.05)] overflow-hidden">
       <div className="px-4 py-3 border-b border-border/40 bg-gradient-to-r from-muted/40 to-transparent flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-primary bg-primary/10 px-2 py-0.5 rounded">
+          <span className="text-micro font-bold uppercase tracking-[0.15em] text-primary bg-primary/10 px-2 py-0.5 rounded">
             {statusLabel}
           </span>
-          <span className="text-[10px] font-semibold text-muted-foreground">·</span>
-          <span className="text-[10px] font-semibold text-muted-foreground">{leadSource}</span>
+          <span className="text-micro font-semibold text-muted-foreground">·</span>
+          <span className="text-micro font-semibold text-muted-foreground">{leadSource}</span>
         </div>
-        <span className="text-[10px] text-muted-foreground whitespace-nowrap">Last activity · {lastActivityAgo}</span>
+        <span className="text-micro text-muted-foreground whitespace-nowrap">Last activity · {lastActivityAgo}</span>
       </div>
       <div className="px-4 py-3 space-y-2">
         <div className="text-base font-bold text-card-foreground leading-tight">
@@ -368,7 +368,7 @@ const DLAtAGlance = ({
           alt="Driver's license — front"
           className="w-12 h-8 object-cover rounded"
         />
-        <span className="text-[10px] font-semibold text-muted-foreground group-hover:text-primary transition-colors">
+        <span className="text-micro font-semibold text-muted-foreground group-hover:text-primary transition-colors">
           DL on file
         </span>
       </button>
@@ -440,7 +440,7 @@ const CompactOBDIndicator = ({ submissionId, token }: { submissionId: string; to
           </span>
           OBD-II Scan
         </h3>
-        <span className="text-[10px] font-semibold text-muted-foreground">{scanDate}</span>
+        <span className="text-micro font-semibold text-muted-foreground">{scanDate}</span>
       </div>
       <div className="p-4 flex items-center gap-3">
         <div
@@ -929,7 +929,7 @@ export const SubmissionDetailSheetLegacy = ({
                       <span className="text-primary-foreground/50 text-xs">
                         {new Date(sub.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                       </span>
-                      <Badge className={`text-[10px] font-bold tracking-wider rounded-lg px-2.5 py-0.5 ${
+                      <Badge className={`text-micro font-bold tracking-wider rounded-lg px-2.5 py-0.5 ${
                         sub.progress_status === "purchase_complete" ? "bg-success/20 text-success border-success/30 shadow-[0_0_8px_rgba(34,197,94,0.15)]" :
                         sub.progress_status === "dead_lead" ? "bg-destructive/25 text-destructive-foreground border-destructive/30" :
                         "bg-primary-foreground/15 text-primary-foreground border-primary-foreground/20"
@@ -937,7 +937,7 @@ export const SubmissionDetailSheetLegacy = ({
                         {getStatusLabel(sub.progress_status)}
                       </Badge>
                       {sub.is_hot_lead && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-orange-500/20 text-orange-200 border border-orange-400/30 rounded-lg px-2 py-0.5 animate-pulse">
+                        <span className="inline-flex items-center gap-1 text-micro font-bold bg-orange-500/20 text-orange-200 border border-orange-400/30 rounded-lg px-2 py-0.5 animate-pulse">
                           🔥 Hot Lead
                         </span>
                       )}
@@ -947,7 +947,7 @@ export const SubmissionDetailSheetLegacy = ({
                   {/* Quick deal value in header */}
                   {(sub.offered_price || sub.estimated_offer_high) && (
                     <div className="text-right shrink-0 hidden sm:block">
-                      <p className="text-primary-foreground/50 text-[10px] uppercase tracking-widest font-semibold mb-0.5">
+                      <p className="text-primary-foreground/50 text-micro uppercase tracking-widest font-semibold mb-0.5">
                         {sub.offered_price ? "Offered" : "Estimated"}
                       </p>
                       <p className="text-2xl font-black text-primary-foreground tracking-tight font-display">
@@ -1027,7 +1027,7 @@ export const SubmissionDetailSheetLegacy = ({
                     <TooltipProvider delayDuration={200}>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 rounded-lg cursor-help transition-colors ${isAutoPopulated ? "bg-accent/10 text-accent border border-accent/20" : "bg-primary/10 text-primary border border-primary/20"}`}>
+                          <span className={`inline-flex items-center gap-1 text-micro font-semibold px-2.5 py-1 rounded-lg cursor-help transition-colors ${isAutoPopulated ? "bg-accent/10 text-accent border border-accent/20" : "bg-primary/10 text-primary border border-primary/20"}`}>
                             {isAutoPopulated ? <><CheckCircle2 className="w-3 h-3" /> Auto · Accepted</> : <><Users className="w-3 h-3" /> Staff Set</>}
                           </span>
                         </TooltipTrigger>
@@ -1124,7 +1124,7 @@ export const SubmissionDetailSheetLegacy = ({
                   <p className="text-2xl font-black text-card-foreground tracking-tight font-display">${Number(sub.acv_value).toLocaleString()}</p>
                   {sub.offered_price && sub.acv_value && (
                     <div className="text-right">
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Spread</p>
+                      <p className="text-micro text-muted-foreground uppercase tracking-wider">Spread</p>
                       <p className={`text-sm font-bold ${(sub.acv_value - sub.offered_price) > 0 ? "text-success" : "text-destructive"}`}>
                         {(sub.acv_value - sub.offered_price) > 0 ? "+" : ""}${Math.floor(sub.acv_value - sub.offered_price).toLocaleString()}
                       </p>
@@ -1207,7 +1207,7 @@ export const SubmissionDetailSheetLegacy = ({
             {/* Acquisition Tracker (Status + Pipeline) */}
             <SectionCard icon={TrendingUp} title="Acquisition Tracker" headerRight={
               sub.progress_status !== "new" && sub.progress_status !== "dead_lead" ? (
-                <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground bg-muted/50 rounded-lg px-2 py-0.5"><Check className="w-3 h-3 text-success" /> Synced</span>
+                <span className="inline-flex items-center gap-1 text-micro text-muted-foreground bg-muted/50 rounded-lg px-2 py-0.5"><Check className="w-3 h-3 text-success" /> Synced</span>
               ) : undefined
             }>
               {/* Status chips with premium styling */}
@@ -1253,7 +1253,7 @@ export const SubmissionDetailSheetLegacy = ({
                           }`}>
                             {isComplete ? <Check className="w-4 h-4" /> : <stage.icon className="w-3.5 h-3.5" />}
                           </div>
-                          <span className={`text-[10px] mt-2 text-center leading-tight max-w-[70px] transition-colors ${
+                          <span className={`text-micro mt-2 text-center leading-tight max-w-[70px] transition-colors ${
                             isCurrent ? "font-extrabold text-primary" :
                             isComplete ? "font-semibold text-card-foreground" :
                             "text-muted-foreground/60"
@@ -1443,12 +1443,12 @@ export const SubmissionDetailSheetLegacy = ({
                 (sub.phone || sub.email) ? (
                   <div className="flex items-center gap-1">
                     {sub.phone && (
-                      <a href={`tel:${sub.phone}`} className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-lg bg-success/10 text-success border border-success/20 hover:bg-success/20 transition-colors cursor-pointer">
+                      <a href={`tel:${sub.phone}`} className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-1 rounded-lg bg-success/10 text-success border border-success/20 hover:bg-success/20 transition-colors cursor-pointer">
                         <Phone className="w-3 h-3" /> Call
                       </a>
                     )}
                     {sub.email && (
-                      <a href={`mailto:${sub.email}`} className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors cursor-pointer">
+                      <a href={`mailto:${sub.email}`} className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-1 rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors cursor-pointer">
                         <Mail className="w-3 h-3" /> Email
                       </a>
                     )}
@@ -1529,7 +1529,7 @@ export const SubmissionDetailSheetLegacy = ({
                       <span className="flex items-center gap-1.5">
                         {sub.vin}
                         {(sub as any).vin_verified && (
-                          <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-600 bg-emerald-500/10 rounded-full px-1.5 py-0.5" title="VIN verified via document OCR">
+                          <span className="inline-flex items-center gap-0.5 text-micro font-semibold text-emerald-600 bg-emerald-500/10 rounded-full px-1.5 py-0.5" title="VIN verified via document OCR">
                             <CheckCircle2 className="w-3 h-3" /> Verified
                           </span>
                         )}
@@ -1574,7 +1574,7 @@ export const SubmissionDetailSheetLegacy = ({
                   {/* Verified Payoff Amount (drives equity calc) */}
                   <div className="col-span-2 mt-2 p-3 rounded-xl bg-muted/30 border border-border/40 space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                      <Label className="text-micro font-bold text-muted-foreground uppercase tracking-wider">
                         Verified Payoff Amount
                       </Label>
                       <div className="flex items-center gap-1.5">
@@ -1679,7 +1679,7 @@ export const SubmissionDetailSheetLegacy = ({
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
               <SectionCard icon={Camera} title="Photos" headerRight={
                 photos.length > 0 ? (
-                  <span className="text-[10px] font-bold bg-primary/10 text-primary rounded-lg px-2 py-0.5">{photos.length}</span>
+                  <span className="text-micro font-bold bg-primary/10 text-primary rounded-lg px-2 py-0.5">{photos.length}</span>
                 ) : undefined
               }>
                 {photos.length > 0 ? (
@@ -1690,7 +1690,7 @@ export const SubmissionDetailSheetLegacy = ({
                           <img src={photo.url} alt={`Photo ${i + 1}`} className="w-full h-32 object-cover group-hover/photo:scale-105 transition-transform duration-500" />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover/photo:opacity-100 transition-opacity duration-300" />
                           <div className="absolute bottom-2 left-2 opacity-0 group-hover/photo:opacity-100 transition-opacity duration-300">
-                            <span className="text-[10px] text-white font-medium bg-black/40 backdrop-blur-sm rounded-md px-2 py-0.5">
+                            <span className="text-micro text-white font-medium bg-black/40 backdrop-blur-sm rounded-md px-2 py-0.5">
                               <ExternalLink className="w-2.5 h-2.5 inline mr-1" />View
                             </span>
                           </div>
@@ -1716,7 +1716,7 @@ export const SubmissionDetailSheetLegacy = ({
 
               <SectionCard icon={FileText} title="Documents" headerRight={
                 docs.length > 0 ? (
-                  <span className="text-[10px] font-bold bg-primary/10 text-primary rounded-lg px-2 py-0.5">{docs.length}</span>
+                  <span className="text-micro font-bold bg-primary/10 text-primary rounded-lg px-2 py-0.5">{docs.length}</span>
                 ) : undefined
               }>
                 {docs.length > 0 ? (
@@ -1738,7 +1738,7 @@ export const SubmissionDetailSheetLegacy = ({
                                   ) : (
                                     <div className="w-full h-32 bg-gradient-to-br from-muted/60 to-muted/30 flex flex-col items-center justify-center hover:from-muted/80 transition-colors border-b border-border/20">
                                       <FileText className="w-8 h-8 text-muted-foreground/40 mb-1.5" />
-                                      <span className="text-[10px] text-muted-foreground text-center px-2 truncate w-full font-medium">{doc.name}</span>
+                                      <span className="text-micro text-muted-foreground text-center px-2 truncate w-full font-medium">{doc.name}</span>
                                     </div>
                                   )}
                                 </a>
@@ -1801,7 +1801,7 @@ export const SubmissionDetailSheetLegacy = ({
                   <TrendingUp className="w-4 h-4 text-muted-foreground" />
                   Research &amp; Automation
                 </span>
-                <span className="text-[10px] text-muted-foreground">Market · Follow-ups · Call history · Activity log</span>
+                <span className="text-micro text-muted-foreground">Market · Follow-ups · Call history · Activity log</span>
                 <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform duration-200" />
               </summary>
               <div className="px-4 pb-4 pt-2 space-y-5 border-t border-border/30">
@@ -1823,7 +1823,7 @@ export const SubmissionDetailSheetLegacy = ({
             {/* AI Call History */}
             {callHistory.length > 0 && (
               <SectionCard icon={Phone} title="AI Call History" headerRight={
-                <span className="text-[10px] text-muted-foreground">{callHistory.length} calls</span>
+                <span className="text-micro text-muted-foreground">{callHistory.length} calls</span>
               }>
                 <div className="space-y-3">
                   {callHistory.map(call => (
@@ -1833,7 +1833,7 @@ export const SubmissionDetailSheetLegacy = ({
                         <div className="flex items-center gap-2">
                           <Badge className={outcomeColor(call.outcome)}>{call.outcome?.replace(/_/g, ' ') || call.status}</Badge>
                           {call.duration_seconds && <span className="text-xs text-muted-foreground">{Math.round(call.duration_seconds / 60)}m {Math.round(call.duration_seconds % 60)}s</span>}
-                          {call.attempt_number > 1 && <span className="text-[10px] text-muted-foreground">Attempt #{call.attempt_number}</span>}
+                          {call.attempt_number > 1 && <span className="text-micro text-muted-foreground">Attempt #{call.attempt_number}</span>}
                         </div>
                         <span className="text-xs text-muted-foreground">{new Date(call.created_at).toLocaleString()}</span>
                       </div>
@@ -1889,7 +1889,7 @@ export const SubmissionDetailSheetLegacy = ({
               return (
                 <SectionCard icon={History} title="Activity Log" headerRight={
                   mergedActivity.length > 0 ? (
-                    <span className="text-[10px] text-muted-foreground bg-muted/50 rounded-lg px-2 py-0.5 font-medium">{mergedActivity.length} events</span>
+                    <span className="text-micro text-muted-foreground bg-muted/50 rounded-lg px-2 py-0.5 font-medium">{mergedActivity.length} events</span>
                   ) : undefined
                 }>
                   {mergedActivity.length > 0 ? (

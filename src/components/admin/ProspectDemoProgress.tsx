@@ -107,7 +107,7 @@ export const ProspectDemoAnalyzeProgress = ({ running }: { running: boolean }) =
   return (
     <div className="rounded-lg border border-violet-200 bg-white p-4 space-y-3">
       <div className="flex items-center justify-between gap-3">
-        <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-violet-700 flex items-center gap-1.5">
+        <div className="text-micro font-bold uppercase tracking-[0.1em] text-violet-700 flex items-center gap-1.5">
           <Loader2 className="w-3.5 h-3.5 animate-spin" />
           Analyzing prospect site
         </div>
@@ -217,7 +217,7 @@ export const ProspectDemoCaptureProgress = ({
   return (
     <div className="rounded-lg border border-blue-200 bg-white p-4 space-y-3">
       <div className="flex items-center justify-between gap-3">
-        <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-blue-700 flex items-center gap-1.5">
+        <div className="text-micro font-bold uppercase tracking-[0.1em] text-blue-700 flex items-center gap-1.5">
           <Loader2 className="w-3.5 h-3.5 animate-spin" />
           Capturing screenshots
         </div>

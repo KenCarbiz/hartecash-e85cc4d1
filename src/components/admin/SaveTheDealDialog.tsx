@@ -222,13 +222,13 @@ const SaveTheDealDialog = ({
                     onClick={() => handleSubmit(p.newOffer, p.bump)}
                     className="rounded-xl border-2 border-border hover:border-primary bg-background hover:bg-primary/5 p-3 text-left transition-all disabled:opacity-50"
                   >
-                    <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <div className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">
                       {p.label}
                     </div>
                     <div className="text-lg font-bold text-card-foreground">
                       +${p.bump.toLocaleString()}
                     </div>
-                    <div className="text-[10px] text-muted-foreground">
+                    <div className="text-micro text-muted-foreground">
                       new ${p.newOffer.toLocaleString()}
                     </div>
                   </button>

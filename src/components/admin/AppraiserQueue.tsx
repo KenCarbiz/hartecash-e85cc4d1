@@ -569,7 +569,7 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-[11px] font-bold tracking-[0.1em] text-muted-foreground uppercase">Queue</h2>
             {autoRoute && (
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-500/10 border border-emerald-500/20 rounded px-2 py-0.5 inline-flex items-center gap-1">
+              <span className="text-micro font-bold uppercase tracking-wider text-emerald-700 bg-emerald-500/10 border border-emerald-500/20 rounded px-2 py-0.5 inline-flex items-center gap-1">
                 <Sparkles className="w-3 h-3" />
                 AI auto-route on
               </span>
@@ -700,7 +700,7 @@ function QueueRowItem({
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className={`text-[10px] font-bold rounded px-2 py-0.5 inline-flex items-center gap-1.5 ${pill.cls}`}>
+            <span className={`text-micro font-bold rounded px-2 py-0.5 inline-flex items-center gap-1.5 ${pill.cls}`}>
               {pill.dot && <span className={`w-1.5 h-1.5 rounded-full ${pill.dot}`} />}
               {pill.label}
             </span>
@@ -753,10 +753,10 @@ function QueueRowItem({
           <div className={`mx-3 mb-3 rounded-md border p-2.5 ${chipClass}`}>
             <div className="flex items-center gap-2 mb-1">
               <Sparkles className="w-3.5 h-3.5" />
-              <span className="text-[10px] font-bold uppercase tracking-wider">
+              <span className="text-micro font-bold uppercase tracking-wider">
                 {isAutoApplied ? "AI Auto-Applied" : "AI Recommends"}
               </span>
-              <span className="text-[10px] opacity-70">
+              <span className="text-micro opacity-70">
                 · {suggestion.photos_analyzed} {suggestion.photos_analyzed === 1 ? "photo" : "photos"}
                 · {suggestion.ai_confidence ?? "—"}% confidence
               </span>

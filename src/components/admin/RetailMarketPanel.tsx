@@ -148,7 +148,7 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, dealerZip, radius
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <div className="flex-1">
-              <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-0.5">
+              <div className="flex items-center justify-between text-micro text-muted-foreground mb-0.5">
                 <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> Search ZIP</span>
                 {dealerZip && searchZip === dealerZip && (
                   <span className="text-primary font-medium">Dealer Location</span>
@@ -163,7 +163,7 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, dealerZip, radius
               />
             </div>
             <div className="flex-1">
-              <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-0.5">
+              <div className="flex items-center justify-between text-micro text-muted-foreground mb-0.5">
                 <span>Radius</span>
                 <span className="font-semibold text-card-foreground">{radius} mi</span>
               </div>
@@ -181,8 +181,8 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, dealerZip, radius
           {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <BarChart3 className="w-3.5 h-3.5 mr-1.5" />}
           {loading ? "Fetching market data…" : `Pull Retail Market (${searchZip}, ${radius}mi)`}
         </Button>
-        {error && <p className="text-[10px] text-destructive">{error}</p>}
-        {searchZip.length < 5 && <p className="text-[10px] text-muted-foreground">Enter a 5-digit ZIP code to search</p>}
+        {error && <p className="text-micro text-destructive">{error}</p>}
+        {searchZip.length < 5 && <p className="text-micro text-muted-foreground">Enter a 5-digit ZIP code to search</p>}
       </div>
     );
   }
@@ -211,12 +211,12 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, dealerZip, radius
               Live Market Data
             </span>
           </div>
-          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+          <div className="flex items-center gap-1.5 text-micro text-muted-foreground">
             <MapPin className="w-3 h-3" />
             <Input
               value={searchZip}
               onChange={e => setSearchZip(e.target.value.replace(/\D/g, "").slice(0, 5))}
-              className="h-5 w-16 text-[10px] font-mono px-1 py-0"
+              className="h-5 w-16 text-micro font-mono px-1 py-0"
               maxLength={5}
             />
             <span>{radius}mi</span>
@@ -224,7 +224,7 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, dealerZip, radius
         </div>
         <div className="flex items-center gap-2">
           <Slider min={25} max={500} step={25} value={[radius]} onValueChange={([v]) => setRadius(v)} className="flex-1" />
-          <Button variant="outline" size="sm" className="text-[10px] h-6 px-2 shrink-0" onClick={() => { setFetched(false); setListings([]); setShowListings(false); setTimeout(fetchStats, 50); }} disabled={loading || searchZip.length < 5}>
+          <Button variant="outline" size="sm" className="text-micro h-6 px-2 shrink-0" onClick={() => { setFetched(false); setListings([]); setShowListings(false); setTimeout(fetchStats, 50); }} disabled={loading || searchZip.length < 5}>
             {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Refresh"}
           </Button>
         </div>
@@ -256,7 +256,7 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, dealerZip, radius
       {/* Active price stats */}
       {active && active.mean_price > 0 && (
         <div className="space-y-1.5">
-          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Active Asking Prices</div>
+          <div className="text-micro font-semibold text-muted-foreground uppercase tracking-wider">Active Asking Prices</div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Mean</span>
@@ -291,7 +291,7 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, dealerZip, radius
       {/* Sold price stats */}
       {sold && sold.mean_price > 0 && (
         <div className="space-y-1.5">
-          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Recently Sold</div>
+          <div className="text-micro font-semibold text-muted-foreground uppercase tracking-wider">Recently Sold</div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Mean</span>
@@ -335,7 +335,7 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, dealerZip, radius
         </CollapsibleTrigger>
         <CollapsibleContent>
           {listings.length === 0 && !listingsLoading && (
-            <p className="text-[10px] text-muted-foreground text-center py-2">No active listings found in area.</p>
+            <p className="text-micro text-muted-foreground text-center py-2">No active listings found in area.</p>
           )}
           {listings.length > 0 && (() => {
             const subjectMiles = typeof vehicleMileage === "number"
@@ -355,14 +355,14 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, dealerZip, radius
                             <span className="ml-1.5 bg-primary/15 text-primary text-[8px] font-bold px-1 py-0.5 rounded">BEST COMP</span>
                           )}
                         </div>
-                        <div className="text-[10px] text-muted-foreground flex items-center gap-2 flex-wrap">
+                        <div className="text-micro text-muted-foreground flex items-center gap-2 flex-wrap">
                           <span>{l.dealer_name}</span>
                           <span>•</span>
                           <span>{l.dealer_city}, {l.dealer_state}</span>
                           <span>•</span>
                           <span>{Math.round(l.distance_to_dealer)}mi</span>
                         </div>
-                        <div className="text-[10px] text-muted-foreground flex items-center gap-2">
+                        <div className="text-micro text-muted-foreground flex items-center gap-2">
                           {l.mileage > 0 && <span>{l.mileage.toLocaleString()} mi</span>}
                           {l.days_on_market > 0 && <><span>•</span><span>{l.days_on_market}d on market</span></>}
                           {l.exterior_color && <><span>•</span><span>{l.exterior_color}</span></>}
@@ -386,7 +386,7 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, dealerZip, radius
         </CollapsibleContent>
       </Collapsible>
 
-      {error && <p className="text-[10px] text-destructive">{error}</p>}
+      {error && <p className="text-micro text-destructive">{error}</p>}
     </div>
   );
 }

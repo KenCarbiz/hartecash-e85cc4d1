@@ -165,14 +165,14 @@ const AdminHeader = ({ darkMode, setDarkMode, userRole, onLogout, userName, isPl
             </div>
             <div className="flex items-center gap-1.5 mt-0.5">
               {isPlatformAdmin && (
-                <span className="inline-flex items-center gap-1 text-[12px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30">
+                <span className="inline-flex items-center gap-1 text-caption px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30">
                   <Crown className="w-2.5 h-2.5" />
                   SUPER ADMIN
                 </span>
               )}
               {!isPlatformAdmin && (
                 <span
-                  className="text-[12px] px-2 py-0.5 rounded-full font-medium border w-fit"
+                  className="text-caption px-2 py-0.5 rounded-full font-medium border w-fit"
                   style={{
                     background: `${topBarText}1a`,
                     color: `${topBarText}b3`,
@@ -208,7 +208,7 @@ const AdminHeader = ({ darkMode, setDarkMode, userRole, onLogout, userName, isPl
                 aria-label="Open command palette"
               />
               <span
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-mono px-1.5 py-0.5 rounded"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-micro font-mono px-1.5 py-0.5 rounded"
                 style={{
                   background: `${topBarText}1a`,
                   color: `${topBarText}b3`,
@@ -290,7 +290,7 @@ const AdminHeader = ({ darkMode, setDarkMode, userRole, onLogout, userName, isPl
                role label but lives in the right cluster as a quick visual
                anchor for the avatar block. */}
           <span
-            className="hidden md:inline-flex items-center text-[12px] h-9 px-3 rounded-full font-medium border"
+            className="hidden md:inline-flex items-center text-caption h-9 px-3 rounded-full font-medium border"
             style={{
               background: `${topBarText}14`,
               color: `${topBarText}cc`,
@@ -317,10 +317,10 @@ const AdminHeader = ({ darkMode, setDarkMode, userRole, onLogout, userName, isPl
               {initials}
             </div>
             <div className="leading-tight">
-              <div className="text-[12px] font-medium" style={{ color: topBarText }}>
+              <div className="text-caption font-medium" style={{ color: topBarText }}>
                 {firstName || "Staff"}
               </div>
-              <div className="text-[10px]" style={{ color: `${topBarText}99` }}>
+              <div className="text-micro" style={{ color: `${topBarText}99` }}>
                 {roleLabel}
               </div>
             </div>
@@ -340,7 +340,7 @@ const AdminHeader = ({ darkMode, setDarkMode, userRole, onLogout, userName, isPl
                 aria-label="Help"
               >
                 <HelpCircle className="w-4 h-4" />
-                <span className="hidden lg:inline ml-1.5 text-[12px]">Help</span>
+                <span className="hidden lg:inline ml-1.5 text-caption">Help</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
@@ -377,7 +377,7 @@ const AdminHeader = ({ darkMode, setDarkMode, userRole, onLogout, userName, isPl
             style={{ color: `${topBarText}b3` }}
           >
             <LogOut className="w-4 h-4" />
-            <span className="hidden lg:inline ml-1.5 text-[12px]">Logout</span>
+            <span className="hidden lg:inline ml-1.5 text-caption">Logout</span>
           </Button>
         </div>
       </div>

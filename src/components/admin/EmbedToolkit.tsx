@@ -438,7 +438,7 @@ window.addEventListener("message", function(e) {
             <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
             <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
           </div>
-          <span className="text-[10px] text-muted-foreground font-mono truncate flex-1">{src}</span>
+          <span className="text-micro text-muted-foreground font-mono truncate flex-1">{src}</span>
         </div>
         <iframe
           src={src}
@@ -497,7 +497,7 @@ window.addEventListener("message", function(e) {
                   <Badge
                     key={preset}
                     variant="outline"
-                    className="text-[10px] cursor-pointer hover:bg-primary/10 transition-colors"
+                    className="text-micro cursor-pointer hover:bg-primary/10 transition-colors"
                     onClick={() => setButtonText(preset)}
                   >
                     {preset}
@@ -576,12 +576,12 @@ window.addEventListener("message", function(e) {
                 }`}
               >
                 <div className="aspect-[16/10] mb-1.5 rounded overflow-hidden border border-dashed border-border bg-muted/40 flex items-center justify-center">
-                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  <span className="text-micro font-semibold text-muted-foreground uppercase tracking-wider">
                     Inherits
                   </span>
                 </div>
                 <div className="font-semibold text-xs">Dealer Default</div>
-                <div className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">
+                <div className="text-micro text-muted-foreground mt-0.5 line-clamp-2">
                   Use whatever is set in Landing &amp; Flow.
                 </div>
               </button>
@@ -602,7 +602,7 @@ window.addEventListener("message", function(e) {
                       <TemplateThumbnail template={t.value} />
                     </div>
                     <div className="font-semibold text-xs">{t.label}</div>
-                    <div className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">
+                    <div className="text-micro text-muted-foreground mt-0.5 line-clamp-2">
                       {t.description}
                     </div>
                   </button>
@@ -688,7 +688,7 @@ window.addEventListener("message", function(e) {
                   readOnly
                   className="bg-muted/30"
                 />
-                <p className="text-[10px] text-muted-foreground">Edit in Branding → Hero Content section</p>
+                <p className="text-micro text-muted-foreground">Edit in Branding → Hero Content section</p>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs">Subtext</Label>
@@ -698,7 +698,7 @@ window.addEventListener("message", function(e) {
                   readOnly
                   className="bg-muted/30"
                 />
-                <p className="text-[10px] text-muted-foreground">Edit in Branding → Hero Content section</p>
+                <p className="text-micro text-muted-foreground">Edit in Branding → Hero Content section</p>
               </div>
             </div>
           </div>
@@ -711,7 +711,7 @@ window.addEventListener("message", function(e) {
                 <div className="space-y-1.5">
                   <Label className="text-xs">Guarantee Amount</Label>
                   <div className="flex items-center gap-1 text-sm font-bold text-amber-600">${pptAmount.toLocaleString()}</div>
-                  <p className="text-[10px] text-muted-foreground">Configured in Branding settings</p>
+                  <p className="text-micro text-muted-foreground">Configured in Branding settings</p>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs">Headline</Label>
@@ -795,8 +795,8 @@ window.addEventListener("message", function(e) {
             <CardHeader className="pb-2">
               <div className="flex items-center gap-2">
                 <CardTitle className="text-base">Inventory-Aware Trade Widget</CardTitle>
-                <Badge className="text-[10px] bg-emerald-600 hover:bg-emerald-700">New</Badge>
-                <Badge variant="secondary" className="text-[10px]">State-Aware</Badge>
+                <Badge className="text-micro bg-emerald-600 hover:bg-emerald-700">New</Badge>
+                <Badge variant="secondary" className="text-micro">State-Aware</Badge>
               </div>
               <CardDescription>
                 One snippet, every page. Detects the vehicle the customer is viewing on the dealer's
@@ -951,7 +951,7 @@ window.addEventListener("message", function(e) {
             <CardHeader className="pb-2">
               <div className="flex items-center gap-2">
                 <CardTitle className="text-base">Trade-In Page iFrame</CardTitle>
-                <Badge variant="secondary" className="text-[10px]">Recommended</Badge>
+                <Badge variant="secondary" className="text-micro">Recommended</Badge>
               </div>
               <CardDescription>
                 Replace the dealer's "Value Your Trade" page with this iframe. No header or footer — it looks like a native part of the dealer's website. The form defaults to trade-in value with tax savings.
@@ -980,7 +980,7 @@ window.addEventListener("message", function(e) {
             <CardHeader className="pb-2">
               <div className="flex items-center gap-2">
                 <CardTitle className="text-base">Homepage Landing iFrame</CardTitle>
-                <Badge variant="secondary" className="text-[10px]">
+                <Badge variant="secondary" className="text-micro">
                   {embedTemplate === "__default__" ? "Dealer Default" : LANDING_TEMPLATES.find(t => t.value === embedTemplate)?.label}
                 </Badge>
               </div>
@@ -1013,7 +1013,7 @@ window.addEventListener("message", function(e) {
             <CardHeader className="pb-2">
               <div className="flex items-center gap-2">
                 <CardTitle className="text-base">Floating Widget</CardTitle>
-                <Badge variant="secondary" className="text-[10px]">Site-Wide</Badge>
+                <Badge variant="secondary" className="text-micro">Site-Wide</Badge>
               </div>
               <CardDescription>
                 A floating button on every page. {openMode === "drawer" ? "Clicking opens a slide-out panel with the trade form — customers never leave the page." : "Clicking opens the trade form in a new tab."}
@@ -1052,7 +1052,7 @@ window.addEventListener("message", function(e) {
             <CardHeader className="pb-2">
               <div className="flex items-center gap-2">
                 <CardTitle className="text-base">Sticky Ghost Link</CardTitle>
-                <Badge variant="secondary" className="text-[10px]">VDP / SRP</Badge>
+                <Badge variant="secondary" className="text-micro">VDP / SRP</Badge>
               </div>
               <CardDescription>
                 A thin, semi-transparent bar that follows the customer as they scroll VDP and SRP pages. Appears after a short scroll to avoid feeling pushy — then stays visible until they engage or dismiss.
@@ -1069,7 +1069,7 @@ window.addEventListener("message", function(e) {
                       <Badge
                         key={preset}
                         variant="outline"
-                        className="text-[10px] cursor-pointer hover:bg-primary/10 transition-colors"
+                        className="text-micro cursor-pointer hover:bg-primary/10 transition-colors"
                         onClick={() => setStickyText(preset)}
                       >
                         {preset}
@@ -1151,7 +1151,7 @@ window.addEventListener("message", function(e) {
             <CardHeader className="pb-2">
               <div className="flex items-center gap-2">
                 <CardTitle className="text-base">Inventory Page Banner</CardTitle>
-                <Badge variant="secondary" className="text-[10px]">VDP / SRP</Badge>
+                <Badge variant="secondary" className="text-micro">VDP / SRP</Badge>
               </div>
               <CardDescription>
                 An inline banner for vehicle detail pages (VDP) and search results pages (SRP). Catches the customer while they're already shopping.
@@ -1168,7 +1168,7 @@ window.addEventListener("message", function(e) {
                       <Badge
                         key={preset}
                         variant="outline"
-                        className="text-[10px] cursor-pointer hover:bg-primary/10 transition-colors"
+                        className="text-micro cursor-pointer hover:bg-primary/10 transition-colors"
                         onClick={() => setBannerHeadline(preset)}
                       >
                         {preset}
@@ -1232,7 +1232,7 @@ window.addEventListener("message", function(e) {
               <CardHeader className="pb-2">
                 <div className="flex items-center gap-2">
                   <CardTitle className="text-base">Push/Pull/Tow Certificate</CardTitle>
-                  <Badge className="text-[10px] bg-amber-100 text-amber-800 border-amber-200">Guarantee</Badge>
+                  <Badge className="text-micro bg-amber-100 text-amber-800 border-amber-200">Guarantee</Badge>
                 </div>
                 <CardDescription>
                   Offer customers a guaranteed ${pptAmount.toLocaleString()} minimum trade-in value. If the market offer is higher, they get the higher amount. Embed as an iframe page replacement or use the floating widget.
@@ -1254,7 +1254,7 @@ window.addEventListener("message", function(e) {
                         <Badge
                           key={preset}
                           variant="outline"
-                          className="text-[10px] cursor-pointer hover:bg-amber-50 transition-colors"
+                          className="text-micro cursor-pointer hover:bg-amber-50 transition-colors"
                           onClick={() => setPptButtonText(preset)}
                         >
                           {preset}
@@ -1266,7 +1266,7 @@ window.addEventListener("message", function(e) {
                     <Label className="text-xs">Guarantee Amount</Label>
                     <div className="p-2 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
                       <p className="text-lg font-extrabold text-amber-700 dark:text-amber-400">${pptAmount.toLocaleString()}</p>
-                      <p className="text-[10px] text-muted-foreground">Configured in Branding settings (ppt_guarantee_amount)</p>
+                      <p className="text-micro text-muted-foreground">Configured in Branding settings (ppt_guarantee_amount)</p>
                     </div>
                   </div>
                 </div>
@@ -1492,13 +1492,13 @@ const EmbedPerformanceCard = ({ dealershipId }: { dealershipId: string }) => {
         <div className="grid grid-cols-2 md:grid-cols-5 divide-x divide-y md:divide-y-0 divide-border">
           {tiles.map((t) => (
             <div key={t.key} className="px-4 py-3.5">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              <p className="text-micro font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                 {t.label}
               </p>
               <p className="text-2xl font-bold tabular-nums tracking-tight text-card-foreground mt-0.5">
                 {(counts[t.key] || 0).toLocaleString()}
               </p>
-              {t.sub && <p className="text-[10px] text-muted-foreground">{t.sub}</p>}
+              {t.sub && <p className="text-micro text-muted-foreground">{t.sub}</p>}
             </div>
           ))}
         </div>

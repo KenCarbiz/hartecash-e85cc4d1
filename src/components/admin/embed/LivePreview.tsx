@@ -314,7 +314,7 @@ const LivePreview = ({
       {/* Asset toggle chips — show as soon as a successful capture exists */}
       {hasAnyCapture && (
         <div className="rounded-lg border border-slate-200 bg-white p-4">
-          <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500 mb-2">
+          <div className="text-micro font-bold uppercase tracking-[0.1em] text-slate-500 mb-2">
             Toggle assets to layer on the screenshots
           </div>
           <div className="flex flex-wrap gap-2">
@@ -434,7 +434,7 @@ const BrowserFrame = ({
           <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
           <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
         </div>
-        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 ml-2">{label}</span>
+        <span className="text-micro font-bold uppercase tracking-wider text-slate-500 ml-2">{label}</span>
       </div>
       <div className="flex-1 mx-4 flex items-center gap-1.5 bg-white border border-slate-200 rounded-md px-2 py-1 text-[11px] text-slate-600 truncate">
         <ExternalLink className="w-3 h-3 shrink-0 text-slate-400" />
@@ -477,7 +477,7 @@ const PageScreenshot = ({
           <div className="text-xs text-slate-500 font-medium">
             Loading screenshot…
           </div>
-          <div className="text-[10px] text-slate-400 mt-1 max-w-md truncate px-4">
+          <div className="text-micro text-slate-400 mt-1 max-w-md truncate px-4">
             {src}
           </div>
         </div>
@@ -495,7 +495,7 @@ const PageScreenshot = ({
             may have a cert issue, blocked the capture, or hit microlink's
             free-tier rate limit.
           </div>
-          <div className="text-[10px] font-mono text-slate-400 mt-3 max-w-md truncate px-4">
+          <div className="text-micro font-mono text-slate-400 mt-3 max-w-md truncate px-4">
             {src}
           </div>
         </div>

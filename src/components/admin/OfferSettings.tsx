@@ -668,14 +668,14 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
             <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">
               ⚠ These are profit analysis inputs. They do NOT reduce the customer offer.
             </p>
-            <p className="text-[10px] text-muted-foreground mt-1">
+            <p className="text-micro text-muted-foreground mt-1">
               Recon cost and dealer pack are internal references that appear in the waterfall's profit section and ACV sheet, but never change the offer the customer sees.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <Label className="text-sm font-semibold">Recon Reserve</Label>
-              <p className="text-[10px] text-muted-foreground mb-1.5">
+              <p className="text-micro text-muted-foreground mb-1.5">
                 Avg cost to recondition before retail.
               </p>
               <div className="relative">
@@ -690,7 +690,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
             </div>
             <div>
               <Label className="text-sm font-semibold">Dealer Pack</Label>
-              <p className="text-[10px] text-muted-foreground mb-1.5">
+              <p className="text-micro text-muted-foreground mb-1.5">
                 Standard acquisition pack per deal.
               </p>
               <div className="relative">
@@ -705,7 +705,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
             </div>
             <div>
               <Label className="text-sm font-semibold">Target Gross Minimum</Label>
-              <p className="text-[10px] text-muted-foreground mb-1.5">
+              <p className="text-micro text-muted-foreground mb-1.5">
                 Red warning if projected gross falls below this.
               </p>
               <div className="relative">
@@ -729,7 +729,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 pt-4 border-t border-border">
             <div className="sm:col-span-2">
               <Label className="text-sm font-semibold">Auto-Firm QuickOffer (% of high estimate)</Label>
-              <p className="text-[10px] text-muted-foreground mb-1.5">
+              <p className="text-micro text-muted-foreground mb-1.5">
                 The 60-second QuickOffer landing flow shows a firm number to the customer
                 instead of waiting for a manager bump. Leave blank to keep "manager bumps
                 before customer sees firm offer" behavior. Typical values: 85–92%.
@@ -777,7 +777,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
             <div>
               <Label className="text-sm font-semibold">Floor Plan Rate</Label>
-              <p className="text-[10px] text-muted-foreground mb-1.5">
+              <p className="text-micro text-muted-foreground mb-1.5">
                 Annual floor plan interest rate used for carrying cost calculations.
               </p>
               <div className="flex items-center gap-2">
@@ -792,7 +792,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
             </div>
             <div>
               <Label className="text-sm font-semibold">Lot Cost Per Day</Label>
-              <p className="text-[10px] text-muted-foreground mb-1.5">
+              <p className="text-micro text-muted-foreground mb-1.5">
                 Daily overhead allocated to each used vehicle on the lot.
               </p>
               <div className="relative">
@@ -813,14 +813,14 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
             />
             <div>
               <Label className="text-sm font-semibold">Combine Pack into Reconditioning</Label>
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-micro text-muted-foreground">
                 Hides the dealer pack from appraisal staff by merging it into a single "Recon" line.
               </p>
             </div>
           </div>
           <div className="mt-4 p-3 rounded-lg border border-border bg-muted/30">
             <Label className="text-sm font-semibold">Retail Basis for Profit Calculations</Label>
-            <p className="text-[10px] text-muted-foreground mb-2">
+            <p className="text-micro text-muted-foreground mb-2">
               Which retail tier to use when calculating projected profit and margin.
             </p>
             <Select
@@ -849,7 +849,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label className="text-sm font-semibold">Offer Floor</Label>
-              <p className="text-[10px] text-muted-foreground mb-1">Minimum offer regardless of deductions.</p>
+              <p className="text-micro text-muted-foreground mb-1">Minimum offer regardless of deductions.</p>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
                 <Input type="number" min={0} step={100} value={settings.offer_floor ?? 500} onChange={(e) => setSettings({ ...settings, offer_floor: Number(e.target.value) || 0 })} className="pl-7" />
@@ -857,7 +857,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
             </div>
             <div>
               <Label className="text-sm font-semibold">Offer Ceiling</Label>
-              <p className="text-[10px] text-muted-foreground mb-1">Max offer cap (blank = no ceiling).</p>
+              <p className="text-micro text-muted-foreground mb-1">Max offer cap (blank = no ceiling).</p>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
                 <Input type="number" min={0} step={500} value={settings.offer_ceiling ?? ""} onChange={(e) => setSettings({ ...settings, offer_ceiling: e.target.value ? Number(e.target.value) : null })} placeholder="No ceiling" className="pl-7" />
@@ -865,7 +865,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
             </div>
             <div>
               <Label className="text-sm font-semibold">Max % of Retail</Label>
-              <p className="text-[10px] text-muted-foreground mb-1">Never offer more than this % of BB retail avg.</p>
+              <p className="text-micro text-muted-foreground mb-1">Never offer more than this % of BB retail avg.</p>
               <div className="flex items-center gap-2">
                 <Input type="number" min={50} max={100} step={1} value={(settings as any).max_market_pct ?? 90} onChange={(e) => setSettings({ ...settings, max_market_pct: Number(e.target.value) || 90 } as any)} className="w-24" />
                 <span className="text-sm text-muted-foreground">%</span>
@@ -873,13 +873,13 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
             </div>
             <div>
               <Label className="text-sm font-semibold">Manager PIN</Label>
-              <p className="text-[10px] text-muted-foreground mb-1">4-digit PIN for management override on appraisals.</p>
+              <p className="text-micro text-muted-foreground mb-1">4-digit PIN for management override on appraisals.</p>
               <Input type="password" maxLength={4} value={(settings as any).manager_pin || "0000"} onChange={(e) => setSettings({ ...settings, manager_pin: e.target.value.replace(/\D/g, "").slice(0, 4) } as any)} className="w-28 text-center font-mono tracking-widest" />
             </div>
           </div>
           <div className="mt-4 pt-4 border-t border-border">
             <Label className="text-sm font-semibold mb-3 block">Wholesale-Only Threshold</Label>
-            <p className="text-[10px] text-muted-foreground mb-3">If a vehicle exceeds these thresholds, flag it as "Wholesale Only" on the appraisal page.</p>
+            <p className="text-micro text-muted-foreground mb-3">If a vehicle exceeds these thresholds, flag it as "Wholesale Only" on the appraisal page.</p>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-xs text-muted-foreground">Max Mileage</Label>
@@ -944,7 +944,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
             </p>
             <div>
               <Label className="text-sm font-semibold">Activation Threshold</Label>
-              <p className="text-[10px] text-muted-foreground mb-1.5">
+              <p className="text-micro text-muted-foreground mb-1.5">
                 Minimum finalized appraisals with outcomes before historical insights appear on the appraisal page.
               </p>
               <div className="flex items-center gap-2">

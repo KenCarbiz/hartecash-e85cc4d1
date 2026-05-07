@@ -122,7 +122,7 @@ const ProspectDemoHistory = ({ onLoadDemo, activeDemoId }: ProspectDemoHistoryPr
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
-                <thead className="bg-slate-50 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
+                <thead className="bg-slate-50 text-micro font-bold uppercase tracking-[0.08em] text-slate-500">
                   <tr>
                     <th className="px-4 py-2 text-left">Dealer</th>
                     <th className="px-4 py-2 text-left">Homepage</th>

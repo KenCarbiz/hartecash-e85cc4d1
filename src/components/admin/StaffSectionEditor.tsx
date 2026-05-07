@@ -134,7 +134,7 @@ const StaffSectionEditor = ({
             })}
           </div>
 
-          <p className="text-[10px] text-muted-foreground text-center">
+          <p className="text-micro text-muted-foreground text-center">
             {sections.length} of {ALL_SECTIONS.length} sections enabled
           </p>
         </div>

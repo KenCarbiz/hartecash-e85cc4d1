@@ -162,7 +162,7 @@ const FollowUpLog = () => {
                       : "—"}
                   </TableCell>
                   <TableCell className="text-xs">
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                    <Badge variant="outline" className="text-micro px-1.5 py-0">
                       {r.touch_number} — {TOUCH_LABELS[r.touch_number] || `Touch ${r.touch_number}`}
                     </Badge>
                   </TableCell>
@@ -178,7 +178,7 @@ const FollowUpLog = () => {
                       {r.status}
                     </span>
                     {r.error_message && (
-                      <p className="text-destructive text-[10px] mt-0.5 max-w-[200px] truncate" title={r.error_message}>
+                      <p className="text-destructive text-micro mt-0.5 max-w-[200px] truncate" title={r.error_message}>
                         {r.error_message}
                       </p>
                     )}

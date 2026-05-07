@@ -34,7 +34,7 @@ export default function MarketAdjustmentConfigPanel({ config, onChange }: Props)
       <div className="flex items-center justify-between">
         <div>
           <Label className="text-sm font-bold">Enable Live Market Multiplier</Label>
-          <p className="text-[10px] text-muted-foreground">
+          <p className="text-micro text-muted-foreground">
             Automatically adjust offers based on Black Book Market Days Supply data.
           </p>
         </div>
@@ -72,7 +72,7 @@ export default function MarketAdjustmentConfigPanel({ config, onChange }: Props)
                     value={bracket.max_days >= 9999 ? "" : bracket.max_days}
                     onChange={e => updateBracket(i, "max_days", e.target.value ? Number(e.target.value) : 9999)}
                     placeholder="∞"
-                    className="h-6 text-[10px] text-center"
+                    className="h-6 text-micro text-center"
                     disabled={bracket.max_days >= 9999}
                   />
                   <div className="flex items-center justify-center">
@@ -80,7 +80,7 @@ export default function MarketAdjustmentConfigPanel({ config, onChange }: Props)
                       type="number"
                       value={bracket.adjustment_pct}
                       onChange={e => updateBracket(i, "adjustment_pct", Number(e.target.value))}
-                      className="h-6 text-[10px] text-center w-16"
+                      className="h-6 text-micro text-center w-16"
                       step={1}
                       min={-20}
                       max={20}

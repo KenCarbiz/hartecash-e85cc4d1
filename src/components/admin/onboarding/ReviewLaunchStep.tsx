@@ -60,7 +60,7 @@ const ReviewLaunchStep = ({ state }: Props) => {
       {/* BDC + Approver cards */}
       <div className="grid grid-cols-2 gap-3">
         <div className="border border-border rounded-xl p-3 space-y-2">
-          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Lead Handling</p>
+          <p className="text-micro font-semibold text-muted-foreground uppercase tracking-wider">Lead Handling</p>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <BDCIcon className="w-4 h-4 text-primary" />
@@ -69,7 +69,7 @@ const ReviewLaunchStep = ({ state }: Props) => {
           </div>
         </div>
         <div className="border border-border rounded-xl p-3 space-y-2">
-          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Offer Logic Approver</p>
+          <p className="text-micro font-semibold text-muted-foreground uppercase tracking-wider">Offer Logic Approver</p>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <Shield className="w-4 h-4 text-primary" />
@@ -126,12 +126,12 @@ const ReviewLaunchStep = ({ state }: Props) => {
                   <Globe className="w-3.5 h-3.5 text-primary shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="font-medium">{loc.name}</div>
-                    <div className="text-muted-foreground font-mono text-[10px] truncate">
+                    <div className="text-muted-foreground font-mono text-micro truncate">
                       {loc.rooftopSlug}.autocurb.io
                       {loc.rooftopCustomDomain && <span> · {loc.rooftopCustomDomain}</span>}
                     </div>
                   </div>
-                  <Badge variant="secondary" className="text-[10px] shrink-0">
+                  <Badge variant="secondary" className="text-micro shrink-0">
                     {loc.rooftopLandingTemplate || "group default"}
                   </Badge>
                 </div>
@@ -167,7 +167,7 @@ const ReviewLaunchStep = ({ state }: Props) => {
             "notification_settings", "inspection_config", "photo_config", "locations",
             "notification_templates",
           ].map((t) => (
-            <Badge key={t} variant="secondary" className="text-[10px]">{t}</Badge>
+            <Badge key={t} variant="secondary" className="text-micro">{t}</Badge>
           ))}
         </div>
       </div>

@@ -230,7 +230,7 @@ const PhotoConfiguration = () => {
                   />
                   {opt.label}
                   {isSelected && (
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">default</Badge>
+                    <Badge variant="secondary" className="text-micro px-1.5 py-0">default</Badge>
                   )}
                 </button>
               );
@@ -271,10 +271,10 @@ const PhotoConfiguration = () => {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Badge variant="outline" className="text-[10px]">
+              <Badge variant="outline" className="text-micro">
                 First upload — {preRequiredCount} required, {preActiveCount} shown
               </Badge>
-              <Badge variant="outline" className="text-[10px] border-emerald-500/40 text-emerald-700">
+              <Badge variant="outline" className="text-micro border-emerald-500/40 text-emerald-700">
                 Boost — {boostRequiredCount} required + {boostBonusCount} bonus
               </Badge>
             </div>
@@ -282,7 +282,7 @@ const PhotoConfiguration = () => {
 
           {/* Column header strip — two grouped columns, faint emerald
               wash behind the boost column to read at a glance. */}
-          <div className="hidden md:grid md:grid-cols-[1fr_minmax(220px,260px)_minmax(220px,260px)_36px] gap-3 px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          <div className="hidden md:grid md:grid-cols-[1fr_minmax(220px,260px)_minmax(220px,260px)_36px] gap-3 px-2 pt-2 pb-1 text-micro font-semibold uppercase tracking-[0.14em] text-muted-foreground">
             <div>Shot</div>
             <div>Before appointment</div>
             <div className="text-emerald-700">In boost flow</div>
@@ -313,7 +313,7 @@ const PhotoConfiguration = () => {
                           className="h-7 text-sm font-semibold w-44"
                         />
                         {boostActive && (
-                          <Badge className="bg-emerald-500/10 text-emerald-700 border-emerald-500/30 text-[10px] gap-1">
+                          <Badge className="bg-emerald-500/10 text-emerald-700 border-emerald-500/30 text-micro gap-1">
                             <Sparkles className="w-3 h-3" />
                             {row.boost_role === "required" ? "Boost" : "Bonus"}
                           </Badge>

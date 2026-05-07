@@ -514,7 +514,7 @@ const PlatformPricingManager = () => {
               Single store · 1 rooftop · full price
             </p>
           </div>
-          <Badge variant="outline" className="text-[10px] uppercase tracking-wider font-semibold">
+          <Badge variant="outline" className="text-micro uppercase tracking-wider font-semibold">
             Base Rate
           </Badge>
         </div>
@@ -776,7 +776,7 @@ const PlatformPricingManager = () => {
                           >
                             ${discounted.toLocaleString()}
                             {changed && (
-                              <span className="text-[10px] text-muted-foreground line-through ml-1.5">
+                              <span className="text-micro text-muted-foreground line-through ml-1.5">
                                 ${base.toLocaleString()}
                               </span>
                             )}
@@ -814,7 +814,7 @@ const PlatformPricingManager = () => {
                       >
                         ${discounted.toLocaleString()}
                         {changed && (
-                          <span className="text-[10px] text-muted-foreground line-through ml-1.5">
+                          <span className="text-micro text-muted-foreground line-through ml-1.5">
                             ${bundle.monthly_price.toLocaleString()}
                           </span>
                         )}
@@ -837,7 +837,7 @@ const PlatformPricingManager = () => {
               <span className="font-medium text-card-foreground">
                 Unsaved changes
               </span>
-              <Badge variant="outline" className="text-[10px]">
+              <Badge variant="outline" className="text-micro">
                 {dirtyMarks} {dirtyMarks === 1 ? "edit" : "edits"}
               </Badge>
             </div>
@@ -950,13 +950,13 @@ function MainTierRow({
               <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
                 ${annual.toLocaleString()}
               </span>
-              <span className="text-[10px] text-muted-foreground">/mo</span>
+              <span className="text-micro text-muted-foreground">/mo</span>
             </>
           ) : (
             <span className="text-xs text-muted-foreground">annual off</span>
           )}
         </div>
-        <p className="text-[10px] text-muted-foreground mt-0.5">
+        <p className="text-micro text-muted-foreground mt-0.5">
           annual pre-paid
         </p>
       </div>
@@ -1113,13 +1113,13 @@ function BundleRow({
               <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
                 ${annual.toLocaleString()}
               </span>
-              <span className="text-[10px] text-muted-foreground">/mo</span>
+              <span className="text-micro text-muted-foreground">/mo</span>
             </>
           ) : (
             <span className="text-xs text-muted-foreground">annual off</span>
           )}
         </div>
-        <p className="text-[10px] text-muted-foreground mt-0.5">
+        <p className="text-micro text-muted-foreground mt-0.5">
           annual pre-paid
         </p>
       </div>
@@ -1225,7 +1225,7 @@ function MonthlyField({
       >
         ${displayed.toLocaleString()}
       </span>
-      <span className="text-[10px] text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+      <span className="text-micro text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
         edit
       </span>
     </button>

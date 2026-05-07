@@ -572,11 +572,11 @@ export default function NotificationSettings() {
           <div className="flex items-center gap-2 font-medium">
             <Bell className="w-4 h-4" />
             Staff Alert Triggers
-            <Badge variant="outline" className="text-[10px] ml-1">
+            <Badge variant="outline" className="text-micro ml-1">
               {staffEnabledCount}/{STAFF_TRIGGERS.length} on
             </Badge>
             {search && filteredStaff.length !== STAFF_TRIGGERS.length && (
-              <Badge variant="secondary" className="text-[10px]">{filteredStaff.length} match</Badge>
+              <Badge variant="secondary" className="text-micro">{filteredStaff.length} match</Badge>
             )}
           </div>
           <ChevronDown className={`w-4 h-4 transition-transform ${(openSections.triggers || !!search) ? "rotate-180" : ""}`} />
@@ -615,11 +615,11 @@ export default function NotificationSettings() {
           <div className="flex items-center gap-2 font-medium">
             <UserCheck className="w-4 h-4" />
             Customer Notifications
-            <Badge variant="outline" className="text-[10px] ml-1">
+            <Badge variant="outline" className="text-micro ml-1">
               {customerEnabledCount}/{CUSTOMER_TRIGGERS.length} on
             </Badge>
             {search && filteredCustomer.length !== CUSTOMER_TRIGGERS.length && (
-              <Badge variant="secondary" className="text-[10px]">{filteredCustomer.length} match</Badge>
+              <Badge variant="secondary" className="text-micro">{filteredCustomer.length} match</Badge>
             )}
           </div>
           <ChevronDown className={`w-4 h-4 transition-transform ${(openSections.customer || !!search) ? "rotate-180" : ""}`} />

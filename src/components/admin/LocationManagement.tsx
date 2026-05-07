@@ -414,12 +414,12 @@ const LocationManagement = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className="font-semibold text-sm truncate">{loc.name || "Unnamed"}</span>
-                    <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${ti.color}`}>
+                    <Badge variant="outline" className={`text-micro px-1.5 py-0 ${ti.color}`}>
                       <ti.icon className="w-3 h-3 mr-1" />
                       {ti.label}
                     </Badge>
                     {loc.temporarily_offline && (
-                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-amber-500/10 text-amber-600 border-amber-200">⚠ Offline</Badge>
+                      <Badge variant="outline" className="text-micro px-1.5 py-0 bg-amber-500/10 text-amber-600 border-amber-200">⚠ Offline</Badge>
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground truncate">
@@ -432,7 +432,7 @@ const LocationManagement = () => {
                 {/* Quick toggles */}
                 <div className="hidden lg:flex items-center gap-4">
                   <div className="flex items-center gap-1.5" title="Active">
-                    <Label className="text-[10px] text-muted-foreground">Active</Label>
+                    <Label className="text-micro text-muted-foreground">Active</Label>
                     <Switch checked={loc.is_active} onCheckedChange={() => toggleField(loc.id, "is_active", loc.is_active)} onClick={(e) => e.stopPropagation()} />
                   </div>
                 </div>
@@ -521,7 +521,7 @@ const LocationManagement = () => {
                           {loc.location_type !== "primary" && (
                             <div className="flex items-center gap-1.5 mt-1.5">
                               <Switch checked={loc.use_corporate_established_year} onCheckedChange={v => updateLocation(loc.id, "use_corporate_established_year", v)} />
-                              <Label className="text-[10px] text-muted-foreground">Inherit corporate year</Label>
+                              <Label className="text-micro text-muted-foreground">Inherit corporate year</Label>
                             </div>
                           )}
                         </div>
@@ -617,7 +617,7 @@ const LocationManagement = () => {
                             <div className="ml-1 border-l-2 border-border pl-4 space-y-3">
                               <div className="flex items-center gap-4">
                                 <div className="w-28">
-                                  <Label className="text-[10px] text-muted-foreground mb-0.5 block">Center ZIP</Label>
+                                  <Label className="text-micro text-muted-foreground mb-0.5 block">Center ZIP</Label>
                                   <Input value={loc.center_zip || ""} onChange={e => updateLocation(loc.id, "center_zip", e.target.value)} placeholder="06103" className="font-mono" maxLength={5} />
                                 </div>
                                 <div className="flex-1 space-y-1">
@@ -626,7 +626,7 @@ const LocationManagement = () => {
                                     <span className="text-xs font-semibold tabular-nums">{loc.coverage_radius_miles} mi</span>
                                   </div>
                                   <Slider value={[loc.coverage_radius_miles || 0]} onValueChange={([val]) => updateLocation(loc.id, "coverage_radius_miles", val)} min={5} max={50} step={5} />
-                                  <div className="flex justify-between text-[10px] text-muted-foreground/60"><span>5 mi</span><span>25 mi</span><span>50 mi</span></div>
+                                  <div className="flex justify-between text-micro text-muted-foreground/60"><span>5 mi</span><span>25 mi</span><span>50 mi</span></div>
                                 </div>
                               </div>
                               {loc.center_zip?.length === 5 && (
@@ -649,7 +649,7 @@ const LocationManagement = () => {
                           <div className="flex items-center gap-2 mb-3">
                             <Switch checked={loc.all_brands ?? true} onCheckedChange={v => updateLocation(loc.id, "all_brands", v)} />
                             <Label className="text-sm">{(loc.all_brands ?? true) ? "All Brands" : "Specific Brands Only"}</Label>
-                            {(loc.all_brands ?? true) && <Badge variant="secondary" className="text-[10px]">Accepts every make</Badge>}
+                            {(loc.all_brands ?? true) && <Badge variant="secondary" className="text-micro">Accepts every make</Badge>}
                           </div>
 
                           {/* All brands ON — exclusions */}
@@ -723,13 +723,13 @@ const LocationManagement = () => {
                           <Link2 className="w-4 h-4 text-primary" />
                           <Label className="text-xs font-semibold">Custom Domain</Label>
                           {domainMap[loc.id] && (
-                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-emerald-500/10 text-emerald-600 border-emerald-200 gap-1">
+                            <Badge variant="outline" className="text-micro px-1.5 py-0 bg-emerald-500/10 text-emerald-600 border-emerald-200 gap-1">
                               <CheckCircle2 className="w-3 h-3" /> Mapped
                             </Badge>
                           )}
                         </div>
                         <p className="text-[11px] text-muted-foreground">
-                          Assign a custom domain so this store gets its own branded landing page. DNS must point to <code className="font-mono bg-muted px-1 rounded text-[10px]">185.158.133.1</code> with a <code className="font-mono bg-muted px-1 rounded text-[10px]">_lovable</code> TXT record.
+                          Assign a custom domain so this store gets its own branded landing page. DNS must point to <code className="font-mono bg-muted px-1 rounded text-micro">185.158.133.1</code> with a <code className="font-mono bg-muted px-1 rounded text-micro">_lovable</code> TXT record.
                         </p>
                         <div className="flex items-center gap-2">
                           <Input
@@ -773,19 +773,19 @@ const LocationManagement = () => {
                         <Label className="text-xs font-semibold">Store Identity</Label>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div>
-                            <Label className="text-[10px] text-muted-foreground mb-1 block">Display Name</Label>
+                            <Label className="text-micro text-muted-foreground mb-1 block">Display Name</Label>
                             <Input value={loc.dealership_name || ""} onChange={e => updateLocation(loc.id, "dealership_name", e.target.value || null)} placeholder="Inherit from corporate" />
                           </div>
                           <div>
-                            <Label className="text-[10px] text-muted-foreground mb-1 block">Tagline</Label>
+                            <Label className="text-micro text-muted-foreground mb-1 block">Tagline</Label>
                             <Input value={loc.tagline || ""} onChange={e => updateLocation(loc.id, "tagline", e.target.value || null)} placeholder="Inherit from corporate" />
                           </div>
                           <div>
-                            <Label className="text-[10px] text-muted-foreground mb-1 block">Phone</Label>
+                            <Label className="text-micro text-muted-foreground mb-1 block">Phone</Label>
                             <Input value={loc.phone || ""} onChange={e => updateLocation(loc.id, "phone", e.target.value || null)} placeholder="Inherit from corporate" />
                           </div>
                           <div>
-                            <Label className="text-[10px] text-muted-foreground mb-1 block">Email</Label>
+                            <Label className="text-micro text-muted-foreground mb-1 block">Email</Label>
                             <Input value={loc.email || ""} onChange={e => updateLocation(loc.id, "email", e.target.value || null)} placeholder="Inherit from corporate" />
                           </div>
                         </div>
@@ -799,12 +799,12 @@ const LocationManagement = () => {
                             <button
                               type="button"
                               onClick={() => updateLocation(loc.id, "landing_template", null)}
-                              className="text-[10px] font-semibold text-primary hover:underline"
+                              className="text-micro font-semibold text-primary hover:underline"
                             >
                               Reset to corporate
                             </button>
                           ) : (
-                            <span className="text-[10px] font-semibold text-muted-foreground">
+                            <span className="text-micro font-semibold text-muted-foreground">
                               Inheriting from corporate
                             </span>
                           )}
@@ -829,7 +829,7 @@ const LocationManagement = () => {
                                   <TemplateThumbnail template={t.value} />
                                 </div>
                                 <div className="font-semibold text-xs">{t.label}</div>
-                                <div className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">
+                                <div className="text-micro text-muted-foreground mt-0.5 line-clamp-2">
                                   {t.description}
                                 </div>
                               </button>
@@ -842,20 +842,20 @@ const LocationManagement = () => {
                       <div className="space-y-3 border-t border-border/30 pt-4">
                         <Label className="text-xs font-semibold">Hero Section</Label>
                         <div>
-                          <Label className="text-[10px] text-muted-foreground mb-1 block">Headline</Label>
+                          <Label className="text-micro text-muted-foreground mb-1 block">Headline</Label>
                           <Input value={loc.hero_headline || ""} onChange={e => updateLocation(loc.id, "hero_headline", e.target.value || null)} placeholder="Inherit from corporate" />
                         </div>
                         <div>
-                          <Label className="text-[10px] text-muted-foreground mb-1 block">Subtext</Label>
+                          <Label className="text-micro text-muted-foreground mb-1 block">Subtext</Label>
                           <Textarea value={loc.hero_subtext || ""} onChange={e => updateLocation(loc.id, "hero_subtext", e.target.value || null)} placeholder="Inherit from corporate" rows={2} />
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div>
-                            <Label className="text-[10px] text-muted-foreground mb-1 block">Service Hero Headline</Label>
+                            <Label className="text-micro text-muted-foreground mb-1 block">Service Hero Headline</Label>
                             <Input value={loc.service_hero_headline || ""} onChange={e => updateLocation(loc.id, "service_hero_headline", e.target.value || null)} placeholder="Inherit" />
                           </div>
                           <div>
-                            <Label className="text-[10px] text-muted-foreground mb-1 block">Trade Hero Headline</Label>
+                            <Label className="text-micro text-muted-foreground mb-1 block">Trade Hero Headline</Label>
                             <Input value={loc.trade_hero_headline || ""} onChange={e => updateLocation(loc.id, "trade_hero_headline", e.target.value || null)} placeholder="Inherit" />
                           </div>
                         </div>
@@ -866,15 +866,15 @@ const LocationManagement = () => {
                         <Label className="text-xs font-semibold">Brand Colors (HSL)</Label>
                         <div className="grid grid-cols-3 gap-3">
                           <div>
-                            <Label className="text-[10px] text-muted-foreground mb-1 block">Primary</Label>
+                            <Label className="text-micro text-muted-foreground mb-1 block">Primary</Label>
                             <Input value={loc.primary_color || ""} onChange={e => updateLocation(loc.id, "primary_color", e.target.value || null)} placeholder="Inherit" className="font-mono text-xs" />
                           </div>
                           <div>
-                            <Label className="text-[10px] text-muted-foreground mb-1 block">Accent</Label>
+                            <Label className="text-micro text-muted-foreground mb-1 block">Accent</Label>
                             <Input value={loc.accent_color || ""} onChange={e => updateLocation(loc.id, "accent_color", e.target.value || null)} placeholder="Inherit" className="font-mono text-xs" />
                           </div>
                           <div>
-                            <Label className="text-[10px] text-muted-foreground mb-1 block">Success</Label>
+                            <Label className="text-micro text-muted-foreground mb-1 block">Success</Label>
                             <Input value={loc.success_color || ""} onChange={e => updateLocation(loc.id, "success_color", e.target.value || null)} placeholder="Inherit" className="font-mono text-xs" />
                           </div>
                         </div>
@@ -886,7 +886,7 @@ const LocationManagement = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           {(["facebook_url", "instagram_url", "google_review_url", "tiktok_url", "youtube_url"] as const).map(field => (
                             <div key={field}>
-                              <Label className="text-[10px] text-muted-foreground mb-1 block capitalize">{field.replace(/_url$/, "").replace(/_/g, " ")}</Label>
+                              <Label className="text-micro text-muted-foreground mb-1 block capitalize">{field.replace(/_url$/, "").replace(/_/g, " ")}</Label>
                               <Input value={(loc as any)[field] || ""} onChange={e => updateLocation(loc.id, field, e.target.value || null)} placeholder="Inherit" className="text-xs" />
                             </div>
                           ))}
@@ -908,19 +908,19 @@ const LocationManagement = () => {
         </Label>
         <div className="flex items-end gap-3 flex-wrap">
           <div className="flex-1 min-w-[160px]">
-            <Label className="text-[10px] text-muted-foreground mb-1 block">Name</Label>
+            <Label className="text-micro text-muted-foreground mb-1 block">Name</Label>
             <Input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Location name" />
           </div>
           <div className="w-32">
-            <Label className="text-[10px] text-muted-foreground mb-1 block">City</Label>
+            <Label className="text-micro text-muted-foreground mb-1 block">City</Label>
             <Input value={newCity} onChange={e => setNewCity(e.target.value)} placeholder="City" />
           </div>
           <div className="w-20">
-            <Label className="text-[10px] text-muted-foreground mb-1 block">State</Label>
+            <Label className="text-micro text-muted-foreground mb-1 block">State</Label>
             <Input value={newState} onChange={e => setNewState(e.target.value)} placeholder="ST" />
           </div>
           <div className="w-44">
-            <Label className="text-[10px] text-muted-foreground mb-1 block">Type</Label>
+            <Label className="text-micro text-muted-foreground mb-1 block">Type</Label>
             <Select value={newLocationType} onValueChange={setNewLocationType}>
               <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
               <SelectContent>

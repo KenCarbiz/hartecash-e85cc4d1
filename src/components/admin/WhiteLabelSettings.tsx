@@ -226,7 +226,7 @@ const WhiteLabelSettings = () => {
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <Label className="text-xs font-medium">Custom Domain</Label>
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border border-blue-500/40 bg-blue-500/10 text-blue-700 dark:text-blue-300">
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-micro font-bold uppercase tracking-wider border border-blue-500/40 bg-blue-500/10 text-blue-700 dark:text-blue-300">
               Enterprise Beta
             </span>
           </div>
@@ -317,7 +317,7 @@ const WhiteLabelSettings = () => {
         <div className="space-y-4">
           {/* Header preview */}
           <div>
-            <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground/60 mb-2">Header</p>
+            <p className="text-micro uppercase tracking-widest font-bold text-muted-foreground/60 mb-2">Header</p>
             <div className="rounded-xl border border-border bg-muted/20 px-5 py-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {state.custom_favicon_url ? (
@@ -336,7 +336,7 @@ const WhiteLabelSettings = () => {
                   {state.meta_title || previewName}
                 </span>
               </div>
-              <Badge variant="secondary" className="text-[10px]">
+              <Badge variant="secondary" className="text-micro">
                 {state.custom_email_domain || "yourdomain.com"}
               </Badge>
             </div>
@@ -344,7 +344,7 @@ const WhiteLabelSettings = () => {
 
           {/* Footer preview — mirrors the resolved mode (including super-admin force) */}
           <div>
-            <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground/60 mb-2">Footer Preview</p>
+            <p className="text-micro uppercase tracking-widest font-bold text-muted-foreground/60 mb-2">Footer Preview</p>
             <div className="rounded-xl border border-border bg-muted/20 px-5 py-4 text-center space-y-1">
               <p className="text-xs text-muted-foreground">
                 &copy; {new Date().getFullYear()} {previewName}. All rights reserved.
@@ -356,14 +356,14 @@ const WhiteLabelSettings = () => {
                   : state.powered_by_mode;
                 if (effectiveMode === "autocurb") {
                   return (
-                    <p className="text-[10px] text-muted-foreground/50">
+                    <p className="text-micro text-muted-foreground/50">
                       Powered by Autocurb.ai
                     </p>
                   );
                 }
                 if (effectiveMode === "dealer") {
                   return (
-                    <p className="text-[10px] text-muted-foreground/50">
+                    <p className="text-micro text-muted-foreground/50">
                       Powered by {previewName}
                     </p>
                   );

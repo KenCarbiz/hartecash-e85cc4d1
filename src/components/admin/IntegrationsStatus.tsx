@@ -298,7 +298,7 @@ const StatusPill = ({
         <Icon className="w-4 h-4" />
       </div>
       <div>
-        <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+        <div className="text-micro uppercase tracking-wider font-bold text-muted-foreground">
           {meta.label}
         </div>
         <div className="text-xl font-black tracking-tight text-card-foreground">
@@ -341,7 +341,7 @@ const IntegrationCard = ({ integration }: { integration: Integration }) => {
               <CategoryIcon className="w-4 h-4 text-muted-foreground" />
             </div>
             <div className="min-w-0">
-              <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+              <div className="text-micro uppercase tracking-wider font-bold text-muted-foreground">
                 {integration.category}
               </div>
               <h3 className="text-sm font-black tracking-tight text-card-foreground leading-tight">
@@ -352,7 +352,7 @@ const IntegrationCard = ({ integration }: { integration: Integration }) => {
 
           <span
             className={cn(
-              "inline-flex items-center gap-1 rounded-lg border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider shrink-0",
+              "inline-flex items-center gap-1 rounded-lg border px-2 py-0.5 text-micro font-bold uppercase tracking-wider shrink-0",
               meta.badge
             )}
           >
@@ -495,7 +495,7 @@ const IntegrationsStatus: React.FC = () => {
                 {cat}
               </h3>
               <div className="flex-1 h-px bg-border/40" />
-              <span className="text-[10px] font-bold text-muted-foreground/70">
+              <span className="text-micro font-bold text-muted-foreground/70">
                 {items.length}
               </span>
             </div>

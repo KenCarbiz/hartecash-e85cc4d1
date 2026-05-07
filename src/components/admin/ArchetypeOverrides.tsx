@@ -88,10 +88,10 @@ export default function ArchetypeOverrides({ value, onChange, defaultAmounts }: 
 
                   return (
                     <div key={field.key}>
-                      <Label className="text-[10px] font-semibold text-muted-foreground">{field.label}</Label>
+                      <Label className="text-micro font-semibold text-muted-foreground">{field.label}</Label>
                       <p className="text-[8px] text-muted-foreground mb-1">{field.hint}</p>
                       <div className="relative">
-                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-[10px]">$</span>
+                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-micro">$</span>
                         <Input
                           type="number" min={0} step={50}
                           value={currentVal ?? ""}

@@ -382,7 +382,7 @@ const EquityMining = () => {
         <div className="bg-card rounded-2xl border border-border p-4 shadow-sm">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+              <label className="text-micro font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">
                 Date From
               </label>
               <Input
@@ -393,7 +393,7 @@ const EquityMining = () => {
               />
             </div>
             <div>
-              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+              <label className="text-micro font-bold text-muted-foreground uppercase tracking-wider mb-1.5 block">
                 Date To
               </label>
               <Input
@@ -405,7 +405,7 @@ const EquityMining = () => {
             </div>
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                <label className="text-micro font-bold text-muted-foreground uppercase tracking-wider">
                   Minimum Equity
                 </label>
                 <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
@@ -472,7 +472,7 @@ const EquityMining = () => {
             <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
               Service Drive Leads by Estimated Equity
             </h3>
-            <Badge variant="secondary" className="ml-auto text-[10px]">
+            <Badge variant="secondary" className="ml-auto text-micro">
               {filtered.length} lead{filtered.length !== 1 ? "s" : ""}
             </Badge>
           </div>
@@ -495,28 +495,28 @@ const EquityMining = () => {
             <table className="w-full text-sm min-w-[900px]">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
-                  <th className="text-left px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                  <th className="text-left px-4 py-3 text-micro font-bold text-muted-foreground uppercase tracking-wider">
                     Customer
                   </th>
-                  <th className="text-left px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                  <th className="text-left px-4 py-3 text-micro font-bold text-muted-foreground uppercase tracking-wider">
                     Vehicle
                   </th>
-                  <th className="text-right px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                  <th className="text-right px-4 py-3 text-micro font-bold text-muted-foreground uppercase tracking-wider">
                     Vehicle Value
                   </th>
-                  <th className="text-right px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                  <th className="text-right px-4 py-3 text-micro font-bold text-muted-foreground uppercase tracking-wider">
                     Loan Payoff
                   </th>
-                  <th className="text-right px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                  <th className="text-right px-4 py-3 text-micro font-bold text-muted-foreground uppercase tracking-wider">
                     Equity
                   </th>
-                  <th className="text-right px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                  <th className="text-right px-4 py-3 text-micro font-bold text-muted-foreground uppercase tracking-wider">
                     Days
                   </th>
-                  <th className="text-center px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                  <th className="text-center px-4 py-3 text-micro font-bold text-muted-foreground uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="text-right px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                  <th className="text-right px-4 py-3 text-micro font-bold text-muted-foreground uppercase tracking-wider">
                     Action
                   </th>
                 </tr>
@@ -615,15 +615,15 @@ const EquityMining = () => {
                       </td>
                       <td className="px-4 py-3 text-center">
                         {wasSent ? (
-                          <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-0 text-[10px]">
+                          <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-0 text-micro">
                             Sent
                           </Badge>
                         ) : lead.progress_status === "contacted" ? (
-                          <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-0 text-[10px]">
+                          <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-0 text-micro">
                             Contacted
                           </Badge>
                         ) : (
-                          <Badge variant="secondary" className="text-[10px]">
+                          <Badge variant="secondary" className="text-micro">
                             Pending
                           </Badge>
                         )}
@@ -680,7 +680,7 @@ function KpiCard({
       />
       <div className="relative">
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
+          <span className="text-micro text-muted-foreground font-bold uppercase tracking-wider">
             {label}
           </span>
           <div className="w-7 h-7 rounded-lg bg-background/60 flex items-center justify-center">

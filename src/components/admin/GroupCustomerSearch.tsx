@@ -162,11 +162,11 @@ const GroupCustomerSearch = ({ dealershipNames }: Props) => {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-medium text-sm">{r.name || "—"}</span>
-                    <Badge variant="outline" className="text-[10px]">{rooftop}</Badge>
+                    <Badge variant="outline" className="text-micro">{rooftop}</Badge>
                     {r.progress_status && (
                       <Badge
                         variant="secondary"
-                        className="text-[10px]"
+                        className="text-micro"
                       >
                         {r.progress_status}
                       </Badge>
@@ -177,7 +177,7 @@ const GroupCustomerSearch = ({ dealershipNames }: Props) => {
                     {vehicle && <> · {vehicle}</>}
                     {r.offered_price && <> · ${r.offered_price.toLocaleString()}</>}
                   </div>
-                  <div className="text-[10px] text-muted-foreground/70 font-mono mt-0.5">
+                  <div className="text-micro text-muted-foreground/70 font-mono mt-0.5">
                     {new Date(r.created_at).toLocaleDateString()} · {r.id.slice(0, 8)}
                   </div>
                 </div>

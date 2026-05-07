@@ -120,10 +120,10 @@ const RecentInvoicesPanel = () => {
             const open = inv.status === "open";
             return (
               <tr key={inv.id} className="hover:bg-muted/20">
-                <td className="px-5 py-2 text-[12px] tabular-nums">
+                <td className="px-5 py-2 text-caption tabular-nums">
                   {new Date(inv.created).toLocaleDateString()}
                 </td>
-                <td className="px-3 py-2 text-[12px] font-mono text-muted-foreground">
+                <td className="px-3 py-2 text-caption font-mono text-muted-foreground">
                   {inv.number || inv.id}
                 </td>
                 <td className="px-3 py-2 text-right tabular-nums font-medium">
@@ -134,11 +134,11 @@ const RecentInvoicesPanel = () => {
                 </td>
                 <td className="px-3 py-2">
                   {paid ? (
-                    <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-[10px]">paid</Badge>
+                    <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-micro">paid</Badge>
                   ) : open ? (
-                    <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-[10px]">open</Badge>
+                    <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-micro">open</Badge>
                   ) : (
-                    <Badge variant="outline" className="text-[10px]">{inv.status}</Badge>
+                    <Badge variant="outline" className="text-micro">{inv.status}</Badge>
                   )}
                 </td>
                 <td className="px-5 py-2 text-right">

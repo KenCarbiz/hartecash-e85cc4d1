@@ -177,7 +177,7 @@ If you have any questions please let us know. Thanks!`;
       <div className="rounded-lg border border-slate-200 bg-white p-4 space-y-3">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500">
+            <div className="text-micro font-bold uppercase tracking-[0.1em] text-slate-500">
               Step 1 — Save current settings
             </div>
             <div className="text-xs text-slate-600 mt-0.5">
@@ -216,7 +216,7 @@ If you have any questions please let us know. Thanks!`;
       <div className="rounded-lg border border-slate-200 bg-white p-4 space-y-3">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500">
+            <div className="text-micro font-bold uppercase tracking-[0.1em] text-slate-500">
               Step 2 — Send this snippet to your web provider
             </div>
             <div className="text-xs text-slate-600 mt-0.5">
@@ -246,7 +246,7 @@ If you have any questions please let us know. Thanks!`;
       <div className="rounded-lg border border-slate-200 bg-white p-4 space-y-3">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500">
+            <div className="text-micro font-bold uppercase tracking-[0.1em] text-slate-500">
               Step 3 (optional) — Pre-written email to your web provider
             </div>
             <div className="text-xs text-slate-600 mt-0.5">

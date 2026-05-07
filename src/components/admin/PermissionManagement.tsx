@@ -361,7 +361,7 @@ const PermissionManagement = () => {
                   {req.message && (
                     <p className="text-xs text-muted-foreground mt-1 italic">"{req.message}"</p>
                   )}
-                  <p className="text-[10px] text-muted-foreground/60 mt-1">
+                  <p className="text-micro text-muted-foreground/60 mt-1">
                     {new Date(req.created_at).toLocaleDateString()} {new Date(req.created_at).toLocaleTimeString()}
                   </p>
                 </div>
@@ -401,7 +401,7 @@ const PermissionManagement = () => {
                   {member.individual_sections.length > 0 ? (
                     <div className="flex flex-wrap gap-1 mt-2">
                       {member.individual_sections.map((s) => (
-                        <Badge key={s} variant="outline" className="text-[10px]">
+                        <Badge key={s} variant="outline" className="text-micro">
                           {ALL_SECTIONS.find((sec) => sec.key === s)?.label || s}
                         </Badge>
                       ))}
@@ -433,12 +433,12 @@ const PermissionManagement = () => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-semibold text-foreground">{g.name}</p>
-                  {g.is_default && <Badge variant="secondary" className="text-[10px]">Default</Badge>}
+                  {g.is_default && <Badge variant="secondary" className="text-micro">Default</Badge>}
                 </div>
                 {g.description && <p className="text-xs text-muted-foreground mt-0.5">{g.description}</p>}
                 <div className="flex flex-wrap gap-1 mt-2">
                   {g.allowed_sections.map((s) => (
-                    <Badge key={s} variant="outline" className="text-[10px]">
+                    <Badge key={s} variant="outline" className="text-micro">
                       {ALL_SECTIONS.find((sec) => sec.key === s)?.label || s}
                     </Badge>
                   ))}

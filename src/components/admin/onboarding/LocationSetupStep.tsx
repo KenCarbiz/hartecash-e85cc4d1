@@ -145,7 +145,7 @@ const LocationSetupStep = ({ state, onChange }: Props) => {
                   {loc.name || `Location ${idx + 1}`}
                 </span>
                 {hasData && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />}
-                <Badge variant="secondary" className="text-[10px]">
+                <Badge variant="secondary" className="text-micro">
                   {LOCATION_TYPES.find((t) => t.value === loc.locationType)?.label || loc.locationType}
                 </Badge>
               </div>
@@ -226,7 +226,7 @@ const LocationSetupStep = ({ state, onChange }: Props) => {
                         type="button"
                         onClick={() => toggleBrand(idx, brand)}
                         className={cn(
-                          "text-[10px] px-2 py-1 rounded-md border transition-colors",
+                          "text-micro px-2 py-1 rounded-md border transition-colors",
                           loc.oem_brands.includes(brand)
                             ? "bg-primary text-primary-foreground border-primary"
                             : "border-border hover:bg-muted text-muted-foreground"
@@ -292,7 +292,7 @@ const LocationSetupStep = ({ state, onChange }: Props) => {
                             className="mt-1 text-sm font-mono"
                           />
                           {loc.rooftopSlug && (
-                            <p className="text-[10px] text-muted-foreground mt-1">
+                            <p className="text-micro text-muted-foreground mt-1">
                               Will serve at <span className="font-mono">{loc.rooftopSlug}.autocurb.io</span>
                             </p>
                           )}
@@ -307,7 +307,7 @@ const LocationSetupStep = ({ state, onChange }: Props) => {
                             placeholder="smithtoyota.com"
                             className="mt-1 text-sm font-mono"
                           />
-                          <p className="text-[10px] text-muted-foreground mt-1">
+                          <p className="text-micro text-muted-foreground mt-1">
                             Add later in Rooftop Websites if the dealer doesn't own one yet.
                           </p>
                         </div>
@@ -329,7 +329,7 @@ const LocationSetupStep = ({ state, onChange }: Props) => {
                             ))}
                           </SelectContent>
                         </Select>
-                        <p className="text-[10px] text-muted-foreground mt-1">
+                        <p className="text-micro text-muted-foreground mt-1">
                           "Group default" uses whatever the group picks in Landing &amp; Flow.
                           Dealers can always switch later per rooftop.
                         </p>
@@ -349,7 +349,7 @@ const LocationSetupStep = ({ state, onChange }: Props) => {
 function MiniLogoSlot({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <div className="border border-dashed border-border rounded-lg p-2 space-y-1.5">
-      <p className="text-[10px] font-medium text-muted-foreground">{label}</p>
+      <p className="text-micro font-medium text-muted-foreground">{label}</p>
       {value ? (
         <img src={value} alt={label} className="h-8 object-contain mx-auto" />
       ) : (
@@ -361,7 +361,7 @@ function MiniLogoSlot({ label, value, onChange }: { label: string; value: string
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="URL"
-        className="text-[10px] h-6"
+        className="text-micro h-6"
       />
     </div>
   );

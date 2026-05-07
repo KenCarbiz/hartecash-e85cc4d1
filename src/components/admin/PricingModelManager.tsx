@@ -505,7 +505,7 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
         </div>
 
         {activeModels.length > 0 && (
-          <Badge variant="secondary" className="text-[10px] shrink-0">
+          <Badge variant="secondary" className="text-micro shrink-0">
             {activeModels.length} active
           </Badge>
         )}
@@ -533,7 +533,7 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
               const ab = APPROVAL_BADGE[selectedModel.approval_status] || APPROVAL_BADGE.draft;
               const AbIcon = ab.icon;
               return (
-                <Badge variant={ab.variant} className="gap-1 text-[10px] shrink-0">
+                <Badge variant={ab.variant} className="gap-1 text-micro shrink-0">
                   <AbIcon className="w-3 h-3" /> {ab.label}
                 </Badge>
               );

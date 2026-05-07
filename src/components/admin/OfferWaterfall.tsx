@@ -154,7 +154,7 @@ export default function OfferWaterfall({
                 }`}
                 style={{ width: `${Math.max(barWidth, 3)}%` }}
               >
-                <span className={`text-[10px] font-bold px-1.5 truncate ${
+                <span className={`text-micro font-bold px-1.5 truncate ${
                   isTotal ? "text-primary-foreground" : 
                   isBase ? "text-primary" :
                   isPositive ? "text-green-600 dark:text-green-400" :

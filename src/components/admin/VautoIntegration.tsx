@@ -354,7 +354,7 @@ const VautoIntegration = () => {
       <PremiumCard icon={ShieldCheck} title="Integration Status" description="Live state of the vAuto sync bridge.">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
           <div className="rounded-xl border border-border/40 bg-muted/20 p-4">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-1">Mode</div>
+            <div className="text-micro uppercase tracking-wider text-muted-foreground font-bold mb-1">Mode</div>
             <div className="font-semibold capitalize">{cfg.vauto_api_environment}</div>
             <p className="text-xs text-muted-foreground mt-1">
               {cfg.vauto_api_environment === "sandbox"
@@ -363,14 +363,14 @@ const VautoIntegration = () => {
             </p>
           </div>
           <div className="rounded-xl border border-border/40 bg-muted/20 p-4">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-1">Credentials</div>
+            <div className="text-micro uppercase tracking-wider text-muted-foreground font-bold mb-1">Credentials</div>
             <div className="font-semibold">{cfg.vauto_api_key ? "Configured" : "Not set"}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Dealer ID: {cfg.vauto_dealer_id || <span className="italic">unset</span>}
             </p>
           </div>
           <div className="rounded-xl border border-border/40 bg-muted/20 p-4">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-1">Auto-push</div>
+            <div className="text-micro uppercase tracking-wider text-muted-foreground font-bold mb-1">Auto-push</div>
             <div className="font-semibold">{cfg.vauto_auto_push ? "On" : "Off"}</div>
             <p className="text-xs text-muted-foreground mt-1">
               {cfg.vauto_auto_push
@@ -547,7 +547,7 @@ const VautoIntegration = () => {
                       <td className="px-3 py-2">
                         <div className="font-semibold">{vehicle || "—"}</div>
                         {row.submissions?.vin && (
-                          <div className="text-[10px] font-mono text-muted-foreground">{row.submissions.vin}</div>
+                          <div className="text-micro font-mono text-muted-foreground">{row.submissions.vin}</div>
                         )}
                       </td>
                       <td className="px-3 py-2 text-muted-foreground">
@@ -556,7 +556,7 @@ const VautoIntegration = () => {
                       <td className="px-3 py-2">
                         <StatusChip status={row.push_status} />
                         {row.error_message && row.push_status !== "success" && (
-                          <div className="text-[10px] text-red-600 dark:text-red-400 mt-1 max-w-[220px] truncate" title={row.error_message}>
+                          <div className="text-micro text-red-600 dark:text-red-400 mt-1 max-w-[220px] truncate" title={row.error_message}>
                             {row.error_message}
                           </div>
                         )}

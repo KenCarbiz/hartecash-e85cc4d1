@@ -867,7 +867,7 @@ const ProspectDemo = () => {
 
       {/* Prospect config form */}
       <div className="rounded-lg border border-slate-200 bg-white p-4 space-y-4">
-        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500">
+        <div className="flex items-center gap-2 text-micro font-bold uppercase tracking-[0.1em] text-slate-500">
           <Sparkles className="w-3.5 h-3.5" />
           Prospect Brand &amp; Copy
         </div>
@@ -977,7 +977,7 @@ const ProspectDemo = () => {
 
       {/* Capture form */}
       <div className="rounded-lg border border-slate-200 bg-white p-4 space-y-3">
-        <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500">
+        <div className="text-micro font-bold uppercase tracking-[0.1em] text-slate-500">
           Prospect Site URLs
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -1089,7 +1089,7 @@ const ProspectDemo = () => {
       {/* Asset toggles — paired with the screenshots they control. */}
       {hasAnyCapture && (
         <div className="rounded-lg border border-slate-200 bg-white p-4 space-y-3">
-          <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500">
+          <div className="text-micro font-bold uppercase tracking-[0.1em] text-slate-500">
             Toggle assets to layer on the screenshots
           </div>
           <div className="flex flex-wrap gap-2">
@@ -1464,7 +1464,7 @@ const DragSnapZone = ({
           without having to start a drag to discover it. Hidden during
           drag so it doesn't compete with the snap-zone indicators. */}
       {!drag && (
-        <div className="absolute top-2 right-2 pointer-events-none flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur-sm px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-600 shadow-sm border border-slate-200/80">
+        <div className="absolute top-2 right-2 pointer-events-none flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur-sm px-2.5 py-1 text-micro font-bold uppercase tracking-wider text-slate-600 shadow-sm border border-slate-200/80">
           <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
             <path d="M10 3a1 1 0 011 1v4h4a1 1 0 110 2h-4v4a1 1 0 11-2 0v-4H5a1 1 0 110-2h4V4a1 1 0 011-1z" />
           </svg>
@@ -1493,7 +1493,7 @@ const DragSnapZone = ({
                 }`}
               />
               <div
-                className={`absolute top-full mt-1 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${
+                className={`absolute top-full mt-1 left-1/2 -translate-x-1/2 text-micro font-bold uppercase tracking-wider whitespace-nowrap ${
                   isClosest ? "text-[#003b80]" : "text-slate-500"
                 }`}
               >
@@ -1534,11 +1534,11 @@ const BrowserFrame = ({
           <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
           <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
         </div>
-        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 ml-2">{label}</span>
+        <span className="text-micro font-bold uppercase tracking-wider text-slate-500 ml-2">{label}</span>
       </div>
       {positionControl && (
         <div className="flex items-center gap-1.5 mr-3 shrink-0">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+          <span className="text-micro font-bold uppercase tracking-wider text-slate-400">
             Position
           </span>
           <select
@@ -1558,7 +1558,7 @@ const BrowserFrame = ({
             <button
               type="button"
               onClick={positionControl.onReset}
-              className="text-[10px] font-bold text-slate-500 hover:text-slate-800 underline"
+              className="text-micro font-bold text-slate-500 hover:text-slate-800 underline"
               title="Reset to the AI's suggested position"
             >
               reset
@@ -1604,7 +1604,7 @@ const PageScreenshot = ({
           <div className="text-xs text-slate-500 font-medium">
             Loading screenshot…
           </div>
-          <div className="text-[10px] text-slate-400 mt-1 max-w-md truncate px-4">
+          <div className="text-micro text-slate-400 mt-1 max-w-md truncate px-4">
             {src}
           </div>
         </div>
@@ -1621,7 +1621,7 @@ const PageScreenshot = ({
             may have a cert issue, blocked the capture, or hit microlink's
             free-tier rate limit.
           </div>
-          <div className="text-[10px] font-mono text-slate-400 mt-3 max-w-md truncate px-4">
+          <div className="text-micro font-mono text-slate-400 mt-3 max-w-md truncate px-4">
             {src}
           </div>
         </div>
@@ -1677,7 +1677,7 @@ const SharePanel = ({
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           <Share2 className="w-4 h-4 text-emerald-700" />
-          <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-emerald-700">
+          <div className="text-micro font-bold uppercase tracking-[0.1em] text-emerald-700">
             Share This Demo with the Prospect
           </div>
         </div>
@@ -1822,7 +1822,7 @@ const ColorRecommendationsPanel = ({
     <div className="rounded-lg border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4 space-y-4">
       <div className="flex items-center gap-2">
         <Sparkles className="w-4 h-4 text-blue-600" />
-        <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500">
+        <div className="text-micro font-bold uppercase tracking-[0.1em] text-slate-500">
           AI Color Recommendations
         </div>
       </div>
@@ -1876,15 +1876,15 @@ const ColorRecommendationsPanel = ({
                     <div className="text-xs font-bold text-slate-800 truncate">
                       {r.name}
                     </div>
-                    <div className="text-[10px] font-mono text-slate-500">{r.hex}</div>
+                    <div className="text-micro font-mono text-slate-500">{r.hex}</div>
                   </div>
                   {isActive && (
-                    <div className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">
+                    <div className="text-micro font-bold text-blue-700 uppercase tracking-wider">
                       Applied
                     </div>
                   )}
                 </div>
-                <div className="text-[10px] text-slate-600 leading-snug">{r.reasoning}</div>
+                <div className="text-micro text-slate-600 leading-snug">{r.reasoning}</div>
                 <div className="flex gap-3 mt-1.5 text-[9px] text-slate-500">
                   <span>{r.contrastVsWhite}:1 vs white</span>
                   <span>{r.contrastVsPrimary}:1 vs primary</span>
@@ -1926,7 +1926,7 @@ const LlmRecommendationsPanel = ({
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           <Brain className="w-4 h-4 text-violet-700" />
-          <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-violet-700">
+          <div className="text-micro font-bold uppercase tracking-[0.1em] text-violet-700">
             Senior-Rep AI Recommendations
           </div>
         </div>
@@ -1970,7 +1970,7 @@ const LlmRecommendationsPanel = ({
         <div className="space-y-3">
           {result.pitchLine && (
             <div className="rounded-md border border-violet-200 bg-white p-3">
-              <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-violet-700 mb-1">
+              <div className="text-micro font-bold uppercase tracking-[0.1em] text-violet-700 mb-1">
                 Opening pitch
               </div>
               <div className="text-sm text-slate-800 italic leading-relaxed">
@@ -1981,7 +1981,7 @@ const LlmRecommendationsPanel = ({
 
           {accent?.hex && (
             <div className="rounded-md border border-slate-200 bg-white p-3">
-              <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500 mb-2">
+              <div className="text-micro font-bold uppercase tracking-[0.1em] text-slate-500 mb-2">
                 Recommended accent color
               </div>
               <div className="flex items-center gap-3">
@@ -2026,7 +2026,7 @@ const LlmRecommendationsPanel = ({
                     key={pageKey}
                     className="rounded-md border border-slate-200 bg-white p-3"
                   >
-                    <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500 mb-1.5">
+                    <div className="text-micro font-bold uppercase tracking-[0.1em] text-slate-500 mb-1.5">
                       {pageKey === "home"
                         ? "Homepage"
                         : pageKey === "listing"

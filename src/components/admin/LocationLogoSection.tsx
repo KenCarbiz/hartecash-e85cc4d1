@@ -132,7 +132,7 @@ const LocationLogoSection = ({ location, dealershipId, onUpdate }: LocationLogoS
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {/* Light variant */}
           <div className="space-y-1">
-            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Light / Default</span>
+            <span className="text-micro font-medium text-muted-foreground uppercase tracking-wide">Light / Default</span>
             <div className="flex items-center gap-2">
               {location.corporate_logo_url ? (
                 <div className="relative group">
@@ -140,7 +140,7 @@ const LocationLogoSection = ({ location, dealershipId, onUpdate }: LocationLogoS
                   <button onClick={() => onUpdate("corporate_logo_url", null)} className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-3 h-3" /></button>
                 </div>
               ) : (
-                <div className="h-12 w-28 rounded border border-dashed border-border flex items-center justify-center text-[10px] text-muted-foreground">No logo</div>
+                <div className="h-12 w-28 rounded border border-dashed border-border flex items-center justify-center text-micro text-muted-foreground">No logo</div>
               )}
               <Button size="sm" variant="outline" onClick={() => corpInputRef.current?.click()} disabled={uploading === "corporate"} className="gap-1.5">
                 {uploading === "corporate" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
@@ -151,7 +151,7 @@ const LocationLogoSection = ({ location, dealershipId, onUpdate }: LocationLogoS
           </div>
           {/* Dark variant */}
           <div className="space-y-1">
-            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Dark (for light backgrounds)</span>
+            <span className="text-micro font-medium text-muted-foreground uppercase tracking-wide">Dark (for light backgrounds)</span>
             <div className="flex items-center gap-2">
               {location.corporate_logo_dark_url ? (
                 <div className="relative group">
@@ -159,7 +159,7 @@ const LocationLogoSection = ({ location, dealershipId, onUpdate }: LocationLogoS
                   <button onClick={() => onUpdate("corporate_logo_dark_url", null)} className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-3 h-3" /></button>
                 </div>
               ) : (
-                <div className="h-12 w-28 rounded border border-dashed border-border flex items-center justify-center text-[10px] text-muted-foreground">No logo</div>
+                <div className="h-12 w-28 rounded border border-dashed border-border flex items-center justify-center text-micro text-muted-foreground">No logo</div>
               )}
               <Button size="sm" variant="outline" onClick={() => corpDarkInputRef.current?.click()} disabled={uploading === "corporate_dark"} className="gap-1.5">
                 {uploading === "corporate_dark" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
@@ -211,13 +211,13 @@ const LocationLogoSection = ({ location, dealershipId, onUpdate }: LocationLogoS
       {/* Secondary Logo — Light & Dark */}
       <div className="space-y-3">
         <Label className="text-xs text-muted-foreground">Additional / Auxiliary Logo (optional)</Label>
-        <p className="text-[10px] text-muted-foreground -mt-2">
+        <p className="text-micro text-muted-foreground -mt-2">
           An extra logo shown alongside your main dealership logo — e.g. an alternate brand logo, certification badge, or promotional mark. Appears on landing pages and the site header.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {/* Light variant */}
           <div className="space-y-1">
-            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Light / Default</span>
+            <span className="text-micro font-medium text-muted-foreground uppercase tracking-wide">Light / Default</span>
             <div className="flex items-center gap-2">
               {location.secondary_logo_url ? (
                 <div className="relative group">
@@ -225,7 +225,7 @@ const LocationLogoSection = ({ location, dealershipId, onUpdate }: LocationLogoS
                   <button onClick={() => onUpdate("secondary_logo_url", null)} className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-3 h-3" /></button>
                 </div>
               ) : (
-                <div className="h-12 w-28 rounded border border-dashed border-border flex items-center justify-center text-[10px] text-muted-foreground">No logo</div>
+                <div className="h-12 w-28 rounded border border-dashed border-border flex items-center justify-center text-micro text-muted-foreground">No logo</div>
               )}
               <Button size="sm" variant="outline" onClick={() => secInputRef.current?.click()} disabled={uploading === "secondary"} className="gap-1.5">
                 {uploading === "secondary" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
@@ -236,7 +236,7 @@ const LocationLogoSection = ({ location, dealershipId, onUpdate }: LocationLogoS
           </div>
           {/* Dark variant */}
           <div className="space-y-1">
-            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Dark (for light backgrounds)</span>
+            <span className="text-micro font-medium text-muted-foreground uppercase tracking-wide">Dark (for light backgrounds)</span>
             <div className="flex items-center gap-2">
               {location.secondary_logo_dark_url ? (
                 <div className="relative group">
@@ -244,7 +244,7 @@ const LocationLogoSection = ({ location, dealershipId, onUpdate }: LocationLogoS
                   <button onClick={() => onUpdate("secondary_logo_dark_url", null)} className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-3 h-3" /></button>
                 </div>
               ) : (
-                <div className="h-12 w-28 rounded border border-dashed border-border flex items-center justify-center text-[10px] text-muted-foreground">No logo</div>
+                <div className="h-12 w-28 rounded border border-dashed border-border flex items-center justify-center text-micro text-muted-foreground">No logo</div>
               )}
               <Button size="sm" variant="outline" onClick={() => secDarkInputRef.current?.click()} disabled={uploading === "secondary_dark"} className="gap-1.5">
                 {uploading === "secondary_dark" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
@@ -260,7 +260,7 @@ const LocationLogoSection = ({ location, dealershipId, onUpdate }: LocationLogoS
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label className="text-xs text-muted-foreground">OEM / Franchise Logos (max {MAX_OEM_LOGOS})</Label>
-          <span className="text-[10px] text-muted-foreground">{(location.oem_logo_urls || []).length}/{MAX_OEM_LOGOS}</span>
+          <span className="text-micro text-muted-foreground">{(location.oem_logo_urls || []).length}/{MAX_OEM_LOGOS}</span>
         </div>
         <div className="flex flex-wrap gap-2">
           {(location.oem_logo_urls || []).map((url, idx) => (
@@ -301,7 +301,7 @@ const LocationLogoSection = ({ location, dealershipId, onUpdate }: LocationLogoS
           )}
           <input ref={oemInputRef} type="file" accept="image/*" className="hidden" onChange={handleOemUpload} />
         </div>
-        <p className="text-[10px] text-muted-foreground">
+        <p className="text-micro text-muted-foreground">
           e.g. Chrysler, Dodge, Jeep, Ram — these appear next to your dealership logo in the header
         </p>
       </div>

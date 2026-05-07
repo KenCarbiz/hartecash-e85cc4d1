@@ -228,6 +228,7 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
           submissions={submissions}
           fetchSubmissions={fetchSubmissions}
           onView={props.handleView}
+          userName={props.userName}
         />
       );
     }

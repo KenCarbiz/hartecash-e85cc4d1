@@ -250,10 +250,10 @@ const DataEgressPanel = () => {
                   <span className="text-sm font-medium">
                     {total.toLocaleString()} rows · {row.table_names.length} table{row.table_names.length === 1 ? "" : "s"}
                   </span>
-                  <Badge variant={row.status === "ready" ? "secondary" : "outline"} className="text-[10px]">
+                  <Badge variant={row.status === "ready" ? "secondary" : "outline"} className="text-micro">
                     {row.status}
                   </Badge>
-                  {expired && <Badge variant="outline" className="text-[10px]">link expired</Badge>}
+                  {expired && <Badge variant="outline" className="text-micro">link expired</Badge>}
                 </div>
                 <div className="text-[11px] text-muted-foreground mt-0.5">
                   {new Date(row.created_at).toLocaleString()}

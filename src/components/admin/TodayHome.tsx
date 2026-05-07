@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { ArrowRight, Eye, Phone, DollarSign } from "lucide-react";
 import type { Submission, Appointment, DealerLocation } from "@/lib/adminConstants";
 import { clickToDial } from "@/lib/clickToDial";
+import TodayHeader from "./TodayHeader";
 
 interface TodayHomeProps {
   submissions: Submission[];
@@ -147,12 +148,13 @@ const TodayHome = ({
 
   return (
     <div className="space-y-8 max-w-6xl">
-      {/* Greeting */}
-      <header>
-        <p className="text-xs text-muted-foreground">{dateLabel}</p>
-        <h1 className="text-3xl font-bold tracking-tight mt-1">{greetingFor(now)}, {firstName}.</h1>
-        <p className="text-sm text-muted-foreground mt-1">Here's what needs you today.</p>
-      </header>
+      {/* Greeting — shared TodayHeader primitive so this surface and
+          FrontDesk read identically (item 26 of the audit). */}
+      <TodayHeader
+        firstName={firstName}
+        subtitle="Here's what needs you today."
+        dateLabelOverride={dateLabel}
+      />
 
       {/* RIGHT NOW */}
       <section>
@@ -385,7 +387,7 @@ function DoNextRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm font-semibold truncate">{sub.name || "Unnamed lead"}</span>
-          <span className={`text-[10px] font-bold rounded px-1.5 py-0.5 ${statusPill.cls}`}>{statusPill.label}</span>
+          <span className={`text-micro font-bold rounded px-1.5 py-0.5 ${statusPill.cls}`}>{statusPill.label}</span>
         </div>
         <div className="text-xs text-muted-foreground truncate">
           {ymm(sub)}
@@ -437,7 +439,7 @@ function ApptRow({
         <div className="text-xs text-muted-foreground truncate">{appt.vehicle_info || "Vehicle TBD"}</div>
       </div>
       {pill && (
-        <span className={`text-[10px] font-bold rounded px-2 py-0.5 inline-flex items-center gap-1.5 ${pill.cls}`}>
+        <span className={`text-micro font-bold rounded px-2 py-0.5 inline-flex items-center gap-1.5 ${pill.cls}`}>
           <span className={`w-1.5 h-1.5 rounded-full ${pill.dot}`} />
           {pill.label}
         </span>

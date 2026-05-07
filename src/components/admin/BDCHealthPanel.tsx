@@ -248,7 +248,7 @@ const BDCHealthPanel = () => {
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center justify-between">
             <span>BDC Health · Today</span>
-            <Badge variant="outline" className="text-[10px]">
+            <Badge variant="outline" className="text-micro">
               {humanRows.length} {humanRows.length === 1 ? "rep" : "reps"}{aiRows.length ? " · 1 AI" : ""}
             </Badge>
           </CardTitle>
@@ -257,7 +257,7 @@ const BDCHealthPanel = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                <tr className="border-b border-border text-micro font-bold uppercase tracking-wider text-muted-foreground">
                   <th className="text-left py-2 pr-3">Rep</th>
                   <th className="text-right py-2 px-3">Calls</th>
                   <th className="text-right py-2 px-3">Reached</th>
@@ -269,7 +269,7 @@ const BDCHealthPanel = () => {
                 {aiRows.length > 0 && (
                   <>
                     <tr>
-                      <td colSpan={5} className="pt-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-info">
+                      <td colSpan={5} className="pt-3 pb-1 text-micro font-bold uppercase tracking-wider text-info">
                         AI agents
                       </td>
                     </tr>
@@ -281,7 +281,7 @@ const BDCHealthPanel = () => {
 
                 <tr>
                   <td colSpan={5} className={cn(
-                    "pt-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground",
+                    "pt-3 pb-1 text-micro font-bold uppercase tracking-wider text-muted-foreground",
                     aiRows.length === 0 && "pt-0",
                   )}>
                     Human reps
@@ -309,7 +309,7 @@ const BDCHealthPanel = () => {
               </tbody>
             </table>
           </div>
-          <p className="mt-3 text-[10px] text-muted-foreground leading-relaxed">
+          <p className="mt-3 text-micro text-muted-foreground leading-relaxed">
             Appointments are credited to the rep who closed the booking. AI handoffs credit the receiving human rep, not the AI — the AI's value shows in volume + reach rate.
           </p>
         </CardContent>

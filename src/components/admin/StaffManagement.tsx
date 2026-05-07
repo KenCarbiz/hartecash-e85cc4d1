@@ -605,7 +605,7 @@ const StaffManagement = () => {
                         <UserCog className="w-3.5 h-3.5" />
                         Access
                         {(staffSections[member.user_id]?.length || 0) > 0 && (
-                          <span className="text-[10px] bg-primary/10 text-primary rounded-full px-1.5">{staffSections[member.user_id].length}</span>
+                          <span className="text-micro bg-primary/10 text-primary rounded-full px-1.5">{staffSections[member.user_id].length}</span>
                         )}
                       </Button>
                     )}

@@ -499,7 +499,7 @@ const ConsentLog = () => {
                           <td className="px-4 py-2.5">
                             <Badge
                               variant="outline"
-                              className={`text-[10px] rounded-md ${isWithdrawn ? "opacity-50" : ""}`}
+                              className={`text-micro rounded-md ${isWithdrawn ? "opacity-50" : ""}`}
                             >
                               {SOURCE_LABELS[r.form_source] || r.form_source}
                             </Badge>
@@ -508,18 +508,18 @@ const ConsentLog = () => {
                           <td className="px-4 py-2.5">
                             {isWithdrawn ? (
                               <div>
-                                <Badge className="bg-orange-500/15 text-orange-700 dark:text-orange-400 border-orange-500/30 text-[10px] rounded-md">
+                                <Badge className="bg-orange-500/15 text-orange-700 dark:text-orange-400 border-orange-500/30 text-micro rounded-md">
                                   <ShieldOff className="w-3 h-3 mr-1" /> Withdrawn
                                 </Badge>
                                 <p
-                                  className="text-[10px] text-muted-foreground mt-0.5 truncate max-w-[140px]"
+                                  className="text-micro text-muted-foreground mt-0.5 truncate max-w-[140px]"
                                   title={`${formatDate(r.withdrawn_at!)}${r.withdrawn_by ? ` by ${r.withdrawn_by}` : ""}`}
                                 >
                                   {formatDate(r.withdrawn_at!)}
                                 </p>
                               </div>
                             ) : (
-                              <Badge className="bg-green-500/15 text-green-700 dark:text-green-400 border-green-500/30 text-[10px] rounded-md">
+                              <Badge className="bg-green-500/15 text-green-700 dark:text-green-400 border-green-500/30 text-micro rounded-md">
                                 <ShieldCheck className="w-3 h-3 mr-1" /> Active
                               </Badge>
                             )}
@@ -559,7 +559,7 @@ const ConsentLog = () => {
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                                 {/* Consent text */}
                                 <div className="md:col-span-2">
-                                  <p className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider mb-1">
+                                  <p className="text-micro font-semibold uppercase text-muted-foreground tracking-wider mb-1">
                                     Consent Text
                                   </p>
                                   <p className="text-foreground/80 leading-relaxed bg-muted/30 rounded-lg p-3 border border-border/40">
@@ -699,7 +699,7 @@ function DetailItem({
 }) {
   return (
     <div>
-      <p className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider mb-0.5">
+      <p className="text-micro font-semibold uppercase text-muted-foreground tracking-wider mb-0.5">
         {label}
       </p>
       <p

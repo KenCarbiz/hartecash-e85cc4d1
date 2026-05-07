@@ -328,7 +328,7 @@ const PlatformSubscriptions = () => {
                   {dirty && (
                     <Badge
                       variant="outline"
-                      className="text-[10px] font-bold uppercase tracking-wider border-amber-400/60 bg-amber-500/10 text-amber-700 dark:text-amber-300 gap-1"
+                      className="text-micro font-bold uppercase tracking-wider border-amber-400/60 bg-amber-500/10 text-amber-700 dark:text-amber-300 gap-1"
                     >
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
                       Unsaved changes
@@ -358,7 +358,7 @@ const PlatformSubscriptions = () => {
               {/* Full-width horizontal card lineup — the sticky Your
                   Selection rail below holds all the totals. */}
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
+                <p className="text-micro font-bold text-muted-foreground uppercase tracking-wider mb-2">
                   Your Platform Choices
                 </p>
                 <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1">
@@ -368,7 +368,7 @@ const PlatformSubscriptions = () => {
                     <div className="shrink-0 min-w-[280px] rounded-xl border border-primary/50 bg-gradient-to-br from-primary/10 to-primary/[0.04] p-3 shadow-sm">
                       <div className="flex items-center gap-2 mb-1.5">
                         <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                        <p className="text-micro font-bold uppercase tracking-wider text-primary">
                           Bundle · All-Apps
                         </p>
                       </div>
@@ -383,7 +383,7 @@ const PlatformSubscriptions = () => {
                           return (
                             <span
                               key={pid}
-                              className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-card px-2 py-0.5 text-[10px] text-card-foreground"
+                              className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-card px-2 py-0.5 text-micro text-card-foreground"
                             >
                               <Icon className="w-2.5 h-2.5" />
                               {p.name}
@@ -396,7 +396,7 @@ const PlatformSubscriptions = () => {
                         style={{ fontVariantNumeric: "tabular-nums" }}
                       >
                         {formatUSD(effectiveMonthly(activeBundle))}
-                        <span className="text-[10px] font-normal text-muted-foreground ml-0.5">
+                        <span className="text-micro font-normal text-muted-foreground ml-0.5">
                           /rooftop/mo
                         </span>
                       </p>
@@ -528,7 +528,7 @@ const PlatformSubscriptions = () => {
                             </div>
 
                             {/* Tier name */}
-                            <p className="text-[10px] md:text-[11px] text-muted-foreground mb-1.5 truncate">
+                            <p className="text-micro md:text-[11px] text-muted-foreground mb-1.5 truncate">
                               {tier.name}
                             </p>
 
@@ -542,11 +542,11 @@ const PlatformSubscriptions = () => {
                             {/* Price / Included */}
                             {isComplimentary ? (
                               <div className="space-y-0.5">
-                                <span className="inline-flex items-center gap-1 text-[10px] md:text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                                <span className="inline-flex items-center gap-1 text-micro md:text-xs font-semibold text-emerald-700 dark:text-emerald-300">
                                   <Gift className="w-2.5 h-2.5 md:w-3 md:h-3" />
                                   Included
                                 </span>
-                                <p className="text-[10px] md:text-[11px] text-emerald-700 dark:text-emerald-400 leading-snug">
+                                <p className="text-micro md:text-[11px] text-emerald-700 dark:text-emerald-400 leading-snug">
                                   Free with {complimentaryFrom}
                                 </p>
                               </div>
@@ -557,12 +557,12 @@ const PlatformSubscriptions = () => {
                                   style={{ fontVariantNumeric: "tabular-nums" }}
                                 >
                                   {formatUSD(price)}
-                                  <span className="text-[10px] font-normal text-muted-foreground ml-0.5">
+                                  <span className="text-micro font-normal text-muted-foreground ml-0.5">
                                     /mo
                                   </span>
                                 </p>
                                 {tierCycleForCard === "annual" && tier?.annual_price && (
-                                  <p className="text-[9px] md:text-[10px] text-emerald-600 font-semibold mt-0.5">
+                                  <p className="text-[9px] md:text-micro text-emerald-600 font-semibold mt-0.5">
                                     Annual prepaid
                                   </p>
                                 )}
@@ -575,7 +575,7 @@ const PlatformSubscriptions = () => {
                                 {featuresPreview.map((f) => (
                                   <li
                                     key={f}
-                                    className="flex items-start gap-1.5 text-[10px] text-muted-foreground leading-snug"
+                                    className="flex items-start gap-1.5 text-micro text-muted-foreground leading-snug"
                                   >
                                     <Check className="w-2.5 h-2.5 mt-0.5 text-emerald-500 shrink-0" />
                                     <span className="line-clamp-2">{f}</span>

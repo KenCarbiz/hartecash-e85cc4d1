@@ -790,7 +790,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
                   <div className="flex items-center justify-between gap-2">
                     <Label className="text-xs font-semibold">{label}</Label>
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                      <span className="text-micro uppercase tracking-wide text-muted-foreground">
                         {overrideOn ? "Override on" : "Using brand"}
                       </span>
                       <Switch
@@ -860,7 +860,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
               <div className="mt-5 pt-5 border-t border-border">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-xs font-semibold text-card-foreground">Live preview</p>
-                  <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  <span className="text-micro uppercase tracking-wide text-muted-foreground">
                     Updates as you edit
                   </span>
                 </div>
@@ -870,7 +870,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
                     className="rounded-xl p-5 overflow-hidden relative"
                     style={{ background: `linear-gradient(135deg, ${primaryBg}, ${primaryBg} 60%, hsl(0 0% 0% / 0.4))` }}
                   >
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-white/60 mb-2">
+                    <div className="text-micro font-bold uppercase tracking-widest text-white/60 mb-2">
                       Landing page · /
                     </div>
                     <div className="text-white font-display text-lg font-bold leading-tight mb-1">
@@ -880,7 +880,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
                       {config.hero_subtext || "Real cash offer in 60 seconds."}
                     </div>
                     <div className="bg-white/95 rounded-lg p-2.5 flex gap-2 items-center">
-                      <div className="flex-1 h-7 rounded bg-muted/40 flex items-center px-2 text-[10px] text-muted-foreground">
+                      <div className="flex-1 h-7 rounded bg-muted/40 flex items-center px-2 text-micro text-muted-foreground">
                         ABC-1234
                       </div>
                       <button
@@ -895,7 +895,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
 
                   {/* Offer page mock */}
                   <div className="rounded-xl p-5 bg-card border border-border">
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
+                    <div className="text-micro font-bold uppercase tracking-widest text-muted-foreground mb-2">
                       Offer page · /offer
                     </div>
                     <div className="text-card-foreground font-bold text-base mb-1">Your Cash Offer</div>
@@ -909,7 +909,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
                     >
                       → Accept Offer
                     </button>
-                    <p className="text-[10px] text-muted-foreground text-center mt-2">
+                    <p className="text-micro text-muted-foreground text-center mt-2">
                       Slide-to-accept on the live page
                     </p>
                   </div>
@@ -958,7 +958,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
 
           {/* Service Landing Page (/service) */}
           <div className="border-t border-border pt-4 mt-4">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3">Service Page (/service)</p>
+            <p className="text-micro font-bold text-muted-foreground uppercase tracking-wider mb-3">Service Page (/service)</p>
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold">Service Page Headline</Label>
@@ -971,7 +971,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
 
           {/* Trade Landing Page (/trade) */}
           <div className="border-t border-border pt-4 mt-4">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3">Trade Page (/trade)</p>
+            <p className="text-micro font-bold text-muted-foreground uppercase tracking-wider mb-3">Trade Page (/trade)</p>
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold">Trade Page Headline</Label>
@@ -984,12 +984,12 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
 
           {/* Trade iFrame (/trade-in) */}
           <div className="border-t border-border pt-4 mt-4">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3">Trade iFrame (/trade-in) — Dealer Website Embed</p>
+            <p className="text-micro font-bold text-muted-foreground uppercase tracking-wider mb-3">Trade iFrame (/trade-in) — Dealer Website Embed</p>
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold">iFrame Headline</Label>
             <Input value={(config as any).trade_iframe_headline || ""} onChange={e => update("trade_iframe_headline" as any, e.target.value)} placeholder="What's Your Trade Worth?" />
-            <p className="text-[10px] text-muted-foreground">Shown on the iframe page embedded on the dealer's website.</p>
+            <p className="text-micro text-muted-foreground">Shown on the iframe page embedded on the dealer's website.</p>
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold">iFrame Subtext</Label>
@@ -998,7 +998,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
 
           {/* Push/Pull/Tow */}
           <div className="border-t border-border pt-4 mt-4">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3">Push / Pull / Tow Guarantee</p>
+            <p className="text-micro font-bold text-muted-foreground uppercase tracking-wider mb-3">Push / Pull / Tow Guarantee</p>
           </div>
           <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
             <div className="flex items-center gap-3">
@@ -1019,7 +1019,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold">Guarantee Amount ($)</Label>
                 <Input type="number" min={500} step={500} value={(config as any).ppt_guarantee_amount || 3000} onChange={e => update("ppt_guarantee_amount" as any, parseInt(e.target.value) || 3000)} className="w-32" />
-                <p className="text-[10px] text-muted-foreground">Minimum trade-in value guaranteed to the customer (e.g. 3000 for $3,000).</p>
+                <p className="text-micro text-muted-foreground">Minimum trade-in value guaranteed to the customer (e.g. 3000 for $3,000).</p>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold">PPT Headline (optional)</Label>
@@ -1082,7 +1082,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
               }}
               placeholder="e.g. 1947"
             />
-            <p className="text-[10px] text-muted-foreground">Auto-calculates "Years in Business"</p>
+            <p className="text-micro text-muted-foreground">Auto-calculates "Years in Business"</p>
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold">Cars Purchased</Label>
@@ -1097,7 +1097,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
               disabled={!!config.established_year}
             />
             {config.established_year && (
-              <p className="text-[10px] text-muted-foreground">Auto: {new Date().getFullYear() - config.established_year} yrs (from est. {config.established_year})</p>
+              <p className="text-micro text-muted-foreground">Auto: {new Date().getFullYear() - config.established_year} yrs (from est. {config.established_year})</p>
             )}
           </div>
           <div className="space-y-1.5">
@@ -1363,7 +1363,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="p-3 rounded-lg bg-card border border-border">
                     <Label className="text-xs font-semibold">Max Bump %</Label>
-                    <p className="text-[10px] text-muted-foreground mt-0.5 mb-2">
+                    <p className="text-micro text-muted-foreground mt-0.5 mb-2">
                       Anything above this % of the current offer goes to the queue instead of auto-applying.
                     </p>
                     <Input
@@ -1384,7 +1384,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
                   </div>
                   <div className="p-3 rounded-lg bg-card border border-border">
                     <Label className="text-xs font-semibold">Max Bump $</Label>
-                    <p className="text-[10px] text-muted-foreground mt-0.5 mb-2">
+                    <p className="text-micro text-muted-foreground mt-0.5 mb-2">
                       Anything above this dollar amount goes to the queue instead of auto-applying.
                     </p>
                     <Input
@@ -1406,7 +1406,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
                   </div>
                   <div className="p-3 rounded-lg bg-card border border-border">
                     <Label className="text-xs font-semibold">Daily Cap $</Label>
-                    <p className="text-[10px] text-muted-foreground mt-0.5 mb-2">
+                    <p className="text-micro text-muted-foreground mt-0.5 mb-2">
                       Max cumulative auto-bump dollars per day across the whole dealership. Set to 0 to disable.
                     </p>
                     <Input
@@ -1427,7 +1427,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
                   </div>
                   <div className="p-3 rounded-lg bg-card border border-border">
                     <Label className="text-xs font-semibold">Confidence Floor %</Label>
-                    <p className="text-[10px] text-muted-foreground mt-0.5 mb-2">
+                    <p className="text-micro text-muted-foreground mt-0.5 mb-2">
                       Minimum AI confidence (0-100) required to auto-apply. Below this, bumps go to the queue.
                     </p>
                     <Input

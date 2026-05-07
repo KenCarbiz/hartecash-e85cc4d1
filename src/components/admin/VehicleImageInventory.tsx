@@ -276,7 +276,7 @@ const VehicleImageInventory = () => {
             <span className="w-3 h-3 rounded-full border border-border inline-block" style={{ backgroundColor: colorSwatch(img.exterior_color) }} />
             {img.exterior_color}
           </span>
-          <span className="text-[10px] text-muted-foreground/60">
+          <span className="text-micro text-muted-foreground/60">
             {new Date(img.created_at).toLocaleDateString()}
           </span>
         </div>

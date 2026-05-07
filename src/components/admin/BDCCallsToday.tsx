@@ -171,17 +171,17 @@ const BDCCallsToday = () => {
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <Badge variant={t.priority <= 3 ? "destructive" : "secondary"} className="text-[10px]">
+                    <Badge variant={t.priority <= 3 ? "destructive" : "secondary"} className="text-micro">
                       P{t.priority}
                     </Badge>
-                    <Badge variant="outline" className="text-[10px]">
+                    <Badge variant="outline" className="text-micro">
                       {INTENT_LABEL[t.intent] || t.intent}
                     </Badge>
-                    <Badge variant="outline" className="text-[10px]">
+                    <Badge variant="outline" className="text-micro">
                       cadence: {t.cadence_state} step {t.cadence_step}
                     </Badge>
                     {signals.decline_reason && (
-                      <Badge variant="outline" className="text-[10px] border-amber-400 text-amber-600">
+                      <Badge variant="outline" className="text-micro border-amber-400 text-amber-600">
                         reason: {signals.decline_reason}
                       </Badge>
                     )}
@@ -216,7 +216,7 @@ const BDCCallsToday = () => {
                   </div>
 
                   {ctx.talking_points && (
-                    <pre className="mt-3 text-[12px] bg-muted/40 rounded-lg p-3 whitespace-pre-wrap font-sans leading-relaxed">
+                    <pre className="mt-3 text-caption bg-muted/40 rounded-lg p-3 whitespace-pre-wrap font-sans leading-relaxed">
                       {ctx.talking_points}
                     </pre>
                   )}
@@ -274,7 +274,7 @@ const BDCCallsToday = () => {
                   onChange={(e) => setReQuotedAmount(e.target.value)}
                   className="mt-1"
                 />
-                <p className="mt-1 text-[10px] text-muted-foreground">
+                <p className="mt-1 text-micro text-muted-foreground">
                   If higher than the previous offer, the customer gets an "offer increased" SMS automatically.
                 </p>
               </div>

@@ -338,7 +338,7 @@ const ClassicCommsFullView = ({
       <div className="shrink-0 flex items-center gap-3 px-5 h-12 border-b border-slate-200 bg-white">
         <button
           onClick={onClose}
-          className="text-[12px] font-semibold text-slate-500 hover:text-slate-900 flex items-center gap-1 transition"
+          className="text-caption font-semibold text-slate-500 hover:text-slate-900 flex items-center gap-1 transition"
         >
           <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path d="M12.7 4.3a1 1 0 010 1.4L8.4 10l4.3 4.3a1 1 0 01-1.4 1.4l-5-5a1 1 0 010-1.4l5-5a1 1 0 011.4 0z"/></svg>
           Back to file
@@ -357,7 +357,7 @@ const ClassicCommsFullView = ({
             <button
               key={c}
               onClick={() => setTab(c)}
-              className={`h-12 px-4 text-[12px] font-bold uppercase tracking-[0.08em] flex items-center gap-1.5 transition border-b-2 ${
+              className={`h-12 px-4 text-caption font-bold uppercase tracking-[0.08em] flex items-center gap-1.5 transition border-b-2 ${
                 active
                   ? "text-slate-900 border-[#003b80]"
                   : "text-slate-500 border-transparent hover:text-slate-700"
@@ -365,7 +365,7 @@ const ClassicCommsFullView = ({
             >
               {c === "calls" ? "Calls" : c === "unified" ? "Unified" : c.toUpperCase()}
               {counts[c] > 0 && (
-                <span className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] font-bold ${
+                <span className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-micro font-bold ${
                   active ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600"
                 }`}>{counts[c]}</span>
               )}
@@ -419,7 +419,7 @@ const ClassicCommsFullView = ({
                 return (
                   <div key={m.id} className="rounded-lg border border-slate-200 bg-white p-4">
                     <div className="flex items-baseline justify-between gap-2">
-                      <span className="text-[12px] text-slate-500">{addressLine}</span>
+                      <span className="text-caption text-slate-500">{addressLine}</span>
                       <span className="text-[11px] text-slate-400 shrink-0">{fmtTime(m.occurred_at)}</span>
                     </div>
                     <div className="text-[13.5px] font-bold text-slate-900 mt-0.5">{subject}</div>
@@ -455,7 +455,7 @@ const ClassicCommsFullView = ({
                   <select
                     value={logDirection}
                     onChange={(e) => setLogDirection(e.target.value as "outbound" | "inbound")}
-                    className="h-9 text-[12px] rounded-md border border-slate-200 px-2 bg-white outline-none focus:border-blue-400"
+                    className="h-9 text-caption rounded-md border border-slate-200 px-2 bg-white outline-none focus:border-blue-400"
                   >
                     <option value="outbound">Outbound</option>
                     <option value="inbound">Inbound</option>
@@ -463,7 +463,7 @@ const ClassicCommsFullView = ({
                   <select
                     value={logOutcome}
                     onChange={(e) => setLogOutcome(e.target.value)}
-                    className="h-9 text-[12px] rounded-md border border-slate-200 px-2 bg-white outline-none focus:border-blue-400"
+                    className="h-9 text-caption rounded-md border border-slate-200 px-2 bg-white outline-none focus:border-blue-400"
                   >
                     <option value="connected">Connected</option>
                     <option value="voicemail">Voicemail</option>
@@ -477,7 +477,7 @@ const ClassicCommsFullView = ({
                   value={logDuration}
                   onChange={(e) => setLogDuration(e.target.value)}
                   placeholder="Duration (e.g. 2:22) — optional"
-                  className="w-full h-9 text-[12px] rounded-md border border-slate-200 px-3 outline-none focus:border-blue-400"
+                  className="w-full h-9 text-caption rounded-md border border-slate-200 px-3 outline-none focus:border-blue-400"
                 />
                 <textarea
                   value={logSummary}
@@ -489,14 +489,14 @@ const ClassicCommsFullView = ({
                 <div className="flex justify-end gap-1.5">
                   <button
                     onClick={() => { setLogFormOpen(false); setLogSummary(""); setLogDuration(""); }}
-                    className="text-[12px] font-semibold px-3 h-8 rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition"
+                    className="text-caption font-semibold px-3 h-8 rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={() => void logCall()}
                     disabled={!logSummary.trim() || busy !== "none"}
-                    className="text-[12px] font-bold px-3.5 h-8 rounded-md bg-[#003b80] hover:bg-[#002a5c] disabled:bg-slate-300 text-white transition"
+                    className="text-caption font-bold px-3.5 h-8 rounded-md bg-[#003b80] hover:bg-[#002a5c] disabled:bg-slate-300 text-white transition"
                   >
                     {busy === "logging" ? "Saving…" : "Save call"}
                   </button>
@@ -544,9 +544,9 @@ const ClassicCommsFullView = ({
                         <div className="flex-1 min-w-0">
                           <div className="flex items-baseline justify-between gap-2">
                             <div>
-                              <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 mb-0.5">Call</div>
+                              <div className="text-micro font-bold uppercase tracking-wider text-emerald-700 mb-0.5">Call</div>
                               <div className="text-[13.5px] font-bold text-slate-900">{dirLabel} · {outcomeLabel}</div>
-                              {c.performed_by && <div className="text-[12px] text-slate-500 mt-0.5">by {c.performed_by}</div>}
+                              {c.performed_by && <div className="text-caption text-slate-500 mt-0.5">by {c.performed_by}</div>}
                             </div>
                             <span className="text-[11px] text-slate-400 shrink-0">
                               {fmtTime(c.created_at)}{c.duration_seconds ? ` · ${fmtDuration(c.duration_seconds)}` : ""}
@@ -568,13 +568,13 @@ const ClassicCommsFullView = ({
                     return (
                       <div key={key} className="rounded-lg border border-purple-200 bg-white p-4">
                         <div className="flex items-baseline justify-between gap-2">
-                          <div className="text-[10px] font-bold uppercase tracking-wider text-purple-700 inline-flex items-center gap-1">
+                          <div className="text-micro font-bold uppercase tracking-wider text-purple-700 inline-flex items-center gap-1">
                             <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor"><path d="M2 5.5A1.5 1.5 0 013.5 4h13A1.5 1.5 0 0118 5.5v9a1.5 1.5 0 01-1.5 1.5h-13A1.5 1.5 0 012 14.5v-9zm2.2.5L10 10.2 15.8 6H4.2z"/></svg>
                             Email
                           </div>
                           <span className="text-[11px] text-slate-400">{fmtTime(m.occurred_at)}</span>
                         </div>
-                        <div className="text-[12px] text-slate-500 mt-1">{addressLine}</div>
+                        <div className="text-caption text-slate-500 mt-1">{addressLine}</div>
                         <div className="text-[13.5px] font-bold text-slate-900 mt-0.5">{subject}</div>
                         <p className="text-[13px] text-slate-700 leading-relaxed mt-1 whitespace-pre-wrap line-clamp-3">{m.body_text}</p>
                       </div>
@@ -585,7 +585,7 @@ const ClassicCommsFullView = ({
                   const m = row.m;
                   return (
                     <div key={key} className={`flex flex-col ${m.direction === "out" ? "items-end" : "items-start"}`}>
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-blue-700 inline-flex items-center gap-1 mb-1">
+                      <div className="text-micro font-bold uppercase tracking-wider text-blue-700 inline-flex items-center gap-1 mb-1">
                         <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                         SMS
                       </div>
@@ -649,7 +649,7 @@ const ClassicCommsFullView = ({
 
           {/* Tone strip */}
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 mr-1 inline-flex items-center gap-1">
+            <span className="text-micro font-bold uppercase tracking-wider text-purple-600 mr-1 inline-flex items-center gap-1">
               <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2l1.5 4 4 1.5-4 1.5L10 13l-1.5-4-4-1.5 4-1.5L10 2zm5 9l1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2z"/></svg>
               AI Assist
             </span>
@@ -670,7 +670,7 @@ const ClassicCommsFullView = ({
 
           {/* Templates */}
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mr-1">Templates</span>
+            <span className="text-micro font-bold uppercase tracking-wider text-slate-400 mr-1">Templates</span>
             {TEMPLATES.map((t) => (
               <button
                 key={t.k}
@@ -745,7 +745,7 @@ const ClassicCommsFullView = ({
               <button
                 onClick={() => void send()}
                 disabled={!draft.trim() || busy !== "none" || composerDisabled || (effectiveSendChannel === "sms" && draft.length > charLimit)}
-                className="text-[12px] font-bold px-3.5 h-8 rounded-md bg-[#003b80] hover:bg-[#002a5c] disabled:bg-slate-300 text-white inline-flex items-center gap-1.5 transition"
+                className="text-caption font-bold px-3.5 h-8 rounded-md bg-[#003b80] hover:bg-[#002a5c] disabled:bg-slate-300 text-white inline-flex items-center gap-1.5 transition"
               >
                 <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M2.5 2.4a1 1 0 011-.4l13.5 4.8a1 1 0 010 1.9L4.5 13.5a1 1 0 01-1.4-1.2l1.6-3.8L3 4.6a1 1 0 01-.5-2.2z"/></svg>
                 {busy === "sending" ? "Sending…" : `Send ${effectiveSendChannel === "sms" ? "SMS" : "email"}`}

@@ -183,7 +183,7 @@ const SubmissionNotesModal = ({ submissionId, customerName, open, onClose, autho
             notes.map((n) => (
               <div key={n.id} className="rounded-lg border border-slate-200 bg-white p-3">
                 <div className="flex items-baseline justify-between gap-2 mb-1">
-                  <span className="text-[12px] font-bold text-slate-900">{n.author || "Staff"}</span>
+                  <span className="text-caption font-bold text-slate-900">{n.author || "Staff"}</span>
                   <span className="text-[11px] text-slate-400">{fmtNoteTime(n.created_at)}</span>
                 </div>
                 <p className="text-[13px] text-slate-700 whitespace-pre-wrap leading-relaxed">{n.body}</p>

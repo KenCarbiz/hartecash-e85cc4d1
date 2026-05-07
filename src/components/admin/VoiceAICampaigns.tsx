@@ -518,7 +518,7 @@ const VoiceAICampaigns = () => {
                 }`}
               >
                 <div className="text-sm font-bold">Bland.ai</div>
-                <div className="text-[10px] text-muted-foreground mt-0.5 leading-snug">
+                <div className="text-micro text-muted-foreground mt-0.5 leading-snug">
                   Default. Built-in dialing. Dealer-domain-tuned voices. Add a bland API key below.
                 </div>
               </button>
@@ -532,7 +532,7 @@ const VoiceAICampaigns = () => {
                 }`}
               >
                 <div className="text-sm font-bold">OpenAI Realtime</div>
-                <div className="text-[10px] text-muted-foreground mt-0.5 leading-snug">
+                <div className="text-micro text-muted-foreground mt-0.5 leading-snug">
                   Lower latency + cost. Needs Twilio for outbound dialing + OPENAI_API_KEY in Edge Function secrets. Bridge currently in setup — Bland.ai stays the working option.
                 </div>
               </button>
@@ -831,7 +831,7 @@ const VoiceAICampaigns = () => {
               </p>
               {newCampaign.voicemail_message?.trim() && (
                 <div className="rounded-md border border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-500/5 p-2.5 text-xs">
-                  <div className="text-[10px] uppercase tracking-wider text-emerald-700 dark:text-emerald-400 font-bold mb-1 flex items-center gap-1">
+                  <div className="text-micro uppercase tracking-wider text-emerald-700 dark:text-emerald-400 font-bold mb-1 flex items-center gap-1">
                     <Eye className="w-3 h-3" /> Preview (sample customer)
                   </div>
                   <div className="text-foreground/90 italic whitespace-pre-wrap">
@@ -1065,7 +1065,7 @@ function ScriptPreviewSection({ editingId }: { editingId: string | null }) {
             </div>
           ) : script ? (
             <>
-              <div className="text-[10px] uppercase tracking-wider text-blue-700 dark:text-blue-400 font-bold mb-2">
+              <div className="text-micro uppercase tracking-wider text-blue-700 dark:text-blue-400 font-bold mb-2">
                 {source === "campaign" ? "Campaign-specific script" : "Default Offer Follow-Up script"} · sample customer
               </div>
               <div className="text-foreground/90 whitespace-pre-wrap font-mono text-[11px] leading-relaxed max-h-[280px] overflow-y-auto">
@@ -1143,25 +1143,25 @@ function CampaignAnalytics({
     <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="rounded-lg border border-border bg-background p-3">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Total calls</div>
+          <div className="text-micro uppercase tracking-wider text-muted-foreground font-bold">Total calls</div>
           <div className="text-lg font-bold mt-0.5">{total}</div>
         </div>
         <div className="rounded-lg border border-border bg-background p-3">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Connected</div>
+          <div className="text-micro uppercase tracking-wider text-muted-foreground font-bold">Connected</div>
           <div className="text-lg font-bold mt-0.5">{connected} <span className="text-xs text-muted-foreground font-normal">({pct(connected)}%)</span></div>
         </div>
         <div className="rounded-lg border border-border bg-background p-3">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Converted</div>
+          <div className="text-micro uppercase tracking-wider text-muted-foreground font-bold">Converted</div>
           <div className="text-lg font-bold mt-0.5 text-emerald-600">{converted} <span className="text-xs text-muted-foreground font-normal">({pct(converted)}%)</span></div>
         </div>
         <div className="rounded-lg border border-border bg-background p-3">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Avg duration</div>
+          <div className="text-micro uppercase tracking-wider text-muted-foreground font-bold">Avg duration</div>
           <div className="text-lg font-bold mt-0.5">{fmtDur(avgDur)}</div>
         </div>
       </div>
 
       <div>
-        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-2">Outcomes</div>
+        <div className="text-micro uppercase tracking-wider text-muted-foreground font-bold mb-2">Outcomes</div>
         <div className="space-y-1.5">
           {sortedOutcomes.map(([outcome, count]) => {
             const share = pct(count);
@@ -1171,14 +1171,14 @@ function CampaignAnalytics({
                 <div className="w-40 shrink-0 truncate font-medium">{outcome.replace(/_/g, " ")}</div>
                 <div className="flex-1 h-5 bg-muted rounded-md overflow-hidden">
                   <div
-                    className={`h-full ${colorClass} flex items-center px-2 text-[10px] font-semibold`}
+                    className={`h-full ${colorClass} flex items-center px-2 text-micro font-semibold`}
                     style={{ width: `${share}%`, minWidth: share > 0 ? "2rem" : 0 }}
                   >
                     {share >= 8 && `${share}%`}
                   </div>
                 </div>
                 <div className="w-16 text-right text-muted-foreground tabular-nums">
-                  {count} <span className="text-[10px]">({share}%)</span>
+                  {count} <span className="text-micro">({share}%)</span>
                 </div>
               </div>
             );

@@ -479,8 +479,8 @@ const ChannelsSettings = () => {
                         variant="outline"
                         className={
                           recordCalls
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px]"
-                            : "bg-slate-100 text-slate-600 border-slate-200 text-[10px]"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200 text-micro"
+                            : "bg-slate-100 text-slate-600 border-slate-200 text-micro"
                         }
                       >
                         {recordCalls ? "ON" : "OFF"}
@@ -778,7 +778,7 @@ const ChannelsSettings = () => {
         <div className="flex items-center gap-2 mt-2">
           <ShieldCheck className="w-4 h-4 text-muted-foreground" />
           <h2 className="text-base font-bold">TCPA disclosure</h2>
-          <Badge variant="outline" className="text-[10px]">v{tcpaVersion}</Badge>
+          <Badge variant="outline" className="text-micro">v{tcpaVersion}</Badge>
         </div>
         <p className="text-sm text-muted-foreground -mt-1 max-w-3xl">
           Per-tenant consent language shown beneath the lead-gen submit button.

@@ -253,7 +253,7 @@ const ConversationThread = ({
       <div className="flex flex-wrap gap-1.5">
         <button
           onClick={() => setChannelFilter(null)}
-          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-colors ${
+          className={`text-micro font-semibold px-2 py-0.5 rounded-full border transition-colors ${
             channelFilter === null
               ? "bg-primary text-primary-foreground border-primary"
               : "bg-background border-border text-muted-foreground hover:border-primary/40"
@@ -265,7 +265,7 @@ const ConversationThread = ({
           <button
             key={ch}
             onClick={() => setChannelFilter(ch)}
-            className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-colors ${
+            className={`text-micro font-semibold px-2 py-0.5 rounded-full border transition-colors ${
               channelFilter === ch
                 ? "bg-primary text-primary-foreground border-primary"
                 : "bg-background border-border text-muted-foreground hover:border-primary/40"
@@ -283,7 +283,7 @@ const ConversationThread = ({
       {canReply && (
         <div className="rounded-xl border-2 border-border bg-card p-3 space-y-2">
           <div className="flex items-center gap-1.5">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mr-1">Reply</span>
+            <span className="text-micro font-bold uppercase tracking-widest text-muted-foreground mr-1">Reply</span>
             {[
               { value: "note", label: "Internal note", Icon: StickyNote },
               { value: "sms", label: "SMS", Icon: MessageSquare },
@@ -307,7 +307,7 @@ const ConversationThread = ({
                   onClick={() => !disabled && setReplyChannel(value as "sms" | "email" | "note")}
                   disabled={disabled}
                   title={disabledReason}
-                  className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                  className={`inline-flex items-center gap-1 text-micro font-semibold px-2 py-0.5 rounded-full border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
                     replyChannel === value
                       ? "bg-primary text-primary-foreground border-primary"
                       : "bg-background border-border text-muted-foreground hover:border-primary/40"
@@ -333,7 +333,7 @@ const ConversationThread = ({
             disabled={sending}
           />
           <div className="flex items-center justify-between">
-            <span className="text-[10px] text-muted-foreground">
+            <span className="text-micro text-muted-foreground">
               {replyChannel === "note"
                 ? "Internal only"
                 : replyChannel === "sms"
@@ -396,7 +396,7 @@ const ConversationThread = ({
                   {ev.direction === "inbound" && (
                     <Badge variant="secondary" className="text-[9px] h-4 px-1.5">← from customer</Badge>
                   )}
-                  <span className="text-[10px] text-muted-foreground ml-auto flex items-center gap-1">
+                  <span className="text-micro text-muted-foreground ml-auto flex items-center gap-1">
                     <Clock className="w-2.5 h-2.5" />
                     {new Date(ev.occurred_at).toLocaleString(undefined, {
                       month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
@@ -404,12 +404,12 @@ const ConversationThread = ({
                   </span>
                 </div>
                 {ev.body_text && (
-                  <p className="text-[12px] text-card-foreground whitespace-pre-wrap leading-snug break-words">
+                  <p className="text-caption text-card-foreground whitespace-pre-wrap leading-snug break-words">
                     {ev.body_text}
                   </p>
                 )}
                 {typeof (md as any).duration_seconds === "number" && (md as any).duration_seconds > 0 && (
-                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                  <p className="text-micro text-muted-foreground mt-0.5">
                     Duration: {Math.round(((md as any).duration_seconds as number) / 60)}m{" "}
                     {Math.round(((md as any).duration_seconds as number) % 60)}s
                   </p>
@@ -418,7 +418,7 @@ const ConversationThread = ({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-6 px-2 mt-1.5 text-[10px] text-primary"
+                    className="h-6 px-2 mt-1.5 text-micro text-primary"
                     onClick={() =>
                       setExpanded((prev) => ({ ...prev, [ev.id]: !prev[ev.id] }))
                     }
@@ -441,7 +441,7 @@ const ConversationThread = ({
                   </a>
                 )}
                 {expandedNow && transcript && (
-                  <pre className="mt-2 text-[10px] bg-muted/40 border border-border rounded-lg p-2 overflow-x-auto whitespace-pre-wrap font-mono text-muted-foreground max-h-60">
+                  <pre className="mt-2 text-micro bg-muted/40 border border-border rounded-lg p-2 overflow-x-auto whitespace-pre-wrap font-mono text-muted-foreground max-h-60">
                     {transcript}
                   </pre>
                 )}

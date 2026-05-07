@@ -265,13 +265,13 @@ const DepthPolicyManager = () => {
                   onChange={e => updateLocal(policy.id, { name: e.target.value })}
                   className="h-8 text-sm font-semibold max-w-[240px]"
                 />
-                <Badge variant="outline" className={`text-[10px] ${getPolicyTypeColor(policy.policy_type)}`}>
+                <Badge variant="outline" className={`text-micro ${getPolicyTypeColor(policy.policy_type)}`}>
                   {POLICY_TYPES.find(t => t.value === policy.policy_type)?.label || policy.policy_type}
                 </Badge>
               </div>
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1.5">
-                  <Label className="text-[10px] text-muted-foreground">Active</Label>
+                  <Label className="text-micro text-muted-foreground">Active</Label>
                   <Switch
                     checked={policy.is_active}
                     onCheckedChange={v => updateLocal(policy.id, { is_active: v })}
@@ -304,7 +304,7 @@ const DepthPolicyManager = () => {
             {/* Row 1: Type + Brand scope */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label className="text-[10px] font-bold uppercase text-muted-foreground">Policy Type</Label>
+                <Label className="text-micro font-bold uppercase text-muted-foreground">Policy Type</Label>
                 <Select value={policy.policy_type} onValueChange={v => updateLocal(policy.id, { policy_type: v })}>
                   <SelectTrigger className="h-8 text-xs mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -316,9 +316,9 @@ const DepthPolicyManager = () => {
               </div>
               <div>
                 <div className="flex items-center justify-between">
-                  <Label className="text-[10px] font-bold uppercase text-muted-foreground">Brand Scope</Label>
+                  <Label className="text-micro font-bold uppercase text-muted-foreground">Brand Scope</Label>
                   <div className="flex items-center gap-1.5">
-                    <Label className="text-[10px] text-muted-foreground">All Brands</Label>
+                    <Label className="text-micro text-muted-foreground">All Brands</Label>
                     <Switch
                       checked={policy.all_brands}
                       onCheckedChange={v => updateLocal(policy.id, { all_brands: v })}
@@ -345,7 +345,7 @@ const DepthPolicyManager = () => {
             {/* Row 2: Depth minimums */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
-                <Label className="text-[10px] font-bold uppercase text-muted-foreground flex items-center gap-1">
+                <Label className="text-micro font-bold uppercase text-muted-foreground flex items-center gap-1">
                   <Gauge className="w-3 h-3" /> Min Tire Depth (/32")
                 </Label>
                 <Input
@@ -363,7 +363,7 @@ const DepthPolicyManager = () => {
                 />
               </div>
               <div>
-                <Label className="text-[10px] font-bold uppercase text-muted-foreground flex items-center gap-1">
+                <Label className="text-micro font-bold uppercase text-muted-foreground flex items-center gap-1">
                   <Gauge className="w-3 h-3" /> Min Brake Depth (/32")
                 </Label>
                 <Input
@@ -377,7 +377,7 @@ const DepthPolicyManager = () => {
                 />
               </div>
               <div>
-                <Label className="text-[10px] font-bold uppercase text-muted-foreground flex items-center gap-1">
+                <Label className="text-micro font-bold uppercase text-muted-foreground flex items-center gap-1">
                   <Car className="w-3 h-3" /> Max Vehicle Age (Years)
                 </Label>
                 <Input
@@ -389,7 +389,7 @@ const DepthPolicyManager = () => {
                 />
               </div>
               <div>
-                <Label className="text-[10px] font-bold uppercase text-muted-foreground">Max Mileage</Label>
+                <Label className="text-micro font-bold uppercase text-muted-foreground">Max Mileage</Label>
                 <Input
                   type="number" min={0} step={1000}
                   value={policy.max_mileage ?? ""}
@@ -401,7 +401,7 @@ const DepthPolicyManager = () => {
             </div>
 
             {/* Preview summary */}
-            <div className="bg-muted/30 rounded-lg px-3 py-2 text-[10px] text-muted-foreground">
+            <div className="bg-muted/30 rounded-lg px-3 py-2 text-micro text-muted-foreground">
               <strong className="text-card-foreground">Summary:</strong>{" "}
               {policy.all_brands ? "All brands" : policy.oem_brands.length > 0 ? policy.oem_brands.join(", ") : "No brands selected"} —{" "}
               Tires ≥ {policy.min_tire_depth}/32", Brakes ≥ {policy.min_brake_depth}/32"
@@ -483,15 +483,15 @@ const DepthPolicyManager = () => {
                       <div className="grid grid-cols-3 gap-2 text-center text-foreground">
                         <div className="rounded-md border border-border p-2">
                           <div className="text-lg font-bold">{preview.total}</div>
-                          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Inspected</div>
+                          <div className="text-micro uppercase tracking-wider text-muted-foreground">Inspected</div>
                         </div>
                         <div className="rounded-md border border-red-500/40 bg-red-500/5 p-2">
                           <div className="text-lg font-bold text-red-600">{preview.nowFails}</div>
-                          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Now fails</div>
+                          <div className="text-micro uppercase tracking-wider text-muted-foreground">Now fails</div>
                         </div>
                         <div className="rounded-md border border-emerald-500/40 bg-emerald-500/5 p-2">
                           <div className="text-lg font-bold text-emerald-600">{preview.nowPasses}</div>
-                          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Now passes</div>
+                          <div className="text-micro uppercase tracking-wider text-muted-foreground">Now passes</div>
                         </div>
                       </div>
                       <p className="text-xs">

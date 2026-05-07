@@ -408,7 +408,7 @@ const InspectionConfiguration = () => {
               Full Inspection
             </button>
           </div>
-          <p className="text-[10px] text-muted-foreground mt-2">
+          <p className="text-micro text-muted-foreground mt-2">
             {defaultInspectionMode === "standard"
               ? "Abbreviated checklist for managers & sales staff — covers key items without deep mechanical checks."
               : "Full mechanic-aided deep inspection — all checklist items for thorough evaluation."}
@@ -453,7 +453,7 @@ const InspectionConfiguration = () => {
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-sm">{meta.label}</span>
                       {hasFields && isEnabled && (
-                        <Badge variant="outline" className="text-[10px]">
+                        <Badge variant="outline" className="text-micro">
                           {enabledFieldCount(sectionKey)}/{totalFieldCount(sectionKey)} fields
                         </Badge>
                       )}
@@ -537,7 +537,7 @@ const InspectionConfiguration = () => {
                               Pass / Fail
                             </button>
                           </div>
-                          <p className="text-[10px] text-muted-foreground mt-1.5">
+                          <p className="text-micro text-muted-foreground mt-1.5">
                             {tireInputMode === "measurement"
                               ? "Inspector enters tread depth (/32\") for each tire."
                               : "Inspector taps each tire to toggle Pass/Fail — no numbers."}
@@ -567,7 +567,7 @@ const InspectionConfiguration = () => {
                               Pass / Fail
                             </button>
                           </div>
-                          <p className="text-[10px] text-muted-foreground mt-1.5">
+                          <p className="text-micro text-muted-foreground mt-1.5">
                             {brakeInputMode === "measurement"
                               ? "Inspector enters pad thickness (mm) for each brake."
                               : "Inspector taps each brake to toggle Pass/Fail — no numbers."}
@@ -584,7 +584,7 @@ const InspectionConfiguration = () => {
                         <div className="border border-border rounded-lg p-3 bg-muted/20 space-y-2">
                           <div>
                             <label className="text-sm font-semibold block">Per-Rooftop Overrides</label>
-                            <p className="text-[10px] text-muted-foreground">
+                            <p className="text-micro text-muted-foreground">
                               Override the corporate setting for a specific rooftop. Leave on "Inherit" to use the value above.
                             </p>
                           </div>
@@ -666,7 +666,7 @@ const InspectionConfiguration = () => {
                           </span>
                           <Switch checked={enableTireAdjustments} onCheckedChange={setEnableTireAdjustments} />
                         </label>
-                        <p className="text-[10px] text-muted-foreground mt-1">
+                        <p className="text-micro text-muted-foreground mt-1">
                           Automatically credit or deduct from the offer based on tire tread depth at inspection
                         </p>
 
@@ -752,7 +752,7 @@ const InspectionConfiguration = () => {
                                 />
                               </div>
                             </div>
-                            <div className="text-[10px] text-muted-foreground bg-background rounded p-2 border">
+                            <div className="text-micro text-muted-foreground bg-background rounded p-2 border">
                               {tireAdjustmentMode === "per_tire" ? (
                                 <>
                                   <strong>Example (Per Tire):</strong> Tire at 8/32 (threshold {tireCreditThreshold}) → credit = {Math.max(8 - tireCreditThreshold, 0)} × ${tireCreditPer32} = <strong className="text-green-600">+${Math.max(8 - tireCreditThreshold, 0) * tireCreditPer32}</strong>.
@@ -807,7 +807,7 @@ const InspectionConfiguration = () => {
                                 return next;
                               });
                             }}
-                            className="text-[10px] text-accent hover:underline"
+                            className="text-micro text-accent hover:underline"
                           >Enable All</button>
                           <button
                             onClick={() => {
@@ -817,7 +817,7 @@ const InspectionConfiguration = () => {
                                 return next;
                               });
                             }}
-                            className="text-[10px] text-muted-foreground hover:underline"
+                            className="text-micro text-muted-foreground hover:underline"
                           >Disable All</button>
                         </div>
                       </div>

@@ -121,14 +121,14 @@ const WebsiteScrapeStep = ({ state, onChange }: Props) => {
 
           {sd.about_story && (
             <div>
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase mb-1">About Story</p>
+              <p className="text-micro font-semibold text-muted-foreground uppercase mb-1">About Story</p>
               <p className="text-xs text-muted-foreground line-clamp-3">{sd.about_story}</p>
             </div>
           )}
 
           {sd.community_involvement && (
             <div>
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase mb-1">Community</p>
+              <p className="text-micro font-semibold text-muted-foreground uppercase mb-1">Community</p>
               <p className="text-xs text-muted-foreground line-clamp-2">{sd.community_involvement}</p>
             </div>
           )}
@@ -183,7 +183,7 @@ function LogoUploadSlot({
           <button
             type="button"
             onClick={() => onChange("")}
-            className="absolute top-0 right-0 text-[10px] text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute top-0 right-0 text-micro text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
           >
             Remove
           </button>

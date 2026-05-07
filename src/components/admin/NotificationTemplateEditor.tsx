@@ -192,7 +192,7 @@ export default function NotificationTemplateEditor({ open, onOpenChange, trigger
               <CollapsibleContent className="pt-2">
                 <div className="flex flex-wrap gap-1.5">
                   {PLACEHOLDER_VARS.map(v => (
-                    <Badge key={v.key} variant="outline" className="text-[10px] font-mono cursor-help" title={v.desc}>
+                    <Badge key={v.key} variant="outline" className="text-micro font-mono cursor-help" title={v.desc}>
                       {v.key}
                     </Badge>
                   ))}

@@ -192,13 +192,13 @@ const DocumentConfiguration = () => {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Badge variant="outline" className="text-[10px]">Required — {requiredCount}</Badge>
-              <Badge variant="outline" className="text-[10px]">Conditional — {conditionalCount}</Badge>
-              <Badge variant="outline" className="text-[10px]">Staff-only — {staffOnlyCount}</Badge>
+              <Badge variant="outline" className="text-micro">Required — {requiredCount}</Badge>
+              <Badge variant="outline" className="text-micro">Conditional — {conditionalCount}</Badge>
+              <Badge variant="outline" className="text-micro">Staff-only — {staffOnlyCount}</Badge>
             </div>
           </div>
 
-          <div className="hidden md:grid md:grid-cols-[1fr_minmax(240px,300px)_140px] gap-3 px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          <div className="hidden md:grid md:grid-cols-[1fr_minmax(240px,300px)_140px] gap-3 px-2 pt-2 pb-1 text-micro font-semibold uppercase tracking-[0.14em] text-muted-foreground">
             <div>Document</div>
             <div>Role</div>
             <div>Visibility</div>
@@ -225,7 +225,7 @@ const DocumentConfiguration = () => {
                           className="h-7 text-sm font-semibold w-56"
                         />
                         {doc.ocr_pipeline && (
-                          <Badge variant="outline" className="text-[10px] border-emerald-500/40 text-emerald-700">
+                          <Badge variant="outline" className="text-micro border-emerald-500/40 text-emerald-700">
                             OCR auto-fill
                           </Badge>
                         )}

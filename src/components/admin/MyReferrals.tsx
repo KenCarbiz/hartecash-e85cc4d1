@@ -259,7 +259,7 @@ const MyReferrals = ({ staffName }: { staffName: string }) => {
                   <code className="text-xs bg-muted px-2 py-0.5 rounded font-mono">{ref.referral_code}</code>
                 </td>
                 <td className="px-4 py-2.5">
-                  <Badge className={`text-[10px] ${STATUS_COLORS[ref.status] || ""}`}>
+                  <Badge className={`text-micro ${STATUS_COLORS[ref.status] || ""}`}>
                     {ref.status === "pending" && <Clock className="w-3 h-3 mr-1" />}
                     {ref.status === "converted" && <CheckCircle className="w-3 h-3 mr-1" />}
                     {ref.status === "rewarded" && <Award className="w-3 h-3 mr-1" />}

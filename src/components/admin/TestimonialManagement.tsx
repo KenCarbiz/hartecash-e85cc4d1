@@ -199,13 +199,13 @@ const TestimonialManagement = () => {
                       <Star key={i} className={`w-3 h-3 ${i < t.rating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/30"}`} />
                     ))}
                   </div>
-                  {!t.is_active && <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-medium text-muted-foreground">Hidden</span>}
+                  {!t.is_active && <span className="text-micro bg-muted px-1.5 py-0.5 rounded font-medium text-muted-foreground">Hidden</span>}
                 </div>
                 <p className="text-sm text-card-foreground italic line-clamp-2">"{t.review_text}"</p>
                 <div className="flex items-center gap-2 mt-1.5 text-xs text-muted-foreground">
                   <span className="font-semibold text-card-foreground">{t.author_name}</span>
                   {t.location && <span>• {t.location}</span>}
-                  {t.vehicle && <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded-full text-[10px] font-medium">{t.vehicle}</span>}
+                  {t.vehicle && <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded-full text-micro font-medium">{t.vehicle}</span>}
                 </div>
               </div>
               <div className="flex items-center gap-1 shrink-0">

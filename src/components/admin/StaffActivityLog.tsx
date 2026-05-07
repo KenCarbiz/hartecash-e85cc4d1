@@ -225,10 +225,10 @@ const StaffActivityLog = () => {
                       <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">{fmtDate(r.created_at)}</td>
                       <td className="px-3 py-2">
                         <div className="font-medium text-foreground">{sub?.name || "—"}</div>
-                        {vehicle && <div className="text-[10px] text-muted-foreground">{vehicle}</div>}
+                        {vehicle && <div className="text-micro text-muted-foreground">{vehicle}</div>}
                       </td>
                       <td className="px-3 py-2">
-                        <Badge variant="outline" className="text-[10px] font-semibold">
+                        <Badge variant="outline" className="text-micro font-semibold">
                           {r.action}
                         </Badge>
                       </td>

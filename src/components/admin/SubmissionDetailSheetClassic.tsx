@@ -410,7 +410,7 @@ const PhotoCarousel = ({ items }: { items: { url: string; name: string }[] }) =>
           </button>
           {/* Subtle "expand" affordance — bottom-left corner so it
               doesn't fight the existing counter on the right. */}
-          <div className="pointer-events-none absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-black/60 text-white/90 text-[10px] font-semibold backdrop-blur-sm flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="pointer-events-none absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-black/60 text-white/90 text-micro font-semibold backdrop-blur-sm flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor"><path d="M3 3h5v2H5v3H3V3zm9 0h5v5h-2V5h-3V3zM3 12h2v3h3v2H3v-5zm14 0v5h-5v-2h3v-3h2z"/></svg>
             Expand
           </div>
@@ -560,7 +560,7 @@ const DLAtGlance = ({
         <div className="w-14 h-9 rounded overflow-hidden shrink-0 bg-slate-100 border border-slate-200">
           {cur && /\.(jpg|jpeg|png|gif|webp)$/i.test(cur.name)
             ? <img src={cur.url} alt={`Driver's license — ${side}`} className="w-full h-full object-cover" />
-            : <div className="w-full h-full flex items-center justify-center text-slate-400 text-[10px] font-bold">DL</div>}
+            : <div className="w-full h-full flex items-center justify-center text-slate-400 text-micro font-bold">DL</div>}
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Driver's License</div>
@@ -630,7 +630,7 @@ const QRInspectionModal = ({
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-[14px] font-bold text-slate-900 truncate">{sub.name || "Unknown customer"}</div>
-            <div className="text-[12px] text-slate-500 truncate">
+            <div className="text-caption text-slate-500 truncate">
               {[sub.vehicle_year, sub.vehicle_make, sub.vehicle_model].filter(Boolean).join(" ")}
             </div>
           </div>
@@ -647,7 +647,7 @@ const QRInspectionModal = ({
         </div>
 
         <div className="px-5 pb-5 space-y-2">
-          <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1">Short Link</div>
+          <div className="text-micro uppercase tracking-wider font-bold text-slate-400 mb-1">Short Link</div>
           <div className="flex items-center gap-2">
             <code className="flex-1 font-mono text-[11.5px] text-slate-700 bg-slate-100 rounded px-2 py-1.5 truncate">
               {inspectionUrl.replace(/^https?:\/\//, "")}
@@ -738,7 +738,7 @@ const MoneyBlock = ({
         // pill that earns its color by signaling customer
         // engagement (they completed the photo flow).
         <div className={`flex items-center gap-2 mt-1.5 flex-wrap ${align === "right" ? "md:justify-end" : ""}`}>
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-400/90 text-emerald-950 text-[10px] font-bold uppercase tracking-[0.1em]">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-400/90 text-emerald-950 text-micro font-bold uppercase tracking-[0.1em]">
             <svg width="9" height="9" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true">
               <path d="M5 1.5L8 5H6V8H4V5H2L5 1.5Z" />
             </svg>
@@ -759,7 +759,7 @@ const MoneyBlock = ({
 };
 
 const VehicleStrip = ({ sub }: { sub: Submission }) => (
-  <div className="flex items-center gap-2 flex-wrap text-[12px] text-white/80">
+  <div className="flex items-center gap-2 flex-wrap text-caption text-white/80">
     {sub.vin && <span className="font-mono bg-white/10 rounded px-2 py-0.5 tracking-wider">{sub.vin}</span>}
     {sub.mileage && <span>{fmtNumber(sub.mileage)} mi</span>}
     {sub.exterior_color && (<><span className="text-white/55">·</span><span>{sub.exterior_color}</span></>)}
@@ -1114,19 +1114,19 @@ export default function SubmissionDetailSheetClassic({
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => setNotesOpen(true)}
-                    className="px-3 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-[12px] font-semibold flex items-center gap-1.5 transition relative"
+                    className="px-3 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-caption font-semibold flex items-center gap-1.5 transition relative"
                   >
                     <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M2 3a1 1 0 011-1h3.5a1 1 0 01.9.55l.7 1.4H17a1 1 0 011 1V16a1 1 0 01-1 1H3a1 1 0 01-1-1V3z"/></svg>
                     Notes
                     {notes.length > 0 && (
-                      <span className="ml-0.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full bg-white/25 text-white text-[10px] font-bold">
+                      <span className="ml-0.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full bg-white/25 text-white text-micro font-bold">
                         {notes.length}
                       </span>
                     )}
                   </button>
                   <button
                     onClick={() => window.print()}
-                    className="px-3 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-[12px] font-semibold flex items-center gap-1.5 transition"
+                    className="px-3 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-caption font-semibold flex items-center gap-1.5 transition"
                   >
                     <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M5 4a2 2 0 00-2 2v1h14V6a2 2 0 00-2-2H5zM17 9H3v5a2 2 0 002 2h10a2 2 0 002-2V9z"/></svg>
                     Print
@@ -1138,7 +1138,7 @@ export default function SubmissionDetailSheetClassic({
                         sessionStorage.setItem("autocurb:reopenSubmissionId", sub.id);
                         navigate(`/appraisal/${sub.token}`);
                       }}
-                      className="px-3 h-8 rounded-lg bg-white text-[#003b80] hover:bg-white/90 text-[12px] font-bold flex items-center gap-1.5 transition"
+                      className="px-3 h-8 rounded-lg bg-white text-[#003b80] hover:bg-white/90 text-caption font-bold flex items-center gap-1.5 transition"
                     >
                       <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3.5a.5.5 0 01.5.5v5.5H16a.5.5 0 010 1h-5.5V16a.5.5 0 01-1 0v-5.5H4a.5.5 0 010-1h5.5V4a.5.5 0 01.5-.5z"/></svg>
                       Open Appraisal
@@ -1158,7 +1158,7 @@ export default function SubmissionDetailSheetClassic({
                   ) && (
                     <button
                       onClick={() => setSaveTheDealOpen(true)}
-                      className="px-3 h-8 rounded-lg bg-emerald-500/95 hover:bg-emerald-500 text-white text-[12px] font-bold flex items-center gap-1.5 transition"
+                      className="px-3 h-8 rounded-lg bg-emerald-500/95 hover:bg-emerald-500 text-white text-caption font-bold flex items-center gap-1.5 transition"
                     >
                       <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm3.7 6.3a1 1 0 010 1.4l-4 4a1 1 0 01-1.4 0l-2-2a1 1 0 111.4-1.4L9 11.6l3.3-3.3a1 1 0 011.4 0z"/></svg>
                       Save the deal
@@ -1226,10 +1226,10 @@ export default function SubmissionDetailSheetClassic({
                 </div>
                 {/* Greeting Card facts row — packed below the headline so
                     the salesperson can take it all in without scrolling. */}
-                <div className="px-6 pb-3 flex items-center gap-x-6 gap-y-1 flex-wrap text-[12px] text-white/95">
+                <div className="px-6 pb-3 flex items-center gap-x-6 gap-y-1 flex-wrap text-caption text-white/95">
                   {sub.appointment_set && sub.appointment_date && (
                     <span>
-                      <span className="text-white/65 font-semibold uppercase tracking-wider text-[10px]">Appt</span>
+                      <span className="text-white/65 font-semibold uppercase tracking-wider text-micro">Appt</span>
                       <span className="ml-1.5 font-bold tabular-nums">
                         {sub.appointment_time || ""}{sub.appointment_time ? " · " : ""}{new Date(sub.appointment_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                       </span>
@@ -1237,25 +1237,25 @@ export default function SubmissionDetailSheetClassic({
                   )}
                   {typeof sub.offered_price === "number" && sub.offered_price > 0 && (
                     <span>
-                      <span className="text-white/65 font-semibold uppercase tracking-wider text-[10px]">Offer</span>
+                      <span className="text-white/65 font-semibold uppercase tracking-wider text-micro">Offer</span>
                       <span className="ml-1.5 font-bold tabular-nums">${sub.offered_price.toLocaleString()}</span>
                     </span>
                   )}
                   {typeof sub.customer_walk_away_number === "number" && sub.customer_walk_away_number > 0 && (
                     <span>
-                      <span className="text-white/65 font-semibold uppercase tracking-wider text-[10px]">Walk-away</span>
+                      <span className="text-white/65 font-semibold uppercase tracking-wider text-micro">Walk-away</span>
                       <span className="ml-1.5 font-bold tabular-nums">${sub.customer_walk_away_number.toLocaleString()}</span>
                     </span>
                   )}
                   {sub.competitor_mentioned && (
                     <span>
-                      <span className="text-white/65 font-semibold uppercase tracking-wider text-[10px]">Competitor</span>
+                      <span className="text-white/65 font-semibold uppercase tracking-wider text-micro">Competitor</span>
                       <span className="ml-1.5 font-bold capitalize">{sub.competitor_mentioned}</span>
                     </span>
                   )}
                   {sub.last_outreach_at && (
                     <span>
-                      <span className="text-white/65 font-semibold uppercase tracking-wider text-[10px]">Last touch</span>
+                      <span className="text-white/65 font-semibold uppercase tracking-wider text-micro">Last touch</span>
                       <span className="ml-1.5 font-bold">{timeAgo(sub.last_outreach_at)}</span>
                     </span>
                   )}
@@ -1408,7 +1408,7 @@ export default function SubmissionDetailSheetClassic({
                       <div className="flex items-center gap-2 pt-1 flex-wrap">
                         <button
                           onClick={goInspect}
-                          className="h-9 px-3.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-[12px] font-semibold text-slate-700 inline-flex items-center gap-1.5 transition"
+                          className="h-9 px-3.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-caption font-semibold text-slate-700 inline-flex items-center gap-1.5 transition"
                         >
                           <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M2 4a2 2 0 012-2h9l5 5v9a2 2 0 01-2 2H4a2 2 0 01-2-2V4z"/></svg>
                           View Full Inspection
@@ -1416,7 +1416,7 @@ export default function SubmissionDetailSheetClassic({
                         {manualAppraisalNeeded ? (
                           <button
                             onClick={goAppraise}
-                            className="h-9 px-3.5 rounded-lg bg-[#003b80] hover:bg-[#002a5c] text-white text-[12px] font-bold inline-flex items-center gap-1.5 transition"
+                            className="h-9 px-3.5 rounded-lg bg-[#003b80] hover:bg-[#002a5c] text-white text-caption font-bold inline-flex items-center gap-1.5 transition"
                           >
                             <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3a7 7 0 100 14 7 7 0 000-14zm0 3a1 1 0 011 1v3h2a1 1 0 110 2h-2v2a1 1 0 11-2 0v-2H7a1 1 0 110-2h2V7a1 1 0 011-1z"/></svg>
                             Appraise Vehicle
@@ -1424,7 +1424,7 @@ export default function SubmissionDetailSheetClassic({
                         ) : (
                           <button
                             onClick={goAppraise}
-                            className="h-9 px-3 rounded-lg text-[12px] font-semibold text-slate-500 hover:text-slate-800 inline-flex items-center gap-1 transition"
+                            className="h-9 px-3 rounded-lg text-caption font-semibold text-slate-500 hover:text-slate-800 inline-flex items-center gap-1 transition"
                           >
                             Re-Appraise
                           </button>
@@ -1534,7 +1534,7 @@ export default function SubmissionDetailSheetClassic({
                     <section className={`rounded-xl border border-slate-200 bg-gradient-to-br ${toneBg} text-white shadow-sm overflow-hidden`}>
                       <div className="px-4 py-2.5 border-b border-white/15 flex items-center justify-between">
                         <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-white/80">Next Action</span>
-                        <span className="text-[10px] font-bold uppercase tracking-wider bg-white/15 rounded px-2 py-0.5">For Sales</span>
+                        <span className="text-micro font-bold uppercase tracking-wider bg-white/15 rounded px-2 py-0.5">For Sales</span>
                       </div>
                       <div className="p-4">
                         <div className="font-display text-[20px] leading-tight">{nextLabel}</div>
@@ -1588,7 +1588,7 @@ export default function SubmissionDetailSheetClassic({
                       {notes.slice(0, 3).map((n) => (
                         <div key={n.id} className="border-b border-slate-100 last:border-0 pb-2.5 last:pb-0">
                           <div className="flex items-baseline justify-between gap-2 mb-0.5">
-                            <span className="text-[12px] font-bold text-slate-900">{n.author || "Staff"}</span>
+                            <span className="text-caption font-bold text-slate-900">{n.author || "Staff"}</span>
                             <span className="text-[11px] text-slate-400">
                               {(() => {
                                 const d = new Date(n.created_at);
@@ -1682,7 +1682,7 @@ export default function SubmissionDetailSheetClassic({
                       </Select>
                       <button
                         onClick={() => onScheduleAppointment(sub)}
-                        className="h-9 px-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-[12px] font-semibold transition"
+                        className="h-9 px-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-caption font-semibold transition"
                       >
                         Schedule
                       </button>
@@ -1714,11 +1714,11 @@ export default function SubmissionDetailSheetClassic({
                         </div>
                         {latestBump.line_items.length > 0 && (
                           <div className="pt-1.5 border-t border-slate-100 space-y-1.5">
-                            <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
+                            <div className="text-micro font-bold uppercase tracking-[0.14em] text-slate-500">
                               Condition adjustments from photo review
                             </div>
                             {latestBump.line_items.map((item, i) => (
-                              <div key={i} className="flex items-start justify-between gap-2 text-[12px]">
+                              <div key={i} className="flex items-start justify-between gap-2 text-caption">
                                 <span className="text-slate-700 leading-snug">{item.label}</span>
                                 <span className="font-semibold text-slate-700 tabular-nums whitespace-nowrap">
                                   +{fmtMoney(item.amount)}
@@ -1752,7 +1752,7 @@ export default function SubmissionDetailSheetClassic({
                       </span>
                     </div>
                     <div className="flex items-baseline justify-between pt-2 border-t border-slate-100">
-                      <span className="text-[12px] uppercase tracking-wider text-slate-500 font-semibold">Customer Equity</span>
+                      <span className="text-caption uppercase tracking-wider text-slate-500 font-semibold">Customer Equity</span>
                       {dealValue != null ? (
                         <span className={`font-bold text-[15px] ${
                           (dealValue - (sub.loan_payoff_amount ?? 0)) >= 0 ? "text-emerald-700" : "text-red-700"

@@ -198,7 +198,7 @@ export default function ChangelogManagement() {
                 <td className="px-3 py-2 font-mono text-xs whitespace-nowrap">{entry.entry_date}</td>
                 <td className="px-3 py-2 font-medium truncate max-w-[200px]">{entry.title}</td>
                 <td className="px-3 py-2">
-                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${TAG_COLORS[entry.tag] || ""}`}>
+                  <span className={`text-micro font-semibold px-2 py-0.5 rounded-full ${TAG_COLORS[entry.tag] || ""}`}>
                     {TAG_OPTIONS.find(t => t.value === entry.tag)?.label || entry.tag}
                   </span>
                 </td>

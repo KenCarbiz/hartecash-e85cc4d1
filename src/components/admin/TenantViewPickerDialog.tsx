@@ -134,7 +134,7 @@ export default function TenantViewPickerDialog({
               className="text-sm"
               disabled={submitting}
             />
-            <p className="text-[10px] text-muted-foreground">
+            <p className="text-micro text-muted-foreground">
               Logged to the compliance audit trail. Minimum 10 characters.
             </p>
           </div>

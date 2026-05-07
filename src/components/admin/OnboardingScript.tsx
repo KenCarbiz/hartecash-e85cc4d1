@@ -319,7 +319,7 @@ export default function OnboardingScript({ targetDealershipId, onNavigate }: Onb
       if (q.id === "acquisition_intent") {
         return (
           <div className="w-full space-y-2">
-            <div className="flex justify-between text-[10px] text-muted-foreground px-1">
+            <div className="flex justify-between text-micro text-muted-foreground px-1">
               <span>🟢 Conservative</span>
               <span>🔴 Predator</span>
             </div>
@@ -334,7 +334,7 @@ export default function OnboardingScript({ targetDealershipId, onNavigate }: Onb
             <div className="flex justify-between gap-1">
               {q.choices.map((c) => (
                 <button key={c} type="button" onClick={() => toggleChoice(q.id, c)}
-                  className={`flex-1 text-[10px] py-1.5 rounded-md border transition-colors text-center ${answers[q.id] === c ? "bg-primary text-primary-foreground border-primary font-bold" : "border-border hover:bg-muted"}`}>
+                  className={`flex-1 text-micro py-1.5 rounded-md border transition-colors text-center ${answers[q.id] === c ? "bg-primary text-primary-foreground border-primary font-bold" : "border-border hover:bg-muted"}`}>
                   {c}
                 </button>
               ))}

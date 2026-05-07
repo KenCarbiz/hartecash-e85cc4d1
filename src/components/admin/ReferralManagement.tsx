@@ -323,7 +323,7 @@ const ReferralManagement = () => {
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">{ref.referred_name || "—"}</td>
                 <td className="px-4 py-3">
-                  <Badge className={`text-[10px] ${STATUS_COLORS[ref.status] || ""}`}>
+                  <Badge className={`text-micro ${STATUS_COLORS[ref.status] || ""}`}>
                     {ref.status === "pending" && <Clock className="w-3 h-3 mr-1" />}
                     {ref.status === "converted" && <CheckCircle className="w-3 h-3 mr-1" />}
                     {ref.status === "rewarded" && <Award className="w-3 h-3 mr-1" />}
@@ -355,7 +355,7 @@ const ReferralManagement = () => {
                     {ref.status === "rewarded" && !ref.clawed_back_at && (
                       <>
                         {ref.payout_reference && (
-                          <Badge variant="outline" className="text-[10px] font-mono" title={`${ref.payout_method || "?"} — paid ${ref.payout_at ? new Date(ref.payout_at).toLocaleDateString() : ""} by ${ref.paid_by || "?"}`}>
+                          <Badge variant="outline" className="text-micro font-mono" title={`${ref.payout_method || "?"} — paid ${ref.payout_at ? new Date(ref.payout_at).toLocaleDateString() : ""} by ${ref.paid_by || "?"}`}>
                             {(ref.payout_method || "").toUpperCase()} #{ref.payout_reference}
                           </Badge>
                         )}
@@ -365,7 +365,7 @@ const ReferralManagement = () => {
                       </>
                     )}
                     {ref.clawed_back_at && (
-                      <Badge variant="destructive" className="text-[10px]" title={`Reversed: ${ref.clawback_reason || "no reason"}`}>
+                      <Badge variant="destructive" className="text-micro" title={`Reversed: ${ref.clawback_reason || "no reason"}`}>
                         Clawed Back
                       </Badge>
                     )}

@@ -153,30 +153,35 @@ const statusMeta = (
   }
 };
 
+// Status pill / dot colors. The semantic tones (green=success,
+// yellow=warning, blue=info) route through the shared design tokens
+// so they drift in step with --success / --warning / --info; the
+// non-semantic tones (red, orange, purple) stay on Tailwind literals
+// because they don't have a token equivalent yet.
 const pillCls: Record<StatusTone, string> = {
   red: "text-red-600",
   orange: "text-orange-600",
-  green: "text-emerald-600",
-  blue: "text-blue-600",
+  green: "text-success",
+  blue: "text-info",
   purple: "text-violet-600",
-  yellow: "text-amber-600",
+  yellow: "text-warning",
   gray: "text-muted-foreground",
 };
 
 const dotCls: Record<StatusTone, string> = {
   red: "bg-red-500",
   orange: "bg-orange-500",
-  green: "bg-emerald-500",
-  blue: "bg-blue-500",
+  green: "bg-success",
+  blue: "bg-info",
   purple: "bg-violet-500",
-  yellow: "bg-amber-500",
+  yellow: "bg-warning",
   gray: "bg-muted-foreground/50",
 };
 
 const StatusPill = ({ s }: { s: Submission }) => {
   const m = statusMeta(s);
   return (
-    <span className={cn("inline-flex items-center gap-1.5 text-[12px] font-semibold", pillCls[m.tone])}>
+    <span className={cn("inline-flex items-center gap-1.5 text-caption font-semibold", pillCls[m.tone])}>
       <span className={cn("w-1.5 h-1.5 rounded-full", dotCls[m.tone], m.pulse && "animate-pulse")} />
       {m.label}
     </span>
@@ -461,7 +466,7 @@ const AllLeadsPage = ({
           <button
             type="button"
             onClick={() => onClearPrefilter?.()}
-            className="h-8 px-3 inline-flex items-center gap-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-700 border border-emerald-500/30 hover:bg-emerald-500/15 transition-colors"
+            className="h-8 px-3 inline-flex items-center gap-1.5 rounded-full text-xs font-semibold bg-success/10 text-success border border-success/30 hover:bg-success/15 transition-colors"
           >
             <span>
               {prefilter.kind === "progress"        && "Status: "}

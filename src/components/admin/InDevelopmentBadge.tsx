@@ -34,7 +34,7 @@ const SIZE_MAP: Record<
   sm: {
     wrapper: "px-2 py-0.5 rounded-md",
     icon: "w-3 h-3",
-    text: "text-[10px]",
+    text: "text-micro",
     gap: "gap-1",
   },
   md: {

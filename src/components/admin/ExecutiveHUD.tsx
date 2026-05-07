@@ -377,12 +377,12 @@ const ExecutiveHUD = ({ onDrillDown }: ExecutiveHUDProps = {}) => {
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <div className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">
                       {step.label}
                     </div>
                     {t && (
                       <span
-                        className={`text-[10px] font-bold tabular-nums ${
+                        className={`text-micro font-bold tabular-nums ${
                           t.dir === "up" ? "text-success" : "text-destructive"
                         }`}
                         title={`vs prior ${rangeDays}d: ${step.prev}`}
@@ -393,7 +393,7 @@ const ExecutiveHUD = ({ onDrillDown }: ExecutiveHUDProps = {}) => {
                   </div>
                   <div className="text-2xl font-bold text-card-foreground mt-1">{step.value}</div>
                   {step.convFrom !== null && (
-                    <div className="text-[10px] text-muted-foreground mt-0.5">
+                    <div className="text-micro text-muted-foreground mt-0.5">
                       {pct(step.value, step.convFrom)} step conv
                     </div>
                   )}
@@ -415,7 +415,7 @@ const ExecutiveHUD = ({ onDrillDown }: ExecutiveHUDProps = {}) => {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-1.5">
-              <AlertTriangle className="w-4 h-4 text-amber-500" /> Top decline reasons
+              <AlertTriangle className="w-4 h-4 text-warning" /> Top decline reasons
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -441,7 +441,7 @@ const ExecutiveHUD = ({ onDrillDown }: ExecutiveHUDProps = {}) => {
                           // Decline trends are inverse: more declines
                           // is bad. Up = red (destructive), down = green.
                           <span
-                            className={`text-[10px] font-bold tabular-nums ${
+                            className={`text-micro font-bold tabular-nums ${
                               t.dir === "up" ? "text-destructive" : "text-success"
                             }`}
                             title={`vs prior ${rangeDays}d: ${declinePrev[b.key] || 0}`}
@@ -527,7 +527,7 @@ const ExecutiveHUD = ({ onDrillDown }: ExecutiveHUDProps = {}) => {
                         {pct(row.accepted, row.appraisals)}
                       </td>
                       <td className="py-1.5 pr-3 text-right tabular-nums">{row.acquired}</td>
-                      <td className="py-1.5 text-right tabular-nums text-emerald-600 font-semibold">
+                      <td className="py-1.5 text-right tabular-nums text-success font-semibold">
                         {pct(row.acquired, row.appraisals)}
                       </td>
                     </tr>
@@ -556,17 +556,17 @@ const ExecutiveHUD = ({ onDrillDown }: ExecutiveHUDProps = {}) => {
           ) : (
             <div className="grid grid-cols-3 gap-2">
               <div className="rounded-lg border border-border bg-muted/30 p-3">
-                <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Aged units</div>
+                <div className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Aged units</div>
                 <div className="text-2xl font-bold text-destructive mt-1">{aged.count}</div>
               </div>
               <div className="rounded-lg border border-border bg-muted/30 p-3">
-                <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Total ACV on lot</div>
+                <div className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Total ACV on lot</div>
                 <div className="text-2xl font-bold text-card-foreground mt-1">{formatHoldingMoney(aged.totalAcv)}</div>
               </div>
               <div className="rounded-lg border border-border bg-muted/30 p-3">
-                <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Daily burn</div>
+                <div className="text-micro font-semibold uppercase tracking-wider text-muted-foreground">Daily burn</div>
                 <div className="text-2xl font-bold text-destructive mt-1">{formatHoldingMoney(holding.perDay)}</div>
-                <div className="text-[10px] text-muted-foreground mt-0.5">
+                <div className="text-micro text-muted-foreground mt-0.5">
                   {formatHoldingMoney(holding.atTarget)} at target
                 </div>
               </div>

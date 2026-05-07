@@ -423,7 +423,7 @@ const AdminSidebar = ({
                         {!collapsed && item.badge && (
                           <Badge
                             variant={item.badgeVariant === "destructive" ? "destructive" : "secondary"}
-                            className="ml-auto text-[10px] h-4 min-w-4 px-1 flex items-center justify-center"
+                            className="ml-auto text-micro h-4 min-w-4 px-1 flex items-center justify-center"
                           >
                             {item.badge}
                           </Badge>
@@ -447,7 +447,7 @@ const AdminSidebar = ({
 
         {lockedSections.length > 0 && !collapsed && (
           <SidebarGroup>
-            <SidebarGroupLabel className="text-[10px] uppercase tracking-widest font-bold text-sidebar-foreground/50">
+            <SidebarGroupLabel className="text-micro uppercase tracking-widest font-bold text-sidebar-foreground/50">
               Request Access
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -486,7 +486,7 @@ const AdminSidebar = ({
         </SidebarMenu>
         {!collapsed && (
           <div className="text-center space-y-0.5">
-            <p className="text-[10px] text-sidebar-foreground/50 font-medium tracking-wider uppercase">
+            <p className="text-micro text-sidebar-foreground/50 font-medium tracking-wider uppercase">
               Autocurb.io
             </p>
             <p className="text-[9px] text-sidebar-foreground/30">

@@ -102,7 +102,7 @@ export default function VoiceCallCard({ call, compact = false }: Props) {
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className={`text-[10px] font-bold uppercase tracking-wider rounded-full px-2 py-0.5 border ${outcomeColor}`}>
+          <span className={`text-micro font-bold uppercase tracking-wider rounded-full px-2 py-0.5 border ${outcomeColor}`}>
             {outcomeLabel}
           </span>
           <span className="text-[11px] font-semibold text-slate-500">{dirLabel}</span>
@@ -117,7 +117,7 @@ export default function VoiceCallCard({ call, compact = false }: Props) {
         )}
 
         {call.summary && (
-          <p className={`${compact ? "text-[12px]" : "text-[13px]"} italic text-slate-700 mt-1.5`}>
+          <p className={`${compact ? "text-caption" : "text-[13px]"} italic text-slate-700 mt-1.5`}>
             "{call.summary}"
           </p>
         )}
@@ -148,7 +148,7 @@ export default function VoiceCallCard({ call, compact = false }: Props) {
         )}
 
         {expanded && hasTranscript && (
-          <pre className={`${compact ? "text-[11.5px]" : "text-[12px]"} text-slate-600 mt-2 p-3 bg-slate-50 rounded-md whitespace-pre-wrap font-sans leading-relaxed max-h-[320px] overflow-y-auto`}>
+          <pre className={`${compact ? "text-[11.5px]" : "text-caption"} text-slate-600 mt-2 p-3 bg-slate-50 rounded-md whitespace-pre-wrap font-sans leading-relaxed max-h-[320px] overflow-y-auto`}>
             {call.transcript}
           </pre>
         )}

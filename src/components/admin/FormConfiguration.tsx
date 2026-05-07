@@ -371,7 +371,7 @@ export default function FormConfiguration() {
                 <div>
                   <p className="text-sm font-medium flex items-center gap-1.5">
                     Step 3.5 — AI Condition Scoring
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-success bg-success/15 px-1.5 py-0.5 rounded">New</span>
+                    <span className="text-micro font-bold uppercase tracking-wider text-success bg-success/15 px-1.5 py-0.5 rounded">New</span>
                   </p>
                   <p className="text-xs text-muted-foreground">
                     Optional photo upload after Condition. Customer can skip — when they upload, the AI verifies actual condition and may bump the offer up.
@@ -668,7 +668,7 @@ export default function FormConfiguration() {
                   />
                   <span className="text-sm text-muted-foreground">%</span>
                 </div>
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-micro text-muted-foreground">
                   Example: 8% above a $10,000 low = $10,800 high.
                 </p>
               </div>

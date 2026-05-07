@@ -93,7 +93,7 @@ const TenantDetailsStep = ({ state, onChange }: Props) => {
               placeholder="smith_motors"
               className="mt-1.5 font-mono text-sm"
             />
-            <p className="text-[10px] text-muted-foreground mt-1">Used as dealership_id</p>
+            <p className="text-micro text-muted-foreground mt-1">Used as dealership_id</p>
           </div>
           <div>
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Custom Domain</Label>

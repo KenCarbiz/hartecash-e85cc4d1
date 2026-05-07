@@ -221,7 +221,7 @@ const WholesaleMarketplace = () => {
                 {/* Listed Badge */}
                 {isListed && (
                   <div className="absolute top-3 right-3 z-10">
-                    <Badge className="bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300 border-0 text-[10px] gap-1">
+                    <Badge className="bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300 border-0 text-micro gap-1">
                       <CheckCircle className="w-3 h-3" />
                       Listed
                     </Badge>
@@ -267,7 +267,7 @@ const WholesaleMarketplace = () => {
                   {/* ACV / Price */}
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
+                      <p className="text-micro text-muted-foreground font-bold uppercase tracking-wider">
                         ACV / Appraisal
                       </p>
                       {acv > 0 ? (
@@ -279,7 +279,7 @@ const WholesaleMarketplace = () => {
                       )}
                     </div>
                     <div className="text-right">
-                      <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
+                      <p className="text-micro text-muted-foreground font-bold uppercase tracking-wider">
                         Days Listed
                       </p>
                       <div className="flex items-center justify-end gap-1">
@@ -342,7 +342,7 @@ function StatCard({
       />
       <div className="relative">
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
+          <span className="text-micro text-muted-foreground font-bold uppercase tracking-wider">
             {label}
           </span>
           <div className="w-7 h-7 rounded-lg bg-background/60 flex items-center justify-center">

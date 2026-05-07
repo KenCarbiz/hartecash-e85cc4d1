@@ -619,7 +619,7 @@ const LandingFlowConfig = () => {
                   </div>
                   <span className="font-bold text-sm flex-1">{v.label}</span>
                   {active && (
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                    <span className="text-micro font-bold uppercase tracking-wider text-primary">
                       Active
                     </span>
                   )}
@@ -636,7 +636,7 @@ const LandingFlowConfig = () => {
         <div className="flex items-center gap-2 mb-1">
           <Layout className="w-4 h-4 text-primary" />
           <h3 className="font-bold">Flow Density</h3>
-          <span className="ml-2 text-[10px] font-bold uppercase tracking-[0.18em] text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+          <span className="ml-2 text-micro font-bold uppercase tracking-[0.18em] text-primary bg-primary/10 px-2 py-0.5 rounded-full">
             ★ New
           </span>
         </div>
@@ -681,7 +681,7 @@ const LandingFlowConfig = () => {
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-bold text-sm">{d.label}</span>
                   {active ? (
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Active</span>
+                    <span className="text-micro font-bold uppercase tracking-wider text-primary">Active</span>
                   ) : d.recommended ? (
                     <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-primary/70 bg-primary/10 px-2 py-0.5 rounded-full">
                       ★ Pick
@@ -782,7 +782,7 @@ const LandingFlowConfig = () => {
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-bold text-sm">{c.label}</span>
                   {active && (
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                    <span className="text-micro font-bold uppercase tracking-wider text-primary">
                       Active
                     </span>
                   )}
@@ -936,7 +936,7 @@ const LandingFlowConfig = () => {
                     dangerouslySetInnerHTML={{ __html: opt.label }}
                   />
                   {active && (
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                    <span className="text-micro font-bold uppercase tracking-wider text-primary">
                       Active
                     </span>
                   )}
@@ -1126,7 +1126,7 @@ const LandingFlowConfig = () => {
         {/* Legacy Hartecash — pre-audit maximalist look, kept featured
             for dealers whose conversions came from the long scroll. */}
         <div className="mb-3 flex items-center gap-2">
-          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-600">
+          <span className="text-micro font-bold uppercase tracking-[0.18em] text-amber-600">
             ◇ Legacy
           </span>
           <span className="text-[11px] text-muted-foreground italic">— the original Hartecash look</span>
@@ -1151,7 +1151,7 @@ const LandingFlowConfig = () => {
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-bold text-sm">{t.label}</span>
                   {active ? (
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700">
+                    <span className="text-micro font-bold uppercase tracking-wider text-amber-700">
                       Active
                     </span>
                   ) : (
@@ -1168,7 +1168,7 @@ const LandingFlowConfig = () => {
 
         {/* Recommended (4 new templates from the design audit) */}
         <div className="mb-3 flex items-center gap-2">
-          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
+          <span className="text-micro font-bold uppercase tracking-[0.18em] text-primary">
             ★ Recommended
           </span>
           <span className="text-[11px] text-muted-foreground italic">— design-audit picks, May 2026</span>
@@ -1193,7 +1193,7 @@ const LandingFlowConfig = () => {
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-bold text-sm">{t.label}</span>
                   {active ? (
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                    <span className="text-micro font-bold uppercase tracking-wider text-primary">
                       Active
                     </span>
                   ) : (
@@ -1210,7 +1210,7 @@ const LandingFlowConfig = () => {
 
         {/* All templates (existing 15) — collapsed under a heading */}
         <details className="border-t border-border pt-5">
-          <summary className="cursor-pointer mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground hover:text-card-foreground transition-colors">
+          <summary className="cursor-pointer mb-3 text-micro font-bold uppercase tracking-[0.18em] text-muted-foreground hover:text-card-foreground transition-colors">
             ▾ All templates (15 more)
           </summary>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">
@@ -1233,7 +1233,7 @@ const LandingFlowConfig = () => {
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-bold text-sm">{t.label}</span>
                   {active && (
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                    <span className="text-micro font-bold uppercase tracking-wider text-primary">
                       Active
                     </span>
                   )}
@@ -1438,14 +1438,14 @@ const LiveTemplatePreview = ({
     <div className="mb-8 rounded-2xl border border-border bg-zinc-50/50 overflow-hidden">
       <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border bg-card">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+          <span className="text-micro font-bold uppercase tracking-[0.18em] text-muted-foreground">
             Live preview
           </span>
           <span className="text-xs font-semibold text-card-foreground truncate">
             {LANDING_TEMPLATES.find((t) => t.value === template)?.label || template}
           </span>
           {unsaved && (
-            <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-600 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200">
+            <span className="text-micro font-semibold uppercase tracking-[0.16em] text-amber-600 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200">
               Unsaved
             </span>
           )}

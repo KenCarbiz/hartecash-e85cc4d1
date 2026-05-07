@@ -177,7 +177,7 @@ const OnboardingGroupClaim = ({ dealershipId, enabled, disabled }: Props) => {
               <span className="text-sm font-medium text-emerald-900">
                 Attached to {currentGroup.display_name || currentGroup.name}
               </span>
-              <Badge variant="outline" className="text-[10px] font-mono">{currentGroup.slug}</Badge>
+              <Badge variant="outline" className="text-micro font-mono">{currentGroup.slug}</Badge>
             </div>
             <Button
               variant="link"

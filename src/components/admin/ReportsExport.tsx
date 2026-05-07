@@ -304,7 +304,7 @@ const ReportsExport = () => {
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-[10px] text-muted-foreground">{activeReport.description}</p>
+              <p className="text-micro text-muted-foreground">{activeReport.description}</p>
             </div>
 
             {/* Date From */}
@@ -337,7 +337,7 @@ const ReportsExport = () => {
           {/* Quick-range presets — populate both From + To inputs in
               one click. Same shortcuts most CRMs offer. */}
           <div className="flex flex-wrap items-center gap-1.5 mt-3">
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mr-1">
+            <span className="text-micro uppercase tracking-wider text-muted-foreground font-bold mr-1">
               Quick range:
             </span>
             {(() => {
@@ -433,11 +433,11 @@ const ReportsExport = () => {
                     className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-500 flex items-center justify-end pr-2.5"
                     style={{ width: `${Math.max(pct, 4)}%` }}
                   >
-                    {pct > 12 && <span className="text-[10px] font-bold text-white drop-shadow-sm">{count}</span>}
+                    {pct > 12 && <span className="text-micro font-bold text-white drop-shadow-sm">{count}</span>}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 w-20 justify-end">
-                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{count}</Badge>
+                  <Badge variant="secondary" className="text-micro px-1.5 py-0">{count}</Badge>
                   <span className="text-xs font-bold text-card-foreground">{pct}%</span>
                 </div>
               </div>
@@ -452,10 +452,10 @@ const ReportsExport = () => {
           <h3 className="text-sm font-bold text-card-foreground flex items-center gap-2">
             <Eye className="w-4 h-4 text-slate-500" />
             Preview
-            <Badge variant="outline" className="text-[10px] ml-1">{filteredData.length} total</Badge>
+            <Badge variant="outline" className="text-micro ml-1">{filteredData.length} total</Badge>
           </h3>
           {filteredData.length > 10 && (
-            <span className="text-[10px] text-muted-foreground">Showing first 10 of {filteredData.length}</span>
+            <span className="text-micro text-muted-foreground">Showing first 10 of {filteredData.length}</span>
           )}
         </div>
 
@@ -470,13 +470,13 @@ const ReportsExport = () => {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/30">
-                  <TableHead className="text-[10px] font-bold uppercase tracking-wider w-24">Date</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase tracking-wider">Name</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase tracking-wider">Vehicle</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase tracking-wider">Source</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase tracking-wider">Status</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-right">Offered</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase tracking-wider text-center">Hot</TableHead>
+                  <TableHead className="text-micro font-bold uppercase tracking-wider w-24">Date</TableHead>
+                  <TableHead className="text-micro font-bold uppercase tracking-wider">Name</TableHead>
+                  <TableHead className="text-micro font-bold uppercase tracking-wider">Vehicle</TableHead>
+                  <TableHead className="text-micro font-bold uppercase tracking-wider">Source</TableHead>
+                  <TableHead className="text-micro font-bold uppercase tracking-wider">Status</TableHead>
+                  <TableHead className="text-micro font-bold uppercase tracking-wider text-right">Offered</TableHead>
+                  <TableHead className="text-micro font-bold uppercase tracking-wider text-center">Hot</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -487,20 +487,20 @@ const ReportsExport = () => {
                     </TableCell>
                     <TableCell>
                       <div className="text-xs font-medium text-card-foreground">{row.name || "--"}</div>
-                      {row.email && <div className="text-[10px] text-muted-foreground">{row.email}</div>}
+                      {row.email && <div className="text-micro text-muted-foreground">{row.email}</div>}
                     </TableCell>
                     <TableCell className="text-xs text-card-foreground whitespace-nowrap">
                       {[row.vehicle_year, row.vehicle_make, row.vehicle_model].filter(Boolean).join(" ") || "--"}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="text-[10px] font-medium">
+                      <Badge variant="outline" className="text-micro font-medium">
                         {SOURCE_LABELS[row.lead_source] || row.lead_source || "--"}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <Badge
                         variant="secondary"
-                        className={`text-[10px] font-medium ${
+                        className={`text-micro font-medium ${
                           COMPLETED_STATUSES.includes(row.progress_status)
                             ? "bg-emerald-500/15 text-emerald-600"
                             : DEAD_STATUSES.includes(row.progress_status)
@@ -545,7 +545,7 @@ const ReportsExport = () => {
                 </div>
                 <div>
                   <h4 className="text-sm font-semibold text-card-foreground">Download CSV</h4>
-                  <p className="text-[10px] text-muted-foreground">Excel, Google Sheets, CRM compatible</p>
+                  <p className="text-micro text-muted-foreground">Excel, Google Sheets, CRM compatible</p>
                 </div>
               </div>
               <Button
@@ -566,7 +566,7 @@ const ReportsExport = () => {
                 </div>
                 <div>
                   <h4 className="text-sm font-semibold text-card-foreground">Copy to Clipboard</h4>
-                  <p className="text-[10px] text-muted-foreground">Paste directly into spreadsheets</p>
+                  <p className="text-micro text-muted-foreground">Paste directly into spreadsheets</p>
                 </div>
               </div>
               <Button
@@ -601,11 +601,11 @@ function KpiCard({ label, value, icon: Icon, color, bg, sub }: {
       <div className={`absolute inset-0 bg-gradient-to-br ${bg} pointer-events-none`} />
       <div className="relative">
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{label}</span>
+          <span className="text-micro text-muted-foreground font-bold uppercase tracking-wider">{label}</span>
           <Icon className={`w-4 h-4 ${color}`} />
         </div>
         <span className="text-2xl font-black text-card-foreground tracking-tight">{value}</span>
-        <p className="text-[10px] text-muted-foreground mt-0.5">{sub}</p>
+        <p className="text-micro text-muted-foreground mt-0.5">{sub}</p>
       </div>
     </div>
   );

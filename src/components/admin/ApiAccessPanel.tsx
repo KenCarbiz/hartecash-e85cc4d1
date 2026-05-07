@@ -283,7 +283,7 @@ const ApiAccessPanel = () => {
                   <td className="px-4 py-2.5 hidden md:table-cell">
                     <div className="flex flex-wrap gap-1">
                       {ep.scopes.map((s) => (
-                        <Badge key={s} variant="secondary" className="text-[10px] font-mono">
+                        <Badge key={s} variant="secondary" className="text-micro font-mono">
                           {s}
                         </Badge>
                       ))}

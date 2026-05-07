@@ -329,9 +329,9 @@ const RolePermissionsMatrix = () => {
               : "Override which sidebar sections each role can open. Cells resolve in order: per-store > tenant > platform default > built-in. The matrix only adjusts visibility — page-level admin guards still apply."}
           </p>
           <p className="text-[11px] text-muted-foreground mt-1">
-            <Badge variant="outline" className="text-[10px] mr-1.5">{overrideCount}</Badge>
+            <Badge variant="outline" className="text-micro mr-1.5">{overrideCount}</Badge>
             overrides at this scope ·{" "}
-            <Badge variant="outline" className="text-[10px] mr-1.5">{dirtyCount}</Badge>
+            <Badge variant="outline" className="text-micro mr-1.5">{dirtyCount}</Badge>
             unsaved
           </p>
         </div>
@@ -384,7 +384,7 @@ const RolePermissionsMatrix = () => {
               {SECTION_GROUPS.map((group) => (
                 <>
                   <tr key={`g-${group.label}`} className="bg-muted/30">
-                    <td colSpan={DEFAULT_ROLES.length + 1} className="px-3 py-1.5 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+                    <td colSpan={DEFAULT_ROLES.length + 1} className="px-3 py-1.5 text-micro uppercase tracking-wider font-bold text-muted-foreground">
                       {group.label}
                     </td>
                   </tr>
@@ -392,7 +392,7 @@ const RolePermissionsMatrix = () => {
                     <tr key={section.key} className="border-t border-border/30 hover:bg-muted/20">
                       <td className="px-3 py-1.5 font-medium sticky left-0 bg-card z-10">
                         {section.label}
-                        <span className="block text-[10px] text-muted-foreground font-mono font-normal">{section.key}</span>
+                        <span className="block text-micro text-muted-foreground font-mono font-normal">{section.key}</span>
                       </td>
                       {DEFAULT_ROLES.map((role) => {
                         const allowed = cellValue(role, section.key);

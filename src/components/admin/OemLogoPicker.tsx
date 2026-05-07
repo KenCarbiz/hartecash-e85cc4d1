@@ -140,7 +140,7 @@ const OemLogoPicker = ({ dealershipId, locationId, existingLogos, maxLogos, onAd
             )}
           </div>
 
-          <p className="text-[10px] text-muted-foreground">
+          <p className="text-micro text-muted-foreground">
             Click a brand to download its official logo. {remaining} slot{remaining !== 1 ? "s" : ""} remaining.
           </p>
 

@@ -362,7 +362,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-[10px] px-2 py-1 rounded bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 font-semibold flex items-center gap-1">
+          <span className="text-micro px-2 py-1 rounded bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 font-semibold flex items-center gap-1">
             <Crown className="w-3 h-3" /> Admin only
           </span>
         </div>
@@ -489,7 +489,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
                   />
                   <div>
                     <div className="text-xs font-medium">Primary</div>
-                    <div className="text-[10px] font-mono text-muted-foreground">
+                    <div className="text-micro font-mono text-muted-foreground">
                       {draft.top_bar_bg}
                     </div>
                   </div>
@@ -503,7 +503,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
                   />
                   <div>
                     <div className="text-xs font-medium">Accent</div>
-                    <div className="text-[10px] font-mono text-muted-foreground">
+                    <div className="text-micro font-mono text-muted-foreground">
                       {draft.customer_file_accent}
                     </div>
                   </div>
@@ -528,7 +528,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
                     <div className="text-xs font-medium">
                       {draft.top_bar_style === "solid" ? "Background" : "Start"}
                     </div>
-                    <div className="text-[10px] font-mono text-muted-foreground">{draft.top_bar_bg}</div>
+                    <div className="text-micro font-mono text-muted-foreground">{draft.top_bar_bg}</div>
                   </div>
                 </label>
                 {draft.top_bar_style !== "solid" && (
@@ -541,7 +541,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
                     />
                     <div>
                       <div className="text-xs font-medium">End</div>
-                      <div className="text-[10px] font-mono text-muted-foreground">{draft.top_bar_bg_2}</div>
+                      <div className="text-micro font-mono text-muted-foreground">{draft.top_bar_bg_2}</div>
                     </div>
                   </label>
                 )}
@@ -554,7 +554,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
                   />
                   <div>
                     <div className="text-xs font-medium">Text</div>
-                    <div className="text-[10px] font-mono text-muted-foreground">{draft.top_bar_text}</div>
+                    <div className="text-micro font-mono text-muted-foreground">{draft.top_bar_text}</div>
                   </div>
                 </label>
               </div>
@@ -684,7 +684,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
 
           {/* Live preview */}
           <Card className="p-4 h-fit">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">
+            <div className="text-micro uppercase tracking-wider text-muted-foreground font-semibold mb-2">
               Live preview
             </div>
             <div className="rounded-md overflow-hidden border border-border">
@@ -698,7 +698,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
                 >
                   Logo
                 </div>
-                <span className="text-[10px] text-white/90 font-semibold">
+                <span className="text-micro text-white/90 font-semibold">
                   Good afternoon, Marcus
                 </span>
               </div>
@@ -782,7 +782,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
               >
                 Reset to 100%
               </button>
-              <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+              <div className="flex items-center gap-1 text-micro text-muted-foreground">
                 {[90, 100, 110, 120].map((v) => (
                   <button
                     key={v}
@@ -823,7 +823,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
               >
                 Reset to 100%
               </button>
-              <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+              <div className="flex items-center gap-1 text-micro text-muted-foreground">
                 {[90, 100, 115, 130].map((v) => (
                   <button
                     key={v}
@@ -885,7 +885,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
               <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
                 Customer file header layout
               </div>
-              <span className="text-[10px] text-muted-foreground/70">
+              <span className="text-micro text-muted-foreground/70">
                 Classic only — Conversation-first uses its own header
               </span>
             </div>
@@ -928,24 +928,24 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
                       <div className="flex items-baseline gap-2">
                         <span className="font-semibold text-sm">{opt.label}</span>
                         {opt.recommended && (
-                          <span className="text-[10px] uppercase tracking-wider font-bold text-emerald-700 bg-emerald-500/10 border border-emerald-500/20 rounded px-1.5 py-0.5">
+                          <span className="text-micro uppercase tracking-wider font-bold text-emerald-700 bg-emerald-500/10 border border-emerald-500/20 rounded px-1.5 py-0.5">
                             Recommended
                           </span>
                         )}
                       </div>
                       {active && (
-                        <span className="text-[10px] uppercase tracking-wider font-bold text-foreground bg-foreground/10 rounded px-2 py-0.5">
+                        <span className="text-micro uppercase tracking-wider font-bold text-foreground bg-foreground/10 rounded px-2 py-0.5">
                           Active
                         </span>
                       )}
                     </div>
-                    <p className="text-[12px] text-muted-foreground mt-1 leading-snug">{opt.sub}</p>
+                    <p className="text-caption text-muted-foreground mt-1 leading-snug">{opt.sub}</p>
                     <div className="text-[11px] text-muted-foreground/80 mt-1">
                       Best when: <span className="text-foreground/80">{opt.best}</span>
                     </div>
 
                     {/* Mini visual mock */}
-                    <div className="mt-3 rounded-md p-3 text-white text-[10px]" style={{
+                    <div className="mt-3 rounded-md p-3 text-white text-micro" style={{
                       background: `linear-gradient(to right, ${draft.top_bar_bg}, ${draft.top_bar_bg_2 || draft.top_bar_bg})`,
                     }}>
                       {opt.k === "a" && (
@@ -995,7 +995,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
                           <div className="h-px bg-white/15 my-2" />
                           <div>
                             <div className="text-[8px] uppercase tracking-wider text-white/55 font-bold">Vehicle</div>
-                            <div className="text-[12px] font-bold leading-none mt-0.5">2021 Ford F-150 XLT</div>
+                            <div className="text-caption font-bold leading-none mt-0.5">2021 Ford F-150 XLT</div>
                             <div className="text-[9px] text-white/80 mt-1">42,000 mi · ABC-123 · Oxford White</div>
                           </div>
                         </>
@@ -1046,7 +1046,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
             <div className="p-3 border border-border rounded-md">
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
+              <div className="text-micro uppercase tracking-wider text-muted-foreground mb-1">
                 Top bar shimmer
               </div>
               <label className="flex items-center gap-2 cursor-pointer">
@@ -1059,7 +1059,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
               </label>
             </div>
             <div className="p-3 border border-border rounded-md">
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
+              <div className="text-micro uppercase tracking-wider text-muted-foreground mb-1">
                 Shimmer style
               </div>
               <select
@@ -1073,7 +1073,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
               </select>
             </div>
             <div className="p-3 border border-border rounded-md">
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
+              <div className="text-micro uppercase tracking-wider text-muted-foreground mb-1">
                 Shimmer speed
               </div>
               <div className="flex items-center gap-2">
@@ -1091,7 +1091,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
               </div>
             </div>
             <div className="p-3 border border-border rounded-md">
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
+              <div className="text-micro uppercase tracking-wider text-muted-foreground mb-1">
                 Customer file accent 2
               </div>
               <input

@@ -196,7 +196,7 @@ function V2Identity({
         // "Photos verified" pill that earns its color by signaling
         // customer engagement (they completed the photo flow).
         <div className="flex md:justify-end items-center gap-2 mt-1.5 flex-wrap">
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-400/90 text-emerald-950 text-[10px] font-bold uppercase tracking-[0.1em]">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-400/90 text-emerald-950 text-micro font-bold uppercase tracking-[0.1em]">
             <svg width="9" height="9" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true">
               <path d="M5 1.5L8 5H6V8H4V5H2L5 1.5Z" />
             </svg>
@@ -216,7 +216,7 @@ function V2Identity({
   );
 
   const VehicleStrip = (
-    <div className="flex items-center gap-2 flex-wrap text-[12px] text-white/80 mt-1">
+    <div className="flex items-center gap-2 flex-wrap text-caption text-white/80 mt-1">
       {sub.vin && <span className="font-mono bg-white/10 rounded px-2 py-0.5 tracking-wider">{sub.vin}</span>}
       {sub.mileage != null && (<><span>·</span><span>{Number(sub.mileage).toLocaleString()} mi</span></>)}
       {sub.exterior_color && (<><span>·</span><span>{sub.exterior_color}</span></>)}
@@ -236,7 +236,7 @@ function V2Identity({
           />
         </div>
       ) : (
-        <div className="text-white/40 text-[12px] italic">No phone on file</div>
+        <div className="text-white/40 text-caption italic">No phone on file</div>
       )}
       {sub.email ? (
         <div className="flex items-center gap-1.5 truncate">
@@ -244,7 +244,7 @@ function V2Identity({
           <a href={`mailto:${sub.email}`} className="truncate hover:underline">{sub.email}</a>
         </div>
       ) : (
-        <div className="text-white/40 text-[12px] italic">No email on file</div>
+        <div className="text-white/40 text-caption italic">No email on file</div>
       )}
     </div>
   );
@@ -277,7 +277,7 @@ function V2Identity({
             <div className={`text-[24px] font-bold leading-tight mt-0.5 ${!sub.name ? "text-white/60 italic" : ""}`}>
               {sub.name || "Unknown customer"}
             </div>
-            <div className="text-[12px] text-white/80 mt-1 flex items-center gap-3 flex-wrap">
+            <div className="text-caption text-white/80 mt-1 flex items-center gap-3 flex-wrap">
               {sub.phone && <ClickToDialButton submissionId={sub.id} customerPhone={sub.phone} customerName={sub.name} className="hover:underline cursor-pointer" />}
               {sub.phone && sub.email && <span className="text-white/50">·</span>}
               {sub.email && <a href={`mailto:${sub.email}`} className="hover:underline truncate">{sub.email}</a>}
@@ -353,7 +353,7 @@ function V2Header({
             <Button
               size="sm"
               variant="ghost"
-              className="h-8 px-3 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[12px] font-semibold"
+              className="h-8 px-3 rounded-lg bg-white/10 hover:bg-white/20 text-white text-caption font-semibold"
             >
               <StickyNote className="w-3.5 h-3.5 mr-1.5" />
               Notes
@@ -361,7 +361,7 @@ function V2Header({
             <Button
               size="sm"
               variant="ghost"
-              className="h-8 px-3 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[12px] font-semibold"
+              className="h-8 px-3 rounded-lg bg-white/10 hover:bg-white/20 text-white text-caption font-semibold"
               onClick={() => window.print()}
             >
               <Printer className="w-3.5 h-3.5 mr-1.5" />
@@ -740,7 +740,7 @@ function ConversationTab({
             <button
               key={c}
               onClick={() => setChannel(c)}
-              className={`h-10 px-4 text-[12px] font-bold uppercase tracking-[0.08em] flex items-center gap-1.5 transition border-b-2 ${
+              className={`h-10 px-4 text-caption font-bold uppercase tracking-[0.08em] flex items-center gap-1.5 transition border-b-2 ${
                 active
                   ? "text-slate-900 dark:text-slate-100 border-[var(--customer-file-accent,#003b80)]"
                   : "text-slate-500 border-transparent hover:text-slate-700 dark:hover:text-slate-300"
@@ -748,7 +748,7 @@ function ConversationTab({
             >
               {c === "calls" ? "Calls" : c === "unified" ? "Unified" : c.toUpperCase()}
               {counts[c] > 0 && (
-                <span className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] font-bold ${
+                <span className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-micro font-bold ${
                   active ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
                 }`}>{counts[c]}</span>
               )}
@@ -832,7 +832,7 @@ function ConversationTab({
                   <select
                     value={logDirection}
                     onChange={(e) => setLogDirection(e.target.value as "outbound" | "inbound")}
-                    className="h-9 text-[12px] rounded-md border border-slate-200 px-2 bg-white outline-none focus:border-blue-400"
+                    className="h-9 text-caption rounded-md border border-slate-200 px-2 bg-white outline-none focus:border-blue-400"
                   >
                     <option value="outbound">Outbound</option>
                     <option value="inbound">Inbound</option>
@@ -840,7 +840,7 @@ function ConversationTab({
                   <select
                     value={logOutcome}
                     onChange={(e) => setLogOutcome(e.target.value)}
-                    className="h-9 text-[12px] rounded-md border border-slate-200 px-2 bg-white outline-none focus:border-blue-400"
+                    className="h-9 text-caption rounded-md border border-slate-200 px-2 bg-white outline-none focus:border-blue-400"
                   >
                     <option value="connected">Connected</option>
                     <option value="voicemail_left">Voicemail</option>
@@ -854,7 +854,7 @@ function ConversationTab({
                   value={logDuration}
                   onChange={(e) => setLogDuration(e.target.value)}
                   placeholder="Duration (e.g. 2:22) — optional"
-                  className="w-full h-9 text-[12px] rounded-md border border-slate-200 px-3 outline-none focus:border-blue-400"
+                  className="w-full h-9 text-caption rounded-md border border-slate-200 px-3 outline-none focus:border-blue-400"
                 />
                 <textarea
                   value={logSummary}
@@ -867,14 +867,14 @@ function ConversationTab({
                   <button
                     onClick={() => { setLogFormOpen(false); setLogSummary(""); setLogDuration(""); }}
                     disabled={logSavingCall}
-                    className="text-[12px] font-semibold px-3 h-8 rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition disabled:opacity-50"
+                    className="text-caption font-semibold px-3 h-8 rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition disabled:opacity-50"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={() => void logCall()}
                     disabled={!logSummary.trim() || logSavingCall}
-                    className="text-[12px] font-bold px-3.5 h-8 rounded-md bg-[var(--customer-file-accent,#003b80)] hover:opacity-90 disabled:bg-slate-300 text-white transition"
+                    className="text-caption font-bold px-3.5 h-8 rounded-md bg-[var(--customer-file-accent,#003b80)] hover:opacity-90 disabled:bg-slate-300 text-white transition"
                   >
                     {logSavingCall ? "Saving…" : "Save call"}
                   </button>
@@ -902,13 +902,13 @@ function ConversationTab({
                   }
                   return (
                     <div key={`${row.k}-${row.m.id}`} className="rounded-lg border border-slate-200 bg-white p-3 flex items-start gap-3">
-                      <span className={`shrink-0 inline-flex items-center text-[10px] font-bold uppercase tracking-wider rounded-md px-2 py-0.5 border ${
+                      <span className={`shrink-0 inline-flex items-center text-micro font-bold uppercase tracking-wider rounded-md px-2 py-0.5 border ${
                         row.k === "sms" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
                         "bg-blue-50 text-blue-700 border-blue-200"
                       }`}>{row.k}</span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-baseline justify-between gap-2">
-                          <span className="text-[12px] font-semibold text-slate-900">
+                          <span className="text-caption font-semibold text-slate-900">
                             {row.m.actor_label || (row.m.direction === "in" ? "Customer" : "You")}
                           </span>
                           <span className="text-[11px] text-slate-400">{fmtConvTime(row.ts)}</span>
@@ -931,7 +931,7 @@ function ConversationTab({
         <div className="shrink-0 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-5 py-3 space-y-2.5">
           {/* AI Assist tone strip */}
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 mr-1">⚡ AI Assist</span>
+            <span className="text-micro font-bold uppercase tracking-wider text-amber-600 mr-1">⚡ AI Assist</span>
             {AI_TONES.map((t) => (
               <button
                 key={t.k}
@@ -950,7 +950,7 @@ function ConversationTab({
           {/* Templates */}
           {channel === "sms" && (
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mr-1">Templates</span>
+              <span className="text-micro font-bold uppercase tracking-wider text-slate-400 mr-1">Templates</span>
               {SMS_TEMPLATES.map((t) => (
                 <button
                   key={t.k}
@@ -997,7 +997,7 @@ function ConversationTab({
               <button
                 onClick={() => void send()}
                 disabled={!draft.trim() || sending || composerDisabled || draft.length > charLimit}
-                className="text-[12px] font-bold px-3.5 h-8 rounded-md bg-[var(--customer-file-accent,#003b80)] hover:opacity-90 disabled:bg-slate-300 text-white transition"
+                className="text-caption font-bold px-3.5 h-8 rounded-md bg-[var(--customer-file-accent,#003b80)] hover:opacity-90 disabled:bg-slate-300 text-white transition"
               >
                 {sending ? "Sending…" : `Send ${channel === "sms" ? "SMS" : "Email"}`}
               </button>
@@ -1076,7 +1076,7 @@ function ActivityTab({
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 divide-y divide-slate-100 dark:divide-slate-800">
           {visible.map((a) => (
             <div key={a.id} className="px-4 py-3 flex items-start gap-3">
-              <span className={`shrink-0 inline-flex items-center text-[10px] font-bold uppercase tracking-wider rounded-md px-2 py-0.5 border ${a._kind.cls}`}>
+              <span className={`shrink-0 inline-flex items-center text-micro font-bold uppercase tracking-wider rounded-md px-2 py-0.5 border ${a._kind.cls}`}>
                 {a._kind.label}
               </span>
               <div className="flex-1 min-w-0">
@@ -1262,7 +1262,7 @@ function DealTab({
             {notes.slice(0, 4).map((n) => (
               <div key={n.id} className="border-b border-slate-100 last:border-0 pb-2 last:pb-0">
                 <div className="flex items-baseline justify-between gap-2 mb-0.5">
-                  <span className="text-[12px] font-bold text-slate-900 dark:text-slate-100">{n.author || "Staff"}</span>
+                  <span className="text-caption font-bold text-slate-900 dark:text-slate-100">{n.author || "Staff"}</span>
                   <span className="text-[11px] text-slate-400">{fmtTime(n.created_at)}</span>
                 </div>
                 <p className="text-[12.5px] text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{n.body}</p>
@@ -1416,7 +1416,7 @@ function VehicleTab({
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Match to customer name</div>
-                <div className="text-[12px] text-emerald-700 font-semibold flex items-center gap-1">
+                <div className="text-caption text-emerald-700 font-semibold flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Pass
                 </div>
               </div>
@@ -1480,13 +1480,13 @@ function VehicleTab({
             <div className="flex gap-2">
               <button
                 onClick={goInspect}
-                className="flex-1 h-9 rounded-md border border-slate-200 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-[12px] font-semibold text-slate-700 dark:text-slate-300 transition"
+                className="flex-1 h-9 rounded-md border border-slate-200 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-caption font-semibold text-slate-700 dark:text-slate-300 transition"
               >
                 View Full Inspection
               </button>
               <button
                 onClick={goAppraise}
-                className="flex-1 h-9 rounded-md bg-[#003b80] hover:bg-[#002a5c] text-white text-[12px] font-bold transition"
+                className="flex-1 h-9 rounded-md bg-[#003b80] hover:bg-[#002a5c] text-white text-caption font-bold transition"
               >
                 Open Appraisal Tool
               </button>
@@ -1499,7 +1499,7 @@ function VehicleTab({
             </div>
             <button
               onClick={goInspect}
-              className="w-full h-9 rounded-md bg-[#003b80] hover:bg-[#002a5c] text-white text-[12px] font-bold transition"
+              className="w-full h-9 rounded-md bg-[#003b80] hover:bg-[#002a5c] text-white text-caption font-bold transition"
             >
               Start Inspection
             </button>
@@ -1686,11 +1686,11 @@ function ContextRail({
       <section className={`rounded-xl border border-slate-200 bg-gradient-to-br ${toneBg} text-white shadow-sm overflow-hidden`}>
         <div className="px-4 py-2.5 border-b border-white/15 flex items-center justify-between">
           <span className="text-[10.5px] font-bold uppercase tracking-[0.1em] text-white/80">Next Action</span>
-          <span className="text-[10px] font-bold uppercase tracking-wider bg-white/15 rounded px-2 py-0.5">For Sales</span>
+          <span className="text-micro font-bold uppercase tracking-wider bg-white/15 rounded px-2 py-0.5">For Sales</span>
         </div>
         <div className="p-4">
           <div className="font-semibold text-[18px] leading-tight">{nextAction.label}</div>
-          <p className="text-[12px] text-white/80 mt-1 leading-snug">{nextAction.sub}</p>
+          <p className="text-caption text-white/80 mt-1 leading-snug">{nextAction.sub}</p>
           <button
             onClick={nextAction.onClick || undefined}
             className="w-full mt-3 h-10 rounded-lg bg-white text-slate-900 text-[13px] font-bold hover:bg-white/90 transition"
@@ -1704,13 +1704,13 @@ function ContextRail({
       <RailCard title="Deal Status">
         <div className="space-y-2">
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Current</div>
+            <div className="text-micro font-bold uppercase tracking-wider text-slate-400">Current</div>
             <div className="text-[14px] font-bold text-slate-900 dark:text-slate-100 mt-0.5 truncate">
               {sub.progress_status || "new_submission"}
             </div>
           </div>
           <Select value={sub.progress_status} onValueChange={updateStatus}>
-            <SelectTrigger className="h-8 text-[12px] rounded-md w-full">
+            <SelectTrigger className="h-8 text-caption rounded-md w-full">
               <SelectValue placeholder="Update Status" />
             </SelectTrigger>
             <SelectContent>
@@ -1739,13 +1739,13 @@ function ContextRail({
               />
               {latestBump.line_items.length > 0 && (
                 <div className="my-1.5 pt-1.5 border-t border-slate-100 dark:border-slate-800 space-y-1">
-                  <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
+                  <div className="text-micro font-bold uppercase tracking-[0.14em] text-slate-500">
                     Condition adjustments from photo review
                   </div>
                   {latestBump.line_items.map((item, i) => (
                     <div
                       key={i}
-                      className="flex items-start justify-between gap-2 text-[12px]"
+                      className="flex items-start justify-between gap-2 text-caption"
                     >
                       <span className="text-slate-700 dark:text-slate-300 leading-snug">
                         {item.label}
@@ -1780,7 +1780,7 @@ function ContextRail({
             <Row label="ACV" value={fmtMoney(sub.acv_value)} compact />
           )}
           {!latestBump && sub.offered_price == null && sub.estimated_offer_high == null && sub.acv_value == null && (
-            <span className="text-[12px] text-slate-400 italic">No offer yet.</span>
+            <span className="text-caption text-slate-400 italic">No offer yet.</span>
           )}
         </div>
       </RailCard>
@@ -1791,7 +1791,7 @@ function ContextRail({
           <h3 className="text-[10.5px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
             Internal Notes
             {notes.length > 0 && (
-              <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-slate-200 text-slate-700 text-[10px] font-bold">
+              <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-slate-200 text-slate-700 text-micro font-bold">
                 {notes.length}
               </span>
             )}
@@ -1802,7 +1802,7 @@ function ContextRail({
         </div>
         <div className="px-3.5 py-2.5">
           {notes.length === 0 ? (
-            <span className="text-[12px] text-slate-400 italic">No notes yet.</span>
+            <span className="text-caption text-slate-400 italic">No notes yet.</span>
           ) : (
             <div className="space-y-2.5">
               {notes.slice(0, 2).map((n) => (
@@ -1821,7 +1821,7 @@ function ContextRail({
                       })()}
                     </span>
                   </div>
-                  <p className="text-[12px] text-slate-700 leading-snug line-clamp-2">{n.body}</p>
+                  <p className="text-caption text-slate-700 leading-snug line-clamp-2">{n.body}</p>
                 </div>
               ))}
               {notes.length > 2 && (
@@ -1838,7 +1838,7 @@ function ContextRail({
       <button
         type="button"
         onClick={() => setMoreOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-3 py-2 text-[12px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800/60 rounded-md transition"
+        className="w-full flex items-center justify-between px-3 py-2 text-caption font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800/60 rounded-md transition"
       >
         <span className="flex items-center gap-1.5">
           {moreOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -1851,7 +1851,7 @@ function ContextRail({
         <>
           <RailCard title={`Photos (${photos.length})`}>
             {photos.length === 0 ? (
-              <p className="text-[12px] text-slate-500">No photos uploaded.</p>
+              <p className="text-caption text-slate-500">No photos uploaded.</p>
             ) : (
               <div className="grid grid-cols-3 gap-1.5">
                 {photos.slice(0, 6).map((p) => (
@@ -1864,12 +1864,12 @@ function ContextRail({
           </RailCard>
           <RailCard title={`Documents (${docs.length})`}>
             {docs.length === 0 ? (
-              <p className="text-[12px] text-slate-500">No documents uploaded.</p>
+              <p className="text-caption text-slate-500">No documents uploaded.</p>
             ) : (
               <ul className="space-y-1">
                 {docs.map((d) => (
                   <li key={d.name}>
-                    <a href={d.url} target="_blank" rel="noreferrer" className="text-[12px] text-[var(--customer-file-accent,#003b80)] hover:underline truncate block">
+                    <a href={d.url} target="_blank" rel="noreferrer" className="text-caption text-[var(--customer-file-accent,#003b80)] hover:underline truncate block">
                       {d.name}
                     </a>
                   </li>
@@ -1936,7 +1936,7 @@ function Row({
 }) {
   return (
     <div className={`flex items-center justify-between ${compact ? "py-0.5" : "py-2"}`}>
-      <span className="text-[12px] text-slate-500">{label}</span>
+      <span className="text-caption text-slate-500">{label}</span>
       <span
         className={`text-[13px] ${mono ? "font-mono" : ""} ${
           highlight
