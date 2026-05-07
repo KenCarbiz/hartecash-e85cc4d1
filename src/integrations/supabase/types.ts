@@ -1063,6 +1063,54 @@ export type Database = {
         }
         Relationships: []
       }
+      document_config: {
+        Row: {
+          conditional_on: string | null
+          created_at: string
+          customer_visible: boolean
+          dealership_id: string
+          description: string
+          doc_id: string
+          id: string
+          label: string
+          ocr_pipeline: string | null
+          role: string
+          sort_order: number
+          staff_only: boolean
+          updated_at: string
+        }
+        Insert: {
+          conditional_on?: string | null
+          created_at?: string
+          customer_visible?: boolean
+          dealership_id?: string
+          description?: string
+          doc_id: string
+          id?: string
+          label: string
+          ocr_pipeline?: string | null
+          role?: string
+          sort_order?: number
+          staff_only?: boolean
+          updated_at?: string
+        }
+        Update: {
+          conditional_on?: string | null
+          created_at?: string
+          customer_visible?: boolean
+          dealership_id?: string
+          description?: string
+          doc_id?: string
+          id?: string
+          label?: string
+          ocr_pipeline?: string | null
+          role?: string
+          sort_order?: number
+          staff_only?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
