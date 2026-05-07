@@ -1,69 +1,13 @@
-ALTER TABLE public.submissions
-  ADD COLUMN IF NOT EXISTS customer_memory jsonb NOT NULL DEFAULT '[]'::jsonb;
-
-COMMENT ON COLUMN public.submissions.customer_memory IS
-  'Append-only array of personal details the voice AI extracted from prior calls. The next call''s compiled prompt surfaces the most recent item with a "reference in first 20 seconds" mandate. This is the rockstar-rep "long-memory specificity" mechanic.';
-
-ALTER TABLE public.voice_call_log
-  ADD COLUMN IF NOT EXISTS memory_hook_offered text,
-  ADD COLUMN IF NOT EXISTS memory_hook_used boolean,
-  ADD COLUMN IF NOT EXISTS memory_hook_used_within_20s boolean;
-
-CREATE OR REPLACE FUNCTION public.add_customer_memory_item(
-  _submission_id   uuid,
-  _fact            text,
-  _kind            text DEFAULT 'general',
-  _source_call_id  uuid DEFAULT NULL
-)
-RETURNS void
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-  _item jsonb;
-  _existing jsonb;
-BEGIN
-  IF _fact IS NULL OR length(trim(_fact)) = 0 THEN
-    RETURN;
-  END IF;
-
-  IF _kind IN ('offer','vehicle','price','payoff','vin','mileage') THEN
-    RAISE EXCEPTION 'add_customer_memory_item: kind=% is not a personal-detail kind', _kind;
-  END IF;
-
-  _item := jsonb_build_object(
-    'fact', trim(_fact),
-    'kind', _kind,
-    'source_call_id', _source_call_id,
-    'captured_at', to_jsonb(now())
-  );
-
-  SELECT customer_memory INTO _existing FROM submissions WHERE id = _submission_id;
-  IF _existing IS NULL THEN
-    _existing := '[]'::jsonb;
-  END IF;
-
-  UPDATE submissions
-  SET customer_memory = jsonb_build_array(_item) || (
-    SELECT COALESCE(jsonb_agg(value ORDER BY ord), '[]'::jsonb)
-    FROM (
-      SELECT value, ord
-      FROM jsonb_array_elements(_existing) WITH ORDINALITY AS t(value, ord)
-      ORDER BY ord
-      LIMIT 11
-    ) sub
-  )
-  WHERE id = _submission_id;
-END;
-$$;
-
-GRANT EXECUTE ON FUNCTION public.add_customer_memory_item(uuid, text, text, uuid) TO service_role;
+-- Replace compile_voice_agent_prompt with a variant-aware version
+-- that samples across active variants per slot using a Thompson-style
+-- approximation, and (when given a call_id) records every chosen
+-- variant into voice_call_variants_used.
 
 CREATE OR REPLACE FUNCTION public.compile_voice_agent_prompt(
   _dealership_id text DEFAULT 'default',
   _submission_id uuid DEFAULT NULL,
-  _call_type     text DEFAULT 'offered_to_accepted'
+  _call_type     text DEFAULT 'offered_to_accepted',
+  _call_id       uuid DEFAULT NULL
 )
 RETURNS text
 LANGUAGE plpgsql
@@ -77,17 +21,29 @@ DECLARE
   _sub      record;
   _memory   jsonb;
   _mem_top  jsonb;
+  _draw     numeric;
 BEGIN
   SELECT * INTO _persona
   FROM voice_agent_persona
   WHERE (dealership_id = _dealership_id OR dealership_id = 'default')
     AND is_active = true
     AND retired_at IS NULL
-  ORDER BY CASE WHEN dealership_id = _dealership_id THEN 0 ELSE 1 END, sort_order
+  ORDER BY
+    CASE WHEN dealership_id = _dealership_id THEN 0 ELSE 1 END,
+    ((1 + win_count)::numeric / (2 + win_count + loss_count))
+      + random() * sqrt(1.0 / (3 + win_count + loss_count)) DESC,
+    sort_order
   LIMIT 1;
 
   IF _persona.id IS NULL THEN
     RETURN E'No voice agent persona configured.';
+  END IF;
+
+  IF _call_id IS NOT NULL THEN
+    INSERT INTO voice_call_variants_used (call_id, source_table, variant_id, slot_key, thompson_draw)
+    VALUES (_call_id, 'voice_agent_persona', _persona.variant_id,
+            'persona:' || _persona.persona_name, NULL);
+    UPDATE voice_agent_persona SET last_promoted_at = now() WHERE variant_id = _persona.variant_id;
   END IF;
 
   _block := _block || E'═══ PERSONA ═══\nYou are: ' || _persona.persona_name || E'\n\n';
@@ -116,40 +72,61 @@ BEGIN
       _block := _block || E'  "' || (_mem_top ->> 'fact') || E'"\n\n';
       _block := _block || E'Reference this BRIEFLY within the first 20 seconds of the call ';
       _block := _block || E'(after your greeting, before any business). One sentence. ';
-      _block := _block || E'Do NOT make it the centerpiece — just acknowledge it. ';
-      _block := _block || E'Examples of what this looks like:\n';
-      _block := _block || E'  - "Hey, before we get into the car — last time you mentioned [thing]. How''s that going?"\n';
-      _block := _block || E'  - "Quick check-in before we dive in — you''d told me [thing]. Still on track?"\n\n';
-      _block := _block || E'This single move is what separates a forgettable call from one ';
-      _block := _block || E'where the customer feels heard. Skip it and the customer hears a script. ';
-      _block := _block || E'Use it and they hear a person who listened.\n\n';
+      _block := _block || E'Do NOT make it the centerpiece — just acknowledge it.\n\n';
+      IF _call_id IS NOT NULL THEN
+        UPDATE voice_call_log
+        SET memory_hook_offered = (_mem_top ->> 'fact')
+        WHERE id = _call_id;
+      END IF;
     END IF;
   END IF;
 
   _block := _block || E'═══ CONVERSATION PHASES ═══\n';
   FOR _r IN
-    SELECT * FROM conversation_phases
-    WHERE (dealership_id = _dealership_id OR dealership_id = 'default')
-      AND call_type = _call_type
-      AND is_active = true
-      AND retired_at IS NULL
-    ORDER BY CASE WHEN dealership_id = _dealership_id THEN 0 ELSE 1 END, sort_order
+    SELECT DISTINCT ON (phase_key) *
+    FROM (
+      SELECT
+        cp.*,
+        ((1 + cp.win_count)::numeric / (2 + cp.win_count + cp.loss_count))
+          + random() * sqrt(1.0 / (3 + cp.win_count + cp.loss_count)) AS _draw_score,
+        CASE WHEN cp.dealership_id = _dealership_id THEN 0 ELSE 1 END AS _tenant_pref
+      FROM conversation_phases cp
+      WHERE (cp.dealership_id = _dealership_id OR cp.dealership_id = 'default')
+        AND cp.call_type = _call_type
+        AND cp.is_active = true
+        AND cp.retired_at IS NULL
+    ) ranked
+    ORDER BY phase_key, _tenant_pref, _draw_score DESC, sort_order
   LOOP
     _block := _block || E'\n[' || _r.phase_position || ' · ' || _r.phase_key || ']\n';
     _block := _block || _r.content || E'\n';
     IF _r.use_when IS NOT NULL THEN
       _block := _block || '  USE WHEN: ' || _r.use_when || E'\n';
     END IF;
+    IF _call_id IS NOT NULL THEN
+      INSERT INTO voice_call_variants_used (call_id, source_table, variant_id, slot_key, thompson_draw)
+      VALUES (_call_id, 'conversation_phases', _r.variant_id,
+              'phase:' || _r.phase_key, _r._draw_score);
+      UPDATE conversation_phases SET last_promoted_at = now() WHERE variant_id = _r.variant_id;
+    END IF;
   END LOOP;
   _block := _block || E'\n';
 
   _block := _block || E'═══ CUSTOMER SIGNALS ═══\nMatch the customer''s words to one of these states and use the recommended response.\n';
   FOR _r IN
-    SELECT * FROM customer_signals
-    WHERE (dealership_id = _dealership_id OR dealership_id = 'default')
-      AND is_active = true
-      AND retired_at IS NULL
-    ORDER BY CASE WHEN dealership_id = _dealership_id THEN 0 ELSE 1 END, sort_order
+    SELECT DISTINCT ON (signal_key) *
+    FROM (
+      SELECT
+        cs.*,
+        ((1 + cs.win_count)::numeric / (2 + cs.win_count + cs.loss_count))
+          + random() * sqrt(1.0 / (3 + cs.win_count + cs.loss_count)) AS _draw_score,
+        CASE WHEN cs.dealership_id = _dealership_id THEN 0 ELSE 1 END AS _tenant_pref
+      FROM customer_signals cs
+      WHERE (cs.dealership_id = _dealership_id OR cs.dealership_id = 'default')
+        AND cs.is_active = true
+        AND cs.retired_at IS NULL
+    ) ranked
+    ORDER BY signal_key, _tenant_pref, _draw_score DESC, sort_order
   LOOP
     _block := _block || E'\n— Signal: ' || _r.signal_key || ' (state: ' || _r.customer_state || E')\n';
     _block := _block || '  If they say: ' || array_to_string(_r.signal_phrases, ', ') || E'\n';
@@ -163,16 +140,30 @@ BEGIN
     IF _r.hand_off_to_human THEN
       _block := _block || E'  → HAND OFF TO HUMAN immediately.\n';
     END IF;
+    IF _call_id IS NOT NULL THEN
+      INSERT INTO voice_call_variants_used (call_id, source_table, variant_id, slot_key, thompson_draw)
+      VALUES (_call_id, 'customer_signals', _r.variant_id,
+              'signal:' || _r.signal_key, _r._draw_score);
+      UPDATE customer_signals SET last_promoted_at = now() WHERE variant_id = _r.variant_id;
+    END IF;
   END LOOP;
   _block := _block || E'\n';
 
   _block := _block || E'═══ CITABLE FACTS ═══\nUse these when the customer challenges a claim. Quote the number, do not paraphrase. Competitor entries fire ONLY when the customer names the competitor first.\n';
   FOR _r IN
-    SELECT * FROM industry_intel
-    WHERE (dealership_id = _dealership_id OR dealership_id = 'default')
-      AND is_active = true
-      AND retired_at IS NULL
-    ORDER BY CASE WHEN dealership_id = _dealership_id THEN 0 ELSE 1 END, scope, sort_order
+    SELECT DISTINCT ON (scope, topic) *
+    FROM (
+      SELECT
+        ii.*,
+        ((1 + ii.win_count)::numeric / (2 + ii.win_count + ii.loss_count))
+          + random() * sqrt(1.0 / (3 + ii.win_count + ii.loss_count)) AS _draw_score,
+        CASE WHEN ii.dealership_id = _dealership_id THEN 0 ELSE 1 END AS _tenant_pref
+      FROM industry_intel ii
+      WHERE (ii.dealership_id = _dealership_id OR ii.dealership_id = 'default')
+        AND ii.is_active = true
+        AND ii.retired_at IS NULL
+    ) ranked
+    ORDER BY scope, topic, _tenant_pref, _draw_score DESC, sort_order
   LOOP
     _block := _block || E'\n[' || _r.scope || ' · ' || _r.topic || E']\n';
     _block := _block || '  ' || _r.short_claim || E'\n';
@@ -181,6 +172,12 @@ BEGIN
     END IF;
     IF _r.use_when IS NOT NULL THEN
       _block := _block || '  Use when: ' || _r.use_when || E'\n';
+    END IF;
+    IF _call_id IS NOT NULL THEN
+      INSERT INTO voice_call_variants_used (call_id, source_table, variant_id, slot_key, thompson_draw)
+      VALUES (_call_id, 'industry_intel', _r.variant_id,
+              'intel:' || _r.scope || '/' || _r.topic, _r._draw_score);
+      UPDATE industry_intel SET last_promoted_at = now() WHERE variant_id = _r.variant_id;
     END IF;
   END LOOP;
   _block := _block || E'\n';
@@ -192,7 +189,9 @@ BEGIN
     WHERE (dealership_id = _dealership_id OR dealership_id = 'default')
       AND is_active = true
       AND voice_ai_snippet IS NOT NULL
-    ORDER BY CASE WHEN dealership_id = _dealership_id THEN 0 ELSE 1 END, sort_order
+    ORDER BY
+      CASE WHEN dealership_id = _dealership_id THEN 0 ELSE 1 END,
+      sort_order
   LOOP
     _block := _block || E'\n— If they say something like '
       || array_to_string(_r.customer_signals[1:3], ', ')
@@ -242,7 +241,7 @@ BEGIN
 END;
 $function$;
 
-GRANT EXECUTE ON FUNCTION public.compile_voice_agent_prompt(text, uuid, text)
+GRANT EXECUTE ON FUNCTION public.compile_voice_agent_prompt(text, uuid, text, uuid)
   TO authenticated, anon, service_role;
 
 NOTIFY pgrst, 'reload schema';
