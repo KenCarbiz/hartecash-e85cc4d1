@@ -694,7 +694,12 @@ export type Database = {
           start_date: string | null
           twilio_from_number: string | null
           updated_at: string
+          voice_ai_api_key: string | null
+          voice_ai_enabled: boolean | null
+          voice_ai_from_number: string | null
+          voice_ai_max_bump_amount: number | null
           voice_ai_provider: string
+          voice_ai_transfer_number: string | null
         }
         Insert: {
           architecture?: string
@@ -720,7 +725,12 @@ export type Database = {
           start_date?: string | null
           twilio_from_number?: string | null
           updated_at?: string
+          voice_ai_api_key?: string | null
+          voice_ai_enabled?: boolean | null
+          voice_ai_from_number?: string | null
+          voice_ai_max_bump_amount?: number | null
           voice_ai_provider?: string
+          voice_ai_transfer_number?: string | null
         }
         Update: {
           architecture?: string
@@ -746,7 +756,12 @@ export type Database = {
           start_date?: string | null
           twilio_from_number?: string | null
           updated_at?: string
+          voice_ai_api_key?: string | null
+          voice_ai_enabled?: boolean | null
+          voice_ai_from_number?: string | null
+          voice_ai_max_bump_amount?: number | null
           voice_ai_provider?: string
+          voice_ai_transfer_number?: string | null
         }
         Relationships: [
           {
@@ -4479,6 +4494,219 @@ export type Database = {
           success_criteria?: string
           updated_at?: string
           voice_rules?: string
+        }
+        Relationships: []
+      }
+      voice_call_log: {
+        Row: {
+          answered_by: string | null
+          attempt_number: number | null
+          bump_offered: number | null
+          campaign_id: string | null
+          consent_verified: boolean | null
+          created_at: string
+          customer_name: string | null
+          dealership_id: string | null
+          duration_seconds: number | null
+          ended_at: string | null
+          id: string
+          metadata: Json | null
+          opt_out_requested: boolean | null
+          original_offer: number | null
+          outcome: string | null
+          phone_number: string
+          provider_call_id: string | null
+          provider_response: Json | null
+          recording_url: string | null
+          retry_scheduled_at: string | null
+          scheduled_at: string | null
+          started_at: string | null
+          status: string
+          submission_id: string
+          summary: string | null
+          tcpa_disclosure_given: boolean | null
+          transcript: string | null
+          vehicle_info: string | null
+        }
+        Insert: {
+          answered_by?: string | null
+          attempt_number?: number | null
+          bump_offered?: number | null
+          campaign_id?: string | null
+          consent_verified?: boolean | null
+          created_at?: string
+          customer_name?: string | null
+          dealership_id?: string | null
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          metadata?: Json | null
+          opt_out_requested?: boolean | null
+          original_offer?: number | null
+          outcome?: string | null
+          phone_number: string
+          provider_call_id?: string | null
+          provider_response?: Json | null
+          recording_url?: string | null
+          retry_scheduled_at?: string | null
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: string
+          submission_id: string
+          summary?: string | null
+          tcpa_disclosure_given?: boolean | null
+          transcript?: string | null
+          vehicle_info?: string | null
+        }
+        Update: {
+          answered_by?: string | null
+          attempt_number?: number | null
+          bump_offered?: number | null
+          campaign_id?: string | null
+          consent_verified?: boolean | null
+          created_at?: string
+          customer_name?: string | null
+          dealership_id?: string | null
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          metadata?: Json | null
+          opt_out_requested?: boolean | null
+          original_offer?: number | null
+          outcome?: string | null
+          phone_number?: string
+          provider_call_id?: string | null
+          provider_response?: Json | null
+          recording_url?: string | null
+          retry_scheduled_at?: string | null
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: string
+          submission_id?: string
+          summary?: string | null
+          tcpa_disclosure_given?: boolean | null
+          transcript?: string | null
+          vehicle_info?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_call_log_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "voice_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voice_call_log_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voice_campaigns: {
+        Row: {
+          calling_hours_end: string | null
+          calling_hours_start: string | null
+          created_at: string
+          dealership_id: string
+          id: string
+          max_call_duration: number | null
+          max_calls_per_day: number | null
+          name: string
+          retry_attempts: number | null
+          retry_delay_hours: number | null
+          script_template: string
+          status: string
+          target_criteria: Json
+          total_calls_made: number | null
+          total_connected: number | null
+          total_converted: number | null
+          transfer_phone: string | null
+          updated_at: string
+          voice_id: string | null
+          voice_provider: string
+        }
+        Insert: {
+          calling_hours_end?: string | null
+          calling_hours_start?: string | null
+          created_at?: string
+          dealership_id: string
+          id?: string
+          max_call_duration?: number | null
+          max_calls_per_day?: number | null
+          name: string
+          retry_attempts?: number | null
+          retry_delay_hours?: number | null
+          script_template: string
+          status?: string
+          target_criteria?: Json
+          total_calls_made?: number | null
+          total_connected?: number | null
+          total_converted?: number | null
+          transfer_phone?: string | null
+          updated_at?: string
+          voice_id?: string | null
+          voice_provider?: string
+        }
+        Update: {
+          calling_hours_end?: string | null
+          calling_hours_start?: string | null
+          created_at?: string
+          dealership_id?: string
+          id?: string
+          max_call_duration?: number | null
+          max_calls_per_day?: number | null
+          name?: string
+          retry_attempts?: number | null
+          retry_delay_hours?: number | null
+          script_template?: string
+          status?: string
+          target_criteria?: Json
+          total_calls_made?: number | null
+          total_connected?: number | null
+          total_converted?: number | null
+          transfer_phone?: string | null
+          updated_at?: string
+          voice_id?: string | null
+          voice_provider?: string
+        }
+        Relationships: []
+      }
+      voice_script_templates: {
+        Row: {
+          category: string | null
+          created_at: string
+          dealership_id: string | null
+          description: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          script_template: string
+          variables: Json | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          dealership_id?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          script_template: string
+          variables?: Json | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          dealership_id?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          script_template?: string
+          variables?: Json | null
         }
         Relationships: []
       }
