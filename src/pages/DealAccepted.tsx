@@ -511,9 +511,12 @@ const DealAcceptedLegacy = () => {
           <div>
             <p className="font-bold text-card-foreground text-sm">Your offer is locked in!</p>
             <p className="text-xs text-muted-foreground">
+              {/* Replaced "a team member" with named-rep when assigned;
+                  falls back to a calmer placeholder when no rep is on
+                  the file yet. Strategist-audit dead-phrase fix. */}
               {daysRemaining > 0
-                ? `Price guaranteed for ${daysRemaining} ${daysRemaining === 1 ? "day" : "days"} — a team member will be reaching out shortly.`
-                : "A team member will be reaching out shortly."
+                ? `Price guaranteed for ${daysRemaining} ${daysRemaining === 1 ? "day" : "days"} — your acquisition contact will reach out within the hour.`
+                : "Your acquisition contact will reach out within the hour."
               }
             </p>
           </div>

@@ -98,11 +98,14 @@ export const DEFAULT_TEMPLATES: Record<string, TemplateDefaults> = {
       "Hi {{customer_name}}, your visit is confirmed for {{appointment_date}} at {{appointment_time}} at {{location}}. Bring your ID, title/registration, and all keys. — {{dealership_name}}",
   },
   customer_appointment_reminder: {
-    email_subject: "Reminder: Your Appointment Is Tomorrow",
+    // Strategist-audit dead-phrase fix: dropped "Just a friendly
+    // reminder" + injected {{rep_name_short}} so the customer hears
+    // from a named human, not a system.
+    email_subject: "You're on the books for tomorrow at {{appointment_time}}",
     email_body:
-      "Hi {{customer_name}},\n\nJust a friendly reminder — your inspection is tomorrow!\n\nDate: {{appointment_date}}\nTime: {{appointment_time}}\nLocation: {{location}}\nAddress: {{location_address}}\nVehicle: {{vehicle}}\n\nRemember to bring:\n• Driver's License\n• Vehicle Title or Registration\n• All Keys & Remotes\n• Loan Payoff Info (if applicable)\n\nYour inspection takes about 15-20 minutes.\n\nSee you soon!\n{{dealership_name}}",
+      "Hi {{customer_name}},\n\n{{rep_name_short}} here — confirming your inspection tomorrow at {{appointment_time}}, {{location}}, for the {{vehicle}}.\n\nWhat to bring:\n• Driver's license\n• Vehicle title (or registration if your lender holds the title)\n• All keys + remotes\n• Loan payoff letter if you still owe on it\n\nDon't detail it and don't fix anything beforehand — we'd rather see the car as-is.\n\nReply to this and it goes straight to {{rep_name_short}}.\n\n— {{dealership_name}}",
     sms_body:
-      "Reminder: Your visit is tomorrow at {{appointment_time}} at {{location}}. Bring your ID, title/registration, and all keys. See you there! — {{dealership_name}}",
+      "{{customer_name}} — {{rep_name_short}} here, confirming you for tomorrow at {{appointment_time}} at {{location}}. Bring ID, title (or registration), all keys. — {{dealership_name}}",
   },
   customer_appointment_reminder_dayof: {
     email_subject: "Your inspection is today at {{appointment_time}}",
@@ -123,6 +126,184 @@ export const DEFAULT_TEMPLATES: Record<string, TemplateDefaults> = {
     sms_body:
       "{{customer_name}} — heads-up that {{location_name}} is ready for you at {{appointment_time}}. Tap when you head out: {{arrive_url}}?status=on_the_way — or when you arrive: {{arrive_url}}?status=arrived. — {{dealership_name}}",
   },
+  // ── Education suite — content-rich emails the dealer can drip
+  // post-decline OR pre-decision. Each carries a real reason the
+  // customer benefits from selling to us instead of going wholesale
+  // (CarMax/Carvana) or private (Craigslist/FB Marketplace).
+  // Anchored in citable industry numbers from the May-2026
+  // voice-AI-training research; phrasing matches the dealer-floor-
+  // direct voice the objection playbook uses.
+
+  customer_education_private_sale_risks: {
+    // The "if you sell it private here's what really happens" email.
+    // Open-title risk gets its own paragraph because it's the single
+    // most-misunderstood liability consumers carry without realizing.
+    email_subject: "Selling private? A few things worth knowing first",
+    email_body:
+      "Hi {{customer_name}},\n\n" +
+      "You mentioned selling your {{vehicle}} privately — totally fair, the headline number on Craigslist or Facebook Marketplace is usually higher than what any dealer will pay. Before you commit, here are the things most folks don't think about until they're in the middle of it.\n\n" +
+      "OPEN-TITLE EXPOSURE — the biggest one\n" +
+      "If you sign the back of your title and hand it to a private buyer who doesn't immediately register the car in their name, you have what's called an \"open title.\" Until that buyer takes the title to the DMV, YOU are still the registered owner. That means parking tickets, toll violations, accidents, and abandoned-vehicle fines all come back to you — sometimes for months. State DMVs report hundreds of these cases per year per state. There is no easy way to force the buyer to register; you'd have to sue them.\n" +
+      "How we avoid this: when you sell to us, our title clerk takes the title directly from your hand to the DMV. The car is re-titled to the dealership before anyone drives off our lot.\n\n" +
+      "TEST-DRIVE LIABILITY\n" +
+      "If a private buyer test-drives your car and crashes it before you've signed and they've paid, your insurance is on the hook. Your premium goes up. Your deductible applies. We've seen it more than once.\n" +
+      "How we avoid this: you don't hand the keys to a stranger. The car never moves until we've cut you a check.\n\n" +
+      "CHECK FRAUD\n" +
+      "Cashier's checks, certified checks, and bank drafts can all be forged convincingly. Banks don't confirm a check is real for 7-10 business days even though they release the funds for the customer to use. By then, your buyer is gone with the car.\n" +
+      "How we avoid this: real check, drawn on the dealership's account, cleared before you leave.\n\n" +
+      "TIME ON MARKET\n" +
+      "The average private-party listing takes 30-60 days to sell. That's an hour or two of your time per buyer who shows up — most of whom don't buy. If your time is worth $30/hr, the math closes faster than you'd think.\n\n" +
+      "PERSONAL SAFETY\n" +
+      "Strangers coming to your house at the times that work for them. We don't have to belabor it; if you've sold a car privately before, you know the feeling.\n\n" +
+      "TAX-CREDIT MATH\n" +
+      "If you're going to buy another car this year, trading instead of selling private captures the sales-tax credit on your trade allowance — typically 5-9% of the trade value depending on state. That's real money the private buyer doesn't give you.\n\n" +
+      "I'm not trying to talk you out of selling private — sometimes the dollar gap is real. I just want you to compare with the full picture in front of you. Our offer of {{offer_amount}} is locked through {{lock_expires}} if you'd like a fallback.\n\n" +
+      "— {{rep_name_short}}, {{dealership_name}}",
+    sms_body:
+      "{{customer_name}} — heads up on private sales. Big one: if a buyer signs the title but doesn't register it, YOU stay liable for tickets/tolls/accidents until they do. Plus check fraud, test-drive liability, 30-60 day average time. Quick read: {{portal_link}}. Our offer of {{offer_amount}} is locked through {{lock_expires}} if you want a fallback. — {{rep_name_short}}",
+  },
+
+  customer_education_wholesale_vs_retail: {
+    // What actually happens to a customer's car at CarMax/Carvana
+    // vs at us. Anchored in CarMax FY2025 10-K — citable.
+    email_subject: "Where your car actually goes after you sell it",
+    email_body:
+      "Hi {{customer_name}},\n\n" +
+      "Quick honest comparison since the question comes up a lot.\n\n" +
+      "AT CARMAX\n" +
+      "CarMax's most recent annual report shows they bought 1.3 million vehicles last year and sold roughly 540,000 of those at wholesale auction — about 4 in every 10 cars they buy gets flipped to another dealer at auction within a week or two. Your car is one of those 1.3 million. There's no way to know in advance whether yours retails on a CarMax lot or auctions to whoever bids on it. Either way, your title information passes through the auction registry, which is visible to every wholesale buyer who participates.\n\n" +
+      "AT CARVANA\n" +
+      "Their offer is conditional on a 150-point inspection at pickup. They don't publish what the typical reduction is. Reductions happen for cosmetic damage, mechanical issues, mileage discrepancies — and the customer has limited recourse once Carvana is at their door with the truck.\n\n" +
+      "AT US\n" +
+      "We're a single dealership. We bought your {{vehicle}} for our own retail lot. We'll recondition it, photograph it, list it, and sell it to a customer in the next 30-45 days. Your title and your contact information stay in this building. Three people see your name on this transaction: me, our title clerk, and the DMV. That's it.\n\n" +
+      "If you'd rather see what we're going to list it as, here's our current inventory: {{portal_link}}\n\n" +
+      "Your offer of {{offer_amount}} is locked through {{lock_expires}}.\n\n" +
+      "— {{rep_name_short}}, {{dealership_name}}",
+    sms_body:
+      "Quick honest one — CarMax wholesales about 40% of what they buy (their own annual report). Carvana can change their offer at pickup. We're a single store buying your {{vehicle}} for our lot. Title stays here. Three people see your name. {{portal_link}} — {{rep_name_short}}",
+  },
+
+  customer_education_title_data_flow: {
+    // The "where your information goes" piece. Often the closer for
+    // a customer who's been burned before or is naturally privacy-
+    // conscious.
+    email_subject: "Where your information goes when you sell to us",
+    email_body:
+      "Hi {{customer_name}},\n\n" +
+      "Privacy questions come up a lot, especially since the big online buyers wholesale most of what they take in. Here's the actual data flow when you sell to {{dealership_name}}:\n\n" +
+      "1. You hand us the title and ID. Our title clerk photographs both into our internal system. The originals go in a locked cabinet until DMV processing.\n" +
+      "2. Our title clerk takes the title to the DMV (or submits electronically if your state supports it). The DMV re-titles the car to the dealership.\n" +
+      "3. Your name comes off the registration. We are now the registered owner of record.\n" +
+      "4. We list the car for retail. The new buyer's name goes on the next title — your name never touches their transaction.\n\n" +
+      "Three people see your name during this: me (your acquisition contact), our title clerk, and the DMV. That's the whole list.\n\n" +
+      "Compare to a wholesale flow: a CarMax-style operation logs your title in their system, ships the car to auction, the auction registry exposes the title chain to every dealer who bids, the winning dealer takes the title, retitles in their state, often adds another step if they ship out of state. Your information has touched 5-15 organizations by the time the car finds a new owner. None of those organizations are bound by what you agreed to with the buyer up front.\n\n" +
+      "If you'd like a written privacy commitment from {{dealership_name}}, just reply and our GM will send one over on letterhead. Costs nothing, and a few customers have asked for it.\n\n" +
+      "— {{rep_name_short}}, {{dealership_name}}",
+    sms_body:
+      "Quick one on privacy — your name and title at {{dealership_name}} touch 3 people: your contact, our title clerk, and the DMV. With wholesale flows it's 5-15 orgs because the car goes to auction. Reply if you want a written privacy commitment from our GM. — {{rep_name_short}}",
+  },
+
+  customer_education_payoff_timeline: {
+    // The "if you owe money on the car, here's how it works"
+    // explainer. Negative-equity prevalence sits at ~29% of trades
+    // per Edmunds Q4 2025 — most customers in this state feel alone
+    // and embarrassed; lead with the data point so they don't.
+    email_subject: "If you have a loan on the car — how the payoff works",
+    email_body:
+      "Hi {{customer_name}},\n\n" +
+      "Quick rundown so this part doesn't feel mysterious. Roughly 29% of vehicles being sold in the US right now have an active loan with a balance higher than the car's value — you're not alone if that's where you sit, and it's not a deal-killer either way.\n\n" +
+      "STEP 1 — Get the real payoff number\n" +
+      "We send your lender a payoff authorization form (you sign it, we fax/email it). The lender returns a 10-day payoff letter — the exact dollar amount needed to clear the loan, including unearned interest you'll get back. Captive lenders (Toyota Financial, Ford Credit, BMW FS) often respond same day. Most banks: 2-5 business days. Credit unions: typically 10 business days.\n\n" +
+      "STEP 2 — Compare payoff to offer\n" +
+      "If the payoff is LESS than {{offer_amount}}, we send the difference to you and the lender directly. Your loan is closed; your title is released to us; you're done.\n" +
+      "If the payoff is MORE than {{offer_amount}} (negative equity), the gap can be covered out of pocket OR rolled into a new financing arrangement if you're trading into another vehicle. Either way, we walk through the math with you before anything is signed.\n\n" +
+      "STEP 3 — Title release\n" +
+      "Once the lender is paid, they release the title to us. Some captive lenders do this electronically same-day. Banks send a hard-copy lien release in 2-3 weeks. Credit unions hold the title another 10 business days after payoff before releasing.\n\n" +
+      "Translation: from your perspective, you sign the payoff authorization today, we cut you a check today (less the loan balance), and you walk out done. The title cleanup happens on our end.\n\n" +
+      "Want to start the payoff authorization now so it's not the bottleneck on inspection day? Reply YES and I'll text you the link.\n\n" +
+      "— {{rep_name_short}}, {{dealership_name}}",
+    sms_body:
+      "Quick one on the loan — about 29% of trades nationally are underwater, average gap $7,214 (Edmunds Q4 2025). We send your lender a payoff auth, they return a 10-day payoff letter. If you owe less than {{offer_amount}}, you get the difference. If more, we walk you through options. Want to start the auth now? Reply YES. — {{rep_name_short}}",
+  },
+
+  customer_education_inspection_prep: {
+    // T-48h to T-24h before the inspection. Removes the friction
+    // list (don't detail it, don't fix anything, here's what to
+    // bring) — strategist-flagged opportunity for warmth.
+    email_subject: "Before your inspection at {{dealership_name}}",
+    email_body:
+      "Hi {{customer_name}},\n\n" +
+      "Quick prep so your inspection day is the easy day.\n\n" +
+      "DON'T DETAIL IT\n" +
+      "Seriously — please don't pay for a detail. We're going to look at the car as-is, and a freshly-detailed car can hide things our appraiser would normally call out and fix later. You'll do better skipping the $200 detail fee.\n\n" +
+      "DON'T FIX ANYTHING\n" +
+      "If there's a known issue (a check-engine light, a small dent, a worn tire), don't repair it before bringing the car in. Tell us what you know. Repairs done outside our network rarely move the offer favorably; honesty about known issues almost always preserves it.\n\n" +
+      "WHAT TO BRING\n" +
+      "• Driver's license (yours and any co-titler's)\n" +
+      "• Vehicle title — or, if your lender holds it, your most recent registration plus the lender's name and your account number\n" +
+      "• All keys and remotes (yes, even the spare)\n" +
+      "• Owner's manual if you have it\n" +
+      "• Loan payoff letter if we haven't already pulled one\n\n" +
+      "WHAT WE'LL DO IN THE 30-MINUTE INSPECTION\n" +
+      "Walk-around with you (we encourage you to come along — most customers like seeing what we're looking at), tire-tread and brake check, road test on a 2-mile loop, full diagnostic scan, paperwork verification. If you'd rather wait in the lounge, that's fine too — we'll text you when it's done.\n\n" +
+      "WHAT WE'LL TELL YOU AT THE END\n" +
+      "Your final number. If it matches the offer of {{offer_amount}}, we move to paperwork. If anything we found requires a small adjustment, we walk you through what we saw, line by line. You decide whether to proceed.\n\n" +
+      "See you soon.\n\n" +
+      "— {{rep_name_short}}, {{dealership_name}}",
+    sms_body:
+      "Heads up before your inspection: DON'T detail it (a detail can hide what we'd normally fix on our dime). DON'T fix anything yourself. Bring license, title (or registration + lender name), all keys, payoff letter if you have one. We do a 30-min walk-around — you can ride along. — {{rep_name_short}}",
+  },
+
+  customer_decline_winback_benefits: {
+    // The post-decline content-rich email. NOT a "we miss you" plea
+    // — it's the dealer's positioning argument distilled. Pulls
+    // from the objection playbook lines and the citable data the
+    // voice-AI-training research surfaced. Includes the trade-up
+    // incentive variable so dealers who configure one have it
+    // surfaced; degrades gracefully when no incentive is set.
+    email_subject: "Worth a second look on your {{vehicle}}",
+    email_body:
+      "Hi {{customer_name}},\n\n" +
+      "I saw the offer didn't move forward. I'm not going to keep emailing you — but if it would help to see the comparison clearly before you go elsewhere, here it is in one place.\n\n" +
+      "WHAT MAKES OUR OFFER DIFFERENT\n\n" +
+      "1. Title and information stay in our building\n" +
+      "Three people see your name: me, our title clerk, and the DMV. That's it. The big online buyers wholesale 30-40% of what they take in, which means your title information touches every dealer at the auction.\n\n" +
+      "2. Locked, in writing, for 7 days\n" +
+      "Your offer of {{offer_amount}} doesn't change at inspection unless we find something specific (and we walk you through it line by line if we do). The first $0-500 of any inspection difference, we eat — not you.\n\n" +
+      "3. Match a written competitor offer by $300\n" +
+      "If CarMax, Carvana, or anyone else gave you a written offer that beats ours by less than $300, send it over and we match on the spot. No re-appraisal, no inspection games.\n\n" +
+      "4. Same-day check\n" +
+      "From your driveway to a check in your hand: typically 30-45 minutes once you're at the dealership. Most folks expect this to take a day or two — it doesn't.\n\n" +
+      "5. {{trade_up_block}}\n\n" +
+      "WHAT YOU'RE COMPARING TO\n\n" +
+      "Selling private: 30-60 days on market on average, plus the open-title liability (you stay on the registration until the buyer registers, which means tickets and accidents come back to you), plus check fraud risk, plus the time tax of running ads and screening buyers.\n\n" +
+      "CarMax/Carvana: their numbers can move at inspection. Carvana doesn't publish how much. CarMax buys ~1.3 million cars a year and wholesales about 540,000 of them — your car has roughly a 40% chance of going to auction, where your title chain becomes visible to every dealer who bids.\n\n" +
+      "If the math still doesn't work for you, no hard feelings. Auction prices are running about 0.5% higher than they were last week (Manheim Index 213.0, mid-April) — if you want to revisit in 30 days, I'll re-quote based on the market then.\n\n" +
+      "— {{rep_name_short}}, {{dealership_name}}",
+    sms_body:
+      "{{customer_name}} — quick recap on your {{vehicle}}: title + info stay with us, $300 written competitor match, same-day check, first $500 of inspection delta we eat. {{trade_up_short}} Full comparison: {{portal_link}} — {{rep_name_short}}",
+  },
+
+  customer_offer_accepted_v2: {
+    // Strategist-recommended rewrite of customer_offer_accepted in
+    // the voice of customer_manager_signed_extension — prose-first,
+    // named rep up top, doc checklist as P.S. Use this template key
+    // for new acceptances; the legacy customer_offer_accepted stays
+    // available for tenants that haven't migrated.
+    email_subject: "Confirmed — {{rep_name_short}} from {{dealership_name}}",
+    email_body:
+      "Hi {{customer_name}},\n\n" +
+      "{{rep_name_short}} here. Thanks for accepting the offer of {{offer_amount}} on your {{vehicle}}. Wanted to reach out personally so you have a name and a face on the other end of this rather than just a confirmation email.\n\n" +
+      "{{trade_up_block}}\n\n" +
+      "Next step is the inspection — about 30 minutes door to door, you can ride along with the appraiser if you want, and the check is cut the same visit. You can pick a time here: {{portal_link}}\n\n" +
+      "If anything comes up between now and then — questions, schedule changes, paperwork wrinkles — just reply to this email and it goes straight to me.\n\n" +
+      "Looking forward to meeting you.\n\n" +
+      "— {{rep_name_short}}, {{dealership_name}}\n\n" +
+      "P.S. — what to bring on inspection day: driver's license, vehicle title (or registration plus your lender's name if they hold the title), all keys and remotes, and a loan payoff letter if you still owe on it. We'll handle every step from there.",
+    sms_body:
+      "Hi {{customer_name}} — {{rep_name_short}} from {{dealership_name}}. Thanks for locking in {{offer_amount}} on your {{vehicle}}. Pick an inspection time here: {{portal_link}} — about 30 min door to door, check the same visit. Reply with any questions; goes straight to me.",
+  },
+
   customer_what_to_bring: {
     email_subject: "What to bring to your vehicle inspection",
     email_body:

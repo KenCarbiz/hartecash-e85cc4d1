@@ -1143,7 +1143,7 @@ const OfferPageLegacy = () => {
                 </h1>
                 <p className="text-sm text-primary-foreground/60 mt-0.5">
                   {vehicleStr && <span className="font-medium text-primary-foreground/80">{vehicleStr}</span>}
-                  {vehicleStr && " · "}Personalized just for you
+                  {vehicleStr && " · "}Built from your VIN, your odometer, and last 14 days of comp sales
                 </p>
               </div>
             </div>
@@ -1218,9 +1218,14 @@ const OfferPageLegacy = () => {
                   className="grid grid-cols-3 gap-2"
                 >
                   {[
-                    { icon: Zap, label: "Fast Payment", sub: "Same-day available" },
-                    { icon: Handshake, label: "No Haggling", sub: "Price is final" },
-                    { icon: BadgeCheck, label: "Guaranteed", sub: "Locked price" },
+                    // Trust trio rewrite per the May-2026 comms-strategist
+                    // audit. Replaces three abstract claims (fast/no-haggle/
+                    // guaranteed) with three concrete commitments from the
+                    // objection playbook — each verifiable, each addresses a
+                    // specific customer concern.
+                    { icon: BadgeCheck, label: "Title stays here", sub: "3 people see your file" },
+                    { icon: Handshake, label: "$300 CarMax-match", sub: "Written offers honored" },
+                    { icon: Zap, label: "Same-day check", sub: "30-45 min on-site" },
                   ].map(item => (
                     <div key={item.label} className="flex flex-col items-center text-center bg-card/60 backdrop-blur-sm rounded-2xl p-3 border border-border/20 shadow-sm">
                       <div className="w-8 h-8 rounded-xl bg-primary/8 flex items-center justify-center mb-1.5">
@@ -1331,9 +1336,12 @@ const OfferPageLegacy = () => {
             className="grid grid-cols-3 gap-2"
           >
             {[
-              { icon: Zap, label: "Fast Payment" },
-              { icon: Handshake, label: "No Haggling" },
-              { icon: BadgeCheck, label: "Guaranteed" },
+              // Mirror of the desktop trust trio (lines ~1220) — see
+              // strategist audit notes there. Mobile gets the same
+              // three concrete commitments.
+              { icon: BadgeCheck, label: "Title stays here" },
+              { icon: Handshake, label: "$300 CarMax-match" },
+              { icon: Zap, label: "Same-day check" },
             ].map(item => (
               <div key={item.label} className="flex flex-col items-center text-center bg-card/60 rounded-2xl p-2.5 border border-border/15 shadow-sm">
                 <div className="w-7 h-7 rounded-lg bg-primary/8 flex items-center justify-center mb-1">

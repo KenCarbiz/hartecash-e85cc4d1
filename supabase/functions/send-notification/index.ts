@@ -131,9 +131,9 @@ const DEFAULT_TEMPLATES: Record<string, { email_subject: string; email_body: str
     sms_body: "Hi {{customer_name}}, your offer of {{offer_amount}} is locked through {{lock_expires}}. Schedule your 30-min visit here: {{portal_link}} — {{dealership_name}}",
   },
   customer_appointment_reminder: {
-    email_subject: "Reminder: Your Appointment Is Tomorrow",
-    email_body: "Hi {{customer_name}},\n\nJust a friendly reminder — your inspection is tomorrow!\n\nDate: {{appointment_date}}\nTime: {{appointment_time}}\nLocation: {{location}}\nVehicle: {{vehicle}}\n\nSee you soon!\n{{dealership_name}}",
-    sms_body: "Reminder: Your visit is tomorrow at {{appointment_time}} at {{location}}. Bring title, ID & keys. See you there! — {{dealership_name}}",
+    email_subject: "You're on the books for tomorrow at {{appointment_time}}",
+    email_body: "Hi {{customer_name}},\n\n{{rep_name_short}} here — confirming your inspection tomorrow at {{appointment_time}}, {{location}}, for the {{vehicle}}.\n\nWhat to bring: driver's license, title (or registration if your lender holds it), all keys + remotes, loan payoff letter if you still owe.\n\nReply to this and it goes straight to {{rep_name_short}}.\n\n— {{dealership_name}}",
+    sms_body: "{{customer_name}} — {{rep_name_short}} here, you're confirmed for tomorrow at {{appointment_time}} at {{location}}. Bring ID, title, all keys. — {{dealership_name}}",
   },
   // 24h-out reminder. Fired by send-appointment-reminders cron when
   // the appointment is 22.5–25.5h away. Calmer copy + a peek at the
@@ -446,6 +446,40 @@ Deno.serve(async (req) => {
       loanPayoffBlock = `\n\n💳 IF YOU STILL HAVE A LOAN ON THIS VEHICLE:\n  Your lender (${(sub as any).loan_company || "your bank"}) needs to issue a 10-day payoff letter — that takes a few days, so let's get it started now.\n  Sign the payoff authorization here: ${portalLink}/payoff-auth\n  We'll fax/email it to your lender directly so you don't have to.`;
     }
 
+    // Trade-up incentive block — pulled from trade_up_incentives if
+    // the dealer has one configured for the relevant trigger moment.
+    // Empty string when nothing's configured (templates render
+    // without it).
+    let tradeUpBlock = "";
+    let tradeUpShort = "";
+    if (sub?.dealership_id) {
+      const incentiveMoment =
+        trigger_key === "customer_offer_accepted" || trigger_key === "customer_offer_accepted_v2"
+          ? "post_acceptance"
+          : "pre_acceptance";
+      try {
+        const { data: incentives } = await supabase
+          .from("trade_up_incentives")
+          .select("headline, description, bonus_amount, inventory_url")
+          .eq("dealership_id", sub.dealership_id)
+          .eq("trigger_moment", incentiveMoment)
+          .eq("is_active", true)
+          .order("sort_order")
+          .limit(1);
+        const inc = (incentives as Array<{ headline: string; description: string | null; bonus_amount: number; inventory_url: string | null }> | null)?.[0];
+        if (inc) {
+          const amount = Number(inc.bonus_amount) > 0 ? `$${Number(inc.bonus_amount).toLocaleString()}` : "";
+          tradeUpBlock = `BONUS — ${inc.headline}` +
+            (inc.description ? `\n${inc.description}` : "") +
+            (amount ? `\nAdditional value: ${amount}` : "") +
+            (inc.inventory_url ? `\nBrowse eligible vehicles: ${inc.inventory_url}` : "");
+          tradeUpShort = amount ? `Trade-up bonus: ${amount}.` : inc.headline;
+        }
+      } catch {
+        // trade_up_incentives table missing → no-op block.
+      }
+    }
+
     const templateVars: Record<string, string> = {
       customer_name: sub?.name?.split(" ")[0] || "there",
       customer_email: sub?.email || "",
@@ -467,6 +501,8 @@ Deno.serve(async (req) => {
       rep_name_short: repNameShort,
       lock_expires: lockExpires,
       loan_payoff_block: loanPayoffBlock,
+      trade_up_block: tradeUpBlock,
+      trade_up_short: tradeUpShort,
       appointment_date: body.appointment_date || "",
       appointment_time: body.appointment_time || "",
       location: body.location || "",
