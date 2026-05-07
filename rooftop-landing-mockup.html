@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rooftop — Run your rooftop.</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            lime: {
+              DEFAULT: '#C7FF1A',
+              dark:    '#A8DC10',
+              soft:    '#E8FFA0',
+            },
+            ink:   '#0A0A0A',
+            slate: '#1A1A1A',
+            steel: '#2A2A2A',
+            paper: '#FAFAFA',
+          },
+          fontFamily: {
+            sans:    ['Inter', 'system-ui', 'sans-serif'],
+            display: ['Space Grotesk', 'Inter', 'sans-serif'],
+          },
+          boxShadow: {
+            lime: '0 0 0 1px rgba(199,255,26,.4), 0 8px 32px -4px rgba(199,255,26,.35)',
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .font-display { font-family: 'Space Grotesk', 'Inter', sans-serif; letter-spacing: -0.02em; }
+
+    .lime-glow {
+      background: radial-gradient(ellipse at center, rgba(199,255,26,0.20) 0%, transparent 60%);
+    }
+    .grid-bg {
+      background-image:
+        linear-gradient(rgba(199,255,26,0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(199,255,26,0.07) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+    .pulse-dot {
+      animation: pulse 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.6; transform: scale(0.85); }
+    }
+    .marquee {
+      animation: scroll 40s linear infinite;
+    }
+    @keyframes scroll {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .strikethrough-red {
+      position: relative;
+    }
+    .strikethrough-red::after {
+      content: '';
+      position: absolute;
+      inset: 50% 0 auto 0;
+      height: 2px;
+      background: #ef4444;
+      transform: rotate(-4deg);
+    }
+    .gradient-border {
+      background: linear-gradient(180deg, rgba(199,255,26,.4), rgba(199,255,26,0));
+      padding: 1px;
+      border-radius: 16px;
+    }
+    .gradient-border > div {
+      background: #0A0A0A;
+      border-radius: 15px;
+    }
+  </style>
+</head>
+<body class="bg-ink text-paper antialiased">
+
+  <!-- ============== TOP NAV ============== -->
+  <nav class="fixed top-0 inset-x-0 z-50 bg-ink/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-10">
+        <a href="#" class="flex items-center gap-2">
+          <!-- Rooftop logo: a stylized roof angle in lime -->
+          <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+            <path d="M4 22 L16 6 L28 22 L28 26 L4 26 Z" stroke="#C7FF1A" stroke-width="2.5" stroke-linejoin="round" fill="rgba(199,255,26,0.12)"/>
+            <circle cx="16" cy="18" r="2" fill="#C7FF1A"/>
+          </svg>
+          <span class="font-display font-bold text-lg tracking-tight">Rooftop</span>
+        </a>
+        <div class="hidden md:flex items-center gap-7 text-sm text-white/70">
+          <a href="#" class="hover:text-white">Platform</a>
+          <a href="#" class="hover:text-white">vs Competitors</a>
+          <a href="#" class="hover:text-white">Pricing</a>
+          <a href="#" class="hover:text-white">Customers</a>
+          <a href="#" class="hover:text-white">Docs</a>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="#" class="hidden md:block text-sm text-white/70 hover:text-white">Sign in</a>
+        <a href="#" class="bg-lime text-ink font-semibold text-sm px-4 py-2 rounded-lg hover:bg-lime-dark transition">Book demo</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ============== HERO ============== -->
+  <section class="relative pt-32 pb-24 overflow-hidden">
+    <div class="absolute inset-0 grid-bg opacity-40"></div>
+    <div class="absolute inset-x-0 top-0 h-[600px] lime-glow"></div>
+
+    <div class="relative max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center">
+      <!-- left: copy -->
+      <div>
+        <div class="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-3 py-1 text-xs text-white/80 mb-8">
+          <span class="relative flex h-2 w-2">
+            <span class="absolute inline-flex h-full w-full rounded-full bg-lime opacity-75 pulse-dot"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-lime"></span>
+          </span>
+          Now live at 200+ rooftops nationwide
+        </div>
+
+        <h1 class="font-display font-bold text-6xl lg:text-7xl leading-[0.95]">
+          Run your<br/>
+          <span class="text-lime">rooftop.</span>
+        </h1>
+
+        <p class="mt-6 text-xl text-white/70 max-w-xl leading-relaxed">
+          The AI acquisition OS that turns every web click, service write-up, and walk-in into your next deal — under <span class="text-white font-medium">your brand</span>, for a fraction of what AccuTrade charges.
+        </p>
+
+        <div class="mt-10 flex flex-wrap items-center gap-4">
+          <a href="#" class="bg-lime text-ink font-semibold px-6 py-3.5 rounded-lg hover:bg-lime-dark transition shadow-lime flex items-center gap-2">
+            Get your numbers
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path d="M3 10h13m0 0l-5-5m5 5l-5 5"/></svg>
+          </a>
+          <a href="#" class="text-white/90 font-medium px-6 py-3.5 rounded-lg border border-white/15 hover:border-white/30 hover:bg-white/5 transition">
+            Watch 90-sec tour
+          </a>
+        </div>
+
+        <div class="mt-10 flex items-center gap-6 text-sm text-white/50">
+          <div class="flex items-center gap-2">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="#C7FF1A"><path d="M16.7 5.3a1 1 0 010 1.4l-8 8a1 1 0 01-1.4 0l-4-4a1 1 0 111.4-1.4L8 12.6l7.3-7.3a1 1 0 011.4 0z"/></svg>
+            No per-lead fees
+          </div>
+          <div class="flex items-center gap-2">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="#C7FF1A"><path d="M16.7 5.3a1 1 0 010 1.4l-8 8a1 1 0 01-1.4 0l-4-4a1 1 0 111.4-1.4L8 12.6l7.3-7.3a1 1 0 011.4 0z"/></svg>
+            30-day money back
+          </div>
+          <div class="flex items-center gap-2">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="#C7FF1A"><path d="M16.7 5.3a1 1 0 010 1.4l-8 8a1 1 0 01-1.4 0l-4-4a1 1 0 111.4-1.4L8 12.6l7.3-7.3a1 1 0 011.4 0z"/></svg>
+            Onboard in 7 days
+          </div>
+        </div>
+      </div>
+
+      <!-- right: mascot + product peek -->
+      <div class="relative">
+        <!-- product card peek -->
+        <div class="absolute -top-4 right-0 w-72 bg-slate border border-white/10 rounded-2xl p-5 shadow-2xl rotate-3 z-10">
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-2 h-2 rounded-full bg-lime pulse-dot"></div>
+            <span class="text-xs text-white/60 uppercase tracking-wider">Live deal · #4421</span>
+          </div>
+          <div class="text-sm text-white/80 mb-1">Sarah K. — 2019 Honda CR-V</div>
+          <div class="text-3xl font-display font-bold text-lime">$18,400</div>
+          <div class="text-xs text-white/50 mt-1">Offer accepted · 2 min ago</div>
+          <div class="mt-3 pt-3 border-t border-white/10 grid grid-cols-5 gap-1">
+            <div class="h-1 rounded-full bg-lime"></div>
+            <div class="h-1 rounded-full bg-lime"></div>
+            <div class="h-1 rounded-full bg-lime"></div>
+            <div class="h-1 rounded-full bg-white/15"></div>
+            <div class="h-1 rounded-full bg-white/15"></div>
+          </div>
+        </div>
+
+        <!-- mascot SVG -->
+        <div class="relative aspect-square max-w-md mx-auto">
+          <div class="absolute inset-0 bg-lime rounded-3xl"></div>
+          <svg viewBox="0 0 400 400" class="relative w-full h-full">
+            <!-- shadow under feet -->
+            <ellipse cx="200" cy="370" rx="80" ry="8" fill="rgba(0,0,0,0.15)"/>
+            <!-- body / suit -->
+            <path d="M130 220 Q130 200 150 195 L250 195 Q270 200 270 220 L270 360 L130 360 Z" fill="#0A0A0A"/>
+            <!-- white shirt v -->
+            <path d="M180 195 L200 250 L220 195 Z" fill="#FAFAFA"/>
+            <!-- tie -->
+            <path d="M195 200 L205 200 L210 220 L200 290 L190 220 Z" fill="#0A0A0A" stroke="#FAFAFA" stroke-width="1"/>
+            <!-- neck -->
+            <rect x="185" y="170" width="30" height="30" fill="#F5DEB3"/>
+            <!-- head -->
+            <ellipse cx="200" cy="135" rx="55" ry="62" fill="#F5DEB3"/>
+            <!-- hair -->
+            <path d="M150 110 Q150 75 200 70 Q250 75 250 110 Q250 95 235 92 Q220 100 200 95 Q180 100 165 92 Q150 95 150 110 Z" fill="#0A0A0A"/>
+            <!-- beard scruff -->
+            <path d="M165 160 Q200 175 235 160 Q230 178 200 182 Q170 178 165 160 Z" fill="#0A0A0A" opacity="0.85"/>
+            <!-- glasses -->
+            <circle cx="178" cy="135" r="14" fill="none" stroke="#0A0A0A" stroke-width="3"/>
+            <circle cx="222" cy="135" r="14" fill="none" stroke="#0A0A0A" stroke-width="3"/>
+            <line x1="192" y1="135" x2="208" y2="135" stroke="#0A0A0A" stroke-width="3"/>
+            <!-- eyes inside glasses -->
+            <circle cx="178" cy="135" r="3" fill="#0A0A0A"/>
+            <circle cx="222" cy="135" r="3" fill="#0A0A0A"/>
+            <!-- smile -->
+            <path d="M180 158 Q200 170 220 158" stroke="#0A0A0A" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <!-- pocket square (lime accent) -->
+            <rect x="155" y="225" width="14" height="10" fill="#C7FF1A"/>
+            <!-- arms in pockets / arms-crossed look -->
+            <ellipse cx="155" cy="280" rx="22" ry="40" fill="#0A0A0A"/>
+            <ellipse cx="245" cy="280" rx="22" ry="40" fill="#0A0A0A"/>
+            <!-- thumbs up -->
+            <circle cx="270" cy="250" r="14" fill="#F5DEB3"/>
+            <rect x="265" y="225" width="10" height="22" rx="4" fill="#F5DEB3"/>
+          </svg>
+        </div>
+
+        <!-- bottom-left stats bubble -->
+        <div class="absolute -bottom-4 -left-4 bg-ink border border-lime/40 rounded-2xl p-4 shadow-lime">
+          <div class="text-xs text-white/60 uppercase tracking-wider mb-1">This month</div>
+          <div class="font-display text-2xl font-bold">+47 deals</div>
+          <div class="text-xs text-lime">↑ 23% vs last month</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== LOGO STRIP ============== -->
+  <section class="border-y border-white/5 bg-slate/50 py-10 overflow-hidden">
+    <p class="text-center text-xs uppercase tracking-[0.2em] text-white/40 mb-8">Trusted by franchise & independent rooftops</p>
+    <div class="flex marquee gap-16 whitespace-nowrap">
+      <div class="flex gap-16 shrink-0 items-center text-white/30 font-display font-semibold text-2xl">
+        <span>KOONS</span><span>•</span><span>HARTE NISSAN</span><span>•</span><span>INFINITI OF MANHATTAN</span><span>•</span><span>HENDRICK</span><span>•</span><span>GARBER AUTOMOTIVE</span><span>•</span><span>LITHIA</span><span>•</span><span>SUBURBAN COLLECTION</span><span>•</span><span>FERMAN MOTORS</span>
+      </div>
+      <div class="flex gap-16 shrink-0 items-center text-white/30 font-display font-semibold text-2xl">
+        <span>KOONS</span><span>•</span><span>HARTE NISSAN</span><span>•</span><span>INFINITI OF MANHATTAN</span><span>•</span><span>HENDRICK</span><span>•</span><span>GARBER AUTOMOTIVE</span><span>•</span><span>LITHIA</span><span>•</span><span>SUBURBAN COLLECTION</span><span>•</span><span>FERMAN MOTORS</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== STATS BAR — counter to inride's ad ============== -->
+  <section class="py-20">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="text-center mb-12">
+        <p class="text-xs uppercase tracking-[0.2em] text-lime mb-3">The numbers</p>
+        <h2 class="font-display text-4xl lg:text-5xl font-bold">What one rooftop did in 30 days.</h2>
+      </div>
+      <div class="grid md:grid-cols-4 gap-px bg-white/10 rounded-2xl overflow-hidden">
+        <div class="bg-ink p-8 text-center">
+          <div class="font-display text-5xl lg:text-6xl font-bold text-lime">47+</div>
+          <div class="text-sm text-white/60 mt-2">acquisitions / mo</div>
+        </div>
+        <div class="bg-ink p-8 text-center">
+          <div class="font-display text-5xl lg:text-6xl font-bold text-lime">$214K</div>
+          <div class="text-sm text-white/60 mt-2">gross / month one</div>
+        </div>
+        <div class="bg-ink p-8 text-center">
+          <div class="font-display text-5xl lg:text-6xl font-bold text-lime">0</div>
+          <div class="text-sm text-white/60 mt-2">BDC headcount added</div>
+        </div>
+        <div class="bg-ink p-8 text-center relative">
+          <div class="absolute top-3 right-3 text-[10px] uppercase tracking-wider bg-lime/20 text-lime px-2 py-0.5 rounded-full font-semibold">Ours</div>
+          <div class="font-display text-5xl lg:text-6xl font-bold text-lime flex items-center justify-center gap-2">
+            <svg width="48" height="48" viewBox="0 0 20 20" fill="currentColor"><path d="M16.7 5.3a1 1 0 010 1.4l-8 8a1 1 0 01-1.4 0l-4-4a1 1 0 111.4-1.4L8 12.6l7.3-7.3a1 1 0 011.4 0z"/></svg>
+            1
+          </div>
+          <div class="text-sm text-white/60 mt-2">platform — not 5</div>
+        </div>
+      </div>
+      <p class="text-center text-xs text-white/40 mt-6">Anonymized 30-day results from a single-rooftop Honda store, March 2026. Your mileage may vary.</p>
+    </div>
+  </section>
+
+  <!-- ============== BEFORE / AFTER ============== -->
+  <section class="py-24 bg-slate/40 border-y border-white/5">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <p class="text-xs uppercase tracking-[0.2em] text-lime mb-3">The honest picture</p>
+        <h2 class="font-display text-4xl lg:text-5xl font-bold">Your stack today vs.<br/>your stack on Rooftop.</h2>
+      </div>
+
+      <div class="grid lg:grid-cols-2 gap-8">
+        <!-- BEFORE -->
+        <div class="border border-red-500/30 bg-red-500/5 rounded-2xl p-8">
+          <div class="flex items-center gap-2 mb-6">
+            <div class="text-xs uppercase tracking-wider text-red-400 bg-red-500/10 px-2 py-1 rounded-full font-semibold">Before</div>
+            <div class="text-sm text-white/70">Your stack today</div>
+          </div>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between p-3 bg-ink/60 rounded-lg border border-white/5">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-white/10 rounded flex items-center justify-center text-xs font-semibold">AT</div>
+                <span class="text-sm">AccuTrade widget</span>
+              </div>
+              <span class="text-sm text-red-400 font-mono">$1,500/mo</span>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-ink/60 rounded-lg border border-white/5">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-white/10 rounded flex items-center justify-center text-xs font-semibold">KB</div>
+                <span class="text-sm">KBB ICO leads <span class="text-white/40">(shared)</span></span>
+              </div>
+              <span class="text-sm text-red-400 font-mono">per-lead</span>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-ink/60 rounded-lg border border-white/5">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-white/10 rounded flex items-center justify-center text-xs font-semibold">vA</div>
+                <span class="text-sm">vAuto Provision</span>
+              </div>
+              <span class="text-sm text-red-400 font-mono">$3,000/mo</span>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-ink/60 rounded-lg border border-white/5">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-white/10 rounded flex items-center justify-center text-xs font-semibold">iR</div>
+                <span class="text-sm">inride.ai BDC bot</span>
+              </div>
+              <span class="text-sm text-red-400 font-mono">$undisclosed</span>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-ink/60 rounded-lg border border-white/5">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-white/10 rounded flex items-center justify-center text-xs font-semibold">📋</div>
+                <span class="text-sm">Spreadsheets + Post-its</span>
+              </div>
+              <span class="text-sm text-red-400 font-mono">your sanity</span>
+            </div>
+          </div>
+          <div class="mt-6 pt-6 border-t border-white/10 flex items-center justify-between">
+            <span class="text-sm text-white/60">Total monthly bleed</span>
+            <span class="font-display text-2xl font-bold text-red-400 strikethrough-red">$5,000+</span>
+          </div>
+          <p class="text-xs text-white/40 mt-3">Plus: leads dropped between tools, no single source of truth, customer thinks they're selling to KBB.</p>
+        </div>
+
+        <!-- AFTER -->
+        <div class="gradient-border">
+          <div class="p-8">
+            <div class="flex items-center gap-2 mb-6">
+              <div class="text-xs uppercase tracking-wider text-ink bg-lime px-2 py-1 rounded-full font-semibold">After</div>
+              <div class="text-sm text-white/70">Your stack on Rooftop</div>
+            </div>
+            <div class="bg-lime/5 border border-lime/30 rounded-xl p-6">
+              <div class="flex items-center gap-3 mb-4">
+                <svg width="40" height="40" viewBox="0 0 32 32" fill="none">
+                  <path d="M4 22 L16 6 L28 22 L28 26 L4 26 Z" stroke="#C7FF1A" stroke-width="2.5" stroke-linejoin="round" fill="rgba(199,255,26,0.12)"/>
+                  <circle cx="16" cy="18" r="2" fill="#C7FF1A"/>
+                </svg>
+                <div>
+                  <div class="font-display font-bold text-xl">Rooftop</div>
+                  <div class="text-xs text-white/50">One platform · your brand on top</div>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2 text-sm">
+                <div class="flex items-center gap-2 text-white/80"><span class="text-lime">✓</span> AI outreach + BDC</div>
+                <div class="flex items-center gap-2 text-white/80"><span class="text-lime">✓</span> Instant offer widget</div>
+                <div class="flex items-center gap-2 text-white/80"><span class="text-lime">✓</span> Service drive mining</div>
+                <div class="flex items-center gap-2 text-white/80"><span class="text-lime">✓</span> Walk-in VIN scan</div>
+                <div class="flex items-center gap-2 text-white/80"><span class="text-lime">✓</span> AI condition score</div>
+                <div class="flex items-center gap-2 text-white/80"><span class="text-lime">✓</span> Inspection + appraisal</div>
+                <div class="flex items-center gap-2 text-white/80"><span class="text-lime">✓</span> Check request gen</div>
+                <div class="flex items-center gap-2 text-white/80"><span class="text-lime">✓</span> vAuto / DMS push</div>
+                <div class="flex items-center gap-2 text-white/80"><span class="text-lime">✓</span> OBD-II diagnostics</div>
+                <div class="flex items-center gap-2 text-white/80"><span class="text-lime">✓</span> Reporting + analytics</div>
+              </div>
+            </div>
+            <div class="mt-6 pt-6 border-t border-white/10 flex items-center justify-between">
+              <span class="text-sm text-white/60">Monthly cost</span>
+              <div class="text-right">
+                <div class="font-display text-2xl font-bold text-lime">From $299/mo</div>
+                <div class="text-xs text-white/50">Save 94% vs the stack above</div>
+              </div>
+            </div>
+            <p class="text-xs text-lime/80 mt-3">One login. One source of truth. Your name on every customer screen.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== 3-PILLAR ============== -->
+  <section class="py-24">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="text-center mb-16 max-w-2xl mx-auto">
+        <p class="text-xs uppercase tracking-[0.2em] text-lime mb-3">How it works</p>
+        <h2 class="font-display text-4xl lg:text-5xl font-bold">Source. Score. Sign.</h2>
+        <p class="text-white/60 mt-4">Every step from "I'm thinking about selling my car" to "here's your check" — under one roof.</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6">
+        <!-- Source -->
+        <div class="bg-slate border border-white/10 rounded-2xl p-8 hover:border-lime/40 transition group">
+          <div class="w-12 h-12 rounded-xl bg-lime/10 border border-lime/30 flex items-center justify-center mb-6 group-hover:bg-lime/20 transition">
+            <svg width="22" height="22" viewBox="0 0 20 20" fill="#C7FF1A"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zM6 8h8v2H6V8zm0 4h5v2H6v-2z"/></svg>
+          </div>
+          <div class="text-xs uppercase tracking-wider text-lime mb-2">01 · Source</div>
+          <h3 class="font-display text-2xl font-bold mb-3">Every channel, one pipeline.</h3>
+          <p class="text-white/60 text-sm leading-relaxed">Web offer widget. Service-drive equity mining. Walk-in VIN scan. AI BDC outreach to your CRM. Each lead lands in the same branded pipeline — no cross-tool handoffs.</p>
+          <div class="mt-6 space-y-2 text-sm">
+            <div class="flex items-center gap-2 text-white/70"><span class="text-lime">→</span> Web instant-offer form</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-lime">→</span> Service drive mining</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-lime">→</span> Walk-in VIN scan</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-lime">→</span> CRM AI outreach</div>
+          </div>
+        </div>
+
+        <!-- Score -->
+        <div class="bg-slate border border-white/10 rounded-2xl p-8 hover:border-lime/40 transition group">
+          <div class="w-12 h-12 rounded-xl bg-lime/10 border border-lime/30 flex items-center justify-center mb-6 group-hover:bg-lime/20 transition">
+            <svg width="22" height="22" viewBox="0 0 20 20" fill="#C7FF1A"><path d="M3 12h2v5H3v-5zm5-6h2v11H8V6zm5 3h2v8h-2V9z"/></svg>
+          </div>
+          <div class="text-xs uppercase tracking-wider text-lime mb-2">02 · Score</div>
+          <h3 class="font-display text-2xl font-bold mb-3">Know which deal to chase first.</h3>
+          <p class="text-white/60 text-sm leading-relaxed">AI photo damage detection. Live Black Book values. 0-100 lead score on 16 signals. Inspector-vs-AI disagreement flags. Stop chasing dead leads — let the score tell you who's hot.</p>
+          <div class="mt-6 space-y-2 text-sm">
+            <div class="flex items-center gap-2 text-white/70"><span class="text-lime">→</span> AI condition scoring</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-lime">→</span> Black Book live tiers</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-lime">→</span> 0-100 lead score</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-lime">→</span> OBD-II diagnostics</div>
+          </div>
+        </div>
+
+        <!-- Sign -->
+        <div class="bg-slate border border-white/10 rounded-2xl p-8 hover:border-lime/40 transition group">
+          <div class="w-12 h-12 rounded-xl bg-lime/10 border border-lime/30 flex items-center justify-center mb-6 group-hover:bg-lime/20 transition">
+            <svg width="22" height="22" viewBox="0 0 20 20" fill="#C7FF1A"><path d="M16.7 5.3a1 1 0 010 1.4l-8 8a1 1 0 01-1.4 0l-4-4a1 1 0 111.4-1.4L8 12.6l7.3-7.3a1 1 0 011.4 0z"/></svg>
+          </div>
+          <div class="text-xs uppercase tracking-wider text-lime mb-2">03 · Sign</div>
+          <h3 class="font-display text-2xl font-bold mb-3">Click to check, in one tool.</h3>
+          <p class="text-white/60 text-sm leading-relaxed">Inspection → manager appraisal → customer accepts → check request generated → DMS push. The whole back half of acquisition lives where the front half started. No re-keying.</p>
+          <div class="mt-6 space-y-2 text-sm">
+            <div class="flex items-center gap-2 text-white/70"><span class="text-lime">→</span> 100+ inspection items</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-lime">→</span> Appraisal waterfall</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-lime">→</span> Check request gen</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-lime">→</span> vAuto / DMS push</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== COMPARISON TABLE ============== -->
+  <section class="py-24 bg-slate/40 border-y border-white/5">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-12">
+        <p class="text-xs uppercase tracking-[0.2em] text-lime mb-3">vs. the rest</p>
+        <h2 class="font-display text-4xl lg:text-5xl font-bold">No one else does the whole job.</h2>
+      </div>
+
+      <div class="overflow-x-auto rounded-2xl border border-white/10">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-ink/60 border-b border-white/10">
+              <th class="text-left p-5 font-medium text-white/60"></th>
+              <th class="p-5 bg-lime/10 border-x border-lime/30">
+                <div class="font-display font-bold text-lime text-base">Rooftop</div>
+              </th>
+              <th class="p-5 font-medium text-white/60">inride.ai</th>
+              <th class="p-5 font-medium text-white/60">AccuTrade</th>
+              <th class="p-5 font-medium text-white/60">KBB ICO</th>
+              <th class="p-5 font-medium text-white/60">vAuto</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-white/5">
+            <tr>
+              <td class="p-5 text-white/80">AI outreach to your CRM</td>
+              <td class="text-center p-5 bg-lime/5 border-x border-lime/20"><span class="text-lime text-lg">✓</span></td>
+              <td class="text-center p-5"><span class="text-lime text-lg">✓</span></td>
+              <td class="text-center p-5 text-white/30">—</td>
+              <td class="text-center p-5 text-white/30">—</td>
+              <td class="text-center p-5 text-white/30">—</td>
+            </tr>
+            <tr>
+              <td class="p-5 text-white/80">Instant offer widget</td>
+              <td class="text-center p-5 bg-lime/5 border-x border-lime/20"><span class="text-lime text-lg">✓</span></td>
+              <td class="text-center p-5 text-white/30">—</td>
+              <td class="text-center p-5"><span class="text-lime text-lg">✓</span></td>
+              <td class="text-center p-5"><span class="text-lime text-lg">✓</span></td>
+              <td class="text-center p-5 text-white/30">—</td>
+            </tr>
+            <tr>
+              <td class="p-5 text-white/80">Service drive equity mining</td>
+              <td class="text-center p-5 bg-lime/5 border-x border-lime/20"><span class="text-lime text-lg">✓</span></td>
+              <td class="text-center p-5 text-white/30">—</td>
+              <td class="text-center p-5 text-white/30">—</td>
+              <td class="text-center p-5 text-white/30">—</td>
+              <td class="text-center p-5 text-white/30">—</td>
+            </tr>
+            <tr>
+              <td class="p-5 text-white/80">Photo + doc + appointment flow</td>
+              <td class="text-center p-5 bg-lime/5 border-x border-lime/20"><span class="text-lime text-lg">✓</span></td>
+              <td class="text-center p-5 text-white/30">—</td>
+              <td class="text-center p-5 text-white/40 text-xs">partial</td>
+              <td class="text-center p-5 text-white/30">—</td>
+              <td class="text-center p-5 text-white/30">—</td>
+            </tr>
+            <tr>
+              <td class="p-5 text-white/80">OBD-II diagnostics</td>
+              <td class="text-center p-5 bg-lime/5 border-x border-lime/20"><span class="text-lime text-xs">$80 1×</span></td>
+              <td class="text-center p-5 text-white/30">—</td>
+              <td class="text-center p-5 text-red-400 text-xs">$1,500/mo</td>
+              <td class="text-center p-5 text-white/30">—</td>
+              <td class="text-center p-5 text-white/30">—</td>
+            </tr>
+            <tr>
+              <td class="p-5 text-white/80">Inspection → appraisal → check</td>
+              <td class="text-center p-5 bg-lime/5 border-x border-lime/20"><span class="text-lime text-lg">✓</span></td>
+              <td class="text-center p-5 text-white/30">—</td>
+              <td class="text-center p-5 text-white/30">—</td>
+              <td class="text-center p-5 text-white/30">—</td>
+              <td class="text-center p-5 text-white/40 text-xs">post-buy</td>
+            </tr>
+            <tr>
+              <td class="p-5 text-white/80">Dealer-branded (not theirs)</td>
+              <td class="text-center p-5 bg-lime/5 border-x border-lime/20"><span class="text-lime text-lg">✓</span></td>
+              <td class="text-center p-5"><span class="text-lime text-lg">✓</span></td>
+              <td class="text-center p-5 text-white/40 text-xs">partial</td>
+              <td class="text-center p-5 text-red-400 text-xs">KBB owns lead</td>
+              <td class="text-center p-5"><span class="text-lime text-lg">✓</span></td>
+            </tr>
+            <tr class="bg-ink/40">
+              <td class="p-5 text-white font-semibold">Starting price</td>
+              <td class="text-center p-5 bg-lime/5 border-x border-lime/20 font-display font-bold text-lime">$299/mo</td>
+              <td class="text-center p-5 text-white/60">undisclosed</td>
+              <td class="text-center p-5 text-red-400">$1,500/mo</td>
+              <td class="text-center p-5 text-white/60">per-lead</td>
+              <td class="text-center p-5 text-red-400">$1k–5k/mo</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== TESTIMONIAL ============== -->
+  <section class="py-24">
+    <div class="max-w-4xl mx-auto px-6">
+      <div class="bg-gradient-to-br from-lime/10 to-transparent border border-lime/20 rounded-3xl p-12 text-center">
+        <svg class="mx-auto mb-6" width="48" height="48" viewBox="0 0 32 32" fill="#C7FF1A" opacity="0.4"><path d="M0 16q0-7 4.5-11.5T16 0v4q-4 0-7 3t-3 7h6v12H0V16zm16 0q0-7 4.5-11.5T32 0v4q-4 0-7 3t-3 7h6v12H16V16z"/></svg>
+        <p class="font-display text-2xl lg:text-3xl text-white leading-snug">
+          "We dropped AccuTrade and KBB ICO in week one. By month two we'd added <span class="text-lime">23 acquisitions</span> we wouldn't have closed otherwise — same team, same headcount, one screen instead of five."
+        </p>
+        <div class="mt-8 flex items-center justify-center gap-4">
+          <div class="w-12 h-12 rounded-full bg-lime/20 border border-lime/40 flex items-center justify-center font-display font-bold text-lime">MK</div>
+          <div class="text-left">
+            <div class="font-semibold">Marcus Kennedy</div>
+            <div class="text-sm text-white/50">GM · Koons Used Car Center</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== PRICING ============== -->
+  <section class="py-24 bg-slate/40 border-y border-white/5">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <p class="text-xs uppercase tracking-[0.2em] text-lime mb-3">Pricing</p>
+        <h2 class="font-display text-4xl lg:text-5xl font-bold">No per-lead games. No surprise hikes.</h2>
+        <p class="text-white/60 mt-4">All tiers include unlimited leads. Cancel anytime. 30-day money back.</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        <!-- Starter -->
+        <div class="bg-ink border border-white/10 rounded-2xl p-8">
+          <div class="text-xs uppercase tracking-wider text-white/50 mb-2">Starter</div>
+          <div class="font-display text-5xl font-bold mb-1">$299<span class="text-lg text-white/50 font-normal">/mo</span></div>
+          <p class="text-sm text-white/60 mb-6">For single-rooftop independents.</p>
+          <a href="#" class="block text-center bg-white/5 border border-white/10 hover:bg-white/10 rounded-lg py-3 font-semibold mb-6 transition">Start free trial</a>
+          <ul class="space-y-3 text-sm text-white/70">
+            <li class="flex gap-2"><span class="text-lime">✓</span> Unlimited submissions</li>
+            <li class="flex gap-2"><span class="text-lime">✓</span> Instant offer widget</li>
+            <li class="flex gap-2"><span class="text-lime">✓</span> Pipeline + customer portal</li>
+            <li class="flex gap-2"><span class="text-lime">✓</span> Photo + doc + appointment</li>
+            <li class="flex gap-2"><span class="text-lime">✓</span> Email + SMS notifications</li>
+          </ul>
+        </div>
+
+        <!-- Professional (featured) -->
+        <div class="bg-gradient-to-b from-lime/15 to-transparent border-2 border-lime rounded-2xl p-8 relative shadow-lime">
+          <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-lime text-ink text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Most popular</div>
+          <div class="text-xs uppercase tracking-wider text-lime mb-2">Professional</div>
+          <div class="font-display text-5xl font-bold mb-1">$499<span class="text-lg text-white/50 font-normal">/mo</span></div>
+          <p class="text-sm text-white/60 mb-6">For franchise rooftops.</p>
+          <a href="#" class="block text-center bg-lime text-ink hover:bg-lime-dark rounded-lg py-3 font-semibold mb-6 transition">Book demo</a>
+          <ul class="space-y-3 text-sm text-white/80">
+            <li class="flex gap-2"><span class="text-lime">✓</span> Everything in Starter</li>
+            <li class="flex gap-2"><span class="text-lime">✓</span> AI lead scoring</li>
+            <li class="flex gap-2"><span class="text-lime">✓</span> AI photo damage scoring</li>
+            <li class="flex gap-2"><span class="text-lime">✓</span> Service drive equity mining</li>
+            <li class="flex gap-2"><span class="text-lime">✓</span> Multi-location</li>
+            <li class="flex gap-2"><span class="text-lime">✓</span> Advanced analytics</li>
+          </ul>
+        </div>
+
+        <!-- Enterprise -->
+        <div class="bg-ink border border-white/10 rounded-2xl p-8">
+          <div class="text-xs uppercase tracking-wider text-white/50 mb-2">Enterprise</div>
+          <div class="font-display text-5xl font-bold mb-1">$999<span class="text-lg text-white/50 font-normal">/mo</span></div>
+          <p class="text-sm text-white/60 mb-6">For groups & captive finance.</p>
+          <a href="#" class="block text-center bg-white/5 border border-white/10 hover:bg-white/10 rounded-lg py-3 font-semibold mb-6 transition">Talk to sales</a>
+          <ul class="space-y-3 text-sm text-white/70">
+            <li class="flex gap-2"><span class="text-lime">✓</span> Everything in Professional</li>
+            <li class="flex gap-2"><span class="text-lime">✓</span> API access + webhooks</li>
+            <li class="flex gap-2"><span class="text-lime">✓</span> White-label removal</li>
+            <li class="flex gap-2"><span class="text-lime">✓</span> vAuto / DMS push</li>
+            <li class="flex gap-2"><span class="text-lime">✓</span> SSO + RBAC</li>
+            <li class="flex gap-2"><span class="text-lime">✓</span> Priority support</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== FINAL CTA ============== -->
+  <section class="py-32 relative overflow-hidden">
+    <div class="absolute inset-0 lime-glow"></div>
+    <div class="relative max-w-4xl mx-auto px-6 text-center">
+      <h2 class="font-display text-5xl lg:text-7xl font-bold leading-[0.95]">
+        Stop babysitting<br/>
+        <span class="text-lime">your stack.</span>
+      </h2>
+      <p class="mt-6 text-xl text-white/70 max-w-2xl mx-auto">
+        Run your rooftop on one platform. See your numbers in 24 hours.
+      </p>
+      <div class="mt-10 flex flex-wrap items-center justify-center gap-4">
+        <a href="#" class="bg-lime text-ink font-semibold px-8 py-4 rounded-lg hover:bg-lime-dark transition shadow-lime text-lg flex items-center gap-2">
+          Get your numbers
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3 10h13m0 0l-5-5m5 5l-5 5"/></svg>
+        </a>
+        <a href="#" class="text-white/90 font-medium px-8 py-4 rounded-lg border border-white/15 hover:border-white/30 hover:bg-white/5 transition text-lg">
+          Watch 90-sec tour
+        </a>
+      </div>
+      <p class="mt-6 text-sm text-white/40">No credit card. No installation. 7-day onboarding guarantee.</p>
+    </div>
+  </section>
+
+  <!-- ============== FOOTER ============== -->
+  <footer class="border-t border-white/5 py-12">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="grid md:grid-cols-5 gap-8 mb-12">
+        <div class="md:col-span-2">
+          <div class="flex items-center gap-2 mb-4">
+            <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+              <path d="M4 22 L16 6 L28 22 L28 26 L4 26 Z" stroke="#C7FF1A" stroke-width="2.5" stroke-linejoin="round" fill="rgba(199,255,26,0.12)"/>
+              <circle cx="16" cy="18" r="2" fill="#C7FF1A"/>
+            </svg>
+            <span class="font-display font-bold text-lg">Rooftop</span>
+          </div>
+          <p class="text-sm text-white/50 max-w-xs">The AI acquisition OS for franchise & independent dealers.</p>
+        </div>
+        <div>
+          <div class="text-xs uppercase tracking-wider text-white/40 mb-4">Product</div>
+          <ul class="space-y-2 text-sm text-white/70">
+            <li><a href="#" class="hover:text-lime">Platform</a></li>
+            <li><a href="#" class="hover:text-lime">Pricing</a></li>
+            <li><a href="#" class="hover:text-lime">vs Competitors</a></li>
+            <li><a href="#" class="hover:text-lime">Changelog</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="text-xs uppercase tracking-wider text-white/40 mb-4">Company</div>
+          <ul class="space-y-2 text-sm text-white/70">
+            <li><a href="#" class="hover:text-lime">About</a></li>
+            <li><a href="#" class="hover:text-lime">Customers</a></li>
+            <li><a href="#" class="hover:text-lime">Careers</a></li>
+            <li><a href="#" class="hover:text-lime">Press</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="text-xs uppercase tracking-wider text-white/40 mb-4">Resources</div>
+          <ul class="space-y-2 text-sm text-white/70">
+            <li><a href="#" class="hover:text-lime">Docs</a></li>
+            <li><a href="#" class="hover:text-lime">API</a></li>
+            <li><a href="#" class="hover:text-lime">Status</a></li>
+            <li><a href="#" class="hover:text-lime">Contact</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="pt-8 border-t border-white/5 flex flex-wrap items-center justify-between gap-4">
+        <div class="text-sm text-white/40">© 2026 Rooftop. All rights reserved.</div>
+        <div class="flex items-center gap-6 text-sm text-white/40">
+          <a href="#" class="hover:text-white">Privacy</a>
+          <a href="#" class="hover:text-white">Terms</a>
+          <a href="#" class="hover:text-white">TCPA</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
