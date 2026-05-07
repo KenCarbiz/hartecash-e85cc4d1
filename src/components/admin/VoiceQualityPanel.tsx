@@ -66,6 +66,16 @@ interface FullGrade extends QualityRow {
   golden_pinned?: boolean | null;
 }
 
+interface CallTurn {
+  turn_index: number;
+  speaker: "ai" | "customer" | "unknown";
+  text: string;
+  sentiment: "positive" | "neutral" | "negative" | "mixed" | null;
+  was_interrupted: boolean | null;
+  silence_before_ms: number | null;
+  matched_signal_key: string | null;
+}
+
 interface GradeRun {
   id: string;
   run_label: string;
@@ -136,11 +146,86 @@ const npsBadge = (n: number | null | undefined) => {
   return                   { label: `★${n}`, cls: "bg-red-100 text-red-700 border-red-300 font-bold" };
 };
 
-function CallRow({ row, expanded, onToggle, full, pinned, onTogglePin }: {
+const turnSpeakerLabel = (s: CallTurn["speaker"]) =>
+  s === "ai" ? "AI" : s === "customer" ? "Customer" : "?";
+
+const turnSpeakerCls = (s: CallTurn["speaker"]) =>
+  s === "ai"
+    ? "border-blue-200 bg-blue-50 text-blue-800 dark:bg-blue-900/20 dark:border-blue-700 dark:text-blue-200"
+    : s === "customer"
+    ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:bg-emerald-900/20 dark:border-emerald-700 dark:text-emerald-200"
+    : "border-slate-200 bg-slate-50 text-slate-700 dark:bg-slate-800/40 dark:border-slate-700 dark:text-slate-300";
+
+const sentimentDotCls = (s: CallTurn["sentiment"]) =>
+  s === "positive" ? "bg-emerald-400"
+  : s === "negative" ? "bg-red-400"
+  : s === "mixed"   ? "bg-amber-400"
+  : "bg-slate-200";
+
+function TurnsTranscript({ turns }: { turns: CallTurn[] }) {
+  const [expanded, setExpanded] = useState(false);
+  if (!turns.length) return null;
+  // Show first 8 + a "show all" toggle; full transcripts can run 30+
+  // turns and overwhelm the row at default.
+  const visible = expanded ? turns : turns.slice(0, 8);
+
+  return (
+    <div className="mt-3 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-950/40 p-3">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[10.5px] uppercase tracking-wider text-slate-500 font-bold">
+          Transcript ({turns.length} turns)
+        </span>
+        {turns.length > 8 && (
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            className="text-[11px] text-blue-600 hover:underline font-semibold"
+          >
+            {expanded ? "Collapse" : `Show all ${turns.length}`}
+          </button>
+        )}
+      </div>
+      <div className="space-y-1.5 max-h-[420px] overflow-y-auto pr-1">
+        {visible.map((t) => {
+          const longSilence = (t.silence_before_ms ?? 0) >= 2000;
+          return (
+            <div key={t.turn_index}>
+              {longSilence && (
+                <div className="text-[10.5px] uppercase tracking-wider text-amber-600 font-semibold pl-1 py-0.5">
+                  ⋯ {Math.round((t.silence_before_ms ?? 0) / 1000)}s pause
+                </div>
+              )}
+              <div className="flex items-start gap-2">
+                <div className={`shrink-0 inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10.5px] font-bold uppercase tracking-wider ${turnSpeakerCls(t.speaker)}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${sentimentDotCls(t.sentiment)}`} />
+                  {turnSpeakerLabel(t.speaker)}
+                  {t.was_interrupted && (
+                    <span className="ml-0.5 text-[10px] text-amber-600">↯</span>
+                  )}
+                </div>
+                <div className="flex-1 text-[12.5px] text-slate-800 dark:text-slate-200 leading-snug">
+                  {t.text}
+                  {t.matched_signal_key && (
+                    <span className="ml-2 inline-block px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wider font-bold bg-purple-100 text-purple-700 border border-purple-200">
+                      signal: {t.matched_signal_key}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function CallRow({ row, expanded, onToggle, full, turns, pinned, onTogglePin }: {
   row: QualityRow;
   expanded: boolean;
   onToggle: () => void;
   full: FullGrade | null;
+  turns: CallTurn[] | null;
   pinned: boolean;
   onTogglePin: () => void;
 }) {
@@ -277,6 +362,7 @@ function CallRow({ row, expanded, onToggle, full, pinned, onTogglePin }: {
               "{row.feedback_comment}"
             </div>
           )}
+          {turns && turns.length > 0 && <TurnsTranscript turns={turns} />}
           <div className="mt-3 flex items-center gap-2 text-[11px] text-slate-500">
             <span>Call ID:</span>
             <code className="font-mono text-[10.5px] bg-slate-100 dark:bg-slate-800 rounded px-1.5 py-0.5">{row.call_id}</code>
@@ -294,13 +380,14 @@ interface SectionProps {
   expandedId: string | null;
   onToggle: (id: string) => void;
   fullById: Record<string, FullGrade>;
+  turnsById: Record<string, CallTurn[]>;
   pinnedById: Record<string, boolean>;
   onTogglePin: (callId: string) => void;
   emptyHint: string;
   icon: React.ElementType;
 }
 
-function Section({ title, subtitle, rows, expandedId, onToggle, fullById, pinnedById, onTogglePin, emptyHint, icon: Icon }: SectionProps) {
+function Section({ title, subtitle, rows, expandedId, onToggle, fullById, turnsById, pinnedById, onTogglePin, emptyHint, icon: Icon }: SectionProps) {
   return (
     <div>
       <div className="flex items-start gap-3 mb-3">
@@ -323,6 +410,7 @@ function Section({ title, subtitle, rows, expandedId, onToggle, fullById, pinned
               expanded={expandedId === r.call_id}
               onToggle={() => onToggle(r.call_id)}
               full={fullById[r.call_id] || null}
+              turns={turnsById[r.call_id] || null}
               pinned={!!pinnedById[r.call_id]}
               onTogglePin={() => onTogglePin(r.call_id)}
             />
@@ -342,6 +430,7 @@ export default function VoiceQualityPanel() {
   const [gating, setGating]   = useState<QualityRow[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [fullById, setFullById] = useState<Record<string, FullGrade>>({});
+  const [turnsById, setTurnsById] = useState<Record<string, CallTurn[]>>({});
   const [pinnedById, setPinnedById] = useState<Record<string, boolean>>({});
   const [runs, setRuns] = useState<GradeRun[]>([]);
   const [running, setRunning] = useState(false);
@@ -523,26 +612,38 @@ export default function VoiceQualityPanel() {
       return;
     }
     setExpandedId(callId);
-    if (fullById[callId]) return;
+    if (fullById[callId] && turnsById[callId]) return;
 
-    const { data } = await supabase
-      .from("voice_call_grades")
-      .select("call_id, dim_compliance, dim_vehicle_confirm, dim_motivation_disco, dim_quote_band, dim_objection_handle, dim_close_control, dim_transfer_hygiene, dim_pacing, dim_hallucination, dim_brand_tone, composite_score, gating_failed, rationale, grader_model, golden_pinned")
-      .eq("call_id", callId)
-      .is("run_id", null)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    // Fetch grade row + turns in parallel — both are independent and
+    // the user has to wait on the slowest one anyway.
+    const [gradeQ, turnsQ] = await Promise.all([
+      fullById[callId] ? Promise.resolve({ data: null }) : supabase
+        .from("voice_call_grades")
+        .select("call_id, dim_compliance, dim_vehicle_confirm, dim_motivation_disco, dim_quote_band, dim_objection_handle, dim_close_control, dim_transfer_hygiene, dim_pacing, dim_hallucination, dim_brand_tone, composite_score, gating_failed, rationale, grader_model, golden_pinned")
+        .eq("call_id", callId)
+        .is("run_id", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      turnsById[callId] ? Promise.resolve({ data: null }) : supabase
+        .from("voice_call_turns")
+        .select("turn_index, speaker, text, sentiment, was_interrupted, silence_before_ms, matched_signal_key")
+        .eq("call_id", callId)
+        .order("turn_index", { ascending: true }),
+    ]);
 
-    if (data) {
+    if (gradeQ.data) {
       const merged = {
         ...(highest.find((r) => r.call_id === callId)
           || lowest.find((r) => r.call_id === callId)
           || gating.find((r) => r.call_id === callId)),
-        ...data,
-        grader_rationale: data.rationale ?? null,
+        ...gradeQ.data,
+        grader_rationale: (gradeQ.data as { rationale?: string | null }).rationale ?? null,
       } as FullGrade;
       setFullById((prev) => ({ ...prev, [callId]: merged }));
+    }
+    if (turnsQ.data) {
+      setTurnsById((prev) => ({ ...prev, [callId]: turnsQ.data as CallTurn[] }));
     }
   };
 
@@ -584,6 +685,7 @@ export default function VoiceQualityPanel() {
             expandedId={expandedId}
             onToggle={onToggle}
             fullById={fullById}
+            turnsById={turnsById}
             pinnedById={pinnedById}
             onTogglePin={togglePin}
             emptyHint="No gating fails this week. Keep that streak."
@@ -596,6 +698,7 @@ export default function VoiceQualityPanel() {
             expandedId={expandedId}
             onToggle={onToggle}
             fullById={fullById}
+            turnsById={turnsById}
             pinnedById={pinnedById}
             onTogglePin={togglePin}
             emptyHint="No graded calls yet."
@@ -608,6 +711,7 @@ export default function VoiceQualityPanel() {
             expandedId={expandedId}
             onToggle={onToggle}
             fullById={fullById}
+            turnsById={turnsById}
             pinnedById={pinnedById}
             onTogglePin={togglePin}
             emptyHint="No graded calls yet."
