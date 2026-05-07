@@ -52,6 +52,7 @@ const AppraisalTool = lazy(() => import("./pages/AppraisalTool"));
 const SuperAdminDashboard = lazy(() => import("./pages/SuperAdminDashboard"));
 const OnboardingMobile = lazy(() => import("./pages/OnboardingMobile"));
 const PublicDemo = lazy(() => import("./pages/PublicDemo"));
+const CustomerArrival = lazy(() => import("./pages/CustomerArrival"));
 const EmailUnsubscribe = lazy(() => import("./pages/EmailUnsubscribe"));
 const ReferralPage = lazy(() => import("./pages/ReferralPage"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
@@ -146,6 +147,7 @@ const AnimatedRoutes = () => {
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/offer/:token" element={<OfferPage />} />
+        <Route path="/arrive/:token" element={<CustomerArrival />} />
         <Route path="/quick-offer" element={<QuickOfferPage />} />
         <Route path="/sitemap" element={<Sitemap />} />
         <Route path="/review/:token" element={<ReviewPage />} />

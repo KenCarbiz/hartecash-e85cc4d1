@@ -107,9 +107,21 @@ export const DEFAULT_TEMPLATES: Record<string, TemplateDefaults> = {
   customer_appointment_reminder_dayof: {
     email_subject: "Your inspection is today at {{appointment_time}}",
     email_body:
-      "Hi {{customer_name}},\n\nYour vehicle inspection is TODAY!\n\nTime: {{appointment_time}}\nLocation: {{location}}\nAddress: {{location_address}}\nVehicle: {{vehicle}}\n\nWhat to Bring:\n• Driver's License\n• Vehicle Title or Registration\n• All Keys & Remotes\n• Loan Payoff Info (if applicable)\n\nYour inspection takes about 15-20 minutes.\n\nWe look forward to seeing you!\n{{dealership_name}}",
+      "Hi {{customer_name}},\n\nYour vehicle inspection is TODAY!\n\nTime: {{appointment_time}}\nLocation: {{location}}\nAddress: {{location_address}}\nVehicle: {{vehicle}}\n\nWhat to Bring:\n• Driver's License\n• Vehicle Title or Registration\n• All Keys & Remotes\n• Loan Payoff Info (if applicable)\n\nWhen you head out: {{arrive_url}}?status=on_the_way\nWhen you get here: {{arrive_url}}?status=arrived\n\nYour inspection takes about 15-20 minutes.\n\nWe look forward to seeing you!\n{{dealership_name}}",
     sms_body:
-      "Reminder: Your vehicle inspection is today at {{appointment_time}} at {{location_name}}. Bring your ID, title/registration, and all keys. — {{dealership_name}}",
+      "Reminder: Your inspection is today at {{appointment_time}} at {{location_name}}. Tap when you head out: {{arrive_url}}?status=on_the_way — or when you arrive: {{arrive_url}}?status=arrived. Bring ID, title/registration, all keys. — {{dealership_name}}",
+  },
+  customer_self_checkin_link: {
+    // T-3h before the appointment. The two URLs are the heart of the
+    // self-check-in flow — customer taps one, the front desk sees the
+    // status flip on FrontDesk + the customer file's Greeting Card
+    // strip without needing to visually spot the customer at the
+    // counter.
+    email_subject: "Heading our way? Tap one button when you do",
+    email_body:
+      "Hi {{customer_name}},\n\nYour inspection is coming up at {{appointment_time}} at {{location}}.\n\nWhen you leave home, tap: {{arrive_url}}?status=on_the_way\nWhen you pull in, tap: {{arrive_url}}?status=arrived\n\nWe'll have your file pulled and the bay ready before you walk in. See you soon.\n\n{{dealership_name}}",
+    sms_body:
+      "{{customer_name}} — heads-up that {{location_name}} is ready for you at {{appointment_time}}. Tap when you head out: {{arrive_url}}?status=on_the_way — or when you arrive: {{arrive_url}}?status=arrived. — {{dealership_name}}",
   },
   customer_what_to_bring: {
     email_subject: "What to bring to your vehicle inspection",

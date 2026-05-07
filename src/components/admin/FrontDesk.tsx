@@ -298,6 +298,11 @@ const FrontDesk = ({ appointments, submissions, fetchSubmissions, onView, onCrea
                 const status = sub?.progress_status;
                 const arrived = status === "customer_arrived";
                 const onTheWay = status === "on_the_way";
+                // Self check-in flag — when the customer tapped the SMS
+                // link rather than the receptionist clicking "Check in"
+                // for them. Surfaces a small "self" chip so the front
+                // desk knows the data didn't come from staff input.
+                const selfCheckedIn = !!(sub as { self_checkin_at?: string | null })?.self_checkin_at;
 
                 const rowBg = arrived
                   ? "bg-red-50 border-l-4 border-l-red-500"
@@ -306,7 +311,7 @@ const FrontDesk = ({ appointments, submissions, fetchSubmissions, onView, onCrea
                 const pill = arrived
                   ? { label: "Arrived", cls: "text-red-700", dot: "bg-red-500" }
                   : onTheWay
-                    ? { label: "On the way", cls: "text-orange-600 bg-orange-100 px-2 py-0.5 rounded", dot: "" }
+                    ? { label: "On the way", cls: "text-warning bg-warning/15 px-2 py-0.5 rounded", dot: "" }
                     : null;
 
                 return (
@@ -320,6 +325,11 @@ const FrontDesk = ({ appointments, submissions, fetchSubmissions, onView, onCrea
                             <span className={`text-[11px] font-bold inline-flex items-center gap-1.5 ${pill.cls}`}>
                               {pill.dot && <span className={`w-1.5 h-1.5 rounded-full ${pill.dot}`} />}
                               {pill.label}
+                            </span>
+                          )}
+                          {selfCheckedIn && (
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-info bg-info/10 border border-info/30 rounded px-1.5 py-0.5">
+                              Self
                             </span>
                           )}
                         </div>

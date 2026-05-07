@@ -436,6 +436,11 @@ Deno.serve(async (req) => {
       mileage: sub?.mileage || "",
       offer_amount: offerAmount,
       portal_link: portalLink,
+      // Self-check-in URL — the customer-facing /arrive/:token page
+      // accepts ?status=on_the_way and ?status=arrived. Templates
+      // append the query param themselves so we keep one variable
+      // and let the message pick the action it wants to surface.
+      arrive_url: sub ? `${siteUrl}/arrive/${sub.token}` : siteUrl,
       decline_link_price: declineLink("price_too_low"),
       decline_link_shopping: declineLink("shopping_around"),
       decline_link_notready: declineLink("not_ready"),
