@@ -3754,6 +3754,7 @@ export type Database = {
           cadence_step: number
           check_request_done: boolean
           created_at: string
+          customer_memory: Json
           dealership_id: string
           decline_reason: string | null
           decline_reason_at: string | null
@@ -3894,6 +3895,7 @@ export type Database = {
           cadence_step?: number
           check_request_done?: boolean
           created_at?: string
+          customer_memory?: Json
           dealership_id?: string
           decline_reason?: string | null
           decline_reason_at?: string | null
@@ -4034,6 +4036,7 @@ export type Database = {
           cadence_step?: number
           check_request_done?: boolean
           created_at?: string
+          customer_memory?: Json
           dealership_id?: string
           decline_reason?: string | null
           decline_reason_at?: string | null
@@ -4675,6 +4678,9 @@ export type Database = {
           duration_seconds: number | null
           ended_at: string | null
           id: string
+          memory_hook_offered: string | null
+          memory_hook_used: boolean | null
+          memory_hook_used_within_20s: boolean | null
           metadata: Json | null
           opt_out_requested: boolean | null
           original_offer: number | null
@@ -4705,6 +4711,9 @@ export type Database = {
           duration_seconds?: number | null
           ended_at?: string | null
           id?: string
+          memory_hook_offered?: string | null
+          memory_hook_used?: boolean | null
+          memory_hook_used_within_20s?: boolean | null
           metadata?: Json | null
           opt_out_requested?: boolean | null
           original_offer?: number | null
@@ -4735,6 +4744,9 @@ export type Database = {
           duration_seconds?: number | null
           ended_at?: string | null
           id?: string
+          memory_hook_offered?: string | null
+          memory_hook_used?: boolean | null
+          memory_hook_used_within_20s?: boolean | null
           metadata?: Json | null
           opt_out_requested?: boolean | null
           original_offer?: number | null
@@ -5037,6 +5049,15 @@ export type Database = {
       activation_in_pilot: {
         Args: { _activation_id: string }
         Returns: boolean
+      }
+      add_customer_memory_item: {
+        Args: {
+          _fact: string
+          _kind?: string
+          _source_call_id?: string
+          _submission_id: string
+        }
+        Returns: undefined
       }
       apply_boost_bump: {
         Args: {
