@@ -95,7 +95,15 @@ const ExecutiveHUD = ({ onDrillDown }: ExecutiveHUDProps = {}) => {
   const [funnel, setFunnel] = useState<FunnelCounts>({
     submitted: 0, offerMade: 0, appointmentSet: 0, inspectionCompleted: 0, acquired: 0,
   });
+  // Prior period (same length, immediately before) so each funnel
+  // tile and decline row can show a "▲ 12% vs prev 30d" delta.
+  // Item 25a from the audit: turns the HUD from a vanity dashboard
+  // into something a GM can read for direction.
+  const [funnelPrev, setFunnelPrev] = useState<FunnelCounts>({
+    submitted: 0, offerMade: 0, appointmentSet: 0, inspectionCompleted: 0, acquired: 0,
+  });
   const [declineReasons, setDeclineReasons] = useState<Bucket[]>([]);
+  const [declinePrev, setDeclinePrev] = useState<Record<string, number>>({});
   const [competitors, setCompetitors] = useState<Bucket[]>([]);
   const [aged, setAged] = useState<{ count: number; totalAcv: number }>({ count: 0, totalAcv: 0 });
   const [holdingConfig, setHoldingConfig] = useState<TenantHoldingConfig | null>(null);
@@ -114,8 +122,14 @@ const ExecutiveHUD = ({ onDrillDown }: ExecutiveHUDProps = {}) => {
     (async () => {
       setLoading(true);
       const since = rangeStart(range).toISOString();
+      // Prior period of the same length, immediately before `since`,
+      // so deltas read "vs prev 30d" rather than "vs all time".
+      const sinceMs = new Date(since).getTime();
+      const periodMs = Date.now() - sinceMs;
+      const prevSince = new Date(sinceMs - periodMs).toISOString();
+      const prevUntil = since;
 
-      const [subRes, tenantRes] = await Promise.all([
+      const [subRes, prevRes, tenantRes] = await Promise.all([
         supabase
           .from("submissions")
           .select(
@@ -123,6 +137,14 @@ const ExecutiveHUD = ({ onDrillDown }: ExecutiveHUDProps = {}) => {
           )
           .eq("dealership_id", tenant.dealership_id)
           .gte("created_at", since),
+        supabase
+          .from("submissions")
+          .select(
+            "progress_status, appointment_set, estimated_offer_high, offered_price, declined_reason, created_at"
+          )
+          .eq("dealership_id", tenant.dealership_id)
+          .gte("created_at", prevSince)
+          .lt("created_at", prevUntil),
         supabase
           .from("tenants")
           .select("floor_plan_rate_annual_pct, overhead_per_day_per_unit, avg_holding_days_target")
@@ -150,6 +172,33 @@ const ExecutiveHUD = ({ onDrillDown }: ExecutiveHUDProps = {}) => {
         ).length,
       };
       setFunnel(fc);
+
+      // ── Prior-period funnel + decline reasons (for trend deltas) ──
+      const prevRows = (prevRes.data as any[]) || [];
+      const prevFunnel: FunnelCounts = {
+        submitted: prevRows.length,
+        offerMade: prevRows.filter((r) => r.estimated_offer_high || r.offered_price).length,
+        appointmentSet: prevRows.filter((r) => r.appointment_set).length,
+        inspectionCompleted: prevRows.filter(
+          (r) => r.progress_status === "inspection_completed" ||
+            r.progress_status === "deal_finalized" ||
+            r.progress_status === "check_request_submitted" ||
+            r.progress_status === "purchase_complete"
+        ).length,
+        acquired: prevRows.filter(
+          (r) => r.progress_status === "purchase_complete" ||
+            r.progress_status === "check_request_submitted"
+        ).length,
+      };
+      setFunnelPrev(prevFunnel);
+
+      const prevReasonMap: Record<string, number> = {};
+      prevRows.forEach((r) => {
+        if (r.declined_reason) {
+          prevReasonMap[r.declined_reason] = (prevReasonMap[r.declined_reason] || 0) + 1;
+        }
+      });
+      setDeclinePrev(prevReasonMap);
 
       // Decline reasons bucket
       const reasonMap: Record<string, number> = {};
@@ -249,6 +298,22 @@ const ExecutiveHUD = ({ onDrillDown }: ExecutiveHUDProps = {}) => {
   const pct = (num: number, denom: number) =>
     denom > 0 ? `${Math.round((num / denom) * 100)}%` : "—";
 
+  // Trend delta vs the immediately-preceding period of the same
+  // length. Returns null when there's nothing to compare against
+  // (zero in both periods, or very low absolute counts where a %
+  // is misleading) so the tile stays uncluttered. Direction is the
+  // raw delta sign — for decline reasons the chip is colored
+  // red-on-up + green-on-down (more declines = bad), for funnel
+  // tiles it's the opposite.
+  const trend = (current: number, previous: number) => {
+    if (current === 0 && previous === 0) return null;
+    if (current < 3 && previous < 3) return null;
+    if (previous === 0) return { dir: "up" as const, pct: 100 };
+    const diff = Math.round(((current - previous) / previous) * 100);
+    if (diff === 0) return null;
+    return { dir: diff > 0 ? ("up" as const) : ("down" as const), pct: Math.abs(diff) };
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -292,16 +357,15 @@ const ExecutiveHUD = ({ onDrillDown }: ExecutiveHUDProps = {}) => {
           <div className="grid grid-cols-5 gap-2">
             {[
               // Each tile carries the drill-down it should fire when
-              // clicked. "Submitted" doesn't drill (it's already
-              // unfiltered All Leads); the rest narrow on
-              // progress_status or appointment_set.
-              { label: "Submitted", value: funnel.submitted, convFrom: null as number | null, drill: null as DrillDown | null },
-              { label: "Offer",     value: funnel.offerMade,            convFrom: funnel.submitted,           drill: { kind: "progress",   value: "offer_sent",          label: "Offer sent",         chip: "all" } as DrillDown },
-              { label: "Appt set",  value: funnel.appointmentSet,       convFrom: funnel.offerMade,           drill: { kind: "progress",   value: "appointment_set",     label: "Appointment set",    chip: "appointments" } as DrillDown },
-              { label: "Inspected", value: funnel.inspectionCompleted,  convFrom: funnel.appointmentSet,      drill: { kind: "progress",   value: "inspection_completed",label: "Inspection completed" } as DrillDown },
-              { label: "Acquired",  value: funnel.acquired,             convFrom: funnel.inspectionCompleted, drill: { kind: "progress",   value: "purchase_complete",   label: "Acquired" } as DrillDown },
+              // clicked + the previous-period value for the trend chip.
+              { label: "Submitted", value: funnel.submitted,           prev: funnelPrev.submitted,           convFrom: null as number | null, drill: null as DrillDown | null },
+              { label: "Offer",     value: funnel.offerMade,           prev: funnelPrev.offerMade,           convFrom: funnel.submitted,           drill: { kind: "progress", value: "offer_sent",           label: "Offer sent",          chip: "all" } as DrillDown },
+              { label: "Appt set",  value: funnel.appointmentSet,      prev: funnelPrev.appointmentSet,      convFrom: funnel.offerMade,           drill: { kind: "progress", value: "appointment_set",      label: "Appointment set",     chip: "appointments" } as DrillDown },
+              { label: "Inspected", value: funnel.inspectionCompleted, prev: funnelPrev.inspectionCompleted, convFrom: funnel.appointmentSet,      drill: { kind: "progress", value: "inspection_completed", label: "Inspection completed" } as DrillDown },
+              { label: "Acquired",  value: funnel.acquired,            prev: funnelPrev.acquired,            convFrom: funnel.inspectionCompleted, drill: { kind: "progress", value: "purchase_complete",    label: "Acquired" } as DrillDown },
             ].map((step) => {
               const clickable = !!(step.drill && onDrillDown);
+              const t = trend(step.value, step.prev);
               return (
                 <button
                   key={step.label}
@@ -312,8 +376,20 @@ const ExecutiveHUD = ({ onDrillDown }: ExecutiveHUDProps = {}) => {
                     clickable ? "hover:bg-muted/60 cursor-pointer" : "cursor-default"
                   }`}
                 >
-                  <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    {step.label}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      {step.label}
+                    </div>
+                    {t && (
+                      <span
+                        className={`text-[10px] font-bold tabular-nums ${
+                          t.dir === "up" ? "text-success" : "text-destructive"
+                        }`}
+                        title={`vs prior ${rangeDays}d: ${step.prev}`}
+                      >
+                        {t.dir === "up" ? "▲" : "▼"} {t.pct}%
+                      </span>
+                    )}
                   </div>
                   <div className="text-2xl font-bold text-card-foreground mt-1">{step.value}</div>
                   {step.convFrom !== null && (
@@ -347,7 +423,9 @@ const ExecutiveHUD = ({ onDrillDown }: ExecutiveHUDProps = {}) => {
               <p className="text-xs text-muted-foreground">No declines captured yet — BDC is logging reasons in the declined-reason dialog.</p>
             ) : (
               <ul className="space-y-1">
-                {declineReasons.slice(0, 6).map((b) => (
+                {declineReasons.slice(0, 6).map((b) => {
+                  const t = trend(b.count, declinePrev[b.key] || 0);
+                  return (
                   <li key={b.key}>
                     <button
                       type="button"
@@ -358,10 +436,25 @@ const ExecutiveHUD = ({ onDrillDown }: ExecutiveHUDProps = {}) => {
                       }`}
                     >
                       <span className="capitalize">{b.key.replace(/_/g, " ")}</span>
-                      <span className="font-semibold text-card-foreground">{b.count}</span>
+                      <span className="flex items-center gap-2">
+                        {t && (
+                          // Decline trends are inverse: more declines
+                          // is bad. Up = red (destructive), down = green.
+                          <span
+                            className={`text-[10px] font-bold tabular-nums ${
+                              t.dir === "up" ? "text-destructive" : "text-success"
+                            }`}
+                            title={`vs prior ${rangeDays}d: ${declinePrev[b.key] || 0}`}
+                          >
+                            {t.dir === "up" ? "▲" : "▼"} {t.pct}%
+                          </span>
+                        )}
+                        <span className="font-semibold text-card-foreground tabular-nums">{b.count}</span>
+                      </span>
                     </button>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
             )}
           </CardContent>

@@ -214,6 +214,23 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
   // ── Pipeline sections ──
   if (activeSection === "today") {
     if (props.loading) return <AdminLoadingSkeleton />;
+    // Today surface is role-parameterized per item 26 of the audit.
+    // Receptionists land on FrontDesk (search + check-in + walk-in
+    // intake) instead of TodayHome (which shows MTD Gross + funnel
+    // tiles a receptionist can't act on). Other roles get TodayHome
+    // unchanged. Mounting both at the "today" section key collapses
+    // the previous "receptionist visits TodayHome and sees the wrong
+    // numbers" failure mode without a separate route.
+    if (userRole === "receptionist") {
+      return (
+        <FrontDesk
+          appointments={appointments}
+          submissions={submissions}
+          fetchSubmissions={fetchSubmissions}
+          onView={props.handleView}
+        />
+      );
+    }
     return (
       <TodayHome
         submissions={submissions}
