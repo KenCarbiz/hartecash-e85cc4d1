@@ -29,6 +29,7 @@ import {
   type Submission, type DealerLocation,
 } from "@/lib/adminConstants";
 import SubmissionNotesModal, { fetchSubmissionNotes, type SubmissionNote } from "./SubmissionNotesModal";
+import SaveTheDealDialog from "./SaveTheDealDialog";
 import ClassicCommsCard from "./ClassicCommsCard";
 import ClassicCommsFullView from "./ClassicCommsFullView";
 import ClickToDialButton from "./ClickToDialButton";
@@ -779,57 +780,12 @@ const ClassicHeaderIdentity = ({
 }) => {
   const vehicleTitle = [sub.vehicle_year, sub.vehicle_make, sub.vehicle_model].filter(Boolean).join(" ") || "—";
 
-  // ── A: Vehicle-first — big YEAR · MAKE · MODEL dominates, no customer name in header
-  if (layout === "a") {
-    return (
-      <div className="flex items-end gap-4 flex-wrap">
-        <div className="flex-1 min-w-[260px]">
-          <div className="text-[11px] uppercase tracking-[0.15em] text-white/60 font-semibold mb-1">
-            {sub.vehicle_year}{sub.mileage ? ` · ${fmtNumber(sub.mileage)} mi` : ""}
-          </div>
-          <h1 className="font-display text-[34px] leading-[1.05] tracking-tight">
-            {[sub.vehicle_make, sub.vehicle_model].filter(Boolean).join(" ") || "—"}
-          </h1>
-          <div className="flex items-center gap-3 mt-2 text-[13px] text-white/80">
-            {sub.vin && <span className="font-mono bg-white/10 rounded px-2 py-0.5 tracking-wider">{sub.vin}</span>}
-            {sub.plate && <span>Plate · {sub.plate}</span>}
-            {sub.exterior_color && <span className="text-white/60">· {sub.exterior_color}</span>}
-          </div>
-        </div>
-        <MoneyBlock dealKind={dealKind} dealValue={dealValue} sub={sub} latestBump={latestBump} />
-      </div>
-    );
-  }
+  // Layout A (vehicle-first) and Layout C (stacked) were retired —
+  // 12 months of dealer feedback consistently picked B. The `layout`
+  // prop is preserved for now so call sites still type-check, but
+  // every value resolves to the B render below.
 
-  // ── C: Stacked — customer + money on top, divider, vehicle below
-  if (layout === "c") {
-    return (
-      <>
-        <div className="flex items-end gap-4 flex-wrap">
-          <div className="flex-1 min-w-[260px]">
-            <div className="text-[11px] uppercase tracking-[0.15em] text-white/55 font-bold mb-1">Customer</div>
-            <h1 className="font-display text-[32px] leading-[1.05] tracking-tight">
-              {sub.name || "Unknown customer"}
-            </h1>
-            <div className="mt-1.5 text-[13px] text-white/80 flex items-center gap-3 flex-wrap">
-              {sub.phone && <ClickToDialButton submissionId={sub.id} customerPhone={sub.phone} customerName={sub.name} />}
-              {sub.phone && sub.email && <span className="text-white/50">·</span>}
-              {sub.email && <a href={`mailto:${sub.email}`} className="hover:underline">{sub.email}</a>}
-            </div>
-          </div>
-          <MoneyBlock dealKind={dealKind} dealValue={dealValue} sub={sub} latestBump={latestBump} />
-        </div>
-        <div className="h-px bg-white/15 my-4" />
-        <div>
-          <div className="text-[11px] uppercase tracking-[0.15em] text-white/55 font-bold mb-1">Vehicle</div>
-          <h2 className="font-display text-[24px] leading-[1.1] tracking-tight">{vehicleTitle}</h2>
-          <div className="mt-1.5"><VehicleStrip sub={sub} /></div>
-        </div>
-      </>
-    );
-  }
-
-  // ── B (default): Customer-first, vehicle-right — 12-col grid
+  // ── B: Customer-first, vehicle-right — 12-col grid
   return (
     <div className="grid grid-cols-12 gap-6 items-start">
       <div className="col-span-12 md:col-span-4 min-w-0">
@@ -977,6 +933,7 @@ export default function SubmissionDetailSheetClassic({
   const [editState, setEditState] = useState<Submission | null>(null);
   const [qrOpen, setQrOpen] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
+  const [saveTheDealOpen, setSaveTheDealOpen] = useState(false);
   const [commsFullOpen, setCommsFullOpen] = useState(false);
   const [notes, setNotes] = useState<SubmissionNote[]>([]);
 
@@ -1148,6 +1105,26 @@ export default function SubmissionDetailSheetClassic({
                     >
                       <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3.5a.5.5 0 01.5.5v5.5H16a.5.5 0 010 1h-5.5V16a.5.5 0 01-1 0v-5.5H4a.5.5 0 010-1h5.5V4a.5.5 0 01.5-.5z"/></svg>
                       Open Appraisal
+                    </button>
+                  )}
+                  {/* Save-the-deal — visible when the customer has
+                      declined the offer OR has stated a walk-away
+                      number that's higher than the current offer.
+                      Sales-manager UX: one click from the file to the
+                      bump dialog instead of routing through the
+                      declined-reason path. */}
+                  {sub && (
+                    sub.progress_status === "offer_declined" ||
+                    (typeof sub.customer_walk_away_number === "number"
+                      && sub.customer_walk_away_number > 0
+                      && (sub.offered_price || 0) < sub.customer_walk_away_number)
+                  ) && (
+                    <button
+                      onClick={() => setSaveTheDealOpen(true)}
+                      className="px-3 h-8 rounded-lg bg-emerald-500/95 hover:bg-emerald-500 text-white text-[12px] font-bold flex items-center gap-1.5 transition"
+                    >
+                      <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm3.7 6.3a1 1 0 010 1.4l-4 4a1 1 0 01-1.4 0l-2-2a1 1 0 111.4-1.4L9 11.6l3.3-3.3a1 1 0 011.4 0z"/></svg>
+                      Save the deal
                     </button>
                   )}
                 </div>
@@ -1345,10 +1322,12 @@ export default function SubmissionDetailSheetClassic({
                       {sub.overall_condition && (
                         <p className="text-[14px] leading-relaxed text-slate-700">{sub.overall_condition}</p>
                       )}
-                      <div className="flex gap-3">
-                        <PassFail label="Tires" pass={null} />
-                        <PassFail label="Brakes" pass={null} />
-                      </div>
+                      {/* Tires / Brakes pass-fail removed pending real
+                          inspection-data wiring. The two PassFail tiles
+                          here were always rendering "Not inspected"
+                          because pass was hardcoded to null — dead
+                          ornament that confused appraisers. Will return
+                          when the inspection-sheet field maps in. */}
                       <div className="flex items-center gap-2 pt-1 flex-wrap">
                         <button
                           onClick={goInspect}
@@ -1558,6 +1537,35 @@ export default function SubmissionDetailSheetClassic({
                   )}
                 </Card>
 
+                {/* Appraisal-in-progress pill — visible to the salesperson
+                    while the appraiser has the file open. Soft-falls-back
+                    to nothing if the appraisal_started_at column doesn't
+                    exist yet (migration 20260507050000 not applied). */}
+                {(() => {
+                  const startedAt = (sub as { appraisal_started_at?: string | null })?.appraisal_started_at;
+                  if (!startedAt || sub.acv_value) return null;
+                  const minutesAgo = Math.max(0, Math.round(
+                    (Date.now() - new Date(startedAt).getTime()) / 60000,
+                  ));
+                  const display = minutesAgo < 1
+                    ? "just now"
+                    : minutesAgo < 60
+                      ? `${minutesAgo}m ago`
+                      : `${Math.round(minutesAgo / 60)}h ago`;
+                  return (
+                    <div className="rounded-xl border border-amber-300/50 bg-amber-50/60 px-4 py-3 flex items-center gap-2.5">
+                      <span className="relative flex h-2 w-2 shrink-0">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" aria-hidden="true" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" aria-hidden="true" />
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[11px] uppercase tracking-wider text-amber-700 font-bold">Appraiser working on it</div>
+                        <div className="text-xs text-amber-900/80 mt-0.5">Started {display} — final number coming back to this file.</div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {/* Deal Status — current step + appointment + status select + schedule */}
                 <Card title="Deal Status">
                   <div className="space-y-3">
@@ -1715,6 +1723,25 @@ export default function SubmissionDetailSheetClassic({
           onClose={() => setNotesOpen(false)}
           author={auditLabel || "Staff"}
           onChange={() => void refreshNotes(sub.id)}
+        />
+
+        <SaveTheDealDialog
+          open={saveTheDealOpen}
+          onOpenChange={setSaveTheDealOpen}
+          submissionId={sub.id}
+          currentOffer={sub.offered_price ?? null}
+          bookAvg={sub.bb_tradein_avg ?? sub.bb_wholesale_avg ?? null}
+          acv={sub.acv_value ?? null}
+          walkAwayNumber={sub.customer_walk_away_number ?? null}
+          competitorName={sub.competitor_mentioned ?? null}
+          competitorOffer={null}
+          auditLabel={auditLabel}
+          onSaved={() => {
+            // The dialog already updated offered_price + cleared
+            // declined_reason server-side; bounce the sheet so the
+            // header strip + offer breakdown show the new number.
+            if (sub) onUpdate(sub);
+          }}
         />
         </ClassicErrorBoundary>
       </SheetContent>

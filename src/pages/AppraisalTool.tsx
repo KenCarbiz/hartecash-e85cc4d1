@@ -313,6 +313,23 @@ export default function AppraisalTool() {
       if (!subData) { toast({ title: "Not Found", description: "Submission not found.", variant: "destructive" }); setLoading(false); return; }
       const s = subData as any as Submission;
       setSub(s);
+      // Stamp appraisal_started_at so the customer-file slide-out
+      // can show a live "Appraiser working on it" pill back to the
+      // salesperson while the appraiser is heads-down. Only stamp
+      // once — don't overwrite an earlier start time, and don't
+      // stamp if acv_value is already set (appraisal already done).
+      if (!(s as any).appraisal_started_at && !s.acv_value) {
+        try {
+          await supabase
+            .from("submissions")
+            .update({ appraisal_started_at: new Date().toISOString() } as never)
+            .eq("id", s.id);
+        } catch {
+          // Column may not exist yet (migration 20260507050000 not
+          // applied). The pill on the slide-out soft-falls-back to
+          // "no signal" so this is safe to swallow.
+        }
+      }
       setAcvOverride(s.acv_value ?? null);
       setOfferOverride(s.offered_price ?? null);
       // Map customer condition to our 4-tier system

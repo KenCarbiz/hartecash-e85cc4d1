@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { Check } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Check, Search, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { Appointment, Submission } from "@/lib/adminConstants";
@@ -12,7 +12,14 @@ interface FrontDeskProps {
   fetchSubmissions: () => void;
   /** Opens the customer file slide-out for handoff after greet. */
   onView: (sub: Submission) => void;
+  /** Opens the new-walk-in / new-lead intake — wired by the parent
+   *  to whatever creates a manual_entry submission and pre-opens
+   *  the customer file. Optional so this component still mounts in
+   *  isolation. */
+  onCreateWalkIn?: () => void;
 }
+
+const onlyDigits = (s: string) => s.replace(/\D/g, "");
 
 const TODAY_ISO = () => new Date().toISOString().slice(0, 10);
 
@@ -24,9 +31,10 @@ const apptTimeKey = (t: string) => {
   return hour * 60 + parseInt(m[2], 10);
 };
 
-const FrontDesk = ({ appointments, submissions, fetchSubmissions, onView }: FrontDeskProps) => {
+const FrontDesk = ({ appointments, submissions, fetchSubmissions, onView, onCreateWalkIn }: FrontDeskProps) => {
   const { toast } = useToast();
   const today = TODAY_ISO();
+  const [search, setSearch] = useState("");
 
   const subByToken = useMemo(() => {
     const m = new Map<string, Submission>();
@@ -70,12 +78,98 @@ const FrontDesk = ({ appointments, submissions, fetchSubmissions, onView }: Fron
     fetchSubmissions();
   };
 
+  // Front-desk customer search — searches across the full submission
+  // set, not just today's appointments, so a walk-in saying "I called
+  // last week about my F-150" can be found instantly. Matches name,
+  // vehicle, plate, VIN, and digits-only phone.
+  const searchResults = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return [];
+    const qDigits = onlyDigits(q);
+    return submissions
+      .filter((s) => {
+        const name    = (s.name || "").toLowerCase();
+        const vehicle = `${s.vehicle_year || ""} ${s.vehicle_make || ""} ${s.vehicle_model || ""}`.toLowerCase();
+        const plate   = (s.plate || "").toLowerCase();
+        const vin     = (s.vin || "").toLowerCase();
+        const phone   = onlyDigits(s.phone || "");
+        if (name.includes(q))    return true;
+        if (vehicle.includes(q)) return true;
+        if (plate.includes(q))   return true;
+        if (vin.includes(q))     return true;
+        if (qDigits.length >= 3 && phone.includes(qDigits)) return true;
+        return false;
+      })
+      .slice(0, 12);
+  }, [submissions, search]);
+
   return (
     <div className="space-y-6 max-w-6xl">
       <header>
         <h1 className="text-3xl font-bold tracking-tight">Front desk</h1>
         <p className="text-sm text-muted-foreground mt-1">Check customers in and keep the schedule moving.</p>
       </header>
+
+      {/* Customer search + walk-in intake. Pinned at the top because
+          this is the receptionist's primary failure mode — someone
+          standing at the desk who isn't on today's calendar. */}
+      <section className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Find a customer — name, phone, plate, or VIN"
+            className="w-full h-11 pl-10 pr-3 rounded-lg border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+          />
+        </div>
+        {onCreateWalkIn && (
+          <button
+            type="button"
+            onClick={onCreateWalkIn}
+            className="h-11 px-4 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-bold inline-flex items-center justify-center gap-1.5 transition"
+          >
+            <UserPlus className="w-4 h-4" />
+            New walk-in
+          </button>
+        )}
+      </section>
+
+      {search.trim() && (
+        <section>
+          <h2 className="text-[11px] font-bold tracking-[0.1em] text-muted-foreground uppercase mb-2">
+            {searchResults.length === 0
+              ? "No customers found"
+              : `Customers (${searchResults.length})`}
+          </h2>
+          {searchResults.length > 0 && (
+            <div className="rounded-lg border bg-card overflow-hidden">
+              <ul className="divide-y">
+                {searchResults.map((s) => (
+                  <li key={s.id}>
+                    <button
+                      type="button"
+                      onClick={() => onView(s)}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold truncate">{s.name || "Unknown"}</div>
+                        <div className="text-xs text-muted-foreground truncate">
+                          {s.vehicle_year} {s.vehicle_make} {s.vehicle_model}
+                          {s.phone && <span> · {s.phone}</span>}
+                          {s.plate && <span> · {s.plate.toUpperCase()}</span>}
+                        </div>
+                      </div>
+                      <span className="text-[11px] font-semibold text-primary">Open</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* KPI tiles */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4">

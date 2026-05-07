@@ -100,8 +100,15 @@ const SECTION_MAP: { key: string; label: string; icon: React.ElementType; group:
   { key: "gm-hud", label: "GM HUD", icon: BarChart3, group: "Direct Links" },
 ];
 
+// Strip non-digits so a query like "(555) 123-4567" matches phones
+// stored as "5551234567" or "+15551234567". We only digit-match if
+// the query contains 3+ digits — otherwise typing a single number
+// would dump the whole list.
+const onlyDigits = (s: string) => s.replace(/\D/g, "");
+
 const AdminCommandPalette = ({ onNavigate, onViewSubmission, submissions, allowedSections }: AdminCommandPaletteProps) => {
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -114,16 +121,59 @@ const AdminCommandPalette = ({ onNavigate, onViewSubmission, submissions, allowe
     return () => document.removeEventListener("keydown", down);
   }, []);
 
-  const filteredSections = useMemo(
+  // Reset the search field whenever the dialog closes so reopening
+  // it doesn't surface stale matches.
+  useEffect(() => { if (!open) setQuery(""); }, [open]);
+
+  const visibleSections = useMemo(
     () => allowedSections === null
       ? SECTION_MAP
       : SECTION_MAP.filter((s) => allowedSections?.includes(s.key)),
     [allowedSections]
   );
 
+  // Sections also filter on the query so a "BDC" search matches the
+  // Queue + the manager hub + the Direct Links entries cleanly.
+  const filteredSections = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return visibleSections;
+    return visibleSections.filter((s) =>
+      s.label.toLowerCase().includes(q) || s.group.toLowerCase().includes(q)
+    );
+  }, [visibleSections, query]);
+
+  // Filter submissions when the user types. Searches across name +
+  // vehicle string + phone (digits-only) + plate + VIN. Empty query
+  // shows recent 8; non-empty shows up to 50 matches so a receptionist
+  // looking for someone who came in last month doesn't run out of rows.
+  const filteredLeads = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return submissions.slice(0, 8);
+    const qDigits = onlyDigits(q);
+    return submissions
+      .filter((s) => {
+        const name    = (s.name || "").toLowerCase();
+        const vehicle = `${s.vehicle_year || ""} ${s.vehicle_make || ""} ${s.vehicle_model || ""}`.toLowerCase();
+        const plate   = (s.plate || "").toLowerCase();
+        const vin     = (s.vin || "").toLowerCase();
+        const phone   = onlyDigits(s.phone || "");
+        if (name.includes(q))    return true;
+        if (vehicle.includes(q)) return true;
+        if (plate.includes(q))   return true;
+        if (vin.includes(q))     return true;
+        if (qDigits.length >= 3 && phone.includes(qDigits)) return true;
+        return false;
+      })
+      .slice(0, 50);
+  }, [submissions, query]);
+
   return (
-    <CommandDialog open={open} onOpenChange={setOpen}>
-      <CommandInput placeholder="Search sections or leads…" />
+    <CommandDialog open={open} onOpenChange={setOpen} shouldFilter={false}>
+      <CommandInput
+        placeholder="Search by name, phone, plate, VIN, or section…"
+        value={query}
+        onValueChange={setQuery}
+      />
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
         <CommandGroup heading="Sections">
@@ -141,22 +191,27 @@ const AdminCommandPalette = ({ onNavigate, onViewSubmission, submissions, allowe
             );
           })}
         </CommandGroup>
-        {submissions.length > 0 && (
-          <CommandGroup heading="Recent Leads">
-            {submissions.slice(0, 8).map((sub) => (
-              <CommandItem
-                key={sub.id}
-                onSelect={() => {
-                  onViewSubmission?.(sub);
-                  setOpen(false);
-                }}
-              >
-                <Search className="mr-2 h-4 w-4 text-muted-foreground" />
-                <span className="truncate">
-                  {sub.name || "Unknown"} — {sub.vehicle_year} {sub.vehicle_make} {sub.vehicle_model}
-                </span>
-              </CommandItem>
-            ))}
+        {filteredLeads.length > 0 && (
+          <CommandGroup heading={query ? `Customers (${filteredLeads.length})` : "Recent Leads"}>
+            {filteredLeads.map((sub) => {
+              const phoneDisplay = sub.phone ? ` · ${sub.phone}` : "";
+              const plateDisplay = sub.plate ? ` · ${sub.plate.toUpperCase()}` : "";
+              return (
+                <CommandItem
+                  key={sub.id}
+                  onSelect={() => {
+                    onViewSubmission?.(sub);
+                    setOpen(false);
+                  }}
+                >
+                  <Search className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <span className="truncate">
+                    {sub.name || "Unknown"} — {sub.vehicle_year} {sub.vehicle_make} {sub.vehicle_model}
+                    <span className="text-muted-foreground">{phoneDisplay}{plateDisplay}</span>
+                  </span>
+                </CommandItem>
+              );
+            })}
           </CommandGroup>
         )}
       </CommandList>

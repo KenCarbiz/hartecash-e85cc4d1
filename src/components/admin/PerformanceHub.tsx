@@ -14,6 +14,14 @@ interface PerformanceHubProps {
   /** When false (role can't view HUD) the HUD tab is hidden and we
    *  render only the KPI surface. Routed by canViewExecutiveHUD. */
   showHud?: boolean;
+  /** Drill-down handler for the GM HUD funnel + decline buckets.
+   *  Threaded down from AdminSectionRenderer so clicking a tile
+   *  opens All Leads pre-filtered. */
+  onHudDrillDown?: (target:
+    | { kind: "progress"; value: string; label?: string; chip?: string }
+    | { kind: "decline_reason"; value: string; label?: string }
+    | { kind: "competitor"; value: string; label?: string }
+  ) => void;
 }
 
 /**
@@ -29,6 +37,7 @@ interface PerformanceHubProps {
 const PerformanceHub = ({
   initialTab = "kpi",
   showHud = false,
+  onHudDrillDown,
 }: PerformanceHubProps) => {
   const [tab, setTab] = useState<string>(initialTab);
 
@@ -58,7 +67,7 @@ const PerformanceHub = ({
 
         <TabsContent value="hud" className="pt-4">
           <React.Suspense fallback={<AdminLoadingSkeleton />}>
-            <ExecutiveHUD />
+            <ExecutiveHUD onDrillDown={onHudDrillDown} />
           </React.Suspense>
         </TabsContent>
       </Tabs>

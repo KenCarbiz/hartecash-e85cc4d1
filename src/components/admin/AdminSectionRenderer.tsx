@@ -242,6 +242,12 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
           onPageChange={props.setPage}
           dealerLocations={props.dealerLocations}
           onView={props.handleView}
+          initialChip={props.leadsInitialChip}
+          prefilter={props.leadsPrefilter}
+          onClearPrefilter={() => {
+            props.setLeadsPrefilter?.(null);
+            props.setLeadsInitialChip?.(null);
+          }}
         />
       </>
     );
@@ -278,6 +284,11 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
           submissions={submissions}
           fetchSubmissions={fetchSubmissions}
           onView={handleView}
+          // onCreateWalkIn — wired in a follow-up commit when the
+          // manual-entry intake form lands. Until then the New
+          // Walk-In button doesn't render (FrontDesk gates on the
+          // prop being defined), so the search bar is the only
+          // walk-in path for now.
         />
         <AppointmentManager
           appointments={appointments}
@@ -523,7 +534,21 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
     const initialTab: "kpi" | "hud" = activeSection === "gm-hud" && showHud ? "hud" : "kpi";
     return (
       <React.Suspense fallback={<AdminLoadingSkeleton />}>
-        <PerformanceHub initialTab={initialTab} showHud={showHud} />
+        <PerformanceHub
+          initialTab={initialTab}
+          showHud={showHud}
+          onHudDrillDown={(target) => {
+            // Park the drill-down on the dashboard hook so the All
+            // Leads page picks it up on mount, then nav over.
+            props.setLeadsPrefilter?.(target);
+            props.setLeadsInitialChip?.(
+              target.kind === "progress" && "chip" in target && target.chip
+                ? target.chip
+                : null,
+            );
+            props.setActiveSection?.("submissions");
+          }}
+        />
       </React.Suspense>
     );
   }

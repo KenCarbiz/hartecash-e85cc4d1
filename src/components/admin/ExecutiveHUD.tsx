@@ -63,7 +63,19 @@ function rangeStart(label: RangeKey): Date {
   return new Date(Date.now() - opt.days * 24 * 60 * 60 * 1000);
 }
 
-const ExecutiveHUD = () => {
+type DrillDown =
+  | { kind: "progress"; value: string; label?: string; chip?: string }
+  | { kind: "decline_reason"; value: string; label?: string }
+  | { kind: "competitor"; value: string; label?: string };
+
+interface ExecutiveHUDProps {
+  /** Drill-down handler — opens All Leads pre-filtered. Optional so
+   *  the HUD still renders when mounted standalone (super-admin view,
+   *  storybook). When not provided the tiles render as plain divs. */
+  onDrillDown?: (target: DrillDown) => void;
+}
+
+const ExecutiveHUD = ({ onDrillDown }: ExecutiveHUDProps = {}) => {
   const { tenant } = useTenant();
   const [range, setRange] = useState<RangeKey>("30d");
   const DAYS = useMemo(() => {
@@ -279,24 +291,39 @@ const ExecutiveHUD = () => {
         <CardContent>
           <div className="grid grid-cols-5 gap-2">
             {[
-              { label: "Submitted", value: funnel.submitted, convFrom: null as number | null },
-              { label: "Offer", value: funnel.offerMade, convFrom: funnel.submitted },
-              { label: "Appt set", value: funnel.appointmentSet, convFrom: funnel.offerMade },
-              { label: "Inspected", value: funnel.inspectionCompleted, convFrom: funnel.appointmentSet },
-              { label: "Acquired", value: funnel.acquired, convFrom: funnel.inspectionCompleted },
-            ].map((step) => (
-              <div key={step.label} className="rounded-lg border border-border bg-muted/30 p-3">
-                <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  {step.label}
-                </div>
-                <div className="text-2xl font-bold text-card-foreground mt-1">{step.value}</div>
-                {step.convFrom !== null && (
-                  <div className="text-[10px] text-muted-foreground mt-0.5">
-                    {pct(step.value, step.convFrom)} step conv
+              // Each tile carries the drill-down it should fire when
+              // clicked. "Submitted" doesn't drill (it's already
+              // unfiltered All Leads); the rest narrow on
+              // progress_status or appointment_set.
+              { label: "Submitted", value: funnel.submitted, convFrom: null as number | null, drill: null as DrillDown | null },
+              { label: "Offer",     value: funnel.offerMade,            convFrom: funnel.submitted,           drill: { kind: "progress",   value: "offer_sent",          label: "Offer sent",         chip: "all" } as DrillDown },
+              { label: "Appt set",  value: funnel.appointmentSet,       convFrom: funnel.offerMade,           drill: { kind: "progress",   value: "appointment_set",     label: "Appointment set",    chip: "appointments" } as DrillDown },
+              { label: "Inspected", value: funnel.inspectionCompleted,  convFrom: funnel.appointmentSet,      drill: { kind: "progress",   value: "inspection_completed",label: "Inspection completed" } as DrillDown },
+              { label: "Acquired",  value: funnel.acquired,             convFrom: funnel.inspectionCompleted, drill: { kind: "progress",   value: "purchase_complete",   label: "Acquired" } as DrillDown },
+            ].map((step) => {
+              const clickable = !!(step.drill && onDrillDown);
+              return (
+                <button
+                  key={step.label}
+                  type="button"
+                  disabled={!clickable}
+                  onClick={() => clickable && onDrillDown?.(step.drill!)}
+                  className={`rounded-lg border border-border bg-muted/30 p-3 text-left transition-colors ${
+                    clickable ? "hover:bg-muted/60 cursor-pointer" : "cursor-default"
+                  }`}
+                >
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    {step.label}
                   </div>
-                )}
-              </div>
-            ))}
+                  <div className="text-2xl font-bold text-card-foreground mt-1">{step.value}</div>
+                  {step.convFrom !== null && (
+                    <div className="text-[10px] text-muted-foreground mt-0.5">
+                      {pct(step.value, step.convFrom)} step conv
+                    </div>
+                  )}
+                </button>
+              );
+            })}
           </div>
           {funnel.submitted > 0 && (
             <div className="mt-3 text-xs text-muted-foreground">
@@ -319,11 +346,20 @@ const ExecutiveHUD = () => {
             {declineReasons.length === 0 ? (
               <p className="text-xs text-muted-foreground">No declines captured yet — BDC is logging reasons in the declined-reason dialog.</p>
             ) : (
-              <ul className="space-y-1.5">
+              <ul className="space-y-1">
                 {declineReasons.slice(0, 6).map((b) => (
-                  <li key={b.key} className="flex items-center justify-between text-sm">
-                    <span className="capitalize">{b.key.replace(/_/g, " ")}</span>
-                    <span className="font-semibold text-card-foreground">{b.count}</span>
+                  <li key={b.key}>
+                    <button
+                      type="button"
+                      disabled={!onDrillDown}
+                      onClick={() => onDrillDown?.({ kind: "decline_reason", value: b.key, label: b.key.replace(/_/g, " ") })}
+                      className={`w-full flex items-center justify-between text-sm rounded-md px-2 py-1.5 transition-colors ${
+                        onDrillDown ? "hover:bg-muted/60 cursor-pointer" : "cursor-default"
+                      }`}
+                    >
+                      <span className="capitalize">{b.key.replace(/_/g, " ")}</span>
+                      <span className="font-semibold text-card-foreground">{b.count}</span>
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -341,11 +377,20 @@ const ExecutiveHUD = () => {
             {competitors.length === 0 ? (
               <p className="text-xs text-muted-foreground">No competitor mentions captured yet.</p>
             ) : (
-              <ul className="space-y-1.5">
+              <ul className="space-y-1">
                 {competitors.slice(0, 6).map((b) => (
-                  <li key={b.key} className="flex items-center justify-between text-sm">
-                    <span className="capitalize">{b.key}</span>
-                    <span className="font-semibold text-card-foreground">{b.count}</span>
+                  <li key={b.key}>
+                    <button
+                      type="button"
+                      disabled={!onDrillDown}
+                      onClick={() => onDrillDown?.({ kind: "competitor", value: b.key, label: b.key })}
+                      className={`w-full flex items-center justify-between text-sm rounded-md px-2 py-1.5 transition-colors ${
+                        onDrillDown ? "hover:bg-muted/60 cursor-pointer" : "cursor-default"
+                      }`}
+                    >
+                      <span className="capitalize">{b.key}</span>
+                      <span className="font-semibold text-card-foreground">{b.count}</span>
+                    </button>
                   </li>
                 ))}
               </ul>

@@ -55,6 +55,17 @@ export function useAdminDashboard() {
   const [selectedApptLocation, setSelectedApptLocation] = useState<string | null>(null);
   const [optOutStatus, setOptOutStatus] = useState<{ email: boolean; sms: boolean }>({ email: false, sms: false });
   const [activeSection, setActiveSection] = useState("submissions");
+  // Click-through context for the All Leads page. Set by drill-down
+  // surfaces (ExecutiveHUD funnel + decline buckets, etc.) before
+  // they call setActiveSection("submissions"). AllLeadsPage reads
+  // this on mount, applies the filter, then can clear it from the UI.
+  const [leadsPrefilter, setLeadsPrefilter] = useState<
+    | { kind: "progress"; value: string; label?: string }
+    | { kind: "decline_reason"; value: string; label?: string }
+    | { kind: "competitor"; value: string; label?: string }
+    | null
+  >(null);
+  const [leadsInitialChip, setLeadsInitialChip] = useState<string | null>(null);
   const [onboardingDealershipId, setOnboardingDealershipId] = useState<string | null>(null);
   const [onboardingDealerName, setOnboardingDealerName] = useState("");
   const [dealerLocations, setDealerLocations] = useState<DealerLocation[]>([]);
@@ -477,6 +488,8 @@ export function useAdminDashboard() {
     selectedApptTime, selectedApptLocation,
     optOutStatus,
     activeSection, setActiveSection,
+    leadsPrefilter, setLeadsPrefilter,
+    leadsInitialChip, setLeadsInitialChip,
     onboardingDealershipId, setOnboardingDealershipId,
     onboardingDealerName, setOnboardingDealerName,
     dealerLocations,

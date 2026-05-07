@@ -220,8 +220,8 @@ const BoostRulesEditor = () => {
         const msg = error.message?.toLowerCase() || "";
         if (msg.includes("does not exist") || msg.includes("schema cache")) {
           toast({
-            title: "Pending migration",
-            description: "Apply 20260506210000_boost_bump_rules.sql to enable per-dealer tuning.",
+            title: "Not enabled for this store yet",
+            description: "Per-dealer rule tuning is still being configured for your account. Contact your Success Manager to turn it on.",
             variant: "destructive",
           });
         } else {
@@ -325,14 +325,13 @@ const BoostRulesEditor = () => {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4 text-sm text-emerald-900 leading-relaxed">
-        <p className="font-semibold mb-1 inline-flex items-center gap-1.5">
-          <Sparkles className="w-4 h-4" /> How these rules work
-        </p>
-        <p className="text-emerald-800/90">
-          When a customer uploads photos on the boost-offer page, our AI checks each one and looks for the
-          signals below. Every signal that fires adds its dollar amount to the customer's offer. Signals
-          you disable here never appear in the customer's receipt.
+      <div className="rounded-xl border border-border bg-muted/30 p-4 text-sm text-muted-foreground leading-relaxed">
+        <p className="font-semibold text-foreground mb-1">How these rules work</p>
+        <p>
+          These signals drive automatic adjustments on photo-verified condition. When the AI detects a
+          signal during the customer's photo re-review, the configured amount is added to their offer
+          and itemized on the receipt. Toggle a signal off to suppress it from offers and from the
+          customer-facing receipt.
         </p>
       </div>
 

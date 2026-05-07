@@ -46,6 +46,17 @@ interface AllLeadsPageProps {
   dealerLocations: DealerLocation[];
   onView: (sub: Submission) => void;
   onCreate?: () => void;
+  /** Drill-down context handed in by the GM HUD funnel + decline
+   *  buckets (and any future surface that wants to land here with
+   *  a pre-applied filter). Cleared by the X chip on the active
+   *  filter pill above the list. */
+  initialChip?: string | null;
+  prefilter?:
+    | { kind: "progress"; value: string; label?: string }
+    | { kind: "decline_reason"; value: string; label?: string }
+    | { kind: "competitor"; value: string; label?: string }
+    | null;
+  onClearPrefilter?: () => void;
 }
 
 type ChipKey = "all" | "new" | "hot" | "appointments" | "accepted" | "stuck";
@@ -245,8 +256,17 @@ const actionForLead = (s: Submission): ActionButton => {
 // ── Main component ─────────────────────────────────────────────
 const AllLeadsPage = ({
   submissions, loading, search, onSearchChange, page, total, pageSize = PAGE_SIZE, onPageChange, onView, onCreate,
+  initialChip, prefilter, onClearPrefilter,
 }: AllLeadsPageProps) => {
-  const [chip, setChip] = useState<ChipKey>("all");
+  // Honor an initial chip from a drill-down navigation (GM HUD funnel,
+  // decline buckets) but only on first render — once the user clicks
+  // a different chip, their choice wins.
+  const [chip, setChip] = useState<ChipKey>(() => {
+    const valid: ChipKey[] = ["all", "new", "hot", "appointments", "accepted", "stuck"];
+    return (initialChip && (valid as string[]).includes(initialChip))
+      ? (initialChip as ChipKey)
+      : "all";
+  });
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
   // ── Counts for chips + subtitle ──
@@ -280,8 +300,12 @@ const AllLeadsPage = ({
   const banner = !bannerDismissed && liveLeads.length > 0 ? liveLeads[0] : null;
 
   // ── Chip-filtered rows ──
+  // Combines the user's chip selection with an optional prefilter
+  // handed in by a drill-down (GM HUD funnel / decline buckets).
+  // When a prefilter is active we always run through the .filter
+  // path even for chip="all" so the prefilter actually applies.
   const filtered = useMemo(() => {
-    return submissions.filter((s) => {
+    const passesChip = (s: Submission) => {
       switch (chip) {
         case "new": return s.progress_status === "new";
         case "hot": return s.is_hot_lead;
@@ -293,13 +317,25 @@ const AllLeadsPage = ({
             && s.progress_status !== "purchase_complete";
         default: return true;
       }
-    });
-  }, [submissions, chip]);
+    };
+    const passesPrefilter = (s: Submission) => {
+      if (!prefilter) return true;
+      if (prefilter.kind === "progress")        return s.progress_status === prefilter.value;
+      if (prefilter.kind === "decline_reason")  return s.declined_reason === prefilter.value;
+      if (prefilter.kind === "competitor") {
+        const m = (s.competitor_mentioned || "").toLowerCase();
+        return m === prefilter.value.toLowerCase() || m.includes(prefilter.value.toLowerCase());
+      }
+      return true;
+    };
+    return submissions.filter((s) => passesChip(s) && passesPrefilter(s));
+  }, [submissions, chip, prefilter]);
 
-  const showingTotal = chip === "all" ? total : filtered.length;
+  const filterActive = chip !== "all" || !!prefilter;
+  const showingTotal = filterActive ? filtered.length : total;
   const totalPages = Math.max(1, Math.ceil(showingTotal / pageSize));
-  const currentPage = chip === "all" ? page + 1 : 1;
-  const rows = chip === "all" ? submissions : filtered.slice(0, pageSize);
+  const currentPage = filterActive ? 1 : page + 1;
+  const rows = filterActive ? filtered.slice(0, pageSize) : submissions;
 
   const chips: { k: ChipKey; label: string; n: number }[] = [
     { k: "all", label: "All", n: counts.all },
@@ -417,6 +453,26 @@ const AllLeadsPage = ({
             </button>
           );
         })}
+        {prefilter && (
+          // Active drill-down filter handed in from the GM HUD funnel
+          // or decline-reasons buckets. Distinct emerald pill so the
+          // user knows they're seeing a narrowed view, with an X to
+          // return to the unfiltered list.
+          <button
+            type="button"
+            onClick={() => onClearPrefilter?.()}
+            className="h-8 px-3 inline-flex items-center gap-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-700 border border-emerald-500/30 hover:bg-emerald-500/15 transition-colors"
+          >
+            <span>
+              {prefilter.kind === "progress"        && "Status: "}
+              {prefilter.kind === "decline_reason"  && "Decline: "}
+              {prefilter.kind === "competitor"      && "Competitor: "}
+              <span className="capitalize">{(prefilter.label || prefilter.value).replace(/_/g, " ")}</span>
+              {" · "}{filtered.length}
+            </span>
+            <span aria-hidden="true">×</span>
+          </button>
+        )}
       </div>
 
       {/* Table */}

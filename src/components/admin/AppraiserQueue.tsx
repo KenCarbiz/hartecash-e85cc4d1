@@ -111,8 +111,12 @@ const isStaleOffer = (row: QueueRow): boolean => {
 };
 
 const classifyRow = (row: QueueRow): QueueReason => {
-  // Phone/SMS/email decline takes precedence — the appraiser's job is
-  // to bump and counter, regardless of how the lead originally arrived.
+  // Customer is physically present right now — this is THE most
+  // urgent state for an appraiser. Wins over every other bucket
+  // (declined, stale, service) because the human is standing there
+  // waiting. Pinned-strip rendering below promotes these to the top
+  // of the queue with a "customer present" indicator.
+  if (row.progress_status === "customer_arrived") return "walk_in";
   if (row.progress_status === "offer_declined") return "declined";
   // Lead-source bucketing wins next so a walk-in with a stale offer
   // still shows under Walk-ins (operator intent — they walked in).
@@ -523,6 +527,45 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
         </div>
       ) : (
         <section>
+          {/* ── Customer-present strip ──
+              Walk-ins where the customer is physically at the dealership
+              right now (progress_status = customer_arrived) get pinned at
+              the very top of the queue with a pulsing red indicator.
+              These are the strongest urgency signal an appraiser sees —
+              they should not be commingled with stale-offer reappraisals
+              that are phone work. */}
+          {(() => {
+            const customerHere = visible.filter((r) => r.progress_status === "customer_arrived");
+            if (customerHere.length === 0) return null;
+            return (
+              <div className="mb-5">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-[11px] font-bold tracking-[0.1em] text-red-600 uppercase inline-flex items-center gap-2">
+                    <span className="relative flex h-2 w-2 shrink-0">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" aria-hidden="true" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-600" aria-hidden="true" />
+                    </span>
+                    Customer present — {customerHere.length}
+                  </h2>
+                </div>
+                <div className="space-y-2 rounded-xl border-2 border-red-500/30 bg-red-500/[0.03] p-2">
+                  {customerHere.map((row) => (
+                    <QueueRowItem
+                      key={row.id}
+                      row={row}
+                      reason={classifyRow(row)}
+                      suggestion={suggestions[row.id]}
+                      onOpen={() => navigate(`/appraisal/${row.token}`)}
+                      onDismiss={row.needs_appraisal ? () => dismissFromQueue(row) : undefined}
+                      onAcceptSuggestion={(s) => acceptSuggestion(row, s)}
+                      onDismissSuggestion={(s) => dismissSuggestion(s)}
+                    />
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-[11px] font-bold tracking-[0.1em] text-muted-foreground uppercase">Queue</h2>
             {autoRoute && (
@@ -538,7 +581,11 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
                 No leads match your filter. <button onClick={() => { setBucket("all"); setSearch(""); }} className="underline font-semibold">Clear filters</button>.
               </div>
             )}
-            {visible.map((row) => (
+            {visible
+              // Hide customer-present rows here so they don't double-render —
+              // they live in the pinned strip above.
+              .filter((row) => row.progress_status !== "customer_arrived")
+              .map((row) => (
               <QueueRowItem
                 key={row.id}
                 row={row}
@@ -579,6 +626,44 @@ function QueueTile({ label, value, valueClass, active, onClick }: {
       <div className="text-[11px] font-bold tracking-wider uppercase text-muted-foreground">{label}</div>
       <div className={`text-3xl font-bold mt-2 ${valueClass}`}>{value}</div>
     </button>
+  );
+}
+
+/** Fetches up to 3 thumbnails for the photos the AI most recently
+ *  analyzed for this submission. We don't store the exact paths in
+ *  ai_reappraisal_log so we use "most recent uploads in
+ *  submission-photos/<token>" as the proxy — the AI's pass runs on
+ *  fresh boost-flow uploads which are also the latest in the bucket.
+ *  Falls back to nothing on error so the suggestion card still renders. */
+function SuggestionPhotoThumbs({ token, count }: { token: string | null | undefined; count: number }) {
+  const [urls, setUrls] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.storage
+        .from("submission-photos")
+        .list(token, { limit: 24, sortBy: { column: "created_at", order: "desc" } });
+      if (cancelled || !data) return;
+      const picked = data
+        .filter((f) => f.name !== ".emptyFolderPlaceholder")
+        .slice(0, 3)
+        .map((f) => supabase.storage.from("submission-photos").getPublicUrl(`${token}/${f.name}`).data.publicUrl);
+      setUrls(picked);
+    })();
+    return () => { cancelled = true; };
+  }, [token]);
+
+  if (urls.length === 0) return null;
+  return (
+    <div className="flex gap-1.5 mt-2" aria-label={`${count} photo${count === 1 ? "" : "s"} the AI analyzed`}>
+      {urls.map((u, i) => (
+        <div key={i} className="w-12 h-12 rounded border border-current/20 overflow-hidden bg-black/10 shrink-0">
+          <img src={u} alt={`Source photo ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -687,6 +772,7 @@ function QueueRowItem({
               </span>
             </div>
             <p className="text-[11px] mt-1 leading-relaxed">{suggestion.reason}</p>
+            <SuggestionPhotoThumbs token={row.token} count={suggestion.photos_analyzed} />
             {suggestion.status === "suggested" && (
               <div className="flex gap-1.5 mt-2">
                 <Button size="sm" className="h-7 text-[11px]" onClick={() => onAcceptSuggestion(suggestion)}>
