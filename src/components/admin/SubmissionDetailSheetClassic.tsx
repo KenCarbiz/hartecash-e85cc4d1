@@ -677,12 +677,17 @@ const ClassicHeaderIdentity = ({
         </h1>
         <div className="mt-2"><CustomerContact sub={sub} /></div>
       </div>
-      <div className={`col-span-12 ${dealValue != null ? "md:col-span-5" : "md:col-span-8"} min-w-0 md:border-l md:border-white/15 md:pl-6`}>
+      {/* Money column shows when EITHER the submission row has an
+          offer OR a boost row exists. The latter handles the very
+          common case where the parent component is showing a
+          stale cached sub (offered_price null) but a boost has
+          since landed in offer_bumps with new_offer populated. */}
+      <div className={`col-span-12 ${(dealValue != null || (latestBump && latestBump.bump_amount > 0)) ? "md:col-span-5" : "md:col-span-8"} min-w-0 md:border-l md:border-white/15 md:pl-6`}>
         <div className="text-[11px] uppercase tracking-[0.15em] text-white/55 font-bold mb-1">Vehicle</div>
         <h2 className="font-display text-[30px] leading-[1.1] tracking-tight">{vehicleTitle}</h2>
         <div className="mt-2"><VehicleStrip sub={sub} /></div>
       </div>
-      {dealValue != null && (
+      {(dealValue != null || (latestBump && latestBump.bump_amount > 0)) && (
         <div className="col-span-12 md:col-span-3 md:border-l md:border-white/15 md:pl-6">
           <MoneyBlock dealKind={dealKind} dealValue={dealValue} sub={sub} latestBump={latestBump} />
         </div>
@@ -832,6 +837,46 @@ export default function SubmissionDetailSheetClassic({
 
   // Reset local edit state whenever the parent opens a different submission.
   useEffect(() => { setEditState(null); }, [selected?.id]);
+
+  // Refetch the submission row from Supabase whenever the file
+  // opens. Solves the "stale cached row" problem — the parent
+  // component's leads list might have been loaded before a
+  // customer-side boost landed in offer_bumps + bumped
+  // offered_price, so without this the dealer would see "—"
+  // for an offer that's actually $24,749 in the database.
+  useEffect(() => {
+    if (!selected?.id) return;
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await (supabase as never as {
+        from: (t: string) => {
+          select: (cols: string) => {
+            eq: (k: string, v: string) => {
+              maybeSingle: () => Promise<{ data: Submission | null; error: { message: string } | null }>;
+            };
+          };
+        };
+      })
+        .from("submissions")
+        .select("*")
+        .eq("id", selected.id)
+        .maybeSingle();
+      if (cancelled || error || !data) return;
+      // Only push back up if something changed on the dealer-
+      // visible columns to avoid churn.
+      const changed =
+        data.offered_price !== selected.offered_price ||
+        data.estimated_offer_high !== selected.estimated_offer_high ||
+        data.acv_value !== selected.acv_value ||
+        data.progress_status !== selected.progress_status ||
+        data.mileage !== selected.mileage;
+      if (changed) onUpdate(data);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected?.id]);
 
   // ── Single-field save (optimistic local + supabase write) ──────────
   async function saveField<K extends keyof Submission>(field: K, value: Submission[K]) {
