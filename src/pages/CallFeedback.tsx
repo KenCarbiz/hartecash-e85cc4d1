@@ -67,8 +67,9 @@ export default function CallFeedback() {
       if (rpcErr) {
         setError(rpcErr.message);
       } else {
-        const result = data as CallFeedbackContext;
-        setCtx(result);
+        const rows = data as unknown as CallFeedbackContext[] | null;
+        const result = rows?.[0] as CallFeedbackContext | undefined;
+        setCtx(result ?? null);
         if (result?.already_submitted) setSubmitted(true);
       }
       setLoading(false);
