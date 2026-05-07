@@ -16,7 +16,8 @@
  */
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import CustomerFileOfferCard from "./CustomerFileOfferCard";
+import { useLatestOfferBump } from "@/hooks/useLatestOfferBump";
+import type { OfferBumpRow } from "@/types/offerBumps";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -117,6 +118,11 @@ export default function CustomerFileV2(props: CustomerFileV2Props) {
   }, [sub]);
   const dealKind = sub?.offered_price != null ? "Offer Given" : "Estimated Offer";
 
+  // Most recent boost row — drives the "Photos verified" pill in
+  // the header and the line-item breakdown in the rail's Offer
+  // Breakdown card. Soft-fails to null until the migration lands.
+  const { bump: latestBump } = useLatestOfferBump(sub?.id || null);
+
   return (
     <>
       <CustomerFileAccentStyle />
@@ -132,6 +138,7 @@ export default function CustomerFileV2(props: CustomerFileV2Props) {
                 sub={sub}
                 dealValue={dealValue}
                 dealKind={dealKind}
+                latestBump={latestBump}
                 onClose={onClose}
                 headerLayout={(((config as { customer_file_header_layout?: string }).customer_file_header_layout) as "a" | "b" | "c" | undefined) || "b"}
               />
@@ -148,6 +155,7 @@ export default function CustomerFileV2(props: CustomerFileV2Props) {
                     sub={sub}
                     photos={photos}
                     docs={docs}
+                    latestBump={latestBump}
                     apptTime={props.selectedApptTime}
                     apptLocation={props.selectedApptLocation}
                     auditLabel={props.auditLabel}
@@ -165,19 +173,40 @@ export default function CustomerFileV2(props: CustomerFileV2Props) {
 
 /* ─────────────── HEADER IDENTITY ROWS (A / B / C) ─────────────── */
 function V2Identity({
-  sub, dealValue, dealKind, layout,
+  sub, dealValue, dealKind, latestBump, layout,
 }: {
   sub: Submission;
   dealValue: number | null;
   dealKind: string;
+  latestBump: OfferBumpRow | null;
   layout: "a" | "b" | "c";
 }) {
+  const hasBump = !!(latestBump && latestBump.bump_amount > 0);
   const vehicleTitle = [sub.vehicle_year, sub.vehicle_make, sub.vehicle_model].filter(Boolean).join(" ") || "—";
 
   const Money = (
     <div className="text-left md:text-right">
       <div className="text-[11px] uppercase tracking-[0.15em] text-white/55 font-bold">{dealKind}</div>
       <div className="text-[36px] font-bold leading-none mt-0.5 font-mono">{fmtMoney(dealValue)}</div>
+      {hasBump && (
+        // Boost indicator. Brand-lens decision (from agent review):
+        // dealer never sees "AI Boost" vocabulary — that's customer-
+        // side acquisition language. Here it's framed as condition
+        // adjustment from photo review with a small emerald
+        // "Photos verified" pill that earns its color by signaling
+        // customer engagement (they completed the photo flow).
+        <div className="flex md:justify-end items-center gap-2 mt-1.5 flex-wrap">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-400/90 text-emerald-950 text-[10px] font-bold uppercase tracking-[0.1em]">
+            <svg width="9" height="9" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true">
+              <path d="M5 1.5L8 5H6V8H4V5H2L5 1.5Z" />
+            </svg>
+            Photos verified
+          </span>
+          <span className="text-[11px] text-white/85 leading-tight">
+            +{fmtMoney(latestBump!.bump_amount)} from photo review
+          </span>
+        </div>
+      )}
       {sub.acv_value != null && dealValue != null && (
         <div className="text-[11px] text-white/70 mt-1">
           ACV {fmtMoney(sub.acv_value)} ·{" "}
@@ -294,12 +323,14 @@ function V2Header({
   sub,
   dealValue,
   dealKind,
+  latestBump,
   onClose,
   headerLayout = "b",
 }: {
   sub: Submission;
   dealValue: number | null;
   dealKind: string;
+  latestBump: OfferBumpRow | null;
   onClose: () => void;
   headerLayout?: "a" | "b" | "c";
 }) {
@@ -342,7 +373,7 @@ function V2Header({
           </div>
         </div>
 
-        <V2Identity sub={sub} dealValue={dealValue} dealKind={dealKind} layout={headerLayout} />
+        <V2Identity sub={sub} dealValue={dealValue} dealKind={dealKind} latestBump={latestBump} layout={headerLayout} />
 
         <div className="flex items-center gap-2 mt-3 flex-wrap">
           {sub.progress_status && (
@@ -1487,6 +1518,7 @@ function ContextRail({
   sub,
   photos,
   docs,
+  latestBump,
   apptTime,
   apptLocation,
   auditLabel,
@@ -1495,6 +1527,7 @@ function ContextRail({
   sub: Submission;
   photos: { url: string; name: string }[];
   docs: { name: string; url: string; type: string }[];
+  latestBump: OfferBumpRow | null;
   apptTime: string | null;
   apptLocation: string | null;
   auditLabel: string;
@@ -1645,24 +1678,12 @@ function ContextRail({
 
   return (
     <div className="p-4 space-y-3">
-      {/* Headline offer card — sits above Next Action so the dollar
-          amount is the first thing the dealer sees when they open
-          the file. Brand-lens decision: dealer admin never sees
-          "AI Boost" vocabulary; the same event is framed as a
-          "condition adjustment from photo review" — appraiser-
-          native language. See CustomerFileOfferCard for the full
-          synthesized rationale from the design / architecture /
-          brand-identity agent review. */}
-      <CustomerFileOfferCard
-        submissionId={sub.id}
-        effectiveOffer={
-          sub.offered_price ??
-          sub.estimated_offer_high ??
-          (sub as { bb_tradein_avg?: number | null }).bb_tradein_avg ??
-          (sub as { bb_wholesale_avg?: number | null }).bb_wholesale_avg ??
-          null
-        }
-      />
+      {/* Headline offer + boost indicator now lives in the blue
+          header strip (V2Identity Money block). The full line-item
+          breakdown is in the existing Offer Breakdown rail card
+          below — that's where the appraiser's eye expects the
+          math, and where the photo-review line items now expand
+          into a defensible audit trail. */}
 
       {/* Next Action — gradient header, white CTA */}
       <section className={`rounded-xl border border-slate-200 bg-gradient-to-br ${toneBg} text-white shadow-sm overflow-hidden`}>
@@ -1704,19 +1725,64 @@ function ContextRail({
         </div>
       </RailCard>
 
-      {/* Offer Breakdown */}
+      {/* Offer Breakdown — when a boost has landed, expand into a
+          full audit trail: original offer → each photo-review line
+          item → final offer. Brand-lens framing: appraiser-native
+          "condition adjustments from photo review", no AI Boost
+          vocabulary. The dealer can defend every dollar to the
+          customer on a follow-up call. */}
       <RailCard title="Offer Breakdown">
         <div className="text-[13px] space-y-1">
-          {sub.offered_price != null && (
-            <Row label="Offer Given" value={fmtMoney(sub.offered_price)} compact highlight />
-          )}
-          {sub.estimated_offer_high != null && sub.offered_price == null && (
-            <Row label="Estimated" value={fmtMoney(sub.estimated_offer_high)} compact />
+          {latestBump && latestBump.bump_amount > 0 ? (
+            <>
+              <Row
+                label="Original offer"
+                value={fmtMoney(latestBump.previous_offer)}
+                compact
+              />
+              {latestBump.line_items.length > 0 && (
+                <div className="my-1.5 pt-1.5 border-t border-slate-100 dark:border-slate-800 space-y-1">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
+                    Condition adjustments from photo review
+                  </div>
+                  {latestBump.line_items.map((item, i) => (
+                    <div
+                      key={i}
+                      className="flex items-start justify-between gap-2 text-[12px]"
+                    >
+                      <span className="text-slate-700 dark:text-slate-300 leading-snug">
+                        {item.label}
+                      </span>
+                      <span className="font-semibold text-slate-700 dark:text-slate-300 tabular-nums whitespace-nowrap">
+                        +{fmtMoney(item.amount)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="pt-1.5 border-t border-slate-100 dark:border-slate-800">
+                <Row
+                  label="Final offer"
+                  value={fmtMoney(latestBump.new_offer)}
+                  compact
+                  highlight
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              {sub.offered_price != null && (
+                <Row label="Offer Given" value={fmtMoney(sub.offered_price)} compact highlight />
+              )}
+              {sub.estimated_offer_high != null && sub.offered_price == null && (
+                <Row label="Estimated" value={fmtMoney(sub.estimated_offer_high)} compact />
+              )}
+            </>
           )}
           {sub.acv_value != null && (
             <Row label="ACV" value={fmtMoney(sub.acv_value)} compact />
           )}
-          {sub.offered_price == null && sub.estimated_offer_high == null && sub.acv_value == null && (
+          {!latestBump && sub.offered_price == null && sub.estimated_offer_high == null && sub.acv_value == null && (
             <span className="text-[12px] text-slate-400 italic">No offer yet.</span>
           )}
         </div>
