@@ -16,6 +16,7 @@
  */
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import CustomerFileOfferCard from "./CustomerFileOfferCard";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -1644,6 +1645,25 @@ function ContextRail({
 
   return (
     <div className="p-4 space-y-3">
+      {/* Headline offer card — sits above Next Action so the dollar
+          amount is the first thing the dealer sees when they open
+          the file. Brand-lens decision: dealer admin never sees
+          "AI Boost" vocabulary; the same event is framed as a
+          "condition adjustment from photo review" — appraiser-
+          native language. See CustomerFileOfferCard for the full
+          synthesized rationale from the design / architecture /
+          brand-identity agent review. */}
+      <CustomerFileOfferCard
+        submissionId={sub.id}
+        effectiveOffer={
+          sub.offered_price ??
+          sub.estimated_offer_high ??
+          (sub as { bb_tradein_avg?: number | null }).bb_tradein_avg ??
+          (sub as { bb_wholesale_avg?: number | null }).bb_wholesale_avg ??
+          null
+        }
+      />
+
       {/* Next Action — gradient header, white CTA */}
       <section className={`rounded-xl border border-slate-200 bg-gradient-to-br ${toneBg} text-white shadow-sm overflow-hidden`}>
         <div className="px-4 py-2.5 border-b border-white/15 flex items-center justify-between">
