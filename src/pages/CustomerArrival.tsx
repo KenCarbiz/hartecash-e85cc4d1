@@ -180,7 +180,7 @@ const CustomerArrival = () => {
 
   const fetchData = async () => {
     if (!token) return;
-    const { data: rows, error } = await supabase.rpc(
+    const { data: rows, error } = await (supabase.rpc as any)(
       "get_customer_arrival_page",
       { _token: token } as never,
     );
@@ -224,7 +224,7 @@ const CustomerArrival = () => {
   const submit = async (status: "on_the_way" | "arrived") => {
     if (!token) return;
     setSubmitting(true);
-    const { error } = await supabase.rpc(
+    const { error } = await (supabase.rpc as any)(
       "customer_self_checkin",
       { _token: token, _status: status } as never,
     );
