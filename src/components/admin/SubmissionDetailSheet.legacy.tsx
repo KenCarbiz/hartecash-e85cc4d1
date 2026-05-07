@@ -190,8 +190,8 @@ const InspectionVitals = ({ submissionId }: { submissionId: string }) => {
   };
 
   const stateClass: Record<State, string> = {
-    green:  "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
-    yellow: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
+    green:  "bg-success/15 text-success dark:text-emerald-400 border-success/30",
+    yellow: "bg-warning/15 text-warning dark:text-amber-400 border-warning/30",
     red:    "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30",
     empty:  "bg-muted text-muted-foreground/40 border-border",
   };
@@ -430,7 +430,7 @@ const CompactOBDIndicator = ({ submissionId, token }: { submissionId: string; to
       className={`rounded-2xl border overflow-hidden shadow-sm transition-shadow hover:shadow-md ${
         milOn
           ? "border-red-500/40 bg-gradient-to-br from-red-500/10 via-red-500/5 to-transparent"
-          : "border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent"
+          : "border-success/30 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent"
       }`}
     >
       <div className="bg-gradient-to-r from-muted/60 via-muted/30 to-transparent px-5 py-3 border-b border-border/40 flex items-center justify-between">
@@ -447,17 +447,17 @@ const CompactOBDIndicator = ({ submissionId, token }: { submissionId: string; to
           className={`flex items-center justify-center w-10 h-10 rounded-xl shrink-0 ${
             milOn
               ? "bg-red-500/20 border border-red-500/30"
-              : "bg-emerald-500/20 border border-emerald-500/30"
+              : "bg-success/20 border border-success/30"
           }`}
         >
           {milOn ? (
             <AlertTriangle className="w-5 h-5 text-red-500" />
           ) : (
-            <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <CheckCircle2 className="w-5 h-5 text-success dark:text-emerald-400" />
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <p className={`text-xs font-black uppercase tracking-wide ${milOn ? "text-red-600 dark:text-red-400" : "text-emerald-700 dark:text-emerald-400"}`}>
+          <p className={`text-xs font-black uppercase tracking-wide ${milOn ? "text-red-600 dark:text-red-400" : "text-success dark:text-emerald-400"}`}>
             {milOn ? "Check Engine On" : "No Active Faults"}
           </p>
           <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -536,9 +536,9 @@ export const SubmissionDetailSheetLegacy = ({
   const outcomeColor = (outcome: string | null) => {
     switch (outcome) {
       case 'accepted': return 'bg-success/15 text-success border-success/30';
-      case 'appointment_scheduled': return 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30';
-      case 'wants_higher_offer': return 'bg-amber-500/15 text-amber-600 border-amber-500/30';
-      case 'callback_requested': return 'bg-blue-500/15 text-blue-600 border-blue-500/30';
+      case 'appointment_scheduled': return 'bg-success/15 text-success border-success/30';
+      case 'wants_higher_offer': return 'bg-warning/15 text-warning border-warning/30';
+      case 'callback_requested': return 'bg-blue-500/15 text-info border-info/30';
       case 'not_interested': return 'bg-muted text-muted-foreground border-border';
       case 'voicemail_left': return 'bg-purple-500/15 text-purple-600 border-purple-500/30';
       case 'opted_out': return 'bg-destructive/15 text-destructive border-destructive/30';
@@ -919,7 +919,7 @@ export const SubmissionDetailSheetLegacy = ({
                   <CustomerAvatar name={sub.name} />
                   <div className="flex-1 min-w-0">
                     <SheetTitle className="text-2xl font-extrabold text-primary-foreground font-display tracking-wide leading-tight">
-                      {sub.vehicle_year} {sub.vehicle_make} {sub.vehicle_model || "Submission Details"}
+                      {sub.vehicle_year} {sub.vehicle_make} {sub.vehicle_model || "Customer File"}
                     </SheetTitle>
                     <div className="flex items-center gap-3 mt-2 flex-wrap">
                       <span className="text-primary-foreground/60 text-sm font-medium">
@@ -976,17 +976,17 @@ export const SubmissionDetailSheetLegacy = ({
               </div>
             )}
             {(optOutStatus.email || optOutStatus.sms) && (
-              <div className="bg-amber-500/8 border border-amber-500/20 rounded-2xl p-4 flex items-start gap-3 backdrop-blur-sm">
-                <div className="w-9 h-9 rounded-xl bg-amber-500/15 flex items-center justify-center flex-shrink-0">
-                  <Bell className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              <div className="bg-warning/8 border border-warning/20 rounded-2xl p-4 flex items-start gap-3 backdrop-blur-sm">
+                <div className="w-9 h-9 rounded-xl bg-warning/15 flex items-center justify-center flex-shrink-0">
+                  <Bell className="w-5 h-5 text-warning dark:text-amber-400" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-amber-700 dark:text-amber-300">Customer Unsubscribed</p>
+                  <p className="text-sm font-bold text-warning dark:text-amber-300">Customer Unsubscribed</p>
                   <div className="flex gap-2 mt-1.5">
-                    {optOutStatus.email && <Badge variant="outline" className="text-xs border-amber-500/30 text-amber-700 dark:text-amber-300 rounded-lg"><Mail className="w-3 h-3 mr-1" /> Email opted out</Badge>}
-                    {optOutStatus.sms && <Badge variant="outline" className="text-xs border-amber-500/30 text-amber-700 dark:text-amber-300 rounded-lg"><Phone className="w-3 h-3 mr-1" /> SMS opted out</Badge>}
+                    {optOutStatus.email && <Badge variant="outline" className="text-xs border-warning/30 text-warning dark:text-amber-300 rounded-lg"><Mail className="w-3 h-3 mr-1" /> Email opted out</Badge>}
+                    {optOutStatus.sms && <Badge variant="outline" className="text-xs border-warning/30 text-warning dark:text-amber-300 rounded-lg"><Phone className="w-3 h-3 mr-1" /> SMS opted out</Badge>}
                   </div>
-                  <p className="text-[11px] text-amber-600/70 dark:text-amber-400/70 mt-1.5">Follow-up messages to opted-out channels will be skipped automatically.</p>
+                  <p className="text-[11px] text-warning/70 dark:text-amber-400/70 mt-1.5">Follow-up messages to opted-out channels will be skipped automatically.</p>
                 </div>
               </div>
             )}
@@ -1098,7 +1098,7 @@ export const SubmissionDetailSheetLegacy = ({
                           <div
                             className={`h-full rounded-full transition-all duration-500 ${
                               ls.score >= 80 ? "bg-orange-500" :
-                              ls.score >= 60 ? "bg-amber-500" :
+                              ls.score >= 60 ? "bg-warning" :
                               ls.score >= 40 ? "bg-blue-500" :
                               "bg-muted-foreground/40"
                             }`}
@@ -1166,10 +1166,10 @@ export const SubmissionDetailSheetLegacy = ({
               const wholesaleAvg = tiers?.wholesale?.avg ? Number(tiers.wholesale.avg) : (sub.bb_wholesale_avg ? Number(sub.bb_wholesale_avg) : null);
 
               const valueRows = [
-                { label: "Retail", value: retailAvg, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10", dotBg: "bg-emerald-500" },
-                { label: "Private Party", value: privatePartyAvg, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-500/10", dotBg: "bg-amber-500", highlight: true },
+                { label: "Retail", value: retailAvg, color: "text-success dark:text-emerald-400", bg: "bg-success/10", dotBg: "bg-success" },
+                { label: "Private Party", value: privatePartyAvg, color: "text-warning dark:text-amber-400", bg: "bg-warning/10", dotBg: "bg-warning", highlight: true },
                 { label: "Trade-In", value: tradeinAvg, color: "text-primary", bg: "bg-primary/10", dotBg: "bg-primary" },
-                { label: "Wholesale", value: wholesaleAvg, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500/10", dotBg: "bg-blue-500" },
+                { label: "Wholesale", value: wholesaleAvg, color: "text-info dark:text-blue-400", bg: "bg-blue-500/10", dotBg: "bg-blue-500" },
               ].filter(r => r.value && r.value > 0);
 
               if (valueRows.length === 0) return null;
@@ -1180,11 +1180,11 @@ export const SubmissionDetailSheetLegacy = ({
                 }>
                   <div className="space-y-2">
                     {valueRows.map(row => (
-                      <div key={row.label} className={`flex items-center justify-between py-2 px-3 rounded-xl transition-colors ${row.highlight ? `${row.bg} border border-amber-500/15` : "hover:bg-muted/30"}`}>
+                      <div key={row.label} className={`flex items-center justify-between py-2 px-3 rounded-xl transition-colors ${row.highlight ? `${row.bg} border border-warning/15` : "hover:bg-muted/30"}`}>
                         <span className="flex items-center gap-2 text-sm">
                           <span className={`w-2 h-2 rounded-full ${row.dotBg}`} />
                           <span className={row.highlight ? "font-bold text-card-foreground" : "text-muted-foreground"}>{row.label}</span>
-                          {row.highlight && <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Key Ref</span>}
+                          {row.highlight && <span className="text-[9px] font-bold text-warning dark:text-amber-400 uppercase tracking-wider">Key Ref</span>}
                         </span>
                         <span className={`text-sm font-bold ${row.color}`}>${Math.floor(row.value!).toLocaleString()}</span>
                       </div>
@@ -1351,7 +1351,7 @@ export const SubmissionDetailSheetLegacy = ({
                 <label htmlFor="check-request-done" className={`text-sm font-semibold ${isPriceAgreedOrBeyond ? "text-card-foreground" : "text-muted-foreground"}`}>Check Request Completed</label>
               </div>
               {!(sub as any).appraisal_finalized ? (
-                <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-500/8 border border-amber-500/15 rounded-xl p-3">
+                <div className="flex items-center gap-2 text-xs text-warning bg-warning/8 border border-warning/15 rounded-xl p-3">
                   <AlertTriangle className="w-4 h-4 flex-shrink-0" />
                   <span className="font-medium">Appraisal must be finalized before generating a check request.</span>
                 </div>
@@ -1529,7 +1529,7 @@ export const SubmissionDetailSheetLegacy = ({
                       <span className="flex items-center gap-1.5">
                         {sub.vin}
                         {(sub as any).vin_verified && (
-                          <span className="inline-flex items-center gap-0.5 text-micro font-semibold text-emerald-600 bg-emerald-500/10 rounded-full px-1.5 py-0.5" title="VIN verified via document OCR">
+                          <span className="inline-flex items-center gap-0.5 text-micro font-semibold text-success bg-success/10 rounded-full px-1.5 py-0.5" title="VIN verified via document OCR">
                             <CheckCircle2 className="w-3 h-3" /> Verified
                           </span>
                         )}

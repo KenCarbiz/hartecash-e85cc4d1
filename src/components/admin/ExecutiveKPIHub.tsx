@@ -345,7 +345,10 @@ const ExecutiveKPIHub = ({ standalone = false }: ExecutiveKPIHubProps) => {
       offer_accepted: "Contacted",
       paperwork: "Inspected",
       purchase_complete: "Purchased",
-      dead_lead: "Dead",
+      // The DB stores this as 'dead_lead' for legacy reasons but
+      // GMs read it on the dashboard — show the merchandising
+      // outcome ("Wholesaled") instead of the engineering enum.
+      dead_lead: "Wholesaled",
     };
 
     const counts: Record<string, number> = { New: 0, Abandoned: 0, Contacted: 0, Inspected: 0, Purchased: 0, Dead: 0 };
@@ -446,7 +449,7 @@ const ExecutiveKPIHub = ({ standalone = false }: ExecutiveKPIHubProps) => {
           label="MTD Gross"
           value={`$${Math.round(mtdKpis.mtdGross / 1000)}k`}
           icon={DollarSign}
-          color="text-emerald-500"
+          color="text-success"
           bg="from-emerald-500/15 to-emerald-600/5"
           badge={mtdKpis.hasOutcomeData ? undefined : { value: "Proxy (no outcomes)", positive: false }}
         />
@@ -472,11 +475,11 @@ const ExecutiveKPIHub = ({ standalone = false }: ExecutiveKPIHubProps) => {
       <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
         <KpiCard label="Total Leads" value={kpis.total} icon={Users} color="text-blue-500" bg="from-blue-500/15 to-blue-600/5" />
         <KpiCard label="Active Deals" value={kpis.active} icon={Target} color="text-violet-500" bg="from-violet-500/15 to-violet-600/5" />
-        <KpiCard label="Abandoned" value={kpis.abandoned} icon={AlertTriangle} color="text-amber-500" bg="from-amber-500/15 to-amber-600/5"
+        <KpiCard label="Abandoned" value={kpis.abandoned} icon={AlertTriangle} color="text-warning" bg="from-amber-500/15 to-amber-600/5"
           badge={kpis.dropOffRate > 0 ? { value: `${kpis.dropOffRate}% drop-off`, positive: false } : undefined} />
-        <KpiCard label="Closed Deals" value={kpis.completed} icon={UserCheck} color="text-emerald-500" bg="from-emerald-500/15 to-emerald-600/5" />
-        <KpiCard label="Pipeline Value" value={`$${(kpis.pipeline / 1000).toFixed(0)}k`} icon={DollarSign} color="text-amber-500" bg="from-amber-500/15 to-amber-600/5" />
-        <KpiCard label="Closed Revenue" value={`$${(kpis.closed / 1000).toFixed(0)}k`} icon={UserCheck} color="text-emerald-600" bg="from-emerald-600/15 to-emerald-700/5" />
+        <KpiCard label="Closed Deals" value={kpis.completed} icon={UserCheck} color="text-success" bg="from-emerald-500/15 to-emerald-600/5" />
+        <KpiCard label="Pipeline Value" value={`$${(kpis.pipeline / 1000).toFixed(0)}k`} icon={DollarSign} color="text-warning" bg="from-amber-500/15 to-amber-600/5" />
+        <KpiCard label="Closed Revenue" value={`$${(kpis.closed / 1000).toFixed(0)}k`} icon={UserCheck} color="text-success" bg="from-emerald-600/15 to-emerald-700/5" />
       </div>
 
       {/* Pipeline Velocity + Aging Heatmap */}
@@ -497,8 +500,8 @@ const ExecutiveKPIHub = ({ standalone = false }: ExecutiveKPIHubProps) => {
                 const widthPct = Math.max(8, (stage.avgDays / maxDays) * 100);
                 const barColor =
                   stage.avgDays >= 7 ? "bg-red-500"
-                  : stage.avgDays >= 3 ? "bg-amber-500"
-                  : "bg-emerald-500";
+                  : stage.avgDays >= 3 ? "bg-warning"
+                  : "bg-success";
                 return (
                   <div key={stage.key} className="flex items-center gap-3">
                     <span className="text-micro font-semibold text-muted-foreground uppercase w-32 text-right shrink-0 truncate">
@@ -610,16 +613,16 @@ const ExecutiveKPIHub = ({ standalone = false }: ExecutiveKPIHubProps) => {
               <tr key={sr.key} className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors">
                 <td className="py-2.5 font-semibold text-card-foreground">{sr.label}</td>
                 <td className="text-right py-2.5 font-bold">{sr.leads}</td>
-                <td className="text-right py-2.5 text-emerald-600 font-semibold">{sr.closed}</td>
+                <td className="text-right py-2.5 text-success font-semibold">{sr.closed}</td>
                 <td className="text-right py-2.5">
-                  <span className={`font-bold ${sr.convRate >= 10 ? "text-emerald-600" : sr.convRate >= 5 ? "text-amber-600" : "text-red-500"}`}>
+                  <span className={`font-bold ${sr.convRate >= 10 ? "text-success" : sr.convRate >= 5 ? "text-warning" : "text-red-500"}`}>
                     {sr.convRate}%
                   </span>
                 </td>
-                <td className="text-right py-2.5 font-semibold text-amber-600">${sr.acquisitionSpend.toLocaleString()}</td>
+                <td className="text-right py-2.5 font-semibold text-warning">${sr.acquisitionSpend.toLocaleString()}</td>
                 <td className="text-right py-2.5 font-semibold">
                   {sr.grossDollars != null ? (
-                    <span className={sr.grossDollars >= 0 ? "text-emerald-600" : "text-red-500"}>
+                    <span className={sr.grossDollars >= 0 ? "text-success" : "text-red-500"}>
                       ${sr.grossDollars.toLocaleString()}
                     </span>
                   ) : (
@@ -674,14 +677,14 @@ const ExecutiveKPIHub = ({ standalone = false }: ExecutiveKPIHubProps) => {
                 </td>
                 <td className="text-right py-2.5 font-bold text-card-foreground">{sm.total}</td>
                 <td className="text-right py-2.5 text-muted-foreground">{sm.active}</td>
-                <td className="text-right py-2.5 text-emerald-600 font-semibold">{sm.completed}</td>
+                <td className="text-right py-2.5 text-success font-semibold">{sm.completed}</td>
                 <td className="text-right py-2.5">
-                  <span className={`font-bold ${sm.convRate >= 10 ? "text-emerald-600" : sm.convRate >= 5 ? "text-amber-600" : "text-red-500"}`}>
+                  <span className={`font-bold ${sm.convRate >= 10 ? "text-success" : sm.convRate >= 5 ? "text-warning" : "text-red-500"}`}>
                     {sm.convRate}%
                   </span>
                 </td>
-                <td className="text-right py-2.5 font-semibold text-amber-600">${sm.pipeline.toLocaleString()}</td>
-                <td className="text-right py-2.5 font-semibold text-emerald-600">${sm.closed.toLocaleString()}</td>
+                <td className="text-right py-2.5 font-semibold text-warning">${sm.pipeline.toLocaleString()}</td>
+                <td className="text-right py-2.5 font-semibold text-success">${sm.closed.toLocaleString()}</td>
                 <td className="py-2.5 pl-4">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     {sm.channels.map(ch => (
@@ -698,10 +701,10 @@ const ExecutiveKPIHub = ({ standalone = false }: ExecutiveKPIHubProps) => {
               <td className="py-2.5 text-card-foreground">All Stores</td>
               <td className="text-right py-2.5">{kpis.total}</td>
               <td className="text-right py-2.5">{kpis.active}</td>
-              <td className="text-right py-2.5 text-emerald-600">{kpis.completed}</td>
-              <td className="text-right py-2.5 text-emerald-600">{kpis.convRate}%</td>
-              <td className="text-right py-2.5 text-amber-600">${kpis.pipeline.toLocaleString()}</td>
-              <td className="text-right py-2.5 text-emerald-600">${kpis.closed.toLocaleString()}</td>
+              <td className="text-right py-2.5 text-success">{kpis.completed}</td>
+              <td className="text-right py-2.5 text-success">{kpis.convRate}%</td>
+              <td className="text-right py-2.5 text-warning">${kpis.pipeline.toLocaleString()}</td>
+              <td className="text-right py-2.5 text-success">${kpis.closed.toLocaleString()}</td>
               <td className="py-2.5 pl-4"></td>
             </tr>
           </tbody>
@@ -797,9 +800,9 @@ const ExecutiveKPIHub = ({ standalone = false }: ExecutiveKPIHubProps) => {
           {/* Abandoned & Dead below funnel */}
           <div className="flex items-center gap-4 mt-2 pt-2 border-t border-border/50">
             <div className="flex items-center gap-1.5">
-              <AlertTriangle className="w-3 h-3 text-amber-500" />
+              <AlertTriangle className="w-3 h-3 text-warning" />
               <span className="text-micro font-bold text-muted-foreground uppercase">Abandoned:</span>
-              <span className="text-xs font-black text-amber-600">{funnelStages.abandoned}</span>
+              <span className="text-xs font-black text-warning">{funnelStages.abandoned}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <TrendingDown className="w-3 h-3 text-red-500" />
@@ -832,7 +835,7 @@ const ExecutiveKPIHub = ({ standalone = false }: ExecutiveKPIHubProps) => {
                     <tr key={sm.name} className="border-b border-border/50 last:border-0">
                       <td className="py-2.5 font-semibold text-card-foreground">{sm.name}</td>
                       <td className="text-right py-2.5 font-bold text-card-foreground">{sm.deals}</td>
-                      <td className="text-right py-2.5 font-semibold text-emerald-600">${sm.totalValue.toLocaleString()}</td>
+                      <td className="text-right py-2.5 font-semibold text-success">${sm.totalValue.toLocaleString()}</td>
                       <td className="py-2.5 pl-4">
                         <div className="h-5 bg-muted/30 rounded-full overflow-hidden w-40">
                           <div className="h-full rounded-full bg-gradient-to-r from-primary/80 to-primary transition-all duration-500" style={{ width: `${pct}%` }} />
@@ -867,7 +870,7 @@ function KpiCard({ label, value, icon: Icon, color, bg, badge }: {
         <div className="flex items-baseline gap-1.5">
           <span className="text-3xl font-black text-card-foreground tracking-tight">{value}</span>
           {badge && (
-            <span className={`text-micro font-bold flex items-center gap-0.5 ${badge.positive ? "text-emerald-500" : "text-red-500"}`}>
+            <span className={`text-micro font-bold flex items-center gap-0.5 ${badge.positive ? "text-success" : "text-red-500"}`}>
               {badge.positive ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
               {badge.value}
             </span>

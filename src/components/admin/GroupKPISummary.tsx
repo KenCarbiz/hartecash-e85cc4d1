@@ -52,7 +52,7 @@ function DeltaBadge({ value, prior }: { value: number; prior: number }) {
   return (
     <span
       className={`inline-flex items-center gap-1 text-micro font-medium ${
-        d.sign === "up" ? "text-emerald-700" : "text-red-700"
+        d.sign === "up" ? "text-success" : "text-red-700"
       }`}
     >
       {d.sign === "up" ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}

@@ -99,6 +99,7 @@ const SECTION_MAP: { key: string; label: string; icon: React.ElementType; group:
   { key: "executive", label: "Performance KPIs", icon: BarChart3, group: "Direct Links" },
   { key: "gm-hud", label: "GM HUD", icon: BarChart3, group: "Direct Links" },
   { key: "bdc-health", label: "BDC Health", icon: PhoneCall, group: "Direct Links" },
+  { key: "manager-dispatch", label: "Manager Dispatch", icon: Target, group: "Direct Links" },
 ];
 
 // Strip non-digits so a query like "(555) 123-4567" matches phones

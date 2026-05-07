@@ -49,9 +49,9 @@ const statusTone = (status: string): "slate" | "blue" | "amber" | "emerald" | "r
 
 const statusToneClasses: Record<string, string> = {
   slate:   "bg-slate-100 text-slate-700 border-slate-200",
-  blue:    "bg-sky-50 text-sky-700 border-sky-200",
+  blue:    "bg-sky-50 text-info border-sky-200",
   amber:   "bg-amber-50 text-amber-800 border-amber-200",
-  emerald: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  emerald: "bg-emerald-50 text-success border-emerald-200",
   red:     "bg-red-50 text-red-700 border-red-200",
 };
 
@@ -70,7 +70,7 @@ const shortStatusLabel = (status: string): string => {
     "title_ownership_verified": "Title Verified",
     "check_request_submitted": "Check Requested",
     "purchase_complete": "Purchased",
-    "dead_lead": "Dead",
+    "dead_lead": "Wholesaled",
     "partial": "Abandoned",
   };
   return short[status] || getStatusLabel(status);
@@ -82,11 +82,11 @@ const intentFromSource = (s: Submission): { label: string; dotClass: string } =>
     case "in_store_trade":
       return { label: "Trade-In", dotClass: "bg-blue-500" };
     case "inventory":
-      return { label: "Sell", dotClass: "bg-emerald-500" };
+      return { label: "Sell", dotClass: "bg-success" };
     case "service":
-      return { label: "Unsure", dotClass: "bg-amber-500" };
+      return { label: "Unsure", dotClass: "bg-warning" };
     default:
-      return { label: "Sell", dotClass: "bg-emerald-500" };
+      return { label: "Sell", dotClass: "bg-success" };
   }
 };
 

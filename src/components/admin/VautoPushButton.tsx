@@ -104,7 +104,7 @@ const VautoPushButton = ({
     return (
       <Badge
         variant="outline"
-        className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 gap-1.5 py-1 px-2.5"
+        className="bg-success/10 text-success dark:text-emerald-400 border-success/30 gap-1.5 py-1 px-2.5"
       >
         <CheckCircle2 className="w-3 h-3" />
         <span className="font-semibold">Pushed to vAuto</span>

@@ -303,8 +303,8 @@ const AdminSidebar = ({
 
   const allSectionKeys = [
     "today", "submissions", "accepted-appts", "appraiser-queue",
-    // Performance: legacy "executive" / "gm-hud" / "bdc-health" all resolve.
-    "performance", "executive", "gm-hud", "bdc-health",
+    // Performance: legacy keys all resolve to the hub on the right tab.
+    "performance", "executive", "gm-hud", "bdc-health", "manager-dispatch",
     // BDC: legacy "bdc-queue" / "bdc-calls" still resolve.
     "bdc-hub", "bdc-queue", "bdc-calls",
     // Comms: legacy "channels" / "notifications" / "compliance" still resolve.
@@ -335,28 +335,43 @@ const AdminSidebar = ({
   // appointments only. Work keeps Today, Queues collapses to just
   // Appointments, Floor Tools to just Inspection Check-In, and the
   // personal "My" links stay accessible at the bottom.
+  // Group labels are dealer-language now (item 19 of the audit). The
+  // previous taxonomy ("Setup·Dealer", "Lane Tools", "Grow",
+  // "Measure") read as IA jargon — most dealers don't think of their
+  // store in those buckets. Mapping:
+  //   Work          → Daily Work
+  //   My            → My Day
+  //   Queues        → Sales Floor          (where the actual leads live)
+  //   Lane Tools    → On the Lot            (lane = car-dealer term, but "On the Lot" reads more clearly)
+  //   Grow          → Customer Outreach
+  //   Measure       → Performance
+  //   Setup · Dealer → Store Settings
+  //   Setup · Process → Marketing Setup
+  //   Integrations  → Integrations
+  //   Account       → Account & Plan
+  //   Platform      → Platform Admin
   const groupEntries: [string, SidebarItem[]][] = isReceptionist
     ? [
-        ["Work", workItems],
-        ["My", myItems],
-        ["Queues", queueItems.filter((i) => i.key === "accepted-appts")],
-        ["Lane Tools", floorToolsItems.filter((i) => i.key === "inspection-checkin")],
+        ["Daily Work", workItems],
+        ["My Day", myItems],
+        ["Sales Floor", queueItems.filter((i) => i.key === "accepted-appts")],
+        ["On the Lot", floorToolsItems.filter((i) => i.key === "inspection-checkin")],
       ]
     : [
         // Daily / personal context first.
-        ["Work", workItems],
-        ["My", myItems],
+        ["Daily Work", workItems],
+        ["My Day", myItems],
         // Active work surfaces.
-        ["Queues", queueItems],
-        ["Lane Tools", floorToolsItems],
-        ["Grow", growItems],
-        ["Measure", measureItems],
+        ["Sales Floor", queueItems],
+        ["On the Lot", floorToolsItems],
+        ["Customer Outreach", growItems],
+        ["Performance", measureItems],
         // Configuration sinks to the bottom.
-        ["Setup · Dealer", setupDealerItems],
-        ["Setup · Process", setupProcessItems],
+        ["Store Settings", setupDealerItems],
+        ["Marketing Setup", setupProcessItems],
         ["Integrations", integrationsItems],
-        ["Account", accountItems],
-        ["Platform", platformItems],
+        ["Account & Plan", accountItems],
+        ["Platform Admin", platformItems],
       ];
 
   useEffect(() => {
@@ -476,7 +491,7 @@ const AdminSidebar = ({
                   if (isMobile) setOpenMobile(false);
                 }}
                 tooltip={collapsed ? "Command Center" : undefined}
-                className="transition-all duration-200 text-amber-500 dark:text-amber-400 hover:bg-amber-500/10"
+                className="transition-all duration-200 text-warning dark:text-amber-400 hover:bg-warning/10"
               >
                 <Gauge className="w-4 h-4 shrink-0" />
                 {!collapsed && <span className="flex-1 truncate font-semibold">Command Center</span>}

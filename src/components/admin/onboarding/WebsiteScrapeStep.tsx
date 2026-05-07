@@ -94,7 +94,7 @@ const WebsiteScrapeStep = ({ state, onChange }: Props) => {
       {sd && (
         <div className="bg-muted/30 border border-border rounded-xl p-4 space-y-4">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+            <CheckCircle2 className="w-4 h-4 text-success" />
             <span className="text-sm font-bold text-card-foreground">Data Extracted</span>
           </div>
 

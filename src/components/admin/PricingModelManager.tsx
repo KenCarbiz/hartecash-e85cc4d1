@@ -486,10 +486,10 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
                     : "border-border text-muted-foreground hover:border-primary/30 hover:text-card-foreground"
                 }`}
               >
-                {m.is_default && <Star className="w-3 h-3 fill-amber-500 text-amber-500" />}
+                {m.is_default && <Star className="w-3 h-3 fill-amber-500 text-warning" />}
                 {m.is_active && !m.is_default && <Power className="w-3 h-3 text-success" />}
                 {m.schedule_start && <CalendarRange className="w-3 h-3 text-primary" />}
-                {m.approval_status === "pending" && <Clock className="w-3 h-3 text-amber-500" />}
+                {m.approval_status === "pending" && <Clock className="w-3 h-3 text-warning" />}
                 {m.approval_status === "rejected" && <XCircle className="w-3 h-3 text-destructive" />}
                 <span className="truncate max-w-[120px]">{m.name}</span>
               </button>
@@ -584,7 +584,7 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
                     onClick={() => handleSetDefault(selectedModelId)}
                     disabled={selectedModel?.is_default}
                   >
-                    <Star className={`w-3 h-3 ${selectedModel?.is_default ? "fill-amber-500 text-amber-500" : ""}`} />
+                    <Star className={`w-3 h-3 ${selectedModel?.is_default ? "fill-amber-500 text-warning" : ""}`} />
                   </Button>
                   <Button
                     variant={selectedModel?.is_active ? "default" : "outline"}

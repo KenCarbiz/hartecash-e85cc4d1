@@ -61,8 +61,8 @@ const TenantDetailsStep = ({ state, onChange }: Props) => {
       </div>
 
       {isEnterprise ? (
-        <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-6 text-center space-y-2">
-          <Crown className="w-10 h-10 text-amber-500 mx-auto" />
+        <div className="bg-warning/10 border border-warning/20 rounded-xl p-6 text-center space-y-2">
+          <Crown className="w-10 h-10 text-warning mx-auto" />
           <h3 className="font-bold text-lg">Enterprise — Custom Build</h3>
           <p className="text-sm text-muted-foreground max-w-sm mx-auto">
             Our team will work with you on a custom configuration. Enter the basics below and we'll handle the rest.
@@ -145,10 +145,10 @@ const TenantDetailsStep = ({ state, onChange }: Props) => {
 
         {/* DNS info */}
         {state.customDomain && (
-          <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
+          <div className="bg-warning/10 border border-warning/20 rounded-xl p-4">
             <div className="flex items-start gap-2">
-              <Globe className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
-              <div className="text-xs text-amber-700 dark:text-amber-400 space-y-1">
+              <Globe className="w-4 h-4 text-warning mt-0.5 shrink-0" />
+              <div className="text-xs text-warning dark:text-amber-400 space-y-1">
                 <p className="font-semibold">DNS Setup Required</p>
                 <ul className="list-disc list-inside space-y-0.5 ml-1">
                   <li>A Record <code className="bg-muted px-1 rounded">@</code> → <code className="bg-muted px-1 rounded">185.158.133.1</code></li>

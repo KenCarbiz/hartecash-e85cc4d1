@@ -104,7 +104,7 @@ export default function TenantViewPickerDialog({
           {/* What this does — reassuring copy */}
           <div className="rounded-xl border border-border bg-muted/40 p-3 text-xs text-muted-foreground leading-relaxed space-y-2">
             <p className="flex items-start gap-2">
-              <Shield className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+              <Shield className="w-3.5 h-3.5 text-success dark:text-emerald-400 shrink-0 mt-0.5" />
               <span>
                 <strong className="text-foreground">Your session stays yours.</strong> You remain
                 authenticated as yourself — only the tenant context is swapped. Every action you take
@@ -112,7 +112,7 @@ export default function TenantViewPickerDialog({
               </span>
             </p>
             <p className="flex items-start gap-2">
-              <Eye className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+              <Eye className="w-3.5 h-3.5 text-info dark:text-blue-400 shrink-0 mt-0.5" />
               <span>
                 <strong className="text-foreground">A red banner stays on screen</strong> the entire
                 time so you never forget which tenant you're viewing. Click Exit to return to Super Admin.

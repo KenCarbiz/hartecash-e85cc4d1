@@ -50,7 +50,7 @@ interface StaffMember {
 }
 
 export const ALL_SECTIONS = [
-  { key: "submissions", label: "Submissions", group: "Pipeline" },
+  { key: "submissions", label: "All Leads", group: "Pipeline" },
   { key: "appointments", label: "Appointments", group: "Pipeline" },
   { key: "staff", label: "Staff", group: "Team" },
   { key: "requests", label: "Access Requests", group: "Team" },

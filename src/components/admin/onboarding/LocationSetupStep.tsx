@@ -144,7 +144,7 @@ const LocationSetupStep = ({ state, onChange }: Props) => {
                 <span className="font-semibold text-sm">
                   {loc.name || `Location ${idx + 1}`}
                 </span>
-                {hasData && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />}
+                {hasData && <CheckCircle2 className="w-3.5 h-3.5 text-success" />}
                 <Badge variant="secondary" className="text-micro">
                   {LOCATION_TYPES.find((t) => t.value === loc.locationType)?.label || loc.locationType}
                 </Badge>

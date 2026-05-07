@@ -17,8 +17,8 @@ const MODE_META: Record<StrategyMode, { icon: React.ReactNode; color: string; bo
   },
   aggressive: {
     icon: <Zap className="w-5 h-5" />,
-    color: "text-amber-600",
-    border: "border-amber-500/30 hover:border-amber-500/60",
+    color: "text-warning",
+    border: "border-warning/30 hover:border-warning/60",
     desc: "Step up to win cars. Trade-in clean floor across all tiers.",
   },
   predator: {

@@ -274,7 +274,7 @@ const PhotoConfiguration = () => {
               <Badge variant="outline" className="text-micro">
                 First upload — {preRequiredCount} required, {preActiveCount} shown
               </Badge>
-              <Badge variant="outline" className="text-micro border-emerald-500/40 text-emerald-700">
+              <Badge variant="outline" className="text-micro border-success/40 text-success">
                 Boost — {boostRequiredCount} required + {boostBonusCount} bonus
               </Badge>
             </div>
@@ -285,7 +285,7 @@ const PhotoConfiguration = () => {
           <div className="hidden md:grid md:grid-cols-[1fr_minmax(220px,260px)_minmax(220px,260px)_36px] gap-3 px-2 pt-2 pb-1 text-micro font-semibold uppercase tracking-[0.14em] text-muted-foreground">
             <div>Shot</div>
             <div>Before appointment</div>
-            <div className="text-emerald-700">In boost flow</div>
+            <div className="text-success">In boost flow</div>
             <div />
           </div>
 
@@ -313,7 +313,7 @@ const PhotoConfiguration = () => {
                           className="h-7 text-sm font-semibold w-44"
                         />
                         {boostActive && (
-                          <Badge className="bg-emerald-500/10 text-emerald-700 border-emerald-500/30 text-micro gap-1">
+                          <Badge className="bg-success/10 text-success border-success/30 text-micro gap-1">
                             <Sparkles className="w-3 h-3" />
                             {row.boost_role === "required" ? "Boost" : "Bonus"}
                           </Badge>
@@ -424,7 +424,7 @@ interface RoleSegmentedProps<T extends string> {
 
 function RoleSegmented<T extends string>({ value, options, onChange, accent, helper }: RoleSegmentedProps<T>) {
   const selectedClass = accent === "emerald"
-    ? "bg-emerald-500 text-white border-emerald-500"
+    ? "bg-success text-white border-success"
     : "bg-primary text-primary-foreground border-primary";
   const groupBg = accent === "emerald" ? "bg-emerald-50/40" : "bg-muted/30";
   return (

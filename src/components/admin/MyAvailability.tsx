@@ -185,7 +185,7 @@ const MyAvailability = () => {
               variant="outline"
               className={
                 form.dnd
-                  ? "bg-amber-50 text-amber-700 border-amber-200"
+                  ? "bg-amber-50 text-warning border-amber-200"
                   : "bg-slate-100 text-slate-600 border-slate-200"
               }
             >

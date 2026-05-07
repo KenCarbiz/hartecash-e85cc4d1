@@ -147,7 +147,7 @@ const InteractiveWaterfallBlock = ({
     : isTotal
     ? "bg-primary border-primary/60"
     : isPositive
-    ? "bg-emerald-500/25 border-emerald-500/40"
+    ? "bg-success/25 border-success/40"
     : "bg-destructive/25 border-destructive/40";
 
   const textColor = isTotal
@@ -155,7 +155,7 @@ const InteractiveWaterfallBlock = ({
     : isBase
     ? "text-primary"
     : isPositive
-    ? "text-emerald-700 dark:text-emerald-400"
+    ? "text-success dark:text-emerald-400"
     : "text-destructive";
 
   return (
@@ -196,7 +196,7 @@ const InteractiveWaterfallBlock = ({
 
         {/* Arrow icon */}
         <div className="w-4 shrink-0">
-          {isPositive && <TrendingUp className="w-3 h-3 text-emerald-500" />}
+          {isPositive && <TrendingUp className="w-3 h-3 text-success" />}
           {isNegative && <TrendingDown className="w-3 h-3 text-destructive" />}
           {(isBase || isTotal) && <Minus className="w-3 h-3 text-muted-foreground" />}
         </div>
@@ -749,7 +749,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                     -${amount.toLocaleString()}
                   </span>
                 ) : (
-                  <span className="text-[9px] font-bold text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded-full ml-auto shrink-0">
+                  <span className="text-[9px] font-bold text-success bg-success/10 px-1.5 py-0.5 rounded-full ml-auto shrink-0">
                     No deduction
                   </span>
                 );
@@ -1000,7 +1000,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                         <CheckSquare className="w-3.5 h-3.5 text-primary" />
                         <span className="font-semibold text-[11px] text-card-foreground">③ Factory Equipment — Customer Selected ({liveSelectedAddDeducts.length}/{liveBbVehicle.add_deduct_list.length})</span>
                         {equipmentTotal !== 0 && (
-                          <Badge variant="secondary" className={`text-[9px] ${equipmentTotal > 0 ? "text-emerald-600" : "text-destructive"}`}>
+                          <Badge variant="secondary" className={`text-[9px] ${equipmentTotal > 0 ? "text-success" : "text-destructive"}`}>
                             {equipmentTotal > 0 ? "+" : ""}${equipmentTotal.toLocaleString()}
                           </Badge>
                         )}
@@ -1010,9 +1010,9 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     {/* Inspector verification reminder */}
-                    <div className="mx-1 mt-2 mb-1 px-2.5 py-1.5 rounded-md bg-amber-500/10 border border-amber-500/20 flex items-center gap-2">
-                      <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                      <span className="text-micro font-semibold text-amber-700 dark:text-amber-400">
+                    <div className="mx-1 mt-2 mb-1 px-2.5 py-1.5 rounded-md bg-warning/10 border border-warning/20 flex items-center gap-2">
+                      <AlertTriangle className="w-3.5 h-3.5 text-warning dark:text-amber-400 shrink-0" />
+                      <span className="text-micro font-semibold text-warning dark:text-amber-400">
                         Inspector: Verify all customer-selected equipment is present on the vehicle during in-person inspection.
                       </span>
                     </div>
@@ -1037,7 +1037,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                     </div>
                     {liveSelectedAddDeducts.length > 0 && (
                       <div className="mx-1 mb-1 px-2.5 py-1 text-[9px] text-muted-foreground border-t border-border">
-                        <strong>{liveSelectedAddDeducts.length}</strong> option{liveSelectedAddDeducts.length !== 1 ? "s" : ""} selected by customer → value impact: <strong className={equipmentTotal >= 0 ? "text-emerald-600" : "text-destructive"}>{equipmentTotal >= 0 ? "+" : ""}${equipmentTotal.toLocaleString()}</strong>
+                        <strong>{liveSelectedAddDeducts.length}</strong> option{liveSelectedAddDeducts.length !== 1 ? "s" : ""} selected by customer → value impact: <strong className={equipmentTotal >= 0 ? "text-success" : "text-destructive"}>{equipmentTotal >= 0 ? "+" : ""}${equipmentTotal.toLocaleString()}</strong>
                       </div>
                     )}
                   </CollapsibleContent>
@@ -1112,7 +1112,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                     <CollapsibleTrigger asChild>
                       <button className="flex items-center justify-between w-full px-3 py-2 text-left hover:bg-muted/30 transition-colors rounded-lg border border-border">
                         <div className="flex items-center gap-1.5">
-                          <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+                          <TrendingUp className="w-3.5 h-3.5 text-success" />
                           <span className="font-semibold text-[11px] text-card-foreground">Low-Mileage Bonus</span>
                           {(localSettings as any).low_mileage_bonus?.enabled && (
                             <Badge variant="secondary" className="text-[8px] px-1 py-0">ON</Badge>
@@ -1370,7 +1370,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                     <CollapsibleTrigger asChild>
                       <button className="flex items-center justify-between w-full px-3 py-2 text-left hover:bg-muted/30 transition-colors rounded-lg border border-border">
                         <div className="flex items-center gap-1.5">
-                          <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                          <AlertTriangle className="w-3.5 h-3.5 text-warning" />
                           <span className="font-semibold text-[11px] text-card-foreground">Deduction Amounts</span>
                         </div>
                         <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
@@ -1393,7 +1393,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                                 <div className="flex items-center gap-1">
                                   <span className="text-micro font-semibold text-card-foreground">{config.label}</span>
                                   {isPctMode && <Badge variant="outline" className="text-[7px] px-1 py-0">% mode</Badge>}
-                                  {isModified && <Badge variant="outline" className="text-[7px] px-1 py-0 border-amber-500/50 text-amber-600 dark:text-amber-400 bg-amber-500/10">Modified</Badge>}
+                                  {isModified && <Badge variant="outline" className="text-[7px] px-1 py-0 border-warning/50 text-warning dark:text-amber-400 bg-warning/10">Modified</Badge>}
                                 </div>
                                 <Switch
                                   checked={enabled}
@@ -1440,7 +1440,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                     {compareMode && liveSavedResult && whatIfDelta !== 0 && (
                       <div className="mt-2 flex items-center gap-2">
                         <span className="text-xs text-muted-foreground">vs. saved:</span>
-                        <span className={`text-sm font-bold px-2 py-0.5 rounded-full ${whatIfDelta > 0 ? "bg-emerald-500/10 text-emerald-600" : "bg-destructive/10 text-destructive"}`}>
+                        <span className={`text-sm font-bold px-2 py-0.5 rounded-full ${whatIfDelta > 0 ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
                           {whatIfDelta > 0 ? "+" : ""}${whatIfDelta.toLocaleString()}
                         </span>
                       </div>

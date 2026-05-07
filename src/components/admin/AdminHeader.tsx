@@ -165,7 +165,7 @@ const AdminHeader = ({ darkMode, setDarkMode, userRole, onLogout, userName, isPl
             </div>
             <div className="flex items-center gap-1.5 mt-0.5">
               {isPlatformAdmin && (
-                <span className="inline-flex items-center gap-1 text-caption px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30">
+                <span className="inline-flex items-center gap-1 text-caption px-2 py-0.5 rounded-full bg-warning/20 text-amber-300 font-semibold border border-warning/30">
                   <Crown className="w-2.5 h-2.5" />
                   SUPER ADMIN
                 </span>

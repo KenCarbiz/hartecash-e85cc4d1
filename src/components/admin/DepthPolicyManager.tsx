@@ -219,10 +219,10 @@ const DepthPolicyManager = () => {
 
   const getPolicyTypeColor = (type: string) => {
     switch (type) {
-      case "manufacturer_cpo": return "bg-blue-500/10 text-blue-600 border-blue-400/40";
+      case "manufacturer_cpo": return "bg-blue-500/10 text-info border-blue-400/40";
       case "limited_cpo": return "bg-cyan-500/10 text-cyan-600 border-cyan-400/40";
       case "internal_cert": return "bg-purple-500/10 text-purple-600 border-purple-400/40";
-      case "custom": return "bg-amber-500/10 text-amber-600 border-amber-400/40";
+      case "custom": return "bg-warning/10 text-warning border-amber-400/40";
       default: return "bg-muted text-muted-foreground";
     }
   };
@@ -418,9 +418,9 @@ const DepthPolicyManager = () => {
               const orig = originals.get(policy.id);
               const preview = previews.get(policy.id);
               return (
-                <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 px-3 py-2.5 space-y-2">
+                <div className="rounded-lg border border-warning/40 bg-warning/5 px-3 py-2.5 space-y-2">
                   <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-400">
+                    <p className="text-[11px] font-semibold text-warning dark:text-amber-400">
                       Thresholds changed:{" "}
                       {orig && orig.min_tire_depth !== policy.min_tire_depth && (
                         <span>tires {orig.min_tire_depth}→{policy.min_tire_depth}</span>
@@ -450,8 +450,8 @@ const DepthPolicyManager = () => {
                         <div className={`text-lg font-bold ${preview.nowFails > 0 ? "text-red-600" : "text-foreground"}`}>{preview.nowFails}</div>
                         <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-bold">Now fails</div>
                       </div>
-                      <div className={`rounded-md border p-2 ${preview.nowPasses > 0 ? "border-emerald-500/40 bg-emerald-500/5" : "border-border bg-background"}`}>
-                        <div className={`text-lg font-bold ${preview.nowPasses > 0 ? "text-emerald-600" : "text-foreground"}`}>{preview.nowPasses}</div>
+                      <div className={`rounded-md border p-2 ${preview.nowPasses > 0 ? "border-success/40 bg-success/5" : "border-border bg-background"}`}>
+                        <div className={`text-lg font-bold ${preview.nowPasses > 0 ? "text-success" : "text-foreground"}`}>{preview.nowPasses}</div>
                         <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-bold">Now passes</div>
                       </div>
                     </div>
@@ -489,8 +489,8 @@ const DepthPolicyManager = () => {
                           <div className="text-lg font-bold text-red-600">{preview.nowFails}</div>
                           <div className="text-micro uppercase tracking-wider text-muted-foreground">Now fails</div>
                         </div>
-                        <div className="rounded-md border border-emerald-500/40 bg-emerald-500/5 p-2">
-                          <div className="text-lg font-bold text-emerald-600">{preview.nowPasses}</div>
+                        <div className="rounded-md border border-success/40 bg-success/5 p-2">
+                          <div className="text-lg font-bold text-success">{preview.nowPasses}</div>
                           <div className="text-micro uppercase tracking-wider text-muted-foreground">Now passes</div>
                         </div>
                       </div>

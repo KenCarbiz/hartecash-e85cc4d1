@@ -412,7 +412,7 @@ const GroupManagement = () => {
                   {selectedGroup.master_msa_signed_at ? (
                     <span>signed {new Date(selectedGroup.master_msa_signed_at).toLocaleDateString()}</span>
                   ) : (
-                    <span className="text-amber-700">not signed yet</span>
+                    <span className="text-warning">not signed yet</span>
                   )}
                   {selectedGroup.master_msa_url && (
                     <>
@@ -537,7 +537,7 @@ const GroupManagement = () => {
                           <span className="font-medium text-sm">{rooftop.display_name || rooftop.dealership_id}</span>
                           {act && statusBadge(act.status)}
                           {inPilot && (
-                            <span className="text-[11px] text-amber-700 inline-flex items-center gap-1">
+                            <span className="text-[11px] text-warning inline-flex items-center gap-1">
                               <Clock className="w-3 h-3" />
                               {formatCountdown(pilotMs)}
                             </span>

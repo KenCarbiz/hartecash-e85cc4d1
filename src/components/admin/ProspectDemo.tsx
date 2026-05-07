@@ -853,7 +853,7 @@ const ProspectDemo = () => {
     <div className="space-y-5 max-w-[1400px]">
       {/* Header explainer */}
       <div className="rounded-lg border border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50 p-4 flex items-start gap-3">
-        <Target className="w-5 h-5 text-blue-700 shrink-0 mt-0.5" />
+        <Target className="w-5 h-5 text-info shrink-0 mt-0.5" />
         <div className="text-sm text-slate-700 leading-relaxed">
           <strong>Prospect Demo Builder</strong> — for pitching dealers who aren't customers yet.
           Configure the prospect's brand below, paste their site URLs, and we'll generate a
@@ -1612,7 +1612,7 @@ const PageScreenshot = ({
 
       {status === "errored" && (
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center bg-slate-50 p-6">
-          <AlertCircle className="w-10 h-10 text-amber-500 mb-3" />
+          <AlertCircle className="w-10 h-10 text-warning mb-3" />
           <div className="text-sm font-bold text-slate-800">
             Screenshot didn't load
           </div>
@@ -1676,8 +1676,8 @@ const SharePanel = ({
     <div className="rounded-lg border border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-4 space-y-3">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
-          <Share2 className="w-4 h-4 text-emerald-700" />
-          <div className="text-micro font-bold uppercase tracking-[0.1em] text-emerald-700">
+          <Share2 className="w-4 h-4 text-success" />
+          <div className="text-micro font-bold uppercase tracking-[0.1em] text-success">
             Share This Demo with the Prospect
           </div>
         </div>
@@ -1701,7 +1701,7 @@ const SharePanel = ({
             disabled={saving}
             variant="default"
             size="sm"
-            className="gap-1.5 bg-emerald-600 hover:bg-emerald-700"
+            className="gap-1.5 bg-success hover:bg-success"
           >
             {saving ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1742,7 +1742,7 @@ const SharePanel = ({
             >
               {copied ? (
                 <>
-                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                  <Check className="w-3.5 h-3.5 text-success" />
                   Copied
                 </>
               ) : (
@@ -1808,7 +1808,7 @@ const ColorRecommendationsPanel = ({
   if (error) {
     return (
       <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 flex items-start gap-2">
-        <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+        <AlertCircle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
         <div className="text-xs text-amber-800">
           Couldn't analyze the screenshot for color recommendations: {error}
         </div>
@@ -1821,7 +1821,7 @@ const ColorRecommendationsPanel = ({
   return (
     <div className="rounded-lg border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4 space-y-4">
       <div className="flex items-center gap-2">
-        <Sparkles className="w-4 h-4 text-blue-600" />
+        <Sparkles className="w-4 h-4 text-info" />
         <div className="text-micro font-bold uppercase tracking-[0.1em] text-slate-500">
           AI Color Recommendations
         </div>
@@ -1863,7 +1863,7 @@ const ColorRecommendationsPanel = ({
                 onClick={() => onApply(r.hex)}
                 className={`text-left rounded-lg border p-3 transition ${
                   isActive
-                    ? "border-blue-500 bg-blue-50 ring-2 ring-blue-200"
+                    ? "border-info bg-blue-50 ring-2 ring-blue-200"
                     : "border-slate-200 bg-white hover:border-slate-400"
                 }`}
               >
@@ -1879,7 +1879,7 @@ const ColorRecommendationsPanel = ({
                     <div className="text-micro font-mono text-slate-500">{r.hex}</div>
                   </div>
                   {isActive && (
-                    <div className="text-micro font-bold text-blue-700 uppercase tracking-wider">
+                    <div className="text-micro font-bold text-info uppercase tracking-wider">
                       Applied
                     </div>
                   )}
@@ -1961,7 +1961,7 @@ const LlmRecommendationsPanel = ({
 
       {error && (
         <div className="rounded-md border border-amber-200 bg-amber-50 p-3 flex items-start gap-2">
-          <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+          <AlertCircle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
           <div className="text-xs text-amber-800">{error}</div>
         </div>
       )}
@@ -2043,7 +2043,7 @@ const LlmRecommendationsPanel = ({
                         provided. The "(applied)" tag confirms auto-apply. */}
                     {(!!p.placements?.length || !!p.use?.length) && (
                       <div className="mb-1.5">
-                        <div className="text-[9px] font-bold uppercase tracking-wider text-emerald-700 mb-0.5">
+                        <div className="text-[9px] font-bold uppercase tracking-wider text-success mb-0.5">
                           Use {p.use?.length ? `(${p.use.length} applied)` : ""}
                         </div>
                         <ul className="text-[11px] text-slate-700 leading-snug space-y-0.5 list-disc list-inside">
@@ -2104,7 +2104,7 @@ const CaptureFailurePanel = ({
     className="relative bg-slate-50 flex flex-col items-center justify-center text-center p-8"
     style={{ aspectRatio: "1280 / 800" }}
   >
-    <AlertCircle className="w-10 h-10 text-amber-500 mb-3" />
+    <AlertCircle className="w-10 h-10 text-warning mb-3" />
     <div className="text-sm font-bold text-slate-800">Couldn't capture this page</div>
     <div className="text-xs text-slate-600 mt-1 max-w-2xl whitespace-pre-line text-left font-mono leading-relaxed">{reason}</div>
     {url && (

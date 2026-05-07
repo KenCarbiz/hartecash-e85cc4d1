@@ -160,12 +160,12 @@ const StripeWebhookReprocessor = () => {
                   </td>
                   <td className="px-3 py-2.5">
                     {e.processed_at ? (
-                      <span className="inline-flex items-center gap-1 text-emerald-700 text-[11px]">
+                      <span className="inline-flex items-center gap-1 text-success text-[11px]">
                         <CheckCircle2 className="w-3 h-3" />
                         processed
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-amber-700 text-[11px]">
+                      <span className="inline-flex items-center gap-1 text-warning text-[11px]">
                         <AlertCircle className="w-3 h-3" />
                         unprocessed
                       </span>

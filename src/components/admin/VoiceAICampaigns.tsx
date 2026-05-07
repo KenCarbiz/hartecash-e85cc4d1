@@ -85,8 +85,8 @@ function renderClientTemplate(template: string, vars: Record<string, string>): s
 /* ── KPI card ──────────────────────────────────────── */
 
 const ACCENT: Record<string, string> = {
-  primary: "bg-primary/10 text-primary", emerald: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-  amber: "bg-amber-500/10 text-amber-600 dark:text-amber-400", blue: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+  primary: "bg-primary/10 text-primary", emerald: "bg-success/10 text-success dark:text-emerald-400",
+  amber: "bg-warning/10 text-warning dark:text-amber-400", blue: "bg-blue-500/10 text-info dark:text-blue-400",
 };
 const KPICard = ({ icon: Icon, label, value, accent = "primary" }: { icon: React.ElementType; label: string; value: string; accent?: string }) => (
   <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm shadow-[0_1px_3px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.03)] p-5 flex flex-col gap-3">
@@ -428,15 +428,15 @@ const VoiceAICampaigns = () => {
   const activeCount = campaigns.filter((c: any) => c.status === "active").length;
 
   const STATUS_COLORS: Record<string, string> = {
-    active: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-    paused: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+    active: "bg-success/10 text-success border-success/20",
+    paused: "bg-warning/10 text-warning border-warning/20",
     draft: "bg-muted text-muted-foreground border-border",
-    completed: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+    completed: "bg-blue-500/10 text-info border-info/20",
   };
 
   const OUTCOME_COLORS: Record<string, string> = {
-    accepted: "bg-emerald-500/10 text-emerald-600", appointment_scheduled: "bg-emerald-600/10 text-emerald-700",
-    wants_higher_offer: "bg-amber-500/10 text-amber-600", callback_requested: "bg-blue-500/10 text-blue-600",
+    accepted: "bg-success/10 text-success", appointment_scheduled: "bg-success/10 text-success",
+    wants_higher_offer: "bg-warning/10 text-warning", callback_requested: "bg-blue-500/10 text-info",
     not_interested: "bg-muted text-muted-foreground", voicemail_left: "bg-purple-500/10 text-purple-600",
     opted_out: "bg-red-500/10 text-red-600",
   };
@@ -466,9 +466,9 @@ const VoiceAICampaigns = () => {
 
       {/* ── Missing API Key Banner ── */}
       {!config.voice_ai_api_key && (
-        <div className="flex items-center gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 px-5 py-4">
-          <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
-          <p className="text-sm text-amber-700 dark:text-amber-300">
+        <div className="flex items-center gap-3 rounded-2xl border border-warning/30 bg-warning/5 px-5 py-4">
+          <AlertTriangle className="w-5 h-5 text-warning dark:text-amber-400 shrink-0" />
+          <p className="text-sm text-warning dark:text-amber-300">
             Connect your Bland.ai API key to start making AI calls.
           </p>
         </div>
@@ -713,7 +713,7 @@ const VoiceAICampaigns = () => {
               <Button
                 size="sm"
                 variant="outline"
-                className="gap-1.5 border-amber-500/40 text-amber-700 hover:bg-amber-500/10"
+                className="gap-1.5 border-warning/40 text-warning hover:bg-warning/10"
                 onClick={pauseAllActive}
                 disabled={pausingAll}
                 title={`Pause ${activeCount} active campaign${activeCount === 1 ? "" : "s"}`}
@@ -830,8 +830,8 @@ const VoiceAICampaigns = () => {
                 Bland.ai will read this when the call hits voicemail. Leave blank to hang up silently. Use {"{{customer_first_name}}"}, {"{{vehicle_make}}"}, etc — the same template vars as the AI script.
               </p>
               {newCampaign.voicemail_message?.trim() && (
-                <div className="rounded-md border border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-500/5 p-2.5 text-xs">
-                  <div className="text-micro uppercase tracking-wider text-emerald-700 dark:text-emerald-400 font-bold mb-1 flex items-center gap-1">
+                <div className="rounded-md border border-success/30 bg-emerald-50/40 dark:bg-success/5 p-2.5 text-xs">
+                  <div className="text-micro uppercase tracking-wider text-success dark:text-emerald-400 font-bold mb-1 flex items-center gap-1">
                     <Eye className="w-3 h-3" /> Preview (sample customer)
                   </div>
                   <div className="text-foreground/90 italic whitespace-pre-wrap">
@@ -932,7 +932,7 @@ const VoiceAICampaigns = () => {
       {/* ── Section B: Recent Call Log ── */}
       <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm shadow-[0_1px_3px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.03)] overflow-hidden">
         <div className="bg-gradient-to-r from-muted/60 via-muted/30 to-transparent px-6 py-4 border-b border-border/40 flex items-center gap-3">
-          <span className="flex items-center justify-center w-9 h-9 rounded-xl bg-blue-500/10 text-blue-600"><List className="w-4 h-4" /></span>
+          <span className="flex items-center justify-center w-9 h-9 rounded-xl bg-blue-500/10 text-info"><List className="w-4 h-4" /></span>
           <div>
             <h3 className="text-sm font-bold text-foreground/90 tracking-tight">Recent Calls</h3>
             <p className="text-xs text-muted-foreground mt-0.5">Last 30 outbound AI calls</p>
@@ -1058,14 +1058,14 @@ function ScriptPreviewSection({ editingId }: { editingId: string | null }) {
         <span className="text-muted-foreground font-normal">— what the AI will say on the call</span>
       </button>
       {open && (
-        <div className="rounded-md border border-blue-500/30 bg-blue-50/40 dark:bg-blue-500/5 p-3 text-xs">
+        <div className="rounded-md border border-info/30 bg-blue-50/40 dark:bg-blue-500/5 p-3 text-xs">
           {loading ? (
             <div className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading…
             </div>
           ) : script ? (
             <>
-              <div className="text-micro uppercase tracking-wider text-blue-700 dark:text-blue-400 font-bold mb-2">
+              <div className="text-micro uppercase tracking-wider text-info dark:text-blue-400 font-bold mb-2">
                 {source === "campaign" ? "Campaign-specific script" : "Default Offer Follow-Up script"} · sample customer
               </div>
               <div className="text-foreground/90 whitespace-pre-wrap font-mono text-[11px] leading-relaxed max-h-[280px] overflow-y-auto">
@@ -1152,7 +1152,7 @@ function CampaignAnalytics({
         </div>
         <div className="rounded-lg border border-border bg-background p-3">
           <div className="text-micro uppercase tracking-wider text-muted-foreground font-bold">Converted</div>
-          <div className="text-lg font-bold mt-0.5 text-emerald-600">{converted} <span className="text-xs text-muted-foreground font-normal">({pct(converted)}%)</span></div>
+          <div className="text-lg font-bold mt-0.5 text-success">{converted} <span className="text-xs text-muted-foreground font-normal">({pct(converted)}%)</span></div>
         </div>
         <div className="rounded-lg border border-border bg-background p-3">
           <div className="text-micro uppercase tracking-wider text-muted-foreground font-bold">Avg duration</div>

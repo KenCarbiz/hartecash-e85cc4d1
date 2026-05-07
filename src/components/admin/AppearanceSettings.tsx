@@ -362,7 +362,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-micro px-2 py-1 rounded bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 font-semibold flex items-center gap-1">
+          <span className="text-micro px-2 py-1 rounded bg-warning/15 text-warning dark:text-amber-400 border border-warning/30 font-semibold flex items-center gap-1">
             <Crown className="w-3 h-3" /> Admin only
           </span>
         </div>
@@ -591,7 +591,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
                         <div className="flex items-baseline gap-2">
                           <span className="text-sm font-semibold">{p.name}</span>
                           {p.recommended && (
-                            <span className="text-[9px] uppercase tracking-wider font-bold text-emerald-700 bg-emerald-500/10 border border-emerald-500/20 rounded px-1.5 py-0.5">
+                            <span className="text-[9px] uppercase tracking-wider font-bold text-success bg-success/10 border border-success/20 rounded px-1.5 py-0.5">
                               Rec
                             </span>
                           )}
@@ -928,7 +928,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
                       <div className="flex items-baseline gap-2">
                         <span className="font-semibold text-sm">{opt.label}</span>
                         {opt.recommended && (
-                          <span className="text-micro uppercase tracking-wider font-bold text-emerald-700 bg-emerald-500/10 border border-emerald-500/20 rounded px-1.5 py-0.5">
+                          <span className="text-micro uppercase tracking-wider font-bold text-success bg-success/10 border border-success/20 rounded px-1.5 py-0.5">
                             Recommended
                           </span>
                         )}

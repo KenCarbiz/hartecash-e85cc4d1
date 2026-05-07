@@ -207,7 +207,7 @@ function CatalogRow({
             variant="outline"
             className={`text-[9px] font-bold uppercase tracking-wider ${
               visible
-                ? "bg-emerald-500/10 text-emerald-700 border-emerald-500/30"
+                ? "bg-success/10 text-success border-success/30"
                 : "bg-muted text-muted-foreground"
             }`}
           >

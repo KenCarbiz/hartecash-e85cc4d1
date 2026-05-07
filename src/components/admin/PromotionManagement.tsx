@@ -238,7 +238,7 @@ const PromotionManagement = () => {
                 size="sm"
                 onClick={pauseAllActive}
                 disabled={pausingAll}
-                className="border-amber-500/40 text-amber-700 hover:bg-amber-500/10"
+                className="border-warning/40 text-warning hover:bg-warning/10"
                 title={`Pause all ${statusCounts.active} active promotion${statusCounts.active === 1 ? "" : "s"}`}
               >
                 {pausingAll ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : null}

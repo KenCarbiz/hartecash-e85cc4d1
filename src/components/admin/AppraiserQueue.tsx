@@ -94,9 +94,9 @@ type QueueReason =
 const REASON_META: Record<QueueReason, { label: string; color: string; icon: React.ElementType; priority: number }> = {
   walk_in:     { label: "Walk-In",     color: "bg-red-500/15 text-red-600 border-red-500/30 dark:text-red-400", icon: Flame,    priority: 1 },
   service:     { label: "Service",     color: "bg-orange-500/15 text-orange-600 border-orange-500/30 dark:text-orange-400", icon: Wrench, priority: 2 },
-  manual_entry:{ label: "Manual",      color: "bg-amber-500/15 text-amber-600 border-amber-500/30 dark:text-amber-400", icon: Plus, priority: 3 },
+  manual_entry:{ label: "Manual",      color: "bg-warning/15 text-warning border-warning/30 dark:text-amber-400", icon: Plus, priority: 3 },
   flagged:     { label: "Flagged",     color: "bg-violet-500/15 text-violet-600 border-violet-500/30 dark:text-violet-400", icon: Sparkles, priority: 4 },
-  declined:    { label: "Declined",    color: "bg-blue-500/15 text-blue-600 border-blue-500/30 dark:text-blue-400", icon: UserX, priority: 5 },
+  declined:    { label: "Declined",    color: "bg-blue-500/15 text-info border-info/30 dark:text-blue-400", icon: UserX, priority: 5 },
 };
 
 const isStaleOffer = (row: QueueRow): boolean => {
@@ -463,7 +463,7 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
         <QueueTile
           label="Flagged"
           value={tileCounts.flagged}
-          valueClass="text-blue-600"
+          valueClass="text-info"
           active={bucket === "flagged"}
           onClick={() => setBucket(bucket === "flagged" ? "all" : "flagged")}
         />
@@ -569,7 +569,7 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-[11px] font-bold tracking-[0.1em] text-muted-foreground uppercase">Queue</h2>
             {autoRoute && (
-              <span className="text-micro font-bold uppercase tracking-wider text-emerald-700 bg-emerald-500/10 border border-emerald-500/20 rounded px-2 py-0.5 inline-flex items-center gap-1">
+              <span className="text-micro font-bold uppercase tracking-wider text-success bg-success/10 border border-success/20 rounded px-2 py-0.5 inline-flex items-center gap-1">
                 <Sparkles className="w-3 h-3" />
                 AI auto-route on
               </span>
@@ -683,8 +683,8 @@ function QueueRowItem({
   // no journey signal we can show distinctly.
   const pill = (() => {
     if (row.progress_status === "customer_arrived") return { label: "Arrived", cls: "bg-red-100 text-red-700", dot: "bg-red-500" };
-    if (row.progress_status === "on_the_way") return { label: "On the way", cls: "bg-amber-100 text-amber-700", dot: "bg-amber-500" };
-    if (row.progress_status === "inspection_completed") return { label: "Inspected", cls: "bg-blue-100 text-blue-700", dot: "bg-blue-500" };
+    if (row.progress_status === "on_the_way") return { label: "On the way", cls: "bg-amber-100 text-warning", dot: "bg-warning" };
+    if (row.progress_status === "inspection_completed") return { label: "Inspected", cls: "bg-blue-100 text-info", dot: "bg-blue-500" };
     if (row.progress_status === "offer_declined") return { label: "Declined", cls: "bg-slate-200 text-slate-700", dot: "bg-slate-500" };
     const m = REASON_META[reason];
     return { label: m.label, cls: m.color, dot: "" };
@@ -745,10 +745,10 @@ function QueueRowItem({
         const isBump = suggestion.delta > 0;
         const isAutoApplied = suggestion.status === "auto_applied";
         const chipClass = isAutoApplied
-          ? "bg-emerald-500/10 text-emerald-700 border-emerald-500/20"
+          ? "bg-success/10 text-success border-success/20"
           : isBump
             ? "bg-violet-500/10 text-violet-700 border-violet-500/20"
-            : "bg-amber-500/10 text-amber-700 border-amber-500/20";
+            : "bg-warning/10 text-warning border-warning/20";
         return (
           <div className={`mx-3 mb-3 rounded-md border p-2.5 ${chipClass}`}>
             <div className="flex items-center gap-2 mb-1">
@@ -767,7 +767,7 @@ function QueueRowItem({
               </span>
               <ArrowRight className="w-3 h-3 opacity-60" />
               <span className="text-sm font-black">{formatCurrency(suggestion.suggested_offer)}</span>
-              <span className={`text-[11px] font-semibold ${isBump ? "text-emerald-700" : "text-amber-700"}`}>
+              <span className={`text-[11px] font-semibold ${isBump ? "text-success" : "text-warning"}`}>
                 {isBump ? "+" : ""}{formatCurrency(suggestion.delta)}
               </span>
             </div>

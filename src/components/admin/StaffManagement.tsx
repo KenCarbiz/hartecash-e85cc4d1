@@ -47,9 +47,9 @@ const ROLE_LABELS: Record<string, string> = {
 const ROLE_COLORS: Record<string, string> = {
   admin: "bg-red-500/15 text-red-600 dark:text-red-400",
   gsm_gm: "bg-violet-500/15 text-violet-600 dark:text-violet-400",
-  used_car_manager: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
+  used_car_manager: "bg-blue-500/15 text-info dark:text-blue-400",
   new_car_manager: "bg-cyan-500/15 text-cyan-600 dark:text-cyan-400",
-  sales_bdc: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+  sales_bdc: "bg-success/15 text-success dark:text-emerald-400",
   user: "bg-muted text-muted-foreground",
 };
 
@@ -435,7 +435,7 @@ const StaffManagement = () => {
               <ul className="text-xs text-muted-foreground space-y-0.5">
                 {perms.map((p, i) => (
                   <li key={i} className="flex items-start gap-1">
-                    <span className="text-emerald-500 mt-0.5">•</span> {p}
+                    <span className="text-success mt-0.5">•</span> {p}
                   </li>
                 ))}
               </ul>

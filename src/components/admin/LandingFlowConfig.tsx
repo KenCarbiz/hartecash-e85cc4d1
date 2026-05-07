@@ -970,7 +970,7 @@ const LandingFlowConfig = () => {
             "Selected · Save to apply" tag tells you what to do; this
             banner reminds you BEFORE you scroll past. */}
         {state.ghost_screen !== saved.ghost_screen && (
-          <div className="mb-4 rounded-lg border border-amber-300/60 bg-amber-50 dark:bg-amber-500/10 px-3 py-2 text-xs text-amber-900 dark:text-amber-100 flex items-start gap-2">
+          <div className="mb-4 rounded-lg border border-amber-300/60 bg-amber-50 dark:bg-warning/10 px-3 py-2 text-xs text-amber-900 dark:text-amber-100 flex items-start gap-2">
             <span className="font-bold">⚠ Unsaved change.</span>
             <span>
               You picked{" "}
@@ -1007,7 +1007,7 @@ const LandingFlowConfig = () => {
                   selected
                     ? "border-primary bg-primary/5 shadow-lg ring-2 ring-primary/20"
                     : live
-                    ? "border-emerald-500/60 bg-emerald-500/5"
+                    ? "border-success/60 bg-success/5"
                     : "border-border bg-muted/20 hover:bg-muted/40 hover:border-primary/40"
                 }`}
               >
@@ -1024,7 +1024,7 @@ const LandingFlowConfig = () => {
                       </span>
                     )}
                     {live && (
-                      <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-emerald-700 bg-emerald-500/15 px-2 py-0.5 rounded-full">
+                      <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-success bg-success/15 px-2 py-0.5 rounded-full">
                         Live
                       </span>
                     )}
@@ -1126,7 +1126,7 @@ const LandingFlowConfig = () => {
         {/* Legacy Hartecash — pre-audit maximalist look, kept featured
             for dealers whose conversions came from the long scroll. */}
         <div className="mb-3 flex items-center gap-2">
-          <span className="text-micro font-bold uppercase tracking-[0.18em] text-amber-600">
+          <span className="text-micro font-bold uppercase tracking-[0.18em] text-warning">
             ◇ Legacy
           </span>
           <span className="text-[11px] text-muted-foreground italic">— the original Hartecash look</span>
@@ -1141,7 +1141,7 @@ const LandingFlowConfig = () => {
                 onClick={() => setState((prev) => ({ ...prev, landing_template: t.value }))}
                 className={`relative text-left rounded-xl border-2 p-3 transition-all ${
                   active
-                    ? "border-amber-500 bg-amber-50 shadow-lg ring-2 ring-amber-300/40"
+                    ? "border-warning bg-amber-50 shadow-lg ring-2 ring-amber-300/40"
                     : "border-amber-300/60 bg-card hover:bg-amber-50/40 hover:border-amber-400 shadow-sm"
                 }`}
               >
@@ -1151,11 +1151,11 @@ const LandingFlowConfig = () => {
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-bold text-sm">{t.label}</span>
                   {active ? (
-                    <span className="text-micro font-bold uppercase tracking-wider text-amber-700">
+                    <span className="text-micro font-bold uppercase tracking-wider text-warning">
                       Active
                     </span>
                   ) : (
-                    <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                    <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-warning bg-amber-100 px-2 py-0.5 rounded-full">
                       ◇ Pick
                     </span>
                   )}
@@ -1445,7 +1445,7 @@ const LiveTemplatePreview = ({
             {LANDING_TEMPLATES.find((t) => t.value === template)?.label || template}
           </span>
           {unsaved && (
-            <span className="text-micro font-semibold uppercase tracking-[0.16em] text-amber-600 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200">
+            <span className="text-micro font-semibold uppercase tracking-[0.16em] text-warning px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200">
               Unsaved
             </span>
           )}

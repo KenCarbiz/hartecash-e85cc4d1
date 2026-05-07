@@ -329,7 +329,7 @@ const AddTenantWizard = ({ onClose, onCreated }: Props) => {
                     <div className="bg-muted/30 border rounded-xl p-4 text-left max-w-sm mx-auto space-y-1">
                       {result.steps.map((s, i) => (
                         <div key={i} className="flex items-center gap-2 text-xs">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
+                          <CheckCircle2 className="w-3 h-3 text-success shrink-0" />
                           <span>{s}</span>
                         </div>
                       ))}
@@ -372,7 +372,7 @@ const AddTenantWizard = ({ onClose, onCreated }: Props) => {
                 <Button
                   onClick={handleCreate}
                   disabled={!canProceed()}
-                  className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+                  className="gap-1.5 bg-success hover:bg-success text-white"
                 >
                   <Rocket className="w-3.5 h-3.5" /> Launch Tenant
                 </Button>

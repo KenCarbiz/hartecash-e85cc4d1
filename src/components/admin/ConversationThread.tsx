@@ -376,9 +376,9 @@ const ConversationThread = ({
                   ev.channel === "voice"
                     ? "bg-violet-500/10 text-violet-600 dark:text-violet-400"
                     : ev.channel === "sms"
-                    ? "bg-sky-500/10 text-sky-600 dark:text-sky-400"
+                    ? "bg-info/10 text-info dark:text-sky-400"
                     : ev.channel === "email"
-                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                    ? "bg-success/10 text-success dark:text-emerald-400"
                     : "bg-muted text-muted-foreground"
                 }`}
               >

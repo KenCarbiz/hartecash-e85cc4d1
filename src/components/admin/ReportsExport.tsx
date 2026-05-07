@@ -274,8 +274,8 @@ const ReportsExport = () => {
       <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
         <div className="bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-transparent px-6 py-4 border-b border-border/50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center">
-              <FileSpreadsheet className="w-5 h-5 text-emerald-500" />
+            <div className="w-10 h-10 rounded-xl bg-success/15 flex items-center justify-center">
+              <FileSpreadsheet className="w-5 h-5 text-success" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-card-foreground tracking-tight">Reports & Export</h2>
@@ -393,7 +393,7 @@ const ReportsExport = () => {
           label="Conversion Rate"
           value={`${kpis.conversionRate}%`}
           icon={Target}
-          color="text-emerald-500"
+          color="text-success"
           bg="from-emerald-500/5 to-transparent"
           sub="completed / total leads"
         />
@@ -401,7 +401,7 @@ const ReportsExport = () => {
           label="Avg Offer Value"
           value={kpis.avgOfferValue > 0 ? fmt(kpis.avgOfferValue) : "--"}
           icon={TrendingUp}
-          color="text-amber-500"
+          color="text-warning"
           bg="from-amber-500/5 to-transparent"
           sub="across leads with offers"
         />
@@ -502,7 +502,7 @@ const ReportsExport = () => {
                         variant="secondary"
                         className={`text-micro font-medium ${
                           COMPLETED_STATUSES.includes(row.progress_status)
-                            ? "bg-emerald-500/15 text-emerald-600"
+                            ? "bg-success/15 text-success"
                             : DEAD_STATUSES.includes(row.progress_status)
                             ? "bg-red-500/15 text-red-600"
                             : ""
@@ -540,8 +540,8 @@ const ReportsExport = () => {
             {/* CSV Download */}
             <div className="rounded-xl border border-border bg-muted/20 p-4 flex flex-col gap-3">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-emerald-500/15 flex items-center justify-center shrink-0">
-                  <FileSpreadsheet className="w-4.5 h-4.5 text-emerald-500" />
+                <div className="w-9 h-9 rounded-lg bg-success/15 flex items-center justify-center shrink-0">
+                  <FileSpreadsheet className="w-4.5 h-4.5 text-success" />
                 </div>
                 <div>
                   <h4 className="text-sm font-semibold text-card-foreground">Download CSV</h4>

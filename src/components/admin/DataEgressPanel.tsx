@@ -164,7 +164,7 @@ const DataEgressPanel = () => {
       </div>
 
       <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4 flex items-start gap-3">
-        <ShieldCheck className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
+        <ShieldCheck className="w-5 h-5 text-success shrink-0 mt-0.5" />
         <div className="text-sm text-emerald-900">
           <strong className="block mb-1">Free data egress is in your contract.</strong>
           You can export all of your customer, lead, inspection, and communication data at any time.

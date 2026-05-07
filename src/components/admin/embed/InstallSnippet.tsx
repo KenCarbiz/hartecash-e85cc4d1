@@ -164,7 +164,7 @@ If you have any questions please let us know. Thanks!`;
     <div className="space-y-4">
       {/* Explainer */}
       <div className="rounded-lg border border-blue-200 bg-gradient-to-r from-blue-50 to-violet-50 p-4 flex items-start gap-3">
-        <Sparkles className="w-5 h-5 text-blue-700 shrink-0 mt-0.5" />
+        <Sparkles className="w-5 h-5 text-info shrink-0 mt-0.5" />
         <div className="text-sm text-slate-700 leading-relaxed">
           <strong>Install once, change forever.</strong> Save your settings
           below, then send your web provider the install snippet. After that,
@@ -199,7 +199,7 @@ If you have any questions please let us know. Thanks!`;
           </Button>
         </div>
         {savedAt && !saveError && (
-          <div className="text-[11px] text-emerald-700 flex items-center gap-1.5">
+          <div className="text-[11px] text-success flex items-center gap-1.5">
             <Check className="w-3.5 h-3.5" /> Saved at{" "}
             {savedAt.toLocaleTimeString()}. The live site will reflect these
             changes within 30 seconds.
@@ -230,7 +230,7 @@ If you have any questions please let us know. Thanks!`;
             className="gap-1.5"
           >
             {copiedSnippet ? (
-              <Check className="w-4 h-4 text-emerald-600" />
+              <Check className="w-4 h-4 text-success" />
             ) : (
               <Copy className="w-4 h-4" />
             )}
@@ -259,7 +259,7 @@ If you have any questions please let us know. Thanks!`;
             className="gap-1.5"
           >
             {copiedEmail ? (
-              <Check className="w-4 h-4 text-emerald-600" />
+              <Check className="w-4 h-4 text-success" />
             ) : (
               <Mail className="w-4 h-4" />
             )}

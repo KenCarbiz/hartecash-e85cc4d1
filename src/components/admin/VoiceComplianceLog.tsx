@@ -120,7 +120,7 @@ const VoiceComplianceLog = () => {
     <div className="space-y-6">
       <div>
         <h3 className="text-base font-bold flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-emerald-600" />
+          <ShieldCheck className="w-4 h-4 text-success" />
           Voice AI compliance
         </h3>
         <p className="text-xs text-muted-foreground mt-1">
@@ -136,11 +136,11 @@ const VoiceComplianceLog = () => {
         </div>
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="text-micro uppercase tracking-wider text-muted-foreground font-bold">Consent verified</div>
-          <div className="text-2xl font-bold mt-1 text-emerald-600">{compliantCount}</div>
+          <div className="text-2xl font-bold mt-1 text-success">{compliantCount}</div>
         </div>
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="text-micro uppercase tracking-wider text-muted-foreground font-bold">Blocked at gate</div>
-          <div className={`text-2xl font-bold mt-1 ${blocked.length > 0 ? "text-amber-600" : ""}`}>{blocked.length}</div>
+          <div className={`text-2xl font-bold mt-1 ${blocked.length > 0 ? "text-warning" : ""}`}>{blocked.length}</div>
         </div>
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="text-micro uppercase tracking-wider text-muted-foreground font-bold">Recordings on file</div>
@@ -150,11 +150,11 @@ const VoiceComplianceLog = () => {
 
       {/* Blocked attempts */}
       {blocked.length > 0 && (
-        <div className="rounded-xl border border-amber-500/40 bg-amber-50/40 dark:bg-amber-500/5 p-4">
+        <div className="rounded-xl border border-warning/40 bg-amber-50/40 dark:bg-warning/5 p-4">
           <div className="flex items-center gap-2 mb-2">
-            <ShieldAlert className="w-4 h-4 text-amber-600" />
+            <ShieldAlert className="w-4 h-4 text-warning" />
             <h4 className="font-bold text-sm">Blocked at consent gate</h4>
-            <Badge variant="outline" className="bg-amber-500/10 text-amber-700 border-amber-500/30">
+            <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30">
               {blocked.length}
             </Badge>
           </div>
@@ -173,7 +173,7 @@ const VoiceComplianceLog = () => {
               </thead>
               <tbody>
                 {blocked.map((c) => (
-                  <tr key={c.id} className="border-t border-amber-500/20">
+                  <tr key={c.id} className="border-t border-warning/20">
                     <td className="py-1.5 pr-3">{c.customer_name || "—"}</td>
                     <td className="py-1.5 pr-3 font-mono">{formatPhone(c.phone_number) || "—"}</td>
                     <td className="py-1.5 pr-3">{(c.metadata as { blocked_reason?: string } | null)?.blocked_reason || "—"}</td>
@@ -218,10 +218,10 @@ const VoiceComplianceLog = () => {
                       {c.outcome ? <span className="text-foreground/80">{c.outcome.replace(/_/g, " ")}</span> : <span className="text-muted-foreground">—</span>}
                     </td>
                     <td className="px-3 py-2 text-center">
-                      {c.consent_verified ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 inline" /> : <span className="text-muted-foreground">—</span>}
+                      {c.consent_verified ? <CheckCircle2 className="w-3.5 h-3.5 text-success inline" /> : <span className="text-muted-foreground">—</span>}
                     </td>
                     <td className="px-3 py-2 text-center">
-                      {c.tcpa_disclosure_given ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 inline" /> : <span className="text-muted-foreground">—</span>}
+                      {c.tcpa_disclosure_given ? <CheckCircle2 className="w-3.5 h-3.5 text-success inline" /> : <span className="text-muted-foreground">—</span>}
                     </td>
                     <td className="px-3 py-2 text-center">
                       {c.recording_url ? (

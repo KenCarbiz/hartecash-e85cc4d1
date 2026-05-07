@@ -225,7 +225,7 @@ const actionForLead = (s: Submission): ActionButton => {
     return {
       label: "Make offer",
       icon: DollarSign,
-      cls: "bg-blue-600 hover:bg-blue-700 text-white",
+      cls: "bg-info hover:bg-info text-white",
       onClick: (_s, openFile) => openFile(),
     };
   }

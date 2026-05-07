@@ -56,8 +56,8 @@ const SECTION_FIELDS: Record<string, string[]> = {
 const SECTION_META: Record<string, { label: string; icon: React.ElementType; color: string }> = {
   tires: { label: "Tires & Brakes", icon: Gauge, color: "text-blue-500" },
   measurements: { label: "Quick Measurements", icon: ThermometerSun, color: "text-violet-500" },
-  exterior: { label: "Exterior", icon: Paintbrush, color: "text-sky-500" },
-  interior: { label: "Interior", icon: Armchair, color: "text-amber-500" },
+  exterior: { label: "Exterior", icon: Paintbrush, color: "text-info" },
+  interior: { label: "Interior", icon: Armchair, color: "text-warning" },
   mechanical: { label: "Mechanical", icon: Wrench, color: "text-slate-500" },
   electrical: { label: "Electrical", icon: Zap, color: "text-yellow-500" },
   glass: { label: "Glass & Lights", icon: Eye, color: "text-teal-500" },
@@ -461,7 +461,7 @@ const InspectionConfiguration = () => {
                         <Camera className="w-3.5 h-3.5 text-blue-500" />
                       )}
                       {requireNotes[sectionKey] && (
-                        <StickyNote className="w-3.5 h-3.5 text-amber-500" />
+                        <StickyNote className="w-3.5 h-3.5 text-warning" />
                       )}
                     </div>
                   </div>

@@ -114,7 +114,7 @@ export const ProspectDemoAnalyzeProgress = ({ running }: { running: boolean }) =
         <div className="text-[11px] font-mono text-slate-500 tabular-nums">
           {formatElapsed(elapsed)}
           {overrunning && (
-            <span className="ml-2 text-amber-600">taking longer than usual…</span>
+            <span className="ml-2 text-warning">taking longer than usual…</span>
           )}
         </div>
       </div>
@@ -135,7 +135,7 @@ export const ProspectDemoAnalyzeProgress = ({ running }: { running: boolean }) =
               <div
                 className={`mt-0.5 w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
                   status === "done"
-                    ? "bg-emerald-100 text-emerald-700"
+                    ? "bg-emerald-100 text-success"
                     : status === "active"
                       ? "bg-violet-100 text-violet-700"
                       : "bg-slate-100 text-slate-400"
@@ -217,7 +217,7 @@ export const ProspectDemoCaptureProgress = ({
   return (
     <div className="rounded-lg border border-blue-200 bg-white p-4 space-y-3">
       <div className="flex items-center justify-between gap-3">
-        <div className="text-micro font-bold uppercase tracking-[0.1em] text-blue-700 flex items-center gap-1.5">
+        <div className="text-micro font-bold uppercase tracking-[0.1em] text-info flex items-center gap-1.5">
           <Loader2 className="w-3.5 h-3.5 animate-spin" />
           Capturing screenshots
         </div>
@@ -243,12 +243,12 @@ export const ProspectDemoCaptureProgress = ({
               <div
                 className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
                   status === "done"
-                    ? "bg-emerald-100 text-emerald-700"
+                    ? "bg-emerald-100 text-success"
                     : status === "failed"
                       ? "bg-rose-100 text-rose-700"
                       : status === "skipped"
                         ? "bg-slate-100 text-slate-400"
-                        : "bg-blue-100 text-blue-700"
+                        : "bg-blue-100 text-info"
                 }`}
               >
                 {status === "done" ? (

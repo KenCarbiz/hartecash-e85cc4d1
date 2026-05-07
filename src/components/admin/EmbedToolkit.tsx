@@ -395,8 +395,8 @@ window.addEventListener("message", function(e) {
   }) => (
     <div className={`grid grid-cols-3 gap-3 px-4 py-2.5 ${accent ? "bg-emerald-50/40" : ""}`}>
       <div className="text-muted-foreground">{state}</div>
-      <div className={accent ? "font-semibold text-emerald-700" : "text-card-foreground"}>{onVdp}</div>
-      <div className={accent ? "font-semibold text-emerald-700" : "text-card-foreground"}>{offVdp}</div>
+      <div className={accent ? "font-semibold text-success" : "text-card-foreground"}>{onVdp}</div>
+      <div className={accent ? "font-semibold text-success" : "text-card-foreground"}>{offVdp}</div>
     </div>
   );
 
@@ -710,7 +710,7 @@ window.addEventListener("message", function(e) {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs">Guarantee Amount</Label>
-                  <div className="flex items-center gap-1 text-sm font-bold text-amber-600">${pptAmount.toLocaleString()}</div>
+                  <div className="flex items-center gap-1 text-sm font-bold text-warning">${pptAmount.toLocaleString()}</div>
                   <p className="text-micro text-muted-foreground">Configured in Branding settings</p>
                 </div>
                 <div className="space-y-1.5">
@@ -795,7 +795,7 @@ window.addEventListener("message", function(e) {
             <CardHeader className="pb-2">
               <div className="flex items-center gap-2">
                 <CardTitle className="text-base">Inventory-Aware Trade Widget</CardTitle>
-                <Badge className="text-micro bg-emerald-600 hover:bg-emerald-700">New</Badge>
+                <Badge className="text-micro bg-success hover:bg-success">New</Badge>
                 <Badge variant="secondary" className="text-micro">State-Aware</Badge>
               </div>
               <CardDescription>
@@ -1265,7 +1265,7 @@ window.addEventListener("message", function(e) {
                   <div className="space-y-1.5">
                     <Label className="text-xs">Guarantee Amount</Label>
                     <div className="p-2 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
-                      <p className="text-lg font-extrabold text-amber-700 dark:text-amber-400">${pptAmount.toLocaleString()}</p>
+                      <p className="text-lg font-extrabold text-warning dark:text-amber-400">${pptAmount.toLocaleString()}</p>
                       <p className="text-micro text-muted-foreground">Configured in Branding settings (ppt_guarantee_amount)</p>
                     </div>
                   </div>

@@ -63,8 +63,8 @@ export const InDevelopmentBadge: React.FC<InDevelopmentBadgeProps> = ({
     <span
       className={cn(
         "inline-flex items-center font-bold uppercase tracking-wider",
-        "border border-amber-500/40 bg-amber-500/10",
-        "text-amber-700 dark:text-amber-300",
+        "border border-warning/40 bg-warning/10",
+        "text-warning dark:text-amber-300",
         "shadow-[0_0_0_1px_rgba(245,158,11,0.06)]",
         sizing.wrapper,
         sizing.gap,
@@ -87,7 +87,7 @@ export const InDevelopmentBadge: React.FC<InDevelopmentBadgeProps> = ({
         </TooltipTrigger>
         <TooltipContent
           side="bottom"
-          className="max-w-[280px] border-amber-500/40 bg-amber-50 text-amber-900 dark:bg-amber-950/90 dark:text-amber-100"
+          className="max-w-[280px] border-warning/40 bg-amber-50 text-amber-900 dark:bg-amber-950/90 dark:text-amber-100"
         >
           <p className="text-xs leading-snug">{reason}</p>
         </TooltipContent>
@@ -125,12 +125,12 @@ export const InDevelopmentOverlay: React.FC<InDevelopmentOverlayProps> = ({
 
       {/* Centered banner */}
       <div className="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
-        <div className="pointer-events-auto flex items-center gap-3 rounded-2xl border border-amber-500/40 bg-amber-50/95 dark:bg-amber-950/90 backdrop-blur-sm px-5 py-3 shadow-lg shadow-amber-500/10">
-          <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30">
-            <HardHat className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+        <div className="pointer-events-auto flex items-center gap-3 rounded-2xl border border-warning/40 bg-amber-50/95 dark:bg-amber-950/90 backdrop-blur-sm px-5 py-3 shadow-lg shadow-amber-500/10">
+          <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-warning/15 border border-warning/30">
+            <HardHat className="w-4 h-4 text-warning dark:text-amber-400" />
           </div>
           <div>
-            <p className="text-xs font-black uppercase tracking-wider text-amber-700 dark:text-amber-300">
+            <p className="text-xs font-black uppercase tracking-wider text-warning dark:text-amber-300">
               {label}
             </p>
             {reason && (

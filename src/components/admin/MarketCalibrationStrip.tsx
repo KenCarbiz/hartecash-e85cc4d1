@@ -79,9 +79,9 @@ export default function MarketCalibrationStrip({ listings, stats, vehicleMileage
 
         {/* 90d Sold Avg */}
         {soldAvg != null && soldAvg > 0 && (
-          <div className="rounded-md border border-emerald-500/20 bg-emerald-500/5 p-2 space-y-0.5">
+          <div className="rounded-md border border-success/20 bg-success/5 p-2 space-y-0.5">
             <div className="text-[8px] uppercase tracking-wider text-muted-foreground font-bold">90d Sold Avg</div>
-            <div className="text-sm font-black text-emerald-600 dark:text-emerald-400 tabular-nums">{fmt(soldAvg)}</div>
+            <div className="text-sm font-black text-success dark:text-emerald-400 tabular-nums">{fmt(soldAvg)}</div>
             {stats?.sold?.vehicle_count && (
               <div className="text-[9px] text-muted-foreground">{stats.sold.vehicle_count} sold</div>
             )}
@@ -101,13 +101,13 @@ export default function MarketCalibrationStrip({ listings, stats, vehicleMileage
       {delta != null && closest && (
         <div className="flex items-center gap-1.5 text-micro px-1">
           {delta < 0 ? (
-            <TrendingDown className="w-3 h-3 text-emerald-500 shrink-0" />
+            <TrendingDown className="w-3 h-3 text-success shrink-0" />
           ) : (
-            <TrendingUp className="w-3 h-3 text-amber-500 shrink-0" />
+            <TrendingUp className="w-3 h-3 text-warning shrink-0" />
           )}
           <span className="text-muted-foreground">
             Your offer is{" "}
-            <strong className={delta < 0 ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}>
+            <strong className={delta < 0 ? "text-success dark:text-emerald-400" : "text-warning dark:text-amber-400"}>
               {fmt(Math.abs(delta))} {delta < 0 ? "below" : "above"}
             </strong>{" "}
             the closest comp ({closest.model_year} {closest.make} {closest.model} at {closest.mileage.toLocaleString()} mi)

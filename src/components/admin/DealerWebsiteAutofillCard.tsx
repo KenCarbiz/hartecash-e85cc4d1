@@ -680,7 +680,7 @@ export default function DealerWebsiteAutofillCard({
                 </h3>
                 <p className="text-xs text-muted-foreground">
                   Found <span className="font-semibold text-primary">{previewData.totalFound}</span> fields
-                  {previewData.totalNew > 0 && <> · <span className="font-semibold text-emerald-600">{previewData.totalNew} new</span></>}
+                  {previewData.totalNew > 0 && <> · <span className="font-semibold text-success">{previewData.totalNew} new</span></>}
                 </p>
               </div>
             </div>
@@ -705,13 +705,13 @@ export default function DealerWebsiteAutofillCard({
                   <div className="flex items-center gap-2 mb-2">
                     <CatIcon className="h-4 w-4 text-primary" />
                     <span className="text-xs font-semibold text-card-foreground">{category.label}</span>
-                    {newCount > 0 && <Badge variant="secondary" className="text-micro px-1.5 py-0 bg-emerald-100 text-emerald-700 border-emerald-200">{newCount} new</Badge>}
+                    {newCount > 0 && <Badge variant="secondary" className="text-micro px-1.5 py-0 bg-emerald-100 text-success border-emerald-200">{newCount} new</Badge>}
                   </div>
                   <div className="space-y-1">
                     {category.items.map((item, idx) => (
                       <div key={idx} className="flex items-start gap-2 text-xs">
                         {item.isNew ? (
-                          <CheckCircle className="h-3 w-3 shrink-0 text-emerald-500 mt-0.5" />
+                          <CheckCircle className="h-3 w-3 shrink-0 text-success mt-0.5" />
                         ) : (
                           <span className="h-3 w-3 shrink-0 flex items-center justify-center mt-0.5 text-muted-foreground/50">—</span>
                         )}
@@ -729,7 +729,7 @@ export default function DealerWebsiteAutofillCard({
           {previewData.missing.length > 0 && (
             <div className="border border-amber-200 bg-amber-50/50 rounded-lg p-3 dark:border-amber-800 dark:bg-amber-950/20">
               <div className="flex items-center gap-2 mb-2">
-                <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                <AlertTriangle className="h-4 w-4 text-warning dark:text-amber-400" />
                 <span className="text-xs font-semibold text-amber-800 dark:text-amber-400">Still needs attention</span>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -743,7 +743,7 @@ export default function DealerWebsiteAutofillCard({
                       }}
                       className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-amber-300 bg-background text-xs hover:bg-amber-100/50 transition-colors dark:border-amber-700 dark:hover:bg-amber-900/30"
                     >
-                      <MIcon className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                      <MIcon className="h-3 w-3 text-warning dark:text-amber-400" />
                       <span className="text-card-foreground">{item.label}</span>
                       <XCircle className="h-3 w-3 text-amber-400" />
                     </button>

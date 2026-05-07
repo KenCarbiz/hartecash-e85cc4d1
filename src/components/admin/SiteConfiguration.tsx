@@ -1270,7 +1270,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
             <div className="flex-1 mr-3">
               <Label className="text-sm font-semibold">Abandoned Lead Tracking</Label>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Automatically capture partial form submissions when a customer provides contact info but doesn't complete the process. Abandoned leads appear in the submissions list and Executive HUD for follow-up.
+                Automatically capture partial form fills when a customer provides contact info but doesn't complete the process. Abandoned leads appear in All Leads and the Executive HUD for follow-up.
               </p>
             </div>
             <Switch

@@ -366,7 +366,7 @@ export default function RetailMarketPanel({ vin, uvc, zipcode, dealerZip, radius
                           {l.mileage > 0 && <span>{l.mileage.toLocaleString()} mi</span>}
                           {l.days_on_market > 0 && <><span>•</span><span>{l.days_on_market}d on market</span></>}
                           {l.exterior_color && <><span>•</span><span>{l.exterior_color}</span></>}
-                          {l.certified && <><span>•</span><span className="text-emerald-600 font-medium">CPO</span></>}
+                          {l.certified && <><span>•</span><span className="text-success font-medium">CPO</span></>}
                         </div>
                       </div>
                       <div className="text-right shrink-0">

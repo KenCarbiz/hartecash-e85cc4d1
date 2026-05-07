@@ -23,10 +23,10 @@ export interface VoiceCallRow {
 }
 
 const OUTCOME_COLORS: Record<string, string> = {
-  accepted: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  appointment_scheduled: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  callback_requested: "bg-blue-50 text-blue-700 border-blue-200",
-  wants_higher_offer: "bg-amber-50 text-amber-700 border-amber-200",
+  accepted: "bg-emerald-50 text-success border-emerald-200",
+  appointment_scheduled: "bg-emerald-50 text-success border-emerald-200",
+  callback_requested: "bg-blue-50 text-info border-blue-200",
+  wants_higher_offer: "bg-amber-50 text-warning border-amber-200",
   voicemail_left: "bg-purple-50 text-purple-700 border-purple-200",
   not_interested: "bg-slate-100 text-slate-600 border-slate-200",
   no_answer: "bg-slate-100 text-slate-600 border-slate-200",
@@ -72,7 +72,7 @@ export default function VoiceCallCard({ call, compact = false }: Props) {
   const isVoicemail = outcome.includes("voicemail");
 
   const DirIcon = isVoicemail ? MessageSquare : isInbound ? PhoneIncoming : PhoneOutgoing;
-  const iconClass = isInbound ? "text-amber-700 bg-amber-100" : "text-emerald-700 bg-emerald-100";
+  const iconClass = isInbound ? "text-warning bg-amber-100" : "text-success bg-emerald-100";
 
   const outcomeLabel = (call.outcome || call.status || "Call")
     .replace(/_/g, " ")
@@ -130,7 +130,7 @@ export default function VoiceCallCard({ call, compact = false }: Props) {
               src={call.recording_url || undefined}
               className="w-full max-w-[420px] h-9"
             >
-              <a href={call.recording_url || "#"} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline inline-flex items-center gap-1">
+              <a href={call.recording_url || "#"} target="_blank" rel="noopener noreferrer" className="text-xs text-info hover:underline inline-flex items-center gap-1">
                 Open recording <ExternalLink className="w-3 h-3" />
               </a>
             </audio>

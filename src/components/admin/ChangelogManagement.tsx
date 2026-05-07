@@ -43,7 +43,7 @@ const TAG_COLORS: Record<string, string> = {
   feature: "bg-accent/15 text-accent",
   improvement: "bg-primary/15 text-primary",
   fix: "bg-orange-500/15 text-orange-600",
-  security: "bg-emerald-500/15 text-emerald-600",
+  security: "bg-success/15 text-success",
 };
 
 const emptyEntry = {

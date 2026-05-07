@@ -446,7 +446,7 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
                     {PLAN_LABELS[newTier] || newTier}
                   </Badge>
                   {isUpgrade && (
-                    <Badge className="text-xs bg-amber-500/10 text-amber-600 border-amber-500/20">
+                    <Badge className="text-xs bg-warning/10 text-warning border-warning/20">
                       <ArrowUpCircle className="w-3 h-3 mr-1" /> Upgrade
                     </Badge>
                   )}
@@ -461,10 +461,10 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
 
             {/* Pricing Effective Date Prompt */}
             {showPricingPrompt && isUpgrade && (
-              <Card className="border-amber-500/30 bg-amber-500/5">
+              <Card className="border-warning/30 bg-warning/5">
                 <CardContent className="pt-4 space-y-3">
                   <div className="flex items-center gap-2">
-                    <CalendarClock className="w-4 h-4 text-amber-600" />
+                    <CalendarClock className="w-4 h-4 text-warning" />
                     <p className="text-sm font-semibold text-card-foreground">
                       When should the price increase take effect?
                     </p>
@@ -571,12 +571,12 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
             </div>
 
             {/* Super-admin attribution force override */}
-            <div className="col-span-2 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
+            <div className="col-span-2 rounded-xl border border-warning/30 bg-warning/5 p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <Label className="text-sm font-semibold">Force "Powered by Autocurb.ai" Attribution</Label>
-                    <span className="text-[9px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-500/15 border border-amber-500/30 rounded-md px-1.5 py-0.5">
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-warning dark:text-amber-400 bg-warning/15 border border-warning/30 rounded-md px-1.5 py-0.5">
                       Super Admin
                     </span>
                   </div>

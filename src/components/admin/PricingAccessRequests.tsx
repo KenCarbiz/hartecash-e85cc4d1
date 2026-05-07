@@ -118,10 +118,10 @@ const PricingAccessRequests = ({ userId }: PricingAccessRequestsProps) => {
     <div className="space-y-4">
       {/* Pending Requests */}
       {pendingRequests.length > 0 && (
-        <Card className="border-amber-500/30 bg-amber-500/5">
+        <Card className="border-warning/30 bg-warning/5">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
-              <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              <Clock className="w-4 h-4 text-warning dark:text-amber-400" />
               Pending Access Requests
               <Badge variant="destructive" className="text-xs">{pendingRequests.length}</Badge>
             </CardTitle>

@@ -264,7 +264,7 @@ const SuperAdminDashboard = () => {
       new: "New", partial: "Abandoned", contacted: "Contacted",
       inspection_scheduled: "Inspected", inspected: "Inspected",
       offer_made: "Contacted", offer_accepted: "Contacted",
-      paperwork: "Inspected", purchase_complete: "Purchased", dead_lead: "Dead",
+      paperwork: "Inspected", purchase_complete: "Purchased", dead_lead: "Wholesaled",
     };
     const counts: Record<string, number> = { New: 0, Abandoned: 0, Contacted: 0, Inspected: 0, Purchased: 0, Dead: 0 };
     filteredSubs.forEach(s => {
@@ -392,7 +392,7 @@ const SuperAdminDashboard = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <MiniStat label="Active" value={kpis.active} color="text-blue-500" />
                   <MiniStat label="Completed" value={kpis.completed} color="text-emerald-500" />
-                  <MiniStat label="Dead" value={kpis.dead} color="text-red-500" />
+                  <MiniStat label="Wholesaled" value={kpis.dead} color="text-red-500" />
                   <MiniStat label="Abandoned" value={kpis.abandoned} color="text-amber-500" />
                 </div>
               </div>

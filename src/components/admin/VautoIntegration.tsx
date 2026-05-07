@@ -40,8 +40,8 @@ const PremiumCard = ({
 }) => {
   const accentMap = {
     primary: "bg-primary/10 text-primary",
-    emerald: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-    amber: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+    emerald: "bg-success/10 text-success dark:text-emerald-400",
+    amber: "bg-warning/10 text-warning dark:text-amber-400",
   };
   return (
     <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm shadow-[0_1px_3px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.03)] overflow-hidden">
@@ -64,10 +64,10 @@ const PremiumCard = ({
 const StatusChip = ({ status }: { status: string }) => {
   const style =
     status === "success"
-      ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30"
+      ? "bg-success/10 text-success dark:text-emerald-400 border-success/30"
       : status === "failed"
       ? "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30"
-      : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30";
+      : "bg-warning/10 text-warning dark:text-amber-400 border-warning/30";
   const Icon = status === "success" ? CheckCircle2 : status === "failed" ? AlertCircle : Clock;
   return (
     <Badge variant="outline" className={`${style} gap-1 capitalize`}>
@@ -279,17 +279,17 @@ const VautoIntegration = () => {
 
   /* ── Derived UI state ── */
   const envBadge = cfg.vauto_api_environment === "production" ? (
-    <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30" variant="outline">
+    <Badge className="bg-success/10 text-success dark:text-emerald-400 border-success/30" variant="outline">
       <Zap className="w-3 h-3 mr-1" /> Production
     </Badge>
   ) : (
-    <Badge className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30" variant="outline">
+    <Badge className="bg-warning/10 text-warning dark:text-amber-400 border-warning/30" variant="outline">
       <ShieldCheck className="w-3 h-3 mr-1" /> Sandbox
     </Badge>
   );
 
   const enabledBadge = cfg.vauto_enabled ? (
-    <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30" variant="outline">
+    <Badge className="bg-success/10 text-success dark:text-emerald-400 border-success/30" variant="outline">
       <CheckCircle2 className="w-3 h-3 mr-1" /> Enabled
     </Badge>
   ) : (
@@ -310,7 +310,7 @@ const VautoIntegration = () => {
           <div className="flex-1 min-w-[220px]">
             <div className="flex items-center gap-2 flex-wrap">
               <h2 className="text-xl font-black tracking-tight">vAuto (Cox Automotive)</h2>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider border border-blue-500/40 bg-blue-500/10 text-blue-700 dark:text-blue-300">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider border border-info/40 bg-blue-500/10 text-info dark:text-blue-300">
                 <Truck className="w-3.5 h-3.5" />
                 Enterprise Beta
               </span>
@@ -332,12 +332,12 @@ const VautoIntegration = () => {
       </div>
 
       {/* Enterprise Beta banner */}
-      <div className="rounded-2xl border border-blue-500/30 bg-gradient-to-r from-blue-500/10 via-blue-500/5 to-transparent p-4 flex items-start gap-3">
-        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-blue-500/15 border border-blue-500/30 shrink-0">
-          <Truck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+      <div className="rounded-2xl border border-info/30 bg-gradient-to-r from-blue-500/10 via-blue-500/5 to-transparent p-4 flex items-start gap-3">
+        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-blue-500/15 border border-info/30 shrink-0">
+          <Truck className="w-4 h-4 text-info dark:text-blue-400" />
         </div>
         <div className="text-xs leading-relaxed text-blue-900 dark:text-blue-100">
-          <p className="font-bold text-blue-700 dark:text-blue-300 text-[11px] uppercase tracking-wider mb-0.5">
+          <p className="font-bold text-info dark:text-blue-300 text-[11px] uppercase tracking-wider mb-0.5">
             Enterprise Beta · vAuto Direct Push
           </p>
           <p>

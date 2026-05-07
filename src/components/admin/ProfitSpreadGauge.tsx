@@ -60,8 +60,8 @@ export default function ProfitSpreadGauge({
       zoneLabel = "Conservative — Risk Losing Deal";
       zoneIcon = TrendingDown;
       zoneBg = "from-amber-500/10 to-amber-500/5";
-      zoneBorder = "border-amber-500/30";
-      zoneText = "text-amber-600 dark:text-amber-400";
+      zoneBorder = "border-warning/30";
+      zoneText = "text-warning dark:text-amber-400";
     } else if (offerHigh > tradeinAvg * 1.05) {
       zone = "overpaying";
       zoneLabel = "Overpaying — Margin Risk";
@@ -78,8 +78,8 @@ export default function ProfitSpreadGauge({
       zoneLabel = "Aggressive — May Not Close";
       zoneIcon = TrendingDown;
       zoneBg = "from-amber-500/10 to-amber-500/5";
-      zoneBorder = "border-amber-500/30";
-      zoneText = "text-amber-600 dark:text-amber-400";
+      zoneBorder = "border-warning/30";
+      zoneText = "text-warning dark:text-amber-400";
     }
 
     return {
@@ -122,13 +122,13 @@ export default function ProfitSpreadGauge({
     { label: "Retail Avg", shortLabel: "RTL", pos: retailPos, value: retailAvg, color: "text-green-500", dotColor: "bg-green-500" },
   );
   if (retailCleanPos !== null && retailClean) {
-    markers.push({ label: "Retail Clean", shortLabel: "RTL Clean", pos: retailCleanPos, value: retailClean, color: "text-emerald-600 dark:text-emerald-400", dotColor: "bg-emerald-500" });
+    markers.push({ label: "Retail Clean", shortLabel: "RTL Clean", pos: retailCleanPos, value: retailClean, color: "text-success dark:text-emerald-400", dotColor: "bg-success" });
   }
   if (closestCompPos !== null && closestCompPrice) {
-    markers.push({ label: "Closest Comp", shortLabel: "Comp", pos: closestCompPos, value: closestCompPrice, color: "text-amber-600 dark:text-amber-400", dotColor: "bg-amber-500" });
+    markers.push({ label: "Closest Comp", shortLabel: "Comp", pos: closestCompPos, value: closestCompPrice, color: "text-warning dark:text-amber-400", dotColor: "bg-warning" });
   }
   if (soldAvgPos !== null && soldAvg) {
-    markers.push({ label: "90d Sold Avg", shortLabel: "Sold Avg", pos: soldAvgPos, value: soldAvg, color: "text-emerald-500", dotColor: "bg-emerald-600" });
+    markers.push({ label: "90d Sold Avg", shortLabel: "Sold Avg", pos: soldAvgPos, value: soldAvg, color: "text-success", dotColor: "bg-success" });
   }
   if (liveMarketPos !== null && retailListings?.avgPrice) {
     markers.push({ label: "Live Market", shortLabel: "MKT", pos: liveMarketPos, value: retailListings.avgPrice, color: "text-violet-500", dotColor: "bg-violet-500", isPrimary: true });
@@ -277,19 +277,19 @@ export default function ProfitSpreadGauge({
           data.profitPct >= 15
             ? "border-green-500/20 bg-gradient-to-b from-green-500/5 to-transparent"
             : data.profitPct >= 5
-            ? "border-amber-500/20 bg-gradient-to-b from-amber-500/5 to-transparent"
+            ? "border-warning/20 bg-gradient-to-b from-amber-500/5 to-transparent"
             : "border-destructive/20 bg-gradient-to-b from-destructive/5 to-transparent"
         }`}>
           <div className="text-micro text-muted-foreground font-medium mb-0.5">Margin</div>
           <div className={`text-lg font-bold tabular-nums ${
-            data.profitPct >= 15 ? "text-green-600 dark:text-green-400" : data.profitPct >= 5 ? "text-amber-600 dark:text-amber-400" : "text-destructive"
+            data.profitPct >= 15 ? "text-green-600 dark:text-green-400" : data.profitPct >= 5 ? "text-warning dark:text-amber-400" : "text-destructive"
           }`}>
             {data.profitPct.toFixed(1)}%
           </div>
           <div className="w-full mt-1 h-1.5 rounded-full bg-muted overflow-hidden">
             <div
               className={`h-full rounded-full transition-all ${
-                data.profitPct >= 15 ? "bg-green-500" : data.profitPct >= 5 ? "bg-amber-500" : "bg-destructive"
+                data.profitPct >= 15 ? "bg-green-500" : data.profitPct >= 5 ? "bg-warning" : "bg-destructive"
               }`}
               style={{ width: `${Math.min(Math.max(data.profitPct, 0), 40) * 2.5}%` }}
             />
@@ -343,17 +343,17 @@ export default function ProfitSpreadGauge({
         </span>
         {retailClean && retailClean > 0 && (
           <span className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-emerald-500" /> RTL Clean
+            <div className="w-2 h-2 rounded-full bg-success" /> RTL Clean
           </span>
         )}
         {closestCompPrice && closestCompPrice > 0 && (
           <span className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-amber-500" /> Comp
+            <div className="w-2 h-2 rounded-full bg-warning" /> Comp
           </span>
         )}
         {soldAvg && soldAvg > 0 && (
           <span className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-emerald-600" /> Sold Avg
+            <div className="w-2 h-2 rounded-full bg-success" /> Sold Avg
           </span>
         )}
         {retailListings?.avgPrice && (

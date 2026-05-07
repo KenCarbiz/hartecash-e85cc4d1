@@ -153,7 +153,7 @@ export default function NotificationLog() {
         return;
       }
       const csvEscape = (s: string) => /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-      const headers = ["When", "Trigger", "Channel", "Recipient", "Status", "Error", "Submission ID"];
+      const headers = ["When", "Trigger", "Channel", "Recipient", "Status", "Error", "Lead ID"];
       const csv = [
         headers.join(","),
         ...rows.map((r) => [

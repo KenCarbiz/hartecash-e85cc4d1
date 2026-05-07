@@ -101,7 +101,7 @@ const ManualScreenshotUpload = ({
           </>
         ) : done ? (
           <>
-            <Check className="w-3.5 h-3.5 text-emerald-600" />
+            <Check className="w-3.5 h-3.5 text-success" />
             Uploaded
           </>
         ) : (

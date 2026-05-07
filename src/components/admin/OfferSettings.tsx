@@ -664,8 +664,8 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
           defaultOpen={false}
           headerRight={<Badge variant="outline" className="text-[9px] text-muted-foreground">Internal</Badge>}
         >
-          <div className="rounded-lg bg-amber-500/5 border border-amber-500/20 p-3 mb-4">
-            <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+          <div className="rounded-lg bg-warning/5 border border-warning/20 p-3 mb-4">
+            <p className="text-xs font-semibold text-warning dark:text-amber-400">
               ⚠ These are profit analysis inputs. They do NOT reduce the customer offer.
             </p>
             <p className="text-micro text-muted-foreground mt-1">

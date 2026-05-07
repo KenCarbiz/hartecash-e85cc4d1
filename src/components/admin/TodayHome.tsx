@@ -207,10 +207,10 @@ const TodayHome = ({
           label="MTD Gross"
           value={dollars(kpis.mtdGross, true)}
           sub="month-to-date"
-          valueClass="text-emerald-600"
+          valueClass="text-success"
         />
         <KpiTile label="Open Leads" value={String(kpis.openLeads)} sub={`${kpis.needAction} need action`} />
-        <KpiTile label="Avg Response" value="—" sub="goal < 2h" valueClass="text-emerald-600" />
+        <KpiTile label="Avg Response" value="—" sub="goal < 2h" valueClass="text-success" />
       </section>
 
       {/* DO NEXT */}
@@ -291,10 +291,10 @@ function RightNowCard({
   const accent = tone === "red"
     ? "border-l-red-500 [--btn-bg:#dc2626] [--btn-bg-hover:#b91c1c]"
     : "border-l-amber-500 [--btn-bg:#0f172a] [--btn-bg-hover:#020617]";
-  const badgeColor = tone === "red" ? "text-red-600" : "text-amber-600";
+  const badgeColor = tone === "red" ? "text-red-600" : "text-warning";
   const dot = tone === "red"
     ? <span className="w-2 h-2 rounded-full bg-red-500 inline-block" />
-    : <span className="w-3 h-3 rounded-full border-2 border-amber-500 inline-block" />;
+    : <span className="w-3 h-3 rounded-full border-2 border-warning inline-block" />;
   return (
     <div className={`rounded-lg border border-l-4 bg-card p-4 ${accent}`}>
       <div className="flex items-start justify-between gap-2">
@@ -360,8 +360,8 @@ function DoNextRow({
   const statusPill = (() => {
     switch (kind) {
       case "sla": return { label: `SLA · ${Math.floor(ageHours / 24)}d`, cls: "bg-red-100 text-red-700" };
-      case "make_offer": return { label: "Inspected", cls: "bg-blue-100 text-blue-700" };
-      case "follow_up": return { label: "Contacted", cls: "bg-blue-100 text-blue-700" };
+      case "make_offer": return { label: "Inspected", cls: "bg-blue-100 text-info" };
+      case "follow_up": return { label: "Contacted", cls: "bg-blue-100 text-info" };
       case "call_new": return { label: "New", cls: "bg-muted text-muted-foreground" };
     }
   })();
@@ -369,7 +369,7 @@ function DoNextRow({
   const action = (() => {
     switch (kind) {
       case "sla": return { label: "Call now", icon: Phone, cls: "bg-red-600 hover:bg-red-700 text-white" };
-      case "make_offer": return { label: "Make offer", icon: DollarSign, cls: "bg-blue-600 hover:bg-blue-700 text-white" };
+      case "make_offer": return { label: "Make offer", icon: DollarSign, cls: "bg-info hover:bg-info text-white" };
       case "follow_up": return { label: "Follow up", icon: Phone, cls: "bg-background border hover:bg-muted/60 text-foreground" };
       case "call_new": return { label: "Call", icon: Phone, cls: "bg-slate-900 hover:bg-slate-800 text-white" };
     }
@@ -427,7 +427,7 @@ function ApptRow({
   const pill = (() => {
     const s = sub?.progress_status;
     if (s === "customer_arrived") return { label: "Arrived", cls: "bg-red-100 text-red-700", dot: "bg-red-500" };
-    if (s === "on_the_way") return { label: "On the way", cls: "bg-amber-100 text-amber-700", dot: "bg-amber-500" };
+    if (s === "on_the_way") return { label: "On the way", cls: "bg-amber-100 text-warning", dot: "bg-warning" };
     return null;
   })();
 

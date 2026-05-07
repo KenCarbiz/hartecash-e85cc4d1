@@ -30,10 +30,10 @@ function relativeTime(iso: string): string {
 
 function iconFor(k: FeedEntry["kind"]) {
   switch (k) {
-    case "activated":   return <Power className="w-3.5 h-3.5 text-emerald-700" aria-hidden="true" />;
-    case "deactivated": return <PowerOff className="w-3.5 h-3.5 text-amber-700" aria-hidden="true" />;
+    case "activated":   return <Power className="w-3.5 h-3.5 text-success" aria-hidden="true" />;
+    case "deactivated": return <PowerOff className="w-3.5 h-3.5 text-warning" aria-hidden="true" />;
     case "detached":    return <ArrowRightLeft className="w-3.5 h-3.5 text-red-700" aria-hidden="true" />;
-    case "exported":    return <FileSearch className="w-3.5 h-3.5 text-sky-700" aria-hidden="true" />;
+    case "exported":    return <FileSearch className="w-3.5 h-3.5 text-info" aria-hidden="true" />;
   }
 }
 

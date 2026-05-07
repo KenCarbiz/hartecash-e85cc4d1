@@ -59,7 +59,7 @@ export default function MarketAdjustmentConfigPanel({ config, onChange }: Props)
                 <div key={i} className="grid grid-cols-[1fr_80px_80px_1fr] gap-0 items-center px-3 py-1.5 border-t border-border hover:bg-muted/20">
                   <div className="flex items-center gap-1.5">
                     {bracket.adjustment_pct > 0 ? (
-                      <TrendingUp className="w-3 h-3 text-emerald-500" />
+                      <TrendingUp className="w-3 h-3 text-success" />
                     ) : bracket.adjustment_pct < 0 ? (
                       <TrendingDown className="w-3 h-3 text-destructive" />
                     ) : (

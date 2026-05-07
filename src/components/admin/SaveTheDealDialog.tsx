@@ -180,7 +180,7 @@ const SaveTheDealDialog = ({
                 <span className="text-muted-foreground">
                   {competitorName || "Competitor"}
                 </span>
-                <span className="font-semibold text-amber-600 dark:text-amber-400">
+                <span className="font-semibold text-warning dark:text-amber-400">
                   ${Number(competitorOffer).toLocaleString()}
                 </span>
               </div>

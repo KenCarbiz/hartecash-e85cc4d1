@@ -101,7 +101,7 @@ const TenantViewLog = () => {
           Tenant View-As audit
         </h3>
         <p className="text-xs text-muted-foreground mt-1">
-          Every "View as Tenant" session by a platform admin. Last 200 entries; oldest first by start time. {activeCount > 0 && <span className="font-semibold text-amber-600">· {activeCount} currently active</span>}
+          Every "View as Tenant" session by a platform admin. Last 200 entries; oldest first by start time. {activeCount > 0 && <span className="font-semibold text-warning">· {activeCount} currently active</span>}
         </p>
       </div>
 
@@ -118,7 +118,7 @@ const TenantViewLog = () => {
           onClick={() => setShowOnlyActive(!showOnlyActive)}
           className={`text-[11px] font-semibold px-2.5 py-1.5 rounded-md border transition-colors ${
             showOnlyActive
-              ? "bg-amber-500 border-amber-500 text-white"
+              ? "bg-warning border-warning text-white"
               : "border-border hover:bg-muted"
           }`}
         >
@@ -167,7 +167,7 @@ const TenantViewLog = () => {
                       </td>
                       <td className="px-3 py-2">
                         {active ? (
-                          <Badge className="bg-amber-500/15 text-amber-700 border-amber-500/30 text-micro gap-1">
+                          <Badge className="bg-warning/15 text-warning border-warning/30 text-micro gap-1">
                             <Clock className="w-3 h-3 animate-pulse" />
                             active
                           </Badge>

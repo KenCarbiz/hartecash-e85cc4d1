@@ -45,9 +45,9 @@ const PremiumCard = ({
 
 const methodColor = (m: string) => {
   switch (m) {
-    case "GET": return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20";
-    case "POST": return "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20";
-    case "PUT": return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20";
+    case "GET": return "bg-success/10 text-success dark:text-emerald-400 border-success/20";
+    case "POST": return "bg-blue-500/10 text-info dark:text-blue-400 border-info/20";
+    case "PUT": return "bg-warning/10 text-warning dark:text-amber-400 border-warning/20";
     case "DELETE": return "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20";
     default: return "bg-muted text-muted-foreground";
   }
@@ -189,7 +189,7 @@ const ApiAccessPanel = () => {
             <Code2 className="w-5 h-5 text-primary" />
             API Access
           </h2>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider border border-blue-500/40 bg-blue-500/10 text-blue-700 dark:text-blue-300">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider border border-info/40 bg-blue-500/10 text-info dark:text-blue-300">
             <Code2 className="w-3.5 h-3.5" />
             Enterprise Beta
           </span>
@@ -200,12 +200,12 @@ const ApiAccessPanel = () => {
       </div>
 
       {/* ── Enterprise Beta banner ── */}
-      <div className="rounded-2xl border border-blue-500/30 bg-gradient-to-r from-blue-500/10 via-blue-500/5 to-transparent p-4 flex items-start gap-3">
-        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-blue-500/15 border border-blue-500/30 shrink-0">
-          <Code2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+      <div className="rounded-2xl border border-info/30 bg-gradient-to-r from-blue-500/10 via-blue-500/5 to-transparent p-4 flex items-start gap-3">
+        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-blue-500/15 border border-info/30 shrink-0">
+          <Code2 className="w-4 h-4 text-info dark:text-blue-400" />
         </div>
         <div className="text-xs leading-relaxed text-blue-900 dark:text-blue-100">
-          <p className="font-bold text-blue-700 dark:text-blue-300 text-[11px] uppercase tracking-wider mb-0.5">
+          <p className="font-bold text-info dark:text-blue-300 text-[11px] uppercase tracking-wider mb-0.5">
             Enterprise Beta · Programmatic API Access
           </p>
           <p>
@@ -251,7 +251,7 @@ const ApiAccessPanel = () => {
             </div>
           </div>
           {apiKey && (
-            <p className="text-[11px] text-amber-600 dark:text-amber-400 bg-amber-500/8 border border-amber-500/20 rounded-lg px-3 py-2">
+            <p className="text-[11px] text-warning dark:text-amber-400 bg-warning/8 border border-warning/20 rounded-lg px-3 py-2">
               Keep your API key secret. If compromised, regenerate it immediately. The full key is only shown once after generation.
             </p>
           )}

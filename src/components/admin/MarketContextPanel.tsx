@@ -40,9 +40,9 @@ export default function MarketContextPanel({ bbVehicle, offerHigh }: Props) {
 
   const typeColors: Record<string, string> = {
     retail: "bg-green-500/20 border-green-500/30 text-green-700 dark:text-green-400",
-    private: "bg-amber-500/20 border-amber-500/30 text-amber-700 dark:text-amber-400",
+    private: "bg-warning/20 border-warning/30 text-warning dark:text-amber-400",
     tradein: "bg-primary/20 border-primary/30 text-primary",
-    wholesale: "bg-blue-500/20 border-blue-500/30 text-blue-700 dark:text-blue-400",
+    wholesale: "bg-blue-500/20 border-info/30 text-info dark:text-blue-400",
   };
 
   const hasFinanceAdv = financeAdv && (financeAdv.avg > 0 || financeAdv.clean > 0);

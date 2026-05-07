@@ -225,7 +225,7 @@ const DocumentConfiguration = () => {
                           className="h-7 text-sm font-semibold w-56"
                         />
                         {doc.ocr_pipeline && (
-                          <Badge variant="outline" className="text-micro border-emerald-500/40 text-emerald-700">
+                          <Badge variant="outline" className="text-micro border-success/40 text-success">
                             OCR auto-fill
                           </Badge>
                         )}

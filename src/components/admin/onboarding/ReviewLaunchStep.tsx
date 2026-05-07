@@ -98,7 +98,7 @@ const ReviewLaunchStep = ({ state }: Props) => {
                     {loc.oem_brands.join(", ")}
                   </span>
                 )}
-                {loc.scrapedData && <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />}
+                {loc.scrapedData && <CheckCircle2 className="w-3 h-3 text-success shrink-0" />}
               </div>
             ))}
           </div>

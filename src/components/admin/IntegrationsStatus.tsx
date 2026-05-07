@@ -229,28 +229,28 @@ const STATUS_META: Record<
   live: {
     label: "Live",
     icon: CheckCircle2,
-    ring: "border-emerald-500/40",
+    ring: "border-success/40",
     badge:
-      "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30",
-    dot: "bg-emerald-500",
+      "bg-success/10 text-success dark:text-emerald-400 border-success/30",
+    dot: "bg-success",
     gradient: "from-emerald-500/10 via-emerald-500/5 to-transparent",
   },
   beta: {
     label: "Beta",
     icon: Beaker,
-    ring: "border-blue-500/40",
+    ring: "border-info/40",
     badge:
-      "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/30",
+      "bg-blue-500/10 text-info dark:text-blue-400 border-info/30",
     dot: "bg-blue-500",
     gradient: "from-blue-500/10 via-blue-500/5 to-transparent",
   },
   "in-development": {
     label: "In Development",
     icon: HardHat,
-    ring: "border-amber-500/40",
+    ring: "border-warning/40",
     badge:
-      "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30",
-    dot: "bg-amber-500",
+      "bg-warning/10 text-warning dark:text-amber-400 border-warning/30",
+    dot: "bg-warning",
     gradient: "from-amber-500/10 via-amber-500/5 to-transparent",
   },
   "needs-config": {

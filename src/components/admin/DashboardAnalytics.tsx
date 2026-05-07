@@ -247,7 +247,7 @@ const DashboardAnalytics = () => {
             <div className="flex items-baseline gap-1.5">
               <span className="text-3xl font-black text-card-foreground tracking-tight">{metrics.totalLeads}</span>
               {monthTrend !== 0 && (
-                <span className={`text-micro font-bold ${monthTrend > 0 ? "text-emerald-500" : "text-red-500"} flex items-center gap-0.5`}>
+                <span className={`text-micro font-bold ${monthTrend > 0 ? "text-success" : "text-red-500"} flex items-center gap-0.5`}>
                   {monthTrend > 0 ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
                   {monthTrend > 0 ? "+" : ""}{monthTrend}% mo
                 </span>
@@ -262,7 +262,7 @@ const DashboardAnalytics = () => {
           <div className="relative">
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-micro text-muted-foreground font-bold uppercase tracking-wider">Conversion</span>
-              <TrendingUp className="w-4 h-4 text-emerald-500" />
+              <TrendingUp className="w-4 h-4 text-success" />
             </div>
             <span className="text-3xl font-black text-card-foreground tracking-tight">{conversionRate}%</span>
             <p className="text-micro text-muted-foreground mt-0.5">{metrics.completedLeads} purchased / {activeDeals} active</p>
@@ -274,7 +274,7 @@ const DashboardAnalytics = () => {
           <div className="relative">
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-micro text-muted-foreground font-bold uppercase tracking-wider">Pipeline Value</span>
-              <DollarSign className="w-4 h-4 text-amber-500" />
+              <DollarSign className="w-4 h-4 text-warning" />
             </div>
             <span className="text-3xl font-black text-card-foreground tracking-tight">${(metrics.pendingDealValue / 1000).toFixed(0)}k</span>
             <p className="text-micro text-muted-foreground mt-0.5">Avg offer: ${metrics.avgOfferAmount.toLocaleString()}</p>
@@ -307,7 +307,7 @@ const DashboardAnalytics = () => {
           <span className="text-micro text-muted-foreground font-medium">Photos Uploaded</span>
         </div>
         <div className="flex flex-col items-center gap-1 rounded-xl border border-border bg-card p-3 shadow-sm">
-          <FileText className="w-4 h-4 text-emerald-500" />
+          <FileText className="w-4 h-4 text-success" />
           <span className="text-lg font-black text-card-foreground">{metrics.docsUploaded}</span>
           <span className="text-micro text-muted-foreground font-medium">Docs Uploaded</span>
         </div>

@@ -488,7 +488,7 @@ const ConsentLog = () => {
                           <td className="px-4 py-2.5">
                             <span
                               className={`inline-flex items-center gap-1 text-xs ${
-                                isWithdrawn ? "opacity-50" : "text-emerald-600 dark:text-emerald-400"
+                                isWithdrawn ? "opacity-50" : "text-success dark:text-emerald-400"
                               }`}
                             >
                               <ShieldCheck className="w-3.5 h-3.5 shrink-0" />

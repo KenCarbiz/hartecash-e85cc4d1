@@ -486,7 +486,7 @@ const PageScreenshot = ({
       {/* Error fallback — visible message with the URL that failed */}
       {status === "errored" && (
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center bg-slate-50 p-6">
-          <AlertCircle className="w-10 h-10 text-amber-500 mb-3" />
+          <AlertCircle className="w-10 h-10 text-warning mb-3" />
           <div className="text-sm font-bold text-slate-800">
             Screenshot didn't load
           </div>
@@ -524,7 +524,7 @@ const CaptureFailurePanel = ({ reason, url }: { reason: string; url: string }) =
     className="relative bg-slate-50 flex flex-col items-center justify-center text-center p-8"
     style={{ aspectRatio: "1280 / 800" }}
   >
-    <AlertCircle className="w-10 h-10 text-amber-500 mb-3" />
+    <AlertCircle className="w-10 h-10 text-warning mb-3" />
     <div className="text-sm font-bold text-slate-800">Couldn't capture this page</div>
     <div className="text-xs text-slate-600 mt-1 max-w-2xl whitespace-pre-line text-left font-mono leading-relaxed">{reason}</div>
     {url && (

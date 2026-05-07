@@ -141,7 +141,7 @@ const ProspectDemoHistory = ({ onLoadDemo, activeDemoId }: ProspectDemoHistoryPr
                         <td className="px-4 py-2 font-medium text-slate-800">
                           {r.dealer_name || <span className="text-slate-400">Unnamed</span>}
                           {isActive && (
-                            <span className="ml-2 inline-block rounded bg-blue-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-blue-700">
+                            <span className="ml-2 inline-block rounded bg-blue-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-info">
                               Editing
                             </span>
                           )}

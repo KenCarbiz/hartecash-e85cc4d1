@@ -528,7 +528,7 @@ const ClassicCommsFullView = ({
                     const outcome = (c.outcome || c.status || "call").toLowerCase();
                     const isInbound = direction === "inbound" || direction === "in" || outcome.includes("voicemail");
                     const isVoicemail = outcome.includes("voicemail");
-                    const iconBg = isInbound ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700";
+                    const iconBg = isInbound ? "bg-amber-100 text-warning" : "bg-emerald-100 text-success";
                     const borderColor = isInbound ? "border-amber-200" : "border-emerald-200";
                     const dirLabel = isInbound ? "Inbound" : "Outbound";
                     const outcomeLabel = (c.outcome || c.status || "Call").replace(/_/g, " ").replace(/\b\w/g, (s) => s.toUpperCase());
@@ -544,7 +544,7 @@ const ClassicCommsFullView = ({
                         <div className="flex-1 min-w-0">
                           <div className="flex items-baseline justify-between gap-2">
                             <div>
-                              <div className="text-micro font-bold uppercase tracking-wider text-emerald-700 mb-0.5">Call</div>
+                              <div className="text-micro font-bold uppercase tracking-wider text-success mb-0.5">Call</div>
                               <div className="text-[13.5px] font-bold text-slate-900">{dirLabel} · {outcomeLabel}</div>
                               {c.performed_by && <div className="text-caption text-slate-500 mt-0.5">by {c.performed_by}</div>}
                             </div>
@@ -585,7 +585,7 @@ const ClassicCommsFullView = ({
                   const m = row.m;
                   return (
                     <div key={key} className={`flex flex-col ${m.direction === "out" ? "items-end" : "items-start"}`}>
-                      <div className="text-micro font-bold uppercase tracking-wider text-blue-700 inline-flex items-center gap-1 mb-1">
+                      <div className="text-micro font-bold uppercase tracking-wider text-info inline-flex items-center gap-1 mb-1">
                         <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                         SMS
                       </div>
@@ -624,7 +624,7 @@ const ClassicCommsFullView = ({
                   disabled={!customerPhone}
                   className={`text-[11px] font-bold px-2.5 h-7 rounded-md inline-flex items-center gap-1 transition disabled:opacity-50 ${
                     unifiedSendVia === "sms"
-                      ? "bg-blue-50 text-blue-700 border border-blue-200"
+                      ? "bg-blue-50 text-info border border-blue-200"
                       : "bg-white text-slate-500 border border-slate-200 hover:border-slate-400"
                   }`}
                 >

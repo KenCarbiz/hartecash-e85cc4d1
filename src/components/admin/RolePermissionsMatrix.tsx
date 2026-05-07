@@ -405,12 +405,12 @@ const RolePermissionsMatrix = () => {
                               title={`${MATRIX_ROLE_LABELS[role] || role} can ${allowed ? "see" : "NOT see"} ${section.label}.${overridden ? " Overridden — double-click to reset to default." : ""}`}
                               className={`relative w-8 h-8 rounded-md border transition-colors ${
                                 allowed
-                                  ? "bg-emerald-500/15 border-emerald-500/40 hover:bg-emerald-500/25"
+                                  ? "bg-success/15 border-success/40 hover:bg-success/25"
                                   : "bg-slate-200/60 border-slate-300 hover:bg-slate-200/80 dark:bg-slate-800 dark:border-slate-700"
                               } ${overridden ? "ring-2 ring-amber-400/60" : ""}`}
                             >
                               {allowed ? (
-                                <span className="text-emerald-700 dark:text-emerald-400 font-bold">✓</span>
+                                <span className="text-success dark:text-emerald-400 font-bold">✓</span>
                               ) : (
                                 <span className="text-slate-400">·</span>
                               )}

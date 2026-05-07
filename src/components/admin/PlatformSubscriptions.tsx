@@ -45,8 +45,8 @@ const ICON_MAP: Record<string, React.ElementType> = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  active: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30",
-  trial: "bg-amber-500/15 text-amber-600 border-amber-500/30",
+  active: "bg-success/15 text-success border-success/30",
+  trial: "bg-warning/15 text-warning border-warning/30",
   suspended: "bg-red-500/15 text-red-600 border-red-500/30",
   cancelled: "bg-muted text-muted-foreground border-border",
 };
@@ -311,7 +311,7 @@ const PlatformSubscriptions = () => {
       <Card
         className={`shadow-lg overflow-hidden relative transition-[box-shadow,background] ${
           dirty
-            ? "border-amber-400/60 ring-1 ring-amber-300/50 bg-amber-50/40 dark:bg-amber-500/5"
+            ? "border-amber-400/60 ring-1 ring-amber-300/50 bg-amber-50/40 dark:bg-warning/5"
             : "border-border/50"
         }`}
       >
@@ -328,9 +328,9 @@ const PlatformSubscriptions = () => {
                   {dirty && (
                     <Badge
                       variant="outline"
-                      className="text-micro font-bold uppercase tracking-wider border-amber-400/60 bg-amber-500/10 text-amber-700 dark:text-amber-300 gap-1"
+                      className="text-micro font-bold uppercase tracking-wider border-amber-400/60 bg-warning/10 text-warning dark:text-amber-300 gap-1"
                     >
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
                       Unsaved changes
                     </Badge>
                   )}
@@ -507,7 +507,7 @@ const PlatformSubscriptions = () => {
                             key={product.id}
                             className={`shrink-0 w-48 md:w-64 lg:w-72 rounded-xl border p-3 md:p-4 shadow-sm flex flex-col ${
                               isComplimentary
-                                ? "border-emerald-500/40 bg-emerald-500/[0.05]"
+                                ? "border-success/40 bg-success/[0.05]"
                                 : "border-border/60 bg-card"
                             }`}
                           >
@@ -516,7 +516,7 @@ const PlatformSubscriptions = () => {
                               <div
                                 className={`w-7 h-7 md:w-8 md:h-8 rounded-lg flex items-center justify-center shrink-0 ${
                                   isComplimentary
-                                    ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                                    ? "bg-success/15 text-success dark:text-emerald-300"
                                     : "bg-primary/10 text-primary"
                                 }`}
                               >
@@ -542,11 +542,11 @@ const PlatformSubscriptions = () => {
                             {/* Price / Included */}
                             {isComplimentary ? (
                               <div className="space-y-0.5">
-                                <span className="inline-flex items-center gap-1 text-micro md:text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                                <span className="inline-flex items-center gap-1 text-micro md:text-xs font-semibold text-success dark:text-emerald-300">
                                   <Gift className="w-2.5 h-2.5 md:w-3 md:h-3" />
                                   Included
                                 </span>
-                                <p className="text-micro md:text-[11px] text-emerald-700 dark:text-emerald-400 leading-snug">
+                                <p className="text-micro md:text-[11px] text-success dark:text-emerald-400 leading-snug">
                                   Free with {complimentaryFrom}
                                 </p>
                               </div>
@@ -562,7 +562,7 @@ const PlatformSubscriptions = () => {
                                   </span>
                                 </p>
                                 {tierCycleForCard === "annual" && tier?.annual_price && (
-                                  <p className="text-[9px] md:text-micro text-emerald-600 font-semibold mt-0.5">
+                                  <p className="text-[9px] md:text-micro text-success font-semibold mt-0.5">
                                     Annual prepaid
                                   </p>
                                 )}
@@ -577,7 +577,7 @@ const PlatformSubscriptions = () => {
                                     key={f}
                                     className="flex items-start gap-1.5 text-micro text-muted-foreground leading-snug"
                                   >
-                                    <Check className="w-2.5 h-2.5 mt-0.5 text-emerald-500 shrink-0" />
+                                    <Check className="w-2.5 h-2.5 mt-0.5 text-success shrink-0" />
                                     <span className="line-clamp-2">{f}</span>
                                   </li>
                                 ))}

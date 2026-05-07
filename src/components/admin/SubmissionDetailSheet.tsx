@@ -240,8 +240,8 @@ const InspectionVitals = ({ submissionId }: { submissionId: string }) => {
   };
 
   const stateClass: Record<State, string> = {
-    green:  "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
-    yellow: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
+    green:  "bg-success/15 text-success dark:text-emerald-400 border-success/30",
+    yellow: "bg-warning/15 text-warning dark:text-amber-400 border-warning/30",
     red:    "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30",
     empty:  "bg-muted text-muted-foreground/40 border-border",
   };
@@ -482,7 +482,7 @@ const CompactOBDIndicator = ({ submissionId, token }: { submissionId: string; to
       className={`rounded-2xl border overflow-hidden shadow-sm transition-shadow hover:shadow-md ${
         milOn
           ? "border-red-500/40 bg-gradient-to-br from-red-500/10 via-red-500/5 to-transparent"
-          : "border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent"
+          : "border-success/30 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent"
       }`}
     >
       <div className="bg-gradient-to-r from-muted/60 via-muted/30 to-transparent px-5 py-3 border-b border-border/40 flex items-center justify-between">
@@ -499,17 +499,17 @@ const CompactOBDIndicator = ({ submissionId, token }: { submissionId: string; to
           className={`flex items-center justify-center w-10 h-10 rounded-xl shrink-0 ${
             milOn
               ? "bg-red-500/20 border border-red-500/30"
-              : "bg-emerald-500/20 border border-emerald-500/30"
+              : "bg-success/20 border border-success/30"
           }`}
         >
           {milOn ? (
             <AlertTriangle className="w-5 h-5 text-red-500" />
           ) : (
-            <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <CheckCircle2 className="w-5 h-5 text-success dark:text-emerald-400" />
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <p className={`text-xs font-black uppercase tracking-wide ${milOn ? "text-red-600 dark:text-red-400" : "text-emerald-700 dark:text-emerald-400"}`}>
+          <p className={`text-xs font-black uppercase tracking-wide ${milOn ? "text-red-600 dark:text-red-400" : "text-success dark:text-emerald-400"}`}>
             {milOn ? "Check Engine On" : "No Active Faults"}
           </p>
           <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -588,9 +588,9 @@ const RefreshedSheet = ({
   const outcomeColor = (outcome: string | null) => {
     switch (outcome) {
       case 'accepted': return 'bg-success/15 text-success border-success/30';
-      case 'appointment_scheduled': return 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30';
-      case 'wants_higher_offer': return 'bg-amber-500/15 text-amber-600 border-amber-500/30';
-      case 'callback_requested': return 'bg-blue-500/15 text-blue-600 border-blue-500/30';
+      case 'appointment_scheduled': return 'bg-success/15 text-success border-success/30';
+      case 'wants_higher_offer': return 'bg-warning/15 text-warning border-warning/30';
+      case 'callback_requested': return 'bg-blue-500/15 text-info border-info/30';
       case 'not_interested': return 'bg-muted text-muted-foreground border-border';
       case 'voicemail_left': return 'bg-purple-500/15 text-purple-600 border-purple-500/30';
       case 'opted_out': return 'bg-destructive/15 text-destructive border-destructive/30';
@@ -975,7 +975,7 @@ const RefreshedSheet = ({
                       {[sub.name, sub.vehicle_year, sub.mileage ? `${Number(sub.mileage).toLocaleString()} mi` : null].filter(Boolean).join(" · ")}
                     </div>
                     <SheetTitle className="font-display text-[28px] leading-[1.05] tracking-tight text-white">
-                      {[sub.vehicle_make, sub.vehicle_model].filter(Boolean).join(" ") || "Submission Details"}
+                      {[sub.vehicle_make, sub.vehicle_model].filter(Boolean).join(" ") || "Customer File"}
                     </SheetTitle>
                     <div className="flex items-center gap-3 mt-2 text-[13px] text-white/80 flex-wrap">
                       {sub.vin && (
@@ -1079,15 +1079,15 @@ const RefreshedSheet = ({
             {(optOutStatus.email || optOutStatus.sms) && (
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
                 <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
-                  <Bell className="w-4 h-4 text-amber-600" />
+                  <Bell className="w-4 h-4 text-warning" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-amber-700">Customer Unsubscribed</p>
+                  <p className="text-sm font-semibold text-warning">Customer Unsubscribed</p>
                   <div className="flex gap-2 mt-1.5">
-                    {optOutStatus.email && <Badge variant="outline" className="text-xs border-amber-300 text-amber-700 rounded-lg"><Mail className="w-3 h-3 mr-1" /> Email opted out</Badge>}
-                    {optOutStatus.sms && <Badge variant="outline" className="text-xs border-amber-300 text-amber-700 rounded-lg"><Phone className="w-3 h-3 mr-1" /> SMS opted out</Badge>}
+                    {optOutStatus.email && <Badge variant="outline" className="text-xs border-amber-300 text-warning rounded-lg"><Mail className="w-3 h-3 mr-1" /> Email opted out</Badge>}
+                    {optOutStatus.sms && <Badge variant="outline" className="text-xs border-amber-300 text-warning rounded-lg"><Phone className="w-3 h-3 mr-1" /> SMS opted out</Badge>}
                   </div>
-                  <p className="text-[11px] text-amber-600/80 mt-1.5">Follow-up messages to opted-out channels will be skipped automatically.</p>
+                  <p className="text-[11px] text-warning/80 mt-1.5">Follow-up messages to opted-out channels will be skipped automatically.</p>
                 </div>
               </div>
             )}
@@ -1124,7 +1124,7 @@ const RefreshedSheet = ({
                     <TooltipProvider delayDuration={200}>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <span className={`inline-flex items-center gap-1 text-micro font-semibold px-2.5 py-1 rounded-lg cursor-help border ${isAutoPopulated ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-slate-50 text-slate-600 border-slate-200"}`}>
+                          <span className={`inline-flex items-center gap-1 text-micro font-semibold px-2.5 py-1 rounded-lg cursor-help border ${isAutoPopulated ? "bg-emerald-50 text-success border-emerald-200" : "bg-slate-50 text-slate-600 border-slate-200"}`}>
                             {isAutoPopulated ? <><CheckCircle2 className="w-3 h-3" /> Auto · Accepted</> : <><Users className="w-3 h-3" /> Staff Set</>}
                           </span>
                         </TooltipTrigger>
@@ -1192,7 +1192,7 @@ const RefreshedSheet = ({
                           <div
                             className={`h-full rounded-full transition-all duration-500 ${
                               ls.score >= 80 ? "bg-orange-500" :
-                              ls.score >= 60 ? "bg-amber-500" :
+                              ls.score >= 60 ? "bg-warning" :
                               ls.score >= 40 ? "bg-blue-500" :
                               "bg-slate-300"
                             }`}
@@ -1219,7 +1219,7 @@ const RefreshedSheet = ({
                   {sub.offered_price && sub.acv_value && (
                     <div className="text-right">
                       <p className="text-micro text-slate-400 uppercase tracking-wider">Spread</p>
-                      <p className={`text-sm font-bold ${(sub.acv_value - sub.offered_price) > 0 ? "text-emerald-600" : "text-red-600"}`}>
+                      <p className={`text-sm font-bold ${(sub.acv_value - sub.offered_price) > 0 ? "text-success" : "text-red-600"}`}>
                         {(sub.acv_value - sub.offered_price) > 0 ? "+" : ""}${Math.floor(sub.acv_value - sub.offered_price).toLocaleString()}
                       </p>
                     </div>
@@ -1260,10 +1260,10 @@ const RefreshedSheet = ({
               const wholesaleAvg = tiers?.wholesale?.avg ? Number(tiers.wholesale.avg) : (sub.bb_wholesale_avg ? Number(sub.bb_wholesale_avg) : null);
 
               const valueRows = [
-                { label: "Retail", value: retailAvg, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10", dotBg: "bg-emerald-500" },
-                { label: "Private Party", value: privatePartyAvg, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-500/10", dotBg: "bg-amber-500", highlight: true },
+                { label: "Retail", value: retailAvg, color: "text-success dark:text-emerald-400", bg: "bg-success/10", dotBg: "bg-success" },
+                { label: "Private Party", value: privatePartyAvg, color: "text-warning dark:text-amber-400", bg: "bg-warning/10", dotBg: "bg-warning", highlight: true },
                 { label: "Trade-In", value: tradeinAvg, color: "text-primary", bg: "bg-primary/10", dotBg: "bg-primary" },
-                { label: "Wholesale", value: wholesaleAvg, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500/10", dotBg: "bg-blue-500" },
+                { label: "Wholesale", value: wholesaleAvg, color: "text-info dark:text-blue-400", bg: "bg-blue-500/10", dotBg: "bg-blue-500" },
               ].filter(r => r.value && r.value > 0);
 
               if (valueRows.length === 0) return null;
@@ -1278,7 +1278,7 @@ const RefreshedSheet = ({
                         <span className="flex items-center gap-2 text-sm">
                           <span className={`w-2 h-2 rounded-full ${row.dotBg}`} />
                           <span className={row.highlight ? "font-bold text-slate-900" : "text-slate-500"}>{row.label}</span>
-                          {row.highlight && <span className="text-[9px] font-bold text-amber-600 uppercase tracking-wider">Key Ref</span>}
+                          {row.highlight && <span className="text-[9px] font-bold text-warning uppercase tracking-wider">Key Ref</span>}
                         </span>
                         <span className={`text-sm font-bold ${row.color}`}>${Math.floor(row.value!).toLocaleString()}</span>
                       </div>
@@ -1301,7 +1301,7 @@ const RefreshedSheet = ({
             {/* Acquisition Tracker (Status + Pipeline) */}
             <SectionCard icon={TrendingUp} title="Acquisition Tracker" headerRight={
               sub.progress_status !== "new" && sub.progress_status !== "dead_lead" ? (
-                <span className="inline-flex items-center gap-1 text-micro text-slate-400 bg-slate-100 rounded px-2 py-0.5"><Check className="w-3 h-3 text-emerald-500" /> Synced</span>
+                <span className="inline-flex items-center gap-1 text-micro text-slate-400 bg-slate-100 rounded px-2 py-0.5"><Check className="w-3 h-3 text-success" /> Synced</span>
               ) : undefined
             }>
               {/* Status chips */}
@@ -1313,7 +1313,7 @@ const RefreshedSheet = ({
                 ].map(chip => (
                   <div key={chip.label} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold border transition-all ${
                     chip.check
-                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      ? "bg-emerald-50 text-success border-emerald-200"
                       : "bg-slate-50 text-slate-400 border-slate-200"
                   }`}>
                     {chip.check ? <CheckCircle2 className="w-3.5 h-3.5" /> : <chip.icon className="w-3.5 h-3.5" />}
@@ -1341,7 +1341,7 @@ const RefreshedSheet = ({
                       <div key={stage.key} className="flex items-center flex-1 min-w-0">
                         <div className="flex flex-col items-center w-full">
                           <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold transition-all duration-300 ${
-                            isComplete ? "bg-emerald-500 text-white" :
+                            isComplete ? "bg-success text-white" :
                             isCurrent ? "bg-[#003b80] text-white ring-[3px] ring-[#003b80]/20" :
                             "bg-slate-100 text-slate-400 border border-slate-200"
                           }`}>
@@ -1357,7 +1357,7 @@ const RefreshedSheet = ({
                         </div>
                         {i < arr.length - 1 && (
                           <div className={`h-[2px] flex-1 min-w-[8px] -mt-5 rounded-full transition-all ${
-                            isComplete ? "bg-emerald-500" : "bg-slate-200"
+                            isComplete ? "bg-success" : "bg-slate-200"
                           }`} />
                         )}
                       </div>
@@ -1415,12 +1415,12 @@ const RefreshedSheet = ({
                 <div className="space-y-3">
                   <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-lg p-3">
                     <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                      <CalendarDays className="w-5 h-5 text-emerald-600" />
+                      <CalendarDays className="w-5 h-5 text-success" />
                     </div>
                     <div>
                       <p className="text-sm text-slate-900 font-bold">
                         {new Date(sub.appointment_date + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
-                        {selectedApptTime && <span className="text-emerald-700 font-semibold ml-1.5">at {selectedApptTime}</span>}
+                        {selectedApptTime && <span className="text-success font-semibold ml-1.5">at {selectedApptTime}</span>}
                       </p>
                       {selectedApptLocation && <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1"><MapPin className="w-3 h-3" /> {getLocationLabel(selectedApptLocation)}</p>}
                     </div>
@@ -1445,7 +1445,7 @@ const RefreshedSheet = ({
                 <label htmlFor="check-request-done" className={`text-sm font-semibold ${isPriceAgreedOrBeyond ? "text-slate-900" : "text-slate-400"}`}>Check Request Completed</label>
               </div>
               {!(sub as any).appraisal_finalized ? (
-                <div className="flex items-center gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <div className="flex items-center gap-2 text-xs text-warning bg-amber-50 border border-amber-200 rounded-lg p-3">
                   <AlertTriangle className="w-4 h-4 flex-shrink-0" />
                   <span className="font-medium">Appraisal must be finalized before generating a check request.</span>
                 </div>
@@ -1477,16 +1477,16 @@ const RefreshedSheet = ({
                 </div>
                 <div className="relative p-5">
                   {sub.review_requested ? (
-                    <div className="flex items-center gap-3 text-sm text-emerald-700 bg-emerald-50 rounded-lg p-3 border border-emerald-200">
+                    <div className="flex items-center gap-3 text-sm text-success bg-emerald-50 rounded-lg p-3 border border-emerald-200">
                       <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
-                        <Check className="w-4 h-4 text-emerald-600" />
+                        <Check className="w-4 h-4 text-success" />
                       </div>
                       <span className="font-semibold">Review request sent{sub.review_requested_at ? ` on ${new Date(sub.review_requested_at).toLocaleDateString()}` : ""}</span>
                     </div>
                   ) : (
                     <div className="space-y-3">
                       <p className="text-sm text-slate-500">Send an email asking the customer to leave a review for this completed purchase.</p>
-                      <Button variant="outline" size="sm" className="border-emerald-300 text-emerald-700 hover:bg-emerald-50 rounded-lg h-9 font-semibold" onClick={async () => {
+                      <Button variant="outline" size="sm" className="border-emerald-300 text-success hover:bg-emerald-50 rounded-lg h-9 font-semibold" onClick={async () => {
                         toast({ title: "Sending...", description: "Sending review request email..." });
                         try {
                           const res = await supabase.functions.invoke("send-review-request", { body: { submission_id: sub.id, submission_token: sub.token } });
@@ -1537,7 +1537,7 @@ const RefreshedSheet = ({
                       <button
                         type="button"
                         onClick={() => clickToDial(sub.id)}
-                        className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1 text-micro font-semibold px-2 py-1 rounded-lg bg-emerald-50 text-success border border-emerald-200 hover:bg-emerald-100 transition-colors cursor-pointer"
                       >
                         <Phone className="w-3 h-3" /> Call
                       </button>
@@ -1629,7 +1629,7 @@ const RefreshedSheet = ({
                       <span className="flex items-center gap-1.5">
                         {sub.vin}
                         {(sub as any).vin_verified && (
-                          <span className="inline-flex items-center gap-0.5 text-micro font-semibold text-emerald-600 bg-emerald-500/10 rounded-full px-1.5 py-0.5" title="VIN verified via document OCR">
+                          <span className="inline-flex items-center gap-0.5 text-micro font-semibold text-success bg-success/10 rounded-full px-1.5 py-0.5" title="VIN verified via document OCR">
                             <CheckCircle2 className="w-3 h-3" /> Verified
                           </span>
                         )}
@@ -2223,7 +2223,7 @@ const SubmissionDetailSheetV2 = ({
       case "deal_finalized": return { label: "Complete the check request", icon: ClipboardCheck, color: "from-amber-600 to-amber-500", action: "checkreq" };
       case "check_request_submitted": return { label: "Awaiting final approval", icon: Clock, color: "from-slate-600 to-slate-500", action: "none" };
       case "purchase_complete": return { label: "Deal closed! Request a review", icon: Star, color: "from-emerald-600 to-emerald-500", action: "review" };
-      case "dead_lead":      return { label: "Lead is closed", icon: XCircle, color: "from-slate-500 to-slate-400", action: "none" };
+      case "dead_lead":      return { label: "Closed — wholesaled", icon: XCircle, color: "from-slate-500 to-slate-400", action: "none" };
       default:               return { label: "Follow up with the customer", icon: Bell, color: "from-[#003b80] to-[#005bb5]", action: "followup" };
     }
   };
@@ -2302,7 +2302,7 @@ const SubmissionDetailSheetV2 = ({
       case "offer_sent": case "deal_finalized": return hasOffer ? { title: "Review Offer", desc: "Customer has an offer. Follow up to close.", cta: "Send Follow-Up", ctaHref: null, ctaAction: "followup" } : { title: "Send the offer", desc: "Build and send the offer to the customer.", cta: "Open Appraisal", ctaHref: null, ctaAction: "appraise" };
       case "check_request_submitted": return { title: "Complete check request", desc: "Price agreed. Generate and submit the check request.", cta: "Generate", ctaHref: null, ctaAction: "checkreq" };
       case "purchase_complete": return { title: "Deal closed!", desc: "Great work. Consider requesting a review.", cta: "Send Review Request", ctaHref: null, ctaAction: "review" };
-      case "dead_lead": return { title: "Lead is closed", desc: "This opportunity has been marked as dead.", cta: null, ctaHref: null, ctaAction: null };
+      case "dead_lead": return { title: "Closed — wholesaled", desc: "This vehicle was sent to wholesale instead of taken in retail.", cta: null, ctaHref: null, ctaAction: null };
       default: return { title: "Follow up", desc: "Stay in touch with the customer.", cta: "Send Follow-Up", ctaHref: null, ctaAction: "followup" };
     }
   })();
@@ -2439,7 +2439,7 @@ const SubmissionDetailSheetV2 = ({
             </div>
           )}
           {(sub as any).on_the_way_at && sub.progress_status === "on_the_way" && (
-            <div className="bg-amber-600 px-5 py-2.5 flex items-center gap-3 border-t border-amber-900/30">
+            <div className="bg-warning px-5 py-2.5 flex items-center gap-3 border-t border-amber-900/30">
               <span className="relative flex shrink-0"><span className="absolute inline-flex h-3 w-3 rounded-full bg-white/60 animate-ping" /><span className="relative inline-flex h-3 w-3 rounded-full bg-white" /></span>
               <span className="text-sm font-semibold text-white">Customer On The Way · {new Date((sub as any).on_the_way_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })} — Prepare</span>
             </div>
@@ -2458,19 +2458,19 @@ const SubmissionDetailSheetV2 = ({
               <div className="space-y-2">
                 {duplicateWarnings[sub.id]?.length > 0 && (
                   <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 flex items-center gap-2">
-                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                    <AlertTriangle className="w-3.5 h-3.5 text-warning shrink-0" />
                     <span className="text-xs font-bold text-amber-800">Possible Duplicate</span>
-                    <span className="text-xs text-amber-700 truncate">{duplicateWarnings[sub.id][0]}</span>
+                    <span className="text-xs text-warning truncate">{duplicateWarnings[sub.id][0]}</span>
                   </div>
                 )}
                 {(optOutStatus.email || optOutStatus.sms) && (
                   <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2.5">
-                    <Bell className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                    <Bell className="w-4 h-4 text-warning mt-0.5 shrink-0" />
                     <div>
-                      <p className="text-xs font-semibold text-amber-700">Customer Unsubscribed</p>
+                      <p className="text-xs font-semibold text-warning">Customer Unsubscribed</p>
                       <div className="flex gap-1.5 mt-1">
-                        {optOutStatus.email && <Badge variant="outline" className="text-micro border-amber-300 text-amber-700"><Mail className="w-3 h-3 mr-1" />Email</Badge>}
-                        {optOutStatus.sms && <Badge variant="outline" className="text-micro border-amber-300 text-amber-700"><Phone className="w-3 h-3 mr-1" />SMS</Badge>}
+                        {optOutStatus.email && <Badge variant="outline" className="text-micro border-amber-300 text-warning"><Mail className="w-3 h-3 mr-1" />Email</Badge>}
+                        {optOutStatus.sms && <Badge variant="outline" className="text-micro border-amber-300 text-warning"><Phone className="w-3 h-3 mr-1" />SMS</Badge>}
                       </div>
                     </div>
                   </div>
@@ -2593,7 +2593,7 @@ const SubmissionDetailSheetV2 = ({
                               <p className="text-micro font-bold uppercase tracking-wider text-slate-600 mb-0.5">
                                 Driver's License{hasBack ? ` · ${dlSide === "back" ? "Back" : "Front"}` : ""}
                               </p>
-                              <p className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
+                              <p className="text-[11px] text-success font-semibold flex items-center gap-1">
                                 <CheckCircle2 className="w-3 h-3 shrink-0" /> Verified on file
                               </p>
                             </div>
@@ -2744,7 +2744,7 @@ const SubmissionDetailSheetV2 = ({
                 <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
                   <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100">
                     <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Inspection Summary</h3>
-                    <span className={`text-micro font-bold uppercase px-2 py-0.5 rounded-md ${inspDone ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
+                    <span className={`text-micro font-bold uppercase px-2 py-0.5 rounded-md ${inspDone ? "bg-emerald-100 text-success" : "bg-slate-100 text-slate-500"}`}>
                       {inspDone ? "Completed" : "Pending"}
                     </span>
                   </div>
@@ -2903,7 +2903,7 @@ const SubmissionDetailSheetV2 = ({
                   if (!v) return null;
                   return (
                     <div className="flex items-baseline justify-between pt-2.5 border-t border-slate-100">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Customer Equity</span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-success">Customer Equity</span>
                       <span className={`text-base font-bold ${result.color}`}>{result.displayText}</span>
                     </div>
                   );
@@ -2915,7 +2915,7 @@ const SubmissionDetailSheetV2 = ({
                     <button
                       onClick={() => updateField({ loan_payoff_verified: !(sub as any).loan_payoff_verified, loan_payoff_updated_at: new Date().toISOString() } as any)}
                       className="flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-slate-700 transition-colors">
-                      <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${(sub as any).loan_payoff_verified ? "border-emerald-500 bg-emerald-500" : "border-slate-300 bg-white"}`}>
+                      <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${(sub as any).loan_payoff_verified ? "border-success bg-success" : "border-slate-300 bg-white"}`}>
                         {(sub as any).loan_payoff_verified && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
                       </span>
                       Confirmed

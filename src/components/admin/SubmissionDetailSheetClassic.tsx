@@ -330,7 +330,7 @@ const PassFail = ({ label, pass }: { label: string; pass: boolean | null }) => {
   const ok = pass === true;
   return (
     <div className={`flex-1 rounded-lg border px-3 py-2.5 ${ok ? "border-emerald-200 bg-emerald-50" : "border-red-200 bg-red-50"}`}>
-      <div className={`text-[11px] uppercase tracking-wider font-semibold ${ok ? "text-emerald-700" : "text-red-700"}`}>{label}</div>
+      <div className={`text-[11px] uppercase tracking-wider font-semibold ${ok ? "text-success" : "text-red-700"}`}>{label}</div>
       <div className={`text-sm font-bold mt-0.5 flex items-center gap-1.5 ${ok ? "text-emerald-800" : "text-red-800"}`}>
         {ok ? (
           <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path d="M16.7 5.3a1 1 0 010 1.4l-8 8a1 1 0 01-1.4 0l-4-4a1 1 0 011.4-1.4L8 12.6l7.3-7.3a1 1 0 011.4 0z"/></svg>
@@ -564,12 +564,12 @@ const DLAtGlance = ({
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Driver's License</div>
-          <div className="text-xs text-emerald-700 font-semibold flex items-center gap-1">
+          <div className="text-xs text-success font-semibold flex items-center gap-1">
             <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor"><path d="M16.7 5.3a1 1 0 010 1.4l-8 8a1 1 0 01-1.4 0l-4-4a1 1 0 011.4-1.4L8 12.6l7.3-7.3a1 1 0 011.4 0z"/></svg>
             Verified on file
           </div>
         </div>
-        <span className="text-xs text-blue-700 font-semibold">{open ? "Hide" : "View"}</span>
+        <span className="text-xs text-info font-semibold">{open ? "Hide" : "View"}</span>
       </button>
       {open && cur && (
         <div className="p-3 pt-0 space-y-2">
@@ -1158,7 +1158,7 @@ export default function SubmissionDetailSheetClassic({
                   ) && (
                     <button
                       onClick={() => setSaveTheDealOpen(true)}
-                      className="px-3 h-8 rounded-lg bg-emerald-500/95 hover:bg-emerald-500 text-white text-caption font-bold flex items-center gap-1.5 transition"
+                      className="px-3 h-8 rounded-lg bg-success/95 hover:bg-success text-white text-caption font-bold flex items-center gap-1.5 transition"
                     >
                       <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm3.7 6.3a1 1 0 010 1.4l-4 4a1 1 0 01-1.4 0l-2-2a1 1 0 111.4-1.4L9 11.6l3.3-3.3a1 1 0 011.4 0z"/></svg>
                       Save the deal
@@ -1380,7 +1380,7 @@ export default function SubmissionDetailSheetClassic({
                   title={inspectionCompleted ? "Inspection Summary" : customerArrived ? "Inspection · Customer Here" : "Inspection"}
                   right={
                     inspectionCompleted ? (
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-500/10 border border-emerald-500/20 rounded-md px-2 py-0.5">Completed</span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-success bg-success/10 border border-success/20 rounded-md px-2 py-0.5">Completed</span>
                     ) : customerArrived ? (
                       <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-red-700 bg-red-500/10 border border-red-500/30 rounded-md px-2 py-0.5">
                         <span className="relative flex items-center justify-center">
@@ -1390,7 +1390,7 @@ export default function SubmissionDetailSheetClassic({
                         Ready to Start
                       </span>
                     ) : (
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700 bg-amber-500/10 border border-amber-500/20 rounded-md px-2 py-0.5">Pending</span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-warning bg-warning/10 border border-warning/20 rounded-md px-2 py-0.5">Pending</span>
                     )
                   }
                 >
@@ -1459,7 +1459,7 @@ export default function SubmissionDetailSheetClassic({
                   ) : (
                     <div className="space-y-3">
                       <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 flex items-start gap-3">
-                        <svg className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm.75 11.5a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM10 6a.75.75 0 00-.75.75v4a.75.75 0 001.5 0v-4A.75.75 0 0010 6z"/></svg>
+                        <svg className="w-5 h-5 text-warning shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm.75 11.5a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM10 6a.75.75 0 00-.75.75v4a.75.75 0 001.5 0v-4A.75.75 0 0010 6z"/></svg>
                         <div className="flex-1">
                           <div className="font-semibold text-amber-900 text-sm">No inspection completed yet</div>
                           <div className="text-[13px] text-amber-800/80 mt-0.5">Tires and brakes pass/fail will appear here once the car is inspected.</div>
@@ -1635,10 +1635,10 @@ export default function SubmissionDetailSheetClassic({
                     <div className="rounded-xl border border-amber-300/50 bg-amber-50/60 px-4 py-3 flex items-center gap-2.5">
                       <span className="relative flex h-2 w-2 shrink-0">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" aria-hidden="true" />
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" aria-hidden="true" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-warning" aria-hidden="true" />
                       </span>
                       <div className="flex-1 min-w-0">
-                        <div className="text-[11px] uppercase tracking-wider text-amber-700 font-bold">Appraiser working on it</div>
+                        <div className="text-[11px] uppercase tracking-wider text-warning font-bold">Appraiser working on it</div>
                         <div className="text-xs text-amber-900/80 mt-0.5">Started {display} — final number coming back to this file.</div>
                       </div>
                     </div>
@@ -1651,15 +1651,15 @@ export default function SubmissionDetailSheetClassic({
                     <div>
                       <div className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Current Step</div>
                       <div className={`text-sm font-bold mt-0.5 ${
-                        tone === "emerald" ? "text-emerald-700" :
-                        tone === "amber"   ? "text-amber-700" :
+                        tone === "emerald" ? "text-success" :
+                        tone === "amber"   ? "text-warning" :
                         tone === "red"     ? "text-red-700" : "text-slate-900"
                       }`}>{statusLabel}</div>
                     </div>
 
                     {sub.appointment_set && sub.appointment_date && (
                       <div className="rounded-lg bg-sky-50 border border-sky-200 p-3">
-                        <div className="text-[11px] uppercase tracking-wider text-sky-700 font-semibold">Appointment</div>
+                        <div className="text-[11px] uppercase tracking-wider text-info font-semibold">Appointment</div>
                         <div className="text-sm font-bold text-sky-900 mt-0.5">
                           {new Date(sub.appointment_date + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
                         </div>
@@ -1755,7 +1755,7 @@ export default function SubmissionDetailSheetClassic({
                       <span className="text-caption uppercase tracking-wider text-slate-500 font-semibold">Customer Equity</span>
                       {dealValue != null ? (
                         <span className={`font-bold text-[15px] ${
-                          (dealValue - (sub.loan_payoff_amount ?? 0)) >= 0 ? "text-emerald-700" : "text-red-700"
+                          (dealValue - (sub.loan_payoff_amount ?? 0)) >= 0 ? "text-success" : "text-red-700"
                         }`}>
                           {(dealValue - (sub.loan_payoff_amount ?? 0)) >= 0 ? "+" : ""}{fmtMoney(dealValue - (sub.loan_payoff_amount ?? 0))}
                         </span>

@@ -149,10 +149,10 @@ const WhiteLabelSettings = () => {
       <PremiumCard icon={Tag} title="Footer Attribution" description="Choose what appears in the customer-facing site footer">
         {/* Locked state — super admin has forced Autocurb attribution */}
         {siteConfig.force_autocurb_attribution && (
-          <div className="mb-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 flex items-start gap-2.5">
-            <Eye className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <div className="mb-3 rounded-xl border border-warning/40 bg-warning/10 p-3 flex items-start gap-2.5">
+            <Eye className="w-4 h-4 text-warning dark:text-amber-400 shrink-0 mt-0.5" />
             <div className="text-xs text-amber-900 dark:text-amber-100 leading-snug">
-              <strong className="text-amber-700 dark:text-amber-300">Attribution is locked by your Autocurb account.</strong>{" "}
+              <strong className="text-warning dark:text-amber-300">Attribution is locked by your Autocurb account.</strong>{" "}
               Your contract requires the "Powered by Autocurb.ai" credit to remain
               visible. Contact your Autocurb Success Manager to change this setting.
             </div>
@@ -226,7 +226,7 @@ const WhiteLabelSettings = () => {
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <Label className="text-xs font-medium">Custom Domain</Label>
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-micro font-bold uppercase tracking-wider border border-blue-500/40 bg-blue-500/10 text-blue-700 dark:text-blue-300">
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-micro font-bold uppercase tracking-wider border border-info/40 bg-blue-500/10 text-info dark:text-blue-300">
               Enterprise Beta
             </span>
           </div>
@@ -245,12 +245,12 @@ const WhiteLabelSettings = () => {
             </p>
           )}
           {/* Enterprise Beta — DNS/SSL provisioning note */}
-          <div className="rounded-xl border border-blue-500/30 bg-blue-500/5 p-3 flex items-start gap-2.5">
-            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-blue-500/15 border border-blue-500/30 shrink-0">
-              <Mail className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+          <div className="rounded-xl border border-info/30 bg-blue-500/5 p-3 flex items-start gap-2.5">
+            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-blue-500/15 border border-info/30 shrink-0">
+              <Mail className="w-3.5 h-3.5 text-info dark:text-blue-400" />
             </div>
             <p className="text-[11px] leading-snug text-blue-900 dark:text-blue-100">
-              <span className="font-bold text-blue-700 dark:text-blue-300">Enterprise Beta:</span>{" "}
+              <span className="font-bold text-info dark:text-blue-300">Enterprise Beta:</span>{" "}
               Custom sending domain configuration is saved now. Your Autocurb
               Success Manager handles DNS verification and SSL provisioning as
               part of Enterprise Beta enablement — contact support to activate.
@@ -369,7 +369,7 @@ const WhiteLabelSettings = () => {
                   );
                 }
                 return (
-                  <Badge variant="outline" className="text-[9px] text-emerald-600 dark:text-emerald-400 border-emerald-500/30">
+                  <Badge variant="outline" className="text-[9px] text-success dark:text-emerald-400 border-success/30">
                     Attribution hidden
                   </Badge>
                 );

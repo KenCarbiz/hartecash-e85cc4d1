@@ -25,10 +25,10 @@ type AuditRow = {
 };
 
 const KIND_META: Record<AuditKind, { label: string; icon: React.ComponentType<{ className?: string }>; color: string }> = {
-  tenant_view:    { label: "View-as",    icon: Eye,            color: "text-amber-700" },
+  tenant_view:    { label: "View-as",    icon: Eye,            color: "text-warning" },
   rooftop_detach: { label: "Rooftop op", icon: ArrowRightLeft, color: "text-red-700"   },
-  data_egress:    { label: "Data export",icon: FileSearch,     color: "text-sky-700"   },
-  stripe_event:   { label: "Stripe",     icon: Webhook,        color: "text-emerald-700" },
+  data_egress:    { label: "Data export",icon: FileSearch,     color: "text-info"   },
+  stripe_event:   { label: "Stripe",     icon: Webhook,        color: "text-success" },
 };
 
 function fmtRelative(iso: string): string {

@@ -297,7 +297,7 @@ const EquityMining = () => {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center">
-            <Pickaxe className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <Pickaxe className="w-5 h-5 text-success dark:text-emerald-400" />
           </div>
           <div>
             <h2 className="text-2xl font-black text-card-foreground tracking-tight">
@@ -360,12 +360,12 @@ const EquityMining = () => {
       </div>
 
       {/* Service lead ingestion note */}
-      <div className="rounded-2xl border border-blue-500/30 bg-gradient-to-r from-blue-500/8 via-blue-500/4 to-transparent p-4 flex items-start gap-3">
-        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-blue-500/15 border border-blue-500/30 shrink-0">
-          <Info className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+      <div className="rounded-2xl border border-info/30 bg-gradient-to-r from-blue-500/8 via-blue-500/4 to-transparent p-4 flex items-start gap-3">
+        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-blue-500/15 border border-info/30 shrink-0">
+          <Info className="w-4 h-4 text-info dark:text-blue-400" />
         </div>
         <div className="text-xs leading-relaxed text-blue-900 dark:text-blue-100">
-          <p className="font-bold text-blue-700 dark:text-blue-300 text-[11px] uppercase tracking-wider mb-0.5">
+          <p className="font-bold text-info dark:text-blue-300 text-[11px] uppercase tracking-wider mb-0.5">
             Capture service leads instantly
           </p>
           <p>
@@ -408,7 +408,7 @@ const EquityMining = () => {
                 <label className="text-micro font-bold text-muted-foreground uppercase tracking-wider">
                   Minimum Equity
                 </label>
-                <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                <span className="text-[11px] font-bold text-success dark:text-emerald-400">
                   {fmtUsd(minEquity)}
                 </span>
               </div>
@@ -438,14 +438,14 @@ const EquityMining = () => {
           label="Hot Leads"
           value={kpis.hotCount}
           icon={Flame}
-          color="text-emerald-500"
+          color="text-success"
           bg="from-emerald-500/15 to-emerald-600/5"
         />
         <KpiCard
           label="Total Hot Equity"
           value={fmtUsd(kpis.totalHotEquity)}
           icon={DollarSign}
-          color="text-emerald-500"
+          color="text-success"
           bg="from-emerald-500/15 to-emerald-600/5"
         />
         <KpiCard
@@ -459,7 +459,7 @@ const EquityMining = () => {
           label="Converted"
           value={kpis.converted}
           icon={CheckCircle}
-          color="text-amber-500"
+          color="text-warning"
           bg="from-amber-500/15 to-amber-600/5"
         />
       </div>
@@ -468,7 +468,7 @@ const EquityMining = () => {
       <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b border-border bg-gradient-to-r from-emerald-500/5 to-teal-500/5">
           <div className="flex items-center gap-2">
-            <Car className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <Car className="w-4 h-4 text-success dark:text-emerald-400" />
             <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
               Service Drive Leads by Estimated Equity
             </h3>
@@ -532,9 +532,9 @@ const EquityMining = () => {
 
                   const rowBg =
                     equityResult.label === "hot"
-                      ? "hover:bg-emerald-500/5"
+                      ? "hover:bg-success/5"
                       : equityResult.label === "warm"
-                      ? "hover:bg-amber-500/5"
+                      ? "hover:bg-warning/5"
                       : equityResult.label === "negative"
                       ? "hover:bg-destructive/5"
                       : "hover:bg-muted/20";
@@ -585,7 +585,7 @@ const EquityMining = () => {
                               ${Number(payoff).toLocaleString()}
                             </span>
                             {lead.loan_payoff_verified && (
-                              <CheckCircle className="w-3 h-3 text-emerald-500" />
+                              <CheckCircle className="w-3 h-3 text-success" />
                             )}
                           </div>
                         ) : (
@@ -605,7 +605,7 @@ const EquityMining = () => {
                           <span
                             className={`font-semibold ${
                               days > 7
-                                ? "text-amber-600 dark:text-amber-400"
+                                ? "text-warning dark:text-amber-400"
                                 : "text-card-foreground"
                             }`}
                           >
@@ -615,11 +615,11 @@ const EquityMining = () => {
                       </td>
                       <td className="px-4 py-3 text-center">
                         {wasSent ? (
-                          <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-0 text-micro">
+                          <Badge className="bg-emerald-100 text-success dark:bg-emerald-900/40 dark:text-emerald-300 border-0 text-micro">
                             Sent
                           </Badge>
                         ) : lead.progress_status === "contacted" ? (
-                          <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-0 text-micro">
+                          <Badge className="bg-blue-100 text-info dark:bg-blue-900/40 dark:text-blue-300 border-0 text-micro">
                             Contacted
                           </Badge>
                         ) : (
@@ -639,7 +639,7 @@ const EquityMining = () => {
                           {isSending ? (
                             <Loader2 className="w-3 h-3 animate-spin" />
                           ) : wasSent ? (
-                            <CheckCircle className="w-3 h-3 text-emerald-500" />
+                            <CheckCircle className="w-3 h-3 text-success" />
                           ) : (
                             <Send className="w-3 h-3" />
                           )}

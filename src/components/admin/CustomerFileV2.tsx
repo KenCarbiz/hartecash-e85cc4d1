@@ -483,9 +483,9 @@ const CHANNEL_ICON: Record<string, React.ElementType> = {
 
 function statusTone(status?: string): { icon: React.ElementType; cls: string } {
   if (!status) return { icon: Clock, cls: "text-slate-400" };
-  if (["sent", "delivered", "success"].includes(status)) return { icon: CheckCircle2, cls: "text-emerald-500" };
+  if (["sent", "delivered", "success"].includes(status)) return { icon: CheckCircle2, cls: "text-success" };
   if (["failed", "error", "bounced"].includes(status)) return { icon: AlertCircle, cls: "text-red-500" };
-  return { icon: Clock, cls: "text-amber-500" };
+  return { icon: Clock, cls: "text-warning" };
 }
 
 /* ─────────────── TAB: CONVERSATION (full SMS / Email / Calls / Unified threads) ─────────────── */
@@ -903,8 +903,8 @@ function ConversationTab({
                   return (
                     <div key={`${row.k}-${row.m.id}`} className="rounded-lg border border-slate-200 bg-white p-3 flex items-start gap-3">
                       <span className={`shrink-0 inline-flex items-center text-micro font-bold uppercase tracking-wider rounded-md px-2 py-0.5 border ${
-                        row.k === "sms" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
-                        "bg-blue-50 text-blue-700 border-blue-200"
+                        row.k === "sms" ? "bg-emerald-50 text-success border-emerald-200" :
+                        "bg-blue-50 text-info border-blue-200"
                       }`}>{row.k}</span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-baseline justify-between gap-2">
@@ -931,7 +931,7 @@ function ConversationTab({
         <div className="shrink-0 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-5 py-3 space-y-2.5">
           {/* AI Assist tone strip */}
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-micro font-bold uppercase tracking-wider text-amber-600 mr-1">⚡ AI Assist</span>
+            <span className="text-micro font-bold uppercase tracking-wider text-warning mr-1">⚡ AI Assist</span>
             {AI_TONES.map((t) => (
               <button
                 key={t.k}
@@ -1014,14 +1014,14 @@ type ActivityKind = "all" | "messages" | "calls" | "status" | "notes";
 
 const activityKindOf = (action: string): { kind: ActivityKind; label: string; cls: string } => {
   const a = action.toLowerCase();
-  if (a.includes("sms") && a.includes("in")) return { kind: "messages", label: "SMS IN", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" };
-  if (a.includes("sms") && a.includes("out")) return { kind: "messages", label: "SMS OUT", cls: "bg-blue-50 text-blue-700 border-blue-200" };
-  if (a.includes("sms")) return { kind: "messages", label: "SMS", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" };
-  if (a.includes("email") && a.includes("in")) return { kind: "messages", label: "EMAIL IN", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" };
-  if (a.includes("email") && a.includes("out")) return { kind: "messages", label: "EMAIL OUT", cls: "bg-blue-50 text-blue-700 border-blue-200" };
-  if (a.includes("email")) return { kind: "messages", label: "EMAIL", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+  if (a.includes("sms") && a.includes("in")) return { kind: "messages", label: "SMS IN", cls: "bg-emerald-50 text-success border-emerald-200" };
+  if (a.includes("sms") && a.includes("out")) return { kind: "messages", label: "SMS OUT", cls: "bg-blue-50 text-info border-blue-200" };
+  if (a.includes("sms")) return { kind: "messages", label: "SMS", cls: "bg-emerald-50 text-success border-emerald-200" };
+  if (a.includes("email") && a.includes("in")) return { kind: "messages", label: "EMAIL IN", cls: "bg-emerald-50 text-success border-emerald-200" };
+  if (a.includes("email") && a.includes("out")) return { kind: "messages", label: "EMAIL OUT", cls: "bg-blue-50 text-info border-blue-200" };
+  if (a.includes("email")) return { kind: "messages", label: "EMAIL", cls: "bg-emerald-50 text-success border-emerald-200" };
   if (a.includes("call")) return { kind: "calls", label: "CALL", cls: "bg-purple-50 text-purple-700 border-purple-200" };
-  if (a.includes("note")) return { kind: "notes", label: "NOTE", cls: "bg-amber-50 text-amber-700 border-amber-200" };
+  if (a.includes("note")) return { kind: "notes", label: "NOTE", cls: "bg-amber-50 text-warning border-amber-200" };
   if (a.includes("status")) return { kind: "status", label: "STATUS", cls: "bg-slate-100 text-slate-600 border-slate-200" };
   return { kind: "status", label: action.toUpperCase().slice(0, 12), cls: "bg-slate-100 text-slate-600 border-slate-200" };
 };
@@ -1391,7 +1391,7 @@ function VehicleTab({
         title="Driver's License"
         right={
           (dlFront || dlBack) ? (
-            <span className="text-[10.5px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-500/10 border border-emerald-500/30 rounded-md px-2 py-0.5">
+            <span className="text-[10.5px] font-bold uppercase tracking-wider text-success bg-success/10 border border-success/30 rounded-md px-2 py-0.5">
               Verified on file
             </span>
           ) : (
@@ -1416,7 +1416,7 @@ function VehicleTab({
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Match to customer name</div>
-                <div className="text-caption text-emerald-700 font-semibold flex items-center gap-1">
+                <div className="text-caption text-success font-semibold flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Pass
                 </div>
               </div>
@@ -1448,11 +1448,11 @@ function VehicleTab({
         title="Inspection Summary"
         right={
           inspectionDone ? (
-            <span className="text-[10.5px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-500/10 border border-emerald-500/30 rounded-md px-2 py-0.5">
+            <span className="text-[10.5px] font-bold uppercase tracking-wider text-success bg-success/10 border border-success/30 rounded-md px-2 py-0.5">
               Completed
             </span>
           ) : (
-            <span className="text-[10.5px] font-bold uppercase tracking-wider text-amber-700 bg-amber-500/10 border border-amber-500/30 rounded-md px-2 py-0.5">
+            <span className="text-[10.5px] font-bold uppercase tracking-wider text-warning bg-warning/10 border border-warning/30 rounded-md px-2 py-0.5">
               Pending
             </span>
           )
@@ -1465,13 +1465,13 @@ function VehicleTab({
             )}
             <div className="grid grid-cols-2 gap-2">
               <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2">
-                <div className="text-[10.5px] uppercase tracking-wider font-semibold text-emerald-700">Tires</div>
+                <div className="text-[10.5px] uppercase tracking-wider font-semibold text-success">Tires</div>
                 <div className="text-[13px] font-bold text-emerald-800 mt-0.5 flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Pass
                 </div>
               </div>
               <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2">
-                <div className="text-[10.5px] uppercase tracking-wider font-semibold text-emerald-700">Brakes</div>
+                <div className="text-[10.5px] uppercase tracking-wider font-semibold text-success">Brakes</div>
                 <div className="text-[13px] font-bold text-emerald-800 mt-0.5 flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Pass
                 </div>

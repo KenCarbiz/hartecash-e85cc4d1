@@ -152,7 +152,7 @@ const BDCCallsToday = () => {
 
       {tasks && tasks.length === 0 && !loading && (
         <Card className="p-8 text-center text-sm text-muted-foreground">
-          <CheckCircle className="w-6 h-6 mx-auto mb-2 text-emerald-500" />
+          <CheckCircle className="w-6 h-6 mx-auto mb-2 text-success" />
           No open calls. Nice.
         </Card>
       )}
@@ -181,7 +181,7 @@ const BDCCallsToday = () => {
                       cadence: {t.cadence_state} step {t.cadence_step}
                     </Badge>
                     {signals.decline_reason && (
-                      <Badge variant="outline" className="text-micro border-amber-400 text-amber-600">
+                      <Badge variant="outline" className="text-micro border-amber-400 text-warning">
                         reason: {signals.decline_reason}
                       </Badge>
                     )}
@@ -205,13 +205,13 @@ const BDCCallsToday = () => {
                       <span>Last offer <strong className="text-foreground">${Number(offer.current).toLocaleString()}</strong></span>
                     )}
                     {offer.max_quotable != null && (
-                      <span>Authorized to <strong className="text-emerald-700 dark:text-emerald-400">${Number(offer.max_quotable).toLocaleString()}</strong> ({offer.authorized_bump_pct}%)</span>
+                      <span>Authorized to <strong className="text-success dark:text-emerald-400">${Number(offer.max_quotable).toLocaleString()}</strong> ({offer.authorized_bump_pct}%)</span>
                     )}
                     {offer.acv_ceiling != null && (
                       <span>ACV ceiling <strong>${Number(offer.acv_ceiling).toLocaleString()}</strong></span>
                     )}
                     {signals.has_loan && (
-                      <span className="text-amber-600">⚠ Lien w/ {signals.loan_company || "lender"}</span>
+                      <span className="text-warning">⚠ Lien w/ {signals.loan_company || "lender"}</span>
                     )}
                   </div>
 

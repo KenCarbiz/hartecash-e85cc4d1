@@ -253,7 +253,7 @@ const ReferralManagement = () => {
           <p className="text-xs text-muted-foreground">Rewarded</p>
         </div>
         <div className="bg-card border border-border rounded-xl p-4 text-center">
-          <DollarSign className="w-5 h-5 mx-auto mb-1 text-emerald-500" />
+          <DollarSign className="w-5 h-5 mx-auto mb-1 text-success" />
           <p className="text-2xl font-bold text-card-foreground">${totalPaidOut.toLocaleString()}</p>
           <p className="text-xs text-muted-foreground">Total Paid Out</p>
         </div>

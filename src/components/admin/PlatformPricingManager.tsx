@@ -490,8 +490,8 @@ const PlatformPricingManager = () => {
           percentage off. The annual-equivalent monthly price and multiplier
           recompute live.
         </p>
-        <div className="mt-3 flex items-start gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/5 px-3 py-2 text-xs text-emerald-900 dark:text-emerald-200 max-w-2xl">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 mt-1 shrink-0 animate-pulse" />
+        <div className="mt-3 flex items-start gap-2 rounded-xl border border-success/30 bg-success/5 px-3 py-2 text-xs text-emerald-900 dark:text-emerald-200 max-w-2xl">
+          <span className="w-2 h-2 rounded-full bg-success mt-1 shrink-0 animate-pulse" />
           <p className="leading-snug">
             <span className="font-semibold">Live —</span> wired into the dealer
             onboarding picker and the billing plan card. Every save here pushes
@@ -536,7 +536,7 @@ const PlatformPricingManager = () => {
                   </div>
                   {!isAvailable && (
                     <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10">
-                      <Badge variant="outline" className="text-[9px] uppercase tracking-wider font-semibold text-amber-600 border-amber-500/30 bg-amber-500/5">
+                      <Badge variant="outline" className="text-[9px] uppercase tracking-wider font-semibold text-warning border-warning/30 bg-warning/5">
                         Paused
                       </Badge>
                     </div>
@@ -584,7 +584,7 @@ const PlatformPricingManager = () => {
                   </div>
                   {!isAvailable && (
                     <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10">
-                      <Badge variant="outline" className="text-[9px] uppercase tracking-wider font-semibold text-amber-600 border-amber-500/30 bg-amber-500/5">
+                      <Badge variant="outline" className="text-[9px] uppercase tracking-wider font-semibold text-warning border-warning/30 bg-warning/5">
                         Paused
                       </Badge>
                     </div>
@@ -614,8 +614,8 @@ const PlatformPricingManager = () => {
       {/* ─── Block 2: Volume Discount Tiers ─── */}
       <Card className="border-border/60 overflow-hidden">
         <div className="flex items-center gap-3 px-6 py-4 border-b border-border/50 bg-muted/30">
-          <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-            <Building className="w-4.5 h-4.5 text-emerald-600" />
+          <div className="w-9 h-9 rounded-lg bg-success/10 flex items-center justify-center">
+            <Building className="w-4.5 h-4.5 text-success" />
           </div>
           <div className="flex-1">
             <h3 className="text-base font-semibold text-card-foreground tracking-tight">
@@ -665,7 +665,7 @@ const PlatformPricingManager = () => {
                     <span
                       className={`text-lg font-bold ${
                         pct > 0
-                          ? "text-emerald-600 dark:text-emerald-400"
+                          ? "text-success dark:text-emerald-400"
                           : "text-muted-foreground"
                       }`}
                       style={{ fontVariantNumeric: "tabular-nums" }}
@@ -769,7 +769,7 @@ const PlatformPricingManager = () => {
                             key={vt.key}
                             className={`text-right px-4 py-2.5 font-semibold ${
                               changed
-                                ? "text-emerald-600 dark:text-emerald-400"
+                                ? "text-success dark:text-emerald-400"
                                 : "text-muted-foreground"
                             }`}
                             style={{ fontVariantNumeric: "tabular-nums" }}
@@ -807,7 +807,7 @@ const PlatformPricingManager = () => {
                         key={vt.key}
                         className={`text-right px-4 py-2.5 font-semibold ${
                           changed
-                            ? "text-emerald-600 dark:text-emerald-400"
+                            ? "text-success dark:text-emerald-400"
                             : "text-muted-foreground"
                         }`}
                         style={{ fontVariantNumeric: "tabular-nums" }}
@@ -833,7 +833,7 @@ const PlatformPricingManager = () => {
         <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/60 bg-background/90 backdrop-blur-md">
           <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-sm">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-warning animate-pulse" />
               <span className="font-medium text-card-foreground">
                 Unsaved changes
               </span>
@@ -947,7 +947,7 @@ function MainTierRow({
         >
           {annual != null ? (
             <>
-              <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+              <span className="text-sm font-semibold text-success dark:text-emerald-400">
                 ${annual.toLocaleString()}
               </span>
               <span className="text-micro text-muted-foreground">/mo</span>
@@ -1110,7 +1110,7 @@ function BundleRow({
         >
           {annual != null ? (
             <>
-              <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+              <span className="text-sm font-semibold text-success dark:text-emerald-400">
                 ${annual.toLocaleString()}
               </span>
               <span className="text-micro text-muted-foreground">/mo</span>
@@ -1220,7 +1220,7 @@ function MonthlyField({
     >
       <span
         className={`font-semibold ${
-          isOverride ? "text-amber-600 dark:text-amber-400" : "text-card-foreground"
+          isOverride ? "text-warning dark:text-amber-400" : "text-card-foreground"
         }`}
       >
         ${displayed.toLocaleString()}

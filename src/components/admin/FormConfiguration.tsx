@@ -453,7 +453,7 @@ export default function FormConfiguration() {
         </CollapsibleTrigger>
         <CollapsibleContent className="pt-3 space-y-1 px-1">
           {!config.step_vehicle_build && (
-            <p className="text-xs text-amber-600 dark:text-amber-400 px-3 pb-2">
+            <p className="text-xs text-warning dark:text-amber-400 px-3 pb-2">
               ⚠ Vehicle Build step is disabled — these questions won't show regardless.
             </p>
           )}
@@ -475,7 +475,7 @@ export default function FormConfiguration() {
         </CollapsibleTrigger>
         <CollapsibleContent className="pt-3 space-y-1 px-1">
           {!config.step_condition_history && (
-            <p className="text-xs text-amber-600 dark:text-amber-400 px-3 pb-2">
+            <p className="text-xs text-warning dark:text-amber-400 px-3 pb-2">
               ⚠ Condition & History step is disabled — these questions won't show regardless.
             </p>
           )}

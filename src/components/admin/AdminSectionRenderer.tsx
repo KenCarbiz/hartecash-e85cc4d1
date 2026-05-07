@@ -552,25 +552,37 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
     activeSection === "performance" ||
     activeSection === "executive" ||
     activeSection === "gm-hud" ||
-    activeSection === "bdc-health"
+    activeSection === "bdc-health" ||
+    activeSection === "manager-dispatch"
   ) {
     const showHud = canViewExecutiveHUD(userRole);
     // BDC Health: managers + GM/GSM + admins. BDC manager role-key
     // varies by deployment so we accept both bdc_manager and the
     // legacy 'manager' / 'used_car_manager' for safety.
     const showBdcHealth = ["admin", "gsm_gm", "used_car_manager", "manager", "bdc_manager"].includes(userRole);
-    const initialTab: "kpi" | "hud" | "bdc" =
-      activeSection === "bdc-health" && showBdcHealth
-        ? "bdc"
-        : activeSection === "gm-hud" && showHud
-          ? "hud"
-          : "kpi";
+    // Manager Dispatch (item 23): same audience as BDC Health plus
+    // any salesperson with manager_view permissions handled by the
+    // role mapping below.
+    const showManagerDispatch = ["admin", "gsm_gm", "gm", "used_car_manager", "manager"].includes(userRole);
+    const initialTab: "kpi" | "hud" | "bdc" | "dispatch" =
+      activeSection === "manager-dispatch" && showManagerDispatch
+        ? "dispatch"
+        : activeSection === "bdc-health" && showBdcHealth
+          ? "bdc"
+          : activeSection === "gm-hud" && showHud
+            ? "hud"
+            : "kpi";
     return (
       <React.Suspense fallback={<AdminLoadingSkeleton />}>
         <PerformanceHub
           initialTab={initialTab}
           showBdcHealth={showBdcHealth}
           showHud={showHud}
+          showManagerDispatch={showManagerDispatch}
+          onOpenSubmission={(id) => {
+            const sub = submissions.find((s) => s.id === id);
+            if (sub) props.handleView?.(sub);
+          }}
           onHudDrillDown={(target) => {
             // Park the drill-down on the dashboard hook so the All
             // Leads page picks it up on mount, then nav over.
@@ -833,14 +845,14 @@ const AdminSectionRendererInner = (props: AdminSectionRendererProps) => {
     return (
       <TenantOverrideProvider dealershipId={onboardingDealershipId} displayName={onboardingDealerName}>
         <div className="mb-4 flex items-center gap-3 rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-700 px-4 py-2.5">
-          <Store className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+          <Store className="w-4 h-4 text-warning dark:text-amber-400 shrink-0" />
           <span className="text-sm font-medium text-amber-800 dark:text-amber-200 flex-1">
             Configuring: <strong>{onboardingDealerName || onboardingDealershipId}</strong>
           </span>
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 text-xs text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50"
+            className="h-7 text-xs text-warning dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50"
             onClick={() => { setOnboardingDealershipId(null); setOnboardingDealerName(""); }}
           >
             ✕ Back to {tenant.display_name}

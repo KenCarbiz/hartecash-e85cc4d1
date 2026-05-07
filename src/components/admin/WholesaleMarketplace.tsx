@@ -134,7 +134,7 @@ const WholesaleMarketplace = () => {
             <h2 className="text-2xl font-black text-card-foreground tracking-tight">
               Wholesale Marketplace
             </h2>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider border border-blue-500/40 bg-blue-500/10 text-blue-700 dark:text-blue-300">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider border border-info/40 bg-blue-500/10 text-info dark:text-blue-300">
               <Store className="w-3.5 h-3.5" />
               Enterprise Beta
             </span>
@@ -146,12 +146,12 @@ const WholesaleMarketplace = () => {
       </div>
 
       {/* Enterprise Beta banner */}
-      <div className="rounded-2xl border border-blue-500/30 bg-gradient-to-r from-blue-500/10 via-blue-500/5 to-transparent p-4 flex items-start gap-3">
-        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-blue-500/15 border border-blue-500/30 shrink-0">
-          <Store className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+      <div className="rounded-2xl border border-info/30 bg-gradient-to-r from-blue-500/10 via-blue-500/5 to-transparent p-4 flex items-start gap-3">
+        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-blue-500/15 border border-info/30 shrink-0">
+          <Store className="w-4 h-4 text-info dark:text-blue-400" />
         </div>
         <div className="text-xs leading-relaxed text-blue-900 dark:text-blue-100">
-          <p className="font-bold text-blue-700 dark:text-blue-300 text-[11px] uppercase tracking-wider mb-0.5">
+          <p className="font-bold text-info dark:text-blue-300 text-[11px] uppercase tracking-wider mb-0.5">
             Enterprise Beta · Wholesale Marketplace
           </p>
           <p>
@@ -176,14 +176,14 @@ const WholesaleMarketplace = () => {
           label="Avg Asking Price"
           value={stats.avgAskingPrice > 0 ? `$${stats.avgAskingPrice.toLocaleString()}` : "--"}
           icon={DollarSign}
-          color="text-emerald-500"
+          color="text-success"
           bg="from-emerald-500/15 to-emerald-600/5"
         />
         <StatCard
           label="Avg Days Listed"
           value={stats.avgDaysListed > 0 ? `${stats.avgDaysListed}d` : "--"}
           icon={BarChart3}
-          color="text-amber-500"
+          color="text-warning"
           bg="from-amber-500/15 to-amber-600/5"
         />
       </div>
@@ -284,7 +284,7 @@ const WholesaleMarketplace = () => {
                       </p>
                       <div className="flex items-center justify-end gap-1">
                         <Clock className="w-3 h-3 text-muted-foreground" />
-                        <p className={`text-lg font-black ${days > 14 ? "text-amber-600 dark:text-amber-400" : "text-card-foreground"}`}>
+                        <p className={`text-lg font-black ${days > 14 ? "text-warning dark:text-amber-400" : "text-card-foreground"}`}>
                           {days}
                         </p>
                       </div>

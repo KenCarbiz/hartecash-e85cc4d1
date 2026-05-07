@@ -98,7 +98,7 @@ const BDCSelector = ({ selected, onSelect, disabled }: Props) => {
                 <div className="flex items-center gap-2">
                   <h3 className="font-bold text-sm sm:text-base text-card-foreground">{card.title}</h3>
                   {card.badge && (
-                    <span className="text-micro font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                    <span className="text-micro font-bold px-2 py-0.5 rounded-full bg-warning/10 text-warning dark:text-amber-400 border border-warning/20">
                       {card.badge}
                     </span>
                   )}
