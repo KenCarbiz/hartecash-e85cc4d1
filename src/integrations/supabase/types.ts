@@ -593,6 +593,7 @@ export type Database = {
           plan_tier: string
           special_instructions: string
           start_date: string | null
+          twilio_from_number: string | null
           updated_at: string
           voice_ai_provider: string
         }
@@ -618,6 +619,7 @@ export type Database = {
           plan_tier?: string
           special_instructions?: string
           start_date?: string | null
+          twilio_from_number?: string | null
           updated_at?: string
           voice_ai_provider?: string
         }
@@ -643,6 +645,7 @@ export type Database = {
           plan_tier?: string
           special_instructions?: string
           start_date?: string | null
+          twilio_from_number?: string | null
           updated_at?: string
           voice_ai_provider?: string
         }
@@ -1596,6 +1599,7 @@ export type Database = {
           dealership_id: string
           error_message: string | null
           id: string
+          idempotency_key: string | null
           imported_at: string | null
           imported_from_dms: string | null
           legacy_id: string | null
@@ -1611,6 +1615,7 @@ export type Database = {
           dealership_id?: string
           error_message?: string | null
           id?: string
+          idempotency_key?: string | null
           imported_at?: string | null
           imported_from_dms?: string | null
           legacy_id?: string | null
@@ -1626,6 +1631,7 @@ export type Database = {
           dealership_id?: string
           error_message?: string | null
           id?: string
+          idempotency_key?: string | null
           imported_at?: string | null
           imported_from_dms?: string | null
           legacy_id?: string | null
@@ -4033,6 +4039,63 @@ export type Database = {
         }
         Relationships: []
       }
+      trade_up_incentives: {
+        Row: {
+          active_until: string | null
+          bonus_amount: number
+          created_at: string
+          dealership_id: string
+          description: string | null
+          disclaimer: string | null
+          headline: string
+          id: string
+          inventory_price_ceiling: number | null
+          inventory_price_floor: number | null
+          inventory_scope: string
+          inventory_url: string | null
+          is_active: boolean
+          sort_order: number
+          trigger_moment: string
+          updated_at: string
+        }
+        Insert: {
+          active_until?: string | null
+          bonus_amount?: number
+          created_at?: string
+          dealership_id: string
+          description?: string | null
+          disclaimer?: string | null
+          headline: string
+          id?: string
+          inventory_price_ceiling?: number | null
+          inventory_price_floor?: number | null
+          inventory_scope?: string
+          inventory_url?: string | null
+          is_active?: boolean
+          sort_order?: number
+          trigger_moment: string
+          updated_at?: string
+        }
+        Update: {
+          active_until?: string | null
+          bonus_amount?: number
+          created_at?: string
+          dealership_id?: string
+          description?: string | null
+          disclaimer?: string | null
+          headline?: string
+          id?: string
+          inventory_price_ceiling?: number | null
+          inventory_price_floor?: number | null
+          inventory_scope?: string
+          inventory_url?: string | null
+          is_active?: boolean
+          sort_order?: number
+          trigger_moment?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           click_to_dial_dnd: boolean
@@ -4160,6 +4223,14 @@ export type Database = {
       can_act_in_state: {
         Args: { _state: string; _user_id: string }
         Returns: boolean
+      }
+      can_touch: {
+        Args: { _channel: string; _submission_id: string }
+        Returns: {
+          decision: string
+          detail: string
+          reason: string
+        }[]
       }
       can_view_submission: {
         Args: {
