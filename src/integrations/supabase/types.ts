@@ -3348,9 +3348,14 @@ export type Database = {
           appraisal_finalized: boolean
           appraisal_finalized_at: string | null
           appraisal_finalized_by: string | null
+          appraisal_started_at: string | null
           appraised_by: string | null
+          appraised_by_user_id: string | null
           arrived_at: string | null
+          assigned_at: string | null
+          assigned_bdc_rep_id: string | null
           assigned_rep_email: string | null
+          assigned_salesperson_id: string | null
           bb_add_deducts: Json | null
           bb_base_whole_avg: number | null
           bb_class_name: string | null
@@ -3479,9 +3484,14 @@ export type Database = {
           appraisal_finalized?: boolean
           appraisal_finalized_at?: string | null
           appraisal_finalized_by?: string | null
+          appraisal_started_at?: string | null
           appraised_by?: string | null
+          appraised_by_user_id?: string | null
           arrived_at?: string | null
+          assigned_at?: string | null
+          assigned_bdc_rep_id?: string | null
           assigned_rep_email?: string | null
+          assigned_salesperson_id?: string | null
           bb_add_deducts?: Json | null
           bb_base_whole_avg?: number | null
           bb_class_name?: string | null
@@ -3610,9 +3620,14 @@ export type Database = {
           appraisal_finalized?: boolean
           appraisal_finalized_at?: string | null
           appraisal_finalized_by?: string | null
+          appraisal_started_at?: string | null
           appraised_by?: string | null
+          appraised_by_user_id?: string | null
           arrived_at?: string | null
+          assigned_at?: string | null
+          assigned_bdc_rep_id?: string | null
           assigned_rep_email?: string | null
+          assigned_salesperson_id?: string | null
           bb_add_deducts?: Json | null
           bb_base_whole_avg?: number | null
           bb_class_name?: string | null
@@ -4077,6 +4092,10 @@ export type Database = {
           _token: string
         }
         Returns: string
+      }
+      assign_submission_user: {
+        Args: { _role: string; _submission_id: string; _user_id: string }
+        Returns: undefined
       }
       can_act_in_state: {
         Args: { _state: string; _user_id: string }
