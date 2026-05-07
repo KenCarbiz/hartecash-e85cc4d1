@@ -161,6 +161,10 @@ interface AdminSectionRendererProps {
   fetchSubmissions: () => void;
   fetchAppointments: () => void;
   toast: (opts: any) => void;
+  leadsInitialChip?: string | null;
+  leadsPrefilter?: any;
+  setLeadsPrefilter?: (v: any) => void;
+  setLeadsInitialChip?: (v: string | null) => void;
 }
 
 const submissionsTableProps = (
