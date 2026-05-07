@@ -5159,6 +5159,18 @@ export type Database = {
       }
     }
     Views: {
+      v_unmatched_customer_phrases: {
+        Row: {
+          avg_call_composite: number | null
+          cluster_key: string | null
+          dealership_id: string | null
+          distinct_calls: number | null
+          last_seen_at: string | null
+          occurrence_count: number | null
+          sample_text: string | null
+        }
+        Relationships: []
+      }
       v_voice_call_quality: {
         Row: {
           call_id: string | null
