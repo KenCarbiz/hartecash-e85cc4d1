@@ -48,6 +48,8 @@ const SHOT_EXPECTATIONS: Record<string, string> = {
   exterior_passenger: "the passenger-side profile of a car, showing the side from front wheel to rear wheel. Most of the side of the vehicle should be visible.",
   dashboard_odometer: "a vehicle's dashboard or instrument cluster taken from the driver seat. The odometer reading should be visible — even partially is OK as long as numbers are legible.",
   tires_wheels: "a close-up of one tire and wheel of a car, showing tread surface and wheel face. Could be any corner of the vehicle.",
+  interior_driver_seat: "the driver-side seat of a car, taken from outside the open driver door. The seatback, seat cushion, and side bolsters should be visible — even partial views are acceptable.",
+  interior_steering_wheel: "a vehicle's steering wheel, taken straight on from the driver seat. The wheel rim, center hub, and any control buttons should be visible.",
 };
 
 serve(async (req) => {

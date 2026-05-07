@@ -137,6 +137,43 @@ const ShotSilhouette = ({ shotKey, className, state = "neutral" }: ShotSilhouett
         </svg>
       );
 
+    case "interior_driver_seat":
+      return (
+        <svg viewBox="0 0 180 200" className={className}>
+          {/* Seatback — slight curve, side bolsters suggested */}
+          <path d="M50 30 Q50 20 60 20 L120 20 Q130 20 130 30 L130 110 L50 110 Z" {...common} />
+          {/* Side bolster lines (the wear-tell zone) */}
+          <line x1="60" y1="30" x2="60" y2="110" {...common} />
+          <line x1="120" y1="30" x2="120" y2="110" {...common} />
+          {/* Seat base / cushion */}
+          <path d="M40 110 L140 110 L150 170 L30 170 Z" {...common} />
+          {/* Bolster lines on the cushion (where getting-in-out wears) */}
+          <line x1="48" y1="110" x2="38" y2="170" {...common} />
+          <line x1="132" y1="110" x2="142" y2="170" {...common} />
+          {/* Headrest */}
+          <rect x="70" y="2" width="40" height="22" rx="6" {...common} />
+        </svg>
+      );
+
+    case "interior_steering_wheel":
+      return (
+        <svg viewBox="0 0 200 200" className={className}>
+          {/* Outer wheel rim */}
+          <circle cx="100" cy="100" r="78" {...common} />
+          {/* Inner rim hint (depth) */}
+          <circle cx="100" cy="100" r="68" strokeDasharray="3 5" {...common} />
+          {/* Center hub */}
+          <ellipse cx="100" cy="100" rx="28" ry="22" {...common} />
+          {/* Three-spoke layout (left, right, bottom) — modern cars */}
+          <line x1="32" y1="100" x2="72" y2="100" {...common} />
+          <line x1="128" y1="100" x2="168" y2="100" {...common} />
+          <line x1="100" y1="122" x2="100" y2="170" {...common} />
+          {/* Buttons / control hints on the spokes */}
+          <circle cx="50" cy="100" r="3" {...common} />
+          <circle cx="150" cy="100" r="3" {...common} />
+        </svg>
+      );
+
     default:
       return (
         <svg viewBox="0 0 200 200" className={className}>

@@ -62,6 +62,33 @@ const REQUIRED_SHOTS = [
   { id: "tires_wheels",      label: "Tire & Wheel",   captured: "Tire wear pattern visible",  tip: "Get close — show the tread groove" },
 ];
 
+// Optional bonus shots — the AI uses these to cross-reference
+// odometer OCR against actual interior wear. Heavily-worn driver
+// seats and shiny worn steering-wheel grips are the strongest
+// "true miles higher than odometer says" tells in the appraisal
+// industry. Keeping these clean = bigger bump.
+//
+// Bonus shots don't gate Submit — allComplete is calculated only
+// against REQUIRED_SHOTS so a customer can submit with 6 of 6
+// required + 0 of 2 bonus and still get their core bump. The
+// extra ~$200 chip per shot is the carrot for the engaged ones.
+const BONUS_SHOTS = [
+  {
+    id: "interior_driver_seat",
+    label: "Driver Seat",
+    captured: "Driver seat captured",
+    tip: "Whole seat from the door, daylight if you can",
+    rewardHint: "+ up to $200 if seat looks low-wear",
+  },
+  {
+    id: "interior_steering_wheel",
+    label: "Steering Wheel",
+    captured: "Steering wheel captured",
+    tip: "Straight on from the driver seat",
+    rewardHint: "+ up to $150 if wheel looks original",
+  },
+];
+
 type ShotState = { file?: File; preview?: string; uploaded?: boolean };
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
@@ -284,8 +311,12 @@ const BoostOfferClarity = () => {
       // shown on the next screen comes straight from the AI run.
       setPhase("evaluating");
 
+      // Bundle every shot — required + bonus — that the customer
+      // actually uploaded. boost-evaluate runs vision per path and
+      // tolerates absent bonus shots gracefully (just skips those
+      // signals instead of penalizing).
       const photoPaths: Record<string, string> = {};
-      for (const shot of REQUIRED_SHOTS) {
+      for (const shot of [...REQUIRED_SHOTS, ...BONUS_SHOTS]) {
         const matched = allFiles?.find((f) => f.name.startsWith(`${shot.id}-`));
         if (matched) photoPaths[shot.id] = `${token}/${matched.name}`;
       }
@@ -786,6 +817,97 @@ const BoostOfferClarity = () => {
           </div>
         </section>
 
+        {/* ── Bonus shots ── Optional driver seat + steering wheel.
+              These are the strongest interior signals for "is the
+              odometer telling the truth" — clean seat bolsters and
+              an unworn wheel grip suggest the miles are real. We
+              don't gate Submit on them; they're an extra-credit
+              opportunity for engaged customers. */}
+        <section aria-label="Bonus photos" className="space-y-4">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">
+              Bonus — extra value
+            </p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-700">
+              Optional
+            </p>
+          </div>
+          <p className="text-xs text-zinc-500 leading-relaxed -mt-2">
+            Two more photos worth your time — the AI uses them to confirm your{" "}
+            {modelStr || "vehicle"} has been well cared for. Each can add to your offer.
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            {BONUS_SHOTS.map((shot) => {
+              const state = shotState[shot.id];
+              const filled = state?.file || state?.uploaded;
+              return (
+                <div key={shot.id} className="space-y-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleTileClick(shot.id)}
+                    className={`relative aspect-[4/3] w-full rounded-2xl overflow-hidden border-2 transition-all text-left ${
+                      filled
+                        ? "border-emerald-500"
+                        : "border-emerald-200 hover:border-emerald-400 bg-emerald-50/30 shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
+                    }`}
+                  >
+                    {state?.preview ? (
+                      <img src={state.preview} alt={shot.label} className="absolute inset-0 w-full h-full object-cover" />
+                    ) : (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 px-3 text-center text-zinc-600">
+                        <Sparkles className="w-4 h-4 text-emerald-600" aria-hidden="true" />
+                        <span className="text-xs font-semibold uppercase tracking-wider">
+                          {shot.label}
+                        </span>
+                        <span className="text-[10px] font-medium text-emerald-700 leading-snug">
+                          {shot.rewardHint}
+                        </span>
+                      </div>
+                    )}
+                    {filled && (
+                      <span className="absolute top-2 right-2 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center" aria-hidden="true">
+                        <CheckCircle className="w-3.5 h-3.5" strokeWidth={3} />
+                      </span>
+                    )}
+                    {state?.file && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeShot(shot.id);
+                        }}
+                        className="absolute top-2 left-2 w-6 h-6 rounded-full bg-zinc-900/80 text-white flex items-center justify-center"
+                        aria-label="Remove photo"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                    <span className="absolute bottom-0 left-0 right-0 px-3 py-2 bg-gradient-to-t from-black/60 to-transparent text-white text-[11px] font-semibold tracking-tight">
+                      {filled ? "Tap to retake" : shot.tip}
+                    </span>
+                  </button>
+                  <motion.p
+                    initial={false}
+                    animate={{
+                      opacity: filled ? 1 : 0,
+                      y: filled ? 0 : -2,
+                    }}
+                    transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                    className="text-[10px] font-semibold text-emerald-700 inline-flex items-center gap-1 px-1 min-h-[14px]"
+                  >
+                    {filled && (
+                      <>
+                        <CheckCircle className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
+                        <span className="leading-tight">{shot.captured}</span>
+                      </>
+                    )}
+                  </motion.p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
         {/* What happens next — mini-explainer card so the customer
             knows the bump isn't automatic and roughly how long it takes. */}
         <section
@@ -856,7 +978,11 @@ const BoostOfferClarity = () => {
           permission on page load. The component handles its own
           stream lifecycle — every exit path stops the tracks. */}
       {activeShot && (() => {
-        const shotDef = REQUIRED_SHOTS.find((s) => s.id === activeShot);
+        // Required + bonus both go through the same camera modal —
+        // look in either list so bonus tile-taps work identically.
+        const shotDef =
+          REQUIRED_SHOTS.find((s) => s.id === activeShot) ||
+          BONUS_SHOTS.find((s) => s.id === activeShot);
         if (!shotDef) return null;
         return (
           <CaptureWithOverlay

@@ -97,7 +97,13 @@ const SIGNAL_DEFAULTS: Record<string, { amount: number; enabled: boolean }> = {
   // Tier 4
   no_warning_lights:       { amount: 200, enabled: true },
   clean_cabin:             { amount: 125, enabled: true },
-  // Tier 5 (defined but not yet emitted by the orchestrator below)
+  // Tier 5 — bonus interior shots. Strongest mileage-honesty
+  // tells in the appraisal industry. Only fire when the customer
+  // actually uploads the bonus photo (driver seat / steering
+  // wheel), so they're a true upside lever, not a baseline bump.
+  driver_seat_low_wear:    { amount: 200, enabled: true },
+  steering_wheel_unworn:   { amount: 150, enabled: true },
+  // Tier 6 (defined but not yet emitted by the orchestrator below)
   headlight_clarity:       { amount: 100, enabled: false },
 };
 
@@ -499,7 +505,45 @@ serve(async (req) => {
     }
   }
 
-  // 4g. Cap the total — never exceeds MAX_BUMP_TOTAL even if every
+  // 4g. Bonus — driver seat. We fire driver_seat_low_wear when the
+  // customer uploaded the bonus shot AND the AI did NOT flag heavy
+  // wear / rips / stains in cabin_concerns or in damage_items
+  // localized to the seat. Heavily-worn driver bolsters are the
+  // strongest "true miles higher than odometer says" tell, so a
+  // clean seat is a real positive signal.
+  const seatReport = latestByCategory.interior_driver_seat;
+  if (seatReport) {
+    const concerns: string[] = seatReport.verification_findings?.cabin_concerns || [];
+    const hasWear = concerns.includes("heavy_wear") || concerns.includes("rips") || concerns.includes("stains");
+    type Dmg = { type?: string; location?: string; severity?: string };
+    const seatDamage = (seatReport.damage_items as Dmg[] | null || []).filter(
+      (d) => /seat|bolster|cushion/i.test(d.location || "") &&
+             d.severity !== "minor",
+    );
+    if (!hasWear && seatDamage.length === 0) {
+      pushSignal("driver_seat_low_wear", "Driver seat low-wear — bolsters and cushion clean");
+    }
+  }
+
+  // 4h. Bonus — steering wheel. We fire steering_wheel_unworn when
+  // the wheel shot has no damage_items localized to it (a glossy
+  // worn grip would be flagged by analyze-vehicle-damage as wear
+  // at location:steering_wheel). Original-condition wheel = miles
+  // are honest.
+  const wheelReport = latestByCategory.interior_steering_wheel;
+  if (wheelReport) {
+    type Dmg = { type?: string; location?: string; severity?: string };
+    const wheelDamage = (wheelReport.damage_items as Dmg[] | null || []).filter(
+      (d) => /steering|wheel/i.test(d.location || "") &&
+             /wear|gloss|smooth|shiny|crack/i.test(d.type || "") &&
+             d.severity !== "minor",
+    );
+    if (wheelDamage.length === 0) {
+      pushSignal("steering_wheel_unworn", "Steering wheel original — no glossy-grip wear");
+    }
+  }
+
+  // 4i. Cap the total — never exceeds MAX_BUMP_TOTAL even if every
   // signal fires. Bumps preserve order (highest-signal first) and
   // we trim from the end if needed.
   let runningTotal = 0;

@@ -24,7 +24,7 @@ import { Loader2, Check, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
  * what matters without analysis paralysis on the rest.
  */
 
-type Tier = 1 | 2 | 3 | 4;
+type Tier = 1 | 2 | 3 | 4 | 5;
 
 interface SignalDef {
   key: string;
@@ -150,6 +150,29 @@ const SIGNALS: SignalDef[] = [
     defaultAmount: 125,
     defaultEnabled: true,
   },
+
+  // ── Tier 5 — Bonus interior shots (driver seat + steering wheel)
+  // These are the strongest mileage-honesty signals available from
+  // a photo set. Only fire when the customer uploads the optional
+  // bonus shot, so they're upside-only — never a baseline bump.
+  {
+    key: "driver_seat_low_wear",
+    tier: 5,
+    label: "Driver seat shows low wear",
+    description:
+      "AI checks the bolster, cushion, and back for heavy wear, rips, stains, or sagging. A clean driver seat suggests miles are honest — heavily-bolstered wear is the #1 'true miles higher than odometer says' tell in the appraisal industry.",
+    defaultAmount: 200,
+    defaultEnabled: true,
+  },
+  {
+    key: "steering_wheel_unworn",
+    tier: 5,
+    label: "Steering wheel looks original",
+    description:
+      "AI checks the grip area for glossy wear band, leather cracking, or worn buttons. An original-condition wheel cross-checks the odometer reading — high-mileage cars almost always show a shiny worn grip from years of contact.",
+    defaultAmount: 150,
+    defaultEnabled: true,
+  },
 ];
 
 const TIER_LABEL: Record<Tier, string> = {
@@ -157,6 +180,7 @@ const TIER_LABEL: Record<Tier, string> = {
   2: "Tier 2 — Body & paint",
   3: "Tier 3 — Tires & wheels",
   4: "Tier 4 — Dashboard & cabin",
+  5: "Tier 5 — Interior bonus shots",
 };
 
 interface RuleState {
