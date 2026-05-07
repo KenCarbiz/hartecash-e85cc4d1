@@ -444,96 +444,138 @@ export type Database = {
           call_type: string
           content: string
           created_at: string
+          created_from_call_id: string | null
           dealership_id: string
           id: string
           is_active: boolean
+          last_promoted_at: string | null
+          loss_count: number
+          parent_variant_id: string | null
           phase_key: string
           phase_position: string
+          retired_at: string | null
           signal_keywords: string[]
           sort_order: number
           updated_at: string
           use_when: string | null
+          variant_id: string | null
           variant_label: string
+          win_count: number
         }
         Insert: {
           advances_to?: string | null
           call_type: string
           content: string
           created_at?: string
+          created_from_call_id?: string | null
           dealership_id?: string
           id?: string
           is_active?: boolean
+          last_promoted_at?: string | null
+          loss_count?: number
+          parent_variant_id?: string | null
           phase_key: string
           phase_position: string
+          retired_at?: string | null
           signal_keywords?: string[]
           sort_order?: number
           updated_at?: string
           use_when?: string | null
+          variant_id?: string | null
           variant_label: string
+          win_count?: number
         }
         Update: {
           advances_to?: string | null
           call_type?: string
           content?: string
           created_at?: string
+          created_from_call_id?: string | null
           dealership_id?: string
           id?: string
           is_active?: boolean
+          last_promoted_at?: string | null
+          loss_count?: number
+          parent_variant_id?: string | null
           phase_key?: string
           phase_position?: string
+          retired_at?: string | null
           signal_keywords?: string[]
           sort_order?: number
           updated_at?: string
           use_when?: string | null
+          variant_id?: string | null
           variant_label?: string
+          win_count?: number
         }
         Relationships: []
       }
       customer_signals: {
         Row: {
           created_at: string
+          created_from_call_id: string | null
           customer_state: string
           dealership_id: string
           do_not_say: string[]
           hand_off_to_human: boolean
           id: string
           is_active: boolean
+          last_promoted_at: string | null
+          loss_count: number
+          parent_variant_id: string | null
           recommended_posture: string
           response_variants: string[]
+          retired_at: string | null
           signal_key: string
           signal_phrases: string[]
           sort_order: number
           updated_at: string
+          variant_id: string | null
+          win_count: number
         }
         Insert: {
           created_at?: string
+          created_from_call_id?: string | null
           customer_state: string
           dealership_id?: string
           do_not_say?: string[]
           hand_off_to_human?: boolean
           id?: string
           is_active?: boolean
+          last_promoted_at?: string | null
+          loss_count?: number
+          parent_variant_id?: string | null
           recommended_posture: string
           response_variants?: string[]
+          retired_at?: string | null
           signal_key: string
           signal_phrases?: string[]
           sort_order?: number
           updated_at?: string
+          variant_id?: string | null
+          win_count?: number
         }
         Update: {
           created_at?: string
+          created_from_call_id?: string | null
           customer_state?: string
           dealership_id?: string
           do_not_say?: string[]
           hand_off_to_human?: boolean
           id?: string
           is_active?: boolean
+          last_promoted_at?: string | null
+          loss_count?: number
+          parent_variant_id?: string | null
           recommended_posture?: string
           response_variants?: string[]
+          retired_at?: string | null
           signal_key?: string
           signal_phrases?: string[]
           sort_order?: number
           updated_at?: string
+          variant_id?: string | null
+          win_count?: number
         }
         Relationships: []
       }
@@ -1521,49 +1563,70 @@ export type Database = {
           applies_to_segments: string[]
           citable_number: string | null
           created_at: string
+          created_from_call_id: string | null
           dealership_id: string
           evidence_url: string | null
           id: string
           is_active: boolean
+          last_promoted_at: string | null
           last_verified_at: string | null
+          loss_count: number
+          parent_variant_id: string | null
+          retired_at: string | null
           scope: string
           short_claim: string
           sort_order: number
           topic: string
           updated_at: string
           use_when: string | null
+          variant_id: string | null
+          win_count: number
         }
         Insert: {
           applies_to_segments?: string[]
           citable_number?: string | null
           created_at?: string
+          created_from_call_id?: string | null
           dealership_id?: string
           evidence_url?: string | null
           id?: string
           is_active?: boolean
+          last_promoted_at?: string | null
           last_verified_at?: string | null
+          loss_count?: number
+          parent_variant_id?: string | null
+          retired_at?: string | null
           scope: string
           short_claim: string
           sort_order?: number
           topic: string
           updated_at?: string
           use_when?: string | null
+          variant_id?: string | null
+          win_count?: number
         }
         Update: {
           applies_to_segments?: string[]
           citable_number?: string | null
           created_at?: string
+          created_from_call_id?: string | null
           dealership_id?: string
           evidence_url?: string | null
           id?: string
           is_active?: boolean
+          last_promoted_at?: string | null
           last_verified_at?: string | null
+          loss_count?: number
+          parent_variant_id?: string | null
+          retired_at?: string | null
           scope?: string
           short_claim?: string
           sort_order?: number
           topic?: string
           updated_at?: string
           use_when?: string | null
+          variant_id?: string | null
+          win_count?: number
         }
         Relationships: []
       }
@@ -4450,50 +4513,71 @@ export type Database = {
         Row: {
           ai_disclosure_line: string | null
           created_at: string
+          created_from_call_id: string | null
           dealership_id: string
           greeting_style: string | null
           hard_constraints: string[]
           id: string
           is_active: boolean
+          last_promoted_at: string | null
+          loss_count: number
           mission_block: string
+          parent_variant_id: string | null
           persona_name: string
+          retired_at: string | null
           signoff_style: string | null
           sort_order: number
           success_criteria: string
           updated_at: string
+          variant_id: string | null
           voice_rules: string
+          win_count: number
         }
         Insert: {
           ai_disclosure_line?: string | null
           created_at?: string
+          created_from_call_id?: string | null
           dealership_id?: string
           greeting_style?: string | null
           hard_constraints?: string[]
           id?: string
           is_active?: boolean
+          last_promoted_at?: string | null
+          loss_count?: number
           mission_block: string
+          parent_variant_id?: string | null
           persona_name: string
+          retired_at?: string | null
           signoff_style?: string | null
           sort_order?: number
           success_criteria: string
           updated_at?: string
+          variant_id?: string | null
           voice_rules: string
+          win_count?: number
         }
         Update: {
           ai_disclosure_line?: string | null
           created_at?: string
+          created_from_call_id?: string | null
           dealership_id?: string
           greeting_style?: string | null
           hard_constraints?: string[]
           id?: string
           is_active?: boolean
+          last_promoted_at?: string | null
+          loss_count?: number
           mission_block?: string
+          parent_variant_id?: string | null
           persona_name?: string
+          retired_at?: string | null
           signoff_style?: string | null
           sort_order?: number
           success_criteria?: string
           updated_at?: string
+          variant_id?: string | null
           voice_rules?: string
+          win_count?: number
         }
         Relationships: []
       }
@@ -4601,6 +4685,44 @@ export type Database = {
             columns: ["submission_id"]
             isOneToOne: false
             referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voice_call_variants_used: {
+        Row: {
+          call_id: string
+          id: string
+          recorded_at: string
+          slot_key: string
+          source_table: string
+          thompson_draw: number | null
+          variant_id: string
+        }
+        Insert: {
+          call_id: string
+          id?: string
+          recorded_at?: string
+          slot_key: string
+          source_table: string
+          thompson_draw?: number | null
+          variant_id: string
+        }
+        Update: {
+          call_id?: string
+          id?: string
+          recorded_at?: string
+          slot_key?: string
+          source_table?: string
+          thompson_draw?: number | null
+          variant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_call_variants_used_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
+            referencedRelation: "voice_call_log"
             referencedColumns: ["id"]
           },
         ]
@@ -4731,6 +4853,14 @@ export type Database = {
         }
         Returns: string
       }
+      apply_voice_call_outcome: {
+        Args: {
+          _call_id: string
+          _outcome_score: number
+          _retire_gating_failures?: boolean
+        }
+        Returns: undefined
+      }
       assign_submission_user: {
         Args: { _role: string; _submission_id: string; _user_id: string }
         Returns: undefined
@@ -4768,6 +4898,7 @@ export type Database = {
         }
         Returns: string
       }
+      decay_voice_variant_counts: { Args: never; Returns: undefined }
       decide_offer_request: {
         Args: {
           _decision: string
