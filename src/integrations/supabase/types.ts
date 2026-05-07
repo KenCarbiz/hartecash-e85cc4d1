@@ -1747,12 +1747,14 @@ export type Database = {
           channel: string
           created_at: string
           dealership_id: string
+          delivered_at: string | null
           error_message: string | null
           id: string
           idempotency_key: string | null
           imported_at: string | null
           imported_from_dms: string | null
           legacy_id: string | null
+          provider_message_id: string | null
           recipient: string
           status: string
           store_location_id: string | null
@@ -1763,12 +1765,14 @@ export type Database = {
           channel: string
           created_at?: string
           dealership_id?: string
+          delivered_at?: string | null
           error_message?: string | null
           id?: string
           idempotency_key?: string | null
           imported_at?: string | null
           imported_from_dms?: string | null
           legacy_id?: string | null
+          provider_message_id?: string | null
           recipient: string
           status?: string
           store_location_id?: string | null
@@ -1779,12 +1783,14 @@ export type Database = {
           channel?: string
           created_at?: string
           dealership_id?: string
+          delivered_at?: string | null
           error_message?: string | null
           id?: string
           idempotency_key?: string | null
           imported_at?: string | null
           imported_from_dms?: string | null
           legacy_id?: string | null
+          provider_message_id?: string | null
           recipient?: string
           status?: string
           store_location_id?: string | null
