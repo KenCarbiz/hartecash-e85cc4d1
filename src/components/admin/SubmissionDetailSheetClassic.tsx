@@ -898,6 +898,15 @@ export default function SubmissionDetailSheetClassic({
     onUpdate(next);
   }
 
+  // ── Hooks above any early return ─────────────────────────────────
+  // useLatestOfferBump MUST be called unconditionally on every
+  // render — putting it after the !selected || !sub guard below
+  // caused React error #310 ("rendered more hooks than during the
+  // previous render") because the hook count changed between the
+  // loading and ready render. Hook accepts null and short-circuits
+  // its own fetch, so calling it with sub?.id || null is safe.
+  const { bump: latestBump } = useLatestOfferBump(sub?.id || null);
+
   // ── Derived state (only valid when sub != null; guarded below) ─────
   if (!selected || !sub) {
     return (
@@ -917,10 +926,6 @@ export default function SubmissionDetailSheetClassic({
   const manualAppraisalNeeded = !offerAccepted && !inspectionCompleted;
   const dealValue = sub.offered_price ?? sub.estimated_offer_high;
   const dealKind = sub.offered_price != null ? "Offer Given" : "Estimated Offer";
-  // Most recent boost row — drives the "Photos verified" pill in
-  // the blue header. Soft-fails to null until the offer_bumps
-  // migration lands.
-  const { bump: latestBump } = useLatestOfferBump(sub.id);
   const arrivedAt = customerArrived ? sub.status_updated_at : null;
   const statusLabel = getStatusLabel(sub.progress_status);
   const firstName = (sub.name || "Customer").split(/\s+/)[0];
