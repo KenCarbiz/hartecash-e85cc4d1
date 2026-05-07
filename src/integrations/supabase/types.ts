@@ -4581,6 +4581,87 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_call_grades: {
+        Row: {
+          call_id: string
+          composite_score: number
+          created_at: string
+          dim_brand_tone: number | null
+          dim_close_control: number | null
+          dim_compliance: number | null
+          dim_hallucination: number | null
+          dim_motivation_disco: number | null
+          dim_objection_handle: number | null
+          dim_pacing: number | null
+          dim_quote_band: number | null
+          dim_transfer_hygiene: number | null
+          dim_vehicle_confirm: number | null
+          gating_failed: boolean
+          golden_pinned: boolean
+          grader: string
+          grader_model: string | null
+          id: string
+          rationale: string | null
+        }
+        Insert: {
+          call_id: string
+          composite_score: number
+          created_at?: string
+          dim_brand_tone?: number | null
+          dim_close_control?: number | null
+          dim_compliance?: number | null
+          dim_hallucination?: number | null
+          dim_motivation_disco?: number | null
+          dim_objection_handle?: number | null
+          dim_pacing?: number | null
+          dim_quote_band?: number | null
+          dim_transfer_hygiene?: number | null
+          dim_vehicle_confirm?: number | null
+          gating_failed?: boolean
+          golden_pinned?: boolean
+          grader?: string
+          grader_model?: string | null
+          id?: string
+          rationale?: string | null
+        }
+        Update: {
+          call_id?: string
+          composite_score?: number
+          created_at?: string
+          dim_brand_tone?: number | null
+          dim_close_control?: number | null
+          dim_compliance?: number | null
+          dim_hallucination?: number | null
+          dim_motivation_disco?: number | null
+          dim_objection_handle?: number | null
+          dim_pacing?: number | null
+          dim_quote_band?: number | null
+          dim_transfer_hygiene?: number | null
+          dim_vehicle_confirm?: number | null
+          gating_failed?: boolean
+          golden_pinned?: boolean
+          grader?: string
+          grader_model?: string | null
+          id?: string
+          rationale?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_call_grades_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
+            referencedRelation: "v_voice_call_quality"
+            referencedColumns: ["call_id"]
+          },
+          {
+            foreignKeyName: "voice_call_grades_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
+            referencedRelation: "voice_call_log"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       voice_call_log: {
         Row: {
           answered_by: string | null
@@ -4689,6 +4770,87 @@ export type Database = {
           },
         ]
       }
+      voice_call_turns: {
+        Row: {
+          asr_confidence: number | null
+          call_id: string
+          created_at: string
+          emotion_score: number | null
+          emotion_top: string | null
+          end_ms: number | null
+          first_token_ms: number | null
+          id: string
+          matched_signal_key: string | null
+          metadata: Json
+          sentiment: string | null
+          sentiment_score: number | null
+          silence_before_ms: number | null
+          speaker: string
+          start_ms: number | null
+          text: string
+          total_token_ms: number | null
+          turn_index: number
+          was_interrupted: boolean
+        }
+        Insert: {
+          asr_confidence?: number | null
+          call_id: string
+          created_at?: string
+          emotion_score?: number | null
+          emotion_top?: string | null
+          end_ms?: number | null
+          first_token_ms?: number | null
+          id?: string
+          matched_signal_key?: string | null
+          metadata?: Json
+          sentiment?: string | null
+          sentiment_score?: number | null
+          silence_before_ms?: number | null
+          speaker: string
+          start_ms?: number | null
+          text?: string
+          total_token_ms?: number | null
+          turn_index: number
+          was_interrupted?: boolean
+        }
+        Update: {
+          asr_confidence?: number | null
+          call_id?: string
+          created_at?: string
+          emotion_score?: number | null
+          emotion_top?: string | null
+          end_ms?: number | null
+          first_token_ms?: number | null
+          id?: string
+          matched_signal_key?: string | null
+          metadata?: Json
+          sentiment?: string | null
+          sentiment_score?: number | null
+          silence_before_ms?: number | null
+          speaker?: string
+          start_ms?: number | null
+          text?: string
+          total_token_ms?: number | null
+          turn_index?: number
+          was_interrupted?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_call_turns_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
+            referencedRelation: "v_voice_call_quality"
+            referencedColumns: ["call_id"]
+          },
+          {
+            foreignKeyName: "voice_call_turns_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
+            referencedRelation: "voice_call_log"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       voice_call_variants_used: {
         Row: {
           call_id: string
@@ -4718,6 +4880,13 @@ export type Database = {
           variant_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "voice_call_variants_used_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
+            referencedRelation: "v_voice_call_quality"
+            referencedColumns: ["call_id"]
+          },
           {
             foreignKeyName: "voice_call_variants_used_call_id_fkey"
             columns: ["call_id"]
@@ -4834,7 +5003,34 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      v_voice_call_quality: {
+        Row: {
+          call_id: string | null
+          call_outcome: string | null
+          composite_score: number | null
+          customer_name: string | null
+          dealership_id: string | null
+          dim_compliance: number | null
+          dim_hallucination: number | null
+          dim_quote_band: number | null
+          duration_seconds: number | null
+          gating_failed: boolean | null
+          grader_model: string | null
+          grader_rationale: string | null
+          started_at: string | null
+          submission_id: string | null
+          vehicle_info: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_call_log_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       accept_offer: { Args: { _token: string }; Returns: undefined }
