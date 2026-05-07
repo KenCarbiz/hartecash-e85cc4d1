@@ -172,6 +172,14 @@ export interface Submission {
   bb_wholesale_avg?: number | null;
   bb_retail_avg?: number | null;
   bb_value_tiers?: Record<string, Record<string, number>> | string | null;
+  declined_reason?: string | null;
+  competitor_mentioned?: string | null;
+  customer_walk_away_number?: number | null;
+  last_outreach_at?: string | null;
+  inspection_completed_at?: string | null;
+  appointment_time?: string | null;
+  dealership_id?: string | null;
+  self_checkin_at?: string | null;
 }
 
 export type SubmissionPipelineState = Pick<Submission, "progress_status" | "appointment_set" | "offered_price" | "estimated_offer_high">;
