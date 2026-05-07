@@ -14,7 +14,7 @@
  * our schema — see the adapter helpers at the top.
  */
 
-import { useState, useMemo, useEffect, useCallback, Component, type ReactNode, type ErrorInfo } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback, Component, type ReactNode, type ErrorInfo } from "react";
 import { useLatestOfferBump } from "@/hooks/useLatestOfferBump";
 import type { OfferBumpRow } from "@/types/offerBumps";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -162,6 +162,11 @@ const InlineEdit = ({
 }) => {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value ?? "");
+  // Same ref slot tracks whichever element is currently rendered
+  // (button in idle, input in edit). Tab navigation uses this to
+  // locate "where I am" among all sibling InlineEdits in document
+  // order without needing a parent context or registration system.
+  const elRef = useRef<HTMLButtonElement | HTMLInputElement | null>(null);
 
   useEffect(() => { setDraft(value ?? ""); }, [value]);
 
@@ -171,9 +176,38 @@ const InlineEdit = ({
     if (v !== value) onSave(v);
   };
 
+  // Tab / Shift+Tab — commit the current field, then find the next
+  // (or previous) InlineEdit in document order and synthesize a
+  // click to put it into edit mode. Lets the appraiser type
+  // address → tab → city → tab → state → tab → zip without
+  // touching the mouse. Falls through to default Tab behavior if
+  // no neighbor InlineEdit is found, so non-InlineEdit form fields
+  // on the same page still get focus normally.
+  const advanceTab = (shift: boolean) => {
+    const v = draft.trim() === "" ? null : draft.trim();
+    if (v !== value) onSave(v);
+    setEditing(false);
+    // setTimeout(0) lets React commit the editing→idle transition
+    // first so the *next* button (which might be us in some edge
+    // cases) can be safely clicked.
+    setTimeout(() => {
+      const all = Array.from(
+        document.querySelectorAll<HTMLElement>("[data-inline-edit]"),
+      );
+      const myIdx = elRef.current ? all.indexOf(elRef.current) : -1;
+      if (myIdx === -1) return;
+      const next = all[myIdx + (shift ? -1 : 1)];
+      if (next && next.tagName === "BUTTON") {
+        (next as HTMLButtonElement).click();
+      }
+    }, 0);
+  };
+
   if (editing) {
     return (
       <input
+        ref={(el) => { elRef.current = el; }}
+        data-inline-edit
         type={type}
         autoFocus
         value={draft}
@@ -181,7 +215,11 @@ const InlineEdit = ({
         onBlur={commit}
         onKeyDown={(e) => {
           if (e.key === "Enter") commit();
-          if (e.key === "Escape") { setDraft(value ?? ""); setEditing(false); }
+          else if (e.key === "Escape") { setDraft(value ?? ""); setEditing(false); }
+          else if (e.key === "Tab") {
+            e.preventDefault();
+            advanceTab(e.shiftKey);
+          }
         }}
         className={`w-full px-2 py-1 -mx-2 -my-1 text-[13px] ${mono ? "font-mono" : ""} ${align === "right" ? "text-right" : ""} rounded-md border border-blue-400 bg-white outline-none focus:ring-2 focus:ring-blue-100`}
       />
@@ -191,9 +229,11 @@ const InlineEdit = ({
   const empty = value == null || value === "";
   return (
     <button
+      ref={(el) => { elRef.current = el; }}
+      data-inline-edit
       onClick={() => { setDraft(value ?? ""); setEditing(true); }}
       className={`group w-full px-2 py-1 -mx-2 -my-1 text-[13px] ${mono ? "font-mono text-[12.5px]" : ""} ${align === "right" ? "text-right" : "text-left"} rounded-md hover:bg-blue-50 hover:ring-1 hover:ring-blue-200 transition-colors cursor-text`}
-      title="Click to edit"
+      title="Click to edit · Tab to next field"
     >
       <span className={`${empty ? "text-slate-400 italic" : "text-slate-900 font-semibold"}`}>
         {empty ? placeholder : value}
