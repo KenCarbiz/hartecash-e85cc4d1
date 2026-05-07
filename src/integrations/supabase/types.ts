@@ -4666,6 +4666,13 @@ export type Database = {
             foreignKeyName: "voice_call_grades_call_id_fkey"
             columns: ["call_id"]
             isOneToOne: false
+            referencedRelation: "v_voice_call_quality_with_nps"
+            referencedColumns: ["call_id"]
+          },
+          {
+            foreignKeyName: "voice_call_grades_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
             referencedRelation: "voice_call_log"
             referencedColumns: ["id"]
           },
@@ -4683,6 +4690,12 @@ export type Database = {
           dealership_id: string | null
           duration_seconds: number | null
           ended_at: string | null
+          feedback_captured_at: string | null
+          feedback_comment: string | null
+          feedback_request_channel: string | null
+          feedback_request_sent_at: string | null
+          feedback_score: number | null
+          feedback_token: string | null
           id: string
           memory_hook_offered: string | null
           memory_hook_used: boolean | null
@@ -4716,6 +4729,12 @@ export type Database = {
           dealership_id?: string | null
           duration_seconds?: number | null
           ended_at?: string | null
+          feedback_captured_at?: string | null
+          feedback_comment?: string | null
+          feedback_request_channel?: string | null
+          feedback_request_sent_at?: string | null
+          feedback_score?: number | null
+          feedback_token?: string | null
           id?: string
           memory_hook_offered?: string | null
           memory_hook_used?: boolean | null
@@ -4749,6 +4768,12 @@ export type Database = {
           dealership_id?: string | null
           duration_seconds?: number | null
           ended_at?: string | null
+          feedback_captured_at?: string | null
+          feedback_comment?: string | null
+          feedback_request_channel?: string | null
+          feedback_request_sent_at?: string | null
+          feedback_score?: number | null
+          feedback_token?: string | null
           id?: string
           memory_hook_offered?: string | null
           memory_hook_used?: boolean | null
@@ -4864,6 +4889,13 @@ export type Database = {
             foreignKeyName: "voice_call_turns_call_id_fkey"
             columns: ["call_id"]
             isOneToOne: false
+            referencedRelation: "v_voice_call_quality_with_nps"
+            referencedColumns: ["call_id"]
+          },
+          {
+            foreignKeyName: "voice_call_turns_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
             referencedRelation: "voice_call_log"
             referencedColumns: ["id"]
           },
@@ -4903,6 +4935,13 @@ export type Database = {
             columns: ["call_id"]
             isOneToOne: false
             referencedRelation: "v_voice_call_quality"
+            referencedColumns: ["call_id"]
+          },
+          {
+            foreignKeyName: "voice_call_variants_used_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
+            referencedRelation: "v_voice_call_quality_with_nps"
             referencedColumns: ["call_id"]
           },
           {
@@ -5032,6 +5071,37 @@ export type Database = {
           dim_hallucination: number | null
           dim_quote_band: number | null
           duration_seconds: number | null
+          gating_failed: boolean | null
+          grader_model: string | null
+          grader_rationale: string | null
+          started_at: string | null
+          submission_id: string | null
+          vehicle_info: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_call_log_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_voice_call_quality_with_nps: {
+        Row: {
+          call_id: string | null
+          call_outcome: string | null
+          composite_score: number | null
+          customer_name: string | null
+          dealership_id: string | null
+          dim_compliance: number | null
+          dim_hallucination: number | null
+          dim_quote_band: number | null
+          duration_seconds: number | null
+          feedback_captured_at: string | null
+          feedback_comment: string | null
+          feedback_score: number | null
           gating_failed: boolean | null
           grader_model: string | null
           grader_rationale: string | null
@@ -5181,6 +5251,17 @@ export type Database = {
           role: string
           role_id: string
           user_id: string
+        }[]
+      }
+      get_call_feedback_context: {
+        Args: { _token: string }
+        Returns: {
+          already_submitted: boolean
+          call_id: string
+          customer_name: string
+          existing_score: number
+          started_at: string
+          vehicle_info: string
         }[]
       }
       get_inspection_damage: {
@@ -5382,6 +5463,10 @@ export type Database = {
           p_quiet_tz: string
         }
         Returns: undefined
+      }
+      submit_call_feedback: {
+        Args: { _comment?: string; _score: number; _token: string }
+        Returns: Json
       }
       update_staff_role: {
         Args: {

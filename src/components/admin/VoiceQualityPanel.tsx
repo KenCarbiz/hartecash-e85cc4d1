@@ -320,18 +320,19 @@ export default function VoiceQualityPanel() {
       // columns simply won't be present and "does not exist" surfaces
       // as missing-table on the with_nps view).
       const tryView = async (view: string, headerCols: string) => {
+        const sb = supabase as any;
         const [hi, lo, gate] = await Promise.all([
-          supabase.from(view).select(headerCols)
+          sb.from(view).select(headerCols)
             .gte("started_at", weekAgoIso)
             .not("composite_score", "is", null)
             .order("composite_score", { ascending: false, nullsFirst: false })
             .limit(10),
-          supabase.from(view).select(headerCols)
+          sb.from(view).select(headerCols)
             .gte("started_at", weekAgoIso)
             .not("composite_score", "is", null)
             .order("composite_score", { ascending: true, nullsFirst: false })
             .limit(10),
-          supabase.from(view).select(headerCols)
+          sb.from(view).select(headerCols)
             .eq("gating_failed", true)
             .order("started_at", { ascending: false, nullsFirst: false })
             .limit(20),
