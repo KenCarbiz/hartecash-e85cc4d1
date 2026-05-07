@@ -194,7 +194,7 @@ const CustomerArrival = () => {
       setLoading(false);
       return;
     }
-    const row = (rows as ArrivalData[] | null)?.[0] || null;
+    const row = (rows as unknown as ArrivalData[] | null)?.[0] || null;
     if (!row) {
       setErrorMsg("We couldn't find your appointment. Reach out to the dealership and we'll get you sorted.");
       setLoading(false);
