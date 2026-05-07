@@ -45,6 +45,12 @@ interface QualityRow {
   dim_hallucination: number | null;
   grader_rationale: string | null;
   grader_model: string | null;
+  /** Customer NPS columns (joined via v_voice_call_quality_with_nps).
+   *  Optional because the migration that adds them ships separately
+   *  and the panel soft-falls-back to the base view if missing. */
+  feedback_score?: number | null;
+  feedback_comment?: string | null;
+  feedback_captured_at?: string | null;
 }
 
 interface FullGrade extends QualityRow {
@@ -108,11 +114,26 @@ function MigrationMissingCard() {
   );
 }
 
+const npsBadge = (n: number | null | undefined) => {
+  if (n == null) return null;
+  if (n >= 4) return { label: `★${n}`, cls: "bg-emerald-100 text-emerald-700 border-emerald-300" };
+  if (n === 3) return { label: `★${n}`, cls: "bg-slate-100 text-slate-600 border-slate-300" };
+  return                   { label: `★${n}`, cls: "bg-red-100 text-red-700 border-red-300 font-bold" };
+};
+
 function CallRow({ row, expanded, onToggle, full }: {
   row: QualityRow; expanded: boolean; onToggle: () => void; full: FullGrade | null;
 }) {
   const badge = scoreBadge(row.composite_score);
   const isGating = !!row.gating_failed;
+  const nps = npsBadge(row.feedback_score);
+  // "Disagreement" — LLM thought it went well, customer didn't (or
+  // vice-versa). Worth listening to even if neither extreme.
+  const llmHigh = (row.composite_score ?? 0) >= 0.5;
+  const npsLow  = (row.feedback_score ?? 0) > 0 && (row.feedback_score ?? 0) <= 2;
+  const llmLow  = (row.composite_score ?? 0) <= -0.5;
+  const npsHigh = (row.feedback_score ?? 0) >= 4;
+  const disagrees = (llmHigh && npsLow) || (llmLow && npsHigh);
 
   return (
     <div className={`rounded-lg border ${isGating ? "border-red-300 bg-red-50/30 dark:bg-red-900/10 dark:border-red-700" : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"}`}>
@@ -129,6 +150,22 @@ function CallRow({ row, expanded, onToggle, full }: {
             <span className={`text-[11px] font-bold uppercase tracking-wider rounded-md border px-2 py-0.5 ${badge.cls}`}>
               {badge.label}
             </span>
+            {nps && (
+              <span
+                className={`text-[11px] font-bold uppercase tracking-wider rounded-md border px-2 py-0.5 ${nps.cls}`}
+                title="Customer's post-call rating (1-5)"
+              >
+                {nps.label}
+              </span>
+            )}
+            {disagrees && (
+              <span
+                className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider rounded-md border border-amber-400 bg-amber-50 text-amber-800 px-2 py-0.5"
+                title="LLM grade and customer rating disagree — worth listening"
+              >
+                disagree
+              </span>
+            )}
             {isGating && (
               <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider rounded-md border border-red-400 bg-red-100 text-red-700 px-2 py-0.5">
                 <ShieldAlert className="w-3 h-3" /> gating fail
@@ -194,6 +231,14 @@ function CallRow({ row, expanded, onToggle, full }: {
             <div className="text-[12.5px] text-slate-700 dark:text-slate-300 leading-snug whitespace-pre-line">
               <span className="font-bold uppercase tracking-wider text-[10.5px] text-slate-500">Rationale ({full.grader_model || "judge"}): </span>
               {full.grader_rationale}
+            </div>
+          )}
+          {row.feedback_comment && (
+            <div className="mt-2 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-[12.5px] text-slate-700 dark:text-slate-300 leading-snug">
+              <span className="font-bold uppercase tracking-wider text-[10.5px] text-slate-500">
+                Customer ({row.feedback_score}/5):{" "}
+              </span>
+              "{row.feedback_comment}"
             </div>
           )}
           <div className="mt-3 flex items-center gap-2 text-[11px] text-slate-500">
@@ -268,30 +313,36 @@ export default function VoiceQualityPanel() {
     const load = async () => {
       setLoading(true);
 
-      const headerCols = "call_id, submission_id, customer_name, vehicle_info, started_at, duration_seconds, call_outcome, composite_score, gating_failed, dim_compliance, dim_quote_band, dim_hallucination, grader_rationale, grader_model";
+      const headerCols = "call_id, submission_id, customer_name, vehicle_info, started_at, duration_seconds, call_outcome, composite_score, gating_failed, dim_compliance, dim_quote_band, dim_hallucination, grader_rationale, grader_model, feedback_score, feedback_comment, feedback_captured_at";
 
-      const [hi, lo, gate] = await Promise.all([
-        supabase
-          .from("v_voice_call_quality")
-          .select(headerCols)
-          .gte("started_at", weekAgoIso)
-          .not("composite_score", "is", null)
-          .order("composite_score", { ascending: false, nullsFirst: false })
-          .limit(10),
-        supabase
-          .from("v_voice_call_quality")
-          .select(headerCols)
-          .gte("started_at", weekAgoIso)
-          .not("composite_score", "is", null)
-          .order("composite_score", { ascending: true, nullsFirst: false })
-          .limit(10),
-        supabase
-          .from("v_voice_call_quality")
-          .select(headerCols)
-          .eq("gating_failed", true)
-          .order("started_at", { ascending: false, nullsFirst: false })
-          .limit(20),
-      ]);
+      // Prefer the NPS-joined view; fall back to the base view if the
+      // 20260507210000 migration hasn't been applied yet (the new
+      // columns simply won't be present and "does not exist" surfaces
+      // as missing-table on the with_nps view).
+      const tryView = async (view: string, headerCols: string) => {
+        const [hi, lo, gate] = await Promise.all([
+          supabase.from(view).select(headerCols)
+            .gte("started_at", weekAgoIso)
+            .not("composite_score", "is", null)
+            .order("composite_score", { ascending: false, nullsFirst: false })
+            .limit(10),
+          supabase.from(view).select(headerCols)
+            .gte("started_at", weekAgoIso)
+            .not("composite_score", "is", null)
+            .order("composite_score", { ascending: true, nullsFirst: false })
+            .limit(10),
+          supabase.from(view).select(headerCols)
+            .eq("gating_failed", true)
+            .order("started_at", { ascending: false, nullsFirst: false })
+            .limit(20),
+        ]);
+        return { hi, lo, gate };
+      };
+      let { hi, lo, gate } = await tryView("v_voice_call_quality_with_nps", headerCols);
+      const baseColsOnly = headerCols.replace(/, feedback_[^,]+/g, "");
+      if ((hi.error?.message || "").includes("does not exist")) {
+        ({ hi, lo, gate } = await tryView("v_voice_call_quality", baseColsOnly));
+      }
 
       if (cancel) return;
 

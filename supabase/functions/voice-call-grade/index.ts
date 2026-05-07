@@ -286,6 +286,58 @@ Deno.serve(async (req) => {
   });
   if (rpcErr) console.warn("apply_voice_call_outcome failed:", rpcErr.message);
 
+  // ── Customer NPS feedback request (post-call) ──
+  // Send a 1-tap "How was that call? 1-5" SMS so the customer
+  // can ground-truth our LLM grade. Realistic response rate 8-12%
+  // — we treat it as a noisy weighting on the variant outcome,
+  // not a replacement. Skip on gating fails (we already know the
+  // call went badly; asking adds insult), on opt-outs, and on
+  // calls that hung up under 30s (the customer never engaged).
+  //
+  // Fire-and-forget: a feedback-SMS failure should not block the
+  // grader's response or cause Bland retries.
+  if (!gatingFailed) {
+    void (async () => {
+      try {
+        const { data: callRow } = await supabase
+          .from("voice_call_log")
+          .select("id, dealership_id, submission_id, phone_number, feedback_token, duration_seconds, opt_out_requested")
+          .eq("id", body.call_id)
+          .single();
+        if (!callRow) return;
+        if (callRow.opt_out_requested) return;
+        if ((callRow.duration_seconds ?? 0) < 30) return;
+        if (!callRow.feedback_token || !callRow.phone_number) return;
+
+        const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+        const publicBase  = Deno.env.get("PUBLIC_APP_URL")
+          || supabaseUrl.replace(".supabase.co", ".vercel.app");
+        const link = `${publicBase}/call-feedback/${callRow.feedback_token}`;
+
+        const body = `Quick favor — how was your call just now? Tap to rate 1-5: ${link}  Reply STOP to opt out.`;
+
+        await supabase.functions.invoke("send-notification", {
+          body: {
+            trigger_key: "voice_call_feedback_request",
+            submission_id: callRow.submission_id,
+            recipient_phone: callRow.phone_number,
+            custom_body: body,
+            // Stamps feedback_sent_at via the notification_log path —
+            // the cadence engine reads this to throttle re-asks on the
+            // same submission.
+          },
+        });
+
+        await supabase
+          .from("voice_call_log")
+          .update({ feedback_sent_at: new Date().toISOString() })
+          .eq("id", callRow.id);
+      } catch (e) {
+        console.warn("voice-call-grade: feedback SMS path failed:", e);
+      }
+    })();
+  }
+
   return new Response(
     JSON.stringify({
       ok: true,
