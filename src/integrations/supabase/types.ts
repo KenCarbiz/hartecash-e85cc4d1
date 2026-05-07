@@ -531,6 +531,7 @@ export type Database = {
           sort_order: number
           updated_at: string
           variant_id: string | null
+          variant_label: string
           win_count: number
         }
         Insert: {
@@ -553,6 +554,7 @@ export type Database = {
           sort_order?: number
           updated_at?: string
           variant_id?: string | null
+          variant_label?: string
           win_count?: number
         }
         Update: {
@@ -575,6 +577,7 @@ export type Database = {
           sort_order?: number
           updated_at?: string
           variant_id?: string | null
+          variant_label?: string
           win_count?: number
         }
         Relationships: []
@@ -1580,6 +1583,7 @@ export type Database = {
           updated_at: string
           use_when: string | null
           variant_id: string | null
+          variant_label: string
           win_count: number
         }
         Insert: {
@@ -1603,6 +1607,7 @@ export type Database = {
           updated_at?: string
           use_when?: string | null
           variant_id?: string | null
+          variant_label?: string
           win_count?: number
         }
         Update: {
@@ -1626,6 +1631,7 @@ export type Database = {
           updated_at?: string
           use_when?: string | null
           variant_id?: string | null
+          variant_label?: string
           win_count?: number
         }
         Relationships: []
