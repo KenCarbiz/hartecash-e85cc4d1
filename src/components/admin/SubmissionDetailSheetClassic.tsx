@@ -15,6 +15,8 @@
  */
 
 import { useState, useMemo, useEffect, useCallback, Component, type ReactNode, type ErrorInfo } from "react";
+import { useLatestOfferBump } from "@/hooks/useLatestOfferBump";
+import type { OfferBumpRow } from "@/types/offerBumps";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
@@ -523,28 +525,53 @@ class ClassicErrorBoundary extends Component<{ children: ReactNode }, { error: E
 }
 
 const MoneyBlock = ({
-  dealKind, dealValue, sub, align = "right",
+  dealKind, dealValue, sub, latestBump, align = "right",
 }: {
   dealKind: string;
   dealValue: number | null;
   sub: Submission;
+  latestBump: OfferBumpRow | null;
   align?: "left" | "right";
 }) => {
-  if (dealValue == null) return null;
+  // Show the slot when there's an offer to display OR a boost row
+  // exists (rare, but the pill should render even if dealValue is
+  // somehow stale / null for a single render).
+  if (dealValue == null && (!latestBump || latestBump.bump_amount <= 0)) return null;
+  const hasBump = !!(latestBump && latestBump.bump_amount > 0);
+  // The boost effectively rewrites dealValue to new_offer if the
+  // dealValue from props is stale (e.g. submissions row hasn't
+  // been refetched yet).
+  const display = dealValue ?? latestBump?.new_offer ?? null;
   return (
     <div className={`text-left ${align === "right" ? "md:text-right" : ""}`}>
       <div className="text-[11px] uppercase tracking-[0.15em] text-white/55 font-bold">{dealKind}</div>
-      <div className="font-display text-[40px] leading-none tracking-tight mt-0.5">{fmtMoney(dealValue, true)}</div>
-      {sub.acv_value != null && (
-        <div className="text-[11px] text-white/60 mt-1">
-          ACV {fmtMoney(sub.acv_value)}
-          {sub.offered_price != null && (
-            <span className={`ml-1 font-semibold ${sub.offered_price > sub.acv_value ? "text-emerald-300" : "text-red-300"}`}>
-              {sub.offered_price > sub.acv_value ? "+" : ""}{fmtMoney(sub.offered_price - sub.acv_value)}
-            </span>
-          )}
+      <div className="font-display text-[40px] leading-none tracking-tight mt-0.5">
+        {display != null ? fmtMoney(display, true) : "—"}
+      </div>
+      {hasBump && (
+        // Boost indicator. Brand-lens decision: dealer never sees
+        // "AI Boost" vocabulary — that's customer-side acquisition
+        // language. Here it reads as "condition adjustment from
+        // photo review" with a small emerald "Photos verified"
+        // pill that earns its color by signaling customer
+        // engagement (they completed the photo flow).
+        <div className={`flex items-center gap-2 mt-1.5 flex-wrap ${align === "right" ? "md:justify-end" : ""}`}>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-400/90 text-emerald-950 text-[10px] font-bold uppercase tracking-[0.1em]">
+            <svg width="9" height="9" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true">
+              <path d="M5 1.5L8 5H6V8H4V5H2L5 1.5Z" />
+            </svg>
+            Photos verified
+          </span>
+          <span className="text-[11px] text-white/85 leading-tight">
+            +{fmtMoney(latestBump!.bump_amount)} from photo review
+          </span>
         </div>
       )}
+      {/* ACV / equity-delta line removed per dealer feedback —
+          that math lives in the rail's Offer Breakdown card
+          alongside Loan Payoff / Customer Equity, not in the
+          blue strip where it competed with the headline number
+          and the photo-review pill. */}
     </div>
   );
 };
@@ -580,12 +607,13 @@ const CustomerContact = ({ sub }: { sub: Submission }) => (
 );
 
 const ClassicHeaderIdentity = ({
-  layout, sub, dealValue, dealKind,
+  layout, sub, dealValue, dealKind, latestBump,
 }: {
   layout: "a" | "b" | "c";
   sub: Submission;
   dealValue: number | null;
   dealKind: string;
+  latestBump: OfferBumpRow | null;
 }) => {
   const vehicleTitle = [sub.vehicle_year, sub.vehicle_make, sub.vehicle_model].filter(Boolean).join(" ") || "—";
 
@@ -606,7 +634,7 @@ const ClassicHeaderIdentity = ({
             {sub.exterior_color && <span className="text-white/60">· {sub.exterior_color}</span>}
           </div>
         </div>
-        <MoneyBlock dealKind={dealKind} dealValue={dealValue} sub={sub} />
+        <MoneyBlock dealKind={dealKind} dealValue={dealValue} sub={sub} latestBump={latestBump} />
       </div>
     );
   }
@@ -627,7 +655,7 @@ const ClassicHeaderIdentity = ({
               {sub.email && <a href={`mailto:${sub.email}`} className="hover:underline">{sub.email}</a>}
             </div>
           </div>
-          <MoneyBlock dealKind={dealKind} dealValue={dealValue} sub={sub} />
+          <MoneyBlock dealKind={dealKind} dealValue={dealValue} sub={sub} latestBump={latestBump} />
         </div>
         <div className="h-px bg-white/15 my-4" />
         <div>
@@ -656,7 +684,7 @@ const ClassicHeaderIdentity = ({
       </div>
       {dealValue != null && (
         <div className="col-span-12 md:col-span-3 md:border-l md:border-white/15 md:pl-6">
-          <MoneyBlock dealKind={dealKind} dealValue={dealValue} sub={sub} />
+          <MoneyBlock dealKind={dealKind} dealValue={dealValue} sub={sub} latestBump={latestBump} />
         </div>
       )}
     </div>
@@ -840,6 +868,10 @@ export default function SubmissionDetailSheetClassic({
   const manualAppraisalNeeded = !offerAccepted && !inspectionCompleted;
   const dealValue = sub.offered_price ?? sub.estimated_offer_high;
   const dealKind = sub.offered_price != null ? "Offer Given" : "Estimated Offer";
+  // Most recent boost row — drives the "Photos verified" pill in
+  // the blue header. Soft-fails to null until the offer_bumps
+  // migration lands.
+  const { bump: latestBump } = useLatestOfferBump(sub.id);
   const arrivedAt = customerArrived ? sub.status_updated_at : null;
   const statusLabel = getStatusLabel(sub.progress_status);
   const firstName = (sub.name || "Customer").split(/\s+/)[0];
@@ -913,6 +945,7 @@ export default function SubmissionDetailSheetClassic({
                 sub={sub}
                 dealValue={dealValue}
                 dealKind={dealKind}
+                latestBump={latestBump}
               />
 
               {/* Status / intent / hot lead chips + submitted date */}
@@ -1360,8 +1393,42 @@ export default function SubmissionDetailSheetClassic({
                     between leads with vs. without an offer/loan. */}
                 <Card title="Offer Breakdown">
                   <div className="space-y-2.5">
-                    <div className="flex items-baseline justify-between">
-                      <span className="text-[13px] text-slate-600">{dealValue != null ? dealKind : "Offer Given"}</span>
+                    {latestBump && latestBump.bump_amount > 0 && (
+                      // Boost-aware breakdown — when the customer
+                      // earned a photo-review bump, surface the
+                      // original offer + each line item before the
+                      // headline number so the appraiser can defend
+                      // every dollar on a follow-up call. Brand-lens
+                      // language: "condition adjustments from photo
+                      // review", no AI Boost vocabulary.
+                      <>
+                        <div className="flex items-baseline justify-between text-[13px]">
+                          <span className="text-slate-600">Original offer</span>
+                          <span className="font-semibold text-slate-800 tabular-nums">
+                            {fmtMoney(latestBump.previous_offer)}
+                          </span>
+                        </div>
+                        {latestBump.line_items.length > 0 && (
+                          <div className="pt-1.5 border-t border-slate-100 space-y-1.5">
+                            <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
+                              Condition adjustments from photo review
+                            </div>
+                            {latestBump.line_items.map((item, i) => (
+                              <div key={i} className="flex items-start justify-between gap-2 text-[12px]">
+                                <span className="text-slate-700 leading-snug">{item.label}</span>
+                                <span className="font-semibold text-slate-700 tabular-nums whitespace-nowrap">
+                                  +{fmtMoney(item.amount)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )}
+                    <div className={`flex items-baseline justify-between ${latestBump && latestBump.bump_amount > 0 ? "pt-2 border-t border-slate-100" : ""}`}>
+                      <span className="text-[13px] text-slate-600">
+                        {latestBump && latestBump.bump_amount > 0 ? "Final offer" : (dealValue != null ? dealKind : "Offer Given")}
+                      </span>
                       <span className="font-display text-[22px] text-slate-900 leading-none">
                         {dealValue != null ? fmtMoney(dealValue, true) : <span className="text-slate-400">—</span>}
                       </span>
