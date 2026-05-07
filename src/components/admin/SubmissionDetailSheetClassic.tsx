@@ -844,33 +844,37 @@ export default function SubmissionDetailSheetClassic({
   // customer-side boost landed in offer_bumps + bumped
   // offered_price, so without this the dealer would see "—"
   // for an offer that's actually $24,749 in the database.
+  // Soft-fails on any error so the rest of the file still
+  // renders against the cached row.
   useEffect(() => {
     if (!selected?.id) return;
     let cancelled = false;
     (async () => {
-      const { data, error } = await (supabase as never as {
-        from: (t: string) => {
-          select: (cols: string) => {
-            eq: (k: string, v: string) => {
-              maybeSingle: () => Promise<{ data: Submission | null; error: { message: string } | null }>;
-            };
-          };
-        };
-      })
-        .from("submissions")
-        .select("*")
-        .eq("id", selected.id)
-        .maybeSingle();
-      if (cancelled || error || !data) return;
-      // Only push back up if something changed on the dealer-
-      // visible columns to avoid churn.
-      const changed =
-        data.offered_price !== selected.offered_price ||
-        data.estimated_offer_high !== selected.estimated_offer_high ||
-        data.acv_value !== selected.acv_value ||
-        data.progress_status !== selected.progress_status ||
-        data.mileage !== selected.mileage;
-      if (changed) onUpdate(data);
+      try {
+        const { data, error } = await supabase
+          .from("submissions")
+          .select("*")
+          .eq("id", selected.id)
+          .maybeSingle();
+        if (cancelled) return;
+        if (error) {
+          console.warn("[CustomerFile] refetch failed:", error.message);
+          return;
+        }
+        if (!data) return;
+        const fresh = data as unknown as Submission;
+        // Only push back up if something changed on the dealer-
+        // visible columns to avoid churn.
+        const changed =
+          fresh.offered_price !== selected.offered_price ||
+          fresh.estimated_offer_high !== selected.estimated_offer_high ||
+          fresh.acv_value !== selected.acv_value ||
+          fresh.progress_status !== selected.progress_status ||
+          fresh.mileage !== selected.mileage;
+        if (changed) onUpdate(fresh);
+      } catch (e) {
+        if (!cancelled) console.warn("[CustomerFile] refetch threw:", (e as Error).message);
+      }
     })();
     return () => {
       cancelled = true;
