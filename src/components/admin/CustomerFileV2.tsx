@@ -25,7 +25,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   MessageSquare, Activity, FileText, Car, X, Printer, StickyNote,
   Phone, Mail, Flame, ChevronDown, ChevronUp, Send, CheckCircle2, AlertCircle, Clock,
+  Radio,
 } from "lucide-react";
+import CadenceTimeline from "./CadenceTimeline";
 import type { Submission, DealerLocation } from "@/lib/adminConstants";
 import { ALL_STATUS_OPTIONS, getStatusLabel } from "@/lib/adminConstants";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
@@ -74,7 +76,7 @@ interface CustomerFileV2Props {
   fetchSubmissions: () => void;
 }
 
-type TabId = "conversation" | "activity" | "deal" | "vehicle";
+type TabId = "conversation" | "activity" | "cadence" | "deal" | "vehicle";
 
 const fmtMoney = (n: number | null | undefined) =>
   n == null ? "—" : `$${Number(n).toLocaleString()}`;
@@ -147,6 +149,7 @@ export default function CustomerFileV2(props: CustomerFileV2Props) {
                 <main className="flex-1 min-w-0 overflow-y-auto">
                   {tab === "conversation" && <ConversationTab sub={sub} activityLog={activityLog} />}
                   {tab === "activity" && <ActivityTab activityLog={activityLog} />}
+                  {tab === "cadence" && <CadenceTimeline submissionId={sub.id} />}
                   {tab === "deal" && <DealTab sub={sub} auditLabel={props.auditLabel} onUpdate={props.onUpdate} />}
                   {tab === "vehicle" && <VehicleTab sub={sub} photos={photos} docs={docs} onUpdate={props.onUpdate} />}
                 </main>
@@ -426,6 +429,7 @@ function V2Tabs({
   const items: { id: TabId; label: string; icon: React.ElementType }[] = [
     { id: "conversation", label: "Conversation", icon: MessageSquare },
     { id: "activity", label: "Activity", icon: Activity },
+    { id: "cadence", label: "Cadence", icon: Radio },
     { id: "deal", label: "Deal", icon: FileText },
     { id: "vehicle", label: "Vehicle", icon: Car },
   ];
