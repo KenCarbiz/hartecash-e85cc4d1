@@ -3400,6 +3400,8 @@ export type Database = {
       submissions: {
         Row: {
           accidents: string | null
+          acv_set_at: string | null
+          acv_status: string
           acv_value: number | null
           address_city: string | null
           address_state: string | null
@@ -3466,6 +3468,7 @@ export type Database = {
           id: string
           imported_at: string | null
           imported_from_dms: string | null
+          inspection_completed_at: string | null
           inspection_data: Json | null
           inspection_pin: string | null
           inspector_grade: string | null
@@ -3537,6 +3540,8 @@ export type Database = {
         }
         Insert: {
           accidents?: string | null
+          acv_set_at?: string | null
+          acv_status?: string
           acv_value?: number | null
           address_city?: string | null
           address_state?: string | null
@@ -3603,6 +3608,7 @@ export type Database = {
           id?: string
           imported_at?: string | null
           imported_from_dms?: string | null
+          inspection_completed_at?: string | null
           inspection_data?: Json | null
           inspection_pin?: string | null
           inspector_grade?: string | null
@@ -3674,6 +3680,8 @@ export type Database = {
         }
         Update: {
           accidents?: string | null
+          acv_set_at?: string | null
+          acv_status?: string
           acv_value?: number | null
           address_city?: string | null
           address_state?: string | null
@@ -3740,6 +3748,7 @@ export type Database = {
           id?: string
           imported_at?: string | null
           imported_from_dms?: string | null
+          inspection_completed_at?: string | null
           inspection_data?: Json | null
           inspection_pin?: string | null
           inspector_grade?: string | null
