@@ -1823,6 +1823,63 @@ export type Database = {
         }
         Relationships: []
       }
+      objection_playbook: {
+        Row: {
+          category: string
+          created_at: string
+          customer_concern: string
+          customer_signals: string[]
+          dealer_reframe: string
+          dealership_id: string
+          escalation_path: string | null
+          fires_on: Json
+          id: string
+          is_active: boolean
+          label: string
+          objection_key: string
+          proof_points: Json
+          sort_order: number
+          updated_at: string
+          voice_ai_snippet: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          customer_concern: string
+          customer_signals?: string[]
+          dealer_reframe: string
+          dealership_id?: string
+          escalation_path?: string | null
+          fires_on?: Json
+          id?: string
+          is_active?: boolean
+          label: string
+          objection_key: string
+          proof_points?: Json
+          sort_order?: number
+          updated_at?: string
+          voice_ai_snippet?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          customer_concern?: string
+          customer_signals?: string[]
+          dealer_reframe?: string
+          dealership_id?: string
+          escalation_path?: string | null
+          fires_on?: Json
+          id?: string
+          is_active?: boolean
+          label?: string
+          objection_key?: string
+          proof_points?: Json
+          sort_order?: number
+          updated_at?: string
+          voice_ai_snippet?: string | null
+        }
+        Relationships: []
+      }
       offer_bumps: {
         Row: {
           bump_amount: number
@@ -3351,6 +3408,7 @@ export type Database = {
           appraisal_started_at: string | null
           appraised_by: string | null
           appraised_by_user_id: string | null
+          arrival_link_sent_at: string | null
           arrived_at: string | null
           assigned_at: string | null
           assigned_bdc_rep_id: string | null
@@ -3487,6 +3545,7 @@ export type Database = {
           appraisal_started_at?: string | null
           appraised_by?: string | null
           appraised_by_user_id?: string | null
+          arrival_link_sent_at?: string | null
           arrived_at?: string | null
           assigned_at?: string | null
           assigned_bdc_rep_id?: string | null
@@ -3623,6 +3682,7 @@ export type Database = {
           appraisal_started_at?: string | null
           appraised_by?: string | null
           appraised_by_user_id?: string | null
+          arrival_link_sent_at?: string | null
           arrived_at?: string | null
           assigned_at?: string | null
           assigned_bdc_rep_id?: string | null
@@ -4177,6 +4237,10 @@ export type Database = {
           vehicle_year: string
           vin: string
         }[]
+      }
+      get_objection_playbook_for_voice: {
+        Args: { _dealership_id?: string }
+        Returns: string
       }
       get_submission_by_token: {
         Args: { _token: string }
