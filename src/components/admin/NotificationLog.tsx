@@ -55,8 +55,8 @@ export default function NotificationLog() {
 
   // Common filter application — used by both the page query and the
   // stats query so they always reflect the same WHERE clause.
-  const applyFilters = (q: ReturnType<typeof supabase.from>) => {
-    let r = q as ReturnType<ReturnType<typeof supabase.from>["select"]>;
+  const applyFilters = (q: any): any => {
+    let r: any = q;
     if (filterTrigger !== "all") r = r.eq("trigger_key", filterTrigger);
     if (filterChannel !== "all") r = r.eq("channel", filterChannel);
     if (filterStatus !== "all") r = r.eq("status", filterStatus);
