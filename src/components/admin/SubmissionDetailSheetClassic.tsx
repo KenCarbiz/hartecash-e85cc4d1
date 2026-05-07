@@ -283,10 +283,45 @@ const PassFail = ({ label, pass }: { label: string; pass: boolean | null }) => {
   );
 };
 
-// ── Photo carousel (inline, no modal) ────────────────────────────────
+// ── Photo carousel + click-to-zoom lightbox ─────────────────────────
+// Inspector-grade view: tapping the main image opens a full-screen
+// lightbox with the photo at object-contain so nothing is cropped,
+// with prev/next nav, Esc-to-close, click-to-toggle 2x zoom, and
+// click-outside to dismiss. Lets the appraiser actually see scuffs,
+// stains, mileage digits, etc. without leaving the customer file.
 const PhotoCarousel = ({ items }: { items: { url: string; name: string }[] }) => {
   const [i, setI] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [zoomed, setZoomed] = useState(false);
   useEffect(() => { setI(0); }, [items.length]);
+
+  // Esc + arrow-key navigation while the lightbox is open. Listener
+  // attaches/detaches with the lightbox state so we don't intercept
+  // shortcuts when it's closed.
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setLightboxOpen(false);
+        setZoomed(false);
+      } else if (e.key === "ArrowLeft" && items.length > 1) {
+        setI((v) => (v - 1 + items.length) % items.length);
+        setZoomed(false);
+      } else if (e.key === "ArrowRight" && items.length > 1) {
+        setI((v) => (v + 1) % items.length);
+        setZoomed(false);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    // Lock body scroll while lightbox is up so trackpad doesn't
+    // bleed scroll into the customer file underneath.
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [lightboxOpen, items.length]);
 
   if (!items.length) {
     return (
@@ -300,47 +335,134 @@ const PhotoCarousel = ({ items }: { items: { url: string; name: string }[] }) =>
   const cur = items[i];
 
   return (
-    <div className="space-y-2">
-      <div className="relative aspect-[16/10] rounded-lg overflow-hidden bg-slate-900 group">
-        <img src={cur.url} alt={`Vehicle photo ${i + 1}`} className="w-full h-full object-cover" />
-        {items.length > 1 && (
-          <>
-            <button
-              onClick={prev}
-              aria-label="Previous photo"
-              className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/55 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/75 transition"
-            >
-              <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor"><path d="M12.7 4.3a1 1 0 010 1.4L8.4 10l4.3 4.3a1 1 0 01-1.4 1.4l-5-5a1 1 0 010-1.4l5-5a1 1 0 011.4 0z"/></svg>
-            </button>
-            <button
-              onClick={next}
-              aria-label="Next photo"
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/55 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/75 transition"
-            >
-              <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor"><path d="M7.3 4.3a1 1 0 011.4 0l5 5a1 1 0 010 1.4l-5 5a1 1 0 01-1.4-1.4L11.6 10 7.3 5.7a1 1 0 010-1.4z"/></svg>
-            </button>
-          </>
-        )}
-        <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-black/60 text-white text-[11px] font-semibold backdrop-blur-sm">
-          {i + 1} / {items.length}
+    <>
+      <div className="space-y-2">
+        <div className="relative aspect-[16/10] rounded-lg overflow-hidden bg-slate-900 group">
+          {/* Click main image to open lightbox. Cursor + hover hint
+              telegraph the affordance without adding chrome. */}
+          <button
+            type="button"
+            onClick={() => { setLightboxOpen(true); setZoomed(false); }}
+            className="absolute inset-0 w-full h-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            aria-label="View full size"
+          >
+            <img src={cur.url} alt={`Vehicle photo ${i + 1}`} className="w-full h-full object-cover" />
+          </button>
+          {/* Subtle "expand" affordance — bottom-left corner so it
+              doesn't fight the existing counter on the right. */}
+          <div className="pointer-events-none absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-black/60 text-white/90 text-[10px] font-semibold backdrop-blur-sm flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor"><path d="M3 3h5v2H5v3H3V3zm9 0h5v5h-2V5h-3V3zM3 12h2v3h3v2H3v-5zm14 0v5h-5v-2h3v-3h2z"/></svg>
+            Expand
+          </div>
+          {items.length > 1 && (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); prev(); }}
+                aria-label="Previous photo"
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/55 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/75 transition z-10"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor"><path d="M12.7 4.3a1 1 0 010 1.4L8.4 10l4.3 4.3a1 1 0 01-1.4 1.4l-5-5a1 1 0 010-1.4l5-5a1 1 0 011.4 0z"/></svg>
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); next(); }}
+                aria-label="Next photo"
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/55 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/75 transition z-10"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor"><path d="M7.3 4.3a1 1 0 011.4 0l5 5a1 1 0 010 1.4l-5 5a1 1 0 01-1.4-1.4L11.6 10 7.3 5.7a1 1 0 010-1.4z"/></svg>
+              </button>
+            </>
+          )}
+          <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-black/60 text-white text-[11px] font-semibold backdrop-blur-sm pointer-events-none">
+            {i + 1} / {items.length}
+          </div>
         </div>
+        {items.length > 1 && (
+          <div className="flex gap-1.5 overflow-x-auto pb-1">
+            {items.map((p, idx) => (
+              <button
+                key={`${p.name}-${idx}`}
+                onClick={() => setI(idx)}
+                className={`shrink-0 w-14 h-14 rounded-md overflow-hidden border-2 transition ${
+                  idx === i ? "border-blue-600 ring-2 ring-blue-200" : "border-transparent opacity-70 hover:opacity-100"
+                }`}
+              >
+                <img src={p.url} alt="" className="w-full h-full object-cover" />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
-      {items.length > 1 && (
-        <div className="flex gap-1.5 overflow-x-auto pb-1">
-          {items.map((p, idx) => (
-            <button
-              key={`${p.name}-${idx}`}
-              onClick={() => setI(idx)}
-              className={`shrink-0 w-14 h-14 rounded-md overflow-hidden border-2 transition ${
-                idx === i ? "border-blue-600 ring-2 ring-blue-200" : "border-transparent opacity-70 hover:opacity-100"
-              }`}
-            >
-              <img src={p.url} alt="" className="w-full h-full object-cover" />
-            </button>
-          ))}
+
+      {/* ── Lightbox ── full-screen overlay. Click outside to
+          dismiss; click the image to toggle 2x zoom; arrows for
+          nav; Esc closes. Uses a fixed z-[300] which clears the
+          customer-file Sheet (z-50) and any dialog overlays. */}
+      {lightboxOpen && (
+        <div
+          className="fixed inset-0 z-[300] bg-black/95 flex items-center justify-center p-4"
+          onClick={() => { setLightboxOpen(false); setZoomed(false); }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Photo viewer"
+        >
+          {/* Close button — top-right, always visible */}
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setLightboxOpen(false); setZoomed(false); }}
+            aria-label="Close"
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center transition"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor"><path d="M5.3 5.3a1 1 0 011.4 0L10 8.6l3.3-3.3a1 1 0 011.4 1.4L11.4 10l3.3 3.3a1 1 0 01-1.4 1.4L10 11.4l-3.3 3.3a1 1 0 01-1.4-1.4L8.6 10 5.3 6.7a1 1 0 010-1.4z"/></svg>
+          </button>
+
+          {/* Counter + zoom hint */}
+          <div className="absolute top-4 left-4 text-white/80 text-xs font-semibold tracking-wider">
+            {i + 1} / {items.length}
+            <span className="ml-3 text-white/50 font-normal hidden sm:inline">
+              {zoomed ? "Click image to fit" : "Click image to zoom · Esc to close"}
+            </span>
+          </div>
+
+          {/* Prev / Next */}
+          {items.length > 1 && (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); prev(); setZoomed(false); }}
+                aria-label="Previous photo"
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center transition"
+              >
+                <svg className="w-6 h-6" viewBox="0 0 20 20" fill="currentColor"><path d="M12.7 4.3a1 1 0 010 1.4L8.4 10l4.3 4.3a1 1 0 01-1.4 1.4l-5-5a1 1 0 010-1.4l5-5a1 1 0 011.4 0z"/></svg>
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); next(); setZoomed(false); }}
+                aria-label="Next photo"
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center transition"
+              >
+                <svg className="w-6 h-6" viewBox="0 0 20 20" fill="currentColor"><path d="M7.3 4.3a1 1 0 011.4 0l5 5a1 1 0 010 1.4l-5 5a1 1 0 01-1.4-1.4L11.6 10 7.3 5.7a1 1 0 010-1.4z"/></svg>
+              </button>
+            </>
+          )}
+
+          {/* The image itself. object-contain at 1x; click to flip
+              to 2x for inspection-level detail. The wrapping div is
+              scrollable so a zoomed image can be panned via drag /
+              scroll without leaving the lightbox. */}
+          <div
+            className={`max-w-[95vw] max-h-[90vh] ${zoomed ? "overflow-auto cursor-zoom-out" : "cursor-zoom-in"}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={cur.url}
+              alt={`Vehicle photo ${i + 1}`}
+              draggable={false}
+              onClick={() => setZoomed((z) => !z)}
+              className={`select-none transition-transform duration-200 ${zoomed ? "scale-[2] origin-center" : "max-w-[95vw] max-h-[90vh] object-contain"}`}
+              style={zoomed ? { maxWidth: "none", maxHeight: "none" } : undefined}
+            />
+          </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 
