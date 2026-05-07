@@ -385,7 +385,7 @@ const ExecutiveHUD = ({ onDrillDown }: ExecutiveHUDProps = {}) => {
                         className={`text-micro font-bold tabular-nums ${
                           t.dir === "up" ? "text-success" : "text-destructive"
                         }`}
-                        title={`vs prior ${rangeDays}d: ${step.prev}`}
+                        title={`vs prior ${DAYS}d: ${step.prev}`}
                       >
                         {t.dir === "up" ? "▲" : "▼"} {t.pct}%
                       </span>
@@ -444,7 +444,7 @@ const ExecutiveHUD = ({ onDrillDown }: ExecutiveHUDProps = {}) => {
                             className={`text-micro font-bold tabular-nums ${
                               t.dir === "up" ? "text-destructive" : "text-success"
                             }`}
-                            title={`vs prior ${rangeDays}d: ${declinePrev[b.key] || 0}`}
+                            title={`vs prior ${DAYS}d: ${declinePrev[b.key] || 0}`}
                           >
                             {t.dir === "up" ? "▲" : "▼"} {t.pct}%
                           </span>
