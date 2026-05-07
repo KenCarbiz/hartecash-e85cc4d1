@@ -63,25 +63,70 @@ const ShotSilhouette = ({ shotKey, className, state = "neutral" }: ShotSilhouett
       );
 
     case "exterior_driver":
-    case "exterior_passenger":
-      return (
-        <svg viewBox="0 0 240 110" className={className}>
-          {/* Side profile — windshield curve, roof, trunk */}
-          <path
-            d="M20 75 L40 75 Q50 55 70 50 L130 38 Q160 38 175 50 L210 65 L220 75"
-            {...common}
-          />
-          <line x1="20" y1="80" x2="220" y2="80" {...common} />
+    case "exterior_passenger": {
+      // Detailed sedan side profile — replaces the simpler outline
+      // per dealer feedback. Driver-side faces left (front of car
+      // on the left edge); passenger-side mirrors it horizontally
+      // so a customer standing on either side sees the front of
+      // the car at the corresponding edge of the silhouette.
+      const SedanSide = (
+        <g {...common}>
+          {/* Body outline — front bumper around the front wheel,
+              hood, A-pillar, roof, C-pillar, trunk, rear bumper */}
+          <path d="M 38 282
+                   Q 32 232 52 220
+                   Q 80 213 115 213
+                   L 135 196
+                   Q 152 184 180 178
+                   L 285 168
+                   Q 305 165 320 148
+                   L 380 92
+                   Q 402 76 442 75
+                   L 528 75
+                   Q 558 75 576 100
+                   L 614 158
+                   Q 638 165 654 174
+                   L 660 235
+                   Q 661 268 650 282" />
+          {/* Rocker / under-body line tying the front and rear
+              bumpers together along the bottom */}
+          <line x1="38" y1="282" x2="650" y2="282" />
+          {/* Front wheel + wheel-arch */}
+          <circle cx="180" cy="290" r="56" />
+          <path d="M 124 290 A 56 56 0 0 1 236 290" />
+          {/* Rear wheel + wheel-arch */}
+          <circle cx="540" cy="290" r="56" />
+          <path d="M 484 290 A 56 56 0 0 1 596 290" />
           {/* Window glass */}
-          <path d="M62 70 Q72 55 88 53 L138 45 Q150 47 162 56 L172 70" {...common} />
-          <line x1="115" y1="48" x2="115" y2="70" {...common} />
-          {/* Wheels */}
-          <circle cx="55" cy="90" r="14" {...common} />
-          <circle cx="185" cy="90" r="14" {...common} />
-          {/* Door handle hint */}
-          <line x1="100" y1="75" x2="115" y2="75" {...common} />
+          <path d="M 320 152 L 380 96 L 442 86 L 528 86 L 576 102 L 614 158 Z" />
+          {/* B-pillar (split between front and rear glass) */}
+          <line x1="458" y1="86" x2="458" y2="158" />
+          {/* Vertical seam between front and rear doors at the
+              B-pillar, plus a hint of where the rear door ends */}
+          <line x1="378" y1="158" x2="378" y2="270" />
+          <line x1="458" y1="158" x2="458" y2="270" />
+          {/* Door handles — front + rear */}
+          <rect x="396" y="170" width="34" height="6" rx="2" />
+          <rect x="510" y="170" width="34" height="6" rx="2" />
+          {/* Side mirror (small bump above the A-pillar / front door) */}
+          <ellipse cx="338" cy="138" rx="10" ry="6" />
+          {/* Headlight cluster hint at the front */}
+          <ellipse cx="78" cy="226" rx="20" ry="7" />
+        </g>
+      );
+      return (
+        <svg viewBox="0 0 700 350" className={className}>
+          {shotKey === "exterior_passenger" ? (
+            // Mirror horizontally so the customer's view from the
+            // passenger side reads correctly (front of car on the
+            // right edge of the silhouette).
+            <g transform="translate(700,0) scale(-1,1)">{SedanSide}</g>
+          ) : (
+            SedanSide
+          )}
         </svg>
       );
+    }
 
     case "exterior_rear":
       return (
