@@ -8,9 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Camera, GripVertical, Loader2, Eye, EyeOff, Palette } from "lucide-react";
+import { Save, Camera, GripVertical, Loader2, Eye, EyeOff, Sparkles } from "lucide-react";
 import GhostCarSilhouette from "@/components/upload/GhostCarSilhouette";
 import type { VehicleArchetype } from "@/lib/vehicleArchetypes";
+
+type PreAppointmentRole = "off" | "optional" | "required";
+type BoostRole = "off" | "bonus" | "required";
 
 interface PhotoConfigRow {
   id: string;
@@ -21,15 +24,30 @@ interface PhotoConfigRow {
   orientation: string;
   is_enabled: boolean;
   is_required: boolean;
+  pre_appointment_role: PreAppointmentRole;
+  boost_role: BoostRole;
   sort_order: number;
 }
 
-const PREVIEW_ARCHETYPE: VehicleArchetype = "sedan";
 const OVERLAY_COLOR_OPTIONS = [
   { value: "#00FF88", label: "Green" },
   { value: "#FF3B3B", label: "Red" },
   { value: "#FFFFFF", label: "White" },
 ];
+
+const PRE_OPTIONS: Array<{ value: PreAppointmentRole; label: string }> = [
+  { value: "off",      label: "Off" },
+  { value: "optional", label: "Optional" },
+  { value: "required", label: "Required" },
+];
+const BOOST_OPTIONS: Array<{ value: BoostRole; label: string }> = [
+  { value: "off",      label: "Off" },
+  { value: "bonus",    label: "Bonus" },
+  { value: "required", label: "Required" },
+];
+
+const HELPER_PRE = "What the customer is asked to upload before their dealership appointment.";
+const HELPER_BOOST = "What the customer is asked to capture during the AI photo re-review (Boost) — optional bonus shots earn upside-only signals.";
 
 const PhotoConfiguration = () => {
   const { tenant } = useTenant();
@@ -52,7 +70,7 @@ const PhotoConfiguration = () => {
       .eq("dealership_id", dealershipId)
       .order("sort_order");
 
-    // If no tenant-specific config, clone from default
+    // First-time tenant: clone defaults so the matrix isn't empty.
     if (!data || data.length === 0) {
       const { data: defaults } = await supabase
         .from("photo_config")
@@ -61,7 +79,7 @@ const PhotoConfiguration = () => {
         .order("sort_order");
 
       if (defaults && defaults.length > 0) {
-        const cloned = defaults.map(d => ({
+        const cloned = defaults.map((d) => ({
           dealership_id: dealershipId,
           shot_id: d.shot_id,
           label: d.label,
@@ -69,6 +87,8 @@ const PhotoConfiguration = () => {
           orientation: d.orientation,
           is_enabled: d.is_enabled,
           is_required: d.is_required,
+          pre_appointment_role: d.pre_appointment_role ?? (d.is_enabled === false ? "off" : d.is_required ? "required" : "optional"),
+          boost_role: d.boost_role ?? "off",
           sort_order: d.sort_order,
         }));
         await supabase.from("photo_config").insert(cloned);
@@ -82,7 +102,7 @@ const PhotoConfiguration = () => {
     }
 
     if (data) {
-      setRows(data.map(d => ({
+      setRows(data.map((d) => ({
         id: d.id,
         dealership_id: d.dealership_id,
         shot_id: d.shot_id,
@@ -91,11 +111,16 @@ const PhotoConfiguration = () => {
         orientation: d.orientation,
         is_enabled: d.is_enabled,
         is_required: d.is_required,
+        // Soft-fall-back for instances that haven't applied
+        // 20260507010000_unified_photo_roles.sql yet (per CLAUDE.md
+        // migrations don't auto-apply on merge to main).
+        pre_appointment_role: (d.pre_appointment_role as PreAppointmentRole | null)
+          ?? (d.is_enabled === false ? "off" : d.is_required ? "required" : "optional"),
+        boost_role: (d.boost_role as BoostRole | null) ?? "off",
         sort_order: d.sort_order,
       })));
     }
 
-    // Fetch overlay color settings from site_config
     const { data: siteData } = await supabase
       .from("site_config")
       .select("id, photo_overlay_color, photo_allow_color_change")
@@ -113,22 +138,28 @@ const PhotoConfiguration = () => {
   useEffect(() => { fetchConfig(); }, [fetchConfig]);
 
   const updateRow = (idx: number, patch: Partial<PhotoConfigRow>) => {
-    setRows(prev => prev.map((r, i) => i === idx ? { ...r, ...patch } : r));
+    setRows((prev) => prev.map((r, i) => i === idx ? { ...r, ...patch } : r));
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
       for (const row of rows) {
+        // Keep legacy is_enabled / is_required in sync with the roles
+        // so older readers (admin queries, edge functions that haven't
+        // moved over yet) keep working until they migrate.
+        const isEnabled = row.pre_appointment_role !== "off" || row.boost_role !== "off";
+        const isRequired = row.pre_appointment_role === "required";
         await supabase.from("photo_config").update({
           label: row.label,
           description: row.description,
-          is_enabled: row.is_enabled,
-          is_required: row.is_required,
+          is_enabled: isEnabled,
+          is_required: isRequired,
+          pre_appointment_role: row.pre_appointment_role,
+          boost_role: row.boost_role,
           sort_order: row.sort_order,
         }).eq("id", row.id);
       }
-      // Save overlay color settings to site_config
       if (siteConfigId) {
         await supabase.from("site_config").update({
           photo_overlay_color: overlayColor,
@@ -142,8 +173,11 @@ const PhotoConfiguration = () => {
     setSaving(false);
   };
 
-  const enabledCount = rows.filter(r => r.is_enabled).length;
-  const requiredCount = rows.filter(r => r.is_enabled && r.is_required).length;
+  const preActiveCount   = rows.filter((r) => r.pre_appointment_role !== "off").length;
+  const preRequiredCount = rows.filter((r) => r.pre_appointment_role === "required").length;
+  const boostActiveCount   = rows.filter((r) => r.boost_role !== "off").length;
+  const boostRequiredCount = rows.filter((r) => r.boost_role === "required").length;
+  const boostBonusCount    = rows.filter((r) => r.boost_role === "bonus").length;
 
   if (loading) {
     return (
@@ -155,22 +189,20 @@ const PhotoConfiguration = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
             <Camera className="w-5 h-5 text-primary" />
-            Photo Upload — GhostCar Overlay Settings
+            Inspection photos
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            These settings control the <strong>camera overlay</strong> customers see when uploading vehicle photos — the transparent silhouette guide that helps them frame each shot.
-            This does <em>not</em> affect the vehicle display image on the offer page (that's configured under Site Configuration → Vehicle Display Image).
+            What we ask the customer to capture, and how each shot is used.
+            Settings are unique to <strong>{tenant.display_name || "this rooftop"}</strong> — every dealership and group configures its own list, no global policy.
           </p>
         </div>
         <Badge variant="secondary">Dealer admin</Badge>
       </div>
 
-      {/* Default Overlay Color */}
       <Card>
         <CardContent className="pt-5 pb-5 px-5 space-y-4">
           <div>
@@ -180,7 +212,7 @@ const PhotoConfiguration = () => {
             </p>
           </div>
           <div className="flex gap-3">
-            {OVERLAY_COLOR_OPTIONS.map(opt => {
+            {OVERLAY_COLOR_OPTIONS.map((opt) => {
               const isSelected = overlayColor === opt.value;
               return (
                 <button
@@ -207,7 +239,6 @@ const PhotoConfiguration = () => {
         </CardContent>
       </Card>
 
-      {/* Allow customer to change color */}
       <Card>
         <CardContent className="pt-5 pb-5 px-5 space-y-3">
           <div>
@@ -225,48 +256,119 @@ const PhotoConfiguration = () => {
         </CardContent>
       </Card>
 
-      {/* Enabled photo shots */}
+      {/* Unified shot matrix — one row per shot, two role columns:
+          Before appointment (Off / Optional / Required) and
+          In boost flow    (Off / Bonus    / Required).
+          A single shot can live in both columns at the same time
+          (e.g. Front: Required before AND Required for boost). */}
       <Card>
         <CardContent className="pt-5 pb-5 px-5 space-y-4">
-          <div>
-            <h3 className="text-sm font-semibold text-foreground">Enabled photo shots</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Toggle which shots are required for this rooftop. Unchecked shots are hidden from the customer flow.
-            </p>
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Shot list</h3>
+              <p className="text-xs text-muted-foreground mt-0.5 max-w-2xl">
+                Each shot answers two questions: how it behaves <strong>before the appointment</strong> (in the customer's first upload) and how it behaves <strong>during AI photo re-review (Boost)</strong> if the dealer offers that path.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="outline" className="text-[10px]">
+                First upload — {preRequiredCount} required, {preActiveCount} shown
+              </Badge>
+              <Badge variant="outline" className="text-[10px] border-emerald-500/40 text-emerald-700">
+                Boost — {boostRequiredCount} required + {boostBonusCount} bonus
+              </Badge>
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            {rows.map((row, idx) => (
-              <label
-                key={row.id}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border cursor-pointer transition-all ${
-                  row.is_enabled
-                    ? "border-primary/30 bg-primary/5"
-                    : "border-border bg-card hover:bg-muted/50"
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={row.is_enabled}
-                  onChange={(e) => updateRow(idx, { is_enabled: e.target.checked, is_required: e.target.checked ? row.is_required : false })}
-                  className="w-4 h-4 rounded border-border text-primary focus:ring-primary/30 accent-primary"
-                />
-                <span className={`text-sm ${row.is_enabled ? "text-foreground font-medium" : "text-muted-foreground"}`}>
-                  {row.label}
-                </span>
-              </label>
-            ))}
+
+          {/* Column header strip — two grouped columns, faint emerald
+              wash behind the boost column to read at a glance. */}
+          <div className="hidden md:grid md:grid-cols-[1fr_minmax(220px,260px)_minmax(220px,260px)_36px] gap-3 px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            <div>Shot</div>
+            <div>Before appointment</div>
+            <div className="text-emerald-700">In boost flow</div>
+            <div />
+          </div>
+
+          <div className="space-y-2">
+            {rows.map((row, idx) => {
+              const preDimmed   = row.pre_appointment_role === "off";
+              const boostActive = row.boost_role !== "off";
+              return (
+                <div
+                  key={row.id}
+                  className={`flex flex-col md:grid md:grid-cols-[1fr_minmax(220px,260px)_minmax(220px,260px)_36px] gap-3 py-2.5 px-3 rounded-lg border bg-card transition-colors ${
+                    preDimmed && !boostActive
+                      ? "border-border opacity-70"
+                      : "border-border"
+                  }`}
+                >
+                  {/* Shot identity column */}
+                  <div className="flex items-start gap-2 min-w-0">
+                    <GripVertical className="w-4 h-4 text-muted-foreground/40 shrink-0 mt-1.5" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Input
+                          value={row.label}
+                          onChange={(e) => updateRow(idx, { label: e.target.value })}
+                          className="h-7 text-sm font-semibold w-44"
+                        />
+                        {boostActive && (
+                          <Badge className="bg-emerald-500/10 text-emerald-700 border-emerald-500/30 text-[10px] gap-1">
+                            <Sparkles className="w-3 h-3" />
+                            {row.boost_role === "required" ? "Boost" : "Bonus"}
+                          </Badge>
+                        )}
+                      </div>
+                      <Input
+                        value={row.description}
+                        onChange={(e) => updateRow(idx, { description: e.target.value })}
+                        className="h-6 text-xs text-muted-foreground border-none p-0 mt-0.5"
+                        placeholder="Instruction for customer..."
+                      />
+                    </div>
+                  </div>
+
+                  {/* Before-appointment role */}
+                  <RoleSegmented<PreAppointmentRole>
+                    value={row.pre_appointment_role}
+                    options={PRE_OPTIONS}
+                    onChange={(v) => updateRow(idx, { pre_appointment_role: v })}
+                    accent="primary"
+                    helper={HELPER_PRE}
+                  />
+
+                  {/* Boost-flow role */}
+                  <RoleSegmented<BoostRole>
+                    value={row.boost_role}
+                    options={BOOST_OPTIONS}
+                    onChange={(v) => updateRow(idx, { boost_role: v })}
+                    accent="emerald"
+                    helper={HELPER_BOOST}
+                  />
+
+                  <button
+                    onClick={() => setPreviewShot(previewShot === row.shot_id ? null : row.shot_id)}
+                    className={`p-1.5 rounded transition-colors self-start md:self-center ${
+                      previewShot === row.shot_id ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                    title="Preview overlay"
+                  >
+                    {previewShot === row.shot_id ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
 
-      {/* Overlay preview */}
       {previewShot && (
         <Card className="border-primary/20">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center justify-between">
-              <span>Overlay Preview: {rows.find(r => r.shot_id === previewShot)?.label}</span>
+              <span>Overlay Preview: {rows.find((r) => r.shot_id === previewShot)?.label}</span>
               <div className="flex gap-2">
-                {(["sedan", "compact_suv", "truck", "van"] as VehicleArchetype[]).map(a => (
+                {(["sedan", "compact_suv", "truck", "van"] as VehicleArchetype[]).map((a) => (
                   <button key={a} onClick={() => setPreviewArchetype(a)}
                     className={`text-xs px-2 py-0.5 rounded ${previewArchetype === a ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
                     {a.replace("_", " ")}
@@ -300,58 +402,6 @@ const PhotoConfiguration = () => {
         </Card>
       )}
 
-      {/* Shot detail rows (for label/description editing & required toggle) */}
-      <Card>
-        <CardContent className="pt-5 pb-3 px-5">
-          <h3 className="text-sm font-semibold text-foreground mb-3">Shot details &amp; requirements</h3>
-          <div className="space-y-1.5">
-            {rows.filter(r => r.is_enabled).map((row, _i) => {
-              const idx = rows.findIndex(r => r.id === row.id);
-              return (
-                <div key={row.id} className="flex items-center gap-3 py-2 px-3 rounded-lg border border-border bg-card">
-                  <GripVertical className="w-4 h-4 text-muted-foreground/40 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <Input
-                        value={row.label}
-                        onChange={(e) => updateRow(idx, { label: e.target.value })}
-                        className="h-7 text-sm font-semibold w-44"
-                      />
-                      {row.is_required ? (
-                        <Badge className="bg-success/10 text-success border-success/30 text-[10px]">Required</Badge>
-                      ) : (
-                        <Badge variant="outline" className="text-[10px]">Optional</Badge>
-                      )}
-                    </div>
-                    <Input
-                      value={row.description}
-                      onChange={(e) => updateRow(idx, { description: e.target.value })}
-                      className="h-6 text-xs text-muted-foreground border-none p-0 mt-0.5"
-                      placeholder="Instruction for customer..."
-                    />
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>Required</span>
-                    <Switch
-                      checked={row.is_required}
-                      onCheckedChange={(v) => updateRow(idx, { is_required: v })}
-                    />
-                  </div>
-                  <button
-                    onClick={() => setPreviewShot(previewShot === row.shot_id ? null : row.shot_id)}
-                    className={`p-1.5 rounded transition-colors ${previewShot === row.shot_id ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`}
-                    title="Preview overlay"
-                  >
-                    {previewShot === row.shot_id ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Footer actions */}
       <div className="flex justify-end gap-3 pt-2">
         <Button variant="outline" onClick={() => fetchConfig()}>Cancel</Button>
         <Button onClick={handleSave} disabled={saving} className="gap-2">
@@ -362,5 +412,41 @@ const PhotoConfiguration = () => {
     </div>
   );
 };
+
+interface RoleSegmentedProps<T extends string> {
+  value: T;
+  options: Array<{ value: T; label: string }>;
+  onChange: (v: T) => void;
+  accent: "primary" | "emerald";
+  helper: string;
+}
+
+function RoleSegmented<T extends string>({ value, options, onChange, accent, helper }: RoleSegmentedProps<T>) {
+  const selectedClass = accent === "emerald"
+    ? "bg-emerald-500 text-white border-emerald-500"
+    : "bg-primary text-primary-foreground border-primary";
+  const groupBg = accent === "emerald" ? "bg-emerald-50/40" : "bg-muted/30";
+  return (
+    <div className={`inline-flex p-0.5 rounded-lg border border-border ${groupBg} self-start`} title={helper}>
+      {options.map((opt) => {
+        const selected = opt.value === value;
+        return (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => onChange(opt.value)}
+            className={`px-3 py-1 text-xs font-medium rounded-md border transition-colors ${
+              selected
+                ? selectedClass
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {opt.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 export default PhotoConfiguration;

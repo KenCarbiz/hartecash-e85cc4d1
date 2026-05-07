@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Camera, CheckCircle, Loader2, Plus, Smartphone, Sparkles, TrendingUp, Upload, X } from "lucide-react";
@@ -8,23 +8,26 @@ import { safeInvoke } from "@/lib/safeInvoke";
 import { Button } from "@/components/ui/button";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { usePhotoConfig } from "@/hooks/usePhotoConfig";
 import CaptureWithOverlay from "@/components/sell-form/CaptureWithOverlay";
 
 /**
  * Clarity-tier "Boost my offer" page — a focused, opinionated
- * 6-shot photo capture flow framed as "help us pay you more"
- * instead of the generic UploadPhotosClarity.
+ * photo capture flow framed as "help us pay you more" instead of
+ * the generic UploadPhotosClarity.
  *
  * Reached from the CustomerPortalClarity card "Looking for more
  * cash for your {vehicle}?". Distinct route /boost-offer/:token
  * so the framing carries through and analytics can measure
  * conversion on the bump-CTA specifically.
  *
- * The six required shots are hardcoded (not driven by the dealer's
- * usePhotoConfig) because this is a known recipe for getting an
- * accurate AI re-appraisal: each angle covers a different damage
- * surface, and odometer + tire close-ups are the two biggest
- * appraiser-bump triggers.
+ * The shot list is now driven by photo_config.boost_role per
+ * dealership (migration 20260507010000_unified_photo_roles.sql).
+ * `boost_role = 'required'` rows render in the Required grid;
+ * `boost_role = 'bonus'` rows render in the Bonus grid. Falls back
+ * to a hardcoded canonical recipe if the hook returns nothing
+ * (instance hasn't applied the migration, or a brand-new dealer's
+ * config isn't seeded yet) so the page never renders empty.
  */
 
 interface SubmissionInfo {
@@ -48,46 +51,63 @@ interface SubmissionInfo {
   overall_condition?: string | null;
 }
 
-const REQUIRED_SHOTS = [
-  { id: "exterior_front",    label: "Front",          captured: "Front exterior captured",    tip: "Whole front in frame" },
-  { id: "exterior_driver",   label: "Driver Side",    captured: "Driver side angle clear",    tip: "Whole side, daylight if you can" },
-  { id: "exterior_rear",     label: "Rear",           captured: "Rear exterior captured",     tip: "Stand back so the whole rear fits" },
-  { id: "exterior_passenger",label: "Passenger Side", captured: "Passenger side angle clear", tip: "Whole side, daylight if you can" },
+interface BoostShot {
+  id: string;
+  label: string;
+  captured: string;
+  tip: string;
+  rewardHint?: string;
+}
+
+// Per-shot copy overrides keyed by canonical photo_config.shot_id.
+// photo_config carries label + description (description maps to the
+// shot's `tip`), but the boost flow shows two extra strings the
+// admin doesn't capture yet: the post-fill confirmation microcopy
+// (`captured`) and the bonus-tile reward hint (`rewardHint`). Until
+// those become editable fields on photo_config we keep them here so
+// brand voice stays consistent across rooftops.
+const BOOST_COPY: Record<string, { captured?: string; rewardHint?: string; tip?: string }> = {
+  front:                   { captured: "Front exterior captured",    tip: "Whole front in frame" },
+  driver_side:             { captured: "Driver side angle clear",    tip: "Whole side, daylight if you can" },
+  rear:                    { captured: "Rear exterior captured",     tip: "Stand back so the whole rear fits" },
+  passenger_side:          { captured: "Passenger side angle clear", tip: "Whole side, daylight if you can" },
   // Engine-on tip is intentionally vague — we don't tell the
   // customer why (the AI uses a running engine to capture live
   // warning lights vs. pre-start indicators), but the instruction
-  // is non-negotiable for the no_warning_lights signal to fire
-  // accurately.
-  { id: "dashboard_odometer",label: "Odometer",       captured: "Odometer reading visible",   tip: "Engine running, photo from the driver seat" },
-  { id: "tires_wheels",      label: "Tire & Wheel",   captured: "Tire wear pattern visible",  tip: "Get close — show the tread groove" },
+  // is non-negotiable for the no_warning_lights signal to fire.
+  dashboard:               { captured: "Odometer reading visible",   tip: "Engine running, photo from the driver seat" },
+  wheel:                   { captured: "Tire wear pattern visible",  tip: "Get close — show the tread groove" },
+  interior_driver_seat:    { captured: "Driver seat captured",       tip: "Whole seat from the door, daylight if you can", rewardHint: "+ up to $200 if seat looks low-wear" },
+  interior_steering_wheel: { captured: "Steering wheel captured",    tip: "Straight on from the driver seat",              rewardHint: "+ up to $150 if wheel looks original" },
+};
+
+// Hard fallback used when usePhotoConfig returns no rows — covers
+// dealers whose photo_config seed predates the boost-role columns
+// or instances that haven't applied 20260507010000_unified_photo_roles.sql.
+// Same canonical ids the migration writes, so storage paths match.
+const FALLBACK_BOOST_REQUIRED: BoostShot[] = [
+  { id: "front",          label: "Front",          ...BOOST_COPY.front          } as BoostShot,
+  { id: "driver_side",    label: "Driver Side",    ...BOOST_COPY.driver_side    } as BoostShot,
+  { id: "rear",           label: "Rear",           ...BOOST_COPY.rear           } as BoostShot,
+  { id: "passenger_side", label: "Passenger Side", ...BOOST_COPY.passenger_side } as BoostShot,
+  { id: "dashboard",      label: "Odometer",       ...BOOST_COPY.dashboard      } as BoostShot,
+  { id: "wheel",          label: "Tire & Wheel",   ...BOOST_COPY.wheel          } as BoostShot,
+];
+const FALLBACK_BOOST_BONUS: BoostShot[] = [
+  { id: "interior_driver_seat",    label: "Driver Seat",    ...BOOST_COPY.interior_driver_seat    } as BoostShot,
+  { id: "interior_steering_wheel", label: "Steering Wheel", ...BOOST_COPY.interior_steering_wheel } as BoostShot,
 ];
 
-// Optional bonus shots — the AI uses these to cross-reference
-// odometer OCR against actual interior wear. Heavily-worn driver
-// seats and shiny worn steering-wheel grips are the strongest
-// "true miles higher than odometer says" tells in the appraisal
-// industry. Keeping these clean = bigger bump.
-//
-// Bonus shots don't gate Submit — allComplete is calculated only
-// against REQUIRED_SHOTS so a customer can submit with 6 of 6
-// required + 0 of 2 bonus and still get their core bump. The
-// extra ~$200 chip per shot is the carrot for the engaged ones.
-const BONUS_SHOTS = [
-  {
-    id: "interior_driver_seat",
-    label: "Driver Seat",
-    captured: "Driver seat captured",
-    tip: "Whole seat from the door, daylight if you can",
-    rewardHint: "+ up to $200 if seat looks low-wear",
-  },
-  {
-    id: "interior_steering_wheel",
-    label: "Steering Wheel",
-    captured: "Steering wheel captured",
-    tip: "Straight on from the driver seat",
-    rewardHint: "+ up to $150 if wheel looks original",
-  },
-];
+const toBoostShot = (s: { shot_id: string; label: string; description: string }): BoostShot => {
+  const copy = BOOST_COPY[s.shot_id] || {};
+  return {
+    id: s.shot_id,
+    label: s.label,
+    tip: copy.tip || s.description || "",
+    captured: copy.captured || `${s.label} captured`,
+    rewardHint: copy.rewardHint,
+  };
+};
 
 type ShotState = { file?: File; preview?: string; uploaded?: boolean };
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -121,6 +141,26 @@ const BoostOfferClarity = () => {
   } | null>(null);
   const [activeShot, setActiveShot] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Per-tenant boost recipe — falls back to canonical defaults if
+  // the rooftop hasn't customized photo_config yet so the page never
+  // renders an empty grid. The hook keys by submission.dealership_id;
+  // each tenant / dealer group picks its own shots, no global policy.
+  const { boostRequiredShots, boostBonusShots } = usePhotoConfig(
+    submission?.dealership_id || "default",
+  );
+  const REQUIRED_SHOTS = useMemo<BoostShot[]>(
+    () => (boostRequiredShots.length > 0
+      ? boostRequiredShots.map(toBoostShot)
+      : FALLBACK_BOOST_REQUIRED),
+    [boostRequiredShots],
+  );
+  const BONUS_SHOTS = useMemo<BoostShot[]>(
+    () => (boostBonusShots.length > 0
+      ? boostBonusShots.map(toBoostShot)
+      : FALLBACK_BOOST_BONUS),
+    [boostBonusShots],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -169,7 +209,7 @@ const BoostOfferClarity = () => {
     return () => {
       cancelled = true;
     };
-  }, [token, submission]);
+  }, [token, submission, REQUIRED_SHOTS]);
 
   // Tile-tap behavior — opens the CarMax-style overlay camera by
   // setting activeShot. The CaptureWithOverlay component (rendered
