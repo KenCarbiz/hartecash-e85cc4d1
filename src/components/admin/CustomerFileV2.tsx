@@ -207,14 +207,11 @@ function V2Identity({
           </span>
         </div>
       )}
-      {sub.acv_value != null && dealValue != null && (
-        <div className="text-[11px] text-white/70 mt-1">
-          ACV {fmtMoney(sub.acv_value)} ·{" "}
-          <span className="text-emerald-300 font-semibold">
-            +{fmtMoney(dealValue - Number(sub.acv_value))}
-          </span>
-        </div>
-      )}
+      {/* ACV / equity-delta line removed from the header per
+          dealer feedback — that math belongs in the rail's Offer
+          Breakdown card alongside Loan Payoff / Equity, not in
+          the blue strip where it competes with the headline
+          number and the photo-review pill. */}
     </div>
   );
 
