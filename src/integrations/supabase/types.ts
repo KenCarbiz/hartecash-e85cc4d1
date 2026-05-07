@@ -2138,6 +2138,7 @@ export type Database = {
       }
       photo_config: {
         Row: {
+          boost_role: string
           created_at: string
           dealership_id: string
           description: string
@@ -2146,11 +2147,13 @@ export type Database = {
           is_required: boolean
           label: string
           orientation: string
+          pre_appointment_role: string
           shot_id: string
           sort_order: number
           updated_at: string
         }
         Insert: {
+          boost_role?: string
           created_at?: string
           dealership_id?: string
           description?: string
@@ -2159,11 +2162,13 @@ export type Database = {
           is_required?: boolean
           label: string
           orientation?: string
+          pre_appointment_role?: string
           shot_id: string
           sort_order?: number
           updated_at?: string
         }
         Update: {
+          boost_role?: string
           created_at?: string
           dealership_id?: string
           description?: string
@@ -2172,6 +2177,7 @@ export type Database = {
           is_required?: boolean
           label?: string
           orientation?: string
+          pre_appointment_role?: string
           shot_id?: string
           sort_order?: number
           updated_at?: string
