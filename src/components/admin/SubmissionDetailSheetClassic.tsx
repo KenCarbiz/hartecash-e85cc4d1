@@ -22,6 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { safeInvoke } from "@/lib/safeInvoke";
 import { formatPhone } from "@/lib/utils";
 import {
   ALL_STATUS_OPTIONS, getStatusLabel,
@@ -1163,6 +1164,49 @@ export default function SubmissionDetailSheetClassic({
                     >
                       <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm3.7 6.3a1 1 0 010 1.4l-4 4a1 1 0 01-1.4 0l-2-2a1 1 0 111.4-1.4L9 11.6l3.3-3.3a1 1 0 011.4 0z"/></svg>
                       Save the deal
+                    </button>
+                  )}
+                  {/* Send self check-in link — visible whenever the
+                      lead has a future appointment and isn't already
+                      arrived. Same trigger the T-2h cron uses; this
+                      is the manual override the BDC rep / sales mgr
+                      taps from inside the customer file. Color flips
+                      to muted "Sent ✓" once arrival_link_sent_at is
+                      stamped (auto or manual). */}
+                  {sub && sub.appointment_set && !["customer_arrived","inspection_completed","appraisal_completed","manager_approval","manager_approval_inspection","price_agreed","deal_finalized","check_request_submitted","purchase_complete","dead_lead"].includes(sub.progress_status) && (
+                    <button
+                      onClick={async () => {
+                        if (!sub?.id) return;
+                        try {
+                          safeInvoke("send-notification", {
+                            body: { trigger_key: "customer_self_checkin_link", submission_id: sub.id },
+                            context: { from: "ClassicHeader.sendArrivalLink" },
+                          });
+                          await supabase
+                            .from("submissions")
+                            .update({ arrival_link_sent_at: new Date().toISOString() } as never)
+                            .eq("id", sub.id);
+                          if (sub) onUpdate({ ...sub, arrival_link_sent_at: new Date().toISOString() } as never);
+                          toast({ title: "Check-in link sent", description: `${sub.name?.split(" ")[0] || "Customer"} will get the SMS in a few seconds.` });
+                        } catch {
+                          toast({ title: "Send failed", variant: "destructive" });
+                        }
+                      }}
+                      className={
+                        (sub as { arrival_link_sent_at?: string | null }).arrival_link_sent_at
+                          ? "px-3 h-8 rounded-lg bg-white/15 hover:bg-white/25 text-white/80 text-caption font-bold flex items-center gap-1.5 transition cursor-pointer"
+                          : "px-3 h-8 rounded-lg bg-white/95 hover:bg-white text-[#003b80] text-caption font-bold flex items-center gap-1.5 transition"
+                      }
+                      title={
+                        (sub as { arrival_link_sent_at?: string | null }).arrival_link_sent_at
+                          ? "Check-in link already sent. Click to re-send."
+                          : "Send self check-in SMS link to the customer"
+                      }
+                    >
+                      <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-.4.8l-5.6 4.2v4l-2 1v-5L3 6.8A1 1 0 013 6V4z" />
+                      </svg>
+                      {(sub as { arrival_link_sent_at?: string | null }).arrival_link_sent_at ? "Link sent" : "Send check-in"}
                     </button>
                   )}
                 </div>

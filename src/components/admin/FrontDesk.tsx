@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { Check, Search, UserPlus, ChevronDown } from "lucide-react";
+import { Check, Search, UserPlus, ChevronDown, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { safeInvoke } from "@/lib/safeInvoke";
 import { useToast } from "@/hooks/use-toast";
 import { useTenant } from "@/contexts/TenantContext";
+import { useFrontDeskRealtime } from "@/hooks/useFrontDeskRealtime";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import TodayHeader from "./TodayHeader";
 import type { Appointment, Submission } from "@/lib/adminConstants";
@@ -46,9 +47,36 @@ interface SalespersonOption {
 }
 
 const FrontDesk = ({ appointments, submissions, fetchSubmissions, onView, onCreateWalkIn, userName }: FrontDeskProps) => {
+  // Track per-row send state so the inline "Send link" button reflects
+  // both prior sends (arrival_link_sent_at on the submission) and
+  // optimistic in-flight sends.
+  const [sendingFor, setSendingFor] = useState<string | null>(null);
   const { toast } = useToast();
   const { tenant } = useTenant();
   const today = TODAY_ISO();
+
+  // Live updates — when a customer self-checks-in OR another staff
+  // member flips a status, FrontDesk refetches without a manual
+  // page-reload. The toast tells the receptionist what just happened
+  // so they don't miss the arrival cue when they're heads-down.
+  useFrontDeskRealtime(tenant.dealership_id, (next, transition) => {
+    if (transition.to === "customer_arrived" && transition.from !== "customer_arrived") {
+      const sub = submissions.find((s) => s.id === next.id);
+      const name = sub?.name?.split(" ")[0] || "A customer";
+      toast({
+        title: `${name} just checked in`,
+        description: next.self_checkin_at ? "Self check-in via SMS." : "Status flipped to arrived.",
+      });
+    } else if (transition.to === "on_the_way" && transition.from !== "on_the_way") {
+      const sub = submissions.find((s) => s.id === next.id);
+      const name = sub?.name?.split(" ")[0] || "A customer";
+      toast({
+        title: `${name} is on the way`,
+        description: "Self check-in says they've left.",
+      });
+    }
+    fetchSubmissions();
+  });
   const [search, setSearch] = useState("");
   const [salespeople, setSalespeople] = useState<SalespersonOption[]>([]);
   const [assignOpen, setAssignOpen] = useState<string | null>(null); // submission_id of the open picker
@@ -143,6 +171,36 @@ const FrontDesk = ({ appointments, submissions, fetchSubmissions, onView, onCrea
     });
     return { total: todays.length, arrived, onTheWay };
   }, [todays, subByToken]);
+
+  // Manual fire of the self-checkin SMS link. Same trigger the T-2h
+  // cron uses (customer_self_checkin_link), but bypasses the schedule
+  // — the receptionist taps it for a customer running late or for a
+  // walk-in not yet on the calendar. Stamps arrival_link_sent_at so
+  // the button reflects "already sent" until the next manual reset.
+  const sendArrivalLink = async (sub: Submission) => {
+    if (!sub?.id) return;
+    setSendingFor(sub.id);
+    try {
+      safeInvoke("send-notification", {
+        body: { trigger_key: "customer_self_checkin_link", submission_id: sub.id },
+        context: { from: "FrontDesk.sendArrivalLink" },
+      });
+      await supabase
+        .from("submissions")
+        .update({ arrival_link_sent_at: new Date().toISOString() } as never)
+        .eq("id", sub.id);
+      toast({
+        title: `Check-in link sent to ${sub.name?.split(" ")[0] || "customer"}`,
+        description: "They'll get the SMS in a few seconds.",
+      });
+      fetchSubmissions();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Try again in a moment.";
+      toast({ title: "Send failed", description: msg, variant: "destructive" });
+    } finally {
+      setSendingFor(null);
+    }
+  };
 
   const checkIn = async (sub: Submission) => {
     const next = {
@@ -403,14 +461,51 @@ const FrontDesk = ({ appointments, submissions, fetchSubmissions, onView, onCrea
                           </PopoverContent>
                         </Popover>
                       ) : (
-                        <button
-                          type="button"
-                          onClick={() => sub ? checkIn(sub) : null}
-                          disabled={!sub}
-                          className="h-9 px-3.5 rounded-md border bg-background hover:bg-muted/60 text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition"
-                        >
-                          Check in
-                        </button>
+                        <>
+                          {/* Send self-checkin SMS link. Outlined info-
+                              tone before send; muted "Sent ✓" after.
+                              The T-2h cron auto-fires the same trigger
+                              for everyone with an appointment; this
+                              button is the manual override (walk-ins,
+                              re-sends, customers running late). */}
+                          {sub && (
+                            <button
+                              type="button"
+                              onClick={() => sendArrivalLink(sub)}
+                              disabled={sendingFor === sub.id}
+                              className={
+                                (sub as { arrival_link_sent_at?: string | null }).arrival_link_sent_at
+                                  ? "h-9 px-3 rounded-md border bg-muted text-muted-foreground text-xs font-semibold inline-flex items-center gap-1.5 cursor-default"
+                                  : "h-9 px-3 rounded-md border border-info text-info hover:bg-info/10 text-xs font-semibold inline-flex items-center gap-1.5 transition disabled:opacity-50"
+                              }
+                              title={
+                                (sub as { arrival_link_sent_at?: string | null }).arrival_link_sent_at
+                                  ? "Self check-in SMS already sent. Click again to re-send."
+                                  : "Send self check-in SMS link"
+                              }
+                            >
+                              {(sub as { arrival_link_sent_at?: string | null }).arrival_link_sent_at ? (
+                                <>
+                                  <Check className="w-3.5 h-3.5" />
+                                  Sent
+                                </>
+                              ) : (
+                                <>
+                                  <Send className="w-3.5 h-3.5" />
+                                  Send link
+                                </>
+                              )}
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => sub ? checkIn(sub) : null}
+                            disabled={!sub}
+                            className="h-9 px-3.5 rounded-md border bg-background hover:bg-muted/60 text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition"
+                          >
+                            Check in
+                          </button>
+                        </>
                       )}
                     </div>
                   </li>

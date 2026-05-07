@@ -103,6 +103,16 @@ Deno.serve(async (req) => {
             .from("appointments")
             .update({ reminder_2h_sent_at: new Date().toISOString() })
             .eq("id", appt.id);
+          // Also stamp arrival_link_sent_at on the submission so the
+          // FrontDesk + customer-file "Send check-in link" button
+          // reflects "already sent" without an extra notification_log
+          // query per row.
+          if (appt.submission_id) {
+            await supabase
+              .from("submissions")
+              .update({ arrival_link_sent_at: new Date().toISOString() })
+              .eq("id", appt.submission_id);
+          }
           sent2h++;
         }
       }
