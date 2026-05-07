@@ -1,0 +1,397 @@
+/**
+ * VoiceQualityPanel — the Monday-ritual page.
+ *
+ * The single highest-leverage habit in voice-AI training (synthesized
+ * from the three research agents): every Monday, the head of the
+ * buying desk listens to the 10 lowest-graded and 10 highest-graded
+ * calls of the prior week and personally edits the cabinet.
+ *
+ * No tooling replaces that ritual — this UI just makes it cheap.
+ *
+ * Reads v_voice_call_quality (joins voice_call_log + most-recent
+ * voice_call_grades). Three sections:
+ *   - Gating fails (TCPA / quote-band / hallucination)  — always above
+ *     the fold; these auto-retired variants and need root-cause review
+ *   - 10 highest composite_score this week              — what to copy
+ *   - 10 lowest composite_score this week               — what to fix
+ *
+ * Each row expands to show the rubric breakdown, grader rationale,
+ * and a deep-link to the call transcript via the Cadence Timeline
+ * tab on the customer file.
+ *
+ * Soft-falls-back when migrations haven't been applied — shows the
+ * MigrationMissingCard so the panel doesn't crash the hub.
+ */
+
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  AlertTriangle, ChevronDown, ChevronRight,
+  Mic, Sparkles, ShieldAlert,
+} from "lucide-react";
+
+interface QualityRow {
+  call_id: string;
+  submission_id: string | null;
+  customer_name: string | null;
+  vehicle_info: string | null;
+  started_at: string | null;
+  duration_seconds: number | null;
+  call_outcome: string | null;
+  composite_score: number | null;
+  gating_failed: boolean | null;
+  dim_compliance: number | null;
+  dim_quote_band: number | null;
+  dim_hallucination: number | null;
+  grader_rationale: string | null;
+  grader_model: string | null;
+}
+
+interface FullGrade extends QualityRow {
+  dim_vehicle_confirm: number | null;
+  dim_motivation_disco: number | null;
+  dim_objection_handle: number | null;
+  dim_close_control: number | null;
+  dim_transfer_hygiene: number | null;
+  dim_pacing: number | null;
+  dim_brand_tone: number | null;
+}
+
+const fmtTime = (iso: string | null) => {
+  if (!iso) return "—";
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString(undefined, {
+      month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
+    });
+  } catch { return iso; }
+};
+
+const fmtDuration = (s: number | null) => {
+  if (s == null) return "—";
+  const m = Math.floor(s / 60);
+  const sec = Math.round(s - m * 60);
+  return `${m}:${sec.toString().padStart(2, "0")}`;
+};
+
+const scoreBadge = (n: number | null) => {
+  if (n == null) return { label: "ungraded", cls: "bg-slate-100 text-slate-500 border-slate-200" };
+  if (n >= 0.5)  return { label: "+" + n.toFixed(1), cls: "bg-emerald-100 text-emerald-700 border-emerald-300" };
+  if (n >= 0)    return { label: n.toFixed(1),       cls: "bg-slate-100 text-slate-600 border-slate-300" };
+  if (n >= -1)   return { label: n.toFixed(1),       cls: "bg-amber-100 text-amber-800 border-amber-300" };
+  return                { label: n.toFixed(1),       cls: "bg-red-100 text-red-700 border-red-300" };
+};
+
+const dimBadge = (n: number | null, gating = false) => {
+  if (n == null) return "bg-slate-50 text-slate-300 border-slate-200";
+  if (n === 1) return gating
+    ? "bg-red-100 text-red-700 border-red-400 font-bold"
+    : "bg-amber-100 text-amber-800 border-amber-300";
+  if (n <= 2) return "bg-amber-50 text-amber-700 border-amber-200";
+  if (n >= 4) return "bg-emerald-50 text-emerald-700 border-emerald-200";
+  return "bg-slate-50 text-slate-600 border-slate-200";
+};
+
+function MigrationMissingCard() {
+  return (
+    <div className="rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 p-4 text-sm text-amber-900 dark:text-amber-200">
+      <div className="font-semibold mb-1">Voice quality data unavailable</div>
+      <div className="text-[12.5px]">
+        The <code>v_voice_call_quality</code> view requires migrations
+        <code className="px-1 mx-0.5 bg-white/60 rounded">20260507150000</code>,
+        <code className="px-1 mx-0.5 bg-white/60 rounded">20260507160000</code>,
+        and <code className="px-1 mx-0.5 bg-white/60 rounded">20260507180000</code>.
+        Apply them via Lovable Push — the panel auto-populates as
+        graded calls land.
+      </div>
+    </div>
+  );
+}
+
+function CallRow({ row, expanded, onToggle, full }: {
+  row: QualityRow; expanded: boolean; onToggle: () => void; full: FullGrade | null;
+}) {
+  const badge = scoreBadge(row.composite_score);
+  const isGating = !!row.gating_failed;
+
+  return (
+    <div className={`rounded-lg border ${isGating ? "border-red-300 bg-red-50/30 dark:bg-red-900/10 dark:border-red-700" : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"}`}>
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full text-left px-4 py-3 flex items-start gap-3 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition"
+      >
+        <span className="shrink-0 mt-0.5">
+          {expanded ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
+        </span>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={`text-[11px] font-bold uppercase tracking-wider rounded-md border px-2 py-0.5 ${badge.cls}`}>
+              {badge.label}
+            </span>
+            {isGating && (
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider rounded-md border border-red-400 bg-red-100 text-red-700 px-2 py-0.5">
+                <ShieldAlert className="w-3 h-3" /> gating fail
+              </span>
+            )}
+            <span className="text-[13px] font-semibold text-slate-900 dark:text-slate-100">
+              {row.customer_name || "Customer"}
+            </span>
+            <span className="text-[11px] text-slate-400">·</span>
+            <span className="text-[12px] text-slate-600 dark:text-slate-400">{row.vehicle_info || "—"}</span>
+            <span className="text-[11px] text-slate-400">·</span>
+            <span className="text-[11px] text-slate-500">{fmtTime(row.started_at)}</span>
+            <span className="text-[11px] text-slate-400">·</span>
+            <span className="text-[11px] text-slate-500 font-mono">{fmtDuration(row.duration_seconds)}</span>
+            {row.call_outcome && (
+              <>
+                <span className="text-[11px] text-slate-400">·</span>
+                <span className="text-[11px] text-slate-500 capitalize">{row.call_outcome.replace(/_/g, " ")}</span>
+              </>
+            )}
+          </div>
+          {row.grader_rationale && (
+            <div className="text-[12.5px] text-slate-600 dark:text-slate-400 mt-1 leading-snug line-clamp-2">
+              {row.grader_rationale}
+            </div>
+          )}
+        </div>
+      </button>
+
+      {expanded && full && (
+        <div className="border-t border-slate-200 dark:border-slate-800 px-4 py-3 bg-slate-50/30 dark:bg-slate-950/20">
+          <div className="grid grid-cols-5 gap-1.5 text-[10.5px] font-bold uppercase tracking-wider text-slate-500 mb-2">
+            <div>compliance*</div>
+            <div>vehicle</div>
+            <div>motivation</div>
+            <div>quote band*</div>
+            <div>objection</div>
+            <div>close</div>
+            <div>transfer</div>
+            <div>pacing</div>
+            <div>halluc.*</div>
+            <div>tone</div>
+          </div>
+          <div className="grid grid-cols-5 gap-1.5 mb-3">
+            {[
+              { v: full.dim_compliance,        gating: true  },
+              { v: full.dim_vehicle_confirm,   gating: false },
+              { v: full.dim_motivation_disco,  gating: false },
+              { v: full.dim_quote_band,        gating: true  },
+              { v: full.dim_objection_handle,  gating: false },
+              { v: full.dim_close_control,     gating: false },
+              { v: full.dim_transfer_hygiene,  gating: false },
+              { v: full.dim_pacing,            gating: false },
+              { v: full.dim_hallucination,     gating: true  },
+              { v: full.dim_brand_tone,        gating: false },
+            ].map((d, i) => (
+              <span key={i} className={`text-center text-[12px] font-mono font-bold rounded border px-1 py-1 ${dimBadge(d.v, d.gating)}`}>
+                {d.v ?? "—"}
+              </span>
+            ))}
+          </div>
+          {full.grader_rationale && (
+            <div className="text-[12.5px] text-slate-700 dark:text-slate-300 leading-snug whitespace-pre-line">
+              <span className="font-bold uppercase tracking-wider text-[10.5px] text-slate-500">Rationale ({full.grader_model || "judge"}): </span>
+              {full.grader_rationale}
+            </div>
+          )}
+          <div className="mt-3 flex items-center gap-2 text-[11px] text-slate-500">
+            <span>Call ID:</span>
+            <code className="font-mono text-[10.5px] bg-slate-100 dark:bg-slate-800 rounded px-1.5 py-0.5">{row.call_id}</code>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface SectionProps {
+  title: string;
+  subtitle: string;
+  rows: QualityRow[];
+  expandedId: string | null;
+  onToggle: (id: string) => void;
+  fullById: Record<string, FullGrade>;
+  emptyHint: string;
+  icon: React.ElementType;
+}
+
+function Section({ title, subtitle, rows, expandedId, onToggle, fullById, emptyHint, icon: Icon }: SectionProps) {
+  return (
+    <div>
+      <div className="flex items-start gap-3 mb-3">
+        <Icon className="w-5 h-5 mt-0.5 text-slate-500 shrink-0" />
+        <div>
+          <h3 className="text-[13px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">{title}</h3>
+          <p className="text-[12px] text-slate-500 max-w-prose">{subtitle}</p>
+        </div>
+      </div>
+      {rows.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-slate-200 dark:border-slate-800 p-6 text-center text-[12.5px] text-slate-500">
+          {emptyHint}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {rows.map((r) => (
+            <CallRow
+              key={r.call_id}
+              row={r}
+              expanded={expandedId === r.call_id}
+              onToggle={() => onToggle(r.call_id)}
+              full={fullById[r.call_id] || null}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function VoiceQualityPanel() {
+  const [loading, setLoading] = useState(true);
+  const [missing, setMissing] = useState(false);
+  const [highest, setHighest] = useState<QualityRow[]>([]);
+  const [lowest, setLowest]   = useState<QualityRow[]>([]);
+  const [gating, setGating]   = useState<QualityRow[]>([]);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [fullById, setFullById] = useState<Record<string, FullGrade>>({});
+
+  const weekAgoIso = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 7);
+    return d.toISOString();
+  }, []);
+
+  useEffect(() => {
+    let cancel = false;
+    const load = async () => {
+      setLoading(true);
+
+      const headerCols = "call_id, submission_id, customer_name, vehicle_info, started_at, duration_seconds, call_outcome, composite_score, gating_failed, dim_compliance, dim_quote_band, dim_hallucination, grader_rationale, grader_model";
+
+      const [hi, lo, gate] = await Promise.all([
+        supabase
+          .from("v_voice_call_quality")
+          .select(headerCols)
+          .gte("started_at", weekAgoIso)
+          .not("composite_score", "is", null)
+          .order("composite_score", { ascending: false, nullsFirst: false })
+          .limit(10),
+        supabase
+          .from("v_voice_call_quality")
+          .select(headerCols)
+          .gte("started_at", weekAgoIso)
+          .not("composite_score", "is", null)
+          .order("composite_score", { ascending: true, nullsFirst: false })
+          .limit(10),
+        supabase
+          .from("v_voice_call_quality")
+          .select(headerCols)
+          .eq("gating_failed", true)
+          .order("started_at", { ascending: false, nullsFirst: false })
+          .limit(20),
+      ]);
+
+      if (cancel) return;
+
+      const anyMissing = (hi.error?.message || "").includes("does not exist")
+        || (lo.error?.message || "").includes("does not exist")
+        || (gate.error?.message || "").includes("does not exist");
+
+      setMissing(anyMissing);
+      setHighest((hi.data as QualityRow[]) || []);
+      setLowest((lo.data as QualityRow[]) || []);
+      setGating((gate.data as QualityRow[]) || []);
+      setLoading(false);
+    };
+    void load();
+    return () => { cancel = true; };
+  }, [weekAgoIso]);
+
+  const onToggle = async (callId: string) => {
+    if (expandedId === callId) {
+      setExpandedId(null);
+      return;
+    }
+    setExpandedId(callId);
+    if (fullById[callId]) return;
+
+    const { data } = await supabase
+      .from("voice_call_grades")
+      .select("call_id, dim_compliance, dim_vehicle_confirm, dim_motivation_disco, dim_quote_band, dim_objection_handle, dim_close_control, dim_transfer_hygiene, dim_pacing, dim_hallucination, dim_brand_tone, composite_score, gating_failed, rationale, grader_model")
+      .eq("call_id", callId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (data) {
+      const merged = {
+        ...(highest.find((r) => r.call_id === callId)
+          || lowest.find((r) => r.call_id === callId)
+          || gating.find((r) => r.call_id === callId)),
+        ...data,
+        grader_rationale: data.rationale ?? null,
+      } as FullGrade;
+      setFullById((prev) => ({ ...prev, [callId]: merged }));
+    }
+  };
+
+  if (missing) return <MigrationMissingCard />;
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h2 className="text-[15px] font-bold text-card-foreground">Voice Quality — Monday Ritual</h2>
+        <p className="text-[12.5px] text-muted-foreground max-w-prose mt-1">
+          Every Monday, listen to the 10 lowest- and 10 highest-graded calls
+          of the prior week and edit the training cabinet. No tooling replaces
+          this step. Gating fails (TCPA, ACV out-of-band, hallucinated numbers)
+          appear at the top — they auto-retire the variants in use and need
+          root-cause review before the next call ships.
+        </p>
+      </div>
+
+      {loading && (
+        <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 text-center text-[12.5px] text-slate-500">
+          Loading…
+        </div>
+      )}
+
+      {!loading && (
+        <>
+          <Section
+            title="Gating fails (TCPA · quote band · hallucination)"
+            subtitle="Variants used in these calls were auto-retired. Listen first, then patch the cabinet so the failure mode can't recur."
+            rows={gating}
+            expandedId={expandedId}
+            onToggle={onToggle}
+            fullById={fullById}
+            emptyHint="No gating fails this week. Keep that streak."
+            icon={AlertTriangle}
+          />
+          <Section
+            title="Top 10 this week"
+            subtitle="What to copy. Pull patterns from the rationale into new variants."
+            rows={highest}
+            expandedId={expandedId}
+            onToggle={onToggle}
+            fullById={fullById}
+            emptyHint="No graded calls yet."
+            icon={Sparkles}
+          />
+          <Section
+            title="Bottom 10 this week"
+            subtitle="What to fix. The lowest-graded calls usually share a root cause — look for the pattern, then edit the phase or signal that produced it."
+            rows={lowest}
+            expandedId={expandedId}
+            onToggle={onToggle}
+            fullById={fullById}
+            emptyHint="No graded calls yet."
+            icon={Mic}
+          />
+        </>
+      )}
+    </div>
+  );
+}
