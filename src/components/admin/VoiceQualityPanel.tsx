@@ -23,7 +23,7 @@
  * MigrationMissingCard so the panel doesn't crash the hub.
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   AlertTriangle, ChevronDown, ChevronRight,
@@ -85,6 +85,7 @@ interface CallTurn {
   was_interrupted: boolean | null;
   silence_before_ms: number | null;
   matched_signal_key: string | null;
+  start_ms?: number | null;
 }
 
 interface GradeRun {
@@ -173,18 +174,43 @@ const sentimentDotCls = (s: CallTurn["sentiment"]) =>
   : s === "mixed"   ? "bg-amber-400"
   : "bg-slate-200";
 
-function TurnsTranscript({ turns }: { turns: CallTurn[] }) {
+const fmtMmSs = (ms: number) => {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const m = Math.floor(total / 60);
+  const s = total - m * 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+};
+
+function TurnsTranscript({
+  turns, audioRef, onSeek,
+}: {
+  turns: CallTurn[];
+  audioRef: React.RefObject<HTMLAudioElement>;
+  onSeek?: (turnIndex: number) => void;
+}) {
   const [expanded, setExpanded] = useState(false);
+  const [activeIdx, setActiveIdx] = useState<number | null>(null);
+
   if (!turns.length) return null;
   // Show first 8 + a "show all" toggle; full transcripts can run 30+
   // turns and overwhelm the row at default.
   const visible = expanded ? turns : turns.slice(0, 8);
+  const canSeek = typeof audioRef.current?.play === "function";
+
+  const seekTo = (turn: CallTurn) => {
+    const audio = audioRef.current;
+    if (!audio || turn.start_ms == null) return;
+    audio.currentTime = turn.start_ms / 1000;
+    void audio.play().catch(() => {});
+    setActiveIdx(turn.turn_index);
+    onSeek?.(turn.turn_index);
+  };
 
   return (
     <div className="mt-3 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-950/40 p-3">
       <div className="flex items-center justify-between mb-2">
         <span className="text-[10.5px] uppercase tracking-wider text-slate-500 font-bold">
-          Transcript ({turns.length} turns)
+          Transcript ({turns.length} turns){canSeek ? " · click any turn to jump audio" : ""}
         </span>
         {turns.length > 8 && (
           <button
@@ -199,6 +225,8 @@ function TurnsTranscript({ turns }: { turns: CallTurn[] }) {
       <div className="space-y-1.5 max-h-[420px] overflow-y-auto pr-1">
         {visible.map((t) => {
           const longSilence = (t.silence_before_ms ?? 0) >= 2000;
+          const seekable = canSeek && t.start_ms != null;
+          const isActive = activeIdx === t.turn_index;
           return (
             <div key={t.turn_index}>
               {longSilence && (
@@ -206,7 +234,21 @@ function TurnsTranscript({ turns }: { turns: CallTurn[] }) {
                   ⋯ {Math.round((t.silence_before_ms ?? 0) / 1000)}s pause
                 </div>
               )}
-              <div className="flex items-start gap-2">
+              <div
+                role={seekable ? "button" : undefined}
+                tabIndex={seekable ? 0 : undefined}
+                onClick={seekable ? () => seekTo(t) : undefined}
+                onKeyDown={seekable ? (e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    seekTo(t);
+                  }
+                } : undefined}
+                className={`flex items-start gap-2 rounded px-1.5 py-1 -mx-1.5 transition ${
+                  seekable ? "cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/60" : ""
+                } ${isActive ? "bg-blue-50 dark:bg-blue-900/20 ring-1 ring-blue-300 dark:ring-blue-700" : ""}`}
+                title={seekable ? `Jump audio to ${fmtMmSs(t.start_ms!)}` : undefined}
+              >
                 <div className={`shrink-0 inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10.5px] font-bold uppercase tracking-wider ${turnSpeakerCls(t.speaker)}`}>
                   <span className={`w-1.5 h-1.5 rounded-full ${sentimentDotCls(t.sentiment)}`} />
                   {turnSpeakerLabel(t.speaker)}
@@ -214,6 +256,11 @@ function TurnsTranscript({ turns }: { turns: CallTurn[] }) {
                     <span className="ml-0.5 text-[10px] text-amber-600">↯</span>
                   )}
                 </div>
+                {t.start_ms != null && (
+                  <span className="shrink-0 font-mono text-[10.5px] text-slate-400 mt-0.5">
+                    {fmtMmSs(t.start_ms)}
+                  </span>
+                )}
                 <div className="flex-1 text-[12.5px] text-slate-800 dark:text-slate-200 leading-snug">
                   {t.text}
                   {t.matched_signal_key && (
@@ -240,6 +287,7 @@ function CallRow({ row, expanded, onToggle, full, turns, pinned, onTogglePin }: 
   pinned: boolean;
   onTogglePin: () => void;
 }) {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const badge = scoreBadge(row.composite_score);
   const isGating = !!row.gating_failed;
   const nps = npsBadge(row.feedback_score);
@@ -336,6 +384,7 @@ function CallRow({ row, expanded, onToggle, full, turns, pinned, onTogglePin }: 
                 Recording
               </span>
               <audio
+                ref={audioRef}
                 controls
                 preload="none"
                 src={full.recording_url}
@@ -388,7 +437,7 @@ function CallRow({ row, expanded, onToggle, full, turns, pinned, onTogglePin }: 
               "{row.feedback_comment}"
             </div>
           )}
-          {turns && turns.length > 0 && <TurnsTranscript turns={turns} />}
+          {turns && turns.length > 0 && <TurnsTranscript turns={turns} audioRef={audioRef} />}
           <div className="mt-3 flex items-center gap-2 text-[11px] text-slate-500">
             <span>Call ID:</span>
             <code className="font-mono text-[10.5px] bg-slate-100 dark:bg-slate-800 rounded px-1.5 py-0.5">{row.call_id}</code>
@@ -662,7 +711,7 @@ export default function VoiceQualityPanel() {
         .maybeSingle(),
       turnsById[callId] ? Promise.resolve({ data: null }) : supabase
         .from("voice_call_turns")
-        .select("turn_index, speaker, text, sentiment, was_interrupted, silence_before_ms, matched_signal_key")
+        .select("turn_index, speaker, text, sentiment, was_interrupted, silence_before_ms, matched_signal_key, start_ms")
         .eq("call_id", callId)
         .order("turn_index", { ascending: true }),
       // recording_url is lightweight — always fetch fresh; not cached.
