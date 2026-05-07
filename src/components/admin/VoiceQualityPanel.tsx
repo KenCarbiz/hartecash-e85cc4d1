@@ -27,7 +27,8 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   AlertTriangle, ChevronDown, ChevronRight,
-  Mic, Sparkles, ShieldAlert, Star, Play, Loader2,
+  Mic, Sparkles, ShieldAlert, Star, Play, Loader2, MessageCircle,
+  Copy, ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -64,6 +65,15 @@ interface FullGrade extends QualityRow {
   dim_pacing: number | null;
   dim_brand_tone: number | null;
   golden_pinned?: boolean | null;
+}
+
+interface UnmatchedPhrase {
+  cluster_key: string;
+  sample_text: string;
+  occurrence_count: number;
+  distinct_calls: number;
+  avg_call_composite: number | null;
+  last_seen_at: string | null;
 }
 
 interface CallTurn {
@@ -433,6 +443,7 @@ export default function VoiceQualityPanel() {
   const [turnsById, setTurnsById] = useState<Record<string, CallTurn[]>>({});
   const [pinnedById, setPinnedById] = useState<Record<string, boolean>>({});
   const [runs, setRuns] = useState<GradeRun[]>([]);
+  const [unmatched, setUnmatched] = useState<UnmatchedPhrase[]>([]);
   const [running, setRunning] = useState(false);
   const [pinnedCount, setPinnedCount] = useState<number>(0);
 
@@ -513,8 +524,10 @@ export default function VoiceQualityPanel() {
         if (!cancel) setPinnedById(map);
       }
 
-      // Recent runs + pinned-count for the header.
-      const [runsQ, pinnedQ] = await Promise.all([
+      // Recent runs + pinned-count + unmatched-phrase suggestions.
+      // The unmatched view returns 50; we cap render at 10 (worst
+      // offenders) to keep the panel scannable.
+      const [runsQ, pinnedQ, unmatchedQ] = await Promise.all([
         supabase
           .from("voice_grade_runs")
           .select("id, run_label, started_at, finished_at, total_calls, avg_composite, gating_fail_count, baseline_run_id, notes")
@@ -525,11 +538,17 @@ export default function VoiceQualityPanel() {
           .select("call_id", { count: "exact", head: false })
           .eq("golden_pinned", true)
           .is("run_id", null),
+        supabase
+          .from("v_unmatched_customer_phrases")
+          .select("cluster_key, sample_text, occurrence_count, distinct_calls, avg_call_composite, last_seen_at")
+          .limit(10),
       ]);
       if (!cancel) {
         setRuns((runsQ.data as GradeRun[]) || []);
         const uniq = new Set((pinnedQ.data || []).map((r) => r.call_id as string));
         setPinnedCount(uniq.size);
+        // Soft-fall-back: missing view → empty list, not crash.
+        setUnmatched((unmatchedQ.data as UnmatchedPhrase[]) || []);
       }
       setLoading(false);
     };
@@ -670,6 +689,11 @@ export default function VoiceQualityPanel() {
 
       {!loading && (
         <>
+          {/* Cabinet gap suggestions — phrases the AI didn't recognize */}
+          {unmatched.length > 0 && (
+            <UnmatchedPhrasesSection rows={unmatched} />
+          )}
+
           {/* Golden-100 control bar — pin + run regression */}
           <GoldenControlBar
             pinnedCount={pinnedCount}
@@ -724,6 +748,115 @@ export default function VoiceQualityPanel() {
 }
 
 /* ──────────────────────── GOLDEN-100 CONTROL BAR ──────────────────────── */
+/* ──────────────────────── UNMATCHED PHRASES (CABINET GAPS) ──────────────────────── */
+function UnmatchedPhrasesSection({ rows }: { rows: UnmatchedPhrase[] }) {
+  const { toast } = useToast();
+  const [collapsed, setCollapsed] = useState(false);
+
+  const copyPhrase = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({ title: "Copied", description: "Paste into the signal_phrases textarea." });
+    } catch {
+      toast({ title: "Copy failed", variant: "destructive" });
+    }
+  };
+
+  const openSignalEditor = () => {
+    // Deep-link to the Voice AI Training tab on the same hub. The
+    // hash takes the user straight to the Signals sub-tab via the
+    // browser's anchor — there's no router-level route for sub-tabs,
+    // so we just navigate and let the hub default-render the right
+    // place.
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.set("section", "communications");
+      url.hash = "voice_ai_signals";
+      window.location.href = url.toString();
+    }
+  };
+
+  return (
+    <div className="rounded-xl border border-purple-300 bg-gradient-to-br from-purple-50 to-white dark:from-purple-900/10 dark:to-slate-900 dark:border-purple-700 p-4">
+      <button
+        type="button"
+        onClick={() => setCollapsed((v) => !v)}
+        className="w-full text-left flex items-start gap-3 flex-wrap"
+      >
+        <MessageCircle className="w-5 h-5 mt-0.5 text-purple-500 shrink-0" />
+        <div className="flex-1 min-w-[240px]">
+          <h3 className="text-[13px] font-bold uppercase tracking-wider text-purple-900 dark:text-purple-200 flex items-center gap-2">
+            Cabinet gaps · phrases worth a signal
+            <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-purple-200 text-purple-800 text-[11px] font-mono">
+              {rows.length}
+            </span>
+          </h3>
+          <p className="text-[12px] text-slate-600 dark:text-slate-400 max-w-prose">
+            Customer phrases from the last 14 days the AI didn't recognize as
+            any known signal. Ranked by frequency × call-badness — the worst
+            offender at the top is the highest-leverage signal to add.
+          </p>
+        </div>
+        <ChevronDown className={`w-4 h-4 text-slate-400 mt-1 transition-transform ${collapsed ? "-rotate-90" : ""}`} />
+      </button>
+
+      {!collapsed && (
+        <div className="mt-4 space-y-1">
+          {rows.map((p) => {
+            const score = p.avg_call_composite;
+            const tone =
+              score == null ? "text-slate-400"
+              : score <= -0.5 ? "text-red-600 font-bold"
+              : score <= 0    ? "text-amber-600"
+              : "text-slate-500";
+            return (
+              <div
+                key={p.cluster_key}
+                className="flex items-start gap-3 px-3 py-2 rounded-md bg-white/60 dark:bg-slate-900/40 border border-purple-100 dark:border-purple-900/40"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="text-[13px] text-slate-900 dark:text-slate-100 leading-snug break-words">
+                    "{p.sample_text}"
+                  </div>
+                  <div className="flex items-center gap-3 mt-1 text-[10.5px] uppercase tracking-wider font-bold text-slate-400">
+                    <span>×{p.occurrence_count} occurrences</span>
+                    <span>·</span>
+                    <span>{p.distinct_calls} {p.distinct_calls === 1 ? "call" : "calls"}</span>
+                    <span>·</span>
+                    <span className={tone}>
+                      avg score {score != null ? score.toFixed(2) : "—"}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => copyPhrase(p.sample_text)}
+                  title="Copy verbatim phrase to clipboard"
+                  className="shrink-0 p-1.5 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            );
+          })}
+          <div className="pt-3 flex justify-end">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={openSignalEditor}
+              className="h-8 text-xs"
+              title="Jump to the Voice AI Training editor's Signals tab"
+            >
+              Open Signals editor
+              <ArrowRight className="w-3 h-3 ml-1.5" />
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function GoldenControlBar({
   pinnedCount, running, onRun, runs,
 }: {
