@@ -31,6 +31,7 @@ import {
 import SubmissionNotesModal, { fetchSubmissionNotes, type SubmissionNote } from "./SubmissionNotesModal";
 import SaveTheDealDialog from "./SaveTheDealDialog";
 import ClassicCommsCard from "./ClassicCommsCard";
+import ObjectionCardInline from "./ObjectionCardInline";
 import ClassicCommsFullView from "./ClassicCommsFullView";
 import ClickToDialButton from "./ClickToDialButton";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
@@ -1555,6 +1556,17 @@ export default function SubmissionDetailSheetClassic({
                     </section>
                   );
                 })()}
+
+                {/* Objection coaching card — surfaces when the lead's
+                    declined_reason or competitor_mentioned matches a
+                    playbook entry. Reads to the BDC rep right above
+                    Comms so the reframe + proof points are in eyeshot
+                    while they're typing/calling. */}
+                <ObjectionCardInline
+                  declinedReason={sub.declined_reason ?? null}
+                  competitor={sub.competitor_mentioned ?? null}
+                  dealershipId={sub.dealership_id}
+                />
 
                 {/* Comms tabs — SMS / Email / Calls preview + composer */}
                 <div data-role-anchor="comms" className="scroll-mt-24">

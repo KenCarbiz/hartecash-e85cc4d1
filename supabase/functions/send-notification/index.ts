@@ -135,6 +135,24 @@ const DEFAULT_TEMPLATES: Record<string, { email_subject: string; email_body: str
     email_body: "Hi {{customer_name}},\n\nJust a friendly reminder — your inspection is tomorrow!\n\nDate: {{appointment_date}}\nTime: {{appointment_time}}\nLocation: {{location}}\nVehicle: {{vehicle}}\n\nSee you soon!\n{{dealership_name}}",
     sms_body: "Reminder: Your visit is tomorrow at {{appointment_time}} at {{location}}. Bring title, ID & keys. See you there! — {{dealership_name}}",
   },
+  // 24h-out reminder. Fired by send-appointment-reminders cron when
+  // the appointment is 22.5–25.5h away. Calmer copy + a peek at the
+  // self-checkin links so the customer knows the workflow when they
+  // get the day-of ping.
+  customer_appointment_reminder_24h: {
+    email_subject: "Tomorrow at {{appointment_time}} — your inspection",
+    email_body: "Hi {{customer_name}},\n\nQuick reminder — we'll see you tomorrow at {{appointment_time}} at {{location}} for your {{vehicle}}.\n\nWhat to bring:\n• Driver's license\n• Vehicle title (or registration if title is held by your lender)\n• All keys + remotes\n• Loan payoff letter if you still owe on it\n\nWhen the time comes you can let us know you're heading in by tapping {{arrive_url}}?status=on_the_way — totally optional, but it helps us have your file ready before you walk in.\n\nReply to this email if anything changes.\n\n— {{dealership_name}}",
+    sms_body: "{{customer_name}} — heads-up that we'll see you tomorrow at {{appointment_time}} at {{location}}. Bring ID, title, all keys. — {{dealership_name}}",
+  },
+  // 2h-out reminder. This is the SMS that carries the self-checkin
+  // links — close enough to departure that the customer is about to
+  // get in the car. Both URLs included so the customer can pick
+  // whichever fits their moment (heading out vs arriving).
+  customer_appointment_reminder_2h: {
+    email_subject: "Inspection in about 2 hours",
+    email_body: "Hi {{customer_name}},\n\nWe're ready for you at {{appointment_time}} for the {{vehicle}}.\n\nWhen you head out: {{arrive_url}}?status=on_the_way\nWhen you pull in: {{arrive_url}}?status=arrived\n\nEither tap is fine — pick whichever fits.\n\n— {{dealership_name}}",
+    sms_body: "Hi {{customer_name}} — ready for you at {{appointment_time}}. Tap when you head out: {{arrive_url}}?status=on_the_way — or when you arrive: {{arrive_url}}?status=arrived. — {{dealership_name}}",
+  },
   customer_appointment_rescheduled: {
     email_subject: "Your Appointment Has Been Rescheduled",
     email_body: "Hi {{customer_name}},\n\nYour inspection appointment has been rescheduled.\n\nNew Date: {{appointment_date}}\nNew Time: {{appointment_time}}\nLocation: {{location}}\n\nBest regards,\n{{dealership_name}}",
