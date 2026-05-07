@@ -65,6 +65,7 @@ interface FullGrade extends QualityRow {
   dim_pacing: number | null;
   dim_brand_tone: number | null;
   golden_pinned?: boolean | null;
+  recording_url?: string | null;
 }
 
 interface UnmatchedPhrase {
@@ -328,6 +329,21 @@ function CallRow({ row, expanded, onToggle, full, turns, pinned, onTogglePin }: 
 
       {expanded && full && (
         <div className="border-t border-slate-200 dark:border-slate-800 px-4 py-3 bg-slate-50/30 dark:bg-slate-950/20">
+          {/* Recording player — listening beats reading. */}
+          {full.recording_url && (
+            <div className="mb-3 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 flex items-center gap-3">
+              <span className="text-[10.5px] uppercase tracking-wider text-slate-500 font-bold shrink-0">
+                Recording
+              </span>
+              <audio
+                controls
+                preload="none"
+                src={full.recording_url}
+                className="flex-1 h-8"
+                style={{ maxWidth: "100%" }}
+              />
+            </div>
+          )}
           <div className="grid grid-cols-5 gap-1.5 text-[10.5px] font-bold uppercase tracking-wider text-slate-500 mb-2">
             <div>compliance*</div>
             <div>vehicle</div>
@@ -633,9 +649,9 @@ export default function VoiceQualityPanel() {
     setExpandedId(callId);
     if (fullById[callId] && turnsById[callId]) return;
 
-    // Fetch grade row + turns in parallel — both are independent and
-    // the user has to wait on the slowest one anyway.
-    const [gradeQ, turnsQ] = await Promise.all([
+    // Fetch grade row + turns + recording_url in parallel — all
+    // independent and the user has to wait on the slowest one anyway.
+    const [gradeQ, turnsQ, recQ] = await Promise.all([
       fullById[callId] ? Promise.resolve({ data: null }) : supabase
         .from("voice_call_grades")
         .select("call_id, dim_compliance, dim_vehicle_confirm, dim_motivation_disco, dim_quote_band, dim_objection_handle, dim_close_control, dim_transfer_hygiene, dim_pacing, dim_hallucination, dim_brand_tone, composite_score, gating_failed, rationale, grader_model, golden_pinned")
@@ -649,15 +665,22 @@ export default function VoiceQualityPanel() {
         .select("turn_index, speaker, text, sentiment, was_interrupted, silence_before_ms, matched_signal_key")
         .eq("call_id", callId)
         .order("turn_index", { ascending: true }),
+      // recording_url is lightweight — always fetch fresh; not cached.
+      supabase
+        .from("voice_call_log")
+        .select("recording_url")
+        .eq("id", callId)
+        .maybeSingle(),
     ]);
 
-    if (gradeQ.data) {
+    if (gradeQ.data || recQ.data) {
       const merged = {
         ...(highest.find((r) => r.call_id === callId)
           || lowest.find((r) => r.call_id === callId)
           || gating.find((r) => r.call_id === callId)),
-        ...gradeQ.data,
-        grader_rationale: (gradeQ.data as { rationale?: string | null }).rationale ?? null,
+        ...(gradeQ.data || {}),
+        grader_rationale: (gradeQ.data as { rationale?: string | null } | null)?.rationale ?? null,
+        recording_url: (recQ.data as { recording_url?: string | null } | null)?.recording_url ?? null,
       } as FullGrade;
       setFullById((prev) => ({ ...prev, [callId]: merged }));
     }
