@@ -287,6 +287,167 @@ const VariantActions = ({ row, isOverride, onBranch, onToggleRetire, saving }: V
   );
 };
 
+/**
+ * VariantLineage — inline parent + children panel for a variant.
+ *
+ * Shows the immediate ancestor (one level up via parent_variant_id)
+ * and immediate descendants (one level down: rows whose parent_variant_id
+ * == this row's variant_id) with their W·L counts. A multi-generation
+ * tree view would be nice but most cabinet edits are 1-2 generations
+ * deep; rendering deeper would mostly be visual noise.
+ *
+ * Each node is clickable — clicking jumps the parent editor's openId
+ * to that row so the user can read/edit it.
+ *
+ * Generic over the four cabinet tables. Pass the table name and the
+ * row's variant_id; the component handles the queries.
+ */
+interface LineageRow {
+  id: string;
+  variant_id: string | null;
+  variant_label?: string | null;
+  win_count: number | null;
+  loss_count: number | null;
+  retired_at: string | null;
+  // Display label varies by table — we accept a render function for
+  // the row title so the parent component decides what to show.
+  __display_title: string;
+}
+
+const VariantLineage = <T extends Record<string, unknown>>({
+  table,
+  row,
+  displayTitle,
+  onJumpTo,
+}: {
+  table: string;
+  row: VariantFields & { id: string; dealership_id: string } & T;
+  displayTitle: (r: T) => string;
+  onJumpTo: (rowId: string) => void;
+}) => {
+  const [parent, setParent]   = useState<(LineageRow & T) | null>(null);
+  const [children, setChildren] = useState<Array<LineageRow & T>>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!row.variant_id && !row.parent_variant_id) return;
+    let cancel = false;
+
+    void (async () => {
+      setLoading(true);
+      const [parentQ, childrenQ] = await Promise.all([
+        row.parent_variant_id
+          ? supabase.from(table as never)
+              .select("*")
+              .eq("variant_id", row.parent_variant_id)
+              .maybeSingle()
+          : Promise.resolve({ data: null, error: null }),
+        row.variant_id
+          ? supabase.from(table as never)
+              .select("*")
+              .eq("parent_variant_id", row.variant_id)
+              .order("created_at", { ascending: true })
+          : Promise.resolve({ data: [], error: null }),
+      ]);
+      if (cancel) return;
+
+      const decorate = (r: T): LineageRow & T => ({
+        ...r,
+        __display_title: displayTitle(r),
+      } as LineageRow & T);
+
+      setParent((parentQ.data ? decorate(parentQ.data as T) : null));
+      setChildren(((childrenQ.data || []) as T[]).map(decorate));
+      setLoading(false);
+    })();
+
+    return () => { cancel = true; };
+  }, [table, row.variant_id, row.parent_variant_id, displayTitle]);
+
+  // Nothing to show — no parent and no children. Hide entirely.
+  if (!parent && children.length === 0 && !loading) return null;
+
+  const lineageNode = (n: LineageRow, depth: number, position: "parent" | "self" | "child") => {
+    const wins   = n.win_count ?? 0;
+    const losses = n.loss_count ?? 0;
+    const total  = wins + losses;
+    const winRate = total === 0 ? null : (1 + wins) / (2 + wins + losses);
+    const dotCls = position === "self"
+      ? "bg-blue-500"
+      : n.retired_at
+      ? "bg-slate-400"
+      : winRate != null && winRate >= 0.6 ? "bg-emerald-500"
+      : winRate != null && winRate < 0.4 ? "bg-amber-500"
+      : "bg-slate-300";
+
+    return (
+      <div
+        key={n.id}
+        style={{ paddingLeft: `${depth * 16}px` }}
+        className="flex items-center gap-2 py-1.5"
+      >
+        <span className={`shrink-0 w-2 h-2 rounded-full ${dotCls}`} />
+        {position !== "self" ? (
+          <button
+            type="button"
+            onClick={() => onJumpTo(n.id)}
+            className="flex-1 min-w-0 text-left text-xs hover:underline text-foreground truncate"
+            title="Jump to this variant"
+          >
+            <span className="font-mono text-muted-foreground">
+              {n.variant_label || "default"}
+            </span>
+            <span className="mx-1.5 text-muted-foreground">·</span>
+            <span className="truncate">{n.__display_title}</span>
+          </button>
+        ) : (
+          <span className="flex-1 min-w-0 text-xs italic text-muted-foreground truncate">
+            (this variant)
+          </span>
+        )}
+        {total > 0 && (
+          <span className="font-mono text-micro shrink-0 text-muted-foreground">
+            {wins}W·{losses}L
+            {winRate != null && (
+              <span className="ml-1 opacity-70">
+                ({Math.round(winRate * 100)}%)
+              </span>
+            )}
+          </span>
+        )}
+        {n.retired_at && (
+          <Badge variant="outline" className="text-micro border-red-300 text-red-600 bg-red-50 shrink-0">
+            Retired
+          </Badge>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="rounded-md border border-border bg-muted/20 px-3 py-2 mt-3">
+      <div className="text-micro font-bold uppercase tracking-wider text-muted-foreground mb-1">
+        Variant lineage
+      </div>
+      {loading ? (
+        <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground my-2" />
+      ) : (
+        <>
+          {parent && lineageNode(parent, 0, "parent")}
+          {lineageNode(
+            { id: row.id, variant_id: row.variant_id ?? null, variant_label: (row as { variant_label?: string }).variant_label,
+              win_count: row.win_count ?? 0, loss_count: row.loss_count ?? 0,
+              retired_at: row.retired_at ?? null, __display_title: displayTitle(row as unknown as T) },
+            parent ? 1 : 0,
+            "self",
+          )}
+          {children.map((c) => lineageNode(c, parent ? 2 : 1, "child"))}
+        </>
+      )}
+    </div>
+  );
+};
+
 const MigrationMissingCard = () => (
   <Card>
     <CardContent className="pt-5 pb-5 px-5">
@@ -563,6 +724,12 @@ const PhaseEditor = () => {
                       {saving === row.id ? "Saving…" : "Save"}
                     </Button>
                   </div>
+                  <VariantLineage
+                    table="conversation_phases"
+                    row={row}
+                    displayTitle={(r) => `${(r as PhaseRow).phase_position} · ${(r as PhaseRow).phase_key}`}
+                    onJumpTo={(targetId) => setOpenId(targetId)}
+                  />
                 </div>
               )}
             </CardContent>
@@ -730,6 +897,12 @@ const SignalEditor = () => {
                       {saving === row.id ? "Saving…" : "Save"}
                     </Button>
                   </div>
+                  <VariantLineage
+                    table="customer_signals"
+                    row={row}
+                    displayTitle={(r) => `${(r as SignalRow).signal_key} · ${(r as SignalRow).customer_state}`}
+                    onJumpTo={(targetId) => setOpenId(targetId)}
+                  />
                 </div>
               )}
             </CardContent>
@@ -895,6 +1068,12 @@ const IntelEditor = () => {
                       {saving === row.id ? "Saving…" : "Save"}
                     </Button>
                   </div>
+                  <VariantLineage
+                    table="industry_intel"
+                    row={row}
+                    displayTitle={(r) => `${(r as IntelRow).scope} · ${(r as IntelRow).topic}`}
+                    onJumpTo={(targetId) => setOpenId(targetId)}
+                  />
                 </div>
               )}
             </CardContent>
