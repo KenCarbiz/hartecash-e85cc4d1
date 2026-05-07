@@ -1270,7 +1270,7 @@ const OfferPageLegacy = () => {
                 vehicleStr={vehicleStr}
               />
 
-              {s.photos_uploaded && token && <VehiclePhotos token={token} photosUploaded />}
+              {token && <VehiclePhotos token={token} />}
               {TradeInExplanation}
               {NoTaxBlock}
               {ConditionBlock}
@@ -1357,7 +1357,7 @@ const OfferPageLegacy = () => {
             vehicleStr={vehicleStr}
           />
 
-          {s.photos_uploaded && token && <VehiclePhotos token={token} photosUploaded />}
+          {token && <VehiclePhotos token={token} />}
           {TradeInExplanation}
           {NoTaxBlock}
           {ConditionBlock}

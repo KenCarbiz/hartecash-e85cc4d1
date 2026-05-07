@@ -5,23 +5,29 @@ import { motion } from "framer-motion";
 
 interface VehiclePhotosProps {
   token: string;
-  photosUploaded: boolean;
+  /**
+   * Legacy gate — kept so existing call sites compile but no longer
+   * controls visibility. Boost-flow uploads land in
+   * submission-photos/<token>/ without flipping the photos_uploaded
+   * column (that column is for the separate /upload/:token path),
+   * so we always list the bucket and render if anything is there.
+   */
+  photosUploaded?: boolean;
 }
 
-const VehiclePhotos = ({ token, photosUploaded }: VehiclePhotosProps) => {
+const VehiclePhotos = ({ token }: VehiclePhotosProps) => {
   const [photos, setPhotos] = useState<string[]>([]);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!photosUploaded) return;
+    if (!token) return;
     const fetchPhotos = async () => {
       const { data } = await supabase.storage
         .from("submission-photos")
-        .list(token, { limit: 20, sortBy: { column: "created_at", order: "asc" } });
+        .list(token, { limit: 100, sortBy: { column: "created_at", order: "asc" } });
       if (data && data.length > 0) {
         const urls = data
           .filter((f) => f.name !== ".emptyFolderPlaceholder")
-          .slice(0, 8)
           .map((f) => {
             const { data: urlData } = supabase.storage
               .from("submission-photos")
@@ -29,10 +35,12 @@ const VehiclePhotos = ({ token, photosUploaded }: VehiclePhotosProps) => {
             return urlData.publicUrl;
           });
         setPhotos(urls);
+      } else {
+        setPhotos([]);
       }
     };
     fetchPhotos();
-  }, [token, photosUploaded]);
+  }, [token]);
 
   if (photos.length === 0) return null;
 

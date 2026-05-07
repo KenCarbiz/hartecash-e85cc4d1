@@ -413,7 +413,7 @@ const CustomerPortalLegacy = () => {
                 />
               )}
               <CompletionChecklist {...checklistProps} />
-              <VehiclePhotos token={s.token} photosUploaded={s.photos_uploaded} />
+              <VehiclePhotos token={s.token} />
               <PaymentInfoCard />
               {s.loan_status && ["has_loan", "lease"].includes(s.loan_status) && <LoanPayoffCard />}
               <Collapsible>
@@ -454,7 +454,7 @@ const CustomerPortalLegacy = () => {
           <PortalOfferCard {...offerCardProps} />
           <ResendOfferLink submissionId={s.id} customerEmail={s.email} />
           <CompletionChecklist {...checklistProps} />
-          <VehiclePhotos token={s.token} photosUploaded={s.photos_uploaded} />
+          <VehiclePhotos token={s.token} />
 
           <PortalVehicleSummary {...vehicleSummaryProps} />
           <PaymentInfoCard />
