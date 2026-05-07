@@ -7,6 +7,7 @@ const NotificationSettings = React.lazy(() => import("./NotificationSettings"));
 const NotificationLog = React.lazy(() => import("./NotificationLog"));
 const ObjectionPlaybookEditor = React.lazy(() => import("./ObjectionPlaybookEditor"));
 const TradeUpIncentiveEditor = React.lazy(() => import("./TradeUpIncentiveEditor"));
+const VoiceAgentTrainingEditor = React.lazy(() => import("./VoiceAgentTrainingEditor"));
 const ConsentLog = React.lazy(() => import("./ConsentLog"));
 const CommunicationLog = React.lazy(() => import("./CommunicationLog"));
 const VoiceComplianceLog = React.lazy(() => import("./VoiceComplianceLog"));
@@ -20,7 +21,7 @@ interface CommunicationsHubProps {
    * back to "channels" when the consolidated "communications" key is
    * what the user clicked.
    */
-  initialTab?: "channels" | "notifications" | "objections" | "incentives" | "compliance";
+  initialTab?: "channels" | "notifications" | "objections" | "incentives" | "voice_ai" | "compliance";
   /** Whether the current user can manage channels + notifications.
    *  When false, those tab triggers are hidden so a compliance-only
    *  viewer sees only the audit logs. */
@@ -69,6 +70,7 @@ const CommunicationsHub = ({
           {canManageChannels && <TabsTrigger value="notifications">Notifications</TabsTrigger>}
           {canManageChannels && <TabsTrigger value="objections">Objection Playbook</TabsTrigger>}
           {canManageChannels && <TabsTrigger value="incentives">Trade-Up Incentives</TabsTrigger>}
+          {canManageChannels && <TabsTrigger value="voice_ai">Voice AI Training</TabsTrigger>}
           <TabsTrigger value="compliance">Compliance</TabsTrigger>
         </TabsList>
 
@@ -111,6 +113,14 @@ const CommunicationsHub = ({
           <TabsContent value="incentives" className="pt-4">
             <React.Suspense fallback={<AdminLoadingSkeleton />}>
               <TradeUpIncentiveEditor />
+            </React.Suspense>
+          </TabsContent>
+        )}
+
+        {canManageChannels && (
+          <TabsContent value="voice_ai" className="pt-4">
+            <React.Suspense fallback={<AdminLoadingSkeleton />}>
+              <VoiceAgentTrainingEditor />
             </React.Suspense>
           </TabsContent>
         )}
