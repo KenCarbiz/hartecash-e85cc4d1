@@ -609,6 +609,50 @@ serve(async (req) => {
       );
     }
 
+    // ── Compile the training-cabinet prompt ──
+    // Pulls persona + phases + signals + intel + objection playbook +
+    // the customer_memory hook into a single block, runs Thompson-
+    // approx sampling across active variants per slot, and records
+    // every chosen variant into voice_call_variants_used so the
+    // post-call grader's reward signal can attribute. The cabinet
+    // block is PREPENDED to the per-intent script — the script
+    // remains the immediate task; the cabinet is the standing
+    // playbook the AI consults for tone, posture, and citable facts.
+    //
+    // Soft-fall-back: if the RPC is missing (migrations not applied)
+    // or returns the placeholder "No voice agent persona configured."
+    // we just send renderedScript on its own. The variant store stays
+    // dormant until the cabinet is seeded.
+    let cabinetPrompt = "";
+    try {
+      const callType =
+        (typeof intent === "string" && intent) ||
+        (typeof campaign_type === "string" && campaign_type) ||
+        "offered_to_accepted";
+      const { data: cabinet, error: cabinetErr } = await supabase.rpc(
+        "compile_voice_agent_prompt",
+        {
+          _dealership_id: dealershipId || "default",
+          _submission_id: submission_id || null,
+          _call_type:     callType,
+          _call_id:       callLog.id,
+        },
+      );
+      if (cabinetErr) {
+        console.warn("compile_voice_agent_prompt failed:", cabinetErr.message);
+      } else if (typeof cabinet === "string"
+                 && cabinet
+                 && !cabinet.startsWith("No voice agent persona")) {
+        cabinetPrompt = cabinet;
+      }
+    } catch (e) {
+      console.warn("compile_voice_agent_prompt threw:", e);
+    }
+
+    const finalTask = cabinetPrompt
+      ? `${cabinetPrompt}\n\n═══ TASK ═══\n${renderedScript}`
+      : renderedScript;
+
     // ── Make the Bland.ai API call ──
     const maxDuration =
       campaignData?.max_call_duration || 5;
@@ -629,7 +673,7 @@ serve(async (req) => {
 
     const blandPayload: Record<string, unknown> = {
       phone_number: customerPhone,
-      task: renderedScript,
+      task: finalTask,
       voice: voiceId,
       first_sentence: firstSentence,
       wait_for_greeting: true,
