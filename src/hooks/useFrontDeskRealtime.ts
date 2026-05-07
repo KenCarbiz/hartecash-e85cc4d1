@@ -42,9 +42,9 @@ export function useFrontDeskRealtime(
           table: "submissions",
           filter: `dealership_id=eq.${dealershipId}`,
         },
-        (payload: { new: SubmissionDelta; old?: SubmissionDelta }) => {
-          const next = payload.new;
-          const prev = payload.old || {};
+        (payload: any) => {
+          const next = (payload.new || {}) as SubmissionDelta;
+          const prev = (payload.old || {}) as SubmissionDelta;
           // Only signal on the transitions FrontDesk cares about.
           // Submissions update for many reasons; we filter here so
           // the UI doesn't refetch on every keystroke.
