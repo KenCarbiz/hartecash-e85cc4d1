@@ -4611,6 +4611,7 @@ export type Database = {
           grader_model: string | null
           id: string
           rationale: string | null
+          run_id: string | null
         }
         Insert: {
           call_id: string
@@ -4632,6 +4633,7 @@ export type Database = {
           grader_model?: string | null
           id?: string
           rationale?: string | null
+          run_id?: string | null
         }
         Update: {
           call_id?: string
@@ -4653,6 +4655,7 @@ export type Database = {
           grader_model?: string | null
           id?: string
           rationale?: string | null
+          run_id?: string | null
         }
         Relationships: [
           {
@@ -4674,6 +4677,13 @@ export type Database = {
             columns: ["call_id"]
             isOneToOne: false
             referencedRelation: "voice_call_log"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voice_call_grades_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "voice_grade_runs"
             referencedColumns: ["id"]
           },
         ]
@@ -5022,6 +5032,95 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_grade_runs: {
+        Row: {
+          avg_composite: number | null
+          avg_dim_brand_tone: number | null
+          avg_dim_close_control: number | null
+          avg_dim_compliance: number | null
+          avg_dim_hallucination: number | null
+          avg_dim_motivation_disco: number | null
+          avg_dim_objection_handle: number | null
+          avg_dim_pacing: number | null
+          avg_dim_quote_band: number | null
+          avg_dim_transfer_hygiene: number | null
+          avg_dim_vehicle_confirm: number | null
+          baseline_run_id: string | null
+          created_at: string
+          failed_calls: number | null
+          finished_at: string | null
+          gating_fail_count: number | null
+          id: string
+          notes: string | null
+          rubric_version: string | null
+          run_label: string
+          started_at: string
+          succeeded_calls: number | null
+          total_calls: number | null
+          triggered_by: string | null
+        }
+        Insert: {
+          avg_composite?: number | null
+          avg_dim_brand_tone?: number | null
+          avg_dim_close_control?: number | null
+          avg_dim_compliance?: number | null
+          avg_dim_hallucination?: number | null
+          avg_dim_motivation_disco?: number | null
+          avg_dim_objection_handle?: number | null
+          avg_dim_pacing?: number | null
+          avg_dim_quote_band?: number | null
+          avg_dim_transfer_hygiene?: number | null
+          avg_dim_vehicle_confirm?: number | null
+          baseline_run_id?: string | null
+          created_at?: string
+          failed_calls?: number | null
+          finished_at?: string | null
+          gating_fail_count?: number | null
+          id?: string
+          notes?: string | null
+          rubric_version?: string | null
+          run_label: string
+          started_at?: string
+          succeeded_calls?: number | null
+          total_calls?: number | null
+          triggered_by?: string | null
+        }
+        Update: {
+          avg_composite?: number | null
+          avg_dim_brand_tone?: number | null
+          avg_dim_close_control?: number | null
+          avg_dim_compliance?: number | null
+          avg_dim_hallucination?: number | null
+          avg_dim_motivation_disco?: number | null
+          avg_dim_objection_handle?: number | null
+          avg_dim_pacing?: number | null
+          avg_dim_quote_band?: number | null
+          avg_dim_transfer_hygiene?: number | null
+          avg_dim_vehicle_confirm?: number | null
+          baseline_run_id?: string | null
+          created_at?: string
+          failed_calls?: number | null
+          finished_at?: string | null
+          gating_fail_count?: number | null
+          id?: string
+          notes?: string | null
+          rubric_version?: string | null
+          run_label?: string
+          started_at?: string
+          succeeded_calls?: number | null
+          total_calls?: number | null
+          triggered_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_grade_runs_baseline_run_id_fkey"
+            columns: ["baseline_run_id"]
+            isOneToOne: false
+            referencedRelation: "voice_grade_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       voice_script_templates: {
         Row: {
           category: string | null
@@ -5240,6 +5339,7 @@ export type Database = {
         Returns: number
       }
       expire_pilots: { Args: never; Returns: number }
+      finalize_voice_grade_run: { Args: { _run_id: string }; Returns: Json }
       get_all_staff: {
         Args: { _dealership_id?: string }
         Returns: {
@@ -5374,6 +5474,10 @@ export type Database = {
           vehicle_model: string
           vehicle_year: string
         }[]
+      }
+      mark_call_golden: {
+        Args: { _call_id: string; _pinned?: boolean }
+        Returns: Json
       }
       mark_docs_uploaded: { Args: { _token: string }; Returns: undefined }
       mark_photos_uploaded: { Args: { _token: string }; Returns: undefined }

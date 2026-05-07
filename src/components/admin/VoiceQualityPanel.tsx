@@ -71,7 +71,7 @@ interface GradeRun {
   run_label: string;
   started_at: string;
   finished_at: string | null;
-  call_count: number;
+  total_calls: number;
   avg_composite: number | null;
   gating_fail_count: number;
   baseline_run_id: string | null;
@@ -428,7 +428,7 @@ export default function VoiceQualityPanel() {
       const [runsQ, pinnedQ] = await Promise.all([
         supabase
           .from("voice_grade_runs")
-          .select("id, run_label, started_at, finished_at, call_count, avg_composite, gating_fail_count, baseline_run_id, notes")
+          .select("id, run_label, started_at, finished_at, total_calls, avg_composite, gating_fail_count, baseline_run_id, notes")
           .order("started_at", { ascending: false })
           .limit(5),
         supabase
@@ -502,7 +502,7 @@ export default function VoiceQualityPanel() {
       // Refresh runs.
       const { data: runsData } = await supabase
         .from("voice_grade_runs")
-        .select("id, run_label, started_at, finished_at, call_count, avg_composite, gating_fail_count, baseline_run_id, notes")
+        .select("id, run_label, started_at, finished_at, total_calls, avg_composite, gating_fail_count, baseline_run_id, notes")
         .order("started_at", { ascending: false })
         .limit(5);
       setRuns((runsData as GradeRun[]) || []);
@@ -704,7 +704,7 @@ function GoldenControlBar({
                   </span>
                   <span className="flex-1 truncate text-slate-700 dark:text-slate-300">{r.run_label}</span>
                   <span className="text-slate-500 font-mono">
-                    n={r.call_count}
+                    n={r.total_calls}
                   </span>
                   <span className={`font-mono font-bold w-[60px] text-right ${
                     r.avg_composite == null ? "text-slate-300"
