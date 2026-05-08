@@ -11,8 +11,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Loader2, Save, ChevronDown, Mic, Bot, MessageSquare, BookOpen, Sparkles,
-  GitBranch, ArchiveRestore, Archive,
+  GitBranch, ArchiveRestore, Archive, Eye, PhoneCall, X, Copy,
 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 /**
  * Voice AI Training cabinet editor — admin tab under Communications.
@@ -106,11 +107,178 @@ interface IntelRow extends VariantFields {
   sort_order: number;
 }
 
+/**
+ * CabinetTools — manager controls for previewing the compiled cabinet
+ * prompt and dispatching a test voice call to their own number.
+ *
+ * Two buttons:
+ *   1. Preview compiled prompt — calls compile_voice_agent_prompt with
+ *      the current tenant + a stub call_type and renders the result in
+ *      a dialog so the manager can see what Bland will receive at
+ *      call-start. No call_id passed → no variant attribution side
+ *      effect.
+ *   2. Send test call — invokes launch-voice-call with
+ *      campaign_type:"test" + the manager's phone. Uses the existing
+ *      test-shortcut path that bypasses submission lookup but still
+ *      runs the cabinet compile against this dealership's overrides.
+ *
+ * Both fall back gracefully when the migrations / RPC aren't applied —
+ * preview shows the placeholder text, test-call surfaces the error
+ * toast.
+ */
+const CabinetTools = () => {
+  const { tenant } = useTenant();
+  const { toast } = useToast();
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
+  const [previewText, setPreviewText] = useState<string>("");
+  const [callType, setCallType] = useState("offered_to_accepted");
+  const [testPhone, setTestPhone] = useState("");
+  const [calling, setCalling] = useState(false);
+
+  const handlePreview = async () => {
+    setPreviewing(true);
+    try {
+      const { data, error } = await supabase.rpc("compile_voice_agent_prompt", {
+        _dealership_id: tenant.dealership_id,
+        _submission_id: null,
+        _call_type: callType,
+        _call_id: null,
+      });
+      if (error) {
+        toast({ title: "Preview failed", description: error.message, variant: "destructive" });
+        return;
+      }
+      setPreviewText(typeof data === "string" ? data : JSON.stringify(data, null, 2));
+      setPreviewOpen(true);
+    } finally { setPreviewing(false); }
+  };
+
+  const handleCopyPreview = async () => {
+    try {
+      await navigator.clipboard.writeText(previewText);
+      toast({ title: "Copied", description: "Compiled prompt on clipboard." });
+    } catch {
+      toast({ title: "Copy failed", variant: "destructive" });
+    }
+  };
+
+  const handleTestCall = async () => {
+    const phone = testPhone.trim();
+    if (!phone) {
+      toast({ title: "Enter a phone number", variant: "destructive" });
+      return;
+    }
+    setCalling(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("launch-voice-call", {
+        body: {
+          campaign_type: "test",
+          phone,
+          context: { dealership_id: tenant.dealership_id, call_type: callType },
+        },
+      });
+      if (error) {
+        toast({ title: "Test call failed", description: error.message, variant: "destructive" });
+        return;
+      }
+      const result = data as { ok?: boolean; error?: string } | null;
+      if (result?.error) {
+        toast({ title: "Test call failed", description: result.error, variant: "destructive" });
+      } else {
+        toast({
+          title: "Test call dispatched",
+          description: `Bland will dial ${phone} in a few seconds. Pick up to hear the cabinet live.`,
+        });
+      }
+    } finally { setCalling(false); }
+  };
+
+  return (
+    <div className="rounded-md border border-border bg-muted/20 p-3 space-y-2">
+      <div className="text-micro font-bold uppercase tracking-wider text-muted-foreground">
+        Cabinet tools
+      </div>
+      <div className="flex items-center gap-2 flex-wrap">
+        <select
+          value={callType}
+          onChange={(e) => setCallType(e.target.value)}
+          className="text-xs h-8 px-2 rounded-md border border-border bg-background"
+          aria-label="Call type"
+        >
+          <option value="offered_to_accepted">offered_to_accepted</option>
+          <option value="voice_offer_re_engage">voice_offer_re_engage</option>
+          <option value="voice_offer_refresh">voice_offer_refresh</option>
+          <option value="voice_schedule_inspection">voice_schedule_inspection</option>
+          <option value="appraiser_qa">appraiser_qa</option>
+        </select>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handlePreview}
+          disabled={previewing}
+          className="h-8 text-xs"
+        >
+          <Eye className="w-3 h-3 mr-1.5" />
+          {previewing ? "Compiling…" : "Preview compiled prompt"}
+        </Button>
+        <div className="h-6 w-px bg-border" />
+        <Input
+          value={testPhone}
+          onChange={(e) => setTestPhone(e.target.value)}
+          placeholder="+15551234567"
+          className="h-8 w-[180px] text-xs"
+          aria-label="Test call phone"
+        />
+        <Button
+          size="sm"
+          onClick={handleTestCall}
+          disabled={calling || !testPhone.trim()}
+          className="h-8 text-xs"
+        >
+          <PhoneCall className="w-3 h-3 mr-1.5" />
+          {calling ? "Dispatching…" : "Send test call"}
+        </Button>
+      </div>
+
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between gap-3 pr-8">
+              <span>Compiled prompt — {callType}</span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleCopyPreview}
+                className="h-7 text-xs"
+                title="Copy compiled prompt to clipboard"
+              >
+                <Copy className="w-3 h-3 mr-1.5" />
+                Copy
+              </Button>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-auto rounded-md border border-border bg-muted/30 p-3">
+            <pre className="text-[11.5px] leading-snug font-mono whitespace-pre-wrap break-words">
+              {previewText || "(empty)"}
+            </pre>
+          </div>
+          <div className="text-micro text-muted-foreground pt-2">
+            This is what Bland.ai will receive as the system prompt. Variant
+            choices are sampled fresh on every preview, so the same call type
+            may render different variants between previews.
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
 const VoiceAgentTrainingEditor = () => {
   return (
     <div className="space-y-5">
       <Card>
-        <CardContent className="pt-5 pb-5 px-5 space-y-2">
+        <CardContent className="pt-5 pb-5 px-5 space-y-3">
           <h3 className="text-sm font-semibold text-foreground inline-flex items-center gap-2">
             <Bot className="w-4 h-4 text-info" />
             Voice AI Training
@@ -118,9 +286,8 @@ const VoiceAgentTrainingEditor = () => {
           <p className="text-xs text-muted-foreground max-w-3xl">
             Four layers compile into the voice agent's prompt at call-start.
             Edits create a tenant-specific override; network defaults stay intact for any card you don't customize.
-            Use the <code className="px-1 rounded bg-muted text-foreground">compile_voice_agent_prompt</code> RPC
-            to preview the full block your provider will inject.
           </p>
+          <CabinetTools />
         </CardContent>
       </Card>
 
