@@ -282,7 +282,7 @@ serve(async (req) => {
     // Opt-out: insert into opt_outs table
     if (outcome === "opted_out") {
       console.log(
-        `Customer opted out during voice call. Submission: ${callLog.submission_id}`
+        `Customer opted out during voice call. Call: ${callLog.id}`
       );
 
       // Fetch submission for phone/email
@@ -319,7 +319,7 @@ serve(async (req) => {
     // Appointment scheduled: fire notification
     if (outcome === "appointment_scheduled") {
       console.log(
-        `Appointment scheduled via voice call. Submission: ${callLog.submission_id}`
+        `Appointment scheduled via voice call. Call: ${callLog.id}`
       );
 
       try {
@@ -343,7 +343,7 @@ serve(async (req) => {
     // Accepted: update submission progress_status
     if (outcome === "accepted" && callLog.submission_id) {
       console.log(
-        `Offer accepted via voice call. Submission: ${callLog.submission_id}`
+        `Offer accepted via voice call. Call: ${callLog.id}`
       );
 
       const { error: subUpdateErr } = await supabase
