@@ -510,6 +510,45 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_data_access_log: {
+        Row: {
+          created_at: string
+          dealership_id: string | null
+          id: string
+          metadata: Json
+          request_path: string | null
+          resource_kind: string
+          staff_label: string | null
+          staff_user_id: string | null
+          submission_id: string | null
+          voice_call_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          dealership_id?: string | null
+          id?: string
+          metadata?: Json
+          request_path?: string | null
+          resource_kind: string
+          staff_label?: string | null
+          staff_user_id?: string | null
+          submission_id?: string | null
+          voice_call_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          dealership_id?: string | null
+          id?: string
+          metadata?: Json
+          request_path?: string | null
+          resource_kind?: string
+          staff_label?: string | null
+          staff_user_id?: string | null
+          submission_id?: string | null
+          voice_call_id?: string | null
+        }
+        Relationships: []
+      }
       customer_signals: {
         Row: {
           created_at: string
@@ -2606,6 +2645,33 @@ export type Database = {
         }
         Relationships: []
       }
+      pii_retention_config: {
+        Row: {
+          customer_memory_retention_days: number
+          dealership_id: string
+          notification_log_retention_days: number
+          recording_url_retention_days: number
+          updated_at: string
+          voice_transcript_retention_days: number
+        }
+        Insert: {
+          customer_memory_retention_days?: number
+          dealership_id: string
+          notification_log_retention_days?: number
+          recording_url_retention_days?: number
+          updated_at?: string
+          voice_transcript_retention_days?: number
+        }
+        Update: {
+          customer_memory_retention_days?: number
+          dealership_id?: string
+          notification_log_retention_days?: number
+          recording_url_retention_days?: number
+          updated_at?: string
+          voice_transcript_retention_days?: number
+        }
+        Relationships: []
+      }
       platform_bundles: {
         Row: {
           annual_price: number | null
@@ -4616,6 +4682,7 @@ export type Database = {
           grader: string
           grader_model: string | null
           id: string
+          pii_redacted_at: string | null
           rationale: string | null
           run_id: string | null
         }
@@ -4638,6 +4705,7 @@ export type Database = {
           grader?: string
           grader_model?: string | null
           id?: string
+          pii_redacted_at?: string | null
           rationale?: string | null
           run_id?: string | null
         }
@@ -4660,6 +4728,7 @@ export type Database = {
           grader?: string
           grader_model?: string | null
           id?: string
+          pii_redacted_at?: string | null
           rationale?: string | null
           run_id?: string | null
         }
@@ -4721,6 +4790,7 @@ export type Database = {
           original_offer: number | null
           outcome: string | null
           phone_number: string
+          pii_redacted_at: string | null
           provider_call_id: string | null
           provider_response: Json | null
           recording_url: string | null
@@ -4760,6 +4830,7 @@ export type Database = {
           original_offer?: number | null
           outcome?: string | null
           phone_number: string
+          pii_redacted_at?: string | null
           provider_call_id?: string | null
           provider_response?: Json | null
           recording_url?: string | null
@@ -4799,6 +4870,7 @@ export type Database = {
           original_offer?: number | null
           outcome?: string | null
           phone_number?: string
+          pii_redacted_at?: string | null
           provider_call_id?: string | null
           provider_response?: Json | null
           recording_url?: string | null
@@ -4841,6 +4913,7 @@ export type Database = {
           id: string
           matched_signal_key: string | null
           metadata: Json
+          pii_redacted_at: string | null
           sentiment: string | null
           sentiment_score: number | null
           silence_before_ms: number | null
@@ -4862,6 +4935,7 @@ export type Database = {
           id?: string
           matched_signal_key?: string | null
           metadata?: Json
+          pii_redacted_at?: string | null
           sentiment?: string | null
           sentiment_score?: number | null
           silence_before_ms?: number | null
@@ -4883,6 +4957,7 @@ export type Database = {
           id?: string
           matched_signal_key?: string | null
           metadata?: Json
+          pii_redacted_at?: string | null
           sentiment?: string | null
           sentiment_score?: number | null
           silence_before_ms?: number | null
@@ -5374,17 +5449,19 @@ export type Database = {
           user_id: string
         }[]
       }
-      get_call_feedback_context: {
-        Args: { _token: string }
-        Returns: {
-          already_submitted: boolean
-          call_id: string
-          customer_name: string
-          existing_score: number
-          started_at: string
-          vehicle_info: string
-        }[]
-      }
+      get_call_feedback_context:
+        | {
+            Args: { _token: string }
+            Returns: {
+              error: true
+            } & "Could not choose the best candidate function between: public.get_call_feedback_context(_token => text), public.get_call_feedback_context(_token => uuid). Try renaming the parameters or the function itself in the database so function overloading can be resolved"[]
+          }
+        | {
+            Args: { _token: string }
+            Returns: {
+              error: true
+            } & "Could not choose the best candidate function between: public.get_call_feedback_context(_token => text), public.get_call_feedback_context(_token => uuid). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+          }
       get_customer_arrival_page: {
         Args: { _token: string }
         Returns: {
@@ -5507,6 +5584,16 @@ export type Database = {
       is_platform_admin: { Args: { _user_id: string }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
       licensed_states_valid: { Args: { _states: string[] }; Returns: boolean }
+      log_customer_data_access: {
+        Args: {
+          _metadata?: Json
+          _request_path?: string
+          _resource_kind: string
+          _submission_id: string
+          _voice_call_id: string
+        }
+        Returns: undefined
+      }
       lookup_submission_by_contact: {
         Args: { _email: string; _phone: string }
         Returns: {
@@ -5562,6 +5649,8 @@ export type Database = {
           previous_offer: number
         }[]
       }
+      redact_old_customer_memory: { Args: never; Returns: Json }
+      redact_old_voice_pii: { Args: never; Returns: Json }
       remove_staff_role: { Args: { _role_id: string }; Returns: undefined }
       request_offer_increase: {
         Args: {
@@ -5610,10 +5699,15 @@ export type Database = {
         }
         Returns: undefined
       }
-      submit_call_feedback: {
-        Args: { _comment?: string; _score: number; _token: string }
-        Returns: Json
-      }
+      submit_call_feedback:
+        | {
+            Args: { _comment?: string; _score: number; _token: string }
+            Returns: Json
+          }
+        | {
+            Args: { _comment?: string; _score: number; _token: string }
+            Returns: Json
+          }
       update_staff_role: {
         Args: {
           _new_role: Database["public"]["Enums"]["app_role"]
