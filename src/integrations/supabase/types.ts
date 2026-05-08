@@ -5449,17 +5449,19 @@ export type Database = {
           user_id: string
         }[]
       }
-      get_call_feedback_context: {
-        Args: { _token: string }
-        Returns: {
-          already_submitted: boolean
-          call_id: string
-          customer_name: string
-          existing_score: number
-          started_at: string
-          vehicle_info: string
-        }[]
-      }
+      get_call_feedback_context:
+        | {
+            Args: { _token: string }
+            Returns: {
+              error: true
+            } & "Could not choose the best candidate function between: public.get_call_feedback_context(_token => text), public.get_call_feedback_context(_token => uuid). Try renaming the parameters or the function itself in the database so function overloading can be resolved"[]
+          }
+        | {
+            Args: { _token: string }
+            Returns: {
+              error: true
+            } & "Could not choose the best candidate function between: public.get_call_feedback_context(_token => text), public.get_call_feedback_context(_token => uuid). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+          }
       get_customer_arrival_page: {
         Args: { _token: string }
         Returns: {
@@ -5697,10 +5699,15 @@ export type Database = {
         }
         Returns: undefined
       }
-      submit_call_feedback: {
-        Args: { _comment?: string; _score: number; _token: string }
-        Returns: Json
-      }
+      submit_call_feedback:
+        | {
+            Args: { _comment?: string; _score: number; _token: string }
+            Returns: Json
+          }
+        | {
+            Args: { _comment?: string; _score: number; _token: string }
+            Returns: Json
+          }
       update_staff_role: {
         Args: {
           _new_role: Database["public"]["Enums"]["app_role"]
