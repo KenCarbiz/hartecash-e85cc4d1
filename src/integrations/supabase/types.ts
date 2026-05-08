@@ -3825,6 +3825,8 @@ export type Database = {
           review_requested: boolean
           review_requested_at: string | null
           salesperson_name: string | null
+          self_checkin_at: string | null
+          self_checkin_status: string | null
           smoked_in: string | null
           state: string | null
           status_updated_at: string | null
@@ -3966,6 +3968,8 @@ export type Database = {
           review_requested?: boolean
           review_requested_at?: string | null
           salesperson_name?: string | null
+          self_checkin_at?: string | null
+          self_checkin_status?: string | null
           smoked_in?: string | null
           state?: string | null
           status_updated_at?: string | null
@@ -4107,6 +4111,8 @@ export type Database = {
           review_requested?: boolean
           review_requested_at?: string | null
           salesperson_name?: string | null
+          self_checkin_at?: string | null
+          self_checkin_status?: string | null
           smoked_in?: string | null
           state?: string | null
           status_updated_at?: string | null
@@ -5312,6 +5318,10 @@ export type Database = {
             }
             Returns: string
           }
+      customer_self_checkin: {
+        Args: { _status: string; _token: string }
+        Returns: Json
+      }
       decay_voice_variant_counts: { Args: never; Returns: undefined }
       decide_offer_request: {
         Args: {
@@ -5374,6 +5384,27 @@ export type Database = {
           existing_score: number
           started_at: string
           vehicle_info: string
+        }[]
+      }
+      get_customer_arrival_page: {
+        Args: { _token: string }
+        Returns: {
+          appointment_date: string
+          appointment_time: string
+          customer_first_name: string
+          dealership_id: string
+          dealership_name: string
+          plate: string
+          progress_status: string
+          salesperson_name: string
+          self_checkin_at: string
+          self_checkin_status: string
+          submission_id: string
+          vehicle_make: string
+          vehicle_model: string
+          vehicle_trim: string
+          vehicle_year: string
+          vin_last6: string
         }[]
       }
       get_inspection_damage: {
