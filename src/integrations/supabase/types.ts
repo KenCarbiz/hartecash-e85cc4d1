@@ -1834,7 +1834,7 @@ export type Database = {
           delivered_at: string | null
           error_message: string | null
           id: string
-          idempotency_key: string | null
+          idempotency_key: string
           imported_at: string | null
           imported_from_dms: string | null
           legacy_id: string | null
@@ -1852,7 +1852,7 @@ export type Database = {
           delivered_at?: string | null
           error_message?: string | null
           id?: string
-          idempotency_key?: string | null
+          idempotency_key: string
           imported_at?: string | null
           imported_from_dms?: string | null
           legacy_id?: string | null
@@ -1870,7 +1870,7 @@ export type Database = {
           delivered_at?: string | null
           error_message?: string | null
           id?: string
-          idempotency_key?: string | null
+          idempotency_key?: string
           imported_at?: string | null
           imported_from_dms?: string | null
           legacy_id?: string | null
@@ -5283,7 +5283,6 @@ export type Database = {
         Args: { _channel: string; _submission_id: string }
         Returns: {
           decision: string
-          detail: string
           reason: string
         }[]
       }
