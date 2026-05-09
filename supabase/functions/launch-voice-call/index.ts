@@ -56,6 +56,41 @@ function isWithinCallingHours(
   return currentTime >= start && currentTime < end;
 }
 
+/**
+ * US states that require ALL parties to consent to call recording
+ * (two-party / all-party consent). In these states, recording without
+ * disclosure can be a CRIMINAL offense — wiretap statutes typically
+ * carry 1-5 year prison terms in addition to civil damages.
+ *
+ * California (Penal Code §632), Florida, Illinois (720 ILCS 5/14-2),
+ * Maryland, Massachusetts (M.G.L. ch. 272 §99), Montana, Nevada,
+ * New Hampshire, Pennsylvania (18 Pa.C.S. §5704), Washington —
+ * plus several states (Connecticut, Delaware, Hawaii, Oregon, Vermont,
+ * Wisconsin) with mixed/contextual rules where adding disclosure is
+ * always the safer choice.
+ *
+ * When the customer's address_state is on this list, we prepend a
+ * recording disclosure to the AI's first sentence so the disclosure
+ * occurs before any substantive conversation. The customer's first
+ * utterance is therefore captured AFTER they have heard the
+ * disclosure, satisfying all-party-consent statutes.
+ *
+ * If we don't know the state (no address on file), we default to
+ * REQUIRING disclosure — over-disclosing is harmless legally;
+ * under-disclosing is criminal liability.
+ */
+const TWO_PARTY_CONSENT_STATES = new Set([
+  "CA", "CT", "DE", "FL", "HI", "IL", "MD", "MA", "MT",
+  "NV", "NH", "OR", "PA", "VT", "WA", "WI",
+]);
+
+function requiresRecordingDisclosure(stateCode: string | null | undefined): boolean {
+  if (!stateCode) return true; // unknown → safe default = disclose
+  const s = stateCode.toString().trim().toUpperCase();
+  if (s.length !== 2) return true;
+  return TWO_PARTY_CONSENT_STATES.has(s);
+}
+
 function renderTemplate(
   template: string,
   vars: Record<string, string>
@@ -505,6 +540,14 @@ serve(async (req) => {
 
     const customerFirstName =
       submission.name?.split(" ")[0] || "there";
+
+    // ── Recording-disclosure gate (two-party consent states) ──
+    // Compute BEFORE firstSentence so we can prepend the disclosure
+    // when needed. address_state is the customer's state from intake;
+    // when missing we err on the side of disclosing (see comment on
+    // requiresRecordingDisclosure for the rationale).
+    const customerAddressState = (submission as { address_state?: string | null }).address_state ?? null;
+    const recordingDisclosureRequired = requiresRecordingDisclosure(customerAddressState);
     const offerAmount = submission.offered_price
       ? Number(submission.offered_price).toLocaleString("en-US", {
           maximumFractionDigits: 0,
@@ -567,7 +610,16 @@ serve(async (req) => {
     ]
       .filter(Boolean)
       .join(" ");
-    const firstSentence = `Hi, is this ${customerFirstName}?`;
+    // First sentence — recorded calls in two-party-consent states must
+    // open with disclosure BEFORE any substantive conversation. Bland
+    // begins recording at call-start, so the disclosure must be the
+    // first words spoken; the customer's first reply is therefore
+    // captured after they have heard the disclosure, satisfying
+    // all-party-consent statutes (CA Penal §632, IL 720 ILCS 5/14-2,
+    // MA Gen. Laws ch. 272 §99, etc.).
+    const firstSentence = recordingDisclosureRequired
+      ? `Hi ${customerFirstName} — quick note before we begin: this call is being recorded for quality. Is now still a good time?`
+      : `Hi, is this ${customerFirstName}?`;
 
     // ── Insert call log record (queued) ──
     const { data: callLog, error: insertErr } = await supabase
@@ -593,6 +645,12 @@ serve(async (req) => {
           consent_log_id: consentRecord.id,
           consent_type: consentRecord.consent_type,
           consent_captured_at: consentRecord.created_at,
+          // Recording-disclosure proof. Stored on every call so an
+          // audit can answer "did this call open with a recording
+          // disclosure?" without re-listening to the audio.
+          recording_disclosure_required: recordingDisclosureRequired,
+          recording_disclosure_in_first_sentence: recordingDisclosureRequired,
+          customer_address_state: customerAddressState,
         },
       })
       .select()
