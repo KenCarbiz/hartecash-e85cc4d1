@@ -1889,6 +1889,36 @@ export type Database = {
           },
         ]
       }
+      login_attempt_log: {
+        Row: {
+          attempted_at: string
+          email: string
+          failure_reason: string | null
+          id: string
+          ip_addr: unknown
+          succeeded: boolean
+          user_agent: string | null
+        }
+        Insert: {
+          attempted_at?: string
+          email: string
+          failure_reason?: string | null
+          id?: string
+          ip_addr?: unknown
+          succeeded: boolean
+          user_agent?: string | null
+        }
+        Update: {
+          attempted_at?: string
+          email?: string
+          failure_reason?: string | null
+          id?: string
+          ip_addr?: unknown
+          succeeded?: boolean
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       lookup_attempts: {
         Row: {
           attempted_at: string
@@ -1943,6 +1973,33 @@ export type Database = {
           user_agent?: string | null
           user_id?: string
           user_label?: string | null
+        }
+        Relationships: []
+      }
+      mfa_backup_codes: {
+        Row: {
+          code_hash: string
+          consumed_ip: unknown
+          created_at: string
+          id: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          code_hash: string
+          consumed_ip?: unknown
+          created_at?: string
+          id?: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          code_hash?: string
+          consumed_ip?: unknown
+          created_at?: string
+          id?: string
+          used_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -5422,6 +5479,17 @@ export type Database = {
         }
         Relationships: []
       }
+      v_login_attempts_recent: {
+        Row: {
+          email: string | null
+          failures: number | null
+          ip_addr: unknown
+          last_attempt_at: string | null
+          successes: number | null
+          total_attempts: number | null
+        }
+        Relationships: []
+      }
       v_unmatched_customer_phrases: {
         Row: {
           avg_call_composite: number | null
@@ -5574,6 +5642,7 @@ export type Database = {
             }
             Returns: string
           }
+      consume_mfa_backup_code: { Args: { _code: string }; Returns: Json }
       customer_self_checkin: {
         Args: { _status: string; _token: string }
         Returns: Json
@@ -5619,6 +5688,7 @@ export type Database = {
       expire_pilots: { Args: never; Returns: number }
       export_customer_data: { Args: { _token: string }; Returns: Json }
       finalize_voice_grade_run: { Args: { _run_id: string }; Returns: Json }
+      generate_mfa_backup_codes: { Args: never; Returns: Json }
       get_all_staff: {
         Args: { _dealership_id?: string }
         Returns: {
@@ -5764,6 +5834,7 @@ export type Database = {
         Args: { _group_id: string; _user_id: string }
         Returns: boolean
       }
+      is_login_locked: { Args: { _email: string; _ip?: string }; Returns: Json }
       is_platform_admin: { Args: { _user_id: string }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
       licensed_states_valid: { Args: { _states: string[] }; Returns: boolean }
@@ -5836,6 +5907,16 @@ export type Database = {
           new_offer: number
           previous_offer: number
         }[]
+      }
+      record_login_attempt: {
+        Args: {
+          _email: string
+          _ip?: string
+          _reason?: string
+          _success: boolean
+          _ua?: string
+        }
+        Returns: undefined
       }
       redact_old_customer_memory: { Args: never; Returns: Json }
       redact_old_voice_pii: { Args: never; Returns: Json }
