@@ -549,6 +549,48 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_data_request: {
+        Row: {
+          contact_email: string | null
+          contact_phone: string | null
+          dealership_id: string | null
+          expires_at: string
+          fulfilled_at: string | null
+          id: string
+          kind: string
+          metadata: Json
+          request_token: string
+          requested_at: string
+          status: string
+        }
+        Insert: {
+          contact_email?: string | null
+          contact_phone?: string | null
+          dealership_id?: string | null
+          expires_at?: string
+          fulfilled_at?: string | null
+          id?: string
+          kind: string
+          metadata?: Json
+          request_token?: string
+          requested_at?: string
+          status?: string
+        }
+        Update: {
+          contact_email?: string | null
+          contact_phone?: string | null
+          dealership_id?: string | null
+          expires_at?: string
+          fulfilled_at?: string | null
+          id?: string
+          kind?: string
+          metadata?: Json
+          request_token?: string
+          requested_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       customer_signals: {
         Row: {
           created_at: string
@@ -1862,6 +1904,72 @@ export type Database = {
           attempted_at?: string
           id?: string
           ip_hash?: string
+        }
+        Relationships: []
+      }
+      mfa_audit_log: {
+        Row: {
+          created_at: string
+          dealership_id: string | null
+          event_kind: string
+          factor_type: string | null
+          id: string
+          ip_addr: unknown
+          metadata: Json
+          user_agent: string | null
+          user_id: string
+          user_label: string | null
+        }
+        Insert: {
+          created_at?: string
+          dealership_id?: string | null
+          event_kind: string
+          factor_type?: string | null
+          id?: string
+          ip_addr?: unknown
+          metadata?: Json
+          user_agent?: string | null
+          user_id: string
+          user_label?: string | null
+        }
+        Update: {
+          created_at?: string
+          dealership_id?: string | null
+          event_kind?: string
+          factor_type?: string | null
+          id?: string
+          ip_addr?: unknown
+          metadata?: Json
+          user_agent?: string | null
+          user_id?: string
+          user_label?: string | null
+        }
+        Relationships: []
+      }
+      mfa_enforcement_config: {
+        Row: {
+          dealership_id: string
+          grace_period_days: number
+          require_mfa: boolean
+          required_for_roles: string[]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          dealership_id: string
+          grace_period_days?: number
+          require_mfa?: boolean
+          required_for_roles?: string[]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          dealership_id?: string
+          grace_period_days?: number
+          require_mfa?: boolean
+          required_for_roles?: string[]
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -5240,6 +5348,80 @@ export type Database = {
       }
     }
     Views: {
+      v_bulk_access_anomalies: {
+        Row: {
+          dealership_id: string | null
+          distinct_in_window: number | null
+          staff_label: string | null
+          staff_user_id: string | null
+          window_start: string | null
+        }
+        Relationships: []
+      }
+      v_dealership_mfa_status: {
+        Row: {
+          dealership_id: string | null
+          enrolled_staff: number | null
+          enrollment_pct: number | null
+          missing_high_priv_count: number | null
+          total_staff: number | null
+        }
+        Relationships: []
+      }
+      v_dealership_privacy_posture: {
+        Row: {
+          active_opt_outs: number | null
+          bulk_access_anomalies_14d: number | null
+          customer_memory_retention_days: number | null
+          dealership_id: string | null
+          distinct_staff_pii_viewers_30d: number | null
+          fulfilled_requests_90d: number | null
+          last_memory_redact_at: string | null
+          last_voice_redact_at: string | null
+          notification_log_retention_days: number | null
+          oldest_unredacted_call_at: string | null
+          pending_data_requests: number | null
+          recording_url_retention_days: number | null
+          retention_config_updated_at: string | null
+          staff_pii_views_30d: number | null
+          voice_transcript_retention_days: number | null
+        }
+        Insert: {
+          active_opt_outs?: never
+          bulk_access_anomalies_14d?: never
+          customer_memory_retention_days?: number | null
+          dealership_id?: string | null
+          distinct_staff_pii_viewers_30d?: never
+          fulfilled_requests_90d?: never
+          last_memory_redact_at?: never
+          last_voice_redact_at?: never
+          notification_log_retention_days?: number | null
+          oldest_unredacted_call_at?: never
+          pending_data_requests?: never
+          recording_url_retention_days?: number | null
+          retention_config_updated_at?: string | null
+          staff_pii_views_30d?: never
+          voice_transcript_retention_days?: number | null
+        }
+        Update: {
+          active_opt_outs?: never
+          bulk_access_anomalies_14d?: never
+          customer_memory_retention_days?: number | null
+          dealership_id?: string | null
+          distinct_staff_pii_viewers_30d?: never
+          fulfilled_requests_90d?: never
+          last_memory_redact_at?: never
+          last_voice_redact_at?: never
+          notification_log_retention_days?: number | null
+          oldest_unredacted_call_at?: never
+          pending_data_requests?: never
+          recording_url_retention_days?: number | null
+          retention_config_updated_at?: string | null
+          staff_pii_views_30d?: never
+          voice_transcript_retention_days?: number | null
+        }
+        Relationships: []
+      }
       v_unmatched_customer_phrases: {
         Row: {
           avg_call_composite: number | null
@@ -5435,6 +5617,7 @@ export type Database = {
         Returns: number
       }
       expire_pilots: { Args: never; Returns: number }
+      export_customer_data: { Args: { _token: string }; Returns: Json }
       finalize_voice_grade_run: { Args: { _run_id: string }; Returns: Json }
       get_all_staff: {
         Args: { _dealership_id?: string }
@@ -5594,6 +5777,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      log_mfa_event: {
+        Args: { _event_kind: string; _factor_type?: string; _metadata?: Json }
+        Returns: undefined
+      }
       lookup_submission_by_contact: {
         Args: { _email: string; _phone: string }
         Returns: {
@@ -5630,6 +5817,7 @@ export type Database = {
         }
         Returns: number
       }
+      purge_customer_data: { Args: { _token: string }; Returns: Json }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
@@ -5652,6 +5840,10 @@ export type Database = {
       redact_old_customer_memory: { Args: never; Returns: Json }
       redact_old_voice_pii: { Args: never; Returns: Json }
       remove_staff_role: { Args: { _role_id: string }; Returns: undefined }
+      request_customer_data_action: {
+        Args: { _email?: string; _kind?: string; _phone?: string }
+        Returns: Json
+      }
       request_offer_increase: {
         Args: {
           _reason?: string
@@ -5662,6 +5854,7 @@ export type Database = {
         }
         Returns: Json
       }
+      require_mfa_for_user: { Args: never; Returns: Json }
       role_requires_state_license: { Args: { _role: string }; Returns: boolean }
       save_mobile_inspection:
         | {
