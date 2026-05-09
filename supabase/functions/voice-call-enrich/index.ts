@@ -35,6 +35,7 @@
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
+import { report } from "../_shared/report.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -471,6 +472,17 @@ Deno.serve(async (req) => {
       });
   }
 
+  // Mark pipeline job as enriched — the cron retry queue picks up
+  // anything stuck in this state at the grade step. Soft-fails when
+  // the table doesn't exist (migration not yet applied).
+  await supabase.rpc("mark_voice_pipeline_job", {
+    _call_id: body.call_id,
+    _status: "enriched",
+    _bump: "enrich",
+  }).then(({ error }) => {
+    if (error) console.warn("mark_voice_pipeline_job(enriched) failed:", error.message);
+  });
+
   // Chain to the grader. Fire-and-forget — enrichment's response is
   // independent of grading success, and grading reads its own data
   // (the turns we just wrote) so a slow Claude judge does not block
@@ -478,7 +490,12 @@ Deno.serve(async (req) => {
   // applies the variant-store reward via apply_voice_call_outcome.
   supabase.functions.invoke("voice-call-grade", {
     body: { call_id: body.call_id },
-  }).catch((e: unknown) => console.warn("voice-call-grade invoke failed:", e));
+  }).catch((e: unknown) => {
+    void report("voice-call-enrich", e, {
+      call_id: body.call_id,
+      stage: "grade_invoke",
+    }, "warning");
+  });
 
   return new Response(
     JSON.stringify({

@@ -208,12 +208,22 @@ serve(async (req) => {
 
     if (logErr || !callLog) {
       console.error("Call log not found:", logErr);
-      // Still return 200 so Bland doesn't retry
+      // Return 503 with Retry-After so Bland retries instead of
+      // silently dropping the call. Common cause: race between
+      // launch-voice-call's INSERT and Bland's status callback —
+      // the row exists a few seconds later. Prior behavior returned
+      // 200, which made Bland think the work succeeded and the
+      // call disappeared with no row to recover from. Reliability
+      // audit P1.
       return new Response(
-        JSON.stringify({ warning: "Call log record not found", call_id: callId }),
+        JSON.stringify({ retry: true, reason: "call_log_not_found_yet", call_id: callId }),
         {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 503,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+            "Retry-After": "10",
+          },
         }
       );
     }
@@ -265,13 +275,18 @@ serve(async (req) => {
       console.error("Failed to update call log:", updateErr);
     }
 
-    // ── Fire-and-forget post-call enrichment ──
-    // voice-call-enrich does Whisper re-ASR (when configured), per-turn
-    // sentiment, silence/barge-in detection, customer-memory extraction,
-    // and back-fills memory_hook_used on this row. We do NOT await — Bland
-    // expects a fast 200 and enrichment can take 5-15s. Errors are logged
-    // by the enrich function itself.
+    // ── Post-call enrichment + retry queue ──
+    // Enqueue a voice_pipeline_jobs row FIRST so even if the immediate
+    // enrich invoke times out or errors, the 5-min cron picks it up.
+    // The fire-and-forget invoke is the happy path; the queue is the
+    // safety net. Reliability audit P0 #3.
     if (callStatus === "completed") {
+      await supabase.rpc("enqueue_voice_pipeline_job", {
+        _call_id: callLog.id,
+      }).then(({ error }) => {
+        if (error) console.warn("enqueue_voice_pipeline_job failed:", error.message);
+      });
+
       supabase.functions.invoke("voice-call-enrich", {
         body: { call_id: callLog.id },
       }).catch((e: unknown) => console.warn("voice-call-enrich invoke failed:", e));
