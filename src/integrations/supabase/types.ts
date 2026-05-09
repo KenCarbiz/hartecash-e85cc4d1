@@ -549,6 +549,48 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_data_purge_queue: {
+        Row: {
+          attempt_count: number
+          bland_purged: boolean
+          contact_email: string | null
+          contact_phone: string | null
+          enqueued_at: string
+          finished_at: string | null
+          id: string
+          last_error: string | null
+          status: string
+          storage_purged: boolean
+          submission_id: string | null
+        }
+        Insert: {
+          attempt_count?: number
+          bland_purged?: boolean
+          contact_email?: string | null
+          contact_phone?: string | null
+          enqueued_at?: string
+          finished_at?: string | null
+          id?: string
+          last_error?: string | null
+          status?: string
+          storage_purged?: boolean
+          submission_id?: string | null
+        }
+        Update: {
+          attempt_count?: number
+          bland_purged?: boolean
+          contact_email?: string | null
+          contact_phone?: string | null
+          enqueued_at?: string
+          finished_at?: string | null
+          id?: string
+          last_error?: string | null
+          status?: string
+          storage_purged?: boolean
+          submission_id?: string | null
+        }
+        Relationships: []
+      }
       customer_data_request: {
         Row: {
           contact_email: string | null
@@ -3629,6 +3671,72 @@ export type Database = {
           },
         ]
       }
+      security_incident: {
+        Row: {
+          affected_data_categories: string[] | null
+          affected_record_count: number | null
+          closed_at: string | null
+          contained_at: string | null
+          created_at: string
+          created_by: string | null
+          customers_notified_at: string | null
+          dealership_id: string | null
+          detected_via: string
+          discovered_at: string
+          id: string
+          notes: string | null
+          notification_due_at: string
+          related_anomaly_window: string | null
+          severity: string
+          staff_user_ids: string[] | null
+          status: string
+          summary: string
+          updated_at: string
+        }
+        Insert: {
+          affected_data_categories?: string[] | null
+          affected_record_count?: number | null
+          closed_at?: string | null
+          contained_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          customers_notified_at?: string | null
+          dealership_id?: string | null
+          detected_via: string
+          discovered_at?: string
+          id?: string
+          notes?: string | null
+          notification_due_at?: string
+          related_anomaly_window?: string | null
+          severity?: string
+          staff_user_ids?: string[] | null
+          status?: string
+          summary: string
+          updated_at?: string
+        }
+        Update: {
+          affected_data_categories?: string[] | null
+          affected_record_count?: number | null
+          closed_at?: string | null
+          contained_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          customers_notified_at?: string | null
+          dealership_id?: string | null
+          detected_via?: string
+          discovered_at?: string
+          id?: string
+          notes?: string | null
+          notification_due_at?: string
+          related_anomaly_window?: string | null
+          severity?: string
+          staff_user_ids?: string[] | null
+          status?: string
+          summary?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       site_config: {
         Row: {
           about_hero_headline: string
@@ -6129,6 +6237,17 @@ export type Database = {
       redact_old_customer_memory: { Args: never; Returns: Json }
       redact_old_voice_pii: { Args: never; Returns: Json }
       refresh_dealership_privacy_posture: { Args: never; Returns: undefined }
+      register_security_incident: {
+        Args: {
+          _affected_count?: number
+          _categories?: string[]
+          _detected_via: string
+          _notes?: string
+          _severity?: string
+          _summary: string
+        }
+        Returns: string
+      }
       remove_staff_role: { Args: { _role_id: string }; Returns: undefined }
       report_error: {
         Args: {
