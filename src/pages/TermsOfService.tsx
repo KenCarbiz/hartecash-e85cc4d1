@@ -3,8 +3,33 @@ import { ArrowLeft } from "lucide-react";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import SEO from "@/components/SEO";
 
+/**
+ * Substitute the dealership name into the contract body. We
+ * deliberately fail safe here: if site_config.dealership_name is
+ * missing or matches the placeholder list, we refuse to render the
+ * legal-entity name and surface "(legal entity not configured)".
+ *
+ * Why: rendering a contract that says "{dealerName}" as the
+ * counterparty is a contract-validity problem — the customer
+ * doesn't know who they're agreeing with. The compliance audit
+ * (May 2026) flagged this. The DB-side CHECK in 20260509050000
+ * blocks new placeholder values; this function is the runtime
+ * fallback for tenants whose config predates the constraint.
+ */
+const PLACEHOLDER_NAMES = new Set([
+  "our dealership", "dealership", "default", "tbd", "your dealership",
+]);
+
+function legalEntityName(raw: string | null | undefined): string {
+  const v = (raw ?? "").trim();
+  if (!v) return "(legal entity not configured)";
+  if (PLACEHOLDER_NAMES.has(v.toLowerCase())) return "(legal entity not configured)";
+  return v;
+}
+
 const TermsOfService = () => {
   const { config } = useSiteConfig();
+  const dealerName = legalEntityName(config.dealership_name);
   // Template-aware chrome — same pattern as PrivacyPolicy. Clarity
   // dealers get the quiet white header; every other template
   // keeps the dark primary banner. Body content unchanged.
@@ -12,8 +37,8 @@ const TermsOfService = () => {
   return (
     <div className={`min-h-screen flex flex-col ${isClarity ? "bg-white text-zinc-900" : "bg-background"}`}>
       <SEO
-        title={`Terms of Service | ${config.dealership_name}`}
-        description={`Review the terms and conditions for using ${config.dealership_name}'s vehicle appraisal and purchasing services.`}
+        title={`Terms of Service | ${dealerName}`}
+        description={`Review the terms and conditions for using ${dealerName}'s vehicle appraisal and purchasing services.`}
         path="/terms"
       />
       {isClarity ? (
@@ -22,9 +47,9 @@ const TermsOfService = () => {
             <Link to="/" className="flex items-center gap-3 min-w-0">
               <ArrowLeft className="w-4 h-4 text-zinc-500" aria-hidden="true" />
               {config.logo_url ? (
-                <img src={config.logo_url} alt={config.dealership_name} className="h-16 md:h-20 w-auto object-contain" />
+                <img src={config.logo_url} alt={dealerName} className="h-16 md:h-20 w-auto object-contain" />
               ) : (
-                <span className="text-sm font-semibold tracking-tight truncate text-zinc-900">{config.dealership_name}</span>
+                <span className="text-sm font-semibold tracking-tight truncate text-zinc-900">{dealerName}</span>
               )}
             </Link>
             <span className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
@@ -39,9 +64,9 @@ const TermsOfService = () => {
               <ArrowLeft className="w-5 h-5" />
             </Link>
             {config.logo_white_url ? (
-              <img src={config.logo_white_url} alt={config.dealership_name} className="h-20 w-auto" />
+              <img src={config.logo_white_url} alt={dealerName} className="h-20 w-auto" />
             ) : (
-              <span className="text-lg font-bold">{config.dealership_name}</span>
+              <span className="text-lg font-bold">{dealerName}</span>
             )}
             <h1 className="font-bold text-lg">Terms of Service</h1>
           </div>
@@ -50,14 +75,14 @@ const TermsOfService = () => {
 
       <main className={`flex-1 max-w-3xl mx-auto px-5 py-10 md:py-14 ${isClarity ? "text-zinc-700" : ""}`}>
         <h1 className={`text-3xl font-extrabold mb-2 ${isClarity ? "font-sans tracking-[-0.025em] text-zinc-900" : "text-foreground"}`}>Terms of Service</h1>
-        <p className="text-sm text-muted-foreground mb-8">Last updated: February 26, 2026</p>
+        <p className="text-sm text-muted-foreground mb-8">Last updated: May 9, 2026</p>
 
         <div className="prose prose-sm max-w-none text-foreground/90 space-y-6">
           <section>
             <h2 className="text-xl font-bold text-foreground">1. Acceptance of Terms</h2>
             <p>
               By accessing or using this website and related services operated by
-              Our Dealership ("we," "us," or "our"), you agree to be bound by these Terms of
+              {dealerName} ("we," "us," or "our"), you agree to be bound by these Terms of
               Service. If you do not agree to these terms, please do not use our services.
             </p>
           </section>
@@ -65,7 +90,7 @@ const TermsOfService = () => {
           <section>
             <h2 className="text-xl font-bold text-foreground">2. Services</h2>
             <p>
-              Our Dealership provides an online platform for vehicle appraisals, trade-in offers,
+              {dealerName} provides an online platform for vehicle appraisals, trade-in offers,
               appointment scheduling, and related automotive services. All offers and valuations
               provided through our website are estimates and subject to in-person vehicle inspection
               and verification.
@@ -86,7 +111,7 @@ const TermsOfService = () => {
             <h2 className="text-xl font-bold text-foreground">4. Communications Consent</h2>
             <p>
               By submitting your contact information through any form on our website, you consent to
-              receive communications from Our Dealership, including but not limited to phone calls,
+              receive communications from {dealerName}, including but not limited to phone calls,
               text messages (SMS/MMS), and emails regarding your vehicle submission, offer, or
               appointment. See our{" "}
               <Link to="/privacy#sms-consent" className="text-primary underline hover:no-underline">
@@ -109,7 +134,7 @@ const TermsOfService = () => {
           <section>
             <h2 className="text-xl font-bold text-foreground">6. Limitation of Liability</h2>
             <p>
-              Our website and services are provided "as is" without warranties of any kind. Our dealership
+              Our website and services are provided "as is" without warranties of any kind. {dealerName}
               Group shall not be liable for any indirect, incidental, or consequential damages arising
               from your use of our services.
             </p>
@@ -126,7 +151,7 @@ const TermsOfService = () => {
           <section>
             <h2 className="text-xl font-bold text-foreground">8. Contact</h2>
             <p>
-              Questions about these Terms should be directed to Our Dealership at (866) 851-7390
+              Questions about these Terms should be directed to {dealerName} at (866) 851-7390
               or at 150 Weston Street, Hartford, CT 06120.
             </p>
           </section>
@@ -135,7 +160,7 @@ const TermsOfService = () => {
 
       <footer className="border-t border-border py-6 px-5 text-center">
         <p className="text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Our Dealership. All rights reserved.
+          © {new Date().getFullYear()} {dealerName}. All rights reserved.
         </p>
       </footer>
     </div>
