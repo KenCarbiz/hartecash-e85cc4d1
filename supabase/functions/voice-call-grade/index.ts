@@ -38,6 +38,7 @@
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
+import { report } from "../_shared/report.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -365,6 +366,19 @@ Deno.serve(async (req) => {
         console.warn("voice-call-grade: feedback SMS path failed:", e);
       }
     })();
+  }
+
+  // Mark pipeline job as graded — terminal state for the retry queue.
+  // Skip on regrade runs (run_id set) — those are admin-initiated and
+  // not part of the live pipeline.
+  if (!body.run_id) {
+    await supabase.rpc("mark_voice_pipeline_job", {
+      _call_id: body.call_id,
+      _status: "graded",
+      _bump: "grade",
+    }).then(({ error }) => {
+      if (error) console.warn("mark_voice_pipeline_job(graded) failed:", error.message);
+    });
   }
 
   return new Response(
