@@ -6194,6 +6194,16 @@ export type Database = {
         }
         Returns: number
       }
+      pickup_customer_data_purge_jobs: {
+        Args: { _limit?: number }
+        Returns: {
+          attempt_count: number
+          contact_email: string
+          contact_phone: string
+          id: string
+          submission_id: string
+        }[]
+      }
       pickup_stuck_voice_pipeline_jobs: {
         Args: { _limit?: number }
         Returns: {
