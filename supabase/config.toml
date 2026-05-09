@@ -67,6 +67,10 @@ project_id = "ptiwdwfdckfqivoocyvp"
   # email. Authenticated by submission token in query string.
   [functions.track-decline-reason]
     verify_jwt = false
+  # Public traffic: dealer-website embed pings this with no JWT.
+  # Function validates the body (dealer_id + event shape) and origin.
+  [functions.embed-track]
+    verify_jwt = false
   # Cadence orchestrator — invoked by Supabase scheduled functions
   # every 5 minutes. Service role required (cron passes the service
   # JWT). Manual backfills also via service role.

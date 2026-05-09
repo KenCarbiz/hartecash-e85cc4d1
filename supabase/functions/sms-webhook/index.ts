@@ -124,18 +124,21 @@ Deno.serve(async (req) => {
     const inbound = params as unknown as TwilioInbound;
 
     // ── Signature check ─────────────────────────────────────────
-    // If the auth token is configured we validate; if it isn't we log
-    // a warning and continue (dev environments).
-    if (authToken) {
-      const signature = req.headers.get("x-twilio-signature") || "";
-      const publicUrl = req.url; // Twilio signs against the full request URL it POSTed
-      const ok = await validateTwilioSignature(publicUrl, params, signature, authToken);
-      if (!ok) {
-        console.warn("sms-webhook: bad Twilio signature from", inbound.From);
-        return new Response("unauthorized", { status: 401 });
-      }
-    } else {
-      console.warn("sms-webhook: TWILIO_AUTH_TOKEN not set — skipping signature validation");
+    // Fail CLOSED: refuse the request when TWILIO_AUTH_TOKEN is missing
+    // rather than log a warning and continue. The prior fail-OPEN
+    // behavior meant a misconfigured production environment silently
+    // accepted unauthenticated webhooks — exact attack vector the
+    // signature is supposed to prevent.
+    if (!authToken) {
+      console.error("sms-webhook: TWILIO_AUTH_TOKEN not configured — refusing request");
+      return new Response("server misconfigured", { status: 503 });
+    }
+    const signature = req.headers.get("x-twilio-signature") || "";
+    const publicUrl = req.url; // Twilio signs against the full request URL it POSTed
+    const ok = await validateTwilioSignature(publicUrl, params, signature, authToken);
+    if (!ok) {
+      console.warn("sms-webhook: bad Twilio signature from", inbound.From);
+      return new Response("unauthorized", { status: 401 });
     }
 
     if (!inbound.MessageSid || !inbound.From) {

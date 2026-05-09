@@ -51,7 +51,7 @@ const PrivacyPolicy = () => {
 
       <main className={`flex-1 max-w-3xl mx-auto px-5 py-10 md:py-14 ${isClarity ? "text-zinc-700" : ""}`}>
         <h1 className={`text-3xl font-extrabold mb-2 ${isClarity ? "font-sans tracking-[-0.025em] text-zinc-900" : "text-foreground"}`}>Privacy Policy</h1>
-        <p className="text-sm text-muted-foreground mb-8">Last updated: February 26, 2026</p>
+        <p className="text-sm text-muted-foreground mb-8">Last updated: May 9, 2026</p>
 
         <div className="prose prose-sm max-w-none text-foreground/90 space-y-6">
           <section>
@@ -178,10 +178,70 @@ const PrivacyPolicy = () => {
             <h2 className="text-xl font-bold text-foreground">6. How We Share Your Information</h2>
             <p>We do not sell your personal information. We may share your information with:</p>
             <ul className="list-disc pl-5 space-y-1">
-              <li><strong>Service Providers:</strong> Third-party vendors that help us deliver services (e.g., email delivery, SMS messaging, data hosting). These providers are contractually obligated to protect your data.</li>
-              <li><strong>Legal Requirements:</strong> When required by law, regulation, or legal process.</li>
-              <li><strong>Business Transfers:</strong> In connection with a merger, acquisition, or sale of assets, your information may be transferred as part of the transaction.</li>
+              <li><strong>Service providers (sub-processors):</strong> the named third parties below, each contractually limited to delivering the service on our behalf:</li>
             </ul>
+            <div className="mt-2 overflow-x-auto">
+              <table className="text-sm w-full border border-border">
+                <thead className="bg-muted/40">
+                  <tr>
+                    <th className="text-left px-3 py-2 border-b border-border">Sub-processor</th>
+                    <th className="text-left px-3 py-2 border-b border-border">Purpose</th>
+                    <th className="text-left px-3 py-2 border-b border-border">Categories of data shared</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="px-3 py-2 border-b border-border">Supabase, Inc. (AWS us-east-1)</td>
+                    <td className="px-3 py-2 border-b border-border">Database, authentication, file storage</td>
+                    <td className="px-3 py-2 border-b border-border">All categories</td>
+                  </tr>
+                  <tr>
+                    <td className="px-3 py-2 border-b border-border">Twilio, Inc.</td>
+                    <td className="px-3 py-2 border-b border-border">SMS / MMS delivery</td>
+                    <td className="px-3 py-2 border-b border-border">Phone number, message content</td>
+                  </tr>
+                  <tr>
+                    <td className="px-3 py-2 border-b border-border">Bland AI, Inc.</td>
+                    <td className="px-3 py-2 border-b border-border">Outbound voice AI calls</td>
+                    <td className="px-3 py-2 border-b border-border">Phone number, name, vehicle details, call recording, transcript</td>
+                  </tr>
+                  <tr>
+                    <td className="px-3 py-2 border-b border-border">Anthropic PBC</td>
+                    <td className="px-3 py-2 border-b border-border">AI grading + sentiment of voice calls</td>
+                    <td className="px-3 py-2 border-b border-border">Call transcripts (text only)</td>
+                  </tr>
+                  <tr>
+                    <td className="px-3 py-2 border-b border-border">OpenAI, L.L.C.</td>
+                    <td className="px-3 py-2 border-b border-border">Whisper speech-to-text on call recordings</td>
+                    <td className="px-3 py-2 border-b border-border">Call audio (recordings)</td>
+                  </tr>
+                  <tr>
+                    <td className="px-3 py-2 border-b border-border">Stripe, Inc.</td>
+                    <td className="px-3 py-2 border-b border-border">Payment processing (dealership subscriptions)</td>
+                    <td className="px-3 py-2 border-b border-border">No customer-of-dealership data; dealership account billing only</td>
+                  </tr>
+                  <tr>
+                    <td className="px-3 py-2 border-b border-border">Resend, Inc. / SendGrid (Twilio)</td>
+                    <td className="px-3 py-2 border-b border-border">Transactional email delivery</td>
+                    <td className="px-3 py-2 border-b border-border">Email address, message content</td>
+                  </tr>
+                  <tr>
+                    <td className="px-3 py-2 border-b border-border">DealerTrack / RouteOne</td>
+                    <td className="px-3 py-2 border-b border-border">Loan payoff verification (only if you authorized in §5)</td>
+                    <td className="px-3 py-2 border-b border-border">Lender, account number, vehicle</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-2">We may also share your information when:</p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li><strong>Legal requirements:</strong> when required by law, regulation, or legal process (subpoena, court order).</li>
+              <li><strong>Business transfers:</strong> in connection with a merger, acquisition, or sale of assets, with notice to you.</li>
+            </ul>
+            <p className="mt-2 text-sm text-muted-foreground">
+              We do not share your personal information with advertisers or marketing networks.
+              We do not sell your personal information.
+            </p>
           </section>
 
           <section>
@@ -215,6 +275,86 @@ const PrivacyPolicy = () => {
             <p>
               To exercise any of these rights, contact us at{" "}
               <strong>(866) 851-7390</strong> or email us at the address listed below.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-foreground">9a. California Residents (CCPA / CPRA)</h2>
+            <p>
+              If you are a California resident, the California Consumer Privacy Act
+              (as amended by the California Privacy Rights Act) gives you the
+              following rights, which we honor regardless of where you live:
+            </p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>
+                <strong>Right to know.</strong> You can request a copy of every
+                category of personal information we have collected about you, the
+                sources we collected it from, the business or commercial purpose
+                for collecting it, and the third parties we shared it with.
+              </li>
+              <li>
+                <strong>Right to delete.</strong> You can request that we delete
+                personal information we have about you, subject to limited
+                exceptions (legal hold, fraud prevention, completing a
+                transaction you initiated).
+              </li>
+              <li>
+                <strong>Right to correct.</strong> You can request correction of
+                inaccurate personal information.
+              </li>
+              <li>
+                <strong>Right to limit use of sensitive personal information.</strong>{" "}
+                We do not use sensitive PI (driver's license images, financial
+                account numbers) for any purpose beyond delivering the service
+                you requested.
+              </li>
+              <li>
+                <strong>Right to opt out of sale or sharing.</strong> We do not
+                sell or share your personal information for cross-context
+                behavioral advertising. There is nothing to opt out of.
+              </li>
+              <li>
+                <strong>Right to non-discrimination.</strong> We will not deny
+                service, charge a different price, or provide a lower quality of
+                service because you exercised any of these rights.
+              </li>
+            </ul>
+            <p className="mt-2">
+              To exercise these rights, you (or an authorized agent) can:
+            </p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>
+                Submit a self-service request at{" "}
+                <a href="/my-data-rights" className="text-primary underline">
+                  /my-data-rights
+                </a>
+                . We will verify your identity by sending a one-time code to the
+                phone or email on file and respond within 45 days (extendable to
+                90 days with notice).
+              </li>
+              <li>
+                Call <strong>(866) 851-7390</strong> or email{" "}
+                <a href="mailto:privacy@hartecash.com" className="text-primary underline">
+                  privacy@hartecash.com
+                </a>
+                .
+              </li>
+            </ul>
+            <p className="mt-2 text-sm text-muted-foreground">
+              The categories of personal information we have collected in the
+              preceding 12 months are listed in §2 above. We retain personal
+              information for the periods stated in §8.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-foreground">9b. Other State Privacy Rights</h2>
+            <p>
+              Residents of Virginia (VCDPA), Colorado (CPA), Connecticut (CTDPA),
+              Utah (UCPA), and other states with comprehensive privacy laws have
+              substantially similar rights, including the right to know, delete,
+              correct, opt out of sale or targeted advertising, and appeal a
+              denied request. The same self-service request flow above applies.
             </p>
           </section>
 

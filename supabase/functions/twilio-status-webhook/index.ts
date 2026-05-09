@@ -27,6 +27,38 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+/**
+ * Twilio signature validation — HMAC-SHA1 of (URL + sorted form params),
+ * base64-encoded, matched against the X-Twilio-Signature header.
+ * https://www.twilio.com/docs/usage/security#validating-requests
+ *
+ * Without this, anyone on the internet can POST forged status updates
+ * for any MessageSid and silently corrupt the delivery audit
+ * (mark legitimately delivered messages as failed, or vice versa).
+ * That was the prior state of this function — fixed here.
+ */
+async function validateTwilioSignature(
+  url: string,
+  params: Record<string, string>,
+  signatureHeader: string,
+  authToken: string,
+): Promise<boolean> {
+  const sortedKeys = Object.keys(params).sort();
+  const data = sortedKeys.reduce((acc, k) => acc + k + params[k], url);
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(authToken),
+    { name: "HMAC", hash: "SHA-1" },
+    false,
+    ["sign"],
+  );
+  const sigBuffer = await crypto.subtle.sign("HMAC", key, encoder.encode(data));
+  const sigArray = Array.from(new Uint8Array(sigBuffer));
+  const expected = btoa(String.fromCharCode(...sigArray));
+  return expected === signatureHeader;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -36,11 +68,31 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const params = new URLSearchParams(await req.text());
-    const messageSid     = params.get("MessageSid") || "";
-    const messageStatus  = params.get("MessageStatus") || "";
-    const errorCode      = params.get("ErrorCode") || "";
-    const errorMessage   = params.get("ErrorMessage") || "";
+    // Twilio always sends application/x-www-form-urlencoded.
+    // Read the body once into a record so we can hand it to both the
+    // signature validator and our own param lookups.
+    const formText = await req.text();
+    const formParams = new URLSearchParams(formText);
+    const params: Record<string, string> = {};
+    for (const [k, v] of formParams.entries()) params[k] = v;
+
+    // ── Signature check (fail-CLOSED) ───────────────────────────
+    const authToken = Deno.env.get("TWILIO_AUTH_TOKEN");
+    if (!authToken) {
+      console.error("twilio-status-webhook: TWILIO_AUTH_TOKEN not configured — refusing request");
+      return new Response("server misconfigured", { status: 503 });
+    }
+    const signature = req.headers.get("x-twilio-signature") || "";
+    const sigOk = await validateTwilioSignature(req.url, params, signature, authToken);
+    if (!sigOk) {
+      console.warn("twilio-status-webhook: bad signature for MessageSid", params.MessageSid || "(none)");
+      return new Response("unauthorized", { status: 401 });
+    }
+
+    const messageSid     = params.MessageSid     || "";
+    const messageStatus  = params.MessageStatus  || "";
+    const errorCode      = params.ErrorCode      || "";
+    const errorMessage   = params.ErrorMessage   || "";
 
     if (!messageSid || !messageStatus) {
       return new Response(JSON.stringify({ ok: false, reason: "missing_params" }), {
