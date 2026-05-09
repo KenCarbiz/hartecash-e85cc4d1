@@ -1,1 +1,160 @@
-# Customer File Redesign \u2014 Handoff Package\n\nSingle-screen visual refresh of the customer detail sheet. **Safest possible first merge** \u2014 no DB changes, no routing changes, one component touched.\n\n## Your workflow\n\n```\n  Claude Code \u2192 GitHub branch \u2192 Lovable auto-preview \u2192 you review \u2192 merge to main \u2192 Lovable ships prod\n```\n\nThe whole point of this handoff is to keep **all experimental work on a branch** so `main` (and therefore production) is never at risk until you say so.\n\n## How to use with Claude Code\n\n1. Drop this folder into the repo root (or anywhere Claude Code can read it).\n\n2. Tell Claude Code to work on a new branch, never `main`:\n\n   > Read `handoff_customer_file/CLAUDE_CODE_BRIEF.md` and follow it exactly. Create and push the branch `customer-file-refresh` from `main`, then do all work there \u2014 never commit directly to `main`. Open a Draft PR after \u00a72 so Lovable starts building a preview for that branch. Stop after each numbered section and show me what you did. Do not proceed to the next section until I say \"continue\". Do not touch any file not in the \"touch list\" \u2014 if you think you need to, ask me first.\n\n3. After Claude Code finishes \u00a72 (the legacy copy step) the branch will exist and Lovable will build a preview. Get the preview URL.\n\n4. As Claude Code finishes each section and pushes, Lovable's preview auto-updates. Refresh the preview URL to see progress.\n\n5. When all sections are done:\n   - Open the preview with the feature flag **OFF** \u2192 everything should look like today\n   - Open the preview with the feature flag **ON** \u2192 refreshed sheet should match `screenshots/02-file-open.png`\n   - Walk through the test plan in \u00a75 of the brief\n\n6. Only after both states check out: merge the PR. Keep the Lovable production env var OFF at first. Flip it to ON for one staging dealer, watch for a day, then enable more.\n\n## Contents\n\n- `CLAUDE_CODE_BRIEF.md` \u2014 the single-screen spec. Keep Claude Code on these rails.\n- `design_files/Customer File Redesign.html` \u2014 the approved mockup. Open it in a browser to see the exact target.\n- `design_files/*.jsx`, `mock-data.js` \u2014 supporting files that make the mockup run.\n- `screenshots/*.png` \u2014 reference images.\n\n## Why start here\n\n- **One component.** Not seven.\n- **No database changes.** Nothing to roll back at the data layer.\n- **No sidebar changes.** Nothing layout-wide to break.\n- **Feature-flagged.** Off by default \u2014 literally zero user impact on merge until you flip the switch in Lovable env vars.\n- **Fast rollback.** Flip the env var in Lovable, wait ~1 min for rebuild. Or `git revert` the merge commit.\n- **Branch-isolated.** Until you merge, `main` is untouched and production is untouched.\n\nOnce this is merged and stable, the next handoff folder uses the same pattern at a larger scale.\n\n## Safety net cheat sheet\n\n| Worry | Answer |\n|---|---|\n| \"What if Claude Code breaks something?\" | It's on a branch. `main` is fine. Close the PR. |\n| \"What if the merged version breaks something?\" | Flip `VITE_CUSTOMER_FILE_REFRESH=false` in Lovable env. ~1 min rebuild. |\n| \"What if the legacy version behind the flag is broken?\" | `git revert` the merge commit. Lovable redeploys the previous state. |\n| \"What if Claude Code tries to touch other files?\" | The brief tells it to stop and ask. If it asks, say no. If it didn't ask, the PR diff will show you \u2014 request changes on the PR. |\n| \"What if there's a bad DB migration?\" | There isn't one in this handoff. Claude Code is instructed not to add any. If it does, reject the PR. |\n\n## Guardrails in one sentence\n\nIf Claude Code wants to touch a file not in the \"touch list\", open a database migration, or \"clean up\" unrelated code \u2014 say **no** and point back at this brief.\n
+<div align="center">
+
+# Rooftop
+
+**The platform for car people, by car people.**
+
+The operating system for the modern dealership — trade-in, FTC pricing & window stickers, video & service NPI, and CarMax-grade photography. Four prongs. One rooftop.
+
+[Landing mockup](./rooftop-landing-mockup.html) · [Investor brief](./HARTECASH_INVESTOR_BRIEF.md) · [CLAUDE.md](./CLAUDE.md)
+
+</div>
+
+---
+
+## Why Rooftop
+
+Cox bought a data company. Cars.com bought a widget. CarGurus is a data marketplace. None of them have **been** the salesperson, the desk, the GSM, the partner, the owner, the F&I director.
+
+The founder has — for 25+ years. Rooftop is what happens when someone who's lived every role at the dealership builds the tools they always wished existed. It's not a feature. It's a stance.
+
+> **They sell tools. We run your rooftop.**
+
+## The four modules
+
+| Module | Solves | Replaces |
+|---|---|---|
+| **Rooftop Trade** | AI-driven trade-in tool — not "just a form." Web + off-street + direct-to-consumer acquisition. | KBB ICO, AccuTrade, CarGurus trade |
+| **Rooftop Sticker** | FTC-compliant window stickers + addenda (used & new). Auto-syncs to dealer site. Customer e-signs accessories. Audit trail. | Manual books, FTC exposure |
+| **Rooftop Reach** | Custom video to the customer in <10 min of contact. Service department NPI in the same system. | CoVideo, Flick Fusion, manual BDC video |
+| **Rooftop Studio** | "Auto Frame" — 95% of CarMax/360booth photo consistency without the $2M booth. | 360booth's dealer-group-only moat |
+
+All four modules live under one login, one schema, one brand.
+
+## Status
+
+| Module | State |
+|---|---|
+| Rooftop Trade | **Live** — full pipeline from VIN/plate lookup to check request, plus service drive equity mining and walk-in VIN scan |
+| Rooftop Sticker | **In progress** — see `Harte-INFINITI-FTC-Pricing-Mockup.html` |
+| Rooftop Reach | **In progress** — voice AI training cabinet shipped in `feat: trade-up admin UI + voice-AI training cabinet` |
+| Rooftop Studio | **Design phase** |
+| Brand rename (HarteCash → Rooftop) | **In progress** on branch `claude/dealership-saas-branding-furaV` |
+
+## Tech stack
+
+| Layer | Tool |
+|---|---|
+| Frontend | React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui (Radix), Framer Motion |
+| Backend | Supabase (Postgres + Edge Functions + Auth + Storage + Realtime) |
+| Auth | Supabase Auth with role-based access (RLS on every table) |
+| AI | Google Gemini 2.5 Flash (vision/condition scoring), Bland (voice AI) |
+| Hardware | OBDLink CX over Web Bluetooth |
+| Hosting | Lovable (frontend + edge functions auto-deploy on merge to `main`) |
+| Tests | Vitest |
+
+## Getting started
+
+```bash
+# install
+bun install            # or: npm install
+
+# run the dev server
+bun run dev            # vite — http://localhost:5173
+
+# tests
+bun run test           # one-shot
+bun run test:watch     # watch mode
+
+# lint
+bun run lint
+
+# production build
+bun run build
+```
+
+Environment variables live in `.env.local`. See `docs/billing-stripe-setup.md` and `docs/DEPLOYMENT_CHECKLIST.md` for the full env list.
+
+## Repository layout
+
+```
+.
+├── src/                  React frontend
+│   ├── pages/            top-level routes
+│   ├── components/       shared UI (shadcn-based)
+│   ├── integrations/     Supabase client, third-party SDKs
+│   ├── hooks/, lib/, contexts/
+│   └── test/
+├── supabase/
+│   ├── migrations/       SQL — must be idempotent (see CLAUDE.md)
+│   ├── functions/        edge functions (Deno)
+│   └── config.toml
+├── docs/                 design audits, ops handoffs, persona guides
+├── public/               static assets
+├── *.html                standalone mockups (customer file, FTC pricing,
+│                         rooftop landing) — open directly in a browser
+├── CLAUDE.md             repo-wide notes for AI assistants — READ THIS
+└── HARTECASH_INVESTOR_BRIEF.md
+```
+
+## Database & migrations
+
+> ⚠️ **Migrations are NOT auto-applied when you merge to `main`.**
+> Lovable's GitHub sync ships frontend + edge functions on merge. SQL files in `supabase/migrations/` must be applied manually. This has caused two prod incidents already.
+
+After you merge a PR with a migration, **apply it via one of:**
+
+1. **Lovable Push** — "Push to Supabase" button on the migration in the Lovable editor
+2. **`supabase db push`** — from a local checkout with the Supabase CLI linked
+3. **SQL Editor paste** — copy the file into the Supabase dashboard SQL editor and run
+4. **`psql -v ON_ERROR_STOP=1 -f supabase/migrations/<file>.sql`** if you have `PG*` env vars
+
+**Authoring rule:** every migration must be idempotent. Use `IF NOT EXISTS`, `ON CONFLICT DO NOTHING`, or `WHERE NOT EXISTS` guards on every `CREATE` / `INSERT` / `ALTER`.
+
+After data changes, end the file with:
+
+```sql
+NOTIFY pgrst, 'reload schema';
+```
+
+Full notes in [CLAUDE.md](./CLAUDE.md).
+
+## Deployment
+
+- **Frontend & edge functions** — auto-deployed by Lovable on merge to `main`
+- **Database migrations** — manual (see above)
+- **Branch previews** — Lovable builds a preview for every PR branch — `[branch].lovable.app`
+- **Feature flags** — Vite env vars (`VITE_*`) toggled in Lovable's env settings; rebuild ~1 min
+
+Rollback: flip the relevant `VITE_*` flag, or `git revert` the merge commit.
+
+## Branching & AI assistants
+
+- `main` is production. Don't commit to it directly — every change goes through a PR.
+- AI-assisted work lives on `claude/<short-task-name>` branches.
+- Read [CLAUDE.md](./CLAUDE.md) before starting an AI session — it documents the migration footgun, the idempotency rule, and the conventions specific to this repo.
+- One-off mockups live as standalone `.html` files at the repo root (zero deps, open in browser). See `Customer File Redesign.html`, `Harte-INFINITI-FTC-Pricing-Mockup.html`, `rooftop-landing-mockup.html`.
+
+## Tests
+
+```bash
+bun run test           # vitest, one-shot
+bun run test:watch     # vitest watch mode
+bun run lint           # eslint
+```
+
+Type-checking and tests verify code correctness, not feature correctness. UI changes require manual browser testing — start the dev server and walk through the flow before declaring done.
+
+## License
+
+Proprietary. All rights reserved. Contact the maintainer for licensing inquiries.
+
+---
+
+<div align="center">
+
+**Built by car people. Not data people.**
+
+25+ years on every side of the desk.
+
+</div>
