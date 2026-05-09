@@ -1907,6 +1907,72 @@ export type Database = {
         }
         Relationships: []
       }
+      mfa_audit_log: {
+        Row: {
+          created_at: string
+          dealership_id: string | null
+          event_kind: string
+          factor_type: string | null
+          id: string
+          ip_addr: unknown
+          metadata: Json
+          user_agent: string | null
+          user_id: string
+          user_label: string | null
+        }
+        Insert: {
+          created_at?: string
+          dealership_id?: string | null
+          event_kind: string
+          factor_type?: string | null
+          id?: string
+          ip_addr?: unknown
+          metadata?: Json
+          user_agent?: string | null
+          user_id: string
+          user_label?: string | null
+        }
+        Update: {
+          created_at?: string
+          dealership_id?: string | null
+          event_kind?: string
+          factor_type?: string | null
+          id?: string
+          ip_addr?: unknown
+          metadata?: Json
+          user_agent?: string | null
+          user_id?: string
+          user_label?: string | null
+        }
+        Relationships: []
+      }
+      mfa_enforcement_config: {
+        Row: {
+          dealership_id: string
+          grace_period_days: number
+          require_mfa: boolean
+          required_for_roles: string[]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          dealership_id: string
+          grace_period_days?: number
+          require_mfa?: boolean
+          required_for_roles?: string[]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          dealership_id?: string
+          grace_period_days?: number
+          require_mfa?: boolean
+          required_for_roles?: string[]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       notification_log: {
         Row: {
           channel: string
@@ -5292,6 +5358,16 @@ export type Database = {
         }
         Relationships: []
       }
+      v_dealership_mfa_status: {
+        Row: {
+          dealership_id: string | null
+          enrolled_staff: number | null
+          enrollment_pct: number | null
+          missing_high_priv_count: number | null
+          total_staff: number | null
+        }
+        Relationships: []
+      }
       v_dealership_privacy_posture: {
         Row: {
           active_opt_outs: number | null
@@ -5701,6 +5777,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      log_mfa_event: {
+        Args: { _event_kind: string; _factor_type?: string; _metadata?: Json }
+        Returns: undefined
+      }
       lookup_submission_by_contact: {
         Args: { _email: string; _phone: string }
         Returns: {
@@ -5774,6 +5854,7 @@ export type Database = {
         }
         Returns: Json
       }
+      require_mfa_for_user: { Args: never; Returns: Json }
       role_requires_state_license: { Args: { _role: string }; Returns: boolean }
       save_mobile_inspection:
         | {
