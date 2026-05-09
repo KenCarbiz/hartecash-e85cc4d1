@@ -18,12 +18,12 @@ This is the **corporate / marketing site** for Rooftop the parent brand. It cont
 
 ## The Rooftop family
 
-| Product | Solves | Tagline direction |
+| Product | Solves | Tagline |
 |---|---|---|
-| **AutoCurb** | AI-driven trade-in tool — web, off-street, direct-to-consumer acquisition | *"Every channel into one pipeline."* |
+| **AutoCurb** | AI-driven trade-in tool — web, off-street, direct-to-consumer acquisition | *"The AI acquisition OS."* |
 | **AutoLabels** | FTC-compliant window stickers + addenda. Auto-syncs to dealer site. Customer e-signs accessories. Audit trail. | *"Stickers your auditor will love."* |
 | **AutoFilm** | Custom video to the customer in <10 min. Service department NPI in the same system. | *"Show up first. In their pocket."* |
-| **AutoFrame** | "Auto Frame" — 95% of CarMax/360booth photo consistency without the $2M booth. | *"CarMax photography, every dealer."* |
+| **AutoFrame** | "Auto Frame" — 95% of CarMax/360booth photo consistency without the $2M booth. | *"CarMax photography. Every dealer."* |
 
 All four roll up to **Rooftop** — one parent brand, four standalone products. Each can be sold separately or bundled.
 
@@ -33,6 +33,8 @@ All four roll up to **Rooftop** — one parent brand, four standalone products. 
 .
 ├── README.md                  this file
 ├── BRAND_ASSETS.md            asset checklist — what to drop where
+├── index.html                 the rooftop.io landing page
+├── .gitignore
 └── public/
     └── brand/
         ├── logo/              Rooftop parent marks + favicon
@@ -47,6 +49,24 @@ All four roll up to **Rooftop** — one parent brand, four standalone products. 
         ├── social/            OG card, Twitter card
         └── empty-states/      Welcome email, 404, etc.
 ```
+
+## Preview locally
+
+The site is a single static HTML file with Tailwind via CDN — no build step needed.
+
+**Easiest:** double-click `index.html` to open in your browser.
+
+**With a local server** (so relative asset paths resolve cleanly when you start dropping in images):
+
+```bash
+# Python 3 (no install required on Mac/Linux)
+python3 -m http.server 8000
+
+# Or with Node
+npx serve .
+```
+
+Then open http://localhost:8000.
 
 See [BRAND_ASSETS.md](./BRAND_ASSETS.md) for the full asset checklist with prompts, target filenames, and dimensions.
 
@@ -73,8 +93,8 @@ See [BRAND_ASSETS.md](./BRAND_ASSETS.md) for the full asset checklist with promp
 | Spot illustrations (4 sub-brands) | **In generation** |
 | Stack-flow diagram (cartoon + cinematic) | **In generation** |
 | Hero / OG / favicon / texture | **In generation** |
-| Logo system | **In design** — interim mark in landing mockup |
-| Landing page | **Mockup lives in `hartecash-e85cc4d1`** as `rooftop-landing-mockup.html`; will be migrated and rewritten for the parent/sub-brand architecture |
+| Logo system | **In design** — interim inline-SVG mark in `index.html` |
+| Landing page | **Live in this repo** as `index.html` — open it in a browser to view |
 
 ## Contributing assets
 

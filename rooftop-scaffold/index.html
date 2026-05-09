@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rooftop — Built by car people. Not data people.</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            lime: {
+              DEFAULT: '#C7FF1A',
+              dark:    '#A8DC10',
+              soft:    '#E8FFA0',
+            },
+            ink:   '#0A0A0A',
+            slate: '#1A1A1A',
+            steel: '#2A2A2A',
+            paper: '#FAFAFA',
+          },
+          fontFamily: {
+            sans:    ['Inter', 'system-ui', 'sans-serif'],
+            display: ['Space Grotesk', 'Inter', 'sans-serif'],
+          },
+          boxShadow: {
+            lime: '0 0 0 1px rgba(199,255,26,.4), 0 8px 32px -4px rgba(199,255,26,.35)',
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .font-display { font-family: 'Space Grotesk', 'Inter', sans-serif; letter-spacing: -0.02em; }
+
+    .lime-glow {
+      background: radial-gradient(ellipse at center, rgba(199,255,26,0.20) 0%, transparent 60%);
+    }
+    .grid-bg {
+      background-image:
+        linear-gradient(rgba(199,255,26,0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(199,255,26,0.07) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+    .pulse-dot {
+      animation: pulse 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.6; transform: scale(0.85); }
+    }
+    .marquee {
+      animation: scroll 40s linear infinite;
+    }
+    @keyframes scroll {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .gradient-border {
+      background: linear-gradient(180deg, rgba(199,255,26,.4), rgba(199,255,26,0));
+      padding: 1px;
+      border-radius: 16px;
+    }
+    .gradient-border > div {
+      background: #0A0A0A;
+      border-radius: 15px;
+    }
+    .product-card:hover .product-arrow {
+      transform: translateX(4px);
+    }
+    .product-arrow {
+      transition: transform 0.2s ease;
+    }
+  </style>
+</head>
+<body class="bg-ink text-paper antialiased">
+
+  <!-- ============== TOP NAV ============== -->
+  <nav class="fixed top-0 inset-x-0 z-50 bg-ink/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-10">
+        <a href="#" class="flex items-center gap-2">
+          <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+            <path d="M4 22 L16 6 L28 22 L28 26 L4 26 Z" stroke="#C7FF1A" stroke-width="2.5" stroke-linejoin="round" fill="rgba(199,255,26,0.12)"/>
+            <circle cx="16" cy="18" r="2" fill="#C7FF1A"/>
+          </svg>
+          <span class="font-display font-bold text-lg tracking-tight">Rooftop</span>
+        </a>
+        <div class="hidden md:flex items-center gap-7 text-sm text-white/70">
+          <a href="#products" class="hover:text-white">Products</a>
+          <a href="#why" class="hover:text-white">Why Rooftop</a>
+          <a href="#founder" class="hover:text-white">Founder</a>
+          <a href="#contact" class="hover:text-white">Contact</a>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="#" class="hidden md:block text-sm text-white/70 hover:text-white">Sign in</a>
+        <a href="#" class="bg-lime text-ink font-semibold text-sm px-4 py-2 rounded-lg hover:bg-lime-dark transition">Book demo</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ============== HERO ============== -->
+  <section class="relative pt-32 pb-24 overflow-hidden">
+    <div class="absolute inset-0 grid-bg opacity-40"></div>
+    <div class="absolute inset-x-0 top-0 h-[600px] lime-glow"></div>
+
+    <div class="relative max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center">
+      <div>
+        <div class="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-3 py-1 text-xs text-white/80 mb-8">
+          <span class="relative flex h-2 w-2">
+            <span class="absolute inline-flex h-full w-full rounded-full bg-lime opacity-75 pulse-dot"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-lime"></span>
+          </span>
+          Four products. One platform. One rooftop.
+        </div>
+
+        <h1 class="font-display font-bold text-6xl lg:text-7xl leading-[0.95]">
+          Run your<br/>
+          <span class="text-lime">rooftop.</span>
+        </h1>
+
+        <p class="mt-6 text-xl text-white/70 max-w-xl leading-relaxed">
+          The dealership SaaS family <span class="text-white font-medium">built by car people, not data people.</span> Trade-in, FTC stickers, video, and CarMax-grade photography — under one roof.
+        </p>
+
+        <div class="mt-10 flex flex-wrap items-center gap-4">
+          <a href="#products" class="bg-lime text-ink font-semibold px-6 py-3.5 rounded-lg hover:bg-lime-dark transition shadow-lime flex items-center gap-2">
+            See the four products
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path d="M3 10h13m0 0l-5-5m5 5l-5 5"/></svg>
+          </a>
+          <a href="#founder" class="text-white/90 font-medium px-6 py-3.5 rounded-lg border border-white/15 hover:border-white/30 hover:bg-white/5 transition">
+            Read the founder note
+          </a>
+        </div>
+
+        <div class="mt-10 flex items-center gap-6 text-sm text-white/50">
+          <div class="flex items-center gap-2">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="#C7FF1A"><path d="M16.7 5.3a1 1 0 010 1.4l-8 8a1 1 0 01-1.4 0l-4-4a1 1 0 111.4-1.4L8 12.6l7.3-7.3a1 1 0 011.4 0z"/></svg>
+            25+ years operator-built
+          </div>
+          <div class="flex items-center gap-2">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="#C7FF1A"><path d="M16.7 5.3a1 1 0 010 1.4l-8 8a1 1 0 01-1.4 0l-4-4a1 1 0 111.4-1.4L8 12.6l7.3-7.3a1 1 0 011.4 0z"/></svg>
+            Dealer-branded throughout
+          </div>
+          <div class="flex items-center gap-2">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="#C7FF1A"><path d="M16.7 5.3a1 1 0 010 1.4l-8 8a1 1 0 01-1.4 0l-4-4a1 1 0 111.4-1.4L8 12.6l7.3-7.3a1 1 0 011.4 0z"/></svg>
+            Buy what you need
+          </div>
+        </div>
+      </div>
+
+      <!-- mascot placeholder — swap in public/brand/mascot/01-hero.png when generated -->
+      <div class="relative">
+        <div class="absolute -top-4 right-0 w-72 bg-slate border border-white/10 rounded-2xl p-5 shadow-2xl rotate-3 z-10">
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-2 h-2 rounded-full bg-lime pulse-dot"></div>
+            <span class="text-xs text-white/60 uppercase tracking-wider">Live · across the family</span>
+          </div>
+          <div class="text-sm text-white/80 mb-1">Acquisitions this month</div>
+          <div class="text-3xl font-display font-bold text-lime">+47</div>
+          <div class="text-xs text-white/50 mt-1">↑ 23% vs last month</div>
+        </div>
+
+        <div class="relative aspect-square max-w-md mx-auto">
+          <div class="absolute inset-0 bg-lime rounded-3xl"></div>
+          <svg viewBox="0 0 400 400" class="relative w-full h-full">
+            <ellipse cx="200" cy="370" rx="80" ry="8" fill="rgba(0,0,0,0.15)"/>
+            <path d="M130 220 Q130 200 150 195 L250 195 Q270 200 270 220 L270 360 L130 360 Z" fill="#0A0A0A"/>
+            <path d="M180 195 L200 250 L220 195 Z" fill="#FAFAFA"/>
+            <path d="M195 200 L205 200 L210 220 L200 290 L190 220 Z" fill="#0A0A0A" stroke="#FAFAFA" stroke-width="1"/>
+            <rect x="185" y="170" width="30" height="30" fill="#F5DEB3"/>
+            <ellipse cx="200" cy="135" rx="55" ry="62" fill="#F5DEB3"/>
+            <path d="M150 110 Q150 75 200 70 Q250 75 250 110 Q250 95 235 92 Q220 100 200 95 Q180 100 165 92 Q150 95 150 110 Z" fill="#0A0A0A"/>
+            <path d="M165 160 Q200 175 235 160 Q230 178 200 182 Q170 178 165 160 Z" fill="#0A0A0A" opacity="0.85"/>
+            <circle cx="178" cy="135" r="14" fill="none" stroke="#0A0A0A" stroke-width="3"/>
+            <circle cx="222" cy="135" r="14" fill="none" stroke="#0A0A0A" stroke-width="3"/>
+            <line x1="192" y1="135" x2="208" y2="135" stroke="#0A0A0A" stroke-width="3"/>
+            <circle cx="178" cy="135" r="3" fill="#0A0A0A"/>
+            <circle cx="222" cy="135" r="3" fill="#0A0A0A"/>
+            <path d="M180 158 Q200 170 220 158" stroke="#0A0A0A" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <rect x="155" y="225" width="14" height="10" fill="#C7FF1A"/>
+            <ellipse cx="155" cy="280" rx="22" ry="40" fill="#0A0A0A"/>
+            <ellipse cx="245" cy="280" rx="22" ry="40" fill="#0A0A0A"/>
+            <circle cx="270" cy="250" r="14" fill="#F5DEB3"/>
+            <rect x="265" y="225" width="10" height="22" rx="4" fill="#F5DEB3"/>
+          </svg>
+        </div>
+
+        <div class="absolute -bottom-4 -left-4 bg-ink border border-lime/40 rounded-2xl p-4 shadow-lime">
+          <div class="text-xs text-white/60 uppercase tracking-wider mb-1">Trusted by</div>
+          <div class="font-display text-2xl font-bold">200+ rooftops</div>
+          <div class="text-xs text-lime">Across all four products</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== LOGO STRIP ============== -->
+  <section class="border-y border-white/5 bg-slate/50 py-10 overflow-hidden">
+    <p class="text-center text-xs uppercase tracking-[0.2em] text-white/40 mb-8">Powering rooftops nationwide</p>
+    <div class="flex marquee gap-16 whitespace-nowrap">
+      <div class="flex gap-16 shrink-0 items-center text-white/30 font-display font-semibold text-2xl">
+        <span>KOONS</span><span>•</span><span>HARTE NISSAN</span><span>•</span><span>INFINITI OF MANHATTAN</span><span>•</span><span>HENDRICK</span><span>•</span><span>GARBER AUTOMOTIVE</span><span>•</span><span>LITHIA</span><span>•</span><span>SUBURBAN COLLECTION</span><span>•</span><span>FERMAN MOTORS</span>
+      </div>
+      <div class="flex gap-16 shrink-0 items-center text-white/30 font-display font-semibold text-2xl">
+        <span>KOONS</span><span>•</span><span>HARTE NISSAN</span><span>•</span><span>INFINITI OF MANHATTAN</span><span>•</span><span>HENDRICK</span><span>•</span><span>GARBER AUTOMOTIVE</span><span>•</span><span>LITHIA</span><span>•</span><span>SUBURBAN COLLECTION</span><span>•</span><span>FERMAN MOTORS</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== STATS BAR ============== -->
+  <section class="py-20">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="text-center mb-12">
+        <p class="text-xs uppercase tracking-[0.2em] text-lime mb-3">Across the Rooftop family</p>
+        <h2 class="font-display text-4xl lg:text-5xl font-bold">What our dealers see in 30 days.</h2>
+      </div>
+      <div class="grid md:grid-cols-4 gap-px bg-white/10 rounded-2xl overflow-hidden">
+        <div class="bg-ink p-8 text-center">
+          <div class="font-display text-5xl lg:text-6xl font-bold text-lime">47+</div>
+          <div class="text-sm text-white/60 mt-2">acquisitions / mo</div>
+        </div>
+        <div class="bg-ink p-8 text-center">
+          <div class="font-display text-5xl lg:text-6xl font-bold text-lime">$214K</div>
+          <div class="text-sm text-white/60 mt-2">gross / month one</div>
+        </div>
+        <div class="bg-ink p-8 text-center">
+          <div class="font-display text-5xl lg:text-6xl font-bold text-lime">100%</div>
+          <div class="text-sm text-white/60 mt-2">FTC-compliant addenda</div>
+        </div>
+        <div class="bg-ink p-8 text-center relative">
+          <div class="absolute top-3 right-3 text-[10px] uppercase tracking-wider bg-lime/20 text-lime px-2 py-0.5 rounded-full font-semibold">Ours</div>
+          <div class="font-display text-5xl lg:text-6xl font-bold text-lime flex items-center justify-center gap-2">
+            <svg width="48" height="48" viewBox="0 0 20 20" fill="currentColor"><path d="M16.7 5.3a1 1 0 010 1.4l-8 8a1 1 0 01-1.4 0l-4-4a1 1 0 111.4-1.4L8 12.6l7.3-7.3a1 1 0 011.4 0z"/></svg>
+            1
+          </div>
+          <div class="text-sm text-white/60 mt-2">platform — not five</div>
+        </div>
+      </div>
+      <p class="text-center text-xs text-white/40 mt-6">Anonymized 30-day results across active Rooftop dealers. Your mileage may vary.</p>
+    </div>
+  </section>
+
+  <!-- ============== FOUR PRODUCTS ============== -->
+  <section id="products" class="py-24 bg-slate/40 border-y border-white/5">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="text-center mb-16 max-w-2xl mx-auto">
+        <p class="text-xs uppercase tracking-[0.2em] text-lime mb-3">The Rooftop family</p>
+        <h2 class="font-display text-4xl lg:text-5xl font-bold">Four products. One rooftop.</h2>
+        <p class="text-white/60 mt-4">Each one solves a real, expensive, ignored problem at every dealership in America. Buy what you need. Bundle for the discount.</p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6">
+
+        <!-- AutoCurb -->
+        <a href="#" class="product-card bg-ink border border-white/10 rounded-2xl p-8 hover:border-lime/40 transition group block">
+          <div class="flex items-start justify-between mb-6">
+            <div class="w-14 h-14 rounded-xl bg-lime/10 border border-lime/30 flex items-center justify-center">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#C7FF1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 6 L21 6 L17 18 L7 18 Z"/>
+                <path d="M9 12 L15 12"/>
+              </svg>
+            </div>
+            <div class="text-xs uppercase tracking-wider text-white/40">Acquisition</div>
+          </div>
+          <div class="font-display text-3xl font-bold mb-1">AutoCurb</div>
+          <p class="text-lime text-sm font-medium mb-4">The AI acquisition OS.</p>
+          <p class="text-white/60 text-sm leading-relaxed mb-6">Web visitors, service-drive equity, walk-ins, and CRM outreach — every acquisition channel flows into one branded pipeline. 100% dealer-branded. Ends at a check request, not a dropped lead.</p>
+          <div class="space-y-2 text-sm">
+            <div class="flex items-center gap-2 text-white/70"><span class="text-lime">→</span> Smart instant-offer widget</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-lime">→</span> Service drive equity mining</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-lime">→</span> Walk-in VIN scan</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-lime">→</span> AI BDC outreach to your CRM</div>
+          </div>
+          <div class="mt-6 pt-6 border-t border-white/5 flex items-center justify-between">
+            <span class="text-xs text-white/40">Replaces: KBB ICO · AccuTrade · CarGurus trade tool</span>
+            <span class="text-lime text-sm font-semibold flex items-center gap-1">Visit autocurb.io <span class="product-arrow inline-block">→</span></span>
+          </div>
+        </a>
+
+        <!-- AutoLabels -->
+        <a href="#" class="product-card bg-ink border border-white/10 rounded-2xl p-8 hover:border-lime/40 transition group block">
+          <div class="flex items-start justify-between mb-6">
+            <div class="w-14 h-14 rounded-xl bg-lime/10 border border-lime/30 flex items-center justify-center">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#C7FF1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="3" width="16" height="18" rx="2"/>
+                <path d="M8 8 L16 8 M8 12 L14 12 M8 16 L13 16"/>
+                <circle cx="17" cy="16" r="1.5" fill="#C7FF1A"/>
+              </svg>
+            </div>
+            <div class="text-xs uppercase tracking-wider text-white/40">Compliance</div>
+          </div>
+          <div class="font-display text-3xl font-bold mb-1">AutoLabels</div>
+          <p class="text-lime text-sm font-medium mb-4">Stickers your auditor will love.</p>
+          <p class="text-white/60 text-sm leading-relaxed mb-6">FTC-compliant window stickers + addenda for used and new. Auto-syncs accessories to your website. Customer e-signs every line item — mandatory or optional. Full audit trail when the regulator calls.</p>
+          <div class="space-y-2 text-sm">
+            <div class="flex items-center gap-2 text-white/70"><span class="text-lime">→</span> Window stickers (used + new)</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-lime">→</span> Addendum + accessory sign-off</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-lime">→</span> Auto-publish to dealer website</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-lime">→</span> Permanent audit trail</div>
+          </div>
+          <div class="mt-6 pt-6 border-t border-white/5 flex items-center justify-between">
+            <span class="text-xs text-white/40">Replaces: Manual books · FTC exposure</span>
+            <span class="text-lime text-sm font-semibold flex items-center gap-1">Visit autolabels.io <span class="product-arrow inline-block">→</span></span>
+          </div>
+        </a>
+
+        <!-- AutoFilm -->
+        <a href="#" class="product-card bg-ink border border-white/10 rounded-2xl p-8 hover:border-lime/40 transition group block">
+          <div class="flex items-start justify-between mb-6">
+            <div class="w-14 h-14 rounded-xl bg-lime/10 border border-lime/30 flex items-center justify-center">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#C7FF1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="6" width="14" height="12" rx="1"/>
+                <path d="M17 10 L21 7 L21 17 L17 14 Z" fill="#C7FF1A" stroke="#C7FF1A"/>
+              </svg>
+            </div>
+            <div class="text-xs uppercase tracking-wider text-white/40">Outreach</div>
+          </div>
+          <div class="font-display text-3xl font-bold mb-1">AutoFilm</div>
+          <p class="text-lime text-sm font-medium mb-4">Show up first. In their pocket.</p>
+          <p class="text-white/60 text-sm leading-relaxed mb-6">Custom video to the customer in under 10 minutes of contact — every time. Service department NPI lives in the same system. Captures trade info while you're filming. One platform, one workflow.</p>
+          <div class="space-y-2 text-sm">
+            <div class="flex items-center gap-2 text-white/70"><span class="text-lime">→</span> Custom video in &lt;10 min</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-lime">→</span> Service department NPI</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-lime">→</span> Trade info capture in-flow</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-lime">→</span> View & engagement tracking</div>
+          </div>
+          <div class="mt-6 pt-6 border-t border-white/5 flex items-center justify-between">
+            <span class="text-xs text-white/40">Replaces: CoVideo · Flick Fusion · manual BDC video</span>
+            <span class="text-lime text-sm font-semibold flex items-center gap-1">Visit autofilm.io <span class="product-arrow inline-block">→</span></span>
+          </div>
+        </a>
+
+        <!-- AutoFrame -->
+        <a href="#" class="product-card bg-ink border border-white/10 rounded-2xl p-8 hover:border-lime/40 transition group block">
+          <div class="flex items-start justify-between mb-6">
+            <div class="w-14 h-14 rounded-xl bg-lime/10 border border-lime/30 flex items-center justify-center">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#C7FF1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 7 L8 7 L9 5 L15 5 L16 7 L19 7 A2 2 0 0 1 21 9 L21 18 A2 2 0 0 1 19 20 L5 20 A2 2 0 0 1 3 18 L3 9 A2 2 0 0 1 5 7 Z"/>
+                <circle cx="12" cy="13" r="4" fill="#C7FF1A" stroke="#C7FF1A"/>
+              </svg>
+            </div>
+            <div class="text-xs uppercase tracking-wider text-white/40">Photography</div>
+          </div>
+          <div class="font-display text-3xl font-bold mb-1">AutoFrame</div>
+          <p class="text-lime text-sm font-medium mb-4">CarMax photography. Every dealer.</p>
+          <p class="text-white/60 text-sm leading-relaxed mb-6">CarMax spent $millions on 360booth and over 2,000 photo booths to lock down photo consistency. AutoFrame gives every dealer 95% of that consistency — software-only, no booth required.</p>
+          <div class="space-y-2 text-sm">
+            <div class="flex items-center gap-2 text-white/70"><span class="text-lime">→</span> Auto-framing every angle</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-lime">→</span> Consistency across the lot</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-lime">→</span> No booth, no $2M capex</div>
+            <div class="flex items-center gap-2 text-white/70"><span class="text-lime">→</span> Direct publish to inventory</div>
+          </div>
+          <div class="mt-6 pt-6 border-t border-white/5 flex items-center justify-between">
+            <span class="text-xs text-white/40">Replaces: 360booth's dealer-group-only moat</span>
+            <span class="text-lime text-sm font-semibold flex items-center gap-1">Visit autoframe.io <span class="product-arrow inline-block">→</span></span>
+          </div>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== BEFORE / AFTER ============== -->
+  <section class="py-24">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <p class="text-xs uppercase tracking-[0.2em] text-lime mb-3">The honest picture</p>
+        <h2 class="font-display text-4xl lg:text-5xl font-bold">Four pains. One rooftop.</h2>
+      </div>
+
+      <div class="grid lg:grid-cols-2 gap-8">
+        <!-- BEFORE -->
+        <div class="border border-red-500/30 bg-red-500/5 rounded-2xl p-8">
+          <div class="flex items-center gap-2 mb-6">
+            <div class="text-xs uppercase tracking-wider text-red-400 bg-red-500/10 px-2 py-1 rounded-full font-semibold">Before</div>
+            <div class="text-sm text-white/70">The dealer's daily pain</div>
+          </div>
+          <div class="space-y-3">
+            <div class="p-3 bg-ink/60 rounded-lg border border-white/5">
+              <div class="text-sm font-semibold text-white mb-1">Form-only trade tool</div>
+              <div class="text-xs text-white/50">Customer fills it out. Lead disappears into the CRM. Half never get called back.</div>
+            </div>
+            <div class="p-3 bg-ink/60 rounded-lg border border-white/5">
+              <div class="text-sm font-semibold text-white mb-1">FTC compliance exposure</div>
+              <div class="text-xs text-white/50">Hand-typed addendum books. No audit trail. One inspection away from a six-figure fine.</div>
+            </div>
+            <div class="p-3 bg-ink/60 rounded-lg border border-white/5">
+              <div class="text-sm font-semibold text-white mb-1">No video, slow response</div>
+              <div class="text-xs text-white/50">Lead waits 4 hours for a templated email. Already drove past two competitors.</div>
+            </div>
+            <div class="p-3 bg-ink/60 rounded-lg border border-white/5">
+              <div class="text-sm font-semibold text-white mb-1">Inconsistent photos</div>
+              <div class="text-xs text-white/50">Sales kid with iPhone, half-blurred shots, glare on the windshield. CarMax wins online.</div>
+            </div>
+          </div>
+          <div class="mt-6 pt-6 border-t border-white/10">
+            <span class="text-xs text-white/40">Plus: five separate vendor invoices, three logins, leads dropped between tools.</span>
+          </div>
+        </div>
+
+        <!-- AFTER -->
+        <div class="gradient-border">
+          <div class="p-8">
+            <div class="flex items-center gap-2 mb-6">
+              <div class="text-xs uppercase tracking-wider text-ink bg-lime px-2 py-1 rounded-full font-semibold">After</div>
+              <div class="text-sm text-white/70">Under one rooftop</div>
+            </div>
+            <div class="space-y-3">
+              <div class="p-3 bg-lime/5 rounded-lg border border-lime/30">
+                <div class="text-sm font-semibold text-lime mb-1">→ AutoCurb</div>
+                <div class="text-xs text-white/70">AI-driven trade tool. Multi-channel pipeline. Branded yours. Ends at a check.</div>
+              </div>
+              <div class="p-3 bg-lime/5 rounded-lg border border-lime/30">
+                <div class="text-sm font-semibold text-lime mb-1">→ AutoLabels</div>
+                <div class="text-xs text-white/70">FTC-compliant stickers, customer e-signed accessories, audit trail forever.</div>
+              </div>
+              <div class="p-3 bg-lime/5 rounded-lg border border-lime/30">
+                <div class="text-sm font-semibold text-lime mb-1">→ AutoFilm</div>
+                <div class="text-xs text-white/70">Custom video in &lt;10 min. Service NPI in the same system.</div>
+              </div>
+              <div class="p-3 bg-lime/5 rounded-lg border border-lime/30">
+                <div class="text-sm font-semibold text-lime mb-1">→ AutoFrame</div>
+                <div class="text-xs text-white/70">CarMax-grade photo consistency. Software-only. No $2M booth.</div>
+              </div>
+            </div>
+            <div class="mt-6 pt-6 border-t border-white/10">
+              <span class="text-xs text-lime/80">One login. One brand. One vendor. Every customer sees you, not us.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== FOUNDER ============== -->
+  <section id="founder" class="py-24 bg-slate/40 border-y border-white/5">
+    <div class="max-w-4xl mx-auto px-6">
+      <div class="grid md:grid-cols-[200px_1fr] gap-10 items-start">
+        <!-- founder placeholder — swap with public/brand/mascot/05-avatar.png or real photo -->
+        <div class="relative">
+          <div class="w-40 h-40 rounded-2xl bg-lime/20 border border-lime/40 mx-auto md:mx-0 flex items-center justify-center font-display text-5xl font-bold text-lime">
+            NZ
+          </div>
+          <div class="text-center md:text-left mt-4">
+            <div class="text-sm font-semibold">Nema Z.</div>
+            <div class="text-xs text-white/50">Founder, Rooftop</div>
+          </div>
+        </div>
+        <div>
+          <p class="text-xs uppercase tracking-[0.2em] text-lime mb-3">The founder note</p>
+          <h2 class="font-display text-3xl lg:text-4xl font-bold mb-6 leading-tight">Built by car people.<br/><span class="text-lime">Not data people.</span></h2>
+          <div class="space-y-4 text-white/80 leading-relaxed">
+            <p>I've spent <span class="text-white font-semibold">25+ years on every side of the dealership desk</span> — salesperson, sales manager, GSM, GM, partner, owner, F&amp;I director. I've been the kid getting handed bad photos at 7am. I've been the desk that couldn't trust the trade tool. I've watched mom-and-pops die because they're car dealers, not business owners.</p>
+            <p>The same vendors keep cycling through the showroom: <span class="text-white">data brokers selling us our own customers back</span>, widgets that stop at the form, photo systems only the giants can afford. None of them have been us.</p>
+            <p class="text-lime font-medium">Rooftop is what happens when the operator gets to build the tools.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== COMPARISON TABLE ============== -->
+  <section id="why" class="py-24">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-12">
+        <p class="text-xs uppercase tracking-[0.2em] text-lime mb-3">Why us</p>
+        <h2 class="font-display text-4xl lg:text-5xl font-bold">They sell you tools.<br/><span class="text-lime">We run your rooftop.</span></h2>
+      </div>
+
+      <div class="overflow-x-auto rounded-2xl border border-white/10">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-ink/60 border-b border-white/10">
+              <th class="text-left p-5 font-medium text-white/60"></th>
+              <th class="p-5 bg-lime/10 border-x border-lime/30">
+                <div class="font-display font-bold text-lime text-base">Rooftop</div>
+              </th>
+              <th class="p-5 font-medium text-white/60">KBB ICO</th>
+              <th class="p-5 font-medium text-white/60">AccuTrade</th>
+              <th class="p-5 font-medium text-white/60">CarGurus</th>
+              <th class="p-5 font-medium text-white/60">vAuto</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-white/5">
+            <tr class="bg-lime/5">
+              <td class="p-5 text-white font-semibold">Built by car people?</td>
+              <td class="text-center p-5 bg-lime/10 border-x border-lime/30"><span class="text-lime text-lg">✓</span></td>
+              <td class="text-center p-5 text-red-400 text-xs">data co</td>
+              <td class="text-center p-5 text-red-400 text-xs">cars.com</td>
+              <td class="text-center p-5 text-red-400 text-xs">marketplace</td>
+              <td class="text-center p-5 text-red-400 text-xs">Cox data</td>
+            </tr>
+            <tr>
+              <td class="p-5 text-white/80">Multi-channel acquisition</td>
+              <td class="text-center p-5 bg-lime/5 border-x border-lime/20"><span class="text-lime text-lg">✓</span></td>
+              <td class="text-center p-5 text-white/30">—</td>
+              <td class="text-center p-5 text-white/40 text-xs">web only</td>
+              <td class="text-center p-5 text-white/40 text-xs">web only</td>
+              <td class="text-center p-5 text-white/30">—</td>
+            </tr>
+            <tr>
+              <td class="p-5 text-white/80">FTC-compliant addenda</td>
+              <td class="text-center p-5 bg-lime/5 border-x border-lime/20"><span class="text-lime text-lg">✓</span></td>
+              <td class="text-center p-5 text-white/30">—</td>
+              <td class="text-center p-5 text-white/30">—</td>
+              <td class="text-center p-5 text-white/30">—</td>
+              <td class="text-center p-5 text-white/30">—</td>
+            </tr>
+            <tr>
+              <td class="p-5 text-white/80">Custom video &lt;10 min</td>
+              <td class="text-center p-5 bg-lime/5 border-x border-lime/20"><span class="text-lime text-lg">✓</span></td>
+              <td class="text-center p-5 text-white/30">—</td>
+              <td class="text-center p-5 text-white/30">—</td>
+              <td class="text-center p-5 text-white/30">—</td>
+              <td class="text-center p-5 text-white/30">—</td>
+            </tr>
+            <tr>
+              <td class="p-5 text-white/80">CarMax-grade photo consistency</td>
+              <td class="text-center p-5 bg-lime/5 border-x border-lime/20"><span class="text-lime text-lg">✓</span></td>
+              <td class="text-center p-5 text-white/30">—</td>
+              <td class="text-center p-5 text-white/30">—</td>
+              <td class="text-center p-5 text-white/30">—</td>
+              <td class="text-center p-5 text-white/30">—</td>
+            </tr>
+            <tr>
+              <td class="p-5 text-white/80">Dealer owns the customer</td>
+              <td class="text-center p-5 bg-lime/5 border-x border-lime/20"><span class="text-lime text-lg">✓</span></td>
+              <td class="text-center p-5 text-red-400 text-xs">KBB owns lead</td>
+              <td class="text-center p-5"><span class="text-lime text-lg">✓</span></td>
+              <td class="text-center p-5 text-white/40 text-xs">shared</td>
+              <td class="text-center p-5"><span class="text-lime text-lg">✓</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== MANIFESTO ============== -->
+  <section class="py-24 bg-slate/40 border-y border-white/5">
+    <div class="max-w-4xl mx-auto px-6">
+      <div class="bg-gradient-to-br from-lime/10 to-transparent border border-lime/20 rounded-3xl p-12">
+        <p class="text-xs uppercase tracking-[0.2em] text-lime mb-4">Why we built this</p>
+        <div class="space-y-5 text-white/85 text-lg leading-relaxed">
+          <p>Cox bought a data company. Cars.com bought a widget. CarGurus is a marketplace. <span class="text-white font-semibold">None of them have been you.</span></p>
+          <p>None of them have been the salesperson handed bad photos at 7am. The desk who couldn't trust the trade tool. The GM watching a mom-and-pop die because they're a car dealer, not a business owner.</p>
+          <p class="font-display text-2xl text-lime font-bold">We have. That's the difference.</p>
+          <p>Every Rooftop product is the answer to a problem we've personally lived through. Trade tools that were forms. Stickers that were hand-typed. Videos that didn't exist. Photos that lost the deal online.</p>
+          <p class="text-white">Rooftop is the operator's revenge.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== FINAL CTA ============== -->
+  <section id="contact" class="py-32 relative overflow-hidden">
+    <div class="absolute inset-0 lime-glow"></div>
+    <div class="relative max-w-4xl mx-auto px-6 text-center">
+      <h2 class="font-display text-5xl lg:text-7xl font-bold leading-[0.95]">
+        Stop renting from<br/>
+        <span class="text-lime">data brokers.</span>
+      </h2>
+      <p class="mt-6 text-xl text-white/70 max-w-2xl mx-auto">
+        Run your rooftop on tools built by people who've actually run a rooftop.
+      </p>
+      <div class="mt-10 flex flex-wrap items-center justify-center gap-4">
+        <a href="#" class="bg-lime text-ink font-semibold px-8 py-4 rounded-lg hover:bg-lime-dark transition shadow-lime text-lg flex items-center gap-2">
+          Book a 15-min walk-through
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M3 10h13m0 0l-5-5m5 5l-5 5"/></svg>
+        </a>
+        <a href="#products" class="text-white/90 font-medium px-8 py-4 rounded-lg border border-white/15 hover:border-white/30 hover:bg-white/5 transition text-lg">
+          Browse the four products
+        </a>
+      </div>
+      <p class="mt-6 text-sm text-white/40">No per-lead fees. No three-year contracts. Buy what you need.</p>
+    </div>
+  </section>
+
+  <!-- ============== FOOTER ============== -->
+  <footer class="border-t border-white/5 py-12">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="grid md:grid-cols-5 gap-8 mb-12">
+        <div class="md:col-span-2">
+          <div class="flex items-center gap-2 mb-4">
+            <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+              <path d="M4 22 L16 6 L28 22 L28 26 L4 26 Z" stroke="#C7FF1A" stroke-width="2.5" stroke-linejoin="round" fill="rgba(199,255,26,0.12)"/>
+              <circle cx="16" cy="18" r="2" fill="#C7FF1A"/>
+            </svg>
+            <span class="font-display font-bold text-lg">Rooftop</span>
+          </div>
+          <p class="text-sm text-white/50 max-w-xs">The dealership SaaS family built by car people, not data people.</p>
+          <p class="text-xs text-white/30 mt-4">rooftop.io</p>
+        </div>
+        <div>
+          <div class="text-xs uppercase tracking-wider text-white/40 mb-4">Products</div>
+          <ul class="space-y-2 text-sm text-white/70">
+            <li><a href="#" class="hover:text-lime">AutoCurb</a></li>
+            <li><a href="#" class="hover:text-lime">AutoLabels</a></li>
+            <li><a href="#" class="hover:text-lime">AutoFilm</a></li>
+            <li><a href="#" class="hover:text-lime">AutoFrame</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="text-xs uppercase tracking-wider text-white/40 mb-4">Company</div>
+          <ul class="space-y-2 text-sm text-white/70">
+            <li><a href="#founder" class="hover:text-lime">Founder</a></li>
+            <li><a href="#why" class="hover:text-lime">Why Rooftop</a></li>
+            <li><a href="#" class="hover:text-lime">Press</a></li>
+            <li><a href="#" class="hover:text-lime">Careers</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="text-xs uppercase tracking-wider text-white/40 mb-4">Connect</div>
+          <ul class="space-y-2 text-sm text-white/70">
+            <li><a href="#" class="hover:text-lime">Book a demo</a></li>
+            <li><a href="#" class="hover:text-lime">Contact</a></li>
+            <li><a href="#" class="hover:text-lime">LinkedIn</a></li>
+            <li><a href="#" class="hover:text-lime">X / Twitter</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="pt-8 border-t border-white/5 flex flex-wrap items-center justify-between gap-4">
+        <div class="text-sm text-white/40">© 2026 Rooftop. Built by car people.</div>
+        <div class="flex items-center gap-6 text-sm text-white/40">
+          <a href="#" class="hover:text-white">Privacy</a>
+          <a href="#" class="hover:text-white">Terms</a>
+          <a href="#" class="hover:text-white">TCPA</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
