@@ -549,6 +549,48 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_data_purge_queue: {
+        Row: {
+          attempt_count: number
+          bland_purged: boolean
+          contact_email: string | null
+          contact_phone: string | null
+          enqueued_at: string
+          finished_at: string | null
+          id: string
+          last_error: string | null
+          status: string
+          storage_purged: boolean
+          submission_id: string | null
+        }
+        Insert: {
+          attempt_count?: number
+          bland_purged?: boolean
+          contact_email?: string | null
+          contact_phone?: string | null
+          enqueued_at?: string
+          finished_at?: string | null
+          id?: string
+          last_error?: string | null
+          status?: string
+          storage_purged?: boolean
+          submission_id?: string | null
+        }
+        Update: {
+          attempt_count?: number
+          bland_purged?: boolean
+          contact_email?: string | null
+          contact_phone?: string | null
+          enqueued_at?: string
+          finished_at?: string | null
+          id?: string
+          last_error?: string | null
+          status?: string
+          storage_purged?: boolean
+          submission_id?: string | null
+        }
+        Relationships: []
+      }
       customer_data_request: {
         Row: {
           contact_email: string | null
@@ -1252,6 +1294,63 @@ export type Database = {
           website_url?: string | null
           youtube_url?: string | null
           zip_codes?: string[]
+        }
+        Relationships: []
+      }
+      dealership_privacy_posture_snapshot: {
+        Row: {
+          active_opt_outs: number | null
+          bulk_access_anomalies_14d: number | null
+          customer_memory_retention_days: number | null
+          dealership_id: string
+          distinct_staff_pii_viewers_30d: number | null
+          fulfilled_requests_90d: number | null
+          last_memory_redact_at: string | null
+          last_voice_redact_at: string | null
+          notification_log_retention_days: number | null
+          oldest_unredacted_call_at: string | null
+          pending_data_requests: number | null
+          recording_url_retention_days: number | null
+          retention_config_updated_at: string | null
+          snapshot_at: string
+          staff_pii_views_30d: number | null
+          voice_transcript_retention_days: number | null
+        }
+        Insert: {
+          active_opt_outs?: number | null
+          bulk_access_anomalies_14d?: number | null
+          customer_memory_retention_days?: number | null
+          dealership_id: string
+          distinct_staff_pii_viewers_30d?: number | null
+          fulfilled_requests_90d?: number | null
+          last_memory_redact_at?: string | null
+          last_voice_redact_at?: string | null
+          notification_log_retention_days?: number | null
+          oldest_unredacted_call_at?: string | null
+          pending_data_requests?: number | null
+          recording_url_retention_days?: number | null
+          retention_config_updated_at?: string | null
+          snapshot_at?: string
+          staff_pii_views_30d?: number | null
+          voice_transcript_retention_days?: number | null
+        }
+        Update: {
+          active_opt_outs?: number | null
+          bulk_access_anomalies_14d?: number | null
+          customer_memory_retention_days?: number | null
+          dealership_id?: string
+          distinct_staff_pii_viewers_30d?: number | null
+          fulfilled_requests_90d?: number | null
+          last_memory_redact_at?: string | null
+          last_voice_redact_at?: string | null
+          notification_log_retention_days?: number | null
+          oldest_unredacted_call_at?: string | null
+          pending_data_requests?: number | null
+          recording_url_retention_days?: number | null
+          retention_config_updated_at?: string | null
+          snapshot_at?: string
+          staff_pii_views_30d?: number | null
+          voice_transcript_retention_days?: number | null
         }
         Relationships: []
       }
@@ -3572,6 +3671,72 @@ export type Database = {
           },
         ]
       }
+      security_incident: {
+        Row: {
+          affected_data_categories: string[] | null
+          affected_record_count: number | null
+          closed_at: string | null
+          contained_at: string | null
+          created_at: string
+          created_by: string | null
+          customers_notified_at: string | null
+          dealership_id: string | null
+          detected_via: string
+          discovered_at: string
+          id: string
+          notes: string | null
+          notification_due_at: string
+          related_anomaly_window: string | null
+          severity: string
+          staff_user_ids: string[] | null
+          status: string
+          summary: string
+          updated_at: string
+        }
+        Insert: {
+          affected_data_categories?: string[] | null
+          affected_record_count?: number | null
+          closed_at?: string | null
+          contained_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          customers_notified_at?: string | null
+          dealership_id?: string | null
+          detected_via: string
+          discovered_at?: string
+          id?: string
+          notes?: string | null
+          notification_due_at?: string
+          related_anomaly_window?: string | null
+          severity?: string
+          staff_user_ids?: string[] | null
+          status?: string
+          summary: string
+          updated_at?: string
+        }
+        Update: {
+          affected_data_categories?: string[] | null
+          affected_record_count?: number | null
+          closed_at?: string | null
+          contained_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          customers_notified_at?: string | null
+          dealership_id?: string | null
+          detected_via?: string
+          discovered_at?: string
+          id?: string
+          notes?: string | null
+          notification_due_at?: string
+          related_anomaly_window?: string | null
+          severity?: string
+          staff_user_ids?: string[] | null
+          status?: string
+          summary?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       site_config: {
         Row: {
           about_hero_headline: string
@@ -5552,41 +5717,44 @@ export type Database = {
           pending_data_requests: number | null
           recording_url_retention_days: number | null
           retention_config_updated_at: string | null
+          snapshot_at: string | null
           staff_pii_views_30d: number | null
           voice_transcript_retention_days: number | null
         }
         Insert: {
-          active_opt_outs?: never
-          bulk_access_anomalies_14d?: never
+          active_opt_outs?: number | null
+          bulk_access_anomalies_14d?: number | null
           customer_memory_retention_days?: number | null
           dealership_id?: string | null
-          distinct_staff_pii_viewers_30d?: never
-          fulfilled_requests_90d?: never
-          last_memory_redact_at?: never
-          last_voice_redact_at?: never
+          distinct_staff_pii_viewers_30d?: number | null
+          fulfilled_requests_90d?: number | null
+          last_memory_redact_at?: string | null
+          last_voice_redact_at?: string | null
           notification_log_retention_days?: number | null
-          oldest_unredacted_call_at?: never
-          pending_data_requests?: never
+          oldest_unredacted_call_at?: string | null
+          pending_data_requests?: number | null
           recording_url_retention_days?: number | null
           retention_config_updated_at?: string | null
-          staff_pii_views_30d?: never
+          snapshot_at?: string | null
+          staff_pii_views_30d?: number | null
           voice_transcript_retention_days?: number | null
         }
         Update: {
-          active_opt_outs?: never
-          bulk_access_anomalies_14d?: never
+          active_opt_outs?: number | null
+          bulk_access_anomalies_14d?: number | null
           customer_memory_retention_days?: number | null
           dealership_id?: string | null
-          distinct_staff_pii_viewers_30d?: never
-          fulfilled_requests_90d?: never
-          last_memory_redact_at?: never
-          last_voice_redact_at?: never
+          distinct_staff_pii_viewers_30d?: number | null
+          fulfilled_requests_90d?: number | null
+          last_memory_redact_at?: string | null
+          last_voice_redact_at?: string | null
           notification_log_retention_days?: number | null
-          oldest_unredacted_call_at?: never
-          pending_data_requests?: never
+          oldest_unredacted_call_at?: string | null
+          pending_data_requests?: number | null
           recording_url_retention_days?: number | null
           retention_config_updated_at?: string | null
-          staff_pii_views_30d?: never
+          snapshot_at?: string | null
+          staff_pii_views_30d?: number | null
           voice_transcript_retention_days?: number | null
         }
         Relationships: []
@@ -5767,6 +5935,7 @@ export type Database = {
           }
       consume_mfa_backup_code: { Args: { _code: string }; Returns: Json }
       cron_health_check: { Args: never; Returns: undefined }
+      current_user_dealership_ids: { Args: never; Returns: string[] }
       customer_self_checkin: {
         Args: { _status: string; _token: string }
         Returns: Json
@@ -6025,6 +6194,16 @@ export type Database = {
         }
         Returns: number
       }
+      pickup_customer_data_purge_jobs: {
+        Args: { _limit?: number }
+        Returns: {
+          attempt_count: number
+          contact_email: string
+          contact_phone: string
+          id: string
+          submission_id: string
+        }[]
+      }
       pickup_stuck_voice_pipeline_jobs: {
         Args: { _limit?: number }
         Returns: {
@@ -6067,6 +6246,18 @@ export type Database = {
       }
       redact_old_customer_memory: { Args: never; Returns: Json }
       redact_old_voice_pii: { Args: never; Returns: Json }
+      refresh_dealership_privacy_posture: { Args: never; Returns: undefined }
+      register_security_incident: {
+        Args: {
+          _affected_count?: number
+          _categories?: string[]
+          _detected_via: string
+          _notes?: string
+          _severity?: string
+          _summary: string
+        }
+        Returns: string
+      }
       remove_staff_role: { Args: { _role_id: string }; Returns: undefined }
       report_error: {
         Args: {
