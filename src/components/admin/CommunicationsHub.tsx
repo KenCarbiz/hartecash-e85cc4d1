@@ -9,6 +9,7 @@ const ObjectionPlaybookEditor = React.lazy(() => import("./ObjectionPlaybookEdit
 const TradeUpIncentiveEditor = React.lazy(() => import("./TradeUpIncentiveEditor"));
 const VoiceAgentTrainingEditor = React.lazy(() => import("./VoiceAgentTrainingEditor"));
 const VoiceQualityPanel = React.lazy(() => import("./VoiceQualityPanel"));
+const PrivacyPosturePanel = React.lazy(() => import("./PrivacyPosturePanel"));
 const ConsentLog = React.lazy(() => import("./ConsentLog"));
 const CommunicationLog = React.lazy(() => import("./CommunicationLog"));
 const VoiceComplianceLog = React.lazy(() => import("./VoiceComplianceLog"));
@@ -137,7 +138,10 @@ const CommunicationsHub = ({
 
         <TabsContent value="compliance" className="pt-4 space-y-6">
           <React.Suspense fallback={<AdminLoadingSkeleton />}>
-            <ConsentLog />
+            <PrivacyPosturePanel />
+            <div className="border-t border-border pt-6">
+              <ConsentLog />
+            </div>
             <div className="border-t border-border pt-6">
               <CommunicationLog />
             </div>

@@ -24,6 +24,8 @@ const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const RescheduleAppointment = lazy(() => import("./pages/RescheduleAppointment"));
 const CallFeedback = lazy(() => import("./pages/CallFeedback"));
+const MfaSetup = lazy(() => import("./pages/MfaSetup"));
+const MfaChallenge = lazy(() => import("./pages/MfaChallenge"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const PitchDeck = lazy(() => import("./pages/PitchDeck"));
 const PlatformPitch = lazy(() => import("./pages/PlatformPitch"));
@@ -73,22 +75,82 @@ const GroupLandingPage = lazy(() => import("./pages/GroupLandingPage"));
 
 const queryClient = new QueryClient();
 
+type MfaGate = "loading" | "ok" | "challenge" | "enroll" | null;
+
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<null | "loading" | "authenticated">("loading");
+  const [mfa, setMfa] = useState<MfaGate>("loading");
+  const location = useLocation();
+
+  // The MFA flow itself runs inside a ProtectedRoute (must be signed
+  // in to enroll/challenge). Skip the gate when we're already on the
+  // MFA pages so we don't get into a redirect loop.
+  const onMfaPage = location.pathname.startsWith("/admin/mfa-");
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      setSession(s ? "authenticated" : null);
-    });
+    let cancel = false;
+
+    const evaluate = async () => {
+      const { data: { session: s } } = await supabase.auth.getSession();
+      if (cancel) return;
+      if (!s) {
+        setSession(null);
+        setMfa(null);
+        return;
+      }
+      setSession("authenticated");
+
+      if (onMfaPage) {
+        setMfa("ok");
+        return;
+      }
+
+      // 1) AAL upgrade required? Means user has a verified factor but
+      //    the current session is single-factor. Send to challenge.
+      const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (cancel) return;
+      if (aal && aal.currentLevel === "aal1" && aal.nextLevel === "aal2") {
+        setMfa("challenge");
+        return;
+      }
+
+      // 2) Tenant enforcement — does this user need to enroll?
+      //    require_mfa_for_user RPC handles tenant policy + grace
+      //    period + role filter. Soft-fail to "ok" if the migration
+      //    isn't applied yet (RPC missing / errors) so we don't lock
+      //    everyone out before MFA is rolled out.
+      try {
+        const { data: req } = await supabase.rpc("require_mfa_for_user");
+        if (cancel) return;
+        const result = req as { ok?: boolean; required?: boolean } | null;
+        if (result?.ok && result.required) {
+          setMfa("enroll");
+          return;
+        }
+      } catch { /* RPC missing — soft-fail */ }
+
+      setMfa("ok");
+    };
+
+    void evaluate();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
-      setSession(s ? "authenticated" : null);
+      if (!s) {
+        setSession(null);
+        setMfa(null);
+        return;
+      }
+      setSession("authenticated");
+      void evaluate();
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      cancel = true;
+      subscription.unsubscribe();
+    };
+  }, [onMfaPage, location.pathname]);
 
-  if (session === "loading") {
+  if (session === "loading" || mfa === "loading") {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
@@ -98,6 +160,13 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
 
   if (!session) {
     return <Navigate to="/admin/login" replace />;
+  }
+
+  if (mfa === "challenge") {
+    return <Navigate to="/admin/mfa-challenge" replace state={{ from: location.pathname }} />;
+  }
+  if (mfa === "enroll") {
+    return <Navigate to="/admin/mfa-setup" replace />;
   }
 
   return <>{children}</>;
@@ -140,6 +209,8 @@ const AnimatedRoutes = () => {
         {/* Customer-facing vehicle value tracker (Watch My Car's Worth). */}
         <Route path="/watch-my-car/:token" element={<WatchMyCar />} />
         <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin/mfa-setup" element={<ProtectedRoute><MfaSetup /></ProtectedRoute>} />
+        <Route path="/admin/mfa-challenge" element={<ProtectedRoute><MfaChallenge /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
         <Route path="/service" element={<ServiceLanding />} />
         <Route path="/pitch" element={<PitchDeck />} />
