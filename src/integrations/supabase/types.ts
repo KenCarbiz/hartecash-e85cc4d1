@@ -1489,6 +1489,48 @@ export type Database = {
         }
         Relationships: []
       }
+      error_log: {
+        Row: {
+          call_id: string | null
+          context: Json
+          created_at: string
+          dealership_id: string | null
+          id: string
+          message: string
+          severity: string
+          source: string
+          stack: string | null
+          submission_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          call_id?: string | null
+          context?: Json
+          created_at?: string
+          dealership_id?: string | null
+          id?: string
+          message: string
+          severity?: string
+          source: string
+          stack?: string | null
+          submission_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          call_id?: string | null
+          context?: Json
+          created_at?: string
+          dealership_id?: string | null
+          id?: string
+          message?: string
+          severity?: string
+          source?: string
+          stack?: string | null
+          submission_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       follow_ups: {
         Row: {
           channel: string
@@ -5367,6 +5409,64 @@ export type Database = {
           },
         ]
       }
+      voice_pipeline_jobs: {
+        Row: {
+          call_id: string
+          created_at: string
+          enrich_attempts: number
+          grade_attempts: number
+          id: string
+          last_error: string | null
+          next_retry_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          call_id: string
+          created_at?: string
+          enrich_attempts?: number
+          grade_attempts?: number
+          id?: string
+          last_error?: string | null
+          next_retry_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          call_id?: string
+          created_at?: string
+          enrich_attempts?: number
+          grade_attempts?: number
+          id?: string
+          last_error?: string | null
+          next_retry_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_pipeline_jobs_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: true
+            referencedRelation: "v_voice_call_quality"
+            referencedColumns: ["call_id"]
+          },
+          {
+            foreignKeyName: "voice_pipeline_jobs_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: true
+            referencedRelation: "v_voice_call_quality_with_nps"
+            referencedColumns: ["call_id"]
+          },
+          {
+            foreignKeyName: "voice_pipeline_jobs_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: true
+            referencedRelation: "voice_call_log"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       voice_script_templates: {
         Row: {
           category: string | null
@@ -5412,6 +5512,18 @@ export type Database = {
           staff_label: string | null
           staff_user_id: string | null
           window_start: string | null
+        }
+        Relationships: []
+      }
+      v_cron_health_recent: {
+        Row: {
+          command: string | null
+          end_time: string | null
+          jobname: string | null
+          return_message: string | null
+          schedule: string | null
+          start_time: string | null
+          status: string | null
         }
         Relationships: []
       }
@@ -5476,6 +5588,17 @@ export type Database = {
           retention_config_updated_at?: string | null
           staff_pii_views_30d?: never
           voice_transcript_retention_days?: number | null
+        }
+        Relationships: []
+      }
+      v_error_log_recent: {
+        Row: {
+          first_seen_at: string | null
+          last_seen_at: string | null
+          occurrences: number | null
+          sample_message: string | null
+          severity: string | null
+          source: string | null
         }
         Relationships: []
       }
@@ -5643,6 +5766,7 @@ export type Database = {
             Returns: string
           }
       consume_mfa_backup_code: { Args: { _code: string }; Returns: Json }
+      cron_health_check: { Args: never; Returns: undefined }
       customer_self_checkin: {
         Args: { _status: string; _token: string }
         Returns: Json
@@ -5684,6 +5808,10 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      enqueue_voice_pipeline_job: {
+        Args: { _call_id: string }
+        Returns: undefined
       }
       expire_pilots: { Args: never; Returns: number }
       export_customer_data: { Args: { _token: string }; Returns: Json }
@@ -5868,6 +5996,15 @@ export type Database = {
       }
       mark_docs_uploaded: { Args: { _token: string }; Returns: undefined }
       mark_photos_uploaded: { Args: { _token: string }; Returns: undefined }
+      mark_voice_pipeline_job: {
+        Args: {
+          _bump?: string
+          _call_id: string
+          _error?: string
+          _status: string
+        }
+        Returns: undefined
+      }
       merge_rooftop: {
         Args: {
           _create_pilot?: boolean
@@ -5887,6 +6024,16 @@ export type Database = {
           source_queue: string
         }
         Returns: number
+      }
+      pickup_stuck_voice_pipeline_jobs: {
+        Args: { _limit?: number }
+        Returns: {
+          call_id: string
+          enrich_attempts: number
+          grade_attempts: number
+          id: string
+          status: string
+        }[]
       }
       purge_customer_data: { Args: { _token: string }; Returns: Json }
       read_email_batch: {
@@ -5921,6 +6068,19 @@ export type Database = {
       redact_old_customer_memory: { Args: never; Returns: Json }
       redact_old_voice_pii: { Args: never; Returns: Json }
       remove_staff_role: { Args: { _role_id: string }; Returns: undefined }
+      report_error: {
+        Args: {
+          _call_id?: string
+          _context?: Json
+          _dealership_id?: string
+          _message: string
+          _severity?: string
+          _source: string
+          _stack?: string
+          _submission_id?: string
+        }
+        Returns: string
+      }
       request_customer_data_action: {
         Args: { _email?: string; _kind?: string; _phone?: string }
         Returns: Json
