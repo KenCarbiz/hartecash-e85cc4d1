@@ -409,6 +409,72 @@ export default function PitchDeck() {
         </div>
       </section>
 
+      {/* ═══ 5b — AI VOICE AGENT (PIPELINE) ═══ */}
+      <section className="px-6 py-20 md:py-28 bg-[hsl(220,25%,8%)]">
+        <div className="absolute inset-0 bg-gradient-to-b from-violet-600/[0.03] via-transparent to-transparent pointer-events-none" />
+        <div className="max-w-6xl mx-auto relative">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
+            <GlowBadge label="AI Voice Agent · Pipeline" color="amber" />
+            <motion.h2 variants={fadeUp} custom={0} className="text-3xl md:text-5xl lg:text-6xl font-black mb-6 leading-tight">
+              A Voice AI That{" "}
+              <span className="text-amber-400">Trains Itself</span>
+            </motion.h2>
+            <motion.p variants={fadeUp} custom={1} className="text-lg text-white/50 max-w-3xl mb-14 leading-relaxed">
+              Most voice-AI platforms ship a script and call it done. We built a closed-loop training pipeline: every customer call gets re-transcribed, sentiment-tagged, and graded on a 10-dimension rubric, then the highest-performing cabinet variants get more airtime via a Thompson-sampling bandit. The agent gets better with every call.
+            </motion.p>
+
+            <motion.div variants={fadeUp} custom={2} className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-14">
+              {[
+                { icon: Cpu, title: "Four-layer training cabinet", desc: "Persona, conversation phases, customer signals, and citable industry intel — each a separately-tunable layer. Per-tenant overrides on every row; network defaults seed every dealership.", highlight: true },
+                { icon: Sparkles, title: "Thompson-sampling bandit", desc: "Every variant carries win/loss counts. At call-start the compile RPC samples Beta(1+wins, 1+losses) per slot — best-performing variants get more airtime, fresh variants still get exploration." },
+                { icon: Activity, title: "Per-call LLM grading", desc: "Every call is judged by Claude Sonnet on a 10-dimension rubric (compliance, motivation discovery, quote-band adherence, hallucination, etc.). Three dimensions are gating: a single 1-score auto-retires the variants used." },
+                { icon: Target, title: "1-tap customer NPS feedback", desc: "Post-call SMS link to a 5-star rating page. Realistic 8-12% response rate; treated as ground-truth weighting on the LLM grade. Customer comments surface in the admin Voice Quality panel inline with the rubric." },
+                { icon: History, title: "Customer-memory long-memory", desc: "Every call extracts one personal-life detail (\"daughter heading to Denver in August\"). The next call's compiled prompt mandates referencing it within 20 seconds — the single move that separates rockstar reps from script-readers." },
+                { icon: ShieldCheck, title: "Golden-100 regression check", desc: "Pin a diverse set of calls to a holdout. After any rubric or model change, re-grade the set and see Δ vs baseline inline. Catches grader drift before it taints the bandit." },
+                { icon: Repeat, title: "Cabinet-gap auto-suggestions", desc: "Customer phrases the AI didn't recognize get ranked by frequency × call-badness and surfaced in the admin panel. Add the missing signal in two clicks; the next call uses it." },
+                { icon: Eye, title: "Cabinet preview + test call", desc: "Before any cabinet edit goes live, the manager can preview the compiled prompt and dispatch a test call to their own phone. Edit → preview → test → ship in under 60 seconds." },
+                { icon: Lock, title: "Two-party recording-disclosure guard", desc: "Customers in CA / CT / FL / IL / MA / MD and 10 other all-party-consent states get a recording disclosure in the AI's first sentence — before any substantive conversation. Compliance with state wiretap statutes baked into the dialer." },
+                { icon: ShieldCheck, title: "Per-tenant warm transfer", desc: "Bland's transfer-instruction format with E.164-normalized rep numbers. Unreachable transfers fall back to a callback-promise + manager alert. No customer ever lands in dead air." },
+                { icon: Clock, title: "Per-turn enrichment pipeline", desc: "Whisper re-ASR + Claude Haiku sentiment + silence/barge-in detection on every turn. Voice Quality panel renders a 2x scrubable transcript: click any turn to seek the audio to that timestamp." },
+                { icon: ShieldCheck, title: "Pipeline retry queue", desc: "Every call enqueues a job; a 5-min cron picks up orphans whose enrich/grade chain failed (Whisper outage, OpenAI rate limit). Exponential backoff + 5-attempt cap. No call is silently lost." },
+              ].map((item, i) => (
+                <motion.div key={i} variants={scaleIn} custom={i * 0.15 + 4} className={`bg-white/5 border rounded-2xl p-6 transition-colors ${item.highlight ? "border-amber-400/40 bg-amber-500/10 hover:border-amber-400/60" : "border-white/10 hover:border-amber-400/30"}`}>
+                  <div className="w-11 h-11 rounded-xl bg-amber-500/20 flex items-center justify-center mb-4">
+                    <item.icon className="w-5 h-5 text-amber-400" />
+                  </div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="font-bold text-base">{item.title}</h3>
+                    {item.highlight && <span className="text-[9px] font-bold uppercase tracking-wider text-amber-400 bg-amber-500/15 border border-amber-400/30 rounded-full px-2 py-0.5">Core</span>}
+                  </div>
+                  <p className="text-sm text-white/50 leading-relaxed">{item.desc}</p>
+                </motion.div>
+              ))}
+            </motion.div>
+
+            <motion.div variants={fadeUp} custom={6} className="grid md:grid-cols-4 gap-4">
+              {[
+                { value: "10", label: "Rubric dimensions per call", accent: "text-amber-400" },
+                { value: "3", label: "Gating dims (auto-retire)", accent: "text-red-400" },
+                { value: "5+", label: "Cabinet RPC layers", accent: "text-blue-400" },
+                { value: "16", label: "Two-party recording states honored", accent: "text-emerald-400" },
+              ].map((m, i) => (
+                <motion.div key={i} variants={scaleIn} custom={i + 7} className="bg-white/5 border border-white/10 rounded-2xl p-5 text-center hover:border-amber-400/20 transition-colors">
+                  <div className={`text-2xl md:text-3xl font-black mb-1 ${m.accent}`}>{m.value}</div>
+                  <p className="text-[11px] text-white/50 leading-snug">{m.label}</p>
+                </motion.div>
+              ))}
+            </motion.div>
+
+            <motion.div variants={fadeUp} custom={8} className="mt-10 flex items-center justify-center">
+              <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-amber-500/10 border border-amber-400/20 text-amber-400 text-sm font-semibold">
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                Phase A complete · production rollout in pilot
+              </div>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* ═══ 6 — PLATFORM STRENGTHS ═══ */}
       <section className="px-6 py-20 md:py-28 bg-[hsl(220,25%,8%)]">
         <div className="max-w-6xl mx-auto">
@@ -478,6 +544,16 @@ export default function PitchDeck() {
                     { feature: "TCPA Consent Versioning", us: true, them: false, others: false },
                     { feature: "Per-User Appraiser Credential", us: true, them: false, others: false },
                     { feature: "vAuto Push Integration", us: "partial", them: false, others: false },
+                    { feature: "AI Voice Agent (Bland-powered, multi-tenant)", us: true, them: false, others: false },
+                    { feature: "Self-Training Voice Bandit (Thompson sampling)", us: true, them: false, others: false },
+                    { feature: "Per-Call LLM Grading (10-dim rubric)", us: true, them: false, others: false },
+                    { feature: "Customer NPS Loop on Every Call", us: true, them: false, others: false },
+                    { feature: "Two-Party Recording Disclosure (16 states)", us: true, them: false, others: false },
+                    { feature: "TOTP MFA + Backup Codes + Tenant Enforcement", us: true, them: false, others: false },
+                    { feature: "Cross-Tenant RLS Isolation", us: true, them: "partial", others: false },
+                    { feature: "Customer Right-to-Know / Right-to-Delete", us: true, them: false, others: false },
+                    { feature: "PII Retention + Auto-Redaction", us: true, them: false, others: false },
+                    { feature: "Staff PII Access Audit + Anomaly Detection", us: true, them: false, others: false },
                   ].map((row, i) => (
                     <tr key={i} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
                       <td className="py-3 px-4 text-white/70">{row.feature}</td>
@@ -548,6 +624,46 @@ export default function PitchDeck() {
                   title: "Pricing Access Gate",
                   desc: "The appraisal tool — waterfall, deduction basis, wholesale spread — is restricted to roles that are allowed to see cost. Any non-privileged role sees a Lock screen explaining they need to request temporary pricing access. Database-enforced, not just UI.",
                 },
+                {
+                  icon: ShieldCheck,
+                  title: "Two-factor authentication (TOTP)",
+                  desc: "Authy / Google Authenticator / 1Password — supported natively. Per-tenant enforcement with 7-day grace for new staff. 10 backup codes generated at enrollment, downloadable. Three-strikes lockout on the verification page; 5-fail-per-IP / 3-per-email lockout on password login.",
+                },
+                {
+                  icon: Lock,
+                  title: "Cross-tenant data isolation (RLS)",
+                  desc: "Postgres row-level security on every voice_call_log, voice_call_turns, voice_call_grades, customer_data_access_log, and submissions table. A staff user at one dealership cannot SELECT another dealership's data even with a hand-crafted query.",
+                },
+                {
+                  icon: UserCheck,
+                  title: "Customer right-to-know / right-to-delete",
+                  desc: "Self-serve CCPA / CPRA / VCDPA compliance. Customer enters phone or email, receives an SMS verification, and can download a full JSON export of every record we have on them or trigger a complete purge — including driver's-license images in storage and recordings on Bland.ai.",
+                },
+                {
+                  icon: Clock,
+                  title: "PII retention with auto-redaction",
+                  desc: "Per-tenant retention windows (default 90 days transcripts, 90 days recordings, 180 days customer-memory items, 365 days notification logs). Nightly cron auto-redacts everything past the floor. Aggregate stats (sentiment, latency, scores) are kept; verbatim PII expires.",
+                },
+                {
+                  icon: Eye,
+                  title: "Staff PII-view audit log + anomaly detection",
+                  desc: "Every transcript view, recording playback, customer-memory fetch, and bulk export is logged with the staff member's identity, IP, and user-agent. A view surfaces any user who pulled 50+ distinct records in a 60-min window — catches stolen-credentials and rogue-employee scenarios.",
+                },
+                {
+                  icon: FileText,
+                  title: "Breach-notification readiness",
+                  desc: "security_incident table tracks every incident from discovery → containment → notification with statutory deadline (NY SHIELD 30-day floor). Documented runbook covers state-by-state notification windows (CA / NY / CT / TX / MA / FL / IL). When something happens, the legal team has a playbook, not improvisation.",
+                },
+                {
+                  icon: Activity,
+                  title: "Centralized error log + cron health",
+                  desc: "Every edge-function exception goes through a shared report() helper to a tenant-scoped error_log table. A daily cron checks pg_cron job-run history and surfaces any failed retention / decay job to the admin error console. Silent regulatory breaches via broken cron jobs are no longer possible.",
+                },
+                {
+                  icon: ShieldCheck,
+                  title: "Sub-processors named",
+                  desc: "Privacy policy lists every sub-processor by name (Twilio, Bland AI, Anthropic, OpenAI, Supabase, Stripe, DealerTrack, RouteOne) with purpose + data categories. CCPA §1798.130 compliance; closes the \"third-party vendors\" generic gap that draws enforcement actions.",
+                },
               ].map((item, i) => (
                 <motion.div key={i} variants={scaleIn} custom={i + 3} className="bg-white/5 border border-emerald-400/20 rounded-2xl p-6 hover:border-emerald-400/40 transition-colors">
                   <div className="w-11 h-11 rounded-xl bg-emerald-500/20 flex items-center justify-center mb-4">
@@ -580,11 +696,11 @@ export default function PitchDeck() {
                 { value: "< 500ms", label: "VIN barcode decode time", icon: ScanLine, accent: "text-blue-400" },
                 { value: "24 hr", label: "Black Book VIN cache TTL", icon: Database, accent: "text-emerald-400" },
                 { value: "$2,500", label: "Max AI auto-bump per vehicle", icon: Sparkles, accent: "text-violet-400" },
-                { value: "20+", label: "Automated edge functions", icon: Activity, accent: "text-amber-400" },
+                { value: "70+", label: "Automated edge functions", icon: Activity, accent: "text-amber-400" },
                 { value: "5", label: "Queue priority tiers", icon: Gauge, accent: "text-red-400" },
                 { value: "10+", label: "Deal pipeline stages", icon: BarChart3, accent: "text-blue-400" },
-                { value: "7", label: "Timezone options — quiet-hours aware", icon: Clock, accent: "text-emerald-400" },
-                { value: "8", label: "US brands auto-flagged for OBD brake read", icon: Shield, accent: "text-violet-400" },
+                { value: "16", label: "Two-party-consent states honored", icon: Shield, accent: "text-emerald-400" },
+                { value: "10", label: "Voice AI rubric dimensions per call", icon: Cpu, accent: "text-violet-400" },
               ].map((m, i) => (
                 <motion.div key={i} variants={scaleIn} custom={i + 3} className="bg-white/5 border border-white/10 rounded-2xl p-5 text-center hover:border-white/20 transition-colors">
                   <m.icon className={`w-5 h-5 ${m.accent} mx-auto mb-3 opacity-70`} />
