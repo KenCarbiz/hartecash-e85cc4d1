@@ -36,12 +36,14 @@ interface EnrollData {
 
 export default function MfaSetup() {
   const navigate = useNavigate();
-  const [phase, setPhase] = useState<"loading" | "enroll" | "verify" | "done" | "error">("loading");
+  const [phase, setPhase] = useState<"loading" | "enroll" | "verify" | "backup_codes" | "done" | "error">("loading");
   const [enroll, setEnroll] = useState<EnrollData | null>(null);
   const [code, setCode] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [secretCopied, setSecretCopied] = useState(false);
+  const [backupCodes, setBackupCodes] = useState<string[]>([]);
+  const [acknowledgedBackup, setAcknowledgedBackup] = useState(false);
 
   useEffect(() => {
     let cancel = false;
@@ -104,7 +106,11 @@ export default function MfaSetup() {
       return;
     }
 
-    // Success — log the event and bounce back to admin.
+    // Success — log the event, generate backup codes, then show
+    // them to the user before bouncing to admin. Backup codes are
+    // displayed exactly ONCE — if the user closes the page without
+    // saving, they'd have to regenerate (which invalidates the old
+    // set).
     try {
       await supabase.rpc("log_mfa_event", {
         _event_kind: "enrolled",
@@ -113,8 +119,52 @@ export default function MfaSetup() {
       });
     } catch { /* non-fatal */ }
 
+    const { data: codesData, error: codesErr } = await supabase.rpc(
+      "generate_mfa_backup_codes",
+    );
+    if (!codesErr && codesData) {
+      const result = codesData as { ok?: boolean; codes?: string[] } | null;
+      if (result?.ok && Array.isArray(result.codes)) {
+        setBackupCodes(result.codes);
+        setPhase("backup_codes");
+        return;
+      }
+    }
+    // Backup codes RPC failed (migration may not be applied) — go
+    // straight to done. Codes can be generated later from settings.
     setPhase("done");
     setTimeout(() => navigate("/admin", { replace: true }), 1200);
+  };
+
+  const downloadCodes = () => {
+    const text = [
+      "Hartecash — two-factor backup codes",
+      `Generated: ${new Date().toISOString()}`,
+      "",
+      "Each code is single-use. Keep them somewhere safe (password manager,",
+      "printed copy in a sealed envelope). If you lose your phone, enter one",
+      "of these instead of the 6-digit TOTP code on the login page.",
+      "",
+      ...backupCodes.map((c, i) => `${(i + 1).toString().padStart(2, " ")}.  ${c}`),
+    ].join("\n");
+    const blob = new Blob([text], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `hartecash-backup-codes-${new Date().toISOString().slice(0, 10)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const copyAllCodes = async () => {
+    try {
+      await navigator.clipboard.writeText(backupCodes.join("\n"));
+    } catch { /* noop */ }
+  };
+
+  const finishBackupCodes = () => {
+    setPhase("done");
+    setTimeout(() => navigate("/admin", { replace: true }), 600);
   };
 
   const copySecret = async () => {
@@ -217,6 +267,70 @@ export default function MfaSetup() {
                 {verifying ? "Verifying…" : "Verify and enable"}
               </Button>
             </div>
+          </div>
+        )}
+
+        {phase === "backup_codes" && (
+          <div className="space-y-5">
+            <div className="rounded-lg border border-emerald-300 bg-emerald-50 p-4">
+              <CheckCircle2 className="w-6 h-6 text-emerald-600 mb-1" />
+              <div className="font-bold text-emerald-900 text-[14px]">
+                Two-factor enabled
+              </div>
+              <div className="text-[12.5px] text-emerald-800 mt-1">
+                Save these backup codes somewhere safe (password manager,
+                printed copy in a sealed envelope). If you lose your phone,
+                each code lets you sign in once. They will not be shown
+                again.
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-slate-200 bg-white p-4">
+              <div className="text-[12.5px] font-bold uppercase tracking-wider text-slate-500 mb-3">
+                Backup codes — single-use
+              </div>
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                {backupCodes.map((c, i) => (
+                  <code
+                    key={i}
+                    className="font-mono text-[14px] tracking-wider bg-slate-50 rounded px-2 py-1.5 text-center"
+                  >
+                    {c}
+                  </code>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={downloadCodes} className="flex-1">
+                  Download .txt
+                </Button>
+                <Button size="sm" variant="outline" onClick={copyAllCodes} className="flex-1">
+                  Copy all
+                </Button>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-amber-300 bg-amber-50 p-3">
+              <label className="inline-flex items-start gap-2 text-[12.5px] text-amber-900 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={acknowledgedBackup}
+                  onChange={(e) => setAcknowledgedBackup(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded border-amber-400 accent-amber-600"
+                />
+                <span>
+                  I have saved these codes somewhere I can find them. I
+                  understand they will not be shown again.
+                </span>
+              </label>
+            </div>
+
+            <Button
+              onClick={finishBackupCodes}
+              disabled={!acknowledgedBackup}
+              className="w-full"
+            >
+              Continue to admin
+            </Button>
           </div>
         )}
 
