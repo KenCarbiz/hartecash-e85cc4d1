@@ -105,11 +105,13 @@ export default function MfaSetup() {
     }
 
     // Success — log the event and bounce back to admin.
-    await supabase.rpc("log_mfa_event", {
-      _event_kind: "enrolled",
-      _factor_type: "totp",
-      _metadata: {},
-    }).catch(() => {});
+    try {
+      await supabase.rpc("log_mfa_event", {
+        _event_kind: "enrolled",
+        _factor_type: "totp",
+        _metadata: {},
+      });
+    } catch { /* non-fatal */ }
 
     setPhase("done");
     setTimeout(() => navigate("/admin", { replace: true }), 1200);
