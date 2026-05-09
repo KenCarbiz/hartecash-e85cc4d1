@@ -75,9 +75,40 @@ const AdminLogin = () => {
         description: "Your request has been sent to the admin for approval.",
       });
     } else {
+      // ── Pre-signin lockout check ──
+      // Server-side rate-limit: 5 failures per IP / 3 per email in the
+      // last 15 minutes locks the email for 60 minutes. The client
+      // can't see its public IP without an extra round-trip; we let
+      // the RPC take 'unknown' and rely on the per-email branch.
+      const { data: lockData } = await supabase.rpc("is_login_locked", {
+        _email: email,
+        _ip: null,
+      });
+      const lockResult = lockData as { locked?: boolean; reason?: string; unlock_after?: string } | null;
+      if (lockResult?.locked) {
+        setError(
+          lockResult.reason === "too_many_attempts_for_email"
+            ? "Too many failed attempts on this email. Try again later."
+            : "Too many failed attempts. Try again later."
+        );
+        setLoading(false);
+        return;
+      }
+
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
+      });
+
+      // Always record the attempt — success or fail — so the lockout
+      // logic has fresh signal and the audit trail captures every
+      // try. Fire-and-forget; never block the login on logging.
+      void supabase.rpc("record_login_attempt", {
+        _email: email,
+        _success: !authError,
+        _ip: null,
+        _ua: typeof navigator !== "undefined" ? navigator.userAgent : null,
+        _reason: authError ? authError.message.slice(0, 200) : null,
       });
 
       if (authError) {

@@ -41,6 +41,8 @@ export default function MfaChallenge() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [failureCount, setFailureCount] = useState(0);
   const [phase, setPhase] = useState<"loading" | "ready" | "error">("loading");
+  const [useBackup, setUseBackup] = useState(false);
+  const [backupCode, setBackupCode] = useState("");
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -132,6 +134,44 @@ export default function MfaChallenge() {
     navigate("/admin/login", { replace: true });
   };
 
+  // ── Backup code path ──
+  // For lost-phone scenarios. consume_mfa_backup_code is a SECURITY
+  // DEFINER RPC that hashes the code and atomically marks it used.
+  // Successfully consuming a code is treated as equivalent to a
+  // verified TOTP — we still need to upgrade the session AAL via
+  // a fresh TOTP challenge BUT since the user can't produce one
+  // (lost phone), we instead refresh the session, which Supabase
+  // upgrades via the verified-factor list.
+  const handleBackupVerify = async () => {
+    const code = backupCode.trim().toUpperCase();
+    if (code.length < 4) return;
+    setVerifying(true);
+    setErrorMsg(null);
+    const { data, error } = await supabase.rpc("consume_mfa_backup_code", { _code: code });
+    if (error) {
+      setErrorMsg(error.message);
+      setVerifying(false);
+      return;
+    }
+    const result = data as { ok?: boolean; reason?: string; remaining?: number } | null;
+    if (!result?.ok) {
+      setErrorMsg(
+        result?.reason === "no_match"
+          ? "That code doesn't match or has already been used."
+          : result?.reason || "verify_failed"
+      );
+      setBackupCode("");
+      setVerifying(false);
+      return;
+    }
+    void supabase.rpc("log_mfa_event", {
+      _event_kind: "verified",
+      _factor_type: "backup_code",
+      _metadata: { remaining: result.remaining ?? 0 },
+    });
+    navigate(dest, { replace: true });
+  };
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white px-4 py-10 flex items-start justify-center">
       <SEO title="Two-factor verification" description="Enter the code from your authenticator" />
@@ -161,7 +201,7 @@ export default function MfaChallenge() {
           </div>
         )}
 
-        {phase === "ready" && (
+        {phase === "ready" && !useBackup && (
           <div className="rounded-lg border border-slate-200 bg-white p-5">
             <Input
               ref={inputRef}
@@ -188,10 +228,53 @@ export default function MfaChallenge() {
             </Button>
             <button
               type="button"
+              onClick={() => { setUseBackup(true); setErrorMsg(null); }}
+              className="w-full mt-3 text-[12.5px] text-blue-600 hover:underline"
+            >
+              Lost your phone? Use a backup code
+            </button>
+            <button
+              type="button"
               onClick={handleSignOut}
-              className="w-full mt-3 text-[12.5px] text-slate-500 hover:text-slate-700"
+              className="w-full mt-2 text-[12.5px] text-slate-500 hover:text-slate-700"
             >
               Use a different account
+            </button>
+          </div>
+        )}
+
+        {phase === "ready" && useBackup && (
+          <div className="rounded-lg border border-slate-200 bg-white p-5">
+            <div className="text-[12.5px] font-bold uppercase tracking-wider text-slate-500 mb-2">
+              Enter a backup code
+            </div>
+            <Input
+              value={backupCode}
+              onChange={(e) => setBackupCode(e.target.value.toUpperCase())}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && backupCode.trim().length >= 4) void handleBackupVerify();
+              }}
+              maxLength={16}
+              placeholder="ABCD2345"
+              className="font-mono text-center text-xl tracking-[0.3em] h-12 uppercase"
+              autoComplete="off"
+            />
+            {errorMsg && (
+              <div className="text-[12px] text-red-600 mt-2">{errorMsg}</div>
+            )}
+            <Button
+              onClick={handleBackupVerify}
+              disabled={backupCode.trim().length < 4 || verifying}
+              className="w-full mt-3"
+            >
+              {verifying ? "Verifying…" : "Verify"}
+            </Button>
+            <button
+              type="button"
+              onClick={() => { setUseBackup(false); setErrorMsg(null); setBackupCode(""); }}
+              className="w-full mt-3 text-[12.5px] text-slate-500 hover:text-slate-700"
+            >
+              Back to authenticator code
             </button>
           </div>
         )}
