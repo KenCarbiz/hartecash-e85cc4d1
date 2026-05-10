@@ -58,7 +58,7 @@ const RescheduleAppointmentClarity = () => {
     if (!token) return;
     let cancelled = false;
     (async () => {
-      const { data, error: rpcErr } = await (supabase as any)
+      const { data, error: rpcErr } = await supabase
         .from("appointments")
         .select("id, scheduled_at, preferred_date, preferred_time, location, store_location, status, confirmed_at, rescheduled_at, dealership_id")
         .eq("reschedule_token", token)
@@ -70,21 +70,21 @@ const RescheduleAppointmentClarity = () => {
         return;
       }
       setAppt(data as Appointment);
-      if ((data as any).dealership_id) {
+      if (data.dealership_id) {
         const { data: t } = await supabase
           .from("tenants")
           .select("display_name")
-          .eq("dealership_id", (data as any).dealership_id)
+          .eq("dealership_id", data.dealership_id)
           .maybeSingle();
         const { data: site } = await supabase
           .from("site_config")
           .select("contact_phone")
-          .eq("dealership_id", (data as any).dealership_id)
+          .eq("dealership_id", data.dealership_id)
           .maybeSingle();
         if (!cancelled) {
           setDealer({
-            display_name: (t as any)?.display_name || config.dealership_name || "the dealership",
-            phone: (site as any)?.contact_phone ?? config.phone ?? null,
+            display_name: t?.display_name || config.dealership_name || "the dealership",
+            phone: site?.contact_phone ?? config.phone ?? null,
           });
         }
       }
@@ -130,7 +130,7 @@ const RescheduleAppointmentClarity = () => {
     setConfirming(true);
     const { error: updErr } = await supabase
       .from("appointments")
-      .update({ confirmed_at: new Date().toISOString() } as any)
+      .update({ confirmed_at: new Date().toISOString() })
       .eq("id", appt.id);
     setConfirming(false);
     if (updErr) {
@@ -153,7 +153,7 @@ const RescheduleAppointmentClarity = () => {
         rescheduled_from: appt.scheduled_at,
         reminder_24h_sent_at: null,
         reminder_2h_sent_at: null,
-      } as any)
+      })
       .eq("id", appt.id);
     if (updErr) {
       setError("Could not save the new time. Please call the dealership.");
