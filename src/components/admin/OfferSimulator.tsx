@@ -12,7 +12,21 @@ import {
   SlidersHorizontal, Gauge, Zap, AlertTriangle, DollarSign, ChevronDown, Calendar, Plus, Trash2,
   Layers, ArrowDown, GripVertical, Pencil, X, Check,
 } from "lucide-react";
-import { calculateOffer, type OfferSettings, type OfferRule, type OfferEstimate, calcHighMileagePenaltyPct, calcColorAdjustmentPct, DEFAULT_HIGH_MILEAGE_PENALTY, DEFAULT_COLOR_DESIRABILITY, DEFAULT_SEASONAL_ADJUSTMENT, DEFAULT_DEDUCTION_MODES, DEFAULT_DEDUCTION_AMOUNTS } from "@/lib/offerCalculator";
+import {
+  calculateOffer,
+  calcHighMileagePenaltyPct, calcColorAdjustmentPct,
+  DEFAULT_HIGH_MILEAGE_PENALTY, DEFAULT_COLOR_DESIRABILITY,
+  DEFAULT_SEASONAL_ADJUSTMENT, DEFAULT_DEDUCTION_MODES, DEFAULT_DEDUCTION_AMOUNTS,
+  type OfferSettings, type OfferRule, type OfferEstimate,
+  type ConditionBasisMap, type ConditionEquipmentMap,
+} from "@/lib/offerCalculator";
+
+// Settings extension fields the simulator UI reads but that are not on the
+// canonical OfferSettings interface. Promoting these to the type once here
+// keeps the rest of the file free of inline `as any` extension casts.
+type SimulatorSettings = OfferSettings & {
+  retail_profit_basis?: string;
+};
 import type { FormData, BBVehicle, BBAddDeduct } from "@/components/sell-form/types";
 import { supabase } from "@/integrations/supabase/client";
 import ProfitSpreadGauge from "./ProfitSpreadGauge";
@@ -412,7 +426,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
 
 
     // 9b. Low-Mileage Bonus
-    const lmb = (activeSettings as any).low_mileage_bonus;
+    const lmb = activeSettings.low_mileage_bonus;
     if (lmb?.enabled && liveBbVehicle.year) {
       const age = Math.max(currentYear - Number(liveBbVehicle.year), 1);
       const milesPerYear = mileageNum / age;
@@ -429,7 +443,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
     }
 
     // 9c. High-Mileage Penalty
-    const hmp = (activeSettings as any).high_mileage_penalty || DEFAULT_HIGH_MILEAGE_PENALTY;
+    const hmp = activeSettings.high_mileage_penalty || DEFAULT_HIGH_MILEAGE_PENALTY;
     if (hmp?.enabled && liveBbVehicle.year) {
       const age = Math.max(currentYear - Number(liveBbVehicle.year), 1);
       const milesPerYear = mileageNum / age;
@@ -446,7 +460,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
     }
 
     // 9d. Seasonal Adjustment
-    const seasonal = (activeSettings as any).seasonal_adjustment || DEFAULT_SEASONAL_ADJUSTMENT;
+    const seasonal = activeSettings.seasonal_adjustment || DEFAULT_SEASONAL_ADJUSTMENT;
     if (seasonal?.enabled && seasonal.adjustment_pct !== 0) {
       const adj = Math.round(running * (seasonal.adjustment_pct / 100));
       running += adj;
@@ -454,7 +468,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
     }
 
     // 9e. Color Desirability
-    const colorConfig = (activeSettings as any).color_desirability || DEFAULT_COLOR_DESIRABILITY;
+    const colorConfig = activeSettings.color_desirability || DEFAULT_COLOR_DESIRABILITY;
     if (colorConfig?.enabled) {
       // Use the vehicle's first exterior color as a proxy
       const sampleColor = liveBbVehicle.exterior_colors?.[0]?.name || "";
@@ -645,7 +659,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                 const cond = liveCondition;
                 const basisMap = localSettings.condition_basis_map || {};
                 const selectedBasis = (basisMap as Record<string, string>)[cond] || "tradein_avg";
-                const condEquipMap = (localSettings as any).condition_equipment_map || { excellent: true, very_good: true, good: true, fair: true };
+                const condEquipMap = localSettings.condition_equipment_map || { excellent: true, very_good: true, good: true, fair: true };
                 const equipEnabled = condEquipMap[cond] ?? true;
                 const mult = localSettings.condition_multipliers?.[cond] ?? 1.0;
 
@@ -670,7 +684,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                             excellent: "retail_xclean", very_good: "tradein_clean", good: "tradein_avg", fair: "wholesale_rough",
                             ...(localSettings.condition_basis_map || {}),
                             [cond]: val,
-                          } as any)}
+                          } as ConditionBasisMap)}
                         >
                           <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                           <SelectContent>
@@ -694,8 +708,11 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                           <Switch
                             checked={equipEnabled}
                             onCheckedChange={(checked) => {
-                              const newMap = { ...(localSettings as any).condition_equipment_map || { excellent: true, very_good: true, good: true, fair: true }, [cond]: checked };
-                              updateLocalSetting("condition_equipment_map" as any, newMap);
+                              const newMap: ConditionEquipmentMap = {
+                                ...(localSettings.condition_equipment_map || { excellent: true, very_good: true, good: true, fair: true }),
+                                [cond]: checked,
+                              };
+                              updateLocalSetting("condition_equipment_map", newMap);
                             }}
                           />
                           <span className="text-micro text-muted-foreground">{equipEnabled ? "Yes" : "No"}</span>
@@ -727,8 +744,8 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
               {(() => {
                 const da = activeSettings.deduction_amounts || {} as Record<string, number>;
                 const dc = activeSettings.deductions_config || {} as Record<string, boolean>;
-                const getAmt = (key: string) => (da as any)[key] || 0;
-                const isOn = (key: string) => (dc as any)[key] !== false;
+                const getAmt = (key: string) => (da as Record<string, number>)[key] || 0;
+                const isOn = (key: string) => (dc as Record<string, boolean>)[key] !== false;
 
                 // Calculate live deduction for each row — matching exact customer form values
                 const accidentDeduct = mappedAccidents === "1 accident" ? getAmt("accidents_1") : mappedAccidents === "2+ accidents" ? getAmt("accidents_2") : 0;
@@ -1114,7 +1131,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                         <div className="flex items-center gap-1.5">
                           <TrendingUp className="w-3.5 h-3.5 text-success" />
                           <span className="font-semibold text-[11px] text-card-foreground">Low-Mileage Bonus</span>
-                          {(localSettings as any).low_mileage_bonus?.enabled && (
+                          {localSettings.low_mileage_bonus?.enabled && (
                             <Badge variant="secondary" className="text-[8px] px-1 py-0">ON</Badge>
                           )}
                         </div>
@@ -1126,41 +1143,41 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                         <div className="flex items-center justify-between">
                           <span className="text-micro text-muted-foreground">Enable low-mileage bonus</span>
                           <Switch
-                            checked={(localSettings as any).low_mileage_bonus?.enabled ?? false}
-                            onCheckedChange={(checked) => updateLocalSetting("low_mileage_bonus" as any, { ...(localSettings as any).low_mileage_bonus || {}, enabled: checked })}
+                            checked={localSettings.low_mileage_bonus?.enabled ?? false}
+                            onCheckedChange={(checked) => updateLocalSetting("low_mileage_bonus", { ...localSettings.low_mileage_bonus || {}, enabled: checked })}
                             className="scale-75"
                           />
                         </div>
-                        {(localSettings as any).low_mileage_bonus?.enabled && (
+                        {localSettings.low_mileage_bonus?.enabled && (
                           <div className="space-y-1.5 border-t border-border pt-2">
                             <div className="flex items-center gap-1 text-micro">
                               <span className="text-muted-foreground w-28">Avg mi/year:</span>
-                              <Input type="number" value={(localSettings as any).low_mileage_bonus?.avg_miles_per_year ?? 12000}
-                                onChange={e => updateLocalSetting("low_mileage_bonus" as any, { ...(localSettings as any).low_mileage_bonus, avg_miles_per_year: Number(e.target.value) })}
+                              <Input type="number" value={localSettings.low_mileage_bonus?.avg_miles_per_year ?? 12000}
+                                onChange={e => updateLocalSetting("low_mileage_bonus", { ...localSettings.low_mileage_bonus, avg_miles_per_year: Number(e.target.value) })}
                                 className="w-20 h-5 text-micro" step="1000" />
                             </div>
                             <div className="flex items-center gap-1 text-micro">
                               <span className="text-muted-foreground w-28">Bonus % per step:</span>
-                              <Input type="number" value={(localSettings as any).low_mileage_bonus?.bonus_pct_per_step ?? 2}
-                                onChange={e => updateLocalSetting("low_mileage_bonus" as any, { ...(localSettings as any).low_mileage_bonus, bonus_pct_per_step: Number(e.target.value) })}
+                              <Input type="number" value={localSettings.low_mileage_bonus?.bonus_pct_per_step ?? 2}
+                                onChange={e => updateLocalSetting("low_mileage_bonus", { ...localSettings.low_mileage_bonus, bonus_pct_per_step: Number(e.target.value) })}
                                 className="w-14 h-5 text-micro" step="0.5" />
                             </div>
                             <div className="flex items-center gap-1 text-micro">
                               <span className="text-muted-foreground w-28">Step size (% below):</span>
-                              <Input type="number" value={(localSettings as any).low_mileage_bonus?.step_size_pct ?? 20}
-                                onChange={e => updateLocalSetting("low_mileage_bonus" as any, { ...(localSettings as any).low_mileage_bonus, step_size_pct: Number(e.target.value) })}
+                              <Input type="number" value={localSettings.low_mileage_bonus?.step_size_pct ?? 20}
+                                onChange={e => updateLocalSetting("low_mileage_bonus", { ...localSettings.low_mileage_bonus, step_size_pct: Number(e.target.value) })}
                                 className="w-14 h-5 text-micro" step="5" />
                             </div>
                             <div className="flex items-center gap-1 text-micro">
                               <span className="text-muted-foreground w-28">Max bonus %:</span>
-                              <Input type="number" value={(localSettings as any).low_mileage_bonus?.max_bonus_pct ?? 8}
-                                onChange={e => updateLocalSetting("low_mileage_bonus" as any, { ...(localSettings as any).low_mileage_bonus, max_bonus_pct: Number(e.target.value) })}
+                              <Input type="number" value={localSettings.low_mileage_bonus?.max_bonus_pct ?? 8}
+                                onChange={e => updateLocalSetting("low_mileage_bonus", { ...localSettings.low_mileage_bonus, max_bonus_pct: Number(e.target.value) })}
                                 className="w-14 h-5 text-micro" step="1" />
                             </div>
                             <div className="flex items-center gap-1 text-micro">
                               <span className="text-muted-foreground w-28">Min mi/year floor:</span>
-                              <Input type="number" value={(localSettings as any).low_mileage_bonus?.min_miles_per_year ?? 4000}
-                                onChange={e => updateLocalSetting("low_mileage_bonus" as any, { ...(localSettings as any).low_mileage_bonus, min_miles_per_year: Number(e.target.value) })}
+                              <Input type="number" value={localSettings.low_mileage_bonus?.min_miles_per_year ?? 4000}
+                                onChange={e => updateLocalSetting("low_mileage_bonus", { ...localSettings.low_mileage_bonus, min_miles_per_year: Number(e.target.value) })}
                                 className="w-20 h-5 text-micro" step="500" />
                             </div>
                             <p className="text-[8px] text-muted-foreground leading-tight mt-1">
@@ -1179,7 +1196,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                         <div className="flex items-center gap-1.5">
                           <TrendingDown className="w-3.5 h-3.5 text-destructive" />
                           <span className="font-semibold text-[11px] text-card-foreground">High-Mileage Penalty</span>
-                          {(localSettings as any).high_mileage_penalty?.enabled && (
+                          {localSettings.high_mileage_penalty?.enabled && (
                             <Badge variant="secondary" className="text-[8px] px-1 py-0">ON</Badge>
                           )}
                         </div>
@@ -1191,41 +1208,41 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                         <div className="flex items-center justify-between">
                           <span className="text-micro text-muted-foreground">Enable high-mileage penalty</span>
                           <Switch
-                            checked={(localSettings as any).high_mileage_penalty?.enabled ?? false}
-                            onCheckedChange={(checked) => updateLocalSetting("high_mileage_penalty" as any, { ...(localSettings as any).high_mileage_penalty || DEFAULT_HIGH_MILEAGE_PENALTY, enabled: checked })}
+                            checked={localSettings.high_mileage_penalty?.enabled ?? false}
+                            onCheckedChange={(checked) => updateLocalSetting("high_mileage_penalty", { ...localSettings.high_mileage_penalty || DEFAULT_HIGH_MILEAGE_PENALTY, enabled: checked })}
                             className="scale-75"
                           />
                         </div>
-                        {(localSettings as any).high_mileage_penalty?.enabled && (
+                        {localSettings.high_mileage_penalty?.enabled && (
                           <div className="space-y-1.5 border-t border-border pt-2">
                             <div className="flex items-center gap-1 text-micro">
                               <span className="text-muted-foreground w-28">Avg mi/year:</span>
-                              <Input type="number" value={(localSettings as any).high_mileage_penalty?.avg_miles_per_year ?? 12000}
-                                onChange={e => updateLocalSetting("high_mileage_penalty" as any, { ...(localSettings as any).high_mileage_penalty, avg_miles_per_year: Number(e.target.value) })}
+                              <Input type="number" value={localSettings.high_mileage_penalty?.avg_miles_per_year ?? 12000}
+                                onChange={e => updateLocalSetting("high_mileage_penalty", { ...localSettings.high_mileage_penalty, avg_miles_per_year: Number(e.target.value) })}
                                 className="w-20 h-5 text-micro" step="1000" />
                             </div>
                             <div className="flex items-center gap-1 text-micro">
                               <span className="text-muted-foreground w-28">Penalty % per step:</span>
-                              <Input type="number" value={(localSettings as any).high_mileage_penalty?.penalty_pct_per_step ?? 2}
-                                onChange={e => updateLocalSetting("high_mileage_penalty" as any, { ...(localSettings as any).high_mileage_penalty, penalty_pct_per_step: Number(e.target.value) })}
+                              <Input type="number" value={localSettings.high_mileage_penalty?.penalty_pct_per_step ?? 2}
+                                onChange={e => updateLocalSetting("high_mileage_penalty", { ...localSettings.high_mileage_penalty, penalty_pct_per_step: Number(e.target.value) })}
                                 className="w-14 h-5 text-micro" step="0.5" />
                             </div>
                             <div className="flex items-center gap-1 text-micro">
                               <span className="text-muted-foreground w-28">Step size (% above):</span>
-                              <Input type="number" value={(localSettings as any).high_mileage_penalty?.step_size_pct ?? 20}
-                                onChange={e => updateLocalSetting("high_mileage_penalty" as any, { ...(localSettings as any).high_mileage_penalty, step_size_pct: Number(e.target.value) })}
+                              <Input type="number" value={localSettings.high_mileage_penalty?.step_size_pct ?? 20}
+                                onChange={e => updateLocalSetting("high_mileage_penalty", { ...localSettings.high_mileage_penalty, step_size_pct: Number(e.target.value) })}
                                 className="w-14 h-5 text-micro" step="5" />
                             </div>
                             <div className="flex items-center gap-1 text-micro">
                               <span className="text-muted-foreground w-28">Max penalty %:</span>
-                              <Input type="number" value={(localSettings as any).high_mileage_penalty?.max_penalty_pct ?? 10}
-                                onChange={e => updateLocalSetting("high_mileage_penalty" as any, { ...(localSettings as any).high_mileage_penalty, max_penalty_pct: Number(e.target.value) })}
+                              <Input type="number" value={localSettings.high_mileage_penalty?.max_penalty_pct ?? 10}
+                                onChange={e => updateLocalSetting("high_mileage_penalty", { ...localSettings.high_mileage_penalty, max_penalty_pct: Number(e.target.value) })}
                                 className="w-14 h-5 text-micro" step="1" />
                             </div>
                             <div className="flex items-center gap-1 text-micro">
                               <span className="text-muted-foreground w-28">Max mi/year cap:</span>
-                              <Input type="number" value={(localSettings as any).high_mileage_penalty?.max_miles_per_year ?? 25000}
-                                onChange={e => updateLocalSetting("high_mileage_penalty" as any, { ...(localSettings as any).high_mileage_penalty, max_miles_per_year: Number(e.target.value) })}
+                              <Input type="number" value={localSettings.high_mileage_penalty?.max_miles_per_year ?? 25000}
+                                onChange={e => updateLocalSetting("high_mileage_penalty", { ...localSettings.high_mileage_penalty, max_miles_per_year: Number(e.target.value) })}
                                 className="w-20 h-5 text-micro" step="1000" />
                             </div>
                             <p className="text-[8px] text-muted-foreground leading-tight mt-1">
@@ -1244,7 +1261,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                         <div className="flex items-center gap-1.5">
                           <Zap className="w-3.5 h-3.5 text-primary" />
                           <span className="font-semibold text-[11px] text-card-foreground">Color Desirability</span>
-                          {(localSettings as any).color_desirability?.enabled && (
+                          {localSettings.color_desirability?.enabled && (
                             <Badge variant="secondary" className="text-[8px] px-1 py-0">ON</Badge>
                           )}
                         </div>
@@ -1256,20 +1273,20 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                         <div className="flex items-center justify-between">
                           <span className="text-micro text-muted-foreground">Enable color adjustments</span>
                           <Switch
-                            checked={(localSettings as any).color_desirability?.enabled ?? false}
-                            onCheckedChange={(checked) => updateLocalSetting("color_desirability" as any, { ...(localSettings as any).color_desirability || DEFAULT_COLOR_DESIRABILITY, enabled: checked })}
+                            checked={localSettings.color_desirability?.enabled ?? false}
+                            onCheckedChange={(checked) => updateLocalSetting("color_desirability", { ...localSettings.color_desirability || DEFAULT_COLOR_DESIRABILITY, enabled: checked })}
                             className="scale-75"
                           />
                         </div>
-                        {(localSettings as any).color_desirability?.enabled && (
+                        {localSettings.color_desirability?.enabled && (
                           <div className="grid grid-cols-2 gap-1 border-t border-border pt-2">
-                            {Object.entries(((localSettings as any).color_desirability?.adjustments || DEFAULT_COLOR_DESIRABILITY.adjustments) as Record<string, number>).map(([color, pct]) => (
+                            {Object.entries((localSettings.color_desirability?.adjustments || DEFAULT_COLOR_DESIRABILITY.adjustments) as Record<string, number>).map(([color, pct]) => (
                               <div key={color} className="flex items-center gap-1 text-micro">
                                 <span className="text-muted-foreground w-14 capitalize">{color}:</span>
                                 <Input type="number" value={pct}
                                   onChange={e => {
-                                    const adj = { ...((localSettings as any).color_desirability?.adjustments || DEFAULT_COLOR_DESIRABILITY.adjustments), [color]: Number(e.target.value) };
-                                    updateLocalSetting("color_desirability" as any, { ...(localSettings as any).color_desirability, adjustments: adj });
+                                    const adj = { ...(localSettings.color_desirability?.adjustments || DEFAULT_COLOR_DESIRABILITY.adjustments), [color]: Number(e.target.value) };
+                                    updateLocalSetting("color_desirability", { ...localSettings.color_desirability, adjustments: adj });
                                   }}
                                   className="w-14 h-5 text-[9px]" step="0.5" />
                                 <span className="text-[8px] text-muted-foreground">%</span>
@@ -1291,7 +1308,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                         <div className="flex items-center gap-1.5">
                           <Calendar className="w-3.5 h-3.5 text-primary" />
                           <span className="font-semibold text-[11px] text-card-foreground">Seasonal / Market Timing</span>
-                          {(localSettings as any).seasonal_adjustment?.enabled && (
+                          {localSettings.seasonal_adjustment?.enabled && (
                             <Badge variant="secondary" className="text-[8px] px-1 py-0">ON</Badge>
                           )}
                         </div>
@@ -1303,17 +1320,17 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                         <div className="flex items-center justify-between">
                           <span className="text-micro text-muted-foreground">Enable seasonal adjustment</span>
                           <Switch
-                            checked={(localSettings as any).seasonal_adjustment?.enabled ?? false}
-                            onCheckedChange={(checked) => updateLocalSetting("seasonal_adjustment" as any, { ...(localSettings as any).seasonal_adjustment || DEFAULT_SEASONAL_ADJUSTMENT, enabled: checked })}
+                            checked={localSettings.seasonal_adjustment?.enabled ?? false}
+                            onCheckedChange={(checked) => updateLocalSetting("seasonal_adjustment", { ...localSettings.seasonal_adjustment || DEFAULT_SEASONAL_ADJUSTMENT, enabled: checked })}
                             className="scale-75"
                           />
                         </div>
-                        {(localSettings as any).seasonal_adjustment?.enabled && (
+                        {localSettings.seasonal_adjustment?.enabled && (
                           <div className="space-y-1.5 border-t border-border pt-2">
                             <div className="flex items-center gap-1 text-micro">
                               <span className="text-muted-foreground w-28">Adjustment %:</span>
-                              <Input type="number" value={(localSettings as any).seasonal_adjustment?.adjustment_pct ?? 0}
-                                onChange={e => updateLocalSetting("seasonal_adjustment" as any, { ...(localSettings as any).seasonal_adjustment, adjustment_pct: Number(e.target.value) })}
+                              <Input type="number" value={localSettings.seasonal_adjustment?.adjustment_pct ?? 0}
+                                onChange={e => updateLocalSetting("seasonal_adjustment", { ...localSettings.seasonal_adjustment, adjustment_pct: Number(e.target.value) })}
                                 className="w-16 h-5 text-micro" step="0.5" />
                             </div>
                             <p className="text-[8px] text-muted-foreground leading-tight">
@@ -1344,7 +1361,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                         </p>
                         <div className="flex items-center gap-2 text-micro">
                           <span className="text-muted-foreground w-24">Accidents:</span>
-                          <Select value={((localSettings as any).deduction_modes?.accidents) || "flat"} onValueChange={(v) => updateLocalSetting("deduction_modes" as any, { ...((localSettings as any).deduction_modes || DEFAULT_DEDUCTION_MODES), accidents: v })}>
+                          <Select value={(localSettings.deduction_modes?.accidents) || "flat"} onValueChange={(v) => updateLocalSetting("deduction_modes", { ...(localSettings.deduction_modes || DEFAULT_DEDUCTION_MODES), accidents: v })}>
                             <SelectTrigger className="h-5 w-24 text-[9px]"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="flat" className="text-micro">Flat ($)</SelectItem>
@@ -1354,7 +1371,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                         </div>
                         <div className="flex items-center gap-2 text-micro">
                           <span className="text-muted-foreground w-24">Not Drivable:</span>
-                          <Select value={((localSettings as any).deduction_modes?.not_drivable) || "flat"} onValueChange={(v) => updateLocalSetting("deduction_modes" as any, { ...((localSettings as any).deduction_modes || DEFAULT_DEDUCTION_MODES), not_drivable: v })}>
+                          <Select value={(localSettings.deduction_modes?.not_drivable) || "flat"} onValueChange={(v) => updateLocalSetting("deduction_modes", { ...(localSettings.deduction_modes || DEFAULT_DEDUCTION_MODES), not_drivable: v })}>
                             <SelectTrigger className="h-5 w-24 text-[9px]"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="flat" className="text-micro">Flat ($)</SelectItem>
@@ -1379,12 +1396,13 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                     <CollapsibleContent>
                       <div className="space-y-1 p-2">
                         {Object.entries(DEDUCTION_LABELS).map(([key, config]) => {
-                          const enabled = (localSettings.deductions_config as any)?.[key] ?? true;
-                          const modes = (localSettings as any).deduction_modes || DEFAULT_DEDUCTION_MODES;
+                          const enabled = (localSettings.deductions_config as Record<string, boolean>)?.[key] ?? true;
+                          const modes = localSettings.deduction_modes || DEFAULT_DEDUCTION_MODES;
                           const isPctMode = (key === "accidents" && modes.accidents === "pct") || (key === "not_drivable" && modes.not_drivable === "pct");
                           const isModified = config.amountKeys.some(amtKey => {
-                            const current = (localSettings.deduction_amounts as any)?.[amtKey] ?? (DEFAULT_DEDUCTION_AMOUNTS as any)[amtKey] ?? 0;
-                            const def = (DEFAULT_DEDUCTION_AMOUNTS as any)[amtKey] ?? 0;
+                            const current = (localSettings.deduction_amounts as Record<string, number>)?.[amtKey]
+                              ?? (DEFAULT_DEDUCTION_AMOUNTS as Record<string, number>)[amtKey] ?? 0;
+                            const def = (DEFAULT_DEDUCTION_AMOUNTS as Record<string, number>)[amtKey] ?? 0;
                             return current !== def;
                           });
                           return (
@@ -1408,7 +1426,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                                       <span className="text-[8px] text-muted-foreground">{AMOUNT_SHORT[amtKey]}:</span>
                                       <Input
                                         type="number"
-                                        value={(localSettings.deduction_amounts as any)?.[amtKey] ?? 0}
+                                        value={(localSettings.deduction_amounts as Record<string, number>)?.[amtKey] ?? 0}
                                         onChange={e => updateLocalSetting("deduction_amounts", { ...localSettings.deduction_amounts, [amtKey]: Number(e.target.value) })}
                                         className="w-14 h-5 text-[9px]" step={isPctMode ? "0.5" : "25"}
                                       />
@@ -1488,7 +1506,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                       wholesaleAvg={Number(liveBbVehicle.wholesale?.avg || 0)}
                       tradeinAvg={Number(liveBbVehicle.tradein?.avg || 0)}
                       retailAvg={(() => {
-                        const basis = (settings as any).retail_profit_basis || "retail_avg";
+                        const basis = (settings as SimulatorSettings).retail_profit_basis || "retail_avg";
                         const tierMap: Record<string, number> = {
                           retail_xclean: Number(liveBbVehicle.retail?.xclean || 0),
                           retail_clean: Number(liveBbVehicle.retail?.clean || 0),
@@ -1512,7 +1530,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                       vin={liveVin}
                       uvc={liveBbVehicle.uvc}
                       zipcode={liveZip}
-                      radiusMiles={(activeSettings as any).retail_search_radius || 100}
+                      radiusMiles={activeSettings.retail_search_radius || 100}
                       offerHigh={liveResult.high}
                       vehicleMileage={liveMileage}
                       onStatsLoaded={setRetailStats}
