@@ -1,1 +1,1 @@
-ALTER TABLE public.form_config ADD COLUMN offer_before_details boolean NOT NULL DEFAULT false;
+ALTER TABLE public.form_config ADD COLUMN IF NOT EXISTS offer_before_details boolean NOT NULL DEFAULT false;
