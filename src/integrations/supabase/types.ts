@@ -4282,6 +4282,7 @@ export type Database = {
           tire_rr: number | null
           tires_replaced: string | null
           token: string
+          token_expires_at: string | null
           vehicle_make: string | null
           vehicle_model: string | null
           vehicle_year: string | null
@@ -4425,6 +4426,7 @@ export type Database = {
           tire_rr?: number | null
           tires_replaced?: string | null
           token?: string
+          token_expires_at?: string | null
           vehicle_make?: string | null
           vehicle_model?: string | null
           vehicle_year?: string | null
@@ -4568,6 +4570,7 @@ export type Database = {
           tire_rr?: number | null
           tires_replaced?: string | null
           token?: string
+          token_expires_at?: string | null
           vehicle_make?: string | null
           vehicle_model?: string | null
           vehicle_year?: string | null
@@ -6134,6 +6137,7 @@ export type Database = {
       is_login_locked: { Args: { _email: string; _ip?: string }; Returns: Json }
       is_platform_admin: { Args: { _user_id: string }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      is_submission_token_valid: { Args: { _token: string }; Returns: boolean }
       licensed_states_valid: { Args: { _states: string[] }; Returns: boolean }
       log_customer_data_access: {
         Args: {
