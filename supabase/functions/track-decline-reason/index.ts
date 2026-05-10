@@ -34,6 +34,38 @@ const REASON_LABEL: Record<string, string> = {
   other: "other reasons",
 };
 
+// Resolve the caller-supplied redirect and return it only if the host is on
+// the explicit allowlist. Anything off-list, or a non-http(s) scheme
+// (javascript:/data:), is dropped so this endpoint can't be turned into a
+// phishing redirector via crafted email links.
+//
+// PUBLIC_SITE_URL is the canonical customer-facing site (e.g.
+// https://hartecash.com); ALLOWED_REDIRECT_HOSTS optionally extends it with
+// a comma-separated list of additional hosts (e.g. preview deploys).
+function sanitizeRedirect(input: string | null, requestUrl: string): string | null {
+  if (!input) return null;
+  const allowed = new Set<string>();
+  const siteUrl = Deno.env.get("PUBLIC_SITE_URL");
+  if (siteUrl) {
+    try { allowed.add(new URL(siteUrl).host); } catch { /* ignore */ }
+  }
+  for (const h of (Deno.env.get("ALLOWED_REDIRECT_HOSTS") ?? "").split(",")) {
+    const trimmed = h.trim();
+    if (trimmed) allowed.add(trimmed);
+  }
+  // Function host stays allowed as a safe fallback for inline flows.
+  try { allowed.add(new URL(requestUrl).host); } catch { /* ignore */ }
+
+  try {
+    const target = new URL(input, requestUrl);
+    if (target.protocol !== "http:" && target.protocol !== "https:") return null;
+    if (!allowed.has(target.host)) return null;
+    return target.toString();
+  } catch {
+    return null;
+  }
+}
+
 function htmlResponse(title: string, body: string, status = 200): Response {
   const html = `<!doctype html>
 <html><head><meta charset="utf-8"/><title>${title}</title>
@@ -107,10 +139,14 @@ serve(async (req) => {
       } as any);
     }
 
-    if (redirect) {
+    // Only honor redirect if it resolves to a same-origin path. Anything
+    // off-site (or a javascript:/data: URI) becomes a phishing primitive
+    // since this endpoint is reachable from email clicks.
+    const safeRedirect = sanitizeRedirect(redirect, req.url);
+    if (safeRedirect) {
       return new Response(null, {
         status: 302,
-        headers: { ...corsHeaders, Location: redirect },
+        headers: { ...corsHeaders, Location: safeRedirect },
       });
     }
 
