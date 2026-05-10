@@ -20,6 +20,8 @@ import InspectionDisclosure from "@/components/portal/InspectionDisclosure";
 import WhatToExpect from "@/components/portal/WhatToExpect";
 import EquipmentValueImpact from "@/components/portal/EquipmentValueImpact";
 import PromoBanner from "@/components/portal/PromoBanner";
+import TokenErrorScreen from "@/components/TokenErrorScreen";
+import { checkTokenStatus, type TokenStatus } from "@/lib/tokenStatus";
 
 import ProgressSteps, { mapStatusToStepIndex } from "@/components/portal/ProgressSteps";
 import PortalOfferCard from "@/components/portal/PortalOfferCard";
@@ -135,14 +137,22 @@ const CustomerPortalLegacy = () => {
   const [loading, setLoading] = useState(true);
   const [mileageUpdating, setMileageUpdating] = useState(false);
   const [error, setError] = useState("");
+  const [tokenStatus, setTokenStatus] = useState<TokenStatus | "error" | null>(null);
+  const [retryNonce, setRetryNonce] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!token) { setError("Invalid link."); setLoading(false); return; }
+      if (!token) { setTokenStatus("missing"); setLoading(false); return; }
       const minDelay = new Promise(r => setTimeout(r, 1200));
       const query = supabase.rpc("get_submission_portal", { _token: token });
       const [, { data, error: err }] = await Promise.all([minDelay, query]);
-      if (err || !data || data.length === 0) { setError("Submission not found. Please check your link."); setLoading(false); return; }
+      if (err || !data || data.length === 0) {
+        const status = err ? "error" : await checkTokenStatus(token);
+        setTokenStatus(status);
+        setError("Submission not found. Please check your link.");
+        setLoading(false);
+        return;
+      }
       setSubmission(data[0] as unknown as PortalSubmission);
       setLoading(false);
 
