@@ -130,7 +130,7 @@ const LandingFlowConfig = () => {
       // schema-cache error.
       let row: any = null;
       const wide = await supabase
-        .from("site_config" as any)
+        .from("site_config")
         .select("landing_template, landing_form_variant, landing_form_density, pickup_offered, condition_card_style, ghost_screen, ghost_headline, ghost_subhead, landing_lookup_default, landing_cta_color, landing_cta_text_color")
         .eq("dealership_id", dealershipId)
         .maybeSingle();
@@ -148,7 +148,7 @@ const LandingFlowConfig = () => {
           lower.includes("schema cache")
         ) {
           const narrow = await supabase
-            .from("site_config" as any)
+            .from("site_config")
             .select("landing_template")
             .eq("dealership_id", dealershipId)
             .maybeSingle();
@@ -217,11 +217,11 @@ const LandingFlowConfig = () => {
     // Pass 1 — template
     if (tmplChanged) {
       const { error: tmplErr } = await supabase
-        .from("site_config" as any)
+        .from("site_config")
         .update({
           landing_template: state.landing_template,
           updated_at: new Date().toISOString(),
-        } as any)
+        })
         .eq("dealership_id", dealershipId);
       if (tmplErr) {
         setSaving(false);
@@ -246,15 +246,15 @@ const LandingFlowConfig = () => {
     let densitySkipped = false;
     if (densityChanged) {
       const { error: dErr } = await supabase
-        .from("site_config" as any)
+        .from("site_config")
         .update({
           landing_form_density: state.landing_form_density,
           updated_at: new Date().toISOString(),
-        } as any)
+        })
         .eq("dealership_id", dealershipId);
       if (dErr) {
         const lower = dErr.message?.toLowerCase() || "";
-        const code = (dErr as any).code || "";
+        const code = dErr.code || "";
         const missingDensity =
           lower.includes("landing_form_density") ||
           lower.includes("schema cache") ||
@@ -275,15 +275,15 @@ const LandingFlowConfig = () => {
     let lookupSkipped = false;
     if (lookupChanged) {
       const { error: lErr } = await supabase
-        .from("site_config" as any)
+        .from("site_config")
         .update({
           landing_lookup_default: state.landing_lookup_default,
           updated_at: new Date().toISOString(),
-        } as any)
+        })
         .eq("dealership_id", dealershipId);
       if (lErr) {
         const lower = lErr.message?.toLowerCase() || "";
-        const code = (lErr as any).code || "";
+        const code = lErr.code || "";
         const missingLookup =
           lower.includes("landing_lookup_default") ||
           lower.includes("landing_cta_color") ||
@@ -306,16 +306,16 @@ const LandingFlowConfig = () => {
     let ctaColorSkipped = false;
     if (ctaColorChanged) {
       const { error: cErr } = await supabase
-        .from("site_config" as any)
+        .from("site_config")
         .update({
           landing_cta_color: state.landing_cta_color.trim() || null,
           landing_cta_text_color: state.landing_cta_text_color.trim() || null,
           updated_at: new Date().toISOString(),
-        } as any)
+        })
         .eq("dealership_id", dealershipId);
       if (cErr) {
         const lower = cErr.message?.toLowerCase() || "";
-        const code = (cErr as any).code || "";
+        const code = cErr.code || "";
         const missing =
           lower.includes("landing_cta_color") ||
           lower.includes("landing_cta_text_color") ||
@@ -345,12 +345,12 @@ const LandingFlowConfig = () => {
     ): Promise<{ skipped: boolean; hardFailMsg?: string }> => {
       if (newVal === oldVal) return { skipped: false };
       const { error: e } = await supabase
-        .from("site_config" as any)
-        .update({ [key]: newVal, updated_at: new Date().toISOString() } as any)
+        .from("site_config")
+        .update({ [key]: newVal, updated_at: new Date().toISOString() })
         .eq("dealership_id", dealershipId);
       if (!e) return { skipped: false };
       const lower = e.message?.toLowerCase() || "";
-      const code = (e as any).code || "";
+      const code = e.code || "";
       const isCacheMiss =
         lower.includes(key) ||
         lower.includes("schema cache") ||
@@ -404,15 +404,15 @@ const LandingFlowConfig = () => {
     let pickupSkipped = false;
     if (pickupChanged) {
       const { error: pErr } = await supabase
-        .from("site_config" as any)
+        .from("site_config")
         .update({
           pickup_offered: state.pickup_offered,
           updated_at: new Date().toISOString(),
-        } as any)
+        })
         .eq("dealership_id", dealershipId);
       if (pErr) {
         const lower = pErr.message?.toLowerCase() || "";
-        const code = (pErr as any).code || "";
+        const code = pErr.code || "";
         const missingPickup =
           lower.includes("pickup_offered") ||
           lower.includes("schema cache") ||
@@ -433,15 +433,15 @@ const LandingFlowConfig = () => {
     let conditionStyleSkipped = false;
     if (conditionStyleChanged) {
       const { error: cErr } = await supabase
-        .from("site_config" as any)
+        .from("site_config")
         .update({
           condition_card_style: state.condition_card_style,
           updated_at: new Date().toISOString(),
-        } as any)
+        })
         .eq("dealership_id", dealershipId);
       if (cErr) {
         const lower = cErr.message?.toLowerCase() || "";
-        const code = (cErr as any).code || "";
+        const code = cErr.code || "";
         const missing =
           lower.includes("condition_card_style") ||
           lower.includes("schema cache") ||
@@ -460,15 +460,15 @@ const LandingFlowConfig = () => {
     let variantSkipped = false;
     if (variantChanged) {
       const { error: varErr } = await supabase
-        .from("site_config" as any)
+        .from("site_config")
         .update({
           landing_form_variant: state.landing_form_variant,
           updated_at: new Date().toISOString(),
-        } as any)
+        })
         .eq("dealership_id", dealershipId);
       if (varErr) {
         const lower = varErr.message?.toLowerCase() || "";
-        const code = (varErr as any).code || "";
+        const code = varErr.code || "";
         const missingVariant =
           lower.includes("landing_form_variant") ||
           lower.includes("schema cache") ||

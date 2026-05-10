@@ -152,24 +152,24 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default", initial }:
       if (cancelled || !data) return;
       // Only resume if the partial belongs to the current tenant — prevents
       // stale localStorage from a different dealer hijacking this session.
-      if ((data as any).dealership_id && (data as any).dealership_id !== tenant.dealership_id) {
+      if (data.dealership_id && data.dealership_id !== tenant.dealership_id) {
         localStorage.removeItem("hartecash_partial_id");
         return;
       }
-      partialIdRef.current = (data as any).id;
+      partialIdRef.current = data.id;
       setFormData((prev) => ({
         ...prev,
-        name: (data as any).name || prev.name,
-        phone: (data as any).phone || prev.phone,
-        email: (data as any).email || prev.email,
-        zip: (data as any).zip || prev.zip,
-        plate: (data as any).plate || prev.plate,
-        state: (data as any).plate_state || prev.state,
-        vin: (data as any).vin || prev.vin,
-        mileage: String((data as any).mileage || prev.mileage || ""),
-        manualYear: String((data as any).vehicle_year || prev.manualYear || ""),
-        manualMake: (data as any).vehicle_make || prev.manualMake,
-        manualModel: (data as any).vehicle_model || prev.manualModel,
+        name: data.name || prev.name,
+        phone: data.phone || prev.phone,
+        email: data.email || prev.email,
+        zip: data.zip || prev.zip,
+        plate: data.plate || prev.plate,
+        state: data.plate_state || prev.state,
+        vin: data.vin || prev.vin,
+        mileage: String(data.mileage || prev.mileage || ""),
+        manualYear: String(data.vehicle_year || prev.manualYear || ""),
+        manualMake: data.vehicle_make || prev.manualMake,
+        manualModel: data.vehicle_model || prev.manualModel,
       }));
       toast({
         title: "Welcome back",
@@ -195,7 +195,7 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default", initial }:
       .eq("is_active", true)
       .lte("starts_at", new Date().toISOString())
       .then(({ data }) => {
-        const active = (data as any[] || []).filter(
+        const active = (data ?? []).filter(
           (p: any) => !p.ends_at || new Date(p.ends_at) > new Date()
         );
         const total = active.reduce((sum: number, p: any) => sum + (p.bonus_amount || 0), 0);
@@ -232,11 +232,11 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default", initial }:
 
     if (partialIdRef.current) {
       // Update existing partial
-      supabase.from("submissions").update(payload as any).eq("id", partialIdRef.current).then(() => {});
+      supabase.from("submissions").update(payload).eq("id", partialIdRef.current).then(() => {});
     } else {
       // Insert new partial; cache the id locally so the next visit on this
       // browser auto-resumes (URL ?resume= still wins when present).
-      supabase.from("submissions").insert(payload as any).select("id").maybeSingle().then(({ data }) => {
+      supabase.from("submissions").insert(payload).select("id").maybeSingle().then(({ data }) => {
         if (data) {
           partialIdRef.current = data.id;
           try { localStorage.setItem("hartecash_partial_id", data.id); } catch { /* private mode */ }
@@ -271,7 +271,7 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default", initial }:
 
   const updateArray = (field: string, value: string) =>
     setFormData((prev) => {
-      const arr = (prev as any)[field] as string[];
+      const arr = (prev as unknown as Record<string, string[]>)[field];
       if (value === "none") return { ...prev, [field]: ["none"] };
       const without = arr.filter((v) => v !== "none");
       return {
@@ -340,7 +340,7 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default", initial }:
         // to a synthetic vehicle when site_config.demo_mode is on (BB
         // sandbox kill-switch). No effect when demo_mode is off.
         dealership_id: tenant.dealership_id,
-        demo_mode: (config as any)?.demo_mode === true ? true : undefined,
+        demo_mode: config?.demo_mode === true ? true : undefined,
       };
       if (isVin) body.vin = formData.vin.trim();
       else {
@@ -583,10 +583,12 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default", initial }:
       // Demo-mode offer override (BB sandbox kill-switch). Clamp the
       // customer-facing offer to site_config.demo_offer_amount when
       // demo_mode is on. Off = no behavior change vs. prior pipeline.
+      // `_demo` is a runtime hint stamped by the demo lookup path —
+      // not on the canonical BBVehicle interface, hence the typed cast.
       const isDemoMode =
-        (config as any)?.demo_mode === true ||
-        (finalBBVehicle as any)?._demo === true;
-      const demoOfferAmount = Number((config as any)?.demo_offer_amount ?? 23599) || 23599;
+        config?.demo_mode === true ||
+        (finalBBVehicle as { _demo?: boolean } | null)?._demo === true;
+      const demoOfferAmount = Number(config?.demo_offer_amount ?? 23599) || 23599;
       const demoEstimateLow = isDemoMode ? demoOfferAmount : (estimate?.low || null);
       const demoEstimateHigh = isDemoMode ? demoOfferAmount : (estimate?.high || null);
 
@@ -594,7 +596,7 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default", initial }:
       const storeLocationId = formData.preferredLocationId
         ? formData.preferredLocationId
         : await resolveStoreAssignment(
-            { ...config as any, dealership_id: tenant.dealership_id },
+            { ...config, dealership_id: tenant.dealership_id },
             vehicleInfo?.make || "",
             formData.zip || "",
           );
@@ -651,7 +653,7 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default", initial }:
           bb_selected_options: selectedAddDeducts.length > 0 ? selectedAddDeducts : [],
           referral_code: referralCode || null,
           assigned_rep_email: repCode || null,
-        } as any);
+        });
 
       if (error) throw error;
 

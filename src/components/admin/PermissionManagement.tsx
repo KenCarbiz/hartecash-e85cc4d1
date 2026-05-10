@@ -1,4 +1,20 @@
 import { useState, useEffect } from "react";
+import type { Database } from "@/integrations/supabase/types";
+
+type PermissionGroupsInsert      = Database["public"]["Tables"]["permission_groups"]["Insert"];
+type PermissionGroupsUpdate      = Database["public"]["Tables"]["permission_groups"]["Update"];
+type AccessRequestsUpdate        = Database["public"]["Tables"]["permission_access_requests"]["Update"];
+type StaffAssignmentsInsert      = Database["public"]["Tables"]["staff_permission_assignments"]["Insert"];
+type StaffAssignmentsUpdate      = Database["public"]["Tables"]["staff_permission_assignments"]["Update"];
+type SiteConfigUpdate            = Database["public"]["Tables"]["site_config"]["Update"];
+
+// Typed boundary helpers — bridge JSONB invariance for write paths.
+const toGroupInsert  = (p: Record<string, unknown>) => p as unknown as PermissionGroupsInsert;
+const toGroupUpdate  = (p: Record<string, unknown>) => p as unknown as PermissionGroupsUpdate;
+const toRequestUpdate = (p: Record<string, unknown>) => p as unknown as AccessRequestsUpdate;
+const toAssignInsert = (p: Record<string, unknown>) => p as unknown as StaffAssignmentsInsert;
+const toAssignUpdate = (p: Record<string, unknown>) => p as unknown as StaffAssignmentsUpdate;
+const toSiteUpdate   = (p: Record<string, unknown>) => p as unknown as SiteConfigUpdate;
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
@@ -106,18 +122,18 @@ const PermissionManagement = () => {
   const fetchData = async () => {
     setLoading(true);
     const [{ data: groupData }, { data: reqData }, { data: configData }] = await Promise.all([
-      supabase.from("permission_groups" as any).select("*").order("name"),
-      supabase.from("permission_access_requests" as any).select("*").eq("status", "pending").order("created_at", { ascending: false }),
+      supabase.from("permission_groups").select("*").order("name"),
+      supabase.from("permission_access_requests").select("*").eq("status", "pending").order("created_at", { ascending: false }),
       supabase.from("site_config").select("show_request_access").eq("dealership_id", dealershipId).maybeSingle(),
     ]);
 
-    setGroups((groupData as any[] || []) as PermissionGroup[]);
+    setGroups((groupData ?? []) as unknown as PermissionGroup[]);
 
     // Enrich requests
     const enriched: AccessRequest[] = [];
-    for (const r of (reqData as any[] || [])) {
+    for (const r of reqData ?? []) {
       const { data: profile } = await supabase.from("profiles").select("email").eq("user_id", r.user_id).maybeSingle();
-      const group = (groupData as any[] || []).find((g: any) => g.id === r.requested_group_id);
+      const group = (groupData ?? []).find((g) => g.id === r.requested_group_id);
       enriched.push({
         ...r,
         user_email: profile?.email || r.user_id,
@@ -125,7 +141,7 @@ const PermissionManagement = () => {
       });
     }
     setRequests(enriched);
-    setShowRequestAccess((configData as any)?.show_request_access ?? true);
+    setShowRequestAccess(configData?.show_request_access ?? true);
 
     // Fetch staff with their individual sections
     await fetchStaffSections();
@@ -138,10 +154,13 @@ const PermissionManagement = () => {
     if (!allStaff) return;
 
     const staffWithSections: StaffMember[] = [];
-    for (const s of allStaff as any[]) {
+    // get_all_staff RPC return type isn't in the generated types yet
+    // (it's defined in a migration but not surfaced as a typed RPC).
+    type StaffRow = { user_id: string; email: string | null; display_name: string | null; role: string };
+    for (const s of (allStaff as unknown as StaffRow[]) ?? []) {
       // Get individual sections for this user
       const { data: assignments } = await supabase
-        .from("staff_permission_assignments" as any)
+        .from("staff_permission_assignments")
         .select("individual_sections")
         .eq("user_id", s.user_id)
         .is("permission_group_id", null)
@@ -152,7 +171,7 @@ const PermissionManagement = () => {
         email: s.email,
         display_name: s.display_name,
         role: s.role,
-        individual_sections: (assignments as any)?.individual_sections || [],
+        individual_sections: (assignments?.individual_sections as string[] | null) ?? [],
       });
     }
     setStaffMembers(staffWithSections);
@@ -190,11 +209,11 @@ const PermissionManagement = () => {
       updated_at: new Date().toISOString(),
     };
     if (isNew) {
-      const { error } = await supabase.from("permission_groups" as any).insert(payload as any);
+      const { error } = await supabase.from("permission_groups").insert(toGroupInsert(payload));
       if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
       else toast({ title: "Group created" });
     } else {
-      const { error } = await supabase.from("permission_groups" as any).update(payload as any).eq("id", editGroup!.id);
+      const { error } = await supabase.from("permission_groups").update(toGroupUpdate(payload)).eq("id", editGroup!.id);
       if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
       else toast({ title: "Group updated" });
     }
@@ -205,7 +224,7 @@ const PermissionManagement = () => {
 
   const handleDeleteGroup = async () => {
     if (!deleteTarget) return;
-    await supabase.from("permission_groups" as any).delete().eq("id", deleteTarget.id);
+    await supabase.from("permission_groups").delete().eq("id", deleteTarget.id);
     toast({ title: "Group deleted" });
     setDeleteTarget(null);
     fetchData();
@@ -225,8 +244,8 @@ const PermissionManagement = () => {
     await saveIndividualSections(grantingRequest.user_id, grantSections);
 
     // Mark request as approved
-    await supabase.from("permission_access_requests" as any)
-      .update({ status: "approved", reviewed_at: new Date().toISOString() } as any)
+    await supabase.from("permission_access_requests")
+      .update(toRequestUpdate({ status: "approved", reviewed_at: new Date().toISOString() }))
       .eq("id", grantingRequest.id);
 
     toast({ title: "Access granted", description: `${grantSections.length} section${grantSections.length !== 1 ? "s" : ""} granted.` });
@@ -246,8 +265,8 @@ const PermissionManagement = () => {
   };
 
   const handleDenyRequest = async (req: AccessRequest) => {
-    await supabase.from("permission_access_requests" as any)
-      .update({ status: "denied", reviewed_at: new Date().toISOString() } as any)
+    await supabase.from("permission_access_requests")
+      .update(toRequestUpdate({ status: "denied", reviewed_at: new Date().toISOString() }))
       .eq("id", req.id);
     toast({ title: "Request denied" });
     try {
@@ -266,19 +285,19 @@ const PermissionManagement = () => {
   const saveIndividualSections = async (userId: string, sections: string[]) => {
     // Upsert the individual sections row (permission_group_id = null)
     const { data: existing } = await supabase
-      .from("staff_permission_assignments" as any)
+      .from("staff_permission_assignments")
       .select("id")
       .eq("user_id", userId)
       .is("permission_group_id", null)
       .maybeSingle();
 
     if (existing) {
-      await supabase.from("staff_permission_assignments" as any)
-        .update({ individual_sections: sections } as any)
-        .eq("id", (existing as any).id);
+      await supabase.from("staff_permission_assignments")
+        .update(toAssignUpdate({ individual_sections: sections }))
+        .eq("id", existing.id);
     } else {
-      await supabase.from("staff_permission_assignments" as any)
-        .insert({ user_id: userId, permission_group_id: null, individual_sections: sections } as any);
+      await supabase.from("staff_permission_assignments")
+        .insert(toAssignInsert({ user_id: userId, permission_group_id: null, individual_sections: sections }));
     }
   };
 
@@ -291,7 +310,7 @@ const PermissionManagement = () => {
 
   const toggleShowRequestAccess = async (val: boolean) => {
     setShowRequestAccess(val);
-    await supabase.from("site_config").update({ show_request_access: val } as any).eq("dealership_id", dealershipId);
+    await supabase.from("site_config").update(toSiteUpdate({ show_request_access: val })).eq("dealership_id", dealershipId);
     toast({ title: val ? "Request Access enabled" : "Request Access hidden" });
   };
 
@@ -540,8 +559,8 @@ const PermissionManagement = () => {
           groups={groups}
           onSave={async (sections) => {
             await saveIndividualSections(grantingRequest.user_id, sections);
-            await supabase.from("permission_access_requests" as any)
-              .update({ status: "approved", reviewed_at: new Date().toISOString() } as any)
+            await supabase.from("permission_access_requests")
+              .update(toRequestUpdate({ status: "approved", reviewed_at: new Date().toISOString() }))
               .eq("id", grantingRequest.id);
             toast({ title: "Access granted", description: `${sections.length} section${sections.length !== 1 ? "s" : ""} granted.` });
             try {
