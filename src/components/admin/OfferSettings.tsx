@@ -10,6 +10,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
 import type { OfferSettings as OfferSettingsType, StrategyMode, MarketAdjustmentConfig } from "@/lib/offerCalculator";
+import type { Database } from "@/integrations/supabase/types";
+
+type OfferSettingsInsert = Database["public"]["Tables"]["offer_settings"]["Insert"];
+type OfferRulesInsert    = Database["public"]["Tables"]["offer_rules"]["Insert"];
+
+// Single boundary cast: typed local model → Supabase Insert payload. JSONB
+// columns serialize fine; this just bridges TypeScript's Json invariance.
+const toSettingsPayload = (p: Record<string, unknown>) => p as unknown as OfferSettingsInsert;
+const toRulePayload     = (p: Record<string, unknown>) => p as unknown as OfferRulesInsert;
 import { STRATEGY_MODE_PRESETS, STRATEGY_PRESETS, DEFAULT_MARKET_ADJUSTMENT } from "@/lib/offerCalculator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -154,6 +163,19 @@ interface OfferSettingsRow {
   hide_pack_from_appraisal: boolean;
   retail_profit_basis: string;
   low_mileage_bonus: { enabled: boolean; avg_miles_per_year: number; bonus_pct_per_step: number; step_size_pct: number; max_bonus_pct: number; min_miles_per_year: number };
+  // Fields the table actually has but were previously missing from the local
+  // interface — code below `settings`-cast its way around them.
+  manager_pin?: string;
+  target_gross_min?: number;
+  wholesale_only_mileage?: number;
+  wholesale_only_age_years?: number;
+  max_market_pct?: number | null;
+  floor_plan_rate_pct?: number;
+  lot_cost_per_day?: number;
+  learning_threshold?: number;
+  archetype_deduction_overrides?: ArchetypeDeductionOverrides | null;
+  auto_firm_offer_pct?: number | null;
+  strategy_mode?: StrategyMode;
 }
 
 interface OfferRule {
@@ -283,11 +305,11 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
   const fetchAll = async () => {
     setLoading(true);
     const [settingsRes, rulesRes] = await Promise.all([
-      supabase.from("offer_settings" as any).select("*").eq("dealership_id", dealershipId).maybeSingle(),
-      supabase.from("offer_rules" as any).select("*").eq("dealership_id", dealershipId).order("priority", { ascending: false }),
+      supabase.from("offer_settings").select("*").eq("dealership_id", dealershipId).maybeSingle(),
+      supabase.from("offer_rules").select("*").eq("dealership_id", dealershipId).order("priority", { ascending: false }),
     ]);
     if (settingsRes.data) {
-      const d = settingsRes.data as any;
+      const d = settingsRes.data;
       setSettings({
         ...d,
         deduction_amounts: d.deduction_amounts || DEFAULT_DEDUCTION_AMOUNTS,
@@ -346,7 +368,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
       }
     }
     if (rulesRes.data) {
-      setRules((rulesRes.data as any[]).map(r => ({ ...r, adjustment_type: r.adjustment_type || "pct" })) as OfferRule[]);
+      setRules((rulesRes.data ?? []).map(r => ({ ...r, adjustment_type: r.adjustment_type || "pct" })) as unknown as OfferRule[]);
     }
     setLoading(false);
   };
@@ -354,38 +376,38 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
   const handleSaveSettings = async () => {
     if (!settings) return;
     setSaving(true);
-    const { error } = await supabase.from("offer_settings" as any).update({
+    const { error } = await supabase.from("offer_settings").update(toSettingsPayload({
       bb_value_basis: settings.bb_value_basis,
       global_adjustment_pct: settings.global_adjustment_pct,
-      deductions_config: settings.deductions_config as any,
-      deduction_amounts: settings.deduction_amounts as any,
-      condition_multipliers: settings.condition_multipliers as any,
-      condition_basis_map: settings.condition_basis_map as any,
-      condition_equipment_map: settings.condition_equipment_map as any,
+      deductions_config: settings.deductions_config,
+      deduction_amounts: settings.deduction_amounts,
+      condition_multipliers: settings.condition_multipliers,
+      condition_basis_map: settings.condition_basis_map,
+      condition_equipment_map: settings.condition_equipment_map,
       recon_cost: settings.recon_cost,
       offer_floor: settings.offer_floor,
       offer_ceiling: settings.offer_ceiling,
-      age_tiers: settings.age_tiers as any,
-      mileage_tiers: settings.mileage_tiers as any,
+      age_tiers: settings.age_tiers,
+      mileage_tiers: settings.mileage_tiers,
       regional_adjustment_pct: settings.regional_adjustment_pct,
       retail_search_radius: settings.retail_search_radius ?? 100,
       retail_search_zip: settings.retail_search_zip || null,
       dealer_pack: settings.dealer_pack ?? 0,
       hide_pack_from_appraisal: settings.hide_pack_from_appraisal ?? false,
       retail_profit_basis: settings.retail_profit_basis || "retail_avg",
-      manager_pin: (settings as any).manager_pin || "0000",
-      target_gross_min: (settings as any).target_gross_min || 0,
-      wholesale_only_mileage: (settings as any).wholesale_only_mileage || 120000,
-      wholesale_only_age_years: (settings as any).wholesale_only_age_years || 10,
-      max_market_pct: (settings as any).max_market_pct ?? 90,
-      floor_plan_rate_pct: (settings as any).floor_plan_rate_pct ?? 6.5,
-      lot_cost_per_day: (settings as any).lot_cost_per_day ?? 8,
-      learning_threshold: (settings as any).learning_threshold ?? 250,
-      archetype_deduction_overrides: (settings as any).archetype_deduction_overrides ?? null,
+      manager_pin: settings.manager_pin || "0000",
+      target_gross_min: settings.target_gross_min || 0,
+      wholesale_only_mileage: settings.wholesale_only_mileage || 120000,
+      wholesale_only_age_years: settings.wholesale_only_age_years || 10,
+      max_market_pct: settings.max_market_pct ?? 90,
+      floor_plan_rate_pct: settings.floor_plan_rate_pct ?? 6.5,
+      lot_cost_per_day: settings.lot_cost_per_day ?? 8,
+      learning_threshold: settings.learning_threshold ?? 250,
+      archetype_deduction_overrides: settings.archetype_deduction_overrides ?? null,
       strategy_mode: strategyMode,
-      auto_firm_offer_pct: (settings as any).auto_firm_offer_pct ?? null,
+      auto_firm_offer_pct: settings.auto_firm_offer_pct ?? null,
       updated_at: new Date().toISOString(),
-    } as any).eq("id", settings.id);
+    })).eq("id", settings.id);
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -450,9 +472,9 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
 
     let error;
     if (editingRule.id) {
-      ({ error } = await supabase.from("offer_rules" as any).update(payload as any).eq("id", editingRule.id));
+      ({ error } = await supabase.from("offer_rules").update(toRulePayload(payload)).eq("id", editingRule.id));
     } else {
-      ({ error } = await supabase.from("offer_rules" as any).insert(payload as any));
+      ({ error } = await supabase.from("offer_rules").insert(toRulePayload(payload)));
     }
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -473,7 +495,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
     if (!confirmDeleteRuleId) return;
     const id = confirmDeleteRuleId;
     setConfirmDeleteRuleId(null);
-    const { error } = await supabase.from("offer_rules" as any).delete().eq("id", id);
+    const { error } = await supabase.from("offer_rules").delete().eq("id", id);
     if (!error) {
       setRules((prev) => prev.filter((r) => r.id !== id));
       toast({ title: "Rule deleted" });
@@ -481,7 +503,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
   };
 
   const handleToggleRuleActive = async (rule: OfferRule) => {
-    const { error } = await supabase.from("offer_rules" as any).update({ is_active: !rule.is_active } as any).eq("id", rule.id);
+    const { error } = await supabase.from("offer_rules").update({ is_active: !rule.is_active }).eq("id", rule.id);
     if (!error) {
       setRules((prev) => prev.map((r) => r.id === rule.id ? { ...r, is_active: !r.is_active } : r));
     }
@@ -554,12 +576,12 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
               setSettings({
                 ...settings,
                 strategy_mode: mode,
-                condition_basis_map: modePreset.condition_basis_map as any,
+                condition_basis_map: modePreset.condition_basis_map as ConditionBasisMap,
                 global_adjustment_pct: modePreset.global_adjustment_pct,
                 ...(calcPreset.condition_multipliers ? { condition_multipliers: calcPreset.condition_multipliers } : {}),
-              } as any);
+              });
             } else if (mode === "custom" && settings) {
-              setSettings({ ...settings, strategy_mode: mode } as any);
+              setSettings({ ...settings, strategy_mode: mode });
             }
           }}
         />
@@ -712,8 +734,8 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
                 <Input
                   type="number" min={0} step={100}
-                  value={(settings as any).target_gross_min || 0}
-                  onChange={(e) => setSettings({ ...settings, target_gross_min: Number(e.target.value) || 0 } as any)}
+                  value={settings.target_gross_min || 0}
+                  onChange={(e) => setSettings({ ...settings, target_gross_min: Number(e.target.value) || 0 })}
                   className="pl-7"
                 />
               </div>
@@ -744,28 +766,28 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
                   step={1}
                   placeholder="off"
                   value={(() => {
-                    const v = (settings as any).auto_firm_offer_pct;
+                    const v = settings.auto_firm_offer_pct;
                     return v == null ? "" : Math.round(v * 100);
                   })()}
                   onChange={(e) => {
                     const raw = e.target.value;
                     if (raw === "") {
-                      setSettings({ ...settings, auto_firm_offer_pct: null } as any);
+                      setSettings({ ...settings, auto_firm_offer_pct: null });
                       return;
                     }
                     const pct = Number(raw);
                     if (!Number.isFinite(pct)) return;
                     // Clamp to the migration's CHECK constraint (50–100).
                     const clamped = Math.max(50, Math.min(100, pct));
-                    setSettings({ ...settings, auto_firm_offer_pct: clamped / 100 } as any);
+                    setSettings({ ...settings, auto_firm_offer_pct: clamped / 100 });
                   }}
                   className="max-w-[8rem]"
                 />
                 <span className="text-sm text-muted-foreground">%</span>
-                {(settings as any).auto_firm_offer_pct != null && (
+                {settings.auto_firm_offer_pct != null && (
                   <button
                     type="button"
-                    onClick={() => setSettings({ ...settings, auto_firm_offer_pct: null } as any)}
+                    onClick={() => setSettings({ ...settings, auto_firm_offer_pct: null })}
                     className="text-xs font-bold text-muted-foreground hover:text-foreground underline"
                   >
                     disable
@@ -783,8 +805,8 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
               <div className="flex items-center gap-2">
                 <Input
                   type="number" min={0} max={20} step={0.25}
-                  value={(settings as any).floor_plan_rate_pct ?? 6.5}
-                  onChange={(e) => setSettings({ ...settings, floor_plan_rate_pct: Number(e.target.value) } as any)}
+                  value={settings.floor_plan_rate_pct ?? 6.5}
+                  onChange={(e) => setSettings({ ...settings, floor_plan_rate_pct: Number(e.target.value) })}
                   className="w-24"
                 />
                 <span className="text-sm text-muted-foreground">% / year</span>
@@ -799,8 +821,8 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
                 <Input
                   type="number" min={0} step={1}
-                  value={(settings as any).lot_cost_per_day ?? 8}
-                  onChange={(e) => setSettings({ ...settings, lot_cost_per_day: Number(e.target.value) } as any)}
+                  value={settings.lot_cost_per_day ?? 8}
+                  onChange={(e) => setSettings({ ...settings, lot_cost_per_day: Number(e.target.value) })}
                   className="pl-7 w-24"
                 />
               </div>
@@ -867,14 +889,14 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
               <Label className="text-sm font-semibold">Max % of Retail</Label>
               <p className="text-micro text-muted-foreground mb-1">Never offer more than this % of BB retail avg.</p>
               <div className="flex items-center gap-2">
-                <Input type="number" min={50} max={100} step={1} value={(settings as any).max_market_pct ?? 90} onChange={(e) => setSettings({ ...settings, max_market_pct: Number(e.target.value) || 90 } as any)} className="w-24" />
+                <Input type="number" min={50} max={100} step={1} value={settings.max_market_pct ?? 90} onChange={(e) => setSettings({ ...settings, max_market_pct: Number(e.target.value) || 90 })} className="w-24" />
                 <span className="text-sm text-muted-foreground">%</span>
               </div>
             </div>
             <div>
               <Label className="text-sm font-semibold">Manager PIN</Label>
               <p className="text-micro text-muted-foreground mb-1">4-digit PIN for management override on appraisals.</p>
-              <Input type="password" maxLength={4} value={(settings as any).manager_pin || "0000"} onChange={(e) => setSettings({ ...settings, manager_pin: e.target.value.replace(/\D/g, "").slice(0, 4) } as any)} className="w-28 text-center font-mono tracking-widest" />
+              <Input type="password" maxLength={4} value={settings.manager_pin || "0000"} onChange={(e) => setSettings({ ...settings, manager_pin: e.target.value.replace(/\D/g, "").slice(0, 4) })} className="w-28 text-center font-mono tracking-widest" />
             </div>
           </div>
           <div className="mt-4 pt-4 border-t border-border">
@@ -883,11 +905,11 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-xs text-muted-foreground">Max Mileage</Label>
-                <Input type="number" step={5000} value={(settings as any).wholesale_only_mileage || 120000} onChange={(e) => setSettings({ ...settings, wholesale_only_mileage: Number(e.target.value) } as any)} />
+                <Input type="number" step={5000} value={settings.wholesale_only_mileage || 120000} onChange={(e) => setSettings({ ...settings, wholesale_only_mileage: Number(e.target.value) })} />
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">Max Vehicle Age (years)</Label>
-                <Input type="number" step={1} value={(settings as any).wholesale_only_age_years || 10} onChange={(e) => setSettings({ ...settings, wholesale_only_age_years: Number(e.target.value) } as any)} />
+                <Input type="number" step={1} value={settings.wholesale_only_age_years || 10} onChange={(e) => setSettings({ ...settings, wholesale_only_age_years: Number(e.target.value) })} />
               </div>
             </div>
           </div>
@@ -907,14 +929,14 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
           title="Archetype Deduction Overrides"
           defaultOpen={false}
           headerRight={
-            (settings as any).archetype_deduction_overrides && Object.keys((settings as any).archetype_deduction_overrides).length > 0
-              ? <Badge variant="secondary" className="text-[9px]">{Object.keys((settings as any).archetype_deduction_overrides).length} overrides</Badge>
+            settings.archetype_deduction_overrides && Object.keys(settings.archetype_deduction_overrides).length > 0
+              ? <Badge variant="secondary" className="text-[9px]">{Object.keys(settings.archetype_deduction_overrides).length} overrides</Badge>
               : undefined
           }
         >
           <ArchetypeOverrides
-            value={(settings as any).archetype_deduction_overrides || null}
-            onChange={(v) => setSettings({ ...settings, archetype_deduction_overrides: Object.keys(v).length > 0 ? v : null } as any)}
+            value={settings.archetype_deduction_overrides || null}
+            onChange={(v) => setSettings({ ...settings, archetype_deduction_overrides: Object.keys(v).length > 0 ? v : null })}
             defaultAmounts={{
               tires_not_replaced: settings.deduction_amounts.tires_not_replaced || 400,
               exterior_damage_per_item: settings.deduction_amounts.exterior_damage_per_item || 300,
@@ -936,7 +958,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
           icon={<Brain className="w-5 h-5 text-primary" />}
           title="Intelligence Learning Layer"
           defaultOpen={false}
-          headerRight={<Badge variant="outline" className="text-[9px]">Threshold: {(settings as any).learning_threshold || 250}</Badge>}
+          headerRight={<Badge variant="outline" className="text-[9px]">Threshold: {settings.learning_threshold || 250}</Badge>}
         >
           <div className="space-y-4">
             <p className="text-xs text-muted-foreground">
@@ -950,8 +972,8 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
               <div className="flex items-center gap-2">
                 <Input
                   type="number" min={50} max={1000} step={25}
-                  value={(settings as any).learning_threshold ?? 250}
-                  onChange={(e) => setSettings({ ...settings, learning_threshold: Number(e.target.value) || 250 } as any)}
+                  value={settings.learning_threshold ?? 250}
+                  onChange={(e) => setSettings({ ...settings, learning_threshold: Number(e.target.value) || 250 })}
                   className="w-28"
                 />
                 <span className="text-sm text-muted-foreground">finalized appraisals</span>
