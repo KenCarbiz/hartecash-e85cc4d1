@@ -84,7 +84,7 @@ const RescheduleAppointmentLegacy = () => {
         setLoading(false);
         return;
       }
-      setApptdata;
+      setAppt(data);
       // Pull dealership display name + phone for the header and the
       // "call instead" fallback.
       if (data.dealership_id) {
