@@ -327,7 +327,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
         hide_pack_from_appraisal: d.hide_pack_from_appraisal ?? false,
         retail_profit_basis: d.retail_profit_basis || "retail_avg",
         low_mileage_bonus: d.low_mileage_bonus || { enabled: false, avg_miles_per_year: 12000, bonus_pct_per_step: 2, step_size_pct: 20, max_bonus_pct: 8, min_miles_per_year: 4000 },
-      } as OfferSettingsRow);
+      } as unknown as OfferSettingsRow);
       // Detect strategy_mode from saved data
       if (d.strategy_mode) {
         setStrategyMode(d.strategy_mode as StrategyMode);
@@ -355,7 +355,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
         hide_pack_from_appraisal: d.hide_pack_from_appraisal ?? false,
         retail_profit_basis: d.retail_profit_basis || "retail_avg",
         low_mileage_bonus: d.low_mileage_bonus || { enabled: false, avg_miles_per_year: 12000, bonus_pct_per_step: 2, step_size_pct: 20, max_bonus_pct: 8, min_miles_per_year: 4000 },
-      } as OfferSettingsRow);
+      } as unknown as OfferSettingsRow);
       // Detect strategy_mode from saved data (savedSettings mirror)
       if (d.strategy_mode) {
         setStrategyMode(d.strategy_mode as StrategyMode);
