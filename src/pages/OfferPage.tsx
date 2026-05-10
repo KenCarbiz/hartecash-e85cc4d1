@@ -28,6 +28,8 @@ import { useToast } from "@/hooks/use-toast";
 import SlideToAccept from "@/components/SlideToAccept";
 import SaveOfferButton from "@/components/offer/SaveOfferButton";
 import CompetitorComparison from "@/components/offer/CompetitorComparison";
+import TokenErrorScreen from "@/components/TokenErrorScreen";
+import { checkTokenStatus, type TokenStatus } from "@/lib/tokenStatus";
 import OfferWatch from "@/components/offer/OfferWatch";
 import { track } from "@/lib/analytics";
 
@@ -169,6 +171,8 @@ const OfferPageLegacy = () => {
   const [submission, setSubmission] = useState<OfferSubmission | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [tokenStatus, setTokenStatus] = useState<TokenStatus | "error" | null>(null);
+  const [retryNonce, setRetryNonce] = useState(0);
   const [activeTab, setActiveTab] = useState<"sell" | "trade">("sell");
   const [condition, setCondition] = useState<ConditionDetails | null>(null);
   const [calculatingDone, setCalculatingDone] = useState(false);
@@ -213,7 +217,7 @@ const OfferPageLegacy = () => {
     let cancelled = false;
     const fetchData = async () => {
       if (!token) {
-        if (!cancelled) { setError("Invalid link."); setLoading(false); }
+        if (!cancelled) { setTokenStatus("missing"); setError("Invalid link."); setLoading(false); }
         return;
       }
 
@@ -225,7 +229,10 @@ const OfferPageLegacy = () => {
         const { data, error: err } = await supabase.rpc("get_submission_portal", { _token: token });
         if (cancelled) return;
         if (err || !data || data.length === 0) {
-          setError("Offer not found.");
+          const status = err ? "error" : await checkTokenStatus(token);
+          if (cancelled) return;
+          setTokenStatus(status);
+          setError(status === "expired" ? "This offer link has expired." : "Offer not found.");
           setLoading(false);
           return;
         }
@@ -352,7 +359,7 @@ const OfferPageLegacy = () => {
     };
     fetchData();
     return () => { cancelled = true; };
-  }, [token]);
+  }, [token, retryNonce]);
 
   /* ─── Inline edit handler: update condition + recalculate ─── */
   const handleFieldUpdate = async (field: string, value: string | string[]) => {
@@ -448,27 +455,16 @@ const OfferPageLegacy = () => {
   }
 
   if (error || !submission) return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-6">
-      <div className="text-center max-w-sm">
-        <div className="w-16 h-16 rounded-2xl bg-muted/40 flex items-center justify-center mx-auto mb-4">
-          <Car className="w-8 h-8 text-muted-foreground/30" />
-        </div>
-        <h1 className="text-xl font-extrabold text-foreground mb-2 tracking-tight">Offer Not Available</h1>
-        <p className="text-sm text-muted-foreground">{error || "No offer has been made yet."}</p>
-        <div className="mt-4 flex items-center justify-center gap-3">
-          <button
-            type="button"
-            onClick={() => window.location.reload()}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
-          >
-            Try again
-          </button>
-          <Link to="/my-submission" className="inline-flex items-center gap-1.5 text-primary font-semibold text-sm hover:underline">
-            Check your submission <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-      </div>
-    </div>
+    <TokenErrorScreen
+      status={tokenStatus ?? "error"}
+      title={tokenStatus === "expired" ? "This offer link has expired" : "Offer Not Available"}
+      onRetry={() => {
+        setTokenStatus(null);
+        setError("");
+        setLoading(true);
+        setRetryNonce(n => n + 1);
+      }}
+    />
   );
 
   const s = submission;
