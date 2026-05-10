@@ -240,12 +240,24 @@ const UploadPhotosLegacy = () => {
         allFiles?.some((f) => f.name.startsWith(`${s.shot_id}-`))
       );
       if (allRequiredPresent) {
-        await supabase.rpc("mark_photos_uploaded", { _token: token });
-        if (submission?.id) {
-          safeInvoke("send-notification", {
-            body: { trigger_key: "photos_uploaded", submission_id: submission.id },
-            context: { from: "UploadPhotos.submit" },
-          });
+        try {
+          await supabase.rpc("mark_photos_uploaded", { _token: token });
+          if (submission?.id) {
+            safeInvoke("send-notification", {
+              body: { trigger_key: "photos_uploaded", submission_id: submission.id },
+              context: { from: "UploadPhotos.submit" },
+            });
+          }
+        } catch (rpcErr) {
+          // Token expired between page load and submit — surface the
+          // expired UI so the customer can request a fresh link.
+          if (isExpiredTokenError(rpcErr)) {
+            setTokenStatus("expired");
+            setSubmission(null);
+            setUploading(false);
+            return;
+          }
+          throw rpcErr;
         }
       }
 
