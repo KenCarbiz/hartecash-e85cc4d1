@@ -1144,7 +1144,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                           <span className="text-micro text-muted-foreground">Enable low-mileage bonus</span>
                           <Switch
                             checked={localSettings.low_mileage_bonus?.enabled ?? false}
-                            onCheckedChange={(checked) => updateLocalSetting("low_mileage_bonus", { ...localSettings.low_mileage_bonus || {}, enabled: checked })}
+                            onCheckedChange={(checked) => updateLocalSetting("low_mileage_bonus", { ...localSettings.low_mileage_bonus || {}, enabled: checked } as any)}
                             className="scale-75"
                           />
                         </div>
@@ -1361,7 +1361,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                         </p>
                         <div className="flex items-center gap-2 text-micro">
                           <span className="text-muted-foreground w-24">Accidents:</span>
-                          <Select value={(localSettings.deduction_modes?.accidents) || "flat"} onValueChange={(v) => updateLocalSetting("deduction_modes", { ...(localSettings.deduction_modes || DEFAULT_DEDUCTION_MODES), accidents: v })}>
+                          <Select value={(localSettings.deduction_modes?.accidents) || "flat"} onValueChange={(v) => updateLocalSetting("deduction_modes", { ...(localSettings.deduction_modes || DEFAULT_DEDUCTION_MODES), accidents: v as "flat" | "pct" })}>
                             <SelectTrigger className="h-5 w-24 text-[9px]"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="flat" className="text-micro">Flat ($)</SelectItem>
@@ -1371,7 +1371,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                         </div>
                         <div className="flex items-center gap-2 text-micro">
                           <span className="text-muted-foreground w-24">Not Drivable:</span>
-                          <Select value={(localSettings.deduction_modes?.not_drivable) || "flat"} onValueChange={(v) => updateLocalSetting("deduction_modes", { ...(localSettings.deduction_modes || DEFAULT_DEDUCTION_MODES), not_drivable: v })}>
+                          <Select value={(localSettings.deduction_modes?.not_drivable) || "flat"} onValueChange={(v) => updateLocalSetting("deduction_modes", { ...(localSettings.deduction_modes || DEFAULT_DEDUCTION_MODES), not_drivable: v as "flat" | "pct" })}>
                             <SelectTrigger className="h-5 w-24 text-[9px]"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="flat" className="text-micro">Flat ($)</SelectItem>
@@ -1396,13 +1396,13 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                     <CollapsibleContent>
                       <div className="space-y-1 p-2">
                         {Object.entries(DEDUCTION_LABELS).map(([key, config]) => {
-                          const enabled = (localSettings.deductions_config as Record<string, boolean>)?.[key] ?? true;
+                          const enabled = (localSettings.deductions_config as unknown as Record<string, boolean>)?.[key] ?? true;
                           const modes = localSettings.deduction_modes || DEFAULT_DEDUCTION_MODES;
                           const isPctMode = (key === "accidents" && modes.accidents === "pct") || (key === "not_drivable" && modes.not_drivable === "pct");
                           const isModified = config.amountKeys.some(amtKey => {
-                            const current = (localSettings.deduction_amounts as Record<string, number>)?.[amtKey]
-                              ?? (DEFAULT_DEDUCTION_AMOUNTS as Record<string, number>)[amtKey] ?? 0;
-                            const def = (DEFAULT_DEDUCTION_AMOUNTS as Record<string, number>)[amtKey] ?? 0;
+                            const current = (localSettings.deduction_amounts as unknown as Record<string, number>)?.[amtKey]
+                              ?? (DEFAULT_DEDUCTION_AMOUNTS as unknown as Record<string, number>)[amtKey] ?? 0;
+                            const def = (DEFAULT_DEDUCTION_AMOUNTS as unknown as Record<string, number>)[amtKey] ?? 0;
                             return current !== def;
                           });
                           return (
@@ -1426,7 +1426,7 @@ const OfferSimulator = ({ settings, savedSettings, rules, inlineControls = true,
                                       <span className="text-[8px] text-muted-foreground">{AMOUNT_SHORT[amtKey]}:</span>
                                       <Input
                                         type="number"
-                                        value={(localSettings.deduction_amounts as Record<string, number>)?.[amtKey] ?? 0}
+                                        value={(localSettings.deduction_amounts as unknown as Record<string, number>)?.[amtKey] ?? 0}
                                         onChange={e => updateLocalSetting("deduction_amounts", { ...localSettings.deduction_amounts, [amtKey]: Number(e.target.value) })}
                                         className="w-14 h-5 text-[9px]" step={isPctMode ? "0.5" : "25"}
                                       />
