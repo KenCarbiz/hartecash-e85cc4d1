@@ -1,4 +1,4 @@
-import ghostCar from "@/assets/ghost-loader.png";
+import ghostCar from "@/assets/ghost-loader.webp";
 
 interface Props {
   /** Optional size — controls the rendered width. Defaults to "lg". */
@@ -12,7 +12,7 @@ interface Props {
 /**
  * HartecashClassicLoader — the official Hartecash loading animation.
  *
- * Uses the dealer's line-art ghost-car PNG (src/assets/ghost-loader.png)
+ * Uses the dealer's line-art ghost-car PNG (src/assets/ghost-loader.webp)
  * over a dashed road that scrolls right-to-left. The car bobs gently
  * to imply motion. Same artwork as PortalSkeleton, but inline-friendly
  * so it can be dropped into a wizard card / overlay without taking

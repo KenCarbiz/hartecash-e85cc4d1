@@ -8,17 +8,17 @@ import {
   ListOrdered, ArrowUpRight, CheckCircle2,
   GraduationCap, BarChart3, Repeat, Quote, Linkedin,
 } from "lucide-react";
-import kenPortrait from "@/assets/ken-portrait.png";
-import kenHyundai from "@/assets/ken-hyundai.png";
-import kenInfiniti from "@/assets/ken-infiniti.png";
-import kenNissan from "@/assets/ken-nissan.png";
-import kenLexus from "@/assets/ken-lexus.png";
-import kenMercedes from "@/assets/ken-mercedes.png";
-import kenHonda from "@/assets/ken-honda.png";
-import kenKia from "@/assets/ken-kia.png";
-import kenChevrolet from "@/assets/ken-chevrolet.png";
-import kenToyota from "@/assets/ken-toyota.png";
-import presenterLogo from "@/assets/pitch/pitch-top-logo.png";
+import kenPortrait from "@/assets/ken-portrait.webp";
+import kenHyundai from "@/assets/ken-hyundai.webp";
+import kenInfiniti from "@/assets/ken-infiniti.webp";
+import kenNissan from "@/assets/ken-nissan.webp";
+import kenLexus from "@/assets/ken-lexus.webp";
+import kenMercedes from "@/assets/ken-mercedes.webp";
+import kenHonda from "@/assets/ken-honda.webp";
+import kenKia from "@/assets/ken-kia.webp";
+import kenChevrolet from "@/assets/ken-chevrolet.webp";
+import kenToyota from "@/assets/ken-toyota.webp";
+import presenterLogo from "@/assets/pitch/pitch-top-logo.webp";
 
 const HERO_IMAGES = [kenNissan, kenHyundai, kenInfiniti, kenLexus, kenMercedes, kenHonda, kenKia, kenChevrolet, kenToyota];
 
