@@ -186,7 +186,7 @@ serve(async (req) => {
       );
 
       // Fetch eligible submissions
-      let submissionQuery = supabase
+      const submissionQuery = supabase
         .from("submissions")
         .select(
           "id, name, phone, email, zip, vehicle_year, vehicle_make, vehicle_model, offered_price, progress_status, dealership_id, created_at"

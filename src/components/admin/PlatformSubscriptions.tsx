@@ -255,7 +255,7 @@ const PlatformSubscriptions = () => {
         if (!error) break;
         const colMatch = /Could not find the '([a-z_]+)' column/i.exec(error.message);
         if (colMatch) {
-          // eslint-disable-next-line no-console
+           
           console.warn(
             `[PlatformSubscriptions] schema cache missing '${colMatch[1]}', retrying without it`,
           );
@@ -263,7 +263,7 @@ const PlatformSubscriptions = () => {
           continue;
         }
         if (/ON CONFLICT/i.test(error.message) || /no unique or exclusion/i.test(error.message)) {
-          // eslint-disable-next-line no-console
+           
           console.warn(
             "[PlatformSubscriptions] UNIQUE(dealership_id) missing — falling back to manual upsert",
           );
@@ -673,7 +673,7 @@ const PlatformSubscriptions = () => {
               // Debug log — remove after hartecash confirms cards
               // accumulate as expected. Helps diagnose a "cards
               // disappear on subsequent clicks" bug report.
-              // eslint-disable-next-line no-console
+               
               console.debug("[PlatformSubscriptions] picker onChange", s);
               setInFlight(s ?? null);
             }}

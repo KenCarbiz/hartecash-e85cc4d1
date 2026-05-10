@@ -111,7 +111,7 @@ const PlatformPricingManager = () => {
       .update({ is_available_for_new_subs: enabled } as never)
       .eq("id", productId);
     if (error) {
-      // eslint-disable-next-line no-console
+       
       console.warn("[PricingManager] availability toggle failed:", error.message);
       // Revert on failure
       setAvailability((prev) => ({ ...prev, [productId]: !enabled }));
@@ -158,7 +158,7 @@ const PlatformPricingManager = () => {
 
       if (cancelled) return;
       if (error) {
-        // eslint-disable-next-line no-console
+         
         console.warn("platform_pricing_model load:", error.message);
         setLoading(false);
         return;
@@ -415,7 +415,7 @@ const PlatformPricingManager = () => {
 
       // Table not in schema cache — wait and retry
       if (/Could not find the table/i.test(error.message)) {
-        // eslint-disable-next-line no-console
+         
         console.warn(`[PlatformPricingManager] table not in cache, retry ${attempt + 1}/4`);
         await new Promise((r) => setTimeout(r, 2000));
         continue;
@@ -424,7 +424,7 @@ const PlatformPricingManager = () => {
       // Column not in schema cache — strip it and retry
       const match = /Could not find the '([a-z_]+)' column/i.exec(error.message);
       if (!match) break;
-      // eslint-disable-next-line no-console
+       
       console.warn(
         `[PlatformPricingManager] schema cache missing '${match[1]}', retrying without it`,
       );
@@ -433,7 +433,7 @@ const PlatformPricingManager = () => {
     setSaving(false);
 
     if (error) {
-      // eslint-disable-next-line no-console
+       
       console.error("[PlatformPricingManager] save failed", { error, payload });
       // If still failing after retries, save locally so the admin
       // isn't blocked. Static architecturePricing.ts overrides

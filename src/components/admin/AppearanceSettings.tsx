@@ -260,7 +260,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
         return targetFilter(q);
       };
 
-      let payload = { ...draft } as Record<string, unknown>;
+      const payload = { ...draft } as Record<string, unknown>;
       const stripped: string[] = [];
       let result = await tryUpdate(payload);
 
