@@ -248,20 +248,13 @@ const CustomerPortalLegacy = () => {
 
   if (loading) return <PortalSkeleton headline="Loading your submission" />;
 
-  if (error) return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-6">
-      <div className="text-center max-w-sm">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-muted/60 flex items-center justify-center">
-          <ArrowLeft className="w-7 h-7 text-muted-foreground" />
-        </div>
-        <h1 className="text-xl font-display font-bold text-foreground mb-2">Submission Not Found</h1>
-        <p className="text-muted-foreground text-sm leading-relaxed">{error}</p>
-        <Link to="/my-submission" className="inline-flex items-center gap-1.5 mt-5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors">
-          <ArrowLeft className="w-3.5 h-3.5" />
-          Look up your submission
-        </Link>
-      </div>
-    </div>
+  if (error || (tokenStatus && tokenStatus !== "valid")) return (
+    <TokenErrorScreen
+      status={tokenStatus ?? "error"}
+      onRetry={tokenStatus === "error" || tokenStatus === "unknown"
+        ? () => { setTokenStatus(null); setError(""); setLoading(true); setRetryNonce(n => n + 1); }
+        : undefined}
+    />
   );
 
   if (!submission) return null;
