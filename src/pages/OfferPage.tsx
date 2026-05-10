@@ -300,7 +300,7 @@ const OfferPageLegacy = () => {
                     estimated_offer_low: estimate.low,
                     estimated_offer_high: estimate.high,
                     ...bbPayload,
-                  )
+                  })
                   .eq("token", token);
                 if (updateErr) {
                   console.error("[OfferPage] failed to persist refreshed pricing", updateErr);
@@ -663,7 +663,7 @@ const OfferPageLegacy = () => {
           phone: contactForm.phone.trim(),
           zip: contactForm.zip.trim(),
           sms_opt_in: smsOptIn,
-        )
+        })
         .eq("token", token!);
 
       // If customer ticked SMS opt-in, also log a consent_log entry so
@@ -675,7 +675,7 @@ const OfferPageLegacy = () => {
             customer_email: contactForm.email.trim(),
             consent_type: "sms_calls_email",
             consent_text: "Customer accepted offer and consented to receive SMS, calls, and emails about their vehicle.",
-          );
+          });
         } catch {
           /* non-fatal — submissions row still has the flag */
         }

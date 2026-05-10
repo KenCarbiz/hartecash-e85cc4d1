@@ -303,7 +303,7 @@ const DealAcceptedClarity = () => {
           email: contactForm.email.trim(),
           phone: contactForm.phone.trim(),
           zip: contactForm.zip.trim() || null,
-        )
+        })
         .eq("token", token!);
       // Fire acceptance notifications now that contact is in place.
       try {
