@@ -1,6 +1,9 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+
+type AppRole = Database["public"]["Enums"]["app_role"];
 import { useToast } from "@/hooks/use-toast";
 import { useEffectivePermissions } from "@/hooks/useEffectivePermissions";
 import { useTenant } from "@/contexts/TenantContext";
@@ -140,12 +143,12 @@ export function useAdminDashboard() {
     // Sales reps only see leads assigned to them
     if (userRole === "sales_bdc" && userEmail) {
       const repCode = userEmail.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "");
-      query = (query as any).eq("assigned_rep_email", repCode);
+      query = query.eq("assigned_rep_email", repCode);
     }
 
     const { data, error, count } = await query;
     if (!error && data) {
-      setSubmissions(data as any);
+      setSubmissions(data as unknown as Submission[]);
       setTotal(count || 0);
     }
 
@@ -153,7 +156,7 @@ export function useAdminDashboard() {
     // manager-flagged count only (not the AI auto-route expansion) because
     // the sidebar badge is meant to signal "you have new manual work."
     try {
-      const { count: queueCount } = await (supabase as any)
+      const { count: queueCount } = await supabase
         .from("submissions")
         .select("id", { count: "exact", head: true })
         .eq("dealership_id", tenant.dealership_id)
@@ -220,7 +223,7 @@ export function useAdminDashboard() {
       navigate("/admin/login");
       return;
     }
-    setUserRole((roleData as any).role);
+    setUserRole(roleData.role);
 
     // Best-effort read of the appraiser additive flag. Was hardcoded
     // false originally; PR #138 wired it up but couldn't assume the
@@ -232,7 +235,7 @@ export function useAdminDashboard() {
       .eq("user_id", session.user.id)
       .limit(1)
       .maybeSingle();
-    setIsAppraiser(!!((appraiserRow as any)?.is_appraiser));
+    setIsAppraiser(!!(appraiserRow?.is_appraiser));
     setUserId(session.user.id);
     const { data: profileData } = await supabase
       .from("profiles")
@@ -241,16 +244,16 @@ export function useAdminDashboard() {
       .maybeSingle();
     setUserName(profileData?.display_name || session.user.email || "");
     setUserEmail(session.user.email || "");
-    if ((roleData as any).role === "admin") {
+    if (roleData.role === "admin") {
       const { count } = await supabase
-        .from("permission_access_requests" as any)
+        .from("permission_access_requests")
         .select("id", { count: "exact", head: true })
         .eq("status", "pending");
       setPermissionRequestCount(count || 0);
     }
-    if (["admin", "gsm_gm"].includes((roleData as any).role)) {
+    if (["admin", "gsm_gm"].includes(roleData.role)) {
       const { count } = await supabase
-        .from("pricing_model_access_requests" as any)
+        .from("pricing_model_access_requests")
         .select("id", { count: "exact", head: true })
         .eq("status", "pending");
       setPricingAccessRequestCount(count || 0);
@@ -260,7 +263,7 @@ export function useAdminDashboard() {
       .select("show_request_access")
       .eq("dealership_id", tenant.dealership_id)
       .maybeSingle();
-    setShowRequestAccessToggle((configData as any)?.show_request_access ?? true);
+    setShowRequestAccessToggle(configData?.show_request_access ?? true);
   }, [navigate, tenant.dealership_id]);
 
   // ── Effects ──
@@ -329,7 +332,7 @@ export function useAdminDashboard() {
           .limit(1)
           .maybeSingle();
         if (apptData?.preferred_time) setSelectedApptTime(apptData.preferred_time);
-        if ((apptData as any)?.store_location) setSelectedApptLocation((apptData as any).store_location);
+        if (apptData?.store_location) setSelectedApptLocation(apptData.store_location);
       }
 
       const { data } = await supabase.storage.from("submission-photos").list(sub.token);
@@ -431,7 +434,7 @@ export function useAdminDashboard() {
 
   const handleApprove = useCallback(
     async (request: PendingRequest) => {
-      const { error } = await supabase.from("user_roles").insert({ user_id: request.user_id, role: approveRole as any });
+      const { error } = await supabase.from("user_roles").insert({ user_id: request.user_id, role: approveRole as AppRole });
       if (error) {
         toast({ title: "Error", variant: "destructive" });
         return;

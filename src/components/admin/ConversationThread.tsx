@@ -86,13 +86,13 @@ const ConversationThread = ({
   const load = useCallback(async () => {
     if (!submissionId) return;
     setLoading(true);
-    const { data } = await (supabase as any)
+    const { data } = await supabase
       .from("conversation_events")
       .select("id, channel, direction, actor_type, actor_label, body_text, body_html, occurred_at, metadata")
       .eq("submission_id", submissionId)
       .order("occurred_at", { ascending: false })
       .limit(200);
-    setEvents((data as any[]) || []);
+    setEvents((data ?? []) || []);
     setLoading(false);
   }, [submissionId]);
 
@@ -118,7 +118,7 @@ const ConversationThread = ({
         // audit consistency (the trigger on activity_log also mirrors
         // into conversation_events but with a system-generated body —
         // the staff-typed body we're inserting below is richer).
-        const { error } = await (supabase as any).from("conversation_events").insert({
+        const { error } = await supabase.from("conversation_events").insert({
           submission_id: submissionId,
           dealership_id: dealershipId || "default",
           channel: "note",
@@ -128,7 +128,7 @@ const ConversationThread = ({
           body_text: text,
           occurred_at: new Date().toISOString(),
           source_table: "manual",
-        } as any);
+        });
         if (error) throw error;
         await supabase.from("activity_log").insert({
           submission_id: submissionId,
@@ -136,7 +136,7 @@ const ConversationThread = ({
           old_value: null,
           new_value: text.slice(0, 500),
           performed_by: userEmail || "staff",
-        } as any);
+        });
         toast({ title: "Note added", description: "Saved to the conversation timeline." });
       } else if (replyChannel === "sms") {
         if (smsDisabled) {
@@ -164,7 +164,7 @@ const ConversationThread = ({
         // so the timeline shows the actual typed body, not the generic
         // "customer_staff_reply_sms → phone" placeholder the mirror
         // would use.
-        await (supabase as any).from("conversation_events").insert({
+        await supabase.from("conversation_events").insert({
           submission_id: submissionId,
           dealership_id: dealershipId || "default",
           channel: "sms",
@@ -174,7 +174,7 @@ const ConversationThread = ({
           body_text: text,
           occurred_at: new Date().toISOString(),
           source_table: "manual_sms",
-        } as any);
+        });
         toast({ title: "SMS sent", description: `Texted ${customerPhone}` });
       } else if (replyChannel === "email") {
         if (emailDisabled) {
@@ -196,7 +196,7 @@ const ConversationThread = ({
           },
         });
         if (error) throw error;
-        await (supabase as any).from("conversation_events").insert({
+        await supabase.from("conversation_events").insert({
           submission_id: submissionId,
           dealership_id: dealershipId || "default",
           channel: "email",
@@ -206,7 +206,7 @@ const ConversationThread = ({
           body_text: text,
           occurred_at: new Date().toISOString(),
           source_table: "manual_email",
-        } as any);
+        });
         toast({ title: "Email sent", description: `Emailed ${customerEmail}` });
       }
       setReplyBody("");
@@ -355,8 +355,8 @@ const ConversationThread = ({
           const isCustomer = ev.actor_type === "customer" || ev.direction === "inbound";
           const isInternal = ev.direction === "internal";
           const md = ev.metadata || {};
-          const recordingUrl = (md as any).recording_url as string | undefined;
-          const transcript = (md as any).transcript as string | undefined;
+          const recordingUrl = (md as { recording_url?: string; transcript?: string }).recording_url as string | undefined;
+          const transcript = (md as { recording_url?: string; transcript?: string }).transcript as string | undefined;
           const hasDetail = !!transcript || !!recordingUrl;
           const expandedNow = !!expanded[ev.id];
 
@@ -408,10 +408,10 @@ const ConversationThread = ({
                     {ev.body_text}
                   </p>
                 )}
-                {typeof (md as any).duration_seconds === "number" && (md as any).duration_seconds > 0 && (
+                {typeof (md as { duration_seconds?: number }).duration_seconds === "number" && (md as { duration_seconds?: number }).duration_seconds > 0 && (
                   <p className="text-micro text-muted-foreground mt-0.5">
-                    Duration: {Math.round(((md as any).duration_seconds as number) / 60)}m{" "}
-                    {Math.round(((md as any).duration_seconds as number) % 60)}s
+                    Duration: {Math.round(((md as { duration_seconds?: number }).duration_seconds as number) / 60)}m{" "}
+                    {Math.round(((md as { duration_seconds?: number }).duration_seconds as number) % 60)}s
                   </p>
                 )}
                 {hasDetail && (

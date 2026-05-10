@@ -151,7 +151,7 @@ const VoiceAICampaigns = () => {
   const loadCampaignStats = async (campaignId: string) => {
     if (campaignStats[campaignId] && !campaignStats[campaignId].loading) return;
     setCampaignStats((prev) => ({ ...prev, [campaignId]: { loading: true, rows: [] } }));
-    const { data } = await (supabase as any)
+    const { data } = await supabase
       .from("voice_call_log")
       .select("status, outcome, duration_seconds")
       .eq("campaign_id", campaignId)
@@ -159,7 +159,7 @@ const VoiceAICampaigns = () => {
       .limit(2000);
     setCampaignStats((prev) => ({
       ...prev,
-      [campaignId]: { loading: false, rows: (data as any[]) || [] },
+      [campaignId]: { loading: false, rows: (data ?? []) || [] },
     }));
   };
 
@@ -178,14 +178,14 @@ const VoiceAICampaigns = () => {
       setLoading(true);
 
       // Fetch dealer config
-      const { data: dealer } = await (supabase as any)
+      const { data: dealer } = await supabase
         .from("dealer_accounts")
         .select("*")
         .eq("dealership_id", dealershipId)
         .maybeSingle();
 
       if (dealer) {
-        const d = dealer as any;
+        const d = dealer;
         setConfig({
           voice_ai_enabled: !!d.voice_ai_enabled,
           voice_ai_api_key: d.voice_ai_api_key || "",
@@ -201,7 +201,7 @@ const VoiceAICampaigns = () => {
       }
 
       // Fetch aggregate KPIs from voice_call_log (parallel)
-      const base = (supabase as any).from("voice_call_log");
+      const base = supabase.from("voice_call_log");
       const [r1, r2, r3] = await Promise.all([
         base.select("id", { count: "exact", head: true }).eq("dealership_id", dealershipId),
         base.select("id", { count: "exact", head: true }).eq("dealership_id", dealershipId).eq("status", "completed"),
@@ -219,8 +219,8 @@ const VoiceAICampaigns = () => {
 
       // Fetch campaigns & call log in parallel
       const [campRes, logRes] = await Promise.all([
-        (supabase as any).from("voice_campaigns").select("*").eq("dealership_id", dealershipId).order("created_at", { ascending: false }),
-        (supabase as any).from("voice_call_log").select("*").eq("dealership_id", dealershipId).order("created_at", { ascending: false }).limit(30),
+        supabase.from("voice_campaigns").select("*").eq("dealership_id", dealershipId).order("created_at", { ascending: false }),
+        supabase.from("voice_call_log").select("*").eq("dealership_id", dealershipId).order("created_at", { ascending: false }).limit(30),
       ]);
       if (campRes.data) setCampaigns(campRes.data);
       if (logRes.data) setCallLog(logRes.data);
@@ -234,7 +234,7 @@ const VoiceAICampaigns = () => {
   /* ── save config ── */
   const handleSave = async () => {
     setSaving(true);
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from("dealer_accounts")
       .upsert(
         {
@@ -309,7 +309,7 @@ const VoiceAICampaigns = () => {
     };
 
     if (editingId) {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("voice_campaigns")
         .update(fields)
         .eq("id", editingId)
@@ -319,7 +319,7 @@ const VoiceAICampaigns = () => {
       setCampaigns((prev) => prev.map((x) => (x.id === editingId ? { ...x, ...data } : x)));
       toast({ title: "Campaign updated" });
     } else {
-      const { data, error } = await (supabase as any).from("voice_campaigns").insert({
+      const { data, error } = await supabase.from("voice_campaigns").insert({
         dealership_id: dealershipId,
         status: "draft",
         ...fields,
@@ -333,7 +333,7 @@ const VoiceAICampaigns = () => {
 
   const toggleCampaignStatus = async (c: any) => {
     const next = c.status === "active" ? "paused" : "active";
-    await (supabase as any).from("voice_campaigns").update({ status: next }).eq("id", c.id);
+    await supabase.from("voice_campaigns").update({ status: next }).eq("id", c.id);
     setCampaigns((prev) => prev.map((x) => (x.id === c.id ? { ...x, status: next } : x)));
   };
 
@@ -348,7 +348,7 @@ const VoiceAICampaigns = () => {
       return;
     }
     setPausingAll(true);
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from("voice_campaigns")
       .update({ status: "paused" })
       .in("id", activeIds);
@@ -1010,7 +1010,7 @@ function ScriptPreviewSection({ editingId }: { editingId: string | null }) {
       let src: "campaign" | "default" | "none" = "none";
 
       if (editingId) {
-        const { data: row } = await (supabase as any)
+        const { data: row } = await supabase
           .from("voice_campaigns")
           .select("script_template")
           .eq("id", editingId)
@@ -1022,7 +1022,7 @@ function ScriptPreviewSection({ editingId }: { editingId: string | null }) {
       }
 
       if (!resolved) {
-        const { data: tmpl } = await (supabase as any)
+        const { data: tmpl } = await supabase
           .from("voice_script_templates")
           .select("script_template, name")
           .eq("category", "follow_up")

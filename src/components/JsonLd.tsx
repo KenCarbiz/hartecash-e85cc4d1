@@ -6,6 +6,21 @@ interface JsonLdProps {
   data: Record<string, unknown>;
 }
 
+// Optional fields the schema.org JSON-LD reads but that aren't on the
+// canonical SiteConfig type — they live on dealership_locations or are
+// looser persisted columns. Promoting them here once keeps the JSON-LD
+// builders free of inline `cfg.field` casts.
+type SiteConfigSeo = {
+  city?: string;
+  state?: string;
+  center_lat?: number | string;
+  center_lng?: number | string;
+  founding_date?: string;
+  founding_year?: number | string;
+  social_links?: string[];
+  area_served?: string;
+};
+
 const JsonLd = ({ data }: JsonLdProps) => (
   <Helmet>
     <script type="application/ld+json">{JSON.stringify(data)}</script>
@@ -20,12 +35,13 @@ const JsonLd = ({ data }: JsonLdProps) => (
 // each rooftop URL surface its own LocalBusiness.
 export const LocalBusinessJsonLd = () => {
   const { config } = useSiteConfig();
+  const cfg = config as typeof config & SiteConfigSeo;
   const { tenant } = useTenant();
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
   const isRooftop = !!tenant.location_id;
   const cityState = [
-    (config as any).city || (config as any).address?.split(",")?.[1]?.trim(),
-    (config as any).state,
+    cfg.city || config.address?.split(",")?.[1]?.trim(),
+    cfg.state,
   ]
     .filter(Boolean)
     .join(", ");
@@ -47,18 +63,18 @@ export const LocalBusinessJsonLd = () => {
               address: {
                 "@type": "PostalAddress",
                 streetAddress: config.address,
-                ...((config as any).city ? { addressLocality: (config as any).city } : {}),
-                ...((config as any).state ? { addressRegion: (config as any).state } : {}),
+                ...(cfg.city ? { addressLocality: cfg.city } : {}),
+                ...(cfg.state ? { addressRegion: cfg.state } : {}),
                 addressCountry: "US",
               },
             }
           : {}),
-        ...(((config as any).center_lat && (config as any).center_lng)
+        ...((cfg.center_lat && cfg.center_lng)
           ? {
               geo: {
                 "@type": "GeoCoordinates",
-                latitude: (config as any).center_lat,
-                longitude: (config as any).center_lng,
+                latitude: cfg.center_lat,
+                longitude: cfg.center_lng,
               },
             }
           : {}),
@@ -72,14 +88,14 @@ export const LocalBusinessJsonLd = () => {
               },
             }
           : {}),
-        ...(((config as any).founding_date || (config as any).founding_year)
-          ? { foundingDate: (config as any).founding_date || String((config as any).founding_year) }
+        ...((cfg.founding_date || cfg.founding_year)
+          ? { foundingDate: cfg.founding_date || String(cfg.founding_year) }
           : { foundingDate: "1952" }),
-        ...(((config as any).social_links && Array.isArray((config as any).social_links) && (config as any).social_links.length)
-          ? { sameAs: (config as any).social_links }
+        ...((cfg.social_links && Array.isArray(cfg.social_links) && cfg.social_links.length)
+          ? { sameAs: cfg.social_links }
           : {}),
-        ...((config as any).area_served
-          ? { areaServed: (config as any).area_served }
+        ...(cfg.area_served
+          ? { areaServed: cfg.area_served }
           : { areaServed: "Connecticut, USA" }),
         priceRange: "$$",
         paymentAccepted: ["Cash", "Check", "Bank Transfer"],

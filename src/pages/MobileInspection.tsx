@@ -338,8 +338,8 @@ const MobileInspection = () => {
         supabase.rpc("get_inspection_data", { _submission_id: id }),
         supabase.rpc("get_inspection_damage", { _submission_id: id }),
       ]);
-      if (subRes.data && (subRes.data as any[]).length > 0) {
-        const sub = (subRes.data as any[])[0];
+      if (subRes.data && subRes.data.length > 0) {
+        const sub = subRes.data[0];
         setSubmission(sub);
         setOverallGrade(sub.overall_condition || "");
 
@@ -355,8 +355,8 @@ const MobileInspection = () => {
           .select("dealership_id, store_location_id")
           .eq("id", id)
           .maybeSingle();
-        const subDealershipId = (subFull as any)?.dealership_id as string | undefined;
-        const subLocationId = (subFull as any)?.store_location_id as string | null | undefined;
+        const subDealershipId = subFull?.dealership_id as string | undefined;
+        const subLocationId = subFull?.store_location_id as string | null | undefined;
         if (subDealershipId) {
           // Try the new cascade resolver. Falls back to the legacy
           // shared column if the function isn't deployed yet.
@@ -364,7 +364,7 @@ const MobileInspection = () => {
           let brakeMode: "measurement" | "pass_fail" = "measurement";
           let resolvedFromRpc = false;
           try {
-            const { data: rpcRows } = await (supabase as any).rpc(
+            const { data: rpcRows } = await supabase.rpc(
               "effective_inspection_input_modes",
               { _dealership_id: subDealershipId, _location_id: subLocationId ?? null },
             );
@@ -385,7 +385,7 @@ const MobileInspection = () => {
               .select("tire_brake_input_mode")
               .eq("dealership_id", subDealershipId)
               .maybeSingle();
-            if ((cfgData as any)?.tire_brake_input_mode === "pass_fail") {
+            if (cfgData?.tire_brake_input_mode === "pass_fail") {
               tireMode = "pass_fail";
               brakeMode = "pass_fail";
             }
@@ -402,20 +402,20 @@ const MobileInspection = () => {
         // the inspection_started_notified_at column (fetched above).
         // Fire-and-forget so any SMS-provider blip doesn't block the
         // inspector's workflow.
-        if (!(sub as any)?.inspection_started_notified_at) {
+        if (!sub?.inspection_started_notified_at) {
           safeInvoke("send-notification", {
             body: { trigger_key: "customer_inspection_started", submission_id: id },
             context: { from: "MobileInspection.firstOpen" },
           });
           supabase
             .from("submissions")
-            .update({ inspection_started_notified_at: new Date().toISOString() } as any)
+            .update({ inspection_started_notified_at: new Date().toISOString() })
             .eq("id", id)
             .then(() => {}, () => {});
         }
       }
       if (dmgRes.data) {
-        const items = (dmgRes.data as any[]).flatMap((r: any) => {
+        const items = (dmgRes.data ?? []).flatMap((r: any) => {
           const di = r.damage_items;
           return Array.isArray(di) ? di : [];
         });
@@ -480,14 +480,13 @@ const MobileInspection = () => {
       _brake_lf: brakeLF,
       _brake_rf: brakeRF,
       _brake_lr: brakeLR,
-      _brake_rr: brakeRR,
-    } as any);
+      _brake_rr: brakeRR, });
 
     setSaving(false);
     if (error) {
       toast({ title: "Error saving", description: error.message, variant: "destructive" });
     } else {
-      const result = data as any;
+      const result = data;
       if (result && result.adjustment !== undefined) setLastAdjustment(result);
 
       // Clear the autosave draft now that the canonical save landed.
@@ -508,14 +507,14 @@ const MobileInspection = () => {
           .select("inspection_progress_notified_at")
           .eq("id", id)
           .maybeSingle();
-        if (!(subFull as any)?.inspection_progress_notified_at) {
+        if (!subFull?.inspection_progress_notified_at) {
           safeInvoke("send-notification", {
             body: { trigger_key: "customer_inspection_progress", submission_id: id },
             context: { from: "MobileInspection.midSave" },
           });
           supabase
             .from("submissions")
-            .update({ inspection_progress_notified_at: new Date().toISOString() } as any)
+            .update({ inspection_progress_notified_at: new Date().toISOString() })
             .eq("id", id)
             .then(() => {}, () => {});
         }
