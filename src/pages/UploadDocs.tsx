@@ -12,6 +12,8 @@ import DocumentCameraCapture from "@/components/upload/DocumentCameraCapture";
 import { getDocDimensions } from "@/lib/documentDimensions";
 import logoFallback from "@/assets/logo-placeholder-white.png";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import TokenErrorScreen from "@/components/TokenErrorScreen";
+import { checkTokenStatus, type TokenStatus } from "@/lib/tokenStatus";
 
 const DOC_TYPES = [
   { key: "drivers_license_front", label: "Driver's License (Front)", icon: CreditCard, ocr: true },
@@ -52,6 +54,8 @@ const UploadDocsLegacy = () => {
   const [submission, setSubmission] = useState<SubmissionInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [tokenStatus, setTokenStatus] = useState<TokenStatus | "error" | null>(null);
+  const [retryNonce, setRetryNonce] = useState(0);
   const [files, setFiles] = useState<{ file: File; docType: string; preview: string }[]>([]);
   const [uploading, setUploading] = useState(false);
   const [done, setDone] = useState(false);
@@ -62,16 +66,21 @@ const UploadDocsLegacy = () => {
 
   useEffect(() => {
     const fetchSubmission = async () => {
-      if (!token) { setError("Invalid link."); setLoading(false); return; }
+      if (!token) { setTokenStatus("missing"); setLoading(false); return; }
       const { data, error: err } = await supabase
         .rpc("get_submission_by_token", { _token: token })
         .maybeSingle();
-      if (err || !data) { setError("Submission not found. Please check your link."); }
-      else { setSubmission(data as unknown as SubmissionInfo); }
+      if (err || !data) {
+        const status = err ? "error" : await checkTokenStatus(token);
+        setTokenStatus(status);
+        setError("Submission not found. Please check your link.");
+      } else {
+        setSubmission(data as unknown as SubmissionInfo);
+      }
       setLoading(false);
     };
     fetchSubmission();
-  }, [token]);
+  }, [token, retryNonce]);
 
   const MAX_FILE_SIZE = 10 * 1024 * 1024;
   const MAX_FILES = 30;
@@ -212,16 +221,13 @@ const UploadDocsLegacy = () => {
     </div>
   );
 
-  if (error && !submission) return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-6">
-      <div className="text-center max-w-sm">
-        <div className="w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-5">
-          <X className="w-10 h-10 text-destructive" />
-        </div>
-        <h1 className="font-display text-2xl text-foreground mb-2">Oops!</h1>
-        <p className="text-muted-foreground">{error}</p>
-      </div>
-    </div>
+  if (tokenStatus && tokenStatus !== "valid" && !submission) return (
+    <TokenErrorScreen
+      status={tokenStatus}
+      onRetry={tokenStatus === "error" || tokenStatus === "unknown"
+        ? () => { setTokenStatus(null); setError(""); setLoading(true); setRetryNonce(n => n + 1); }
+        : undefined}
+    />
   );
 
   if (done) return (
