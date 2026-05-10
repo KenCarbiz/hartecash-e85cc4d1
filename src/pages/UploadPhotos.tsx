@@ -20,6 +20,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { usePhotoConfig, type PhotoShot } from "@/hooks/usePhotoConfig";
 import { classToArchetype, type VehicleArchetype } from "@/lib/vehicleArchetypes";
 import logoFallback from "@/assets/logo-placeholder-white.png";
+import TokenErrorScreen from "@/components/TokenErrorScreen";
+import { checkTokenStatus, isExpiredTokenError, type TokenStatus } from "@/lib/tokenStatus";
 
 interface SubmissionInfo {
   id: string;
@@ -55,6 +57,8 @@ const UploadPhotosLegacy = () => {
   const [submission, setSubmission] = useState<SubmissionInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [tokenStatus, setTokenStatus] = useState<TokenStatus | "error" | null>(null);
+  const [retryNonce, setRetryNonce] = useState(0);
   const [categoryUploads, setCategoryUploads] = useState<CategoryUploads>({});
   const [extraFiles, setExtraFiles] = useState<File[]>([]);
   const [extraPreviews, setExtraPreviews] = useState<string[]>([]);
@@ -71,16 +75,23 @@ const UploadPhotosLegacy = () => {
   // Fetch submission (includes bb_class_name for archetype mapping)
   useEffect(() => {
     const fetchSubmission = async () => {
-      if (!token) { setError("Invalid link."); setLoading(false); return; }
+      if (!token) { setTokenStatus("missing"); setLoading(false); return; }
       const minDelay = new Promise(r => setTimeout(r, 1200));
       const fetchData = supabase.rpc("get_submission_by_token", { _token: token });
       const [, { data, error: err }] = await Promise.all([minDelay, fetchData]);
-      if (err || !data || data.length === 0) { setError("Submission not found."); }
-      else { setSubmission(data[0]); }
+      if (err || !data || data.length === 0) {
+        // Empty result is ambiguous (expired vs missing); resolve so
+        // we can show the right recovery CTA.
+        const status = err ? "error" : await checkTokenStatus(token);
+        setTokenStatus(status);
+        setError("Submission not found.");
+      } else {
+        setSubmission(data[0]);
+      }
       setLoading(false);
     };
     fetchSubmission();
-  }, [token]);
+  }, [token, retryNonce]);
 
   // Load dealer photo config
   const dealershipId = submission?.dealership_id || "default";
@@ -288,16 +299,13 @@ const UploadPhotosLegacy = () => {
 
   if (loading || configLoading) return <UploadSkeleton />;
 
-  if (error && !submission) return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-6">
-      <div className="text-center max-w-sm">
-        <div className="w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-5">
-          <X className="w-10 h-10 text-destructive" />
-        </div>
-        <h1 className="font-display text-2xl text-foreground mb-2">Oops!</h1>
-        <p className="text-muted-foreground">{error}</p>
-      </div>
-    </div>
+  if (tokenStatus && tokenStatus !== "valid" && !submission) return (
+    <TokenErrorScreen
+      status={tokenStatus}
+      onRetry={tokenStatus === "error" || tokenStatus === "unknown"
+        ? () => { setTokenStatus(null); setError(""); setLoading(true); setRetryNonce(n => n + 1); }
+        : undefined}
+    />
   );
 
   if (done) return (
