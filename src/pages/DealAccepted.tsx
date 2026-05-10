@@ -104,38 +104,42 @@ const DealAcceptedLegacy = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!token) { setLoading(false); return; }
-      
+      if (!token) { setTokenStatus("missing"); setLoading(false); return; }
+
       // Mark the offer as accepted (updates status to 'offer_accepted')
       await supabase.rpc("accept_offer", { _token: token });
-      
-      const { data } = await supabase.rpc("get_submission_portal", { _token: token });
-      if (data && data.length > 0) {
-        const sub = data[0] as unknown as DealSubmission;
-        setSubmission(sub);
 
-        // Check if contact info is missing (offer-first flow)
-        const needsContact = !sub.name || !sub.email || !sub.phone;
-        if (needsContact) {
-          setContactName(sub.name || "");
-          setContactEmail(sub.email || "");
-          setContactPhone(sub.phone || "");
-          setContactZip(sub.zip || "");
-          setContactGateOpen(true);
-        } else {
-          // Fire notifications only when contact info is present
-          if ((sub as any).id) {
-            const subId = (sub as any).id as string;
-            const ctx = { from: "DealAccepted.autoFire", submission_id: subId } as const;
-            safeInvoke("send-notification", { body: { trigger_key: "staff_customer_accepted", submission_id: subId }, context: ctx });
-            safeInvoke("send-notification", { body: { trigger_key: "customer_offer_accepted", submission_id: subId }, context: ctx });
-          }
+      const { data, error: err } = await supabase.rpc("get_submission_portal", { _token: token });
+      if (err || !data || data.length === 0) {
+        const status = err ? "error" : await checkTokenStatus(token);
+        setTokenStatus(status);
+        setLoading(false);
+        return;
+      }
+      const sub = data[0] as unknown as DealSubmission;
+      setSubmission(sub);
+
+      // Check if contact info is missing (offer-first flow)
+      const needsContact = !sub.name || !sub.email || !sub.phone;
+      if (needsContact) {
+        setContactName(sub.name || "");
+        setContactEmail(sub.email || "");
+        setContactPhone(sub.phone || "");
+        setContactZip(sub.zip || "");
+        setContactGateOpen(true);
+      } else {
+        // Fire notifications only when contact info is present
+        if ((sub as any).id) {
+          const subId = (sub as any).id as string;
+          const ctx = { from: "DealAccepted.autoFire", submission_id: subId } as const;
+          safeInvoke("send-notification", { body: { trigger_key: "staff_customer_accepted", submission_id: subId }, context: ctx });
+          safeInvoke("send-notification", { body: { trigger_key: "customer_offer_accepted", submission_id: subId }, context: ctx });
         }
       }
       setLoading(false);
     };
     fetchData();
-  }, [token]);
+  }, [token, retryNonce]);
 
   // Fetch appointment details when submission has an appointment
   useEffect(() => {
@@ -190,13 +194,10 @@ const DealAcceptedLegacy = () => {
 
   if (!submission) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-6">
-        <div className="text-center">
-          <div className="text-5xl mb-4">😕</div>
-          <h1 className="text-xl font-bold font-display text-foreground mb-2">Not Found</h1>
-          <p className="text-muted-foreground">We couldn't find this submission.</p>
-        </div>
-      </div>
+      <TokenErrorScreen
+        status={tokenStatus ?? "error"}
+        onRetry={() => { setTokenStatus(null); setLoading(true); setRetryNonce(n => n + 1); }}
+      />
     );
   }
 
