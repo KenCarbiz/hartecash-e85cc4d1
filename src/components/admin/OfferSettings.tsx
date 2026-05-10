@@ -360,7 +360,7 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
       if (d.strategy_mode) {
         setStrategyMode(d.strategy_mode as StrategyMode);
       } else if (d.condition_basis_map) {
-        const basis = d.condition_basis_map;
+        const basis = d.condition_basis_map as any;
         if (basis?.excellent?.startsWith("wholesale")) setStrategyMode("conservative");
         else if (basis?.very_good === "retail_clean") setStrategyMode("predator");
         else if (basis?.good === "tradein_clean") setStrategyMode("aggressive");
