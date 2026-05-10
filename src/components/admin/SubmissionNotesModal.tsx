@@ -54,7 +54,7 @@ export const fetchSubmissionNotes = async (submissionId: string): Promise<Submis
   if (error) {
     if (isMissingTableError(error)) {
       // Migration not applied yet on this database — fail soft.
-      // eslint-disable-next-line no-console
+       
       console.warn("[notes] submission_notes table missing — apply migration 20260427100000_add_submission_notes.sql");
       return [];
     }

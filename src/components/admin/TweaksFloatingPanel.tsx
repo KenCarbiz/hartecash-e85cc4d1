@@ -164,7 +164,7 @@ const TweaksFloatingPanel = ({ userRole }: TweaksFloatingPanelProps) => {
               </section>
 
               {/* Header A/B/C — applies to both Classic and Conversation */}
-              {true && (
+              {(
                 <section>
                   <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Header Layout</div>
                   <div className="space-y-1.5">

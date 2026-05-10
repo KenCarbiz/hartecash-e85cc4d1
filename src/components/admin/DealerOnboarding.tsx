@@ -272,7 +272,7 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate, targetDealershipId, onD
         const colMatch = /Could not find the '([a-z_]+)' column/i.exec(error.message);
         if (colMatch) {
           const missingCol = colMatch[1];
-          // eslint-disable-next-line no-console
+           
           console.warn(
             `[DealerOnboarding] dealer_subscriptions schema cache missing '${missingCol}', retrying without it`,
           );
@@ -282,7 +282,7 @@ const DealerOnboarding = ({ isAdmin = false, onNavigate, targetDealershipId, onD
 
         // (2) Missing unique constraint → manual update-or-insert.
         if (/ON CONFLICT/i.test(error.message) || /no unique or exclusion/i.test(error.message)) {
-          // eslint-disable-next-line no-console
+           
           console.warn(
             "[DealerOnboarding] dealer_subscriptions.dealership_id has no UNIQUE constraint — falling back to manual upsert",
           );

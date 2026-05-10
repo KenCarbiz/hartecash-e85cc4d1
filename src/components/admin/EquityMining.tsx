@@ -131,7 +131,7 @@ const EquityMining = () => {
       (l) => l.progress_status === "contacted"
     ).length;
     return { total, hotCount, totalHotEquity, outreachCount, converted };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [filtered, outreachSentIds]);
 
   /* ── outreach helpers ─────────────────────────────── */

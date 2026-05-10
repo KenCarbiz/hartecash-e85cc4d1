@@ -53,7 +53,7 @@ export const useTradeUpIncentives = (
     let cancelled = false;
     (async () => {
       setLoading(true);
-      let q = supabase
+      const q = supabase
         .from("trade_up_incentives" as never)
         .select("*")
         .eq("dealership_id", dealershipId)

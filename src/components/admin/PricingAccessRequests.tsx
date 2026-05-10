@@ -44,7 +44,7 @@ const PricingAccessRequests = ({ userId }: PricingAccessRequestsProps) => {
 
     // Enrich with profile info
     const userIds = [...new Set(reqs.map(r => r.user_id))];
-    let profiles: Record<string, { display_name: string; email: string }> = {};
+    const profiles: Record<string, { display_name: string; email: string }> = {};
     if (userIds.length > 0) {
       const { data: profileData } = await supabase
         .from("profiles")

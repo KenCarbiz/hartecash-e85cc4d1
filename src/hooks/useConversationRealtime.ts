@@ -31,6 +31,7 @@ export function useCustomerFileRealtime(
     const channel = supabase
       .channel(`customer-file:${submissionId}`)
       .on(
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore supabase realtime types are loose
         "postgres_changes",
         {
@@ -42,6 +43,7 @@ export function useCustomerFileRealtime(
         () => { cbRef.current(); },
       )
       .on(
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore supabase realtime types are loose
         "postgres_changes",
         {

@@ -108,6 +108,7 @@ export function usePricingModel(): PricingModelLookup {
     const channel = supabase
       .channel("platform_pricing_model")
       .on(
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore — supabase realtime types are loose here
         "postgres_changes",
         {

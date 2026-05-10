@@ -34,6 +34,7 @@ export function useFrontDeskRealtime(
     const channel = supabase
       .channel(`front-desk:${dealershipId}`)
       .on(
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore supabase realtime types are loose
         "postgres_changes",
         {

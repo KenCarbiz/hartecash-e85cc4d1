@@ -208,7 +208,7 @@ const PromotionManagement = () => {
           </div>
         </div>
         <div className="flex gap-2 justify-end">
-          <Button variant="ghost" size="sm" onClick={() => { isNew ? setShowNew(false) : setEditingId(null); setDraft(emptyPromo); }}>
+          <Button variant="ghost" size="sm" onClick={() => { if (isNew) setShowNew(false); else setEditingId(null); setDraft(emptyPromo); }}>
             <X className="w-4 h-4 mr-1" /> Cancel
           </Button>
           <Button size="sm" onClick={() => isNew ? handleCreate() : handleUpdate(editingId!)}>

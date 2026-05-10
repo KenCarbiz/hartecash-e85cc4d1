@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { Upload, Copy, FileSpreadsheet, Link2, CheckCircle2, Trash2, Sun, Moon } from "lucide-react";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore - read-excel-file browser entry
 import readXlsxFile from "read-excel-file/browser";
 import serviceLogoFallback from "@/assets/logo-placeholder.png";
@@ -29,7 +30,7 @@ function buildLink(vin: string, date: string, time: string): string {
 function normaliseDate(raw: string): string {
   if (!raw) return "";
   if (/^\d{4}-\d{2}-\d{2}$/.test(raw.trim())) return raw.trim();
-  const parts = raw.trim().split(/[\/\-]/);
+  const parts = raw.trim().split(/[-/]/);
   if (parts.length === 3) {
     const [a, b, c] = parts;
     if (c.length === 4) return `${c}-${a.padStart(2, "0")}-${b.padStart(2, "0")}`;

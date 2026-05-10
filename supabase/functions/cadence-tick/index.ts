@@ -312,7 +312,7 @@ async function createBdcCallTask(
 ): Promise<string | null> {
   // Resolve assignment: assigned_rep_email first, BDC pool fallback.
   let assignedTo: string | null = null;
-  let assignedEmail: string | null = sub.assigned_rep_email || null;
+  const assignedEmail: string | null = sub.assigned_rep_email || null;
   let assignedRole: string | null = null;
 
   if (assignedEmail) {

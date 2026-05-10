@@ -444,7 +444,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
     payload: Record<string, unknown>,
   ): Promise<{ error: { message?: string } | null; stripped: string[] }> => {
     const stripped: string[] = [];
-    let working: Record<string, unknown> = { ...payload };
+    const working: Record<string, unknown> = { ...payload };
     for (let attempt = 0; attempt < 12; attempt++) {
       const { error } = await op(working);
       if (!error) return { error: null, stripped };

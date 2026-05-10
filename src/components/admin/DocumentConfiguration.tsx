@@ -56,11 +56,12 @@ const DocumentConfiguration = () => {
 
   const fetchConfig = useCallback(async () => {
     setLoading(true);
-    let { data, error } = await supabase
+    const { data: initialData, error } = await supabase
       .from("document_config" as never)
       .select("*")
       .eq("dealership_id", dealershipId)
       .order("sort_order");
+    let data = initialData;
 
     if (error) {
       // Migration not applied yet → table doesn't exist. Surface a

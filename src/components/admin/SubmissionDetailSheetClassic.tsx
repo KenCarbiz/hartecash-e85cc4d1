@@ -690,7 +690,7 @@ class ClassicErrorBoundary extends Component<{ children: ReactNode }, { error: E
   state = { error: null as Error | null };
   static getDerivedStateFromError(error: Error) { return { error }; }
   componentDidCatch(error: Error, info: ErrorInfo) {
-    // eslint-disable-next-line no-console
+     
     console.error("[ClassicSlideOut] render error:", error, info);
   }
   render() {

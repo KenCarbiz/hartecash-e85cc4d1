@@ -105,7 +105,7 @@ const CallAvailabilityDialog = ({ open, onOpenChange, userId, userLabel, onSaved
       return supabase.from("user_roles").update(payload).eq("user_id", userId);
     };
 
-    let payload: Record<string, unknown> = {
+    const payload: Record<string, unknown> = {
       click_to_dial_dnd: form.dnd,
       click_to_dial_quiet_start: form.quietStart || null,
       click_to_dial_quiet_end: form.quietEnd || null,
