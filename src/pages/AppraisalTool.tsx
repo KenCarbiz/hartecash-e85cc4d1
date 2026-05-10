@@ -490,7 +490,7 @@ export default function AppraisalTool() {
   }), [sub, condition, accidents, drivable, smokedIn, exteriorItems, interiorItems, mechItems, engineItems, techItems, windshield, moonroof, tiresReplaced, numKeys, modifications, liveSelectedAddDeducts, mappedWindshield, mappedDrivable, mappedAccidents, mappedSmokedIn, mappedTires, mappedKeys]);
 
   // Use live BB vehicle if available, else reconstruct from stored data
-  const bbVehicle: BBVehicle | null = useMemo(() => {
+  const bbVehicle: BBVehicle | null = useMemo<any>(() => {
     if (liveBbVehicle) return liveBbVehicle;
     if (!sub || !sub.bb_tradein_avg) return null;
     // Try to reconstruct from bb_value_tiers if available
@@ -1581,7 +1581,7 @@ export default function AppraisalTool() {
               <OutcomeEntryPanel
                 submissionId={sub.id}
                 appraisalFinalizedAt={sub.appraisal_finalized_at}
-                existingOutcome={sub}
+                existingOutcome={sub as any}
                 onSaved={() => handleRefreshInspection()}
               />
             )}

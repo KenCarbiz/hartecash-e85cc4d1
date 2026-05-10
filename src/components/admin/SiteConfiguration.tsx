@@ -1027,7 +1027,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
           <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
             <div className="flex items-center gap-3">
               <Switch
-                checked={config.ppt_enabled || false}
+                checked={!!config.ppt_enabled}
                 onCheckedChange={v => update("ppt_enabled", v ? 1 : 0)}
               />
               <div>
