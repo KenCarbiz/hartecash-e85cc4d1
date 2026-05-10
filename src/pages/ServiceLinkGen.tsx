@@ -30,7 +30,7 @@ function buildLink(vin: string, date: string, time: string): string {
 function normaliseDate(raw: string): string {
   if (!raw) return "";
   if (/^\d{4}-\d{2}-\d{2}$/.test(raw.trim())) return raw.trim();
-  const parts = raw.trim().split(/[\/\-]/);
+  const parts = raw.trim().split(/[-/]/);
   if (parts.length === 3) {
     const [a, b, c] = parts;
     if (c.length === 4) return `${c}-${a.padStart(2, "0")}-${b.padStart(2, "0")}`;
