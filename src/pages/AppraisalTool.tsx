@@ -39,8 +39,23 @@ import OBDScanResults from "@/components/inspection/OBDScanResults";
 
 
 // ── Types ──
+// Settings persisted on offer_settings beyond what OfferSettings (the
+// calculator interface) declares. Promoting them once here lets the rest of
+// the file read them without inline `(settings as any)` extension casts.
+type OfferSettingsExt = OfferSettings & {
+  dealer_pack?: number;
+  hide_pack_from_appraisal?: boolean;
+  retail_profit_basis?: string;
+  manager_pin?: string;
+  target_gross_min?: number;
+  retail_search_zip?: string | null;
+  learning_threshold?: number;
+};
+
 interface Submission {
   id: string; token: string;
+  // Stamped by the appraisal-start trigger; reads in the slide-out pill.
+  appraisal_started_at?: string | null;
   vehicle_year: string | null; vehicle_make: string | null; vehicle_model: string | null;
   vin: string | null; mileage: string | null; exterior_color: string | null;
   overall_condition: string | null; offered_price: number | null;
@@ -71,6 +86,15 @@ interface Submission {
   appraisal_finalized: boolean;
   appraisal_finalized_at: string | null;
   appraisal_finalized_by: string | null;
+  // Outcome-tracking fields read by OutcomeEntryPanel.
+  outcome_accepted?: boolean | null;
+  outcome_sale_price?: number | null;
+  outcome_days_to_sale?: number | null;
+  outcome_wholesaled?: boolean | null;
+  outcome_wholesale_price?: number | null;
+  outcome_recon_actual?: number | null;
+  outcome_entered_at?: string | null;
+  outcome_entered_by?: string | null;
 }
 
 const CONDITIONS = ["excellent", "very_good", "good", "fair"] as const;
@@ -233,7 +257,7 @@ export default function AppraisalTool() {
         .eq("user_id", session.user.id)
         .limit(1)
         .maybeSingle();
-      const role = (roleData as any)?.role || "";
+      const role = roleData?.role || "";
       setUserRole(role);
       // Pricing tier: admin + every manager-tier role (UCM, NCM, GSM/GM).
       // Uses the canonical helper so adding new manager roles in the
@@ -250,7 +274,7 @@ export default function AppraisalTool() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [sub, setSub] = useState<Submission | null>(null);
-  const [settings, setSettings] = useState<OfferSettings | null>(null);
+  const [settings, setSettings] = useState<OfferSettingsExt | null>(null);
   const [rules, setRules] = useState<OfferRule[]>([]);
   const [dealerPack, setDealerPack] = useState(0);
   const [hidePackFromAppraisal, setHidePackFromAppraisal] = useState(false);
@@ -265,7 +289,7 @@ export default function AppraisalTool() {
   const acvSheetRef = useRef<HTMLDivElement>(null);
 
   // Editable overrides
-  const [localSettings, setLocalSettings] = useState<OfferSettings | null>(null);
+  const [localSettings, setLocalSettings] = useState<OfferSettingsExt | null>(null);
   const [acvOverride, setAcvOverride] = useState<number | null>(null);
   // Customer-facing offer (the number quoted to the customer). Distinct
   // from acv_value, which is the appraiser's internal ceiling. Voice AI
@@ -300,7 +324,7 @@ export default function AppraisalTool() {
   const [liveSelectedAddDeducts, setLiveSelectedAddDeducts] = useState<string[]>([]);
   const [bbLoading, setBbLoading] = useState(false);
 
-  const updateLocalSetting = useCallback(<K extends keyof OfferSettings>(key: K, value: OfferSettings[K]) => {
+  const updateLocalSetting = useCallback(<K extends keyof OfferSettingsExt>(key: K, value: OfferSettingsExt[K]) => {
     setLocalSettings(prev => prev ? { ...prev, [key]: value } : prev);
   }, []);
 
@@ -311,14 +335,14 @@ export default function AppraisalTool() {
       setLoading(true);
       const { data: subData } = await supabase.from("submissions").select("*").eq("token", token).maybeSingle();
       if (!subData) { toast({ title: "Not Found", description: "Submission not found.", variant: "destructive" }); setLoading(false); return; }
-      const s = subData as any as Submission;
+      const s = subData as unknown as Submission;
       setSub(s);
       // Stamp appraisal_started_at so the customer-file slide-out
       // can show a live "Appraiser working on it" pill back to the
       // salesperson while the appraiser is heads-down. Only stamp
       // once — don't overwrite an earlier start time, and don't
       // stamp if acv_value is already set (appraisal already done).
-      if (!(s as any).appraisal_started_at && !s.acv_value) {
+      if (!s.appraisal_started_at && !s.acv_value) {
         try {
           await supabase
             .from("submissions")
@@ -377,25 +401,26 @@ export default function AppraisalTool() {
 
       const { data: settingsData } = await supabase.from("offer_settings").select("*").eq("dealership_id", dealershipId).maybeSingle();
       if (settingsData) {
-        setSettings(settingsData as any);
-        setLocalSettings(settingsData as any);
-        setDealerPack((settingsData as any).dealer_pack ?? 0);
-        setHidePackFromAppraisal((settingsData as any).hide_pack_from_appraisal ?? false);
-        setRetailProfitBasis((settingsData as any).retail_profit_basis || "retail_avg");
-        setBbValueBasis(settingsData.bb_value_basis || "tradein_avg");
-        setManagerPin((settingsData as any).manager_pin || "0000");
-        setTargetGrossMin((settingsData as any).target_gross_min || 0);
+        const ext = settingsData as unknown as OfferSettingsExt;
+        setSettings(ext);
+        setLocalSettings(ext);
+        setDealerPack(ext.dealer_pack ?? 0);
+        setHidePackFromAppraisal(ext.hide_pack_from_appraisal ?? false);
+        setRetailProfitBasis(ext.retail_profit_basis || "retail_avg");
+        setBbValueBasis(ext.bb_value_basis || "tradein_avg");
+        setManagerPin(ext.manager_pin || "0000");
+        setTargetGrossMin(ext.target_gross_min || 0);
         // If a custom retail search ZIP is configured in offer settings, use it
-        if ((settingsData as any).retail_search_zip) {
-          setDealerZip((settingsData as any).retail_search_zip);
+        if (ext.retail_search_zip) {
+          setDealerZip(ext.retail_search_zip);
         }
       }
 
       const { data: rulesData } = await supabase.from("offer_rules").select("*").eq("dealership_id", dealershipId).eq("is_active", true);
-      if (rulesData) setRules(rulesData as any);
+      if (rulesData) setRules(rulesData as unknown as OfferRule[]);
 
       const { data: policiesData } = await supabase.from("depth_policies").select("*").eq("dealership_id", dealershipId).eq("is_active", true).order("sort_order");
-      if (policiesData) setDepthPolicies(policiesData as any);
+      if (policiesData) setDepthPolicies(policiesData as typeof depthPolicies);
 
       // Fetch dealer's primary location ZIP for market data default
       const { data: locData } = await supabase
@@ -469,7 +494,7 @@ export default function AppraisalTool() {
     if (liveBbVehicle) return liveBbVehicle;
     if (!sub || !sub.bb_tradein_avg) return null;
     // Try to reconstruct from bb_value_tiers if available
-    const tiers = sub.bb_value_tiers as any;
+    const tiers = sub.bb_value_tiers as Record<string, Record<string, number>> | null;
     return {
       year: sub.vehicle_year || "", make: sub.vehicle_make || "", model: sub.vehicle_model || "",
       series: "", style: "", uvc: "", vin: sub.vin || "", price_includes: "",
@@ -524,7 +549,7 @@ export default function AppraisalTool() {
   const wholesaleAvg = Number(bbVehicle?.wholesale?.avg || sub?.bb_wholesale_avg || 0);
   const tradeinAvg = Number(bbVehicle?.tradein?.avg || sub?.bb_tradein_avg || 0);
   const cycleRetailBasis = () => {
-    const idx = RETAIL_TIERS.indexOf(retailProfitBasis as any);
+    const idx = RETAIL_TIERS.indexOf(retailProfitBasis as typeof RETAIL_TIERS[number]);
     const next = RETAIL_TIERS[(idx + 1) % RETAIL_TIERS.length];
     setRetailProfitBasis(next);
   };
@@ -549,7 +574,7 @@ export default function AppraisalTool() {
     blocks.push({ id: "condition", label: `Condition (${CONDITION_LABELS[condition] || condition})`, value: condAdj, runningTotal: running, type: condAdj >= 0 ? "add" : "subtract", editable: true, editKey: "condition_multiplier", editType: "multiplier", currentEditValue: condMult });
 
     // 3. Equipment
-    const condEquipMap = (activeSettings as any).condition_equipment_map || { excellent: true, very_good: true, good: true, fair: true };
+    const condEquipMap = activeSettings.condition_equipment_map || { excellent: true, very_good: true, good: true, fair: true };
     const equipEnabled = condEquipMap[condition] ?? true;
     const effectiveEquip = equipEnabled ? equipmentTotal : 0;
     if (effectiveEquip !== 0) {
@@ -596,7 +621,7 @@ export default function AppraisalTool() {
     }
 
     // 9. Low-Mileage Bonus
-    const lmb = (activeSettings as any).low_mileage_bonus;
+    const lmb = activeSettings.low_mileage_bonus;
     if (lmb?.enabled && bbVehicle.year) {
       const age = Math.max(currentYear - Number(bbVehicle.year), 1);
       const milesPerYear = mileageNum / age;
@@ -613,7 +638,7 @@ export default function AppraisalTool() {
     }
 
     // 10. High-Mileage Penalty
-    const hmp = (activeSettings as any).high_mileage_penalty || DEFAULT_HIGH_MILEAGE_PENALTY;
+    const hmp = activeSettings.high_mileage_penalty || DEFAULT_HIGH_MILEAGE_PENALTY;
     if (hmp?.enabled && bbVehicle.year) {
       const age = Math.max(currentYear - Number(bbVehicle.year), 1);
       const milesPerYear = mileageNum / age;
@@ -630,7 +655,7 @@ export default function AppraisalTool() {
     }
 
     // 11. Seasonal
-    const seasonal = (activeSettings as any).seasonal_adjustment || DEFAULT_SEASONAL_ADJUSTMENT;
+    const seasonal = activeSettings.seasonal_adjustment || DEFAULT_SEASONAL_ADJUSTMENT;
     if (seasonal?.enabled && seasonal.adjustment_pct !== 0) {
       const adj = Math.round(running * (seasonal.adjustment_pct / 100));
       running += adj;
@@ -638,7 +663,7 @@ export default function AppraisalTool() {
     }
 
     // 12. Color Desirability
-    const colorConfig = (activeSettings as any).color_desirability || DEFAULT_COLOR_DESIRABILITY;
+    const colorConfig = activeSettings.color_desirability || DEFAULT_COLOR_DESIRABILITY;
     if (colorConfig?.enabled) {
       const sampleColor = sub?.exterior_color || bbVehicle.exterior_colors?.[0]?.name || "";
       const colorPct = calcColorAdjustmentPct(sampleColor, colorConfig);
@@ -713,9 +738,10 @@ export default function AppraisalTool() {
     if (!sub) return;
     const { data } = await supabase.from("submissions").select("*").eq("id", sub.id).maybeSingle();
     if (data) {
-      setSub(data as any);
+      const next = data as unknown as Submission;
+      setSub(next);
       // Re-map inspector grade if updated
-      const grade = (data as any).inspector_grade || data.overall_condition || condition;
+      const grade = next.inspector_grade || next.overall_condition || condition;
       setCondition(grade);
       toast({ title: "Inspection Updated", description: "Latest inspection data has been loaded." });
     }
@@ -759,7 +785,7 @@ export default function AppraisalTool() {
       appraisal_finalized: true,
       appraisal_finalized_at: new Date().toISOString(),
       appraisal_finalized_by: sub.appraised_by || "Staff",
-    } as any).eq("id", sub.id);
+    }).eq("id", sub.id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
@@ -800,7 +826,7 @@ export default function AppraisalTool() {
       appraisal_finalized: false,
       appraisal_finalized_at: null,
       appraisal_finalized_by: null,
-    } as any).eq("id", sub.id);
+    }).eq("id", sub.id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
@@ -820,7 +846,7 @@ export default function AppraisalTool() {
     setSaving(true);
     const { error } = await supabase
       .from("submissions")
-      .update({ acv_value: newVal } as any)
+      .update({ acv_value: newVal })
       .eq("id", sub.id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -863,7 +889,7 @@ export default function AppraisalTool() {
     const previousOffer = sub.offered_price;
     const { error } = await supabase
       .from("submissions")
-      .update({ offered_price: newVal } as any)
+      .update({ offered_price: newVal })
       .eq("id", sub.id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -881,7 +907,7 @@ export default function AppraisalTool() {
         old_value: previousOffer ? `$${Number(previousOffer).toLocaleString()}` : null,
         new_value: `$${newVal.toLocaleString()}`,
         performed_by: sub.appraised_by || "Staff",
-      } as any);
+      });
     } catch (e) {
       // Non-fatal — audit log failures shouldn't fail the save.
       console.warn("activity_log insert failed (non-fatal):", e);
@@ -1007,8 +1033,8 @@ export default function AppraisalTool() {
   // Deduction helpers
   const da = activeSettings?.deduction_amounts || {} as Record<string, number>;
   const dc = activeSettings?.deductions_config || {} as Record<string, boolean>;
-  const getAmt = (key: string) => (da as any)[key] || 0;
-  const isOn = (key: string) => (dc as any)[key] !== false;
+  const getAmt = (key: string) => (da as Record<string, number>)[key] || 0;
+  const isOn = (key: string) => (dc as Record<string, boolean>)[key] !== false;
   const accidentDeduct = accidents === "1" ? getAmt("accidents_1") : accidents === "2+" ? getAmt("accidents_2") : 0;
   const extDeduct = exteriorItems * getAmt("exterior_damage_per_item");
   const intDeduct = interiorItems * getAmt("interior_damage_per_item");
@@ -1555,7 +1581,7 @@ export default function AppraisalTool() {
               <OutcomeEntryPanel
                 submissionId={sub.id}
                 appraisalFinalizedAt={sub.appraisal_finalized_at}
-                existingOutcome={sub as any}
+                existingOutcome={sub}
                 onSaved={() => handleRefreshInspection()}
               />
             )}
@@ -1595,7 +1621,7 @@ export default function AppraisalTool() {
               overallCondition={condition}
               mileage={sub.mileage}
               reconEstimate={reconCost}
-              learningThreshold={(activeSettings as any)?.learning_threshold ?? 250}
+              learningThreshold={activeSettings?.learning_threshold ?? 250}
             />
 
             {/* Deal Maker Section — decision tool */}

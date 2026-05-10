@@ -17,6 +17,11 @@ import CalculatingOffer from "@/components/CalculatingOffer";
 import AboutPageConfig from "@/components/admin/AboutPageConfig";
 import ComparisonConfig from "@/components/admin/ComparisonConfig";
 
+interface BusinessHoursRow {
+  days: string;
+  hours: string;
+}
+
 interface SiteConfig {
   id: string;
   dealership_name: string;
@@ -72,6 +77,25 @@ interface SiteConfig {
   referral_reward_trade_amount: number;
   referral_reward_type: string;
   established_year: number | null;
+  // Fields the table actually has but were missing from the local interface —
+  // every read/write was previously `config.field` to bypass the gap.
+  business_hours?: BusinessHoursRow[] | null;
+  facebook_url?: string | null;
+  instagram_url?: string | null;
+  youtube_url?: string | null;
+  tiktok_url?: string | null;
+  google_review_url?: string | null;
+  service_hero_headline?: string;
+  service_hero_subtext?: string;
+  trade_hero_headline?: string;
+  trade_hero_subtext?: string;
+  trade_iframe_headline?: string;
+  trade_iframe_subtext?: string;
+  ppt_enabled?: boolean | number;
+  ppt_guarantee_amount?: number;
+  ppt_headline?: string;
+  ppt_subtext?: string;
+  offers_mobile_inspection?: boolean;
 }
 
 const DEFAULT_CONFIG: SiteConfig = {
@@ -367,7 +391,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
           );
           if (raw === null) continue;
           try {
-            (merged as any)[key] = JSON.parse(raw);
+            (merged as Record<string, unknown>)[key] = JSON.parse(raw);
           } catch {
             /* corrupted entry, ignore */
           }
@@ -488,7 +512,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
         // until the migration applies (localStorage is browser-bound).
         try {
           for (const key of stripped) {
-            const val = (config as any)[key];
+            const val = config[key];
             if (val !== undefined) {
               localStorage.setItem(
                 `site_config_pending:${dealershipId}:${key}`,
@@ -597,14 +621,14 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
       <Section icon={Clock} title="Business Hours" sectionId="hours" forceOpen={focusField === "hours"}>
         <p className="text-xs text-muted-foreground mb-3">Set your dealership hours. These appear on the customer portal and contact cards.</p>
         <div className="space-y-2">
-          {((config as any).business_hours || []).map((row: any, i: number) => (
+          {(config.business_hours || []).map((row: BusinessHoursRow, i: number) => (
             <div key={i} className="flex items-center gap-2">
               <Input
                 value={row.days}
                 onChange={e => {
-                  const hrs = [...((config as any).business_hours || [])];
+                  const hrs = [...(config.business_hours || [])];
                   hrs[i] = { ...hrs[i], days: e.target.value };
-                  update("business_hours" as any, hrs as any);
+                  update("business_hours", hrs);
                 }}
                 placeholder="Mon–Fri"
                 className="h-8 text-xs w-32"
@@ -612,9 +636,9 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
               <Input
                 value={row.hours}
                 onChange={e => {
-                  const hrs = [...((config as any).business_hours || [])];
+                  const hrs = [...(config.business_hours || [])];
                   hrs[i] = { ...hrs[i], hours: e.target.value };
-                  update("business_hours" as any, hrs as any);
+                  update("business_hours", hrs);
                 }}
                 placeholder="9 AM – 7 PM"
                 className="h-8 text-xs flex-1"
@@ -622,8 +646,8 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
               <button
                 type="button"
                 onClick={() => {
-                  const hrs = ((config as any).business_hours || []).filter((_: any, j: number) => j !== i);
-                  update("business_hours" as any, hrs as any);
+                  const hrs = (config.business_hours || []).filter((_: BusinessHoursRow, j: number) => j !== i);
+                  update("business_hours", hrs);
                 }}
                 className="text-muted-foreground hover:text-destructive"
               >
@@ -634,8 +658,8 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
           <button
             type="button"
             onClick={() => {
-              const hrs = [...((config as any).business_hours || []), { days: "", hours: "" }];
-              update("business_hours" as any, hrs as any);
+              const hrs = [...(config.business_hours || []), { days: "", hours: "" }];
+              update("business_hours", hrs);
             }}
             className="flex items-center gap-1 text-xs text-primary hover:underline"
           >
@@ -650,23 +674,23 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold flex items-center gap-1.5"><Facebook className="w-3.5 h-3.5" /> Facebook URL</Label>
-            <Input value={(config as any).facebook_url || ""} onChange={e => update("facebook_url" as any, e.target.value)} placeholder="https://facebook.com/dealership" className="h-8 text-xs" />
+            <Input value={config.facebook_url || ""} onChange={e => update("facebook_url", e.target.value)} placeholder="https://facebook.com/dealership" className="h-8 text-xs" />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold flex items-center gap-1.5"><Instagram className="w-3.5 h-3.5" /> Instagram URL</Label>
-            <Input value={(config as any).instagram_url || ""} onChange={e => update("instagram_url" as any, e.target.value)} placeholder="https://instagram.com/dealership" className="h-8 text-xs" />
+            <Input value={config.instagram_url || ""} onChange={e => update("instagram_url", e.target.value)} placeholder="https://instagram.com/dealership" className="h-8 text-xs" />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold flex items-center gap-1.5"><Youtube className="w-3.5 h-3.5" /> YouTube URL</Label>
-            <Input value={(config as any).youtube_url || ""} onChange={e => update("youtube_url" as any, e.target.value)} placeholder="https://youtube.com/@dealership" className="h-8 text-xs" />
+            <Input value={config.youtube_url || ""} onChange={e => update("youtube_url", e.target.value)} placeholder="https://youtube.com/@dealership" className="h-8 text-xs" />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold flex items-center gap-1.5">TikTok URL</Label>
-            <Input value={(config as any).tiktok_url || ""} onChange={e => update("tiktok_url" as any, e.target.value)} placeholder="https://tiktok.com/@dealership" className="h-8 text-xs" />
+            <Input value={config.tiktok_url || ""} onChange={e => update("tiktok_url", e.target.value)} placeholder="https://tiktok.com/@dealership" className="h-8 text-xs" />
           </div>
           <div className="sm:col-span-2 space-y-1.5">
             <Label className="text-xs font-semibold flex items-center gap-1.5"><Star className="w-3.5 h-3.5" /> Google Review URL</Label>
-            <Input value={(config as any).google_review_url || ""} onChange={e => update("google_review_url" as any, e.target.value)} placeholder="https://g.page/r/..." className="h-8 text-xs" />
+            <Input value={config.google_review_url || ""} onChange={e => update("google_review_url", e.target.value)} placeholder="https://g.page/r/..." className="h-8 text-xs" />
             <p className="text-xs text-muted-foreground">Used for the review request email and footer link.</p>
           </div>
         </div>
@@ -962,11 +986,11 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold">Service Page Headline</Label>
-            <Input value={(config as any).service_hero_headline || ""} onChange={e => update("service_hero_headline" as any, e.target.value)} />
+            <Input value={config.service_hero_headline || ""} onChange={e => update("service_hero_headline", e.target.value)} />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold">Service Page Subtext</Label>
-            <Textarea value={(config as any).service_hero_subtext || ""} onChange={e => update("service_hero_subtext" as any, e.target.value)} rows={2} />
+            <Textarea value={config.service_hero_subtext || ""} onChange={e => update("service_hero_subtext", e.target.value)} rows={2} />
           </div>
 
           {/* Trade Landing Page (/trade) */}
@@ -975,11 +999,11 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold">Trade Page Headline</Label>
-            <Input value={(config as any).trade_hero_headline || ""} onChange={e => update("trade_hero_headline" as any, e.target.value)} />
+            <Input value={config.trade_hero_headline || ""} onChange={e => update("trade_hero_headline", e.target.value)} />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold">Trade Page Subtext</Label>
-            <Textarea value={(config as any).trade_hero_subtext || ""} onChange={e => update("trade_hero_subtext" as any, e.target.value)} rows={2} />
+            <Textarea value={config.trade_hero_subtext || ""} onChange={e => update("trade_hero_subtext", e.target.value)} rows={2} />
           </div>
 
           {/* Trade iFrame (/trade-in) */}
@@ -988,12 +1012,12 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold">iFrame Headline</Label>
-            <Input value={(config as any).trade_iframe_headline || ""} onChange={e => update("trade_iframe_headline" as any, e.target.value)} placeholder="What's Your Trade Worth?" />
+            <Input value={config.trade_iframe_headline || ""} onChange={e => update("trade_iframe_headline", e.target.value)} placeholder="What's Your Trade Worth?" />
             <p className="text-micro text-muted-foreground">Shown on the iframe page embedded on the dealer's website.</p>
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold">iFrame Subtext</Label>
-            <Textarea value={(config as any).trade_iframe_subtext || ""} onChange={e => update("trade_iframe_subtext" as any, e.target.value)} rows={2} placeholder="Get your trade-in value in under 2 minutes — includes your tax savings." />
+            <Textarea value={config.trade_iframe_subtext || ""} onChange={e => update("trade_iframe_subtext", e.target.value)} rows={2} placeholder="Get your trade-in value in under 2 minutes — includes your tax savings." />
           </div>
 
           {/* Push/Pull/Tow */}
@@ -1003,8 +1027,8 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
           <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
             <div className="flex items-center gap-3">
               <Switch
-                checked={(config as any).ppt_enabled || false}
-                onCheckedChange={v => update("ppt_enabled" as any, v ? 1 : 0)}
+                checked={config.ppt_enabled || false}
+                onCheckedChange={v => update("ppt_enabled", v ? 1 : 0)}
               />
               <div>
                 <p className="text-sm font-medium">Enable Push/Pull/Tow Program</p>
@@ -1014,20 +1038,20 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
               </div>
             </div>
           </div>
-          {(config as any).ppt_enabled && (
+          {config.ppt_enabled && (
             <>
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold">Guarantee Amount ($)</Label>
-                <Input type="number" min={500} step={500} value={(config as any).ppt_guarantee_amount || 3000} onChange={e => update("ppt_guarantee_amount" as any, parseInt(e.target.value) || 3000)} className="w-32" />
+                <Input type="number" min={500} step={500} value={config.ppt_guarantee_amount || 3000} onChange={e => update("ppt_guarantee_amount", parseInt(e.target.value) || 3000)} className="w-32" />
                 <p className="text-micro text-muted-foreground">Minimum trade-in value guaranteed to the customer (e.g. 3000 for $3,000).</p>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold">PPT Headline (optional)</Label>
-                <Input value={(config as any).ppt_headline || ""} onChange={e => update("ppt_headline" as any, e.target.value)} placeholder="$3,000 Minimum Trade Guarantee" />
+                <Input value={config.ppt_headline || ""} onChange={e => update("ppt_headline", e.target.value)} placeholder="$3,000 Minimum Trade Guarantee" />
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold">PPT Subtext (optional)</Label>
-                <Textarea value={(config as any).ppt_subtext || ""} onChange={e => update("ppt_subtext" as any, e.target.value)} rows={2} placeholder="Push it, pull it, or tow it — your trade is worth at least this much toward your next vehicle." />
+                <Textarea value={config.ppt_subtext || ""} onChange={e => update("ppt_subtext", e.target.value)} rows={2} placeholder="Push it, pull it, or tow it — your trade is worth at least this much toward your next vehicle." />
               </div>
             </>
           )}
@@ -1255,7 +1279,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
               </p>
             </div>
             <Switch
-              checked={(config as any).offers_mobile_inspection === true}
+              checked={config.offers_mobile_inspection === true}
               onCheckedChange={v => {
                 setConfig(prev => {
                   const next = { ...prev, offers_mobile_inspection: v };
@@ -1297,7 +1321,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
               </p>
             </div>
             <Switch
-              checked={(config as any).auto_route_appraiser_queue}
+              checked={config.auto_route_appraiser_queue}
               onCheckedChange={v => {
                 setConfig(prev => {
                   const next = { ...prev, auto_route_appraiser_queue: v };
@@ -1321,7 +1345,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
               </p>
             </div>
             <Switch
-              checked={(config as any).ai_photo_reappraisal}
+              checked={config.ai_photo_reappraisal}
               onCheckedChange={v => {
                 setConfig(prev => {
                   const next = { ...prev, ai_photo_reappraisal: v };
@@ -1333,7 +1357,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
           </div>
 
           {/* AI Auto-Bump — only shown when Photo Re-Appraisal is on */}
-          {(config as any).ai_photo_reappraisal && (
+          {config.ai_photo_reappraisal && (
             <div className="ml-4 pl-4 border-l-2 border-primary/30 space-y-3">
               <div className="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/20">
                 <div className="flex-1 mr-3">
@@ -1348,7 +1372,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
                   </p>
                 </div>
                 <Switch
-                  checked={(config as any).ai_auto_bump_enabled}
+                  checked={config.ai_auto_bump_enabled}
                   onCheckedChange={v => {
                     setConfig(prev => {
                       const next = { ...prev, ai_auto_bump_enabled: v };
@@ -1359,7 +1383,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
                 />
               </div>
 
-              {(config as any).ai_auto_bump_enabled && (
+              {config.ai_auto_bump_enabled && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="p-3 rounded-lg bg-card border border-border">
                     <Label className="text-xs font-semibold">Max Bump %</Label>
@@ -1370,7 +1394,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
                       type="number"
                       min={1}
                       max={50}
-                      value={(config as any).ai_auto_bump_max_pct}
+                      value={config.ai_auto_bump_max_pct}
                       onChange={e => {
                         const v = Number(e.target.value) || 0;
                         setConfig(prev => {
@@ -1392,7 +1416,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
                       min={100}
                       max={10000}
                       step={100}
-                      value={(config as any).ai_auto_bump_max_dollars}
+                      value={config.ai_auto_bump_max_dollars}
                       onChange={e => {
                         const v = Number(e.target.value) || 0;
                         setConfig(prev => {
@@ -1413,7 +1437,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
                       type="number"
                       min={0}
                       step={500}
-                      value={(config as any).ai_auto_bump_daily_cap}
+                      value={config.ai_auto_bump_daily_cap}
                       onChange={e => {
                         const v = Number(e.target.value) || 0;
                         setConfig(prev => {
@@ -1434,7 +1458,7 @@ const SiteConfiguration = ({ focusField }: { focusField?: string }) => {
                       type="number"
                       min={50}
                       max={99}
-                      value={(config as any).ai_auto_bump_confidence_floor}
+                      value={config.ai_auto_bump_confidence_floor}
                       onChange={e => {
                         const v = Number(e.target.value) || 0;
                         setConfig(prev => {
