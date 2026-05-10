@@ -772,7 +772,13 @@ const InspectionSheet = () => {
         if (subRes.data.brake_lr != null) setBrakeDepth(prev => ({ ...prev, lr: subRes.data.brake_lr }));
         if (subRes.data.brake_rr != null) setBrakeDepth(prev => ({ ...prev, rr: subRes.data.brake_rr }));
         if (subRes.data.internal_notes) setInspectorNotes(subRes.data.internal_notes);
-        const saved = subRes.data.inspection_data;
+        const saved = subRes.data.inspection_data as {
+          grades?: Record<string, ConditionGrade>;
+          itemNotes?: Record<string, string>;
+          paintReading?: string;
+          oilLife?: string;
+          batteryHealth?: string;
+        } | null;
         if (saved && typeof saved === "object") {
           if (saved.grades) setAllGrades(saved.grades);
           if (saved.itemNotes) setAllNotes(saved.itemNotes);
@@ -810,7 +816,13 @@ const InspectionSheet = () => {
         if (subData.brake_lr != null) setBrakeDepth(prev => ({ ...prev, lr: subData.brake_lr }));
         if (subData.brake_rr != null) setBrakeDepth(prev => ({ ...prev, rr: subData.brake_rr }));
         if (subData.inspector_grade) setInspectorGrade(subData.inspector_grade);
-        const saved = subData.inspection_data;
+        const saved = subData.inspection_data as {
+          grades?: Record<string, ConditionGrade>;
+          itemNotes?: Record<string, string>;
+          paintReading?: string;
+          oilLife?: string;
+          batteryHealth?: string;
+        } | null;
         if (saved && typeof saved === "object") {
           if (saved.grades) setAllGrades(prev => ({ ...prev, ...saved.grades }));
           if (saved.itemNotes) setAllNotes(prev => ({ ...prev, ...saved.itemNotes }));
@@ -882,7 +894,7 @@ const InspectionSheet = () => {
       if (draftKey) {
         try { localStorage.removeItem(draftKey); } catch { /* ignore */ }
       }
-      const result = data;
+      const result = data as { adjustment?: number } | null;
       if (result && result.adjustment !== undefined && result.adjustment !== 0) {
         toast({ title: "Inspection saved", description: `Tire adjustment: ${result.adjustment >= 0 ? "+" : ""}$${Math.abs(result.adjustment).toLocaleString()}` });
       }

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import type { Json } from "@/integrations/supabase/types";
 import { Shield, Loader2 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import CalculatingOffer from "@/components/CalculatingOffer";
@@ -145,7 +146,7 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default", initial }:
     (async () => {
       const { data } = await supabase
         .from("submissions")
-        .select("id, name, phone, email, zip, plate, plate_state, vin, vehicle_year, vehicle_make, vehicle_model, mileage, dealership_id, progress_status")
+        .select("id, name, phone, email, zip, plate, state, vin, vehicle_year, vehicle_make, vehicle_model, mileage, dealership_id, progress_status")
         .eq("id", resumeId)
         .eq("progress_status", "partial")
         .maybeSingle();
@@ -164,7 +165,7 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default", initial }:
         email: data.email || prev.email,
         zip: data.zip || prev.zip,
         plate: data.plate || prev.plate,
-        state: data.plate_state || prev.state,
+        state: data.state || prev.state,
         vin: data.vin || prev.vin,
         mileage: String(data.mileage || prev.mileage || ""),
         manualYear: String(data.vehicle_year || prev.manualYear || ""),
@@ -640,6 +641,9 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default", initial }:
           lead_source: isDemoMode ? `${leadSource}-demo` : leadSource,
           dealership_id: tenant.dealership_id,
           ...bbPayload,
+          // bb_add_deducts is BBAddDeduct[] which is structurally JSON-
+          // compatible but TS can't prove it without a cast.
+          bb_add_deducts: bbPayload.bb_add_deducts as unknown as Json | null,
           estimated_offer_low: demoEstimateLow,
           estimated_offer_high: demoEstimateHigh,
           // In demo_mode, force a firm offered_price so the cadence

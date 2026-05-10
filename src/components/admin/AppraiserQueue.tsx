@@ -218,11 +218,20 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
         `and(offered_price.gt.0,status_updated_at.lt.${cutoffIso},progress_status.not.in.(${acceptedFinalCsv}))`,
       );
     }
-    let { data, error } = await supabase
+    // Generated Supabase types don't yet include the `needs_appraisal`
+    // column. The column exists in production (migration
+    // 20260420090000_appraiser_queue_auto_flag.sql) and the graceful-
+    // degradation block below handles the case where it's missing
+    // in a partly-migrated environment. Cast the result through unknown
+    // so the type-level column check doesn't fail the build.
+    let { data, error } = (await supabase
       .from("submissions")
-      .select(columnsWithFlag)
+      .select(columnsWithFlag as "*")
       .or(orParts.join(","))
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })) as unknown as {
+        data: QueueRow[] | null;
+        error: { message?: string } | null;
+      };
 
     // Graceful degradation — the needs_appraisal column hasn't been
     // provisioned yet. Fall back to a column-free query so the page
@@ -239,7 +248,7 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
           .or("progress_status.eq.offer_declined,progress_status.eq.partial,lead_source.in.(walk_in,service,manual_entry)")
           .is("acv_value", null)
           .order("created_at", { ascending: false });
-        data = fallback.data;
+        data = fallback.data as unknown as QueueRow[];
         error = fallback.error;
       } else {
         data = [];
@@ -265,7 +274,13 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
     if (queueRows.length > 0) {
       try {
         const submissionIds = queueRows.map(r => r.id);
-        const { data: sugData } = await supabase
+        // GENERATED-TYPES STALENESS: ai_reappraisal_log is defined in a
+        // migration but not yet in src/integrations/supabase/types.ts.
+        // Re-running `supabase gen types typescript` would let this
+        // call typecheck cleanly. Until then, cast to bypass the
+        // table-name check.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: sugData } = await (supabase as any)
           .from("ai_reappraisal_log")
           .select("id, submission_id, old_offer, suggested_offer, delta, ai_confidence, photos_analyzed, reason, status, created_at")
           .in("submission_id", submissionIds)
@@ -303,7 +318,8 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
       toast({ title: "Failed to apply bump", description: updateErr.message, variant: "destructive" });
       return;
     }
-    await supabase.from("ai_reappraisal_log").update({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any).from("ai_reappraisal_log").update({
       status: "accepted",
       decided_at: new Date().toISOString(),
       decided_by: actorEmail,
@@ -334,7 +350,8 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
   const dismissSuggestion = async (suggestion: AIReappraisalSuggestion) => {
     const { data: userData } = await supabase.auth.getUser();
     const actorEmail = userData?.user?.email || "unknown";
-    await supabase.from("ai_reappraisal_log").update({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any).from("ai_reappraisal_log").update({
       status: "dismissed",
       decided_at: new Date().toISOString(),
       decided_by: actorEmail,
@@ -396,7 +413,10 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
   const dismissFromQueue = async (row: QueueRow) => {
     // Clears the manager flag. Leaves other auto-route rows alone because
     // needs_appraisal was their only entry criterion.
-    const { error } = await supabase
+    // needs_appraisal column not yet in generated types — same staleness
+    // as ai_reappraisal_log above. Real column exists in production.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any)
       .from("submissions")
       .update({ needs_appraisal: false })
       .eq("id", row.id);
