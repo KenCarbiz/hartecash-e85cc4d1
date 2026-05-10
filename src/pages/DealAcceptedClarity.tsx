@@ -217,22 +217,22 @@ const DealAcceptedClarity = () => {
       let locAddress: string | null = null;
       let locCity: string | null = null;
       let locState: string | null = null;
-      if ((data as any).store_location) {
+      if (data.store_location) {
         const { data: loc } = await supabase
-          .from("dealership_locations" as any)
+          .from("dealership_locations")
           .select("name, address, city, state")
-          .eq("id", (data as any).store_location)
+          .eq("id", data.store_location)
           .maybeSingle();
         if (loc) {
-          locName = (loc as any).name;
-          locAddress = (loc as any).address;
-          locCity = (loc as any).city;
-          locState = (loc as any).state;
+          locName = loc.name;
+          locAddress = loc.address;
+          locCity = loc.city;
+          locState = loc.state;
         }
       }
       setAppointment({
-        preferred_date: (data as any).preferred_date,
-        preferred_time: (data as any).preferred_time,
+        preferred_date: data.preferred_date,
+        preferred_time: data.preferred_time,
         location_name: locName,
         location_address: locAddress,
         location_city: locCity,
@@ -303,7 +303,7 @@ const DealAcceptedClarity = () => {
           email: contactForm.email.trim(),
           phone: contactForm.phone.trim(),
           zip: contactForm.zip.trim() || null,
-        } as any)
+        )
         .eq("token", token!);
       // Fire acceptance notifications now that contact is in place.
       try {

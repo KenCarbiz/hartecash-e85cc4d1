@@ -117,7 +117,7 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
         { dealership_id: dealershipId, trigger_key: key, channel: "sms", subject: null, body: `${displayName}: Hi {{customer_name}}, {{vehicle}} update. {{portal_link}}` },
       );
     }
-    await supabase.from("notification_templates").insert(templates as any);
+    await supabase.from("notification_templates").insert(templates);
   };
 
   const { toast } = useToast();
@@ -128,7 +128,7 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
       .from("tenants")
       .select("*")
       .order("created_at", { ascending: true });
-    setTenants((data as any) || []);
+    setTenants(data || []);
     setLoading(false);
   };
 
@@ -159,10 +159,10 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
     // super admin explicitly releases them.
     const { data: scData } = await supabase
       .from("site_config")
-      .select("force_autocurb_attribution" as any)
+      .select("force_autocurb_attribution")
       .eq("dealership_id", t.dealership_id)
       .maybeSingle();
-    const forceAttr = Boolean((scData as any)?.force_autocurb_attribution ?? true);
+    const forceAttr = Boolean(scData?.force_autocurb_attribution ?? true);
     setForm({
       dealership_id: t.dealership_id,
       slug: t.slug,
@@ -235,7 +235,7 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
 
         await supabase
           .from("dealer_accounts")
-          .update(accountUpdate as any)
+          .update(accountUpdate)
           .eq("dealership_id", payload.dealership_id);
 
         // Super-admin attribution force override — saved on site_config
@@ -243,7 +243,7 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
         // dealer's own powered_by_mode.
         await supabase
           .from("site_config")
-          .update({ force_autocurb_attribution: form.forceAutocurbAttribution } as any)
+          .update({ force_autocurb_attribution: form.forceAutocurbAttribution })
           .eq("dealership_id", payload.dealership_id);
       }
     } else {
@@ -255,17 +255,17 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
         const newDbArch = form.architecture ? architectureToDbValue(form.architecture) : "single_store";
 
         const seeds = await Promise.all([
-          supabase.from("site_config").insert({ dealership_id: payload.dealership_id, dealership_name: payload.display_name } as any),
-          supabase.from("form_config").insert({ dealership_id: payload.dealership_id } as any),
-          supabase.from("offer_settings").insert({ dealership_id: payload.dealership_id } as any),
-          supabase.from("inspection_config").insert({ dealership_id: payload.dealership_id } as any),
-          supabase.from("notification_settings").insert({ dealership_id: payload.dealership_id } as any),
+          supabase.from("site_config").insert({ dealership_id: payload.dealership_id, dealership_name: payload.display_name }),
+          supabase.from("form_config").insert({ dealership_id: payload.dealership_id }),
+          supabase.from("offer_settings").insert({ dealership_id: payload.dealership_id }),
+          supabase.from("inspection_config").insert({ dealership_id: payload.dealership_id }),
+          supabase.from("notification_settings").insert({ dealership_id: payload.dealership_id }),
           supabase.from("dealer_accounts").insert({
             dealership_id: payload.dealership_id,
             architecture: newDbArch,
             plan_tier: newTier,
             offer_logic_approver_role: form.offerLogicApproverRole,
-          } as any),
+          }),
         ]);
         const seedErrors = seeds.filter(s => s.error).map(s => s.error?.message);
         if (seedErrors.length) {
