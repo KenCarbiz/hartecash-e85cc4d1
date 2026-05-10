@@ -112,7 +112,7 @@ const LocationManagement = () => {
 
   const fetchLocations = async () => {
     const { data, error } = await supabase
-      .from("dealership_locations" as any)
+      .from("dealership_locations")
       .select("*")
       .eq("dealership_id", dealershipId)
       .order("sort_order");
@@ -122,12 +122,12 @@ const LocationManagement = () => {
 
   const fetchDomainMappings = useCallback(async () => {
     const { data } = await supabase
-      .from("tenants" as any)
+      .from("tenants")
       .select("id, custom_domain, slug, location_id")
       .eq("dealership_id", dealershipId);
     if (data) {
       const map: Record<string, { id: string; custom_domain: string | null; slug: string }> = {};
-      for (const t of data as any[]) {
+      for (const t of data) {
         if (t.location_id) {
           map[t.location_id] = { id: t.id, custom_domain: t.custom_domain, slug: t.slug };
         }
@@ -155,8 +155,8 @@ const LocationManagement = () => {
     if (existing) {
       // Update existing tenant row
       const { error } = await supabase
-        .from("tenants" as any)
-        .update({ custom_domain: domain, display_name: locationName } as any)
+        .from("tenants")
+        .update({ custom_domain: domain, display_name: locationName })
         .eq("id", existing.id);
       if (error) {
         toast({ title: "Failed to update domain", description: error.message, variant: "destructive" });
@@ -168,7 +168,7 @@ const LocationManagement = () => {
       // Create new tenant row linked to this location
       const slug = domain.replace(/\./g, "-");
       const { error } = await supabase
-        .from("tenants" as any)
+        .from("tenants")
         .insert({
           dealership_id: dealershipId,
           slug,
@@ -176,7 +176,7 @@ const LocationManagement = () => {
           custom_domain: domain,
           location_id: locationId,
           is_active: true,
-        } as any);
+        });
       if (error) {
         toast({ title: "Failed to create domain mapping", description: error.message, variant: "destructive" });
       } else {
@@ -200,7 +200,7 @@ const LocationManagement = () => {
     setConfirmRemoveDomainId(null);
     if (!existing) return;
     const { error } = await supabase
-      .from("tenants" as any)
+      .from("tenants")
       .delete()
       .eq("id", existing.id);
     if (!error) {
@@ -225,8 +225,8 @@ const LocationManagement = () => {
     }
     const maxOrder = locations.length > 0 ? Math.max(...locations.map(l => l.sort_order)) : 0;
     const { error } = await supabase
-      .from("dealership_locations" as any)
-      .insert({ name: newName.trim(), city: newCity.trim(), state: newState.trim() || "CT", sort_order: maxOrder + 1, location_type: newLocationType } as any);
+      .from("dealership_locations")
+      .insert({ name: newName.trim(), city: newCity.trim(), state: newState.trim() || "CT", sort_order: maxOrder + 1, location_type: newLocationType });
     if (error) {
       toast({ title: "Failed to add location", variant: "destructive" });
     } else {
@@ -238,7 +238,7 @@ const LocationManagement = () => {
 
   const toggleField = async (id: string, field: "is_active" | "show_in_footer" | "show_in_scheduling" | "show_in_inspection" | "temporarily_offline" | "use_bdc", current: boolean) => {
     const { error } = await supabase
-      .from("dealership_locations" as any)
+      .from("dealership_locations")
       .update({ [field]: !current })
       .eq("id", id);
     if (!error) {
@@ -248,7 +248,7 @@ const LocationManagement = () => {
 
   const deleteLocation = async (id: string) => {
     const { error } = await supabase
-      .from("dealership_locations" as any)
+      .from("dealership_locations")
       .delete()
       .eq("id", id);
     if (!error) {
@@ -266,7 +266,7 @@ const LocationManagement = () => {
     let hasError = false;
     for (const loc of locations) {
       const { error } = await supabase
-        .from("dealership_locations" as any)
+        .from("dealership_locations")
         .update({
           name: loc.name, city: loc.city, state: loc.state, address: loc.address,
           sort_order: loc.sort_order, zip_codes: loc.zip_codes || [],
@@ -317,7 +317,7 @@ const LocationManagement = () => {
           stats_rating: loc.stats_rating || null,
           stats_reviews_count: loc.stats_reviews_count || null,
           price_guarantee_days: loc.price_guarantee_days || null,
-        } as any)
+        })
         .eq("id", loc.id);
       if (error) hasError = true;
     }
@@ -361,7 +361,7 @@ const LocationManagement = () => {
     const newBrands = raw.split(",").map(b => b.trim()).filter(Boolean);
     if (newBrands.length > 0) {
       setLocations(prev => prev.map(l => l.id === locId
-        ? { ...l, [field]: [...new Set([...((l as any)[field] || []), ...newBrands])] }
+        ? { ...l, [field]: [...new Set([...((l as unknown as Record<string, string | string[] | boolean | null>)[field] || []), ...newBrands])] }
         : l
       ));
       setInputs(prev => ({ ...prev, [locId]: "" }));
@@ -539,7 +539,7 @@ const LocationManagement = () => {
                           { field: "show_in_inspection" as const, label: "Inspections", desc: "Allow vehicle inspections at this store" },
                         ].map(item => (
                           <div key={item.field} className="flex items-start gap-3 p-3 rounded-lg border border-border/50 bg-muted/20">
-                            <Switch checked={(loc as any)[item.field]} onCheckedChange={() => toggleField(loc.id, item.field, (loc as any)[item.field])} className="mt-0.5" />
+                            <Switch checked={(loc as unknown as Record<string, boolean>)[item.field]} onCheckedChange={() => toggleField(loc.id, item.field, (loc as unknown as Record<string, boolean>)[item.field])} className="mt-0.5" />
                             <div>
                               <Label className="text-sm font-medium">{item.label}</Label>
                               <p className="text-[11px] text-muted-foreground">{item.desc}</p>
@@ -707,7 +707,7 @@ const LocationManagement = () => {
                       <LocationLogoSection
                         location={loc}
                         dealershipId={dealershipId}
-                        onUpdate={(field, value) => updateLocation(loc.id, field as any, value)}
+                        onUpdate={(field, value) => updateLocation(loc.id, field, value)}
                       />
                     </TabsContent>
 
@@ -887,7 +887,7 @@ const LocationManagement = () => {
                           {(["facebook_url", "instagram_url", "google_review_url", "tiktok_url", "youtube_url"] as const).map(field => (
                             <div key={field}>
                               <Label className="text-micro text-muted-foreground mb-1 block capitalize">{field.replace(/_url$/, "").replace(/_/g, " ")}</Label>
-                              <Input value={(loc as any)[field] || ""} onChange={e => updateLocation(loc.id, field, e.target.value || null)} placeholder="Inherit" className="text-xs" />
+                              <Input value={(loc as unknown as Record<string, string | string[] | boolean | null>)[field] || ""} onChange={e => updateLocation(loc.id, field, e.target.value || null)} placeholder="Inherit" className="text-xs" />
                             </div>
                           ))}
                         </div>

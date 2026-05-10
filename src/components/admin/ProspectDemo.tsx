@@ -19,6 +19,11 @@ import {
   StickyBarOverlay,
   ButtonCtaOverlay,
   PptOverlay,
+  type BannerPosition,
+  type WidgetPosition,
+  type StickyPosition,
+  type ButtonPosition,
+  type PptPosition,
 } from "./embed/AssetOverlays";
 import {
   type PageType,
@@ -439,15 +444,15 @@ const ProspectDemo = () => {
       if (error) throw error;
       if (!data) throw new Error("Demo not found");
 
-      const cfg = ((data as any).config || {}) as Record<string, any>;
-      setDealerName((data as any).dealer_name || "");
-      setHomeUrl((data as any).home_url || "");
-      setListingUrl((data as any).listing_url || "");
-      setVdpUrl((data as any).vdp_url || "");
+      const cfg = (data.config || {}) as Record<string, unknown>;
+      setDealerName(data.dealer_name || "");
+      setHomeUrl(data.home_url || "");
+      setListingUrl(data.listing_url || "");
+      setVdpUrl(data.vdp_url || "");
       setCaptures({
-        home: (data as any).home_screenshot || null,
-        listing: (data as any).listing_screenshot || null,
-        vdp: (data as any).vdp_screenshot || null,
+        home: data.home_screenshot || null,
+        listing: data.listing_screenshot || null,
+        vdp: data.vdp_screenshot || null,
       });
       if (typeof cfg.buttonColor === "string") setButtonColor(cfg.buttonColor);
       if (typeof cfg.buttonText === "string") setButtonText(cfg.buttonText);
@@ -462,9 +467,9 @@ const ProspectDemo = () => {
         setActiveAssets(new Set(cfg.activeAssets as AssetId[]));
       }
       setSavedDemo({
-        id: (data as any).id,
-        shareToken: (data as any).share_token,
-        expiresAt: (data as any).expires_at,
+        id: data.id,
+        shareToken: data.share_token,
+        expiresAt: data.expires_at,
       });
 
       toast({
@@ -1267,17 +1272,17 @@ const ProspectDemo = () => {
                     />
                     {asset.id === "iframe" && <IframeModalOverlay {...commonOverlayProps} />}
                     {asset.id === "homepage" && (
-                      <HomepageBannerOverlay {...commonOverlayProps} position={effectivePos as any} />
+                      <HomepageBannerOverlay {...commonOverlayProps} position={effectivePos as BannerPosition} />
                     )}
                     {asset.id === "widget" && (
-                      <RightWidgetOverlay {...commonOverlayProps} position={effectivePos as any} />
+                      <RightWidgetOverlay {...commonOverlayProps} position={effectivePos as WidgetPosition} />
                     )}
                     {asset.id === "sticky" && (
                       <StickyBarOverlay
                         {...commonOverlayProps}
                         stickyText={stickyText}
                         stickyCtaText={stickyCtaText}
-                        position={effectivePos as any}
+                        position={effectivePos as StickyPosition}
                       />
                     )}
                     {asset.id === "vdp" && (
@@ -1286,7 +1291,7 @@ const ProspectDemo = () => {
                         bannerHeadline={bannerHeadline}
                         bannerText={bannerText}
                         bannerCtaText={bannerCtaText}
-                        position={effectivePos as any}
+                        position={effectivePos as BannerPosition}
                       />
                     )}
                     {asset.id === "listing" && (
@@ -1294,14 +1299,14 @@ const ProspectDemo = () => {
                         {...commonOverlayProps}
                         bannerHeadline={bannerHeadline}
                         bannerCtaText={bannerCtaText}
-                        position={effectivePos as any}
+                        position={effectivePos as BannerPosition}
                       />
                     )}
                     {asset.id === "button" && (
-                      <ButtonCtaOverlay {...commonOverlayProps} position={effectivePos as any} />
+                      <ButtonCtaOverlay {...commonOverlayProps} position={effectivePos as ButtonPosition} />
                     )}
                     {asset.id === "ppt" && pptEnabled && (
-                      <PptOverlay {...commonOverlayProps} pptButtonText={pptButtonText} position={effectivePos as any} />
+                      <PptOverlay {...commonOverlayProps} pptButtonText={pptButtonText} position={effectivePos as PptPosition} />
                     )}
                   </PageScreenshot>
                 ) : (
