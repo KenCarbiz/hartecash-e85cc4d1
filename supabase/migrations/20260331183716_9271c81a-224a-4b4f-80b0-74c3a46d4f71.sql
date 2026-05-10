@@ -1,6 +1,6 @@
 
 -- Photo configuration table for dealer-managed shot requirements
-CREATE TABLE public.photo_config (
+CREATE TABLE IF NOT EXISTS public.photo_config (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   dealership_id text NOT NULL DEFAULT 'default',
   shot_id text NOT NULL,
@@ -18,12 +18,14 @@ CREATE TABLE public.photo_config (
 ALTER TABLE public.photo_config ENABLE ROW LEVEL SECURITY;
 
 -- Admins can manage their tenant's photo config
+DROP POLICY IF EXISTS "Admins can manage own tenant photo config" ON public.photo_config;
 CREATE POLICY "Admins can manage own tenant photo config"
   ON public.photo_config FOR ALL TO authenticated
   USING (has_role(auth.uid(), 'admin'::app_role) AND dealership_id = get_user_dealership_id(auth.uid()))
   WITH CHECK (has_role(auth.uid(), 'admin'::app_role) AND dealership_id = get_user_dealership_id(auth.uid()));
 
 -- Anyone can read photo config (customers need it for the upload flow)
+DROP POLICY IF EXISTS "Anyone can read photo config" ON public.photo_config;
 CREATE POLICY "Anyone can read photo config"
   ON public.photo_config FOR SELECT TO public
   USING (true);
@@ -44,4 +46,5 @@ INSERT INTO public.photo_config (dealership_id, shot_id, label, description, ori
   ('default', 'trunk', 'Trunk / Cargo Area', 'Open trunk/liftgate — shoot straight in from behind', 'landscape', false, false, 11),
   ('default', 'driver_door', 'Driver Door Interior', 'Open door — shoot across front seat from outside', 'any', false, false, 12),
   ('default', 'undercarriage', 'Wheel Well', 'Crouch at corner — capture wheel well for rust', 'any', false, false, 13),
-  ('default', 'damage', 'Damage Close-up', 'Close-up of any scratches, dents, or wear', 'any', true, false, 14);
+  ('default', 'damage', 'Damage Close-up', 'Close-up of any scratches, dents, or wear', 'any', true, false, 14)
+ON CONFLICT (dealership_id, shot_id) DO NOTHING;

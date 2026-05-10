@@ -1,7 +1,7 @@
 
 -- Inspection configuration table
 -- Stores which sections/fields are enabled and custom checklist items
-CREATE TABLE public.inspection_config (
+CREATE TABLE IF NOT EXISTS public.inspection_config (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   dealership_id text NOT NULL DEFAULT 'default',
   
@@ -48,21 +48,25 @@ CREATE TABLE public.inspection_config (
 ALTER TABLE public.inspection_config ENABLE ROW LEVEL SECURITY;
 
 -- Policies
+DROP POLICY IF EXISTS "Admins can manage inspection config" ON public.inspection_config;
 CREATE POLICY "Admins can manage inspection config"
   ON public.inspection_config FOR ALL
   TO authenticated
   USING (has_role(auth.uid(), 'admin'::app_role))
   WITH CHECK (has_role(auth.uid(), 'admin'::app_role));
 
+DROP POLICY IF EXISTS "Staff can read inspection config" ON public.inspection_config;
 CREATE POLICY "Staff can read inspection config"
   ON public.inspection_config FOR SELECT
   TO authenticated
   USING (is_staff(auth.uid()));
 
+DROP POLICY IF EXISTS "Anyone can read inspection config" ON public.inspection_config;
 CREATE POLICY "Anyone can read inspection config"
   ON public.inspection_config FOR SELECT
   TO public
   USING (true);
 
--- Insert default row
-INSERT INTO public.inspection_config (dealership_id) VALUES ('default');
+-- Insert default row (idempotent on re-apply)
+INSERT INTO public.inspection_config (dealership_id) VALUES ('default')
+ON CONFLICT (dealership_id) DO NOTHING;

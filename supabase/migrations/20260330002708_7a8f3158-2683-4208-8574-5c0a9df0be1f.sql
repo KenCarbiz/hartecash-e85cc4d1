@@ -1,6 +1,6 @@
 
 -- Tenants table: maps domains to dealership_ids
-CREATE TABLE public.tenants (
+CREATE TABLE IF NOT EXISTS public.tenants (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   dealership_id text NOT NULL UNIQUE,
   slug text NOT NULL UNIQUE,
@@ -13,16 +13,19 @@ CREATE TABLE public.tenants (
 
 -- Seed the current default tenant
 INSERT INTO public.tenants (dealership_id, slug, display_name, custom_domain, is_active)
-VALUES ('default', 'harte', 'Harte Auto Group', NULL, true);
+VALUES ('default', 'harte', 'Harte Auto Group', NULL, true)
+ON CONFLICT (dealership_id) DO NOTHING;
 
 -- RLS
 ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
 
 -- Anyone can read active tenants (needed for domain lookup before auth)
+DROP POLICY IF EXISTS "Anyone can read active tenants" ON public.tenants;
 CREATE POLICY "Anyone can read active tenants" ON public.tenants
   FOR SELECT TO public USING (is_active = true);
 
 -- Only admins can manage tenants
+DROP POLICY IF EXISTS "Admins can manage tenants" ON public.tenants;
 CREATE POLICY "Admins can manage tenants" ON public.tenants
   FOR ALL TO authenticated
   USING (has_role(auth.uid(), 'admin'::app_role))
