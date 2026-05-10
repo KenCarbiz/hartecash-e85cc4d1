@@ -107,7 +107,7 @@ export default function AppraisalSidebar({
     for (const line of lines) {
       if (line.startsWith("【") || line.startsWith("[")) {
         if (currentSection) sections.push(currentSection);
-        currentSection = { name: line.replace(/[【】\[\]]/g, "").trim(), items: [] };
+        currentSection = { name: line.replace(/[【》[\]]/g, "").trim(), items: [] };
       } else if (currentSection && (line.includes(":") || line.includes("→"))) {
         const sep = line.includes("→") ? "→" : ":";
         const [label, ...rest] = line.split(sep);

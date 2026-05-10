@@ -60,7 +60,7 @@ const VehicleImage = ({ year, make, model, style, selectedColor, compact = false
     if (cached) {
       if (!isPrefetch) {
         // Preload into browser cache for instant display
-        try { await preloadImage(cached); } catch {}
+        try { await preloadImage(cached); } catch { /* noop */ }
         if (currentColorRef.current === color) {
           setImageUrl(cached);
           setLoading(false);

@@ -56,7 +56,7 @@ const DocumentConfiguration = () => {
 
   const fetchConfig = useCallback(async () => {
     setLoading(true);
-    let { data, error } = await supabase
+    const { data, error } = await supabase
       .from("document_config" as never)
       .select("*")
       .eq("dealership_id", dealershipId)
