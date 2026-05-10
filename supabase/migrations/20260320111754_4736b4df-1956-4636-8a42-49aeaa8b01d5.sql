@@ -1,4 +1,4 @@
-CREATE TABLE public.site_config (
+CREATE TABLE IF NOT EXISTS public.site_config (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   dealership_id text NOT NULL DEFAULT 'default',
   dealership_name text NOT NULL DEFAULT 'Harte Auto Group',
@@ -28,17 +28,20 @@ CREATE TABLE public.site_config (
 ALTER TABLE public.site_config ENABLE ROW LEVEL SECURITY;
 
 -- Anyone can read site config (needed for public pages)
+DROP POLICY IF EXISTS "Anyone can read site config" ON public.site_config;
 CREATE POLICY "Anyone can read site config"
 ON public.site_config FOR SELECT
 TO public
 USING (true);
 
 -- Only admins can manage site config
+DROP POLICY IF EXISTS "Admins can manage site config" ON public.site_config;
 CREATE POLICY "Admins can manage site config"
 ON public.site_config FOR ALL
 TO authenticated
 USING (has_role(auth.uid(), 'admin'::app_role))
 WITH CHECK (has_role(auth.uid(), 'admin'::app_role));
 
--- Insert default row
-INSERT INTO public.site_config (dealership_id) VALUES ('default');
+-- Insert default row (idempotent — re-applying must not duplicate)
+INSERT INTO public.site_config (dealership_id) VALUES ('default')
+ON CONFLICT (dealership_id) DO NOTHING;
