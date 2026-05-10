@@ -34,7 +34,7 @@ export function useFrontDeskRealtime(
     const channel = supabase
       .channel(`front-desk:${dealershipId}`)
       .on(
-        // @ts-ignore supabase realtime types are loose
+        // @ts-expect-error supabase realtime types are loose
         "postgres_changes",
         {
           event: "UPDATE",

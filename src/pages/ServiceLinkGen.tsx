@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { Upload, Copy, FileSpreadsheet, Link2, CheckCircle2, Trash2, Sun, Moon } from "lucide-react";
-// @ts-ignore - read-excel-file browser entry
+// @ts-expect-error - read-excel-file browser entry
 import readXlsxFile from "read-excel-file/browser";
 import serviceLogoFallback from "@/assets/logo-placeholder.png";
 import { useSiteConfig } from "@/hooks/useSiteConfig";

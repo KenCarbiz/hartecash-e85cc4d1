@@ -111,7 +111,7 @@ const VehicleImage = ({ year, make, model, style, selectedColor, compact = false
         localStorage.setItem(cacheKey, data.image_url);
         if (!isPrefetch && currentColorRef.current === color) {
           // Preload into browser memory
-          try { await preloadImage(data.image_url); } catch {}
+          try { await preloadImage(data.image_url); } catch { /* noop */ }
           setImageUrl(data.image_url);
         }
       }
