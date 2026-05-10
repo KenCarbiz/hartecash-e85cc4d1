@@ -18,6 +18,8 @@ import logoFallback from "@/assets/logo-placeholder-white.png";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { getTaxRateFromZip, calcTradeInValue } from "@/lib/salesTax";
 import { generateICalEvent, downloadCalendarInvite, generateGoogleCalendarUrl, generateOutlookCalendarUrl } from "@/lib/calendarInvite";
+import TokenErrorScreen from "@/components/TokenErrorScreen";
+import { checkTokenStatus, type TokenStatus } from "@/lib/tokenStatus";
 
 interface DealSubmission {
   vehicle_year: string | null;
@@ -68,6 +70,8 @@ const DealAcceptedLegacy = () => {
   const [searchParams] = useSearchParams();
   const [submission, setSubmission] = useState<DealSubmission | null>(null);
   const [loading, setLoading] = useState(true);
+  const [tokenStatus, setTokenStatus] = useState<TokenStatus | "error" | null>(null);
+  const [retryNonce, setRetryNonce] = useState(0);
   const confettiKey = `confetti_shown_${token}`;
   const [isFirstVisit] = useState(() => !localStorage.getItem(confettiKey));
   const { config } = useSiteConfig();
