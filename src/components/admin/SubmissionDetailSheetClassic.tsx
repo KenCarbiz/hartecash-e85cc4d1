@@ -452,7 +452,7 @@ const PhotoCarousel = ({ items }: { items: { url: string; name: string }[] }) =>
                   idx === i ? "border-blue-600 ring-2 ring-blue-200" : "border-transparent opacity-70 hover:opacity-100"
                 }`}
               >
-                <img src={p.url} alt="" className="w-full h-full object-cover" />
+                <img src={p.url} alt={`Photo ${idx + 1} thumbnail`} className="w-full h-full object-cover" />
               </button>
             ))}
           </div>

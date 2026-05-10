@@ -139,11 +139,23 @@ const CustomerPortalLegacy = () => {
   useEffect(() => {
     const fetchData = async () => {
       if (!token) { setError("Invalid link."); setLoading(false); return; }
+      // Both queries are keyed on `token` and don't depend on each other —
+      // run them in parallel with the min-delay so the customer-perceived
+      // load time is bounded by the slower of the two, not their sum.
       const minDelay = new Promise(r => setTimeout(r, 1200));
-      const query = supabase.rpc("get_submission_portal", { _token: token });
-      const [, { data, error: err }] = await Promise.all([minDelay, query]);
-      if (err || !data || data.length === 0) { setError("Submission not found. Please check your link."); setLoading(false); return; }
-      setSubmission(data[0] as unknown as PortalSubmission);
+      const portalQuery = supabase.rpc("get_submission_portal", { _token: token });
+      const conditionQuery = supabase
+        .from("submissions")
+        .select("dealership_id, drivetrain, accidents, drivable, exterior_damage, interior_damage, mechanical_issues, engine_issues, tech_issues, smoked_in, tires_replaced, num_keys, windshield_damage, bb_wholesale_avg, bb_retail_avg, bb_value_tiers, bb_add_deducts, bb_selected_options")
+        .eq("token", token)
+        .maybeSingle();
+      const [, portalRes, condRes] = await Promise.all([minDelay, portalQuery, conditionQuery]);
+      if (portalRes.error || !portalRes.data || portalRes.data.length === 0) {
+        setError("Submission not found. Please check your link.");
+        setLoading(false);
+        return;
+      }
+      setSubmission(portalRes.data[0] as unknown as PortalSubmission);
       setLoading(false);
 
       // Portal engagement tracking. Fire-and-forget — we don't want a
@@ -152,14 +164,6 @@ const CustomerPortalLegacy = () => {
       // view, stamps offer_locked_at so the offer flips from estimate-
       // range to locked. Commitment-device lift per the D2b plan.
       (supabase as any).rpc("increment_portal_view", { _token: token }).then(() => {}, () => {});
-
-      const [condRes] = await Promise.all([
-        supabase
-          .from("submissions")
-          .select("dealership_id, drivetrain, accidents, drivable, exterior_damage, interior_damage, mechanical_issues, engine_issues, tech_issues, smoked_in, tires_replaced, num_keys, windshield_damage, bb_wholesale_avg, bb_retail_avg, bb_value_tiers, bb_add_deducts, bb_selected_options")
-          .eq("token", token)
-          .maybeSingle(),
-      ]);
 
       const conditionData = condRes.data as ConditionData | null;
       const pricingRes = await resolveEffectiveSettings(conditionData?.dealership_id || "default");

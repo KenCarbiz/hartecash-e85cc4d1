@@ -430,7 +430,7 @@ const UploadPhotosClarity = () => {
           <div className="flex flex-wrap gap-3">
             {extraPreviews.map((preview, i) => (
               <div key={i} className="relative w-24 h-24 rounded-xl overflow-hidden border border-zinc-200">
-                <img src={preview} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                <img src={preview} alt={`Extra photo ${i + 1}`} className="absolute inset-0 w-full h-full object-cover" />
                 <button
                   type="button"
                   onClick={() => removeExtra(i)}
