@@ -17,42 +17,51 @@ import {
   Save, Plus, Trash2, Copy, Star, Layers, Power, CalendarRange,
   ShieldCheck, Clock, XCircle, SendHorizonal,
 } from "lucide-react";
-import type { OfferSettings } from "@/lib/offerCalculator";
+import type {
+  OfferSettings,
+  ConditionMultipliers, ConditionBasisMap, ConditionEquipmentMap,
+  DeductionsConfig, DeductionAmounts, DeductionModes,
+  LowMileageBonus, HighMileagePenalty,
+  ColorDesirability, SeasonalAdjustment,
+  AgeTier, MileageTier,
+  MarketAdjustmentConfig,
+} from "@/lib/offerCalculator";
+import type { Database } from "@/integrations/supabase/types";
 
 // ── Types ──
+// Derive from the generated Supabase row type so any schema change shows up
+// as a compile error here. Override the JSONB columns with the richer shapes
+// from offerCalculator instead of the catch-all `Json` so the rest of this
+// file can read/write them without per-field casts.
+type PricingModelRow    = Database["public"]["Tables"]["pricing_models"]["Row"];
+type PricingModelInsert = Database["public"]["Tables"]["pricing_models"]["Insert"];
 
-interface PricingModel {
-  id: string;
-  dealership_id: string;
-  name: string;
-  description: string;
-  is_default: boolean;
-  is_active: boolean;
-  schedule_start: string | null;
-  schedule_end: string | null;
-  priority: number;
-  bb_value_basis: string;
-  global_adjustment_pct: number;
-  regional_adjustment_pct: number;
-  condition_multipliers: Record<string, number>;
-  condition_basis_map: Record<string, string>;
-  deductions_config: Record<string, boolean>;
-  deduction_amounts: Record<string, number>;
-  recon_cost: number;
-  offer_floor: number;
-  offer_ceiling: number | null;
-  age_tiers: any[];
-  mileage_tiers: any[];
-  created_by: string | null;
-  created_at: string;
-  updated_at: string;
-  approval_status: string;
-  approved_by: string | null;
-  approved_at: string | null;
-  submitted_by: string | null;
-  submitted_at: string | null;
-  rejection_reason: string | null;
+type JsonbCol =
+  | "condition_multipliers" | "condition_basis_map" | "condition_equipment_map"
+  | "deductions_config" | "deduction_amounts" | "deduction_modes"
+  | "low_mileage_bonus" | "high_mileage_penalty"
+  | "color_desirability" | "seasonal_adjustment"
+  | "age_tiers" | "mileage_tiers" | "market_adjustment";
+
+interface PricingModel extends Omit<PricingModelRow, JsonbCol> {
+  condition_multipliers: ConditionMultipliers;
+  condition_basis_map: ConditionBasisMap;
+  condition_equipment_map: ConditionEquipmentMap;
+  deductions_config: DeductionsConfig;
+  deduction_amounts: DeductionAmounts;
+  deduction_modes: DeductionModes;
+  low_mileage_bonus: LowMileageBonus;
+  high_mileage_penalty: HighMileagePenalty;
+  color_desirability: ColorDesirability;
+  seasonal_adjustment: SeasonalAdjustment;
+  age_tiers: AgeTier[];
+  mileage_tiers: MileageTier[];
+  market_adjustment: MarketAdjustmentConfig | null;
 }
+
+// Single boundary cast: typed local model → Supabase Insert/Update payload.
+// JSONB columns serialize fine; this just bridges TS's Json invariance.
+const toDbPayload = (p: Record<string, unknown>) => p as unknown as PricingModelInsert;
 
 const BB_VALUE_OPTIONS = [
   { value: "wholesale_xclean", label: "Wholesale – X-Clean" },
@@ -88,16 +97,16 @@ const DEFAULT_MODEL_SETTINGS = {
   deduction_amounts: {
     accidents_1: 800, accidents_2: 1800, accidents_3plus: 3000,
     exterior_damage_per_item: 300, interior_damage_per_item: 200,
-    windshield_cracked: 400, windshield_chipped: 150,
+    windshield_cracked: 400, windshield_chipped: 150, moonroof_broken: 300,
     engine_issue_per_item: 500, mechanical_issue_per_item: 350, tech_issue_per_item: 150,
     not_drivable: 1500, smoked_in: 500, tires_not_replaced: 400,
     missing_keys_1: 200, missing_keys_0: 400,
-  },
+  } satisfies DeductionAmounts,
   recon_cost: 0,
   offer_floor: 500,
   offer_ceiling: null as number | null,
-  age_tiers: [] as any[],
-  mileage_tiers: [] as any[],
+  age_tiers: [] as AgeTier[],
+  mileage_tiers: [] as MileageTier[],
 };
 
 // ── Props ──
@@ -146,18 +155,18 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
   const fetchModels = async () => {
     setLoading(true);
     const { data } = await supabase
-      .from("pricing_models" as any)
+      .from("pricing_models")
       .select("*")
       .eq("dealership_id", dealershipId)
       .order("priority", { ascending: false });
-    const parsed = ((data as any[]) || []).map((d: any) => ({
+    const parsed = (data ?? []).map((d) => ({
       ...d,
       condition_multipliers: d.condition_multipliers || DEFAULT_MODEL_SETTINGS.condition_multipliers,
       deductions_config: d.deductions_config || DEFAULT_MODEL_SETTINGS.deductions_config,
       deduction_amounts: d.deduction_amounts || DEFAULT_MODEL_SETTINGS.deduction_amounts,
       age_tiers: Array.isArray(d.age_tiers) ? d.age_tiers : [],
       mileage_tiers: Array.isArray(d.mileage_tiers) ? d.mileage_tiers : [],
-    })) as PricingModel[];
+    })) as unknown as PricingModel[];
     setModels(parsed);
     if (!selectedModelId && parsed.length > 0) {
       const def = parsed.find(m => m.is_default) || parsed[0];
@@ -173,22 +182,22 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
     return {
       bb_value_basis: editModel.bb_value_basis || "tradein_avg",
       global_adjustment_pct: editModel.global_adjustment_pct || 0,
-      deductions_config: editModel.deductions_config as any || DEFAULT_MODEL_SETTINGS.deductions_config,
-      deduction_amounts: editModel.deduction_amounts as any || DEFAULT_MODEL_SETTINGS.deduction_amounts,
-      condition_multipliers: editModel.condition_multipliers as any || DEFAULT_MODEL_SETTINGS.condition_multipliers,
-      condition_basis_map: editModel.condition_basis_map as any || DEFAULT_MODEL_SETTINGS.condition_basis_map,
-      condition_equipment_map: (editModel as any).condition_equipment_map || { excellent: true, very_good: true, good: true, fair: true },
+      deductions_config: editModel.deductions_config || DEFAULT_MODEL_SETTINGS.deductions_config,
+      deduction_amounts: editModel.deduction_amounts || DEFAULT_MODEL_SETTINGS.deduction_amounts,
+      condition_multipliers: editModel.condition_multipliers || DEFAULT_MODEL_SETTINGS.condition_multipliers,
+      condition_basis_map: editModel.condition_basis_map || DEFAULT_MODEL_SETTINGS.condition_basis_map,
+      condition_equipment_map: editModel.condition_equipment_map || { excellent: true, very_good: true, good: true, fair: true },
       recon_cost: editModel.recon_cost || 0,
       offer_floor: editModel.offer_floor || 500,
       offer_ceiling: editModel.offer_ceiling ?? null,
       age_tiers: editModel.age_tiers || [],
       mileage_tiers: editModel.mileage_tiers || [],
       regional_adjustment_pct: editModel.regional_adjustment_pct || 0,
-      low_mileage_bonus: (editModel as any).low_mileage_bonus || { enabled: false, avg_miles_per_year: 12000, bonus_pct_per_step: 2, step_size_pct: 20, max_bonus_pct: 8, min_miles_per_year: 4000 },
-      high_mileage_penalty: (editModel as any).high_mileage_penalty || { enabled: false, avg_miles_per_year: 12000, penalty_pct_per_step: 2, step_size_pct: 20, max_penalty_pct: 10, max_miles_per_year: 25000 },
-      color_desirability: (editModel as any).color_desirability || { enabled: false, adjustments: {} },
-      seasonal_adjustment: (editModel as any).seasonal_adjustment || { enabled: false, adjustment_pct: 0 },
-      deduction_modes: (editModel as any).deduction_modes || { accidents: "flat", not_drivable: "flat" },
+      low_mileage_bonus: editModel.low_mileage_bonus || { enabled: false, avg_miles_per_year: 12000, bonus_pct_per_step: 2, step_size_pct: 20, max_bonus_pct: 8, min_miles_per_year: 4000 },
+      high_mileage_penalty: editModel.high_mileage_penalty || { enabled: false, avg_miles_per_year: 12000, penalty_pct_per_step: 2, step_size_pct: 20, max_penalty_pct: 10, max_miles_per_year: 25000 },
+      color_desirability: editModel.color_desirability || { enabled: false, adjustments: {} },
+      seasonal_adjustment: editModel.seasonal_adjustment || { enabled: false, adjustment_pct: 0 },
+      deduction_modes: editModel.deduction_modes || { accidents: "flat", not_drivable: "flat" },
     };
   }, [editModel]);
 
@@ -215,21 +224,21 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
           bb_value_basis: incoming.bb_value_basis,
           global_adjustment_pct: incoming.global_adjustment_pct,
           regional_adjustment_pct: incoming.regional_adjustment_pct,
-          condition_multipliers: incoming.condition_multipliers as any,
-          condition_basis_map: incoming.condition_basis_map as any,
-          condition_equipment_map: (incoming as any).condition_equipment_map,
-          deductions_config: incoming.deductions_config as any,
-          deduction_amounts: incoming.deduction_amounts as any,
+          condition_multipliers: incoming.condition_multipliers,
+          condition_basis_map: incoming.condition_basis_map,
+          condition_equipment_map: incoming.condition_equipment_map,
+          deductions_config: incoming.deductions_config,
+          deduction_amounts: incoming.deduction_amounts,
           recon_cost: incoming.recon_cost,
           offer_floor: incoming.offer_floor,
           offer_ceiling: incoming.offer_ceiling,
-          age_tiers: incoming.age_tiers as any,
-          mileage_tiers: incoming.mileage_tiers as any,
-          low_mileage_bonus: (incoming as any).low_mileage_bonus,
-          high_mileage_penalty: (incoming as any).high_mileage_penalty,
-          color_desirability: (incoming as any).color_desirability,
-          seasonal_adjustment: (incoming as any).seasonal_adjustment,
-          deduction_modes: (incoming as any).deduction_modes,
+          age_tiers: incoming.age_tiers,
+          mileage_tiers: incoming.mileage_tiers,
+          low_mileage_bonus: incoming.low_mileage_bonus,
+          high_mileage_penalty: incoming.high_mileage_penalty,
+          color_desirability: incoming.color_desirability,
+          seasonal_adjustment: incoming.seasonal_adjustment,
+          deduction_modes: incoming.deduction_modes,
         } : prev);
       });
     }
@@ -251,7 +260,18 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
   };
 
   const handleCreateNew = () => {
-    setEditModel({ ...DEFAULT_MODEL_SETTINGS, dealership_id: dealershipId, name: "New Model", description: "", is_default: false, is_active: false, schedule_start: null, schedule_end: null, priority: 0, created_by: null } as any);
+    setEditModel({
+      ...DEFAULT_MODEL_SETTINGS,
+      dealership_id: dealershipId,
+      name: "New Model",
+      description: "",
+      is_default: false,
+      is_active: false,
+      schedule_start: null,
+      schedule_end: null,
+      priority: 0,
+      created_by: null,
+    } as Partial<PricingModel>);
     setSelectedModelId(null);
   };
 
@@ -261,7 +281,7 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
       return;
     }
     setSaving(true);
-    const payload = {
+    const payload = toDbPayload({
       dealership_id: dealershipId,
       name: editModel.name,
       description: editModel.description || "",
@@ -273,31 +293,31 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
       bb_value_basis: editModel.bb_value_basis || "tradein_avg",
       global_adjustment_pct: editModel.global_adjustment_pct || 0,
       regional_adjustment_pct: editModel.regional_adjustment_pct || 0,
-      condition_multipliers: editModel.condition_multipliers as any,
-      condition_basis_map: editModel.condition_basis_map as any,
-      condition_equipment_map: (editModel as any).condition_equipment_map || { excellent: true, very_good: true, good: true, fair: true },
-      deductions_config: editModel.deductions_config as any,
-      deduction_amounts: editModel.deduction_amounts as any,
+      condition_multipliers: editModel.condition_multipliers,
+      condition_basis_map: editModel.condition_basis_map,
+      condition_equipment_map: editModel.condition_equipment_map || { excellent: true, very_good: true, good: true, fair: true },
+      deductions_config: editModel.deductions_config,
+      deduction_amounts: editModel.deduction_amounts,
       recon_cost: editModel.recon_cost || 0,
       offer_floor: editModel.offer_floor || 500,
       offer_ceiling: editModel.offer_ceiling ?? null,
-      age_tiers: editModel.age_tiers as any || [],
-      mileage_tiers: editModel.mileage_tiers as any || [],
-      low_mileage_bonus: (editModel as any).low_mileage_bonus || { enabled: false, avg_miles_per_year: 12000, bonus_pct_per_step: 2, step_size_pct: 20, max_bonus_pct: 8, min_miles_per_year: 4000 },
-      high_mileage_penalty: (editModel as any).high_mileage_penalty || { enabled: false, avg_miles_per_year: 12000, penalty_pct_per_step: 2, step_size_pct: 20, max_penalty_pct: 10, max_miles_per_year: 25000 },
-      color_desirability: (editModel as any).color_desirability || { enabled: false, adjustments: {} },
-      seasonal_adjustment: (editModel as any).seasonal_adjustment || { enabled: false, adjustment_pct: 0 },
-      deduction_modes: (editModel as any).deduction_modes || { accidents: "flat", not_drivable: "flat" },
+      age_tiers: editModel.age_tiers || [],
+      mileage_tiers: editModel.mileage_tiers || [],
+      low_mileage_bonus: editModel.low_mileage_bonus || { enabled: false, avg_miles_per_year: 12000, bonus_pct_per_step: 2, step_size_pct: 20, max_bonus_pct: 8, min_miles_per_year: 4000 },
+      high_mileage_penalty: editModel.high_mileage_penalty || { enabled: false, avg_miles_per_year: 12000, penalty_pct_per_step: 2, step_size_pct: 20, max_penalty_pct: 10, max_miles_per_year: 25000 },
+      color_desirability: editModel.color_desirability || { enabled: false, adjustments: {} },
+      seasonal_adjustment: editModel.seasonal_adjustment || { enabled: false, adjustment_pct: 0 },
+      deduction_modes: editModel.deduction_modes || { accidents: "flat", not_drivable: "flat" },
       updated_at: new Date().toISOString(),
-    };
+    });
 
     let error;
     if (selectedModelId) {
-      ({ error } = await supabase.from("pricing_models" as any).update(payload as any).eq("id", selectedModelId));
+      ({ error } = await supabase.from("pricing_models").update(payload).eq("id", selectedModelId));
     } else {
-      const { data, error: e } = await supabase.from("pricing_models" as any).insert(payload as any).select().single();
+      const { data, error: e } = await supabase.from("pricing_models").insert(payload).select().single();
       error = e;
-      if (data) setSelectedModelId((data as any).id);
+      if (data) setSelectedModelId(data.id);
     }
 
     if (error) {
@@ -312,7 +332,7 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
   const handleSaveAs = async () => {
     if (!saveAsName.trim() || !editModel) return;
     setSaving(true);
-    const payload = {
+    const payload = toDbPayload({
       dealership_id: dealershipId,
       name: saveAsName,
       description: saveAsDesc,
@@ -322,28 +342,28 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
       bb_value_basis: editModel.bb_value_basis || "tradein_avg",
       global_adjustment_pct: editModel.global_adjustment_pct || 0,
       regional_adjustment_pct: editModel.regional_adjustment_pct || 0,
-      condition_multipliers: editModel.condition_multipliers as any,
-      condition_basis_map: editModel.condition_basis_map as any,
-      condition_equipment_map: (editModel as any).condition_equipment_map || { excellent: true, very_good: true, good: true, fair: true },
-      deductions_config: editModel.deductions_config as any,
-      deduction_amounts: editModel.deduction_amounts as any,
+      condition_multipliers: editModel.condition_multipliers,
+      condition_basis_map: editModel.condition_basis_map,
+      condition_equipment_map: editModel.condition_equipment_map || { excellent: true, very_good: true, good: true, fair: true },
+      deductions_config: editModel.deductions_config,
+      deduction_amounts: editModel.deduction_amounts,
       recon_cost: editModel.recon_cost || 0,
       offer_floor: editModel.offer_floor || 500,
       offer_ceiling: editModel.offer_ceiling ?? null,
-      age_tiers: editModel.age_tiers as any || [],
-      mileage_tiers: editModel.mileage_tiers as any || [],
-      low_mileage_bonus: (editModel as any).low_mileage_bonus || { enabled: false, avg_miles_per_year: 12000, bonus_pct_per_step: 2, step_size_pct: 20, max_bonus_pct: 8, min_miles_per_year: 4000 },
-      high_mileage_penalty: (editModel as any).high_mileage_penalty || { enabled: false, avg_miles_per_year: 12000, penalty_pct_per_step: 2, step_size_pct: 20, max_penalty_pct: 10, max_miles_per_year: 25000 },
-      color_desirability: (editModel as any).color_desirability || { enabled: false, adjustments: {} },
-      seasonal_adjustment: (editModel as any).seasonal_adjustment || { enabled: false, adjustment_pct: 0 },
-      deduction_modes: (editModel as any).deduction_modes || { accidents: "flat", not_drivable: "flat" },
-    };
-    const { data, error } = await supabase.from("pricing_models" as any).insert(payload as any).select().single();
+      age_tiers: editModel.age_tiers || [],
+      mileage_tiers: editModel.mileage_tiers || [],
+      low_mileage_bonus: editModel.low_mileage_bonus || { enabled: false, avg_miles_per_year: 12000, bonus_pct_per_step: 2, step_size_pct: 20, max_bonus_pct: 8, min_miles_per_year: 4000 },
+      high_mileage_penalty: editModel.high_mileage_penalty || { enabled: false, avg_miles_per_year: 12000, penalty_pct_per_step: 2, step_size_pct: 20, max_penalty_pct: 10, max_miles_per_year: 25000 },
+      color_desirability: editModel.color_desirability || { enabled: false, adjustments: {} },
+      seasonal_adjustment: editModel.seasonal_adjustment || { enabled: false, adjustment_pct: 0 },
+      deduction_modes: editModel.deduction_modes || { accidents: "flat", not_drivable: "flat" },
+    });
+    const { data, error } = await supabase.from("pricing_models").insert(payload).select().single();
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Model created", description: `"${saveAsName}" saved.` });
-      setSelectedModelId((data as any).id);
+      setSelectedModelId(data.id);
       setShowSaveAsDialog(false);
       setSaveAsName("");
       setSaveAsDesc("");
@@ -358,8 +378,8 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
       toast({ title: "Cannot set default", description: "Only approved models can be set as default.", variant: "destructive" });
       return;
     }
-    await supabase.from("pricing_models" as any).update({ is_default: false } as any).eq("dealership_id", dealershipId);
-    await supabase.from("pricing_models" as any).update({ is_default: true, is_active: true } as any).eq("id", id);
+    await supabase.from("pricing_models").update({ is_default: false }).eq("dealership_id", dealershipId);
+    await supabase.from("pricing_models").update({ is_default: true, is_active: true }).eq("id", id);
     toast({ title: "Default set" });
     fetchModels();
     if (editModel && selectedModelId === id) {
@@ -373,7 +393,7 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
       toast({ title: "Approval required", description: "This model must be approved before it can be activated.", variant: "destructive" });
       return;
     }
-    const { error } = await supabase.from("pricing_models" as any).update({ is_active: !current } as any).eq("id", id);
+    const { error } = await supabase.from("pricing_models").update({ is_active: !current }).eq("id", id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
       return;
@@ -385,7 +405,7 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
   };
 
   const handleSubmitForApproval = async (id: string) => {
-    const { error } = await supabase.from("pricing_models" as any).update({ approval_status: "pending" } as any).eq("id", id);
+    const { error } = await supabase.from("pricing_models").update({ approval_status: "pending" }).eq("id", id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
@@ -395,7 +415,7 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
   };
 
   const handleApprove = async (id: string) => {
-    const { error } = await supabase.from("pricing_models" as any).update({ approval_status: "approved" } as any).eq("id", id);
+    const { error } = await supabase.from("pricing_models").update({ approval_status: "approved" }).eq("id", id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
@@ -406,10 +426,10 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
 
   const handleReject = async () => {
     if (!rejectModelId) return;
-    const { error } = await supabase.from("pricing_models" as any).update({
+    const { error } = await supabase.from("pricing_models").update({
       approval_status: "rejected",
       rejection_reason: rejectReason || null,
-    } as any).eq("id", rejectModelId);
+    }).eq("id", rejectModelId);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
@@ -429,7 +449,7 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
     if (!confirmDeleteModelId) return;
     const id = confirmDeleteModelId;
     setConfirmDeleteModelId(null);
-    await supabase.from("pricing_models" as any).delete().eq("id", id);
+    await supabase.from("pricing_models").delete().eq("id", id);
     if (selectedModelId === id) {
       setSelectedModelId(null);
       setEditModel(null);
@@ -445,11 +465,11 @@ const PricingModelManager = ({ onModelChange, onRegisterSync, onRegisterSave, on
       toast({ title: "Approval required", description: "Model must be approved before scheduling.", variant: "destructive" });
       return;
     }
-    await supabase.from("pricing_models" as any).update({
+    await supabase.from("pricing_models").update({
       schedule_start: scheduleStart || null,
       schedule_end: scheduleEnd || null,
       is_active: true,
-    } as any).eq("id", scheduleModelId);
+    }).eq("id", scheduleModelId);
     toast({ title: "Schedule set" });
     setShowScheduleDialog(false);
     fetchModels();
