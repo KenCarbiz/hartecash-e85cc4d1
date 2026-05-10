@@ -205,15 +205,15 @@ const ServiceQuickEntry = () => {
           .limit(1)
           .maybeSingle();
         if (existing) {
-          setExistingMatch(existing as any);
+          setExistingMatch(existing);
           // Pre-fill customer fields from the existing record so the rep
           // can confirm instead of retyping.
-          if (!firstName && !lastName && (existing as any).name) {
-            const parts = String((existing as any).name).trim().split(/\s+/);
+          if (!firstName && !lastName && existing.name) {
+            const parts = String(existing.name).trim().split(/\s+/);
             setFirstName(parts[0] || "");
             setLastName(parts.slice(1).join(" ") || "");
           }
-          if (!phone && (existing as any).phone) setPhone((existing as any).phone);
+          if (!phone && existing.phone) setPhone(existing.phone);
         }
       } catch {
         // Non-fatal — dedup is best-effort.
@@ -282,7 +282,7 @@ const ServiceQuickEntry = () => {
 
       const { error } = await supabase
         .from("submissions")
-        .insert(insertPayload as any);
+        .insert(insertPayload);
       if (error) throw error;
 
       // Fire staff notification (best-effort)
@@ -499,7 +499,7 @@ const ServiceQuickEntry = () => {
                 Service Quick Entry
               </h1>
               <p className="text-xs text-muted-foreground truncate">
-                {(siteConfig as any)?.site_title || tenant.display_name} · {userEmail}
+                {(siteConfig as { site_title?: string })?.site_title || tenant.display_name} · {userEmail}
               </p>
             </div>
           </div>

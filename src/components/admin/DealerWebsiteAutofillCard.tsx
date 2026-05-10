@@ -338,8 +338,8 @@ export default function DealerWebsiteAutofillCard({
 
       // About Us
       const aboutItems: PreviewCategory["items"] = [];
-      if (isFilledText(scraped.about_story)) aboutItems.push({ label: "About Story", value: scraped.about_story.slice(0, 200) + (scraped.about_story.length > 200 ? "…" : ""), isNew: !isFilledText((cfg as any)?.about_story) });
-      if (isFilledText(scraped.about_hero_headline)) aboutItems.push({ label: "About Headline", value: scraped.about_hero_headline, isNew: !isFilledText((cfg as any)?.about_hero_headline) });
+      if (isFilledText(scraped.about_story)) aboutItems.push({ label: "About Story", value: scraped.about_story.slice(0, 200) + (scraped.about_story.length > 200 ? "…" : ""), isNew: !isFilledText((cfg as { about_story?: string })?.about_story) });
+      if (isFilledText(scraped.about_hero_headline)) aboutItems.push({ label: "About Headline", value: scraped.about_hero_headline, isNew: !isFilledText((cfg as { about_hero_headline?: string })?.about_hero_headline) });
       if (isFilledText(scraped.about_mission)) aboutItems.push({ label: "Mission", value: scraped.about_mission, isNew: true });
       if (Array.isArray(scraped.about_values_list) && scraped.about_values_list.length > 0) aboutItems.push({ label: "Values", value: scraped.about_values_list.join(", "), isNew: true });
       if (Array.isArray(scraped.certifications) && scraped.certifications.length > 0) aboutItems.push({ label: "Certifications", value: scraped.certifications.join(", "), isNew: true });
@@ -381,7 +381,7 @@ export default function DealerWebsiteAutofillCard({
 
       // Stats
       const statsItems: PreviewCategory["items"] = [];
-      if (isFilledText(scraped.established_year)) statsItems.push({ label: "Established", value: scraped.established_year, isNew: !(cfg as any)?.established_year });
+      if (isFilledText(scraped.established_year)) statsItems.push({ label: "Established", value: scraped.established_year, isNew: !(cfg as { established_year?: number })?.established_year });
       if (isFilledText(scraped.stats_rating)) statsItems.push({ label: "Rating", value: scraped.stats_rating, isNew: !isFilledText(cfg?.stats_rating) });
       if (isFilledText(scraped.stats_reviews_count)) statsItems.push({ label: "Reviews", value: scraped.stats_reviews_count, isNew: !isFilledText(cfg?.stats_reviews_count) });
       if (isFilledText(scraped.stats_years_in_business)) statsItems.push({ label: "Years in Business", value: scraped.stats_years_in_business, isNew: !isFilledText(cfg?.stats_years_in_business) });
@@ -502,8 +502,8 @@ export default function DealerWebsiteAutofillCard({
       maybeSet("logo_url", currentConfig?.logo_url, scraped.logo_url);
       maybeSet("hero_headline", currentConfig?.hero_headline, scraped.hero_headline);
       maybeSet("hero_subtext", currentConfig?.hero_subtext, scraped.hero_subtext);
-      maybeSet("about_hero_headline", (currentConfig as any)?.about_hero_headline, scraped.about_hero_headline);
-      maybeSet("about_story", (currentConfig as any)?.about_story, scraped.about_story);
+      maybeSet("about_hero_headline", (currentConfig as { about_hero_headline?: string })?.about_hero_headline, scraped.about_hero_headline);
+      maybeSet("about_story", (currentConfig as { about_story?: string })?.about_story, scraped.about_story);
 
       // About milestones
       if (Array.isArray(scraped.about_milestones) && scraped.about_milestones.length > 0) {
@@ -527,11 +527,11 @@ export default function DealerWebsiteAutofillCard({
       maybeSet("stats_rating", currentConfig?.stats_rating, scraped.stats_rating);
       maybeSet("stats_reviews_count", currentConfig?.stats_reviews_count, scraped.stats_reviews_count);
       maybeSet("stats_cars_purchased", currentConfig?.stats_cars_purchased, scraped.stats_cars_purchased);
-      maybeSet("favicon_url", (currentConfig as any)?.favicon_url, scraped.favicon_url);
+      maybeSet("favicon_url", currentConfig?.favicon_url, scraped.favicon_url);
 
       // Established year
       const estYear = scraped.established_year ? parseInt(scraped.established_year) : null;
-      if (estYear && estYear >= 1800 && estYear <= new Date().getFullYear() && !(currentConfig as any)?.established_year) {
+      if (estYear && estYear >= 1800 && estYear <= new Date().getFullYear() && !(currentConfig as { established_year?: number })?.established_year) {
         configUpdates.established_year = estYear;
         // Also auto-compute years in business string
         if (!isFilledText(currentConfig?.stats_years_in_business)) {

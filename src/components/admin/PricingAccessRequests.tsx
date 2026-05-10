@@ -35,12 +35,12 @@ const PricingAccessRequests = ({ userId }: PricingAccessRequestsProps) => {
   const fetchRequests = async () => {
     setLoading(true);
     const { data } = await supabase
-      .from("pricing_model_access_requests" as any)
+      .from("pricing_model_access_requests")
       .select("*")
       .order("created_at", { ascending: false })
       .limit(20);
 
-    const reqs = (data as any[]) || [];
+    const reqs = data || [];
 
     // Enrich with profile info
     const userIds = [...new Set(reqs.map(r => r.user_id))];
@@ -66,13 +66,13 @@ const PricingAccessRequests = ({ userId }: PricingAccessRequestsProps) => {
   const handleApprove = async (requestId: string) => {
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
     const { error } = await supabase
-      .from("pricing_model_access_requests" as any)
+      .from("pricing_model_access_requests")
       .update({
         status: "approved",
         approved_by: userId,
         reviewed_at: new Date().toISOString(),
         expires_at: expiresAt,
-      } as any)
+      })
       .eq("id", requestId);
 
     if (error) {
@@ -85,12 +85,12 @@ const PricingAccessRequests = ({ userId }: PricingAccessRequestsProps) => {
 
   const handleDeny = async (requestId: string) => {
     const { error } = await supabase
-      .from("pricing_model_access_requests" as any)
+      .from("pricing_model_access_requests")
       .update({
         status: "denied",
         approved_by: userId,
         reviewed_at: new Date().toISOString(),
-      } as any)
+      })
       .eq("id", requestId);
 
     if (error) {

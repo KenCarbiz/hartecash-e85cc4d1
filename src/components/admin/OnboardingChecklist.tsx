@@ -51,16 +51,16 @@ const OnboardingChecklist = ({ onNavigate, dealershipId: propDealershipId }: Onb
 
     const acct = accountRes.data;
     if (acct) {
-      setSigDealer((acct as any).onboarding_signature_dealer || null);
-      setSigStaff((acct as any).onboarding_signature_staff || null);
-      setSignedAt((acct as any).onboarding_signed_at || null);
+      setSigDealer((acct as { onboarding_signature_dealer?: string }).onboarding_signature_dealer || null);
+      setSigStaff((acct as { onboarding_signature_staff?: string }).onboarding_signature_staff || null);
+      setSignedAt((acct as { onboarding_signed_at?: string }).onboarding_signed_at || null);
     }
 
     const cfg = configRes.data;
     const locCount = locRes.data?.length || 0;
     const notif = notifRes.data;
     const staffCount = staffRes.data?.length || 0;
-    const onboardingAnswers = (acct as any)?.onboarding_answers as Record<string, string> | null;
+    const onboardingAnswers = (acct as { onboarding_answers?: Record<string, string> })?.onboarding_answers as Record<string, string> | null;
 
     const grouped: CheckGroup[] = [
       {
@@ -89,8 +89,8 @@ const OnboardingChecklist = ({ onNavigate, dealershipId: propDealershipId }: Onb
           { key: "contact_phone", label: "Phone number added", icon: Phone, done: !!(cfg?.phone && cfg.phone.length > 0), section: "site-config:dealership-info" },
           { key: "contact_email", label: "Email address added", icon: Mail, done: !!(cfg?.email && cfg.email.length > 0), section: "site-config:dealership-info" },
           { key: "website", label: "Website URL added", icon: Globe, done: !!(cfg?.website_url && cfg.website_url.length > 0), section: "site-config:dealership-info" },
-          { key: "social", label: "Social media links added", icon: Facebook, done: !!((cfg as any)?.facebook_url || (cfg as any)?.instagram_url), section: "site-config:social" },
-          { key: "google_review", label: "Google review link added", icon: Star, done: !!((cfg as any)?.google_review_url && (cfg as any).google_review_url.length > 0), section: "site-config:social" },
+          { key: "social", label: "Social media links added", icon: Facebook, done: !!(cfg?.facebook_url || cfg?.instagram_url), section: "site-config:social" },
+          { key: "google_review", label: "Google review link added", icon: Star, done: !!(cfg?.google_review_url && cfg.google_review_url.length > 0), section: "site-config:social" },
         ],
       },
       {
@@ -98,7 +98,7 @@ const OnboardingChecklist = ({ onNavigate, dealershipId: propDealershipId }: Onb
         icon: Clock,
         items: [
           { key: "locations", label: "At least one location added", icon: MapPin, done: locCount >= 1, section: "locations" },
-          { key: "hours", label: "Business hours configured", icon: Clock, done: !!(cfg?.business_hours && (cfg.business_hours as any[]).length > 0), section: "site-config:hours" },
+          { key: "hours", label: "Business hours configured", icon: Clock, done: !!(cfg?.business_hours && cfg.business_hours.length > 0), section: "site-config:hours" },
           { key: "staff", label: "Staff members added", icon: Users, done: staffCount >= 2, section: "staff" },
         ],
       },

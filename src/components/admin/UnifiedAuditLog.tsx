@@ -54,7 +54,7 @@ function rowsToCSV(rows: AuditRow[]): string {
       : s;
   };
   const header = cols.join(",");
-  const body = rows.map((r) => cols.map((c) => escape((r as any)[c])).join(",")).join("\n");
+  const body = rows.map((r) => cols.map((c) => escape((r as Record<string, unknown>)[c])).join(",")).join("\n");
   return `${header}\n${body}\n`;
 }
 
@@ -117,7 +117,7 @@ const UnifiedAuditLog = () => {
 
     const out: AuditRow[] = [];
 
-    for (const r of (viewLogs.data as any[]) ?? []) {
+    for (const r of (viewLogs.data ?? [])) {
       const ended = r.ended_at ? ` · ended ${fmtRelative(r.ended_at)}` : " · session open";
       out.push({
         ts: r.started_at,
@@ -130,8 +130,8 @@ const UnifiedAuditLog = () => {
       });
     }
 
-    for (const r of (detaches.data as any[]) ?? []) {
-      const direction = (r.snapshot && (r.snapshot as any).kind === "merge") ? "merge into group" : "detach";
+    for (const r of (detaches.data ?? [])) {
+      const direction = (r.snapshot && (r.snapshot as { kind?: string }).kind === "merge") ? "merge into group" : "detach";
       out.push({
         ts: r.performed_at,
         kind: "rooftop_detach",
@@ -143,7 +143,7 @@ const UnifiedAuditLog = () => {
       });
     }
 
-    for (const r of (egress.data as any[]) ?? []) {
+    for (const r of (egress.data ?? [])) {
       const total = Object.values((r.row_counts ?? {}) as Record<string, number>).reduce(
         (s: number, n: number) => s + n, 0,
       );
@@ -159,7 +159,7 @@ const UnifiedAuditLog = () => {
       });
     }
 
-    for (const r of (stripeEvents.data as any[]) ?? []) {
+    for (const r of (stripeEvents.data ?? [])) {
       const processed = r.processed_at ? "processed" : "unprocessed";
       out.push({
         ts: r.received_at,
