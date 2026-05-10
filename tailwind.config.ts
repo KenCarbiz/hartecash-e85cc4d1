@@ -124,5 +124,5 @@ import tailwindcssAnimate from "tailwindcss-animate";
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindcssAnimate],
 } satisfies Config;
