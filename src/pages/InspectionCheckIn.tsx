@@ -160,7 +160,7 @@ const InspectionCheckIn = () => {
     // because it fires exactly once per rotation, not on every keyboard
     // reflow. Not all browsers expose it (looking at you, older iOS), so
     // we addEventListener guardedly and silently skip if it's missing.
-    const orient = (screen as any).orientation;
+    const orient = (screen.orientation as ScreenOrientation | undefined);
     if (orient && typeof orient.addEventListener === "function") {
       orient.addEventListener("change", checkOrientation);
     }
@@ -179,14 +179,14 @@ const InspectionCheckIn = () => {
   // it — the soft overlay handles the UX regardless.
   useEffect(() => {
     if (!scannerOpen) return;
-    const orient = (screen as any).orientation;
+    const orient = (screen.orientation as ScreenOrientation | undefined);
     if (orient && typeof orient.lock === "function") {
       orient.lock("landscape").catch(() => {
         // Ignore — we fall back to the soft overlay prompt
       });
     }
     return () => {
-      const o = (screen as any).orientation;
+      const o = (screen.orientation as ScreenOrientation | undefined);
       if (o && typeof o.unlock === "function") {
         try { o.unlock(); } catch { /* ignore */ }
       }
@@ -325,7 +325,7 @@ const InspectionCheckIn = () => {
     if ("BarcodeDetector" in window) {
       try {
         setScannerMode("native");
-        const Detector = (window as any).BarcodeDetector;
+        const Detector = (window as { BarcodeDetector?: new (opts: { formats: string[] }) => { detect: (img: ImageBitmapSource) => Promise<{ rawValue: string }[]> } }).BarcodeDetector;
         const detector = new Detector({ formats: ["code_39", "code_128"] });
 
         const detect = async () => {
@@ -567,7 +567,7 @@ const InspectionCheckIn = () => {
 
       const { error } = await supabase
         .from("submissions")
-        .insert(insertPayload as any);
+        .insert(insertPayload);
       if (error) throw error;
 
       const { data: inserted } = await supabase
@@ -1026,7 +1026,7 @@ const InspectionCheckIn = () => {
                         // actually pinged the rep. Now we look up the
                         // rep's phone + email from user_roles and fire
                         // a direct staff_customer_arrived notification.
-                        const { data: repRow } = await (supabase as any)
+                        const { data: repRow } = await supabase
                           .from("user_roles")
                           .select("phone, email")
                           .eq("email", rep)
@@ -1035,7 +1035,7 @@ const InspectionCheckIn = () => {
                           body: {
                             trigger_key: "staff_customer_arrived",
                             submission_id: existing.id,
-                            recipient_phone: (repRow as any)?.phone || undefined,
+                            recipient_phone: repRow?.phone || undefined,
                             recipient_email: rep,
                           },
                         }).catch(() => {});
@@ -1045,7 +1045,7 @@ const InspectionCheckIn = () => {
                           old_value: null,
                           new_value: `Notified ${rep}`,
                           performed_by: userEmail || "reception",
-                        } as any);
+                        });
                         toast({ title: "Rep notified", description: `${rep} has been texted.` });
                       }}
                       variant="outline"
@@ -1058,7 +1058,7 @@ const InspectionCheckIn = () => {
                       onClick={async () => {
                         const { error } = await supabase
                           .from("submissions")
-                          .update({ needs_appraisal: true } as any)
+                          .update({ needs_appraisal: true })
                           .eq("id", existing.id);
                         if (error) {
                           toast({ title: "Could not flag", description: error.message, variant: "destructive" });
@@ -1070,7 +1070,7 @@ const InspectionCheckIn = () => {
                           old_value: null,
                           new_value: "Customer arrived at check-in",
                           performed_by: userEmail || "reception",
-                        } as any);
+                        });
                         toast({ title: "Sent to appraiser", description: "Lead flagged for the appraiser queue." });
                       }}
                       variant="outline"

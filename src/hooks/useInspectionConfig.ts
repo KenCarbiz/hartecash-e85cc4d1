@@ -94,13 +94,13 @@ export const useInspectionConfig = (locationId?: string | null) => {
       // Resolve per-type input modes with a per-rooftop cascade
       // overlay. Default to the legacy shared column when neither
       // the split columns nor the RPC are deployed yet.
-      const legacyShared = ((data as any).tire_brake_input_mode === "pass_fail" ? "pass_fail" : "measurement") as "measurement" | "pass_fail";
+      const legacyShared = (data.tire_brake_input_mode === "pass_fail" ? "pass_fail" : "measurement") as "measurement" | "pass_fail";
       let tireMode: "measurement" | "pass_fail" = (() => {
-        const v = (data as any).tire_input_mode;
+        const v = data.tire_input_mode;
         return v === "pass_fail" || v === "measurement" ? v : legacyShared;
       })();
       let brakeMode: "measurement" | "pass_fail" = (() => {
-        const v = (data as any).brake_input_mode;
+        const v = data.brake_input_mode;
         return v === "pass_fail" || v === "measurement" ? v : legacyShared;
       })();
       // When a location is in scope, layer the per-rooftop override
@@ -108,7 +108,7 @@ export const useInspectionConfig = (locationId?: string | null) => {
       // values if the RPC isn't deployed (pre-migration environments).
       if (locationId) {
         try {
-          const { data: rpcRows } = await (supabase as any).rpc(
+          const { data: rpcRows } = await supabase.rpc(
             "effective_inspection_input_modes",
             { _dealership_id: dealershipId, _location_id: locationId },
           );
@@ -131,17 +131,17 @@ export const useInspectionConfig = (locationId?: string | null) => {
         section_mechanical: data.section_mechanical,
         section_electrical: data.section_electrical,
         section_glass: data.section_glass,
-        section_order: (data.section_order as any) || DEFAULTS.section_order,
-        disabled_fields: (data.disabled_fields as any) || {},
+        section_order: (data.section_order as string[] | null) || DEFAULTS.section_order,
+        disabled_fields: (data.disabled_fields as Record<string, boolean> | null) || {},
         show_tire_tread_depth: data.show_tire_tread_depth,
         show_brake_pad_measurements: data.show_brake_pad_measurements,
         show_paint_readings: data.show_paint_readings,
         show_oil_life: data.show_oil_life,
         show_battery_health: data.show_battery_health,
-        require_photos: (data.require_photos as any) || {},
-        require_notes: (data.require_notes as any) || {},
-        custom_items: (data.custom_items as any) || [],
-        default_inspection_mode: ((data as any).default_inspection_mode === "full" ? "full" : "standard") as "standard" | "full",
+        require_photos: (data.require_photos as Record<string, boolean> | null) || {},
+        require_notes: (data.require_notes as Record<string, boolean> | null) || {},
+        custom_items: (data.custom_items as unknown as CustomItem[] | null) || [],
+        default_inspection_mode: (data.default_inspection_mode === "full" ? "full" : "standard") as "standard" | "full",
         tire_brake_input_mode: legacyShared,
         tire_input_mode: tireMode,
         brake_input_mode: brakeMode,

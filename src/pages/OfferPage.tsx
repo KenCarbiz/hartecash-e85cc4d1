@@ -220,7 +220,7 @@ const OfferPageLegacy = () => {
       // Portal engagement tracking — second view flips offer_locked_at,
       // which the UI uses to switch from estimate-range to single-locked
       // display. Fire-and-forget so load time isn't impacted.
-      (supabase as any).rpc("increment_portal_view", { _token: token }).then(() => {}, () => {});
+      supabase.rpc("increment_portal_view", { _token: token }).then(() => {}, () => {});
       try {
         const { data, error: err } = await supabase.rpc("get_submission_portal", { _token: token });
         if (cancelled) return;
@@ -262,7 +262,7 @@ const OfferPageLegacy = () => {
         // the synthetic BB stub — it would override the flat
         // demo_offer_amount we wrote at submit time. Off = identical
         // recompute pipeline to before.
-        const isDemoMode = (config as any)?.demo_mode === true;
+        const isDemoMode = config?.demo_mode === true;
 
         if (conditionData && !isDemoMode) {
           const selectedOptions = parseStoredJson<string[]>(conditionData.bb_selected_options, []);
@@ -300,7 +300,7 @@ const OfferPageLegacy = () => {
                     estimated_offer_low: estimate.low,
                     estimated_offer_high: estimate.high,
                     ...bbPayload,
-                  } as any)
+                  })
                   .eq("token", token);
                 if (updateErr) {
                   console.error("[OfferPage] failed to persist refreshed pricing", updateErr);
@@ -332,7 +332,7 @@ const OfferPageLegacy = () => {
         if (pricingRes.settings) setOfferSettings(pricingRes.settings);
         if (pricingRes.rules) setOfferRules(pricingRes.rules);
         if (apptRes.data) setAppointment(apptRes.data as { preferred_date: string; preferred_time: string; store_location: string | null });
-        if (locRes.data) setDealerLocations(locRes.data as any);
+        if (locRes.data) setDealerLocations(locRes.data);
         setLoading(false);
 
         // Track offer viewed
@@ -372,7 +372,7 @@ const OfferPageLegacy = () => {
     // The offer logic engine recalculates using the already-persisted market data.
     // In demo_mode the offer is pinned to demo_offer_amount; skip the
     // recalc so inline edits don't perturb it.
-    const isDemoMode = (config as any)?.demo_mode === true;
+    const isDemoMode = config?.demo_mode === true;
     const resolvedBBVehicle = isDemoMode ? null : buildStoredBBVehicle({ ...newSubmission, ...newCondition });
 
     if (resolvedBBVehicle) {
@@ -410,7 +410,7 @@ const OfferPageLegacy = () => {
       }
       await supabase
         .from("submissions")
-        .update(updateData as any)
+        .update(updateData)
         .eq("token", token!);
 
       toast({
@@ -505,8 +505,8 @@ const OfferPageLegacy = () => {
   // identical fallback in OfferPageClarity so flipping the staff
   // OfferScreenToggle (Clarity ↔ Legacy) renders both variants
   // with the same number on demo submissions.
-  const isDemoModeRender = (config as any)?.demo_mode === true;
-  const demoOfferAmountRender = Number((config as any)?.demo_offer_amount ?? 23599) || 23599;
+  const isDemoModeRender = config?.demo_mode === true;
+  const demoOfferAmountRender = Number(config?.demo_offer_amount ?? 23599) || 23599;
   const cashOffer = isDemoModeRender
     ? demoOfferAmountRender
     : ((!isAccepted ? liveEstimate?.high : s.offered_price)
@@ -663,7 +663,7 @@ const OfferPageLegacy = () => {
           phone: contactForm.phone.trim(),
           zip: contactForm.zip.trim(),
           sms_opt_in: smsOptIn,
-        } as any)
+        })
         .eq("token", token!);
 
       // If customer ticked SMS opt-in, also log a consent_log entry so
@@ -675,7 +675,7 @@ const OfferPageLegacy = () => {
             customer_email: contactForm.email.trim(),
             consent_type: "sms_calls_email",
             consent_text: "Customer accepted offer and consented to receive SMS, calls, and emails about their vehicle.",
-          } as any);
+          });
         } catch {
           /* non-fatal — submissions row still has the flag */
         }
