@@ -1,6 +1,6 @@
 
--- Add column to track who entered the final appraisal
-ALTER TABLE public.submissions ADD COLUMN appraised_by text;
+-- ADD COLUMN IF NOT EXISTS to track who entered the final appraisal
+ALTER TABLE public.submissions ADD COLUMN IF NOT EXISTS appraised_by text;
 
 -- Replace the trigger function to also enforce ACV restrictions and auto-record appraiser
 CREATE OR REPLACE FUNCTION public.enforce_submission_update_roles()

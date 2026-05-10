@@ -91,21 +91,21 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
   const [applyToAllOpen, setApplyToAllOpen] = useState(false);
 
   const fromConfigDefaults = () => ({
-    top_bar_style: (config as any).top_bar_style || "solid",
-    top_bar_bg: (config as any).top_bar_bg || "#00407f",
-    top_bar_bg_2: (config as any).top_bar_bg_2 || "#005bb5",
-    top_bar_text: (config as any).top_bar_text || "#ffffff",
-    top_bar_height: Number((config as any).top_bar_height ?? 64),
-    top_bar_shimmer: (config as any).top_bar_shimmer ?? true,
-    top_bar_shimmer_style: (config as any).top_bar_shimmer_style || "sheen",
-    top_bar_shimmer_speed: Number((config as any).top_bar_shimmer_speed ?? 3.2),
-    ui_scale: Number((config as any).ui_scale ?? 100),
-    text_scale: Number((config as any).text_scale ?? 100),
-    file_layout: (config as any).file_layout || "classic",
-    customer_file_header_layout: ((config as any).customer_file_header_layout || "b") as "a" | "b" | "c",
-    customer_file_accent: (config as any).customer_file_accent || "#003b80",
-    customer_file_accent_2: (config as any).customer_file_accent_2 || "#005bb5",
-    sidebar_active_color: (config as any).sidebar_active_color || "#0f172a",
+    top_bar_style: config.top_bar_style || "solid",
+    top_bar_bg: config.top_bar_bg || "#00407f",
+    top_bar_bg_2: config.top_bar_bg_2 || "#005bb5",
+    top_bar_text: config.top_bar_text || "#ffffff",
+    top_bar_height: Number(config.top_bar_height ?? 64),
+    top_bar_shimmer: config.top_bar_shimmer ?? true,
+    top_bar_shimmer_style: config.top_bar_shimmer_style || "sheen",
+    top_bar_shimmer_speed: Number(config.top_bar_shimmer_speed ?? 3.2),
+    ui_scale: Number(config.ui_scale ?? 100),
+    text_scale: Number(config.text_scale ?? 100),
+    file_layout: config.file_layout || "classic",
+    customer_file_header_layout: (config.customer_file_header_layout || "b") as "a" | "b" | "c",
+    customer_file_accent: config.customer_file_accent || "#003b80",
+    customer_file_accent_2: config.customer_file_accent_2 || "#005bb5",
+    sidebar_active_color: config.sidebar_active_color || "#0f172a",
   });
 
   // Local draft mirrors site_config so live preview updates without round-trip
@@ -252,7 +252,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
       const targetTable = selectedLocationId == null ? "site_config" : "dealership_locations";
       const targetFilter = (q: any) =>
         selectedLocationId == null
-          ? q.eq("dealership_id", (config as any).dealership_id || tenant.dealership_id || "default")
+          ? q.eq("dealership_id", config.dealership_id || tenant.dealership_id || "default")
           : q.eq("id", selectedLocationId);
 
       const tryUpdate = async (payload: Record<string, unknown>) => {
@@ -1107,7 +1107,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
 
       <div className="mt-5 flex items-center justify-between">
         <div className="text-[11px] text-muted-foreground">
-          Tenant: <span className="font-mono">{(config as any).dealership_id || "default"}</span>
+          Tenant: <span className="font-mono">{config.dealership_id || "default"}</span>
         </div>
         <Button onClick={handleSave} disabled={saving}>
           {saving ? "Saving…" : "Save changes"}

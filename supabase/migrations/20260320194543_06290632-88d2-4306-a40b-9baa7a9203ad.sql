@@ -1,1 +1,1 @@
-ALTER TABLE public.appointments ADD COLUMN store_location text DEFAULT null;
+ALTER TABLE public.appointments ADD COLUMN IF NOT EXISTS store_location text DEFAULT null;

@@ -1,1 +1,1 @@
-ALTER TABLE public.site_config ADD COLUMN enable_animations boolean NOT NULL DEFAULT false;
+ALTER TABLE public.site_config ADD COLUMN IF NOT EXISTS enable_animations boolean NOT NULL DEFAULT false;

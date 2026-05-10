@@ -1,1 +1,1 @@
-ALTER TABLE public.submissions ADD COLUMN assigned_rep_email text;
+ALTER TABLE public.submissions ADD COLUMN IF NOT EXISTS assigned_rep_email text;

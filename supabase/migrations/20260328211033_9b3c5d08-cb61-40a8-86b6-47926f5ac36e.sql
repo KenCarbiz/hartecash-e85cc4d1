@@ -1,6 +1,5 @@
 
--- Step 1: Add column
-ALTER TABLE public.submissions ADD COLUMN inspection_pin text 
+-- Step 1: ADD COLUMN IF NOT EXISTS ALTER TABLE public.submissions ADD COLUMN IF NOT EXISTS inspection_pin text 
   DEFAULT lpad(floor(random() * 10000)::text, 4, '0');
 
 -- Step 2: Backfill

@@ -1,6 +1,15 @@
 import { useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+
+type InspectionConfigUpdate = Database["public"]["Tables"]["inspection_config"]["Update"];
+type InspectionConfigOverrideInsert = Database["public"]["Tables"]["inspection_config_overrides"]["Insert"];
+
+// Single boundary cast: typed local model → Supabase write payload.
+// JSONB columns serialize fine; this just bridges TypeScript's Json invariance.
+const toConfigPayload   = (p: Record<string, unknown>) => p as unknown as InspectionConfigUpdate;
+const toOverridePayload = (p: Record<string, unknown>) => p as unknown as InspectionConfigOverrideInsert;
 import { useTenant } from "@/contexts/TenantContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -154,36 +163,36 @@ const InspectionConfiguration = () => {
           electrical: data.section_electrical,
           glass: data.section_glass,
         });
-        setSectionOrder((data.section_order as any) || sectionOrder);
-        setDisabledFields((data.disabled_fields as any) || {});
+        setSectionOrder((data.section_order as string[] | null) || sectionOrder);
+        setDisabledFields((data.disabled_fields as Record<string, boolean> | null) || {});
         setShowTireTread(data.show_tire_tread_depth);
         setShowBrakePads(data.show_brake_pad_measurements);
         setShowPaintReadings(data.show_paint_readings);
         setShowOilLife(data.show_oil_life);
         setShowBatteryHealth(data.show_battery_health);
-        setRequirePhotos((data.require_photos as any) || {});
-        setRequireNotes((data.require_notes as any) || {});
-        setCustomItems((data.custom_items as any) || []);
-        setEnableTireAdjustments((data as any).enable_tire_adjustments ?? false);
-        setTireCreditThreshold((data as any).tire_credit_threshold ?? 6);
-        setTireDeductThreshold((data as any).tire_deduct_threshold ?? 3);
-        setTireCreditPer32((data as any).tire_credit_per_32 ?? 25);
-        setTireDeductPer32((data as any).tire_deduct_per_32 ?? 50);
-        setTireAdjustmentMode((data as any).tire_adjustment_mode || 'whole');
-        setDefaultInspectionMode((data as any).default_inspection_mode === 'full' ? 'full' : 'standard');
-        const legacyShared = (data as any).tire_brake_input_mode === 'pass_fail' ? 'pass_fail' : 'measurement';
+        setRequirePhotos((data.require_photos as Record<string, boolean> | null) || {});
+        setRequireNotes((data.require_notes as Record<string, boolean> | null) || {});
+        setCustomItems((data.custom_items as CustomItem[] | null) || []);
+        setEnableTireAdjustments(data.enable_tire_adjustments ?? false);
+        setTireCreditThreshold(data.tire_credit_threshold ?? 6);
+        setTireDeductThreshold(data.tire_deduct_threshold ?? 3);
+        setTireCreditPer32(data.tire_credit_per_32 ?? 25);
+        setTireDeductPer32(data.tire_deduct_per_32 ?? 50);
+        setTireAdjustmentMode(data.tire_adjustment_mode || 'whole');
+        setDefaultInspectionMode(data.default_inspection_mode === 'full' ? 'full' : 'standard');
+        const legacyShared = data.tire_brake_input_mode === 'pass_fail' ? 'pass_fail' : 'measurement';
         setTireBrakeInputMode(legacyShared);
         // New split columns. Fall back to the legacy shared value
         // when the per-input-type column isn't set yet (DB pre-
         // migration or never explicitly chosen).
         setTireInputMode(
-          (data as any).tire_input_mode === 'pass_fail' ? 'pass_fail' :
-          (data as any).tire_input_mode === 'measurement' ? 'measurement' :
+          data.tire_input_mode === 'pass_fail' ? 'pass_fail' :
+          data.tire_input_mode === 'measurement' ? 'measurement' :
           legacyShared,
         );
         setBrakeInputMode(
-          (data as any).brake_input_mode === 'pass_fail' ? 'pass_fail' :
-          (data as any).brake_input_mode === 'measurement' ? 'measurement' :
+          data.brake_input_mode === 'pass_fail' ? 'pass_fail' :
+          data.brake_input_mode === 'measurement' ? 'measurement' :
           legacyShared,
         );
       }
@@ -199,20 +208,20 @@ const InspectionConfiguration = () => {
     let cancelled = false;
     (async () => {
       const { data: locs } = await supabase
-        .from("dealership_locations" as any)
+        .from("dealership_locations")
         .select("id, name, city, state")
         .eq("is_active", true)
         .order("sort_order");
       if (cancelled) return;
-      const list = (locs as any[]) || [];
+      const list = locs || [];
       setLocations(list);
       if (list.length <= 1) return;
       const { data: overrides } = await supabase
-        .from("inspection_config_overrides" as any)
+        .from("inspection_config_overrides")
         .select("location_id, tire_input_mode, brake_input_mode");
       if (cancelled) return;
-      const map: Record<string, any> = {};
-      for (const o of (overrides as any[]) || []) {
+      const map: Record<string, { tire_input_mode: string | null; brake_input_mode: string | null }> = {};
+      for (const o of overrides || []) {
         map[o.location_id] = {
           tire_input_mode: o.tire_input_mode || null,
           brake_input_mode: o.brake_input_mode || null,
@@ -227,7 +236,7 @@ const InspectionConfiguration = () => {
     setSaving(true);
     const { error } = await supabase
       .from("inspection_config")
-      .update({
+      .update(toConfigPayload({
         section_tires: sectionToggles.tires,
         section_measurements: sectionToggles.measurements,
         section_exterior: sectionToggles.exterior,
@@ -235,16 +244,16 @@ const InspectionConfiguration = () => {
         section_mechanical: sectionToggles.mechanical,
         section_electrical: sectionToggles.electrical,
         section_glass: sectionToggles.glass,
-        section_order: sectionOrder as any,
-        disabled_fields: disabledFields as any,
+        section_order: sectionOrder,
+        disabled_fields: disabledFields,
         show_tire_tread_depth: showTireTread,
         show_brake_pad_measurements: showBrakePads,
         show_paint_readings: showPaintReadings,
         show_oil_life: showOilLife,
         show_battery_health: showBatteryHealth,
-        require_photos: requirePhotos as any,
-        require_notes: requireNotes as any,
-        custom_items: customItems as any,
+        require_photos: requirePhotos,
+        require_notes: requireNotes,
+        custom_items: customItems,
         enable_tire_adjustments: enableTireAdjustments,
         tire_credit_threshold: tireCreditThreshold,
         tire_deduct_threshold: tireDeductThreshold,
@@ -261,7 +270,7 @@ const InspectionConfiguration = () => {
         tire_input_mode: tireInputMode,
         brake_input_mode: brakeInputMode,
         updated_at: new Date().toISOString(),
-      } as any)
+      }))
       .eq("id", configId);
 
     // Save per-location overrides on the same Save click. Each row
@@ -274,21 +283,21 @@ const InspectionConfiguration = () => {
         const o = locationOverrides[loc.id];
         if (!o || (!o.tire_input_mode && !o.brake_input_mode)) {
           await supabase
-            .from("inspection_config_overrides" as any)
+            .from("inspection_config_overrides")
             .delete()
             .eq("dealership_id", dealershipId)
             .eq("location_id", loc.id);
           continue;
         }
         const { error: upErr } = await supabase
-          .from("inspection_config_overrides" as any)
-          .upsert({
+          .from("inspection_config_overrides")
+          .upsert(toOverridePayload({
             dealership_id: dealershipId,
             location_id: loc.id,
             tire_input_mode: o.tire_input_mode,
             brake_input_mode: o.brake_input_mode,
             updated_at: new Date().toISOString(),
-          } as any, { onConflict: "dealership_id,location_id" });
+          }), { onConflict: "dealership_id,location_id" });
         if (upErr && !overrideErr) overrideErr = upErr;
       }
     }
