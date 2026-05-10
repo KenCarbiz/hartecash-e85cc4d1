@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { formatPhone } from "@/lib/utils";
+
+type AppRole = Database["public"]["Enums"]["app_role"];
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -125,12 +128,12 @@ const StaffManagement = () => {
       // join it client-side by role_id.
       if (staffList.length > 0) {
         const roleIds = staffList.map(s => s.role_id);
-        const { data: appraiserData } = await (supabase as any)
+        const { data: appraiserData } = await supabase
           .from("user_roles")
           .select("id, is_appraiser")
           .in("id", roleIds);
         if (appraiserData) {
-          const map = new Map((appraiserData as any[]).map(r => [r.id, Boolean(r.is_appraiser)]));
+          const map = new Map((appraiserData ?? []).map(r => [r.id, Boolean(r.is_appraiser)]));
           staffList.forEach(s => { s.is_appraiser = map.get(s.role_id) ?? false; });
         }
       }
@@ -139,12 +142,12 @@ const StaffManagement = () => {
       const sectionMap: Record<string, string[]> = {};
       for (const s of staffList) {
         const { data: assignment } = await supabase
-          .from("staff_permission_assignments" as any)
+          .from("staff_permission_assignments")
           .select("individual_sections")
           .eq("user_id", s.user_id)
           .is("permission_group_id", null)
           .maybeSingle();
-        sectionMap[s.user_id] = (assignment as any)?.individual_sections || [];
+        sectionMap[s.user_id] = (assignment?.individual_sections as string[] | null) ?? [];
       }
       setStaffSections(sectionMap);
     }
@@ -152,23 +155,23 @@ const StaffManagement = () => {
   };
 
   const fetchPermGroups = async () => {
-    const { data } = await supabase.from("permission_groups" as any).select("id, name, allowed_sections").order("name");
-    setPermGroups((data as any[] || []).map((g: any) => ({ id: g.id, name: g.name, allowed_sections: g.allowed_sections })));
+    const { data } = await supabase.from("permission_groups").select("id, name, allowed_sections").order("name");
+    setPermGroups((data ?? []).map((g) => ({ id: g.id, name: g.name, allowed_sections: g.allowed_sections })));
   };
 
   const fetchLocations = async () => {
     const { data } = await supabase
-      .from("dealership_locations" as any)
+      .from("dealership_locations")
       .select("id, name")
       .eq("dealership_id", dealershipId)
       .eq("is_active", true)
       .order("sort_order");
-    setLocations((data as any[] || []).map((l: any) => ({ id: l.id, name: l.name })));
+    setLocations((data ?? []).map((l) => ({ id: l.id, name: l.name })));
   };
 
   const handleToggleAppraiser = async (member: StaffMember) => {
     const next = !member.is_appraiser;
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from("user_roles")
       .update({ is_appraiser: next })
       .eq("id", member.role_id);
@@ -187,7 +190,7 @@ const StaffManagement = () => {
     const newVal = locationId === "all" ? null : locationId;
     const { error } = await supabase
       .from("user_roles")
-      .update({ location_id: newVal } as any)
+      .update({ location_id: newVal })
       .eq("id", member.role_id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -199,19 +202,19 @@ const StaffManagement = () => {
 
   const handleSaveStaffSections = async (userId: string, sections: string[]) => {
     const { data: existing } = await supabase
-      .from("staff_permission_assignments" as any)
+      .from("staff_permission_assignments")
       .select("id")
       .eq("user_id", userId)
       .is("permission_group_id", null)
       .maybeSingle();
 
     if (existing) {
-      await supabase.from("staff_permission_assignments" as any)
-        .update({ individual_sections: sections } as any)
-        .eq("id", (existing as any).id);
+      await supabase.from("staff_permission_assignments")
+        .update({ individual_sections: sections })
+        .eq("id", existing.id);
     } else {
-      await supabase.from("staff_permission_assignments" as any)
-        .insert({ user_id: userId, permission_group_id: null, individual_sections: sections } as any);
+      await supabase.from("staff_permission_assignments")
+        .insert({ user_id: userId, permission_group_id: null, individual_sections: sections });
     }
 
     setStaffSections((prev) => ({ ...prev, [userId]: sections }));
@@ -224,7 +227,7 @@ const StaffManagement = () => {
     setChangingRole(member.role_id);
     const { error } = await supabase.rpc("update_staff_role", {
       _role_id: member.role_id,
-      _new_role: newRole as any,
+      _new_role: newRole as AppRole,
     });
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -300,7 +303,7 @@ const StaffManagement = () => {
     // Insert role via user_roles table (RLS requires admin)
     const { data: inserted, error: insertErr } = await supabase
       .from("user_roles")
-      .insert({ user_id: profile.user_id, role: addRole as any, location_id: addLocationId === "all" ? null : addLocationId } as any)
+      .insert({ user_id: profile.user_id, role: addRole as AppRole, location_id: addLocationId === "all" ? null : addLocationId })
       .select("id")
       .single();
 

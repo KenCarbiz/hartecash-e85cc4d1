@@ -160,16 +160,16 @@ export default function FormConfiguration() {
   const fetchConfig = async () => {
     setLoading(true);
     const [formRes, offerRes] = await Promise.all([
-      supabase.from("form_config" as any).select("*").eq("dealership_id", dealershipId).maybeSingle(),
-      supabase.from("offer_settings" as any).select(
+      supabase.from("form_config").select("*").eq("dealership_id", dealershipId).maybeSingle(),
+      supabase.from("offer_settings").select(
         "pricing_reveal_mode, show_range_before_final, range_low_source, range_high_mode, range_high_source, range_high_percent, payment_selection_timing"
       ).eq("dealership_id", dealershipId).maybeSingle(),
     ]);
     if (formRes.data) {
-      setConfig({ ...DEFAULTS, ...(formRes.data as any) });
+      setConfig({ ...DEFAULTS, ...formRes.data });
     }
     if (offerRes.data) {
-      const row = offerRes.data as any;
+      const row = offerRes.data;
       setOfferFlow({
         pricing_reveal_mode: (row.pricing_reveal_mode as PricingRevealMode) || OFFER_FLOW_DEFAULTS.pricing_reveal_mode,
         show_range_before_final: !!row.show_range_before_final,
@@ -195,10 +195,10 @@ export default function FormConfiguration() {
       offer_before_details: offerBeforeDetails,
       updated_at: new Date().toISOString(),
     };
-    delete (payload as any).id;
+    delete (payload as { id?: string }).id;
 
     const { data: existing } = await supabase
-      .from("form_config" as any)
+      .from("form_config")
       .select("id")
       .eq("dealership_id", dealershipId)
       .maybeSingle();
@@ -206,16 +206,16 @@ export default function FormConfiguration() {
     let error;
     if (existing) {
       ({ error } = await supabase
-        .from("form_config" as any)
+        .from("form_config")
         .update(payload)
-        .eq("id", (existing as any).id));
+        .eq("id", existing.id));
     } else {
-      ({ error } = await supabase.from("form_config" as any).insert(payload));
+      ({ error } = await supabase.from("form_config").insert(payload));
     }
 
     // Persist the offer-flow settings on offer_settings
     const { error: offerErr } = await supabase
-      .from("offer_settings" as any)
+      .from("offer_settings")
       .update({
         pricing_reveal_mode: offerFlow.pricing_reveal_mode,
         show_range_before_final: offerFlow.show_range_before_final,
@@ -224,12 +224,12 @@ export default function FormConfiguration() {
         range_high_source: offerFlow.range_high_mode === "bb_value" ? offerFlow.range_high_source : null,
         range_high_percent: offerFlow.range_high_mode === "percent_above_low" ? offerFlow.range_high_percent : null,
         payment_selection_timing: offerFlow.payment_selection_timing,
-      } as any)
+      })
       .eq("dealership_id", dealershipId);
 
     setSaving(false);
     clearFormConfigCache();
-    const err = (error || offerErr) as any;
+    const err = error || offerErr;
     if (err) {
       // Diagnose the two most common causes (unapplied migration or stale
       // PostgREST cache) so the dealer doesn't chase a raw Postgres message.
@@ -254,12 +254,12 @@ export default function FormConfiguration() {
   };
 
   const toggle = (key: string) => setOpenSections(s => ({ ...s, [key]: !s[key] }));
-  const set = (key: string, val: boolean) => setConfig(c => ({ ...c, [key]: val }));
+  const set = (key: string, val: boolean | number | string) => setConfig(c => ({ ...c, [key]: val }));
   const updateFlow = <K extends keyof OfferFlowState>(k: K, v: OfferFlowState[K]) =>
     setOfferFlow((prev) => ({ ...prev, [k]: v }));
 
   const enabledCount = (questions: { key: string }[]) =>
-    questions.filter(q => (config as any)[q.key]).length;
+    questions.filter(q => (config as Record<string, unknown>)[q.key]).length;
 
   if (loading) {
     return (
@@ -273,14 +273,14 @@ export default function FormConfiguration() {
     <div
       key={q.key}
       className={`flex items-center justify-between py-2.5 px-3 rounded-lg transition-colors ${
-        (config as any)[q.key] && !disabled
+        (config as Record<string, unknown>)[q.key] && !disabled
           ? "bg-background"
           : "bg-muted/30 opacity-50"
       }`}
     >
       <div className="flex items-center gap-3">
         <Switch
-          checked={(config as any)[q.key] && !disabled}
+          checked={(config as Record<string, unknown>)[q.key] && !disabled}
           onCheckedChange={v => set(q.key, v)}
           disabled={disabled}
         />
@@ -394,7 +394,7 @@ export default function FormConfiguration() {
                   onChange={(e) =>
                     set(
                       "ai_photos_min_required",
-                      Math.max(1, Math.min(8, Number(e.target.value) || 4)) as any,
+                      Math.max(1, Math.min(8, Number(e.target.value) || 4)),
                     )
                   }
                   className="w-16 h-7 text-sm"

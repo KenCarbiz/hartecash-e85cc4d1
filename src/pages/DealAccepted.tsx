@@ -120,8 +120,8 @@ const DealAcceptedLegacy = () => {
           setContactGateOpen(true);
         } else {
           // Fire notifications only when contact info is present
-          if ((sub as any).id) {
-            const subId = (sub as any).id as string;
+          if (sub.id) {
+            const subId = sub.id as string;
             const ctx = { from: "DealAccepted.autoFire", submission_id: subId } as const;
             safeInvoke("send-notification", { body: { trigger_key: "staff_customer_accepted", submission_id: subId }, context: ctx });
             safeInvoke("send-notification", { body: { trigger_key: "customer_offer_accepted", submission_id: subId }, context: ctx });
@@ -135,7 +135,7 @@ const DealAcceptedLegacy = () => {
 
   // Fetch appointment details when submission has an appointment
   useEffect(() => {
-    if (!token || !submission || !(submission as any).appointment_set) return;
+    if (!token || !submission || !submission.appointment_set) return;
     const fetchAppointment = async () => {
       const { data } = await supabase
         .from("appointments")
@@ -151,15 +151,15 @@ const DealAcceptedLegacy = () => {
         let locState: string | null = null;
         if (data.store_location) {
           const { data: loc } = await supabase
-            .from("dealership_locations" as any)
+            .from("dealership_locations")
             .select("name, address, city, state")
             .eq("id", data.store_location)
             .maybeSingle();
           if (loc) {
-            locName = (loc as any).name;
-            locAddress = (loc as any).address;
-            locCity = (loc as any).city;
-            locState = (loc as any).state;
+            locName = loc.name;
+            locAddress = loc.address;
+            locCity = loc.city;
+            locState = loc.state;
           }
         }
         setAppointmentData({
@@ -212,7 +212,7 @@ const DealAcceptedLegacy = () => {
     }
     setContactSaving(true);
     try {
-      const subId = (submission as any)?.id;
+      const subId = submission?.id;
       if (subId) {
         await supabase.from("submissions").update({
           name: contactName.trim(),
@@ -421,7 +421,7 @@ const DealAcceptedLegacy = () => {
       startDate: start,
       endDate: end,
       organizerName: config.dealership_name || "Dealership",
-      organizerEmail: (config as any).contact_email || config.email || "info@example.com",
+      organizerEmail: (config as { contact_email?: string }).contact_email || config.email || "info@example.com",
     });
     downloadCalendarInvite(ics, "vehicle-inspection-appointment.ics");
   };
@@ -602,13 +602,13 @@ const DealAcceptedLegacy = () => {
             ID requirement at acceptance. The fuller upload pages
             (UploadPhotos / UploadDocs) remain available for the
             exhaustive set. */}
-        {token && (submission as any)?.id && (
+        {token && submission?.id && (
           <motion.div {...entrance(2)} className="mb-6">
             <EssentialUploads
               token={token}
-              submissionId={(submission as any).id}
-              loanStatus={(submission as any).loan_status}
-              dealershipId={(submission as any).dealership_id}
+              submissionId={submission.id}
+              loanStatus={submission.loan_status}
+              dealershipId={submission.dealership_id}
             />
           </motion.div>
         )}
