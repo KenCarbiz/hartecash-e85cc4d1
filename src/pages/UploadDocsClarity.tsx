@@ -342,7 +342,7 @@ const UploadDocsClarity = () => {
                       const idx = files.indexOf(entry);
                       return (
                         <div key={`${doc.key}-${i}`} className="relative w-20 h-20 rounded-lg overflow-hidden border border-zinc-200">
-                          <img src={entry.preview} alt="" className="w-full h-full object-cover" />
+                          <img src={entry.preview} alt={`${doc.label} preview`} className="w-full h-full object-cover" />
                           <span
                             role="button"
                             aria-label="Remove file"

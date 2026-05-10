@@ -71,7 +71,7 @@ const PostOfferStorePicker = ({ onSelected }: { onSelected: (locationId: string)
             {loc.oem_logo_urls?.length > 0 ? (
               <div className="flex items-center justify-center gap-2 h-12">
                 {loc.oem_logo_urls.slice(0, 4).map((url, i) => (
-                  <img key={i} src={url} alt="" className="h-10 w-auto object-contain" />
+                  <img key={i} src={url} alt={`${loc.name} brand logo`} className="h-10 w-auto object-contain" />
                 ))}
               </div>
             ) : (

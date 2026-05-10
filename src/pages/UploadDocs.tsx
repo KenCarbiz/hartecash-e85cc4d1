@@ -382,7 +382,7 @@ const UploadDocsLegacy = () => {
                         return (
                           <div key={i} className="relative bg-muted rounded-lg px-2.5 py-1.5 flex items-center gap-2 text-xs border border-border shadow-sm">
                             {f.preview ? (
-                              <img src={f.preview} alt="" className="w-8 h-8 object-cover rounded" />
+                              <img src={f.preview} alt={`${f.name || "Document"} preview`} className="w-8 h-8 object-cover rounded" />
                             ) : (
                               <FileText className="w-4 h-4 text-muted-foreground" />
                             )}

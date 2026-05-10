@@ -292,7 +292,7 @@ const OfferPrintLayout = ({
         <div className="border border-border rounded-lg p-3 flex items-center gap-3 relative">
           <div className="relative shrink-0">
             <QRCodeSVG value={portalUrl} size={60} level="H" />
-            <img src={logoFallback} alt="" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-sm bg-white p-0.5" />
+            <img src={logoFallback} alt="" aria-hidden="true" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-sm bg-white p-0.5" />
           </div>
           <div className="flex-1">
             <p className="text-[10px] font-bold text-foreground">Upload Photos</p>
