@@ -85,7 +85,7 @@ const QuickOfferForm = ({ leadSource = "quick-offer" }: QuickOfferFormProps) => 
         lookup_type: identifierMode === "vin" ? "vin" : "plate",
         state: state || "CT",
         dealership_id: tenant.dealership_id,
-        demo_mode: (config as any)?.demo_mode === true ? true : undefined,
+        demo_mode: config?.demo_mode === true ? true : undefined,
       };
       if (identifierMode === "vin") lookupBody.vin = vin.trim();
       else {
@@ -189,8 +189,8 @@ const QuickOfferForm = ({ leadSource = "quick-offer" }: QuickOfferFormProps) => 
       // demoed end-to-end. We override low/high too so the offer page
       // reads the same number from any field.
       const isDemoMode =
-        (config as any)?.demo_mode === true || bbData?.demo_mode === true;
-      const demoOfferAmount = Number((config as any)?.demo_offer_amount ?? 23599) || 23599;
+        config?.demo_mode === true || bbData?.demo_mode === true;
+      const demoOfferAmount = Number(config?.demo_offer_amount ?? 23599) || 23599;
       let demoEstimateLow: number | null = estimate?.low ?? null;
       let demoEstimateHigh: number | null = estimate?.high ?? null;
       if (isDemoMode) {
@@ -227,9 +227,9 @@ const QuickOfferForm = ({ leadSource = "quick-offer" }: QuickOfferFormProps) => 
         // and version the customer saw at submit time. Required for
         // FCC 2024 one-to-one defense if a TCPA claim is ever filed.
         tcpa_consent_at: new Date().toISOString(),
-        tcpa_consent_version: (config as any)?.tcpa_disclosure_version || 1,
-        tcpa_consent_text: (config as any)?.tcpa_disclosure || null,
-      } as any);
+        tcpa_consent_version: (config as { tcpa_disclosure_version?: number })?.tcpa_disclosure_version || 1,
+        tcpa_consent_text: (config as { tcpa_disclosure?: string })?.tcpa_disclosure || null,
+      });
 
       if (insertErr) throw insertErr;
 
@@ -261,7 +261,7 @@ const QuickOfferForm = ({ leadSource = "quick-offer" }: QuickOfferFormProps) => 
       className="bg-card rounded-2xl shadow-xl border border-border/50 p-6 max-w-lg mx-auto space-y-4"
     >
       <div className="text-center space-y-1">
-        {(config as any)?.demo_mode === true && (
+        {config?.demo_mode === true && (
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold uppercase tracking-wider mb-1">
             Demo mode
           </div>
@@ -442,7 +442,7 @@ const QuickOfferForm = ({ leadSource = "quick-offer" }: QuickOfferFormProps) => 
         plaintiff firms can't argue the consumer didn't see it.
       */}
       <p className="text-[10px] text-muted-foreground/60 leading-relaxed">
-        {(config as any)?.tcpa_disclosure
+        {(config as { tcpa_disclosure?: string })?.tcpa_disclosure
           || "By submitting this form, I consent to receive automated and prerecorded calls, texts, and emails from this dealership and its agents about my vehicle inquiry, including via autodialer. Consent is not a condition of any purchase. Standard message and data rates may apply. Reply STOP to opt out."}
       </p>
     </form>

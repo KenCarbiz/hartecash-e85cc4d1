@@ -63,14 +63,14 @@ const AdminHeader = ({ darkMode, setDarkMode, userRole, onLogout, userName, isPl
   const firstName = userName?.split(" ")[0] || "";
 
   // New top-bar config fields (from Step 6 migration)
-  const topBarStyle = (config as any).top_bar_style || "solid";
-  const topBarBg = (config as any).top_bar_bg || "#00407f";
-  const topBarBg2 = (config as any).top_bar_bg_2 || "#005bb5";
-  const topBarText = (config as any).top_bar_text || "#ffffff";
-  const topBarHeight = Number((config as any).top_bar_height ?? 64);
-  const topBarShimmer = (config as any).top_bar_shimmer ?? true;
-  const topBarShimmerStyle = (config as any).top_bar_shimmer_style || "sheen";
-  const topBarShimmerSpeed = Number((config as any).top_bar_shimmer_speed ?? 3.2);
+  const topBarStyle = config.top_bar_style || "solid";
+  const topBarBg = config.top_bar_bg || "#00407f";
+  const topBarBg2 = config.top_bar_bg_2 || "#005bb5";
+  const topBarText = config.top_bar_text || "#ffffff";
+  const topBarHeight = Number(config.top_bar_height ?? 64);
+  const topBarShimmer = config.top_bar_shimmer ?? true;
+  const topBarShimmerStyle = config.top_bar_shimmer_style || "sheen";
+  const topBarShimmerSpeed = Number(config.top_bar_shimmer_speed ?? 3.2);
 
   const headerBackground = buildHeaderBackground(topBarStyle, topBarBg, topBarBg2);
 

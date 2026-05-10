@@ -187,7 +187,7 @@ async function resolveTenant(): Promise<TenantInfo> {
       const { data: primary } = await supabase
         .from("dealer_accounts")
         .select("dealership_id, updated_at")
-        .eq("dealer_group_id", (groupRow as any).id)
+        .eq("dealer_group_id", groupRow.id)
         .order("updated_at", { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -195,14 +195,14 @@ async function resolveTenant(): Promise<TenantInfo> {
         const { data: tenantRow } = await supabase
           .from("tenants")
           .select("dealership_id, slug, display_name, location_id")
-          .eq("dealership_id", (primary as any).dealership_id)
+          .eq("dealership_id", primary.dealership_id)
           .maybeSingle();
         if (tenantRow) {
           const t: TenantInfo = {
-            dealership_id: (tenantRow as any).dealership_id,
-            slug: (tenantRow as any).slug,
-            display_name: (groupRow as any).display_name || (groupRow as any).name || (tenantRow as any).display_name,
-            location_id: (tenantRow as any).location_id ?? null,
+            dealership_id: tenantRow.dealership_id,
+            slug: tenantRow.slug,
+            display_name: groupRow.display_name || groupRow.name || tenantRow.display_name,
+            location_id: tenantRow.location_id ?? null,
           };
           cachedTenant = { hostname, tenant: t };
           return t;
@@ -272,7 +272,7 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
       }
 
       // Write the log entry
-      const { data: logRow, error: logErr } = await (supabase as any)
+      const { data: logRow, error: logErr } = await supabase
         .from("tenant_view_log")
         .insert({
           super_admin_user_id: session.user.id,
@@ -316,7 +316,7 @@ export const TenantProvider = ({ children }: { children: ReactNode }) => {
       const current = viewOverride ?? readOverride();
       if (current?.log_id) {
         try {
-          await (supabase as any)
+          await supabase
             .from("tenant_view_log")
             .update({
               ended_at: new Date().toISOString(),

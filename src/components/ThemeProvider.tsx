@@ -65,14 +65,14 @@ const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     // can change one color and have it apply to the landing hero CTA,
     // the wizard's Continue / Get-my-offer buttons, AND the offer
     // page's Accept button in one place.
-    const landingCtaBg = normalizeToHslTriplet((config as any).landing_cta_color);
+    const landingCtaBg = normalizeToHslTriplet(config.landing_cta_color);
     const ctaOffer =
       landingCtaBg ||
-      normalizeToHslTriplet((config as any).cta_offer_color) ||
+      normalizeToHslTriplet(config.cta_offer_color) ||
       accent;
     const ctaAccept =
       landingCtaBg ||
-      normalizeToHslTriplet((config as any).cta_accept_color) ||
+      normalizeToHslTriplet(config.cta_accept_color) ||
       accent;
     if (ctaOffer) root.style.setProperty("--cta-offer", ctaOffer);
     if (ctaAccept) root.style.setProperty("--cta-accept", ctaAccept);
@@ -81,7 +81,7 @@ const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     // are consumed via `color: var(--cta-offer-text)` not wrapped in
     // hsl(). Default white so existing buttons are unchanged when the
     // dealer hasn't set an override.
-    const landingCtaText = (config as any).landing_cta_text_color?.trim?.() || "#FFFFFF";
+    const landingCtaText = config.landing_cta_text_color?.trim?.() || "#FFFFFF";
     root.style.setProperty("--cta-offer-text", landingCtaText);
     root.style.setProperty("--cta-accept-text", landingCtaText);
 
@@ -101,20 +101,20 @@ const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     const existingTag = document.getElementById(TEXT_TAG_ID);
 
     if (!isAdminRoute) {
-      (root.style as any).zoom = "";
+      (root.style as CSSStyleDeclaration & { zoom?: string }).zoom = "";
       const main = document.querySelector("[data-admin-main]") as HTMLElement | null;
-      if (main) (main.style as any).zoom = "";
+      if (main) (main.style as CSSStyleDeclaration & { zoom?: string }).zoom = "";
       if (existingTag) existingTag.textContent = "";
       return;
     }
 
     // Reset any legacy global zoom that older builds applied to the root.
-    (root.style as any).zoom = "";
+    (root.style as CSSStyleDeclaration & { zoom?: string }).zoom = "";
 
     // UI scale → apply zoom to [data-admin-main] only.
     const uiScale = Math.min(1.5, Math.max(0.75, Number(config.ui_scale ?? 100) / 100));
     const main = document.querySelector("[data-admin-main]") as HTMLElement | null;
-    if (main) (main.style as any).zoom = String(uiScale);
+    if (main) (main.style as CSSStyleDeclaration & { zoom?: string }).zoom = String(uiScale);
 
     // Text scale → scoped to [data-admin-topbar] descendants. Rewrites
     // text-[Npx] arbitrary sizes and named Tailwind text-* classes only

@@ -177,7 +177,7 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
   const [bucket, setBucket] = useState<"all" | "walk_ins" | "service" | "flagged" | "declined">("all");
   const [search, setSearch] = useState("");
 
-  const autoRoute = Boolean((config as any).auto_route_appraiser_queue);
+  const autoRoute = Boolean(config.auto_route_appraiser_queue);
   // Visibility: admins + any manager-tier role, OR anyone with the
   // additive Appraiser credential regardless of their base role.
   // Manager helper picks up used_car_manager, new_car_manager, gsm_gm
@@ -218,7 +218,7 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
         `and(offered_price.gt.0,status_updated_at.lt.${cutoffIso},progress_status.not.in.(${acceptedFinalCsv}))`,
       );
     }
-    let { data, error } = await (supabase as any)
+    let { data, error } = await supabase
       .from("submissions")
       .select(columnsWithFlag)
       .or(orParts.join(","))
@@ -233,7 +233,7 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
 
     if (columnMissing) {
       if (autoRoute) {
-        const fallback = await (supabase as any)
+        const fallback = await supabase
           .from("submissions")
           .select(columnsWithoutFlag)
           .or("progress_status.eq.offer_declined,progress_status.eq.partial,lead_source.in.(walk_in,service,manual_entry)")
@@ -257,7 +257,7 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
       ...r,
       // Default the flag to false on rows fetched from the fallback query
       // so downstream classifyRow() doesn't choke on undefined.
-      needs_appraisal: (r as any).needs_appraisal ?? false,
+      needs_appraisal: r.needs_appraisal ?? false,
     }));
     setRows(queueRows);
 
@@ -265,7 +265,7 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
     if (queueRows.length > 0) {
       try {
         const submissionIds = queueRows.map(r => r.id);
-        const { data: sugData } = await (supabase as any)
+        const { data: sugData } = await supabase
           .from("ai_reappraisal_log")
           .select("id, submission_id, old_offer, suggested_offer, delta, ai_confidence, photos_analyzed, reason, status, created_at")
           .in("submission_id", submissionIds)
@@ -303,7 +303,7 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
       toast({ title: "Failed to apply bump", description: updateErr.message, variant: "destructive" });
       return;
     }
-    await (supabase as any).from("ai_reappraisal_log").update({
+    await supabase.from("ai_reappraisal_log").update({
       status: "accepted",
       decided_at: new Date().toISOString(),
       decided_by: actorEmail,
@@ -334,7 +334,7 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
   const dismissSuggestion = async (suggestion: AIReappraisalSuggestion) => {
     const { data: userData } = await supabase.auth.getUser();
     const actorEmail = userData?.user?.email || "unknown";
-    await (supabase as any).from("ai_reappraisal_log").update({
+    await supabase.from("ai_reappraisal_log").update({
       status: "dismissed",
       decided_at: new Date().toISOString(),
       decided_by: actorEmail,
@@ -396,7 +396,7 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
   const dismissFromQueue = async (row: QueueRow) => {
     // Clears the manager flag. Leaves other auto-route rows alone because
     // needs_appraisal was their only entry criterion.
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from("submissions")
       .update({ needs_appraisal: false })
       .eq("id", row.id);
