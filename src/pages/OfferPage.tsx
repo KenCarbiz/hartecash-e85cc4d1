@@ -28,6 +28,8 @@ import { useToast } from "@/hooks/use-toast";
 import SlideToAccept from "@/components/SlideToAccept";
 import SaveOfferButton from "@/components/offer/SaveOfferButton";
 import CompetitorComparison from "@/components/offer/CompetitorComparison";
+import TokenErrorScreen from "@/components/TokenErrorScreen";
+import { checkTokenStatus, type TokenStatus } from "@/lib/tokenStatus";
 import OfferWatch from "@/components/offer/OfferWatch";
 import { track } from "@/lib/analytics";
 
@@ -169,6 +171,8 @@ const OfferPageLegacy = () => {
   const [submission, setSubmission] = useState<OfferSubmission | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [tokenStatus, setTokenStatus] = useState<TokenStatus | "error" | null>(null);
+  const [retryNonce, setRetryNonce] = useState(0);
   const [activeTab, setActiveTab] = useState<"sell" | "trade">("sell");
   const [condition, setCondition] = useState<ConditionDetails | null>(null);
   const [calculatingDone, setCalculatingDone] = useState(false);
