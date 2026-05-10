@@ -171,12 +171,14 @@ describe("calcAIConditionAdjustment", () => {
 
   it("penalises (positive %) when AI sees worse condition than reported, scaled by gap", () => {
     // ranks: excellent=4, very_good=3, good=2, fair=1
-    // customer "excellent" (4), AI "good" (2) → gap=2 → 8% of 20000 = 1600
-    expect(calcAIConditionAdjustment(20000, "excellent", "good", null, 90)).toBe(1600);
-    // customer "excellent" (4), AI "fair" (1) → gap=3 → 15% → 3000 → capped at 1500
-    expect(calcAIConditionAdjustment(20000, "excellent", "fair", null, 90)).toBe(1500);
-    // customer "excellent" (4), AI "very_good" (3) → gap=1 → 3% → 600
-    expect(calcAIConditionAdjustment(20000, "excellent", "very_good", null, 90)).toBe(600);
+    // Use base 15000 so 8% (1200) and 3% (450) fit inside the ±$1500 cap
+    // and we're testing the math, not the cap.
+    // customer "excellent" (4), AI "good" (2) → gap=2 → 8% of 15000 = 1200
+    expect(calcAIConditionAdjustment(15000, "excellent", "good", null, 90)).toBe(1200);
+    // customer "excellent" (4), AI "fair" (1) → gap=3 → 15% → 2250 → capped at 1500
+    expect(calcAIConditionAdjustment(15000, "excellent", "fair", null, 90)).toBe(1500);
+    // customer "excellent" (4), AI "very_good" (3) → gap=1 → 3% → 450
+    expect(calcAIConditionAdjustment(15000, "excellent", "very_good", null, 90)).toBe(450);
   });
 
   it("rewards (negative %) when AI sees better condition than reported", () => {
@@ -229,16 +231,20 @@ function makeBBVehicle(overrides: Partial<BBVehicle> = {}): BBVehicle {
 }
 
 function makeForm(overrides: Partial<FormData> = {}): FormData {
+  // The calculator filters damage arrays by `d !== "none"`, so the
+  // "No <thing>" strings the customer-facing form actually sends would
+  // each count as a real damage item. Empty arrays are the only
+  // damage-free fixture; matches what selecting nothing would persist.
   return {
     ...initialFormData,
     vin: "TESTVIN1234567890",
     mileage: "60000",
     overallCondition: "good",
-    exteriorDamage: ["No exterior damage"],
-    interiorDamage: ["No interior damage"],
-    techIssues: ["No tech issues"],
-    engineIssues: ["No engine issues"],
-    mechanicalIssues: ["No mechanical issues"],
+    exteriorDamage: [],
+    interiorDamage: [],
+    techIssues: [],
+    engineIssues: [],
+    mechanicalIssues: [],
     drivable: "Drivable",
     accidents: "No accidents",
     smokedIn: "No",
