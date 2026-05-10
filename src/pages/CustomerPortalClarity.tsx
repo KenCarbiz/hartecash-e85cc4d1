@@ -716,10 +716,10 @@ const CommPrefsBlock = ({
       }
       const checks = await Promise.all([
         phone
-          ? supabase.from("opt_outs" as any).select("id").eq("phone", phone).eq("channel", "sms").maybeSingle()
+          ? supabase.from("opt_outs").select("id").eq("phone", phone).eq("channel", "sms").maybeSingle()
           : Promise.resolve({ data: null }),
         phone
-          ? supabase.from("opt_outs" as any).select("id").eq("phone", phone).eq("channel", "calls").maybeSingle()
+          ? supabase.from("opt_outs").select("id").eq("phone", phone).eq("channel", "calls").maybeSingle()
           : Promise.resolve({ data: null }),
       ]);
       if (cancelled) return;
@@ -745,18 +745,18 @@ const CommPrefsBlock = ({
         // re-grant on consent_log so the compliance timeline shows
         // both directions (opt-out and opt-in).
         await supabase
-          .from("opt_outs" as any)
+          .from("opt_outs")
           .delete()
           .eq("phone", phone)
           .eq("channel", channel);
-        await supabase.from("consent_log" as any).insert({
+        await supabase.from("consent_log").insert({
           customer_phone: phone,
           customer_email: email || null,
           consent_type: channel === "sms" ? "sms_opt_in_via_portal" : "calls_opt_in_via_portal",
           consent_text: `Customer re-subscribed to ${channel === "sms" ? "SMS messages" : "phone calls"} via the customer portal.`,
           form_source: "portal_communication_preferences",
           submission_token: token,
-        } as any);
+        });
         if (channel === "sms") setSmsOptedOut(false);
         else setCallsOptedOut(false);
         toast({ title: "Re-subscribed", description: `You'll receive ${channel === "sms" ? "text messages" : "calls"} again.` });
@@ -765,16 +765,16 @@ const CommPrefsBlock = ({
         // so the compliance audit trail captures the timestamp,
         // channel, and originating submission token.
         await supabase
-          .from("opt_outs" as any)
-          .insert({ phone, channel, token } as any);
-        await supabase.from("consent_log" as any).insert({
+          .from("opt_outs")
+          .insert({ phone, channel, token });
+        await supabase.from("consent_log").insert({
           customer_phone: phone,
           customer_email: email || null,
           consent_type: channel === "sms" ? "sms_opt_out_via_portal" : "calls_opt_out_via_portal",
           consent_text: `Customer opted out of ${channel === "sms" ? "SMS messages" : "phone calls"} via the customer portal.`,
           form_source: "portal_communication_preferences",
           submission_token: token,
-        } as any);
+        });
         if (channel === "sms") setSmsOptedOut(true);
         else setCallsOptedOut(true);
         toast({ title: "Unsubscribed", description: `We won't ${channel === "sms" ? "text" : "call"} you anymore.` });

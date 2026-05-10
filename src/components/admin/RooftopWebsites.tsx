@@ -60,7 +60,7 @@ const RooftopWebsites = () => {
   const refresh = async () => {
     setLoading(true);
     const [locRes, tRes] = await Promise.all([
-      supabase.from("dealership_locations" as any)
+      supabase.from("dealership_locations")
         .select("id, name, city, state, landing_template")
         .eq("dealership_id", dealershipId)
         .eq("is_active", true)
@@ -115,14 +115,14 @@ const RooftopWebsites = () => {
     }
 
     const loc = locations.find((l) => l.id === newLocationId);
-    const { error } = await supabase.from("tenants" as any).insert({
+    const { error } = await supabase.from("tenants").insert({
       dealership_id: dealershipId,
       slug,
       display_name: loc?.name || slug,
       custom_domain: domain,
       location_id: newLocationId,
       is_active: true,
-    } as any);
+    });
 
     if (error) {
       toast({ title: "Failed", description: error.message, variant: "destructive" });
@@ -131,8 +131,8 @@ const RooftopWebsites = () => {
 
     // If a template was picked, write it to the location override
     if (newTemplate) {
-      await supabase.from("dealership_locations" as any)
-        .update({ landing_template: newTemplate } as any)
+      await supabase.from("dealership_locations")
+        .update({ landing_template: newTemplate })
         .eq("id", newLocationId);
     }
 
@@ -155,7 +155,7 @@ const RooftopWebsites = () => {
     if ("is_active" in patch) updates.is_active = patch.is_active;
 
     if (Object.keys(updates).length) {
-      const { error } = await supabase.from("tenants" as any).update(updates as any).eq("id", r.id);
+      const { error } = await supabase.from("tenants").update(updates).eq("id", r.id);
       if (error) {
         setSavingId(null);
         toast({ title: "Save failed", description: error.message, variant: "destructive" });
@@ -164,8 +164,8 @@ const RooftopWebsites = () => {
     }
 
     if (templatePatch !== undefined && r.location_id) {
-      await supabase.from("dealership_locations" as any)
-        .update({ landing_template: templatePatch || null } as any)
+      await supabase.from("dealership_locations")
+        .update({ landing_template: templatePatch || null })
         .eq("id", r.location_id);
     }
 
@@ -176,7 +176,7 @@ const RooftopWebsites = () => {
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    const { error } = await supabase.from("tenants" as any).delete().eq("id", deleteTarget.id);
+    const { error } = await supabase.from("tenants").delete().eq("id", deleteTarget.id);
     if (error) {
       toast({ title: "Delete failed", description: error.message, variant: "destructive" });
     } else {

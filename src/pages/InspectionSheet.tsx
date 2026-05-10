@@ -450,7 +450,7 @@ const InspectionSheet = () => {
   // multi-rooftop dealers saw the corporate default everywhere because
   // the cascade RPC was only being called from MobileInspection.
   const { config: inspConfig, loading: inspConfigLoading } = useInspectionConfig(
-    (submission as any)?.store_location_id ?? null,
+    submission?.store_location_id ?? null,
   );
   const [damageReports, setDamageReports] = useState<DamageReport[]>([]);
   const [loading, setLoading] = useState(true);
@@ -762,7 +762,7 @@ const InspectionSheet = () => {
         setSubmission(subRes.data);
         setCustomerGrade(subRes.data.overall_condition || "");
         setOverallGrade(subRes.data.overall_condition || "");
-        setInspectorGrade((subRes.data as any).inspector_grade || "");
+        setInspectorGrade(subRes.data.inspector_grade || "");
         if (subRes.data.tire_lf != null) setTireDepth(prev => ({ ...prev, lf: subRes.data.tire_lf }));
         if (subRes.data.tire_rf != null) setTireDepth(prev => ({ ...prev, rf: subRes.data.tire_rf }));
         if (subRes.data.tire_lr != null) setTireDepth(prev => ({ ...prev, lr: subRes.data.tire_lr }));
@@ -772,7 +772,7 @@ const InspectionSheet = () => {
         if (subRes.data.brake_lr != null) setBrakeDepth(prev => ({ ...prev, lr: subRes.data.brake_lr }));
         if (subRes.data.brake_rr != null) setBrakeDepth(prev => ({ ...prev, rr: subRes.data.brake_rr }));
         if (subRes.data.internal_notes) setInspectorNotes(subRes.data.internal_notes);
-        const saved = (subRes.data as any).inspection_data;
+        const saved = subRes.data.inspection_data;
         if (saved && typeof saved === "object") {
           if (saved.grades) setAllGrades(saved.grades);
           if (saved.itemNotes) setAllNotes(saved.itemNotes);
@@ -809,8 +809,8 @@ const InspectionSheet = () => {
         if (subData.brake_rf != null) setBrakeDepth(prev => ({ ...prev, rf: subData.brake_rf }));
         if (subData.brake_lr != null) setBrakeDepth(prev => ({ ...prev, lr: subData.brake_lr }));
         if (subData.brake_rr != null) setBrakeDepth(prev => ({ ...prev, rr: subData.brake_rr }));
-        if ((subData as any).inspector_grade) setInspectorGrade((subData as any).inspector_grade);
-        const saved = (subData as any).inspection_data;
+        if (subData.inspector_grade) setInspectorGrade(subData.inspector_grade);
+        const saved = subData.inspection_data;
         if (saved && typeof saved === "object") {
           if (saved.grades) setAllGrades(prev => ({ ...prev, ...saved.grades }));
           if (saved.itemNotes) setAllNotes(prev => ({ ...prev, ...saved.itemNotes }));
@@ -853,7 +853,7 @@ const InspectionSheet = () => {
         inspector_grade: inspectorGrade || null,
         tire_lf: tireDepth.lf, tire_rf: tireDepth.rf, tire_lr: tireDepth.lr, tire_rr: tireDepth.rr,
         brake_lf: brakeDepth.lf, brake_rf: brakeDepth.rf, brake_lr: brakeDepth.lr, brake_rr: brakeDepth.rr,
-      } as any)
+      })
       .eq("id", id!);
 
     // Also call RPC for tire adjustment calculation
@@ -870,7 +870,7 @@ const InspectionSheet = () => {
       _brake_lr: brakeDepth.lr,
       _brake_rr: brakeDepth.rr,
       _inspector_grade: inspectorGrade || null,
-    } as any);
+    });
 
     setSaving(false);
     if (error) {
@@ -882,7 +882,7 @@ const InspectionSheet = () => {
       if (draftKey) {
         try { localStorage.removeItem(draftKey); } catch { /* ignore */ }
       }
-      const result = data as any;
+      const result = data;
       if (result && result.adjustment !== undefined && result.adjustment !== 0) {
         toast({ title: "Inspection saved", description: `Tire adjustment: ${result.adjustment >= 0 ? "+" : ""}$${Math.abs(result.adjustment).toLocaleString()}` });
       }
