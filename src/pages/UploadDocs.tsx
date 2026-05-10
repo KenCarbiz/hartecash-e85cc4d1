@@ -12,6 +12,8 @@ import DocumentCameraCapture from "@/components/upload/DocumentCameraCapture";
 import { getDocDimensions } from "@/lib/documentDimensions";
 import logoFallback from "@/assets/logo-placeholder-white.png";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import TokenErrorScreen from "@/components/TokenErrorScreen";
+import { checkTokenStatus, isExpiredTokenError, type TokenStatus } from "@/lib/tokenStatus";
 
 const DOC_TYPES = [
   { key: "drivers_license_front", label: "Driver's License (Front)", icon: CreditCard, ocr: true },
@@ -128,7 +130,17 @@ const UploadDocsLegacy = () => {
         if (docType === "drivers_license_front") dlFrontPath = path;
         if (docType === "title_front") titleFrontPath = path;
       }
-      await supabase.rpc("mark_docs_uploaded", { _token: token! });
+      try {
+        await supabase.rpc("mark_docs_uploaded", { _token: token! });
+      } catch (rpcErr) {
+        if (isExpiredTokenError(rpcErr)) {
+          setTokenStatus("expired");
+          setSubmission(null);
+          setUploading(false);
+          return;
+        }
+        throw rpcErr;
+      }
       if (submission?.id) {
         safeInvoke("send-notification", {
           body: { trigger_key: "docs_uploaded", submission_id: submission.id },
