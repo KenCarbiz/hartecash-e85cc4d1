@@ -122,7 +122,9 @@ SELECT
     THEN round((count(*) FILTER (WHERE f.id IS NOT NULL))::numeric
                / count(*)::numeric * 100, 1)
     ELSE 0 END                                                      AS enrollment_pct,
-  count(*) FILTER (WHERE ur.role IN ('admin','manager') AND f.id IS NULL)
+  -- ur.role is the app_role enum; cast to text so the IN-list of text
+  -- literals compares cleanly.
+  count(*) FILTER (WHERE ur.role::text IN ('admin','manager') AND f.id IS NULL)
                                                                     AS missing_high_priv_count
 FROM public.user_roles ur
 LEFT JOIN LATERAL (
@@ -247,9 +249,15 @@ DECLARE
 BEGIN
   IF _uid IS NULL THEN RETURN; END IF;
 
-  SELECT dealership_id, COALESCE(display_name, email)
-    INTO _dealer, _label
+  -- user_roles holds tenant scope but no display fields. Pull tenant
+  -- from there and the human label from profiles (display_name/email).
+  SELECT dealership_id INTO _dealer
   FROM public.user_roles
+  WHERE user_id = _uid
+  LIMIT 1;
+
+  SELECT COALESCE(display_name, email) INTO _label
+  FROM public.profiles
   WHERE user_id = _uid
   LIMIT 1;
 
