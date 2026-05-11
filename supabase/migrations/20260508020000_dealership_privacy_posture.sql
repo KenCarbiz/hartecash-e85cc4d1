@@ -334,6 +334,13 @@ GRANT EXECUTE ON FUNCTION public.purge_customer_data(uuid)
 -- The threshold (50, 60min) is a reasonable starting point and can
 -- be overridden by passing into a parameterized RPC later.
 
+-- Drop both views up front so partial-apply recovery (e.g. an earlier
+-- attempt that committed the table+functions but failed on the view
+-- block) doesn't trip on PG's "cannot drop columns from view" rule
+-- when the column shape changes.
+DROP VIEW IF EXISTS public.v_dealership_privacy_posture;
+DROP VIEW IF EXISTS public.v_bulk_access_anomalies;
+
 CREATE OR REPLACE VIEW public.v_bulk_access_anomalies AS
 WITH bursts AS (
   SELECT
@@ -411,9 +418,11 @@ SELECT
   (SELECT count(*) FROM v_bulk_access_anomalies
     WHERE dealership_id = prc.dealership_id)
     AS bulk_access_anomalies_14d,
-  -- TCPA / opt-out compliance counts.
-  (SELECT count(*) FROM opt_outs
-    WHERE dealership_id = prc.dealership_id::uuid)
+  -- TCPA / opt-out compliance counts. opt_outs has no dealership_id
+  -- column — scope through the submission it points at.
+  (SELECT count(*) FROM opt_outs o
+    JOIN submissions s ON s.id = o.submission_id
+    WHERE s.dealership_id::text = prc.dealership_id)
     AS active_opt_outs,
   -- Active retention floor: oldest unredacted voice_call_log row.
   (SELECT min(created_at) FROM voice_call_log
