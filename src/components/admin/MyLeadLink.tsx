@@ -51,10 +51,10 @@ const MyLeadLink = () => {
     if (!repCode) return;
     const fetchCount = async () => {
       setLoading(true);
-      const { count } = await (supabase
+      const { count } = await supabase
         .from("submissions")
         .select("id", { count: "exact", head: true })
-        .eq("dealership_id", tenant.dealership_id) as any)
+        .eq("dealership_id", tenant.dealership_id)
         .eq("assigned_rep_email", repCode);
       setAssignedCount(count || 0);
       setLoading(false);
