@@ -35,6 +35,7 @@ import ACVSheet from "@/components/offer/ACVSheet";
 import OutcomeEntryPanel from "@/components/appraisal/OutcomeEntryPanel";
 import HistoricalInsightPanel from "@/components/appraisal/HistoricalInsightPanel";
 import MarketPulseCard from "@/components/appraisal/MarketPulseCard";
+import AppraisalPhotosCard from "@/components/admin/AppraisalPhotosCard";
 import OBDScanResults from "@/components/inspection/OBDScanResults";
 
 
@@ -1301,6 +1302,11 @@ export default function AppraisalTool() {
           condition={condition}
           mileage={sub?.mileage}
           currentAcv={finalValue}
+        />
+
+        <AppraisalPhotosCard
+          submissionId={sub?.id ?? null}
+          token={token ?? null}
         />
 
         {/* ═══════════════════════════════════════ */}

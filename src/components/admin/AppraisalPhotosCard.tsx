@@ -1,0 +1,271 @@
+/**
+ * AppraisalPhotosCard — collapsed-by-default evidence panel for the
+ * appraisal screen.
+ *
+ * Why this exists: the appraiser is setting the final ACV and
+ * deductions. Their job is "defend this number." The evidence they
+ * defend against — customer photos, staff inspection photos, AI
+ * condition findings — needs to be on the same screen. Forcing them
+ * to navigate back to the customer file to see a photo breaks flow
+ * and creates a defensibility hole when a customer disputes the
+ * offer later.
+ *
+ * Design (from May 2026 UX discussion):
+ *   - Collapsed by default — appraisal screen is data-heavy and a
+ *     20-photo gallery expanded by default pushes deduction inputs
+ *     below the fold.
+ *   - The collapsed header must EARN its row: counts, AI flag
+ *     strip, and 5-thumb preview together signal what's worth
+ *     expanding.
+ *   - When AI flagged condition issues the customer didn't mention,
+ *     surface a red dot — that's the case where the appraiser must
+ *     look before setting the offer.
+ *   - Click anywhere on the header to expand.
+ *   - Hide entirely when zero photos.
+ *
+ * Sources:
+ *   - submission-photos/{token}/  — both customer-flow and staff-
+ *     uploaded vehicle photos (same bucket; no convention separates
+ *     them yet, so the gallery is consolidated).
+ *   - useLatestOfferBump — the AI condition findings live here as
+ *     line_items[].label / amount / source.
+ */
+
+import { useEffect, useMemo, useState } from "react";
+import {
+  Images, ChevronDown, ChevronUp, AlertTriangle, X,
+} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useLatestOfferBump } from "@/hooks/useLatestOfferBump";
+import { Button } from "@/components/ui/button";
+
+interface PhotoEntry {
+  name: string;
+  url: string;
+  created_at: string | null;
+  size: number | null;
+}
+
+interface AppraisalPhotosCardProps {
+  submissionId: string | null;
+  token: string | null;
+  className?: string;
+}
+
+export default function AppraisalPhotosCard({
+  submissionId,
+  token,
+  className,
+}: AppraisalPhotosCardProps) {
+  const [photos, setPhotos] = useState<PhotoEntry[]>([]);
+  const [expanded, setExpanded] = useState(false);
+  const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const { bump } = useLatestOfferBump(submissionId);
+
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      const { data, error } = await supabase.storage
+        .from("submission-photos")
+        .list(token, {
+          limit: 100,
+          sortBy: { column: "created_at", order: "desc" },
+        });
+      if (cancelled) return;
+      if (error || !data) {
+        setPhotos([]);
+        setLoading(false);
+        return;
+      }
+      const rows = data
+        .filter((f) => f.name && f.name !== ".emptyFolderPlaceholder")
+        .map((f) => ({
+          name: f.name,
+          url: supabase.storage.from("submission-photos")
+            .getPublicUrl(`${token}/${f.name}`).data.publicUrl,
+          created_at: f.created_at ?? null,
+          size: f.metadata && typeof f.metadata.size === "number"
+            ? f.metadata.size
+            : null,
+        }));
+      setPhotos(rows);
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [token]);
+
+  // AI flags worth surfacing in the collapsed header — anything from
+  // the offer-bump line items that suggests condition the customer
+  // didn't represent (positive amount = AI found something more or
+  // better than rated). We keep the labels short and dedupe.
+  const aiFlags = useMemo(() => {
+    const items = bump?.line_items ?? [];
+    const labels = items
+      .filter((i) => i.amount > 0 && typeof i.label === "string")
+      .map((i) => i.label.trim())
+      .filter((l) => l.length > 0);
+    return Array.from(new Set(labels)).slice(0, 4);
+  }, [bump]);
+
+  // Hide the section entirely when there's nothing to show. The
+  // appraisal screen is dense; an empty row is wasted attention.
+  if (loading) return null;
+  if (photos.length === 0) return null;
+
+  const hasAiFlags = aiFlags.length > 0;
+  const previewStrip = photos.slice(0, 5);
+  const remaining = photos.length - previewStrip.length;
+
+  return (
+    <div className={`rounded-xl border bg-card overflow-hidden ${
+      hasAiFlags ? "border-amber-300 dark:border-amber-700"
+                 : "border-border"
+    } ${className ?? ""}`}>
+      {/* ── COLLAPSED HEADER ── */}
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="w-full text-left p-4 hover:bg-muted/40 transition-colors"
+        aria-expanded={expanded}
+      >
+        <div className="flex items-start gap-3">
+          <div className={`shrink-0 w-9 h-9 rounded-lg flex items-center justify-center ${
+            hasAiFlags ? "bg-amber-100 dark:bg-amber-900/40"
+                       : "bg-muted"
+          }`}>
+            <Images className={`w-4 h-4 ${
+              hasAiFlags ? "text-amber-600 dark:text-amber-400"
+                         : "text-muted-foreground"
+            }`} />
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-sm font-bold text-card-foreground">
+                Photos &amp; Evidence
+              </h3>
+              <span className="text-xs text-muted-foreground">
+                {photos.length} {photos.length === 1 ? "photo" : "photos"}
+              </span>
+              {hasAiFlags && (
+                <span className="inline-flex items-center gap-1 text-[10.5px] uppercase tracking-wider font-bold rounded-full bg-amber-500/15 border border-amber-400/40 text-amber-700 dark:text-amber-300 px-2 py-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                  AI flagged
+                </span>
+              )}
+            </div>
+
+            {hasAiFlags && (
+              <div className="mt-1.5 flex items-start gap-1.5 text-[12px] text-amber-800 dark:text-amber-200">
+                <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                <span className="leading-snug">
+                  {aiFlags.join(" · ")}
+                </span>
+              </div>
+            )}
+
+            {/* Thumbnail preview strip */}
+            <div className="mt-3 flex items-center gap-1.5">
+              {previewStrip.map((p) => (
+                <div
+                  key={p.name}
+                  className="w-12 h-12 rounded border border-border bg-muted overflow-hidden shrink-0"
+                >
+                  <img
+                    src={p.url}
+                    alt=""
+                    loading="lazy"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ))}
+              {remaining > 0 && (
+                <span className="ml-1 text-[11px] text-muted-foreground font-medium">
+                  +{remaining} more
+                </span>
+              )}
+            </div>
+          </div>
+
+          <span className="shrink-0 mt-1 text-muted-foreground">
+            {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </span>
+        </div>
+      </button>
+
+      {/* ── EXPANDED GALLERY ── */}
+      {expanded && (
+        <div className="border-t border-border p-4 bg-muted/20">
+          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2">
+            {photos.map((p, i) => (
+              <button
+                key={p.name}
+                type="button"
+                onClick={() => setLightboxIdx(i)}
+                className="aspect-square rounded-md border border-border bg-card overflow-hidden hover:ring-2 hover:ring-primary transition"
+              >
+                <img
+                  src={p.url}
+                  alt={p.name}
+                  loading="lazy"
+                  className="w-full h-full object-cover"
+                />
+              </button>
+            ))}
+          </div>
+
+          {hasAiFlags && bump?.line_items && (
+            <div className="mt-4 rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 p-3">
+              <div className="text-[10.5px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300 mb-1.5">
+                AI condition findings (from offer-bump audit)
+              </div>
+              <div className="space-y-1">
+                {bump.line_items
+                  .filter((i) => i.amount > 0)
+                  .map((item, i) => (
+                    <div key={i} className="flex items-baseline justify-between gap-2 text-[12.5px]">
+                      <span className="text-amber-900 dark:text-amber-100">{item.label}</span>
+                      <span className="font-mono font-semibold text-amber-800 dark:text-amber-200">
+                        +${item.amount.toLocaleString()}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── LIGHTBOX ── */}
+      {lightboxIdx != null && photos[lightboxIdx] && (
+        <div
+          className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4"
+          onClick={() => setLightboxIdx(null)}
+        >
+          <Button
+            size="sm"
+            variant="ghost"
+            className="absolute top-4 right-4 text-white hover:bg-white/10"
+            onClick={(e) => { e.stopPropagation(); setLightboxIdx(null); }}
+            aria-label="Close lightbox"
+          >
+            <X className="w-5 h-5" />
+          </Button>
+          <img
+            src={photos[lightboxIdx].url}
+            alt={photos[lightboxIdx].name}
+            className="max-h-[90vh] max-w-[90vw] object-contain rounded"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/80 text-sm font-mono">
+            {lightboxIdx + 1} / {photos.length}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
