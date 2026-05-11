@@ -294,6 +294,9 @@ const OfferPageLegacy = () => {
 
               if (needsRefresh) {
                 // Persist refreshed pricing but don't block rendering if it fails.
+                // bb_add_deducts: BBAddDeduct[] is structurally JSON-compatible
+                // but TS can't prove array elements satisfy the Json recursive
+                // type — cast at the boundary.
                 const { error: updateErr } = await supabase
                   .from("submissions")
                   .update({
@@ -675,7 +678,11 @@ const OfferPageLegacy = () => {
             customer_email: contactForm.email.trim(),
             consent_type: "sms_calls_email",
             consent_text: "Customer accepted offer and consented to receive SMS, calls, and emails about their vehicle.",
-          } as never);
+            // Required by the consent_log schema — identifies where the
+            // consent was captured. Was missing before, hidden by an
+            // `as never` cast; now type-checked.
+            form_source: "offer_page",
+          });
         } catch {
           /* non-fatal — submissions row still has the flag */
         }
