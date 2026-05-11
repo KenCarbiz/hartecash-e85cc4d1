@@ -218,7 +218,7 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
         `and(offered_price.gt.0,status_updated_at.lt.${cutoffIso},progress_status.not.in.(${acceptedFinalCsv}))`,
       );
     }
-    let { data, error } = await (supabase as any)
+    let { data, error } = await supabase
       .from("submissions")
       .select(columnsWithFlag)
       .or(orParts.join(","))
@@ -233,13 +233,15 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
 
     if (columnMissing) {
       if (autoRoute) {
-        const fallback = await (supabase as any)
+        const fallback = await supabase
           .from("submissions")
           .select(columnsWithoutFlag)
           .or("progress_status.eq.offer_declined,progress_status.eq.partial,lead_source.in.(walk_in,service,manual_entry)")
           .is("acv_value", null)
           .order("created_at", { ascending: false });
-        data = fallback.data;
+        // Fallback shape omits needs_appraisal — same logical rows
+        // from the typed perspective.
+        data = fallback.data as typeof data;
         error = fallback.error;
       } else {
         data = [];
@@ -265,7 +267,7 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
     if (queueRows.length > 0) {
       try {
         const submissionIds = queueRows.map(r => r.id);
-        const { data: sugData } = await (supabase as any)
+        const { data: sugData } = await supabase
           .from("ai_reappraisal_log")
           .select("id, submission_id, old_offer, suggested_offer, delta, ai_confidence, photos_analyzed, reason, status, created_at")
           .in("submission_id", submissionIds)
@@ -303,7 +305,7 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
       toast({ title: "Failed to apply bump", description: updateErr.message, variant: "destructive" });
       return;
     }
-    await (supabase as any).from("ai_reappraisal_log").update({
+    await supabase.from("ai_reappraisal_log").update({
       status: "accepted",
       decided_at: new Date().toISOString(),
       decided_by: actorEmail,
@@ -334,7 +336,7 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
   const dismissSuggestion = async (suggestion: AIReappraisalSuggestion) => {
     const { data: userData } = await supabase.auth.getUser();
     const actorEmail = userData?.user?.email || "unknown";
-    await (supabase as any).from("ai_reappraisal_log").update({
+    await supabase.from("ai_reappraisal_log").update({
       status: "dismissed",
       decided_at: new Date().toISOString(),
       decided_by: actorEmail,
@@ -396,7 +398,7 @@ const AppraiserQueue = ({ userRole = "", isAppraiser = false }: AppraiserQueuePr
   const dismissFromQueue = async (row: QueueRow) => {
     // Clears the manager flag. Leaves other auto-route rows alone because
     // needs_appraisal was their only entry criterion.
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from("submissions")
       .update({ needs_appraisal: false })
       .eq("id", row.id);
