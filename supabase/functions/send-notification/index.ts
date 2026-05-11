@@ -2,6 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
+import { mascotUrlForTrigger } from '../_shared/dealer-mascot.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -257,7 +258,10 @@ function replacePlaceholders(text: string, vars: Record<string, string>): string
   return result;
 }
 
-function textToHtml(text: string, dealerName: string): string {
+// mascotUrl is optional and ONLY ever set for staff-facing trigger_keys.
+// Customer-facing triggers that fall through to this renderer must pass
+// it as undefined so Ken does not leak into customer mail.
+function textToHtml(text: string, dealerName: string, mascotUrl?: string | null): string {
   const lines = sanitize(text).split("\n");
   const bodyHtml = lines.map(l => {
     if (l.startsWith("• ")) return `<li>${l.slice(2)}</li>`;
@@ -265,9 +269,14 @@ function textToHtml(text: string, dealerName: string): string {
     return `<p style="margin:0 0 8px;">${l || "&nbsp;"}</p>`;
   }).join("\n");
 
+  const mascotImg = mascotUrl
+    ? `<img src="${mascotUrl}" alt="" width="120" height="60" style="display:block;margin:0 auto 8px;max-width:120px;height:auto;"/>`
+    : "";
+
   return `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#333;">
       <div style="background:linear-gradient(135deg,#0a2647,#144272);padding:24px;border-radius:12px 12px 0 0;text-align:center;">
+        ${mascotImg}
         <h1 style="color:white;margin:0;font-size:22px;">${sanitize(dealerName)}</h1>
       </div>
       <div style="padding:24px;background:#f9fafb;border-radius:0 0 12px 12px;">
@@ -817,10 +826,14 @@ Deno.serve(async (req) => {
           }
         }
       } else {
-        // Staff emails: use the email queue with inline HTML
+        // Staff emails: use the email queue with inline HTML.
+        // Only staff_* triggers (and similar dealer-only keys) resolve a
+        // mascot URL — customer triggers that fall through here get
+        // undefined so Ken is never rendered for customers.
+        const staffMascotUrl = isStaffTrigger ? mascotUrlForTrigger(trigger_key) : null;
         for (const addr of emailRecipients) {
           try {
-            const emailHtml = textToHtml(emailBodyText, dealerName);
+            const emailHtml = textToHtml(emailBodyText, dealerName, staffMascotUrl);
             const messageId = crypto.randomUUID();
             const idempotencyKey = `${trigger_key}-${submission_id || 'no-sub'}-${messageId}`;
 
