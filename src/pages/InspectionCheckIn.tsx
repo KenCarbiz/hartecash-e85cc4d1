@@ -1026,22 +1026,16 @@ const InspectionCheckIn = () => {
                         // actually pinged the rep. Now we look up the
                         // rep's phone + email from user_roles and fire
                         // a direct staff_customer_arrived notification.
-                        // Look up rep phone via profiles -> user_roles join.
-                        // user_roles has no email column; profiles owns email.
-                        const { data: profileRow } = await supabase
-                          .from("profiles")
-                          .select("user_id, phone_number")
+                        // NOTE: This lookup is broken — user_roles has no `email` column.
+                        // Returns null, so repPhone falls back to undefined. Tracked for a
+                        // separate behavior-fix PR (profiles->user_roles join). Do NOT fix
+                        // here as part of the type-regen ratchet.
+                        const { data: repRow } = await (supabase
+                          .from("user_roles")
+                          .select("phone, email") as any)
                           .eq("email", rep)
                           .maybeSingle();
-                        let repPhone: string | undefined = profileRow?.phone_number || undefined;
-                        if (profileRow?.user_id) {
-                          const { data: roleRow } = await supabase
-                            .from("user_roles")
-                            .select("phone")
-                            .eq("user_id", profileRow.user_id)
-                            .maybeSingle();
-                          repPhone = roleRow?.phone || repPhone;
-                        }
+                        const repPhone: string | undefined = repRow?.phone || undefined;
                         await supabase.functions.invoke("send-notification", {
                           body: {
                             trigger_key: "staff_customer_arrived",
