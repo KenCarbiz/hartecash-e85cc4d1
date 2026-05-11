@@ -28,6 +28,7 @@ import {
   Radio,
 } from "lucide-react";
 import CadenceTimeline from "./CadenceTimeline";
+import AppraisalPhotosCard from "./AppraisalPhotosCard";
 import type { Submission, DealerLocation } from "@/lib/adminConstants";
 import { ALL_STATUS_OPTIONS, getStatusLabel } from "@/lib/adminConstants";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
@@ -1374,22 +1375,17 @@ function VehicleTab({
         </DealRow>
       </DealCard>
 
-      {/* Photos grid — up to 6 thumbnails */}
-      <DealCard
-        title={`Vehicle Photos${photos.length > 0 ? ` · ${photos.length}` : ""}`}
-      >
-        {photos.length === 0 ? (
-          <div className="text-[12.5px] text-slate-400 italic py-2">No photos uploaded yet.</div>
-        ) : (
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-            {photos.slice(0, 12).map((p, i) => (
-              <a key={`${p.name}-${i}`} href={p.url} target="_blank" rel="noreferrer" className="block aspect-[4/3] rounded-md overflow-hidden bg-slate-200 hover:opacity-90 transition">
-                <img src={p.url} alt={`Vehicle photo ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
-              </a>
-            ))}
-          </div>
-        )}
-      </DealCard>
+      {/* Photos & Evidence — unified card. Same component as the
+          appraisal + inspection screens so AI condition findings,
+          staff-vs-customer source split, and the lightbox all work
+          consistently across the deal pipeline. When zero photos
+          exist the card returns null (no empty row on the deal
+          tab — see the photo-count badge in the header strip if
+          presence still matters at a glance). */}
+      <AppraisalPhotosCard
+        submissionId={sub.id ?? null}
+        token={sub.token ?? null}
+      />
 
       {/* Driver's License — verified-on-file badge + click to expand inline */}
       <DealCard
