@@ -1,3 +1,21 @@
+-- ⚠️  DO NOT APPLY VIA LOVABLE PUSH.
+--
+-- This file is retained for historical record only. The cron schedule
+-- it would have created is ALREADY REGISTERED in production by
+-- Lovable's cron-management tool, using an anon-key bearer header
+-- that works in this project's environment.
+--
+-- The body below uses `current_setting('app.supabase_service_role_key',
+-- true)` which resolves to an empty string in this environment, so
+-- re-applying this migration would silently break the working
+-- schedule.
+--
+-- If the cron needs to be re-registered (e.g. fresh project bootstrap),
+-- use Lovable's cron tool or hand-craft the schedule with the
+-- correct auth header — do NOT replay this file.
+--
+-- ─────────────────────────────────────────────────────────────────
+--
 -- Schedule the voice-pipeline retry handler.
 --
 -- Calls the process-stuck-voice-calls edge function every 5 minutes
