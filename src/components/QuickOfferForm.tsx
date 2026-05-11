@@ -229,7 +229,7 @@ const QuickOfferForm = ({ leadSource = "quick-offer" }: QuickOfferFormProps) => 
         tcpa_consent_at: new Date().toISOString(),
         tcpa_consent_version: (config as { tcpa_disclosure_version?: number })?.tcpa_disclosure_version || 1,
         tcpa_consent_text: (config as { tcpa_disclosure?: string })?.tcpa_disclosure || null,
-      });
+      } as never);
 
       if (insertErr) throw insertErr;
 

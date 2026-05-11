@@ -128,12 +128,14 @@ const StaffManagement = () => {
       // join it client-side by role_id.
       if (staffList.length > 0) {
         const roleIds = staffList.map(s => s.role_id);
-        const { data: appraiserData } = await supabase
+        // is_appraiser column not yet in generated types
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: appraiserData } = await (supabase as any)
           .from("user_roles")
           .select("id, is_appraiser")
           .in("id", roleIds);
         if (appraiserData) {
-          const map = new Map((appraiserData ?? []).map(r => [r.id, Boolean(r.is_appraiser)]));
+          const map = new Map<string, boolean>((appraiserData ?? []).map((r: { id: string; is_appraiser?: boolean }) => [r.id, Boolean(r.is_appraiser)]));
           staffList.forEach(s => { s.is_appraiser = map.get(s.role_id) ?? false; });
         }
       }
@@ -171,7 +173,9 @@ const StaffManagement = () => {
 
   const handleToggleAppraiser = async (member: StaffMember) => {
     const next = !member.is_appraiser;
-    const { error } = await supabase
+    // is_appraiser column not yet in generated types
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any)
       .from("user_roles")
       .update({ is_appraiser: next })
       .eq("id", member.role_id);

@@ -185,7 +185,16 @@ const VoiceAICampaigns = () => {
         .maybeSingle();
 
       if (dealer) {
-        const d = dealer;
+        // GENERATED-TYPES STALENESS: voice_ai_call_start, voice_ai_call_end,
+        // voice_ai_competitor_response_mode, voice_ai_beat_competitor_amount
+        // are real columns on dealer_accounts (migration
+        // 20260507223922_*.sql et al.) not yet in generated types.
+        const d = dealer as typeof dealer & {
+          voice_ai_call_start?: string;
+          voice_ai_call_end?: string;
+          voice_ai_competitor_response_mode?: string;
+          voice_ai_beat_competitor_amount?: number;
+        };
         setConfig({
           voice_ai_enabled: !!d.voice_ai_enabled,
           voice_ai_api_key: d.voice_ai_api_key || "",

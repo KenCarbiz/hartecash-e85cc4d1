@@ -5,25 +5,27 @@
 //      bit us across batches 5–8 before it reaches CI. Lint covers
 //      no-unused-expressions / no-constant-binary-expression /
 //      syntax errors that surface those bugs.
-//   2. Stay fast — only run on staged files.
+//   2. Catch typecheck regressions before they hit CI. The 115-error
+//      backlog uncovered when the hook was first added is now cleared
+//      (see commit f409216 + follow-ups), so we can turn the
+//      typecheck step back on.
+//   3. Stay fast — only run when relevant files are actually staged.
 //
-// Intentionally NOT run here:
-//   • Full test suite — CI covers it; gating commits on tests would
-//     push the local commit loop into the 5–10s range.
-//   • `tsc -p tsconfig.app.json` — currently surfaces 115 pre-existing
-//     type errors that CI has been silently ignoring (root tsconfig.json
-//     has `files: []` with project references, so `tsc --noEmit` against
-//     it compiles nothing). Adding a strict typecheck here would block
-//     every commit until that backlog is cleared. The fix has two parts:
-//     (a) sweep the 115 errors (mostly stale column references and
-//         missing fields in local types), and
-//     (b) update the CI workflow to use `tsc -p tsconfig.app.json` so
-//         the typecheck job actually checks something.
-//     That's a separate effort. For now, lint catches the bugs we
-//     actually saw in batches 5–8 (regex-mangled function calls).
+// We intentionally do NOT run the full test suite on every commit.
+// CI covers it; gating commits on tests would push the local commit
+// loop into the 5–10s range, which discourages incremental commits.
 
 export default {
-  // ESLint --fix per-staged-file. Auto-fixable lints get applied and
-  // re-staged automatically. Real errors fail the hook.
-  "*.{ts,tsx}": ["eslint --fix"],
+  // Two tasks run sequentially per staged file glob:
+  //   1. ESLint --fix per-staged-file. Auto-fixable lints get applied
+  //      and re-staged. Real errors fail the hook.
+  //   2. Project-wide typecheck (no file args — tsc needs the full
+  //      import graph). Uses tsconfig.app.json explicitly because the
+  //      root tsconfig.json has `files: []` and project references,
+  //      which makes `tsc --noEmit` against it a no-op. Pointing here
+  //      explicitly ensures we actually compile.
+  "*.{ts,tsx}": [
+    "eslint --fix",
+    () => "tsc --noEmit -p tsconfig.app.json --pretty false",
+  ],
 };

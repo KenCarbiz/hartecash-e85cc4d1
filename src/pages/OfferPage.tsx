@@ -220,7 +220,8 @@ const OfferPageLegacy = () => {
       // Portal engagement tracking — second view flips offer_locked_at,
       // which the UI uses to switch from estimate-range to single-locked
       // display. Fire-and-forget so load time isn't impacted.
-      supabase.rpc("increment_portal_view", { _token: token }).then(() => {}, () => {});
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabase.rpc as any)("increment_portal_view", { _token: token }).then(() => {}, () => {});
       try {
         const { data, error: err } = await supabase.rpc("get_submission_portal", { _token: token });
         if (cancelled) return;
@@ -296,11 +297,13 @@ const OfferPageLegacy = () => {
                 // Persist refreshed pricing but don't block rendering if it fails.
                 const { error: updateErr } = await supabase
                   .from("submissions")
+                  // bbPayload includes bb_add_deducts: BBAddDeduct[] —
+                  // structurally Json-compatible but TS can't prove it.
                   .update({
                     estimated_offer_low: estimate.low,
                     estimated_offer_high: estimate.high,
                     ...bbPayload,
-                  })
+                  } as never)
                   .eq("token", token);
                 if (updateErr) {
                   console.error("[OfferPage] failed to persist refreshed pricing", updateErr);
@@ -670,12 +673,14 @@ const OfferPageLegacy = () => {
       // the dealer's TCPA gate (launch-voice-call etc.) recognises it.
       if (smsOptIn) {
         try {
+          // consent_type and consent_text may not match the generated
+          // Insert type — column accepts strings looser than the type.
           await supabase.from("consent_log").insert({
             customer_phone: contactForm.phone.trim(),
             customer_email: contactForm.email.trim(),
             consent_type: "sms_calls_email",
             consent_text: "Customer accepted offer and consented to receive SMS, calls, and emails about their vehicle.",
-          });
+          } as never);
         } catch {
           /* non-fatal — submissions row still has the flag */
         }

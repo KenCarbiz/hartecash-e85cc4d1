@@ -58,7 +58,10 @@ const RescheduleAppointmentClarity = () => {
     if (!token) return;
     let cancelled = false;
     (async () => {
-      const { data, error: rpcErr } = await supabase
+      // Generated-types staleness — see RescheduleAppointment.tsx
+      // header comment for the same set of missing columns.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error: rpcErr } = await (supabase as any)
         .from("appointments")
         .select("id, scheduled_at, preferred_date, preferred_time, location, store_location, status, confirmed_at, rescheduled_at, dealership_id")
         .eq("reschedule_token", token)
@@ -76,7 +79,8 @@ const RescheduleAppointmentClarity = () => {
           .select("display_name")
           .eq("dealership_id", data.dealership_id)
           .maybeSingle();
-        const { data: site } = await supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: site } = await (supabase as any)
           .from("site_config")
           .select("contact_phone")
           .eq("dealership_id", data.dealership_id)
@@ -128,7 +132,8 @@ const RescheduleAppointmentClarity = () => {
   const handleConfirm = async () => {
     if (!appt) return;
     setConfirming(true);
-    const { error: updErr } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: updErr } = await (supabase as any)
       .from("appointments")
       .update({ confirmed_at: new Date().toISOString() })
       .eq("id", appt.id);
@@ -145,7 +150,8 @@ const RescheduleAppointmentClarity = () => {
   const handleSubmitPick = async () => {
     if (!appt || !selectedSlot) return;
     setSubmittingPick(true);
-    const { error: updErr } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: updErr } = await (supabase as any)
       .from("appointments")
       .update({
         scheduled_at: selectedSlot,

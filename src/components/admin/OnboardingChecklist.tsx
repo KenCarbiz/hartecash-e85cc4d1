@@ -98,7 +98,7 @@ const OnboardingChecklist = ({ onNavigate, dealershipId: propDealershipId }: Onb
         icon: Clock,
         items: [
           { key: "locations", label: "At least one location added", icon: MapPin, done: locCount >= 1, section: "locations" },
-          { key: "hours", label: "Business hours configured", icon: Clock, done: !!(cfg?.business_hours && cfg.business_hours.length > 0), section: "site-config:hours" },
+          { key: "hours", label: "Business hours configured", icon: Clock, done: !!(cfg?.business_hours && (cfg.business_hours as { days: string; hours: string }[]).length > 0), section: "site-config:hours" },
           { key: "staff", label: "Staff members added", icon: Users, done: staffCount >= 2, section: "staff" },
         ],
       },

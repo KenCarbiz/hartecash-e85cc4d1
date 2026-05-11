@@ -73,7 +73,15 @@ const RescheduleAppointmentLegacy = () => {
     if (!token) return;
     let cancelled = false;
     (async () => {
-      const { data, error } = await supabase
+      // GENERATED-TYPES STALENESS: `scheduled_at`, `confirmed_at`,
+      // `rescheduled_at`, `reschedule_token`, `location`, and
+      // `site_config.contact_phone` exist as real columns (added by
+      // migration 20260420180000_appointment_reminder_cadence_and_
+      // reschedule.sql) but aren't in src/integrations/supabase/types.ts.
+      // Re-running `supabase gen types` would let these queries
+      // typecheck cleanly. Cast to bypass until then.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
         .from("appointments")
         .select("id, scheduled_at, preferred_date, preferred_time, location, store_location, status, confirmed_at, rescheduled_at, dealership_id")
         .eq("reschedule_token", token)
@@ -93,7 +101,10 @@ const RescheduleAppointmentLegacy = () => {
           .select("display_name")
           .eq("dealership_id", data.dealership_id)
           .maybeSingle();
-        const { data: site } = await supabase
+        // site_config.contact_phone — same staleness as appointments
+        // columns above; column exists in production.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: site } = await (supabase as any)
           .from("site_config")
           .select("contact_phone")
           .eq("dealership_id", data.dealership_id)
@@ -136,7 +147,9 @@ const RescheduleAppointmentLegacy = () => {
   const handleConfirm = async () => {
     if (!appt) return;
     setConfirming(true);
-    const { error } = await supabase
+    // confirmed_at — same staleness; column exists in production.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any)
       .from("appointments")
       .update({ confirmed_at: new Date().toISOString() })
       .eq("id", appt.id);
@@ -159,7 +172,10 @@ const RescheduleAppointmentLegacy = () => {
   const handleSubmitPick = async () => {
     if (!appt || !selectedSlot) return;
     setSubmittingPick(true);
-    const { error } = await supabase
+    // scheduled_at / rescheduled_at / rescheduled_from / reminder_*_sent_at
+    // — same staleness; columns exist in production.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any)
       .from("appointments")
       .update({
         scheduled_at: selectedSlot,

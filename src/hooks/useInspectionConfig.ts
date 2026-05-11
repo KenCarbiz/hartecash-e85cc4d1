@@ -1,4 +1,10 @@
 import { useState, useEffect } from "react";
+interface CustomItem {
+  section: string;
+  label: string;
+  sort_order: number;
+}
+
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/TenantContext";
 

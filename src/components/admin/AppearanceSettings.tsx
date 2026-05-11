@@ -212,7 +212,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
   };
 
   const handleStyleChange = (style: string) => {
-    set("top_bar_style", style);
+    set("top_bar_style", style as typeof draft["top_bar_style"]);
     // Auto-seed bg2 with a lighter tint when switching to a gradient mode
     if (
       style.startsWith("gradient") &&
@@ -252,7 +252,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
       const targetTable = selectedLocationId == null ? "site_config" : "dealership_locations";
       const targetFilter = (q: any) =>
         selectedLocationId == null
-          ? q.eq("dealership_id", config.dealership_id || tenant.dealership_id || "default")
+          ? q.eq("dealership_id", (config as { dealership_id?: string }).dealership_id || tenant.dealership_id || "default")
           : q.eq("id", selectedLocationId);
 
       const tryUpdate = async (payload: Record<string, unknown>) => {
@@ -865,7 +865,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
               {FILE_LAYOUTS.map((o) => (
                 <button
                   key={o.k}
-                  onClick={() => set("file_layout", o.k)}
+                  onClick={() => set("file_layout", o.k as typeof draft["file_layout"])}
                   className={`border rounded-md px-3 py-3 text-left transition-colors ${
                     draft.file_layout === o.k
                       ? "bg-muted font-semibold border-foreground"
@@ -1107,7 +1107,7 @@ const AppearanceSettings = ({ userRole, canManageAccess }: AppearanceSettingsPro
 
       <div className="mt-5 flex items-center justify-between">
         <div className="text-[11px] text-muted-foreground">
-          Tenant: <span className="font-mono">{config.dealership_id || "default"}</span>
+          Tenant: <span className="font-mono">{(config as { dealership_id?: string }).dealership_id || "default"}</span>
         </div>
         <Button onClick={handleSave} disabled={saving}>
           {saving ? "Saving…" : "Save changes"}

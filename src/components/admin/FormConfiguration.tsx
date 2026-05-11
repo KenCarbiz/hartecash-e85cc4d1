@@ -259,7 +259,7 @@ export default function FormConfiguration() {
     setOfferFlow((prev) => ({ ...prev, [k]: v }));
 
   const enabledCount = (questions: { key: string }[]) =>
-    questions.filter(q => (config as Record<string, unknown>)[q.key]).length;
+    questions.filter(q => (config as unknown as Record<string, unknown>)[q.key]).length;
 
   if (loading) {
     return (
@@ -273,14 +273,14 @@ export default function FormConfiguration() {
     <div
       key={q.key}
       className={`flex items-center justify-between py-2.5 px-3 rounded-lg transition-colors ${
-        (config as Record<string, unknown>)[q.key] && !disabled
+        (config as unknown as Record<string, unknown>)[q.key] && !disabled
           ? "bg-background"
           : "bg-muted/30 opacity-50"
       }`}
     >
       <div className="flex items-center gap-3">
         <Switch
-          checked={(config as Record<string, unknown>)[q.key] && !disabled}
+          checked={(config as unknown as Record<string, unknown>)[q.key] && !disabled}
           onCheckedChange={v => set(q.key, v)}
           disabled={disabled}
         />

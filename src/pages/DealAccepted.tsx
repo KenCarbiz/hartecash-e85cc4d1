@@ -20,6 +20,7 @@ import { getTaxRateFromZip, calcTradeInValue } from "@/lib/salesTax";
 import { generateICalEvent, downloadCalendarInvite, generateGoogleCalendarUrl, generateOutlookCalendarUrl } from "@/lib/calendarInvite";
 
 interface DealSubmission {
+  id: string;
   vehicle_year: string | null;
   vehicle_make: string | null;
   vehicle_model: string | null;
@@ -38,6 +39,8 @@ interface DealSubmission {
   created_at: string | null;
   appointment_set: boolean;
   offer_subject_to_inspection?: boolean | null;
+  loan_status: string | null;
+  dealership_id: string | null;
 }
 
 interface AppointmentData {

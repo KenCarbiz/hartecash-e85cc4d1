@@ -160,7 +160,7 @@ const InspectionCheckIn = () => {
     // because it fires exactly once per rotation, not on every keyboard
     // reflow. Not all browsers expose it (looking at you, older iOS), so
     // we addEventListener guardedly and silently skip if it's missing.
-    const orient = (screen.orientation as ScreenOrientation | undefined);
+    const orient = (screen.orientation as (ScreenOrientation & { lock?: (o: string) => Promise<void>; unlock?: () => void }) | undefined);
     if (orient && typeof orient.addEventListener === "function") {
       orient.addEventListener("change", checkOrientation);
     }
@@ -179,14 +179,14 @@ const InspectionCheckIn = () => {
   // it — the soft overlay handles the UX regardless.
   useEffect(() => {
     if (!scannerOpen) return;
-    const orient = (screen.orientation as ScreenOrientation | undefined);
+    const orient = (screen.orientation as (ScreenOrientation & { lock?: (o: string) => Promise<void>; unlock?: () => void }) | undefined);
     if (orient && typeof orient.lock === "function") {
       orient.lock("landscape").catch(() => {
         // Ignore — we fall back to the soft overlay prompt
       });
     }
     return () => {
-      const o = (screen.orientation as ScreenOrientation | undefined);
+      const o = (screen.orientation as (ScreenOrientation & { lock?: (o: string) => Promise<void>; unlock?: () => void }) | undefined);
       if (o && typeof o.unlock === "function") {
         try { o.unlock(); } catch { /* ignore */ }
       }
@@ -1026,7 +1026,10 @@ const InspectionCheckIn = () => {
                         // actually pinged the rep. Now we look up the
                         // rep's phone + email from user_roles and fire
                         // a direct staff_customer_arrived notification.
-                        const { data: repRow } = await supabase
+                        // user_roles.email isn't in the generated types yet
+                        // (a recent migration added it). Cast to bypass.
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        const { data: repRow } = await (supabase as any)
                           .from("user_roles")
                           .select("phone, email")
                           .eq("email", rep)
@@ -1035,7 +1038,7 @@ const InspectionCheckIn = () => {
                           body: {
                             trigger_key: "staff_customer_arrived",
                             submission_id: existing.id,
-                            recipient_phone: repRow?.phone || undefined,
+                            recipient_phone: (repRow as { phone?: string } | null)?.phone || undefined,
                             recipient_email: rep,
                           },
                         }).catch(() => {});
@@ -1058,7 +1061,7 @@ const InspectionCheckIn = () => {
                       onClick={async () => {
                         const { error } = await supabase
                           .from("submissions")
-                          .update({ needs_appraisal: true })
+                          .update({ needs_appraisal: true } as never)
                           .eq("id", existing.id);
                         if (error) {
                           toast({ title: "Could not flag", description: error.message, variant: "destructive" });

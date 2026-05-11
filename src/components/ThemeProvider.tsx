@@ -68,11 +68,11 @@ const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     const landingCtaBg = normalizeToHslTriplet(config.landing_cta_color);
     const ctaOffer =
       landingCtaBg ||
-      normalizeToHslTriplet(config.cta_offer_color) ||
+      normalizeToHslTriplet((config as { cta_offer_color?: string }).cta_offer_color) ||
       accent;
     const ctaAccept =
       landingCtaBg ||
-      normalizeToHslTriplet(config.cta_accept_color) ||
+      normalizeToHslTriplet((config as { cta_accept_color?: string }).cta_accept_color) ||
       accent;
     if (ctaOffer) root.style.setProperty("--cta-offer", ctaOffer);
     if (ctaAccept) root.style.setProperty("--cta-accept", ctaAccept);

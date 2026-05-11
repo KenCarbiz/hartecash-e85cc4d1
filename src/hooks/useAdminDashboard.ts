@@ -156,7 +156,9 @@ export function useAdminDashboard() {
     // manager-flagged count only (not the AI auto-route expansion) because
     // the sidebar badge is meant to signal "you have new manual work."
     try {
-      const { count: queueCount } = await supabase
+      // needs_appraisal column staleness — see other files for the pattern.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { count: queueCount } = await (supabase as any)
         .from("submissions")
         .select("id", { count: "exact", head: true })
         .eq("dealership_id", tenant.dealership_id)
@@ -235,7 +237,7 @@ export function useAdminDashboard() {
       .eq("user_id", session.user.id)
       .limit(1)
       .maybeSingle();
-    setIsAppraiser(!!(appraiserRow?.is_appraiser));
+    setIsAppraiser(!!(appraiserRow as { is_appraiser?: boolean } | null)?.is_appraiser);
     setUserId(session.user.id);
     const { data: profileData } = await supabase
       .from("profiles")

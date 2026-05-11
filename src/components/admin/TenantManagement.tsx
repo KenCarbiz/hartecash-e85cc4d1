@@ -157,7 +157,7 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
     // Pull the super-admin attribution override from site_config.
     // Defaults to true so new tenants always show the credit unless a
     // super admin explicitly releases them.
-    const { data: scData } = await supabase
+    const { data: scData } = await (supabase as unknown as { from: (t: string) => { select: (s: string) => { eq: (k: string, v: string) => { maybeSingle: () => Promise<{ data: { force_autocurb_attribution?: boolean } | null }> } } } })
       .from("site_config")
       .select("force_autocurb_attribution")
       .eq("dealership_id", t.dealership_id)
@@ -243,7 +243,7 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
         // dealer's own powered_by_mode.
         await supabase
           .from("site_config")
-          .update({ force_autocurb_attribution: form.forceAutocurbAttribution })
+          .update({ force_autocurb_attribution: form.forceAutocurbAttribution } as never)
           .eq("dealership_id", payload.dealership_id);
       }
     } else {

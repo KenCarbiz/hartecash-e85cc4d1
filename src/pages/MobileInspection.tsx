@@ -402,14 +402,14 @@ const MobileInspection = () => {
         // the inspection_started_notified_at column (fetched above).
         // Fire-and-forget so any SMS-provider blip doesn't block the
         // inspector's workflow.
-        if (!sub?.inspection_started_notified_at) {
+        if (!(sub as { inspection_started_notified_at?: string } | null)?.inspection_started_notified_at) {
           safeInvoke("send-notification", {
             body: { trigger_key: "customer_inspection_started", submission_id: id },
             context: { from: "MobileInspection.firstOpen" },
           });
           supabase
             .from("submissions")
-            .update({ inspection_started_notified_at: new Date().toISOString() })
+            .update({ inspection_started_notified_at: new Date().toISOString() } as never)
             .eq("id", id)
             .then(() => {}, () => {});
         }
@@ -486,8 +486,13 @@ const MobileInspection = () => {
     if (error) {
       toast({ title: "Error saving", description: error.message, variant: "destructive" });
     } else {
-      const result = data;
-      if (result && result.adjustment !== undefined) setLastAdjustment(result);
+      const result = data as { adjustment?: number; avg_depth?: number } | null;
+      if (result && result.adjustment !== undefined) {
+        setLastAdjustment({
+          adjustment: result.adjustment ?? 0,
+          avg_depth: result.avg_depth ?? 0,
+        });
+      }
 
       // Clear the autosave draft now that the canonical save landed.
       if (draftKey) {
@@ -507,14 +512,14 @@ const MobileInspection = () => {
           .select("inspection_progress_notified_at")
           .eq("id", id)
           .maybeSingle();
-        if (!subFull?.inspection_progress_notified_at) {
+        if (!(subFull as { inspection_progress_notified_at?: string } | null)?.inspection_progress_notified_at) {
           safeInvoke("send-notification", {
             body: { trigger_key: "customer_inspection_progress", submission_id: id },
             context: { from: "MobileInspection.midSave" },
           });
           supabase
             .from("submissions")
-            .update({ inspection_progress_notified_at: new Date().toISOString() })
+            .update({ inspection_progress_notified_at: new Date().toISOString() } as never)
             .eq("id", id)
             .then(() => {}, () => {});
         }
