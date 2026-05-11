@@ -2,8 +2,6 @@ import { useEffect } from "react";
 import GhostScreen from "@/components/landing/GhostScreen";
 import { useGhostScreen } from "@/hooks/useGhostScreen";
 import { GhostSyncIndicator } from "@/components/PortalSkeleton";
-// Placeholder until ken-thinking.webp ships — see PR description.
-import kenThinking from "@/assets/ken-portrait.webp";
 
 interface Props {
   vehicleYear?: string;
@@ -30,13 +28,7 @@ const CalculatingOffer = ({
   }, [previewMode, onComplete]);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-6 relative">
-      <img
-        src={kenThinking}
-        alt=""
-        aria-hidden="true"
-        className="w-48 md:w-64 object-contain pointer-events-none select-none"
-      />
+    <div className="min-h-screen bg-background flex items-center justify-center relative">
       {ready && (
         <GhostScreen
           kind={kind}
