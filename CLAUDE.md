@@ -33,6 +33,34 @@ Pick **one** of these — all hit the same Supabase project (ref `ptiwdwfdckfqiv
 `INSERT` / `ALTER`. This makes it safe to re-run, safe to merge across
 branches, and safe to apply out of order with hot-fixes.
 
+### Do NOT put `cron.schedule(...)` calls in `supabase/migrations/`
+
+Cron schedules are managed by Lovable's cron tool, NOT static
+migration files. The `current_setting('app.supabase_service_role_key',
+true)` pattern that some older migrations use resolves to an empty
+string in this Supabase project, so re-applying a `cron.schedule`
+migration would replace a working schedule with one that 401s on
+every tick.
+
+If a new cron job is needed:
+1. Author the RPC / function the cron will call as a normal migration.
+2. Ask Lovable to register the cron via its tool, supplying the
+   schedule string and target.
+3. If the cron must live in a migration for some reason, hand-craft
+   the `Authorization` header with the known-working anon key —
+   don't use the `current_setting('app.supabase_service_role_key')`
+   form.
+
+Existing files that are NO-OP-on-replay (Lovable already registered
+the cron, file body would break it):
+- `20260509030000_voice_pipeline_retry_cron.sql`
+- `20260509060000_purge_storage_cron.sql`
+
+Both carry a `⚠️ DO NOT APPLY VIA LOVABLE PUSH` header. The RPC that
+was bundled in 060000 was extracted to `20260509080000_purge_pickup_rpc.sql`
+(safe to push).
+
+
 After data changes, end the file with:
 ```sql
 NOTIFY pgrst, 'reload schema';

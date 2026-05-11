@@ -1,3 +1,18 @@
+-- ⚠️  DO NOT APPLY VIA LOVABLE PUSH.
+--
+-- This file is retained for historical record only. The cron schedule
+-- it would have created is ALREADY REGISTERED in production by
+-- Lovable's cron-management tool, using an anon-key bearer header
+-- that works in this project's environment. Re-applying would
+-- clobber the working schedule with the broken-in-this-env
+-- service-role-key pattern.
+--
+-- The pickup_customer_data_purge_jobs RPC inside this file was
+-- not applied either. It is now shipped standalone in
+-- 20260509080000_purge_pickup_rpc.sql which IS safe to push.
+--
+-- ─────────────────────────────────────────────────────────────────
+--
 -- Purge-customer-storage cron + pickup helper.
 --
 -- Schedules the purge-customer-storage edge function to run every
