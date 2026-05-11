@@ -928,8 +928,11 @@ export type Database = {
           twilio_from_number: string | null
           updated_at: string
           voice_ai_api_key: string | null
+          voice_ai_beat_competitor_amount: number | null
+          voice_ai_competitor_response_mode: string | null
           voice_ai_enabled: boolean | null
           voice_ai_from_number: string | null
+          voice_ai_match_competitors: boolean | null
           voice_ai_max_bump_amount: number | null
           voice_ai_provider: string
           voice_ai_transfer_number: string | null
@@ -959,8 +962,11 @@ export type Database = {
           twilio_from_number?: string | null
           updated_at?: string
           voice_ai_api_key?: string | null
+          voice_ai_beat_competitor_amount?: number | null
+          voice_ai_competitor_response_mode?: string | null
           voice_ai_enabled?: boolean | null
           voice_ai_from_number?: string | null
+          voice_ai_match_competitors?: boolean | null
           voice_ai_max_bump_amount?: number | null
           voice_ai_provider?: string
           voice_ai_transfer_number?: string | null
@@ -990,8 +996,11 @@ export type Database = {
           twilio_from_number?: string | null
           updated_at?: string
           voice_ai_api_key?: string | null
+          voice_ai_beat_competitor_amount?: number | null
+          voice_ai_competitor_response_mode?: string | null
           voice_ai_enabled?: boolean | null
           voice_ai_from_number?: string | null
+          voice_ai_match_competitors?: boolean | null
           voice_ai_max_bump_amount?: number | null
           voice_ai_provider?: string
           voice_ai_transfer_number?: string | null
@@ -3848,6 +3857,7 @@ export type Database = {
           facebook_url: string | null
           favicon_url: string | null
           file_layout: string | null
+          force_autocurb_attribution: boolean
           ghost_headline: string | null
           ghost_screen: string
           ghost_subhead: string | null
@@ -3961,6 +3971,7 @@ export type Database = {
           facebook_url?: string | null
           favicon_url?: string | null
           file_layout?: string | null
+          force_autocurb_attribution?: boolean
           ghost_headline?: string | null
           ghost_screen?: string
           ghost_subhead?: string | null
@@ -4074,6 +4085,7 @@ export type Database = {
           facebook_url?: string | null
           favicon_url?: string | null
           file_layout?: string | null
+          force_autocurb_attribution?: boolean
           ghost_headline?: string | null
           ghost_screen?: string
           ghost_subhead?: string | null
