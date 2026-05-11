@@ -1146,19 +1146,22 @@ export default function SubmissionDetailSheetClassic({
                     <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M5 4a2 2 0 00-2 2v1h14V6a2 2 0 00-2-2H5zM17 9H3v5a2 2 0 002 2h10a2 2 0 002-2V9z"/></svg>
                     Print
                   </button>
-                  {manualAppraisalNeeded && (
-                    <button
-                      onClick={() => {
-                        if (!sub?.token || !sub?.id) return;
-                        sessionStorage.setItem("autocurb:reopenSubmissionId", sub.id);
-                        navigate(`/appraisal/${sub.token}`);
-                      }}
-                      className="px-3 h-8 rounded-lg bg-white text-[#003b80] hover:bg-white/90 text-caption font-bold flex items-center gap-1.5 transition"
-                    >
-                      <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3.5a.5.5 0 01.5.5v5.5H16a.5.5 0 010 1h-5.5V16a.5.5 0 01-1 0v-5.5H4a.5.5 0 010-1h5.5V4a.5.5 0 01.5-.5z"/></svg>
-                      Open Appraisal
-                    </button>
-                  )}
+                  <button
+                    onClick={() => {
+                      if (!sub?.token || !sub?.id) return;
+                      sessionStorage.setItem("autocurb:reopenSubmissionId", sub.id);
+                      navigate(`/appraisal/${sub.token}`);
+                    }}
+                    className={
+                      manualAppraisalNeeded
+                        ? "px-3 h-8 rounded-lg bg-white text-[#003b80] hover:bg-white/90 text-caption font-bold flex items-center gap-1.5 transition"
+                        : "px-3 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white text-caption font-semibold flex items-center gap-1.5 transition"
+                    }
+                    title={manualAppraisalNeeded ? "Open the appraisal tool" : "Reopen the completed appraisal"}
+                  >
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3.5a.5.5 0 01.5.5v5.5H16a.5.5 0 010 1h-5.5V16a.5.5 0 01-1 0v-5.5H4a.5.5 0 010-1h5.5V4a.5.5 0 01.5-.5z"/></svg>
+                    {manualAppraisalNeeded ? "Open Appraisal" : "Re-Appraise"}
+                  </button>
                   {/* Save-the-deal — visible when the customer has
                       declined the offer OR has stated a walk-away
                       number that's higher than the current offer.
