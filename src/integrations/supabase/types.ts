@@ -119,6 +119,7 @@ export type Database = {
       }
       appointments: {
         Row: {
+          confirmed_at: string | null
           created_at: string
           customer_email: string
           customer_name: string
@@ -128,9 +129,16 @@ export type Database = {
           imported_at: string | null
           imported_from_dms: string | null
           legacy_id: string | null
+          location: string | null
           notes: string | null
           preferred_date: string
           preferred_time: string
+          reminder_24h_sent_at: string | null
+          reminder_2h_sent_at: string | null
+          reschedule_token: string | null
+          rescheduled_at: string | null
+          rescheduled_from: string | null
+          scheduled_at: string | null
           status: string
           store_location: string | null
           store_location_id: string | null
@@ -138,6 +146,7 @@ export type Database = {
           vehicle_info: string | null
         }
         Insert: {
+          confirmed_at?: string | null
           created_at?: string
           customer_email: string
           customer_name: string
@@ -147,9 +156,16 @@ export type Database = {
           imported_at?: string | null
           imported_from_dms?: string | null
           legacy_id?: string | null
+          location?: string | null
           notes?: string | null
           preferred_date: string
           preferred_time: string
+          reminder_24h_sent_at?: string | null
+          reminder_2h_sent_at?: string | null
+          reschedule_token?: string | null
+          rescheduled_at?: string | null
+          rescheduled_from?: string | null
+          scheduled_at?: string | null
           status?: string
           store_location?: string | null
           store_location_id?: string | null
@@ -157,6 +173,7 @@ export type Database = {
           vehicle_info?: string | null
         }
         Update: {
+          confirmed_at?: string | null
           created_at?: string
           customer_email?: string
           customer_name?: string
@@ -166,9 +183,16 @@ export type Database = {
           imported_at?: string | null
           imported_from_dms?: string | null
           legacy_id?: string | null
+          location?: string | null
           notes?: string | null
           preferred_date?: string
           preferred_time?: string
+          reminder_24h_sent_at?: string | null
+          reminder_2h_sent_at?: string | null
+          reschedule_token?: string | null
+          rescheduled_at?: string | null
+          rescheduled_from?: string | null
+          scheduled_at?: string | null
           status?: string
           store_location?: string | null
           store_location_id?: string | null
@@ -3832,6 +3856,7 @@ export type Database = {
           assign_buying_center: boolean
           assign_customer_picks: boolean
           assign_oem_brand_match: boolean
+          auto_lock_offer_on_re_engagement: boolean
           auto_route_appraiser_queue: boolean
           business_hours: Json | null
           buying_center_location_id: string | null
@@ -3946,6 +3971,7 @@ export type Database = {
           assign_buying_center?: boolean
           assign_customer_picks?: boolean
           assign_oem_brand_match?: boolean
+          auto_lock_offer_on_re_engagement?: boolean
           auto_route_appraiser_queue?: boolean
           business_hours?: Json | null
           buying_center_location_id?: string | null
@@ -4060,6 +4086,7 @@ export type Database = {
           assign_buying_center?: boolean
           assign_customer_picks?: boolean
           assign_oem_brand_match?: boolean
+          auto_lock_offer_on_re_engagement?: boolean
           auto_route_appraiser_queue?: boolean
           business_hours?: Json | null
           buying_center_location_id?: string | null
@@ -4301,6 +4328,8 @@ export type Database = {
           inspection_completed_at: string | null
           inspection_data: Json | null
           inspection_pin: string | null
+          inspection_progress_notified_at: string | null
+          inspection_started_notified_at: string | null
           inspector_grade: string | null
           interior_damage: string[] | null
           internal_notes: string | null
@@ -4323,6 +4352,7 @@ export type Database = {
           needs_appraisal: boolean
           next_step: string | null
           num_keys: string | null
+          offer_locked_at: string | null
           offer_made_at: string | null
           offer_subject_to_inspection: boolean
           offered_price: number | null
@@ -4340,6 +4370,8 @@ export type Database = {
           phone: string | null
           photos_uploaded: boolean
           plate: string | null
+          portal_last_viewed_at: string | null
+          portal_view_count: number
           progress_status: string
           referral_code: string | null
           review_requested: boolean
@@ -4447,6 +4479,8 @@ export type Database = {
           inspection_completed_at?: string | null
           inspection_data?: Json | null
           inspection_pin?: string | null
+          inspection_progress_notified_at?: string | null
+          inspection_started_notified_at?: string | null
           inspector_grade?: string | null
           interior_damage?: string[] | null
           internal_notes?: string | null
@@ -4469,6 +4503,7 @@ export type Database = {
           needs_appraisal?: boolean
           next_step?: string | null
           num_keys?: string | null
+          offer_locked_at?: string | null
           offer_made_at?: string | null
           offer_subject_to_inspection?: boolean
           offered_price?: number | null
@@ -4486,6 +4521,8 @@ export type Database = {
           phone?: string | null
           photos_uploaded?: boolean
           plate?: string | null
+          portal_last_viewed_at?: string | null
+          portal_view_count?: number
           progress_status?: string
           referral_code?: string | null
           review_requested?: boolean
@@ -4593,6 +4630,8 @@ export type Database = {
           inspection_completed_at?: string | null
           inspection_data?: Json | null
           inspection_pin?: string | null
+          inspection_progress_notified_at?: string | null
+          inspection_started_notified_at?: string | null
           inspector_grade?: string | null
           interior_damage?: string[] | null
           internal_notes?: string | null
@@ -4615,6 +4654,7 @@ export type Database = {
           needs_appraisal?: boolean
           next_step?: string | null
           num_keys?: string | null
+          offer_locked_at?: string | null
           offer_made_at?: string | null
           offer_subject_to_inspection?: boolean
           offered_price?: number | null
@@ -4632,6 +4672,8 @@ export type Database = {
           phone?: string | null
           photos_uploaded?: boolean
           plate?: string | null
+          portal_last_viewed_at?: string | null
+          portal_view_count?: number
           progress_status?: string
           referral_code?: string | null
           review_requested?: boolean
@@ -6219,6 +6261,13 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_portal_view: {
+        Args: { _token: string }
+        Returns: {
+          offer_locked_at: string
+          view_count: number
+        }[]
       }
       is_dealer_group_admin: {
         Args: { _group_id: string; _user_id: string }
