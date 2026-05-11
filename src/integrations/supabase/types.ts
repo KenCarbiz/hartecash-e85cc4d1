@@ -953,6 +953,8 @@ export type Database = {
           updated_at: string
           voice_ai_api_key: string | null
           voice_ai_beat_competitor_amount: number | null
+          voice_ai_call_end: string | null
+          voice_ai_call_start: string | null
           voice_ai_competitor_response_mode: string | null
           voice_ai_enabled: boolean | null
           voice_ai_from_number: string | null
@@ -987,6 +989,8 @@ export type Database = {
           updated_at?: string
           voice_ai_api_key?: string | null
           voice_ai_beat_competitor_amount?: number | null
+          voice_ai_call_end?: string | null
+          voice_ai_call_start?: string | null
           voice_ai_competitor_response_mode?: string | null
           voice_ai_enabled?: boolean | null
           voice_ai_from_number?: string | null
@@ -1021,6 +1025,8 @@ export type Database = {
           updated_at?: string
           voice_ai_api_key?: string | null
           voice_ai_beat_competitor_amount?: number | null
+          voice_ai_call_end?: string | null
+          voice_ai_call_start?: string | null
           voice_ai_competitor_response_mode?: string | null
           voice_ai_enabled?: boolean | null
           voice_ai_from_number?: string | null
@@ -3863,6 +3869,7 @@ export type Database = {
           comparison_features: Json
           competitor_columns: Json
           condition_card_style: string
+          contact_phone: string | null
           created_at: string
           cta_accept_color: string
           cta_offer_color: string
@@ -3978,6 +3985,7 @@ export type Database = {
           comparison_features?: Json
           competitor_columns?: Json
           condition_card_style?: string
+          contact_phone?: string | null
           created_at?: string
           cta_accept_color?: string
           cta_offer_color?: string
@@ -4093,6 +4101,7 @@ export type Database = {
           comparison_features?: Json
           competitor_columns?: Json
           condition_card_style?: string
+          contact_phone?: string | null
           created_at?: string
           cta_accept_color?: string
           cta_offer_color?: string
@@ -4370,6 +4379,7 @@ export type Database = {
           phone: string | null
           photos_uploaded: boolean
           plate: string | null
+          plate_state: string | null
           portal_last_viewed_at: string | null
           portal_view_count: number
           progress_status: string
@@ -4521,6 +4531,7 @@ export type Database = {
           phone?: string | null
           photos_uploaded?: boolean
           plate?: string | null
+          plate_state?: string | null
           portal_last_viewed_at?: string | null
           portal_view_count?: number
           progress_status?: string
@@ -4672,6 +4683,7 @@ export type Database = {
           phone?: string | null
           photos_uploaded?: boolean
           plate?: string | null
+          plate_state?: string | null
           portal_last_viewed_at?: string | null
           portal_view_count?: number
           progress_status?: string
