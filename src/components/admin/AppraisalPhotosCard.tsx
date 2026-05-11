@@ -44,6 +44,17 @@ interface PhotoEntry {
   url: string;
   created_at: string | null;
   size: number | null;
+  source: "staff" | "customer";
+}
+
+/**
+ * Customer-flow uploads use prefixes like front- / back- / dashboard-
+ * (catIds set on the customer upload page) and extra- (manual adds).
+ * Staff-uploaded photos via StaffFileUpload are prefixed staff-.
+ * Detection is purely by filename; no schema change needed.
+ */
+function classifyPhotoSource(filename: string): "staff" | "customer" {
+  return filename.startsWith("staff-") ? "staff" : "customer";
 }
 
 interface AppraisalPhotosCardProps {
@@ -61,6 +72,7 @@ export default function AppraisalPhotosCard({
   const [expanded, setExpanded] = useState(false);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
+  const [sourceFilter, setSourceFilter] = useState<"all" | "customer" | "staff">("all");
 
   const { bump } = useLatestOfferBump(submissionId);
 
@@ -81,7 +93,7 @@ export default function AppraisalPhotosCard({
         setLoading(false);
         return;
       }
-      const rows = data
+      const rows: PhotoEntry[] = data
         .filter((f) => f.name && f.name !== ".emptyFolderPlaceholder")
         .map((f) => ({
           name: f.name,
@@ -91,6 +103,7 @@ export default function AppraisalPhotosCard({
           size: f.metadata && typeof f.metadata.size === "number"
             ? f.metadata.size
             : null,
+          source: classifyPhotoSource(f.name),
         }));
       setPhotos(rows);
       setLoading(false);
@@ -117,8 +130,14 @@ export default function AppraisalPhotosCard({
   if (photos.length === 0) return null;
 
   const hasAiFlags = aiFlags.length > 0;
+  const customerCount = photos.filter((p) => p.source === "customer").length;
+  const staffCount    = photos.filter((p) => p.source === "staff").length;
   const previewStrip = photos.slice(0, 5);
   const remaining = photos.length - previewStrip.length;
+
+  const filteredPhotos = sourceFilter === "all"
+    ? photos
+    : photos.filter((p) => p.source === sourceFilter);
 
   return (
     <div className={`rounded-xl border bg-card overflow-hidden ${
@@ -149,7 +168,15 @@ export default function AppraisalPhotosCard({
                 Photos &amp; Evidence
               </h3>
               <span className="text-xs text-muted-foreground">
-                {photos.length} {photos.length === 1 ? "photo" : "photos"}
+                {customerCount > 0 && staffCount > 0 ? (
+                  <>
+                    {customerCount} customer · {staffCount} staff
+                  </>
+                ) : staffCount > 0 ? (
+                  <>{staffCount} staff {staffCount === 1 ? "photo" : "photos"}</>
+                ) : (
+                  <>{customerCount} customer {customerCount === 1 ? "photo" : "photos"}</>
+                )}
               </span>
               {hasAiFlags && (
                 <span className="inline-flex items-center gap-1 text-[10.5px] uppercase tracking-wider font-bold rounded-full bg-amber-500/15 border border-amber-400/40 text-amber-700 dark:text-amber-300 px-2 py-0.5">
@@ -168,12 +195,15 @@ export default function AppraisalPhotosCard({
               </div>
             )}
 
-            {/* Thumbnail preview strip */}
+            {/* Thumbnail preview strip — Staff-uploaded photos get
+                a small "S" pill in the corner so the appraiser can
+                tell at a glance whether the most recent shots are
+                ours or the customer's. */}
             <div className="mt-3 flex items-center gap-1.5">
               {previewStrip.map((p) => (
                 <div
                   key={p.name}
-                  className="w-12 h-12 rounded border border-border bg-muted overflow-hidden shrink-0"
+                  className="relative w-12 h-12 rounded border border-border bg-muted overflow-hidden shrink-0"
                 >
                   <img
                     src={p.url}
@@ -181,6 +211,14 @@ export default function AppraisalPhotosCard({
                     loading="lazy"
                     className="w-full h-full object-cover"
                   />
+                  {p.source === "staff" && (
+                    <span
+                      className="absolute bottom-0 left-0 right-0 text-[8px] font-bold uppercase tracking-wider text-white bg-blue-600/85 text-center leading-tight py-px"
+                      aria-label="Staff-uploaded photo"
+                    >
+                      Staff
+                    </span>
+                  )}
                 </div>
               ))}
               {remaining > 0 && (
@@ -200,13 +238,46 @@ export default function AppraisalPhotosCard({
       {/* ── EXPANDED GALLERY ── */}
       {expanded && (
         <div className="border-t border-border p-4 bg-muted/20">
+          {/* Source-filter tabs — only render when BOTH sources have
+              photos. Otherwise the tabs are noise. */}
+          {customerCount > 0 && staffCount > 0 && (
+            <div className="mb-3 inline-flex rounded-md border border-border bg-card p-0.5 text-xs">
+              {(["all", "customer", "staff"] as const).map((key) => {
+                const active = sourceFilter === key;
+                const count = key === "all" ? photos.length
+                  : key === "customer" ? customerCount
+                  : staffCount;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setSourceFilter(key)}
+                    className={`px-3 py-1.5 rounded uppercase tracking-wider font-semibold transition ${
+                      active
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {key} <span className="opacity-70 font-mono ml-0.5">{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2">
-            {photos.map((p, i) => (
+            {filteredPhotos.map((p) => (
               <button
                 key={p.name}
                 type="button"
-                onClick={() => setLightboxIdx(i)}
-                className="aspect-square rounded-md border border-border bg-card overflow-hidden hover:ring-2 hover:ring-primary transition"
+                onClick={() => {
+                  // Lightbox indexes off the FULL photos array so
+                  // ±navigation works regardless of the current
+                  // filter selection.
+                  const idx = photos.findIndex((x) => x.name === p.name);
+                  if (idx >= 0) setLightboxIdx(idx);
+                }}
+                className="relative aspect-square rounded-md border border-border bg-card overflow-hidden hover:ring-2 hover:ring-primary transition"
               >
                 <img
                   src={p.url}
@@ -214,6 +285,11 @@ export default function AppraisalPhotosCard({
                   loading="lazy"
                   className="w-full h-full object-cover"
                 />
+                {p.source === "staff" && (
+                  <span className="absolute top-1 left-1 text-[9px] font-bold uppercase tracking-wider text-white bg-blue-600/90 rounded px-1.5 py-0.5">
+                    Staff
+                  </span>
+                )}
               </button>
             ))}
           </div>

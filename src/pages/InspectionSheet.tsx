@@ -22,6 +22,7 @@ import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { formatGrade } from "@/lib/formatGrade";
 import PortalSkeleton from "@/components/PortalSkeleton";
 import VehicleImage from "@/components/sell-form/VehicleImage";
+import AppraisalPhotosCard from "@/components/admin/AppraisalPhotosCard";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
@@ -1602,6 +1603,16 @@ const InspectionSheet = () => {
             </Card>
           ) : null;
         })()}
+
+        {/* Photos & Evidence — same card used on the appraisal screen.
+            Surfaces here so the inspector can review what the customer
+            uploaded BEFORE walking the car, and see any AI-flagged
+            condition findings while they have eyes on the vehicle.
+            Defaults to collapsed; expands on click. */}
+        <AppraisalPhotosCard
+          submissionId={submission?.id ?? null}
+          token={submission?.token ?? null}
+        />
 
         {/* Customer-Reported Issues */}
         {(submission.exterior_damage?.length || submission.interior_damage?.length || submission.mechanical_issues?.length || submission.engine_issues?.length) && (
