@@ -6431,6 +6431,15 @@ export type Database = {
       }
       require_mfa_for_user: { Args: never; Returns: Json }
       role_requires_state_license: { Args: { _role: string }; Returns: boolean }
+      role_section_override: {
+        Args: {
+          _dealership_id: string
+          _location_id: string
+          _role: string
+          _section_key: string
+        }
+        Returns: boolean
+      }
       save_mobile_inspection:
         | {
             Args: {
