@@ -29,7 +29,14 @@ jobs:
         run: npm ci
 
       - name: Type check
-        run: npx tsc --noEmit
+        # Use the app tsconfig explicitly. Plain `tsc --noEmit` runs
+        # against the root tsconfig.json which has `files: []` with
+        # project references — that combination compiles ZERO files
+        # and silently passes. This was a no-op for the entire repo
+        # history until it was discovered while shipping the post-
+        # migration-regen type fixes. Pointing here ensures CI
+        # actually compiles the source tree.
+        run: npx tsc --noEmit -p tsconfig.app.json
 
       - name: Build
         run: npm run build
