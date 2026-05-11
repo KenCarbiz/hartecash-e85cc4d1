@@ -135,14 +135,56 @@ export default function NotificationSettings() {
   const [editingTemplate, setEditingTemplate] = useState<{ key: string; label: string } | null>(null);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     recipients: true,
+    appraiser: true,
     triggers: true,
     customer: true,
     quiet: false,
   });
 
+  // Appraiser-of-record state. Dealer-level only in Phase 1; per-location
+  // override lives on dealership_locations.appraiser_of_record_user_id and
+  // will surface in StaffManagement's per-location config in Phase 2.
+  const [aorUserId, setAorUserId] = useState<string | null>(null);
+  const [staffList, setStaffList] = useState<Array<{ user_id: string; display_name: string | null; email: string | null }>>([]);
+  const [aorSaving, setAorSaving] = useState(false);
+
   useEffect(() => {
     fetchSettings();
+    fetchAor();
+    fetchStaffList();
   }, [dealershipId]);
+
+  const fetchAor = async () => {
+    // appraiser_of_record_user_id was added in
+    // 20260512000000_appraiser_of_record_phase1.sql; cast the select
+    // string until typegen runs against the applied migration.
+    const { data } = await supabase
+      .from("site_config")
+      .select("appraiser_of_record_user_id" as never)
+      .eq("dealership_id", dealershipId)
+      .maybeSingle();
+    setAorUserId((data as { appraiser_of_record_user_id?: string | null } | null)?.appraiser_of_record_user_id ?? null);
+  };
+
+  const fetchStaffList = async () => {
+    const { data } = await supabase.rpc("get_all_staff", { _dealership_id: dealershipId });
+    setStaffList(((data ?? []) as Array<{ user_id: string; display_name: string | null; email: string | null }>) || []);
+  };
+
+  const handleSaveAor = async (newUserId: string | null) => {
+    setAorSaving(true);
+    const { error } = await supabase
+      .from("site_config")
+      .update({ appraiser_of_record_user_id: newUserId } as never)
+      .eq("dealership_id", dealershipId);
+    setAorSaving(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    setAorUserId(newUserId);
+    toast({ title: "Saved", description: newUserId ? "Appraiser of record updated." : "Appraiser of record cleared." });
+  };
 
   const fetchSettings = async () => {
     setLoading(true);
@@ -562,6 +604,39 @@ export default function NotificationSettings() {
               <Input placeholder="(555) 123-4567" value={newPhone} onChange={e => setNewPhone(e.target.value)} onKeyDown={e => e.key === "Enter" && addPhone()} className="max-w-xs text-sm" />
               <Button size="sm" variant="outline" onClick={addPhone}><Plus className="w-3.5 h-3.5 mr-1" /> Add</Button>
             </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+
+      {/* Appraiser of Record */}
+      <Collapsible open={openSections.appraiser} onOpenChange={() => toggle("appraiser")}>
+        <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
+          <div className="flex items-center gap-2 font-medium">
+            <UserCheck className="w-4 h-4" />
+            Appraiser of Record
+          </div>
+          <ChevronDown className={`w-4 h-4 transition-transform ${openSections.appraiser ? "rotate-180" : ""}`} />
+        </CollapsibleTrigger>
+        <CollapsibleContent className="pt-3 space-y-3 px-1">
+          <p className="text-xs text-muted-foreground">
+            The appraiser of record gets emailed whenever a submission moves to "pending appraiser" — with a deep link straight to the appraisal screen. Per-location overrides live in Staff Management.
+          </p>
+          <div className="flex items-center gap-2">
+            <select
+              value={aorUserId ?? ""}
+              onChange={(e) => handleSaveAor(e.target.value || null)}
+              disabled={aorSaving}
+              className="h-9 rounded-md border border-input bg-background px-2 text-sm flex-1 max-w-md"
+            >
+              <option value="">— No appraiser of record —</option>
+              {staffList.map((s) => (
+                <option key={s.user_id} value={s.user_id}>
+                  {s.display_name || s.email || s.user_id}
+                  {s.email && s.display_name ? ` (${s.email})` : ""}
+                </option>
+              ))}
+            </select>
+            {aorSaving && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
           </div>
         </CollapsibleContent>
       </Collapsible>

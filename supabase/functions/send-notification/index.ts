@@ -1,7 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
-import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
+import { TEMPLATES, MASCOTS_BY_TRIGGER } from '../_shared/transactional-email-templates/registry.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,6 +17,7 @@ const TRIGGER_TO_TEMPLATE: Record<string, string> = {
   customer_appointment_booked: 'appointment-confirmation',
   customer_appointment_reminder: 'appointment-reminder',
   customer_appointment_rescheduled: 'appointment-rescheduled',
+  staff_appraisal_pending: 'staff-appraisal-pending',
 };
 
 const SENDER_DOMAIN = "notify.autocurb.io";
@@ -228,6 +229,15 @@ const DEFAULT_TEMPLATES: Record<string, { email_subject: string; email_body: str
     email_body: "A customer started the sell form but didn't finish.\n\nName: {{customer_name}}\nEmail: {{customer_email}}\nPhone: {{customer_phone}}\nVehicle: {{vehicle}}\nMileage: {{mileage}}\n\nThis lead needs immediate follow-up.",
     sms_body: "⚠️ Abandoned lead: {{customer_name}} ({{vehicle}}) started the form but didn't finish. Follow up ASAP!",
   },
+  // Appraiser-of-record notification — fired when needs_appraisal flips
+  // false→true. The branded React Email (staff-appraisal-pending) is the
+  // one customers will actually see; this plain-text default is the
+  // SMS/push fallback when the React render path is bypassed.
+  staff_appraisal_pending: {
+    email_subject: "New Appraisal — {{vehicle}} ({{customer_name}})",
+    email_body: "A submission is pending your appraisal.\n\nCustomer: {{customer_name}}\nVehicle: {{vehicle}}\nOffer: {{offer_amount}}\n\nOpen the appraisal: {{appraisal_link}}",
+    sms_body: "New appraisal: {{customer_name}} — {{vehicle}}. Open: {{appraisal_link}}",
+  },
 };
 
 // Mirror of the SQL tcpa_timezone_for_state() function. Used as a
@@ -397,6 +407,13 @@ Deno.serve(async (req) => {
       : "";
     const siteUrl = Deno.env.get("SITE_URL") || "https://app.autocurb.io";
     const portalLink = sub ? `${siteUrl}/offer/${sub.token}` : siteUrl;
+    // Staff-side deep link into the appraisal screen for the AOR flow.
+    // AdminLogin.tsx honors ?next= and replays the URL post-auth so the
+    // recipient lands on the right submission whether or not they were
+    // signed in when they clicked.
+    const appraisalLink = sub
+      ? `${siteUrl}/admin/login?next=${encodeURIComponent(`/admin?section=appraisal&submission=${sub.id}`)}`
+      : siteUrl;
 
     // Decline-reason capture links — go through the
     // track-decline-reason edge function which writes to
@@ -493,6 +510,7 @@ Deno.serve(async (req) => {
       // append the query param themselves so we keep one variable
       // and let the message pick the action it wants to surface.
       arrive_url: sub ? `${siteUrl}/arrive/${sub.token}` : siteUrl,
+      appraisal_link: appraisalLink,
       decline_link_price: declineLink("price_too_low"),
       decline_link_shopping: declineLink("shopping_around"),
       decline_link_notready: declineLink("not_ready"),
@@ -573,6 +591,39 @@ Deno.serve(async (req) => {
             if ((staffRow as any).sms_notifications_opted_in === false) smsRecipients = [];
             if ((staffRow as any).email_notifications_opted_in === false) emailRecipients = [];
           }
+        }
+      } else if (trigger_key === "staff_appraisal_pending" && sub?.id) {
+        // Appraiser-of-record routing: resolve the per-location AOR
+        // (with dealer-level fallback) at send time. Looking up the
+        // user_id via the SQL helper keeps the precedence rules in one
+        // place; the email comes from public.profiles which is the
+        // canonical staff-email source (user_roles.email is a known
+        // dead column — see TODO bug flagged separately).
+        try {
+          const { data: aorUserId } = await supabase.rpc("get_appraiser_of_record", {
+            _dealership_id: dealershipId,
+            _location_id: (sub as any).store_location_id || null,
+          });
+          if (aorUserId) {
+            const { data: aorProfile } = await supabase
+              .from("profiles")
+              .select("email, display_name")
+              .eq("user_id", aorUserId)
+              .maybeSingle();
+            const aorEmail = (aorProfile as { email?: string } | null)?.email;
+            if (aorEmail) {
+              emailRecipients = [aorEmail];
+              // Stash first-name on templateVars so the React template
+              // can render "Hi <first>". profiles.display_name is the
+              // single source of truth here.
+              const aorDisplay = (aorProfile as { display_name?: string } | null)?.display_name;
+              if (aorDisplay) {
+                templateVars.appraiser_first_name = String(aorDisplay).split(/[\s.]/)[0];
+              }
+            }
+          }
+        } catch (e) {
+          console.error("[send-notification] AOR resolution failed:", e);
         }
       } else {
         const triggerRecipients = (notifSettings as any)?.staff_trigger_recipients?.[trigger_key];
@@ -747,7 +798,76 @@ Deno.serve(async (req) => {
       const templateKey = TRIGGER_TO_TEMPLATE[trigger_key];
       const reactTemplate = templateKey ? TEMPLATES[templateKey] : null;
 
-      if (isCustomerTrigger && reactTemplate) {
+      // Branded React Email render path for staff_appraisal_pending.
+      // Mirrors the customer React branch but builds template data with
+      // staff-side props (appraiserFirstName, appraisalLink, mascot).
+      if (isStaffTrigger && reactTemplate && trigger_key === "staff_appraisal_pending") {
+        const mascot = MASCOTS_BY_TRIGGER[trigger_key];
+        for (const addr of emailRecipients) {
+          try {
+            const templateData = {
+              appraiserFirstName: templateVars.appraiser_first_name || "",
+              customerName: sub?.name || "",
+              vehicle: templateVars.vehicle,
+              acceptedPrice: templateVars.offer_amount || "",
+              triggerKindLabel: "New appraisal",
+              appraisalLink: templateVars.appraisal_link,
+              dealershipName: templateVars.dealership_name,
+              mascotUrl: mascot?.url,
+              mascotAlt: mascot?.alt,
+            };
+
+            const html = await renderAsync(React.createElement(reactTemplate.component, templateData));
+            const plainText = await renderAsync(React.createElement(reactTemplate.component, templateData), { plainText: true });
+            const resolvedSubject = typeof reactTemplate.subject === 'function'
+              ? reactTemplate.subject(templateData)
+              : reactTemplate.subject;
+
+            const messageId = crypto.randomUUID();
+            const idempotencyKey = `${trigger_key}-${submission_id || 'no-sub'}-${messageId}`;
+
+            await supabase.from("email_send_log").insert({
+              message_id: messageId,
+              template_name: templateKey,
+              recipient_email: addr,
+              status: "pending",
+              submission_id: submission_id || null,
+            });
+
+            const { error: enqueueError } = await supabase.rpc("enqueue_email", {
+              queue_name: "transactional_emails",
+              payload: {
+                message_id: messageId,
+                to: addr,
+                from: `${dealerName} <noreply@${FROM_DOMAIN}>`,
+                sender_domain: SENDER_DOMAIN,
+                subject: resolvedSubject,
+                html,
+                text: plainText,
+                purpose: "transactional",
+                label: templateKey,
+                idempotency_key: idempotencyKey,
+                queued_at: new Date().toISOString(),
+                submission_id: submission_id || null,
+              },
+            });
+
+            if (enqueueError) {
+              console.error("Failed to enqueue staff appraisal email:", enqueueError);
+              results.email = `failed: ${enqueueError.message}`;
+              await logNotification("email", addr, "failed", enqueueError.message);
+            } else {
+              console.log(`Staff appraisal email enqueued: ${templateKey} → ${addr}`);
+              results.email = "queued";
+              await logNotification("email", addr, "sent");
+            }
+          } catch (e) {
+            console.error("Staff appraisal email error:", e);
+            results.email = "error";
+            await logNotification("email", addr, "error", String(e));
+          }
+        }
+      } else if (isCustomerTrigger && reactTemplate) {
         // Use branded React Email template + email queue for customer emails
         for (const addr of emailRecipients) {
           try {

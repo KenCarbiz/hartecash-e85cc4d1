@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +33,32 @@ const AdminLogin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // ?next= deep-link target. Used by transactional emails (e.g.
+  // appraiser-of-record notifications) to land the recipient on the
+  // exact submission after sign-in. Only same-origin internal paths
+  // are honored — anything starting with `//`, a protocol, or
+  // missing leading slash falls back to the default /admin home.
+  const nextRaw = searchParams.get("next");
+  const safeNext = (() => {
+    if (!nextRaw) return null;
+    if (!nextRaw.startsWith("/") || nextRaw.startsWith("//")) return null;
+    return nextRaw;
+  })();
+
+  // If the user is already signed in (e.g. they had a session in
+  // another tab) and they hit a deep-link login URL, jump straight to
+  // the target instead of making them re-enter their password.
+  useEffect(() => {
+    if (!safeNext) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!cancelled && data.session) navigate(safeNext, { replace: true });
+    })();
+    return () => { cancelled = true; };
+  }, [safeNext, navigate]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,7 +173,7 @@ const AdminLogin = () => {
 
       track('admin_login', { role: roleData.role });
       identify(data.user.id, { email, role: roleData.role });
-      navigate("/admin");
+      navigate(safeNext || "/admin");
     }
 
     setLoading(false);
