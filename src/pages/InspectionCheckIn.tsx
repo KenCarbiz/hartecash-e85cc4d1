@@ -1026,16 +1026,27 @@ const InspectionCheckIn = () => {
                         // actually pinged the rep. Now we look up the
                         // rep's phone + email from user_roles and fire
                         // a direct staff_customer_arrived notification.
-                        const { data: repRow } = await supabase
-                          .from("user_roles")
-                          .select("phone, email")
+                        // Look up rep phone via profiles -> user_roles join.
+                        // user_roles has no email column; profiles owns email.
+                        const { data: profileRow } = await supabase
+                          .from("profiles")
+                          .select("user_id, phone_number")
                           .eq("email", rep)
                           .maybeSingle();
+                        let repPhone: string | undefined = profileRow?.phone_number || undefined;
+                        if (profileRow?.user_id) {
+                          const { data: roleRow } = await supabase
+                            .from("user_roles")
+                            .select("phone")
+                            .eq("user_id", profileRow.user_id)
+                            .maybeSingle();
+                          repPhone = roleRow?.phone || repPhone;
+                        }
                         await supabase.functions.invoke("send-notification", {
                           body: {
                             trigger_key: "staff_customer_arrived",
                             submission_id: existing.id,
-                            recipient_phone: repRow?.phone || undefined,
+                            recipient_phone: repPhone,
                             recipient_email: rep,
                           },
                         }).catch(() => {});

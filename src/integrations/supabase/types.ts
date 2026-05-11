@@ -6107,7 +6107,7 @@ export type Database = {
       }
       effective_user_sections: {
         Args: { _sections: Json; _user_id: string }
-        Returns: string[]
+        Returns: Json
       }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
@@ -6199,12 +6199,9 @@ export type Database = {
           id: string
           name: string
           photos_uploaded: boolean
-          state: string
           vehicle_make: string
           vehicle_model: string
           vehicle_year: string
-          vin: string
-          zip: string
         }[]
       }
       get_submission_portal: {
@@ -6431,6 +6428,15 @@ export type Database = {
       }
       require_mfa_for_user: { Args: never; Returns: Json }
       role_requires_state_license: { Args: { _role: string }; Returns: boolean }
+      role_section_override: {
+        Args: {
+          _dealership_id: string
+          _location_id: string
+          _role: string
+          _section_key: string
+        }
+        Returns: boolean
+      }
       save_mobile_inspection:
         | {
             Args: {
