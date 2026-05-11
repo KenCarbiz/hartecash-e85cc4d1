@@ -123,8 +123,14 @@ const StaffFileUpload = ({ token, bucket, onUploadComplete }: StaffFileUploadPro
       for (const file of files) {
         const ext = file.name.split(".").pop();
         const uniqueName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        // Prefix staff-uploaded vehicle photos with "staff-" so the
+        // appraisal Photos & Evidence panel can visually distinguish
+        // them from customer-flow uploads (which use prefixes like
+        // front- / back- / extra- / etc. set by the customer upload
+        // page). Documents stay path-based (docType subfolder) and
+        // don't need the prefix.
         const path = isPhotos
-          ? `${token}/${uniqueName}`
+          ? `${token}/staff-${uniqueName}`
           : `${token}/${docType}/${uniqueName}`;
 
         const { error } = await supabase.storage
