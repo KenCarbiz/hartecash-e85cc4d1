@@ -6199,12 +6199,9 @@ export type Database = {
           id: string
           name: string
           photos_uploaded: boolean
-          state: string
           vehicle_make: string
           vehicle_model: string
           vehicle_year: string
-          vin: string
-          zip: string
         }[]
       }
       get_submission_portal: {
