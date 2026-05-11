@@ -23,10 +23,14 @@ import {
   DEFAULT_HIGH_MILEAGE_PENALTY,
   DEFAULT_COLOR_DESIRABILITY,
   DEFAULT_DEDUCTION_AMOUNTS,
+  DEFAULT_MARKET_ADJUSTMENT,
+  MARKET_ADJUSTMENT_BY_STRATEGY,
   type LowMileageBonus,
   type HighMileagePenalty,
   type ColorDesirability,
   type OfferSettings,
+  type MarketAdjustmentConfig,
+  type StrategyMode,
 } from "@/lib/offerCalculator";
 import type { BBVehicle, FormData } from "@/components/sell-form/types";
 import { initialFormData } from "@/components/sell-form/types";
@@ -305,5 +309,224 @@ describe("calculateOffer", () => {
     const result = calculateOffer(makeBBVehicle(), makeForm(), [], settings)!;
     expect(result.low).toBeGreaterThanOrEqual(settings.offer_floor);
     expect(result.high).toBeGreaterThanOrEqual(settings.offer_floor);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// Market adjustment — tested through `calculateOffer` since
+// `calcMarketAdjustment` is private. Pins the strategy×days-supply
+// bracket math that decides how much a tight or soft market moves
+// the customer's offer.
+// ─────────────────────────────────────────────────────────────
+
+function settingsWithMarket(strategy: StrategyMode, marketEnabled: boolean): OfferSettings {
+  return {
+    bb_value_basis: "tradein_avg",
+    global_adjustment_pct: 0,
+    regional_adjustment_pct: 0,
+    deductions_config: {} as OfferSettings["deductions_config"],
+    deduction_amounts: DEFAULT_DEDUCTION_AMOUNTS,
+    condition_multipliers: { excellent: 1, very_good: 1, good: 1, fair: 1 },
+    // Force basis to tradein_avg for every condition so the test isn't
+    // entangled with strategy-driven basis flips.
+    condition_basis_map: { excellent: "tradein_avg", very_good: "tradein_avg", good: "tradein_avg", fair: "tradein_avg" },
+    condition_equipment_map: { excellent: false, very_good: false, good: false, fair: false },
+    recon_cost: 0,
+    offer_floor: 0,
+    offer_ceiling: null,
+    age_tiers: [],
+    mileage_tiers: [],
+    low_mileage_bonus: { ...DEFAULT_LOW_MILEAGE_BONUS, enabled: false },
+    strategy_mode: strategy,
+    market_adjustment: { ...DEFAULT_MARKET_ADJUSTMENT, enabled: marketEnabled },
+  };
+}
+
+describe("calculateOffer — market adjustment", () => {
+  it("returns marketAdjustment=0 when market config is disabled", () => {
+    const result = calculateOffer(
+      makeBBVehicle(),
+      makeForm(),
+      [],
+      settingsWithMarket("standard", false),
+      [],
+      undefined,
+      15, // marketDaysSupply — would be in the +10% bracket if enabled
+    )!;
+    expect(result.marketAdjustment).toBe(0);
+  });
+
+  it("returns marketAdjustment=0 when marketDaysSupply is not provided", () => {
+    const result = calculateOffer(
+      makeBBVehicle(),
+      makeForm(),
+      [],
+      settingsWithMarket("standard", true),
+    )!;
+    expect(result.marketAdjustment).toBe(0);
+  });
+
+  it("applies the matching bracket's adjustment_pct under standard strategy", () => {
+    // Standard strategy at days-supply=15 → +10% bracket (max_days: 20).
+    // Exact dollar value depends on the full waterfall (recon, age tiers,
+    // ...); the invariant we pin is: positive, within ~10% ballpark of the
+    // base tradein_avg, and the metadata fields are populated.
+    const result = calculateOffer(
+      makeBBVehicle(),
+      makeForm(),
+      [],
+      settingsWithMarket("standard", true),
+      [],
+      undefined,
+      15,
+    )!;
+    expect(result.marketAdjustment).toBeGreaterThan(1000);
+    expect(result.marketAdjustment).toBeLessThan(2500);
+    expect(result.marketDaysSupply).toBe(15);
+    expect(result.strategyMode).toBe("standard");
+  });
+
+  it("conservative strategy applies smaller positive adjustments than aggressive in tight markets", () => {
+    const conservative = calculateOffer(
+      makeBBVehicle(), makeForm(), [],
+      settingsWithMarket("conservative", true), [], undefined, 15,
+    )!;
+    const aggressive = calculateOffer(
+      makeBBVehicle(), makeForm(), [],
+      settingsWithMarket("aggressive", true), [], undefined, 15,
+    )!;
+    // At days_supply=15: conservative=+5%, aggressive=+14%.
+    expect(aggressive.marketAdjustment).toBeGreaterThan(conservative.marketAdjustment);
+    // And both should be positive in a tight market.
+    expect(conservative.marketAdjustment).toBeGreaterThan(0);
+    expect(aggressive.marketAdjustment).toBeGreaterThan(0);
+  });
+
+  it("applies a negative adjustment when days_supply is very high (slow-moving inventory)", () => {
+    // Standard at days_supply=120 → -9% bracket (max_days: 9999, last
+    // bucket since 120 > 90 but ≤ 9999).
+    const result = calculateOffer(
+      makeBBVehicle(), makeForm(), [],
+      settingsWithMarket("standard", true), [], undefined, 120,
+    )!;
+    expect(result.marketAdjustment).toBeLessThan(0);
+  });
+
+  it("soft-market penalty further reduces when avg sold is well below avg asking", () => {
+    // Standard at days_supply=15 normally → +10%.
+    // Provide asking=20000, sold=15000 → spread = 25%, above the
+    // default 10% threshold → soft penalty (default -3pp) applied.
+    const tight = calculateOffer(
+      makeBBVehicle(), makeForm(), [],
+      settingsWithMarket("standard", true), [], undefined, 15,
+    )!;
+    const soft = calculateOffer(
+      makeBBVehicle(), makeForm(), [],
+      settingsWithMarket("standard", true), [], undefined, 15, 15000, 20000,
+    )!;
+    expect(soft.marketAdjustment).toBeLessThan(tight.marketAdjustment);
+  });
+
+  it("tight-market bonus adds on top when sold ≈ asking (<2% spread)", () => {
+    // sold/asking spread = 1% → triggers tight-market bonus
+    const tightBonus = calculateOffer(
+      makeBBVehicle(), makeForm(), [],
+      settingsWithMarket("standard", true), [], undefined, 15, 19800, 20000,
+    )!;
+    const tightBase = calculateOffer(
+      makeBBVehicle(), makeForm(), [],
+      settingsWithMarket("standard", true), [], undefined, 15,
+    )!;
+    expect(tightBonus.marketAdjustment).toBeGreaterThan(tightBase.marketAdjustment);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// Strategy mode — verifies the four bracket arrays in
+// MARKET_ADJUSTMENT_BY_STRATEGY are structurally well-formed
+// (sorted ascending, span the days-supply space, no orphans).
+// Catches accidental edits to the tables.
+// ─────────────────────────────────────────────────────────────
+describe("MARKET_ADJUSTMENT_BY_STRATEGY constants", () => {
+  const STRATEGIES: StrategyMode[] = ["conservative", "standard", "aggressive", "predator", "custom"];
+
+  for (const strat of STRATEGIES) {
+    it(`${strat}: brackets are sorted ascending by max_days`, () => {
+      const brackets = MARKET_ADJUSTMENT_BY_STRATEGY[strat];
+      for (let i = 1; i < brackets.length; i++) {
+        expect(brackets[i].max_days).toBeGreaterThan(brackets[i - 1].max_days);
+      }
+    });
+
+    it(`${strat}: the highest bracket caps at >= 90 days (covers the slow-inventory tail)`, () => {
+      const brackets = MARKET_ADJUSTMENT_BY_STRATEGY[strat];
+      const highest = brackets[brackets.length - 1];
+      expect(highest.max_days).toBeGreaterThanOrEqual(90);
+    });
+
+    it(`${strat}: adjustment trends downward as days_supply rises (tight → slow inventory)`, () => {
+      const brackets = MARKET_ADJUSTMENT_BY_STRATEGY[strat];
+      // Strict monotone non-increase: each next bucket ≤ prev.
+      for (let i = 1; i < brackets.length; i++) {
+        expect(brackets[i].adjustment_pct).toBeLessThanOrEqual(brackets[i - 1].adjustment_pct);
+      }
+    });
+  }
+
+  it("aggressive is more aggressive than conservative at every bracket", () => {
+    const aggr = MARKET_ADJUSTMENT_BY_STRATEGY.aggressive;
+    const cons = MARKET_ADJUSTMENT_BY_STRATEGY.conservative;
+    expect(aggr.length).toBe(cons.length);
+    for (let i = 0; i < aggr.length; i++) {
+      expect(aggr[i].adjustment_pct).toBeGreaterThanOrEqual(cons[i].adjustment_pct);
+    }
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// AI condition adjustment flowing through calculateOffer
+// ─────────────────────────────────────────────────────────────
+describe("calculateOffer — AI condition adjustment flow-through", () => {
+  it("subtracts from the offer when AI sees worse condition than reported", () => {
+    const noAi = calculateOffer(makeBBVehicle(), makeForm({ overallCondition: "excellent" }), [])!;
+    const aiSeesFair = calculateOffer(
+      makeBBVehicle(),
+      makeForm({ overallCondition: "excellent" }),
+      [],
+      undefined, undefined, undefined, undefined, undefined, undefined,
+      "fair",      // ai_condition_score: 3 ranks lower than excellent
+      "scratches",
+      90,
+    )!;
+    expect(aiSeesFair.aiConditionAdjustment).toBeGreaterThan(0); // deduction
+    expect(aiSeesFair.high).toBeLessThan(noAi.high);
+  });
+
+  it("adds to the offer when AI sees better condition than reported", () => {
+    const noAi = calculateOffer(makeBBVehicle(), makeForm({ overallCondition: "fair" }), [])!;
+    const aiSeesGood = calculateOffer(
+      makeBBVehicle(),
+      makeForm({ overallCondition: "fair" }),
+      [],
+      undefined, undefined, undefined, undefined, undefined, undefined,
+      "excellent",
+      "no visible damage",
+      90,
+    )!;
+    expect(aiSeesGood.aiConditionAdjustment).toBeLessThan(0); // reward
+    expect(aiSeesGood.high).toBeGreaterThan(noAi.high);
+  });
+
+  it("ignores AI when confidence is below 60% (matches calcAIConditionAdjustment threshold)", () => {
+    const lowConf = calculateOffer(
+      makeBBVehicle(),
+      makeForm({ overallCondition: "excellent" }),
+      [],
+      undefined, undefined, undefined, undefined, undefined, undefined,
+      "fair",
+      "scratches",
+      40, // below 60 floor
+    )!;
+    expect(lowConf.aiConditionAdjustment).toBe(0);
   });
 });
