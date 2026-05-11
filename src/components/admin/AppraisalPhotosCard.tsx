@@ -163,20 +163,22 @@ export default function AppraisalPhotosCard({
             // to be expanded" branch).
             if (!v && !photoViewLoggedRef.current && submissionId) {
               photoViewLoggedRef.current = true;
-              void supabase.rpc("log_customer_data_access", {
-                _submission_id: submissionId,
-                _voice_call_id: null,
-                _resource_kind: "photo_view",
-                _request_path: typeof window !== "undefined"
-                  ? window.location.pathname
-                  : null,
-                _metadata: {
-                  photo_count: photos.length,
-                  customer_count: photos.filter((p) => p.source === "customer").length,
-                  staff_count: photos.filter((p) => p.source === "staff").length,
-                  has_ai_flags: hasAiFlags,
-                },
-              }).catch(() => {
+              void Promise.resolve(
+                supabase.rpc("log_customer_data_access", {
+                  _submission_id: submissionId,
+                  _voice_call_id: null,
+                  _resource_kind: "photo_view",
+                  _request_path: typeof window !== "undefined"
+                    ? window.location.pathname
+                    : null,
+                  _metadata: {
+                    photo_count: photos.length,
+                    customer_count: photos.filter((p) => p.source === "customer").length,
+                    staff_count: photos.filter((p) => p.source === "staff").length,
+                    has_ai_flags: hasAiFlags,
+                  },
+                })
+              ).catch(() => {
                 /* Soft-fail. Migration 20260509070000 may not be
                  * applied yet; the access-log feature is value-
                  * additive, not blocking. */
