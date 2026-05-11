@@ -172,13 +172,13 @@ const InspectionConfiguration = () => {
         setShowBatteryHealth(data.show_battery_health);
         setRequirePhotos((data.require_photos as Record<string, boolean> | null) || {});
         setRequireNotes((data.require_notes as Record<string, boolean> | null) || {});
-        setCustomItems((data.custom_items as CustomItem[] | null) || []);
+        setCustomItems((data.custom_items as unknown as CustomItem[] | null) || []);
         setEnableTireAdjustments(data.enable_tire_adjustments ?? false);
         setTireCreditThreshold(data.tire_credit_threshold ?? 6);
         setTireDeductThreshold(data.tire_deduct_threshold ?? 3);
         setTireCreditPer32(data.tire_credit_per_32 ?? 25);
         setTireDeductPer32(data.tire_deduct_per_32 ?? 50);
-        setTireAdjustmentMode(data.tire_adjustment_mode || 'whole');
+        setTireAdjustmentMode((data.tire_adjustment_mode || 'whole') as 'per_tire' | 'whole');
         setDefaultInspectionMode(data.default_inspection_mode === 'full' ? 'full' : 'standard');
         const legacyShared = data.tire_brake_input_mode === 'pass_fail' ? 'pass_fail' : 'measurement';
         setTireBrakeInputMode(legacyShared);
@@ -220,11 +220,11 @@ const InspectionConfiguration = () => {
         .from("inspection_config_overrides")
         .select("location_id, tire_input_mode, brake_input_mode");
       if (cancelled) return;
-      const map: Record<string, { tire_input_mode: string | null; brake_input_mode: string | null }> = {};
+      const map: Record<string, { tire_input_mode: "measurement" | "pass_fail" | null; brake_input_mode: "measurement" | "pass_fail" | null }> = {};
       for (const o of overrides || []) {
         map[o.location_id] = {
-          tire_input_mode: o.tire_input_mode || null,
-          brake_input_mode: o.brake_input_mode || null,
+          tire_input_mode: (o.tire_input_mode || null) as "measurement" | "pass_fail" | null,
+          brake_input_mode: (o.brake_input_mode || null) as "measurement" | "pass_fail" | null,
         };
       }
       setLocationOverrides(map);

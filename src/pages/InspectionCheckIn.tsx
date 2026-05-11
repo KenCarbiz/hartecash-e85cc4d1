@@ -160,7 +160,7 @@ const InspectionCheckIn = () => {
     // because it fires exactly once per rotation, not on every keyboard
     // reflow. Not all browsers expose it (looking at you, older iOS), so
     // we addEventListener guardedly and silently skip if it's missing.
-    const orient = (screen.orientation as ScreenOrientation | undefined);
+    const orient = (screen.orientation as (ScreenOrientation & { lock?: (o: string) => Promise<void>; unlock?: () => void }) | undefined);
     if (orient && typeof orient.addEventListener === "function") {
       orient.addEventListener("change", checkOrientation);
     }
@@ -179,14 +179,14 @@ const InspectionCheckIn = () => {
   // it — the soft overlay handles the UX regardless.
   useEffect(() => {
     if (!scannerOpen) return;
-    const orient = (screen.orientation as ScreenOrientation | undefined);
+    const orient = (screen.orientation as (ScreenOrientation & { lock?: (o: string) => Promise<void>; unlock?: () => void }) | undefined);
     if (orient && typeof orient.lock === "function") {
       orient.lock("landscape").catch(() => {
         // Ignore — we fall back to the soft overlay prompt
       });
     }
     return () => {
-      const o = (screen.orientation as ScreenOrientation | undefined);
+      const o = (screen.orientation as (ScreenOrientation & { lock?: (o: string) => Promise<void>; unlock?: () => void }) | undefined);
       if (o && typeof o.unlock === "function") {
         try { o.unlock(); } catch { /* ignore */ }
       }
@@ -1023,19 +1023,29 @@ const InspectionCheckIn = () => {
                         }
                         // F1 fix: Reception hitting "Notify Sales Rep"
                         // used to only write activity_log — nothing
-                        // actually pinged the rep. Now we look up the
-                        // rep's phone + email from user_roles and fire
-                        // a direct staff_customer_arrived notification.
-                        // NOTE: This lookup is broken — user_roles has no `email` column.
-                        // Returns null, so repPhone falls back to undefined. Tracked for a
-                        // separate behavior-fix PR (profiles->user_roles join). Do NOT fix
-                        // here as part of the type-regen ratchet.
-                        const { data: repRow } = await (supabase
-                          .from("user_roles")
-                          .select("phone, email") as any)
+                        // actually pinged the rep. Look up the rep's
+                        // phone via profiles (which stores email and
+                        // phone_number for every staff member) and
+                        // fall back to user_roles.phone if the profile
+                        // doesn't have a phone number set. user_roles
+                        // doesn't have an `email` column — the prior
+                        // query against it silently returned null and
+                        // the notification fired without a phone
+                        // recipient (caught during the type-regen pass).
+                        const { data: profile } = await supabase
+                          .from("profiles")
+                          .select("user_id, phone_number")
                           .eq("email", rep)
                           .maybeSingle();
-                        const repPhone: string | undefined = repRow?.phone || undefined;
+                        let repPhone: string | undefined = profile?.phone_number || undefined;
+                        if (!repPhone && profile?.user_id) {
+                          const { data: roleRow } = await supabase
+                            .from("user_roles")
+                            .select("phone")
+                            .eq("user_id", profile.user_id)
+                            .maybeSingle();
+                          repPhone = roleRow?.phone || undefined;
+                        }
                         await supabase.functions.invoke("send-notification", {
                           body: {
                             trigger_key: "staff_customer_arrived",
