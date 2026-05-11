@@ -1,4 +1,6 @@
 import ghostCar from "@/assets/ghost-loader.webp";
+// Placeholder until ken-thinking.webp ships — see PR description.
+import kenThinking from "@/assets/ken-portrait.webp";
 
 interface Props {
   /** Optional size — controls the rendered width. Defaults to "lg". */
@@ -27,6 +29,12 @@ const HartecashClassicLoader = ({ size = "lg", headline, subhead }: Props) => {
 
   return (
     <div className="flex flex-col items-center justify-center text-center">
+      <img
+        src={kenThinking}
+        alt=""
+        aria-hidden="true"
+        className="w-32 md:w-40 object-contain mb-4 pointer-events-none select-none"
+      />
       {/* Headline above the car so the customer sees the action
           before noticing the animation. */}
       {headline && (

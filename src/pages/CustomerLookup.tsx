@@ -7,6 +7,8 @@ import { Search, Car, Shield, ChevronRight, Clock, Star, ArrowRight } from "luci
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+// Placeholder until ken-thinking-avatar.webp ships — see PR description.
+import kenThinking from "@/assets/ken-portrait.webp";
 
 interface FoundSubmission {
   token: string;
@@ -81,6 +83,12 @@ const CustomerLookup = () => {
           {/* Search Form */}
           <form onSubmit={handleSearch} className="bg-card rounded-xl p-6 md:p-8 shadow-sm border border-border space-y-5">
             <div className="text-center mb-2">
+              <img
+                src={kenThinking}
+                alt=""
+                aria-hidden="true"
+                className="w-16 h-16 rounded-full object-cover mx-auto mb-3"
+              />
               <h2 className="font-display text-xl font-bold text-foreground mb-1">Look Up Your Vehicle</h2>
               <p className="text-sm text-muted-foreground">
                 Enter the email and phone you used when you submitted.
