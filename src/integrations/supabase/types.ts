@@ -52,6 +52,71 @@ export type Database = {
           },
         ]
       }
+      ai_reappraisal_log: {
+        Row: {
+          ai_condition_score: string | null
+          ai_confidence: number | null
+          ai_damage_summary: string | null
+          created_at: string
+          dealership_id: string
+          decided_at: string | null
+          decided_by: string | null
+          delta: number
+          id: string
+          old_offer: number | null
+          photos_analyzed: number
+          reason: string
+          reported_condition: string | null
+          status: string
+          submission_id: string
+          suggested_offer: number
+        }
+        Insert: {
+          ai_condition_score?: string | null
+          ai_confidence?: number | null
+          ai_damage_summary?: string | null
+          created_at?: string
+          dealership_id?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          delta: number
+          id?: string
+          old_offer?: number | null
+          photos_analyzed?: number
+          reason: string
+          reported_condition?: string | null
+          status?: string
+          submission_id: string
+          suggested_offer: number
+        }
+        Update: {
+          ai_condition_score?: string | null
+          ai_confidence?: number | null
+          ai_damage_summary?: string | null
+          created_at?: string
+          dealership_id?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          delta?: number
+          id?: string
+          old_offer?: number | null
+          photos_analyzed?: number
+          reason?: string
+          reported_condition?: string | null
+          status?: string
+          submission_id?: string
+          suggested_offer?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_reappraisal_log_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointments: {
         Row: {
           created_at: string
@@ -3758,6 +3823,7 @@ export type Database = {
           assign_buying_center: boolean
           assign_customer_picks: boolean
           assign_oem_brand_match: boolean
+          auto_route_appraiser_queue: boolean
           business_hours: Json | null
           buying_center_location_id: string | null
           comparison_features: Json
@@ -3870,6 +3936,7 @@ export type Database = {
           assign_buying_center?: boolean
           assign_customer_picks?: boolean
           assign_oem_brand_match?: boolean
+          auto_route_appraiser_queue?: boolean
           business_hours?: Json | null
           buying_center_location_id?: string | null
           comparison_features?: Json
@@ -3982,6 +4049,7 @@ export type Database = {
           assign_buying_center?: boolean
           assign_customer_picks?: boolean
           assign_oem_brand_match?: boolean
+          auto_route_appraiser_queue?: boolean
           business_hours?: Json | null
           buying_center_location_id?: string | null
           comparison_features?: Json
@@ -4240,9 +4308,11 @@ export type Database = {
           modifications: string | null
           moonroof: string | null
           name: string | null
+          needs_appraisal: boolean
           next_step: string | null
           num_keys: string | null
           offer_made_at: string | null
+          offer_subject_to_inspection: boolean
           offered_price: number | null
           on_the_way_at: string | null
           outcome_accepted: boolean | null
@@ -4384,9 +4454,11 @@ export type Database = {
           modifications?: string | null
           moonroof?: string | null
           name?: string | null
+          needs_appraisal?: boolean
           next_step?: string | null
           num_keys?: string | null
           offer_made_at?: string | null
+          offer_subject_to_inspection?: boolean
           offered_price?: number | null
           on_the_way_at?: string | null
           outcome_accepted?: boolean | null
@@ -4528,9 +4600,11 @@ export type Database = {
           modifications?: string | null
           moonroof?: string | null
           name?: string | null
+          needs_appraisal?: boolean
           next_step?: string | null
           num_keys?: string | null
           offer_made_at?: string | null
+          offer_subject_to_inspection?: boolean
           offered_price?: number | null
           on_the_way_at?: string | null
           outcome_accepted?: boolean | null
@@ -4875,6 +4949,7 @@ export type Database = {
           dealer_group_id: string | null
           dealership_id: string
           id: string
+          is_appraiser: boolean
           is_platform_admin: boolean
           licensed_states: string[] | null
           location_id: string | null
@@ -4890,6 +4965,7 @@ export type Database = {
           dealer_group_id?: string | null
           dealership_id?: string
           id?: string
+          is_appraiser?: boolean
           is_platform_admin?: boolean
           licensed_states?: string[] | null
           location_id?: string | null
@@ -4905,6 +4981,7 @@ export type Database = {
           dealer_group_id?: string | null
           dealership_id?: string
           id?: string
+          is_appraiser?: boolean
           is_platform_admin?: boolean
           licensed_states?: string[] | null
           location_id?: string | null
@@ -5894,6 +5971,7 @@ export type Database = {
         Args: { _role: string; _submission_id: string; _user_id: string }
         Returns: undefined
       }
+      auto_queue_stale_offers: { Args: never; Returns: number }
       can_act_in_state: {
         Args: { _state: string; _user_id: string }
         Returns: boolean
