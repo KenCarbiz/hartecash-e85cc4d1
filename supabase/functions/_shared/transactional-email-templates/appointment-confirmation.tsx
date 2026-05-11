@@ -1,7 +1,7 @@
 /// <reference types="npm:@types/react@18.3.1" />
 import * as React from 'npm:react@18.3.1'
 import {
-  Body, Container, Head, Heading, Hr, Html, Preview, Section, Text,
+  Body, Button as EmailButton, Container, Head, Heading, Hr, Html, Preview, Section, Text,
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 
@@ -14,9 +14,10 @@ interface Props {
   appointmentTime?: string
   location?: string
   dealershipName?: string
+  arriveLink?: string
 }
 
-const AppointmentConfirmationEmail = ({ customerName, vehicle, appointmentDate, appointmentTime, location, dealershipName }: Props) => (
+const AppointmentConfirmationEmail = ({ customerName, vehicle, appointmentDate, appointmentTime, location, dealershipName, arriveLink }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Your appointment on {appointmentDate || 'upcoming date'} is confirmed</Preview>
@@ -42,6 +43,11 @@ const AppointmentConfirmationEmail = ({ customerName, vehicle, appointmentDate, 
             • Registration{'\n'}
             • All keys & remotes
           </Text>
+          {arriveLink && (
+            <EmailButton href={arriveLink} style={cta}>
+              View My Visit Details →
+            </EmailButton>
+          )}
           <Hr style={hr} />
           <Text style={footer}>See you soon!{'\n'}{dealershipName || SITE_NAME}</Text>
         </Section>
@@ -61,6 +67,7 @@ export const template = {
     appointmentTime: '10:00 AM',
     location: 'Example Motors — Main St',
     dealershipName: 'Example Motors',
+    arriveLink: 'https://example.com/arrive/abc123',
   },
 } satisfies TemplateEntry
 
@@ -73,5 +80,6 @@ const h1 = { fontSize: '22px', fontWeight: 'bold' as const, color: 'hsl(210, 29%
 const text = { fontSize: '14px', color: 'hsl(220, 9%, 46%)', lineHeight: '1.6', margin: '0 0 20px', whiteSpace: 'pre-line' as const }
 const detailsBox = { backgroundColor: 'hsl(210, 33%, 96%)', borderRadius: '12px', padding: '16px 20px', margin: '0 0 20px' }
 const detailRow = { fontSize: '14px', color: 'hsl(210, 29%, 24%)', margin: '0 0 8px', lineHeight: '1.5' }
+const cta = { backgroundColor: 'hsl(210, 100%, 25%)', color: '#ffffff', fontSize: '14px', fontWeight: 'bold' as const, padding: '12px 22px', borderRadius: '10px', textDecoration: 'none', display: 'inline-block' as const, margin: '0 0 4px' }
 const hr = { borderColor: 'hsl(220, 13%, 91%)', margin: '24px 0' }
 const footer = { fontSize: '12px', color: '#999999', margin: '0', whiteSpace: 'pre-line' as const }

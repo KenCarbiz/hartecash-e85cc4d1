@@ -502,6 +502,8 @@ Deno.serve(async (req) => {
       // append the query param themselves so we keep one variable
       // and let the message pick the action it wants to surface.
       arrive_url: sub ? `${siteUrl}/arrive/${sub.token}` : siteUrl,
+      // Doc-upload URL for appointment templates that link to /docs/:token.
+      docs_url: sub ? `${siteUrl}/docs/${sub.token}` : siteUrl,
       decline_link_price: declineLink("price_too_low"),
       decline_link_shopping: declineLink("shopping_around"),
       decline_link_notready: declineLink("not_ready"),
@@ -765,6 +767,8 @@ Deno.serve(async (req) => {
               vehicle: templateVars.vehicle,
               offerAmount: templateVars.offer_amount,
               portalLink: templateVars.portal_link,
+              arriveLink: templateVars.arrive_url,
+              docsLink: templateVars.docs_url,
               guaranteeDays: templateVars.guarantee_days,
               dealershipName: templateVars.dealership_name,
               appointmentDate: templateVars.appointment_date,
