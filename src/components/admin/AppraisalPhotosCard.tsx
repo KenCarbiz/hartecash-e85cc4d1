@@ -31,7 +31,7 @@
  *     line_items[].label / amount / source.
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Images, ChevronDown, ChevronUp, AlertTriangle, X,
 } from "lucide-react";
@@ -73,6 +73,14 @@ export default function AppraisalPhotosCard({
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [sourceFilter, setSourceFilter] = useState<"all" | "customer" | "staff">("all");
+
+  // Audit-log every time staff opens the photos for a submission.
+  // Fired ONCE per (submission, mount) on the first expand so a
+  // manager toggling open/closed doesn't flood the access log.
+  // Resource kind 'photo_view' was added to the enum in migration
+  // 20260509070000_audit_photo_view.sql; the call soft-fails when
+  // that migration hasn't been applied yet.
+  const photoViewLoggedRef = useRef(false);
 
   const { bump } = useLatestOfferBump(submissionId);
 
@@ -147,7 +155,36 @@ export default function AppraisalPhotosCard({
       {/* ── COLLAPSED HEADER ── */}
       <button
         type="button"
-        onClick={() => setExpanded((v) => !v)}
+        onClick={() => {
+          setExpanded((v) => {
+            // First open per mount → write audit row. We can't infer
+            // expansion from state inside the setter (we're about to
+            // flip it), so log on the !v branch (which is the "about
+            // to be expanded" branch).
+            if (!v && !photoViewLoggedRef.current && submissionId) {
+              photoViewLoggedRef.current = true;
+              void supabase.rpc("log_customer_data_access", {
+                _submission_id: submissionId,
+                _voice_call_id: null,
+                _resource_kind: "photo_view",
+                _request_path: typeof window !== "undefined"
+                  ? window.location.pathname
+                  : null,
+                _metadata: {
+                  photo_count: photos.length,
+                  customer_count: photos.filter((p) => p.source === "customer").length,
+                  staff_count: photos.filter((p) => p.source === "staff").length,
+                  has_ai_flags: hasAiFlags,
+                },
+              }).catch(() => {
+                /* Soft-fail. Migration 20260509070000 may not be
+                 * applied yet; the access-log feature is value-
+                 * additive, not blocking. */
+              });
+            }
+            return !v;
+          });
+        }}
         className="w-full text-left p-4 hover:bg-muted/40 transition-colors"
         aria-expanded={expanded}
       >
