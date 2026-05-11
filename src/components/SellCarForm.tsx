@@ -9,6 +9,7 @@ import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { track } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { logConsent } from "@/lib/consent";
@@ -640,6 +641,7 @@ const SellCarForm = ({ leadSource = "inventory", variant = "default", initial }:
           lead_source: isDemoMode ? `${leadSource}-demo` : leadSource,
           dealership_id: tenant.dealership_id,
           ...bbPayload,
+          bb_add_deducts: bbPayload.bb_add_deducts as unknown as Json | null,
           estimated_offer_low: demoEstimateLow,
           estimated_offer_high: demoEstimateHigh,
           // In demo_mode, force a firm offered_price so the cadence

@@ -92,7 +92,7 @@ const ConversationThread = ({
       .eq("submission_id", submissionId)
       .order("occurred_at", { ascending: false })
       .limit(200);
-    setEvents((data ?? []) || []);
+    setEvents(((data ?? []) || []) as unknown as ConvEvent[]);
     setLoading(false);
   }, [submissionId]);
 

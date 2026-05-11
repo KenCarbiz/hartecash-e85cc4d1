@@ -361,7 +361,7 @@ const LocationManagement = () => {
     const newBrands = raw.split(",").map(b => b.trim()).filter(Boolean);
     if (newBrands.length > 0) {
       setLocations(prev => prev.map(l => l.id === locId
-        ? { ...l, [field]: [...new Set([...((l as unknown as Record<string, string | string[] | boolean | null>)[field] || []), ...newBrands])] }
+        ? { ...l, [field]: [...new Set([...((((l as unknown as Record<string, string | string[] | boolean | null>)[field] as string[]) || []) as string[]), ...newBrands])] }
         : l
       ));
       setInputs(prev => ({ ...prev, [locId]: "" }));
@@ -707,7 +707,7 @@ const LocationManagement = () => {
                       <LocationLogoSection
                         location={loc}
                         dealershipId={dealershipId}
-                        onUpdate={(field, value) => updateLocation(loc.id, field, value)}
+                        onUpdate={(field, value) => updateLocation(loc.id, field as keyof typeof loc, value)}
                       />
                     </TabsContent>
 
@@ -887,7 +887,7 @@ const LocationManagement = () => {
                           {(["facebook_url", "instagram_url", "google_review_url", "tiktok_url", "youtube_url"] as const).map(field => (
                             <div key={field}>
                               <Label className="text-micro text-muted-foreground mb-1 block capitalize">{field.replace(/_url$/, "").replace(/_/g, " ")}</Label>
-                              <Input value={(loc as unknown as Record<string, string | string[] | boolean | null>)[field] || ""} onChange={e => updateLocation(loc.id, field, e.target.value || null)} placeholder="Inherit" className="text-xs" />
+                              <Input value={String((loc as unknown as Record<string, string | string[] | boolean | null>)[field] || "")} onChange={e => updateLocation(loc.id, field, e.target.value || null)} placeholder="Inherit" className="text-xs" />
                             </div>
                           ))}
                         </div>
