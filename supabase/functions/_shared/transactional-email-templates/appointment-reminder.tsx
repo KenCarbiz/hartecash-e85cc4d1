@@ -15,9 +15,10 @@ interface Props {
   location?: string
   dealershipName?: string
   docsLink?: string
+  arriveLink?: string
 }
 
-const AppointmentReminderEmail = ({ customerName, vehicle, appointmentDate, appointmentTime, location, dealershipName, docsLink }: Props) => (
+const AppointmentReminderEmail = ({ customerName, vehicle, appointmentDate, appointmentTime, location, dealershipName, docsLink, arriveLink }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Reminder: your appointment is tomorrow — here's what to bring!</Preview>
@@ -68,6 +69,17 @@ const AppointmentReminderEmail = ({ customerName, vehicle, appointmentDate, appo
             </Text>
           </Section>
 
+          {arriveLink && (
+            <Section style={{ textAlign: 'center' as const, margin: '0 0 20px' }}>
+              <Text style={{ ...text, marginBottom: '10px' }}>
+                On the way? Tap below so we have your spot ready:
+              </Text>
+              <EmailButton href={arriveLink} style={arriveBtn}>
+                I'm Heading In →
+              </EmailButton>
+            </Section>
+          )}
+
           <Hr style={hr} />
           <Text style={footer}>See you tomorrow!{'\n'}{dealershipName || SITE_NAME}</Text>
         </Section>
@@ -88,6 +100,7 @@ export const template = {
     location: 'Example Motors — Main St',
     dealershipName: 'Example Motors',
     docsLink: 'https://example.com/upload-docs/abc123',
+    arriveLink: 'https://example.com/arrive/abc123',
   },
 } satisfies TemplateEntry
 
@@ -108,6 +121,7 @@ const checklistItems = { margin: '0' }
 const checklistItem = { fontSize: '14px', color: 'hsl(210, 29%, 24%)', margin: '0 0 10px', lineHeight: '1.4', paddingLeft: '4px' }
 
 const uploadBtn = { backgroundColor: 'hsl(210, 100%, 25%)', color: '#ffffff', fontSize: '14px', fontWeight: 'bold' as const, padding: '10px 20px', borderRadius: '8px', textDecoration: 'none', display: 'inline-block' as const, marginTop: '10px' }
+const arriveBtn = { backgroundColor: 'hsl(210, 100%, 25%)', color: '#ffffff', fontSize: '14px', fontWeight: 'bold' as const, padding: '12px 22px', borderRadius: '10px', textDecoration: 'none', display: 'inline-block' as const }
 const tipBox = { backgroundColor: '#fffbeb', borderRadius: '8px', padding: '14px 16px', margin: '0 0 20px', border: '1px solid #fde68a' }
 const tipText = { fontSize: '13px', color: 'hsl(210, 29%, 24%)', margin: '0', lineHeight: '1.5' }
 
