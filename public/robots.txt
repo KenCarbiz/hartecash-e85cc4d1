@@ -222,4 +222,4 @@ Disallow: /inspection-checkin
 Disallow: /checkin
 Disallow: /servicelinkgen
 
-Sitemap: https://hartecash.lovable.app/sitemap.xml
+Sitemap: https://hartecash.com/sitemap.xml
