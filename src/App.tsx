@@ -204,7 +204,7 @@ const AnimatedRoutes = () => {
       </a>
       <main id="main-content" tabIndex={-1}>
       <Routes>
-        <Route path="/" element={<Index />} />
+        <Route path="/" element={<RootLanding />} />
         {/* Subdirectory rooftop URL — preferred for SEO, pools authority to
             the main domain. Renders the same Index; TenantContext resolves
             the rooftop from the slug path segment. */}
