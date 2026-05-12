@@ -22,6 +22,7 @@ import { classToArchetype, type VehicleArchetype } from "@/lib/vehicleArchetypes
 import logoFallback from "@/assets/logo-placeholder-white.png";
 import TokenErrorScreen from "@/components/TokenErrorScreen";
 import { checkTokenStatus, isExpiredTokenError, type TokenStatus } from "@/lib/tokenStatus";
+import SEO from "@/components/SEO";
 
 interface SubmissionInfo {
   id: string;
