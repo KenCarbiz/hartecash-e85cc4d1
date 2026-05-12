@@ -12,7 +12,7 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-import { Trash2, Shield, Info, Phone, Save, UserPlus, UserCog, Gauge, Moon } from "lucide-react";
+import { Trash2, Shield, Info, Phone, Save, UserPlus, UserCog, Gauge, Moon, Mail } from "lucide-react";
 import CallAvailabilityDialog from "./CallAvailabilityDialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
