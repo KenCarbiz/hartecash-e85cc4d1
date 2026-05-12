@@ -100,6 +100,12 @@ const StaffManagement = () => {
   const [addDisplayName, setAddDisplayName] = useState("");
   const [addLocationId, setAddLocationId] = useState<string>("all");
   const [adding, setAdding] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState("sales_bdc");
+  const [inviteName, setInviteName] = useState("");
+  const [inviteLocationId, setInviteLocationId] = useState<string>("all");
+  const [inviting, setInviting] = useState(false);
   const [permGroups, setPermGroups] = useState<{ id: string; name: string; allowed_sections: string[] }[]>([]);
   const [editingSections, setEditingSections] = useState<StaffMember | null>(null);
   const [locations, setLocations] = useState<DealerLocation[]>([]);
