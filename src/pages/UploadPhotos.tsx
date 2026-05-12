@@ -44,10 +44,17 @@ const UploadPhotos = () => {
   // Template-aware dispatch — Clarity dealers see the Apple-minimal
   // photo upload page; everyone else falls through to the legacy
   // (camera + GhostScreen + tips) renderer.
-  if (rootConfig.landing_template === "clarity") {
-    return <UploadPhotosClarity />;
-  }
-  return <UploadPhotosLegacy />;
+  return (
+    <>
+      <SEO
+        title={`Upload Vehicle Photos | ${rootConfig.dealership_name}`}
+        description="Add photos of your vehicle so we can confirm condition and finalize your offer."
+        path="/upload"
+        noindex
+      />
+      {rootConfig.landing_template === "clarity" ? <UploadPhotosClarity /> : <UploadPhotosLegacy />}
+    </>
+  );
 };
 
 const UploadPhotosLegacy = () => {
