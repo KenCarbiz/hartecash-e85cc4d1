@@ -120,10 +120,17 @@ const CustomerPortal = () => {
   // Template-aware dispatch — Clarity dealers get the Apple-minimal
   // portal scaffold; everyone else falls through to the maximalist
   // legacy portal below.
-  if (rootConfig.landing_template === "clarity") {
-    return <CustomerPortalClarity />;
-  }
-  return <CustomerPortalLegacy />;
+  return (
+    <>
+      <SEO
+        title={`Your Offer & Next Steps | ${rootConfig.dealership_name}`}
+        description="Track your cash offer, schedule pickup, and complete your sale."
+        path="/my-submission"
+        noindex
+      />
+      {rootConfig.landing_template === "clarity" ? <CustomerPortalClarity /> : <CustomerPortalLegacy />}
+    </>
+  );
 };
 
 const CustomerPortalLegacy = () => {
