@@ -2,84 +2,90 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
-    <loc>https://hartecash.lovable.app/</loc>
-    <lastmod>2026-05-01</lastmod>
+    <loc>https://hartecash.com/</loc>
+    <lastmod>2026-05-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <image:image>
-      <image:loc>https://hartecash.lovable.app/og-service.jpg</image:loc>
+      <image:loc>https://hartecash.com/og-service.jpg</image:loc>
       <image:title>Sell Your Car for Cash | Harte Auto Group</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://hartecash.lovable.app/about</loc>
-    <lastmod>2026-05-01</lastmod>
+    <loc>https://hartecash.com/about</loc>
+    <lastmod>2026-05-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://hartecash.lovable.app/service</loc>
-    <lastmod>2026-05-01</lastmod>
+    <loc>https://hartecash.com/service</loc>
+    <lastmod>2026-05-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://hartecash.lovable.app/trade</loc>
-    <lastmod>2026-05-01</lastmod>
+    <loc>https://hartecash.com/trade</loc>
+    <lastmod>2026-05-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://hartecash.lovable.app/quick-offer</loc>
-    <lastmod>2026-05-01</lastmod>
+    <loc>https://hartecash.com/quick-offer</loc>
+    <lastmod>2026-05-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://hartecash.lovable.app/push-pull-tow</loc>
-    <lastmod>2026-05-01</lastmod>
+    <loc>https://hartecash.com/push-pull-tow</loc>
+    <lastmod>2026-05-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://hartecash.lovable.app/schedule</loc>
-    <lastmod>2026-05-01</lastmod>
+    <loc>https://hartecash.com/schedule</loc>
+    <lastmod>2026-05-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://hartecash.lovable.app/referral</loc>
-    <lastmod>2026-05-01</lastmod>
+    <loc>https://hartecash.com/my-submission</loc>
+    <lastmod>2026-05-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://hartecash.com/referral</loc>
+    <lastmod>2026-05-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://hartecash.lovable.app/updates</loc>
-    <lastmod>2026-05-01</lastmod>
+    <loc>https://hartecash.com/updates</loc>
+    <lastmod>2026-05-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://hartecash.lovable.app/disclosure</loc>
-    <lastmod>2026-05-01</lastmod>
+    <loc>https://hartecash.com/disclosure</loc>
+    <lastmod>2026-05-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://hartecash.lovable.app/privacy</loc>
-    <lastmod>2026-05-01</lastmod>
+    <loc>https://hartecash.com/privacy</loc>
+    <lastmod>2026-05-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://hartecash.lovable.app/terms</loc>
-    <lastmod>2026-05-01</lastmod>
+    <loc>https://hartecash.com/terms</loc>
+    <lastmod>2026-05-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://hartecash.lovable.app/sitemap</loc>
-    <lastmod>2026-05-01</lastmod>
+    <loc>https://hartecash.com/sitemap</loc>
+    <lastmod>2026-05-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.2</priority>
   </url>
