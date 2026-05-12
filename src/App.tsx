@@ -12,6 +12,17 @@ import { pageView } from "@/lib/analytics";
 import AppErrorBoundary from "@/components/AppErrorBoundary";
 import PageErrorBoundary from "@/components/PageErrorBoundary";
 const Index = lazy(() => import("./pages/Index"));
+const AutocurbLanding = lazy(() => import("./pages/AutocurbLanding"));
+
+// Hostname check for the AutoCurb SaaS marketing landing. All other
+// hosts (hartecash.com, sell2harte.com, *.lovable.app previews, and
+// every tenant custom domain) keep falling through to <Index />.
+const isAutocurbHost = () => {
+  if (typeof window === "undefined") return false;
+  const h = window.location.hostname.toLowerCase();
+  return h === "autocurb.io" || h === "www.autocurb.io";
+};
+const RootLanding = () => (isAutocurbHost() ? <AutocurbLanding /> : <Index />);
 
 const UploadPhotos = lazy(() => import("./pages/UploadPhotos"));
 const UploadDocs = lazy(() => import("./pages/UploadDocs"));
