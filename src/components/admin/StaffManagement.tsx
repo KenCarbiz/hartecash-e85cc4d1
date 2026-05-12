@@ -333,7 +333,39 @@ const StaffManagement = () => {
     fetchStaff();
   };
 
-  if (loading) {
+  const handleSendInvite = async () => {
+    const email = inviteEmail.trim().toLowerCase();
+    if (!email || !email.includes("@")) {
+      toast({ title: "Email required", description: "Enter a valid email address.", variant: "destructive" });
+      return;
+    }
+    setInviting(true);
+    const { data, error } = await supabase.functions.invoke("invite-staff", {
+      body: {
+        email,
+        role: inviteRole,
+        location_id: inviteLocationId,
+        display_name: inviteName.trim() || null,
+        redirect_origin: window.location.origin,
+      },
+    });
+    setInviting(false);
+    if (error || (data as any)?.error) {
+      toast({
+        title: "Invite failed",
+        description: (data as any)?.error || error?.message || "Could not send invite.",
+        variant: "destructive",
+      });
+      return;
+    }
+    toast({ title: "Invite sent", description: (data as any)?.message || `Invite emailed to ${email}.` });
+    setInviteOpen(false);
+    setInviteEmail("");
+    setInviteName("");
+    setInviteRole("sales_bdc");
+    setInviteLocationId("all");
+    fetchStaff();
+  };
     return <div className="text-center py-12 text-muted-foreground">Loading staff...</div>;
   }
 
