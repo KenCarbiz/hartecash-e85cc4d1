@@ -6,6 +6,7 @@ import logoFallback from "@/assets/logo-placeholder.png";
 import logoWhiteFallback from "@/assets/logo-placeholder-white.png";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import PortalSkeleton from "@/components/PortalSkeleton";
+import SEO from "@/components/SEO";
 import WhatsNextCard from "@/components/portal/WhatsNextCard";
 import VehiclePhotos from "@/components/portal/VehiclePhotos";
 import AppointmentCalendarCard from "@/components/portal/AppointmentCalendarCard";
@@ -120,10 +121,17 @@ const CustomerPortal = () => {
   // Template-aware dispatch — Clarity dealers get the Apple-minimal
   // portal scaffold; everyone else falls through to the maximalist
   // legacy portal below.
-  if (rootConfig.landing_template === "clarity") {
-    return <CustomerPortalClarity />;
-  }
-  return <CustomerPortalLegacy />;
+  return (
+    <>
+      <SEO
+        title={`Your Offer & Next Steps | ${rootConfig.dealership_name}`}
+        description="Track your cash offer, schedule pickup, and complete your sale."
+        path="/my-submission"
+        noindex
+      />
+      {rootConfig.landing_template === "clarity" ? <CustomerPortalClarity /> : <CustomerPortalLegacy />}
+    </>
+  );
 };
 
 const CustomerPortalLegacy = () => {

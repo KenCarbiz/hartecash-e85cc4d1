@@ -13,6 +13,7 @@ import { getDocDimensions } from "@/lib/documentDimensions";
 import logoFallback from "@/assets/logo-placeholder-white.png";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import TokenErrorScreen from "@/components/TokenErrorScreen";
+import SEO from "@/components/SEO";
 import { checkTokenStatus, isExpiredTokenError, type TokenStatus } from "@/lib/tokenStatus";
 
 const DOC_TYPES = [
@@ -42,10 +43,17 @@ const UploadDocs = () => {
   // Template-aware dispatch — Clarity dealers see the Apple-minimal
   // doc-upload page; everyone else falls through to the legacy
   // renderer below.
-  if (rootConfig.landing_template === "clarity") {
-    return <UploadDocsClarity />;
-  }
-  return <UploadDocsLegacy />;
+  return (
+    <>
+      <SEO
+        title={`Upload Your Documents | ${rootConfig.dealership_name}`}
+        description="Securely upload your driver's license, registration, and title to finalize your offer."
+        path="/upload"
+        noindex
+      />
+      {rootConfig.landing_template === "clarity" ? <UploadDocsClarity /> : <UploadDocsLegacy />}
+    </>
+  );
 };
 
 const UploadDocsLegacy = () => {
