@@ -13,6 +13,7 @@ import { getDocDimensions } from "@/lib/documentDimensions";
 import logoFallback from "@/assets/logo-placeholder-white.png";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import TokenErrorScreen from "@/components/TokenErrorScreen";
+import SEO from "@/components/SEO";
 import { checkTokenStatus, isExpiredTokenError, type TokenStatus } from "@/lib/tokenStatus";
 
 const DOC_TYPES = [
