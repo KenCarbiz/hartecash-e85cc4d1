@@ -41,6 +41,7 @@ import ClassicCommsFullView from "./ClassicCommsFullView";
 import ClickToDialButton from "./ClickToDialButton";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { printCheckRequest } from "@/lib/printUtils";
+import { InvestmentTierBadge } from "@/components/admin/InvestmentTierBadge";
 import logoFallback from "@/assets/logo-placeholder.png";
 
 // ── Props ────────────────────────────────────────────────────────────
@@ -1125,6 +1126,25 @@ export default function SubmissionDetailSheetClassic({
                     <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path d="M6.3 4.9a1 1 0 011.4 0L10 7.2l2.3-2.3a1 1 0 011.4 1.4L11.4 8.6l2.3 2.3a1 1 0 01-1.4 1.4L10 10l-2.3 2.3a1 1 0 01-1.4-1.4L8.6 8.6 6.3 6.3a1 1 0 010-1.4z"/></svg>
                   </button>
                   <span className="text-white/70 text-xs">Customer File</span>
+                  {/* Internal investment intel — glanceable Bronze/Silver/Gold/Platinum
+                      pill so the GSM knows whether to chase this deal. MDS isn't
+                      cached on the submission row yet; the appraisal tool computes
+                      it live, so the slide-out shows the score with a neutral MDS
+                      contribution until that data is persisted. */}
+                  {sub.bb_retail_avg != null && (
+                    <InvestmentTierBadge
+                      size="sm"
+                      showBreakdown
+                      inputs={{
+                        marketDaysSupply: null,
+                        offeredPrice: sub.offered_price ?? sub.estimated_offer_high ?? null,
+                        retailClean: sub.bb_retail_avg ?? null,
+                        conditionGrade: sub.inspector_grade || sub.overall_condition || null,
+                        aiConditionScore: (sub as { ai_condition_score?: string | null }).ai_condition_score ?? null,
+                        lotCostPerDay: (config as { lot_cost_per_day?: number } | null)?.lot_cost_per_day ?? 8,
+                      }}
+                    />
+                  )}
                 </div>
                 <div className="flex items-center gap-1.5">
                   <button

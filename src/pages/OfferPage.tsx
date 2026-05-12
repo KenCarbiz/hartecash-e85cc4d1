@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { safeInvoke } from "@/lib/safeInvoke";
 import { ArrowLeft, DollarSign, ArrowDown, TrendingUp, ShieldCheck, Info, Printer, CheckCircle, ArrowRight, Car, Gauge, Palette, Settings2, Pencil, User, Clock, Star, Zap, Shield, BadgeCheck, Handshake, Camera, Sparkles } from "lucide-react";
 import InspectionConfidence from "@/components/InspectionConfidence";
+import { AiVerifiedBadge } from "@/components/offer/AiVerifiedBadge";
 import TalkToAppraiserButton from "@/components/TalkToAppraiserButton";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -807,6 +808,10 @@ const OfferPageLegacy = () => {
               we are that the in-person number will match. Self-hides when
               there's no AI photo data on the submission. */}
           <div className="mt-3 flex flex-wrap justify-center items-center gap-3">
+            <AiVerifiedBadge
+              customerCondition={s.overall_condition || null}
+              aiCondition={condition?.ai_condition_score || null}
+            />
             <InspectionConfidence
               submissionId={s.id}
               customerCondition={s.overall_condition || null}
