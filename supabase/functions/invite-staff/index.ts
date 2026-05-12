@@ -27,6 +27,9 @@ Deno.serve(async (req) => {
     }
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+    const authClient = createClient(SUPABASE_URL, ANON_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
 
     // Verify caller has admin role (not just any staff)
     const { data: callerRoles } = await admin
@@ -62,7 +65,7 @@ Deno.serve(async (req) => {
     let invitedNew = false;
 
     if (!userId) {
-      const redirectTo = redirectOrigin ? `${redirectOrigin}/admin` : undefined;
+      const redirectTo = redirectOrigin ? `${redirectOrigin}/reset-password` : undefined;
       const { data: invited, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
         redirectTo,
         data: {
@@ -78,12 +81,12 @@ Deno.serve(async (req) => {
       userId = invited.user.id;
       invitedNew = true;
     } else {
-      // Existing user — re-send a magic link so they can sign in
-      const redirectTo = redirectOrigin ? `${redirectOrigin}/admin` : undefined;
-      const { error: linkErr } = await admin.auth.admin.generateLink({
-        type: "magiclink",
+      // Existing user — send a real magic link. admin.generateLink only
+      // returns a URL; it does not deliver an email.
+      const redirectTo = redirectOrigin ? `${redirectOrigin}/reset-password` : undefined;
+      const { error: linkErr } = await authClient.auth.signInWithOtp({
         email,
-        options: { redirectTo },
+        options: { emailRedirectTo: redirectTo, shouldCreateUser: false },
       });
       if (linkErr) return json({ error: linkErr.message }, 400);
     }
