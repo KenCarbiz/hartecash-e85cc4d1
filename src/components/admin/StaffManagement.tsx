@@ -366,6 +366,8 @@ const StaffManagement = () => {
     setInviteLocationId("all");
     fetchStaff();
   };
+
+  if (loading) {
     return <div className="text-center py-12 text-muted-foreground">Loading staff...</div>;
   }
 
