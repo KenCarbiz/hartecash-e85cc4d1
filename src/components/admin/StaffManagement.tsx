@@ -460,12 +460,18 @@ const StaffManagement = () => {
       {/* Add Employee button + Permissions legend */}
       <div className="flex items-center justify-between mb-2">
         <div />
-        <Button onClick={() => setAddOpen(true)} size="sm">
-          <UserPlus className="w-4 h-4 mr-1" /> Add Employee
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => setInviteOpen(true)} size="sm" variant="outline">
+            <Mail className="w-4 h-4 mr-1" /> Invite by Email
+          </Button>
+          <Button onClick={() => setAddOpen(true)} size="sm">
+            <UserPlus className="w-4 h-4 mr-1" /> Add Employee
+          </Button>
+        </div>
       </div>
 
       {renderAddDialog()}
+      {renderInviteDialog()}
 
       <div className="bg-muted/40 rounded-xl p-4 border border-border">
         <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Role Permissions</h4>
