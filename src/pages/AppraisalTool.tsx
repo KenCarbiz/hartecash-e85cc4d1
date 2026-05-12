@@ -291,6 +291,22 @@ export default function AppraisalTool() {
   const [closestCompPrice, setClosestCompPrice] = useState<number | null>(null);
   const acvSheetRef = useRef<HTMLDivElement>(null);
 
+  // Cache MDS to the submission row so the customer-file slide-out and
+  // pipeline table can render velocity badges without a live retail-listings
+  // fetch on every open. Fire-and-forget; failures are swallowed because
+  // the appraisal experience does not depend on this write succeeding.
+  useEffect(() => {
+    const mds = retailMarketStats?.market_days_supply;
+    if (!sub?.id || mds == null) return;
+    const cached = (sub as { bb_market_days_supply?: number | null }).bb_market_days_supply;
+    if (cached != null && Math.abs(cached - mds) < 0.5) return;
+    supabase
+      .from("submissions")
+      .update({ bb_market_days_supply: Math.round(mds) } as never)
+      .eq("id", sub.id)
+      .then(() => {}, () => {});
+  }, [retailMarketStats?.market_days_supply, sub?.id]);
+
   // Editable overrides
   const [localSettings, setLocalSettings] = useState<OfferSettingsExt | null>(null);
   const [acvOverride, setAcvOverride] = useState<number | null>(null);

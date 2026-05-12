@@ -42,6 +42,7 @@ import ClickToDialButton from "./ClickToDialButton";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { printCheckRequest } from "@/lib/printUtils";
 import { InvestmentTierBadge } from "@/components/admin/InvestmentTierBadge";
+import { MdsPill } from "@/components/admin/MdsPill";
 import logoFallback from "@/assets/logo-placeholder.png";
 
 // ── Props ────────────────────────────────────────────────────────────
@@ -1127,23 +1128,30 @@ export default function SubmissionDetailSheetClassic({
                   </button>
                   <span className="text-white/70 text-xs">Customer File</span>
                   {/* Internal investment intel — glanceable Bronze/Silver/Gold/Platinum
-                      pill so the GSM knows whether to chase this deal. MDS isn't
-                      cached on the submission row yet; the appraisal tool computes
-                      it live, so the slide-out shows the score with a neutral MDS
-                      contribution until that data is persisted. */}
+                      pill so the GSM knows whether to chase this deal. MDS is
+                      cached on the submission row after the appraisal tool
+                      runs; we render a neutral pill until that's populated. */}
                   {sub.bb_retail_avg != null && (
-                    <InvestmentTierBadge
-                      size="sm"
-                      showBreakdown
-                      inputs={{
-                        marketDaysSupply: null,
-                        offeredPrice: sub.offered_price ?? sub.estimated_offer_high ?? null,
-                        retailClean: sub.bb_retail_avg ?? null,
-                        conditionGrade: sub.inspector_grade || sub.overall_condition || null,
-                        aiConditionScore: (sub as { ai_condition_score?: string | null }).ai_condition_score ?? null,
-                        lotCostPerDay: (config as { lot_cost_per_day?: number } | null)?.lot_cost_per_day ?? 8,
-                      }}
-                    />
+                    <>
+                      <InvestmentTierBadge
+                        size="sm"
+                        showBreakdown
+                        inputs={{
+                          marketDaysSupply: (sub as { bb_market_days_supply?: number | null }).bb_market_days_supply ?? null,
+                          offeredPrice: sub.offered_price ?? sub.estimated_offer_high ?? null,
+                          retailClean: sub.bb_retail_avg ?? null,
+                          conditionGrade: sub.inspector_grade || sub.overall_condition || null,
+                          aiConditionScore: (sub as { ai_condition_score?: string | null }).ai_condition_score ?? null,
+                          lotCostPerDay: (config as { lot_cost_per_day?: number } | null)?.lot_cost_per_day ?? 8,
+                        }}
+                      />
+                      {(sub as { bb_market_days_supply?: number | null }).bb_market_days_supply != null && (
+                        <MdsPill
+                          mds={(sub as { bb_market_days_supply?: number | null }).bb_market_days_supply}
+                          variant="onDark"
+                        />
+                      )}
+                    </>
                   )}
                 </div>
                 <div className="flex items-center gap-1.5">

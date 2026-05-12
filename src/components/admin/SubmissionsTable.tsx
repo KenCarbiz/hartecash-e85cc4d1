@@ -10,6 +10,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { Submission, DealerLocation } from "@/lib/adminConstants";
 import { ALL_STATUS_OPTIONS, getStatusLabel } from "@/lib/adminConstants";
 import DashboardAnalytics from "@/components/admin/DashboardAnalytics";
+import { InvestmentTierBadge } from "@/components/admin/InvestmentTierBadge";
+import { MdsPill } from "@/components/admin/MdsPill";
 
 interface SubmissionsTableProps {
   submissions: Submission[];
@@ -313,6 +315,8 @@ const SubmissionsTable = ({
                     <th className={`${cellPadX} py-2.5 text-left font-semibold`}>Vehicle</th>
                     <th className={`${cellPadX} py-2.5 text-left font-semibold`}>Intent</th>
                     <th className={`${cellPadX} py-2.5 text-right font-semibold`}>Offer</th>
+                    <th className={`${cellPadX} py-2.5 text-left font-semibold`}>Tier</th>
+                    <th className={`${cellPadX} py-2.5 text-left font-semibold`}>MDS</th>
                     <th className={`${cellPadX} py-2.5 text-left font-semibold`}>Status</th>
                     <th className={`${cellPadX} py-2.5 w-12`} />
                   </tr>
@@ -364,6 +368,30 @@ const SubmissionsTable = ({
                             <span className="text-sm font-bold text-slate-900">
                               {isEstimate ? "~" : ""}${Math.floor(offerVal).toLocaleString()}
                             </span>
+                          ) : (
+                            <span className="text-xs text-slate-400">—</span>
+                          )}
+                        </td>
+                        <td className={`${cellPadX} ${rowPad}`} onClick={(e) => e.stopPropagation()}>
+                          {sub.bb_retail_avg != null ? (
+                            <InvestmentTierBadge
+                              size="sm"
+                              inputs={{
+                                marketDaysSupply: sub.bb_market_days_supply ?? null,
+                                offeredPrice: sub.offered_price ?? sub.estimated_offer_high ?? null,
+                                retailClean: sub.bb_retail_avg ?? null,
+                                conditionGrade: sub.inspector_grade || sub.overall_condition || null,
+                                aiConditionScore: sub.ai_condition_score ?? null,
+                                lotCostPerDay: 8,
+                              }}
+                            />
+                          ) : (
+                            <span className="text-xs text-slate-400">—</span>
+                          )}
+                        </td>
+                        <td className={`${cellPadX} ${rowPad}`}>
+                          {sub.bb_market_days_supply != null ? (
+                            <MdsPill mds={sub.bb_market_days_supply} variant="onLight" />
                           ) : (
                             <span className="text-xs text-slate-400">—</span>
                           )}

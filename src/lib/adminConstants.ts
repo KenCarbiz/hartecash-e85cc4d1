@@ -171,7 +171,10 @@ export interface Submission {
   bb_tradein_avg?: number | null;
   bb_wholesale_avg?: number | null;
   bb_retail_avg?: number | null;
+  bb_market_days_supply?: number | null;
   bb_value_tiers?: Record<string, Record<string, number>> | string | null;
+  inspector_grade?: string | null;
+  ai_condition_score?: string | null;
   declined_reason?: string | null;
   competitor_mentioned?: string | null;
   customer_walk_away_number?: number | null;
