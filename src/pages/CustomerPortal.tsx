@@ -6,6 +6,7 @@ import logoFallback from "@/assets/logo-placeholder.png";
 import logoWhiteFallback from "@/assets/logo-placeholder-white.png";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import PortalSkeleton from "@/components/PortalSkeleton";
+import SEO from "@/components/SEO";
 import WhatsNextCard from "@/components/portal/WhatsNextCard";
 import VehiclePhotos from "@/components/portal/VehiclePhotos";
 import AppointmentCalendarCard from "@/components/portal/AppointmentCalendarCard";
