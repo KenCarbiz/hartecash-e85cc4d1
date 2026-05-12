@@ -10,6 +10,17 @@ import { useToast } from "@/hooks/use-toast";
 import { track, identify } from "@/lib/analytics";
 
 const getSafeAuthError = (message: string, isSignup: boolean): string => {
+  const normalized = message.toLowerCase();
+  if (
+    isSignup &&
+    (normalized.includes("known to be weak") ||
+      normalized.includes("easy to guess") ||
+      normalized.includes("weak password") ||
+      normalized.includes("password has been pwned"))
+  ) {
+    return "Password is too common or has appeared in a data breach. Choose a stronger temporary password.";
+  }
+
   const map: Record<string, string> = {
     "Invalid login credentials": "Invalid email or password.",
     "Email not confirmed": "Please verify your email address before signing in.",
