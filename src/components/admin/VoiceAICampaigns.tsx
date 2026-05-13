@@ -186,9 +186,16 @@ const VoiceAICampaigns = () => {
 
       if (dealer) {
         const d = dealer;
+        // Voice AI API key now lives in dealer_voice_secrets (admin-only RLS).
+        // Non-admin staff will receive null here, which is intentional.
+        const { data: secret } = await supabase
+          .from("dealer_voice_secrets")
+          .select("voice_ai_api_key")
+          .eq("dealership_id", dealershipId)
+          .maybeSingle();
         setConfig({
           voice_ai_enabled: !!d.voice_ai_enabled,
-          voice_ai_api_key: d.voice_ai_api_key || "",
+          voice_ai_api_key: secret?.voice_ai_api_key || "",
           voice_ai_from_number: d.voice_ai_from_number || "",
           voice_ai_transfer_number: d.voice_ai_transfer_number || "",
           voice_ai_max_bump_amount: d.voice_ai_max_bump_amount ?? 500,
