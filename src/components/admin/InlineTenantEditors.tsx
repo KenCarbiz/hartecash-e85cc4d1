@@ -59,16 +59,51 @@ function validateSubdomainLabel(label: string): string | null {
 }
 
 // ─────────────────────────────────────────────────────────────
+// Audit helper — fire-and-forget write to tenant_edit_log so
+// inline slug/domain/subdomain changes show up in UnifiedAuditLog.
+// RLS gates writes to platform admins; if it errors we swallow so
+// the user's actual save isn't held up by audit logging.
+// ─────────────────────────────────────────────────────────────
+
+type AuditField = "slug" | "custom_domain" | "subdomain_label" | "parent_domain";
+
+async function writeTenantEdit(
+  tenantId: string,
+  dealershipId: string,
+  field: AuditField,
+  oldValue: string | null,
+  newValue: string | null,
+) {
+  try {
+    const { data: userData } = await supabase.auth.getUser();
+    const user = userData?.user;
+    await supabase.from("tenant_edit_log" as never).insert({
+      tenant_id: tenantId,
+      dealership_id: dealershipId,
+      field,
+      old_value: oldValue,
+      new_value: newValue,
+      performed_by_email: user?.email ?? null,
+      performed_by_user_id: user?.id ?? null,
+    } as never);
+  } catch {
+    // Audit failures are non-fatal — the underlying update already
+    // succeeded by the time this runs.
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
 // Slug editor — popover anchored on the slug cell.
 // ─────────────────────────────────────────────────────────────
 
 interface SlugEditorProps {
   tenantId: string;
+  dealershipId: string;
   currentSlug: string;
   onSaved: () => void;
 }
 
-export function InlineSlugEditor({ tenantId, currentSlug, onSaved }: SlugEditorProps) {
+export function InlineSlugEditor({ tenantId, dealershipId, currentSlug, onSaved }: SlugEditorProps) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(currentSlug);
@@ -113,6 +148,7 @@ export function InlineSlugEditor({ tenantId, currentSlug, onSaved }: SlugEditorP
       setError(updateError.message);
       return;
     }
+    writeTenantEdit(tenantId, dealershipId, "slug", currentSlug, slug);
     toast({ title: "Slug updated", description: `Live at /locations/${slug}` });
     setOpen(false);
     onSaved();
@@ -207,13 +243,14 @@ const EXPECTED_IP = "185.158.133.1";
 
 interface DomainEditorProps {
   tenantId: string;
+  dealershipId: string;
   currentDomain: string | null;
   onSaved: () => void;
 }
 
 type DnsStatus = "idle" | "checking" | "reachable" | "unreachable";
 
-export function InlineDomainEditor({ tenantId, currentDomain, onSaved }: DomainEditorProps) {
+export function InlineDomainEditor({ tenantId, dealershipId, currentDomain, onSaved }: DomainEditorProps) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(currentDomain || "");
@@ -267,6 +304,7 @@ export function InlineDomainEditor({ tenantId, currentDomain, onSaved }: DomainE
       setError(updateError.message);
       return;
     }
+    writeTenantEdit(tenantId, dealershipId, "custom_domain", currentDomain, domain || null);
     toast({ title: domain ? "Domain mapped" : "Domain removed", description: domain || "Custom domain cleared." });
     setOpen(false);
     onSaved();
@@ -283,6 +321,7 @@ export function InlineDomainEditor({ tenantId, currentDomain, onSaved }: DomainE
       setError(updateError.message);
       return;
     }
+    writeTenantEdit(tenantId, dealershipId, "custom_domain", currentDomain, null);
     toast({ title: "Domain removed" });
     setOpen(false);
     onSaved();
@@ -393,13 +432,15 @@ export function OpenDomainButton({ domain }: { domain: string }) {
 
 interface SubdomainEditorProps {
   tenantId: string;
+  dealershipId: string;
   parentDomain: string;
   currentLabel: string | null;
+  currentParentDomain: string | null;
   defaultLabel?: string | null;
   onSaved: () => void;
 }
 
-export function InlineSubdomainEditor({ tenantId, parentDomain, currentLabel, defaultLabel, onSaved }: SubdomainEditorProps) {
+export function InlineSubdomainEditor({ tenantId, dealershipId, parentDomain, currentLabel, currentParentDomain, defaultLabel, onSaved }: SubdomainEditorProps) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(currentLabel || defaultLabel || "");
@@ -443,17 +484,22 @@ export function InlineSubdomainEditor({ tenantId, parentDomain, currentLabel, de
         return;
       }
     }
+    const newParent = label ? parentDomain : null;
     const { error: updateError } = await supabase
       .from("tenants")
       .update({
         subdomain_label: label || null,
-        parent_domain: label ? parentDomain : null,
+        parent_domain: newParent,
       } as never)
       .eq("id", tenantId);
     setSaving(false);
     if (updateError) {
       setError(updateError.message);
       return;
+    }
+    writeTenantEdit(tenantId, dealershipId, "subdomain_label", currentLabel, label || null);
+    if ((currentParentDomain || null) !== newParent) {
+      writeTenantEdit(tenantId, dealershipId, "parent_domain", currentParentDomain, newParent);
     }
     toast({
       title: label ? "Subdomain mapped" : "Subdomain removed",
@@ -473,6 +519,10 @@ export function InlineSubdomainEditor({ tenantId, parentDomain, currentLabel, de
     if (updateError) {
       setError(updateError.message);
       return;
+    }
+    writeTenantEdit(tenantId, dealershipId, "subdomain_label", currentLabel, null);
+    if (currentParentDomain) {
+      writeTenantEdit(tenantId, dealershipId, "parent_domain", currentParentDomain, null);
     }
     toast({ title: "Subdomain removed" });
     setOpen(false);

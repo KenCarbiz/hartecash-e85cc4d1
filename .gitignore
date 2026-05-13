@@ -30,3 +30,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Screenshot tour — see scripts/screenshot-tour.ts
+.env.screenshot
+screenshots/
