@@ -170,14 +170,17 @@ async function loginAdmin(page: Page): Promise<boolean> {
     return false;
   }
   console.log("  → admin login");
-  await page.goto(`${BASE_URL}/auth`, { waitUntil: "domcontentloaded" });
-  // The auth form fields are unlabeled — selectors fall back to input types
-  // so this keeps working if the labels change.
-  await page.fill('input[type="email"]', ADMIN_EMAIL);
-  await page.fill('input[type="password"]', ADMIN_PASSWORD);
-  await page.click('button[type="submit"]');
+  await page.goto(`${BASE_URL}/admin/login`, { waitUntil: "domcontentloaded" });
+  // The login page renders both sign-in and sign-up forms (often
+  // behind a tab). `.first()` picks the visible sign-in form's email
+  // input deterministically without strict-mode complaints.
+  await page.locator('input[type="email"]').first().fill(ADMIN_EMAIL);
+  await page.locator('input[type="password"]').first().fill(ADMIN_PASSWORD);
+  await page.locator('button[type="submit"]').first().click();
   try {
-    await page.waitForURL(/\/admin/, { timeout: 15_000 });
+    // Login lands on /admin (success) or stays on /admin/login (failure).
+    // Match the success path only.
+    await page.waitForURL((url) => url.pathname === "/admin" || url.pathname.startsWith("/admin/") && url.pathname !== "/admin/login", { timeout: 20_000 });
     return true;
   } catch {
     console.error("✗ Admin login failed — check ADMIN_EMAIL / ADMIN_PASSWORD.");
