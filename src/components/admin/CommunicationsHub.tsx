@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AdminLoadingSkeleton from "./AdminLoadingSkeleton";
+import { useIsPlatformAdmin } from "@/hooks/useIsPlatformAdmin";
 
 const ChannelsSettings = React.lazy(() => import("./ChannelsSettings"));
 const NotificationSettings = React.lazy(() => import("./NotificationSettings"));
