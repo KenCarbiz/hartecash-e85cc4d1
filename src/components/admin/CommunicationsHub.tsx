@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AdminLoadingSkeleton from "./AdminLoadingSkeleton";
+import { useIsPlatformAdmin } from "@/hooks/useIsPlatformAdmin";
 
 const ChannelsSettings = React.lazy(() => import("./ChannelsSettings"));
 const NotificationSettings = React.lazy(() => import("./NotificationSettings"));
@@ -52,6 +53,7 @@ const CommunicationsHub = ({
   canManageChannels = true,
   showTenantViewLog = false,
 }: CommunicationsHubProps) => {
+  const { isPlatformAdmin } = useIsPlatformAdmin();
   const [tab, setTab] = useState<string>(
     canManageChannels ? initialTab : "compliance",
   );
@@ -73,7 +75,7 @@ const CommunicationsHub = ({
           {canManageChannels && <TabsTrigger value="objections">Objection Playbook</TabsTrigger>}
           {canManageChannels && <TabsTrigger value="incentives">Trade-Up Incentives</TabsTrigger>}
           {canManageChannels && <TabsTrigger value="voice_ai">Voice AI Training</TabsTrigger>}
-          {canManageChannels && <TabsTrigger value="voice_quality">Voice Quality</TabsTrigger>}
+          {canManageChannels && isPlatformAdmin && <TabsTrigger value="voice_quality">Voice Quality</TabsTrigger>}
           <TabsTrigger value="compliance">Compliance</TabsTrigger>
         </TabsList>
 
@@ -128,7 +130,7 @@ const CommunicationsHub = ({
           </TabsContent>
         )}
 
-        {canManageChannels && (
+        {canManageChannels && isPlatformAdmin && (
           <TabsContent value="voice_quality" className="pt-4">
             <React.Suspense fallback={<AdminLoadingSkeleton />}>
               <VoiceQualityPanel />
