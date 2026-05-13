@@ -252,8 +252,8 @@ export function printAllDocs(
     "@page { margin: 0.75in; size: letter; }",
   ].join("\n");
 
-  const html = `<!DOCTYPE html><html><head><title>Customer Documents – ${customerName || vehicleStr}</title><style>${css}</style></head><body>
-    <div class="header"><h1>Customer Documents</h1><p>${customerName || ""} — ${vehicleStr}</p></div>
+  const html = `<!DOCTYPE html><html><head><title>Customer Documents – ${esc(customerName || vehicleStr)}</title><style>${css}</style></head><body>
+    <div class="header"><h1>Customer Documents</h1><p>${esc(customerName || "")} — ${esc(vehicleStr)}</p></div>
     ${docSections.map(s => makeDocSection(s.title, s.images)).join("")}
   </body></html>`;
 
