@@ -44,15 +44,17 @@ screenshots/2026-05-13T18-30-00Z/
 
 ## What gets captured
 
-**Public (always):** `/`, `/sell`, `/how-it-works`, `/about`, `/faq`
+**Public (always):** `/`, `/sell`, `/how-it-works`, `/about`, `/faq`, `/trade`, `/service`, `/group`, `/quick-offer`, `/docs`, `/updates`, `/privacy`, `/terms`
 
-**Pitch + marketing (always):** `/pitch`, `/platform` — useful for refreshing investor-deck imagery whenever the pitch pages change
+**Pitch + marketing (always):** `/pitch`, `/platform` — refresh investor-deck imagery whenever the pitch pages change
 
-**Customer portal (when `DEMO_TOKEN` is set):** `/portal/<token>`, `/offer/<token>`
+**Customer portal (when `DEMO_TOKEN` is set):** `/portal/<token>`, `/offer/<token>`, `/deal/<token>`, `/watch-my-car/<token>`
 
-**Admin (when admin creds are set):** dashboard, pipeline, equity mining, voice AI, performance, reports, branding, pricing rules, integrations, staff, dealer tenants, audit log.
+**Admin (when admin creds are set):** dashboard, pipeline, equity mining, voice AI, performance, reports, branding, pricing rules, integrations, staff, dealer tenants, audit log, executive, super-admin
 
-Edit `PUBLIC_TOUR`, `PITCH_TOUR`, `PORTAL_TOUR`, or `ADMIN_TOUR` in `scripts/screenshot-tour.ts` to add or remove routes.
+**AutoCurb marketing landing (always):** captured separately by spoofing `window.location.hostname` to `autocurb.io` so the `isAutocurbHost()` check in `App.tsx` flips `RootLanding` from `Index` to `AutocurbLanding`.
+
+Edit `PUBLIC_TOUR`, `PITCH_TOUR`, `PORTAL_TOUR`, `ADMIN_TOUR`, or `AUTOCURB_LANDING` in `scripts/screenshot-tour.ts` to add or remove routes.
 
 ## Troubleshooting
 
