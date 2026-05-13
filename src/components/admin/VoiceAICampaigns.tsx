@@ -247,7 +247,6 @@ const VoiceAICampaigns = () => {
         {
           dealership_id: dealershipId,
           voice_ai_enabled: config.voice_ai_enabled,
-          voice_ai_api_key: config.voice_ai_api_key || null,
           voice_ai_from_number: config.voice_ai_from_number || null,
           voice_ai_transfer_number: config.voice_ai_transfer_number || null,
           voice_ai_max_bump_amount: config.voice_ai_max_bump_amount,
@@ -259,6 +258,19 @@ const VoiceAICampaigns = () => {
         },
         { onConflict: "dealership_id" },
       );
+
+    // API key is stored separately (admin-only RLS); only upsert when admin
+    // actually entered something to avoid wiping it for non-admin viewers.
+    let secretError: { message: string } | null = null;
+    if (config.voice_ai_api_key) {
+      const { error: sErr } = await supabase
+        .from("dealer_voice_secrets")
+        .upsert(
+          { dealership_id: dealershipId, voice_ai_api_key: config.voice_ai_api_key, updated_at: new Date().toISOString() },
+          { onConflict: "dealership_id" },
+        );
+      if (sErr) secretError = sErr;
+    }
 
     setSaving(false);
     if (error) {
