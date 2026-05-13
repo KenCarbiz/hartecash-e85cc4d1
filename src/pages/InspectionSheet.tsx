@@ -905,11 +905,28 @@ const InspectionSheet = () => {
   };
 
   const handlePrint = () => {
-    const vTitle = `${submission.vehicle_year || ""} ${submission.vehicle_make || ""} ${submission.vehicle_model || ""}`.trim();
-    const dealerName = config?.dealership_name || "Dealership";
-    const logoUrl = config?.logo_url || "";
+    // HTML-escape any string interpolated into the print template. All
+    // submission.* fields are customer-supplied, so we must never write
+    // them into innerHTML / document.write without escaping first
+    // (otherwise a malicious VIN/plate/color would execute JS in the
+    // staff print window — stored XSS).
+    const esc = (s: unknown) =>
+      String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    const vTitle = esc(`${submission.vehicle_year || ""} ${submission.vehicle_make || ""} ${submission.vehicle_model || ""}`.trim());
+    const dealerName = esc(config?.dealership_name || "Dealership");
+    const logoUrl = esc(config?.logo_url || "");
     const isStandard = inspectionMode === "ucm";
     const formTitle = isStandard ? "Standard Vehicle Inspection" : "Full Technical Inspection";
+    const safeVin = esc(submission.vin || "_________________");
+    const safeColor = esc(submission.exterior_color || "________");
+    const safePlate = esc(submission.plate || "______");
+    const safeState = esc(submission.state || "__");
+    const safeStock = esc(submission.id?.slice(0, 8).toUpperCase() || "________");
 
     // ── Shared Styles ──
     const css = `
