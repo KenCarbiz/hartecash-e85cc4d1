@@ -1226,7 +1226,7 @@ const InspectionSheet = () => {
         </div>
         <div class="right">
           <div class="date">Date: _____ / _____ / _____</div>
-          <div style="margin-top:3px;">Stock #: ${submission.id?.slice(0, 8).toUpperCase() || "________"}</div>
+          <div style="margin-top:3px;">Stock #: ${safeStock}</div>
           <div style="margin-top:2px;">Inspector: ____________________</div>
         </div>
       </div>
