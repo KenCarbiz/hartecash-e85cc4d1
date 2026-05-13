@@ -84,40 +84,60 @@ interface Shot {
 }
 
 const PUBLIC_TOUR: Shot[] = [
-  { name: "01-public-home",       path: "/",          fullPage: true,  delayMs: 800 },
-  { name: "02-public-sell",       path: "/sell",      fullPage: true,  delayMs: 800 },
-  { name: "03-public-howitworks", path: "/how-it-works", fullPage: true, delayMs: 500 },
-  { name: "04-public-about",      path: "/about",     fullPage: true,  delayMs: 500 },
-  { name: "05-public-faq",        path: "/faq",       fullPage: true,  delayMs: 500 },
+  { name: "01-public-home",       path: "/",            fullPage: true,  delayMs: 800 },
+  { name: "02-public-sell",       path: "/sell",        fullPage: true,  delayMs: 800 },
+  { name: "03-public-howitworks", path: "/how-it-works",fullPage: true,  delayMs: 500 },
+  { name: "04-public-about",      path: "/about",       fullPage: true,  delayMs: 500 },
+  { name: "05-public-faq",        path: "/faq",         fullPage: true,  delayMs: 500 },
+  { name: "06-public-trade",      path: "/trade",       fullPage: true,  delayMs: 500 },
+  { name: "07-public-service",    path: "/service",     fullPage: true,  delayMs: 500 },
+  { name: "08-public-group",      path: "/group",       fullPage: true,  delayMs: 500 },
+  { name: "09-public-quickoffer", path: "/quick-offer", fullPage: true,  delayMs: 500 },
+  { name: "10-public-docs",       path: "/docs",        fullPage: true,  delayMs: 500 },
+  { name: "11-public-updates",    path: "/updates",     fullPage: true,  delayMs: 500 },
+  { name: "12-public-privacy",    path: "/privacy",     fullPage: true,  delayMs: 300 },
+  { name: "13-public-terms",      path: "/terms",       fullPage: true,  delayMs: 300 },
 ];
 
-// Pitch + marketing pages — long-form decks. Larger delayMs lets
-// framer-motion scroll reveals settle before the camera fires.
+// Pitch + marketing decks. Larger delayMs lets framer-motion scroll
+// reveals settle before the camera fires.
 const PITCH_TOUR: Shot[] = [
-  { name: "08-pitch-deck",       path: "/pitch",    fullPage: true,  delayMs: 1500 },
-  { name: "09-platform-pitch",   path: "/platform", fullPage: true,  delayMs: 1500 },
+  { name: "14-pitch-deck",        path: "/pitch",    fullPage: true,  delayMs: 1500 },
+  { name: "15-platform-pitch",    path: "/platform", fullPage: true,  delayMs: 1500 },
 ];
+
+// AutocurbLanding renders only when window.location.hostname is
+// autocurb.io / www.autocurb.io (see isAutocurbHost() in App.tsx).
+// Captured in its own context with a Location.prototype.hostname
+// override so the page believes it's serving from the marketing host.
+const AUTOCURB_LANDING: Shot = {
+  name: "16-autocurb-landing", path: "/", fullPage: true, delayMs: 1000,
+};
 
 const PORTAL_TOUR: Shot[] = DEMO_TOKEN
   ? [
-      { name: "06-customer-portal", path: `/portal/${DEMO_TOKEN}`, fullPage: true, delayMs: 800 },
-      { name: "07-customer-offer",  path: `/offer/${DEMO_TOKEN}`,  fullPage: true, delayMs: 1200 },
+      { name: "17-customer-portal", path: `/portal/${DEMO_TOKEN}`, fullPage: true, delayMs: 800 },
+      { name: "18-customer-offer",  path: `/offer/${DEMO_TOKEN}`,  fullPage: true, delayMs: 1200 },
+      { name: "19-customer-deal",   path: `/deal/${DEMO_TOKEN}`,   fullPage: true, delayMs: 800 },
+      { name: "20-customer-watch",  path: `/watch-my-car/${DEMO_TOKEN}`, fullPage: true, delayMs: 800 },
     ]
   : [];
 
 const ADMIN_TOUR: Shot[] = [
-  { name: "10-admin-dashboard",        path: "/admin",                                       fullPage: true, delayMs: 800 },
-  { name: "11-admin-pipeline",         path: "/admin?section=submissions",                   fullPage: true, delayMs: 800 },
-  { name: "12-admin-equity-mining",    path: "/admin?section=equity-mining",                 fullPage: true, delayMs: 600 },
-  { name: "13-admin-voice-ai",         path: "/admin?section=voice-ai",                      fullPage: true, delayMs: 600 },
-  { name: "14-admin-performance",      path: "/admin?section=performance",                   fullPage: true, delayMs: 600 },
-  { name: "15-admin-reports",          path: "/admin?section=reports",                       fullPage: true, delayMs: 600 },
-  { name: "16-admin-branding",         path: "/admin?section=branding",                      fullPage: true, delayMs: 600 },
-  { name: "17-admin-pricing-rules",    path: "/admin?section=pricing-rules",                 fullPage: true, delayMs: 600 },
-  { name: "18-admin-integrations",     path: "/admin?section=integrations",                  fullPage: true, delayMs: 600 },
-  { name: "19-admin-staff",            path: "/admin?section=staff",                         fullPage: true, delayMs: 600 },
-  { name: "20-admin-dealer-tenants",   path: "/admin?section=tenants",                       fullPage: true, delayMs: 800 },
-  { name: "21-admin-audit-log",        path: "/admin?section=audit-log",                     fullPage: true, delayMs: 600 },
+  { name: "21-admin-dashboard",        path: "/admin",                                       fullPage: true, delayMs: 800 },
+  { name: "22-admin-pipeline",         path: "/admin?section=submissions",                   fullPage: true, delayMs: 800 },
+  { name: "23-admin-equity-mining",    path: "/admin?section=equity-mining",                 fullPage: true, delayMs: 600 },
+  { name: "24-admin-voice-ai",         path: "/admin?section=voice-ai",                      fullPage: true, delayMs: 600 },
+  { name: "25-admin-performance",      path: "/admin?section=performance",                   fullPage: true, delayMs: 600 },
+  { name: "26-admin-reports",          path: "/admin?section=reports",                       fullPage: true, delayMs: 600 },
+  { name: "27-admin-branding",         path: "/admin?section=branding",                      fullPage: true, delayMs: 600 },
+  { name: "28-admin-pricing-rules",    path: "/admin?section=pricing-rules",                 fullPage: true, delayMs: 600 },
+  { name: "29-admin-integrations",     path: "/admin?section=integrations",                  fullPage: true, delayMs: 600 },
+  { name: "30-admin-staff",            path: "/admin?section=staff",                         fullPage: true, delayMs: 600 },
+  { name: "31-admin-dealer-tenants",   path: "/admin?section=tenants",                       fullPage: true, delayMs: 800 },
+  { name: "32-admin-audit-log",        path: "/admin?section=audit-log",                     fullPage: true, delayMs: 600 },
+  { name: "33-admin-executive",        path: "/executive",                                   fullPage: true, delayMs: 800 },
+  { name: "34-admin-super",            path: "/super-admin",                                 fullPage: true, delayMs: 800 },
 ];
 
 // ─────────────────────────────────────────────────────────────
@@ -165,6 +185,30 @@ async function loginAdmin(page: Page): Promise<boolean> {
   }
 }
 
+async function captureAutocurbLanding(browser: Browser, viewport: typeof DESKTOP) {
+  // AutocurbLanding only renders when window.location.hostname matches
+  // the marketing host. We can't change the real hostname Playwright
+  // hits (the deployment lives at BASE_URL), so we patch the Location
+  // prototype before any app script runs. React reads hostname on
+  // first render of RootLanding, so the override fires before mount.
+  const ctx = await browser.newContext({ viewport, deviceScaleFactor: 2 });
+  await ctx.addInitScript(() => {
+    try {
+      Object.defineProperty(Location.prototype, "hostname", {
+        get() { return "autocurb.io"; },
+        configurable: true,
+      });
+    } catch {
+      // Some browsers protect Location.prototype; if so, the override
+      // silently fails and we fall through to the default landing.
+    }
+  });
+  const page = await ctx.newPage();
+  console.log(`  → ${viewport.name.padEnd(8)} ${AUTOCURB_LANDING.name}  ${BASE_URL}/  (hostname override → autocurb.io)`);
+  await snap(page, AUTOCURB_LANDING, viewport);
+  await ctx.close();
+}
+
 async function runViewport(browser: Browser, viewport: typeof DESKTOP) {
   const ctx = await browser.newContext({ viewport, deviceScaleFactor: 2 });
   const page = await ctx.newPage();
@@ -208,11 +252,15 @@ async function main() {
   const browser = await chromium.launch({ headless: true });
   try {
     for (const v of VIEWPORT_SET) await runViewport(browser, v);
+    // AutocurbLanding runs in its own context per viewport because it
+    // needs a hostname override that the rest of the tour should not
+    // inherit.
+    for (const v of VIEWPORT_SET) await captureAutocurbLanding(browser, v);
   } finally {
     await browser.close();
   }
 
-  await writeIndex([...PUBLIC_TOUR, ...PITCH_TOUR, ...PORTAL_TOUR, ...ADMIN_TOUR]);
+  await writeIndex([...PUBLIC_TOUR, ...PITCH_TOUR, ...PORTAL_TOUR, ...ADMIN_TOUR, AUTOCURB_LANDING]);
   console.log(`\n✓ Done. Open ${join(OUTDIR, "INDEX.md")} for the full list.`);
 }
 
