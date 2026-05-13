@@ -15,9 +15,10 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-import { Plus, Loader2, Globe, Pencil, Trash2, Copy, Rocket, CalendarClock, ArrowUpCircle } from "lucide-react";
+import { Plus, Loader2, Globe, Pencil, Trash2, Rocket, CalendarClock, ArrowUpCircle } from "lucide-react";
 import ArchitectureSelector from "./onboarding/ArchitectureSelector";
 import { architectureToplanTier, architectureToDbValue } from "./onboarding/types";
+import { InlineSlugEditor, InlineDomainEditor, CopyUrlButton, OpenDomainButton, normalizeSlug, validateSlug } from "./InlineTenantEditors";
 import type { ArchitectureType } from "./onboarding/types";
 
 interface Tenant {
@@ -201,13 +202,19 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
       toast({ title: "Missing fields", description: "ID, slug, and display name are required.", variant: "destructive" });
       return;
     }
+    const normalizedSlug = normalizeSlug(form.slug);
+    const slugError = validateSlug(normalizedSlug);
+    if (slugError) {
+      toast({ title: "Invalid slug", description: slugError, variant: "destructive" });
+      return;
+    }
     setSaving(true);
 
     const payload = {
       dealership_id: form.dealership_id.toLowerCase().replace(/[^a-z0-9_-]/g, ""),
-      slug: form.slug.toLowerCase().replace(/[^a-z0-9-]/g, ""),
+      slug: normalizedSlug,
       display_name: form.display_name,
-      custom_domain: form.custom_domain?.trim() || null,
+      custom_domain: form.custom_domain?.trim().toLowerCase() || null,
       is_active: form.is_active,
     };
 
@@ -302,12 +309,6 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
     fetchTenants();
   };
 
-  const copySlugUrl = (slug: string) => {
-    const host = window.location.hostname;
-    navigator.clipboard.writeText(`${slug}.${host}`);
-    toast({ title: "Copied", description: `${slug}.${host} copied to clipboard.` });
-  };
-
   // Derived: is this an upgrade?
   const newTier = form.architecture ? architectureToplanTier(form.architecture) : "standard";
   const oldTier = form.originalArchitecture ? architectureToplanTier(form.originalArchitecture) : "standard";
@@ -380,21 +381,24 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
                       <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{t.dealership_id}</code>
                       <div className="flex items-center gap-1">
                         <code className="text-xs text-muted-foreground">{t.slug}</code>
-                        <button onClick={() => copySlugUrl(t.slug)} className="text-muted-foreground hover:text-foreground">
-                          <Copy className="w-3 h-3" />
-                        </button>
+                        <InlineSlugEditor tenantId={t.id} currentSlug={t.slug} onSaved={fetchTenants} />
+                        <CopyUrlButton slug={t.slug} />
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    {t.custom_domain ? (
-                      <div className="flex items-center gap-1">
-                        <Globe className="w-3.5 h-3.5 text-primary" />
-                        <span className="text-sm">{t.custom_domain}</span>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
-                    )}
+                    <div className="flex items-center gap-1.5">
+                      {t.custom_domain ? (
+                        <>
+                          <Globe className="w-3.5 h-3.5 text-primary" />
+                          <span className="text-sm">{t.custom_domain}</span>
+                          <OpenDomainButton domain={t.custom_domain} />
+                        </>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                      <InlineDomainEditor tenantId={t.id} currentDomain={t.custom_domain} onSaved={fetchTenants} />
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Badge variant={t.is_active ? "default" : "secondary"}>
@@ -515,7 +519,7 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
                     display_name: name,
                     ...(!editing ? {
                       dealership_id: name.toLowerCase().replace(/[^a-z0-9]/g, "_").replace(/_+/g, "_").slice(0, 30),
-                      slug: name.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-").slice(0, 30),
+                      slug: normalizeSlug(name),
                     } : {}),
                   }));
                 }}
