@@ -46,11 +46,13 @@ screenshots/2026-05-13T18-30-00Z/
 
 **Public (always):** `/`, `/sell`, `/how-it-works`, `/about`, `/faq`
 
+**Pitch + marketing (always):** `/pitch`, `/platform` — useful for refreshing investor-deck imagery whenever the pitch pages change
+
 **Customer portal (when `DEMO_TOKEN` is set):** `/portal/<token>`, `/offer/<token>`
 
 **Admin (when admin creds are set):** dashboard, pipeline, equity mining, voice AI, performance, reports, branding, pricing rules, integrations, staff, dealer tenants, audit log.
 
-Edit `PUBLIC_TOUR`, `PORTAL_TOUR`, or `ADMIN_TOUR` in `scripts/screenshot-tour.ts` to add or remove routes.
+Edit `PUBLIC_TOUR`, `PITCH_TOUR`, `PORTAL_TOUR`, or `ADMIN_TOUR` in `scripts/screenshot-tour.ts` to add or remove routes.
 
 ## Troubleshooting
 

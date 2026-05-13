@@ -91,6 +91,13 @@ const PUBLIC_TOUR: Shot[] = [
   { name: "05-public-faq",        path: "/faq",       fullPage: true,  delayMs: 500 },
 ];
 
+// Pitch + marketing pages — long-form decks. Larger delayMs lets
+// framer-motion scroll reveals settle before the camera fires.
+const PITCH_TOUR: Shot[] = [
+  { name: "08-pitch-deck",       path: "/pitch",    fullPage: true,  delayMs: 1500 },
+  { name: "09-platform-pitch",   path: "/platform", fullPage: true,  delayMs: 1500 },
+];
+
 const PORTAL_TOUR: Shot[] = DEMO_TOKEN
   ? [
       { name: "06-customer-portal", path: `/portal/${DEMO_TOKEN}`, fullPage: true, delayMs: 800 },
@@ -164,6 +171,7 @@ async function runViewport(browser: Browser, viewport: typeof DESKTOP) {
 
   console.log(`\n▶ ${viewport.name} (${viewport.width}×${viewport.height})`);
   for (const shot of PUBLIC_TOUR) await snap(page, shot, viewport);
+  for (const shot of PITCH_TOUR) await snap(page, shot, viewport);
   for (const shot of PORTAL_TOUR) await snap(page, shot, viewport);
 
   const loggedIn = await loginAdmin(page);
@@ -204,7 +212,7 @@ async function main() {
     await browser.close();
   }
 
-  await writeIndex([...PUBLIC_TOUR, ...PORTAL_TOUR, ...ADMIN_TOUR]);
+  await writeIndex([...PUBLIC_TOUR, ...PITCH_TOUR, ...PORTAL_TOUR, ...ADMIN_TOUR]);
   console.log(`\n✓ Done. Open ${join(OUTDIR, "INDEX.md")} for the full list.`);
 }
 
