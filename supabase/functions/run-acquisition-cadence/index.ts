@@ -91,11 +91,18 @@ serve(async (req) => {
         // Check if dealer has voice AI enabled
         const { data: dealer } = await supabase
           .from("dealer_accounts")
-          .select("voice_ai_enabled, voice_ai_api_key")
+          .select("voice_ai_enabled")
           .eq("dealership_id", lead.dealership_id)
           .maybeSingle();
 
-        if (dealer?.voice_ai_enabled && dealer?.voice_ai_api_key) {
+        // voice_ai_api_key now lives in the locked dealer_voice_secrets table.
+        const { data: voiceSecret } = await supabase
+          .from("dealer_voice_secrets")
+          .select("voice_ai_api_key")
+          .eq("dealership_id", lead.dealership_id)
+          .maybeSingle();
+
+        if (dealer?.voice_ai_enabled && voiceSecret?.voice_ai_api_key) {
           await supabase.functions.invoke("launch-voice-call", {
             body: { submission_id: lead.id, script_category: step.trigger === "price_bump" ? "price_bump" : "follow_up" }
           }).catch(console.error);
@@ -163,11 +170,17 @@ serve(async (req) => {
       if (step.action === "voice" && lead.phone) {
         const { data: dealer } = await supabase
           .from("dealer_accounts")
-          .select("voice_ai_enabled, voice_ai_api_key")
+          .select("voice_ai_enabled")
           .eq("dealership_id", lead.dealership_id)
           .maybeSingle();
 
-        if (dealer?.voice_ai_enabled && dealer?.voice_ai_api_key) {
+        const { data: voiceSecret } = await supabase
+          .from("dealer_voice_secrets")
+          .select("voice_ai_api_key")
+          .eq("dealership_id", lead.dealership_id)
+          .maybeSingle();
+
+        if (dealer?.voice_ai_enabled && voiceSecret?.voice_ai_api_key) {
           await supabase.functions.invoke("launch-voice-call", {
             body: { submission_id: lead.id, script_category: "appointment" }
           }).catch(console.error);
