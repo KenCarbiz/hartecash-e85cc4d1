@@ -268,7 +268,7 @@ serve(async (req) => {
     const { data: dealer, error: dealerErr } = await supabase
       .from("dealer_accounts")
       .select(
-        "id, dealership_name, voice_ai_enabled, voice_ai_provider, voice_ai_api_key, voice_ai_from_number, voice_ai_transfer_number, voice_ai_max_bump_amount, voice_ai_competitor_response_mode, voice_ai_beat_competitor_amount"
+        "id, dealership_id, dealership_name, voice_ai_enabled, voice_ai_provider, voice_ai_from_number, voice_ai_transfer_number, voice_ai_max_bump_amount, voice_ai_competitor_response_mode, voice_ai_beat_competitor_amount"
       )
       .eq("id", dealershipId)
       .single();
@@ -293,7 +293,16 @@ serve(async (req) => {
       );
     }
 
-    if (!dealer.voice_ai_api_key) {
+    // Read voice_ai_api_key from the locked-down secrets table (service-role only).
+    // The column was dropped from dealer_accounts in the prior security PR.
+    const { data: voiceSecret } = await supabase
+      .from("dealer_voice_secrets")
+      .select("voice_ai_api_key")
+      .eq("dealership_id", dealer.dealership_id)
+      .maybeSingle();
+    const voiceApiKey = voiceSecret?.voice_ai_api_key as string | undefined;
+
+    if (!voiceApiKey) {
       return new Response(
         JSON.stringify({ error: "Voice AI API key not configured" }),
         {
