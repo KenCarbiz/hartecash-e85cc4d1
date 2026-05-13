@@ -130,7 +130,7 @@ const CommunicationsHub = ({
           </TabsContent>
         )}
 
-        {canManageChannels && (
+        {canManageChannels && isPlatformAdmin && (
           <TabsContent value="voice_quality" className="pt-4">
             <React.Suspense fallback={<AdminLoadingSkeleton />}>
               <VoiceQualityPanel />
