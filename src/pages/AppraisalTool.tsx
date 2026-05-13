@@ -27,6 +27,8 @@ import DealStatusBanner from "@/components/appraisal/DealStatusBanner";
 import DealMakerSection from "@/components/appraisal/DealMakerSection";
 import ManagementOverride from "@/components/appraisal/ManagementOverride";
 import { calculateOffer, type OfferSettings, type OfferRule, type OfferEstimate, type StrategyMode, calcHighMileagePenaltyPct, calcColorAdjustmentPct, DEFAULT_HIGH_MILEAGE_PENALTY, DEFAULT_COLOR_DESIRABILITY, DEFAULT_SEASONAL_ADJUSTMENT } from "@/lib/offerCalculator";
+import { InvestmentTierBadge } from "@/components/admin/InvestmentTierBadge";
+import VelocityCard from "@/components/appraisal/VelocityCard";
 import { isManagerRole } from "@/lib/adminConstants";
 import { safeInvoke } from "@/lib/safeInvoke";
 import type { FormData, BBVehicle, BBAddDeduct } from "@/components/sell-form/types";
@@ -288,6 +290,22 @@ export default function AppraisalTool() {
   const [retailMarketStats, setRetailMarketStats] = useState<RetailStats | null>(null);
   const [closestCompPrice, setClosestCompPrice] = useState<number | null>(null);
   const acvSheetRef = useRef<HTMLDivElement>(null);
+
+  // Cache MDS to the submission row so the customer-file slide-out and
+  // pipeline table can render velocity badges without a live retail-listings
+  // fetch on every open. Fire-and-forget; failures are swallowed because
+  // the appraisal experience does not depend on this write succeeding.
+  useEffect(() => {
+    const mds = retailMarketStats?.market_days_supply;
+    if (!sub?.id || mds == null) return;
+    const cached = (sub as { bb_market_days_supply?: number | null }).bb_market_days_supply;
+    if (cached != null && Math.abs(cached - mds) < 0.5) return;
+    supabase
+      .from("submissions")
+      .update({ bb_market_days_supply: Math.round(mds) } as never)
+      .eq("id", sub.id)
+      .then(() => {}, () => {});
+  }, [retailMarketStats?.market_days_supply, sub?.id]);
 
   // Editable overrides
   const [localSettings, setLocalSettings] = useState<OfferSettingsExt | null>(null);
@@ -1213,14 +1231,40 @@ export default function AppraisalTool() {
           acvValue={sub.acv_value}
         />
 
+        {/* Velocity strip — Days on Market + projected holding cost. Sits
+            above the HUD because turn-rate is the lens managers should bring
+            to every other number on the page. */}
+        <div className="mb-3">
+          <VelocityCard
+            marketDaysSupply={offerResult?.marketDaysSupply ?? retailMarketStats?.market_days_supply ?? null}
+            lotCostPerDay={activeSettings?.lot_cost_per_day ?? 8}
+          />
+        </div>
+
         {/* HUD — Key Metrics Strip — Appraisal Value is DOMINANT scoreboard */}
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 mb-5">
           {/* DOMINANT — Appraisal Value card spans 2 cols */}
-          <div className={`col-span-2 rounded-xl border-2 p-4 text-center transition-all shadow-lg ${
+          <div className={`col-span-2 rounded-xl border-2 p-4 text-center transition-all shadow-lg relative ${
             sub.appraisal_finalized
               ? "bg-emerald-500/10 border-emerald-500/40 ring-2 ring-emerald-500/30"
               : "bg-primary/10 border-primary/40 ring-2 ring-primary/30"
           }`}>
+            {/* Investment Tier badge — internal-only signal of how good this buy is.
+                Synthesizes MDS + cost-to-market + condition + AI agreement + holding cost. */}
+            <div className="absolute top-2 right-2">
+              <InvestmentTierBadge
+                size="sm"
+                showBreakdown
+                inputs={{
+                  marketDaysSupply: offerResult?.marketDaysSupply ?? null,
+                  offeredPrice: Math.floor(finalValue + (managerOverride.amount || 0)),
+                  retailClean: Number(bbVehicle?.retail?.clean || sub.bb_retail_avg || 0) || null,
+                  conditionGrade: condition,
+                  aiConditionScore: (sub as { ai_condition_score?: string | null }).ai_condition_score ?? null,
+                  lotCostPerDay: activeSettings?.lot_cost_per_day ?? 8,
+                }}
+              />
+            </div>
             <div className="text-[10px] uppercase tracking-[0.1em] font-bold text-muted-foreground mb-1">Appraisal Value</div>
             <div className={`text-4xl font-black tracking-tight ${sub.appraisal_finalized ? "text-emerald-700 dark:text-emerald-400" : "text-primary"}`}>
               ${Math.floor(finalValue + (managerOverride.amount || 0)).toLocaleString()}

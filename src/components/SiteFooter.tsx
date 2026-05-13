@@ -20,7 +20,7 @@ const SiteFooter = () => {
 
   // Attribution resolution — four layers, priority top-to-bottom:
   //   1. Super-admin force override (force_autocurb_attribution) →
-  //      ALWAYS show "Powered by Autocurb.ai" regardless of dealer
+  //      ALWAYS show "Powered by AutoCurb.io" regardless of dealer
   //      settings. Used for contract enforcement on tiers that don't
   //      include white-label rights.
   //   2. Dealer's powered_by_mode (three-way enum).
@@ -221,7 +221,7 @@ const SiteFooter = () => {
                   rel="noopener noreferrer"
                   className="font-semibold text-muted-foreground/60 hover:text-primary transition-colors"
                 >
-                  Autocurb.ai
+                  AutoCurb.io
                 </a>
               </span>
             )}

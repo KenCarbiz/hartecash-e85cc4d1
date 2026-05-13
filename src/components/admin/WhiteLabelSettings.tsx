@@ -153,7 +153,7 @@ const WhiteLabelSettings = () => {
             <Eye className="w-4 h-4 text-warning dark:text-amber-400 shrink-0 mt-0.5" />
             <div className="text-xs text-amber-900 dark:text-amber-100 leading-snug">
               <strong className="text-warning dark:text-amber-300">Attribution is locked by your Autocurb account.</strong>{" "}
-              Your contract requires the "Powered by Autocurb.ai" credit to remain
+              Your contract requires the "Powered by AutoCurb.io" credit to remain
               visible. Contact your Autocurb Success Manager to change this setting.
             </div>
           </div>
@@ -173,7 +173,7 @@ const WhiteLabelSettings = () => {
           >
             <RadioGroupItem value="autocurb" id="pb-autocurb" className="mt-0.5" />
             <div className="flex-1">
-              <p className="text-sm font-medium">Powered by Autocurb.ai (default)</p>
+              <p className="text-sm font-medium">Powered by AutoCurb.io (default)</p>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Standard platform attribution. Subtle link to autocurb.io in the
                 site footer. The right choice for most dealerships.
@@ -357,7 +357,7 @@ const WhiteLabelSettings = () => {
                 if (effectiveMode === "autocurb") {
                   return (
                     <p className="text-micro text-muted-foreground/50">
-                      Powered by Autocurb.ai
+                      Powered by AutoCurb.io
                     </p>
                   );
                 }

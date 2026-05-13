@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import VehicleImage from "@/components/sell-form/VehicleImage";
 import SlideToAccept from "@/components/SlideToAccept";
 import ConsentDisclosure from "@/components/ConsentDisclosure";
+import { AiVerifiedBadge } from "@/components/offer/AiVerifiedBadge";
 import { track } from "@/lib/analytics";
 import { getTaxRateFromZip, calcTradeInValue, STATE_NAMES } from "@/lib/salesTax";
 
@@ -92,6 +93,7 @@ const OfferPageClarity = () => {
   const { toast } = useToast();
 
   const [submission, setSubmission] = useState<PortalSubmission | null>(null);
+  const [aiConditionScore, setAiConditionScore] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   // Sell vs Trade-In tab — Trade-In adds the customer's state sales-tax
@@ -139,6 +141,19 @@ const OfferPageClarity = () => {
         }
         setSubmission((data as unknown as PortalSubmission[])[0]);
         setLoading(false);
+        // Side-fetch the AI condition score so we can render the
+        // "Verified by AI" badge. Kept separate from the portal RPC
+        // (which has a fixed return shape) to avoid a migration.
+        supabase
+          .from("submissions")
+          .select("ai_condition_score")
+          .eq("token", token)
+          .maybeSingle()
+          .then(({ data: aiData }) => {
+            if (cancelled) return;
+            const row = aiData as { ai_condition_score?: string | null } | null;
+            if (row?.ai_condition_score) setAiConditionScore(row.ai_condition_score);
+          }, () => {});
       } catch (e) {
         if (cancelled) return;
         setError((e as Error).message || "Couldn't load your offer.");
@@ -533,6 +548,16 @@ const OfferPageClarity = () => {
                       <ShieldCheck className="w-3 h-3" aria-hidden="true" />
                       Subject to in-person inspection
                     </p>
+                    {/* AI-Verified condition badge — shows when our vision model
+                        confirmed the customer's self-reported condition. Builds
+                        trust before pickup so the customer doesn't feel
+                        ambushed at the dealership. */}
+                    <div className="flex justify-center pt-1">
+                      <AiVerifiedBadge
+                        customerCondition={s.overall_condition || null}
+                        aiCondition={aiConditionScore}
+                      />
+                    </div>
                   </motion.div>
                 ) : (
                   <motion.div

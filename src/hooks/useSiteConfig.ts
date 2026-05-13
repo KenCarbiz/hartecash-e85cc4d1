@@ -181,7 +181,7 @@ export interface SiteConfig {
   enterprise_beta_enabled: boolean;
   // White Label settings blob. powered_by_mode controls which
   // attribution appears in the customer-facing SiteFooter:
-  //   'autocurb' — "Powered by Autocurb.ai" (default)
+  //   'autocurb' — "Powered by AutoCurb.io" (default)
   //   'dealer'   — "Powered by {dealership_name}"
   //   'hidden'   — no attribution
   // The legacy hide_branding boolean is preserved as a fallback for
@@ -192,7 +192,7 @@ export interface SiteConfig {
     [k: string]: unknown;
   } | null;
   // Super-admin-only override. When true, always show "Powered by
-  // Autocurb.ai" regardless of the dealer's own powered_by_mode.
+  // AutoCurb.io" regardless of the dealer's own powered_by_mode.
   force_autocurb_attribution: boolean;
   about_hero_headline: string;
   about_hero_subtext: string;

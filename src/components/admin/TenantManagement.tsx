@@ -15,9 +15,10 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-import { Plus, Loader2, Globe, Pencil, Trash2, Copy, Rocket, CalendarClock, ArrowUpCircle } from "lucide-react";
+import { Plus, Loader2, Globe, Pencil, Trash2, Rocket, CalendarClock, ArrowUpCircle } from "lucide-react";
 import ArchitectureSelector from "./onboarding/ArchitectureSelector";
 import { architectureToplanTier, architectureToDbValue } from "./onboarding/types";
+import { InlineSlugEditor, InlineDomainEditor, InlineSubdomainEditor, CopyUrlButton, OpenDomainButton, normalizeSlug, validateSlug } from "./InlineTenantEditors";
 import type { ArchitectureType } from "./onboarding/types";
 
 interface Tenant {
@@ -26,6 +27,8 @@ interface Tenant {
   slug: string;
   display_name: string;
   custom_domain: string | null;
+  subdomain_label: string | null;
+  parent_domain: string | null;
   is_active: boolean;
   created_at: string;
 }
@@ -39,7 +42,7 @@ interface TenantForm {
   offerLogicApproverRole: string;
   architecture: ArchitectureType | null;
   originalArchitecture: ArchitectureType | null;
-  /** Super-admin-only — forces "Powered by Autocurb.ai" attribution on
+  /** Super-admin-only — forces "Powered by AutoCurb.io" attribution on
    *  the dealer's customer-facing footer regardless of their own
    *  white_label_settings.powered_by_mode. Used to enforce attribution
    *  on tiers that do not include white-label rights. */
@@ -201,13 +204,19 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
       toast({ title: "Missing fields", description: "ID, slug, and display name are required.", variant: "destructive" });
       return;
     }
+    const normalizedSlug = normalizeSlug(form.slug);
+    const slugError = validateSlug(normalizedSlug);
+    if (slugError) {
+      toast({ title: "Invalid slug", description: slugError, variant: "destructive" });
+      return;
+    }
     setSaving(true);
 
     const payload = {
       dealership_id: form.dealership_id.toLowerCase().replace(/[^a-z0-9_-]/g, ""),
-      slug: form.slug.toLowerCase().replace(/[^a-z0-9-]/g, ""),
+      slug: normalizedSlug,
       display_name: form.display_name,
-      custom_domain: form.custom_domain?.trim() || null,
+      custom_domain: form.custom_domain?.trim().toLowerCase() || null,
       is_active: form.is_active,
     };
 
@@ -302,12 +311,6 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
     fetchTenants();
   };
 
-  const copySlugUrl = (slug: string) => {
-    const host = window.location.hostname;
-    navigator.clipboard.writeText(`${slug}.${host}`);
-    toast({ title: "Copied", description: `${slug}.${host} copied to clipboard.` });
-  };
-
   // Derived: is this an upgrade?
   const newTier = form.architecture ? architectureToplanTier(form.architecture) : "standard";
   const oldTier = form.originalArchitecture ? architectureToplanTier(form.originalArchitecture) : "standard";
@@ -367,12 +370,31 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
                 <TableHead>Dealer</TableHead>
                 <TableHead>ID / Slug</TableHead>
                 <TableHead>Domain</TableHead>
+                <TableHead>Subdomain</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="w-[100px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {tenants.map(t => (
+              {tenants.map(t => {
+                // Resolve the parent domain for the subdomain editor:
+                //   1. Row already has one stored — use it.
+                //   2. Otherwise, look across siblings in the same
+                //      dealer group (same dealership_id) for a row
+                //      with a custom_domain. That's the group-level
+                //      domain sister stores live beneath.
+                const parentDomain =
+                  t.parent_domain ||
+                  tenants.find((other) =>
+                    other.id !== t.id &&
+                    other.dealership_id === t.dealership_id &&
+                    !!other.custom_domain
+                  )?.custom_domain ||
+                  null;
+                // Default the subdomain editor's input to the rooftop's
+                // path slug so dealers don't have to retype.
+                const defaultLabel = normalizeSlug(t.slug).slice(0, 30) || null;
+                return (
                 <TableRow key={t.id}>
                   <TableCell className="font-medium">{t.display_name}</TableCell>
                   <TableCell>
@@ -380,21 +402,48 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
                       <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{t.dealership_id}</code>
                       <div className="flex items-center gap-1">
                         <code className="text-xs text-muted-foreground">{t.slug}</code>
-                        <button onClick={() => copySlugUrl(t.slug)} className="text-muted-foreground hover:text-foreground">
-                          <Copy className="w-3 h-3" />
-                        </button>
+                        <InlineSlugEditor tenantId={t.id} currentSlug={t.slug} onSaved={fetchTenants} />
+                        <CopyUrlButton slug={t.slug} />
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    {t.custom_domain ? (
-                      <div className="flex items-center gap-1">
-                        <Globe className="w-3.5 h-3.5 text-primary" />
-                        <span className="text-sm">{t.custom_domain}</span>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
-                    )}
+                    <div className="flex items-center gap-1.5">
+                      {t.custom_domain ? (
+                        <>
+                          <Globe className="w-3.5 h-3.5 text-primary" />
+                          <span className="text-sm">{t.custom_domain}</span>
+                          <OpenDomainButton domain={t.custom_domain} />
+                        </>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                      <InlineDomainEditor tenantId={t.id} currentDomain={t.custom_domain} onSaved={fetchTenants} />
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1.5">
+                      {t.subdomain_label && t.parent_domain ? (
+                        <>
+                          <Globe className="w-3.5 h-3.5 text-primary" />
+                          <span className="text-sm font-mono">{t.subdomain_label}.{t.parent_domain}</span>
+                          <OpenDomainButton domain={`${t.subdomain_label}.${t.parent_domain}`} />
+                        </>
+                      ) : parentDomain ? (
+                        <span className="text-xs text-muted-foreground">— under <code className="font-mono">{parentDomain}</code></span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground/60" title="Set a custom domain on the group first">—</span>
+                      )}
+                      {parentDomain && (
+                        <InlineSubdomainEditor
+                          tenantId={t.id}
+                          parentDomain={parentDomain}
+                          currentLabel={t.subdomain_label}
+                          defaultLabel={defaultLabel}
+                          onSaved={fetchTenants}
+                        />
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Badge variant={t.is_active ? "default" : "secondary"}>
@@ -419,7 +468,8 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>
@@ -515,7 +565,7 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
                     display_name: name,
                     ...(!editing ? {
                       dealership_id: name.toLowerCase().replace(/[^a-z0-9]/g, "_").replace(/_+/g, "_").slice(0, 30),
-                      slug: name.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-").slice(0, 30),
+                      slug: normalizeSlug(name),
                     } : {}),
                   }));
                 }}
@@ -575,14 +625,14 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <Label className="text-sm font-semibold">Force "Powered by Autocurb.ai" Attribution</Label>
+                    <Label className="text-sm font-semibold">Force "Powered by AutoCurb.io" Attribution</Label>
                     <span className="text-[9px] font-bold uppercase tracking-wider text-warning dark:text-amber-400 bg-warning/15 border border-warning/30 rounded-md px-1.5 py-0.5">
                       Super Admin
                     </span>
                   </div>
                   <p className="text-[11px] text-muted-foreground leading-relaxed">
                     When <strong>on</strong>, the customer-facing site footer always shows
-                    "Powered by Autocurb.ai" regardless of the dealer's own white label settings.
+                    "Powered by AutoCurb.io" regardless of the dealer's own white label settings.
                     Use this to enforce attribution on tiers that don't include white-label
                     rights. When <strong>off</strong>, the dealer can choose between Autocurb
                     attribution, their own dealership name, or no attribution at all.
