@@ -294,22 +294,22 @@ export function printCheckRequest(
   ].join("\n");
 
   const html = `<!DOCTYPE html><html><head><title>Check Request</title><style>${css}</style></head><body>
-    <div class="header">${logoBase64 ? `<img src="${logoBase64}" alt="Logo" />` : `<h1 style="font-size:22px;font-weight:700;">Check Request</h1>`}<p>Check Request Form</p></div>
+    <div class="header">${logoBase64 ? `<img src="${esc(logoBase64)}" alt="Logo" />` : `<h1 style="font-size:22px;font-weight:700;">Check Request</h1>`}<p>Check Request Form</p></div>
     <div class="content">
       <p class="title">Check Request</p>
       <table>
-        <tr><th>Date</th><td>${today}</td></tr>
-        <tr><th>Customer Name (As It Appears on Title)</th><td>${s.name || ""}</td></tr>
-        <tr><th>Address</th><td>${[s.address_street, s.address_city, s.address_state, s.zip].filter(Boolean).join(", ")}</td></tr>
-        <tr><th>City, State, Zip</th><td>${[s.address_city, s.address_state, s.zip].filter(Boolean).join(", ") || ""}</td></tr>
-        <tr><th>Contact Phone</th><td>${formatPhone(s.phone)}</td></tr>
-        <tr><th>Contact Email</th><td>${s.email || ""}</td></tr>
+        <tr><th>Date</th><td>${esc(today)}</td></tr>
+        <tr><th>Customer Name (As It Appears on Title)</th><td>${esc(s.name || "")}</td></tr>
+        <tr><th>Address</th><td>${esc([s.address_street, s.address_city, s.address_state, s.zip].filter(Boolean).join(", "))}</td></tr>
+        <tr><th>City, State, Zip</th><td>${esc([s.address_city, s.address_state, s.zip].filter(Boolean).join(", ") || "")}</td></tr>
+        <tr><th>Contact Phone</th><td>${esc(formatPhone(s.phone))}</td></tr>
+        <tr><th>Contact Email</th><td>${esc(s.email || "")}</td></tr>
         <tr><th>Agreed Upon Value (Check Amount)</th><td class="amount">$${s.offered_price!.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td></tr>
         <tr><th>In-House ACV (Actual Cash Value)</th><td class="acv">${s.acv_value ? "$" + s.acv_value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "N/A"}</td></tr>
         <tr><th>Description</th><td style="font-weight:600;">Customer Direct Inventory Purchase</td></tr>
-        <tr><th>Vehicle</th><td>${vehicleStr}</td></tr>
-        <tr><th>VIN</th><td>${s.vin || "N/A"}</td></tr>
-        <tr><th>Mileage</th><td>${s.mileage || "N/A"}</td></tr>
+        <tr><th>Vehicle</th><td>${esc(vehicleStr)}</td></tr>
+        <tr><th>VIN</th><td>${esc(s.vin || "N/A")}</td></tr>
+        <tr><th>Mileage</th><td>${esc(s.mileage || "N/A")}</td></tr>
       </table>
       <div class="sig-section">
         <div class="sig-line">GSM / GM Signature</div>
