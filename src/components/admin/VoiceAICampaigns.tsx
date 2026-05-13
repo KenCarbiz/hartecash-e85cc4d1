@@ -186,9 +186,16 @@ const VoiceAICampaigns = () => {
 
       if (dealer) {
         const d = dealer;
+        // Voice AI API key now lives in dealer_voice_secrets (admin-only RLS).
+        // Non-admin staff will receive null here, which is intentional.
+        const { data: secret } = await supabase
+          .from("dealer_voice_secrets")
+          .select("voice_ai_api_key")
+          .eq("dealership_id", dealershipId)
+          .maybeSingle();
         setConfig({
           voice_ai_enabled: !!d.voice_ai_enabled,
-          voice_ai_api_key: d.voice_ai_api_key || "",
+          voice_ai_api_key: secret?.voice_ai_api_key || "",
           voice_ai_from_number: d.voice_ai_from_number || "",
           voice_ai_transfer_number: d.voice_ai_transfer_number || "",
           voice_ai_max_bump_amount: d.voice_ai_max_bump_amount ?? 500,
@@ -240,7 +247,6 @@ const VoiceAICampaigns = () => {
         {
           dealership_id: dealershipId,
           voice_ai_enabled: config.voice_ai_enabled,
-          voice_ai_api_key: config.voice_ai_api_key || null,
           voice_ai_from_number: config.voice_ai_from_number || null,
           voice_ai_transfer_number: config.voice_ai_transfer_number || null,
           voice_ai_max_bump_amount: config.voice_ai_max_bump_amount,
@@ -253,9 +259,22 @@ const VoiceAICampaigns = () => {
         { onConflict: "dealership_id" },
       );
 
+    // API key is stored separately (admin-only RLS); only upsert when admin
+    // actually entered something to avoid wiping it for non-admin viewers.
+    let secretError: { message: string } | null = null;
+    if (config.voice_ai_api_key) {
+      const { error: sErr } = await supabase
+        .from("dealer_voice_secrets")
+        .upsert(
+          { dealership_id: dealershipId, voice_ai_api_key: config.voice_ai_api_key, updated_at: new Date().toISOString() },
+          { onConflict: "dealership_id" },
+        );
+      if (sErr) secretError = sErr;
+    }
+
     setSaving(false);
-    if (error) {
-      toast({ title: "Save failed", description: error.message, variant: "destructive" });
+    if (error || secretError) {
+      toast({ title: "Save failed", description: (error || secretError)!.message, variant: "destructive" });
     } else {
       toast({ title: "Configuration saved", description: "Voice AI settings updated successfully." });
     }

@@ -88,11 +88,16 @@ serve(async (req) => {
     const submissionIdInput = payload.submission_id;
     const tokenInput = payload.submission_token || payload.token;
 
-    if (!submissionIdInput && !tokenInput) {
+    // SECURITY: require a submission token for any write. The bare
+    // `submission_id` path used to allow anyone who learned a submission UUID
+    // (from a portal magic link, shared SMS, etc.) to inject false DTC codes
+    // or odometer readings. Tokens are high-entropy per-submission secrets;
+    // requiring one ensures the caller actually owns the submission.
+    if (!tokenInput) {
       return new Response(
-        JSON.stringify({ error: "Missing submission_id or submission_token" }),
+        JSON.stringify({ error: "Missing submission_token" }),
         {
-          status: 400,
+          status: 401,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         },
       );
@@ -102,48 +107,28 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Resolve submission by id or token
-    let submissionId: string | null = submissionIdInput ?? null;
-    let submissionRow: { id: string; token: string | null } | null = null;
-
-    if (submissionIdInput) {
-      const { data, error } = await supabase
-        .from("submissions")
-        .select("id, token")
-        .eq("id", submissionIdInput)
-        .maybeSingle();
-      if (error) throw error;
-      if (!data) {
-        return new Response(JSON.stringify({ error: "Submission not found" }), {
-          status: 404,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      submissionRow = data as { id: string; token: string | null };
-      submissionId = data.id;
-    } else if (tokenInput) {
-      const { data, error } = await supabase
-        .from("submissions")
-        .select("id, token")
-        .eq("token", tokenInput)
-        .maybeSingle();
-      if (error) throw error;
-      if (!data) {
-        return new Response(JSON.stringify({ error: "Invalid submission token" }), {
-          status: 404,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      submissionRow = data as { id: string; token: string | null };
-      submissionId = data.id;
-    }
-
-    if (!submissionId || !submissionRow) {
-      return new Response(JSON.stringify({ error: "Could not resolve submission" }), {
-        status: 400,
+    // Resolve submission strictly by token. If submission_id was also supplied,
+    // verify it matches the token's row to prevent token-swap attacks.
+    const { data, error } = await supabase
+      .from("submissions")
+      .select("id, token")
+      .eq("token", tokenInput)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) {
+      return new Response(JSON.stringify({ error: "Invalid submission token" }), {
+        status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    if (submissionIdInput && submissionIdInput !== data.id) {
+      return new Response(
+        JSON.stringify({ error: "submission_id does not match submission_token" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    const submissionRow = data as { id: string; token: string | null };
+    const submissionId: string = data.id;
 
     // Normalize DTCs
     const dtcCodes = normalizeDtcArray(payload.dtc_codes);
