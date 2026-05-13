@@ -951,7 +951,6 @@ export type Database = {
           start_date: string | null
           twilio_from_number: string | null
           updated_at: string
-          voice_ai_api_key: string | null
           voice_ai_beat_competitor_amount: number | null
           voice_ai_call_end: string | null
           voice_ai_call_start: string | null
@@ -987,7 +986,6 @@ export type Database = {
           start_date?: string | null
           twilio_from_number?: string | null
           updated_at?: string
-          voice_ai_api_key?: string | null
           voice_ai_beat_competitor_amount?: number | null
           voice_ai_call_end?: string | null
           voice_ai_call_start?: string | null
@@ -1023,7 +1021,6 @@ export type Database = {
           start_date?: string | null
           twilio_from_number?: string | null
           updated_at?: string
-          voice_ai_api_key?: string | null
           voice_ai_beat_competitor_amount?: number | null
           voice_ai_call_end?: string | null
           voice_ai_call_start?: string | null
@@ -1190,6 +1187,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      dealer_voice_secrets: {
+        Row: {
+          dealership_id: string
+          updated_at: string
+          updated_by: string | null
+          voice_ai_api_key: string | null
+        }
+        Insert: {
+          dealership_id: string
+          updated_at?: string
+          updated_by?: string | null
+          voice_ai_api_key?: string | null
+        }
+        Update: {
+          dealership_id?: string
+          updated_at?: string
+          updated_by?: string | null
+          voice_ai_api_key?: string | null
+        }
+        Relationships: []
       }
       dealership_locations: {
         Row: {
