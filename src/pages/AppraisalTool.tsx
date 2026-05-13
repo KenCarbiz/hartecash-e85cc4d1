@@ -1682,10 +1682,9 @@ export default function AppraisalTool() {
               show={sub.progress_status === "offer_declined" || sub.progress_status === "scheduled" || sub.progress_status === "visiting"}
             />
 
-            {/* Management Override — requires PIN */}
+            {/* Management Override — requires per-user PIN (server-verified) */}
             {!sub.appraisal_finalized && (
               <ManagementOverride
-                managerPin={managerPin}
                 currentValue={finalValue}
                 onOverrideChange={(amount, reason) => setManagerOverride({ amount, reason, by: "Manager" })}
                 existingOverride={managerOverride}
