@@ -32,7 +32,7 @@ export function useFrontDeskRealtime(
   useEffect(() => {
     if (!dealershipId) return;
     const channel = supabase
-      .channel(`front-desk:${dealershipId}`)
+      .channel(`${dealershipId}:front-desk`)
       .on(
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore supabase realtime types are loose
