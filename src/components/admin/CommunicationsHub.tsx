@@ -75,7 +75,7 @@ const CommunicationsHub = ({
           {canManageChannels && <TabsTrigger value="objections">Objection Playbook</TabsTrigger>}
           {canManageChannels && <TabsTrigger value="incentives">Trade-Up Incentives</TabsTrigger>}
           {canManageChannels && <TabsTrigger value="voice_ai">Voice AI Training</TabsTrigger>}
-          {canManageChannels && <TabsTrigger value="voice_quality">Voice Quality</TabsTrigger>}
+          {canManageChannels && isPlatformAdmin && <TabsTrigger value="voice_quality">Voice Quality</TabsTrigger>}
           <TabsTrigger value="compliance">Compliance</TabsTrigger>
         </TabsList>
 
