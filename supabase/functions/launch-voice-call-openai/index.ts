@@ -94,7 +94,7 @@ serve(async (req) => {
     const { data: dealer } = await supabase
       .from("dealer_accounts")
       .select(
-        "id, voice_ai_provider, voice_ai_enabled, voice_ai_api_key, " +
+        "id, voice_ai_provider, voice_ai_enabled, " +
         // Twilio creds — added when the OpenAI provider is fully wired
         "twilio_account_sid, twilio_auth_token, twilio_from_number",
       )
