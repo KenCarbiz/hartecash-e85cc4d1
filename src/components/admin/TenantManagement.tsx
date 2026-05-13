@@ -402,7 +402,7 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
                       <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{t.dealership_id}</code>
                       <div className="flex items-center gap-1">
                         <code className="text-xs text-muted-foreground">{t.slug}</code>
-                        <InlineSlugEditor tenantId={t.id} currentSlug={t.slug} onSaved={fetchTenants} />
+                        <InlineSlugEditor tenantId={t.id} dealershipId={t.dealership_id} currentSlug={t.slug} onSaved={fetchTenants} />
                         <CopyUrlButton slug={t.slug} />
                       </div>
                     </div>
@@ -418,7 +418,7 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
                       ) : (
                         <span className="text-xs text-muted-foreground">—</span>
                       )}
-                      <InlineDomainEditor tenantId={t.id} currentDomain={t.custom_domain} onSaved={fetchTenants} />
+                      <InlineDomainEditor tenantId={t.id} dealershipId={t.dealership_id} currentDomain={t.custom_domain} onSaved={fetchTenants} />
                     </div>
                   </TableCell>
                   <TableCell>
@@ -430,15 +430,26 @@ const TenantManagement = ({ onSetupDealer }: TenantManagementProps) => {
                           <OpenDomainButton domain={`${t.subdomain_label}.${t.parent_domain}`} />
                         </>
                       ) : parentDomain ? (
-                        <span className="text-xs text-muted-foreground">— under <code className="font-mono">{parentDomain}</code></span>
+                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                          <span className="opacity-60">—</span>
+                          <span className="text-[10px] uppercase tracking-wider">Available under</span>
+                          <code className="font-mono text-[10px] bg-muted/50 px-1 py-0.5 rounded">{parentDomain}</code>
+                        </span>
                       ) : (
-                        <span className="text-xs text-muted-foreground/60" title="Set a custom domain on the group first">—</span>
+                        <span
+                          className="text-xs text-muted-foreground/70"
+                          title="Set a custom domain on a dealer in this group first — sister stores then map as subdomains beneath it."
+                        >
+                          Set a parent domain to enable
+                        </span>
                       )}
                       {parentDomain && (
                         <InlineSubdomainEditor
                           tenantId={t.id}
+                          dealershipId={t.dealership_id}
                           parentDomain={parentDomain}
                           currentLabel={t.subdomain_label}
+                          currentParentDomain={t.parent_domain}
                           defaultLabel={defaultLabel}
                           onSaved={fetchTenants}
                         />

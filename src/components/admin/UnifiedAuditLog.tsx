@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
-  Loader2, Search, RefreshCw, Eye, ArrowRightLeft, FileSearch, Webhook, Download, Filter,
+  Loader2, Search, RefreshCw, Eye, ArrowRightLeft, FileSearch, Webhook, Download, Filter, Pencil,
 } from "lucide-react";
 
 type AuditKind =
   | "tenant_view"
+  | "tenant_edit"
   | "rooftop_detach"
   | "data_egress"
   | "stripe_event";
@@ -26,6 +27,7 @@ type AuditRow = {
 
 const KIND_META: Record<AuditKind, { label: string; icon: React.ComponentType<{ className?: string }>; color: string }> = {
   tenant_view:    { label: "View-as",    icon: Eye,            color: "text-warning" },
+  tenant_edit:    { label: "Tenant edit",icon: Pencil,         color: "text-primary" },
   rooftop_detach: { label: "Rooftop op", icon: ArrowRightLeft, color: "text-red-700"   },
   data_egress:    { label: "Data export",icon: FileSearch,     color: "text-info"   },
   stripe_event:   { label: "Stripe",     icon: Webhook,        color: "text-success" },
@@ -81,19 +83,25 @@ const UnifiedAuditLog = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [kindFilter, setKindFilter] = useState<Set<AuditKind>>(
-    () => new Set(["tenant_view", "rooftop_detach", "data_egress", "stripe_event"]),
+    () => new Set(["tenant_view", "tenant_edit", "rooftop_detach", "data_egress", "stripe_event"]),
   );
 
   const reload = useCallback(async () => {
     setLoading(true);
     const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-    const [viewLogs, detaches, egress, stripeEvents] = await Promise.all([
+    const [viewLogs, edits, detaches, egress, stripeEvents] = await Promise.all([
       supabase
         .from("tenant_view_log")
         .select("started_at, super_admin_email, target_dealership_id, target_display_name, reason, ended_at")
         .gte("started_at", since)
         .order("started_at", { ascending: false })
+        .limit(200),
+      supabase
+        .from("tenant_edit_log" as never)
+        .select("created_at, performed_by_email, dealership_id, field, old_value, new_value")
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
         .limit(200),
       supabase
         .from("rooftop_detach_log")
@@ -126,6 +134,20 @@ const UnifiedAuditLog = () => {
         actor_role: "platform-admin",
         target: r.target_display_name || r.target_dealership_id,
         detail: `${r.reason}${ended}`,
+        raw: r,
+      });
+    }
+
+    for (const r of (edits.data as any[]) ?? []) {
+      const oldV = r.old_value == null ? "∅" : String(r.old_value);
+      const newV = r.new_value == null ? "∅" : String(r.new_value);
+      out.push({
+        ts: r.created_at,
+        kind: "tenant_edit",
+        actor_email: r.performed_by_email,
+        actor_role: "platform-admin",
+        target: r.dealership_id,
+        detail: `${r.field}: ${oldV} → ${newV}`,
         raw: r,
       });
     }
