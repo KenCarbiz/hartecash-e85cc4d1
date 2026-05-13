@@ -1233,10 +1233,10 @@ const InspectionSheet = () => {
 
       <div class="vehicle-bar">
         <div class="cell"><div class="cell-label">Vehicle</div><div class="cell-value">${vTitle || "_______________"}</div></div>
-        <div class="cell"><div class="cell-label">VIN</div><div class="cell-value cell-mono">${submission.vin || "_________________"}</div></div>
+        <div class="cell"><div class="cell-label">VIN</div><div class="cell-value cell-mono">${safeVin}</div></div>
         <div class="cell"><div class="cell-label">Mileage</div><div class="cell-value">${submission.mileage ? Number(submission.mileage).toLocaleString() + " mi" : "________"}</div></div>
-        <div class="cell"><div class="cell-label">Color</div><div class="cell-value">${submission.exterior_color || "________"}</div></div>
-        <div class="cell"><div class="cell-label">Plate / State</div><div class="cell-value">${submission.plate || "______"} / ${submission.state || "__"}</div></div>
+        <div class="cell"><div class="cell-label">Color</div><div class="cell-value">${safeColor}</div></div>
+        <div class="cell"><div class="cell-label">Plate / State</div><div class="cell-value">${safePlate} / ${safeState}</div></div>
       </div>
 
       ${body}
