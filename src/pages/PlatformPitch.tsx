@@ -28,7 +28,7 @@ import {
 
 /**
  * B2B Platform Pitch Page — targets dealer principals considering
- * the AutoCurb.ai platform. Follows the proven SaaS narrative arc:
+ * the AutoCurb.io platform. Follows the proven SaaS narrative arc:
  * Promise → Problem → Product → Proof → Push.
  *
  * Route: /platform

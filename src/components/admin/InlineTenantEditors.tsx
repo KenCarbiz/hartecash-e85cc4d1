@@ -15,6 +15,8 @@ import { Pencil, Loader2, Check, Copy, Globe, AlertTriangle, ExternalLink, Trash
 
 const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$/;
 const DOMAIN_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/;
+// Subdomain labels are a single DNS segment — no dots, kebab-case OK.
+const SUBDOMAIN_LABEL_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
 
 export function normalizeSlug(input: string): string {
   return input
@@ -37,6 +39,22 @@ function validateDomain(domain: string): string | null {
   if (!domain) return null; // optional
   if (!DOMAIN_PATTERN.test(domain)) return "Enter a valid hostname (e.g. sellmycar.smithmotors.com).";
   if (domain.length > 253) return "Domain too long.";
+  return null;
+}
+
+function normalizeSubdomainLabel(input: string): string {
+  return input
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 63);
+}
+
+function validateSubdomainLabel(label: string): string | null {
+  if (!label) return null; // clearing is allowed
+  if (label.length > 63) return "Subdomain must be 63 characters or fewer.";
+  if (!SUBDOMAIN_LABEL_PATTERN.test(label)) return "Use lowercase letters, numbers, and hyphens. No dots, no leading or trailing hyphen.";
   return null;
 }
 
@@ -364,5 +382,186 @@ export function OpenDomainButton({ domain }: { domain: string }) {
     >
       <ExternalLink className="w-3 h-3" />
     </a>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Subdomain editor — popover that sets <label>.<parent_domain>
+// for a sister-store rooftop. Only renders when a parent domain
+// is available (resolved by the caller from the dealer group).
+// ─────────────────────────────────────────────────────────────
+
+interface SubdomainEditorProps {
+  tenantId: string;
+  parentDomain: string;
+  currentLabel: string | null;
+  defaultLabel?: string | null;
+  onSaved: () => void;
+}
+
+export function InlineSubdomainEditor({ tenantId, parentDomain, currentLabel, defaultLabel, onSaved }: SubdomainEditorProps) {
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(currentLabel || defaultLabel || "");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [dnsStatus, setDnsStatus] = useState<DnsStatus>("idle");
+
+  const checkDns = async (host: string) => {
+    setDnsStatus("checking");
+    try {
+      await fetch(`https://${host}/`, { method: "HEAD", mode: "no-cors", cache: "no-store" });
+      setDnsStatus("reachable");
+    } catch {
+      setDnsStatus("unreachable");
+    }
+  };
+
+  const save = async () => {
+    const label = normalizeSubdomainLabel(value);
+    const validationError = validateSubdomainLabel(label);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    if ((label || null) === currentLabel) {
+      setOpen(false);
+      return;
+    }
+    setSaving(true);
+    if (label) {
+      const { data: collision } = await supabase
+        .from("tenants")
+        .select("id")
+        .eq("parent_domain", parentDomain)
+        .eq("subdomain_label", label)
+        .neq("id", tenantId)
+        .maybeSingle();
+      if (collision) {
+        setError(`That subdomain is already taken under ${parentDomain}.`);
+        setSaving(false);
+        return;
+      }
+    }
+    const { error: updateError } = await supabase
+      .from("tenants")
+      .update({
+        subdomain_label: label || null,
+        parent_domain: label ? parentDomain : null,
+      } as never)
+      .eq("id", tenantId);
+    setSaving(false);
+    if (updateError) {
+      setError(updateError.message);
+      return;
+    }
+    toast({
+      title: label ? "Subdomain mapped" : "Subdomain removed",
+      description: label ? `${label}.${parentDomain}` : "Sister-store subdomain cleared.",
+    });
+    setOpen(false);
+    onSaved();
+  };
+
+  const remove = async () => {
+    setSaving(true);
+    const { error: updateError } = await supabase
+      .from("tenants")
+      .update({ subdomain_label: null, parent_domain: null } as never)
+      .eq("id", tenantId);
+    setSaving(false);
+    if (updateError) {
+      setError(updateError.message);
+      return;
+    }
+    toast({ title: "Subdomain removed" });
+    setOpen(false);
+    onSaved();
+  };
+
+  const previewHost = `${normalizeSubdomainLabel(value) || "store"}.${parentDomain}`;
+
+  return (
+    <Popover open={open} onOpenChange={(o) => { setOpen(o); if (o) { setValue(currentLabel || defaultLabel || ""); setError(null); setDnsStatus("idle"); } }}>
+      <PopoverTrigger asChild>
+        <button className="text-muted-foreground hover:text-foreground p-0.5 rounded transition" title={currentLabel ? "Edit subdomain" : `Map a subdomain under ${parentDomain}`}>
+          <Pencil className="w-3 h-3" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[420px]" align="start">
+        <div className="space-y-3">
+          <div>
+            <Label className="text-xs font-semibold">Sister-store Subdomain</Label>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Routes this store at <code className="font-mono bg-muted px-1 rounded text-[10px]">&lt;label&gt;.{parentDomain}</code>.
+            </p>
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <Input
+                value={value}
+                onChange={(e) => { setValue(e.target.value); setError(null); setDnsStatus("idle"); }}
+                onBlur={() => setValue(normalizeSubdomainLabel(value))}
+                placeholder="toyota"
+                className="font-mono text-sm flex-1"
+                autoFocus
+              />
+              <span className="text-xs text-muted-foreground">.{parentDomain}</span>
+            </div>
+            {error && (
+              <div className="flex items-center gap-1.5 mt-1.5 text-[11px] text-destructive">
+                <AlertTriangle className="w-3 h-3" />
+                <span>{error}</span>
+              </div>
+            )}
+          </div>
+          <div className="rounded-md bg-muted/50 border border-border px-2.5 py-2">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Live URL preview</div>
+            <code className="text-xs font-mono break-all">https://{previewHost}</code>
+          </div>
+          {value && (
+            <div className="flex items-center justify-between rounded-md bg-muted/50 border border-border px-2.5 py-2 text-[11px]">
+              <span className="text-muted-foreground">DNS status</span>
+              <div className="flex items-center gap-2">
+                <DnsBadge status={dnsStatus} />
+                <Button variant="ghost" size="sm" className="h-6 px-2 text-[11px]" onClick={() => checkDns(previewHost)} disabled={dnsStatus === "checking"}>
+                  {dnsStatus === "checking" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Globe className="w-3 h-3" />}
+                  Check
+                </Button>
+              </div>
+            </div>
+          )}
+          <div className="rounded-md border border-border bg-card px-2.5 py-2 text-[11px] space-y-1.5">
+            <div className="font-semibold text-foreground">DNS — pick one:</div>
+            <div className="flex items-start gap-1.5 text-muted-foreground">
+              <Check className="w-3 h-3 text-emerald-600 shrink-0 mt-0.5" />
+              <div>
+                <strong className="text-foreground">Recommended:</strong> wildcard record <code className="font-mono bg-muted px-1 rounded text-[10px]">*.{parentDomain}</code> → <code className="font-mono bg-muted px-1 rounded text-[10px]">{EXPECTED_IP}</code>
+                <div className="text-[10px] mt-0.5">One DNS entry covers every sister store, current and future.</div>
+              </div>
+            </div>
+            <div className="flex items-start gap-1.5 text-muted-foreground">
+              <Check className="w-3 h-3 text-muted-foreground shrink-0 mt-0.5" />
+              <div>
+                <strong className="text-foreground">Alternative:</strong> single A record <code className="font-mono bg-muted px-1 rounded text-[10px]">{previewHost}</code> → <code className="font-mono bg-muted px-1 rounded text-[10px]">{EXPECTED_IP}</code>
+                <div className="text-[10px] mt-0.5">This store only. Repeat per sister store.</div>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 justify-end">
+            {currentLabel && (
+              <Button variant="ghost" size="sm" onClick={remove} className="text-destructive hover:text-destructive mr-auto" disabled={saving}>
+                <Trash2 className="w-3 h-3 mr-1" /> Remove
+              </Button>
+            )}
+            <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button size="sm" onClick={save} disabled={saving}>
+              {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+              Save
+            </Button>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }

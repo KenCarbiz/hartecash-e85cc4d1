@@ -214,10 +214,40 @@ async function resolveTenant(): Promise<TenantInfo> {
     console.warn("dealer_groups custom_domain lookup failed:", (e as Error).message);
   }
 
-  // 2. Try subdomain slug (e.g. smith.yourdomain.com → "smith")
+  // 2. Try parent-domain-scoped subdomain (e.g. toyota.smithauto.com)
+  //    Wins over the global subdomain fallback because it's namespaced
+  //    to the dealer group — "toyota" can mean different rooftops in
+  //    different groups, and the parent_domain disambiguates.
   const parts = hostname.split(".");
   if (parts.length >= 3) {
     const subdomain = parts[0];
+    const parentDomain = parts.slice(1).join(".");
+    try {
+      const { data: scopedMatch } = await supabase
+        .from("tenants")
+        .select("dealership_id, slug, display_name, location_id")
+        .eq("parent_domain", parentDomain)
+        .eq("subdomain_label", subdomain)
+        .maybeSingle();
+      if (scopedMatch) {
+        const t: TenantInfo = {
+          dealership_id: (scopedMatch as any).dealership_id,
+          slug: (scopedMatch as any).slug,
+          display_name: (scopedMatch as any).display_name,
+          location_id: (scopedMatch as any).location_id ?? null,
+        };
+        cachedTenant = { hostname, tenant: t };
+        return t;
+      }
+    } catch (e) {
+      // parent_domain/subdomain_label columns may not exist on older
+      // deployments; fall through to the global slug fallback.
+      console.warn("subdomain routing lookup failed:", (e as Error).message);
+    }
+
+    // 2b. Global subdomain slug fallback (e.g. smith.yourdomain.com → "smith")
+    //     Kept for backwards compat with tenants set up before the
+    //     parent-domain model.
     const { data: slugMatch } = await supabase.rpc("get_tenant_by_domain", {
       _domain: subdomain,
     });
