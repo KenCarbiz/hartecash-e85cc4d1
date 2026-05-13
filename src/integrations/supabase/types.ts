@@ -4293,6 +4293,7 @@ export type Database = {
           bb_drivetrain: string | null
           bb_engine: string | null
           bb_fuel_type: string | null
+          bb_market_days_supply: number | null
           bb_mileage_adj: number | null
           bb_msrp: number | null
           bb_regional_adj: number | null
@@ -4445,6 +4446,7 @@ export type Database = {
           bb_drivetrain?: string | null
           bb_engine?: string | null
           bb_fuel_type?: string | null
+          bb_market_days_supply?: number | null
           bb_mileage_adj?: number | null
           bb_msrp?: number | null
           bb_regional_adj?: number | null
@@ -4597,6 +4599,7 @@ export type Database = {
           bb_drivetrain?: string | null
           bb_engine?: string | null
           bb_fuel_type?: string | null
+          bb_market_days_supply?: number | null
           bb_mileage_adj?: number | null
           bb_msrp?: number | null
           bb_regional_adj?: number | null
@@ -4869,8 +4872,10 @@ export type Database = {
           id: string
           is_active: boolean
           location_id: string | null
+          parent_domain: string | null
           slug: string
           stripe_customer_id: string | null
+          subdomain_label: string | null
           updated_at: string
         }
         Insert: {
@@ -4881,8 +4886,10 @@ export type Database = {
           id?: string
           is_active?: boolean
           location_id?: string | null
+          parent_domain?: string | null
           slug: string
           stripe_customer_id?: string | null
+          subdomain_label?: string | null
           updated_at?: string
         }
         Update: {
@@ -4893,8 +4900,10 @@ export type Database = {
           id?: string
           is_active?: boolean
           location_id?: string | null
+          parent_domain?: string | null
           slug?: string
           stripe_customer_id?: string | null
+          subdomain_label?: string | null
           updated_at?: string
         }
         Relationships: [
