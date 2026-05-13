@@ -319,7 +319,6 @@ export default function AppraisalTool() {
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [bbValueBasis, setBbValueBasis] = useState("tradein_avg");
   const [managerOverride, setManagerOverride] = useState<{ amount: number | null; reason: string | null; by: string | null }>({ amount: null, reason: null, by: null });
-  const [managerPin, setManagerPin] = useState("0000");
   const [targetGrossMin, setTargetGrossMin] = useState(0);
 
   // Editable condition fields (pre-filled from customer, overridable by appraiser)
