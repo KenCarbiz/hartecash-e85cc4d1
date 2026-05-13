@@ -53,6 +53,7 @@ const CommunicationsHub = ({
   canManageChannels = true,
   showTenantViewLog = false,
 }: CommunicationsHubProps) => {
+  const { isPlatformAdmin } = useIsPlatformAdmin();
   const [tab, setTab] = useState<string>(
     canManageChannels ? initialTab : "compliance",
   );
