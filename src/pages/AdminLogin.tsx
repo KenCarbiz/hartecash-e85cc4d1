@@ -10,6 +10,17 @@ import { useToast } from "@/hooks/use-toast";
 import { track, identify } from "@/lib/analytics";
 
 const getSafeAuthError = (message: string, isSignup: boolean): string => {
+  const normalized = message.toLowerCase();
+  if (
+    isSignup &&
+    (normalized.includes("known to be weak") ||
+      normalized.includes("easy to guess") ||
+      normalized.includes("weak password") ||
+      normalized.includes("password has been pwned"))
+  ) {
+    return "Password is too common or has appeared in a data breach. Choose a stronger temporary password.";
+  }
+
   const map: Record<string, string> = {
     "Invalid login credentials": "Invalid email or password.",
     "Email not confirmed": "Please verify your email address before signing in.",
@@ -54,16 +65,10 @@ const AdminLogin = () => {
         return;
       }
 
-      if (data.user) {
-        const { error: reqError } = await supabase.from("pending_admin_requests").insert({
-          user_id: data.user.id,
-          email,
-        });
-        if (reqError) {
-          setError("Failed to submit access request.");
-          setLoading(false);
-          return;
-        }
+      if (!data.user) {
+        setError("Unable to create account. Please try signing in instead.");
+        setLoading(false);
+        return;
       }
 
       setError("");
@@ -72,7 +77,7 @@ const AdminLogin = () => {
       setIsSignup(false);
       toast({
         title: "Account created!",
-        description: "Your request has been sent to the admin for approval.",
+        description: "Check your email to verify the account. Your access request is pending approval.",
       });
     } else {
       // ── Pre-signin lockout check ──

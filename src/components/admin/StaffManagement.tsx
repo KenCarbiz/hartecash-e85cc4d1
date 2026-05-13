@@ -12,7 +12,7 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-import { Trash2, Shield, Info, Phone, Save, UserPlus, UserCog, Gauge, Moon } from "lucide-react";
+import { Trash2, Shield, Info, Phone, Save, UserPlus, UserCog, Gauge, Moon, Mail } from "lucide-react";
 import CallAvailabilityDialog from "./CallAvailabilityDialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -100,6 +100,12 @@ const StaffManagement = () => {
   const [addDisplayName, setAddDisplayName] = useState("");
   const [addLocationId, setAddLocationId] = useState<string>("all");
   const [adding, setAdding] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState("sales_bdc");
+  const [inviteName, setInviteName] = useState("");
+  const [inviteLocationId, setInviteLocationId] = useState<string>("all");
+  const [inviting, setInviting] = useState(false);
   const [permGroups, setPermGroups] = useState<{ id: string; name: string; allowed_sections: string[] }[]>([]);
   const [editingSections, setEditingSections] = useState<StaffMember | null>(null);
   const [locations, setLocations] = useState<DealerLocation[]>([]);
@@ -327,6 +333,40 @@ const StaffManagement = () => {
     fetchStaff();
   };
 
+  const handleSendInvite = async () => {
+    const email = inviteEmail.trim().toLowerCase();
+    if (!email || !email.includes("@")) {
+      toast({ title: "Email required", description: "Enter a valid email address.", variant: "destructive" });
+      return;
+    }
+    setInviting(true);
+    const { data, error } = await supabase.functions.invoke("invite-staff", {
+      body: {
+        email,
+        role: inviteRole,
+        location_id: inviteLocationId,
+        display_name: inviteName.trim() || null,
+        redirect_origin: window.location.origin,
+      },
+    });
+    setInviting(false);
+    if (error || (data as any)?.error) {
+      toast({
+        title: "Invite failed",
+        description: (data as any)?.error || error?.message || "Could not send invite.",
+        variant: "destructive",
+      });
+      return;
+    }
+    toast({ title: "Invite sent", description: (data as any)?.message || `Invite emailed to ${email}.` });
+    setInviteOpen(false);
+    setInviteEmail("");
+    setInviteName("");
+    setInviteRole("sales_bdc");
+    setInviteLocationId("all");
+    fetchStaff();
+  };
+
   if (loading) {
     return <div className="text-center py-12 text-muted-foreground">Loading staff...</div>;
   }
@@ -415,17 +455,90 @@ const StaffManagement = () => {
     );
   }
 
+  function renderInviteDialog() {
+    return (
+      <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Invite Employee by Email</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-xs text-muted-foreground">
+              We'll email a secure sign-up link. They click it, set a password, and land in the admin with the role you choose below — no need to share the /admin URL.
+            </p>
+            <div className="space-y-2">
+              <Label>Email Address</Label>
+              <Input
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                placeholder="employee@example.com"
+                type="email"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Display Name (optional)</Label>
+              <Input
+                value={inviteName}
+                onChange={(e) => setInviteName(e.target.value)}
+                placeholder="Andrew Ferrara"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Role</Label>
+              <Select value={inviteRole} onValueChange={setInviteRole}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sales_bdc">Sales / BDC</SelectItem>
+                  <SelectItem value="used_car_manager">Used Car Manager</SelectItem>
+                  <SelectItem value="new_car_manager">New Car Manager</SelectItem>
+                  <SelectItem value="gsm_gm">GSM / GM</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {locations.length > 0 && inviteRole !== "admin" && (
+              <div className="space-y-2">
+                <Label>Store Location</Label>
+                <Select value={inviteLocationId} onValueChange={setInviteLocationId}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Stores</SelectItem>
+                    {locations.map(loc => (
+                      <SelectItem key={loc.id} value={loc.id}>{loc.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setInviteOpen(false)}>Cancel</Button>
+            <Button onClick={handleSendInvite} disabled={inviting}>
+              <Mail className="w-4 h-4 mr-1" /> {inviting ? "Sending..." : "Send Invite"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {/* Add Employee button + Permissions legend */}
       <div className="flex items-center justify-between mb-2">
         <div />
-        <Button onClick={() => setAddOpen(true)} size="sm">
-          <UserPlus className="w-4 h-4 mr-1" /> Add Employee
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => setInviteOpen(true)} size="sm" variant="outline">
+            <Mail className="w-4 h-4 mr-1" /> Invite by Email
+          </Button>
+          <Button onClick={() => setAddOpen(true)} size="sm">
+            <UserPlus className="w-4 h-4 mr-1" /> Add Employee
+          </Button>
+        </div>
       </div>
 
       {renderAddDialog()}
+      {renderInviteDialog()}
 
       <div className="bg-muted/40 rounded-xl p-4 border border-border">
         <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Role Permissions</h4>

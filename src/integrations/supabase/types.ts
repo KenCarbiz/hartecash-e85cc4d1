@@ -4293,6 +4293,7 @@ export type Database = {
           bb_drivetrain: string | null
           bb_engine: string | null
           bb_fuel_type: string | null
+          bb_market_days_supply: number | null
           bb_mileage_adj: number | null
           bb_msrp: number | null
           bb_regional_adj: number | null
@@ -4445,6 +4446,7 @@ export type Database = {
           bb_drivetrain?: string | null
           bb_engine?: string | null
           bb_fuel_type?: string | null
+          bb_market_days_supply?: number | null
           bb_mileage_adj?: number | null
           bb_msrp?: number | null
           bb_regional_adj?: number | null
@@ -4597,6 +4599,7 @@ export type Database = {
           bb_drivetrain?: string | null
           bb_engine?: string | null
           bb_fuel_type?: string | null
+          bb_market_days_supply?: number | null
           bb_mileage_adj?: number | null
           bb_msrp?: number | null
           bb_regional_adj?: number | null
@@ -4869,8 +4872,10 @@ export type Database = {
           id: string
           is_active: boolean
           location_id: string | null
+          parent_domain: string | null
           slug: string
           stripe_customer_id: string | null
+          subdomain_label: string | null
           updated_at: string
         }
         Insert: {
@@ -4881,8 +4886,10 @@ export type Database = {
           id?: string
           is_active?: boolean
           location_id?: string | null
+          parent_domain?: string | null
           slug: string
           stripe_customer_id?: string | null
+          subdomain_label?: string | null
           updated_at?: string
         }
         Update: {
@@ -4893,8 +4900,10 @@ export type Database = {
           id?: string
           is_active?: boolean
           location_id?: string | null
+          parent_domain?: string | null
           slug?: string
           stripe_customer_id?: string | null
+          subdomain_label?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -5863,41 +5872,44 @@ export type Database = {
           pending_data_requests: number | null
           recording_url_retention_days: number | null
           retention_config_updated_at: string | null
+          snapshot_at: string | null
           staff_pii_views_30d: number | null
           voice_transcript_retention_days: number | null
         }
         Insert: {
-          active_opt_outs?: never
-          bulk_access_anomalies_14d?: never
+          active_opt_outs?: number | null
+          bulk_access_anomalies_14d?: number | null
           customer_memory_retention_days?: number | null
           dealership_id?: string | null
-          distinct_staff_pii_viewers_30d?: never
-          fulfilled_requests_90d?: never
-          last_memory_redact_at?: never
-          last_voice_redact_at?: never
+          distinct_staff_pii_viewers_30d?: number | null
+          fulfilled_requests_90d?: number | null
+          last_memory_redact_at?: string | null
+          last_voice_redact_at?: string | null
           notification_log_retention_days?: number | null
-          oldest_unredacted_call_at?: never
-          pending_data_requests?: never
+          oldest_unredacted_call_at?: string | null
+          pending_data_requests?: number | null
           recording_url_retention_days?: number | null
           retention_config_updated_at?: string | null
-          staff_pii_views_30d?: never
+          snapshot_at?: string | null
+          staff_pii_views_30d?: number | null
           voice_transcript_retention_days?: number | null
         }
         Update: {
-          active_opt_outs?: never
-          bulk_access_anomalies_14d?: never
+          active_opt_outs?: number | null
+          bulk_access_anomalies_14d?: number | null
           customer_memory_retention_days?: number | null
           dealership_id?: string | null
-          distinct_staff_pii_viewers_30d?: never
-          fulfilled_requests_90d?: never
-          last_memory_redact_at?: never
-          last_voice_redact_at?: never
+          distinct_staff_pii_viewers_30d?: number | null
+          fulfilled_requests_90d?: number | null
+          last_memory_redact_at?: string | null
+          last_voice_redact_at?: string | null
           notification_log_retention_days?: number | null
-          oldest_unredacted_call_at?: never
-          pending_data_requests?: never
+          oldest_unredacted_call_at?: string | null
+          pending_data_requests?: number | null
           recording_url_retention_days?: number | null
           retention_config_updated_at?: string | null
-          staff_pii_views_30d?: never
+          snapshot_at?: string | null
+          staff_pii_views_30d?: number | null
           voice_transcript_retention_days?: number | null
         }
         Relationships: []

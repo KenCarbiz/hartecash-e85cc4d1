@@ -38,9 +38,17 @@
 -- Returns the array directly (not a setof) so callers can use
 -- `dealership_id = ANY((SELECT …))` which Postgres further
 -- optimizes via hash-based lookup.
+--
+-- Type note: user_roles.dealership_id is text in this schema,
+-- so the return type matches. The voice_call_log table stores
+-- dealership_id as uuid; the RLS predicates below cast that
+-- side via `::text` to bridge the two columns. Casting voice_
+-- call_log.dealership_id is the cheaper direction because the
+-- caller's dealership_ids array is small (1-3 elements) and
+-- text-comparison hashing is fast.
 
 CREATE OR REPLACE FUNCTION public.current_user_dealership_ids()
-RETURNS uuid[]
+RETURNS text[]
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
@@ -48,7 +56,7 @@ SET search_path = public
 AS $$
   SELECT COALESCE(
     array_agg(DISTINCT dealership_id) FILTER (WHERE dealership_id IS NOT NULL),
-    ARRAY[]::uuid[]
+    ARRAY[]::text[]
   )
   FROM public.user_roles
   WHERE user_id = auth.uid();
@@ -71,7 +79,7 @@ CREATE POLICY "Staff read voice_call_turns"
     AND EXISTS (
       SELECT 1 FROM public.voice_call_log vcl
       WHERE vcl.id = voice_call_turns.call_id
-        AND vcl.dealership_id = ANY((SELECT public.current_user_dealership_ids()))
+        AND vcl.dealership_id::text = ANY((SELECT public.current_user_dealership_ids()))
     )
   );
 
@@ -83,7 +91,7 @@ CREATE POLICY "Staff read voice_call_grades"
     AND EXISTS (
       SELECT 1 FROM public.voice_call_log vcl
       WHERE vcl.id = voice_call_grades.call_id
-        AND vcl.dealership_id = ANY((SELECT public.current_user_dealership_ids()))
+        AND vcl.dealership_id::text = ANY((SELECT public.current_user_dealership_ids()))
     )
   );
 
@@ -96,7 +104,7 @@ CREATE POLICY "Staff read voice_call_variants_used"
     AND EXISTS (
       SELECT 1 FROM public.voice_call_log vcl
       WHERE vcl.id = voice_call_variants_used.call_id
-        AND vcl.dealership_id = ANY((SELECT public.current_user_dealership_ids()))
+        AND vcl.dealership_id::text = ANY((SELECT public.current_user_dealership_ids()))
     )
   );
 
