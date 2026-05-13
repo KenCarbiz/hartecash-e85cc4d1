@@ -1136,6 +1136,7 @@ export default function SubmissionDetailSheetClassic({
                       <InvestmentTierBadge
                         size="sm"
                         showBreakdown
+                        variant="onDark"
                         inputs={{
                           marketDaysSupply: (sub as { bb_market_days_supply?: number | null }).bb_market_days_supply ?? null,
                           offeredPrice: sub.offered_price ?? sub.estimated_offer_high ?? null,

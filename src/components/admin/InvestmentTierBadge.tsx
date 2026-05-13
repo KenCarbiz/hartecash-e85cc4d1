@@ -1,16 +1,25 @@
 import { useMemo, useState } from "react";
-import { calculateInvestmentScore, TIER_META, type InvestmentScoreInputs, type InvestmentScoreBreakdown } from "@/lib/investmentScore";
+import { calculateInvestmentScore, TIER_META, type InvestmentScoreInputs, type InvestmentScoreBreakdown, type InvestmentTier } from "@/lib/investmentScore";
 
 type Size = "sm" | "md" | "lg";
+type Variant = "onLight" | "onDark";
 
 interface Props {
   inputs: InvestmentScoreInputs;
   size?: Size;
   showBreakdown?: boolean;
+  variant?: Variant;
   className?: string;
 }
 
-export function InvestmentTierBadge({ inputs, size = "md", showBreakdown = false, className = "" }: Props) {
+const ON_DARK: Record<InvestmentTier, { bg: string; text: string; border: string }> = {
+  platinum: { bg: "bg-cyan-400/25",   text: "text-cyan-50",   border: "border-cyan-300/60" },
+  gold:     { bg: "bg-amber-400/25",  text: "text-amber-50",  border: "border-amber-300/60" },
+  silver:   { bg: "bg-slate-300/25",  text: "text-white",     border: "border-slate-200/60" },
+  bronze:   { bg: "bg-rose-400/25",   text: "text-rose-50",   border: "border-rose-300/60" },
+};
+
+export function InvestmentTierBadge({ inputs, size = "md", showBreakdown = false, variant = "onLight", className = "" }: Props) {
   const breakdown = useMemo(() => calculateInvestmentScore(inputs), [inputs]);
   const meta = TIER_META[breakdown.tier];
   const [open, setOpen] = useState(false);
@@ -20,17 +29,20 @@ export function InvestmentTierBadge({ inputs, size = "md", showBreakdown = false
     size === "lg" ? "h-12 px-4 text-sm gap-2" :
     "h-8 px-3 text-xs gap-1.5";
 
+  const palette = variant === "onDark" ? ON_DARK[breakdown.tier] : meta.tw;
+  const countOpacity = variant === "onDark" ? "opacity-80" : "opacity-60";
+
   return (
     <div className={`relative inline-flex ${className}`}>
       <button
         type="button"
         onClick={() => showBreakdown && setOpen(o => !o)}
-        className={`${sizeCls} ${meta.tw.bg} ${meta.tw.text} ${meta.tw.border} border rounded-full font-bold inline-flex items-center transition hover:brightness-110 ${showBreakdown ? "cursor-pointer" : "cursor-default"}`}
+        className={`${sizeCls} ${palette.bg} ${palette.text} ${palette.border} border rounded-full font-bold inline-flex items-center transition hover:brightness-110 ${showBreakdown ? "cursor-pointer" : "cursor-default"}`}
         title={`${meta.label} — ${meta.tagline}`}
       >
-        <span className="opacity-80">●</span>
+        <span className="opacity-90">●</span>
         <span className="uppercase tracking-wide">{meta.label}</span>
-        <span className="opacity-60 font-mono">{breakdown.total}/12</span>
+        <span className={`${countOpacity} font-mono`}>{breakdown.total}/12</span>
       </button>
 
       {showBreakdown && open && (
