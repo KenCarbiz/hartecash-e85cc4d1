@@ -140,6 +140,7 @@ export default function OBDScanResults({ submissionId, showHistory = false }: OB
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [submissionMeta, setSubmissionMeta] = useState<{ token: string; vehicleStr: string } | null>(null);
+  const [dealershipId, setDealershipId] = useState<string | null>(null);
 
   const fetchScan = useCallback(async () => {
     if (!submissionId) return;
