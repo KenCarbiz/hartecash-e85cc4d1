@@ -25,9 +25,10 @@ CREATE INDEX IF NOT EXISTS tenant_edit_log_dealership_id_idx ON tenant_edit_log 
 
 ALTER TABLE tenant_edit_log ENABLE ROW LEVEL SECURITY;
 
--- Read access: platform admins and super admins only. Writes happen
--- from the admin UI which already gates on the same role; the policy
--- here is the second line of defense.
+-- Read access: platform admins only. Per project convention, the
+-- "platform super admin" is either user_roles.is_platform_admin = true
+-- OR user_roles.role = 'admin' on dealership_id = 'default'. There is
+-- no 'super_admin' value in the app_role enum.
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -40,7 +41,7 @@ BEGIN
         EXISTS (
           SELECT 1 FROM user_roles ur
           WHERE ur.user_id = auth.uid()
-            AND (ur.is_platform_admin = true OR ur.role IN ('admin', 'super_admin'))
+            AND (ur.is_platform_admin = true OR ur.role = 'admin')
         )
       );
   END IF;
@@ -55,7 +56,7 @@ BEGIN
         EXISTS (
           SELECT 1 FROM user_roles ur
           WHERE ur.user_id = auth.uid()
-            AND (ur.is_platform_admin = true OR ur.role IN ('admin', 'super_admin'))
+            AND (ur.is_platform_admin = true OR ur.role = 'admin')
         )
       );
   END IF;
