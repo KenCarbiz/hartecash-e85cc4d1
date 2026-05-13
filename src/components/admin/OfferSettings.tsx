@@ -895,9 +895,13 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
             </div>
             <div>
               <Label className="text-sm font-semibold">Manager PIN</Label>
-              <p className="text-micro text-muted-foreground mb-1">4-digit PIN for management override on appraisals.</p>
-              <Input type="password" maxLength={4} value={settings.manager_pin || "0000"} onChange={(e) => setSettings({ ...settings, manager_pin: e.target.value.replace(/\D/g, "").slice(0, 4) })} className="w-28 text-center font-mono tracking-widest" />
+              <p className="text-micro text-muted-foreground">
+                PINs are now <strong>per-user</strong> and verified securely on the server.
+                Each appraiser, used car manager, or GM sets their own PIN from the
+                <em> Management Adjustment</em> panel inside the Appraisal Tool.
+              </p>
             </div>
+
           </div>
           <div className="mt-4 pt-4 border-t border-border">
             <Label className="text-sm font-semibold mb-3 block">Wholesale-Only Threshold</Label>

@@ -2182,6 +2182,27 @@ export type Database = {
         }
         Relationships: []
       }
+      manager_pin_attempts: {
+        Row: {
+          attempted_at: string
+          id: string
+          succeeded: boolean
+          user_id: string
+        }
+        Insert: {
+          attempted_at?: string
+          id?: string
+          succeeded: boolean
+          user_id: string
+        }
+        Update: {
+          attempted_at?: string
+          id?: string
+          succeeded?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       mfa_audit_log: {
         Row: {
           created_at: string
@@ -3429,6 +3450,8 @@ export type Database = {
           display_name: string | null
           email: string | null
           id: string
+          manager_pin_hash: string | null
+          manager_pin_set_at: string | null
           phone_number: string | null
           profile_image_url: string | null
           user_id: string
@@ -3438,6 +3461,8 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id?: string
+          manager_pin_hash?: string | null
+          manager_pin_set_at?: string | null
           phone_number?: string | null
           profile_image_url?: string | null
           user_id: string
@@ -3447,6 +3472,8 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id?: string
+          manager_pin_hash?: string | null
+          manager_pin_set_at?: string | null
           phone_number?: string | null
           profile_image_url?: string | null
           user_id?: string
@@ -6317,6 +6344,7 @@ export type Database = {
       }
       get_user_dealer_group_id: { Args: { _user_id: string }; Returns: string }
       get_user_dealership_id: { Args: { _user_id: string }; Returns: string }
+      has_my_manager_pin: { Args: never; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -6538,6 +6566,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      set_my_manager_pin: { Args: { _pin: string }; Returns: undefined }
       submit_call_feedback:
         | {
             Args: { _comment?: string; _score: number; _token: string }
@@ -6554,10 +6583,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      user_can_hold_manager_pin: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       verify_inspection_pin: {
         Args: { _pin: string; _submission_id: string }
         Returns: boolean
       }
+      verify_my_manager_pin: { Args: { _pin: string }; Returns: boolean }
     }
     Enums: {
       app_role:
