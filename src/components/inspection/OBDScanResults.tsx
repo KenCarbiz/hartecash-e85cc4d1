@@ -140,6 +140,7 @@ export default function OBDScanResults({ submissionId, showHistory = false }: OB
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [submissionMeta, setSubmissionMeta] = useState<{ token: string; vehicleStr: string } | null>(null);
+  const [dealershipId, setDealershipId] = useState<string | null>(null);
 
   const fetchScan = useCallback(async () => {
     if (!submissionId) return;
@@ -178,12 +179,13 @@ export default function OBDScanResults({ submissionId, showHistory = false }: OB
       try {
         const { data } = await (supabase as any)
           .from("submissions")
-          .select("token, vehicle_year, vehicle_make, vehicle_model")
+          .select("token, vehicle_year, vehicle_make, vehicle_model, dealership_id")
           .eq("id", submissionId)
           .maybeSingle();
         if (!cancelled && data) {
           const vehicleStr = `${data.vehicle_year || ""} ${data.vehicle_make || ""} ${data.vehicle_model || ""}`.trim();
           setSubmissionMeta({ token: data.token || submissionId, vehicleStr });
+          setDealershipId(data.dealership_id || null);
         }
       } catch {
         /* noop */
@@ -192,11 +194,11 @@ export default function OBDScanResults({ submissionId, showHistory = false }: OB
     return () => { cancelled = true; };
   }, [submissionId]);
 
-  // Realtime subscription — auto-update on new scans
+  // Realtime subscription — auto-update on new scans (tenant-prefixed topic)
   useEffect(() => {
-    if (!submissionId) return;
+    if (!submissionId || !dealershipId) return;
     const channel = (supabase as any)
-      .channel(`vehicle_scans:${submissionId}`)
+      .channel(`${dealershipId}:vehicle_scans:${submissionId}`)
       .on(
         "postgres_changes",
         {
@@ -213,7 +215,7 @@ export default function OBDScanResults({ submissionId, showHistory = false }: OB
     return () => {
       try { (supabase as any).removeChannel(channel); } catch { /* noop */ }
     };
-  }, [submissionId, fetchScan]);
+  }, [submissionId, dealershipId, fetchScan]);
 
   /* ── Loading state ── */
   if (loading) {

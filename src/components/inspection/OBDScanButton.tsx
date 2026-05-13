@@ -46,17 +46,34 @@ export default function OBDScanButton({
 }: OBDScanButtonProps) {
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<"waiting" | "success">("waiting");
+  const [dealershipId, setDealershipId] = useState<string | null>(null);
 
   // Build the scanner URL. Falls back gracefully if window is unavailable (SSR).
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const scanUrl = `${origin}/obd-scan/${submissionToken}`;
 
+  // Resolve the submission's dealership_id so the realtime channel
+  // topic can be tenant-prefixed (RLS on realtime.messages requires it).
+  useEffect(() => {
+    if (!submissionId) { setDealershipId(null); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("submissions")
+        .select("dealership_id")
+        .eq("id", submissionId)
+        .maybeSingle();
+      if (!cancelled) setDealershipId((data as any)?.dealership_id || null);
+    })();
+    return () => { cancelled = true; };
+  }, [submissionId]);
+
   // Realtime listener — only active while the modal is open
   useEffect(() => {
-    if (!open || !submissionId) return;
+    if (!open || !submissionId || !dealershipId) return;
     setStatus("waiting");
     const channel = (supabase as any)
-      .channel(`vehicle_scans_btn:${submissionId}`)
+      .channel(`${dealershipId}:vehicle_scans_btn:${submissionId}`)
       .on(
         "postgres_changes",
         {
@@ -77,7 +94,7 @@ export default function OBDScanButton({
     return () => {
       try { (supabase as any).removeChannel(channel); } catch { /* noop */ }
     };
-  }, [open, submissionId]);
+  }, [open, submissionId, dealershipId]);
 
   const buttonLabel = label ?? "Scan OBD-II";
 
