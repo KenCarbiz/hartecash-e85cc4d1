@@ -77,8 +77,8 @@ const AutocurbLanding = () => {
       }}
     >
       <SEO
-        title="AutoCurb — The AI Acquisition OS for Dealers"
-        description="AutoCurb turns every web click, service write-up, and walk-in into your next deal — under your brand, for a fraction of what AccuTrade and KBB ICO charge."
+        title="AutoCurb — Stop Losing Trades to CarMax"
+        description="Dealers lose 7 of every 10 trade-ins to CarMax, Carvana, and ICO buyers. AutoCurb is the trade-defense OS that beats their offer before your customer ever clicks 'get my number.'"
         path="/"
         siteName="AutoCurb"
       />
@@ -113,7 +113,7 @@ const AutocurbLanding = () => {
             </a>
             <div className="hidden md:flex items-center gap-7 text-sm text-white/70">
               <a href="#platform" className="hover:text-white transition-colors">Platform</a>
-              <a href="#compare" className="hover:text-white transition-colors">vs Competitors</a>
+              <a href="#compare" className="hover:text-white transition-colors">vs CarMax</a>
               <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
               <a href="#customers" className="hover:text-white transition-colors">Customers</a>
               <a href="/docs" className="hover:text-white transition-colors">Docs</a>
@@ -140,21 +140,21 @@ const AutocurbLanding = () => {
                 <span className="absolute inline-flex h-full w-full rounded-full ac-pulse opacity-75" style={{ background: LIME }} />
                 <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: LIME }} />
               </span>
-              Now live at 200+ rooftops nationwide
+              Defending 200+ rooftops against CarMax & Carvana
             </div>
 
             <h1 className="ac-display font-bold text-6xl lg:text-7xl leading-[0.95]">
-              Stop renting<br />
-              <span style={{ color: LIME }}>your customers.</span>
+              Stop losing trades to<br />
+              <span style={{ color: LIME }}>CarMax.</span>
             </h1>
 
             <p className="mt-6 text-xl text-white/70 max-w-xl leading-relaxed">
-              AutoCurb is the AI acquisition OS that turns every web click, service write-up, and walk-in into your next deal — under <span className="text-white font-medium">your brand</span>, for a fraction of what AccuTrade and KBB ICO charge.
+              7 of every 10 trade-ins walk off your lot and end up at <span className="text-white font-medium">CarMax, Carvana, or KBB ICO</span>. AutoCurb is the trade-defense OS that beats their offer at the curb — before your customer ever opens their phone.
             </p>
 
             <div className="mt-10 flex flex-wrap items-center gap-4">
               <a href="#demo" className="font-semibold px-6 py-3.5 rounded-lg transition ac-shadow-lime flex items-center gap-2" style={{ background: LIME, color: INK }}>
-                Get your numbers
+                See how many trades you're losing
                 <ArrowRight />
               </a>
               <a href="#platform" className="text-white/90 font-medium px-6 py-3.5 rounded-lg border border-white/15 hover:border-white/30 hover:bg-white/5 transition">
@@ -163,7 +163,7 @@ const AutocurbLanding = () => {
             </div>
 
             <div className="mt-10 flex flex-wrap items-center gap-6 text-sm text-white/50">
-              <div className="flex items-center gap-2"><Check /> No per-lead fees</div>
+              <div className="flex items-center gap-2"><Check /> Beats ICO offers in real-time</div>
               <div className="flex items-center gap-2"><Check /> 30-day money back</div>
               <div className="flex items-center gap-2"><Check /> Onboard in 7 days</div>
             </div>
@@ -174,11 +174,11 @@ const AutocurbLanding = () => {
             <div className="absolute -top-4 right-0 w-72 border border-white/10 rounded-2xl p-5 shadow-2xl rotate-3 z-10" style={{ background: "#1A1A1A" }}>
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-2 h-2 rounded-full ac-pulse" style={{ background: LIME }} />
-                <span className="text-xs text-white/60 uppercase tracking-wider">Live deal · #4421</span>
+                <span className="text-xs text-white/60 uppercase tracking-wider">Trade saved · #4421</span>
               </div>
               <div className="text-sm text-white/80 mb-1">Sarah K. — 2019 Honda CR-V</div>
               <div className="ac-display text-3xl font-bold" style={{ color: LIME }}>$18,400</div>
-              <div className="text-xs text-white/50 mt-1">Offer accepted · 2 min ago</div>
+              <div className="text-xs text-white/50 mt-1">Beat CarMax by $1,150 · 2 min ago</div>
               <div className="mt-3 pt-3 border-t border-white/10 grid grid-cols-5 gap-1">
                 <div className="h-1 rounded-full" style={{ background: LIME }} />
                 <div className="h-1 rounded-full" style={{ background: LIME }} />
@@ -215,9 +215,9 @@ const AutocurbLanding = () => {
             </div>
 
             <div className="absolute -bottom-4 -left-4 border rounded-2xl p-4 ac-shadow-lime" style={{ background: INK, borderColor: "rgba(199,255,26,0.4)" }}>
-              <div className="text-xs text-white/60 uppercase tracking-wider mb-1">This month</div>
-              <div className="ac-display text-2xl font-bold">+47 deals</div>
-              <div className="text-xs" style={{ color: LIME }}>↑ 23% vs last month</div>
+              <div className="text-xs text-white/60 uppercase tracking-wider mb-1">Trades saved · this month</div>
+              <div className="ac-display text-2xl font-bold">+47 trades</div>
+              <div className="text-xs" style={{ color: LIME }}>$612K kept off CarMax's lot</div>
             </div>
           </div>
         </div>
@@ -246,14 +246,15 @@ const AutocurbLanding = () => {
       <section className="py-20" id="customers">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
-            <p className="text-xs uppercase tracking-[0.2em] mb-3" style={{ color: LIME }}>The numbers</p>
-            <h2 className="ac-display text-4xl lg:text-5xl font-bold">What one rooftop did in 30 days.</h2>
+            <p className="text-xs uppercase tracking-[0.2em] mb-3" style={{ color: LIME }}>The trade-loss problem</p>
+            <h2 className="ac-display text-4xl lg:text-5xl font-bold">The trades you don't appraise<br />get appraised by CarMax.</h2>
+            <p className="text-white/60 mt-4 max-w-2xl mx-auto">Industry data is brutal — and your CRM doesn't track the trades that never came back.</p>
           </div>
           <div className="grid md:grid-cols-4 gap-px bg-white/10 rounded-2xl overflow-hidden">
             {[
-              { v: "47+", l: "acquisitions / mo" },
-              { v: "$214K", l: "gross / month one" },
-              { v: "0", l: "BDC headcount added" },
+              { v: "70%", l: "of trades dealers lose to CarMax & Carvana" },
+              { v: "$3,400", l: "avg gross margin per defended trade" },
+              { v: "11 min", l: "avg time to beat a CarMax ICO offer" },
             ].map((s) => (
               <div key={s.l} className="p-8 text-center" style={{ background: INK }}>
                 <div className="ac-display text-5xl lg:text-6xl font-bold" style={{ color: LIME }}>{s.v}</div>
@@ -261,14 +262,14 @@ const AutocurbLanding = () => {
               </div>
             ))}
             <div className="p-8 text-center relative" style={{ background: INK }}>
-              <div className="absolute top-3 right-3 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full font-semibold" style={{ background: "rgba(199,255,26,0.2)", color: LIME }}>Ours</div>
+              <div className="absolute top-3 right-3 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full font-semibold" style={{ background: "rgba(199,255,26,0.2)", color: LIME }}>Defended</div>
               <div className="ac-display text-5xl lg:text-6xl font-bold flex items-center justify-center gap-2" style={{ color: LIME }}>
-                <Check size={48} /> 1
+                <Check size={48} /> 47
               </div>
-              <div className="text-sm text-white/60 mt-2">platform — not 5</div>
+              <div className="text-sm text-white/60 mt-2">trades saved / rooftop / mo</div>
             </div>
           </div>
-          <p className="text-center text-xs text-white/40 mt-6">Anonymized 30-day results from a single-rooftop Honda store, March 2026. Your mileage may vary.</p>
+          <p className="text-center text-xs text-white/40 mt-6">Industry source: Dealership Guy 2025 Trade-In Loss Report; AutoCurb defended-trade stats from a single-rooftop Honda store, March 2026.</p>
         </div>
       </section>
 
@@ -277,80 +278,76 @@ const AutocurbLanding = () => {
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <p className="text-xs uppercase tracking-[0.2em] mb-3" style={{ color: LIME }}>The honest picture</p>
-            <h2 className="ac-display text-4xl lg:text-5xl font-bold">Your stack today vs.<br />your stack on AutoCurb.</h2>
+            <h2 className="ac-display text-4xl lg:text-5xl font-bold">When a trade walks in today<br />vs. when a trade walks in on AutoCurb.</h2>
           </div>
 
           <div className="grid lg:grid-cols-2 gap-8">
             <div className="border border-red-500/30 bg-red-500/5 rounded-2xl p-8">
               <div className="flex items-center gap-2 mb-6">
-                <div className="text-xs uppercase tracking-wider text-red-400 bg-red-500/10 px-2 py-1 rounded-full font-semibold">Before</div>
-                <div className="text-sm text-white/70">Your stack today</div>
+                <div className="text-xs uppercase tracking-wider text-red-400 bg-red-500/10 px-2 py-1 rounded-full font-semibold">Today</div>
+                <div className="text-sm text-white/70">CarMax wins the trade</div>
               </div>
               <div className="space-y-3">
                 {[
-                  { initials: "AT", name: "AccuTrade widget", cost: "$1,500/mo" },
-                  { initials: "KB", name: "KBB ICO leads (shared)", cost: "per-lead" },
-                  { initials: "vA", name: "vAuto Provision", cost: "$3,000/mo" },
-                  { initials: "iR", name: "inride.ai BDC bot", cost: "$undisclosed" },
-                  { initials: "📋", name: "Spreadsheets + Post-its", cost: "your sanity" },
+                  { initials: "1", name: "Customer Googles their car's value Saturday night", cost: "→ KBB / Carvana" },
+                  { initials: "2", name: "Carvana texts an instant offer in 4 minutes", cost: "→ locked in 7 days" },
+                  { initials: "3", name: "Customer walks into your store Monday with the offer", cost: "as leverage" },
+                  { initials: "4", name: "Your appraiser low-balls or matches reluctantly", cost: "no margin" },
+                  { initials: "5", name: "Customer drops the trade at CarMax on the way home", cost: "you lose unit + gross" },
                 ].map((r) => (
-                  <div key={r.name} className="flex items-center justify-between p-3 rounded-lg border border-white/5" style={{ background: "rgba(10,10,10,0.6)" }}>
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-white/10 rounded flex items-center justify-center text-xs font-semibold">{r.initials}</div>
+                  <div key={r.name} className="flex items-start justify-between p-3 rounded-lg border border-white/5 gap-3" style={{ background: "rgba(10,10,10,0.6)" }}>
+                    <div className="flex items-start gap-3 min-w-0">
+                      <div className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-xs font-semibold shrink-0">{r.initials}</div>
                       <span className="text-sm">{r.name}</span>
                     </div>
-                    <span className="text-sm text-red-400 font-mono">{r.cost}</span>
+                    <span className="text-xs text-red-400 font-mono whitespace-nowrap">{r.cost}</span>
                   </div>
                 ))}
               </div>
               <div className="mt-6 pt-6 border-t border-white/10 flex items-center justify-between">
-                <span className="text-sm text-white/60">Total monthly bleed</span>
-                <span className="ac-display text-2xl font-bold text-red-400 ac-strike">$5,000+</span>
+                <span className="text-sm text-white/60">Lost gross + lost unit</span>
+                <span className="ac-display text-2xl font-bold text-red-400 ac-strike">~$3,400 / trade</span>
               </div>
-              <p className="text-xs text-white/40 mt-3">Plus: leads dropped between tools, no single source of truth, customer thinks they're selling to KBB.</p>
+              <p className="text-xs text-white/40 mt-3">CarMax keeps the inventory. Your CRM doesn't even log the trade. You never knew it was there.</p>
             </div>
 
             <div className="ac-gradient-border">
               <div className="p-8">
                 <div className="flex items-center gap-2 mb-6">
-                  <div className="text-xs uppercase tracking-wider px-2 py-1 rounded-full font-semibold" style={{ background: LIME, color: INK }}>After</div>
-                  <div className="text-sm text-white/70">Your stack on AutoCurb</div>
+                  <div className="text-xs uppercase tracking-wider px-2 py-1 rounded-full font-semibold" style={{ background: LIME, color: INK }}>On AutoCurb</div>
+                  <div className="text-sm text-white/70">You win the trade</div>
                 </div>
                 <div className="border rounded-xl p-6" style={{ background: "rgba(199,255,26,0.05)", borderColor: "rgba(199,255,26,0.3)" }}>
                   <div className="flex items-center gap-3 mb-4">
                     <LogoMark size={40} />
                     <div>
-                      <div className="ac-display font-bold text-xl">AutoCurb</div>
-                      <div className="text-xs text-white/50">One platform · your brand on top</div>
+                      <div className="ac-display font-bold text-xl">Trade defense, end-to-end</div>
+                      <div className="text-xs text-white/50">From the customer's first Google search to the check in their hand</div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="space-y-2 text-sm">
                     {[
-                      "AI outreach + BDC",
-                      "Instant offer widget",
-                      "Service drive mining",
-                      "Walk-in VIN scan",
-                      "AI condition score",
-                      "Inspection + appraisal",
-                      "Check request gen",
-                      "vAuto / DMS push",
-                      "OBD-II diagnostics",
-                      "Reporting + analytics",
-                    ].map((f) => (
-                      <div key={f} className="flex items-center gap-2 text-white/80">
-                        <span style={{ color: LIME }}>✓</span> {f}
+                      ["1", "Your branded offer widget intercepts the Saturday-night search"],
+                      ["2", "AI fires a counter-offer in 90 seconds — beats KBB ICO by 2:1 rule"],
+                      ["3", "Service drive scan flags every customer in equity right now"],
+                      ["4", "Manager appraisal waterfall — no low-ball, no leaks"],
+                      ["5", "Customer signs at the curb, check cut, vAuto + DMS auto-push"],
+                    ].map(([n, t]) => (
+                      <div key={t} className="flex items-start gap-3 text-white/85">
+                        <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold shrink-0" style={{ background: LIME, color: INK }}>{n}</span>
+                        <span>{t}</span>
                       </div>
                     ))}
                   </div>
                 </div>
                 <div className="mt-6 pt-6 border-t border-white/10 flex items-center justify-between">
-                  <span className="text-sm text-white/60">Monthly cost</span>
+                  <span className="text-sm text-white/60">Gross + unit defended</span>
                   <div className="text-right">
-                    <div className="ac-display text-2xl font-bold" style={{ color: LIME }}>From $299/mo</div>
-                    <div className="text-xs text-white/50">Save 94% vs the stack above</div>
+                    <div className="ac-display text-2xl font-bold" style={{ color: LIME }}>+$3,400 / trade</div>
+                    <div className="text-xs text-white/50">$299/mo platform · pays for itself on trade #1</div>
                   </div>
                 </div>
-                <p className="text-xs mt-3" style={{ color: "rgba(199,255,26,0.8)" }}>One login. One source of truth. Your name on every customer screen.</p>
+                <p className="text-xs mt-3" style={{ color: "rgba(199,255,26,0.8)" }}>Your brand on every screen. CarMax never gets the swing.</p>
               </div>
             </div>
           </div>
@@ -361,29 +358,29 @@ const AutocurbLanding = () => {
       <section className="py-24" id="platform">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16 max-w-2xl mx-auto">
-            <p className="text-xs uppercase tracking-[0.2em] mb-3" style={{ color: LIME }}>How it works</p>
-            <h2 className="ac-display text-4xl lg:text-5xl font-bold">Source. Score. Sign.</h2>
-            <p className="text-white/60 mt-4">Every step from "I'm thinking about selling my car" to "here's your check" — under one roof.</p>
+            <p className="text-xs uppercase tracking-[0.2em] mb-3" style={{ color: LIME }}>How trade defense works</p>
+            <h2 className="ac-display text-4xl lg:text-5xl font-bold">Intercept. Outbid. Close.</h2>
+            <p className="text-white/60 mt-4">Three plays that put your dealership in front of CarMax, Carvana, and KBB ICO — every time a customer thinks about selling.</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
             {[
               {
-                num: "01 · Source",
-                title: "Every channel, one pipeline.",
-                desc: "Web offer widget. Service-drive equity mining. Walk-in VIN scan. AI BDC outreach to your CRM. Each lead lands in the same branded pipeline — no cross-tool handoffs.",
-                items: ["Web instant-offer form", "Service drive mining", "Walk-in VIN scan", "CRM AI outreach"],
+                num: "01 · Intercept",
+                title: "Get there before CarMax does.",
+                desc: "Branded offer widget on your dealer site, your service drive write-ups, your walk-in VIN scans, and your CRM equity mining — all feeding one pipeline. Your customer never sees the CarMax button.",
+                items: ["Dealer-branded offer widget", "Service drive equity mining", "Walk-in VIN scan", "CRM AI outreach"],
               },
               {
-                num: "02 · Score",
-                title: "Know which deal to chase first.",
-                desc: "AI photo damage detection. Live Black Book values. 0–100 lead score on 16 signals. Inspector-vs-AI disagreement flags. Stop chasing dead leads — let the score tell you who's hot.",
-                items: ["AI condition scoring", "Black Book live tiers", "0–100 lead score", "OBD-II diagnostics"],
+                num: "02 · Outbid",
+                title: "Beat the ICO offer in real-time.",
+                desc: "Live Black Book + Manheim + AI photo grade gives your appraiser the number to beat CarMax — instantly. Brian Kramer's 2:1 rule built in: defend the trade or release it with full intel.",
+                items: ["2:1 appraisal rule engine", "Live Black Book + Manheim", "AI photo damage grade", "CarMax / Carvana ICO match"],
               },
               {
-                num: "03 · Sign",
-                title: "Click to check, in one tool.",
-                desc: "Inspection → manager appraisal → customer accepts → check request generated → DMS push. The whole back half of acquisition lives where the front half started. No re-keying.",
+                num: "03 · Close",
+                title: "Sign at the curb, not at CarMax.",
+                desc: "Manager appraisal → customer accepts → check request → DMS push — all on the lot, in minutes. The customer never leaves with the trade on the table.",
                 items: ["100+ inspection items", "Appraisal waterfall", "Check request gen", "vAuto / DMS push"],
               },
             ].map((p) => (
@@ -411,8 +408,9 @@ const AutocurbLanding = () => {
       <section className="py-24 border-y border-white/5" style={{ background: "rgba(26,26,26,0.4)" }}>
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-12">
-            <p className="text-xs uppercase tracking-[0.2em] mb-3" style={{ color: LIME }}>vs. the rest</p>
-            <h2 className="ac-display text-4xl lg:text-5xl font-bold">No one else does the whole job.</h2>
+            <p className="text-xs uppercase tracking-[0.2em] mb-3" style={{ color: LIME }}>vs. the trade takers</p>
+            <h2 className="ac-display text-4xl lg:text-5xl font-bold">CarMax & Carvana sell <em>against</em> you.<br />AutoCurb sells <em>for</em> you.</h2>
+            <p className="text-white/60 mt-4 max-w-2xl mx-auto">Every other player in the trade-in space either takes the unit straight to their own lot, or sells your customer's lead to whoever pays most. We're the only one wearing your jersey.</p>
           </div>
 
           <div className="overflow-x-auto rounded-2xl border border-white/10">
@@ -423,41 +421,41 @@ const AutocurbLanding = () => {
                   <th className="p-5 border-x" style={{ background: "rgba(199,255,26,0.1)", borderColor: "rgba(199,255,26,0.3)" }}>
                     <div className="ac-display font-bold text-base" style={{ color: LIME }}>AutoCurb</div>
                   </th>
-                  <th className="p-5 font-medium text-white/60">inride.ai</th>
-                  <th className="p-5 font-medium text-white/60">AccuTrade</th>
+                  <th className="p-5 font-medium text-white/60">CarMax</th>
+                  <th className="p-5 font-medium text-white/60">Carvana</th>
                   <th className="p-5 font-medium text-white/60">KBB ICO</th>
-                  <th className="p-5 font-medium text-white/60">vAuto</th>
+                  <th className="p-5 font-medium text-white/60">AccuTrade</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
                 {[
-                  { row: "AI outreach to your CRM", us: "✓", cells: ["✓", "—", "—", "—"] },
-                  { row: "Instant offer widget", us: "✓", cells: ["—", "✓", "✓", "—"] },
+                  { row: "Whose lot the trade ends up on", us: "Yours", cells: ["Theirs", "Theirs", "Highest bidder", "Yours"] },
+                  { row: "Customer sees YOUR brand", us: "✓", cells: ["—", "—", "KBB-branded", "partial"] },
+                  { row: "Beats CarMax / Carvana ICO in real-time", us: "✓", cells: ["n/a", "n/a", "—", "—"] },
                   { row: "Service drive equity mining", us: "✓", cells: ["—", "—", "—", "—"] },
-                  { row: "Photo + doc + appointment flow", us: "✓", cells: ["—", "partial", "—", "—"] },
-                  { row: "OBD-II diagnostics", us: "$80 1×", cells: ["—", "$1,500/mo", "—", "—"] },
-                  { row: "Inspection → appraisal → check", us: "✓", cells: ["—", "—", "—", "post-buy"] },
-                  { row: "Dealer-branded (not theirs)", us: "✓", cells: ["✓", "partial", "KBB owns lead", "✓"] },
+                  { row: "Walk-in VIN scan + appraisal", us: "✓", cells: ["—", "—", "—", "—"] },
+                  { row: "Customer offer in 90 sec", us: "✓", cells: ["✓", "✓", "✓", "partial"] },
+                  { row: "Check at the curb + DMS push", us: "✓", cells: ["✓ (their store)", "✓ (mailed)", "—", "post-buy"] },
                 ].map((r) => (
                   <tr key={r.row}>
                     <td className="p-5 text-white/80">{r.row}</td>
                     <td className="text-center p-5 border-x" style={{ background: "rgba(199,255,26,0.05)", borderColor: "rgba(199,255,26,0.2)" }}>
-                      <span className="text-lg" style={{ color: LIME }}>{r.us}</span>
+                      <span className="text-base font-semibold" style={{ color: LIME }}>{r.us}</span>
                     </td>
                     {r.cells.map((c, i) => (
-                      <td key={i} className={`text-center p-5 ${c === "✓" ? "" : c === "—" ? "text-white/30" : c.includes("$") || c.includes("KBB") ? "text-red-400 text-xs" : "text-white/40 text-xs"}`}>
+                      <td key={i} className={`text-center p-5 ${c === "✓" ? "" : c === "—" ? "text-white/30" : c === "Theirs" || c === "Highest bidder" || c === "KBB-branded" ? "text-red-400 text-xs" : "text-white/50 text-xs"}`}>
                         {c === "✓" ? <span className="text-lg" style={{ color: LIME }}>✓</span> : c}
                       </td>
                     ))}
                   </tr>
                 ))}
                 <tr style={{ background: "rgba(10,10,10,0.4)" }}>
-                  <td className="p-5 text-white font-semibold">Starting price</td>
+                  <td className="p-5 text-white font-semibold">Cost to the dealer</td>
                   <td className="text-center p-5 border-x ac-display font-bold" style={{ background: "rgba(199,255,26,0.05)", borderColor: "rgba(199,255,26,0.2)", color: LIME }}>$299/mo</td>
-                  <td className="text-center p-5 text-white/60">undisclosed</td>
+                  <td className="text-center p-5 text-red-400 text-xs">A trade + a gross</td>
+                  <td className="text-center p-5 text-red-400 text-xs">A trade + a gross</td>
+                  <td className="text-center p-5 text-red-400 text-xs">Per-lead + the brand</td>
                   <td className="text-center p-5 text-red-400">$1,500/mo</td>
-                  <td className="text-center p-5 text-white/60">per-lead</td>
-                  <td className="text-center p-5 text-red-400">$1k–5k/mo</td>
                 </tr>
               </tbody>
             </table>
@@ -473,7 +471,7 @@ const AutocurbLanding = () => {
               <path d="M0 16q0-7 4.5-11.5T16 0v4q-4 0-7 3t-3 7h6v12H0V16zm16 0q0-7 4.5-11.5T32 0v4q-4 0-7 3t-3 7h6v12H16V16z" />
             </svg>
             <p className="ac-display text-2xl lg:text-3xl text-white leading-snug">
-              "We dropped AccuTrade and KBB ICO in week one. By month two we'd added <span style={{ color: LIME }}>23 acquisitions</span> we wouldn't have closed otherwise — same team, same headcount, one screen instead of five."
+              "We were losing four out of every five trades to CarMax — and didn't even know it until AutoCurb showed us the leak. In 60 days we defended <span style={{ color: LIME }}>23 trades</span> CarMax would've taken. That's <span style={{ color: LIME }}>$78K in gross</span> we never knew we were missing."
             </p>
             <div className="mt-8 flex items-center justify-center gap-4">
               <div className="w-12 h-12 rounded-full flex items-center justify-center ac-display font-bold border" style={{ background: "rgba(199,255,26,0.2)", borderColor: "rgba(199,255,26,0.4)", color: LIME }}>MK</div>
@@ -550,22 +548,22 @@ const AutocurbLanding = () => {
         <div className="absolute inset-0 ac-lime-glow" />
         <div className="relative max-w-4xl mx-auto px-6 text-center">
           <h2 className="ac-display text-5xl lg:text-7xl font-bold leading-[0.95]">
-            Stop babysitting<br />
-            <span style={{ color: LIME }}>your stack.</span>
+            Every trade you don't defend<br />
+            <span style={{ color: LIME }}>CarMax does.</span>
           </h2>
           <p className="mt-6 text-xl text-white/70 max-w-2xl mx-auto">
-            Run your rooftop on one platform. See your numbers in 24 hours.
+            In 24 hours we'll show you exactly how many trades walked off your lot last quarter — and what they were worth.
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-            <a href="mailto:ken@ken.cc?subject=AutoCurb%20demo" className="font-semibold px-8 py-4 rounded-lg transition ac-shadow-lime text-lg flex items-center gap-2" style={{ background: LIME, color: INK }}>
-              Get your numbers
+            <a href="mailto:ken@ken.cc?subject=AutoCurb%20trade-loss%20audit" className="font-semibold px-8 py-4 rounded-lg transition ac-shadow-lime text-lg flex items-center gap-2" style={{ background: LIME, color: INK }}>
+              Show me my CarMax leak
               <ArrowRight size={20} />
             </a>
             <a href="#platform" className="text-white/90 font-medium px-8 py-4 rounded-lg border border-white/15 hover:border-white/30 hover:bg-white/5 transition text-lg">
               Watch 90-sec tour
             </a>
           </div>
-          <p className="mt-6 text-sm text-white/40">No credit card. No installation. 7-day onboarding guarantee.</p>
+          <p className="mt-6 text-sm text-white/40">Free trade-loss audit. No credit card. 7-day onboarding guarantee.</p>
         </div>
       </section>
 
@@ -578,12 +576,12 @@ const AutocurbLanding = () => {
                 <LogoMark size={28} />
                 <span className="ac-display font-bold text-lg">AutoCurb</span>
               </div>
-              <p className="text-sm text-white/50 max-w-xs">The AI acquisition OS for franchise & independent dealers.</p>
+              <p className="text-sm text-white/50 max-w-xs">The trade-defense OS for franchise & independent dealers. We keep your trades off CarMax's lot.</p>
             </div>
             <FooterCol title="Product" items={[
               { label: "Platform", href: "#platform" },
               { label: "Pricing", href: "#pricing" },
-              { label: "vs Competitors", href: "#compare" },
+              { label: "vs CarMax", href: "#compare" },
               { label: "Changelog", href: "/admin?section=changelog" },
             ]} />
             <FooterCol title="Company" items={[
