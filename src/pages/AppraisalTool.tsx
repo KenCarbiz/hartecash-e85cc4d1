@@ -49,7 +49,6 @@ type OfferSettingsExt = OfferSettings & {
   dealer_pack?: number;
   hide_pack_from_appraisal?: boolean;
   retail_profit_basis?: string;
-  manager_pin?: string;
   target_gross_min?: number;
   retail_search_zip?: string | null;
   learning_threshold?: number;

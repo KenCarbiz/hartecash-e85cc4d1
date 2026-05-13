@@ -2769,7 +2769,6 @@ export type Database = {
           learning_threshold: number
           lot_cost_per_day: number
           low_mileage_bonus: Json
-          manager_pin: string
           max_market_pct: number | null
           mileage_tiers: Json
           offer_ceiling: number | null
@@ -2816,7 +2815,6 @@ export type Database = {
           learning_threshold?: number
           lot_cost_per_day?: number
           low_mileage_bonus?: Json
-          manager_pin?: string
           max_market_pct?: number | null
           mileage_tiers?: Json
           offer_ceiling?: number | null
@@ -2863,7 +2861,6 @@ export type Database = {
           learning_threshold?: number
           lot_cost_per_day?: number
           low_mileage_bonus?: Json
-          manager_pin?: string
           max_market_pct?: number | null
           mileage_tiers?: Json
           offer_ceiling?: number | null
