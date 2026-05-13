@@ -1,36 +1,89 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, KeyRound, Lock, Unlock } from "lucide-react";
+import { ChevronDown, KeyRound, Lock, Unlock, ShieldAlert } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 interface Props {
-  managerPin: string; // correct PIN from settings
   currentValue: number;
   onOverrideChange: (amount: number, reason: string) => void;
   existingOverride: { amount: number | null; reason: string | null; by: string | null };
 }
 
-export default function ManagementOverride({ managerPin, currentValue, onOverrideChange, existingOverride }: Props) {
+export default function ManagementOverride({ currentValue, onOverrideChange, existingOverride }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [pinInput, setPinInput] = useState("");
   const [unlocked, setUnlocked] = useState(false);
-  const [pinError, setPinError] = useState(false);
+  const [pinError, setPinError] = useState<string | null>(null);
+  const [verifying, setVerifying] = useState(false);
+  const [hasPin, setHasPin] = useState<boolean | null>(null);
+
+  // Set-PIN flow
+  const [newPin, setNewPin] = useState("");
+  const [confirmPin, setConfirmPin] = useState("");
+  const [savingPin, setSavingPin] = useState(false);
+
   const [overrideAmount, setOverrideAmount] = useState(existingOverride.amount || 0);
   const [reason, setReason] = useState(existingOverride.reason || "competitive_deal");
   const [customReason, setCustomReason] = useState("");
 
-  const verifyPin = () => {
-    if (pinInput === managerPin || managerPin === "0000") {
-      setUnlocked(true);
-      setPinError(false);
-    } else {
-      setPinError(true);
+  // Check if current user has a PIN configured (only when panel opens)
+  useEffect(() => {
+    if (!isOpen || hasPin !== null) return;
+    (async () => {
+      const { data, error } = await supabase.rpc("has_my_manager_pin" as any);
+      if (error) {
+        setHasPin(false);
+      } else {
+        setHasPin(!!data);
+      }
+    })();
+  }, [isOpen, hasPin]);
+
+  const verifyPin = async () => {
+    setVerifying(true);
+    setPinError(null);
+    const { data, error } = await supabase.rpc("verify_my_manager_pin" as any, { _pin: pinInput });
+    setVerifying(false);
+    if (error) {
+      setPinError(error.message || "Verification failed");
+      return;
     }
+    if (data === true) {
+      setUnlocked(true);
+    } else {
+      setPinError("Incorrect PIN");
+    }
+  };
+
+  const saveNewPin = async () => {
+    if (!/^\d{4}$/.test(newPin)) { setPinError("PIN must be 4 digits"); return; }
+    if (newPin !== confirmPin) { setPinError("PINs don't match"); return; }
+    setSavingPin(true);
+    setPinError(null);
+    const { error } = await supabase.rpc("set_my_manager_pin" as any, { _pin: newPin });
+    setSavingPin(false);
+    if (error) {
+      setPinError(error.message || "Could not save PIN");
+      if ((error.message || "").includes("not authorized")) {
+        toast({
+          title: "Not authorized",
+          description: "Only appraisers, used car managers, GSM/GMs, and admins can set a manager PIN.",
+          variant: "destructive",
+        });
+      }
+      return;
+    }
+    setHasPin(true);
+    setNewPin("");
+    setConfirmPin("");
+    toast({ title: "PIN saved", description: "You can now use it to approve overrides." });
   };
 
   const handleApply = () => {
@@ -59,25 +112,76 @@ export default function ManagementOverride({ managerPin, currentValue, onOverrid
         </CollapsibleTrigger>
         <CollapsibleContent>
           <div className="px-4 pb-4 space-y-3">
-            {!unlocked ? (
+            {!unlocked && hasPin === null && (
+              <p className="text-xs text-muted-foreground">Loading…</p>
+            )}
+
+            {!unlocked && hasPin === false && (
+              <div className="space-y-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+                <div className="flex items-center gap-2 text-amber-700">
+                  <ShieldAlert className="w-3.5 h-3.5" />
+                  <span className="text-xs font-bold">Set your personal manager PIN</span>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  PINs are now per-user and verified securely on the server. Only you can use yours.
+                </p>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="password"
+                    inputMode="numeric"
+                    maxLength={4}
+                    value={newPin}
+                    onChange={e => { setNewPin(e.target.value.replace(/\D/g, "").slice(0, 4)); setPinError(null); }}
+                    placeholder="New PIN"
+                    className="h-8 w-28 text-center text-lg tracking-widest font-mono"
+                  />
+                  <Input
+                    type="password"
+                    inputMode="numeric"
+                    maxLength={4}
+                    value={confirmPin}
+                    onChange={e => { setConfirmPin(e.target.value.replace(/\D/g, "").slice(0, 4)); setPinError(null); }}
+                    placeholder="Confirm"
+                    className="h-8 w-28 text-center text-lg tracking-widest font-mono"
+                  />
+                  <Button size="sm" onClick={saveNewPin} disabled={savingPin || newPin.length < 4 || confirmPin.length < 4}>
+                    Save PIN
+                  </Button>
+                </div>
+                {pinError && <p className="text-[10px] text-destructive font-bold">{pinError}</p>}
+              </div>
+            )}
+
+            {!unlocked && hasPin === true && (
               <div className="space-y-2">
                 <Label className="text-xs font-semibold">Manager PIN</Label>
                 <div className="flex items-center gap-2">
                   <Input
                     type="password"
+                    inputMode="numeric"
                     maxLength={4}
                     value={pinInput}
-                    onChange={e => { setPinInput(e.target.value.replace(/\D/g, "").slice(0, 4)); setPinError(false); }}
+                    onChange={e => { setPinInput(e.target.value.replace(/\D/g, "").slice(0, 4)); setPinError(null); }}
                     placeholder="Enter 4-digit PIN"
                     className={`h-8 w-32 text-center text-lg tracking-widest font-mono ${pinError ? "border-destructive" : ""}`}
                   />
-                  <Button size="sm" onClick={verifyPin} disabled={pinInput.length < 4}>
-                    <Unlock className="w-3.5 h-3.5 mr-1" /> Unlock
+                  <Button size="sm" onClick={verifyPin} disabled={verifying || pinInput.length < 4}>
+                    <Unlock className="w-3.5 h-3.5 mr-1" /> {verifying ? "Verifying…" : "Unlock"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-[10px] text-muted-foreground"
+                    onClick={() => { setHasPin(false); setPinInput(""); setPinError(null); }}
+                  >
+                    Change PIN
                   </Button>
                 </div>
-                {pinError && <p className="text-[10px] text-destructive font-bold">Incorrect PIN</p>}
+                {pinError && <p className="text-[10px] text-destructive font-bold">{pinError}</p>}
               </div>
-            ) : (
+            )}
+
+            {unlocked && (
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-emerald-600">
                   <Lock className="w-3.5 h-3.5" />
