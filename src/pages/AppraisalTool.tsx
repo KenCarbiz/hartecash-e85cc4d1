@@ -426,7 +426,6 @@ export default function AppraisalTool() {
         setHidePackFromAppraisal(ext.hide_pack_from_appraisal ?? false);
         setRetailProfitBasis(ext.retail_profit_basis || "retail_avg");
         setBbValueBasis(ext.bb_value_basis || "tradein_avg");
-        setManagerPin(ext.manager_pin || "0000");
         setTargetGrossMin(ext.target_gross_min || 0);
         // If a custom retail search ZIP is configured in offer settings, use it
         if (ext.retail_search_zip) {
