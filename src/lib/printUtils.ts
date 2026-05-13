@@ -166,11 +166,11 @@ export function printSubmissionDetail(
 
   const photosHtml = photos.length > 0
     ? '<div class="section"><div class="section-title">Photos (' + photos.length + ')</div><div class="photos-grid">' +
-      photos.map(p => '<img src="' + p.url + '" />').join("") + "</div></div>"
+      photos.map(p => '<img src="' + esc(p.url) + '" />').join("") + "</div></div>"
     : "";
 
   const notesHtml = s.internal_notes
-    ? '<div class="section"><div class="section-title">Internal Notes</div><div class="notes">' + s.internal_notes + "</div></div>"
+    ? '<div class="section"><div class="section-title">Internal Notes</div><div class="notes">' + esc(s.internal_notes) + "</div></div>"
     : "";
 
   const priceSection = s.offered_price
