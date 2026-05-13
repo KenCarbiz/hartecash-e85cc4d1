@@ -905,11 +905,28 @@ const InspectionSheet = () => {
   };
 
   const handlePrint = () => {
-    const vTitle = `${submission.vehicle_year || ""} ${submission.vehicle_make || ""} ${submission.vehicle_model || ""}`.trim();
-    const dealerName = config?.dealership_name || "Dealership";
-    const logoUrl = config?.logo_url || "";
+    // HTML-escape any string interpolated into the print template. All
+    // submission.* fields are customer-supplied, so we must never write
+    // them into innerHTML / document.write without escaping first
+    // (otherwise a malicious VIN/plate/color would execute JS in the
+    // staff print window — stored XSS).
+    const esc = (s: unknown) =>
+      String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    const vTitle = esc(`${submission.vehicle_year || ""} ${submission.vehicle_make || ""} ${submission.vehicle_model || ""}`.trim());
+    const dealerName = esc(config?.dealership_name || "Dealership");
+    const logoUrl = esc(config?.logo_url || "");
     const isStandard = inspectionMode === "ucm";
     const formTitle = isStandard ? "Standard Vehicle Inspection" : "Full Technical Inspection";
+    const safeVin = esc(submission.vin || "_________________");
+    const safeColor = esc(submission.exterior_color || "________");
+    const safePlate = esc(submission.plate || "______");
+    const safeState = esc(submission.state || "__");
+    const safeStock = esc(submission.id?.slice(0, 8).toUpperCase() || "________");
 
     // ── Shared Styles ──
     const css = `
@@ -1209,17 +1226,17 @@ const InspectionSheet = () => {
         </div>
         <div class="right">
           <div class="date">Date: _____ / _____ / _____</div>
-          <div style="margin-top:3px;">Stock #: ${submission.id?.slice(0, 8).toUpperCase() || "________"}</div>
+          <div style="margin-top:3px;">Stock #: ${safeStock}</div>
           <div style="margin-top:2px;">Inspector: ____________________</div>
         </div>
       </div>
 
       <div class="vehicle-bar">
         <div class="cell"><div class="cell-label">Vehicle</div><div class="cell-value">${vTitle || "_______________"}</div></div>
-        <div class="cell"><div class="cell-label">VIN</div><div class="cell-value cell-mono">${submission.vin || "_________________"}</div></div>
+        <div class="cell"><div class="cell-label">VIN</div><div class="cell-value cell-mono">${safeVin}</div></div>
         <div class="cell"><div class="cell-label">Mileage</div><div class="cell-value">${submission.mileage ? Number(submission.mileage).toLocaleString() + " mi" : "________"}</div></div>
-        <div class="cell"><div class="cell-label">Color</div><div class="cell-value">${submission.exterior_color || "________"}</div></div>
-        <div class="cell"><div class="cell-label">Plate / State</div><div class="cell-value">${submission.plate || "______"} / ${submission.state || "__"}</div></div>
+        <div class="cell"><div class="cell-label">Color</div><div class="cell-value">${safeColor}</div></div>
+        <div class="cell"><div class="cell-label">Plate / State</div><div class="cell-value">${safePlate} / ${safeState}</div></div>
       </div>
 
       ${body}

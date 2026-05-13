@@ -1,21 +1,14 @@
-// Boost-evaluate the customer's photo set and apply the bump.
+// RETIRED — superseded by `boost-evaluate`, which performs the
+// server-side AI verification of uploaded photos before applying any
+// bump. The old endpoint accepted a client-supplied `bump_amount`
+// authenticated only by the submission token, which let any customer
+// inflate their offer up to $2,000 with no photo evidence.
 //
-// Called from BoostOfferClarity after the six required shots have
-// uploaded. Right now the bump amount is computed deterministically
-// on the client (photo count + a base + a condition modifier) and
-// passed in — this function's job is to:
-//   1. validate the bump is plausible (caps at $2,000, never negative)
-//   2. write the new offered_price to submissions
-//   3. record an audit row in offer_bumps so the dealer can see why
-//      the price moved (and so we can replace deterministic with
-//      analyze-vehicle-damage aggregation later without rewiring
-//      the frontend)
-//
-// Token-authenticated. No JWT — the same opaque submission token
-// the customer already has via the magic-link URL is the auth.
+// We keep the function deployed so any stale magic-link clients fail
+// loudly with 410 Gone instead of silently 404ing or — worse — being
+// re-enabled by accident. To reinstate, route to `boost-evaluate`.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,140 +16,14 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const MAX_BUMP = 2000;          // never bump more than $2k in one shot
-const BUMP_FLOOR_GUARD = 0;     // bumps can never reduce the offer
-
-interface BumpLineItem {
-  label: string;     // "Tires above 50% tread"
-  amount: number;    // 150
-  source?: string;   // "ai" | "shot:tires_wheels" | "condition"
-}
-
-interface ApplyBody {
-  token: string;
-  bump_amount: number;
-  line_items?: BumpLineItem[];
-  source?: string;       // "boost_offer"
-}
-
-serve(async (req) => {
+serve((req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-  if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "method_not_allowed" }), {
-      status: 405,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
-  let body: ApplyBody;
-  try {
-    body = await req.json();
-  } catch {
-    return new Response(JSON.stringify({ error: "invalid_json" }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
-  if (!body?.token || typeof body.bump_amount !== "number") {
-    return new Response(JSON.stringify({ error: "missing_fields" }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
-  // Clamp the bump — never negative, never above MAX_BUMP. Client
-  // shouldn't be sending values outside this range but we defend
-  // against bad input.
-  const bump = Math.max(BUMP_FLOOR_GUARD, Math.min(MAX_BUMP, Math.round(body.bump_amount)));
-
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-  );
-
-  // Fetch the current offered_price + every fallback the offer
-  // page reads from. offered_price is frequently NULL in practice
-  // (lookups that didn't run a firm appraisal yet, demo-mode rows,
-  // older submissions) — in that case the customer is looking at
-  // a number computed from estimated_offer_high / bb_tradein_avg /
-  // bb_wholesale_avg. Without this fallback, the bump would
-  // overwrite NULL → just-the-bump-amount and the customer would
-  // see "$750" instead of "$24,749" on the receipt.
-  const { data: row, error: readErr } = await supabase
-    .from("submissions")
-    .select(
-      "id, offered_price, estimated_offer_high, bb_tradein_avg, bb_wholesale_avg, dealership_id",
-    )
-    .eq("token", body.token)
-    .maybeSingle();
-
-  if (readErr || !row) {
-    console.error("[boost-apply-offer] submission not found", readErr?.message);
-    return new Response(JSON.stringify({ error: "submission_not_found" }), {
-      status: 404,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
-  // Read site_config.demo_mode + demo_offer_amount alongside the
-  // submission. When demo mode is on, the offer page hard-overrides
-  // cashOffer to demo_offer_amount regardless of what's in the row's
-  // pricing fields — so the boost arithmetic has to honor the same
-  // override or "Previous offer" reads $0 on every demo submission.
-  const { data: cfg } = await supabase
-    .from("site_config")
-    .select("demo_mode, demo_offer_amount")
-    .eq("dealership_id", row.dealership_id)
-    .maybeSingle();
-  const demoMode = cfg?.demo_mode === true;
-  const demoAmount = Number(cfg?.demo_offer_amount) || 0;
-
-  // Mirror the OfferPageClarity / OfferPage fallback order. First
-  // truthy value wins. In demo mode, demo_offer_amount supersedes
-  // every database column so the customer's bump receipt shows the
-  // same baseline they actually saw on /offer.
-  const currentOffer = demoMode && demoAmount > 0
-    ? demoAmount
-    : (Number(row.offered_price) ||
-       Number(row.estimated_offer_high) ||
-       Number(row.bb_tradein_avg) ||
-       Number(row.bb_wholesale_avg) ||
-       0);
-  // Floor-locked promise from the boost page: the offer can only
-  // go up. If the current price is somehow null/0 we still apply
-  // the bump as the new floor.
-  const newOffer = currentOffer + bump;
-
-  // Single transaction for offered_price update + offer_bumps
-  // audit insert. apply_boost_bump (in 20260507000000_boost_
-  // safety.sql) row-locks the submission so concurrent runs
-  // can't race; if the audit insert fails the price update
-  // rolls back too.
-  const { error: applyErr } = await supabase.rpc("apply_boost_bump", {
-    _token: body.token,
-    _previous_offer: currentOffer,
-    _new_offer: newOffer,
-    _bump_amount: bump,
-    _line_items: body.line_items ?? [],
-    _source: body.source || "boost_offer",
-  });
-
-  if (applyErr) {
-    console.error("[boost-apply-offer] apply_boost_bump failed", applyErr.message);
-    return new Response(JSON.stringify({ error: "apply_failed", detail: applyErr.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-  void row;
-
   return new Response(
     JSON.stringify({
-      previous_offer: currentOffer,
-      new_offer: newOffer,
-      bump_amount: bump,
+      error: "endpoint_retired",
+      message:
+        "boost-apply-offer has been retired. Use boost-evaluate, which verifies uploaded photos server-side before applying any bump.",
     }),
-    { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    { status: 410, headers: { ...corsHeaders, "Content-Type": "application/json" } },
   );
 });
