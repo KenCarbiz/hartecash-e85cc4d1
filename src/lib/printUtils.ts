@@ -189,15 +189,15 @@ export function printSubmissionDetail(
           const isPdf = u.includes(".pdf");
           return isPdf
             ? '<p style="font-size:13px;color:#4a5568;">[PDF Document]</p>'
-            : '<img class="doc-img" src="' + u + '" />';
+            : '<img class="doc-img" src="' + esc(u) + '" />';
         }).join("");
-        return '<div class="doc-section"><div class="section"><div class="section-title">' + label + '</div>' + images + '</div></div>';
+        return '<div class="doc-section"><div class="section"><div class="section-title">' + esc(label) + '</div>' + images + '</div></div>';
       }).join("")
     : "";
 
   const html = "<!DOCTYPE html><html><head><title>Submission Details</title><style>" + css + "</style></head><body>" +
-    '<div class="header"><h1>' + (vehicleStr || "Submission Details") + "</h1>" +
-    "<p>Submitted " + new Date(s.created_at).toLocaleDateString() + " &bull; " + (s.name || "Unknown") + "</p></div>" +
+    '<div class="header"><h1>' + esc(vehicleStr || "Submission Details") + "</h1>" +
+    "<p>Submitted " + esc(new Date(s.created_at).toLocaleDateString()) + " &bull; " + esc(s.name || "Unknown") + "</p></div>" +
     '<div class="content">' +
     makeSection("Contact Information", [["Name", s.name], ["Phone", formatPhone(s.phone)], ["Email", s.email], ["ZIP", s.zip], ["Address", [s.address_street, s.address_city, s.address_state, s.zip].filter(Boolean).join(", ") || null]]) +
     makeSection("Vehicle Details", [
@@ -215,7 +215,7 @@ export function printSubmissionDetail(
     makeSection("Loan & Info", [["Loan Status", s.loan_status], ["Next Step", s.next_step]]) +
     '<div class="section"><div class="section-title">Appointment</div><p style="font-size:13px;color:#4a5568;">' +
       (s.appointment_set && s.appointment_date
-        ? new Date(s.appointment_date + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })
+        ? esc(new Date(s.appointment_date + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }))
         : "No appointment yet") +
     '</p></div>' +
     '<div class="section"><div class="section-title">Acquisition Tracker</div>' + progressHtml + "</div>" +
@@ -224,7 +224,7 @@ export function printSubmissionDetail(
     photosHtml +
     docsHtml +
     '<div class="section"><div class="section-title">Customer Documents Upload Link</div>' +
-    '<p style="font-size:13px;color:#4a5568;word-break:break-all;">' + docsUrl + "</p></div>" +
+    '<p style="font-size:13px;color:#4a5568;word-break:break-all;">' + esc(docsUrl) + "</p></div>" +
     "</div></body></html>";
 
   const printWindow = window.open("", "_blank", "width=800,height=600");
