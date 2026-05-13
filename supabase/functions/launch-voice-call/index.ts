@@ -799,7 +799,7 @@ serve(async (req) => {
     const blandResponse = await fetch("https://api.bland.ai/v1/calls", {
       method: "POST",
       headers: {
-        Authorization: dealer.voice_ai_api_key,
+        Authorization: voiceApiKey,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(blandPayload),
