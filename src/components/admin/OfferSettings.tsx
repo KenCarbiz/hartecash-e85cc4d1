@@ -165,7 +165,6 @@ interface OfferSettingsRow {
   low_mileage_bonus: { enabled: boolean; avg_miles_per_year: number; bonus_pct_per_step: number; step_size_pct: number; max_bonus_pct: number; min_miles_per_year: number };
   // Fields the table actually has but were previously missing from the local
   // interface — code below `settings`-cast its way around them.
-  manager_pin?: string;
   target_gross_min?: number;
   wholesale_only_mileage?: number;
   wholesale_only_age_years?: number;
@@ -395,7 +394,6 @@ const OfferSettings = ({ userId, userRole }: OfferSettingsProps = {}) => {
       dealer_pack: settings.dealer_pack ?? 0,
       hide_pack_from_appraisal: settings.hide_pack_from_appraisal ?? false,
       retail_profit_basis: settings.retail_profit_basis || "retail_avg",
-      manager_pin: settings.manager_pin || "0000",
       target_gross_min: settings.target_gross_min || 0,
       wholesale_only_mileage: settings.wholesale_only_mileage || 120000,
       wholesale_only_age_years: settings.wholesale_only_age_years || 10,
