@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 /**
@@ -6,18 +6,9 @@ import { supabase } from "@/integrations/supabase/client";
  * INSERTs/UPDATEs on `voice_call_log` for a given submission, and
  * fires `onUpdate` whenever either table changes.
  *
- * Used by every customer-file comms surface so a customer's inbound
- * SMS / email AND a completed Bland.ai voice call appear in the rep's
- * timeline without a manual refresh.
- *
- * voice_call_log fires on UPDATE too because Bland.ai webhooks
- * progressively update the same row (status: queued → in_progress →
- * completed, then later transcript/recording_url get filled in).
- *
- * Requires both tables in the `supabase_realtime` publication. See
- * migrations:
- *   - 20260429130000_conversation_events_realtime.sql
- *   - 20260429170000_voice_call_log_realtime.sql
+ * Channel topic is tenant-prefixed (`<dealership_id>:customer-file:<id>`)
+ * so the realtime.messages RLS policy can scope subscriptions to the
+ * caller's own dealership.
  */
 export function useCustomerFileRealtime(
   submissionId: string | null | undefined,
@@ -25,11 +16,26 @@ export function useCustomerFileRealtime(
 ) {
   const cbRef = useRef(onUpdate);
   cbRef.current = onUpdate;
+  const [dealershipId, setDealershipId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!submissionId) return;
+    if (!submissionId) { setDealershipId(null); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("submissions")
+        .select("dealership_id")
+        .eq("id", submissionId)
+        .maybeSingle();
+      if (!cancelled) setDealershipId((data as any)?.dealership_id || null);
+    })();
+    return () => { cancelled = true; };
+  }, [submissionId]);
+
+  useEffect(() => {
+    if (!submissionId || !dealershipId) return;
     const channel = supabase
-      .channel(`customer-file:${submissionId}`)
+      .channel(`${dealershipId}:customer-file:${submissionId}`)
       .on(
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore supabase realtime types are loose
@@ -59,7 +65,7 @@ export function useCustomerFileRealtime(
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [submissionId]);
+  }, [submissionId, dealershipId]);
 }
 
 /**
@@ -67,3 +73,4 @@ export function useCustomerFileRealtime(
  * `useCustomerFileRealtime`. Remove once all consumers are renamed.
  */
 export const useConversationRealtime = useCustomerFileRealtime;
+
