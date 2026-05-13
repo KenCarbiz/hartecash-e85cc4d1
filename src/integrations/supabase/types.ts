@@ -4780,6 +4780,50 @@ export type Database = {
         }
         Relationships: []
       }
+      tenant_edit_log: {
+        Row: {
+          created_at: string
+          dealership_id: string | null
+          field: string
+          id: string
+          new_value: string | null
+          old_value: string | null
+          performed_by_email: string | null
+          performed_by_user_id: string | null
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          dealership_id?: string | null
+          field: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          performed_by_email?: string | null
+          performed_by_user_id?: string | null
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          dealership_id?: string | null
+          field?: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          performed_by_email?: string | null
+          performed_by_user_id?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_edit_log_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenant_role_section_permissions: {
         Row: {
           allowed: boolean
