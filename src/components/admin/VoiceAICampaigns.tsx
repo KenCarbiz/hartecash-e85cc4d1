@@ -273,8 +273,8 @@ const VoiceAICampaigns = () => {
     }
 
     setSaving(false);
-    if (error) {
-      toast({ title: "Save failed", description: error.message, variant: "destructive" });
+    if (error || secretError) {
+      toast({ title: "Save failed", description: (error || secretError)!.message, variant: "destructive" });
     } else {
       toast({ title: "Configuration saved", description: "Voice AI settings updated successfully." });
     }
