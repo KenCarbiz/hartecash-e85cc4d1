@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireInternalOrPlatformAdmin } from "../_shared/internal-auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -29,6 +30,10 @@ const APPOINTMENT_CADENCE = [
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  // SECURITY: orchestrator endpoint — service-role / platform admins only.
+  const denied = await requireInternalOrPlatformAdmin(req, corsHeaders);
+  if (denied) return denied;
 
   try {
     const supabase = createClient(

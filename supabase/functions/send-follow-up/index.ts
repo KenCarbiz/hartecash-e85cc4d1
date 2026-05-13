@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireInternalOrPlatformAdmin } from "../_shared/internal-auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -159,6 +160,12 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  // SECURITY: this fires customer-facing emails/SMS. Only the cron orchestrator
+  // (service-role) and platform admins ("fire now" in the admin Follow-Up panel)
+  // may invoke it. Plain authenticated users cannot trigger arbitrary submissions.
+  const denied = await requireInternalOrPlatformAdmin(req, corsHeaders);
+  if (denied) return denied;
 
   try {
     const { submission_id, touch_number, triggered_by = "manual" } = (await req.json()) as FollowUpRequest;

@@ -3,6 +3,7 @@ import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
 import { mascotUrlForTrigger } from '../_shared/dealer-mascot.ts'
+import { isInternalCaller } from '../_shared/internal-auth.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -311,6 +312,22 @@ Deno.serve(async (req) => {
 
   try {
     const body = (await req.json()) as SendRequest;
+
+    // SECURITY: Only trusted internal callers (other edge functions running
+    // with the service-role key, or pg_cron jobs that pass it) may specify
+    // arbitrary recipients or override the message body. For any other caller
+    // (anon customer page, tenant staff JWT, anything else) we strip these
+    // fields so the function cannot be turned into an open email/SMS relay
+    // or phishing primitive. Customer flows pass `{ trigger_key, submission_id }`
+    // only — they are unaffected.
+    const internal = isInternalCaller(req);
+    if (!internal) {
+      delete (body as any).recipient_email;
+      delete (body as any).recipient_phone;
+      delete (body as any).custom_body;
+      delete (body as any).custom_subject;
+    }
+
     const { trigger_key, submission_id } = body;
 
     if (!trigger_key || !DEFAULT_TEMPLATES[trigger_key]) {

@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireInternalOrPlatformAdmin } from "../_shared/internal-auth.ts";
 
 /**
  * Cron-triggered function that checks for submissions needing automated follow-ups.
@@ -31,6 +32,12 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  // SECURITY: cron-only endpoint. Only the pg_cron job (service-role) and
+  // platform admins may fire it — otherwise anyone could spam every eligible
+  // customer's email/SMS by hitting this URL.
+  const denied = await requireInternalOrPlatformAdmin(req, corsHeaders);
+  if (denied) return denied;
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;

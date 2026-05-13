@@ -28,6 +28,10 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import {
+  isInternalCaller,
+  requireInternalOrPlatformAdmin,
+} from "../_shared/internal-auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -487,6 +491,14 @@ function nextLocal8amFor(state: string | null, customerTz: string | null): Date 
 // ── HTTP handler ───────────────────────────────────────────────────
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  // SECURITY: orchestrator endpoint. Only pg_cron (service-role) and platform
+  // admins may fire it — otherwise anyone could mass-trigger customer SMS/email
+  // by hitting this URL, and `force_submission_id` would let them target a
+  // specific lead by UUID.
+  const internal = isInternalCaller(req);
+  const denied = internal ? null : await requireInternalOrPlatformAdmin(req, corsHeaders);
+  if (denied) return denied;
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,

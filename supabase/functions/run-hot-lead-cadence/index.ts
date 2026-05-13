@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireInternalOrPlatformAdmin } from "../_shared/internal-auth.ts";
 
 /**
  * run-hot-lead-cadence — sub-day follow-up for fresh leads that saw
@@ -56,6 +57,10 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  // SECURITY: orchestrator endpoint — service-role / platform admins only.
+  const denied = await requireInternalOrPlatformAdmin(req, corsHeaders);
+  if (denied) return denied;
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
