@@ -13,6 +13,7 @@ import AppErrorBoundary from "@/components/AppErrorBoundary";
 import PageErrorBoundary from "@/components/PageErrorBoundary";
 const Index = lazy(() => import("./pages/Index"));
 const AutocurbLanding = lazy(() => import("./pages/AutocurbLanding"));
+const SellFlow = lazy(() => import("./pages/SellFlow"));
 
 // Hostname check for the AutoCurb SaaS marketing landing. All other
 // hosts (hartecash.com, sell2harte.com, *.lovable.app previews, and
@@ -209,6 +210,10 @@ const AnimatedRoutes = () => {
             the main domain. Renders the same Index; TenantContext resolves
             the rooftop from the slug path segment. */}
         <Route path="/locations/:rooftopSlug" element={<Index />} />
+        {/* MotoAcquire-style standalone sell flow. Standalone dealer
+            microsite by default; iframed onto the dealer's own site
+            with ?embed=true so the top + disclosure bars drop out. */}
+        <Route path="/sell" element={<SellFlow />} />
         <Route path="/upload/:token" element={<UploadPhotos />} />
         <Route path="/docs/:token" element={<UploadDocs />} />
         <Route path="/boost-offer/:token" element={<BoostOfferClarity />} />
