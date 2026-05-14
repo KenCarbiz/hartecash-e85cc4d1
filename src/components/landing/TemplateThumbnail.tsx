@@ -22,6 +22,36 @@ const TemplateThumbnail = ({ template, className = "" }: Props) => {
   switch (template) {
     // ── CLASSIC: split hero (text left, form right) + stacked sections ──
     // ── 2026 sell-flow audit recommendations ────────────────────
+    // MOTO: MotoAcquire-style 8-step. Two-tab pill, cascading dropdowns, navy pill CTA.
+    case "moto":
+      return (
+        <div className={wrapClass}>
+          <svg {...common}>
+            <rect x="0" y="0" width="160" height="100" fill="#FFFFFF" />
+            {/* dealer wordmark top-left */}
+            <rect x="6" y="6" width="20" height="3" rx="0.5" fill="#0A0A0A" />
+            {/* bold mixed-color headline */}
+            <rect x="6" y="14" width="58" height="3.5" rx="0.5" fill="#0A0A0A" />
+            <rect x="66" y="14" width="38" height="3.5" rx="0.5" fill="#0E2A6B" />
+            <rect x="6" y="20" width="86" height="3.5" rx="0.5" fill="#0E2A6B" />
+            {/* form card */}
+            <rect x="6" y="30" width="148" height="50" rx="3" fill="#FFFFFF" stroke="#E5E7EB" strokeWidth="0.4" />
+            {/* 2-tab pill segmented */}
+            <rect x="14" y="36" width="132" height="7" rx="3.5" fill="#F1F3F5" />
+            <rect x="14" y="36" width="66" height="7" rx="3.5" fill="#0E2A6B" />
+            <rect x="34" y="38.5" width="26" height="2" rx="0.3" fill="#FFFFFF" />
+            <rect x="100" y="38.5" width="26" height="2" rx="0.3" fill="#6B7280" />
+            {/* outlined fields */}
+            <rect x="14" y="48" width="132" height="8" rx="1.2" fill="#FFFFFF" stroke="#D1D5DB" strokeWidth="0.4" />
+            <rect x="14" y="59" width="132" height="8" rx="1.2" fill="#FFFFFF" stroke="#D1D5DB" strokeWidth="0.4" />
+            {/* navy pill button */}
+            <rect x="14" y="71" width="132" height="7" rx="3.5" fill="#0E2A6B" />
+            {/* "30 seconds" reassurance banner */}
+            <rect x="14" y="84" width="132" height="6" rx="0.6" fill="#F5F5F7" />
+          </svg>
+        </div>
+      );
+
     // CLARITY: Apple-minimal white. Just the form, massive negative space.
     case "clarity":
       return (

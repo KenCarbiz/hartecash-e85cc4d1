@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import SEO from "@/components/SEO";
 import MotoShell from "@/components/moto/MotoShell";
 import MotoStepVehicleSearch from "@/components/moto/steps/MotoStepVehicleSearch";
@@ -13,35 +13,94 @@ import MotoStepSchedule from "@/components/moto/steps/MotoStepSchedule";
 import MotoStepQueued from "@/components/moto/steps/MotoStepQueued";
 import MotoTrackValueBlock from "@/components/moto/MotoTrackValueBlock";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
-import { emptyMotoFlowState, type MotoFlowState } from "@/components/moto/types";
+import { useTenant } from "@/contexts/TenantContext";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  emptyMotoFlowState,
+  type MotoFlowState,
+  type MotoStepId,
+} from "@/components/moto/types";
 
-// Steps where the persistent "Track your vehicle value for free!"
-// re-engagement card hangs below the active step. Skipped on the
-// search screen (no vehicle yet) and on the converted end states
-// (the customer is already in the dealer's pipeline).
-const TRACK_VALUE_STEPS: MotoFlowState["step"][] = [
-  "condition",
-  "trade-or-sell",
-  "ownership",
-  "color",
-  "contact",
-  "offer",
-  "photos",
+const TRACK_VALUE_STEPS: MotoStepId[] = [
+  "condition", "trade-or-sell", "ownership", "color",
+  "contact", "offer", "photos",
 ];
 
+type RevealMode = "contact_first" | "price_first";
+
 /**
- * The MotoAcquire-style /sell flow. 8 screens, white-bg, single
- * tenant variable (button color via site_config.landing_cta_color).
- * Standalone dealer microsite by default; iframe (?embed=true) strips
- * top + disclosure bars so the dealer's host page wraps it.
+ * In `price_first` mode the Contact step (customer info + miles +
+ * SMS OTP) is deferred until AFTER the offer reveal. Any patch a
+ * step component dispatches that would have set step="contact"
+ * (or step="offer" coming out of contact, or step="schedule" from
+ * the offer-accept path) is rewritten through this lookup.
+ *
+ * Keyed by (from-step → declared-next-step) so we only rewrite
+ * the transitions that actually change between modes; everything
+ * else (search→condition, condition→trade-or-sell, etc.) flows
+ * through untouched.
+ */
+const PRICE_FIRST_REWRITES: Partial<Record<MotoStepId, Partial<Record<MotoStepId, MotoStepId>>>> = {
+  color:   { contact: "offer" },    // Color goes straight to Offer (not Contact)
+  offer:   { schedule: "contact" }, // Offer Accept defers Schedule until after Contact
+  contact: { offer: "schedule" },   // Contact (now post-offer) proceeds to Schedule
+};
+
+/**
+ * The MotoAcquire-style /sell flow. 8 screens, white background,
+ * single per-tenant variable (CTA color via
+ * site_config.landing_cta_color), plus an admin-selectable Contact
+ * placement (offer_settings.pricing_reveal_mode).
+ *
+ * Standalone dealer microsite by default; iframed onto the dealer's
+ * host site with ?embed=true strips the top + disclosure bars.
  */
 const SellFlow = () => {
   const { config } = useSiteConfig();
+  const { tenant } = useTenant();
   const [state, setState] = useState<MotoFlowState>(emptyMotoFlowState);
+  const [revealMode, setRevealMode] = useState<RevealMode>("contact_first");
 
-  const update = useCallback((patch: Partial<MotoFlowState>) => {
-    setState((prev) => ({ ...prev, ...patch }));
-  }, []);
+  // Load the dealer's contact placement preference once on mount.
+  // Soft-fail to contact_first if offer_settings isn't yet populated
+  // for this rooftop — that matches the rest of the flow's default.
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const { data } = await supabase
+          .from("offer_settings")
+          .select("pricing_reveal_mode")
+          .eq("dealership_id", tenant.dealership_id)
+          .maybeSingle();
+        if (cancelled || !data) return;
+        const mode = (data as { pricing_reveal_mode?: string }).pricing_reveal_mode;
+        if (mode === "price_first") setRevealMode("price_first");
+        // "contact_first" and "range_then_price" both behave as contact_first
+        // here — the moto flow doesn't have a separate range reveal mode.
+      } catch (e) {
+        console.warn("[SellFlow] offer_settings load failed (soft default):", e);
+      }
+    };
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [tenant.dealership_id]);
+
+  const update = useCallback(
+    (patch: Partial<MotoFlowState>) => {
+      setState((prev) => {
+        const next: MotoFlowState = { ...prev, ...patch };
+        if (revealMode === "price_first" && patch.step) {
+          const rewrite = PRICE_FIRST_REWRITES[prev.step]?.[patch.step];
+          if (rewrite) next.step = rewrite;
+        }
+        return next;
+      });
+    },
+    [revealMode],
+  );
 
   return (
     <MotoShell>

@@ -1174,7 +1174,7 @@ const LandingFlowConfig = () => {
           <span className="text-[11px] text-muted-foreground italic">— design-audit picks, May 2026</span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
-          {LANDING_TEMPLATES.filter((t) => ["clarity", "marquee", "velocity", "heritage"].includes(t.value)).map((t) => {
+          {LANDING_TEMPLATES.filter((t) => ["moto", "clarity", "marquee", "velocity", "heritage"].includes(t.value)).map((t) => {
             const active = state.landing_template === t.value;
             return (
               <button

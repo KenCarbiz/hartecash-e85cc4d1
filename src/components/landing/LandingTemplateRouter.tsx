@@ -11,6 +11,9 @@ const MarqueeTemplate  = lazy(() => import("./templates/MarqueeTemplate"));
 const VelocityTemplate = lazy(() => import("./templates/VelocityTemplate"));
 const HeritageTemplate = lazy(() => import("./templates/HeritageTemplate"));
 
+// ── Instant Offer (MotoAcquire-style 8-step flow) ──
+const MotoTemplate     = lazy(() => import("./templates/MotoTemplate"));
+
 // ── Originals ──────────────────────────────────────────────────────
 const ClassicTemplate  = lazy(() => import("./templates/ClassicTemplate"));
 const BoldTemplate     = lazy(() => import("./templates/BoldTemplate"));
@@ -44,6 +47,8 @@ const templateMap: Record<LandingTemplate, React.ComponentType> = {
   marquee:  MarqueeTemplate,
   velocity: VelocityTemplate,
   heritage: HeritageTemplate,
+  // Instant Offer (MotoAcquire-style 8-step flow)
+  moto:     MotoTemplate,
   // Originals
   classic:  ClassicTemplate,
   bold:     BoldTemplate,
@@ -64,7 +69,7 @@ const templateMap: Record<LandingTemplate, React.ComponentType> = {
 
 const VALID_TEMPLATES = new Set<LandingTemplate>([
   "legacy",
-  "clarity", "marquee", "velocity", "heritage",
+  "clarity", "marquee", "velocity", "heritage", "moto",
   "classic", "bold", "minimal", "elegant", "showroom",
   "cinema", "portal", "carousel", "slab", "diagonal",
   "pickup", "magazine", "circular", "motion", "mosaic",
