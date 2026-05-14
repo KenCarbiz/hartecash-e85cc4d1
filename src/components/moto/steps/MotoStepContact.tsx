@@ -5,6 +5,7 @@ import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { supabase } from "@/integrations/supabase/client";
 import MotoCard from "../MotoCard";
 import MotoPrimaryButton from "../MotoPrimaryButton";
+import MotoStickyFooter from "../MotoStickyFooter";
 import MotoVehicleHero from "../MotoVehicleHero";
 import MotoFormField from "../MotoFormField";
 import type { MotoFlowState } from "../types";
@@ -215,7 +216,7 @@ const MotoStepContact = ({
           </p>
         </div>
       </MotoCard>
-      <div className="mt-5">
+      <MotoStickyFooter>
         <MotoPrimaryButton
           disabled={!formValid || sending}
           loading={sending}
@@ -223,7 +224,7 @@ const MotoStepContact = ({
         >
           Verify Phone &amp; See Offer
         </MotoPrimaryButton>
-      </div>
+      </MotoStickyFooter>
     </>
   );
 };

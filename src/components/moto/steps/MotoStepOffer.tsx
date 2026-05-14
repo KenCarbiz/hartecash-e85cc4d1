@@ -3,6 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTenant } from "@/contexts/TenantContext";
 import MotoCard from "../MotoCard";
 import MotoPrimaryButton from "../MotoPrimaryButton";
+import MotoStickyFooter from "../MotoStickyFooter";
 import MotoVehicleHero from "../MotoVehicleHero";
 import type { MotoFlowState } from "../types";
 import { calculateAndPersistOffer } from "../motoSubmission";
@@ -116,9 +117,9 @@ const MotoStepOffer = ({
         )}
       </MotoCard>
       {!computing && (
-        <div className="mt-5 space-y-3">
+        <MotoStickyFooter>
           {firm ? (
-            <>
+            <div className="space-y-2">
               <MotoPrimaryButton onClick={accept}>Accept &amp; Schedule Inspection</MotoPrimaryButton>
               <button
                 type="button"
@@ -127,13 +128,13 @@ const MotoStepOffer = ({
               >
                 Think it should be higher? Try AI Photo Appraisal
               </button>
-            </>
+            </div>
           ) : (
             <MotoPrimaryButton onClick={() => onNext({ step: "photos" })}>
               Start AI Photo Appraisal
             </MotoPrimaryButton>
           )}
-        </div>
+        </MotoStickyFooter>
       )}
     </>
   );

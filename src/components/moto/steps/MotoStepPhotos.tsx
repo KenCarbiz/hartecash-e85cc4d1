@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import MotoCard from "../MotoCard";
 import MotoPrimaryButton from "../MotoPrimaryButton";
+import MotoStickyFooter from "../MotoStickyFooter";
 import MotoVehicleHero from "../MotoVehicleHero";
 import type { MotoFlowState } from "../types";
 
@@ -187,7 +188,7 @@ const MotoStepPhotos = ({
           onChange={onFile}
         />
       </MotoCard>
-      <div className="mt-5">
+      <MotoStickyFooter>
         <MotoPrimaryButton
           disabled={!allFilled || uploading}
           loading={uploading}
@@ -195,7 +196,7 @@ const MotoStepPhotos = ({
         >
           Get My New Offer
         </MotoPrimaryButton>
-      </div>
+      </MotoStickyFooter>
     </>
   );
 };

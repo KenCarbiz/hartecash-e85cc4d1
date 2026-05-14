@@ -1,6 +1,7 @@
 import { useState } from "react";
 import MotoCard from "../MotoCard";
 import MotoPrimaryButton from "../MotoPrimaryButton";
+import MotoStickyFooter from "../MotoStickyFooter";
 import MotoVehicleHero from "../MotoVehicleHero";
 import type { MotoFlowState, TradeOrSell } from "../types";
 import { cn } from "@/lib/utils";
@@ -41,14 +42,14 @@ const MotoStepTradeOrSell = ({
           ))}
         </div>
       </MotoCard>
-      <div className="mt-5">
+      <MotoStickyFooter>
         <MotoPrimaryButton
           disabled={!picked}
           onClick={() => picked && onNext({ intent: picked, step: "ownership" })}
         >
           Next
         </MotoPrimaryButton>
-      </div>
+      </MotoStickyFooter>
     </>
   );
 };

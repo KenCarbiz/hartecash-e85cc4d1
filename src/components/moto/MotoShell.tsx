@@ -13,7 +13,10 @@ const MotoShell = ({ children }: { children: ReactNode }) => {
   return (
     <div className="min-h-screen bg-white text-zinc-900">
       {!embed && <MotoTopBar />}
-      <main className="mx-auto max-w-screen-sm px-4 pb-12 pt-6">{children}</main>
+      {/* Bottom padding reserves room for the fixed MotoStickyFooter
+          (~96px button + safe-area) so the sticky CTA never sits on
+          top of the disclosure bar or the Track-Value card. */}
+      <main className="mx-auto max-w-screen-sm px-4 pb-[120px] pt-6">{children}</main>
       {!embed && <MotoDisclosureBar />}
     </div>
   );

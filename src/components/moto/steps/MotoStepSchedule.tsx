@@ -5,6 +5,7 @@ import { useTenant } from "@/contexts/TenantContext";
 import { useToast } from "@/hooks/use-toast";
 import MotoCard from "../MotoCard";
 import MotoPrimaryButton from "../MotoPrimaryButton";
+import MotoStickyFooter from "../MotoStickyFooter";
 import MotoVehicleHero from "../MotoVehicleHero";
 import type { MotoFlowState } from "../types";
 import { cn } from "@/lib/utils";
@@ -190,7 +191,7 @@ const MotoStepSchedule = ({
           ))}
         </div>
       </MotoCard>
-      <div className="mt-5">
+      <MotoStickyFooter>
         <MotoPrimaryButton
           disabled={!locationId || !date || !time || submitting}
           loading={submitting}
@@ -198,7 +199,7 @@ const MotoStepSchedule = ({
         >
           Confirm Appointment
         </MotoPrimaryButton>
-      </div>
+      </MotoStickyFooter>
     </>
   );
 };

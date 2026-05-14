@@ -1,5 +1,6 @@
 import MotoCard from "../MotoCard";
 import MotoPrimaryButton from "../MotoPrimaryButton";
+import MotoStickyFooter from "../MotoStickyFooter";
 import MotoVehicleHero from "../MotoVehicleHero";
 import type { Condition, MotoFlowState } from "../types";
 import { useState } from "react";
@@ -44,14 +45,14 @@ const MotoStepCondition = ({
           ))}
         </div>
       </MotoCard>
-      <div className="mt-5">
+      <MotoStickyFooter>
         <MotoPrimaryButton
           disabled={!picked}
           onClick={() => picked && onNext({ condition: picked, step: "trade-or-sell" })}
         >
           Next
         </MotoPrimaryButton>
-      </div>
+      </MotoStickyFooter>
     </>
   );
 };

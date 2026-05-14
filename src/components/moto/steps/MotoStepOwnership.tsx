@@ -1,6 +1,7 @@
 import { useState } from "react";
 import MotoCard from "../MotoCard";
 import MotoPrimaryButton from "../MotoPrimaryButton";
+import MotoStickyFooter from "../MotoStickyFooter";
 import MotoVehicleHero from "../MotoVehicleHero";
 import type { MotoFlowState, Ownership } from "../types";
 
@@ -35,14 +36,14 @@ const MotoStepOwnership = ({
           </select>
         </label>
       </MotoCard>
-      <div className="mt-5">
+      <MotoStickyFooter>
         <MotoPrimaryButton
           disabled={!picked}
           onClick={() => picked && onNext({ ownership: picked as Ownership, step: "color" })}
         >
           Next
         </MotoPrimaryButton>
-      </div>
+      </MotoStickyFooter>
     </>
   );
 };
