@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "prepare": "husky",
-    "screenshots": "tsx scripts/screenshot-tour.ts"
+    "screenshots": "tsx scripts/screenshot-tour.ts",
+    "recon:motoacquire": "tsx scripts/recon-motoacquire.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

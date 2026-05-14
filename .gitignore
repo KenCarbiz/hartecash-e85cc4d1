@@ -34,3 +34,7 @@ dist-ssr
 # Screenshot tour — see scripts/screenshot-tour.ts
 .env.screenshot
 screenshots/
+
+# Competitive recon — see scripts/recon-motoacquire.ts
+.env.recon
+recon/
