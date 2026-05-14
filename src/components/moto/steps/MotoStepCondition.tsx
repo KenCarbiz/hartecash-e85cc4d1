@@ -1,6 +1,4 @@
 import MotoCard from "../MotoCard";
-import MotoPrimaryButton from "../MotoPrimaryButton";
-import MotoStickyFooter from "../MotoStickyFooter";
 import MotoVehicleHero from "../MotoVehicleHero";
 import type { Condition, MotoFlowState } from "../types";
 import { useState } from "react";
@@ -13,6 +11,11 @@ const OPTIONS: { id: Condition; label: string; blurb: string }[] = [
   { id: "poor", label: "Poor", blurb: "Mechanical or cosmetic issues that need fixing." },
 ];
 
+/**
+ * Tap-to-advance — picking a condition immediately routes to the
+ * next step after a brief highlight (250 ms) so the customer sees
+ * their selection register. No explicit Next button on this step.
+ */
 const MotoStepCondition = ({
   state,
   onNext,
@@ -21,6 +24,11 @@ const MotoStepCondition = ({
   onNext: (next: Partial<MotoFlowState>) => void;
 }) => {
   const [picked, setPicked] = useState<Condition | null>(state.condition);
+
+  const choose = (id: Condition) => {
+    setPicked(id);
+    window.setTimeout(() => onNext({ condition: id, step: "trade-or-sell" }), 250);
+  };
 
   return (
     <>
@@ -31,7 +39,7 @@ const MotoStepCondition = ({
             <button
               key={o.id}
               type="button"
-              onClick={() => setPicked(o.id)}
+              onClick={() => choose(o.id)}
               className={cn(
                 "w-full rounded-lg border p-4 text-left transition",
                 picked === o.id
@@ -45,14 +53,6 @@ const MotoStepCondition = ({
           ))}
         </div>
       </MotoCard>
-      <MotoStickyFooter>
-        <MotoPrimaryButton
-          disabled={!picked}
-          onClick={() => picked && onNext({ condition: picked, step: "trade-or-sell" })}
-        >
-          Next
-        </MotoPrimaryButton>
-      </MotoStickyFooter>
     </>
   );
 };

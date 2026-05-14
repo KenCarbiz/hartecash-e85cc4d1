@@ -1,17 +1,9 @@
 import { useState } from "react";
 import MotoCard from "../MotoCard";
-import MotoPrimaryButton from "../MotoPrimaryButton";
-import MotoStickyFooter from "../MotoStickyFooter";
 import MotoVehicleHero from "../MotoVehicleHero";
 import type { MotoFlowState } from "../types";
 import { cn } from "@/lib/utils";
 
-/**
- * Color step. Colors come from the BB lookup's exterior_colors list
- * for the decoded vehicle; if BB didn't return any (e.g. YMM-only
- * lookups go through NHTSA), we fall back to a small generic
- * palette so the step is still completable.
- */
 const FALLBACK_COLORS = [
   { name: "White", hex: "#FFFFFF" },
   { name: "Black", hex: "#0A0A0A" },
@@ -23,6 +15,10 @@ const FALLBACK_COLORS = [
   { name: "Tan", hex: "#C2A878" },
 ];
 
+/**
+ * Tap-to-advance — picking a color swatch auto-routes to the
+ * contact step after a brief highlight. No explicit Next button.
+ */
 const MotoStepColor = ({
   state,
   onNext,
@@ -37,6 +33,11 @@ const MotoStepColor = ({
 
   const [picked, setPicked] = useState(state.color || "");
 
+  const choose = (name: string) => {
+    setPicked(name);
+    window.setTimeout(() => onNext({ color: name, step: "contact" }), 250);
+  };
+
   return (
     <>
       <MotoVehicleHero bb={state.bbVehicle} color={picked || state.color} mileage={state.mileage} />
@@ -46,7 +47,7 @@ const MotoStepColor = ({
             <button
               key={c.name}
               type="button"
-              onClick={() => setPicked(c.name)}
+              onClick={() => choose(c.name)}
               className={cn(
                 "flex flex-col items-center gap-1 rounded-lg border p-2 transition",
                 picked === c.name
@@ -63,14 +64,6 @@ const MotoStepColor = ({
           ))}
         </div>
       </MotoCard>
-      <MotoStickyFooter>
-        <MotoPrimaryButton
-          disabled={!picked}
-          onClick={() => picked && onNext({ color: picked, step: "contact" })}
-        >
-          Next
-        </MotoPrimaryButton>
-      </MotoStickyFooter>
     </>
   );
 };

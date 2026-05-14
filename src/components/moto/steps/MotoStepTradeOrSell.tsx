@@ -1,7 +1,5 @@
 import { useState } from "react";
 import MotoCard from "../MotoCard";
-import MotoPrimaryButton from "../MotoPrimaryButton";
-import MotoStickyFooter from "../MotoStickyFooter";
 import MotoVehicleHero from "../MotoVehicleHero";
 import type { MotoFlowState, TradeOrSell } from "../types";
 import { cn } from "@/lib/utils";
@@ -19,6 +17,12 @@ const MotoStepTradeOrSell = ({
   onNext: (next: Partial<MotoFlowState>) => void;
 }) => {
   const [picked, setPicked] = useState<TradeOrSell | null>(state.intent);
+
+  const choose = (id: TradeOrSell) => {
+    setPicked(id);
+    window.setTimeout(() => onNext({ intent: id, step: "ownership" }), 250);
+  };
+
   return (
     <>
       <MotoVehicleHero bb={state.bbVehicle} color={state.color} mileage={state.mileage} />
@@ -28,7 +32,7 @@ const MotoStepTradeOrSell = ({
             <button
               key={o.id}
               type="button"
-              onClick={() => setPicked(o.id)}
+              onClick={() => choose(o.id)}
               className={cn(
                 "w-full rounded-lg border p-4 text-left transition",
                 picked === o.id
@@ -42,14 +46,6 @@ const MotoStepTradeOrSell = ({
           ))}
         </div>
       </MotoCard>
-      <MotoStickyFooter>
-        <MotoPrimaryButton
-          disabled={!picked}
-          onClick={() => picked && onNext({ intent: picked, step: "ownership" })}
-        >
-          Next
-        </MotoPrimaryButton>
-      </MotoStickyFooter>
     </>
   );
 };

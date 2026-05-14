@@ -1,7 +1,5 @@
 import { useState } from "react";
 import MotoCard from "../MotoCard";
-import MotoPrimaryButton from "../MotoPrimaryButton";
-import MotoStickyFooter from "../MotoStickyFooter";
 import MotoVehicleHero from "../MotoVehicleHero";
 import type { MotoFlowState, Ownership } from "../types";
 
@@ -11,6 +9,11 @@ const OPTIONS: { id: Ownership; label: string }[] = [
   { id: "lease", label: "Leasing it" },
 ];
 
+/**
+ * Tap-to-advance — once the customer picks a value from the
+ * dropdown, the flow auto-advances after a short delay. No
+ * explicit Next button.
+ */
 const MotoStepOwnership = ({
   state,
   onNext,
@@ -19,6 +22,17 @@ const MotoStepOwnership = ({
   onNext: (next: Partial<MotoFlowState>) => void;
 }) => {
   const [picked, setPicked] = useState<Ownership | "">(state.ownership || "");
+
+  const choose = (val: string) => {
+    if (!val) {
+      setPicked("");
+      return;
+    }
+    const id = val as Ownership;
+    setPicked(id);
+    window.setTimeout(() => onNext({ ownership: id, step: "color" }), 250);
+  };
+
   return (
     <>
       <MotoVehicleHero bb={state.bbVehicle} color={state.color} mileage={state.mileage} />
@@ -26,7 +40,7 @@ const MotoStepOwnership = ({
         <label className="block">
           <select
             value={picked}
-            onChange={(e) => setPicked(e.target.value as Ownership)}
+            onChange={(e) => choose(e.target.value)}
             className="w-full rounded-md border border-zinc-300 bg-white px-3 py-3 text-base outline-none focus:border-[hsl(var(--cta-offer))] focus:ring-2 focus:ring-[hsl(var(--cta-offer)/0.15)]"
           >
             <option value="">Select Status</option>
@@ -36,14 +50,6 @@ const MotoStepOwnership = ({
           </select>
         </label>
       </MotoCard>
-      <MotoStickyFooter>
-        <MotoPrimaryButton
-          disabled={!picked}
-          onClick={() => picked && onNext({ ownership: picked as Ownership, step: "color" })}
-        >
-          Next
-        </MotoPrimaryButton>
-      </MotoStickyFooter>
     </>
   );
 };

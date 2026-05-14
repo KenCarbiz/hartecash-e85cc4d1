@@ -4,7 +4,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useTenant } from "@/contexts/TenantContext";
 import MotoCard from "../MotoCard";
 import MotoPrimaryButton from "../MotoPrimaryButton";
-import MotoStickyFooter from "../MotoStickyFooter";
 import { MotoOutlinedInput, MotoOutlinedSelect } from "../MotoOutlinedField";
 import type { LookupMode, MotoFlowState } from "../types";
 import type { BBVehicle } from "@/components/sell-form/types";
@@ -252,22 +251,21 @@ const MotoStepVehicleSearch = ({
           </div>
         )}
 
+        <div className="mt-5">
+          <MotoPrimaryButton
+            className="rounded-full"
+            onClick={submit}
+            disabled={!canSubmit}
+            loading={loading}
+          >
+            Next
+          </MotoPrimaryButton>
+        </div>
       </MotoCard>
 
       <div className="mt-4 rounded-md bg-zinc-50 py-3 text-center text-sm font-semibold text-[hsl(var(--cta-offer))]">
         Get a valuation in less than 30 seconds!
       </div>
-
-      <MotoStickyFooter>
-        <MotoPrimaryButton
-          className="rounded-full"
-          onClick={submit}
-          disabled={!canSubmit}
-          loading={loading}
-        >
-          Next
-        </MotoPrimaryButton>
-      </MotoStickyFooter>
     </>
   );
 };
