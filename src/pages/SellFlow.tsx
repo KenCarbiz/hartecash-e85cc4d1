@@ -11,8 +11,23 @@ import MotoStepOffer from "@/components/moto/steps/MotoStepOffer";
 import MotoStepPhotos from "@/components/moto/steps/MotoStepPhotos";
 import MotoStepSchedule from "@/components/moto/steps/MotoStepSchedule";
 import MotoStepQueued from "@/components/moto/steps/MotoStepQueued";
+import MotoTrackValueBlock from "@/components/moto/MotoTrackValueBlock";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { emptyMotoFlowState, type MotoFlowState } from "@/components/moto/types";
+
+// Steps where the persistent "Track your vehicle value for free!"
+// re-engagement card hangs below the active step. Skipped on the
+// search screen (no vehicle yet) and on the converted end states
+// (the customer is already in the dealer's pipeline).
+const TRACK_VALUE_STEPS: MotoFlowState["step"][] = [
+  "condition",
+  "trade-or-sell",
+  "ownership",
+  "color",
+  "contact",
+  "offer",
+  "photos",
+];
 
 /**
  * The MotoAcquire-style /sell flow. 8 screens, white-bg, single
@@ -61,6 +76,10 @@ const SellFlow = () => {
       )}
       {state.step === "schedule" && <MotoStepSchedule state={state} />}
       {state.step === "queued" && <MotoStepQueued state={state} />}
+
+      {TRACK_VALUE_STEPS.includes(state.step) && (
+        <MotoTrackValueBlock state={state} />
+      )}
     </MotoShell>
   );
 };
